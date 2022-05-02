@@ -683,6 +683,11 @@ class NonLocalExitControl {
   uint32_t openScopeNoteIndex_;
   Kind kind_;
 
+  // The offset of a `JSOp::SetRval` that can be rewritten as a
+  // `JSOp::Return` if we don't generate any code for this
+  // NonLocalExitControl.
+  BytecodeOffset setRvalOffset_ = BytecodeOffset::invalidOffset();
+
   NonLocalExitControl(const NonLocalExitControl&) = delete;
 
   [[nodiscard]] bool leaveScope(EmitterScope* scope);
@@ -704,10 +709,12 @@ class NonLocalExitControl {
     bce_->bytecodeSection().setStackDepth(savedDepth_);
   }
 
-  [[nodiscard]] bool prepareForNonLocalJump(NestableControl* target);
+  [[nodiscard]] bool emitNonLocalJump(NestableControl* target);
 
-  [[nodiscard]] bool prepareForNonLocalJumpToOutermost() {
-    return prepareForNonLocalJump(nullptr);
+  [[nodiscard]] bool emitReturn(BytecodeOffset setRvalOffset) {
+    MOZ_ASSERT(kind_ == Return);
+    setRvalOffset_ = setRvalOffset;
+    return emitNonLocalJump(nullptr);
   }
 };
 
@@ -736,7 +743,7 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
 /*
  * Emit additional bytecode(s) for non-local jumps.
  */
-bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
+bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
   EmitterScope* es = bce_->innermostEmitterScope();
   int npops = 0;
 
@@ -868,22 +875,39 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
     }
   }
 
+  switch (kind_) {
+    case Continue: {
+      LoopControl* loop = &target->as<LoopControl>();
+      if (!bce_->emitJump(JSOp::Goto, &loop->continues)) {
+        return false;
+      }
+      break;
+    }
+    case Break: {
+      BreakableControl* breakable = &target->as<BreakableControl>();
+      if (!bce_->emitJump(JSOp::Goto, &breakable->breaks)) {
+        return false;
+      }
+      break;
+    }
+    case Return:
+      MOZ_ASSERT(!target);
+      if (!bce_->finishReturn(setRvalOffset_)) {
+        return false;
+      }
+      break;
+  }
+
   return true;
 }
 
 }  // anonymous namespace
 
-bool BytecodeEmitter::emitGoto(NestableControl* target, JumpList* jumplist,
-                               GotoKind kind) {
+bool BytecodeEmitter::emitGoto(NestableControl* target, GotoKind kind) {
   NonLocalExitControl nle(this, kind == GotoKind::Continue
                                     ? NonLocalExitControl::Continue
                                     : NonLocalExitControl::Break);
-
-  if (!nle.prepareForNonLocalJump(target)) {
-    return false;
-  }
-
-  return emitJump(JSOp::Goto, jumplist);
+  return nle.emitNonLocalJump(target);
 }
 
 AbstractScopePtr BytecodeEmitter::innermostScope() const {
@@ -6128,7 +6152,7 @@ bool BytecodeEmitter::emitBreak(TaggedParserAtomIndex label) {
     target = findInnermostNestableControl<BreakableControl>(isNotLabel);
   }
 
-  return emitGoto(target, &target->breaks, GotoKind::Break);
+  return emitGoto(target, GotoKind::Break);
 }
 
 bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
@@ -6146,7 +6170,7 @@ bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
   } else {
     target = findInnermostNestableControl<LoopControl>();
   }
-  return emitGoto(target, &target->continues, GotoKind::Continue);
+  return emitGoto(target, GotoKind::Continue);
 }
 
 bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {
@@ -6312,11 +6336,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   }
 
   NonLocalExitControl nle(this, NonLocalExitControl::Return);
-  if (!nle.prepareForNonLocalJumpToOutermost()) {
-    return false;
-  }
-
-  return finishReturn(setRvalOffset);
+  return nle.emitReturn(setRvalOffset);
 }
 
 bool BytecodeEmitter::finishReturn(BytecodeOffset setRvalOffset) {
