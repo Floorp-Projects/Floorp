@@ -54,7 +54,6 @@ TEST(LibaomAv1EncoderTest, InitAndRelease) {
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   ASSERT_TRUE(encoder);
   VideoCodec codec_settings = DefaultCodecSettings();
-  codec_settings.SetScalabilityMode("NONE");
   EXPECT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
   EXPECT_EQ(encoder->Release(), WEBRTC_VIDEO_CODEC_OK);
