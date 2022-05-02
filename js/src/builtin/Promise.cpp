@@ -589,8 +589,8 @@ static bool MaybeGetAndClearExceptionAndStack(JSContext* cx,
   return GetAndClearExceptionAndStack(cx, rval, stack);
 }
 
-[[nodiscard]] static bool RunRejectFunction(
-    JSContext* cx, HandleObject onRejectedFunc, HandleValue result,
+[[nodiscard]] static bool CallPromiseRejectFunction(
+    JSContext* cx, HandleObject rejectFun, HandleValue reason,
     HandleObject promiseObj, HandleSavedFrame unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior);
 
@@ -616,8 +616,8 @@ static bool AbruptRejectPromise(JSContext* cx, CallArgs& args,
     return false;
   }
 
-  if (!RunRejectFunction(cx, reject, reason, promiseObj, stack,
-                         UnhandledRejectionBehavior::Report)) {
+  if (!CallPromiseRejectFunction(cx, reject, reason, promiseObj, stack,
+                                 UnhandledRejectionBehavior::Report)) {
     return false;
   }
 
@@ -2016,10 +2016,10 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
   });
 }
 
-[[nodiscard]] static bool RunFulfillFunction(JSContext* cx,
-                                             HandleObject onFulfilledFunc,
-                                             HandleValue result,
-                                             HandleObject promiseObj);
+[[nodiscard]] static bool CallPromiseResolveFunction(JSContext* cx,
+                                                     HandleObject resolveFun,
+                                                     HandleValue value,
+                                                     HandleObject promiseObj);
 
 /**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
@@ -2081,10 +2081,10 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
     callee =
         reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
 
-    return RunFulfillFunction(cx, callee, handlerResult, promiseObj);
+    return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  // Step 1.h. (handled in RunRejectFunction)
+  // Step 1.h. (handled in CallPromiseRejectFunction)
   //           If handlerResult is an abrupt completion, then
   // Step 1.h.i. Let status be
   //             Call(promiseCapability.[[Reject]], undefined,
@@ -2092,9 +2092,9 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
   // Step 1.j. Return Completion(status).
   callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
 
-  return RunRejectFunction(cx, callee, handlerResult, promiseObj,
-                           unwrappedRejectionStack,
-                           reaction->unhandledRejectionBehavior());
+  return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
+                                   unwrappedRejectionStack,
+                                   reaction->unhandledRejectionBehavior());
 }
 
 /**
@@ -2254,14 +2254,14 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
     callee =
         reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
 
-    return RunFulfillFunction(cx, callee, handlerResult, promiseObj);
+    return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
   callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
 
-  return RunRejectFunction(cx, callee, handlerResult, promiseObj,
-                           unwrappedRejectionStack,
-                           reaction->unhandledRejectionBehavior());
+  return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
+                                   unwrappedRejectionStack,
+                                   reaction->unhandledRejectionBehavior());
 }
 
 /**
@@ -3291,6 +3291,11 @@ static bool CallDefaultPromiseRejectFunction(
     JS::Handle<SavedFrame*> unwrappedRejectionStack = nullptr);
 
 /**
+ * Perform Call(promiseCapability.[[Resolve]], undefined ,« value ») given
+ * promiseCapability = { promiseObj, resolveFun }.
+ *
+ * Also,
+ *
  * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
  *
  * NewPromiseReactionJob ( reaction, argument )
@@ -3298,38 +3303,40 @@ static bool CallDefaultPromiseRejectFunction(
  *
  * Steps 1.f-i. "type is Fulfill" case.
  */
-[[nodiscard]] static bool RunFulfillFunction(JSContext* cx,
-                                             HandleObject onFulfilledFunc,
-                                             HandleValue handlerResult,
-                                             HandleObject promiseObj) {
-  cx->check(onFulfilledFunc);
-  cx->check(handlerResult);
+[[nodiscard]] static bool CallPromiseResolveFunction(JSContext* cx,
+                                                     HandleObject resolveFun,
+                                                     HandleValue value,
+                                                     HandleObject promiseObj) {
+  cx->check(resolveFun);
+  cx->check(value);
   cx->check(promiseObj);
 
+  // NewPromiseReactionJob
   // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
   // (implicit)
 
-  if (onFulfilledFunc) {
+  if (resolveFun) {
+    // NewPromiseReactionJob
     // Step 1.h. If handlerResult is an abrupt completion, then
-    //           (handled in RunRejectFunction)
+    //           (handled in CallPromiseRejectFunction)
     // Step 1.i. Else,
     // Step 1.i.i. Return
     //             ? Call(promiseCapability.[[Resolve]], undefined,
     //                    « handlerResult.[[Value]] »).
-    RootedValue calleeOrRval(cx, ObjectValue(*onFulfilledFunc));
-    return Call(cx, calleeOrRval, UndefinedHandleValue, handlerResult,
-                &calleeOrRval);
+    RootedValue calleeOrRval(cx, ObjectValue(*resolveFun));
+    return Call(cx, calleeOrRval, UndefinedHandleValue, value, &calleeOrRval);
   }
 
+  // `promiseObj` can be optimized away if it's known to be unused.
+  //
+  // NewPromiseReactionJob
   // Step f. If promiseCapability is undefined, then
   // (reordered)
   //
-  // NOTE: we pass promiseCapability fields separately, and
-  //       "promiseCapability is undefined" case is represented by
-  //       `onFulfilledFunc == nullptr && promiseObj == nullptr`.
-  //
-  //       Also `promiseObj` can be optimized away if it's known to be unused.
+  // NOTE: "promiseCapability is undefined" case is represented by
+  //       `resolveFun == nullptr && promiseObj == nullptr`.
   if (!promiseObj) {
+    // NewPromiseReactionJob
     // Step f.i. Assert: handlerResult is not an abrupt completion.
     // (implicit)
 
@@ -3337,21 +3344,30 @@ static bool CallDefaultPromiseRejectFunction(
     return true;
   }
 
+  // NewPromiseReactionJob
   // Step 1.h. If handlerResult is an abrupt completion, then
-  //           (handled in RunRejectFunction)
+  //           (handled in CallPromiseRejectFunction)
   // Step 1.i. Else,
   // Step 1.i.i. Return
   //             ? Call(promiseCapability.[[Resolve]], undefined,
   //                    « handlerResult.[[Value]] »).
   Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return CallDefaultPromiseResolveFunction(cx, promise, handlerResult);
+    return CallDefaultPromiseResolveFunction(cx, promise, value);
   }
+
+  // This case is used by resultCapabilityWithoutResolving in
+  // GetWaitForAllPromise, and nothing should be done.
 
   return true;
 }
 
 /**
+ * Perform Call(promiseCapability.[[Reject]], undefined ,« reason ») given
+ * promiseCapability = { promiseObj, rejectFun }.
+ *
+ * Also,
+ *
  * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
  *
  * NewPromiseReactionJob ( reaction, argument )
@@ -3359,28 +3375,30 @@ static bool CallDefaultPromiseRejectFunction(
  *
  * Steps 1.g-i. "type is Reject" case.
  */
-[[nodiscard]] static bool RunRejectFunction(
-    JSContext* cx, HandleObject onRejectedFunc, HandleValue handlerResult,
+[[nodiscard]] static bool CallPromiseRejectFunction(
+    JSContext* cx, HandleObject rejectFun, HandleValue reason,
     HandleObject promiseObj, HandleSavedFrame unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior) {
-  cx->check(onRejectedFunc);
-  cx->check(handlerResult);
+  cx->check(rejectFun);
+  cx->check(reason);
   cx->check(promiseObj);
 
+  // NewPromiseReactionJob
   // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
   // (implicit)
 
-  if (onRejectedFunc) {
+  if (rejectFun) {
+    // NewPromiseReactionJob
     // Step 1.h. If handlerResult is an abrupt completion, then
     // Step 1.h.i. Return
     //             ? Call(promiseCapability.[[Reject]], undefined,
     //                    « handlerResult.[[Value]] »).
-    RootedValue calleeOrRval(cx, ObjectValue(*onRejectedFunc));
-    return Call(cx, calleeOrRval, UndefinedHandleValue, handlerResult,
-                &calleeOrRval);
+    RootedValue calleeOrRval(cx, ObjectValue(*rejectFun));
+    return Call(cx, calleeOrRval, UndefinedHandleValue, reason, &calleeOrRval);
   }
 
-  // See the comment in RunFulfillFunction for promiseCapability field
+  // NewPromiseReactionJob
+  // See the comment in CallPromiseResolveFunction for promiseCapability field
   //
   // Step f. If promiseCapability is undefined, then
   // Step f.i. Assert: handlerResult is not an abrupt completion.
@@ -3402,23 +3420,28 @@ static bool CallDefaultPromiseRejectFunction(
       return true;
     }
 
+    // NewPromiseReactionJob
     // Step 1.h. If handlerResult is an abrupt completion, then
     // Step 1.h.i. Return
     //             ? Call(promiseCapability.[[Reject]], undefined,
     //                    « handlerResult.[[Value]] »).
-    return RejectPromiseInternal(cx, temporaryPromise, handlerResult,
+    return RejectPromiseInternal(cx, temporaryPromise, reason,
                                  unwrappedRejectionStack);
   }
 
+  // NewPromiseReactionJob
   // Step 1.h. If handlerResult is an abrupt completion, then
   // Step 1.h.i. Return
   //             ? Call(promiseCapability.[[Reject]], undefined,
   //                    « handlerResult.[[Value]] »).
   Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return CallDefaultPromiseRejectFunction(cx, promise, handlerResult,
+    return CallDefaultPromiseRejectFunction(cx, promise, reason,
                                             unwrappedRejectionStack);
   }
+
+  // This case is used by resultCapabilityWithoutResolving in
+  // GetWaitForAllPromise, and nothing should be done.
 
   return true;
 }
@@ -4008,8 +4031,9 @@ static bool PromiseCombinatorElementFunctionAlreadyCalled(
     // Step 4.d.iii.2. Perform
     //                 ? Call(resultCapability.[[Resolve]], undefined,
     //                        « valuesArray »).
-    return RunFulfillFunction(cx, resultCapability.resolve(), values.value(),
-                              resultCapability.promise());
+    return CallPromiseResolveFunction(cx, resultCapability.resolve(),
+                                      values.value(),
+                                      resultCapability.promise());
   }
 
   // Step 4.d.iv. Return resultCapability.[[Promise]].
@@ -4066,7 +4090,8 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
     //                   « valuesArray »).
     RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunFulfillFunction(cx, resolveAllFun, values.value(), promiseObj)) {
+    if (!CallPromiseResolveFunction(cx, resolveAllFun, values.value(),
+                                    promiseObj)) {
       return false;
     }
   }
@@ -4237,8 +4262,9 @@ static bool Promise_static_allSettled(JSContext* cx, unsigned argc, Value* vp) {
     // Step 4.d.iii.2. Perform
     //                 ? Call(resultCapability.[[Resolve]], undefined,
     //                        « valuesArray »).
-    return RunFulfillFunction(cx, resultCapability.resolve(), values.value(),
-                              resultCapability.promise());
+    return CallPromiseResolveFunction(cx, resultCapability.resolve(),
+                                      values.value(),
+                                      resultCapability.promise());
   }
 
   return true;
@@ -4347,7 +4373,8 @@ static bool PromiseAllSettledElementFunction(JSContext* cx, unsigned argc,
     //                   « valuesArray »).
     RootedObject resolveAllFun(cx, data->resolveOrRejectObj());
     RootedObject promiseObj(cx, data->promiseObj());
-    if (!RunFulfillFunction(cx, resolveAllFun, values.value(), promiseObj)) {
+    if (!CallPromiseResolveFunction(cx, resolveAllFun, values.value(),
+                                    promiseObj)) {
       return false;
     }
   }
@@ -4520,8 +4547,8 @@ static bool PromiseAnyRejectElementFunction(JSContext* cx, unsigned argc,
       return false;
     }
 
-    if (!RunRejectFunction(cx, rejectFun, reason, promiseObj, stack,
-                           UnhandledRejectionBehavior::Report)) {
+    if (!CallPromiseRejectFunction(cx, rejectFun, reason, promiseObj, stack,
+                                   UnhandledRejectionBehavior::Report)) {
       return false;
     }
   }
@@ -4693,14 +4720,16 @@ static void ThrowAggregateError(JSContext* cx,
   if (mode == ResolveMode) {
     // PromiseResolve
     // Step 4. Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
-    if (!RunFulfillFunction(cx, capability.resolve(), argVal, promise)) {
+    if (!CallPromiseResolveFunction(cx, capability.resolve(), argVal,
+                                    promise)) {
       return nullptr;
     }
   } else {
     // Promise.reject
     // Step 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-    if (!RunRejectFunction(cx, capability.reject(), argVal, promise, nullptr,
-                           UnhandledRejectionBehavior::Report)) {
+    if (!CallPromiseRejectFunction(cx, capability.reject(), argVal, promise,
+                                   nullptr,
+                                   UnhandledRejectionBehavior::Report)) {
       return nullptr;
     }
   }
