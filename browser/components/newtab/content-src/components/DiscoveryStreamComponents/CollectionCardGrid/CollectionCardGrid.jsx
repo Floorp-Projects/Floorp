@@ -52,7 +52,7 @@ export class CollectionCardGrid extends React.PureComponent {
   }
 
   render() {
-    const { data, dismissible } = this.props;
+    const { data, dismissible, pocket_button_enabled } = this.props;
     if (
       this.state.dismissed ||
       !data ||
@@ -111,6 +111,7 @@ export class CollectionCardGrid extends React.PureComponent {
     const collectionGrid = (
       <div className="ds-collection-card-grid">
         <CardGrid
+          pocket_button_enabled={pocket_button_enabled}
           title={title}
           context={sponsoredByMessage}
           data={recsData}
