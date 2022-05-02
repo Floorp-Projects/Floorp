@@ -986,6 +986,34 @@ static bool IsAlreadyResolvedMaybeWrappedRejectFunction(
 #endif  // DEBUG
 
 /**
+ * Set Promise Resolve Function's and Promise Reject Function's
+ * [[AlreadyResolved]].[[Value]] to true.
+ *
+ * `resolutionFun` can be either of them.
+ */
+static void SetAlreadyResolvedResolutionFunction(JSFunction* resolutionFun) {
+  JSFunction* resolve;
+  JSFunction* reject;
+  if (resolutionFun->maybeNative() == ResolvePromiseFunction) {
+    resolve = resolutionFun;
+    reject = GetRejectFunctionFromResolve(resolutionFun);
+  } else {
+    resolve = GetResolveFunctionFromReject(resolutionFun);
+    reject = resolutionFun;
+  }
+
+  resolve->setExtendedSlot(ResolveFunctionSlot_Promise, UndefinedValue());
+  resolve->setExtendedSlot(ResolveFunctionSlot_RejectFunction,
+                           UndefinedValue());
+
+  reject->setExtendedSlot(RejectFunctionSlot_Promise, UndefinedValue());
+  reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, UndefinedValue());
+
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve));
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject));
+}
+
+/**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
  * CreateResolvingFunctions ( promise )
@@ -1056,8 +1084,6 @@ static bool IsAlreadyResolvedMaybeWrappedRejectFunction(
   return true;
 }
 
-static void ClearResolutionFunctionSlots(JSFunction* resolutionFun);
-
 static bool IsSettledMaybeWrappedPromise(JSObject* promise) {
   if (IsProxy(promise)) {
     promise = UncheckedUnwrap(promise);
@@ -1110,10 +1136,7 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject promise(cx, &promiseVal.toObject());
 
   // Step 6. Set alreadyResolved.[[Value]] to true.
-  //
-  // Here, we only remove the Promise reference from the resolution
-  // functions. Actually marking it as fulfilled/rejected happens later.
-  ClearResolutionFunctionSlots(reject);
+  SetAlreadyResolvedResolutionFunction(reject);
 
   // In some cases the Promise reference on the resolution function won't
   // have been removed during resolution, so we need to check that here,
@@ -1294,10 +1317,7 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject promise(cx, &promiseVal.toObject());
 
   // Step 6. Set alreadyResolved.[[Value]] to true.
-  //
-  // Here, we only remove the Promise reference from the resolution
-  // functions. Actually marking it as fulfilled/rejected happens later.
-  ClearResolutionFunctionSlots(resolve);
+  SetAlreadyResolvedResolutionFunction(resolve);
 
   // In some cases the Promise reference on the resolution function won't
   // have been removed during resolution, so we need to check that here,
@@ -2553,28 +2573,6 @@ static JSFunction* GetResolveFunctionFromPromise(PromiseObject* promise) {
   }
 
   return GetResolveFunctionFromReject(rejectFun);
-}
-
-static void ClearResolutionFunctionSlots(JSFunction* resolutionFun) {
-  JSFunction* resolve;
-  JSFunction* reject;
-  if (resolutionFun->maybeNative() == ResolvePromiseFunction) {
-    resolve = resolutionFun;
-    reject = GetRejectFunctionFromResolve(resolutionFun);
-  } else {
-    resolve = GetResolveFunctionFromReject(resolutionFun);
-    reject = resolutionFun;
-  }
-
-  resolve->setExtendedSlot(ResolveFunctionSlot_Promise, UndefinedValue());
-  resolve->setExtendedSlot(ResolveFunctionSlot_RejectFunction,
-                           UndefinedValue());
-
-  reject->setExtendedSlot(RejectFunctionSlot_Promise, UndefinedValue());
-  reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, UndefinedValue());
-
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve));
-  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject));
 }
 
 /**
