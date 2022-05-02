@@ -49,11 +49,6 @@ constexpr char kVP8IosMaxNumberOfThreadFieldTrial[] =
 constexpr char kVP8IosMaxNumberOfThreadFieldTrialParameter[] = "max_thread";
 #endif
 
-constexpr char kVp8GetEncoderInfoOverrideFieldTrial[] =
-    "WebRTC-VP8-GetEncoderInfoOverride";
-constexpr char kVp8RequestedResolutionAlignmentFieldTrialParameter[] =
-    "requested_resolution_alignment";
-
 constexpr char kVp8ForcePartitionResilience[] =
     "WebRTC-VP8-ForcePartitionResilience";
 
@@ -165,15 +160,6 @@ void ApplyVp8EncoderConfigToVpxConfig(const Vp8EncoderConfig& encoder_config,
   }
 }
 
-absl::optional<int> GetRequestedResolutionAlignmentOverride() {
-  const std::string trial_string =
-      field_trial::FindFullName(kVp8GetEncoderInfoOverrideFieldTrial);
-  FieldTrialOptional<int> requested_resolution_alignment(
-      kVp8RequestedResolutionAlignmentFieldTrialParameter);
-  ParseFieldTrial({&requested_resolution_alignment}, trial_string);
-  return requested_resolution_alignment.GetOptional();
-}
-
 }  // namespace
 
 std::unique_ptr<VideoEncoder> VP8Encoder::Create() {
@@ -230,8 +216,6 @@ LibvpxVp8Encoder::LibvpxVp8Encoder(std::unique_ptr<LibvpxInterface> interface,
                                    VP8Encoder::Settings settings)
     : libvpx_(std::move(interface)),
       rate_control_settings_(RateControlSettings::ParseFromFieldTrials()),
-      requested_resolution_alignment_override_(
-          GetRequestedResolutionAlignmentOverride()),
       frame_buffer_controller_factory_(
           std::move(settings.frame_buffer_controller_factory)),
       resolution_bitrate_limits_(std::move(settings.resolution_bitrate_limits)),
@@ -1189,9 +1173,15 @@ VideoEncoder::EncoderInfo LibvpxVp8Encoder::GetEncoderInfo() const {
   if (!resolution_bitrate_limits_.empty()) {
     info.resolution_bitrate_limits = resolution_bitrate_limits_;
   }
-  if (requested_resolution_alignment_override_) {
+  if (encoder_info_override_.requested_resolution_alignment()) {
     info.requested_resolution_alignment =
-        *requested_resolution_alignment_override_;
+        *encoder_info_override_.requested_resolution_alignment();
+    info.apply_alignment_to_all_simulcast_layers =
+        encoder_info_override_.apply_alignment_to_all_simulcast_layers();
+  }
+  if (!encoder_info_override_.resolution_bitrate_limits().empty()) {
+    info.resolution_bitrate_limits =
+        encoder_info_override_.resolution_bitrate_limits();
   }
 
   const bool enable_scaling =

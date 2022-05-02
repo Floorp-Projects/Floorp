@@ -26,6 +26,7 @@
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/utility/framerate_controller.h"
 #include "rtc_base/experiments/cpu_speed_experiment.h"
+#include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vpx_encoder.h"
@@ -102,9 +103,6 @@ class LibvpxVp8Encoder : public VideoEncoder {
   const CpuSpeedExperiment experimental_cpu_speed_config_arm_;
   const RateControlSettings rate_control_settings_;
 
-  // EncoderInfo::requested_resolution_alignment override from field trial.
-  const absl::optional<int> requested_resolution_alignment_override_;
-
   EncodedImageCallback* encoded_complete_callback_ = nullptr;
   VideoCodec codec_;
   bool inited_ = false;
@@ -146,6 +144,8 @@ class LibvpxVp8Encoder : public VideoEncoder {
   int num_steady_state_frames_ = 0;
 
   FecControllerOverride* fec_controller_override_ = nullptr;
+
+  const LibvpxVp8EncoderInfoSettings encoder_info_override_;
 };
 
 }  // namespace webrtc
