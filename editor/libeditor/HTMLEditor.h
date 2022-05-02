@@ -1518,10 +1518,10 @@ class HTMLEditor final : public EditorBase,
    *                            element into the DOM tree. Note that this should
    *                            not touch outside given element because doing it
    *                            would break range updater's result.
-   * @return                    The created new element node or an error.
+   * @return                    The created new element node and candidate caret
+   *                            position.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateAndInsertElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult CreateAndInsertElement(
       WithTransaction aWithTransaction, nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);

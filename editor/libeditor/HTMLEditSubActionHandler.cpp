@@ -3109,27 +3109,39 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
             [&newListItemElement, &aListItemElementTagName](
                 HTMLEditor& aHTMLEditor, Element& aListElement,
-                const EditorDOMPoint& aPointToInsert)
-                MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                  const auto withTransaction = aListElement.IsInComposedDoc()
-                                                   ? WithTransaction::Yes
-                                                   : WithTransaction::No;
-                  Result<RefPtr<Element>, nsresult> listItemElementOrError =
-                      aHTMLEditor.CreateAndInsertElement(
-                          withTransaction, aListItemElementTagName,
-                          EditorDOMPoint(&aListElement, 0u));
-                  if (listItemElementOrError.isErr()) {
-                    NS_WARNING(
-                        nsPrintfCString(
-                            "HTMLEditor::CreateAndInsertElement(%s) failed",
-                            ToString(withTransaction).c_str())
-                            .get());
-                    return listItemElementOrError.unwrapErr();
-                  }
-                  MOZ_ASSERT(listItemElementOrError.inspect());
-                  newListItemElement = listItemElementOrError.unwrap();
-                  return NS_OK;
-                });
+                const EditorDOMPoint&
+                    aPointToInsert) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+              const auto withTransaction = aListElement.IsInComposedDoc()
+                                               ? WithTransaction::Yes
+                                               : WithTransaction::No;
+              CreateElementResult createNewListItemElementResult =
+                  aHTMLEditor.CreateAndInsertElement(
+                      withTransaction, aListItemElementTagName,
+                      EditorDOMPoint(&aListElement, 0u));
+              if (createNewListItemElementResult.isErr()) {
+                NS_WARNING(nsPrintfCString(
+                               "HTMLEditor::CreateAndInsertElement(%s) failed",
+                               ToString(withTransaction).c_str())
+                               .get());
+                return createNewListItemElementResult.unwrapErr();
+              }
+              nsresult rv = createNewListItemElementResult.SuggestCaretPointTo(
+                  aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                                SuggestCaret::AndIgnoreTrivialError});
+              if (NS_FAILED(rv)) {
+                NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+                return rv;
+              }
+              NS_WARNING_ASSERTION(
+                  rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                  "CreateElementResult::SuggestCaretPointTo() failed, but "
+                  "ignored");
+              newListItemElement =
+                  createNewListItemElementResult.UnwrapNewNode();
+              MOZ_ASSERT(newListItemElement);
+              return NS_OK;
+            });
     if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -3276,23 +3288,34 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           }
           SplitNodeResult splitListItemParentResult =
               SplitNodeWithTransaction(atContent);
-          if (MOZ_UNLIKELY(splitListItemParentResult.Failed())) {
+          if (splitListItemParentResult.Failed()) {
             NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
             return EditActionResult(splitListItemParentResult.Rv());
           }
           MOZ_ASSERT(splitListItemParentResult.DidSplit());
-          Result<RefPtr<Element>, nsresult> maybeNewListElement =
+          CreateElementResult createNewListElementResult =
               CreateAndInsertElement(
                   WithTransaction::Yes, aListElementTagName,
                   splitListItemParentResult.AtNextContent<EditorDOMPoint>());
-          if (maybeNewListElement.isErr()) {
+          if (createNewListElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
                 "failed");
-            return EditActionResult(maybeNewListElement.unwrapErr());
+            return EditActionResult(createNewListElementResult.unwrapErr());
           }
-          MOZ_ASSERT(maybeNewListElement.inspect());
-          curList = maybeNewListElement.unwrap();
+          nsresult rv = createNewListElementResult.SuggestCaretPointTo(
+              *this, {SuggestCaret::OnlyIfHasSuggestion,
+                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                      SuggestCaret::AndIgnoreTrivialError});
+          if (NS_FAILED(rv)) {
+            NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+          }
+          NS_WARNING_ASSERTION(
+              rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+              "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+          curList = createNewListElementResult.UnwrapNewNode();
+          MOZ_ASSERT(curList);
         }
         // Then, move current node into current list element.
         nsresult rv = MoveNodeToEndWithTransaction(*content, *curList);
@@ -5759,7 +5782,7 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   // Otherwise, we need to insert a `<div>` element to set `align` attribute.
   // XXX Don't insert the new `<div>` element until we set `align` attribute
   //     for avoiding running mutation event listeners.
-  Result<RefPtr<Element>, nsresult> maybeNewDivElement = CreateAndInsertElement(
+  CreateElementResult createNewDivElementResult = CreateAndInsertElement(
       WithTransaction::Yes, *nsGkAtoms::div, EditorDOMPoint(&aBlockElement, 0u),
       // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
       [&aAlignType](HTMLEditor& aHTMLEditor, Element& aDivElement,
@@ -5777,21 +5800,32 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
                 .get());
         return rv;
       });
-  if (maybeNewDivElement.isErr()) {
+  if (createNewDivElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes, "
         "nsGkAtoms::div) failed");
-    return maybeNewDivElement.unwrapErr();
+    return createNewDivElementResult.unwrapErr();
   }
-  MOZ_ASSERT(maybeNewDivElement.inspect());
+  nsresult rv = createNewDivElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  RefPtr<Element> newDivElement = createNewDivElementResult.UnwrapNewNode();
+  MOZ_ASSERT(newDivElement);
   // XXX This is tricky and does not work with mutation event listeners.
   //     But I'm not sure what we should do if new content is inserted.
   //     Anyway, I don't think that we should move editable contents
   //     over non-editable contents.  Chrome does no do that.
-  while (lastEditableContent &&
-         (lastEditableContent != maybeNewDivElement.inspect())) {
-    nsresult rv = MoveNodeWithTransaction(
-        *lastEditableContent, EditorDOMPoint(maybeNewDivElement.inspect(), 0));
+  while (lastEditableContent && (lastEditableContent != newDivElement)) {
+    nsresult rv = MoveNodeWithTransaction(*lastEditableContent,
+                                          EditorDOMPoint(newDivElement, 0u));
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -7051,7 +7085,7 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
           : DefaultParagraphSeparatorTagName();
   // We want a wrapper element even if we separate with a <br>.
   // MOZ_KnownLive(newParagraphTagName) because it's available until shutdown.
-  Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
+  const CreateElementResult createNewParagraphElementResult =
       CreateAndInsertElement(
           WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
           EditorDOMPoint::After(*leftHeadingElement),
@@ -7077,15 +7111,26 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
             }
             return NS_OK;
           });
-  if (MOZ_UNLIKELY(maybeNewParagraphElement.isErr())) {
+  if (createNewParagraphElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return Err(maybeNewParagraphElement.unwrapErr());
+    return Err(createNewParagraphElementResult.unwrapErr());
   }
-  MOZ_ASSERT(maybeNewParagraphElement.inspect());
+  rv = createNewParagraphElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(createNewParagraphElementResult.GetNewNode());
 
   // Put caret at the <br> element in the following paragraph.
-  return EditorDOMPoint(maybeNewParagraphElement.unwrap().get(), 0u);
+  return EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u);
 }
 
 EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
@@ -7488,7 +7533,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
             ? *nsGkAtoms::p
             : DefaultParagraphSeparatorTagName();
     // MOZ_KnownLive(newParagraphTagName) because it's available until shutdown.
-    Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
+    const CreateElementResult createNewParagraphElementResult =
         CreateAndInsertElement(
             WithTransaction::Yes, MOZ_KnownLive(newParagraphTagName),
             afterLeftListElement,
@@ -7516,13 +7561,24 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
               }
               return NS_OK;
             });
-    if (MOZ_UNLIKELY(maybeNewParagraphElement.isErr())) {
+    if (createNewParagraphElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-      return Err(maybeNewParagraphElement.unwrapErr());
+      return Err(createNewParagraphElementResult.unwrapErr());
     }
-    MOZ_ASSERT(maybeNewParagraphElement.inspect());
-    return EditorDOMPoint(maybeNewParagraphElement.inspect(), 0u);
+    rv = createNewParagraphElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    MOZ_ASSERT(createNewParagraphElementResult.GetNewNode());
+    return EditorDOMPoint(createNewParagraphElementResult.GetNewNode(), 0u);
   }
 
   // If aListItemElement has some content or aListItemElement is empty but it's
@@ -7598,28 +7654,40 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
                                                         : *nsGkAtoms::dt;
       // MOZ_KnownLive(nextDefinitionListItemTagName) because it's available
       // until shutdown.
-      Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
+      CreateElementResult createNewListItemElementResult =
           CreateAndInsertElement(WithTransaction::Yes,
                                  MOZ_KnownLive(nextDefinitionListItemTagName),
                                  EditorDOMPoint::After(rightListItemElement));
-      if (MOZ_UNLIKELY(maybeNewListItemElement.isErr())) {
+      if (createNewListItemElementResult.isErr()) {
         NS_WARNING(
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-        return Err(maybeNewListItemElement.unwrapErr());
+        return Err(createNewListItemElementResult.unwrapErr());
       }
-      MOZ_ASSERT(maybeNewListItemElement.inspect());
+      nsresult rv = createNewListItemElementResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+        return Err(rv);
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+      RefPtr<Element> newListItemElement =
+          createNewListItemElementResult.UnwrapNewNode();
+      MOZ_ASSERT(newListItemElement);
       // MOZ_KnownLive(rightListItemElement) because it's grabbed by
       // splitListItemResult.
-      nsresult rv =
-          DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
-      if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+      rv = DeleteNodeWithTransaction(MOZ_KnownLive(rightListItemElement));
+      if (NS_WARN_IF(Destroyed())) {
         return Err(NS_ERROR_EDITOR_DESTROYED);
       }
-      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
         return Err(rv);
       }
-      return EditorDOMPoint(maybeNewListItemElement.unwrap(), 0u);
+      return EditorDOMPoint(newListItemElement, 0u);
     }
 
     // If aListItemElement is a <li> and the right list item becomes empty or a
@@ -8219,24 +8287,35 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
     }
   }
 
-  Result<RefPtr<Element>, nsresult> newElementOrError = CreateAndInsertElement(
+  CreateElementResult createNewElementResult = CreateAndInsertElement(
       WithTransaction::Yes, aTagName, splitPoint, aInitializer);
-  if (MOZ_UNLIKELY(newElementOrError.isErr())) {
+  if (createNewElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
-    return newElementOrError;
+    return Err(createNewElementResult.unwrapErr());
   }
-  MOZ_ASSERT(newElementOrError.inspect());
+  nsresult rv = createNewElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(createNewElementResult.GetNewNode());
 
   // If the new block element was moved to different element or removed by
   // the web app via mutation event listener, we should stop handling this
   // action since we cannot handle each of a lot of edge cases.
-  if (MOZ_UNLIKELY(NS_WARN_IF(newElementOrError.inspect()->GetParentNode() !=
-                              splitPoint.GetContainer()))) {
+  if (NS_WARN_IF(createNewElementResult.GetNewNode()->GetParentNode() !=
+                 splitPoint.GetContainer())) {
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
-  return newElementOrError;
+  return createNewElementResult.UnwrapNewNode();
 }
 
 nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
@@ -9922,18 +10001,28 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           MOZ_ASSERT(newDivElementOrError.inspect());
           targetDivElement = newDivElementOrError.unwrap();
         }
-        Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateAndInsertElement(WithTransaction::Yes,
-                                   MOZ_KnownLive(*ULOrOLOrDLTagName),
-                                   EditorDOMPoint::AtEndOf(targetDivElement));
-        if (maybeNewListElement.isErr()) {
+        CreateElementResult createNewListElementResult = CreateAndInsertElement(
+            WithTransaction::Yes, MOZ_KnownLive(*ULOrOLOrDLTagName),
+            EditorDOMPoint::AtEndOf(targetDivElement));
+        if (createNewListElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
               "failed");
-          return maybeNewListElement.unwrapErr();
+          return createNewListElementResult.unwrapErr();
         }
-        MOZ_ASSERT(maybeNewListElement.inspect());
-        createdListElement = maybeNewListElement.unwrap();
+        nsresult rv = createNewListElementResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+          return Err(rv);
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+        createdListElement = createNewListElementResult.UnwrapNewNode();
+        MOZ_ASSERT(createdListElement);
       }
       // Move current node (maybe, assumed as a list item element) into the
       // new list element in the target `<div>` element to be positioned
@@ -10004,18 +10093,28 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           targetDivElement = newDivElementOrError.unwrap();
         }
         // XXX So, createdListElement may be set to a non-list element.
-        Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateAndInsertElement(WithTransaction::Yes,
-                                   MOZ_KnownLive(*containerName),
-                                   EditorDOMPoint::AtEndOf(targetDivElement));
-        if (maybeNewListElement.isErr()) {
+        CreateElementResult createNewListElementResult = CreateAndInsertElement(
+            WithTransaction::Yes, MOZ_KnownLive(*containerName),
+            EditorDOMPoint::AtEndOf(targetDivElement));
+        if (createNewListElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) "
               "failed");
-          return maybeNewListElement.unwrapErr();
+          return createNewListElementResult.unwrapErr();
         }
-        MOZ_ASSERT(maybeNewListElement.inspect());
-        createdListElement = maybeNewListElement.unwrap();
+        nsresult rv = createNewListElementResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+          return Err(rv);
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+        createdListElement = createNewListElementResult.UnwrapNewNode();
+        MOZ_ASSERT(createdListElement);
       }
       // Move current list item element into the createdListElement (could be
       // non-list element due to the above bug) in a candidate `<div>` element
