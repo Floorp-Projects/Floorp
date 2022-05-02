@@ -17,6 +17,7 @@
 #include "api/rtp_headers.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/extended_reports.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/fir.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/loss_notification.h"
@@ -226,6 +227,16 @@ struct LoggedRtcpPacketLossNotification {
 
   int64_t timestamp_us;
   rtcp::LossNotification loss_notification;
+};
+
+struct LoggedRtcpPacketBye {
+  LoggedRtcpPacketBye() = default;
+
+  int64_t log_time_us() const { return timestamp_us; }
+  int64_t log_time_ms() const { return timestamp_us / 1000; }
+
+  int64_t timestamp_us;
+  rtcp::Bye bye;
 };
 
 struct LoggedStartEvent {
