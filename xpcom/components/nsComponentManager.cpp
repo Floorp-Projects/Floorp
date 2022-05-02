@@ -1033,9 +1033,8 @@ nsComponentManagerImpl::GetClassObjectByContractID(const char* aContractID,
  * released and not held onto for any longer.
  */
 NS_IMETHODIMP
-nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
-                                       nsISupports* aDelegate,
-                                       const nsIID& aIID, void** aResult) {
+nsComponentManagerImpl::CreateInstance(const nsCID& aClass, const nsIID& aIID,
+                                       void** aResult) {
   // test this first, since there's no point in creating a component during
   // shutdown -- whether it's available or not would depend on the order it
   // occurs in the list
@@ -1073,7 +1072,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
   nsresult rv;
   nsCOMPtr<nsIFactory> factory = entry->GetFactory();
   if (factory) {
-    rv = factory->CreateInstance(aDelegate, aIID, aResult);
+    rv = factory->CreateInstance(nullptr, aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
       rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
@@ -1108,7 +1107,6 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
  */
 NS_IMETHODIMP
 nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
-                                                   nsISupports* aDelegate,
                                                    const nsIID& aIID,
                                                    void** aResult) {
   if (NS_WARN_IF(!aContractID)) {
@@ -1157,7 +1155,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
   nsresult rv;
   nsCOMPtr<nsIFactory> factory = entry->GetFactory();
   if (factory) {
-    rv = factory->CreateInstance(aDelegate, aIID, aResult);
+    rv = factory->CreateInstance(nullptr, aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
       rv = NS_ERROR_SERVICE_NOT_AVAILABLE;

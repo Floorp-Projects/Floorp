@@ -5,7 +5,6 @@
 use crate::interfaces::{nsIComponentManager, nsIComponentRegistrar, nsIServiceManager};
 use crate::{GetterAddrefs, RefPtr, XpCom};
 use std::ffi::CStr;
-use std::ptr;
 
 /// Get a reference to the global `nsIComponentManager`.
 ///
@@ -40,7 +39,7 @@ pub fn create_instance<T: XpCom>(id: &CStr) -> Option<RefPtr<T>> {
     unsafe {
         let mut ga = GetterAddrefs::<T>::new();
         if component_manager()?
-            .CreateInstanceByContractID(id.as_ptr(), ptr::null(), &T::IID, ga.void_ptr())
+            .CreateInstanceByContractID(id.as_ptr(), &T::IID, ga.void_ptr())
             .succeeded()
         {
             ga.refptr()

@@ -587,8 +587,7 @@ static bool CIGSHelper(JSContext* aCx, unsigned aArgc, Value* aVp,
       return Throw(aCx, NS_ERROR_XPC_GS_RETURNED_FAILURE);
     }
   } else {
-    rv = CallCreateInstance(contractID.get(), nullptr, *iid,
-                            getter_AddRefs(result));
+    rv = CallCreateInstance(contractID.get(), *iid, getter_AddRefs(result));
     if (NS_FAILED(rv) || !result) {
       return Throw(aCx, NS_ERROR_XPC_CI_RETURNED_FAILURE);
     }
