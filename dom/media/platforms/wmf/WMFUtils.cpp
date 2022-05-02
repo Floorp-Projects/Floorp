@@ -6,7 +6,7 @@
 
 #include "WMFUtils.h"
 
-#include <Mfidl.h>
+#include <mfidl.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <initguid.h>
