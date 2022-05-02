@@ -2066,6 +2066,17 @@ nsresult EditorBase::InsertNodeWithTransaction(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
+  if (NS_SUCCEEDED(rv) && AllowsTransactionsToChangeSelection()) {
+    const auto pointToPutCaret =
+        transaction->SuggestPointToPutCaret<EditorRawDOMPoint>();
+    if (pointToPutCaret.IsSet()) {
+      DebugOnly<nsresult> rvIgnored = CollapseSelectionTo(pointToPutCaret);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rvIgnored) || rvIgnored == NS_ERROR_EDITOR_DESTROYED,
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
+    }
+  }
+
   DebugOnly<nsresult> rvIgnored =
       RangeUpdaterRef().SelAdjInsertNode(aPointToInsert);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
@@ -2075,7 +2086,7 @@ nsresult EditorBase::InsertNodeWithTransaction(
     TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToInsert);
   }
 
-  return rv;
+  return MOZ_UNLIKELY(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
 }
 
 CreateElementResult

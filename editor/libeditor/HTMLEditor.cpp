@@ -3022,6 +3022,18 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::CreateAndInsertElement(
         rv = aWithTransaction == WithTransaction::Yes
                  ? DoTransactionInternal(transaction)
                  : transaction->DoTransaction();
+        if (NS_SUCCEEDED(rv) && AllowsTransactionsToChangeSelection()) {
+          const auto pointToPutCaret =
+              transaction->SuggestPointToPutCaret<EditorRawDOMPoint>();
+          if (pointToPutCaret.IsSet()) {
+            DebugOnly<nsresult> rvIgnored =
+                CollapseSelectionTo(pointToPutCaret);
+            NS_WARNING_ASSERTION(
+                NS_SUCCEEDED(rvIgnored) ||
+                    rvIgnored == NS_ERROR_EDITOR_DESTROYED,
+                "EditorBase::CollapseSelectionTo() failed, but ignored");
+          }
+        }
       }
     }
     if (MOZ_UNLIKELY(NS_FAILED(rv))) {
