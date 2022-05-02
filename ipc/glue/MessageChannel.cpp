@@ -559,12 +559,21 @@ int MessageChannel::DispatchingSyncMessageNestedLevel() const {
              : 0;
 }
 
+static const char* StringFromIPCSide(Side side) {
+  switch (side) {
+    case ChildSide:
+      return "Child";
+    case ParentSide:
+      return "Parent";
+    default:
+      return "Unknown";
+  }
+}
+
 static void PrintErrorMessage(Side side, const char* channelName,
                               const char* msg) {
-  const char* from = (side == ChildSide)
-                         ? "Child"
-                         : ((side == ParentSide) ? "Parent" : "Unknown");
-  printf_stderr("\n###!!! [%s][%s] Error: %s\n\n", from, channelName, msg);
+  printf_stderr("\n###!!! [%s][%s] Error: %s\n\n", StringFromIPCSide(side),
+                channelName, msg);
 }
 
 bool MessageChannel::Connected() const {
@@ -1823,10 +1832,13 @@ void MessageChannel::ReportConnectionError(const char* aFunctionName,
       MOZ_CRASH("unreached");
   }
 
-  char reason[512];
-  SprintfLiteral(reason, "%s(msgname=%s) %s", aFunctionName,
-                 IPC::StringFromIPCMessageType(aMsgType), errorMsg);
-  PrintErrorMessage(mSide, mName, reason);
+  // IPC connection errors are fairly common, especially "Channel closing: too
+  // late to send/recv, messages will be lost", so shouldn't be being reported
+  // on release builds, as that's misleading as to their severity.
+  NS_WARNING(nsPrintfCString("IPC Connection Error: [%s][%s] %s(msgname=%s) %s",
+                             StringFromIPCSide(mSide), mName, aFunctionName,
+                             IPC::StringFromIPCMessageType(aMsgType), errorMsg)
+                 .get());
 
   MonitorAutoUnlock unlock(*mMonitor);
   mListener->ProcessingError(MsgDropped, errorMsg);
