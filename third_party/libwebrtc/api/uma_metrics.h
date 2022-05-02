@@ -191,6 +191,17 @@ enum BundleUsage {
   kBundleUsageMax
 };
 
+// Metrics for reporting configured BUNDLE policy, mapping directly to
+// https://w3c.github.io/webrtc-pc/#rtcbundlepolicy-enum
+// These values are persisted to logs. Entries should not be renumbered and
+// numeric values should never be reused.
+enum BundlePolicyUsage {
+  kBundlePolicyUsageBalanced = 0,
+  kBundlePolicyUsageMaxBundle = 1,
+  kBundlePolicyUsageMaxCompat = 2,
+  kBundlePolicyUsageMax
+};
+
 // When adding new metrics please consider using the style described in
 // https://chromium.googlesource.com/chromium/src.git/+/HEAD/tools/metrics/histograms/README.md#usage
 // instead of the legacy enums used above.
