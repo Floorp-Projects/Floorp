@@ -90,7 +90,7 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">გამოტოვება</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message">ორი კვირის მოუნახულებელი ჩანართები, აქ გადმოვა.</string>
+    <string name="tab_tray_inactive_onboarding_message">ორი კვირის მოუნახულებელი ჩანართები აქ გადმოვა.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">გამორთვა პარამეტრებიდან</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
@@ -243,6 +243,9 @@
     <string name="search_engine_suggestions_title">საძიებოდ %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">მოიძიეთ პირდაპირ მისამართების ველიდან</string>
+
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">ძიების პარამეტრები</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
@@ -666,7 +669,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">ძველი ჩანართების უქმეებში გადატანა</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">ორი კვირის მოუნახულებელი ჩანართები, გადმოვა უქმეების არეში.</string>
+    <string name="preferences_inactive_tabs_title">ორი კვირის მოუნახულებელი ჩანართები გადმოვა უქმეების არეში.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -787,6 +790,11 @@
     <string name="history_older">უფრო ძველი</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ისტორია არ არის</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">სხვა მოწყობილობებიდან დასინქრონებული</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">სხვა მოწყობილობებიდან</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1169,6 +1177,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">იშლება დათვალიერების მონაცემები…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">წაიშლება ყველა ჩანაწერი.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">გაუქმება</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">წაშლა</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">ჯგუფი წაიშალა</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview ახლა უკვე გახდა Firefox Nightly</string>
@@ -1522,7 +1539,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ანგარიშების მენიუს დალაგება</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">თვითშევსება</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">მისამართები</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">საკრედიტო ბარათები</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1539,6 +1560,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">შენახული ბარათების მართვა</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">მისამართის დამატება</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">მისამართების დამატება</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ბარათის დამატება</string>
     <!-- Title of the "Edit card" screen -->
@@ -1590,6 +1615,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">გახსენით მოწყობილობა</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">გახსენით, შენახული ბარათის გამოსაყენებლად</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">მისამართის დამატება</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">მისამართების მართვა</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">სრული სახელი</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">ქუჩის მისამართი</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">ქალაქი</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">მხარე</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">საფოსტო ნომერი</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">ტელეფონი</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">ელფოსტა</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">შენახვა</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">გაუქმება</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">მისამართის წაშლა</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">საძიებო სისტემის დამატება</string>

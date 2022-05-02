@@ -256,6 +256,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Buscar directamente desde la barra de direcciones</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Configuración de búsquedas</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Novedades de Firefox</string>
@@ -803,6 +806,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">No hay ningún historial</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Sincronizado desde otros dispositivos</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Desde otros dispositivos</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Descargas eliminadas</string>
@@ -1206,6 +1214,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Eliminando datos de navegación…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Esto eliminará todos los elementos.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Cancelar</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Eliminar</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Grupo eliminado</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview es ahora Firefox Nightly</string>
@@ -1560,7 +1577,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordenar menú de inicio de sesión</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Autocompletado</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Direcciones</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Tarjetas de crédito</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1577,6 +1598,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Administrar tarjetas guardadas</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Añadir dirección</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Administrar direcciones</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Añadir tarjeta</string>
     <!-- Title of the "Edit card" screen -->
@@ -1628,6 +1653,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">Desbloquear tu dispositivo</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Desbloquear para usar la información de la tarjeta de crédito almacenada</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Añadir dirección</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Administrar direcciones</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">Nombre completo</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Domicilio</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Ciudad</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Estado</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Código postal</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Teléfono</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Correo electrónico</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Guardar</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Cancelar</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Eliminar dirección</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Añadir buscador</string>

@@ -257,6 +257,9 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚੋਂ ਸਿ਼ੱਧਾ ਖੋਜੋ</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">ਖੋਜ ਸੈਟਿੰਗਾਂ</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
@@ -807,6 +810,11 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ਇ਼ੱਥੇ ਕੋਈ ਅਤੀਤ ਨਹੀਂ ਹੈ</string>
 
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੇ</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">ਹੋਰ ਡਿਵਾਈਸਾਂ ਤੋਂ</string>
+
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ਡਾਊਨਲੋਡ ਹਟਾਏ ਗਏ</string>
@@ -1193,6 +1201,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">…ਬਰਾਊਜ਼ ਕਰਨ ਵਾਲਾ ਡਾਟਾ ਹਟਾਇਆ ਜਾ ਰਿਹਾ ਹੈ</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">ਇਹ ਸਭ ਚੀਜ਼ਾਂ ਨੂੰ ਹਟਾਏਗਾ।</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">ਰੱਦ ਕਰੋ</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">ਹਟਾਓ</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">ਗਰੁੱਪ ਹਟਾਇਆ</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">ਫਾਇਰਫਾਕਸ ਪ੍ਰੀਵਿਊ ਹੁਣ ਫਾਇਰਫਾਕਸ ਨਾਈਟਲੀ ਹੈ</string>
@@ -1544,7 +1561,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ਲਾਗਇਨ ਲੜੀਬਧ ਮੇਨੂ</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">ਆਪੇ-ਭਰੋ</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">ਸਿਰਨਾਵੇਂ</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">ਕਰੈਡਿਟ ਕਾਰਡ</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1559,6 +1580,10 @@
     <string name="preferences_credit_cards_add_credit_card">ਕਰੈਡਿਟ ਕਾਰਡ ਜੋੜੋ</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">ਸੰਭਾਲੇ ਹੋਏ ਕਾਰਡਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">ਸਿਰਨਾਵਾਂ ਜੋੜੋ</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ਕਾਰਡ ਜੋੜੋ</string>
     <!-- Title of the "Edit card" screen -->
@@ -1610,6 +1635,31 @@
     <string name="credit_cards_biometric_prompt_message_pin">ਆਪਣਾ ਡਿਵਾਇਸ ਅਣ-ਲਾਕ ਕਰੋ</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ਸੰਭਾਲੀ ਕਰੈਡਿਟ ਕਾਰਡ ਜਾਣਕਾਰੀ ਵਰਤਣ ਲਈ ਅਣ-ਲਾਕ ਕਰੋ</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">ਸਿਰਨਾਵਾਂ ਜੋੜੋ</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">ਪੂਰਾ ਨਾਂ</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">ਸੜਕ ਸਿਰਨਾਵਾਂ</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">ਸ਼ਹਿਰ</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">ਸੂਬਾ</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">ਜ਼ਿਪ</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">ਫ਼ੋਨ</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">ਈ-ਮੇਲ</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">ਸੰਭਾਲੋ</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">ਰੱਦ ਕਰੋ</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">ਸਿਰਨਾਵੇਂ ਨੂੰ ਹਟਾਓ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ਖੋਜ ਇੰਜਣ ਜੋੜੋ</string>
