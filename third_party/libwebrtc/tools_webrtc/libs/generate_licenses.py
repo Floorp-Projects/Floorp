@@ -78,6 +78,8 @@ LIB_TO_LICENSES_DICT = {
     # TODO(bugs.webrtc.org/1110): Remove this hack. This is not a lib.
     # For some reason it is listed as so in _GetThirdPartyLibraries.
     'android_deps': [],
+    # This is not a library but a collection of libraries.
+    'androidx': [],
 
     # Compile time dependencies, no license needed:
     'yasm': [],
