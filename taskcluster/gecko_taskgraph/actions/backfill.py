@@ -20,8 +20,6 @@ from .util import (
     get_pushes,
     get_pushes_from_params_input,
     trigger_action,
-    get_downstream_browsertime_tasks,
-    rename_browsertime_vismet_task,
 )
 
 logger = logging.getLogger(__name__)
@@ -285,12 +283,6 @@ def add_task_with_original_manifests(
         label = new_label(label, full_task_graph.tasks)
 
     to_run = [label]
-    if "browsertime" in label:
-        if "vismet" in label:
-            label = rename_browsertime_vismet_task(label)
-        to_run = get_downstream_browsertime_tasks(
-            [label], full_task_graph, label_to_taskid
-        )
 
     modifier = do_not_modify
     test_manifests = input.get("test_manifests")
@@ -390,22 +382,10 @@ def filter_raptor_jobs(full_task_graph, label_to_taskid):
             # add the browsertime test
             if label not in label_to_taskid:
                 to_run.append(label)
-            # add the vismet job
-            vismet_label = get_downstream_browsertime_tasks(
-                [label], full_task_graph, label_to_taskid
-            )
-            if vismet_label not in label_to_taskid:
-                to_run.extend(vismet_label)
         if "geckoview" in entry.attributes.get("raptor_try_name", ""):
             # add the pageload test
             if label not in label_to_taskid:
                 to_run.append(label)
-            # add the vismet job
-            vismet_label = get_downstream_browsertime_tasks(
-                [label], full_task_graph, label_to_taskid
-            )
-            if vismet_label not in label_to_taskid:
-                to_run.extend(vismet_label)
     return to_run
 
 
