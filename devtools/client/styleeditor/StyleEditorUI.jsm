@@ -10,6 +10,9 @@ const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
+const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
+const { OS } = require("resource://gre/modules/osfile.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   getString,
@@ -25,34 +28,10 @@ const {
 } = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { PrefObserver } = require("devtools/client/shared/prefs");
-
-loader.lazyRequireGetter(
-  this,
-  "KeyCodes",
-  "devtools/client/shared/keycodes",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
-  "OriginalSource",
-  "devtools/client/styleeditor/original-source",
-  true
-);
-
-loader.lazyRequireGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm",
-  true
-);
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
+const { KeyCodes } = require("devtools/client/shared/keycodes");
+const {
+  OriginalSource,
+} = require("devtools/client/styleeditor/original-source");
 
 loader.lazyRequireGetter(
   this,
@@ -121,7 +100,6 @@ function StyleEditorUI(toolbox, commands, panelDoc, cssProperties) {
   this._copyUrl = this._copyUrl.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
-  this._onFilterInputChange = this._onFilterInputChange.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.styleeditor.");
   this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
@@ -178,79 +156,33 @@ StyleEditorUI.prototype = {
    * Build the initial UI and wire buttons with event handlers.
    */
   createUI: function() {
-    this._filterInput = this._root.querySelector(".devtools-filterinput");
-    this._filterInputClearButton = this._root.querySelector(
-      ".devtools-searchinput-clear"
-    );
-
-    this._uiAbortController = new AbortController();
-    const eventListenersConfig = { signal: this._uiAbortController.signal };
-
     this._view = new SplitView(this._root);
-    this._view.on(
-      "active-summary-cleared",
-      () => {
-        this.selectedEditor = null;
-      },
-      eventListenersConfig
-    );
-    this._view.on(
-      "filter-state-change",
-      data => {
-        this._filterInput
-          .closest(".devtools-searchbox")
-          .classList.toggle("devtools-searchbox-no-match", !!data.allFiltered);
-      },
-      eventListenersConfig
-    );
 
-    this._root.querySelector(".style-editor-newButton").addEventListener(
-      "click",
-      async () => {
+    this._root
+      .querySelector(".style-editor-newButton")
+      .addEventListener("click", async () => {
         const stylesheetsFront = await this.currentTarget.getFront(
           "stylesheets"
         );
         stylesheetsFront.addStyleSheet(null);
-        this._clearFilterInput();
-      },
-      eventListenersConfig
-    );
+      });
 
-    this._root.querySelector(".style-editor-importButton").addEventListener(
-      "click",
-      () => {
+    this._root
+      .querySelector(".style-editor-importButton")
+      .addEventListener("click", () => {
         this._importFromFile(this._mockImportFile || null, this._window);
-        this._clearFilterInput();
-      },
-      eventListenersConfig
-    );
+      });
 
     this._root
       .querySelector("#style-editor-options")
-      .addEventListener(
-        "click",
-        this._onOptionsButtonClick,
-        eventListenersConfig
-      );
-
-    this._filterInput.addEventListener(
-      "input",
-      this._onFilterInputChange,
-      eventListenersConfig
-    );
-
-    this._filterInputClearButton.addEventListener(
-      "click",
-      () => this._clearFilterInput(),
-      eventListenersConfig
-    );
+      .addEventListener("click", this._onOptionsButtonClick);
 
     this._panelDoc.addEventListener(
       "contextmenu",
       () => {
         this._contextMenuStyleSheet = null;
       },
-      { ...eventListenersConfig, capture: true }
+      true
     );
 
     this._optionsButton = this._panelDoc.getElementById("style-editor-options");
@@ -258,39 +190,19 @@ StyleEditorUI.prototype = {
     this._contextMenu = this._panelDoc.getElementById("sidebar-context");
     this._contextMenu.addEventListener(
       "popupshowing",
-      this._updateContextMenuItems,
-      eventListenersConfig
+      this._updateContextMenuItems
     );
 
     this._openLinkNewTabItem = this._panelDoc.getElementById(
       "context-openlinknewtab"
     );
-    this._openLinkNewTabItem.addEventListener(
-      "command",
-      this._openLinkNewTab,
-      eventListenersConfig
-    );
+    this._openLinkNewTabItem.addEventListener("command", this._openLinkNewTab);
 
     this._copyUrlItem = this._panelDoc.getElementById("context-copyurl");
-    this._copyUrlItem.addEventListener(
-      "command",
-      this._copyUrl,
-      eventListenersConfig
-    );
+    this._copyUrlItem.addEventListener("command", this._copyUrl);
 
     const nav = this._panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
-  },
-
-  _clearFilterInput() {
-    this._filterInput.value = "";
-    this._onFilterInputChange();
-  },
-
-  _onFilterInputChange() {
-    const filterInputValue = this._filterInput.value;
-    this._filterInputClearButton.toggleAttribute("hidden", !filterInputValue);
-    this._view.setFilter(filterInputValue);
   },
 
   /**
@@ -684,7 +596,7 @@ StyleEditorUI.prototype = {
     // add new sidebar item and editor to the UI
     const { summary, details } = this._view.appendItem({
       ordinal,
-      onShow: (detailsEl, options) => {
+      onShow: detailsEl => {
         this.selectedEditor = editor;
 
         (async function() {
@@ -696,7 +608,7 @@ StyleEditorUI.prototype = {
             await editor.load(inputElement, this._cssProperties);
           }
 
-          editor.onShow(options);
+          editor.onShow();
 
           this.emit("editor-selected", editor);
         }
@@ -782,8 +694,7 @@ StyleEditorUI.prototype = {
     if (
       !this.selectedEditor &&
       !this._styleSheetBoundToSelect &&
-      createdEditor.styleSheet.styleSheetIndex == 0 &&
-      !summary.classList.contains(SplitView.FILTERED_CLASSNAME)
+      createdEditor.styleSheet.styleSheetIndex == 0
     ) {
       this._selectEditor(createdEditor);
     }
@@ -1056,9 +967,6 @@ StyleEditorUI.prototype = {
         ruleCount
       )
     );
-
-    // We may need to change the summary visibility as a result of the changes.
-    this._view.handleSummaryVisibility(summary);
   },
 
   /**
@@ -1343,15 +1251,9 @@ StyleEditorUI.prototype = {
       }
     );
 
-    if (this._uiAbortController) {
-      this._uiAbortController.abort();
-      this._uiAbortController = null;
-    }
     this._clearStyleSheetEditors();
 
     this._seenSheets = null;
-    this._filterInput = null;
-    this._filterInputClearButton = null;
 
     const sidebar = this._panelDoc.querySelector(".splitview-controller");
     const sidebarWidth = sidebar.getAttribute("width");
