@@ -128,12 +128,6 @@ JsepTransport::JsepTransport(
   if (sctp_transport_) {
     sctp_transport_->SetDtlsTransport(rtp_dtls_transport_);
   }
-
-  if (datagram_rtp_transport_ && default_rtp_transport()) {
-    composite_rtp_transport_ = std::make_unique<webrtc::CompositeRtpTransport>(
-        std::vector<webrtc::RtpTransportInternal*>{
-            datagram_rtp_transport_.get(), default_rtp_transport()});
-  }
 }
 
 JsepTransport::~JsepTransport() {
