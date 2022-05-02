@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.Address
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -85,5 +86,23 @@ class AddressEditorViewTest {
         assertEquals("Additional", binding.middleNameInput.text.toString())
         assertEquals("email@mozilla.com", binding.emailInput.text.toString())
         assertEquals("Telephone", binding.phoneInput.text.toString())
+    }
+
+    @Test
+    fun `GIVEN an existing address WHEN editor is opened THEN the delete address button is visible`() = runBlocking {
+        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        addressEditorView.bind()
+
+        assertEquals(View.VISIBLE, binding.deleteButton.visibility)
+    }
+
+    @Test
+    fun `GIVEN an existing address WHEN the delete address button is clicked THEN confirm delete dialog is shown`() = runBlocking {
+        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        addressEditorView.bind()
+
+        binding.deleteButton.performClick()
+
+        verify { addressEditorView.showConfirmDeleteAddressDialog(view.context, "123") }
     }
 }

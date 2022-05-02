@@ -56,6 +56,13 @@ class AddressEditorView(
             binding.cityInput.setText(address.addressLevel2)
             binding.stateInput.setText(address.addressLevel1)
             binding.zipInput.setText(address.postalCode)
+
+            binding.deleteButton.apply {
+                isVisible = true
+                setOnClickListener { view ->
+                    showConfirmDeleteAddressDialog(view.context, address.guid)
+                }
+            }
         }
     }
 
@@ -82,5 +89,18 @@ class AddressEditorView(
         } else {
             interactor.onSaveAddress(addressFields)
         }
+    }
+
+    internal fun showConfirmDeleteAddressDialog(context: Context, guid: String) {
+        AlertDialog.Builder(context).apply {
+            setMessage(R.string.addressess_confirm_dialog_message)
+            setNegativeButton(R.string.addressess_confirm_dialog_cancel_button) { dialog: DialogInterface, _ ->
+                dialog.cancel()
+            }
+            setPositiveButton(R.string.addressess_confirm_dialog_ok_button) { _, _ ->
+                interactor.onDeleteAddress(guid)
+            }
+            create()
+        }.show()
     }
 }
