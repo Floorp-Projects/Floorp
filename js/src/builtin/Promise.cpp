@@ -2022,7 +2022,7 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
                                                      HandleObject promiseObj);
 
 /**
- * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
  *
  * NewPromiseReactionJob ( reaction, argument )
  * https://tc39.es/ecma262/#sec-newpromisereactionjob
@@ -2052,7 +2052,8 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
     RootedValue argument(cx, reaction->handlerArg());
 
     // Step 1.e. Else, let handlerResult be
-    //           HostCallJobCallback(handler, undefined, « argument »).
+    //           Completion(HostCallJobCallback(handler, undefined,
+    //                                          « argument »)).
     bool ok;
     if (reaction->targetState() == JS::PromiseState::Fulfilled) {
       ok = ResolvePromiseInternal(cx, promiseToResolve, argument);
@@ -2069,27 +2070,16 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
     }
   }
 
-  // (reordered)
-  // Step 1.i. Else,
+  // Steps 1.f-i.
   RootedObject promiseObj(cx, reaction->promise());
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
-    // Step 1.i.i. Let status be
-    //             Call(promiseCapability.[[Resolve]], undefined,
-    //                  « handlerResult.[[Value]] »).
-    // Step 1.j. Return Completion(status).
     callee =
         reaction->getFixedSlot(ReactionRecordSlot_Resolve).toObjectOrNull();
 
     return CallPromiseResolveFunction(cx, callee, handlerResult, promiseObj);
   }
 
-  // Step 1.h. (handled in CallPromiseRejectFunction)
-  //           If handlerResult is an abrupt completion, then
-  // Step 1.h.i. Let status be
-  //             Call(promiseCapability.[[Reject]], undefined,
-  //                  « handlerResult.[[Value]] »).
-  // Step 1.j. Return Completion(status).
   callee = reaction->getFixedSlot(ReactionRecordSlot_Reject).toObjectOrNull();
 
   return CallPromiseRejectFunction(cx, callee, handlerResult, promiseObj,
@@ -2129,7 +2119,7 @@ static bool ForEachReaction(JSContext* cx, HandleValue reactionsVal, F f) {
 }
 
 /**
- * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
  *
  * NewPromiseReactionJob ( reaction, argument )
  * https://tc39.es/ecma262/#sec-newpromisereactionjob
@@ -2176,7 +2166,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
     ar.emplace(cx, reactionObj);
   }
 
-  // Steps 1-2.
+  // Optimized/special cases.
   Handle<PromiseReactionRecord*> reaction =
       reactionObj.as<PromiseReactionRecord>();
   if (reaction->isDefaultResolvingHandler()) {
@@ -2195,7 +2185,10 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // Step 3.
+  // Step 1.a. Let promiseCapability be reaction.[[Capability]].
+  // (implicit)
+
+  // Step 1.c. Let handler be reaction.[[Handler]].
   RootedValue handlerVal(cx, reaction->handler());
 
   RootedValue argument(cx, reaction->handlerArg());
@@ -2205,18 +2198,25 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedSavedFrame unwrappedRejectionStack(cx);
 
-  // Steps 4-6.
+  // Step 1.d. If handler is empty, then
   if (handlerVal.isInt32()) {
+    // Step 1.b. Let type be reaction.[[Type]].
+    // (reordered)
     auto handlerNum = static_cast<PromiseHandler>(handlerVal.toInt32());
 
-    // Step 4.
+    // Step 1.d.i. If type is Fulfill, let handlerResult be
+    //             NormalCompletion(argument).
     if (handlerNum == PromiseHandler::Identity) {
       handlerResult = argument;
     } else if (handlerNum == PromiseHandler::Thrower) {
-      // Step 5.
+      // Step 1.d.ii. Else,
+      // Step 1.d.ii.1. Assert: type is Reject.
+      // Step 1.d.ii.2. Let handlerResult be ThrowCompletion(argument).
       resolutionMode = RejectMode;
       handlerResult = argument;
     } else {
+      // Special case for Async-from-Sync Iterator.
+
       MOZ_ASSERT(handlerNum ==
                      PromiseHandler::AsyncFromSyncIteratorValueUnwrapDone ||
                  handlerNum ==
@@ -2237,7 +2237,8 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
     MOZ_ASSERT(IsCallable(handlerVal));
 
     // Step 1.e. Else, let handlerResult be
-    //           HostCallJobCallback(handler, undefined, « argument »).
+    //           Completion(HostCallJobCallback(handler, undefined,
+    //                                          « argument »)).
     if (!Call(cx, handlerVal, UndefinedHandleValue, argument, &handlerResult)) {
       resolutionMode = RejectMode;
       if (!MaybeGetAndClearExceptionAndStack(cx, &handlerResult,
@@ -2247,7 +2248,7 @@ static bool PromiseReactionJob(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // Steps 1.f-j.
+  // Steps 1.f-i.
   RootedObject promiseObj(cx, reaction->promise());
   RootedObject callee(cx);
   if (resolutionMode == ResolveMode) {
