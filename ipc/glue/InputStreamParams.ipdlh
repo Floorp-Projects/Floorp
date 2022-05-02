@@ -4,10 +4,9 @@
 
 include ProtocolTypes;
 
-include protocol PRemoteLazyInputStream;
-
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 [RefCounted] using class DataPipeReceiver from "mozilla/ipc/DataPipe.h";
+[RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 
 namespace mozilla {
 namespace ipc {
@@ -47,17 +46,9 @@ struct SlicedInputStreamParams
   bool closed;
 };
 
-struct RemoteLazyInputStreamRef
+struct RemoteLazyInputStreamParams
 {
-  nsID id;
-  uint64_t start;
-  uint64_t length;
-};
-
-union RemoteLazyInputStreamParams
-{
-  RemoteLazyInputStreamRef;
-  PRemoteLazyInputStream;
+  RemoteLazyInputStream stream;
 };
 
 struct DataPipeReceiverStreamParams
