@@ -16,21 +16,11 @@ namespace mozilla {
 namespace ipc {
 
 class FileDescriptor;
-class PFileDescriptorSetChild;
-class PFileDescriptorSetParent;
 
-// Provide two interfaces for sending PFileDescriptorSet constructor messages.
-class ParentToChildStreamActorManager {
- public:
-  virtual PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) = 0;
-};
+// TODO: These interfaces are no longer necessary and should be removed.
+class ParentToChildStreamActorManager {};
 
-class ChildToParentStreamActorManager {
- public:
-  virtual PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) = 0;
-};
+class ChildToParentStreamActorManager {};
 
 // If you want to serialize an inputStream, please use AutoIPCStream.
 class InputStreamHelper {
@@ -48,6 +38,8 @@ class InputStreamHelper {
   // pipe in chunks. This sending can start immediatelly or at the first read
   // based on the value of |aDelayedStart|. The IPC message size is returned
   // into |aSizeUsed|.
+  // XXX: The aManager and aFileDescriptors arguments are no longer necessary
+  // and should be removed.
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
                                    nsTArray<FileDescriptor>& aFileDescriptors,
