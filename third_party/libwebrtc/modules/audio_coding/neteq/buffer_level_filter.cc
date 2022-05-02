@@ -35,14 +35,13 @@ void BufferLevelFilter::Update(size_t buffer_size_samples,
   // |level_factor_| and |filtered_current_level_| are in Q8.
   // |buffer_size_samples| is in Q0.
   const int64_t filtered_current_level =
-      ((level_factor_ * int64_t{filtered_current_level_}) >> 8) +
-      ((256 - level_factor_) * rtc::dchecked_cast<int>(buffer_size_samples));
+      (level_factor_ * int64_t{filtered_current_level_} >> 8) +
+      (256 - level_factor_) * rtc::dchecked_cast<int64_t>(buffer_size_samples);
 
   // Account for time-scale operations (accelerate and pre-emptive expand) and
   // make sure that the filtered value remains non-negative.
   filtered_current_level_ = rtc::saturated_cast<int>(std::max<int64_t>(
-      0,
-      filtered_current_level - (int64_t{time_stretched_samples} * (1 << 8))));
+      0, filtered_current_level - int64_t{time_stretched_samples} * (1 << 8)));
 }
 
 void BufferLevelFilter::SetFilteredBufferLevel(int buffer_size_samples) {
