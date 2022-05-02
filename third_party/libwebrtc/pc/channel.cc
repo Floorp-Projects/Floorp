@@ -314,14 +314,6 @@ bool BaseChannel::IsReadyToReceiveMedia_w() const {
 }
 
 bool BaseChannel::IsReadyToSendMedia_w() const {
-  // Need to access some state updated on the network thread.
-  return network_thread_->Invoke<bool>(RTC_FROM_HERE, [this] {
-    RTC_DCHECK_RUN_ON(network_thread());
-    return IsReadyToSendMedia_n();
-  });
-}
-
-bool BaseChannel::IsReadyToSendMedia_n() const {
   // Send outgoing data if we are enabled, have local and remote content,
   // and we have had some form of connectivity.
   return enabled() &&
@@ -580,22 +572,27 @@ void BaseChannel::ChannelWritable_n() {
   if (writable_) {
     return;
   }
-
-  RTC_LOG(LS_INFO) << "Channel writable (" << ToString() << ")"
-                   << (was_ever_writable_ ? "" : " for the first time");
-
-  was_ever_writable_ = true;
   writable_ = true;
-  UpdateMediaSendRecvState();
+  RTC_LOG(LS_INFO) << "Channel writable (" << ToString() << ")"
+                   << (was_ever_writable_n_ ? "" : " for the first time");
+  // We only have to do this PostTask once, when first transitioning to
+  // writable.
+  if (!was_ever_writable_n_) {
+    worker_thread_->PostTask(ToQueuedTask(alive_, [this] {
+      RTC_DCHECK_RUN_ON(worker_thread());
+      was_ever_writable_ = true;
+      UpdateMediaSendRecvState_w();
+    }));
+  }
+  was_ever_writable_n_ = true;
 }
 
 void BaseChannel::ChannelNotWritable_n() {
-  if (!writable_)
+  if (!writable_) {
     return;
-
-  RTC_LOG(LS_INFO) << "Channel not writable (" << ToString() << ")";
+  }
   writable_ = false;
-  UpdateMediaSendRecvState();
+  RTC_LOG(LS_INFO) << "Channel not writable (" << ToString() << ")";
 }
 
 bool BaseChannel::AddRecvStream_w(const StreamParams& sp) {
@@ -891,12 +888,6 @@ VoiceChannel::~VoiceChannel() {
   // this can't be done in the base class, since it calls a virtual
   DisableMedia_w();
   Deinit();
-}
-
-void BaseChannel::UpdateMediaSendRecvState() {
-  RTC_DCHECK_RUN_ON(network_thread());
-  worker_thread_->PostTask(
-      ToQueuedTask(alive_, [this] { UpdateMediaSendRecvState_w(); }));
 }
 
 void VoiceChannel::Init_w(webrtc::RtpTransportInternal* rtp_transport) {

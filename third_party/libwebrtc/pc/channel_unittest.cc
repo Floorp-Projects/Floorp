@@ -323,6 +323,10 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
             fake_rtcp_packet_transport2_.get(), asymmetric);
       }
     });
+    // The transport becoming writable will asynchronously update the send state
+    // on the worker thread; since this test uses the main thread as the worker
+    // thread, we must process the message queue for this to occur.
+    WaitForThreads();
   }
 
   bool SendInitiate() {
@@ -915,8 +919,6 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_FALSE(channel2_->SrtpActiveForTesting());
     EXPECT_TRUE(SendInitiate());
     WaitForThreads();
-    EXPECT_TRUE(channel1_->writable());
-    EXPECT_TRUE(channel2_->writable());
     EXPECT_TRUE(SendAccept());
     EXPECT_TRUE(channel1_->SrtpActiveForTesting());
     EXPECT_TRUE(channel2_->SrtpActiveForTesting());

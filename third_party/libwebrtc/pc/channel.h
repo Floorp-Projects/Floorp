@@ -143,8 +143,6 @@ class BaseChannel : public ChannelInterface,
     return srtp_active();
   }
 
-  bool writable() const { return writable_; }
-
   // Set an RTP level transport which could be an RtpTransport without
   // encryption, an SrtpTransport for SDES or a DtlsSrtpTransport for DTLS-SRTP.
   // This can be called from any thread and it hops to the network thread
@@ -221,7 +219,7 @@ class BaseChannel : public ChannelInterface,
 
  protected:
   bool was_ever_writable() const {
-    RTC_DCHECK_RUN_ON(network_thread());
+    RTC_DCHECK_RUN_ON(worker_thread());
     return was_ever_writable_;
   }
   void set_local_content_direction(webrtc::RtpTransceiverDirection direction) {
@@ -287,7 +285,6 @@ class BaseChannel : public ChannelInterface,
   // Should be called whenever the conditions for
   // IsReadyToReceiveMedia/IsReadyToSendMedia are satisfied (or unsatisfied).
   // Updates the send/recv state of the media channel.
-  void UpdateMediaSendRecvState();
   virtual void UpdateMediaSendRecvState_w() = 0;
 
   bool UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
@@ -345,7 +342,6 @@ class BaseChannel : public ChannelInterface,
   void DisconnectFromRtpTransport();
   void SignalSentPacket_n(const rtc::SentPacket& sent_packet)
       RTC_RUN_ON(network_thread());
-  bool IsReadyToSendMedia_n() const RTC_RUN_ON(network_thread());
 
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
@@ -372,10 +368,9 @@ class BaseChannel : public ChannelInterface,
       RTC_GUARDED_BY(network_thread());
   std::vector<std::pair<rtc::Socket::Option, int> > rtcp_socket_options_
       RTC_GUARDED_BY(network_thread());
-  // TODO(bugs.webrtc.org/12230): writable_ is accessed in tests
-  // outside of the network thread.
-  bool writable_ = false;
-  bool was_ever_writable_ RTC_GUARDED_BY(network_thread()) = false;
+  bool writable_ RTC_GUARDED_BY(network_thread()) = false;
+  bool was_ever_writable_n_ RTC_GUARDED_BY(network_thread()) = false;
+  bool was_ever_writable_ RTC_GUARDED_BY(worker_thread()) = false;
   const bool srtp_required_ = true;
   const webrtc::CryptoOptions crypto_options_;
 
