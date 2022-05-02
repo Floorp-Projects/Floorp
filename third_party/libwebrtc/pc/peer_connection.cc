@@ -489,12 +489,17 @@ PeerConnection::~PeerConnection() {
 
     sdp_handler_->ResetSessionDescFactory();
   }
-  transport_controller_.reset();
 
-  // port_allocator_ lives on the network thread and should be destroyed there.
+  // port_allocator_ and transport_controller_ live on the network thread and
+  // should be destroyed there.
   network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
     RTC_DCHECK_RUN_ON(network_thread());
+    transport_controller_.reset();
     port_allocator_.reset();
+    if (network_thread_safety_) {
+      network_thread_safety_->SetNotAlive();
+      network_thread_safety_ = nullptr;
+    }
   });
   // call_ and event_log_ must be destroyed on the worker thread.
   worker_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
@@ -527,13 +532,15 @@ RTCError PeerConnection::Initialize(
   }
 
   // The port allocator lives on the network thread and should be initialized
-  // there.
+  // there. Also set up the task safety flag for canceling pending tasks on
+  // the network thread when closing.
   // TODO(bugs.webrtc.org/12427): See if we can piggyback on this call and
   // initialize all the |transport_controller_->Subscribe*| calls below on the
   // network thread via this invoke.
   const auto pa_result =
       network_thread()->Invoke<InitializePortAllocatorResult>(
           RTC_FROM_HERE, [this, &stun_servers, &turn_servers, &configuration] {
+            network_thread_safety_ = PendingTaskSafetyFlag::Create();
             return InitializePortAllocator_n(stun_servers, turn_servers,
                                              configuration);
           });
@@ -830,6 +837,16 @@ RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>>
 PeerConnection::AddTransceiver(
     rtc::scoped_refptr<MediaStreamTrackInterface> track) {
   return AddTransceiver(track, RtpTransceiverInit());
+}
+
+RtpTransportInternal* PeerConnection::GetRtpTransport(const std::string& mid) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return network_thread()->Invoke<RtpTransportInternal*>(
+      RTC_FROM_HERE, [this, &mid] {
+        auto rtp_transport = transport_controller_->GetRtpTransport(mid);
+        RTC_DCHECK(rtp_transport);
+        return rtp_transport;
+      });
 }
 
 RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>>
@@ -1588,11 +1605,11 @@ PeerConnection::LookupDtlsTransportByMidInternal(const std::string& mid) {
 
 rtc::scoped_refptr<SctpTransportInterface> PeerConnection::GetSctpTransport()
     const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!sctp_mid_s_) {
+  RTC_DCHECK_RUN_ON(network_thread());
+  if (!sctp_mid_n_)
     return nullptr;
-  }
-  return transport_controller_->GetSctpTransport(*sctp_mid_s_);
+
+  return transport_controller_->GetSctpTransport(*sctp_mid_n_);
 }
 
 const SessionDescriptionInterface* PeerConnection::local_description() const {
@@ -1673,11 +1690,16 @@ void PeerConnection::Close() {
   // WebRTC session description factory, the session description factory would
   // call the transport controller.
   sdp_handler_->ResetSessionDescFactory();
-  transport_controller_.reset();
   rtp_manager_->Close();
 
-  network_thread()->Invoke<void>(
-      RTC_FROM_HERE, [this] { port_allocator_->DiscardCandidatePool(); });
+  network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
+    transport_controller_.reset();
+    port_allocator_->DiscardCandidatePool();
+    if (network_thread_safety_) {
+      network_thread_safety_->SetNotAlive();
+      network_thread_safety_ = nullptr;
+    }
+  });
 
   worker_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
     RTC_DCHECK_RUN_ON(worker_thread());
@@ -1808,6 +1830,17 @@ absl::optional<std::string> PeerConnection::GetDataMid() const {
     default:
       return absl::nullopt;
   }
+}
+
+void PeerConnection::SetSctpDataMid(const std::string& mid) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  sctp_mid_s_ = mid;
+}
+
+void PeerConnection::ResetSctpDataMid() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  sctp_mid_s_.reset();
+  sctp_transport_name_s_.clear();
 }
 
 void PeerConnection::OnSctpDataChannelClosed(DataChannelInterface* channel) {
@@ -2023,13 +2056,8 @@ std::vector<DataChannelStats> PeerConnection::GetDataChannelStats() const {
 
 absl::optional<std::string> PeerConnection::sctp_transport_name() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  if (sctp_mid_s_ && transport_controller_) {
-    auto dtls_transport = transport_controller_->GetDtlsTransport(*sctp_mid_s_);
-    if (dtls_transport) {
-      return dtls_transport->transport_name();
-    }
-    return absl::optional<std::string>();
-  }
+  if (sctp_mid_s_ && transport_controller_)
+    return sctp_transport_name_s_;
   return absl::optional<std::string>();
 }
 
@@ -2268,6 +2296,15 @@ bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {
   data_channel_controller_.set_data_channel_transport(transport);
   data_channel_controller_.SetupDataChannelTransport_n();
   sctp_mid_n_ = mid;
+  auto dtls_transport = transport_controller_->GetDtlsTransport(mid);
+  if (dtls_transport) {
+    signaling_thread()->PostTask(
+        ToQueuedTask(signaling_thread_safety_.flag(),
+                     [this, name = dtls_transport->transport_name()] {
+                       RTC_DCHECK_RUN_ON(signaling_thread());
+                       sctp_transport_name_s_ = std::move(name);
+                     }));
+  }
 
   // Note: setting the data sink and checking initial state must be done last,
   // after setting up the data channel.  Setting the data sink may trigger
@@ -2612,9 +2649,19 @@ bool PeerConnection::OnTransportChanged(
   if (base_channel) {
     ret = base_channel->SetRtpTransport(rtp_transport);
   }
+
   if (mid == sctp_mid_n_) {
     data_channel_controller_.OnTransportChanged(data_channel_transport);
+    if (dtls_transport) {
+      signaling_thread()->PostTask(ToQueuedTask(
+          signaling_thread_safety_.flag(),
+          [this, name = dtls_transport->internal()->transport_name()] {
+            RTC_DCHECK_RUN_ON(signaling_thread());
+            sctp_transport_name_s_ = std::move(name);
+          }));
+    }
   }
+
   return ret;
 }
 
@@ -2622,6 +2669,23 @@ PeerConnectionObserver* PeerConnection::Observer() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(observer_);
   return observer_;
+}
+
+void PeerConnection::StartSctpTransport(int local_port,
+                                        int remote_port,
+                                        int max_message_size) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (!sctp_mid_s_)
+    return;
+
+  network_thread()->PostTask(ToQueuedTask(
+      network_thread_safety_,
+      [this, mid = *sctp_mid_s_, local_port, remote_port, max_message_size] {
+        rtc::scoped_refptr<SctpTransport> sctp_transport =
+            transport_controller()->GetSctpTransport(mid);
+        if (sctp_transport)
+          sctp_transport->Start(local_port, remote_port, max_message_size);
+      }));
 }
 
 CryptoOptions PeerConnection::GetCryptoOptions() {
