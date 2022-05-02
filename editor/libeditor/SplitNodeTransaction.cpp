@@ -13,7 +13,6 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
-#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"     // for NS_ASSERTION, etc.
 #include "nsError.h"     // for NS_ERROR_NOT_INITIALIZED, etc.
@@ -120,21 +119,7 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
     NS_WARNING("SplitNodeTransaction::DoTransactionInternal() failed");
     return EditorBase::ToGenericNSResult(splitNodeResult.Rv());
   }
-
-  if (!htmlEditor->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
-  }
-
-  NS_WARNING_ASSERTION(
-      !htmlEditor->Destroyed(),
-      "The editor has gone but SplitNodeTransaction keeps trying to modify "
-      "Selection");
-  MOZ_DIAGNOSTIC_ASSERT(splitNodeResult.GetNewContent());
-  htmlEditor->CollapseSelectionTo(
-      EditorRawDOMPoint::AtEndOf(*splitNodeResult.GetNewContent()), error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return error.StealNSResult();
+  return NS_OK;
 }
 
 SplitNodeResult SplitNodeTransaction::DoTransactionInternal(
