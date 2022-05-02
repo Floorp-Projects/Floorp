@@ -3599,7 +3599,6 @@ void nsCycleCollector::BeginCollection(
   JS::AutoEnterCycleCollection autocc(mCCJSRuntime->Runtime());
   mGraph.Init();
   mResults.Init();
-  mResults.mSuspectedAtCCStart = SuspectedCount();
   mResults.mAnyManual = aIsManual;
   bool mergeZones = ShouldMergeZones(aIsManual);
   mResults.mMergedZones = mergeZones;
