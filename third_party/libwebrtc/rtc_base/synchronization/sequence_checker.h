@@ -46,10 +46,6 @@ class RTC_LOCKABLE SequenceChecker
     : public webrtc_sequence_checker_internal::SequenceCheckerDoNothing {};
 #endif  // RTC_ENABLE_THREAD_CHECKER
 
-namespace webrtc_seq_check_impl {
-// TODO(titovartem): Remove when downstream deps are updated
-using ::webrtc::webrtc_sequence_checker_internal::SequenceCheckerScope;
-}  // namespace webrtc_seq_check_impl
 }  // namespace webrtc
 
 // RTC_RUN_ON/RTC_GUARDED_BY/RTC_DCHECK_RUN_ON macros allows to annotate
@@ -116,16 +112,6 @@ using ::webrtc::webrtc_sequence_checker_internal::SequenceCheckerScope;
 // Document if a function expected to be called from same thread/task queue.
 #define RTC_RUN_ON(x) \
   RTC_THREAD_ANNOTATION_ATTRIBUTE__(exclusive_locks_required(x))
-
-namespace webrtc {
-
-// Deprecated. Do not use.
-template <typename ThreadLikeObject>
-RTC_DEPRECATED std::string ExpectationToString(const ThreadLikeObject* o) {
-  return webrtc::webrtc_sequence_checker_internal::ExpectationToString(o);
-}
-
-}  // namespace webrtc
 
 #define RTC_DCHECK_RUN_ON(x)                                               \
   webrtc::webrtc_sequence_checker_internal::SequenceCheckerScope scope(x); \
