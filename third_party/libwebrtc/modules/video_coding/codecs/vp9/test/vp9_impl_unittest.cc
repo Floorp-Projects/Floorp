@@ -522,6 +522,62 @@ TEST(Vp9ImplTest, EnableDisableSpatialLayersWithSvcController) {
   }
 }
 
+MATCHER_P2(GenericLayerIs, spatial_id, temporal_id, "") {
+  if (arg.codec_specific_info.generic_frame_info == absl::nullopt) {
+    *result_listener << " miss generic_frame_info";
+    return false;
+  }
+  const auto& layer = *arg.codec_specific_info.generic_frame_info;
+  if (layer.spatial_id != spatial_id || layer.temporal_id != temporal_id) {
+    *result_listener << " frame from layer (" << layer.spatial_id << ", "
+                     << layer.temporal_id << ")";
+    return false;
+  }
+  return true;
+}
+
+TEST(Vp9ImplTest, SpatialUpswitchNotAtGOFBoundary) {
+  test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Vp9DependencyDescriptor/Enabled/");
+  std::unique_ptr<VideoEncoder> encoder = VP9Encoder::Create();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  ConfigureSvc(codec_settings, /*num_spatial_layers=*/3,
+               /*num_temporal_layers=*/3);
+  codec_settings.VP9()->frameDroppingOn = true;
+  EXPECT_EQ(encoder->InitEncode(&codec_settings, kSettings),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  EncodedVideoFrameProducer producer(*encoder);
+  producer.SetResolution({kWidth, kHeight});
+
+  // Disable all but spatial_layer = 0;
+  VideoBitrateAllocation bitrate_allocation;
+  int layer_bitrate_bps = codec_settings.spatialLayers[0].targetBitrate * 1000;
+  bitrate_allocation.SetBitrate(0, 0, layer_bitrate_bps);
+  bitrate_allocation.SetBitrate(0, 1, layer_bitrate_bps);
+  bitrate_allocation.SetBitrate(0, 2, layer_bitrate_bps);
+  encoder->SetRates(VideoEncoder::RateControlParameters(
+      bitrate_allocation, codec_settings.maxFramerate));
+  EXPECT_THAT(producer.SetNumInputFrames(3).Encode(),
+              ElementsAre(GenericLayerIs(0, 0), GenericLayerIs(0, 2),
+                          GenericLayerIs(0, 1)));
+
+  // Upswitch to spatial_layer = 1
+  layer_bitrate_bps = codec_settings.spatialLayers[1].targetBitrate * 1000;
+  bitrate_allocation.SetBitrate(1, 0, layer_bitrate_bps);
+  bitrate_allocation.SetBitrate(1, 1, layer_bitrate_bps);
+  bitrate_allocation.SetBitrate(1, 2, layer_bitrate_bps);
+  encoder->SetRates(VideoEncoder::RateControlParameters(
+      bitrate_allocation, codec_settings.maxFramerate));
+  // Expect upswitch doesn't happen immediately since there is no S1 frame that
+  // S1T2 frame can reference.
+  EXPECT_THAT(producer.SetNumInputFrames(1).Encode(),
+              ElementsAre(GenericLayerIs(0, 2)));
+  // Expect spatial upswitch happens now, at T0 frame.
+  EXPECT_THAT(producer.SetNumInputFrames(1).Encode(),
+              ElementsAre(GenericLayerIs(0, 0), GenericLayerIs(1, 0)));
+}
+
 TEST_F(TestVp9Impl, DisableEnableBaseLayerTriggersKeyFrame) {
   // Configure encoder to produce N spatial layers. Encode frames for all
   // layers. Then disable all but the last layer. Then reenable all back again.
