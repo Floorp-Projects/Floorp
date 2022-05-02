@@ -858,6 +858,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitShortCircuitAssignment(AssignmentNode* node);
 
   [[nodiscard]] bool emitReturn(UnaryNode* returnNode);
+  [[nodiscard]] bool finishReturn(BytecodeOffset setRvalOffset);
+
   [[nodiscard]] bool emitExpressionStatement(UnaryNode* exprStmt);
   [[nodiscard]] bool emitStatementList(ListNode* stmtList);
 
