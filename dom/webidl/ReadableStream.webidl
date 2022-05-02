@@ -7,7 +7,7 @@ interface ReadableStream {
 
   readonly attribute boolean locked;
 
-  [Throws]
+  [NewObject]
   Promise<void> cancel(optional any reason);
 
   [Throws]
@@ -16,7 +16,7 @@ interface ReadableStream {
   [Pref="dom.streams.transform_streams.enabled", Throws]
   ReadableStream pipeThrough(ReadableWritablePair transform, optional StreamPipeOptions options = {});
 
-  [Pref="dom.streams.pipeTo.enabled", Throws]
+  [Pref="dom.streams.pipeTo.enabled", NewObject]
   Promise<void> pipeTo(WritableStream destination, optional StreamPipeOptions options = {});
 
   [Throws]

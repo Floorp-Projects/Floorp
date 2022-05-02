@@ -299,7 +299,7 @@ interface CanonicalBrowsingContext : BrowsingContext {
     *                       set to prevent prompting.
     * @return A Promise that resolves once printing is finished.
     */
-  [Throws]
+  [NewObject]
   Promise<void> print(nsIPrintSettings aPrintSettings);
 
   /**
