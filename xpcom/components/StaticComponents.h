@@ -125,8 +125,7 @@ struct StaticModule {
 
   already_AddRefed<nsIFactory> GetFactory() const;
 
-  nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                          void** aResult) const;
+  nsresult CreateInstance(const nsIID& aIID, void** aResult) const;
 
   GetServiceHelper GetService() const;
   GetServiceHelper GetService(nsresult*) const;
