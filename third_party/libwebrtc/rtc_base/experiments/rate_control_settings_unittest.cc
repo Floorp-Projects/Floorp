@@ -20,7 +20,7 @@ namespace webrtc {
 namespace {
 
 TEST(RateControlSettingsTest, CongestionWindow) {
-  EXPECT_FALSE(
+  EXPECT_TRUE(
       RateControlSettings::ParseFromFieldTrials().UseCongestionWindow());
 
   test::ScopedFieldTrials field_trials(
@@ -32,8 +32,8 @@ TEST(RateControlSettingsTest, CongestionWindow) {
 }
 
 TEST(RateControlSettingsTest, CongestionWindowPushback) {
-  EXPECT_FALSE(RateControlSettings::ParseFromFieldTrials()
-                   .UseCongestionWindowPushback());
+  EXPECT_TRUE(RateControlSettings::ParseFromFieldTrials()
+                  .UseCongestionWindowPushback());
 
   test::ScopedFieldTrials field_trials(
       "WebRTC-CongestionWindow/QueueSize:100,MinBitrate:100000/");
@@ -42,6 +42,29 @@ TEST(RateControlSettingsTest, CongestionWindowPushback) {
   EXPECT_TRUE(settings_after.UseCongestionWindowPushback());
   EXPECT_EQ(settings_after.CongestionWindowMinPushbackTargetBitrateBps(),
             100000u);
+}
+
+TEST(RateControlSettingsTest, CongestionWindowPushbackDropframe) {
+  EXPECT_TRUE(RateControlSettings::ParseFromFieldTrials()
+                  .UseCongestionWindowPushback());
+
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-CongestionWindow/"
+      "QueueSize:100,MinBitrate:100000,DropFrame:true/");
+  const RateControlSettings settings_after =
+      RateControlSettings::ParseFromFieldTrials();
+  EXPECT_TRUE(settings_after.UseCongestionWindowPushback());
+  EXPECT_EQ(settings_after.CongestionWindowMinPushbackTargetBitrateBps(),
+            100000u);
+  EXPECT_TRUE(settings_after.UseCongestionWindowDropFrameOnly());
+}
+
+TEST(RateControlSettingsTest, CongestionWindowPushbackDefaultConfig) {
+  const RateControlSettings settings =
+      RateControlSettings::ParseFromFieldTrials();
+  EXPECT_TRUE(settings.UseCongestionWindowPushback());
+  EXPECT_EQ(settings.CongestionWindowMinPushbackTargetBitrateBps(), 30000u);
+  EXPECT_TRUE(settings.UseCongestionWindowDropFrameOnly());
 }
 
 TEST(RateControlSettingsTest, PacingFactor) {
