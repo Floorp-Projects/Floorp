@@ -834,11 +834,6 @@ bool WarpBuilder::build_Double(BytecodeLocation loc) {
   return true;
 }
 
-bool WarpBuilder::build_ResumeIndex(BytecodeLocation loc) {
-  pushConstant(Int32Value(loc.getResumeIndex()));
-  return true;
-}
-
 bool WarpBuilder::build_BigInt(BytecodeLocation loc) {
   BigInt* bi = loc.getBigInt(script_);
   pushConstant(BigIntValue(bi));

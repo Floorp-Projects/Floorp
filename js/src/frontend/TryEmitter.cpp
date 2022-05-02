@@ -251,7 +251,8 @@ bool TryEmitter::emitFinallyEnd() {
   } else {
     // If there are no non-local jumps, then the only possible jump target
     // is the code immediately following this finally block. Instead of
-    // emitting a retsub, we can simply pop the resume index and fall through.
+    // emitting a tableswitch, we can simply pop the continuation index
+    // and fall through.
     if (!bce_->emit1(JSOp::Pop)) {
       return false;
     }
