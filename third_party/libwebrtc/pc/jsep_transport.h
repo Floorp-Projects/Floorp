@@ -31,7 +31,6 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_info.h"
-#include "pc/composite_rtp_transport.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/dtls_transport.h"
 #include "pc/rtcp_mux_filter.h"
@@ -173,13 +172,7 @@ class JsepTransport : public sigslot::has_slots<> {
   webrtc::RtpTransportInternal* rtp_transport() const
       RTC_LOCKS_EXCLUDED(accessor_lock_) {
     webrtc::MutexLock lock(&accessor_lock_);
-    if (composite_rtp_transport_) {
-      return composite_rtp_transport_.get();
-    } else if (datagram_rtp_transport_) {
-      return datagram_rtp_transport_.get();
-    } else {
-      return default_rtp_transport();
-    }
+    return default_rtp_transport();
   }
 
   const DtlsTransportInternal* rtp_dtls_transport() const
@@ -348,31 +341,17 @@ class JsepTransport : public sigslot::has_slots<> {
 
   // To avoid downcasting and make it type safe, keep three unique pointers for
   // different SRTP mode and only one of these is non-nullptr.
-  std::unique_ptr<webrtc::RtpTransport> unencrypted_rtp_transport_
-      RTC_GUARDED_BY(accessor_lock_);
-  std::unique_ptr<webrtc::SrtpTransport> sdes_transport_
-      RTC_GUARDED_BY(accessor_lock_);
-  std::unique_ptr<webrtc::DtlsSrtpTransport> dtls_srtp_transport_
-      RTC_GUARDED_BY(accessor_lock_);
+  const std::unique_ptr<webrtc::RtpTransport> unencrypted_rtp_transport_;
+  const std::unique_ptr<webrtc::SrtpTransport> sdes_transport_;
+  const std::unique_ptr<webrtc::DtlsSrtpTransport> dtls_srtp_transport_;
 
-  // If multiple RTP transports are in use, |composite_rtp_transport_| will be
-  // passed to callers.  This is only valid for offer-only, receive-only
-  // scenarios, as it is not possible for the composite to correctly choose
-  // which transport to use for sending.
-  std::unique_ptr<webrtc::CompositeRtpTransport> composite_rtp_transport_
-      RTC_GUARDED_BY(accessor_lock_);
-
-  rtc::scoped_refptr<webrtc::DtlsTransport> rtp_dtls_transport_
-      RTC_GUARDED_BY(accessor_lock_);
+  const rtc::scoped_refptr<webrtc::DtlsTransport> rtp_dtls_transport_;
   rtc::scoped_refptr<webrtc::DtlsTransport> rtcp_dtls_transport_
       RTC_GUARDED_BY(accessor_lock_);
-  rtc::scoped_refptr<webrtc::DtlsTransport> datagram_dtls_transport_
-      RTC_GUARDED_BY(accessor_lock_);
 
-  std::unique_ptr<webrtc::DataChannelTransportInterface>
-      sctp_data_channel_transport_ RTC_GUARDED_BY(accessor_lock_);
-  rtc::scoped_refptr<webrtc::SctpTransport> sctp_transport_
-      RTC_GUARDED_BY(accessor_lock_);
+  const std::unique_ptr<webrtc::DataChannelTransportInterface>
+      sctp_data_channel_transport_;
+  const rtc::scoped_refptr<webrtc::SctpTransport> sctp_transport_;
 
   SrtpFilter sdes_negotiator_ RTC_GUARDED_BY(network_thread_);
   RtcpMuxFilter rtcp_mux_negotiator_ RTC_GUARDED_BY(network_thread_);
@@ -382,9 +361,6 @@ class JsepTransport : public sigslot::has_slots<> {
       RTC_GUARDED_BY(network_thread_);
   absl::optional<std::vector<int>> recv_extension_ids_
       RTC_GUARDED_BY(network_thread_);
-
-  std::unique_ptr<webrtc::RtpTransportInternal> datagram_rtp_transport_
-      RTC_GUARDED_BY(accessor_lock_);
 
   RTC_DISALLOW_COPY_AND_ASSIGN(JsepTransport);
 };

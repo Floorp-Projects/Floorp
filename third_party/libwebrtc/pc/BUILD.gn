@@ -32,8 +32,6 @@ rtc_library("rtc_pc_base") {
     "channel_interface.h",
     "channel_manager.cc",
     "channel_manager.h",
-    "composite_rtp_transport.cc",
-    "composite_rtp_transport.h",
     "dtls_srtp_transport.cc",
     "dtls_srtp_transport.h",
     "dtls_transport.cc",
@@ -817,7 +815,6 @@ if (rtc_include_tests && !build_with_chromium) {
     sources = [
       "channel_manager_unittest.cc",
       "channel_unittest.cc",
-      "composite_rtp_transport_test.cc",
       "dtls_srtp_transport_unittest.cc",
       "dtls_transport_unittest.cc",
       "ice_transport_unittest.cc",
