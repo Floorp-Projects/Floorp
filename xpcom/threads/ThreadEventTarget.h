@@ -47,7 +47,9 @@ class ThreadEventTarget final : public nsISerialEventTarget {
   ~ThreadEventTarget();
 
   RefPtr<ThreadTargetSink> mSink;
+#ifdef DEBUG
   bool mIsMainThread;
+#endif
 };
 
 }  // namespace mozilla
