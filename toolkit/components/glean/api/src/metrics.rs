@@ -101,6 +101,8 @@ pub(crate) mod __glean_metric_maps {
     pub static NUMERATOR_MAP: Lazy<HashMap<MetricId, &Lazy<NumeratorMetric>>> =
         Lazy::new(HashMap::new);
 
+    pub static URL_MAP: Lazy<HashMap<MetricId, &Lazy<UrlMetric>>> = Lazy::new(HashMap::new);
+
     pub(crate) fn record_event_by_id(
         _metric_id: u32,
         _extra: Option<HashMap<i32, String>>,
