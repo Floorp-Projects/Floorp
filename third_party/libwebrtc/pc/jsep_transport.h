@@ -100,7 +100,6 @@ class JsepTransport : public sigslot::has_slots<> {
       std::unique_ptr<webrtc::RtpTransport> unencrypted_rtp_transport,
       std::unique_ptr<webrtc::SrtpTransport> sdes_transport,
       std::unique_ptr<webrtc::DtlsSrtpTransport> dtls_srtp_transport,
-      std::unique_ptr<webrtc::RtpTransportInternal> datagram_rtp_transport,
       std::unique_ptr<DtlsTransportInternal> rtp_dtls_transport,
       std::unique_ptr<DtlsTransportInternal> rtcp_dtls_transport,
       std::unique_ptr<SctpTransportInternal> sctp_transport);
