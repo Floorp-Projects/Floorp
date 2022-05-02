@@ -7,7 +7,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '24c8af75a992523026279984102a742fc1fff90a',
+  'chromium_revision': 'e753f3f38ed4bad047cc79c59089b2ad9742f7e7',
 }
 
 deps = {
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@f793fb384b57d63f12cb6ff77f785435dad97af2',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@7bccac899365c55816f8512a4764fded8611205a',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@6b292120dab1164623df0ea20b1b5c7bdf22c4da',
+    'https://chromium.googlesource.com/chromium/src/testing@1be79fc37ce133b48a6d9edc8b60fbab2f6d56d2',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@2af0e460ec45ef29d30c87fd37a9a3787c9bb151',
+    'https://chromium.googlesource.com/chromium/src/third_party@c6d479695483bc03204122be072a0e1504cd9fa7',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -129,7 +129,7 @@ deps = {
   'src/third_party/colorama/src':
     'https://chromium.googlesource.com/external/colorama.git@799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@8c9559500176334c21f96a22d9ce7b306df0538a',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@8bb3513349f314da3001e0c3baac527a64a92e7f',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@ebd8895ddb097b985db1fbdc816548549e211af9',
   'src/third_party/findbugs': {
@@ -164,7 +164,7 @@ deps = {
   'src/third_party/googletest/src':
     'https://chromium.googlesource.com/external/github.com/google/googletest.git@1b0cdaae57c046c87fb99cb4f69c312a7e794adb',
   'src/third_party/icu': {
-    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@f4147b227f174e03f273053bb49fde33426d05bc',
+    'url': 'https://chromium.googlesource.com/chromium/deps/icu.git@df304fa5705b9a2b85fc5937c493e49412364046',
   },
   'src/third_party/jdk': {
       'packages': [
@@ -200,7 +200,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@55f3b57f8da0ae408cb0331891530760877920fb',
+    'https://android.googlesource.com/platform/external/perfetto.git@71a92399dcf1a54dad73b2ad476ba6fd3175faf3',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@576e0801f9281fd54e2c69ad5be5fef7af656011',
   'src/third_party/libyuv':
@@ -257,7 +257,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@73f1ba6c0bd8ab685de70a49a63a9538fedf4651',
+    'https://chromium.googlesource.com/chromium/src/tools@1dee60d4c31a980774a998936d05973fa0c5f629',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
