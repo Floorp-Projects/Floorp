@@ -52,13 +52,50 @@ static double MillisecondsSinceStartup() {
 
 enum ResolutionMode { ResolveMode, RejectMode };
 
+/**
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
+ *
+ * Promise Resolve Functions
+ * https://tc39.es/ecma262/#sec-promise-resolve-functions
+ */
 enum ResolveFunctionSlots {
+  // NOTE: All slot represent [[AlreadyResolved]].[[Value]].
+  //
+  // The spec creates single record for [[AlreadyResolved]] and shares it
+  // between Promise Resolve Function and Promise Reject Function.
+  //
+  //   Step 1. Let alreadyResolved be the Record { [[Value]]: false }.
+  //   ...
+  //   Step 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
+  //   ...
+  //   Step 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
+  //
+  // We implement it by clearing all slots, both in
+  // Promise Resolve Function and Promise Reject Function at the same time.
+  //
+  // If none of slots are undefined, [[AlreadyResolved]].[[Value]] is false.
+  // If all slot are undefined, [[AlreadyResolved]].[[Value]] is true.
+
+  // [[Promise]] slot.
+  // A possibly-wrapped promise.
   ResolveFunctionSlot_Promise = 0,
+
+  // The corresponding Promise Reject Function.
   ResolveFunctionSlot_RejectFunction,
 };
 
+/**
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
+ *
+ * Promise Reject Functions
+ * https://tc39.es/ecma262/#sec-promise-reject-functions
+ */
 enum RejectFunctionSlots {
+  // [[Promise]] slot.
+  // A possibly-wrapped promise.
   RejectFunctionSlot_Promise = 0,
+
+  // The corresponding Promise Resolve Function.
   RejectFunctionSlot_ResolveFunction,
 };
 
@@ -891,6 +928,8 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
     JSContext* cx, HandleObject promise, MutableHandleObject resolveFn,
     MutableHandleObject rejectFn) {
   // Step 1. Let alreadyResolved be the Record { [[Value]]: false }.
+  // (implicit, see steps 5-6, 10-11 below)
+
   // Step 2. Let stepsResolve be the algorithm steps defined in Promise Resolve
   //         Functions.
   // Step 3. Let lengthResolve be the number of non-optional parameters of the
@@ -924,22 +963,22 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
   JSFunction* rejectFun = &rejectFn->as<JSFunction>();
 
   // Step 5. Set resolve.[[Promise]] to promise.
-  resolveFun->initExtendedSlot(ResolveFunctionSlot_Promise,
-                               ObjectValue(*promise));
-
   // Step 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
   //
-  // NOTE: We use the reference to the reject function as [[AlreadyResolved]].
+  // NOTE: We use these references as [[AlreadyResolved]].[[Value]].
+  //       See the comment in ResolveFunctionSlots for more details.
+  resolveFun->initExtendedSlot(ResolveFunctionSlot_Promise,
+                               ObjectValue(*promise));
   resolveFun->initExtendedSlot(ResolveFunctionSlot_RejectFunction,
                                ObjectValue(*rejectFun));
 
   // Step 10. Set reject.[[Promise]] to promise.
-  rejectFun->initExtendedSlot(RejectFunctionSlot_Promise,
-                              ObjectValue(*promise));
-
   // Step 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
   //
-  // NOTE: We use the reference to the resolve function as [[Alreadyresolved]].
+  // NOTE: We use these references as [[AlreadyResolved]].[[Value]].
+  //       See the comment in ResolveFunctionSlots for more details.
+  rejectFun->initExtendedSlot(RejectFunctionSlot_Promise,
+                              ObjectValue(*promise));
   rejectFun->initExtendedSlot(RejectFunctionSlot_ResolveFunction,
                               ObjectValue(*resolveFun));
 
