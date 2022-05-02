@@ -716,7 +716,7 @@ body[lwt-newtab-brighttext] {
 }
 .onboardingContainer .secondary-cta.top {
   justify-content: end;
-  padding-inline-end: 30px;
+  padding-inline-end: min(150px, 500px - 70vh);
   padding-top: 4px;
   position: absolute;
   top: 10px;
@@ -727,18 +727,7 @@ body[lwt-newtab-brighttext] {
   color: #FFF;
 }
 .onboardingContainer .secondary-cta.top button:hover {
-  background-color: #5B5B66;
   color: #E0E0E6;
-}
-@media (max-height: 570px) {
-  .onboardingContainer .secondary-cta.top button {
-    color: var(--in-content-link-color);
-  }
-  .onboardingContainer .secondary-cta.top button:hover {
-    background-color: #5B5B66;
-    color: var(--in-content-link-color-hover);
-    text-decoration: underline;
-  }
 }
 .onboardingContainer .secondary-cta span {
   color: var(--grey-subtitle-1);
