@@ -210,9 +210,6 @@ jobs:
     condprof:
         symbol: I(condprof)
         parent: ubuntu1804-test
-    visual-metrics:
-        symbol: I(visual-metrics)
-        parent: debian10-base
     github-sync:
         symbol: I(github-sync)
         parent: debian10-base

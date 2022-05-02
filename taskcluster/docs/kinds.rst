@@ -668,16 +668,6 @@ geckodriver-signing
 -------------------
 Signing for geckodriver binary.
 
-visual-metrics
---------------
-Tasks that compute visual performance metrics from videos and images captured
-by other tasks.
-
-visual-metrics-dep
-------------------
-Tasks that compute visual performance metrics from videos and images captured
-by another task that produces a jobs.json artifact
-
 iris
 ----
 Iris testing suite
