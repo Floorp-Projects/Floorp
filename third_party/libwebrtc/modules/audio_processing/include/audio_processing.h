@@ -194,13 +194,9 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
 
     // Sets the properties of the audio processing pipeline.
     struct RTC_EXPORT Pipeline {
-      Pipeline();
-
       // Maximum allowed processing rate used internally. May only be set to
-      // 32000 or 48000 and any differing values will be treated as 48000. The
-      // default rate is currently selected based on the CPU architecture, but
-      // that logic may change.
-      int maximum_internal_processing_rate;
+      // 32000 or 48000 and any differing values will be treated as 48000.
+      int maximum_internal_processing_rate = 48000;
       // Allow multi-channel processing of render audio.
       bool multi_channel_render = false;
       // Allow multi-channel processing of capture audio when AEC3 is active
