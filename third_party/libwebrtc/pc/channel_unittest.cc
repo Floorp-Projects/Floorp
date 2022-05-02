@@ -1205,13 +1205,11 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     CreateChannels(0, 0);
     EXPECT_FALSE(media_channel1_->ready_to_send());
 
-    network_thread_->PostTask(
-        RTC_FROM_HERE, [this] { channel1_->OnTransportReadyToSend(true); });
+    channel1_->OnTransportReadyToSend(true);
     WaitForThreads();
     EXPECT_TRUE(media_channel1_->ready_to_send());
 
-    network_thread_->PostTask(
-        RTC_FROM_HERE, [this] { channel1_->OnTransportReadyToSend(false); });
+    channel1_->OnTransportReadyToSend(false);
     WaitForThreads();
     EXPECT_FALSE(media_channel1_->ready_to_send());
   }
