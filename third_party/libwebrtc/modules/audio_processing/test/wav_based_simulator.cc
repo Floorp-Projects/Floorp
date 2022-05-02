@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "modules/audio_processing/test/test_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/file_wrapper.h"
@@ -106,12 +107,15 @@ void WavBasedSimulator::Process() {
 
   bool samples_left_to_process = true;
   int call_chain_index = 0;
-  int num_forward_chunks_processed = 0;
+  int capture_frames_since_init = 0;
+  constexpr int kInitIndex = 1;
   while (samples_left_to_process) {
     switch (call_chain_[call_chain_index]) {
       case SimulationEventType::kProcessStream:
+        SelectivelyToggleDataDumping(kInitIndex, capture_frames_since_init);
+
         samples_left_to_process = HandleProcessStreamCall();
-        ++num_forward_chunks_processed;
+        ++capture_frames_since_init;
         break;
       case SimulationEventType::kProcessReverseStream:
         if (settings_.reverse_input_filename) {
@@ -126,6 +130,14 @@ void WavBasedSimulator::Process() {
   }
 
   DetachAecDump();
+}
+
+void WavBasedSimulator::Analyze() {
+  std::cout << "Inits:" << std::endl;
+  std::cout << "1: -->" << std::endl;
+  std::cout << " Time:" << std::endl;
+  std::cout << "  Capture: 0 s (0 frames) " << std::endl;
+  std::cout << "  Render: 0 s (0 frames)" << std::endl;
 }
 
 bool WavBasedSimulator::HandleProcessStreamCall() {
