@@ -40,6 +40,7 @@ GIFFT_TYPES = {
         "datetime",
         "quantity",
         "rate",
+        "url",
     ],
 }
 
