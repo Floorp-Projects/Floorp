@@ -54,7 +54,7 @@ class XPCOMThreadWrapper final : public AbstractThread,
     }
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                     DispatchReason aReason = NormalDispatch) override {
@@ -229,15 +229,8 @@ class XPCOMThreadWrapper final : public AbstractThread,
   };
 };
 
-NS_INTERFACE_MAP_BEGIN(XPCOMThreadWrapper)
-  NS_INTERFACE_MAP_ENTRY(nsIThreadObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIDirectTaskDispatcher)
-NS_INTERFACE_MAP_END_INHERITING(AbstractThread)
-
-NS_IMPL_ADDREF_INHERITED(XPCOMThreadWrapper, AbstractThread)
-NS_IMPL_RELEASE_INHERITED(XPCOMThreadWrapper, AbstractThread)
-
-NS_IMPL_ISUPPORTS(AbstractThread, nsIEventTarget, nsISerialEventTarget)
+NS_IMPL_ISUPPORTS(XPCOMThreadWrapper, nsIThreadObserver,
+                  nsIDirectTaskDispatcher, nsISerialEventTarget, nsIEventTarget)
 
 NS_IMETHODIMP_(bool)
 AbstractThread::IsOnCurrentThreadInfallible() { return IsCurrentThreadIn(); }
