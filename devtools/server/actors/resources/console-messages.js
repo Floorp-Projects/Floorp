@@ -25,6 +25,10 @@ const {
   getActorIdForInternalSourceId,
 } = require("devtools/server/actors/utils/dbg-source");
 
+const {
+  isSupportedByConsoleTable,
+} = require("devtools/shared/webconsole/messages");
+
 /**
  * Start watching for all console messages related to a given Target Actor.
  * This will notify about existing console messages, but also the one created in future.
@@ -141,14 +145,6 @@ module.exports = ConsoleMessageWatcher;
  *                   console.table call.
  */
 function getConsoleTableMessageItems(targetActor, result) {
-  if (
-    !result ||
-    !Array.isArray(result.arguments) ||
-    result.arguments.length == 0
-  ) {
-    return null;
-  }
-
   const [tableItemGrip] = result.arguments;
   const dataType = tableItemGrip.class;
   const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
@@ -262,14 +258,17 @@ function prepareConsoleMessageForRemote(targetActor, message) {
   }
 
   if (message.level === "table") {
-    const tableItems = getConsoleTableMessageItems(targetActor, result);
-    if (tableItems) {
-      result.arguments[0].ownProperties = tableItems;
-      result.arguments[0].preview = null;
-    }
+    if (result && isSupportedByConsoleTable(result.arguments)) {
+      const tableItems = getConsoleTableMessageItems(targetActor, result);
+      if (tableItems) {
+        result.arguments[0].ownProperties = tableItems;
+        result.arguments[0].preview = null;
 
-    // Only return the 2 first params.
-    result.arguments = result.arguments.slice(0, 2);
+        // Only return the 2 first params.
+        result.arguments = result.arguments.slice(0, 2);
+      }
+    }
+    // NOTE: See transformConsoleAPICallResource for not-supported case.
   }
 
   return result;
