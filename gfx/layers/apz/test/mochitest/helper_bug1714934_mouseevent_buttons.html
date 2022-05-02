@@ -27,7 +27,7 @@ async function test() {
       resolve();
     }, { once: true })
   });
-  await synthesizeNativeTap(window, 100, 100);
+  synthesizeNativeTap(window, 100, 100);
   await mousedownPromise;
 }
 
