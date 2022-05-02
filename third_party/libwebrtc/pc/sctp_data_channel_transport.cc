@@ -9,6 +9,8 @@
  */
 
 #include "pc/sctp_data_channel_transport.h"
+
+#include "absl/types/optional.h"
 #include "pc/sctp_utils.h"
 
 namespace webrtc {

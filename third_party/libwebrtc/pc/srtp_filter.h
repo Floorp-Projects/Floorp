@@ -11,6 +11,9 @@
 #ifndef PC_SRTP_FILTER_H_
 #define PC_SRTP_FILTER_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <list>
 #include <map>
 #include <memory>

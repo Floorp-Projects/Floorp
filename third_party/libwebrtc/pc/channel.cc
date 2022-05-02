@@ -10,22 +10,23 @@
 
 #include "pc/channel.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <iterator>
+#include <map>
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "absl/memory/memory.h"
-#include "api/call/audio_sink.h"
-#include "media/base/media_constants.h"
+#include "absl/strings/string_view.h"
+#include "api/rtp_parameters.h"
+#include "api/task_queue/queued_task.h"
+#include "media/base/codec.h"
+#include "media/base/rid_description.h"
 #include "media/base/rtp_utils.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
-#include "p2p/base/packet_transport_internal.h"
-#include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
-#include "rtc_base/byte_order.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
-#include "rtc_base/dscp.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/strings/string_builder.h"

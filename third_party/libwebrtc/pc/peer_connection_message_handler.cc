@@ -15,7 +15,11 @@
 #include "api/jsep.h"
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/stats_types.h"
 #include "pc/stats_collector_interface.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/location.h"
 #include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {

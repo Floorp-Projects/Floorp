@@ -10,6 +10,10 @@
 
 #include "pc/data_channel_utils.h"
 
+#include <utility>
+
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
 bool PacketQueue::Empty() const {

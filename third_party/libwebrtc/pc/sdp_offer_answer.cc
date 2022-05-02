@@ -39,7 +39,6 @@
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
 #include "p2p/base/transport_info.h"
-#include "pc/connection_context.h"
 #include "pc/data_channel_utils.h"
 #include "pc/media_protocol_names.h"
 #include "pc/media_stream.h"

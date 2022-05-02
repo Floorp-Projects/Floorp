@@ -11,6 +11,9 @@
 #ifndef PC_CHANNEL_H_
 #define PC_CHANNEL_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <map>
 #include <memory>
 #include <set>
@@ -18,30 +21,50 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/call/audio_sink.h"
+#include "api/crypto/crypto_options.h"
 #include "api/function_view.h"
 #include "api/jsep.h"
+#include "api/media_types.h"
 #include "api/rtp_receiver_interface.h"
+#include "api/rtp_transceiver_direction.h"
+#include "api/scoped_refptr.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
+#include "call/rtp_demuxer.h"
 #include "call/rtp_packet_sink_interface.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_engine.h"
 #include "media/base/stream_params.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/packet_transport_internal.h"
 #include "pc/channel_interface.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/media_session.h"
 #include "pc/rtp_transport.h"
+#include "pc/rtp_transport_internal.h"
+#include "pc/session_description.h"
 #include "pc/srtp_filter.h"
 #include "pc/srtp_transport.h"
+#include "rtc_base/async_packet_socket.h"
 #include "rtc_base/async_udp_socket.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/location.h"
+#include "rtc_base/message_handler.h"
 #include "rtc_base/network.h"
+#include "rtc_base/network/sent_packet.h"
+#include "rtc_base/network_route.h"
+#include "rtc_base/socket.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/thread_message.h"
 #include "rtc_base/unique_id_generator.h"
 
 namespace webrtc {

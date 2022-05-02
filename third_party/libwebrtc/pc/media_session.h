@@ -18,14 +18,22 @@
 #include <string>
 #include <vector>
 
+#include "api/crypto/crypto_options.h"
 #include "api/media_types.h"
+#include "api/rtp_parameters.h"
+#include "api/rtp_transceiver_direction.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"  // For DataChannelType
+#include "media/base/rid_description.h"
+#include "media/base/stream_params.h"
 #include "p2p/base/ice_credentials_iterator.h"
+#include "p2p/base/transport_description.h"
 #include "p2p/base/transport_description_factory.h"
+#include "p2p/base/transport_info.h"
 #include "pc/jsep_transport.h"
 #include "pc/media_protocol_names.h"
 #include "pc/session_description.h"
+#include "pc/simulcast_description.h"
 #include "rtc_base/unique_id_generator.h"
 
 namespace cricket {

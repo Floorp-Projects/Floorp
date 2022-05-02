@@ -39,8 +39,11 @@
 #include "p2p/base/port_allocator.h"
 #include "pc/channel_manager.h"
 #include "pc/connection_context.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/rtc_certificate_generator.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace rtc {
 class BasicNetworkManager;

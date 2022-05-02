@@ -17,7 +17,12 @@
 #include "api/ice_transport_interface.h"
 #include "api/scoped_refptr.h"
 #include "p2p/base/dtls_transport.h"
+#include "p2p/base/dtls_transport_internal.h"
+#include "pc/ice_transport.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 

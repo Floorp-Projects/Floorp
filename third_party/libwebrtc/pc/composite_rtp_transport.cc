@@ -13,8 +13,10 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
+#include "absl/algorithm/container.h"
 #include "p2p/base/packet_transport_internal.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace webrtc {
 

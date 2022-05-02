@@ -10,8 +10,7 @@
 
 #include "pc/ice_transport.h"
 
-#include <memory>
-#include <utility>
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

@@ -10,8 +10,9 @@
 
 #include "pc/media_session.h"
 
+#include <stddef.h>
+
 #include <algorithm>
-#include <functional>
 #include <map>
 #include <memory>
 #include <set>
@@ -20,8 +21,10 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/crypto_params.h"
+#include "media/base/codec.h"
 #include "media/base/h264_profile_level_id.h"
 #include "media/base/media_constants.h"
 #include "media/sctp/sctp_transport_internal.h"
@@ -29,11 +32,12 @@
 #include "pc/channel_manager.h"
 #include "pc/media_protocol_names.h"
 #include "pc/rtp_media_utils.h"
-#include "pc/srtp_filter.h"
 #include "pc/used_ids.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/string_encode.h"
 #include "rtc_base/third_party/base64/base64.h"
 #include "rtc_base/unique_id_generator.h"
 #include "system_wrappers/include/field_trial.h"

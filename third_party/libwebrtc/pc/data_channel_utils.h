@@ -11,6 +11,8 @@
 #ifndef PC_DATA_CHANNEL_UTILS_H_
 #define PC_DATA_CHANNEL_UTILS_H_
 
+#include <stddef.h>
+#include <stdint.h>
 #include <deque>
 #include <memory>
 #include <string>
