@@ -4422,11 +4422,7 @@ pref("services.common.log.logger.tokenserverclient", "Debug");
   // 1: WebDriver BiDi
   // 2: CDP (Chrome DevTools Protocol)
   // 3: WebDriver BiDi + CDP
-  #if defined(NIGHTLY_BUILD)
-    pref("remote.active-protocols", 3);
-  #else
-    pref("remote.active-protocols", 2);
-  #endif
+  pref("remote.active-protocols", 3);
 
   // Defines the verbosity of the internal logger.
   //
