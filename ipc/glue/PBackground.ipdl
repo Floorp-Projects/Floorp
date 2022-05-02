@@ -21,7 +21,6 @@ include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PClientManager;
 include protocol PEndpointForReport;
-include protocol PFileDescriptorSet;
 include protocol PFileSystemRequest;
 include protocol PGamepadEventChannel;
 include protocol PGamepadTestChannel;
@@ -101,7 +100,6 @@ sync protocol PBackground
   manages PCacheStreamControl;
   manages PClientManager;
   manages PEndpointForReport;
-  manages PFileDescriptorSet;
   manages PFileSystemRequest;
   manages PGamepadEventChannel;
   manages PGamepadTestChannel;
@@ -301,8 +299,6 @@ both:
   // PRemoteLazyInputStream is created on the parent side only if the child
   // starts a migration.
   async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
-
-  async PFileDescriptorSet(FileDescriptor fd);
 };
 
 } // namespace ipc

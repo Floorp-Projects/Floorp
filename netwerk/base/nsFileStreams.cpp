@@ -555,7 +555,7 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams,
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
-  SerializeInternal(aParams, aFileDescriptors);
+  SerializeInternal(aParams);
 }
 
 void nsFileInputStream::Serialize(InputStreamParams& aParams,
@@ -566,11 +566,10 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams,
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
-  SerializeInternal(aParams, aFileDescriptors);
+  SerializeInternal(aParams);
 }
 
-void nsFileInputStream::SerializeInternal(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors) {
+void nsFileInputStream::SerializeInternal(InputStreamParams& aParams) {
   FileInputStreamParams params;
 
   if (NS_SUCCEEDED(DoPendingOpen())) {
@@ -578,10 +577,7 @@ void nsFileInputStream::SerializeInternal(
     FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
     NS_ASSERTION(fd, "This should never be null!");
 
-    DebugOnly dbgFD = aFileDescriptors.AppendElement(fd);
-    NS_ASSERTION(dbgFD->IsValid(), "Sending an invalid file descriptor!");
-
-    params.fileDescriptorIndex() = aFileDescriptors.Length() - 1;
+    params.fileDescriptor() = FileDescriptor(fd);
 
     Close();
   } else {
@@ -589,7 +585,7 @@ void nsFileInputStream::SerializeInternal(
         "This file has not been opened (or could not be opened). "
         "Sending an invalid file descriptor to the other process!");
 
-    params.fileDescriptorIndex() = UINT32_MAX;
+    params.fileDescriptor() = FileDescriptor();
   }
 
   int32_t behaviorFlags = mBehaviorFlags;
@@ -619,15 +615,7 @@ bool nsFileInputStream::Deserialize(
 
   const FileInputStreamParams& params = aParams.get_FileInputStreamParams();
 
-  uint32_t fileDescriptorIndex = params.fileDescriptorIndex();
-
-  FileDescriptor fd;
-  if (fileDescriptorIndex < aFileDescriptors.Length()) {
-    fd = aFileDescriptors[fileDescriptorIndex];
-    NS_WARNING_ASSERTION(fd.IsValid(), "Received an invalid file descriptor!");
-  } else {
-    NS_WARNING("Received a bad file descriptor index!");
-  }
+  const FileDescriptor& fd = params.fileDescriptor();
 
   if (fd.IsValid()) {
     auto rawFD = fd.ClonePlatformHandle();
@@ -639,6 +627,7 @@ bool nsFileInputStream::Deserialize(
     mFD = fileDesc;
     mState = eOpened;
   } else {
+    NS_WARNING("Received an invalid file descriptor!");
     mState = eError;
     mErrorValue = NS_ERROR_FILE_NOT_FOUND;
   }

@@ -20,7 +20,6 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
@@ -351,23 +350,6 @@ already_AddRefed<PHttpTransactionChild>
 SocketProcessChild::AllocPHttpTransactionChild() {
   RefPtr<HttpTransactionChild> actor = new HttpTransactionChild();
   return actor.forget();
-}
-
-PFileDescriptorSetChild* SocketProcessChild::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
-}
-
-bool SocketProcessChild::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PFileDescriptorSetChild* SocketProcessChild::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PSocketProcessChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
 already_AddRefed<PHttpConnectionMgrChild>
