@@ -30,6 +30,7 @@ import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.CancellationException
 import kotlin.collections.HashMap
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -1738,6 +1739,62 @@ class WebExtensionTest : BaseSessionTest() {
         }
 
         fail("The above code should throw.")
+    }
+
+    // Test web extension permission.request.
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun permissionRequest() {
+        sessionRule.setPrefsUntilTestEnd(mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false
+        ))
+
+        val extension = sessionRule.waitForResult(
+                        controller.ensureBuiltIn("resource://android/assets/web_extensions/permission-request/",
+                                                 "permissions@example.com"))
+
+        mainSession.loadUri("${extension.metaData.baseUrl}clickToRequestPermission.html")
+        sessionRule.waitForPageStop()
+
+        // click triggers permissions.request
+        mainSession.synthesizeTap(50, 50)
+
+        sessionRule.delegateUntilTestEnd(object : WebExtensionController.PromptDelegate {
+            @AssertCalled(count = 2)
+            override fun onOptionalPrompt(extension: WebExtension, permissions: Array<String>, origins: Array<String>): GeckoResult<AllowOrDeny> {
+                val expected = arrayOf("geolocation")
+                assertThat("Permissions should match the requested permissions", permissions, equalTo(expected))
+                assertThat("Origins should match the requested origins", origins, equalTo(arrayOf("*://example.com/*")))
+                return forEachCall(GeckoResult.deny(), GeckoResult.allow())
+            }
+        })
+
+        var result = GeckoResult<String>()
+        mainSession.webExtensionController.setMessageDelegate(
+                extension, object : WebExtension.MessageDelegate {
+            override fun onMessage(nativeApp: String, message: Any,
+                                   sender: WebExtension.MessageSender): GeckoResult<Any>? {
+                result.complete(message as String)
+                return null
+            }
+        }, "browser")
+
+        val message = sessionRule.waitForResult(result)
+        assertThat("Permission request should first be denied.", message, equalTo("false"))
+
+        mainSession.synthesizeTap(50, 50)
+        result = GeckoResult<String>()
+        val message2 = sessionRule.waitForResult(result)
+        assertThat("Permission request should be accepted.", message2, equalTo("true"))
+
+        mainSession.synthesizeTap(50, 50)
+        result = GeckoResult<String>()
+        val message3 = sessionRule.waitForResult(result)
+        assertThat("Permission request should already be accepted.", message3, equalTo("true"))
+
+        sessionRule.waitForResult(controller.uninstall(extension))
     }
 
     // Test the basic update extension flow with no new permissions.
