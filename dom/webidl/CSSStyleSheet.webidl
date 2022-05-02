@@ -34,7 +34,7 @@ interface CSSStyleSheet : StyleSheet {
   unsigned long insertRule(UTF8String rule, optional unsigned long index = 0);
   [Throws, NeedsSubjectPrincipal]
   void deleteRule(unsigned long index);
-  [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
+  [NewObject, Pref="layout.css.constructable-stylesheets.enabled"]
   Promise<CSSStyleSheet> replace(UTF8String text);
   [Throws, Pref="layout.css.constructable-stylesheets.enabled"]
   void replaceSync(UTF8String text);

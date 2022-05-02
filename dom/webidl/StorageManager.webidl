@@ -12,13 +12,13 @@
  Exposed=(Window,Worker),
  Pref="dom.storageManager.enabled"]
 interface StorageManager {
-  [Throws]
+  [NewObject]
   Promise<boolean> persisted();
 
-  [Exposed=Window, Throws]
+  [Exposed=Window, NewObject]
   Promise<boolean> persist();
 
-  [Throws]
+  [NewObject]
   Promise<StorageEstimate> estimate();
 };
 

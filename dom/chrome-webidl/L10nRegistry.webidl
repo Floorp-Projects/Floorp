@@ -124,7 +124,7 @@ interface L10nFileSource {
 
   [Throws]
   L10nFileSourceHasFileStatus hasFile(UTF8String locale, UTF8String path);
-  [Throws]
+  [NewObject]
   Promise<FluentResource?> fetchFile(UTF8String locale, UTF8String path);
   [Throws]
   FluentResource? fetchFileSync(UTF8String locale, UTF8String path);

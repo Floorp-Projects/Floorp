@@ -717,7 +717,7 @@ partial interface Window {
    * @param {function} callback
    * @returns {Promise}
    */
-  [Throws, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
+  [NewObject, Func="nsGlobalWindowInner::IsPrivilegedChromeWindow"]
   Promise<any> promiseDocumentFlushed(PromiseDocumentFlushedCallback callback);
 
   [ChromeOnly]

@@ -20,7 +20,7 @@ interface WritableStream {
   [Throws]
   Promise<void> abort(optional any reason);
 
-  [Throws]
+  [NewObject]
   Promise<void> close();
 
   [Throws]
