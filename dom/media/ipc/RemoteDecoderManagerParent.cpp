@@ -71,7 +71,7 @@ bool RemoteDecoderManagerParent::StartupThreads() {
     return false;
   }
 
-  sRemoteDecoderManagerParentThread = new TaskQueue(
+  sRemoteDecoderManagerParentThread = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::SUPERVISOR), "RemVidParent");
   if (XRE_IsGPUProcess()) {
     MOZ_ALWAYS_SUCCEEDS(
@@ -189,8 +189,8 @@ PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier) {
   RefPtr<TaskQueue> decodeTaskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "RemoteVideoDecoderParent::mDecodeTaskQueue");
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "RemoteVideoDecoderParent::mDecodeTaskQueue");
 
   if (aRemoteDecoderInfo.type() ==
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {

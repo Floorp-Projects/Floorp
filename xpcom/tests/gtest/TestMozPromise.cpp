@@ -22,8 +22,8 @@ class MOZ_STACK_CLASS AutoTaskQueue {
  public:
   AutoTaskQueue()
       : mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                          "TestMozPromise AutoTaskQueue")) {}
+            TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                              "TestMozPromise AutoTaskQueue")) {}
 
   ~AutoTaskQueue() { mTaskQueue->AwaitShutdownAndIdle(); }
 

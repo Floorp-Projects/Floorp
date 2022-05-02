@@ -20,9 +20,9 @@
 namespace mozilla {
 
 WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager)
-    : mTaskQueue(
-          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                        "WMFMediaDataDecoder")),
+    : mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "WMFMediaDataDecoder")),
       mMFTManager(aMFTManager) {}
 
 WMFMediaDataDecoder::~WMFMediaDataDecoder() {}

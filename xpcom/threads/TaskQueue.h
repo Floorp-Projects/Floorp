@@ -46,15 +46,16 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
+class TaskQueue final : public AbstractThread, public nsIDirectTaskDispatcher {
   class EventTargetWrapper;
 
  public:
-  TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
-            bool aSupportsTailDispatch = false);
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDIRECTTASKDISPATCHER
+
+  static RefPtr<TaskQueue> Create(already_AddRefed<nsIEventTarget> aTarget,
+                                  const char* aName,
+                                  bool aSupportsTailDispatch = false);
 
   TaskDispatcher& TailDispatcher() override;
 
@@ -121,7 +122,10 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   bool IsCurrentThreadIn() const override;
   using nsISerialEventTarget::IsOnCurrentThread;
 
- protected:
+ private:
+  TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
+            bool aSupportsTailDispatch);
+
   virtual ~TaskQueue();
 
   // Blocks until all task finish executing. Called internally by methods

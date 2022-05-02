@@ -787,9 +787,9 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
     return;
   }
 
-  mEncodeTaskQueue = MakeAndAddRef<TaskQueue>(
-      GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
-      "WebSpeechEncoderThread");
+  mEncodeTaskQueue =
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
+                        "WebSpeechEncoderThread");
 
   nsresult rv;
   rv = mRecognitionService->Initialize(this);
