@@ -87,7 +87,7 @@ interface WindowGlobalParent : WindowContext {
   // navigation before proceeding. If the user needs to be prompted, however,
   // the promise will not resolve until the user has responded, regardless of
   // the timeout.
-  [Throws]
+  [NewObject]
   Promise<boolean> permitUnload(optional PermitUnloadAction action = "prompt",
                                 optional unsigned long timeout = 0);
 
@@ -140,7 +140,7 @@ interface WindowGlobalParent : WindowContext {
    * cannot access the rendering of out of process iframes. This API works
    * with remote and local frames.
    */
-  [Throws]
+  [NewObject]
   Promise<ImageBitmap> drawSnapshot(DOMRect? rect,
                                     double scale,
                                     UTF8String backgroundColor,
@@ -155,7 +155,7 @@ interface WindowGlobalParent : WindowContext {
    * This returns a Promise which resolves to an nsITransportSecurity
    * object with certificate data or undefined if no security info is available.
    */
-  [Throws]
+  [NewObject]
   Promise<nsITransportSecurityInfo> getSecurityInfo();
 
   // True if any of the windows in the subtree rooted at this window

@@ -12,9 +12,12 @@
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
   readonly attribute RTCDtlsTransport? transport;
+  [NewObject]
   Promise<void> setParameters (optional RTCRtpParameters parameters = {});
   RTCRtpParameters getParameters();
+  [Throws]
   Promise<void> replaceTrack(MediaStreamTrack? withTrack);
+  [NewObject]
   Promise<RTCStatsReport> getStats();
   [Pref="media.peerconnection.dtmf.enabled"]
   readonly attribute RTCDTMFSender? dtmf;

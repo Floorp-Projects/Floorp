@@ -34,11 +34,9 @@ JSObject* FileSystemHandle::WrapObject(JSContext* aCx,
 void FileSystemHandle::GetName(DOMString& aResult) { aResult.SetNull(); }
 
 already_AddRefed<Promise> FileSystemHandle::IsSameEntry(
-    FileSystemHandle& aOther) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    FileSystemHandle& aOther, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

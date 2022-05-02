@@ -85,8 +85,11 @@ RTCDtlsTransport* RTCRtpSender::GetTransport() const {
 
 RTCDTMFSender* RTCRtpSender::GetDtmf() const { return mDtmf; }
 
-already_AddRefed<Promise> RTCRtpSender::GetStats() {
-  RefPtr<Promise> promise = MakePromise();
+already_AddRefed<Promise> RTCRtpSender::GetStats(ErrorResult& aError) {
+  RefPtr<Promise> promise = MakePromise(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
   if (NS_WARN_IF(!mPipeline)) {
     // TODO(bug 1056433): When we stop nulling this out when the PC is closed
     // (or when the transceiver is stopped), we can remove this code. We
@@ -391,9 +394,12 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal() {
 }
 
 already_AddRefed<Promise> RTCRtpSender::SetParameters(
-    const dom::RTCRtpParameters& aParameters) {
+    const dom::RTCRtpParameters& aParameters, ErrorResult& aError) {
   // TODO(bug 1401592): transaction ids and other spec fixes
-  RefPtr<dom::Promise> p = MakePromise();
+  RefPtr<dom::Promise> p = MakePromise(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
   if (mPc->IsClosed()) {
     p->MaybeRejectWithInvalidStateError("Peer connection is closed");
     return p.forget();
@@ -515,14 +521,15 @@ class ReplaceTrackOperation final : public PeerConnectionImpl::Operation {
  public:
   ReplaceTrackOperation(PeerConnectionImpl* aPc,
                         const RefPtr<TransceiverImpl>& aTransceiver,
-                        const RefPtr<MediaStreamTrack>& aTrack);
+                        const RefPtr<MediaStreamTrack>& aTrack,
+                        ErrorResult& aError);
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ReplaceTrackOperation,
                                            PeerConnectionImpl::Operation)
 
  private:
   MOZ_CAN_RUN_SCRIPT
-  RefPtr<dom::Promise> CallImpl() override;
+  RefPtr<dom::Promise> CallImpl(ErrorResult& aError) override;
   ~ReplaceTrackOperation() = default;
   RefPtr<TransceiverImpl> mTransceiver;
   RefPtr<MediaStreamTrack> mNewTrack;
@@ -540,17 +547,20 @@ NS_INTERFACE_MAP_END_INHERITING(PeerConnectionImpl::Operation)
 
 ReplaceTrackOperation::ReplaceTrackOperation(
     PeerConnectionImpl* aPc, const RefPtr<TransceiverImpl>& aTransceiver,
-    const RefPtr<MediaStreamTrack>& aTrack)
-    : PeerConnectionImpl::Operation(aPc),
+    const RefPtr<MediaStreamTrack>& aTrack, ErrorResult& aError)
+    : PeerConnectionImpl::Operation(aPc, aError),
       mTransceiver(aTransceiver),
       mNewTrack(aTrack) {}
 
-RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl() {
+RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl(ErrorResult& aError) {
   RefPtr<RTCRtpSender> sender = mTransceiver->Sender();
   // If transceiver.[[Stopped]] is true, return a promise rejected with a newly
   // created InvalidStateError.
   if (mTransceiver->Stopped()) {
-    RefPtr<dom::Promise> error = sender->MakePromise();
+    RefPtr<dom::Promise> error = sender->MakePromise(aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
     MOZ_LOG(gSenderLog, LogLevel::Debug,
             ("%s Cannot call replaceTrack when transceiver is stopped",
              __FUNCTION__));
@@ -560,7 +570,10 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl() {
   }
 
   // Let p be a new promise.
-  RefPtr<dom::Promise> p = sender->MakePromise();
+  RefPtr<dom::Promise> p = sender->MakePromise(aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
 
   if (!sender->SeamlessTrackSwitch(mNewTrack)) {
     MOZ_LOG(gSenderLog, LogLevel::Info,
@@ -586,7 +599,7 @@ RefPtr<dom::Promise> ReplaceTrackOperation::CallImpl() {
 }
 
 already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
-    dom::MediaStreamTrack* aWithTrack) {
+    dom::MediaStreamTrack* aWithTrack, ErrorResult& aError) {
   // If withTrack is non-null and withTrack.kind differs from the transceiver
   // kind of transceiver, return a promise rejected with a newly created
   // TypeError.
@@ -596,7 +609,10 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
     nsString oldKind;
     mTransceiverImpl->GetKind(oldKind);
     if (newKind != oldKind) {
-      RefPtr<dom::Promise> error = MakePromise();
+      RefPtr<dom::Promise> error = MakePromise(aError);
+      if (aError.Failed()) {
+        return nullptr;
+      }
       error->MaybeRejectWithTypeError(
           "Cannot replaceTrack with a different kind!");
       return error.forget();
@@ -610,16 +626,20 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
   // Return the result of chaining the following steps to connection's
   // operations chain:
   RefPtr<PeerConnectionImpl::Operation> op =
-      new ReplaceTrackOperation(mPc, mTransceiverImpl, aWithTrack);
+      new ReplaceTrackOperation(mPc, mTransceiverImpl, aWithTrack, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
   // Static analysis forces us to use a temporary.
   auto pc = mPc;
-  return pc->Chain(op);
+  return pc->Chain(op, aError);
 }
 
 nsPIDOMWindowInner* RTCRtpSender::GetParentObject() const { return mWindow; }
 
-already_AddRefed<dom::Promise> RTCRtpSender::MakePromise() const {
-  return mPc->MakePromise();
+already_AddRefed<dom::Promise> RTCRtpSender::MakePromise(
+    ErrorResult& aError) const {
+  return mPc->MakePromise(aError);
 }
 
 bool RTCRtpSender::SeamlessTrackSwitch(

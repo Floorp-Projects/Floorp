@@ -81,15 +81,10 @@ void PublicKeyCredential::SetResponse(RefPtr<AuthenticatorResponse> aResponse) {
 /* static */
 already_AddRefed<Promise>
 PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
-    GlobalObject& aGlobal) {
-  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aGlobal.Context());
-  if (NS_WARN_IF(!globalObject)) {
-    return nullptr;
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(globalObject, rv);
-  if (rv.Failed()) {
+    GlobalObject& aGlobal, ErrorResult& aError) {
+  RefPtr<Promise> promise =
+      Promise::Create(xpc::CurrentNativeGlobal(aGlobal.Context()), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -125,16 +120,11 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
 
 /* static */
 already_AddRefed<Promise>
-PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(
-    GlobalObject& aGlobal) {
-  nsIGlobalObject* globalObject = xpc::CurrentNativeGlobal(aGlobal.Context());
-  if (NS_WARN_IF(!globalObject)) {
-    return nullptr;
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(globalObject, rv);
-  if (rv.Failed()) {
+PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(GlobalObject& aGlobal,
+                                                         ErrorResult& aError) {
+  RefPtr<Promise> promise =
+      Promise::Create(xpc::CurrentNativeGlobal(aGlobal.Context()), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

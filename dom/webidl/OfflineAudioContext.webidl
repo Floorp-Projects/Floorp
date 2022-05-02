@@ -25,7 +25,7 @@ interface OfflineAudioContext : BaseAudioContext {
     constructor(unsigned long numberOfChannels, unsigned long length,
                 float sampleRate);
 
-    [Throws]
+    [NewObject]
     Promise<AudioBuffer> startRendering();
 
     // TODO: Promise<void>        suspend (double suspendTime);

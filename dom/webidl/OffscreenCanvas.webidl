@@ -32,14 +32,14 @@ interface OffscreenCanvas : EventTarget {
 
   [Throws]
   ImageBitmap transferToImageBitmap();
-  [Throws]
+  [NewObject]
   Promise<Blob> convertToBlob(optional ImageEncodeOptions options = {});
 
   attribute EventHandler oncontextlost;
   attribute EventHandler oncontextrestored;
 
   // Deprecated by convertToBlob
-  [Deprecated="OffscreenCanvasToBlob", Throws]
+  [Deprecated="OffscreenCanvasToBlob", NewObject]
   Promise<Blob> toBlob(optional DOMString type = "",
                        optional any encoderOptions);
 };

@@ -10,10 +10,12 @@ dictionary FileSystemCreateWritableOptions {
 // TODO: Add Serializable
 [Exposed=(Window,Worker), SecureContext, Pref="dom.fs.enabled"]
 interface FileSystemFileHandle : FileSystemHandle {
+  [NewObject]
   Promise<File> getFile();
 
+  [NewObject]
   Promise<FileSystemWritableFileStream> createWritable(optional FileSystemCreateWritableOptions options = {});
 
-  [Exposed=DedicatedWorker]
+  [Exposed=DedicatedWorker, NewObject]
   Promise<FileSystemSyncAccessHandle> createSyncAccessHandle();
 };

@@ -64,8 +64,8 @@ interface VRMockController {
 interface VRServiceTest {
   VRMockDisplay getVRDisplay();
   [Throws] VRMockController getVRController(unsigned long controllerIdx);
-  [Throws] Promise<void> run();
-  [Throws] Promise<void> reset();
+  [NewObject] Promise<void> run();
+  [NewObject] Promise<void> reset();
   void commit();
   void end();
   void clearAll();

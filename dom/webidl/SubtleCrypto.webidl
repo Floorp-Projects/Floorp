@@ -183,58 +183,58 @@ typedef (object or DOMString) AlgorithmIdentifier;
 [Exposed=(Window,Worker),
  SecureContext]
 interface SubtleCrypto {
-  [Throws]
+  [NewObject]
   Promise<any> encrypt(AlgorithmIdentifier algorithm,
                        CryptoKey key,
                        BufferSource data);
-  [Throws]
+  [NewObject]
   Promise<any> decrypt(AlgorithmIdentifier algorithm,
                        CryptoKey key,
                        BufferSource data);
-  [Throws]
+  [NewObject]
   Promise<any> sign(AlgorithmIdentifier algorithm,
                      CryptoKey key,
                      BufferSource data);
-  [Throws]
+  [NewObject]
   Promise<any> verify(AlgorithmIdentifier algorithm,
                       CryptoKey key,
                       BufferSource signature,
                       BufferSource data);
-  [Throws]
+  [NewObject]
   Promise<any> digest(AlgorithmIdentifier algorithm,
                       BufferSource data);
 
-  [Throws]
+  [NewObject]
   Promise<any> generateKey(AlgorithmIdentifier algorithm,
                            boolean extractable,
                            sequence<KeyUsage> keyUsages );
-  [Throws]
+  [NewObject]
   Promise<any> deriveKey(AlgorithmIdentifier algorithm,
                          CryptoKey baseKey,
                          AlgorithmIdentifier derivedKeyType,
                          boolean extractable,
                          sequence<KeyUsage> keyUsages );
-  [Throws]
+  [NewObject]
   Promise<any> deriveBits(AlgorithmIdentifier algorithm,
                           CryptoKey baseKey,
                           unsigned long length);
 
-  [Throws]
+  [NewObject]
   Promise<any> importKey(KeyFormat format,
                          object keyData,
                          AlgorithmIdentifier algorithm,
                          boolean extractable,
                          sequence<KeyUsage> keyUsages );
-  [Throws]
+  [NewObject]
   Promise<any> exportKey(KeyFormat format, CryptoKey key);
 
-  [Throws]
+  [NewObject]
   Promise<any> wrapKey(KeyFormat format,
                        CryptoKey key,
                        CryptoKey wrappingKey,
                        AlgorithmIdentifier wrapAlgorithm);
 
-  [Throws]
+  [NewObject]
   Promise<any> unwrapKey(KeyFormat format,
                          BufferSource wrappedKey,
                          CryptoKey unwrappingKey,

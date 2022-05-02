@@ -13,7 +13,11 @@
 
 class nsIGlobalObject;
 
-namespace mozilla::dom {
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
 
 class DOMString;
 enum class FileSystemHandleKind : uint8_t;
@@ -35,7 +39,8 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
 
   void GetName(DOMString& aResult);
 
-  already_AddRefed<Promise> IsSameEntry(FileSystemHandle& aOther);
+  already_AddRefed<Promise> IsSameEntry(FileSystemHandle& aOther,
+                                        ErrorResult& aError);
 
  protected:
   virtual ~FileSystemHandle() = default;
@@ -43,6 +48,7 @@ class FileSystemHandle : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // DOM_FS_FILESYSTEMHANDLE_H_

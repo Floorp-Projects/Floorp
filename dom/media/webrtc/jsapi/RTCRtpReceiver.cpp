@@ -146,12 +146,10 @@ RTCDtlsTransport* RTCRtpReceiver::GetTransport() const {
   return mTransceiverImpl->GetDtlsTransport();
 }
 
-already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
+already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(global, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.StealNSResult();
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
   }
 
@@ -433,8 +431,11 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               local.mFramesPerSecond.Construct(videoStats->decode_frame_rate);
               local.mFrameWidth.Construct(videoStats->width);
               local.mFrameHeight.Construct(videoStats->height);
-              // XXX: key_frames + delta_frames may undercount frames because they were dropped in FrameBuffer::InsertFrame. (bug 1766553)
-              local.mFramesReceived.Construct(videoStats->frame_counts.key_frames + videoStats->frame_counts.delta_frames);
+              // XXX: key_frames + delta_frames may undercount frames because
+              // they were dropped in FrameBuffer::InsertFrame. (bug 1766553)
+              local.mFramesReceived.Construct(
+                  videoStats->frame_counts.key_frames +
+                  videoStats->frame_counts.delta_frames);
 
               /*
                * Potential new stats that are now available upstream.

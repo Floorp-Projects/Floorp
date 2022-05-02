@@ -119,7 +119,7 @@ namespace SessionStoreUtils {
    Promise<void> initializeRestore(CanonicalBrowsingContext browsingContext,
                                    nsISessionStoreRestoreData? data);
 
-   [Throws]
+   [NewObject]
    Promise<void> restoreDocShellState(
       CanonicalBrowsingContext browsingContext,
       UTF8String? url,

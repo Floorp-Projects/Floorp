@@ -133,24 +133,24 @@ partial namespace PathUtils {
   /**
    * The profile directory.
    */
-  [Throws, BinaryName="GetProfileDirAsync"]
+  [NewObject, BinaryName="GetProfileDirAsync"]
   Promise<DOMString> getProfileDir();
 
   /**
    * The local-specific profile directory.
    */
-  [Throws, BinaryName="GetLocalProfileDirAsync"]
+  [NewObject, BinaryName="GetLocalProfileDirAsync"]
   Promise<DOMString> getLocalProfileDir();
 
   /**
    * The temporary directory for the process.
    */
-  [Throws, BinaryName="GetTempDirAsync"]
+  [NewObject, BinaryName="GetTempDirAsync"]
   Promise<DOMString> getTempDir();
 
   /**
    * The OS temporary directory.
    */
-  [Throws, BinaryName="GetOSTempDirAsync"]
+  [NewObject, BinaryName="GetOSTempDirAsync"]
   Promise<DOMString> getOSTempDir();
 };

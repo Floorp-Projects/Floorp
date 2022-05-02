@@ -55,7 +55,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   // webidl
   MediaStreamTrack* Track() const { return mTrack; }
   RTCDtlsTransport* GetTransport() const;
-  already_AddRefed<Promise> GetStats();
+  already_AddRefed<Promise> GetStats(ErrorResult& aError);
   void GetContributingSources(
       nsTArray<dom::RTCRtpContributingSource>& aSources);
   void GetSynchronizationSources(

@@ -13,7 +13,11 @@
 
 class nsIGlobalObject;
 
-namespace mozilla::dom {
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
 
 struct FileSystemReadWriteOptions;
 class MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer;
@@ -40,13 +44,13 @@ class FileSystemSyncAccessHandle final : public nsISupports,
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer,
       const FileSystemReadWriteOptions& aOptions);
 
-  already_AddRefed<Promise> Truncate(uint64_t aSize);
+  already_AddRefed<Promise> Truncate(uint64_t aSize, ErrorResult& aError);
 
-  already_AddRefed<Promise> GetSize();
+  already_AddRefed<Promise> GetSize(ErrorResult& aError);
 
-  already_AddRefed<Promise> Flush();
+  already_AddRefed<Promise> Flush(ErrorResult& aError);
 
-  already_AddRefed<Promise> Close();
+  already_AddRefed<Promise> Close(ErrorResult& aError);
 
  private:
   virtual ~FileSystemSyncAccessHandle() = default;
@@ -54,6 +58,7 @@ class FileSystemSyncAccessHandle final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // DOM_FS_FILESYSTEMSYNCACCESSHANDLE_H_
