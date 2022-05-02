@@ -4383,6 +4383,21 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
+  if (NS_SUCCEEDED(rv) && AllowsTransactionsToChangeSelection()) {
+    if (const nsIContent* previousContent = transaction->GetNewContent()) {
+      const auto pointToPutCaret = EditorRawDOMPoint::AtEndOf(*previousContent);
+      if (MOZ_LIKELY(pointToPutCaret.IsSet())) {
+        rv = CollapseSelectionTo(pointToPutCaret);
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                             "EditorBase::CollapseSelectionTo() failed");
+      } else {
+        NS_WARNING(
+            "The previous node of split point was removed by the web app");
+        rv = NS_ERROR_FAILURE;
+      }
+    }
+  }
+
   nsCOMPtr<nsIContent> newContent = transaction->GetNewContent();
   nsCOMPtr<nsIContent> splitContent = transaction->GetSplitContent();
   if (MOZ_LIKELY(NS_SUCCEEDED(rv) && newContent && splitContent)) {
