@@ -244,6 +244,7 @@ EmulatedNetworkManagerInterface*
 NetworkEmulationManagerImpl::CreateEmulatedNetworkManagerInterface(
     const std::vector<EmulatedEndpoint*>& endpoints) {
   std::vector<EmulatedEndpointImpl*> endpoint_impls;
+  endpoint_impls.reserve(endpoints.size());
   for (EmulatedEndpoint* endpoint : endpoints) {
     endpoint_impls.push_back(static_cast<EmulatedEndpointImpl*>(endpoint));
   }
