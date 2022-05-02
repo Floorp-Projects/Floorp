@@ -264,8 +264,7 @@ struct nsFactoryEntry {
 
   already_AddRefed<nsIFactory> GetFactory();
 
-  nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                          void** aResult);
+  nsresult CreateInstance(const nsIID& aIID, void** aResult);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 

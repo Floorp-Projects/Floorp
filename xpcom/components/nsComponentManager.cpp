@@ -178,14 +178,11 @@ class MOZ_STACK_CLASS EntryWrapper final {
    * side-steps the necessity of creating a nsIFactory instance for static
    * modules.
    */
-  nsresult CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                          void** aResult) {
+  nsresult CreateInstance(const nsIID& aIID, void** aResult) {
     if (mEntry.is<nsFactoryEntry*>()) {
-      return mEntry.as<nsFactoryEntry*>()->CreateInstance(aOuter, aIID,
-                                                          aResult);
+      return mEntry.as<nsFactoryEntry*>()->CreateInstance(aIID, aResult);
     }
-    return mEntry.as<const StaticModule*>()->CreateInstance(aOuter, aIID,
-                                                            aResult);
+    return mEntry.as<const StaticModule*>()->CreateInstance(aIID, aResult);
   }
 
   /**
@@ -1290,7 +1287,7 @@ nsresult nsComponentManagerImpl::GetServiceLocked(Maybe<MonitorAutoLock>& aLock,
     AUTO_PROFILER_MARKER_TEXT(
         "GetService", OTHER, MarkerStack::Capture(),
         nsDependentCString(nsIDToCString(aEntry.CID()).get()));
-    rv = aEntry.CreateInstance(nullptr, aIID, getter_AddRefs(service));
+    rv = aEntry.CreateInstance(aIID, getter_AddRefs(service));
   }
   if (NS_SUCCEEDED(rv) && !service) {
     NS_ERROR("Factory did not return an object but returned success");
@@ -1764,11 +1761,10 @@ already_AddRefed<nsIFactory> nsFactoryEntry::GetFactory() {
   return factory.forget();
 }
 
-nsresult nsFactoryEntry::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult) {
+nsresult nsFactoryEntry::CreateInstance(const nsIID& aIID, void** aResult) {
   nsCOMPtr<nsIFactory> factory = GetFactory();
   NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-  return factory->CreateInstance(aOuter, aIID, aResult);
+  return factory->CreateInstance(nullptr, aIID, aResult);
 }
 
 size_t nsFactoryEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
