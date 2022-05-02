@@ -1014,6 +1014,14 @@ static void SetAlreadyResolvedResolutionFunction(JSFunction* resolutionFun) {
 }
 
 /**
+ * Returns true if given promise is created by
+ * CreatePromiseObjectWithoutResolutionFunctions.
+ */
+static bool IsPromiseWithDefaultResolvingFunction(PromiseObject* promise) {
+  return PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS);
+}
+
+/**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
  * CreateResolvingFunctions ( promise )
@@ -3297,7 +3305,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   }
 
   // If the promise has a default resolution function, perform its steps.
-  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+  if (IsPromiseWithDefaultResolvingFunction(promise)) {
     return ResolvePromiseInternal(cx, promise, result);
   }
 
@@ -3346,7 +3354,7 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   }
 
   // If the promise has a default rejection function, perform its steps.
-  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+  if (IsPromiseWithDefaultResolvingFunction(promise)) {
     return RejectPromiseInternal(cx, promise, result, unwrappedRejectionStack);
   }
 
@@ -3610,8 +3618,8 @@ template <typename T>
       //    PromiseReactionJob won't try to resolve the promise.
       if (thenSpecies == promiseCtor && resolveReturnsUndefined &&
           resultPromise->is<PromiseObject>() &&
-          !PromiseHasAnyFlag(resultPromise->as<PromiseObject>(),
-                             PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+          !IsPromiseWithDefaultResolvingFunction(
+              &resultPromise->as<PromiseObject>())) {
         thenCapability.promise().set(resultPromise);
         addToDependent = false;
       } else {
@@ -4691,8 +4699,7 @@ PromiseObject* PromiseObject::unforgeableReject(JSContext* cx,
   }
 
   MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
-  MOZ_ASSERT(
-      PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS));
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
 
   // Step 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
   if (!RejectPromiseInternal(cx, promise, value)) {
@@ -4787,8 +4794,7 @@ PromiseObject* PromiseObject::unforgeableResolveWithNonPromise(
   }
 
   MOZ_ASSERT(promise->state() == JS::PromiseState::Pending);
-  MOZ_ASSERT(
-      PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS));
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
 
   // PromiseResolve
   // Step 3. Perform ? Call(promiseCapability.[[Resolve]], undefined, « x »).
@@ -6169,7 +6175,7 @@ bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
     return true;
   }
 
-  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+  if (IsPromiseWithDefaultResolvingFunction(promise)) {
     return ResolvePromiseInternal(cx, promise, resolutionValue);
   }
 
@@ -6199,7 +6205,7 @@ bool PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise,
     return true;
   }
 
-  if (PromiseHasAnyFlag(*promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS)) {
+  if (IsPromiseWithDefaultResolvingFunction(promise)) {
     return ResolvePromise(cx, promise, rejectionValue,
                           JS::PromiseState::Rejected);
   }
