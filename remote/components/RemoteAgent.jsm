@@ -397,7 +397,9 @@ class RemoteAgentParentProcess {
                      which is a low-level remote debugging interface used for WebDriver
                      BiDi and CDP. Defaults to port 9222.
   --remote-allow-hosts <hosts> Values of the Host header to allow for incoming requests.
-  --remote-allow-origins <origins> Values of the Origin header to allow for incoming requests.\n`;
+                     Please read security guidelines at https://firefox-source-docs.mozilla.org/remote/Security.html
+  --remote-allow-origins <origins> Values of the Origin header to allow for incoming requests.
+                     Please read security guidelines at https://firefox-source-docs.mozilla.org/remote/Security.html\n`;
   }
 
   get QueryInterface() {
