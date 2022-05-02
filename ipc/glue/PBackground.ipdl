@@ -27,7 +27,6 @@ include protocol PGamepadTestChannel;
 include protocol PHttpBackgroundChannel;
 include protocol PIPCClientCerts;
 include protocol PIdleScheduler;
-include protocol PRemoteLazyInputStream;
 include protocol PMediaTransport;
 include protocol PRemoteWorker;
 include protocol PRemoteWorkerController;
@@ -106,7 +105,6 @@ sync protocol PBackground
   manages PHttpBackgroundChannel;
   manages PIPCClientCerts;
   manages PIdleScheduler;
-  manages PRemoteLazyInputStream;
   manages PLockManager;
   manages PMediaTransport;
   manages PRemoteWorker;
@@ -294,11 +292,6 @@ child:
   async PCacheStreamControl();
 
   async PRemoteWorker(RemoteWorkerData data);
-
-both:
-  // PRemoteLazyInputStream is created on the parent side only if the child
-  // starts a migration.
-  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 };
 
 } // namespace ipc

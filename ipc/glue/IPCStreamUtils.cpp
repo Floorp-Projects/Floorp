@@ -112,43 +112,13 @@ bool SerializeLazyInputStream(nsIInputStream* aStream, IPCStream& aValue,
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  // avoid creating a loop between processes by accessing the underlying input
-  // stream.
-  nsCOMPtr<nsIInputStream> stream = aStream;
-  if (nsCOMPtr<mozIRemoteLazyInputStream> remoteLazyInputStream =
-          do_QueryInterface(stream)) {
-    stream = remoteLazyInputStream->GetInternalStream();
-    if (NS_WARN_IF(!stream)) {
-      return false;
-    }
-  }
-
-  uint64_t childID = 0;
-  if constexpr (std::is_same_v<dom::ContentParent, M>) {
-    childID = aManager->ChildID();
-  } else if constexpr (std::is_base_of_v<PBackgroundParent, M>) {
-    childID = BackgroundParent::GetChildID(aManager);
-  }
-
-  int64_t length = -1;
-  if (!InputStreamLengthHelper::GetSyncLength(stream, &length)) {
-    length = -1;
-  }
-
-  nsresult rv = NS_OK;
-  RefPtr<RemoteLazyInputStreamParent> actor =
-      RemoteLazyInputStreamParent::Create(aStream, length, childID, &rv,
-                                          aManager);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  RefPtr<RemoteLazyInputStream> lazyStream =
+      RemoteLazyInputStream::WrapStream(aStream);
+  if (NS_WARN_IF(!lazyStream)) {
     return false;
   }
 
-  if (!aManager->SendPRemoteLazyInputStreamConstructor(actor, actor->ID(),
-                                                       actor->Size())) {
-    return false;
-  }
-
-  aValue.stream() = RemoteLazyInputStreamParams(actor);
+  aValue.stream() = RemoteLazyInputStreamParams(lazyStream);
 
   return true;
 }
