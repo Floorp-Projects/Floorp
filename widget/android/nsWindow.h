@@ -150,6 +150,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) override;
   void SetZIndex(int32_t aZIndex) override;
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
@@ -255,6 +256,7 @@ class nsWindow final : public nsBaseWidget {
   mozilla::ScreenIntCoord mDynamicToolbarMaxHeight;
   mozilla::ScreenIntMargin mSafeAreaInsets;
 
+  nsSizeMode mSizeMode;
   bool mIsFullScreen;
 
   bool UseExternalCompositingSurface() const override { return true; }

@@ -378,7 +378,8 @@ class nsAutoRetainUIKitObject {
 }
 @end
 
-nsWindow::nsWindow() : mNativeView(nullptr), mVisible(false), mParent(nullptr) {}
+nsWindow::nsWindow()
+    : mNativeView(nullptr), mVisible(false), mSizeMode(nsSizeMode_Normal), mParent(nullptr) {}
 
 nsWindow::~nsWindow() {
   [mNativeView widgetDestroyed];  // Safe if mNativeView is nil.

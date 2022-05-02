@@ -142,7 +142,6 @@ nsBaseWidget::nsBaseWidget(nsBorderStyle aBorderStyle)
       mBorderStyle(aBorderStyle),
       mBounds(0, 0, 0, 0),
       mOriginalBounds(nullptr),
-      mSizeMode(nsSizeMode_Normal),
       mIsTiled(false),
       mPopupLevel(ePopupLevelTop),
       mPopupType(ePopupTypeAny),
@@ -689,18 +688,6 @@ void nsBaseWidget::SetZIndex(int32_t aZIndex) {
       parent->AddChild(this);
     }
   }
-}
-
-//-------------------------------------------------------------------------
-//
-// Maximize, minimize or restore the window. The BaseWidget implementation
-// merely stores the state.
-//
-//-------------------------------------------------------------------------
-void nsBaseWidget::SetSizeMode(nsSizeMode aMode) {
-  MOZ_ASSERT(aMode == nsSizeMode_Normal || aMode == nsSizeMode_Minimized ||
-             aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen);
-  mSizeMode = aMode;
 }
 
 void nsBaseWidget::GetWorkspaceID(nsAString& workspaceID) {
