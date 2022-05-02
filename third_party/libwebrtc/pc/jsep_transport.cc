@@ -232,13 +232,11 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
     local_description_.reset();
     return error;
   }
-  {
-    webrtc::MutexLock lock(&accessor_lock_);
-    if (needs_ice_restart_ && ice_restarting) {
-      needs_ice_restart_ = false;
-      RTC_LOG(LS_VERBOSE) << "needs-ice-restart flag cleared for transport "
-                          << mid();
-    }
+
+  if (needs_ice_restart_ && ice_restarting) {
+    needs_ice_restart_ = false;
+    RTC_LOG(LS_VERBOSE) << "needs-ice-restart flag cleared for transport "
+                        << mid();
   }
 
   return webrtc::RTCError::OK();
@@ -341,7 +339,7 @@ webrtc::RTCError JsepTransport::AddRemoteCandidates(
 }
 
 void JsepTransport::SetNeedsIceRestartFlag() {
-  webrtc::MutexLock lock(&accessor_lock_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   if (!needs_ice_restart_) {
     needs_ice_restart_ = true;
     RTC_LOG(LS_VERBOSE) << "needs-ice-restart flag set for transport " << mid();
