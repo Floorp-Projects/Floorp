@@ -914,7 +914,6 @@ bool DepthFirstDelazification::add(JSContext* cx,
 DelazifyTask::DelazifyTask(JSRuntime* runtime,
                            const JS::ContextOptions& options)
     : runtime(runtime), contextOptions(options), merger(), errors_() {
-  AutoLockScriptData alsd(runtime);
   runtime->addParseTaskRef();
 }
 
