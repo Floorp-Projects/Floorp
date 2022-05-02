@@ -27,6 +27,12 @@ interface nsIBrowserChild : nsISupports
 
   void remoteDropLinks(in Array<nsIDroppedLinkItem> links);
 
+  /**
+   * Resolved after content has received a PBrowser::ChildToParentMatrix.
+   */
+  [implicit_jscontext]
+  Promise contentTransformsReceived();
+
   readonly attribute uint64_t tabId;
 
   /*

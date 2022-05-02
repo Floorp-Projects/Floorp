@@ -2248,6 +2248,21 @@ class SpecialPowersChild extends JSWindowActorChild {
       wrapCallback
     );
   }
+
+  /* Content processes asynchronously receive child-to-parent transformations
+   * when they are launched.  Until they are received, screen coordinates
+   * reported to JS are wrong.  This is generally ok.  It behaves as if the
+   * user repositioned the window.  But if we want to test screen coordinates,
+   * we need to wait for the updated data.
+   */
+  contentTransformsReceived(win) {
+    try {
+      // throw if win is not a remote browser.
+      return win.docShell.browserChild.contentTransformsReceived();
+    } catch (e) {
+      return Promise.resolve();
+    }
+  }
 }
 
 SpecialPowersChild.prototype._proxiedObservers = {
