@@ -648,6 +648,11 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     mozilla::KillClearOnShutdown(ShutdownPhase::XPCOMShutdownLoaders);
     // XXX: Why don't we try a MaybeFastShutdown for XPCOMShutdownLoaders ?
 
+    // Shutdown all remaining threads.  This method does not return until
+    // all threads created using the thread manager (with the exception of
+    // the main thread) have exited.
+    nsThreadManager::get().ShutdownNonMainThreads();
+
     RefPtr<nsObserverService> observerService;
     CallGetService("@mozilla.org/observer-service;1",
                    (nsObserverService**)getter_AddRefs(observerService));
@@ -660,15 +665,11 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     // observers themselves might call ClearOnShutdown().
     // Some destructors may fire extra runnables that will be processed below.
     mozilla::KillClearOnShutdown(ShutdownPhase::XPCOMShutdownFinal);
-
-    // Shutdown all remaining threads.  This method does not return until
-    // all threads created using the thread manager (with the exception of
-    // the main thread) have exited.
-    nsThreadManager::get().Shutdown();
-
-    // Process our last round of events, and then mark that we've finished main
-    // thread event processing.
     NS_ProcessPendingEvents(thread);
+
+    // Shutdown the main thread, processing our last round of events, and then
+    // mark that we've finished main thread event processing.
+    nsThreadManager::get().ShutdownMainThread();
     gXPCOMMainThreadEventsAreDoomed = true;
 
     BackgroundHangMonitor().NotifyActivity();
