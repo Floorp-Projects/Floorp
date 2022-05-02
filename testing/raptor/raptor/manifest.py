@@ -540,7 +540,11 @@ def get_raptor_test_list(args, oskey):
             and next_test.get("measure") is None
             and next_test.get("type") == "pageload"
         ):
-            next_test["measure"] = "fnbpaint, fcp, dcf, loadtime"
+            next_test["measure"] = (
+                "fnbpaint, fcp, dcf, loadtime,"
+                "ContentfulSpeedIndex, PerceptualSpeedIndex,"
+                "SpeedIndex, FirstVisualChange, LastVisualChange"
+            )
 
         # convert 'measure =' test INI line to list
         if next_test.get("measure") is not None:

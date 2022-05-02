@@ -326,7 +326,9 @@ def setup_node(command_context):
             return None
 
         # Check the browsertime-specific node location next
+        node_name = "node"
         if platform.system() == "Windows":
+            node_name = "node.exe"
             node_exe_path = os.path.join(
                 state_dir,
                 "browsertime",
@@ -342,7 +344,7 @@ def setup_node(command_context):
                 "bin",
             )
 
-        node_exe = os.path.join(node_exe_path, "node")
+        node_exe = os.path.join(node_exe_path, node_name)
         if not os.path.exists(node_exe):
             return None
 
