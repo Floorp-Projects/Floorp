@@ -7,16 +7,16 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'd32cb9c63c2191ab0722145499e0ab1405803809',
+  'chromium_revision': '343080f0c8f92767771e7653ddfba45cffa8c329',
 }
 
 deps = {
   # TODO(kjellander): Move this to be Android-only once the libevent dependency
   # in base/third_party/libevent is solved.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@a76f5a45295fca3687bbffc1e866a101ecbbadd5',
+    'https://chromium.googlesource.com/chromium/src/base@05c36bf5d5d4c087ccb82cde324b6e46d395f7fd',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@51e243d51075476922c85d121d1fd9567f03de8a',
+    'https://chromium.googlesource.com/chromium/src/build@10e5511c9e0459ef26ca8a4aa7852a2712047a85',
   'src/buildtools':
     'https://chromium.googlesource.com/chromium/src/buildtools@fc5af1ac75d8a249d692fb3cbf707dd9f791ec3c',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
@@ -25,13 +25,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@8f01dc90a6b4965f6a7a8764186df187528d97ae',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@bfeca89d3e60f40f6536b32c756eed38743b07f0',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@8c4792efb756e72d4dfbd389fb6adfe0c7f63162',
+    'https://chromium.googlesource.com/chromium/src/testing@967a8819da4f9f7169a735cb597e8432cfc090d0',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@2d07e1e01e8a6f72add9d6f72b9125315813a185',
+    'https://chromium.googlesource.com/chromium/src/third_party@2c2047c852d98c1db7e4c13249edc8ebb2d1e400',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -129,7 +129,7 @@ deps = {
   'src/third_party/colorama/src':
     'https://chromium.googlesource.com/external/colorama.git@799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@0e2aee7e979635b6086975009e21bacd6c6c2e64',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@6dc9cc301f553f1a50608b579083997e63b16e14',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@ebd8895ddb097b985db1fbdc816548549e211af9',
   'src/third_party/findbugs': {
@@ -142,7 +142,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@0636dc8af1e502c343b126b50f3a0dbec8f3fc26',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@fd7f92b6f008e0684c3eb8308aca92e20382506e',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@53806e5b83cee0e275eac038d0780f95ac56588c',
   'src/third_party/google_benchmark/src': {
@@ -200,7 +200,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@52852a8ec96d2db2a97fffd2ea9a62e58d65845d',
+    'https://android.googlesource.com/platform/external/perfetto.git@7cb370fb0a2f055e7781a0924e3a275d7adedf6b',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@576e0801f9281fd54e2c69ad5be5fef7af656011',
   'src/third_party/libyuv':
@@ -257,7 +257,7 @@ deps = {
     'condition': 'checkout_win',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@76168ec684ff6c655bc7b82e100dfe1950949e9b',
+    'https://chromium.googlesource.com/chromium/src/tools@be3d315c96d676bec930079d16ecb84eb7661854',
   'src/tools/swarming_client':
     'https://chromium.googlesource.com/infra/luci/client-py.git@a32a1607f6093d338f756c7e7c7b4333b0c50c9c',
 
