@@ -95,7 +95,7 @@ add_task(async function test_submit_untouched_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -147,7 +147,7 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -260,7 +260,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -301,7 +301,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -344,7 +344,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
 });
 
 add_task(async function test_submit_unnormailzed_creditCard_form() {
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -537,7 +537,7 @@ add_task(async function test_submit_manual_mergeable_creditCard_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_3);
+  await setStorage(TEST_CREDIT_CARD_3);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -586,7 +586,7 @@ add_task(async function test_update_autofill_form_name() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -647,7 +647,7 @@ add_task(async function test_update_autofill_form_exp_date() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   let onChanged = waitForStorageChangedEvents("update", "notifyUsed");
@@ -706,7 +706,7 @@ add_task(async function test_create_new_autofill_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
   let onChanged = waitForStorageChangedEvents("add");
@@ -765,12 +765,10 @@ add_task(async function test_update_duplicate_autofill_form() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
   });
-  await saveCreditCard({
-    "cc-number": "6387060366272981",
-  });
-  await saveCreditCard({
-    "cc-number": "5038146897157463",
-  });
+  await setStorage(
+    { "cc-number": "6387060366272981" },
+    { "cc-number": "5038146897157463" }
+  );
   let creditCards = await getCreditCards();
   is(creditCards.length, 2, "2 credit card in storage");
   let onUsed = waitForStorageChangedEvents("notifyUsed");
@@ -924,7 +922,7 @@ add_task(async function test_update_third_party_creditCard_logo() {
     "cc-name": "John Doe",
   };
 
-  await saveCreditCard(amexCard);
+  await setStorage(amexCard);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -1000,7 +998,7 @@ add_task(async function test_update_generic_creditCard_logo() {
     "cc-name": "John Doe",
   };
 
-  await saveCreditCard(genericCard);
+  await setStorage(genericCard);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -1076,7 +1074,7 @@ add_task(async function test_update_panel_with_spaces_in_cc_number_logo() {
     "cc-name": "John Doe",
   };
 
-  await saveCreditCard(amexCard);
+  await setStorage(amexCard);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 

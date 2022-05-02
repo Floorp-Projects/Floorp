@@ -4,9 +4,7 @@ const URL =
   "http://example.org/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
 
 add_task(async function setup_storage() {
-  await saveAddress(TEST_ADDRESS_1);
-  await saveAddress(TEST_ADDRESS_2);
-  await saveAddress(TEST_ADDRESS_3);
+  await setStorage(TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3);
 });
 
 async function reopenPopupWithResizedInput(browser, selector, newSize) {
