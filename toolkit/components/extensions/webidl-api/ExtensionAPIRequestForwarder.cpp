@@ -337,9 +337,15 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
     return;
   }
 
-  mPromiseProxy = dom::PromiseWorkerProxy::Create(
-      mWorkerPrivate, aPromiseRetval,
-      &kExtensionAPIRequestStructuredCloneCallbacks);
+  RefPtr<dom::PromiseWorkerProxy> promiseProxy =
+      dom::PromiseWorkerProxy::Create(
+          mWorkerPrivate, aPromiseRetval,
+          &kExtensionAPIRequestStructuredCloneCallbacks);
+  if (!promiseProxy) {
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return;
+  }
+  mPromiseProxy = promiseProxy.forget();
 }
 
 void RequestWorkerRunnable::SetSerializedCallerStack(
