@@ -144,6 +144,10 @@ struct SimulationSettings {
   absl::optional<std::string> aec_settings_filename;
   absl::optional<absl::string_view> aec_dump_input_string;
   std::vector<float>* processed_capture_samples = nullptr;
+  bool analysis_only = false;
+  absl::optional<int> dump_start_frame;
+  absl::optional<int> dump_end_frame;
+  absl::optional<int> init_to_process;
 };
 
 // Provides common functionality for performing audioprocessing simulations.
@@ -167,6 +171,9 @@ class AudioProcessingSimulator {
     return api_call_statistics_;
   }
 
+  // Analyzes the data in the input and reports the resulting statistics.
+  virtual void Analyze() = 0;
+
   // Reports whether the processed recording was bitexact.
   bool OutputWasBitexact() { return bitexact_output_; }
 
@@ -188,6 +195,8 @@ class AudioProcessingSimulator {
                                   int output_num_channels,
                                   int reverse_input_num_channels,
                                   int reverse_output_num_channels);
+  void SelectivelyToggleDataDumping(int init_index,
+                                    int capture_frames_since_init) const;
 
   const SimulationSettings settings_;
   rtc::scoped_refptr<AudioProcessing> ap_;
