@@ -207,7 +207,6 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
         ice_parameters);
 
     {
-      webrtc::MutexLock lock(&accessor_lock_);
       if (rtcp_dtls_transport_) {
         RTC_DCHECK(rtcp_dtls_transport_->internal());
         rtcp_dtls_transport_->internal()->ice_transport()->SetIceParameters(
@@ -353,7 +352,6 @@ bool JsepTransport::GetStats(TransportStats* stats) {
   bool ret = GetTransportStats(rtp_dtls_transport_->internal(),
                                ICE_CANDIDATE_COMPONENT_RTP, stats);
 
-  webrtc::MutexLock lock(&accessor_lock_);
   if (rtcp_dtls_transport_) {
     RTC_DCHECK(rtcp_dtls_transport_->internal());
     ret &= GetTransportStats(rtcp_dtls_transport_->internal(),
@@ -466,8 +464,6 @@ bool JsepTransport::SetRtcpMux(bool enable,
 }
 
 void JsepTransport::ActivateRtcpMux() {
-  RTC_DCHECK_RUN_ON(network_thread_);
-
   if (unencrypted_rtp_transport_) {
     RTC_DCHECK(!sdes_transport_);
     RTC_DCHECK(!dtls_srtp_transport_);
@@ -483,10 +479,7 @@ void JsepTransport::ActivateRtcpMux() {
     dtls_srtp_transport_->SetDtlsTransports(rtp_dtls_transport(),
                                             /*rtcp_dtls_transport=*/nullptr);
   }
-  {
-    webrtc::MutexLock lock(&accessor_lock_);
-    rtcp_dtls_transport_ = nullptr;  // Destroy this reference.
-  }
+  rtcp_dtls_transport_ = nullptr;  // Destroy this reference.
   // Notify the JsepTransportController to update the aggregate states.
   SignalRtcpMuxActive();
 }

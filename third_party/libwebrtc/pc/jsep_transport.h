@@ -46,7 +46,6 @@
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
@@ -125,7 +124,7 @@ class JsepTransport : public sigslot::has_slots<> {
 
   webrtc::RTCError SetLocalJsepTransportDescription(
       const JsepTransportDescription& jsep_description,
-      webrtc::SdpType type) RTC_LOCKS_EXCLUDED(accessor_lock_);
+      webrtc::SdpType type);
 
   // Set the remote TransportDescription to be used by DTLS and ICE channels
   // that are part of this Transport.
@@ -154,7 +153,7 @@ class JsepTransport : public sigslot::has_slots<> {
   absl::optional<rtc::SSLRole> GetDtlsRole() const;
 
   // TODO(deadbeef): Make this const. See comment in transportcontroller.h.
-  bool GetStats(TransportStats* stats) RTC_LOCKS_EXCLUDED(accessor_lock_);
+  bool GetStats(TransportStats* stats);
 
   const JsepTransportDescription* local_description() const {
     RTC_DCHECK_RUN_ON(network_thread_);
@@ -194,18 +193,16 @@ class JsepTransport : public sigslot::has_slots<> {
     return nullptr;
   }
 
-  const DtlsTransportInternal* rtcp_dtls_transport() const
-      RTC_LOCKS_EXCLUDED(accessor_lock_) {
-    webrtc::MutexLock lock(&accessor_lock_);
+  const DtlsTransportInternal* rtcp_dtls_transport() const {
+    RTC_DCHECK_RUN_ON(network_thread_);
     if (rtcp_dtls_transport_) {
       return rtcp_dtls_transport_->internal();
     }
     return nullptr;
   }
 
-  DtlsTransportInternal* rtcp_dtls_transport()
-      RTC_LOCKS_EXCLUDED(accessor_lock_) {
-    webrtc::MutexLock lock(&accessor_lock_);
+  DtlsTransportInternal* rtcp_dtls_transport() {
+    RTC_DCHECK_RUN_ON(network_thread_);
     if (rtcp_dtls_transport_) {
       return rtcp_dtls_transport_->internal();
     }
@@ -249,7 +246,7 @@ class JsepTransport : public sigslot::has_slots<> {
  private:
   bool SetRtcpMux(bool enable, webrtc::SdpType type, ContentSource source);
 
-  void ActivateRtcpMux() RTC_LOCKS_EXCLUDED(accessor_lock_);
+  void ActivateRtcpMux() RTC_RUN_ON(network_thread_);
 
   bool SetSdes(const std::vector<CryptoParams>& cryptos,
                const std::vector<int>& encrypted_extension_ids,
@@ -289,10 +286,6 @@ class JsepTransport : public sigslot::has_slots<> {
 
   // Owning thread, for safety checks
   const rtc::Thread* const network_thread_;
-  // Critical scope for fields accessed off-thread. Mutable, since it is used by
-  // getter methods.
-  // TODO(https://bugs.webrtc.org/10300): Stop doing this.
-  mutable webrtc::Mutex accessor_lock_;
   const std::string mid_;
   // needs-ice-restart bit as described in JSEP.
   bool needs_ice_restart_ RTC_GUARDED_BY(network_thread_) = false;
@@ -315,10 +308,10 @@ class JsepTransport : public sigslot::has_slots<> {
   const std::unique_ptr<webrtc::DtlsSrtpTransport> dtls_srtp_transport_;
 
   const rtc::scoped_refptr<webrtc::DtlsTransport> rtp_dtls_transport_;
-  // TODO(tommi): Restrict use to network thread, or make const. And delete the
-  // `accessor_lock_`.
+  // The RTCP transport is const for all usages, except that it is cleared
+  // when RTCP multiplexing is turned on; this happens on the network thread.
   rtc::scoped_refptr<webrtc::DtlsTransport> rtcp_dtls_transport_
-      RTC_GUARDED_BY(accessor_lock_);
+      RTC_GUARDED_BY(network_thread_);
 
   const std::unique_ptr<webrtc::DataChannelTransportInterface>
       sctp_data_channel_transport_;
