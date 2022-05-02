@@ -37,11 +37,10 @@ JSObject* FileSystemDirectoryIterator::WrapObject(
 
 // WebIDL Interface
 
-already_AddRefed<Promise> FileSystemDirectoryIterator::Next() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemDirectoryIterator::Next(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

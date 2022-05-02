@@ -47,11 +47,10 @@ FileSystemDirectoryHandle::Values() {
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetFileHandle(
-    const nsAString& aName, const FileSystemGetFileOptions& aOptions) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    const nsAString& aName, const FileSystemGetFileOptions& aOptions,
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -61,11 +60,10 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::GetFileHandle(
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::GetDirectoryHandle(
-    const nsAString& aName, const FileSystemGetDirectoryOptions& aOptions) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    const nsAString& aName, const FileSystemGetDirectoryOptions& aOptions,
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -75,11 +73,10 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::GetDirectoryHandle(
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::RemoveEntry(
-    const nsAString& aName, const FileSystemRemoveOptions& aOptions) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    const nsAString& aName, const FileSystemRemoveOptions& aOptions,
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -89,11 +86,9 @@ already_AddRefed<Promise> FileSystemDirectoryHandle::RemoveEntry(
 }
 
 already_AddRefed<Promise> FileSystemDirectoryHandle::Resolve(
-    FileSystemHandle& aPossibleDescendant) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    FileSystemHandle& aPossibleDescendant, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

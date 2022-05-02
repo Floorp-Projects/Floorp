@@ -56,10 +56,11 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   RTCDtlsTransport* GetTransport() const;
   RTCDTMFSender* GetDtmf() const;
   MOZ_CAN_RUN_SCRIPT
-  already_AddRefed<Promise> ReplaceTrack(MediaStreamTrack* aWithTrack);
-  already_AddRefed<Promise> GetStats();
+  already_AddRefed<Promise> ReplaceTrack(MediaStreamTrack* aWithTrack,
+                                         ErrorResult& aError);
+  already_AddRefed<Promise> GetStats(ErrorResult& aError);
   already_AddRefed<Promise> SetParameters(
-      const dom::RTCRtpParameters& aParameters);
+      const dom::RTCRtpParameters& aParameters, ErrorResult& aError);
   void GetParameters(RTCRtpParameters& aParameters) const;
 
   nsPIDOMWindowInner* GetParentObject() const;
@@ -79,7 +80,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;
   bool IsMyPc(const PeerConnectionImpl* aPc) const { return mPc.get() == aPc; }
   RefPtr<MediaPipelineTransmit> GetPipeline() const;
-  already_AddRefed<dom::Promise> MakePromise() const;
+  already_AddRefed<dom::Promise> MakePromise(ErrorResult& aError) const;
   bool SeamlessTrackSwitch(const RefPtr<MediaStreamTrack>& aWithTrack);
   bool SetSenderTrackWithClosedCheck(const RefPtr<MediaStreamTrack>& aTrack);
 

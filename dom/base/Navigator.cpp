@@ -1397,7 +1397,8 @@ Promise* Navigator::GetBattery(ErrorResult& aRv) {
 //    Navigator::Share() - Web Share API
 //*****************************************************************************
 
-Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
+already_AddRefed<Promise> Navigator::Share(const ShareData& aData,
+                                           ErrorResult& aRv) {
   if (!mWindow || !mWindow->IsFullyActive()) {
     aRv.ThrowInvalidStateError("The document is not fully active.");
     return nullptr;
@@ -1495,7 +1496,7 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
         }
         self->mSharePromise = nullptr;
       });
-  return mSharePromise;
+  return do_AddRef(mSharePromise);
 }
 
 //*****************************************************************************

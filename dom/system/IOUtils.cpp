@@ -270,9 +270,10 @@ IOUtils::StateMutex IOUtils::sState{"IOUtils::sState"};
 /* static */
 template <typename Fn>
 already_AddRefed<Promise> IOUtils::WithPromiseAndState(GlobalObject& aGlobal,
+                                                       ErrorResult& aError,
                                                        Fn aFn) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-  RefPtr<Promise> promise = CreateJSPromise(aGlobal);
+  RefPtr<Promise> promise = CreateJSPromise(aGlobal, aError);
   if (!promise) {
     return nullptr;
   }
@@ -312,30 +313,32 @@ void IOUtils::DispatchAndResolve(IOUtils::EventQueue* aQueue, Promise* aPromise,
 /* static */
 already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
-                                        const ReadOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                        const ReadOptions& aOptions,
+                                        ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    Maybe<uint32_t> toRead = Nothing();
-    if (!aOptions.mMaxBytes.IsNull()) {
-      if (aOptions.mMaxBytes.Value() == 0) {
-        // Resolve with an empty buffer.
-        nsTArray<uint8_t> arr(0);
-        promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
-        return;
-      }
-      toRead.emplace(aOptions.mMaxBytes.Value());
-    }
+        Maybe<uint32_t> toRead = Nothing();
+        if (!aOptions.mMaxBytes.IsNull()) {
+          if (aOptions.mMaxBytes.Value() == 0) {
+            // Resolve with an empty buffer.
+            nsTArray<uint8_t> arr(0);
+            promise->MaybeResolve(TypedArrayCreator<Uint8Array>(arr));
+            return;
+          }
+          toRead.emplace(aOptions.mMaxBytes.Value());
+        }
 
-    DispatchAndResolve<JsBuffer>(
-        state->mEventQueue, promise,
-        [file = std::move(file), offset = aOptions.mOffset, toRead,
-         decompress = aOptions.mDecompress]() {
-          return ReadSync(file, offset, toRead, decompress,
-                          BufferKind::Uint8Array);
-        });
-  });
+        DispatchAndResolve<JsBuffer>(
+            state->mEventQueue, promise,
+            [file = std::move(file), offset = aOptions.mOffset, toRead,
+             decompress = aOptions.mDecompress]() {
+              return ReadSync(file, offset, toRead, decompress,
+                              BufferKind::Uint8Array);
+            });
+      });
 }
 
 /* static */
@@ -379,137 +382,148 @@ RefPtr<SyncReadFile> IOUtils::OpenFileForSyncReading(GlobalObject& aGlobal,
 /* static */
 already_AddRefed<Promise> IOUtils::ReadUTF8(GlobalObject& aGlobal,
                                             const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                            const ReadUTF8Options& aOptions,
+                                            ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<JsBuffer>(
-        state->mEventQueue, promise,
-        [file = std::move(file), decompress = aOptions.mDecompress]() {
-          return ReadUTF8Sync(file, decompress);
-        });
-  });
+        DispatchAndResolve<JsBuffer>(
+            state->mEventQueue, promise,
+            [file = std::move(file), decompress = aOptions.mDecompress]() {
+              return ReadUTF8Sync(file, decompress);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
                                             const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                            const ReadUTF8Options& aOptions,
+                                            ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    RefPtr<StrongWorkerRef> workerRef;
-    if (!NS_IsMainThread()) {
-      // We need to manually keep the worker alive until the promise returned by
-      // Dispatch() resolves or rejects.
-      workerRef = StrongWorkerRef::CreateForcibly(
-          GetCurrentThreadWorkerPrivate(), __func__);
-    }
+        RefPtr<StrongWorkerRef> workerRef;
+        if (!NS_IsMainThread()) {
+          // We need to manually keep the worker alive until the promise
+          // returned by Dispatch() resolves or rejects.
+          workerRef = StrongWorkerRef::CreateForcibly(
+              GetCurrentThreadWorkerPrivate(), __func__);
+        }
 
-    state->mEventQueue
-        ->template Dispatch<JsBuffer>(
-            [file, decompress = aOptions.mDecompress]() {
-              return ReadUTF8Sync(file, decompress);
-            })
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [workerRef, promise = RefPtr{promise}, file](JsBuffer&& aBuffer) {
-              AutoJSAPI jsapi;
-              if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
-                promise->MaybeRejectWithUnknownError(
-                    "Could not initialize JS API");
-                return;
-              }
-              JSContext* cx = jsapi.cx();
+        state->mEventQueue
+            ->template Dispatch<JsBuffer>(
+                [file, decompress = aOptions.mDecompress]() {
+                  return ReadUTF8Sync(file, decompress);
+                })
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [workerRef, promise = RefPtr{promise},
+                 file](JsBuffer&& aBuffer) {
+                  AutoJSAPI jsapi;
+                  if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
+                    promise->MaybeRejectWithUnknownError(
+                        "Could not initialize JS API");
+                    return;
+                  }
+                  JSContext* cx = jsapi.cx();
 
-              JS::Rooted<JSString*> jsonStr(
-                  cx, IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
-              if (!jsonStr) {
-                RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
-                return;
-              }
+                  JS::Rooted<JSString*> jsonStr(
+                      cx,
+                      IOUtils::JsBuffer::IntoString(cx, std::move(aBuffer)));
+                  if (!jsonStr) {
+                    RejectJSPromise(promise, IOError(NS_ERROR_OUT_OF_MEMORY));
+                    return;
+                  }
 
-              JS::Rooted<JS::Value> val(cx);
-              if (!JS_ParseJSON(cx, jsonStr, &val)) {
-                JS::Rooted<JS::Value> exn(cx);
-                if (JS_GetPendingException(cx, &exn)) {
-                  JS_ClearPendingException(cx);
-                  promise->MaybeReject(exn);
-                } else {
-                  RejectJSPromise(
-                      promise,
-                      IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                          .WithMessage(
-                              "ParseJSON threw an uncatchable exception "
-                              "while parsing file(%s)",
-                              file->HumanReadablePath().get()));
-                }
+                  JS::Rooted<JS::Value> val(cx);
+                  if (!JS_ParseJSON(cx, jsonStr, &val)) {
+                    JS::Rooted<JS::Value> exn(cx);
+                    if (JS_GetPendingException(cx, &exn)) {
+                      JS_ClearPendingException(cx);
+                      promise->MaybeReject(exn);
+                    } else {
+                      RejectJSPromise(
+                          promise,
+                          IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                              .WithMessage(
+                                  "ParseJSON threw an uncatchable exception "
+                                  "while parsing file(%s)",
+                                  file->HumanReadablePath().get()));
+                    }
 
-                return;
-              }
+                    return;
+                  }
 
-              promise->MaybeResolve(val);
-            },
-            [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
-              RejectJSPromise(promise, aErr);
-            });
-  });
+                  promise->MaybeResolve(val);
+                },
+                [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
+                  RejectJSPromise(promise, aErr);
+                });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::Write(GlobalObject& aGlobal,
                                          const nsAString& aPath,
                                          const Uint8Array& aData,
-                                         const WriteOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                         const WriteOptions& aOptions,
+                                         ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    aData.ComputeState();
-    auto buf = Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
-    if (buf.isNothing()) {
-      promise->MaybeRejectWithOperationError(
-          "Out of memory: Could not allocate buffer while writing to file");
-      return;
-    }
+        aData.ComputeState();
+        auto buf =
+            Buffer<uint8_t>::CopyFrom(Span(aData.Data(), aData.Length()));
+        if (buf.isNothing()) {
+          promise->MaybeRejectWithOperationError(
+              "Out of memory: Could not allocate buffer while writing to file");
+          return;
+        }
 
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return;
-    }
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
+          return;
+        }
 
-    DispatchAndResolve<uint32_t>(
-        state->mEventQueue, promise,
-        [file = std::move(file), buf = std::move(*buf),
-         opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
-  });
+        DispatchAndResolve<uint32_t>(
+            state->mEventQueue, promise,
+            [file = std::move(file), buf = std::move(*buf),
+             opts = opts.unwrap()]() { return WriteSync(file, buf, opts); });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
                                              const nsACString& aString,
-                                             const WriteOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                             const WriteOptions& aOptions,
+                                             ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return;
-    }
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
+          return;
+        }
 
-    DispatchAndResolve<uint32_t>(
-        state->mEventQueue, promise,
-        [file = std::move(file), str = nsCString(aString),
-         opts = opts.unwrap()]() {
-          return WriteSync(file, AsBytes(Span(str)), opts);
-        });
-  });
+        DispatchAndResolve<uint32_t>(
+            state->mEventQueue, promise,
+            [file = std::move(file), str = nsCString(aString),
+             opts = opts.unwrap()]() {
+              return WriteSync(file, AsBytes(Span(str)), opts);
+            });
+      });
 }
 
 static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
@@ -521,226 +535,247 @@ static bool AppendJsonAsUtf8(const char16_t* aData, uint32_t aLen, void* aStr) {
 already_AddRefed<Promise> IOUtils::WriteJSON(GlobalObject& aGlobal,
                                              const nsAString& aPath,
                                              JS::Handle<JS::Value> aValue,
-                                             const WriteOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                             const WriteOptions& aOptions,
+                                             ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    auto opts = InternalWriteOpts::FromBinding(aOptions);
-    if (opts.isErr()) {
-      RejectJSPromise(promise, opts.unwrapErr());
-      return;
-    }
+        auto opts = InternalWriteOpts::FromBinding(aOptions);
+        if (opts.isErr()) {
+          RejectJSPromise(promise, opts.unwrapErr());
+          return;
+        }
 
-    if (opts.inspect().mMode == WriteMode::Append) {
-      promise->MaybeRejectWithNotSupportedError(
-          "IOUtils.writeJSON does not support appending to files."_ns);
-      return;
-    }
+        if (opts.inspect().mMode == WriteMode::Append) {
+          promise->MaybeRejectWithNotSupportedError(
+              "IOUtils.writeJSON does not support appending to files."_ns);
+          return;
+        }
 
-    JSContext* cx = aGlobal.Context();
-    JS::Rooted<JS::Value> rootedValue(cx, aValue);
-    nsCString utf8Str;
+        JSContext* cx = aGlobal.Context();
+        JS::Rooted<JS::Value> rootedValue(cx, aValue);
+        nsCString utf8Str;
 
-    if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
-                      AppendJsonAsUtf8, &utf8Str)) {
-      JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
-      if (JS_GetPendingException(cx, &exn)) {
-        JS_ClearPendingException(cx);
-        promise->MaybeReject(exn);
-      } else {
-        RejectJSPromise(promise,
-                        IOError(NS_ERROR_DOM_UNKNOWN_ERR)
-                            .WithMessage("Could not serialize object to JSON"));
-      }
-      return;
-    }
+        if (!JS_Stringify(cx, &rootedValue, nullptr, JS::NullHandleValue,
+                          AppendJsonAsUtf8, &utf8Str)) {
+          JS::Rooted<JS::Value> exn(cx, JS::UndefinedValue());
+          if (JS_GetPendingException(cx, &exn)) {
+            JS_ClearPendingException(cx);
+            promise->MaybeReject(exn);
+          } else {
+            RejectJSPromise(
+                promise,
+                IOError(NS_ERROR_DOM_UNKNOWN_ERR)
+                    .WithMessage("Could not serialize object to JSON"));
+          }
+          return;
+        }
 
-    DispatchAndResolve<uint32_t>(
-        state->mEventQueue, promise,
-        [file = std::move(file), utf8Str = std::move(utf8Str),
-         opts = opts.unwrap()]() {
-          return WriteSync(file, AsBytes(Span(utf8Str)), opts);
-        });
-  });
+        DispatchAndResolve<uint32_t>(
+            state->mEventQueue, promise,
+            [file = std::move(file), utf8Str = std::move(utf8Str),
+             opts = opts.unwrap()]() {
+              return WriteSync(file, AsBytes(Span(utf8Str)), opts);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
-                                        const MoveOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+                                        const MoveOptions& aOptions,
+                                        ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-    nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+        nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-    DispatchAndResolve<Ok>(
-        state->mEventQueue, promise,
-        [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-         noOverwrite = aOptions.mNoOverwrite]() {
-          return MoveSync(sourceFile, destFile, noOverwrite);
-        });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
+             noOverwrite = aOptions.mNoOverwrite]() {
+              return MoveSync(sourceFile, destFile, noOverwrite);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
-                                          const RemoveOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                          const RemoveOptions& aOptions,
+                                          ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<Ok>(
-        state->mEventQueue, promise,
-        [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
-         recursive = aOptions.mRecursive]() {
-          return RemoveSync(file, ignoreAbsent, recursive);
-        });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent,
+             recursive = aOptions.mRecursive]() {
+              return RemoveSync(file, ignoreAbsent, recursive);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::MakeDirectory(
     GlobalObject& aGlobal, const nsAString& aPath,
-    const MakeDirectoryOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+    const MakeDirectoryOptions& aOptions, ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<Ok>(
-        state->mEventQueue, promise,
-        [file = std::move(file), createAncestors = aOptions.mCreateAncestors,
-         ignoreExisting = aOptions.mIgnoreExisting,
-         permissions = aOptions.mPermissions]() {
-          return MakeDirectorySync(file, createAncestors, ignoreExisting,
-                                   permissions);
-        });
-  });
+        DispatchAndResolve<Ok>(state->mEventQueue, promise,
+                               [file = std::move(file),
+                                createAncestors = aOptions.mCreateAncestors,
+                                ignoreExisting = aOptions.mIgnoreExisting,
+                                permissions = aOptions.mPermissions]() {
+                                 return MakeDirectorySync(file, createAncestors,
+                                                          ignoreExisting,
+                                                          permissions);
+                               });
+      });
 }
 
 already_AddRefed<Promise> IOUtils::Stat(GlobalObject& aGlobal,
-                                        const nsAString& aPath) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                        const nsAString& aPath,
+                                        ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<InternalFileInfo>(
-        state->mEventQueue, promise,
-        [file = std::move(file)]() { return StatSync(file); });
-  });
+        DispatchAndResolve<InternalFileInfo>(
+            state->mEventQueue, promise,
+            [file = std::move(file)]() { return StatSync(file); });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
-                                        const CopyOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
+                                        const CopyOptions& aOptions,
+                                        ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> sourceFile = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(sourceFile, aSourcePath, promise);
 
-    nsCOMPtr<nsIFile> destFile = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
+        nsCOMPtr<nsIFile> destFile = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(destFile, aDestPath, promise);
 
-    DispatchAndResolve<Ok>(
-        state->mEventQueue, promise,
-        [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
-         noOverwrite = aOptions.mNoOverwrite,
-         recursive = aOptions.mRecursive]() {
-          return CopySync(sourceFile, destFile, noOverwrite, recursive);
-        });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [sourceFile = std::move(sourceFile), destFile = std::move(destFile),
+             noOverwrite = aOptions.mNoOverwrite,
+             recursive = aOptions.mRecursive]() {
+              return CopySync(sourceFile, destFile, noOverwrite, recursive);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::SetModificationTime(
     GlobalObject& aGlobal, const nsAString& aPath,
-    const Optional<int64_t>& aModification) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+    const Optional<int64_t>& aModification, ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    Maybe<int64_t> newTime = Nothing();
-    if (aModification.WasPassed()) {
-      newTime = Some(aModification.Value());
-    }
-    DispatchAndResolve<int64_t>(state->mEventQueue, promise,
-                                [file = std::move(file), newTime]() {
-                                  return SetModificationTimeSync(file, newTime);
-                                });
-  });
+        Maybe<int64_t> newTime = Nothing();
+        if (aModification.WasPassed()) {
+          newTime = Some(aModification.Value());
+        }
+        DispatchAndResolve<int64_t>(
+            state->mEventQueue, promise, [file = std::move(file), newTime]() {
+              return SetModificationTimeSync(file, newTime);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::GetChildren(
     GlobalObject& aGlobal, const nsAString& aPath,
-    const GetChildrenOptions& aOptions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+    const GetChildrenOptions& aOptions, ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<nsTArray<nsString>>(
-        state->mEventQueue, promise,
-        [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent]() {
-          return GetChildrenSync(file, ignoreAbsent);
-        });
-  });
+        DispatchAndResolve<nsTArray<nsString>>(
+            state->mEventQueue, promise,
+            [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent]() {
+              return GetChildrenSync(file, ignoreAbsent);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
                                                   uint32_t aPermissions,
-                                                  const bool aHonorUmask) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
+                                                  const bool aHonorUmask,
+                                                  ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
 #if defined(XP_UNIX) && !defined(ANDROID)
-    if (aHonorUmask) {
-      aPermissions &= ~nsSystemInfo::gUserUmask;
-    }
+        if (aHonorUmask) {
+          aPermissions &= ~nsSystemInfo::gUserUmask;
+        }
 #endif
 
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<Ok>(
-        state->mEventQueue, promise,
-        [file = std::move(file), permissions = aPermissions]() {
-          return SetPermissionsSync(file, permissions);
-        });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [file = std::move(file), permissions = aPermissions]() {
+              return SetPermissionsSync(file, permissions);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::Exists(GlobalObject& aGlobal,
-                                          const nsAString& aPath) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                          const nsAString& aPath,
+                                          ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<bool>(
-        state->mEventQueue, promise,
-        [file = std::move(file)]() { return ExistsSync(file); });
-  });
+        DispatchAndResolve<bool>(
+            state->mEventQueue, promise,
+            [file = std::move(file)]() { return ExistsSync(file); });
+      });
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::CreateUniqueFile(
-    GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
-    const uint32_t aPermissions) {
+already_AddRefed<Promise> IOUtils::CreateUniqueFile(GlobalObject& aGlobal,
+                                                    const nsAString& aParent,
+                                                    const nsAString& aPrefix,
+                                                    const uint32_t aPermissions,
+                                                    ErrorResult& aError) {
   return CreateUnique(aGlobal, aParent, aPrefix, nsIFile::NORMAL_FILE_TYPE,
-                      aPermissions);
+                      aPermissions, aError);
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::CreateUniqueDirectory(
     GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
-    const uint32_t aPermissions) {
+    const uint32_t aPermissions, ErrorResult& aError) {
   return CreateUnique(aGlobal, aParent, aPrefix, nsIFile::DIRECTORY_TYPE,
-                      aPermissions);
+                      aPermissions, aError);
 }
 
 /* static */
@@ -748,107 +783,112 @@ already_AddRefed<Promise> IOUtils::CreateUnique(GlobalObject& aGlobal,
                                                 const nsAString& aParent,
                                                 const nsAString& aPrefix,
                                                 const uint32_t aFileType,
-                                                const uint32_t aPermissions) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aParent, promise);
+                                                const uint32_t aPermissions,
+                                                ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aParent, promise);
 
-    if (nsresult rv = file->Append(aPrefix); NS_FAILED(rv)) {
-      RejectJSPromise(
-          promise,
-          IOError(rv).WithMessage("Could not append prefix `%s' to parent `%s'",
-                                  NS_ConvertUTF16toUTF8(aPrefix).get(),
-                                  file->HumanReadablePath().get()));
-      return;
-    }
+        if (nsresult rv = file->Append(aPrefix); NS_FAILED(rv)) {
+          RejectJSPromise(promise,
+                          IOError(rv).WithMessage(
+                              "Could not append prefix `%s' to parent `%s'",
+                              NS_ConvertUTF16toUTF8(aPrefix).get(),
+                              file->HumanReadablePath().get()));
+          return;
+        }
 
-    DispatchAndResolve<nsString>(
-        state->mEventQueue, promise,
-        [file = std::move(file), aPermissions, aFileType]() {
-          return CreateUniqueSync(file, aFileType, aPermissions);
-        });
-  });
+        DispatchAndResolve<nsString>(
+            state->mEventQueue, promise,
+            [file = std::move(file), aPermissions, aFileType]() {
+              return CreateUniqueSync(file, aFileType, aPermissions);
+            });
+      });
 }
 
 #if defined(XP_WIN)
 
 /* static */
-already_AddRefed<Promise> IOUtils::GetWindowsAttributes(
-    GlobalObject& aGlobal, const nsAString& aPath) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+already_AddRefed<Promise> IOUtils::GetWindowsAttributes(GlobalObject& aGlobal,
+                                                        const nsAString& aPath,
+                                                        ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    RefPtr<StrongWorkerRef> workerRef;
-    if (!NS_IsMainThread()) {
-      // We need to manually keep the worker alive until the promise returned by
-      // Dispatch() resolves or rejects.
-      workerRef = StrongWorkerRef::CreateForcibly(
-          GetCurrentThreadWorkerPrivate(), __func__);
-    }
+        RefPtr<StrongWorkerRef> workerRef;
+        if (!NS_IsMainThread()) {
+          // We need to manually keep the worker alive until the promise
+          // returned by Dispatch() resolves or rejects.
+          workerRef = StrongWorkerRef::CreateForcibly(
+              GetCurrentThreadWorkerPrivate(), __func__);
+        }
 
-    state->mEventQueue
-        ->template Dispatch<uint32_t>([file = std::move(file)]() {
-          return GetWindowsAttributesSync(file);
-        })
-        ->Then(
-            GetCurrentSerialEventTarget(), __func__,
-            [workerRef, promise = RefPtr{promise}](const uint32_t aAttrs) {
-              WindowsFileAttributes attrs;
+        state->mEventQueue
+            ->template Dispatch<uint32_t>([file = std::move(file)]() {
+              return GetWindowsAttributesSync(file);
+            })
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [workerRef, promise = RefPtr{promise}](const uint32_t aAttrs) {
+                  WindowsFileAttributes attrs;
 
-              attrs.mReadOnly.Construct(aAttrs & FILE_ATTRIBUTE_READONLY);
-              attrs.mHidden.Construct(aAttrs & FILE_ATTRIBUTE_HIDDEN);
-              attrs.mSystem.Construct(aAttrs & FILE_ATTRIBUTE_SYSTEM);
+                  attrs.mReadOnly.Construct(aAttrs & FILE_ATTRIBUTE_READONLY);
+                  attrs.mHidden.Construct(aAttrs & FILE_ATTRIBUTE_HIDDEN);
+                  attrs.mSystem.Construct(aAttrs & FILE_ATTRIBUTE_SYSTEM);
 
-              promise->MaybeResolve(attrs);
-            },
-            [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
-              RejectJSPromise(promise, aErr);
-            });
-  });
+                  promise->MaybeResolve(attrs);
+                },
+                [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
+                  RejectJSPromise(promise, aErr);
+                });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
     GlobalObject& aGlobal, const nsAString& aPath,
-    const WindowsFileAttributes& aAttrs) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+    const WindowsFileAttributes& aAttrs, ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    uint32_t setAttrs = 0;
-    uint32_t clearAttrs = 0;
+        uint32_t setAttrs = 0;
+        uint32_t clearAttrs = 0;
 
-    if (aAttrs.mReadOnly.WasPassed()) {
-      if (aAttrs.mReadOnly.Value()) {
-        setAttrs |= FILE_ATTRIBUTE_READONLY;
-      } else {
-        clearAttrs |= FILE_ATTRIBUTE_READONLY;
-      }
-    }
+        if (aAttrs.mReadOnly.WasPassed()) {
+          if (aAttrs.mReadOnly.Value()) {
+            setAttrs |= FILE_ATTRIBUTE_READONLY;
+          } else {
+            clearAttrs |= FILE_ATTRIBUTE_READONLY;
+          }
+        }
 
-    if (aAttrs.mHidden.WasPassed()) {
-      if (aAttrs.mHidden.Value()) {
-        setAttrs |= FILE_ATTRIBUTE_HIDDEN;
-      } else {
-        clearAttrs |= FILE_ATTRIBUTE_HIDDEN;
-      }
-    }
+        if (aAttrs.mHidden.WasPassed()) {
+          if (aAttrs.mHidden.Value()) {
+            setAttrs |= FILE_ATTRIBUTE_HIDDEN;
+          } else {
+            clearAttrs |= FILE_ATTRIBUTE_HIDDEN;
+          }
+        }
 
-    if (aAttrs.mSystem.WasPassed()) {
-      if (aAttrs.mSystem.Value()) {
-        setAttrs |= FILE_ATTRIBUTE_SYSTEM;
-      } else {
-        clearAttrs |= FILE_ATTRIBUTE_SYSTEM;
-      }
-    }
+        if (aAttrs.mSystem.WasPassed()) {
+          if (aAttrs.mSystem.Value()) {
+            setAttrs |= FILE_ATTRIBUTE_SYSTEM;
+          } else {
+            clearAttrs |= FILE_ATTRIBUTE_SYSTEM;
+          }
+        }
 
-    DispatchAndResolve<Ok>(state->mEventQueue, promise,
-                           [file = std::move(file), setAttrs, clearAttrs]() {
-                             return SetWindowsAttributesSync(file, setAttrs,
-                                                             clearAttrs);
-                           });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [file = std::move(file), setAttrs, clearAttrs]() {
+              return SetWindowsAttributesSync(file, setAttrs, clearAttrs);
+            });
+      });
 }
 
 #elif defined(XP_MACOSX)
@@ -856,87 +896,96 @@ already_AddRefed<Promise> IOUtils::SetWindowsAttributes(
 /* static */
 already_AddRefed<Promise> IOUtils::HasMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<bool>(
-        state->mEventQueue, promise,
-        [file = std::move(file), attr = nsCString(aAttr)]() {
-          return HasMacXAttrSync(file, attr);
-        });
-  });
+        DispatchAndResolve<bool>(
+            state->mEventQueue, promise,
+            [file = std::move(file), attr = nsCString(aAttr)]() {
+              return HasMacXAttrSync(file, attr);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::GetMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<nsTArray<uint8_t>>(
-        state->mEventQueue, promise,
-        [file = std::move(file), attr = nsCString(aAttr)]() {
-          return GetMacXAttrSync(file, attr);
-        });
-  });
+        DispatchAndResolve<nsTArray<uint8_t>>(
+            state->mEventQueue, promise,
+            [file = std::move(file), attr = nsCString(aAttr)]() {
+              return GetMacXAttrSync(file, attr);
+            });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::SetMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
                                                const nsACString& aAttr,
-                                               const Uint8Array& aValue) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                               const Uint8Array& aValue,
+                                               ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    aValue.ComputeState();
-    nsTArray<uint8_t> value;
+        aValue.ComputeState();
+        nsTArray<uint8_t> value;
 
-    if (!value.AppendElements(aValue.Data(), aValue.Length(), fallible)) {
-      RejectJSPromise(
-          promise,
-          IOError(NS_ERROR_OUT_OF_MEMORY)
-              .WithMessage(
-                  "Could not allocate buffer to set extended attribute"));
-      return;
-    }
+        if (!value.AppendElements(aValue.Data(), aValue.Length(), fallible)) {
+          RejectJSPromise(
+              promise,
+              IOError(NS_ERROR_OUT_OF_MEMORY)
+                  .WithMessage(
+                      "Could not allocate buffer to set extended attribute"));
+          return;
+        }
 
-    DispatchAndResolve<Ok>(state->mEventQueue, promise,
-                           [file = std::move(file), attr = nsCString(aAttr),
-                            value = std::move(value)] {
-                             return SetMacXAttrSync(file, attr, value);
-                           });
-  });
+        DispatchAndResolve<Ok>(state->mEventQueue, promise,
+                               [file = std::move(file), attr = nsCString(aAttr),
+                                value = std::move(value)] {
+                                 return SetMacXAttrSync(file, attr, value);
+                               });
+      });
 }
 
 /* static */
 already_AddRefed<Promise> IOUtils::DelMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr) {
-  return WithPromiseAndState(aGlobal, [&](Promise* promise, auto& state) {
-    nsCOMPtr<nsIFile> file = new nsLocalFile();
-    REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError) {
+  return WithPromiseAndState(
+      aGlobal, aError, [&](Promise* promise, auto& state) {
+        nsCOMPtr<nsIFile> file = new nsLocalFile();
+        REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
-    DispatchAndResolve<Ok>(state->mEventQueue, promise,
-                           [file = std::move(file), attr = nsCString(aAttr)] {
-                             return DelMacXAttrSync(file, attr);
-                           });
-  });
+        DispatchAndResolve<Ok>(
+            state->mEventQueue, promise,
+            [file = std::move(file), attr = nsCString(aAttr)] {
+              return DelMacXAttrSync(file, attr);
+            });
+      });
 }
 
 #endif
 
 /* static */
-already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
-  ErrorResult er;
+already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal,
+                                                   ErrorResult& aError) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<Promise> promise = Promise::Create(global, er);
-  if (er.Failed()) {
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
   MOZ_ASSERT(promise);
