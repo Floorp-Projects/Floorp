@@ -9,10 +9,13 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsFrameLoader.h"
+#include "nsIFormPOSTActionChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel2.h"
 #include "nsIXULRuntime.h"
 #include "nsSHEntryShared.h"
 #include "nsSHistory.h"
+#include "nsStreamUtils.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/PresState.h"
@@ -42,7 +45,6 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
     : mURI(aLoadState->URI()),
       mOriginalURI(aLoadState->OriginalURI()),
       mResultPrincipalURI(aLoadState->ResultPrincipalURI()),
-      mPostData(aLoadState->PostDataStream()),
       mLoadType(aLoadState->LoadType()),
       mSrcdocData(aLoadState->SrcdocData().IsVoid()
                       ? Nothing()
@@ -56,6 +58,15 @@ SessionHistoryInfo::SessionHistoryInfo(nsDocShellLoadState* aLoadState,
           aLoadState->PartitionedPrincipalToInherit(), aLoadState->Csp(),
           /* FIXME Is this correct? */
           aLoadState->TypeHint())) {
+  // Pull the upload stream off of the channel instead of the load state, as
+  // ownership has already been transferred from the load state to the channel.
+  if (nsCOMPtr<nsIUploadChannel2> postChannel = do_QueryInterface(aChannel)) {
+    int64_t contentLength;
+    MOZ_ALWAYS_SUCCEEDS(postChannel->CloneUploadStream(
+        &contentLength, getter_AddRefs(mPostData)));
+    MOZ_ASSERT_IF(mPostData, NS_InputStreamIsCloneable(mPostData));
+  }
+
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel)) {
     mReferrerInfo = httpChannel->GetReferrerInfo();
   }
@@ -163,6 +174,24 @@ void SessionHistoryInfo::MaybeUpdateTitleFromURI() {
   }
 }
 
+already_AddRefed<nsIInputStream> SessionHistoryInfo::GetPostData() const {
+  // Return a clone of our post data stream. Our caller will either be
+  // transferring this stream to a different SessionHistoryInfo, or passing it
+  // off to necko/another process which will consume it, and we want to preserve
+  // our local instance.
+  nsCOMPtr<nsIInputStream> postData;
+  if (mPostData) {
+    MOZ_ALWAYS_SUCCEEDS(
+        NS_CloneInputStream(mPostData, getter_AddRefs(postData)));
+  }
+  return postData.forget();
+}
+
+void SessionHistoryInfo::SetPostData(nsIInputStream* aPostData) {
+  MOZ_ASSERT_IF(aPostData, NS_InputStreamIsCloneable(aPostData));
+  mPostData = aPostData;
+}
+
 uint64_t SessionHistoryInfo::SharedId() const {
   return mSharedState.Get()->mId;
 }
@@ -217,7 +246,8 @@ void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   aLoadState.SetOriginalURI(mOriginalURI);
   aLoadState.SetMaybeResultPrincipalURI(Some(mResultPrincipalURI));
   aLoadState.SetLoadReplace(mLoadReplace);
-  aLoadState.SetPostDataStream(mPostData);
+  nsCOMPtr<nsIInputStream> postData = GetPostData();
+  aLoadState.SetPostDataStream(postData);
   aLoadState.SetReferrerInfo(mReferrerInfo);
 
   aLoadState.SetTypeHint(mSharedState.Get()->mContentType);
@@ -653,14 +683,13 @@ SessionHistoryEntry::SetRefreshURIList(nsIMutableArray* aRefreshURIList) {
 
 NS_IMETHODIMP
 SessionHistoryEntry::GetPostData(nsIInputStream** aPostData) {
-  nsCOMPtr<nsIInputStream> postData = mInfo->mPostData;
-  postData.forget(aPostData);
+  *aPostData = mInfo->GetPostData().take();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 SessionHistoryEntry::SetPostData(nsIInputStream* aPostData) {
-  mInfo->mPostData = aPostData;
+  mInfo->SetPostData(aPostData);
   return NS_OK;
 }
 
@@ -1467,6 +1496,8 @@ namespace ipc {
 void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
     IPC::MessageWriter* aWriter, IProtocol* aActor,
     const dom::SessionHistoryInfo& aParam) {
+  nsCOMPtr<nsIInputStream> postData = aParam.GetPostData();
+
   Maybe<Tuple<uint32_t, dom::ClonedMessageData>> stateData;
   if (aParam.mStateData) {
     stateData.emplace();
@@ -1497,7 +1528,7 @@ void IPDLParamTraits<dom::SessionHistoryInfo>::Write(
   WriteIPDLParam(aWriter, aActor, aParam.mReferrerInfo);
   WriteIPDLParam(aWriter, aActor, aParam.mTitle);
   WriteIPDLParam(aWriter, aActor, aParam.mName);
-  WriteIPDLParam(aWriter, aActor, aParam.mPostData);
+  WriteIPDLParam(aWriter, aActor, postData);
   WriteIPDLParam(aWriter, aActor, aParam.mLoadType);
   WriteIPDLParam(aWriter, aActor, aParam.mScrollPositionX);
   WriteIPDLParam(aWriter, aActor, aParam.mScrollPositionY);
@@ -1567,6 +1598,17 @@ bool IPDLParamTraits<dom::SessionHistoryInfo>::Read(
       !ReadIPDLParam(aReader, aActor, &csp) ||
       !ReadIPDLParam(aReader, aActor, &contentType)) {
     aActor->FatalError("Error reading fields for SessionHistoryInfo");
+    return false;
+  }
+
+  // We should always see a cloneable input stream passed to SessionHistoryInfo.
+  // This is because it will be cloneable when first read in the parent process
+  // from the nsHttpChannel (which forces streams to be cloneable), and future
+  // streams in content will be wrapped in
+  // nsMIMEInputStream(RemoteLazyInputStream) which is also cloneable.
+  if (aResult->mPostData && !NS_InputStreamIsCloneable(aResult->mPostData)) {
+    aActor->FatalError(
+        "Unexpected non-cloneable postData for SessionHistoryInfo");
     return false;
   }
 
