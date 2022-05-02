@@ -477,9 +477,10 @@ void SrtpSession::DumpPacket(const void* buf, int len, bool outbound) {
   int64_t seconds = (time_of_day / 1000) % 60;
   int64_t millis = time_of_day % 1000;
   RTC_LOG(LS_VERBOSE) << "\n" << (outbound ? "O" : "I") << " "
-    << std::setw(2) << hours << ":" << std::setw(2) << minutes << ":"
-    << std::setw(2) << seconds << "." << std::setw(3)
-    << std::setfill('0') << millis << " "
+    << std::setfill('0') << std::setw(2) << hours << ":"
+    << std::setfill('0') << std::setw(2) << minutes << ":"
+    << std::setfill('0') << std::setw(2) << seconds << "."
+    << std::setfill('0') << std::setw(3) << millis << " "
     << "000000 " << rtc::hex_encode_with_delimiter((const char *)buf, len, ' ')
     << " # RTP_DUMP";
 }
