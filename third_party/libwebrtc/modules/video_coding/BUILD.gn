@@ -596,6 +596,7 @@ rtc_library("webrtc_vp9") {
     "../../media:rtc_vp9_profile",
     "../../rtc_base",
     "../../rtc_base:checks",
+    "../../rtc_base/experiments:encoder_info_settings",
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/experiments:rate_control_settings",
     "../../rtc_base/synchronization:mutex",

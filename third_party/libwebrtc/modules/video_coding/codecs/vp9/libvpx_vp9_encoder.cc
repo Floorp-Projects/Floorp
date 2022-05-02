@@ -1769,6 +1769,10 @@ VideoEncoder::EncoderInfo LibvpxVp9Encoder::GetEncoderInfo() const {
                                       VideoFrameBuffer::Type::kNV12};
     }
   }
+  if (!encoder_info_override_.resolution_bitrate_limits().empty()) {
+    info.resolution_bitrate_limits =
+        encoder_info_override_.resolution_bitrate_limits();
+  }
   return info;
 }
 
