@@ -133,8 +133,6 @@ class AudioProcessingImpl : public AudioProcessing {
     return stats_reporter_.GetStatistics();
   }
 
-  // TODO(peah): Remove MutateConfig once the new API allows that.
-  void MutateConfig(rtc::FunctionView<void(AudioProcessing::Config*)> mutator);
   AudioProcessing::Config GetConfig() const override;
 
  protected:
