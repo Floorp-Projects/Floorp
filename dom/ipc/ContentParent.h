@@ -105,22 +105,20 @@ struct CancelContentJSOptions;
     }                                                \
   }
 
-class ContentParent final
-    : public PContentParent,
-      public nsIDOMProcessParent,
-      public nsIObserver,
-      public nsIDOMGeoPositionCallback,
-      public nsIDOMGeoPositionErrorCallback,
-      public nsIAsyncShutdownBlocker,
-      public nsIInterfaceRequestor,
-      public gfx::gfxVarReceiver,
-      public mozilla::LinkedListElement<ContentParent>,
-      public gfx::GPUProcessListener,
-      public mozilla::MemoryReportingProcess,
-      public mozilla::dom::ipc::MessageManagerCallback,
-      public mozilla::ipc::IShmemAllocator,
-      public mozilla::ipc::ParentToChildStreamActorManager,
-      public ProcessActor {
+class ContentParent final : public PContentParent,
+                            public nsIDOMProcessParent,
+                            public nsIObserver,
+                            public nsIDOMGeoPositionCallback,
+                            public nsIDOMGeoPositionErrorCallback,
+                            public nsIAsyncShutdownBlocker,
+                            public nsIInterfaceRequestor,
+                            public gfx::gfxVarReceiver,
+                            public mozilla::LinkedListElement<ContentParent>,
+                            public gfx::GPUProcessListener,
+                            public mozilla::MemoryReportingProcess,
+                            public mozilla::dom::ipc::MessageManagerCallback,
+                            public mozilla::ipc::IShmemAllocator,
+                            public ProcessActor {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::TestShellParent TestShellParent;
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
