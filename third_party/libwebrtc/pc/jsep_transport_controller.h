@@ -11,32 +11,61 @@
 #ifndef PC_JSEP_TRANSPORT_CONTROLLER_H_
 #define PC_JSEP_TRANSPORT_CONTROLLER_H_
 
+#include <stdint.h>
+
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "api/async_resolver_factory.h"
 #include "api/candidate.h"
 #include "api/crypto/crypto_options.h"
 #include "api/ice_transport_factory.h"
+#include "api/ice_transport_interface.h"
+#include "api/jsep.h"
 #include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/scoped_refptr.h"
+#include "api/transport/data_channel_transport_interface.h"
+#include "api/transport/sctp_transport_factory_interface.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/dtls_transport.h"
 #include "p2p/base/dtls_transport_factory.h"
+#include "p2p/base/dtls_transport_internal.h"
+#include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_transport_channel.h"
+#include "p2p/base/packet_transport_internal.h"
+#include "p2p/base/port.h"
+#include "p2p/base/port_allocator.h"
+#include "p2p/base/transport_description.h"
+#include "p2p/base/transport_info.h"
 #include "pc/channel.h"
 #include "pc/dtls_srtp_transport.h"
 #include "pc/dtls_transport.h"
 #include "pc/jsep_transport.h"
 #include "pc/rtp_transport.h"
+#include "pc/rtp_transport_internal.h"
+#include "pc/sctp_transport.h"
+#include "pc/session_description.h"
 #include "pc/srtp_transport.h"
+#include "pc/transport_stats.h"
 #include "rtc_base/async_invoker.h"
-#include "rtc_base/constructor_magic.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/callback_list.h"
+#include "rtc_base/constructor_magic.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/helpers.h"
+#include "rtc_base/ref_counted_object.h"
+#include "rtc_base/rtc_certificate.h"
+#include "rtc_base/ssl_certificate.h"
+#include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace rtc {
 class Thread;

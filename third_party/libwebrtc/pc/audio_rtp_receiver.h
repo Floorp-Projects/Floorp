@@ -12,17 +12,20 @@
 #define PC_AUDIO_RTP_RECEIVER_H_
 
 #include <stdint.h>
-
 #include <string>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/crypto/frame_decryptor_interface.h"
+#include "api/dtls_transport_interface.h"
+#include "api/frame_transformer_interface.h"
 #include "api/media_stream_interface.h"
 #include "api/media_stream_track_proxy.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
+#include "api/rtp_receiver_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/transport/rtp/rtp_source.h"
 #include "media/base/media_channel.h"
 #include "pc/audio_track.h"
 #include "pc/jitter_buffer_delay_interface.h"
@@ -30,6 +33,7 @@
 #include "pc/rtp_receiver.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
 

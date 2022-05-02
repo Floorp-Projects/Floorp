@@ -11,9 +11,13 @@
 #ifndef PC_VIDEO_TRACK_SOURCE_H_
 #define PC_VIDEO_TRACK_SOURCE_H_
 
+#include "absl/types/optional.h"
 #include "api/media_stream_interface.h"
 #include "api/notifier.h"
+#include "api/video/recordable_encoded_frame.h"
+#include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
 #include "media/base/media_channel.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_checker.h"

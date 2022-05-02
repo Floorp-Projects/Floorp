@@ -10,18 +10,22 @@
 
 #include "pc/rtp_transceiver.h"
 
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
 #include "api/rtp_parameters.h"
+#include "media/base/codec.h"
+#include "media/base/media_constants.h"
 #include "pc/channel_manager.h"
 #include "pc/rtp_media_utils.h"
-#include "pc/rtp_parameters_conversion.h"
 #include "pc/session_description.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/thread.h"
 
 namespace webrtc {
 namespace {

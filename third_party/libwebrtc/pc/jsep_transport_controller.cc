@@ -10,15 +10,26 @@
 
 #include "pc/jsep_transport_controller.h"
 
+#include <stddef.h>
+
+#include <algorithm>
 #include <memory>
 #include <utility>
 
 #include "absl/algorithm/container.h"
-#include "api/ice_transport_factory.h"
+#include "api/rtp_parameters.h"
+#include "api/transport/enums.h"
+#include "media/sctp/sctp_transport_internal.h"
+#include "p2p/base/dtls_transport.h"
 #include "p2p/base/ice_transport_internal.h"
+#include "p2p/base/p2p_constants.h"
 #include "p2p/base/port.h"
-#include "pc/srtp_filter.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/location.h"
+#include "rtc_base/logging.h"
+#include "rtc_base/net_helper.h"
+#include "rtc_base/socket_address.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 
 using webrtc::SdpType;

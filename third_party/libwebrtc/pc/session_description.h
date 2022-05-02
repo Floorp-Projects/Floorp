@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <algorithm>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -24,14 +25,18 @@
 #include "api/crypto_params.h"
 #include "api/media_types.h"
 #include "api/rtp_parameters.h"
+#include "api/rtp_transceiver_direction.h"
 #include "api/rtp_transceiver_interface.h"
+#include "media/base/codec.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_constants.h"
+#include "media/base/rid_description.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/transport_description.h"
 #include "p2p/base/transport_info.h"
 #include "pc/media_protocol_names.h"
 #include "pc/simulcast_description.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/deprecation.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"

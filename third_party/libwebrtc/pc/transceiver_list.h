@@ -11,11 +11,18 @@
 #ifndef PC_TRANSCEIVER_LIST_H_
 #define PC_TRANSCEIVER_LIST_H_
 
+#include <stddef.h>
+
 #include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
+#include "api/media_types.h"
+#include "api/rtc_error.h"
+#include "api/rtp_sender_interface.h"
+#include "api/scoped_refptr.h"
 #include "pc/rtp_transceiver.h"
 
 namespace webrtc {

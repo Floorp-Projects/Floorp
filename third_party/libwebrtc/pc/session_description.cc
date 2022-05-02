@@ -10,12 +10,10 @@
 
 #include "pc/session_description.h"
 
-#include <algorithm>
 #include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
-#include "pc/media_protocol_names.h"
 #include "rtc_base/checks.h"
 
 namespace cricket {

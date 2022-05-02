@@ -10,6 +10,8 @@
 
 #include "pc/transceiver_list.h"
 
+#include "rtc_base/checks.h"
+
 namespace webrtc {
 
 void TransceiverStableState::set_newly_created() {

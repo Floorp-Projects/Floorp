@@ -11,13 +11,18 @@
 #ifndef PC_DTMF_SENDER_H_
 #define PC_DTMF_SENDER_H_
 
+#include <stdint.h>
+
 #include <string>
 
 #include "api/dtmf_sender_interface.h"
 #include "api/proxy.h"
+#include "api/scoped_refptr.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/constructor_magic.h"
+#include "rtc_base/location.h"
 #include "rtc_base/ref_count.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 
 // DtmfSender is the native implementation of the RTCDTMFSender defined by
@@ -95,6 +100,7 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
 
 // Define proxy for DtmfSenderInterface.
 BEGIN_SIGNALING_PROXY_MAP(DtmfSender)
+
 PROXY_SIGNALING_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, RegisterObserver, DtmfSenderObserverInterface*)
 PROXY_METHOD0(void, UnregisterObserver)

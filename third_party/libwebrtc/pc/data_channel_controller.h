@@ -11,14 +11,31 @@
 #ifndef PC_DATA_CHANNEL_CONTROLLER_H_
 #define PC_DATA_CHANNEL_CONTROLLER_H_
 
+#include <stdint.h>
+
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "api/data_channel_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/transport/data_channel_transport_interface.h"
+#include "media/base/media_channel.h"
+#include "media/base/media_engine.h"
+#include "media/base/stream_params.h"
 #include "pc/channel.h"
+#include "pc/data_channel_utils.h"
 #include "pc/rtp_data_channel.h"
 #include "pc/sctp_data_channel.h"
+#include "rtc_base/async_invoker.h"
+#include "rtc_base/checks.h"
+#include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
 
 namespace webrtc {

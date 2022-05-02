@@ -17,6 +17,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

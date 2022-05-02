@@ -10,7 +10,6 @@
 
 #include "pc/srtp_transport.h"
 
-#include <stdint.h>
 #include <string.h>
 
 #include <string>

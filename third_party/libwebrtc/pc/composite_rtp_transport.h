@@ -11,17 +11,23 @@
 #ifndef PC_COMPOSITE_RTP_TRANSPORT_H_
 #define PC_COMPOSITE_RTP_TRANSPORT_H_
 
+#include <stdint.h>
+
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "call/rtp_demuxer.h"
 #include "call/rtp_packet_sink_interface.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/network/sent_packet.h"
+#include "rtc_base/network_route.h"
+#include "rtc_base/socket.h"
 
 namespace webrtc {
 

@@ -11,6 +11,7 @@
 #ifndef PC_RTC_STATS_COLLECTOR_H_
 #define PC_RTC_STATS_COLLECTOR_H_
 
+#include <stdint.h>
 #include <map>
 #include <memory>
 #include <set>
@@ -18,6 +19,8 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/data_channel_interface.h"
+#include "api/media_types.h"
 #include "api/scoped_refptr.h"
 #include "api/stats/rtc_stats_collector_callback.h"
 #include "api/stats/rtc_stats_report.h"
@@ -26,11 +29,20 @@
 #include "media/base/media_channel.h"
 #include "pc/data_channel_utils.h"
 #include "pc/peer_connection_internal.h"
+#include "pc/rtp_data_channel.h"
+#include "pc/rtp_receiver.h"
+#include "pc/rtp_sender.h"
+#include "pc/rtp_transceiver.h"
+#include "pc/sctp_data_channel.h"
 #include "pc/track_media_info_map.h"
+#include "pc/transport_stats.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_count.h"
+#include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
+#include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {

@@ -36,6 +36,7 @@
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/weak_ptr.h"
 
 namespace rtc {
 class Thread;

@@ -15,16 +15,14 @@
 #include <utility>
 #include <vector>
 
-#include "api/media_stream_proxy.h"
+#include "api/video/recordable_encoded_frame.h"
 #include "api/video_track_source_proxy.h"
 #include "pc/jitter_buffer_delay.h"
 #include "pc/jitter_buffer_delay_proxy.h"
-#include "pc/media_stream.h"
 #include "pc/video_track.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 
