@@ -248,7 +248,7 @@ struct ParamTraits<mozilla::WebGLContextOptions> final
   using T = mozilla::WebGLContextOptions;
 
   static bool Validate(const T& val) {
-    return ValidateParam(val.powerPreference);
+    return ValidateParam(val.powerPreference) && ValidateParam(val.colorSpace);
   }
 };
 
@@ -259,6 +259,15 @@ struct ParamTraits<mozilla::dom::WebGLPowerPreference> final
   using T = mozilla::dom::WebGLPowerPreference;
 
   static bool Validate(const T& val) { return val <= T::High_performance; }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::PredefinedColorSpace> final
+    : public ValidatedPlainOldDataSerializer<
+          mozilla::dom::PredefinedColorSpace> {
+  using T = mozilla::dom::PredefinedColorSpace;
+
+  static bool Validate(const T& val) { return val < T::EndGuard_; }
 };
 
 template <>
