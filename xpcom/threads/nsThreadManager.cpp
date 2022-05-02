@@ -43,12 +43,13 @@ static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
 
 bool NS_IsMainThreadTLSInitialized() { return sTLSIsMainThread.initialized(); }
 
-class BackgroundEventTarget final : public nsIEventTarget {
+class BackgroundEventTarget final : public nsIEventTarget,
+                                    public TaskQueueTracker {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
-  BackgroundEventTarget();
+  BackgroundEventTarget() = default;
 
   nsresult Init();
 
@@ -63,15 +64,9 @@ class BackgroundEventTarget final : public nsIEventTarget {
 
   nsCOMPtr<nsIThreadPool> mPool;
   nsCOMPtr<nsIThreadPool> mIOPool;
-
-  Mutex mMutex;
-  nsTArray<RefPtr<TaskQueue>> mTaskQueues GUARDED_BY(mMutex);
 };
 
-NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
-
-BackgroundEventTarget::BackgroundEventTarget()
-    : mMutex("BackgroundEventTarget::mMutex") {}
+NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget, TaskQueueTracker)
 
 nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
@@ -192,8 +187,8 @@ BackgroundEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
 
 void BackgroundEventTarget::BeginShutdown(
     nsTArray<RefPtr<ShutdownPromise>>& promises) {
-  MutexAutoLock lock(mMutex);
-  for (auto& queue : mTaskQueues) {
+  auto queues = GetAllTrackedTaskQueues();
+  for (auto& queue : queues) {
     promises.AppendElement(queue->BeginShutdown());
   }
 }
@@ -205,12 +200,7 @@ void BackgroundEventTarget::FinishShutdown() {
 
 already_AddRefed<nsISerialEventTarget>
 BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
-  MutexAutoLock lock(mMutex);
-
-  RefPtr<TaskQueue> queue = TaskQueue::Create(do_AddRef(this), aName);
-  mTaskQueues.AppendElement(queue);
-
-  return queue.forget();
+  return TaskQueue::Create(do_AddRef(this), aName).forget();
 }
 
 extern "C" {
