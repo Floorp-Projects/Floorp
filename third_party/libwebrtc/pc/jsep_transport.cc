@@ -176,7 +176,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
 
   // If doing SDES, setup the SDES crypto parameters.
   {
-    rtc::CritScope scope(&accessor_lock_);
+    webrtc::MutexLock lock(&accessor_lock_);
     if (sdes_transport_) {
       RTC_DCHECK(!unencrypted_rtp_transport_);
       RTC_DCHECK(!dtls_srtp_transport_);
@@ -213,7 +213,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
     }
   }
   {
-    rtc::CritScope scope(&accessor_lock_);
+    webrtc::MutexLock lock(&accessor_lock_);
     RTC_DCHECK(rtp_dtls_transport_->internal());
     rtp_dtls_transport_->internal()->ice_transport()->SetIceParameters(
         ice_parameters);
@@ -233,7 +233,7 @@ webrtc::RTCError JsepTransport::SetLocalJsepTransportDescription(
     return error;
   }
   {
-    rtc::CritScope scope(&accessor_lock_);
+    webrtc::MutexLock lock(&accessor_lock_);
     if (needs_ice_restart_ && ice_restarting) {
       needs_ice_restart_ = false;
       RTC_LOG(LS_VERBOSE) << "needs-ice-restart flag cleared for transport "
@@ -270,7 +270,7 @@ webrtc::RTCError JsepTransport::SetRemoteJsepTransportDescription(
 
   // If doing SDES, setup the SDES crypto parameters.
   {
-    rtc::CritScope lock(&accessor_lock_);
+    webrtc::MutexLock lock(&accessor_lock_);
     if (sdes_transport_) {
       RTC_DCHECK(!unencrypted_rtp_transport_);
       RTC_DCHECK(!dtls_srtp_transport_);
@@ -341,7 +341,7 @@ webrtc::RTCError JsepTransport::AddRemoteCandidates(
 }
 
 void JsepTransport::SetNeedsIceRestartFlag() {
-  rtc::CritScope scope(&accessor_lock_);
+  webrtc::MutexLock lock(&accessor_lock_);
   if (!needs_ice_restart_) {
     needs_ice_restart_ = true;
     RTC_LOG(LS_VERBOSE) << "needs-ice-restart flag set for transport " << mid();
@@ -350,7 +350,7 @@ void JsepTransport::SetNeedsIceRestartFlag() {
 
 absl::optional<rtc::SSLRole> JsepTransport::GetDtlsRole() const {
   RTC_DCHECK_RUN_ON(network_thread_);
-  rtc::CritScope scope(&accessor_lock_);
+  webrtc::MutexLock lock(&accessor_lock_);
   RTC_DCHECK(rtp_dtls_transport_);
   RTC_DCHECK(rtp_dtls_transport_->internal());
   rtc::SSLRole dtls_role;
@@ -363,7 +363,7 @@ absl::optional<rtc::SSLRole> JsepTransport::GetDtlsRole() const {
 
 bool JsepTransport::GetStats(TransportStats* stats) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  rtc::CritScope scope(&accessor_lock_);
+  webrtc::MutexLock lock(&accessor_lock_);
   stats->transport_name = mid();
   stats->channel_stats.clear();
   RTC_DCHECK(rtp_dtls_transport_->internal());
@@ -405,7 +405,7 @@ webrtc::RTCError JsepTransport::VerifyCertificateFingerprint(
 
 void JsepTransport::SetActiveResetSrtpParams(bool active_reset_srtp_params) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  rtc::CritScope scope(&accessor_lock_);
+  webrtc::MutexLock lock(&accessor_lock_);
   if (dtls_srtp_transport_) {
     RTC_LOG(INFO)
         << "Setting active_reset_srtp_params of DtlsSrtpTransport to: "
@@ -487,7 +487,7 @@ void JsepTransport::ActivateRtcpMux() {
     RTC_DCHECK_RUN_ON(network_thread_);
   }
   {
-    rtc::CritScope scope(&accessor_lock_);
+    webrtc::MutexLock lock(&accessor_lock_);
     if (unencrypted_rtp_transport_) {
       RTC_DCHECK(!sdes_transport_);
       RTC_DCHECK(!dtls_srtp_transport_);
