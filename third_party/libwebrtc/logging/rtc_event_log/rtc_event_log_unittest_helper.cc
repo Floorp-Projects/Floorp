@@ -338,6 +338,19 @@ rtcp::Pli EventGenerator::NewPli() {
   return pli;
 }
 
+rtcp::Bye EventGenerator::NewBye() {
+  rtcp::Bye bye;
+  bye.SetSenderSsrc(prng_.Rand<uint32_t>());
+  std::vector<uint32_t> csrcs{prng_.Rand<uint32_t>(), prng_.Rand<uint32_t>()};
+  bye.SetCsrcs(csrcs);
+  if (prng_.Rand(0, 2)) {
+    bye.SetReason("foo");
+  } else {
+    bye.SetReason("bar");
+  }
+  return bye;
+}
+
 rtcp::TransportFeedback EventGenerator::NewTransportFeedback() {
   rtcp::TransportFeedback transport_feedback;
   uint16_t base_seq_no = prng_.Rand<uint16_t>();
@@ -396,6 +409,7 @@ EventGenerator::NewRtcpPacketIncoming() {
     kPli,
     kNack,
     kRemb,
+    kBye,
     kTransportFeedback,
     kNumValues
   };
@@ -435,6 +449,11 @@ EventGenerator::NewRtcpPacketIncoming() {
     case SupportedRtcpTypes::kRemb: {
       rtcp::Remb remb = NewRemb();
       rtc::Buffer buffer = remb.Build();
+      return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
+    }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      rtc::Buffer buffer = bye.Build();
       return std::make_unique<RtcEventRtcpPacketIncoming>(buffer);
     }
     case SupportedRtcpTypes::kTransportFeedback: {
@@ -459,6 +478,7 @@ EventGenerator::NewRtcpPacketOutgoing() {
     kPli,
     kNack,
     kRemb,
+    kBye,
     kTransportFeedback,
     kNumValues
   };
@@ -498,6 +518,11 @@ EventGenerator::NewRtcpPacketOutgoing() {
     case SupportedRtcpTypes::kRemb: {
       rtcp::Remb remb = NewRemb();
       rtc::Buffer buffer = remb.Build();
+      return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
+    }
+    case SupportedRtcpTypes::kBye: {
+      rtcp::Bye bye = NewBye();
+      rtc::Buffer buffer = bye.Build();
       return std::make_unique<RtcEventRtcpPacketOutgoing>(buffer);
     }
     case SupportedRtcpTypes::kTransportFeedback: {
@@ -1133,6 +1158,7 @@ void EventVerifier::VerifyLoggedExtendedReports(
     int64_t log_time_us,
     const rtcp::ExtendedReports& original_xr,
     const LoggedRtcpPacketExtendedReports& logged_xr) {
+  EXPECT_EQ(log_time_us, logged_xr.log_time_us());
   EXPECT_EQ(original_xr.sender_ssrc(), logged_xr.xr.sender_ssrc());
 
   EXPECT_EQ(original_xr.rrtr().has_value(), logged_xr.xr.rrtr().has_value());
@@ -1173,8 +1199,8 @@ void EventVerifier::VerifyLoggedExtendedReports(
 void EventVerifier::VerifyLoggedFir(int64_t log_time_us,
                                     const rtcp::Fir& original_fir,
                                     const LoggedRtcpPacketFir& logged_fir) {
+  EXPECT_EQ(log_time_us, logged_fir.log_time_us());
   EXPECT_EQ(original_fir.sender_ssrc(), logged_fir.fir.sender_ssrc());
-
   const auto& original_requests = original_fir.requests();
   const auto& logged_requests = logged_fir.fir.requests();
   ASSERT_EQ(original_requests.size(), logged_requests.size());
@@ -1187,8 +1213,18 @@ void EventVerifier::VerifyLoggedFir(int64_t log_time_us,
 void EventVerifier::VerifyLoggedPli(int64_t log_time_us,
                                     const rtcp::Pli& original_pli,
                                     const LoggedRtcpPacketPli& logged_pli) {
+  EXPECT_EQ(log_time_us, logged_pli.log_time_us());
   EXPECT_EQ(original_pli.sender_ssrc(), logged_pli.pli.sender_ssrc());
   EXPECT_EQ(original_pli.media_ssrc(), logged_pli.pli.media_ssrc());
+}
+
+void EventVerifier::VerifyLoggedBye(int64_t log_time_us,
+                                    const rtcp::Bye& original_bye,
+                                    const LoggedRtcpPacketBye& logged_bye) {
+  EXPECT_EQ(log_time_us, logged_bye.log_time_us());
+  EXPECT_EQ(original_bye.sender_ssrc(), logged_bye.bye.sender_ssrc());
+  EXPECT_EQ(original_bye.csrcs(), logged_bye.bye.csrcs());
+  EXPECT_EQ(original_bye.reason(), logged_bye.bye.reason());
 }
 
 void EventVerifier::VerifyLoggedNack(int64_t log_time_us,

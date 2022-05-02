@@ -445,6 +445,8 @@ void EventLogAnalyzer::CreateRtcpTypeGraph(PacketDirection direction,
       CreateRtcpTypeTimeSeries(parsed_log_.firs(direction), config_, "FIR", 7));
   plot->AppendTimeSeries(
       CreateRtcpTypeTimeSeries(parsed_log_.plis(direction), config_, "PLI", 8));
+  plot->AppendTimeSeries(
+      CreateRtcpTypeTimeSeries(parsed_log_.byes(direction), config_, "BYE", 9));
   plot->SetXAxis(config_.CallBeginTimeSec(), config_.CallEndTimeSec(),
                  "Time (s)", kLeftMargin, kRightMargin);
   plot->SetSuggestedYAxis(0, 1, "RTCP type", kBottomMargin, kTopMargin);
@@ -456,7 +458,8 @@ void EventLogAnalyzer::CreateRtcpTypeGraph(PacketDirection direction,
                             {5, "NACK"},
                             {6, "REMB"},
                             {7, "FIR"},
-                            {8, "PLI"}});
+                            {8, "PLI"},
+                            {9, "BYE"}});
 }
 
 template <typename IterableType>
