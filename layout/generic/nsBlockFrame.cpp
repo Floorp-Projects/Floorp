@@ -1836,19 +1836,6 @@ static nscoord ApplyLineClamp(const ReflowInput& aReflowInput,
   return edge;
 }
 
-static bool ShouldApplyAutomaticMinimumOnBlockAxis(
-    WritingMode aWM, const nsStyleDisplay* aDisplay,
-    const nsStylePosition* aPosition) {
-  // The automatic minimum size in the ratio-dependent axis of a box with a
-  // preferred aspect ratio that is neither a replaced element nor a scroll
-  // container is its min-content size clamped from above by its maximum size.
-  //
-  // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-  // Note: we only need to check scroll container because replaced element
-  // doesn't go into nsBlockFrame::Reflow().
-  return !aDisplay->IsScrollableOverflow() && aPosition->MinBSize(aWM).IsAuto();
-}
-
 void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
                                     BlockReflowState& aState,
                                     ReflowOutput& aMetrics,
@@ -1930,9 +1917,7 @@ void nsBlockFrame::ComputeFinalSize(const ReflowInput& aReflowInput,
     // If the content block-size is larger than the effective computed
     // block-size, we extend the block-size to contain all the content.
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
-    if (aReflowInput.mFlags.mIsBSizeSetByAspectRatio &&
-        ShouldApplyAutomaticMinimumOnBlockAxis(wm, aReflowInput.mStyleDisplay,
-                                               aReflowInput.mStylePosition)) {
+    if (aReflowInput.ShouldApplyAutomaticMinimumOnBlockAxis()) {
       // Note: finalSize.BSize(wm) is the border-box size, so we compare it with
       // the content's block-size plus our border and padding..
       finalSize.BSize(wm) =

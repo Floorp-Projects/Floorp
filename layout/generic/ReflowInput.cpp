@@ -760,6 +760,13 @@ void ReflowInput::InitDynamicReflowRoot() {
   }
 }
 
+bool ReflowInput::ShouldApplyAutomaticMinimumOnBlockAxis() const {
+  MOZ_ASSERT(!mFrame->IsFrameOfType(nsIFrame::eReplacedSizing));
+  return mFlags.mIsBSizeSetByAspectRatio &&
+         !mStyleDisplay->IsScrollableOverflow() &&
+         mStylePosition->MinBSize(GetWritingMode()).IsAuto();
+}
+
 /* static */
 LogicalMargin ReflowInput::ComputeRelativeOffsets(WritingMode aWM,
                                                   nsIFrame* aFrame,
