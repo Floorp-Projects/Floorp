@@ -57,23 +57,12 @@ std::string GainController2LevelEstimatorToString(
   RTC_CHECK_NOTREACHED();
 }
 
-int GetDefaultMaxInternalRate() {
-#ifdef WEBRTC_ARCH_ARM_FAMILY
-  return 32000;
-#else
-  return 48000;
-#endif
-}
-
 }  // namespace
 
 constexpr int AudioProcessing::kNativeSampleRatesHz[];
 
 void CustomProcessing::SetRuntimeSetting(
     AudioProcessing::RuntimeSetting setting) {}
-
-AudioProcessing::Config::Pipeline::Pipeline()
-    : maximum_internal_processing_rate(GetDefaultMaxInternalRate()) {}
 
 bool Agc1Config::operator==(const Agc1Config& rhs) const {
   const auto& analog_lhs = analog_gain_controller;
