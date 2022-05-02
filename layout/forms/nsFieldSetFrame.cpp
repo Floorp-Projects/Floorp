@@ -593,6 +593,15 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
     kidReflowInput.Init(
         aPresContext, Nothing(), Nothing(),
         Some(aReflowInput.ComputedLogicalPadding(inner->GetWritingMode())));
+
+    // Propagate the aspect-ratio flag to |inner| (i.e. the container frame
+    // wrapped by nsFieldSetFrame), so we can let |inner|'s reflow code handle
+    // automatic content-based minimum.
+    // Note: Init() resets this flag, so we have to copy it again here.
+    if (aReflowInput.mFlags.mIsBSizeSetByAspectRatio) {
+      kidReflowInput.mFlags.mIsBSizeSetByAspectRatio = true;
+    }
+
     if (kidReflowInput.mFlags.mIsTopOfPage) {
       // Prevent break-before from |inner| if we have a legend.
       kidReflowInput.mFlags.mIsTopOfPage = !legend;
