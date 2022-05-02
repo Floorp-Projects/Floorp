@@ -667,6 +667,7 @@ class Raptor(
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
         self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
         self.browsertime_visualmetrics = self.config.get("browsertime_visualmetrics")
+        self.browsertime_node = self.config.get("browsertime_node")
         self.browsertime_user_args = self.config.get("browsertime_user_args")
         self.browsertime_video = False
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
@@ -961,6 +962,9 @@ class Raptor(
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line
             value = self.config.get(details["dest"])
+            if value is None or value != getattr(self, details["dest"], None):
+                # Check for modifications done to the instance variables
+                value = getattr(self, details["dest"], None)
             if value and arg not in self.config.get("raptor_cmd_line_args", []):
                 if isinstance(value, string_types):
                     options.extend([arg, os.path.expandvars(value)])
@@ -1015,7 +1019,7 @@ class Raptor(
         _virtualenv_path = self.config.get("virtualenv_path")
 
         if self.clean:
-            rmtree(_virtualenv_path)
+            rmtree(_virtualenv_path, ignore_errors=True)
 
         if self.run_local and os.path.exists(_virtualenv_path):
             self.info("Virtualenv already exists, skipping creation")
