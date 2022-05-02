@@ -137,10 +137,6 @@ class BackgroundParentImpl : public PBackgroundParent,
 
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;
 
-  already_AddRefed<PRemoteLazyInputStreamParent>
-  AllocPRemoteLazyInputStreamParent(const nsID& aID,
-                                    const uint64_t& aSize) override;
-
   PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
 
   mozilla::ipc::IPCResult RecvPTemporaryIPCBlobConstructor(

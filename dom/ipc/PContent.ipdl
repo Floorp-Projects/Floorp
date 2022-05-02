@@ -17,7 +17,6 @@ include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
-include protocol PRemoteLazyInputStream;
 include protocol PRemotePrintJob;
 include protocol PLoginReputation;
 include protocol PMedia;
@@ -463,7 +462,6 @@ sync protocol PContent
     manages PHal;
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
-    manages PRemoteLazyInputStream;
     manages PRemotePrintJob;
     manages PMedia;
     manages PNecko;
@@ -860,8 +858,6 @@ child:
     async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
 
     async RefreshScreens(ScreenDetails[] aScreens);
-
-    async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
     async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
     async FlushCodeCoverageCounters() returns (bool unused);
