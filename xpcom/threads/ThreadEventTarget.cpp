@@ -52,10 +52,9 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (gXPCOMThreadsShutDown && !mIsMainThread) {
-    NS_ASSERTION(false, "Failed Dispatch after xpcom-shutdown-threads");
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
-  }
+  NS_ASSERTION(!gXPCOMThreadsShutDown || mIsMainThread ||
+                   PR_GetCurrentThread() == mThread,
+               "Dispatch to non-main thread after xpcom-shutdown-threads");
 
   LogRunnable::LogDispatch(event.get());
 
