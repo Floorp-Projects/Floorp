@@ -16,12 +16,14 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "api/crypto/crypto_options.h"
 #include "api/dtls_transport_interface.h"
 #include "api/scoped_refptr.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/packet_transport_internal.h"
+#include "rtc_base/callback_list.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
@@ -116,12 +118,23 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
 
   // Emitted whenever the Dtls handshake failed on some transport channel.
   sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
+  // F: void(rtc::SSLHandshakeError)
+  template <typename F>
+  void SubscribeDtlsHandshakeError(F&& callback) {
+    dtls_handshake_error_callback_list_.AddReceiver(std::forward<F>(callback));
+  }
+
+  void SendDtlsHandshakeError(rtc::SSLHandshakeError error) {
+    dtls_handshake_error_callback_list_.Send(error);
+  }
 
  protected:
   DtlsTransportInternal();
 
  private:
   RTC_DISALLOW_COPY_AND_ASSIGN(DtlsTransportInternal);
+  webrtc::CallbackList<const rtc::SSLHandshakeError>
+      dtls_handshake_error_callback_list_;
 };
 
 }  // namespace cricket

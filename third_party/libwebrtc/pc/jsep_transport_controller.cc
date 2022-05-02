@@ -477,8 +477,6 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportWritableState_n);
   dtls->SignalReceivingState.connect(
       this, &JsepTransportController::OnTransportReceivingState_n);
-  dtls->SignalDtlsHandshakeError.connect(
-      this, &JsepTransportController::OnDtlsHandshakeError);
   dtls->ice_transport()->SignalGatheringState.connect(
       this, &JsepTransportController::OnTransportGatheringState_n);
   dtls->ice_transport()->SignalCandidateGathered.connect(
@@ -495,6 +493,9 @@ JsepTransportController::CreateDtlsTransport(
       this, &JsepTransportController::OnTransportStateChanged_n);
   dtls->ice_transport()->SignalCandidatePairChanged.connect(
       this, &JsepTransportController::OnTransportCandidatePairChanged_n);
+
+  dtls->SubscribeDtlsHandshakeError(
+      [this](rtc::SSLHandshakeError error) { OnDtlsHandshakeError(error); });
   return dtls;
 }
 
