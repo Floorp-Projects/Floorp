@@ -918,6 +918,73 @@ static bool PromiseHasAnyFlag(PromiseObject& promise, int32_t flag) {
 static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
 
+static JSFunction* GetResolveFunctionFromReject(JSFunction* reject);
+static JSFunction* GetRejectFunctionFromResolve(JSFunction* resolve);
+
+#ifdef DEBUG
+
+/**
+ * Returns Promise Resolve Function's [[AlreadyResolved]].[[Value]].
+ */
+static bool IsAlreadyResolvedMaybeWrappedResolveFunction(
+    JSObject* resolveFunObj) {
+  if (IsWrapper(resolveFunObj)) {
+    resolveFunObj = UncheckedUnwrap(resolveFunObj);
+  }
+
+  JSFunction* resolveFun = &resolveFunObj->as<JSFunction>();
+  MOZ_ASSERT(resolveFun->maybeNative() == ResolvePromiseFunction);
+
+  bool alreadyResolved =
+      resolveFun->getExtendedSlot(ResolveFunctionSlot_Promise).isUndefined();
+
+  // Other slots should agree.
+  if (alreadyResolved) {
+    MOZ_ASSERT(resolveFun->getExtendedSlot(ResolveFunctionSlot_RejectFunction)
+                   .isUndefined());
+  } else {
+    JSFunction* rejectFun = GetRejectFunctionFromResolve(resolveFun);
+    MOZ_ASSERT(
+        !rejectFun->getExtendedSlot(RejectFunctionSlot_Promise).isUndefined());
+    MOZ_ASSERT(!rejectFun->getExtendedSlot(RejectFunctionSlot_ResolveFunction)
+                    .isUndefined());
+  }
+
+  return alreadyResolved;
+}
+
+/**
+ * Returns Promise Reject Function's [[AlreadyResolved]].[[Value]].
+ */
+static bool IsAlreadyResolvedMaybeWrappedRejectFunction(
+    JSObject* rejectFunObj) {
+  if (IsWrapper(rejectFunObj)) {
+    rejectFunObj = UncheckedUnwrap(rejectFunObj);
+  }
+
+  JSFunction* rejectFun = &rejectFunObj->as<JSFunction>();
+  MOZ_ASSERT(rejectFun->maybeNative() == RejectPromiseFunction);
+
+  bool alreadyResolved =
+      rejectFun->getExtendedSlot(RejectFunctionSlot_Promise).isUndefined();
+
+  // Other slots should agree.
+  if (alreadyResolved) {
+    MOZ_ASSERT(rejectFun->getExtendedSlot(RejectFunctionSlot_ResolveFunction)
+                   .isUndefined());
+  } else {
+    JSFunction* resolveFun = GetResolveFunctionFromReject(rejectFun);
+    MOZ_ASSERT(!resolveFun->getExtendedSlot(ResolveFunctionSlot_Promise)
+                    .isUndefined());
+    MOZ_ASSERT(!resolveFun->getExtendedSlot(ResolveFunctionSlot_RejectFunction)
+                    .isUndefined());
+  }
+
+  return alreadyResolved;
+}
+
+#endif  // DEBUG
+
 /**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
@@ -982,6 +1049,9 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp);
   rejectFun->initExtendedSlot(RejectFunctionSlot_ResolveFunction,
                               ObjectValue(*resolveFun));
 
+  MOZ_ASSERT(!IsAlreadyResolvedMaybeWrappedResolveFunction(resolveFun));
+  MOZ_ASSERT(!IsAlreadyResolvedMaybeWrappedRejectFunction(rejectFun));
+
   // Step 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
   return true;
 }
@@ -1029,13 +1099,14 @@ static bool RejectPromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   //
   // If the Promise isn't available anymore, it has been resolved and the
   // reference to it removed to make it eligible for collection.
-  if (promiseVal.isUndefined()) {
+  bool alreadyResolved = promiseVal.isUndefined();
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject) ==
+             alreadyResolved);
+  if (alreadyResolved) {
     args.rval().setUndefined();
     return true;
   }
 
-  // Store the promise value in |promise| before ClearResolutionFunctionSlots
-  // removes the reference.
   RootedObject promise(cx, &promiseVal.toObject());
 
   // Step 6. Set alreadyResolved.[[Value]] to true.
@@ -1204,20 +1275,23 @@ static bool ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp) {
   JSFunction* resolve = &args.callee().as<JSFunction>();
   HandleValue resolutionVal = args.get(0);
 
+  // Step 3. Let promise be F.[[Promise]].
+  const Value& promiseVal =
+      resolve->getExtendedSlot(ResolveFunctionSlot_Promise);
+
   // Step 4. Let alreadyResolved be F.[[AlreadyResolved]].
   // Step 5. If alreadyResolved.[[Value]] is true, return undefined.
   //
   // NOTE: We use the reference to the reject function as [[AlreadyResolved]].
-  if (!resolve->getExtendedSlot(ResolveFunctionSlot_RejectFunction)
-           .isObject()) {
+  bool alreadyResolved = promiseVal.isUndefined();
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve) ==
+             alreadyResolved);
+  if (alreadyResolved) {
     args.rval().setUndefined();
     return true;
   }
 
-  // (reordered)
-  // Step 3. Let promise be F.[[Promise]].
-  RootedObject promise(
-      cx, &resolve->getExtendedSlot(ResolveFunctionSlot_Promise).toObject());
+  RootedObject promise(cx, &promiseVal.toObject());
 
   // Step 6. Set alreadyResolved.[[Value]] to true.
   //
@@ -2498,6 +2572,9 @@ static void ClearResolutionFunctionSlots(JSFunction* resolutionFun) {
 
   reject->setExtendedSlot(RejectFunctionSlot_Promise, UndefinedValue());
   reject->setExtendedSlot(RejectFunctionSlot_ResolveFunction, UndefinedValue());
+
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedResolveFunction(resolve));
+  MOZ_ASSERT(IsAlreadyResolvedMaybeWrappedRejectFunction(reject));
 }
 
 /**
