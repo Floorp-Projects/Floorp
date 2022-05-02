@@ -665,9 +665,6 @@ namespace {
 class NonLocalExitControl {
  public:
   enum Kind {
-    // IteratorClose is handled especially inside the exception unwinder.
-    Throw,
-
     // A 'continue' statement does not call IteratorClose for the loop it
     // is continuing, i.e. excluding the target loop.
     Continue,
@@ -745,12 +742,9 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
 
   AutoCheckUnstableEmitterScope cues(bce_);
 
-  // For 'continue', 'break', and 'return' statements, emit IteratorClose
-  // bytecode inline. 'continue' statements do not call IteratorClose for
-  // the loop they are continuing.
-  bool emitIteratorClose =
-      kind_ == Continue || kind_ == Break || kind_ == Return;
-  bool emitIteratorCloseAtTarget = emitIteratorClose && kind_ != Continue;
+  // We emit IteratorClose bytecode inline. 'continue' statements do
+  // not call IteratorClose for the loop they are continuing.
+  bool emitIteratorCloseAtTarget = kind_ != Continue;
 
   auto flushPops = [&npops](BytecodeEmitter* bce) {
     if (npops && !bce->emitPopN(npops)) {
@@ -805,28 +799,23 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
         break;
       }
 
-      case StatementKind::ForOfLoop:
-        if (emitIteratorClose) {
-          if (!flushPops(bce_)) {
-            return false;
-          }
-          BytecodeOffset tryNoteStart;
-          ForOfLoopControl& loopinfo = control->as<ForOfLoopControl>();
-          if (!loopinfo.emitPrepareForNonLocalJumpFromScope(
-                  bce_, *es,
-                  /* isTarget = */ false, &tryNoteStart)) {
-            //      [stack] ...
-            return false;
-          }
-          if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
-            return false;
-          }
-        } else {
-          // The iterator next method, the iterator, and the current
-          // value are on the stack.
-          npops += 3;
+      case StatementKind::ForOfLoop: {
+        if (!flushPops(bce_)) {
+          return false;
+        }
+        BytecodeOffset tryNoteStart;
+        ForOfLoopControl& loopinfo = control->as<ForOfLoopControl>();
+        if (!loopinfo.emitPrepareForNonLocalJumpFromScope(
+                bce_, *es,
+                /* isTarget = */ false, &tryNoteStart)) {
+          //      [stack] ...
+          return false;
+        }
+        if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
+          return false;
         }
         break;
+      }
 
       case StatementKind::ForInLoop:
         if (!flushPops(bce_)) {
