@@ -78,6 +78,40 @@ user account, there is little we can do to prevent secrets from
 being accessed or leaked.
 
 The Remote Agent is available on all release channels.
-The [security review] was completed in November 2019.
 
-[security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1542229
+Remote Hosts and Origins
+------------------------
+
+By default RemoteAgent only accepts connections with no `Origin` header and a
+`Host` header set to an IP address or a localhost loopback address.
+
+Other `Host` or `Origin` headers can be allowed by starting Firefox with the
+`--remote-allow-origins` and `--remote-allow-hosts` arguments:
+
+- `--remote-allow-hosts` expects a comma separated list of hostnames
+
+- `--remote-allow-origins` expects a comma separated list of origins
+
+Note: Users are strongly discouraged from using the Remote Agent in a way that
+allows it to be accessed by untrusted hosts e.g. by binding it to a publicly
+routeable interface.
+
+The Remote Agent does not provide message encryption, which means that all
+protocol messages are subject to eavesdropping and tampering. It also does not
+provide any authentication system. This is acceptable in an isolated test
+environment, but not to be used on an untrusted network such as the internet.
+People wishing to provide remote access to Firefox sessions via the Remote Agent
+must provide their own encryption, authentication, and authorization.
+
+Security reviews
+----------------
+
+More details can be found in the security reviews conducted for Remote Agent and
+WebDriver BiDi:
+
+- [Remote Agent security review] (November 2019)
+
+- [WebDriver BiDi security review] (April 2022)
+
+[Remote Agent security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1542229
+[WebDriver BiDi security review]: https://bugzilla.mozilla.org/show_bug.cgi?id=1753997
