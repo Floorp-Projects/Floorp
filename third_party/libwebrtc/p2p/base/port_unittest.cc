@@ -778,7 +778,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
   bool role_conflict() const { return role_conflict_; }
 
   void ConnectToSignalDestroyed(PortInterface* port) {
-    port->SignalDestroyed.connect(this, &PortTest::OnDestroyed);
+    port->SubscribePortDestroyed(
+        [this](PortInterface* port) { OnDestroyed(port); });
   }
 
   void OnDestroyed(PortInterface* port) { ++ports_destroyed_; }

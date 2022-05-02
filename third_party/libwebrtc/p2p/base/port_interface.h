@@ -114,7 +114,6 @@ class PortInterface {
 
   // Signaled when this port decides to delete itself because it no longer has
   // any usefulness.
-  sigslot::signal1<PortInterface*> SignalDestroyed;
   virtual void SubscribePortDestroyed(
       std::function<void(PortInterface*)> callback) = 0;
 
