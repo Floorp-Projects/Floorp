@@ -6,6 +6,7 @@
 
 #include "IPCStreamUtils.h"
 
+#include "nsIHttpHeaderVisitor.h"
 #include "nsIIPCSerializableInputStream.h"
 #include "mozIRemoteLazyInputStream.h"
 
@@ -19,6 +20,7 @@
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/Unused.h"
+#include "nsIMIMEInputStream.h"
 #include "nsNetCID.h"
 #include "BackgroundParentImpl.h"
 #include "BackgroundChildImpl.h"
@@ -105,12 +107,63 @@ bool SerializeInputStream(nsIInputStream* aStream, IPCStream& aValue,
   return true;
 }
 
+class MIMEStreamHeaderVisitor final : public nsIHttpHeaderVisitor {
+ public:
+  explicit MIMEStreamHeaderVisitor(
+      nsTArray<mozilla::ipc::HeaderEntry>& aHeaders)
+      : mHeaders(aHeaders) {}
+
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD VisitHeader(const nsACString& aName,
+                         const nsACString& aValue) override {
+    auto el = mHeaders.AppendElement();
+    el->name() = aName;
+    el->value() = aValue;
+    return NS_OK;
+  }
+
+ private:
+  ~MIMEStreamHeaderVisitor() = default;
+
+  nsTArray<mozilla::ipc::HeaderEntry>& mHeaders;
+};
+
+NS_IMPL_ISUPPORTS(MIMEStreamHeaderVisitor, nsIHttpHeaderVisitor)
+
 template <typename M>
 bool SerializeLazyInputStream(nsIInputStream* aStream, IPCStream& aValue,
                               M* aManager) {
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(XRE_IsParentProcess());
+
+  // If we're serializing a MIME stream, ensure we preserve header data which
+  // would not be preserved by a RemoteLazyInputStream wrapper.
+  if (nsCOMPtr<nsIMIMEInputStream> mimeStream = do_QueryInterface(aStream)) {
+    MIMEInputStreamParams params;
+    params.startedReading() = false;
+
+    nsCOMPtr<nsIHttpHeaderVisitor> visitor =
+        new MIMEStreamHeaderVisitor(params.headers());
+    if (NS_WARN_IF(NS_FAILED(mimeStream->VisitHeaders(visitor)))) {
+      return false;
+    }
+
+    nsCOMPtr<nsIInputStream> dataStream;
+    if (NS_FAILED(mimeStream->GetData(getter_AddRefs(dataStream)))) {
+      return false;
+    }
+    if (dataStream) {
+      IPCStream data;
+      if (!SerializeLazyInputStream(dataStream, data, aManager)) {
+        return false;
+      }
+      params.optionalStream().emplace(std::move(data.stream()));
+    }
+
+    aValue.stream() = std::move(params);
+    return true;
+  }
 
   RefPtr<RemoteLazyInputStream> lazyStream =
       RemoteLazyInputStream::WrapStream(aStream);
