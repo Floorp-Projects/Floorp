@@ -50,7 +50,14 @@ using mozilla::Some;
 
 nsBufferedStream::~nsBufferedStream() { Close(); }
 
-NS_IMPL_ISUPPORTS(nsBufferedStream, nsITellableStream, nsISeekableStream)
+NS_IMPL_ADDREF(nsBufferedStream)
+NS_IMPL_RELEASE(nsBufferedStream)
+
+NS_INTERFACE_MAP_BEGIN(nsBufferedStream)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, mSeekable)
+NS_INTERFACE_MAP_END
 
 nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
   NS_ASSERTION(aStream, "need to supply a stream");
@@ -59,6 +66,8 @@ nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
   mBufferSize = bufferSize;
   mBufferStartOffset = 0;
   mCursor = 0;
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
+  mSeekable = seekable;
   mBuffer = new (mozilla::fallible) char[bufferSize];
   if (mBuffer == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
