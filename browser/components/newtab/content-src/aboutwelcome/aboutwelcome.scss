@@ -882,7 +882,7 @@ body {
 
     &.top {
       justify-content: end;
-      padding-inline-end: 30px;
+      padding-inline-end: min(150px, 500px - 70vh);
       padding-top: 4px;
       position: absolute;
       top: 10px;
@@ -893,18 +893,7 @@ body {
         color: #FFF;
 
         &:hover {
-          background-color: #5B5B66;
           color: #E0E0E6;
-        }
-
-        @media (max-height: $break-point-small) {
-          color: var(--in-content-link-color);
-
-          &:hover {
-            background-color: #5B5B66;
-            color: var(--in-content-link-color-hover);
-            text-decoration: underline;
-          }
         }
       }
     }
