@@ -7,13 +7,19 @@
 const { require } = ChromeUtils.import(
   "resource://devtools/shared/loader/Loader.jsm"
 );
+const EventEmitter = require("devtools/shared/event-emitter");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 
 const EXPORTED_SYMBOLS = ["SplitView"];
 
 var bindings = new WeakMap();
 
-class SplitView {
+class SplitView extends EventEmitter {
+  #filter;
+
+  static FILTERED_CLASSNAME = "splitview-filtered";
+  static ALL_FILTERED_CLASSNAME = "splitview-all-filtered";
+
   /**
    * Initialize the split view UI on an existing DOM element.
    *
@@ -26,6 +32,7 @@ class SplitView {
    * @see appendItem
    */
   constructor(root) {
+    super();
     this._root = root;
     this._controller = root.querySelector(".splitview-controller");
     this._nav = root.querySelector(".splitview-nav");
@@ -33,7 +40,6 @@ class SplitView {
     this._tplSummary = root.querySelector("#splitview-tpl-summary-stylesheet");
     this._tplDetails = root.querySelector("#splitview-tpl-details-stylesheet");
     this._activeSummary = null;
-    this._filter = null;
 
     // items list focus and search-on-type handling
     this._nav.addEventListener("keydown", event => {
@@ -56,34 +62,43 @@ class SplitView {
       }
 
       // handle keyboard navigation within the items list
-      let newFocusOrdinal;
+      const visibleElements = Array.from(
+        this._nav.querySelectorAll(`li:not(.${SplitView.FILTERED_CLASSNAME})`)
+      );
+      // Elements have a different visual order (due to the use of MozBoxOrdinalGroup), so
+      // we need to sort them by their data-ordinal attribute
+      visibleElements.sort(
+        (a, b) =>
+          a.getAttribute("data-ordinal") - b.getAttribute("data-ordinal")
+      );
+
+      let elementToFocus;
       if (
         event.keyCode == KeyCodes.DOM_VK_PAGE_UP ||
         event.keyCode == KeyCodes.DOM_VK_HOME
       ) {
-        newFocusOrdinal = 0;
+        elementToFocus = visibleElements[0];
       } else if (
         event.keyCode == KeyCodes.DOM_VK_PAGE_DOWN ||
         event.keyCode == KeyCodes.DOM_VK_END
       ) {
-        newFocusOrdinal = this._nav.childNodes.length - 1;
+        elementToFocus = visibleElements.at(-1);
       } else if (event.keyCode == KeyCodes.DOM_VK_UP) {
-        newFocusOrdinal = getFocusedItemWithin(this._nav).getAttribute(
-          "data-ordinal"
+        const focusedIndex = visibleElements.indexOf(
+          getFocusedItemWithin(this._nav)
         );
-        newFocusOrdinal--;
+        elementToFocus = visibleElements[focusedIndex - 1];
       } else if (event.keyCode == KeyCodes.DOM_VK_DOWN) {
-        newFocusOrdinal = getFocusedItemWithin(this._nav).getAttribute(
-          "data-ordinal"
+        const focusedIndex = visibleElements.indexOf(
+          getFocusedItemWithin(this._nav)
         );
-        newFocusOrdinal++;
+        elementToFocus = visibleElements[focusedIndex + 1];
       }
-      if (newFocusOrdinal !== undefined) {
+
+      if (elementToFocus !== undefined) {
         event.stopPropagation();
-        const el = this.#getSummaryElementByOrdinal(newFocusOrdinal);
-        if (el) {
-          el.focus();
-        }
+        event.preventDefault();
+        elementToFocus.focus();
         return false;
       }
 
@@ -104,8 +119,12 @@ class SplitView {
    * Set the active item's summary element.
    *
    * @param DOMElement summary
+   * @param {Object} options
+   * @param {String=} options.reason: Indicates why the summary was selected. It's set to
+   *                  "filter-auto" when the summary was automatically selected as the result
+   *                  of the previous active summary being filtered out.
    */
-  setActiveSummary(summary) {
+  setActiveSummary(summary, options = {}) {
     if (summary == this._activeSummary) {
       return;
     }
@@ -117,7 +136,9 @@ class SplitView {
       binding._details.classList.remove("splitview-active");
     }
 
+    this._activeSummary = summary;
     if (!summary) {
+      this.emit("active-summary-cleared");
       return;
     }
 
@@ -125,23 +146,9 @@ class SplitView {
     summary.classList.add("splitview-active");
     binding._details.classList.add("splitview-active");
 
-    this._activeSummary = summary;
-
     if (binding.onShow) {
-      binding.onShow(binding._details);
+      binding.onShow(binding._details, options);
     }
-  }
-
-  /**
-   * Retrieve the summary element for a given ordinal.
-   *
-   * @param number ordinal
-   * @return DOMElement
-   *         Summary element with given ordinal or null if not found.
-   * @see appendItem
-   */
-  #getSummaryElementByOrdinal(ordinal) {
-    return this._nav.querySelector("* > li[data-ordinal='" + ordinal + "']");
   }
 
   /**
@@ -151,7 +158,9 @@ class SplitView {
    *        Optional object that defines custom behavior and data for the item.
    *        All properties are optional.
    * @param {function} [options.onShow]
-   *         Called with the detailed element when the item is shown/active.
+   *         Called with the detailed element when the item is shown/active, and a second
+   *         parameter, an object, that may hold a "reason" string property, indicating
+   *         why the editor was shown.
    * @param {Number} [options.ordinal]
    *         Items with a lower ordinal are displayed before those with a higher ordinal.
    */
@@ -196,6 +205,10 @@ class SplitView {
     }
 
     const binding = bindings.get(summary);
+    if (!binding) {
+      return;
+    }
+
     summary.remove();
     binding._details.remove();
   }
@@ -206,6 +219,76 @@ class SplitView {
   removeAll() {
     while (this._nav.hasChildNodes()) {
       this.removeItem(this._nav.firstChild);
+    }
+  }
+
+  /**
+   * Filter the list
+   *
+   * @param String str
+   */
+  setFilter(str) {
+    this.#filter = str;
+    for (const summary of this._nav.childNodes) {
+      // Don't update nav class for every element, we do it after the loop.
+      this.handleSummaryVisibility(summary, {
+        triggerOnFilterStateChange: false,
+      });
+    }
+
+    this.#onFilterStateChange();
+
+    if (this._activeSummary == null) {
+      const firstVisibleSummary = Array.from(this._nav.childNodes).find(
+        node => !node.classList.contains(SplitView.FILTERED_CLASSNAME)
+      );
+
+      if (firstVisibleSummary) {
+        this.setActiveSummary(firstVisibleSummary, { reason: "filter-auto" });
+      }
+    }
+  }
+
+  /**
+   * @emits "filter-state-change"
+   */
+  #onFilterStateChange() {
+    const summaries = Array.from(this._nav.childNodes);
+    const hasVisibleSummary = summaries.some(
+      node => !node.classList.contains(SplitView.FILTERED_CLASSNAME)
+    );
+    const allFiltered = summaries.length > 0 && !hasVisibleSummary;
+
+    this._nav.classList.toggle(SplitView.ALL_FILTERED_CLASSNAME, allFiltered);
+    this.emit("filter-state-change", { allFiltered });
+  }
+
+  /**
+   * Make the passed element visible or not, depending if it matches the current filter
+   *
+   * @param {Element} summary
+   * @param {Object} options
+   * @param {Boolean} options.triggerOnFilterStateChange: Set to false to avoid calling
+   *                  #onFilterStateChange directly here. This can be useful when this
+   *                  function is called for every item of the list, like in `setFilter`.
+   */
+  handleSummaryVisibility(summary, { triggerOnFilterStateChange = true } = {}) {
+    if (!this.#filter) {
+      summary.classList.remove(SplitView.FILTERED_CLASSNAME);
+      return;
+    }
+
+    const label = summary.querySelector(".stylesheet-name label");
+    const itemText = label.value.toLowerCase();
+    const matchesSearch = itemText.includes(this.#filter.toLowerCase());
+    summary.classList.toggle(SplitView.FILTERED_CLASSNAME, !matchesSearch);
+
+    if (this._activeSummary == summary && !matchesSearch) {
+      this.setActiveSummary(null);
+    }
+
+    if (triggerOnFilterStateChange) {
+      this.#onFilterStateChange();
     }
   }
 }
