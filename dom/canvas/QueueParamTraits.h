@@ -196,9 +196,9 @@ template <typename Arg>
 struct QueueParamTraits {
   template <typename U>
   static bool Write(ProducerView<U>& aProducerView, const Arg& aArg) {
-    static_assert(mozilla::webgl::template IsTriviallySerializable<Arg>::value,
+    static_assert(std::is_trivially_copyable<Arg>::value,
                   "No QueueParamTraits specialization was found for this type "
-                  "and it does not satisfy IsTriviallySerializable.");
+                  "and it does not satisfy is_trivially_copyable.");
     // Write self as binary
     const auto begin = &aArg;
     return aProducerView.Write(begin, begin + 1);
@@ -206,9 +206,9 @@ struct QueueParamTraits {
 
   template <typename U>
   static bool Read(ConsumerView<U>& aConsumerView, Arg* aArg) {
-    static_assert(mozilla::webgl::template IsTriviallySerializable<Arg>::value,
+    static_assert(std::is_trivially_copyable<Arg>::value,
                   "No QueueParamTraits specialization was found for this type "
-                  "and it does not satisfy IsTriviallySerializable.");
+                  "and it does not satisfy is_trivially_copyable.");
     // Read self as binary
     return aConsumerView.Read(aArg, aArg + 1);
   }
