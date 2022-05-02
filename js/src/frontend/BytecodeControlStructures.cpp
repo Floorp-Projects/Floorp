@@ -115,7 +115,13 @@ TryFinallyControl::TryFinallyControl(BytecodeEmitter* bce, StatementKind kind)
 bool TryFinallyControl::allocateContinuation(NestableControl* target,
                                              NonLocalExitKind kind,
                                              uint32_t* idx) {
-  // TODO: deduplicate continuations?
+  for (uint32_t i = 0; i < continuations_.length(); i++) {
+    if (continuations_[i].target_ == target &&
+        continuations_[i].kind_ == kind) {
+      *idx = i + SpecialContinuations::Count;
+      return true;
+    }
+  }
   *idx = continuations_.length() + SpecialContinuations::Count;
   return continuations_.emplaceBack(target, kind);
 }
