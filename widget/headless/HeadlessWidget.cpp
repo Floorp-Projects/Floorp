@@ -71,6 +71,7 @@ HeadlessWidget::HeadlessWidget()
       mDestroyed(false),
       mTopLevel(nullptr),
       mCompositorWidget(nullptr),
+      mSizeMode(nsSizeMode_Normal),
       mLastSizeMode(nsSizeMode_Normal),
       mEffectiveSizeMode(nsSizeMode_Normal),
       mRestoreBounds(0, 0, 0, 0) {
@@ -300,7 +301,7 @@ void HeadlessWidget::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
-  nsBaseWidget::SetSizeMode(aMode);
+  mSizeMode = aMode;
 
   // Normally in real widget backends a window event would be triggered that
   // would cause the window manager to handle resizing the window. In headless

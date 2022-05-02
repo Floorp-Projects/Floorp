@@ -2457,7 +2457,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   LOG("nsWindow::SetSizeMode %d\n", aMode);
 
   // Save the requested state.
-  nsBaseWidget::SetSizeMode(aMode);
+  mSizeMode = aMode;
 
   // return if there's no shell or our current state is the same as
   // the mode we were just set to.

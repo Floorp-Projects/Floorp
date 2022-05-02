@@ -114,6 +114,9 @@ class PuppetWidget : public nsBaseWidget,
   virtual void Enable(bool aState) override { mEnabled = aState; }
   virtual bool IsEnabled() const override { return mEnabled; }
 
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
+  virtual void SetSizeMode(nsSizeMode aMode) override { mSizeMode = aMode; }
+
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
 
   virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
@@ -398,6 +401,8 @@ class PuppetWidget : public nsBaseWidget,
   bool mVisible;
 
  private:
+  nsSizeMode mSizeMode;
+
   bool mNeedIMEStateInit;
   // When remote process requests to commit/cancel a composition, the
   // composition may have already been committed in the main process.  In such

@@ -182,8 +182,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   void PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget* aWidget,
                    bool aActivate) override {}
 
-  void SetSizeMode(nsSizeMode aMode) override;
-  nsSizeMode SizeMode() override { return mSizeMode; }
   void GetWorkspaceID(nsAString& workspaceID) override;
   void MoveToWorkspace(const nsAString& workspaceID) override;
   bool IsTiled() const override { return mIsTiled; }
@@ -719,7 +717,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   nsBorderStyle mBorderStyle;
   LayoutDeviceIntRect mBounds;
   LayoutDeviceIntRect* mOriginalBounds;
-  nsSizeMode mSizeMode;
   bool mIsTiled;
   nsPopupLevel mPopupLevel;
   nsPopupType mPopupType;

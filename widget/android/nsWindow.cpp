@@ -1787,6 +1787,7 @@ nsWindow::nsWindow()
       mIsVisible(false),
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
+      mSizeMode(nsSizeMode_Normal),
       mIsFullScreen(false),
       mCompositorWidgetDelegate(nullptr) {}
 
@@ -2110,7 +2111,7 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
-  nsBaseWidget::SetSizeMode(aMode);
+  mSizeMode = aMode;
 
   switch (aMode) {
     case nsSizeMode_Minimized:
