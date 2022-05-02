@@ -354,6 +354,17 @@ deps = {
       'condition': 'checkout_android',
   },
 
+  'src/third_party/androidx': {
+    'packages': [
+      {
+          'package': 'chromium/third_party/androidx',
+          'version': 'zGdAyNdySwhTXOWTtAushFRKlDwCWGcYSWiaS2R5m8YC',
+      },
+    ],
+    'condition': 'checkout_android',
+    'dep_type': 'cipd',
+  },
+
   'src/third_party/android_sdk/public': {
       'packages': [
           {
