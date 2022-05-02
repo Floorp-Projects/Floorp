@@ -118,6 +118,9 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">సాధారణం</string>
 
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">అప్రమేయ విహారిణి, భాష</string>
+
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">డేటా సేకరణ మరియు ఉపయోగం</string>
 
@@ -207,7 +210,13 @@
     <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించు</string>
     <string name="preference_privacy_category_cookies">కుకీలను నిరోధించాలా</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">వద్దు పర్లేదు</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">3వ-పక్ష ట్రాకర్ కుకీలను మాత్రమే నిరోధించు</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">3-వ పక్షం కుకీలను మాత్రమే నిరోధించు</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">క్రాస్-సైటు కుకీలను నిరోధించు</string>
 
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
@@ -386,7 +395,11 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$sకి స్వాగతం!</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
 
     <!-- First run tour (Search): Title -->
@@ -483,8 +496,38 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">డెవలపర్ల పనిముట్లు</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">లంకెలను అనువర్తనాలలో తెరువు</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ఉన్నతం</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">సైటు అనుమతులు</string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">కేమెరా</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">మైక్రోఫోను</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">స్థానం</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-నియంత్రిత విషయం</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">అనుమతిని అడుగు</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">అధ్యయనాలు</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ఇంకా తెలుసుకోండి</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">తీసివేయి</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi ద్వారా రిమోట్ డీబగ్గింగ్</string>
@@ -540,6 +583,9 @@
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">ప్రమాదకరమైన, మోసపూరిత సైట్లను నిరోధించు</string>
 
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">HTTPS-మాత్రమే రీతి</string>
+
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">మినహాయింపులు</string>
     <!-- Menu item to remove existing exceptions. -->
@@ -582,5 +628,25 @@
     <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">తీసివేయి</string>
+
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">పేరుమార్చు</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">పేరుమార్చు</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">అలంకారం</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">వెలుతురు</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">చీకటి</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">ట్యాబును మూసివేయి</string>
+
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">విస్మరించు</string>
 
     </resources>

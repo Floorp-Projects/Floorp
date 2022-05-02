@@ -496,6 +496,9 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_title">ยินดีต้อนรับสู่ %1$s!</string>
 
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">ท่องเว็บเหมือนมันไม่เคยเกิดขึ้น</string>
+
     <!-- Onboarding: Start browsing -->
     <string name="onboarding_start_browsing">เริ่มการเรียกดู</string>
 
@@ -654,6 +657,9 @@
 
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">เล่นอัตโนมัติ</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">การแจ้งเตือน</string>
 
     <!-- Preference for allow autoplay audio and video-->
     <string name="preference_allow_audio_video_autoplay">อนุญาตเสียงและวิดีโอ</string>
