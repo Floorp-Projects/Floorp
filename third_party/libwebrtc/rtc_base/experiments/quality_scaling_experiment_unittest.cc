@@ -38,9 +38,9 @@ void ExpectEqualConfig(QualityScalingExperiment::Config a,
 }
 }  // namespace
 
-TEST(QualityScalingExperimentTest, DefaultEnabledWithoutFieldTrial) {
+TEST(QualityScalingExperimentTest, DisabledWithoutFieldTrial) {
   webrtc::test::ScopedFieldTrials field_trials("");
-  EXPECT_TRUE(QualityScalingExperiment::Enabled());
+  EXPECT_FALSE(QualityScalingExperiment::Enabled());
 }
 
 TEST(QualityScalingExperimentTest, EnabledWithFieldTrial) {
@@ -59,10 +59,9 @@ TEST(QualityScalingExperimentTest, ParseSettings) {
   ExpectEqualSettings(kExpected, *settings);
 }
 
-TEST(QualityScalingExperimentTest, ParseSettingsUsesDefaultsWithoutFieldTrial) {
+TEST(QualityScalingExperimentTest, ParseSettingsFailsWithoutFieldTrial) {
   webrtc::test::ScopedFieldTrials field_trials("");
-  // Uses some default hard coded values.
-  EXPECT_TRUE(QualityScalingExperiment::ParseSettings());
+  EXPECT_FALSE(QualityScalingExperiment::ParseSettings());
 }
 
 TEST(QualityScalingExperimentTest, ParseSettingsFailsWithInvalidFieldTrial) {
