@@ -207,8 +207,14 @@ TEST(NetworkEmulationManagerTest, Run) {
 
   rtc::CopyOnWriteBuffer data("Hello");
   for (uint64_t j = 0; j < 2; j++) {
-    auto* s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
-    auto* s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    rtc::AsyncSocket* s1 = nullptr;
+    rtc::AsyncSocket* s2 = nullptr;
+    t1->Invoke<void>(RTC_FROM_HERE, [&] {
+      s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    });
+    t2->Invoke<void>(RTC_FROM_HERE, [&] {
+      s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    });
 
     SocketReader r1(s1, t1);
     SocketReader r2(s2, t2);
@@ -357,8 +363,14 @@ TEST(NetworkEmulationManagerTest, DebugStatsCollectedInDebugMode) {
 
   rtc::CopyOnWriteBuffer data("Hello");
   for (uint64_t j = 0; j < 2; j++) {
-    auto* s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
-    auto* s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    rtc::AsyncSocket* s1 = nullptr;
+    rtc::AsyncSocket* s2 = nullptr;
+    t1->Invoke<void>(RTC_FROM_HERE, [&] {
+      s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    });
+    t2->Invoke<void>(RTC_FROM_HERE, [&] {
+      s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+    });
 
     SocketReader r1(s1, t1);
     SocketReader r2(s2, t2);
@@ -454,8 +466,15 @@ TEST(NetworkEmulationManagerTest, ThroughputStats) {
   constexpr int64_t kUdpPayloadSize = 100;
   constexpr int64_t kSinglePacketSize = kUdpPayloadSize + kOverheadIpv4Udp;
   rtc::CopyOnWriteBuffer data(kUdpPayloadSize);
-  auto* s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
-  auto* s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+
+  rtc::AsyncSocket* s1 = nullptr;
+  rtc::AsyncSocket* s2 = nullptr;
+  t1->Invoke<void>(RTC_FROM_HERE, [&] {
+    s1 = t1->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+  });
+  t2->Invoke<void>(RTC_FROM_HERE, [&] {
+    s2 = t2->socketserver()->CreateAsyncSocket(AF_INET, SOCK_DGRAM);
+  });
 
   SocketReader r1(s1, t1);
   SocketReader r2(s2, t2);
