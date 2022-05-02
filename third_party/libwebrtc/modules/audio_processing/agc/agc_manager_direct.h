@@ -51,10 +51,9 @@ class AgcManagerDirect final {
   void AnalyzePreProcess(const AudioBuffer* audio);
   void Process(const AudioBuffer* audio);
 
-  // Call when the capture stream has been muted/unmuted. This causes the
-  // manager to disregard all incoming audio; chances are good it's background
-  // noise to which we'd like to avoid adapting.
-  void SetCaptureMuted(bool muted);
+  // Call when the capture stream output has been flagged to be used/not-used.
+  // If unused, the manager  disregards all incoming audio.
+  void HandleCaptureOutputUsedChange(bool capture_output_used);
   float voice_probability() const;
 
   int stream_analog_level() const { return stream_analog_level_; }
@@ -103,7 +102,7 @@ class AgcManagerDirect final {
 
   int frames_since_clipped_;
   int stream_analog_level_ = 0;
-  bool capture_muted_;
+  bool capture_output_used_;
   int channel_controlling_gain_ = 0;
 
   std::vector<std::unique_ptr<MonoAgc>> channel_agcs_;
@@ -122,7 +121,7 @@ class MonoAgc {
   MonoAgc& operator=(const MonoAgc&) = delete;
 
   void Initialize();
-  void SetCaptureMuted(bool muted);
+  void HandleCaptureOutputUsedChange(bool capture_output_used);
 
   void HandleClipping();
 
@@ -166,7 +165,7 @@ class MonoAgc {
   int target_compression_;
   int compression_;
   float compression_accumulator_;
-  bool capture_muted_ = false;
+  bool capture_output_used_ = true;
   bool check_volume_on_next_process_ = true;
   bool startup_ = true;
   int startup_min_level_;
