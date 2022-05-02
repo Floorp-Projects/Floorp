@@ -89,6 +89,7 @@ if (rtc_include_tests) {
     deps = [
       ":av1_svc_config",
       "../../../../api/video_codecs:video_codecs_api",
+      "../../../../test:test_support",
     ]
 
     if (enable_libaom) {
@@ -105,7 +106,6 @@ if (rtc_include_tests) {
         "../../../../api/units:data_size",
         "../../../../api/units:time_delta",
         "../../../../api/video:video_frame",
-        "../../../../test:test_support",
         "../../svc:scalability_structures",
         "../../svc:scalable_video_controller",
       ]

@@ -130,8 +130,9 @@ if (rtc_include_tests) {
       "../test:test_main",
       "../test:test_support",
       "//testing/gtest",
-      "//third_party/abseil-cpp/absl/strings",
     ]
+
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 
     if (is_android) {
       deps += [ "//testing/android/native_test:native_test_support" ]

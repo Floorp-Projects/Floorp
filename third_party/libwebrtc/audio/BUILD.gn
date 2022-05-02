@@ -220,8 +220,8 @@ if (rtc_include_tests) {
         "../test:test_support",
         "../test/pc/e2e:network_quality_metrics_reporter",
         "//testing/gtest",
-        "//third_party/abseil-cpp/absl/flags:flag",
       ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
       if (is_android) {
         deps += [ "//testing/android/native_test:native_test_native_code" ]
       }

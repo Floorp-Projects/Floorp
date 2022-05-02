@@ -615,6 +615,8 @@ if (rtc_include_tests) {
       "../test:test_main",
       "../test:test_support",
       "../test:video_test_common",
+    ]
+    absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
