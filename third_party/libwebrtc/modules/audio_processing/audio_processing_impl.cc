@@ -1574,14 +1574,6 @@ void AudioProcessingImpl::DetachAecDump() {
   }
 }
 
-void AudioProcessingImpl::MutateConfig(
-    rtc::FunctionView<void(AudioProcessing::Config*)> mutator) {
-  MutexLock lock_render(&mutex_render_);
-  MutexLock lock_capture(&mutex_capture_);
-  mutator(&config_);
-  ApplyConfig(config_);
-}
-
 AudioProcessing::Config AudioProcessingImpl::GetConfig() const {
   MutexLock lock_render(&mutex_render_);
   MutexLock lock_capture(&mutex_capture_);
