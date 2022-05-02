@@ -911,7 +911,7 @@ TEST(RtpVideoSenderTest, OverheadIsSubtractedFromTargetBitrate) {
   constexpr uint32_t kTransportPacketOverheadBytes = 40;
   constexpr uint32_t kOverheadPerPacketBytes =
       kRtpHeaderSizeBytes + kTransportPacketOverheadBytes;
-  RtpVideoSenderTestFixture test({kSsrc1}, {kRtxSsrc1}, kPayloadType, {});
+  RtpVideoSenderTestFixture test({kSsrc1}, {}, kPayloadType, {});
   test.router()->OnTransportOverheadChanged(kTransportPacketOverheadBytes);
   test.router()->SetActive(true);
 

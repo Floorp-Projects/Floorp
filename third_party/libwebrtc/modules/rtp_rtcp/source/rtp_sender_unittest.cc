@@ -34,6 +34,7 @@
 #include "modules/rtp_rtcp/source/rtp_utility.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
 #include "rtc_base/arraysize.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_utils/to_queued_task.h"
@@ -415,7 +416,12 @@ class RtpSenderTest : public ::testing::TestWithParam<TestConfig> {
 
   std::unique_ptr<RtpPacketToSend> SendGenericPacket() {
     const int64_t kCaptureTimeMs = clock_->TimeInMilliseconds();
-    return SendPacket(kCaptureTimeMs, sizeof(kPayloadData));
+    // Use maximum allowed size to catch corner cases when packet is dropped
+    // because of lack of capacity for the media packet, or for an rtx packet
+    // containing the media packet.
+    return SendPacket(kCaptureTimeMs,
+                      /*payload_length=*/rtp_sender()->MaxRtpPacketSize() -
+                          rtp_sender()->ExpectedPerPacketOverhead());
   }
 
   size_t GenerateAndSendPadding(size_t target_size_bytes) {
@@ -596,6 +602,7 @@ TEST_P(RtpSenderTestWithoutPacer, AssignSequenceNumberSetPaddingTimestamps) {
 TEST_P(RtpSenderTestWithoutPacer,
        TransportFeedbackObserverGetsCorrectByteCount) {
   constexpr size_t kRtpOverheadBytesPerPacket = 12 + 8;
+  constexpr size_t kPayloadSize = 1400;
 
   RtpRtcpInterface::Configuration config;
   config.clock = clock_;
@@ -612,10 +619,9 @@ TEST_P(RtpSenderTestWithoutPacer,
                    kRtpExtensionTransportSequenceNumber,
                    kTransportSequenceNumberExtensionId));
 
-  const size_t expected_bytes =
-      GetParam().with_overhead
-          ? sizeof(kPayloadData) + kRtpOverheadBytesPerPacket
-          : sizeof(kPayloadData);
+  const size_t expected_bytes = GetParam().with_overhead
+                                    ? kPayloadSize + kRtpOverheadBytesPerPacket
+                                    : kPayloadSize;
 
   EXPECT_CALL(feedback_observer_,
               OnAddPacket(AllOf(
@@ -629,7 +635,7 @@ TEST_P(RtpSenderTestWithoutPacer,
       .Times(1);
   EXPECT_EQ(rtp_sender()->ExpectedPerPacketOverhead(),
             kRtpOverheadBytesPerPacket);
-  SendGenericPacket();
+  SendPacket(clock_->TimeInMilliseconds(), kPayloadSize);
 }
 
 TEST_P(RtpSenderTestWithoutPacer, SendsPacketsWithTransportSequenceNumber) {
@@ -1968,12 +1974,12 @@ TEST_P(RtpSenderTestWithoutPacer, StreamDataCountersCallbacksUlpfec) {
 }
 
 TEST_P(RtpSenderTestWithoutPacer, BytesReportedCorrectly) {
-  // XXX const char* kPayloadName = "GENERIC";
   const uint8_t kPayloadType = 127;
+  const size_t kPayloadSize = 1400;
   rtp_sender()->SetRtxPayloadType(kPayloadType - 1, kPayloadType);
   rtp_sender()->SetRtxStatus(kRtxRetransmitted | kRtxRedundantPayloads);
 
-  SendGenericPacket();
+  SendPacket(clock_->TimeInMilliseconds(), kPayloadSize);
   // Will send 2 full-size padding packets.
   GenerateAndSendPadding(1);
   GenerateAndSendPadding(1);
@@ -1984,7 +1990,7 @@ TEST_P(RtpSenderTestWithoutPacer, BytesReportedCorrectly) {
 
   // Payload
   EXPECT_GT(rtp_stats.first_packet_time_ms, -1);
-  EXPECT_EQ(rtp_stats.transmitted.payload_bytes, sizeof(kPayloadData));
+  EXPECT_EQ(rtp_stats.transmitted.payload_bytes, kPayloadSize);
   EXPECT_EQ(rtp_stats.transmitted.header_bytes, 12u);
   EXPECT_EQ(rtp_stats.transmitted.padding_bytes, 0u);
   EXPECT_EQ(rtx_stats.transmitted.payload_bytes, 0u);

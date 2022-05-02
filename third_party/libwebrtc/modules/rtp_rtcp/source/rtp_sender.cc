@@ -176,8 +176,6 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       max_packet_size_(IP_PACKET_SIZE - 28),  // Default is IP-v4/UDP.
       last_payload_type_(-1),
       rtp_header_extension_map_(config.extmap_allow_mixed),
-      max_media_packet_header_(kRtpHeaderSize),
-      max_padding_fec_packet_header_(kRtpHeaderSize),
       // RTP variables
       sequence_number_forced_(false),
       always_send_mid_and_rid_(config.always_send_mid_and_rid),
@@ -191,6 +189,7 @@ RTPSender::RTPSender(const RtpRtcpInterface::Configuration& config,
       rtx_(kRtxOff),
       supports_bwe_extension_(false),
       retransmission_rate_limiter_(config.retransmission_rate_limiter) {
+  UpdateHeaderSizes();
   // This random initialization is not intended to be cryptographic strong.
   timestamp_offset_ = random_.Rand<uint32_t>();
   // Random start, 16 bits. Can't be 0.
@@ -364,7 +363,11 @@ void RTPSender::OnReceivedAckOnSsrc(int64_t extended_highest_sequence_number) {
 void RTPSender::OnReceivedAckOnRtxSsrc(
     int64_t extended_highest_sequence_number) {
   MutexLock lock(&send_mutex_);
+  bool update_required = !rtx_ssrc_has_acked_;
   rtx_ssrc_has_acked_ = true;
+  if (update_required) {
+    UpdateHeaderSizes();
+  }
 }
 
 void RTPSender::OnReceivedNack(
@@ -878,10 +881,12 @@ void RTPSender::UpdateHeaderSizes() {
                                                  rtp_header_extension_map_);
 
   // RtpStreamId and Mid are treated specially in that we check if they
-  // currently are being sent. RepairedRtpStreamId is still ignored since we
-  // assume RTX will not make up large enough bitrate to treat overhead
-  // differently.
-  const bool send_mid_rid = always_send_mid_and_rid_ || !ssrc_has_acked_;
+  // currently are being sent. RepairedRtpStreamId is ignored because it is sent
+  // instead of RtpStreamId on rtx packets and require the same size.
+  const bool send_mid_rid_on_rtx =
+      rtx_ssrc_.has_value() && !rtx_ssrc_has_acked_;
+  const bool send_mid_rid =
+      always_send_mid_and_rid_ || !ssrc_has_acked_ || send_mid_rid_on_rtx;
   std::vector<RtpExtensionSize> non_volatile_extensions;
   for (auto& extension :
        audio_configured_ ? AudioExtensionSizes() : VideoExtensionSizes()) {
@@ -905,5 +910,9 @@ void RTPSender::UpdateHeaderSizes() {
   max_media_packet_header_ =
       rtp_header_length + RtpHeaderExtensionSize(non_volatile_extensions,
                                                  rtp_header_extension_map_);
+  // Reserve extra bytes if packet might be resent in an rtx packet.
+  if (rtx_ssrc_.has_value()) {
+    max_media_packet_header_ += kRtxHeaderSize;
+  }
 }
 }  // namespace webrtc
