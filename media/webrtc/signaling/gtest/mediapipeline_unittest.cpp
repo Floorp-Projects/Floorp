@@ -53,8 +53,8 @@ class MainAsCurrent : public TaskQueueWrapper<DeletionPolicy::NonBlocking> {
  public:
   MainAsCurrent()
       : TaskQueueWrapper(
-            MakeRefPtr<TaskQueue>(do_AddRef(GetMainThreadEventTarget()),
-                                  "MainAsCurrentTaskQueue"),
+            TaskQueue::Create(do_AddRef(GetMainThreadEventTarget()),
+                              "MainAsCurrentTaskQueue"),
             "MainAsCurrent"_ns),
         mSetter(this) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());

@@ -127,9 +127,9 @@ class HLSDemuxer::HLSDemuxerCallbacksSupport
 };
 
 HLSDemuxer::HLSDemuxer(int aPlayerId)
-    : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                               "HLSDemuxer",
-                               /* aSupportsTailDispatch = */ false)) {
+    : mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::SUPERVISOR), "HLSDemuxer",
+          /* aSupportsTailDispatch = */ false)) {
   MOZ_ASSERT(NS_IsMainThread());
   HLSDemuxerCallbacksSupport::Init();
   mJavaCallbacks = java::GeckoHLSDemuxerWrapper::Callbacks::New();

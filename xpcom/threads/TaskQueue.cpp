@@ -14,9 +14,17 @@
 
 namespace mozilla {
 
+RefPtr<TaskQueue> TaskQueue::Create(already_AddRefed<nsIEventTarget> aTarget,
+                                    const char* aName,
+                                    bool aSupportsTailDispatch) {
+  RefPtr<TaskQueue> queue =
+      new TaskQueue(std::move(aTarget), aName, aSupportsTailDispatch);
+  return queue;
+}
+
 TaskQueue::TaskQueue(already_AddRefed<nsIEventTarget> aTarget,
-                     const char* aName, bool aRequireTailDispatch)
-    : AbstractThread(aRequireTailDispatch),
+                     const char* aName, bool aSupportsTailDispatch)
+    : AbstractThread(aSupportsTailDispatch),
       mTarget(aTarget),
       mQueueMonitor("TaskQueue::Queue"),
       mTailDispatcher(nullptr),

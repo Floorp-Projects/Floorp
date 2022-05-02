@@ -224,7 +224,7 @@ void Await(already_AddRefed<nsIEventTarget> aPool,
            ResolveFunction&& aResolveFunction,
            RejectFunction&& aRejectFunction) {
   RefPtr<TaskQueue> taskQueue =
-      new TaskQueue(std::move(aPool), "MozPromiseAwait");
+      TaskQueue::Create(std::move(aPool), "MozPromiseAwait");
   Monitor mon MOZ_UNANNOTATED(__func__);
   bool done = false;
 
@@ -255,7 +255,7 @@ typename MozPromise<ResolveValueType, RejectValueType,
 Await(already_AddRefed<nsIEventTarget> aPool,
       RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise) {
   RefPtr<TaskQueue> taskQueue =
-      new TaskQueue(std::move(aPool), "MozPromiseAwait");
+      TaskQueue::Create(std::move(aPool), "MozPromiseAwait");
   Monitor mon MOZ_UNANNOTATED(__func__);
   bool done = false;
 
@@ -298,7 +298,7 @@ void AwaitAll(
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
   RefPtr<TaskQueue> taskQueue =
-      new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+      TaskQueue::Create(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
       Promise::All(taskQueue, aPromises);
   Await(pool.forget(), p, std::move(aResolveFunction),
@@ -316,7 +316,7 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
   RefPtr<TaskQueue> taskQueue =
-      new TaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+      TaskQueue::Create(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
       Promise::All(taskQueue, aPromises);
   return Await(pool.forget(), p);

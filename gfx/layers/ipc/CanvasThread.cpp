@@ -131,7 +131,7 @@ void CanvasThreadHolder::DispatchToCanvasThread(
 }
 
 already_AddRefed<TaskQueue> CanvasThreadHolder::CreateWorkerTaskQueue() {
-  return MakeAndAddRef<TaskQueue>(do_AddRef(mCanvasWorkers), "CanvasWorker");
+  return TaskQueue::Create(do_AddRef(mCanvasWorkers), "CanvasWorker").forget();
 }
 
 }  // namespace layers

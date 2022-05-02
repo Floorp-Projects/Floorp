@@ -106,8 +106,9 @@ static MediaDataEncoder::VPXSpecific::Complexity MapComplexity(
 
 WebrtcMediaDataEncoder::WebrtcMediaDataEncoder(
     const webrtc::SdpVideoFormat& aFormat)
-    : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                               "WebrtcMediaDataEncoder::mTaskQueue")),
+    : mTaskQueue(
+          TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                            "WebrtcMediaDataEncoder::mTaskQueue")),
       mFactory(new PEMFactory()),
       mCallbackMutex("WebrtcMediaDataEncoderCodec encoded callback mutex"),
       mFormatParams(aFormat.parameters),
@@ -229,9 +230,8 @@ already_AddRefed<MediaDataEncoder> WebrtcMediaDataEncoder::CreateEncoder(
   }
   CreateEncoderParams params(
       mInfo, MediaDataEncoder::Usage::Realtime,
-      MakeRefPtr<TaskQueue>(
-          GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
-          "WebrtcMediaDataEncoder::mEncoder"),
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_ENCODER),
+                        "WebrtcMediaDataEncoder::mEncoder"),
       MediaDataEncoder::PixelFormat::YUV420P, aCodecSettings->maxFramerate,
       keyframeInterval, mBitrateAdjuster.GetTargetBitrateBps());
   switch (aCodecSettings->codecType) {

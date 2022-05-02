@@ -88,7 +88,7 @@ static MediaResult InitContext(AOMDecoder& aAOMDecoder, aom_codec_ctx_t* aCtx,
 
 AOMDecoder::AOMDecoder(const CreateDecoderParams& aParams)
     : mImageContainer(aParams.mImageContainer),
-      mTaskQueue(new TaskQueue(
+      mTaskQueue(TaskQueue::Create(
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "AOMDecoder")),
       mInfo(aParams.VideoConfig()) {
   PodZero(&mCodec);
