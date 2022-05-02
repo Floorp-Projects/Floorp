@@ -597,8 +597,7 @@ class ConfigureCodec {
                           mSoftwareH264Enabled);
     Telemetry::Accumulate(Telemetry::WEBRTC_HARDWARE_H264_ENABLED,
                           mHardwareH264Enabled);
-    Telemetry::Accumulate(Telemetry::WEBRTC_H264_ENABLED,
-                          mH264Enabled);
+    Telemetry::Accumulate(Telemetry::WEBRTC_H264_ENABLED, mH264Enabled);
 
     branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
     mH264Level &= 0xFF;
