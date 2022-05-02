@@ -25,6 +25,7 @@
 #include "rtc_base/async_resolver_interface.h"
 #include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -203,8 +204,8 @@ class PhysicalSocket : public AsyncSocket, public sigslot::has_slots<> {
   SOCKET s_;
   bool udp_;
   int family_ = 0;
-  RecursiveCriticalSection crit_;
-  int error_ RTC_GUARDED_BY(crit_);
+  mutable webrtc::Mutex mutex_;
+  int error_ RTC_GUARDED_BY(mutex_);
   ConnState state_;
   AsyncResolver* resolver_;
 

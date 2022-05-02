@@ -817,6 +817,7 @@ rtc_library("threading") {
     "../api:function_view",
     "../api:scoped_refptr",
     "../api/task_queue",
+    "synchronization:mutex",
     "synchronization:sequence_checker",
     "system:no_unique_address",
     "system:rtc_export",
