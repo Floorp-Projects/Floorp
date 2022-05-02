@@ -1300,9 +1300,10 @@ nsresult XPCConvert::JSValToXPCException(JSContext* cx, MutableHandleValue s,
       nsCOMPtr<nsIComponentManager> cm;
       if (NS_FAILED(NS_GetComponentManager(getter_AddRefs(cm))) || !cm ||
           NS_FAILED(cm->CreateInstanceByContractID(
-              NS_SUPPORTS_DOUBLE_CONTRACTID, nullptr,
-              NS_GET_IID(nsISupportsDouble), getter_AddRefs(data))))
+              NS_SUPPORTS_DOUBLE_CONTRACTID, NS_GET_IID(nsISupportsDouble),
+              getter_AddRefs(data)))) {
         return NS_ERROR_FAILURE;
+      }
       data->SetData(number);
       rv = ConstructException(NS_ERROR_XPC_JS_THREW_NUMBER, nullptr, ifaceName,
                               methodName, data, exceptn, cx, s.address());
