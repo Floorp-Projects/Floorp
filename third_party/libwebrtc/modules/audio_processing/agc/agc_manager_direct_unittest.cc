@@ -375,7 +375,7 @@ TEST_F(AgcManagerDirectTest, CompressorReachesMinimum) {
 }
 
 TEST_F(AgcManagerDirectTest, NoActionWhileMuted) {
-  manager_.SetCaptureMuted(true);
+  manager_.HandleCaptureOutputUsedChange(false);
   manager_.Process(nullptr);
   absl::optional<int> new_digital_gain = manager_.GetDigitalComressionGain();
   if (new_digital_gain) {
@@ -386,8 +386,8 @@ TEST_F(AgcManagerDirectTest, NoActionWhileMuted) {
 TEST_F(AgcManagerDirectTest, UnmutingChecksVolumeWithoutRaising) {
   FirstProcess();
 
-  manager_.SetCaptureMuted(true);
-  manager_.SetCaptureMuted(false);
+  manager_.HandleCaptureOutputUsedChange(false);
+  manager_.HandleCaptureOutputUsedChange(true);
   ExpectCheckVolumeAndReset(127);
   // SetMicVolume should not be called.
   EXPECT_CALL(*agc_, GetRmsErrorDb(_)).WillOnce(Return(false));
@@ -398,8 +398,8 @@ TEST_F(AgcManagerDirectTest, UnmutingChecksVolumeWithoutRaising) {
 TEST_F(AgcManagerDirectTest, UnmutingRaisesTooLowVolume) {
   FirstProcess();
 
-  manager_.SetCaptureMuted(true);
-  manager_.SetCaptureMuted(false);
+  manager_.HandleCaptureOutputUsedChange(false);
+  manager_.HandleCaptureOutputUsedChange(true);
   ExpectCheckVolumeAndReset(11);
   EXPECT_CALL(*agc_, GetRmsErrorDb(_)).WillOnce(Return(false));
   CallProcess(1);

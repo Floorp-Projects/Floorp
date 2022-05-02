@@ -158,7 +158,7 @@ void MonoAgc::Initialize() {
   target_compression_ = disable_digital_adaptive_ ? 0 : kDefaultCompressionGain;
   compression_ = disable_digital_adaptive_ ? 0 : target_compression_;
   compression_accumulator_ = compression_;
-  capture_muted_ = false;
+  capture_output_used_ = true;
   check_volume_on_next_process_ = true;
 }
 
@@ -256,14 +256,14 @@ void MonoAgc::SetMaxLevel(int level) {
                     << ", max_compression_gain_=" << max_compression_gain_;
 }
 
-void MonoAgc::SetCaptureMuted(bool muted) {
-  if (capture_muted_ == muted) {
+void MonoAgc::HandleCaptureOutputUsedChange(bool capture_output_used) {
+  if (capture_output_used_ == capture_output_used) {
     return;
   }
-  capture_muted_ = muted;
+  capture_output_used_ = capture_output_used;
 
-  if (!muted) {
-    // When we unmute, we should reset things to be safe.
+  if (capture_output_used) {
+    // When we start using the output, we should reset things to be safe.
     check_volume_on_next_process_ = true;
   }
 }
@@ -427,7 +427,7 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
       num_capture_channels_(num_capture_channels),
       disable_digital_adaptive_(disable_digital_adaptive),
       frames_since_clipped_(kClippedWaitFrames),
-      capture_muted_(false),
+      capture_output_used_(true),
       channel_agcs_(num_capture_channels),
       new_compressions_to_set_(num_capture_channels) {
   const int min_mic_level = GetMinMicLevel();
@@ -450,7 +450,7 @@ void AgcManagerDirect::Initialize() {
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     channel_agcs_[ch]->Initialize();
   }
-  capture_muted_ = false;
+  capture_output_used_ = true;
 
   AggregateChannelLevels();
 }
@@ -485,7 +485,7 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
                                          size_t samples_per_channel) {
   RTC_DCHECK(audio);
   AggregateChannelLevels();
-  if (capture_muted_) {
+  if (!capture_output_used_) {
     return;
   }
 
@@ -520,7 +520,7 @@ void AgcManagerDirect::AnalyzePreProcess(const float* const* audio,
 void AgcManagerDirect::Process(const AudioBuffer* audio) {
   AggregateChannelLevels();
 
-  if (capture_muted_) {
+  if (!capture_output_used_) {
     return;
   }
 
@@ -549,11 +549,11 @@ absl::optional<int> AgcManagerDirect::GetDigitalComressionGain() {
   return new_compressions_to_set_[channel_controlling_gain_];
 }
 
-void AgcManagerDirect::SetCaptureMuted(bool muted) {
+void AgcManagerDirect::HandleCaptureOutputUsedChange(bool capture_output_used) {
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
-    channel_agcs_[ch]->SetCaptureMuted(muted);
+    channel_agcs_[ch]->HandleCaptureOutputUsedChange(capture_output_used);
   }
-  capture_muted_ = muted;
+  capture_output_used_ = capture_output_used;
 }
 
 float AgcManagerDirect::voice_probability() const {
