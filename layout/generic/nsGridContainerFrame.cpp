@@ -8634,6 +8634,10 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
   if (computedBSize == NS_UNCONSTRAINEDSIZE) {
     bSize = NS_CSS_MINMAX(bSize, aReflowInput.ComputedMinBSize(),
                           aReflowInput.ComputedMaxBSize());
+  } else if (aReflowInput.ShouldApplyAutomaticMinimumOnBlockAxis()) {
+    nscoord contentBSize = NS_CSS_MINMAX(bSize, aReflowInput.ComputedMinBSize(),
+                                         aReflowInput.ComputedMaxBSize());
+    bSize = std::max(contentBSize, computedBSize);
   } else {
     bSize = computedBSize;
   }
