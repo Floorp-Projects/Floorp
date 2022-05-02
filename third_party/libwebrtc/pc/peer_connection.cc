@@ -1738,6 +1738,27 @@ void PeerConnection::SetConnectionState(
     return;
   connection_state_ = new_state;
   Observer()->OnConnectionChange(new_state);
+
+  // The connection state change to connected usually happens once per
+  // connection which makes it a good point to report metrics.
+  if (new_state == PeerConnectionState::kConnected) {
+    // Record bundle-policy from configuration. Done here from
+    // connectionStateChange to limit to actually established connections.
+    BundlePolicyUsage policy = kBundlePolicyUsageMax;
+    switch (configuration_.bundle_policy) {
+      case kBundlePolicyBalanced:
+        policy = kBundlePolicyUsageBalanced;
+        break;
+      case kBundlePolicyMaxBundle:
+        policy = kBundlePolicyUsageMaxBundle;
+        break;
+      case kBundlePolicyMaxCompat:
+        policy = kBundlePolicyUsageMaxCompat;
+        break;
+    }
+    RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.BundlePolicy", policy,
+                              kBundlePolicyUsageMax);
+  }
 }
 
 void PeerConnection::OnIceGatheringChange(
