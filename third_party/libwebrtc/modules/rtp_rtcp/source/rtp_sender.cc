@@ -813,8 +813,7 @@ std::unique_ptr<RtpPacketToSend> RTPSender::BuildRtxPacket(
   auto payload = packet.payload();
   memcpy(rtx_payload + kRtxHeaderSize, payload.data(), payload.size());
 
-  // Add original application data.
-  rtx_packet->set_application_data(packet.application_data());
+  // Add original additional data.
   rtx_packet->set_additional_data(packet.additional_data());
 
   // Copy capture time so e.g. TransmissionOffset is correctly set.

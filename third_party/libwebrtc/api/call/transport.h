@@ -14,8 +14,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <vector>
-
 #include "api/ref_counted_base.h"
 #include "api/scoped_refptr.h"
 
@@ -31,8 +29,6 @@ struct PacketOptions {
   // A 16 bits positive id. Negative ids are invalid and should be interpreted
   // as packet_id not being set.
   int packet_id = -1;
-  // Deprecated: use `additional_data` instead of `application_data`.
-  std::vector<uint8_t> application_data;
   // Additional data bound to the RTP packet for use in application code,
   // outside of WebRTC.
   rtc::scoped_refptr<rtc::RefCountedBase> additional_data;

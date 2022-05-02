@@ -13,7 +13,6 @@
 #include <stdint.h>
 
 #include <utility>
-#include <vector>
 
 #include "api/array_view.h"
 #include "api/ref_counted_base.h"
@@ -57,16 +56,7 @@ class RtpPacketReceived : public RtpPacket {
   }
 
   // An application can attach arbitrary data to an RTP packet using
-  // `application_data` or `additional_data`.
-  // The additional data does not affect WebRTC processing.
-  RTC_DEPRECATED
-  rtc::ArrayView<const uint8_t> application_data() const {
-    return application_data_;
-  }
-  RTC_DEPRECATED
-  void set_application_data(rtc::ArrayView<const uint8_t> data) {
-    application_data_.assign(data.begin(), data.end());
-  }
+  // `additional_data`. The additional data does not affect WebRTC processing.
   rtc::scoped_refptr<rtc::RefCountedBase> additional_data() const {
     return additional_data_;
   }
@@ -79,7 +69,6 @@ class RtpPacketReceived : public RtpPacket {
   int payload_type_frequency_ = 0;
   bool recovered_ = false;
   rtc::scoped_refptr<rtc::RefCountedBase> additional_data_;
-  std::vector<uint8_t> application_data_;
 };
 
 }  // namespace webrtc
