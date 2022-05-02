@@ -107,7 +107,6 @@
  * various kinds.
  */
 
-#ifdef MOZ_GECKO_PROFILER
 namespace geckoprofiler::markers {
 struct CCIntervalMarker {
   static constexpr mozilla::Span<const char> MarkerTypeName() {
@@ -181,7 +180,6 @@ struct CCIntervalMarker {
   }
 };
 }  // namespace geckoprofiler::markers
-#endif
 
 namespace mozilla {
 
