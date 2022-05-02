@@ -237,7 +237,7 @@ class HomeFragment : Fragment() {
                     )
                 }
             } else {
-                components.appStore.dispatch(AppAction.PocketStoriesChange(emptyList()))
+                components.appStore.dispatch(AppAction.PocketStoriesClean)
             }
         }
 

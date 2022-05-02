@@ -9,7 +9,6 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.crash.Crash.NativeCodeCrash
 import mozilla.components.lib.state.Action
 import mozilla.components.service.pocket.PocketStory
-import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.home.Mode
@@ -56,10 +55,22 @@ sealed class AppAction : Action {
     data class RecentHistoryChange(val recentHistory: List<RecentlyVisitedItem>) : AppAction()
     data class RemoveRecentHistoryHighlight(val highlightUrl: String) : AppAction()
     data class DisbandSearchGroupAction(val searchTerm: String) : AppAction()
+    /**
+     * Indicates the given [categoryName] was selected by the user.
+     */
     data class SelectPocketStoriesCategory(val categoryName: String) : AppAction()
+    /**
+     * Indicates the given [categoryName] was deselected by the user.
+     */
     data class DeselectPocketStoriesCategory(val categoryName: String) : AppAction()
+    /**
+     * Indicates the given [storiesShown] were seen by the user.
+     */
     data class PocketStoriesShown(val storiesShown: List<PocketStory>) : AppAction()
-    data class PocketStoriesChange(val pocketStories: List<PocketRecommendedStory>) : AppAction()
+    /**
+     * Cleans all in-memory data about Pocket stories and categories.
+     */
+    object PocketStoriesClean : AppAction()
     /**
      * Replaces the current list of Pocket sponsored stories.
      */
@@ -72,8 +83,14 @@ sealed class AppAction : Action {
      * Removes a set of items, previously marked for removal, to be displayed again in the UI.
      */
     data class UndoPendingDeletionSet(val historyItems: Set<PendingDeletionHistory>) : AppAction()
+    /**
+     * Replaces the list of available Pocket recommended stories categories.
+     */
     data class PocketStoriesCategoriesChange(val storiesCategories: List<PocketRecommendedStoriesCategory>) :
         AppAction()
+    /**
+     * Restores the list of Pocket recommended stories categories selections.
+     */
     data class PocketStoriesCategoriesSelectionsChange(
         val storiesCategories: List<PocketRecommendedStoriesCategory>,
         val categoriesSelected: List<PocketRecommendedStoriesSelectedCategory>

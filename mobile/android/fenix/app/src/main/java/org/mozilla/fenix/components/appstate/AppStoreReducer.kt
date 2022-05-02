@@ -142,8 +142,11 @@ internal object AppStoreReducer {
                 pocketStories = updatedCategoriesState.getFilteredStories()
             )
         }
-        is AppAction.PocketStoriesChange -> state.copy(
-            pocketStories = action.pocketStories
+        is AppAction.PocketStoriesClean -> state.copy(
+            pocketStoriesCategories = emptyList(),
+            pocketStoriesCategoriesSelections = emptyList(),
+            pocketStories = emptyList(),
+            pocketSponsoredStories = emptyList()
         )
         is AppAction.PocketSponsoredStoriesChange -> state.copy(
             pocketSponsoredStories = action.sponsoredStories

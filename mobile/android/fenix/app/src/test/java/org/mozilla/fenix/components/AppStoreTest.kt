@@ -15,7 +15,6 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.pocket.PocketStory
-import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -344,18 +343,23 @@ class AppStoreTest {
     }
 
     @Test
-    fun `Test updating the list of Pocket recommended stories`() = runTest {
-        val story1 = PocketRecommendedStory("title1", "url", "imageUrl", "publisher", "category", 1, 1)
-        val story2 = story1.copy("title2")
-        appStore = AppStore(AppState())
+    fun `Test cleaning the list of Pocket stories`() = runTest {
+        appStore = AppStore(
+            AppState(
+                pocketStoriesCategories = listOf(mockk()),
+                pocketStoriesCategoriesSelections = listOf(mockk()),
+                pocketStories = listOf(mockk()),
+                pocketSponsoredStories = listOf(mockk())
+            )
+        )
 
-        appStore.dispatch(AppAction.PocketStoriesChange(listOf(story1, story2)))
+        appStore.dispatch(AppAction.PocketStoriesClean)
             .join()
-        assertTrue(appStore.state.pocketStories.containsAll(listOf(story1, story2)))
 
-        val updatedStories = listOf(story2.copy("title3"))
-        appStore.dispatch(AppAction.PocketStoriesChange(updatedStories)).join()
-        assertTrue(updatedStories.containsAll(appStore.state.pocketStories))
+        assertTrue(appStore.state.pocketStoriesCategories.isEmpty())
+        assertTrue(appStore.state.pocketStoriesCategoriesSelections.isEmpty())
+        assertTrue(appStore.state.pocketStories.isEmpty())
+        assertTrue(appStore.state.pocketSponsoredStories.isEmpty())
     }
 
     @Test
