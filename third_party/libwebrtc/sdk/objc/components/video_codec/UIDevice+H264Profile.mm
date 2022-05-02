@@ -24,6 +24,10 @@ struct SupportedH264Profile {
 
 constexpr SupportedH264Profile kH264MaxSupportedProfiles[] = {
     // iPhones with at least iOS 9
+    {RTCDeviceTypeIPhone12ProMax, {kProfileHigh, kLevel5_2}},  // https://support.apple.com/kb/SP832
+    {RTCDeviceTypeIPhone12Pro, {kProfileHigh, kLevel5_2}},     // https://support.apple.com/kb/SP831
+    {RTCDeviceTypeIPhone12, {kProfileHigh, kLevel5_2}},        // https://support.apple.com/kb/SP830
+    {RTCDeviceTypeIPhone12Mini, {kProfileHigh, kLevel5_2}},    // https://support.apple.com/kb/SP829
     {RTCDeviceTypeIPhone11ProMax, {kProfileHigh, kLevel5_2}},  // https://support.apple.com/kb/SP806
     {RTCDeviceTypeIPhone11Pro, {kProfileHigh, kLevel5_2}},     // https://support.apple.com/kb/SP805
     {RTCDeviceTypeIPhone11, {kProfileHigh, kLevel5_2}},        // https://support.apple.com/kb/SP804
@@ -57,6 +61,10 @@ constexpr SupportedH264Profile kH264MaxSupportedProfiles[] = {
     {RTCDeviceTypeIPodTouch5G, {kProfileMain, kLevel3_1}},  // https://support.apple.com/kb/SP657
 
     // iPads with at least iOS 9
+    {RTCDeviceTypeIPadAir4Gen, {kProfileHigh, kLevel4_1}},   // https://support.apple.com/kb/SP828
+    {RTCDeviceTypeIPad8, {kProfileHigh, kLevel4_1}},   // https://support.apple.com/kb/SP822
+    {RTCDeviceTypeIPadPro4Gen12Inch, {kProfileHigh, kLevel4_1}},   // https://support.apple.com/kb/SP815
+    {RTCDeviceTypeIPadPro4Gen11Inch, {kProfileHigh, kLevel4_1}},   // https://support.apple.com/kb/SP814
     {RTCDeviceTypeIPadAir3Gen, {kProfileHigh, kLevel4_1}},   // https://support.apple.com/kb/SP787
     {RTCDeviceTypeIPadMini5Gen, {kProfileHigh, kLevel4_1}},  // https://support.apple.com/kb/SP788
     {RTCDeviceTypeIPadPro3Gen12Inch,
