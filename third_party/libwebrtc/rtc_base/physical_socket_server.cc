@@ -48,6 +48,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/null_socket_server.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
 
 #if defined(WEBRTC_LINUX)
@@ -276,12 +277,12 @@ int PhysicalSocket::DoConnect(const SocketAddress& connect_addr) {
 }
 
 int PhysicalSocket::GetError() const {
-  CritScope cs(&crit_);
+  webrtc::MutexLock lock(&mutex_);
   return error_;
 }
 
 void PhysicalSocket::SetError(int error) {
-  CritScope cs(&crit_);
+  webrtc::MutexLock lock(&mutex_);
   error_ = error;
 }
 
@@ -937,7 +938,7 @@ class EventDispatcher : public Dispatcher {
   }
 
   virtual void Signal() {
-    CritScope cs(&crit_);
+    webrtc::MutexLock lock(&mutex_);
     if (!fSignaled_) {
       const uint8_t b[1] = {0};
       const ssize_t res = write(afd_[1], b, sizeof(b));
@@ -952,7 +953,7 @@ class EventDispatcher : public Dispatcher {
     // It is not possible to perfectly emulate an auto-resetting event with
     // pipes.  This simulates it by resetting before the event is handled.
 
-    CritScope cs(&crit_);
+    webrtc::MutexLock lock(&mutex_);
     if (fSignaled_) {
       uint8_t b[4];  // Allow for reading more than 1 byte, but expect 1.
       const ssize_t res = read(afd_[0], b, sizeof(b));
@@ -968,10 +969,10 @@ class EventDispatcher : public Dispatcher {
   bool IsDescriptorClosed() override { return false; }
 
  private:
-  PhysicalSocketServer* ss_;
-  int afd_[2];
-  bool fSignaled_;
-  RecursiveCriticalSection crit_;
+  PhysicalSocketServer* const ss_;
+  int afd_[2];  // Assigned in constructor only.
+  bool fSignaled_ RTC_GUARDED_BY(mutex_);
+  webrtc::Mutex mutex_;
 };
 
 #endif  // WEBRTC_POSIX
