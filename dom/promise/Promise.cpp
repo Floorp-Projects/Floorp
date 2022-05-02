@@ -402,7 +402,7 @@ class PromiseNativeHandlerShim final : public PromiseNativeHandler {
  public:
   explicit PromiseNativeHandlerShim(PromiseNativeHandler* aInner)
       : mInner(aInner) {
-    MOZ_ASSERT(mInner);
+    MOZ_DIAGNOSTIC_ASSERT(mInner);
   }
 
   MOZ_CAN_RUN_SCRIPT
