@@ -174,7 +174,7 @@ partial interface HTMLInputElement {
   void mozSetDndFilesAndDirectories(sequence<(File or Directory)> list);
 
   // This method is meant to use for testing only.
-  [ChromeOnly, Throws]
+  [ChromeOnly, NewObject]
   Promise<sequence<(File or Directory)>> getFilesAndDirectories();
 
   boolean mozIsTextField(boolean aExcludePassword);

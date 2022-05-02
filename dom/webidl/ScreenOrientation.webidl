@@ -30,7 +30,7 @@ enum OrientationLockType {
 
 [Exposed=Window]
 interface ScreenOrientation : EventTarget {
-  [Throws]
+  [NewObject]
   Promise<void> lock(OrientationLockType orientation);
   [Throws]
   void unlock();

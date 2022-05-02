@@ -1,14 +1,14 @@
 [SecureContext, Exposed=(Window,Worker), Pref="dom.weblocks.enabled"]
 interface LockManager {
-  [Throws]
+  [NewObject]
   Promise<any> request(DOMString name,
                        LockGrantedCallback callback);
-  [Throws]
+  [NewObject]
   Promise<any> request(DOMString name,
                        LockOptions options,
                        LockGrantedCallback callback);
 
-  [Throws]
+  [NewObject]
   Promise<LockManagerSnapshot> query();
 };
 

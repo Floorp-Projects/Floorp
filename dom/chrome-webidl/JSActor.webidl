@@ -10,7 +10,7 @@ interface mixin JSActor {
     void sendAsyncMessage(DOMString messageName,
                           optional any obj);
 
-    [Throws]
+    [NewObject]
     Promise<any> sendQuery(DOMString messageName,
                            optional any obj);
 

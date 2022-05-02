@@ -25,8 +25,8 @@ dictionary PermissionDescriptor {
 
 [Exposed=Window]
 interface Permissions {
-  [Throws]
+  [NewObject]
   Promise<PermissionStatus> query(object permission);
-  [Throws, Pref="dom.permissions.revoke.enable"]
+  [NewObject, Pref="dom.permissions.revoke.enable"]
   Promise<PermissionStatus> revoke(object permission);
 };

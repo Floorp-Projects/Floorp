@@ -14,5 +14,6 @@ interface FileSystemHandle {
   readonly attribute FileSystemHandleKind kind;
   readonly attribute USVString name;
 
+  [NewObject]
   Promise<boolean> isSameEntry(FileSystemHandle other);
 };

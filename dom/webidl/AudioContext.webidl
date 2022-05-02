@@ -29,9 +29,9 @@ interface AudioContext : BaseAudioContext {
     readonly        attribute double               outputLatency;
     AudioTimestamp                  getOutputTimestamp();
 
-    [Throws]
+    [NewObject]
     Promise<void> suspend();
-    [Throws]
+    [NewObject]
     Promise<void> close();
 
     [NewObject, Throws]

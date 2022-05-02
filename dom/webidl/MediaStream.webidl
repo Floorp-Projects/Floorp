@@ -49,7 +49,7 @@ interface MediaStream : EventTarget {
                 attribute EventHandler onaddtrack;
                 attribute EventHandler onremovetrack;
 
-    [ChromeOnly, Throws]
+    [ChromeOnly, NewObject]
     static Promise<long> countUnderlyingStreams();
 
     // Webrtc allows the remote side to name a stream whatever it wants, and we

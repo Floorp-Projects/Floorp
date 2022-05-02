@@ -63,7 +63,7 @@ partial interface HTMLVideoElement {
   // installed in this <video>'s MediaDecoder, or selected video
   // MediaStreamTrack, whichever is available first. Note that it might never
   // resolve.
-  [Throws, Func="IsChromeOrUAWidget"]
+  [NewObject, Func="IsChromeOrUAWidget"]
     Promise<void> cloneElementVisually(HTMLVideoElement target);
 
   // Stops a <video> from cloning visually. Does nothing if the <video>

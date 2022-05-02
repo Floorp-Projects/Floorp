@@ -114,7 +114,7 @@ interface MediaStreamTrack : EventTarget {
     [NeedsCallerType]
     MediaTrackSettings     getSettings ();
 
-    [Throws, NeedsCallerType]
+    [NewObject, NeedsCallerType]
     Promise<void>          applyConstraints (optional MediaTrackConstraints constraints = {});
 //              attribute EventHandler          onoverconstrained;
 };

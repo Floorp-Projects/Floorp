@@ -50,11 +50,11 @@ partial interface File {
 //   `dom.file.createInChild' set to true.
 [Exposed=(Window)]
 partial interface File {
-  [ChromeOnly, Throws, NeedsCallerType]
+  [ChromeOnly, NewObject, NeedsCallerType]
   static Promise<File> createFromNsIFile(nsIFile file,
                                          optional ChromeFilePropertyBag options = {});
 
-  [ChromeOnly, Throws, NeedsCallerType]
+  [ChromeOnly, NewObject, NeedsCallerType]
   static Promise<File> createFromFileName(USVString fileName,
                                           optional ChromeFilePropertyBag options = {});
 };

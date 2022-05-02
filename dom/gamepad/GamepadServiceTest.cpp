@@ -103,6 +103,7 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
     uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics,
     uint32_t aNumLightIndicator, uint32_t aNumTouchEvents, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -134,6 +135,7 @@ already_AddRefed<Promise> GamepadServiceTest::AddGamepad(
 already_AddRefed<Promise> GamepadServiceTest::RemoveGamepad(
     uint32_t aHandleSlot, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -161,6 +163,7 @@ already_AddRefed<Promise> GamepadServiceTest::NewButtonEvent(
     uint32_t aHandleSlot, uint32_t aButton, bool aPressed, bool aTouched,
     ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -186,6 +189,7 @@ already_AddRefed<Promise> GamepadServiceTest::NewButtonValueEvent(
     uint32_t aHandleSlot, uint32_t aButton, bool aPressed, bool aTouched,
     double aValue, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -210,6 +214,7 @@ already_AddRefed<Promise> GamepadServiceTest::NewButtonValueEvent(
 already_AddRefed<Promise> GamepadServiceTest::NewAxisMoveEvent(
     uint32_t aHandleSlot, uint32_t aAxis, double aValue, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -239,6 +244,7 @@ already_AddRefed<Promise> GamepadServiceTest::NewPoseMove(
     const Nullable<Float32Array>& aLinVelocity,
     const Nullable<Float32Array>& aLinAcceleration, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 
@@ -322,6 +328,7 @@ already_AddRefed<Promise> GamepadServiceTest::NewTouch(
     uint8_t aSurfaceId, const Float32Array& aPos,
     const Nullable<Float32Array>& aSurfDim, ErrorResult& aRv) {
   if (mShuttingDown) {
+    aRv.ThrowInvalidStateError("Shutting down");
     return nullptr;
   }
 

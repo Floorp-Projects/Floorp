@@ -30,11 +30,9 @@ FileSystemHandleKind FileSystemFileHandle::Kind() {
   return FileSystemHandleKind::File;
 }
 
-already_AddRefed<Promise> FileSystemFileHandle::GetFile() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemFileHandle::GetFile(ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -44,11 +42,9 @@ already_AddRefed<Promise> FileSystemFileHandle::GetFile() {
 }
 
 already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
-    const FileSystemCreateWritableOptions& aOptions) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    const FileSystemCreateWritableOptions& aOptions, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -57,11 +53,10 @@ already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
   return promise.forget();
 }
 
-already_AddRefed<Promise> FileSystemFileHandle::CreateSyncAccessHandle() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemFileHandle::CreateSyncAccessHandle(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
