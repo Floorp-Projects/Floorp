@@ -11,8 +11,8 @@ Configurable preferences
 
 Defines the remote protocols that are active. Available protocols are,
 WebDriver BiDi (`1`), and CDP (`2`). Multiple protocols can be activated
-at the same time by using bitwise or with the values. Defaults to `3`
-in Nightly builds, and `2` otherwise.
+at the same time by using bitwise or with the values. Defaults to `3` (WebDriver
+BiDi and CDP).
 
 ### `remote.log.level`
 
