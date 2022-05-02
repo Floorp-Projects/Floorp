@@ -3611,7 +3611,7 @@ nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal) {
   return NS_OK;
 }
 
-nsresult nsDOMWindowUtils::ExitFullscreen() {
+nsresult nsDOMWindowUtils::ExitFullscreen(bool aDontRestoreViewSize) {
   PROFILER_MARKER_UNTYPED("Exit fullscreen", DOM);
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -3627,7 +3627,8 @@ nsresult nsDOMWindowUtils::ExitFullscreen() {
   // set the window dimensions in advance. Since the resize message
   // comes after the fullscreen change call, doing so could avoid an
   // extra resize reflow after this point.
-  PrepareForFullscreenChange(GetDocShell(), oldSize);
+  PrepareForFullscreenChange(GetDocShell(),
+                             aDontRestoreViewSize ? nsSize() : oldSize);
   Document::ExitFullscreenInDocTree(doc);
   return NS_OK;
 }
