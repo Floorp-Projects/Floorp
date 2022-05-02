@@ -9,6 +9,7 @@
 #include "frontend/BytecodeEmitter.h"   // BytecodeEmitter
 #include "frontend/EmitterScope.h"      // EmitterScope
 #include "frontend/ForOfLoopControl.h"  // ForOfLoopControl
+#include "frontend/SwitchEmitter.h"     // SwitchEmitter
 #include "vm/Opcodes.h"                 // JSOp
 
 using namespace js;
@@ -111,7 +112,60 @@ TryFinallyControl::TryFinallyControl(BytecodeEmitter* bce, StatementKind kind)
   MOZ_ASSERT(is<TryFinallyControl>());
 }
 
-NonLocalExitControl::NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
+bool TryFinallyControl::allocateContinuation(NestableControl* target,
+                                             NonLocalExitKind kind,
+                                             uint32_t* idx) {
+  // TODO: deduplicate continuations?
+  *idx = continuations_.length() + SpecialContinuations::Count;
+  return continuations_.emplaceBack(target, kind);
+}
+
+bool TryFinallyControl::emitContinuations(BytecodeEmitter* bce) {
+  SwitchEmitter::TableGenerator tableGen(bce);
+  for (uint32_t i = 0; i < continuations_.length(); i++) {
+    if (!tableGen.addNumber(i + SpecialContinuations::Count)) {
+      return false;
+    }
+  }
+  tableGen.finish(continuations_.length());
+  MOZ_RELEASE_ASSERT(tableGen.isValid());
+
+  InternalSwitchEmitter se(bce);
+  if (!se.validateCaseCount(continuations_.length())) {
+    return false;
+  }
+  if (!se.emitTable(tableGen)) {
+    return false;
+  }
+
+  // Continuation index 0 is special-cased to be the fallthrough block.
+  // Non-default switch cases are numbered 1-N.
+  uint32_t caseIdx = SpecialContinuations::Count;
+  for (TryFinallyContinuation& continuation : continuations_) {
+    if (!se.emitCaseBody(caseIdx++, tableGen)) {
+      return false;
+    }
+    // Resume the non-local control flow that was intercepted by
+    // this finally.
+    NonLocalExitControl nle(bce, continuation.kind_);
+    if (!nle.emitNonLocalJump(continuation.target_, this)) {
+      return false;
+    }
+  }
+
+  // The only unhandled case is the fallthrough case, which is handled
+  // by the switch default.
+  if (!se.emitDefaultBody()) {
+    return false;
+  }
+  if (!se.emitEnd()) {
+    return false;
+  }
+  return true;
+}
+
+NonLocalExitControl::NonLocalExitControl(BytecodeEmitter* bce,
+                                         NonLocalExitKind kind)
     : bce_(bce),
       savedScopeNoteIndex_(bce->bytecodeSection().scopeNoteList().length()),
       savedDepth_(bce->bytecodeSection().stackDepth()),
@@ -128,7 +182,7 @@ NonLocalExitControl::~NonLocalExitControl() {
 }
 
 bool NonLocalExitControl::emitReturn(BytecodeOffset setRvalOffset) {
-  MOZ_ASSERT(kind_ == Return);
+  MOZ_ASSERT(kind_ == NonLocalExitKind::Return);
   setRvalOffset_ = setRvalOffset;
   return emitNonLocalJump(nullptr);
 }
@@ -158,15 +212,21 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
 /*
  * Emit additional bytecode(s) for non-local jumps.
  */
-bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
-  EmitterScope* es = bce_->innermostEmitterScope();
+bool NonLocalExitControl::emitNonLocalJump(NestableControl* target,
+                                           NestableControl* startingAfter) {
+  NestableControl* startingControl = startingAfter
+                                         ? startingAfter->enclosing()
+                                         : bce_->innermostNestableControl;
+  EmitterScope* es = startingAfter ? startingAfter->emitterScope()
+                                   : bce_->innermostEmitterScope();
+
   int npops = 0;
 
   AutoCheckUnstableEmitterScope cues(bce_);
 
   // We emit IteratorClose bytecode inline. 'continue' statements do
   // not call IteratorClose for the loop they are continuing.
-  bool emitIteratorCloseAtTarget = kind_ != Continue;
+  bool emitIteratorCloseAtTarget = kind_ != NonLocalExitKind::Continue;
 
   auto flushPops = [&npops](BytecodeEmitter* bce) {
     if (npops && !bce->emitPopN(npops)) {
@@ -182,9 +242,13 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
   // actual jump.
   Vector<BytecodeOffset, 4> forOfIterCloseScopeStarts(bce_->cx);
 
+  // If we have to execute a finally block, then we will jump there now and
+  // continue the non-local jump from the end of the finally block.
+  bool jumpingToFinally = false;
+
   // Walk the nestable control stack and patch jumps.
-  for (NestableControl* control = bce_->innermostNestableControl;
-       control != target; control = control->enclosing()) {
+  for (NestableControl* control = startingControl;
+       control != target && !jumpingToFinally; control = control->enclosing()) {
     // Walk the scope stack and leave the scopes we entered. Leaving a scope
     // may emit administrative ops like JSOp::PopLexicalEnv but never anything
     // that manipulates the stack.
@@ -209,13 +273,18 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
             npops += 3;
           }
         } else {
+          jumpingToFinally = true;
+
           if (!flushPops(bce_)) {
             return false;
           }
-          if (!bce_->emitJumpToFinally(&finallyControl.finallyJumps_)) {
+          uint32_t idx;
+          if (!finallyControl.allocateContinuation(target, kind_, &idx)) {
             return false;
           }
-          finallyControl.setHasNonLocalJumps();
+          if (!bce_->emitJumpToFinally(&finallyControl.finallyJumps_, idx)) {
+            return false;
+          }
         }
         break;
       }
@@ -259,25 +328,49 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
     return false;
   }
 
-  if (target && emitIteratorCloseAtTarget && target->is<ForOfLoopControl>()) {
-    BytecodeOffset tryNoteStart;
-    ForOfLoopControl& loopinfo = target->as<ForOfLoopControl>();
-    if (!loopinfo.emitPrepareForNonLocalJumpFromScope(bce_, *es,
-                                                      /* isTarget = */ true,
-                                                      &tryNoteStart)) {
-      //            [stack] ... UNDEF UNDEF UNDEF
-      return false;
+  if (!jumpingToFinally) {
+    if (target && emitIteratorCloseAtTarget && target->is<ForOfLoopControl>()) {
+      BytecodeOffset tryNoteStart;
+      ForOfLoopControl& loopinfo = target->as<ForOfLoopControl>();
+      if (!loopinfo.emitPrepareForNonLocalJumpFromScope(bce_, *es,
+                                                        /* isTarget = */ true,
+                                                        &tryNoteStart)) {
+        //            [stack] ... UNDEF UNDEF UNDEF
+        return false;
+      }
+      if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
+        return false;
+      }
     }
-    if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
-      return false;
-    }
-  }
 
-  EmitterScope* targetEmitterScope =
-      target ? target->emitterScope() : bce_->varEmitterScope;
-  for (; es != targetEmitterScope; es = es->enclosingInFrame()) {
-    if (!leaveScope(es)) {
-      return false;
+    EmitterScope* targetEmitterScope =
+        target ? target->emitterScope() : bce_->varEmitterScope;
+    for (; es != targetEmitterScope; es = es->enclosingInFrame()) {
+      if (!leaveScope(es)) {
+        return false;
+      }
+    }
+    switch (kind_) {
+      case NonLocalExitKind::Continue: {
+        LoopControl* loop = &target->as<LoopControl>();
+        if (!bce_->emitJump(JSOp::Goto, &loop->continues)) {
+          return false;
+        }
+        break;
+      }
+      case NonLocalExitKind::Break: {
+        BreakableControl* breakable = &target->as<BreakableControl>();
+        if (!bce_->emitJump(JSOp::Goto, &breakable->breaks)) {
+          return false;
+        }
+        break;
+      }
+      case NonLocalExitKind::Return:
+        MOZ_ASSERT(!target);
+        if (!bce_->finishReturn(setRvalOffset_)) {
+          return false;
+        }
+        break;
     }
   }
 
@@ -287,29 +380,6 @@ bool NonLocalExitControl::emitNonLocalJump(NestableControl* target) {
     if (!bce_->addTryNote(TryNoteKind::ForOfIterClose, 0, start, end)) {
       return false;
     }
-  }
-
-  switch (kind_) {
-    case Continue: {
-      LoopControl* loop = &target->as<LoopControl>();
-      if (!bce_->emitJump(JSOp::Goto, &loop->continues)) {
-        return false;
-      }
-      break;
-    }
-    case Break: {
-      BreakableControl* breakable = &target->as<BreakableControl>();
-      if (!bce_->emitJump(JSOp::Goto, &breakable->breaks)) {
-        return false;
-      }
-      break;
-    }
-    case Return:
-      MOZ_ASSERT(!target);
-      if (!bce_->finishReturn(setRvalOffset_)) {
-        return false;
-      }
-      break;
   }
 
   return true;

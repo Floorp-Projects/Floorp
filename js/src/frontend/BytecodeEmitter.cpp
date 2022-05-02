@@ -662,8 +662,8 @@ bool BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand) {
 
 bool BytecodeEmitter::emitGoto(NestableControl* target, GotoKind kind) {
   NonLocalExitControl nle(this, kind == GotoKind::Continue
-                                    ? NonLocalExitControl::Continue
-                                    : NonLocalExitControl::Break);
+                                    ? NonLocalExitKind::Continue
+                                    : NonLocalExitKind::Break);
   return nle.emitNonLocalJump(target);
 }
 
@@ -4819,44 +4819,24 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
   return true;
 }
 
-[[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump) {
-  // Emit the following:
-  //
-  //     ResumeIndex <resumeIndex>
-  //     False
-  //     Goto <target>
-  //   resumeOffset:
-  //     JumpTarget
-  //
-  // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
-  // setting the frame's ICEntry when resuming at resumeOffset.
-
-  BytecodeOffset off;
-  if (!emitN(JSOp::ResumeIndex, 3, &off)) {
+[[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump,
+                                                      uint32_t idx) {
+  // Push the continuation index.
+  if (!emitNumberOp(idx)) {
     return false;
   }
 
+  // Push |throwing|.
   if (!emit1(JSOp::False)) {
     return false;
   }
 
+  // Jump to the finally block.
   if (!emitJumpNoFallthrough(JSOp::Goto, jump)) {
     return false;
   }
 
-  // When we return from the finally, the resume index and throwing
-  // values will have been popped.
-  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() - 2);
-
-  uint32_t resumeIndex;
-  if (!allocateResumeIndex(bytecodeSection().offset(), &resumeIndex)) {
-    return false;
-  }
-
-  SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
-
-  JumpTarget target;
-  return emitJumpTarget(&target);
+  return true;
 }
 
 bool BytecodeEmitter::emitIf(TernaryNode* ifNode) {
@@ -6092,7 +6072,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     return false;
   }
 
-  NonLocalExitControl nle(this, NonLocalExitControl::Return);
+  NonLocalExitControl nle(this, NonLocalExitKind::Return);
   return nle.emitReturn(setRvalOffset);
 }
 
