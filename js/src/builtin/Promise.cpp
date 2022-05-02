@@ -3283,87 +3283,113 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   return resultCapability.promise();
 }
 
+static bool CallDefaultPromiseResolveFunction(JSContext* cx,
+                                              Handle<PromiseObject*> promise,
+                                              HandleValue resolutionValue);
+static bool CallDefaultPromiseRejectFunction(
+    JSContext* cx, Handle<PromiseObject*> promise, HandleValue rejectionValue,
+    JS::Handle<SavedFrame*> unwrappedRejectionStack = nullptr);
+
 /**
- * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
  *
  * NewPromiseReactionJob ( reaction, argument )
  * https://tc39.es/ecma262/#sec-newpromisereactionjob
  *
- * Steps 1.f-j.
+ * Steps 1.f-i. "type is Fulfill" case.
  */
 [[nodiscard]] static bool RunFulfillFunction(JSContext* cx,
                                              HandleObject onFulfilledFunc,
-                                             HandleValue result,
+                                             HandleValue handlerResult,
                                              HandleObject promiseObj) {
   cx->check(onFulfilledFunc);
-  cx->check(result);
+  cx->check(handlerResult);
   cx->check(promiseObj);
 
   // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
+  // (implicit)
+
+  if (onFulfilledFunc) {
+    // Step 1.h. If handlerResult is an abrupt completion, then
+    //           (handled in RunRejectFunction)
+    // Step 1.i. Else,
+    // Step 1.i.i. Return
+    //             ? Call(promiseCapability.[[Resolve]], undefined,
+    //                    « handlerResult.[[Value]] »).
+    RootedValue calleeOrRval(cx, ObjectValue(*onFulfilledFunc));
+    return Call(cx, calleeOrRval, UndefinedHandleValue, handlerResult,
+                &calleeOrRval);
+  }
+
+  // Step f. If promiseCapability is undefined, then
+  // (reordered)
   //
   // NOTE: we pass promiseCapability fields separately, and
   //       "promiseCapability is undefined" case is represented by
   //       `onFulfilledFunc == nullptr && promiseObj == nullptr`.
-
-  // Step 1.h. (handled in RunRejectFunction)
-  //           If handlerResult is an abrupt completion, then
-
-  // Step 1.i. Else,
-  // If |onFulfilledFunc| couldn't be optimized away, just call it.
-  if (onFulfilledFunc) {
-    // Step 1.i.i. Let status be
-    //             Call(promiseCapability.[[Resolve]], undefined,
-    //                  « handlerResult.[[Value]] »).
-    // Step 1.j. Return Completion(status).
-    RootedValue calleeOrRval(cx, ObjectValue(*onFulfilledFunc));
-    return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
-  }
-
-  // (reordered)
-  // Step 1.f. If promiseCapability is undefined, then
+  //
+  //       Also `promiseObj` can be optimized away if it's known to be unused.
   if (!promiseObj) {
-    // Step 1.f.i. Assert: handlerResult is not an abrupt completion.
-    // Step 1.f.ii. Return NormalCompletion(empty).
+    // Step f.i. Assert: handlerResult is not an abrupt completion.
+    // (implicit)
+
+    // Step f.ii. Return empty.
     return true;
   }
 
-  // (reordered)
-  // Step 1.d. If handler is empty, then
-  // Step 1.d.i. If type is Fulfill, let handlerResult be
-  //             NormalCompletion(argument).
-  // Resolve the promise only if it's still pending.
+  // Step 1.h. If handlerResult is an abrupt completion, then
+  //           (handled in RunRejectFunction)
+  // Step 1.i. Else,
+  // Step 1.i.i. Return
+  //             ? Call(promiseCapability.[[Resolve]], undefined,
+  //                    « handlerResult.[[Value]] »).
   Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
-  if (promise->state() != JS::PromiseState::Pending) {
-    return true;
-  }
-
-  // If the promise has a default resolution function, perform its steps.
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return ResolvePromiseInternal(cx, promise, result);
+    return CallDefaultPromiseResolveFunction(cx, promise, handlerResult);
   }
 
-  // Otherwise we're done.
   return true;
 }
 
+/**
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
+ *
+ * NewPromiseReactionJob ( reaction, argument )
+ * https://tc39.es/ecma262/#sec-newpromisereactionjob
+ *
+ * Steps 1.g-i. "type is Reject" case.
+ */
 [[nodiscard]] static bool RunRejectFunction(
-    JSContext* cx, HandleObject onRejectedFunc, HandleValue result,
+    JSContext* cx, HandleObject onRejectedFunc, HandleValue handlerResult,
     HandleObject promiseObj, HandleSavedFrame unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior) {
   cx->check(onRejectedFunc);
-  cx->check(result);
+  cx->check(handlerResult);
   cx->check(promiseObj);
 
-  // If |onRejectedFunc| couldn't be optimized away, just call it.
+  // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
+  // (implicit)
+
   if (onRejectedFunc) {
+    // Step 1.h. If handlerResult is an abrupt completion, then
+    // Step 1.h.i. Return
+    //             ? Call(promiseCapability.[[Reject]], undefined,
+    //                    « handlerResult.[[Value]] »).
     RootedValue calleeOrRval(cx, ObjectValue(*onRejectedFunc));
-    return Call(cx, calleeOrRval, UndefinedHandleValue, result, &calleeOrRval);
+    return Call(cx, calleeOrRval, UndefinedHandleValue, handlerResult,
+                &calleeOrRval);
   }
 
-  // The promise itself may be optimized away.
+  // See the comment in RunFulfillFunction for promiseCapability field
+  //
+  // Step f. If promiseCapability is undefined, then
+  // Step f.i. Assert: handlerResult is not an abrupt completion.
+  //
+  // The spec doesn't allow promiseCapability to be undefined for reject case,
+  // but `promiseObj` can be optimized away if it's known to be unused.
   if (!promiseObj) {
-    // Do nothing if unhandled rejections are to be ignored.
     if (behavior == UnhandledRejectionBehavior::Ignore) {
+      // Do nothing if unhandled rejections are to be ignored.
       return true;
     }
 
@@ -3376,22 +3402,24 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
       return true;
     }
 
-    return RejectPromiseInternal(cx, temporaryPromise, result,
+    // Step 1.h. If handlerResult is an abrupt completion, then
+    // Step 1.h.i. Return
+    //             ? Call(promiseCapability.[[Reject]], undefined,
+    //                    « handlerResult.[[Value]] »).
+    return RejectPromiseInternal(cx, temporaryPromise, handlerResult,
                                  unwrappedRejectionStack);
   }
 
-  // Reject the promise only if it's still pending.
+  // Step 1.h. If handlerResult is an abrupt completion, then
+  // Step 1.h.i. Return
+  //             ? Call(promiseCapability.[[Reject]], undefined,
+  //                    « handlerResult.[[Value]] »).
   Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
-  if (promise->state() != JS::PromiseState::Pending) {
-    return true;
-  }
-
-  // If the promise has a default rejection function, perform its steps.
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return RejectPromiseInternal(cx, promise, result, unwrappedRejectionStack);
+    return CallDefaultPromiseRejectFunction(cx, promise, handlerResult,
+                                            unwrappedRejectionStack);
   }
 
-  // Otherwise we're done.
   return true;
 }
 
@@ -6264,9 +6292,9 @@ bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
  * Promise Reject Functions
  * https://tc39.es/ecma262/#sec-promise-reject-functions
  */
-static bool CallDefaultPromiseRejectFunction(JSContext* cx,
-                                             Handle<PromiseObject*> promise,
-                                             HandleValue rejectionValue) {
+static bool CallDefaultPromiseRejectFunction(
+    JSContext* cx, Handle<PromiseObject*> promise, HandleValue rejectionValue,
+    JS::Handle<SavedFrame*> unwrappedRejectionStack /* = nullptr */) {
   MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
 
   // Steps 1-3.
@@ -6281,7 +6309,8 @@ static bool CallDefaultPromiseRejectFunction(JSContext* cx,
   // Step 6. Set alreadyResolved.[[Value]] to true.
   SetAlreadyResolvedPromiseWithDefaultResolvingFunction(promise);
 
-  return RejectPromiseInternal(cx, promise, rejectionValue);
+  return RejectPromiseInternal(cx, promise, rejectionValue,
+                               unwrappedRejectionStack);
 }
 
 /* static */
