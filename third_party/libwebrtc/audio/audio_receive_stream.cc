@@ -351,6 +351,7 @@ bool AudioReceiveStream::SetMinimumPlayoutDelay(int delay_ms) {
 }
 
 void AudioReceiveStream::AssociateSendStream(AudioSendStream* send_stream) {
+  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread.
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_receive_->SetAssociatedSendChannel(
       send_stream ? send_stream->GetChannel() : nullptr);
@@ -372,6 +373,8 @@ const webrtc::AudioReceiveStream::Config& AudioReceiveStream::config() const {
 
 const AudioSendStream* AudioReceiveStream::GetAssociatedSendStreamForTesting()
     const {
+  // TODO(bugs.webrtc.org/11993): Expect to be called on the network thread or
+  // remove test method and |associated_send_stream_| variable.
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return associated_send_stream_;
 }
