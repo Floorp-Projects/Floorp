@@ -335,6 +335,7 @@ if (rtc_include_tests) {
       "../test:test_support",
     ]
   }
+
   rtc_library("video_quality_test") {
     testonly = true
 

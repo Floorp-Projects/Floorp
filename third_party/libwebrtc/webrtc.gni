@@ -489,6 +489,21 @@ template("rtc_test") {
         xctest_module_target = "//base/test:google_test_runner"
       }
     }
+
+    # If absl_deps is [], no action is needed. If not [], then it needs to be
+    # converted to //third_party/abseil-cpp:absl when build_with_chromium=true
+    # otherwise it just needs to be added to deps.
+    if (defined(absl_deps) && absl_deps != []) {
+      if (!defined(deps)) {
+        deps = []
+      }
+      if (build_with_chromium) {
+        deps += [ "//third_party/abseil-cpp:absl" ]
+      } else {
+        deps += absl_deps
+      }
+    }
+
     if (using_sanitizer) {
       if (is_linux) {
         if (!defined(invoker.data)) {
