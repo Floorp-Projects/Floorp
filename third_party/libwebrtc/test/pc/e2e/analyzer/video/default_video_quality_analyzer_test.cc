@@ -100,7 +100,7 @@ std::string ToString(const std::vector<StatsSample>& values) {
 }
 
 void FakeCPULoad() {
-  std::vector<int> temp(100000);
+  std::vector<int> temp(1000000);
   for (size_t i = 0; i < temp.size(); ++i) {
     temp[i] = rand();
   }
