@@ -24,7 +24,7 @@ enum {
   JOF_ARGC = 10,        /* uint16_t argument count */
   JOF_QARG = 11,        /* function argument index */
   JOF_LOCAL = 12,       /* var or block-local variable */
-  JOF_RESUMEINDEX = 13, /* yield, await, or retsub resume index */
+  JOF_RESUMEINDEX = 13, /* yield or await resume index */
   JOF_DOUBLE = 14,      /* inline DoubleValue */
   JOF_GCTHING = 15,     /* uint32_t generic gc-thing index */
   JOF_ATOM = 16,        /* uint32_t constant index */

@@ -1509,7 +1509,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::GetAliasedDebugVar:
     case JSOp::GetAliasedVar:
     case JSOp::Uint24:
-    case JSOp::ResumeIndex:
     case JSOp::Int32:
     case JSOp::LoopHead:
     case JSOp::GetElem:
@@ -1588,7 +1587,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::AsyncResolve:
     case JSOp::Finally:
     case JSOp::GetRval:
-    case JSOp::Retsub:
     case JSOp::ThrowMsg:
     case JSOp::ForceInterpreter:
 #ifdef ENABLE_RECORD_TUPLE
