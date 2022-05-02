@@ -138,7 +138,7 @@ function Saved(props) {
               </Button>
             </h3>
             {savedStory && (
-              <ArticleList articles={[savedStory]} savedArticle={true} />
+              <ArticleList articles={[savedStory]} openInPocketReader={true} />
             )}
             <TagPicker tags={[]} itemUrl={itemUrl} />
             {similarRecs?.length && locale?.startsWith("en") && (
