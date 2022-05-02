@@ -173,7 +173,6 @@ std::string BaseChannel::ToString() const {
 }
 
 bool BaseChannel::ConnectToRtpTransport() {
-  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK(rtp_transport_);
   if (!RegisterRtpDemuxerSink_n()) {
     RTC_LOG(LS_ERROR) << "Failed to set up demuxing for " << ToString();
@@ -191,7 +190,6 @@ bool BaseChannel::ConnectToRtpTransport() {
 }
 
 void BaseChannel::DisconnectFromRtpTransport() {
-  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK(rtp_transport_);
   rtp_transport_->UnregisterRtpDemuxerSink(this);
   rtp_transport_->SignalReadyToSend.disconnect(this);
@@ -286,6 +284,7 @@ bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
                                   std::string* error_desc) {
   TRACE_EVENT0("webrtc", "BaseChannel::SetLocalContent");
   return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
+    RTC_DCHECK_RUN_ON(worker_thread());
     return SetLocalContent_w(content, type, error_desc);
   });
 }
@@ -295,6 +294,7 @@ bool BaseChannel::SetRemoteContent(const MediaContentDescription* content,
                                    std::string* error_desc) {
   TRACE_EVENT0("webrtc", "BaseChannel::SetRemoteContent");
   return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
+    RTC_DCHECK_RUN_ON(worker_thread());
     return SetRemoteContent_w(content, type, error_desc);
   });
 }
@@ -535,7 +535,6 @@ bool BaseChannel::RegisterRtpDemuxerSink_n() {
 }
 
 void BaseChannel::EnableMedia_w() {
-  RTC_DCHECK(worker_thread_ == rtc::Thread::Current());
   if (enabled_)
     return;
 
@@ -545,7 +544,6 @@ void BaseChannel::EnableMedia_w() {
 }
 
 void BaseChannel::DisableMedia_w() {
-  RTC_DCHECK(worker_thread_ == rtc::Thread::Current());
   if (!enabled_)
     return;
 
@@ -599,7 +597,6 @@ bool BaseChannel::RemoveRecvStream_w(uint32_t ssrc) {
 }
 
 void BaseChannel::ResetUnsignaledRecvStream_w() {
-  RTC_DCHECK(worker_thread() == rtc::Thread::Current());
   media_channel()->ResetUnsignaledRecvStream();
 }
 
@@ -850,7 +847,6 @@ void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
 void BaseChannel::SetNegotiatedHeaderExtensions_w(
     const RtpHeaderExtensions& extensions) {
   TRACE_EVENT0("webrtc", __func__);
-  RTC_DCHECK_RUN_ON(worker_thread());
   webrtc::MutexLock lock(&negotiated_header_extensions_lock_);
   negotiated_header_extensions_ = extensions;
 }
