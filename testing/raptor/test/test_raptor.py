@@ -314,9 +314,9 @@ def test_browsertime_arguments(
 @pytest.mark.parametrize(
     "timeout, expected_timeout, test_patch, options_patch",
     [
-        [0, 20, {}, {}],
-        [0, 20, {}, {"gecko_profile": False}],
-        [1000, 321, {}, {"gecko_profile": True}],
+        [0, 80, {}, {}],
+        [0, 80, {}, {"gecko_profile": False}],
+        [1000, 381, {}, {"gecko_profile": True}],
     ],
 )
 def test_compute_process_timeout(

@@ -269,6 +269,7 @@ def add_extra_options(config, tests):
 
         if test["raptor"].pop("run-visual-metrics", False):
             extra_options.append("--browsertime-video")
+            extra_options.append("--browsertime-visualmetrics")
             test["attributes"]["run-visual-metrics"] = True
 
         if "app" in test:

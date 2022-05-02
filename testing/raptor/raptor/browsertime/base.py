@@ -344,6 +344,14 @@ class Browsertime(Perftest):
                     "true",
                     "--visualMetrics",
                     "true" if self.browsertime_visualmetrics else "false",
+                    "--visualMetricsContentful",
+                    "true",
+                    "--visualMetricsPerceptual",
+                    "true",
+                    "--visualMetricsPortable",
+                    "true",
+                    "--videoParams.keepOriginalVideo",
+                    "true",
                 ]
             )
 
@@ -474,6 +482,15 @@ class Browsertime(Perftest):
         # to be injected/invoked, and for exceptions to bubble up; be generous
         bt_timeout += 20
 
+        # When we produce videos, sometimes FFMPEG can take time to process
+        # large folders of JPEG files into an MP4 file
+        if self.browsertime_video:
+            bt_timeout += 30
+
+        # Visual metrics processing takes another extra 30 seconds
+        if self.browsertime_visualmetrics:
+            bt_timeout += 30
+
         # browsertime also handles restarting the browser/running all of the browser cycles;
         # so we need to multiply our bt_timeout by the number of browser cycles
         bt_timeout = bt_timeout * int(test.get("browser_cycles", 1))
@@ -505,6 +522,7 @@ class Browsertime(Perftest):
         # browsertime requires ffmpeg on the PATH for `--video=true`.
         # It's easier to configure the PATH here than at the TC level.
         env = dict(os.environ)
+        env["PYTHON"] = sys.executable
         if self.browsertime_video and self.browsertime_ffmpeg:
             ffmpeg_dir = os.path.dirname(os.path.abspath(self.browsertime_ffmpeg))
             old_path = env.setdefault("PATH", "")
@@ -555,40 +573,24 @@ class Browsertime(Perftest):
                 else:
                     LOG.info(msg)
 
-            if self.browsertime_visualmetrics and self.run_local:
-                # Check if visual metrics is installed correctly before running the test
-                self.vismet_failed = False
-
-                def _vismet_line_handler(line):
-                    line = line.decode("utf-8")
-                    LOG.info(line)
-                    if "FAIL" in line:
-                        self.vismet_failed = True
-
-                proc = self.process_handler(
-                    [sys.executable, self.browsertime_vismet_script, "--check"],
-                    processOutputLine=_vismet_line_handler,
-                    env=env,
-                )
-                proc.run()
-                proc.wait()
-
-                if self.vismet_failed:
-                    raise Exception(
-                        "Browsertime visual metrics dependencies were not "
-                        "installed correctly. Try removing the virtual environment at "
-                        "%s before running your command again."
-                        % os.environ["VIRTUAL_ENV"]
-                    )
+            proc_timeout = self._compute_process_timeout(test, timeout)
+            output_timeout = BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT
+            if self.benchmark:
+                output_timeout = BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
 
             proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)
-            proc.run(
-                timeout=self._compute_process_timeout(test, timeout),
-                outputTimeout=BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
-                if self.benchmark
-                else BROWSERTIME_PAGELOAD_OUTPUT_TIMEOUT,
-            )
+            proc.run(timeout=proc_timeout, outputTimeout=output_timeout)
             proc.wait()
+
+            if proc.outputTimedOut:
+                raise Exception(
+                    f"Browsertime process timed out after waiting {output_timeout} seconds "
+                    "for output"
+                )
+            if proc.timedOut:
+                raise Exception(
+                    f"Browsertime process timed out after {proc_timeout} seconds"
+                )
 
             if self.browsertime_failure:
                 raise Exception(self.browsertime_failure)

@@ -102,6 +102,7 @@ class Perftest(object):
         environment={},
         project="mozilla-central",
         verbose=False,
+        python=None,
         **kwargs
     ):
         self._remote_test_root = None
