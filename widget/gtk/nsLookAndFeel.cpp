@@ -1271,11 +1271,20 @@ void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   }
 
   if (mSystemTheme.mIsDark == GetThemeIsDark()) {
-    // If the theme still didn't change enough, fall back to either Adwaita or
-    // Adwaita-dark.
-    g_object_set(settings, "gtk-theme-name",
-                 mSystemTheme.mIsDark ? "Adwaita" : "Adwaita-dark", nullptr);
+    // If the theme still didn't change enough, fall back to Adwaita with the
+    // appropriate color preference.
+    g_object_set(settings, "gtk-theme-name", "Adwaita",
+                 "gtk-application-prefer-dark-theme", !mSystemTheme.mIsDark,
+                 nullptr);
     moz_gtk_refresh();
+
+    // If it _still_ didn't change enough, and we're dark, try to set
+    // Adwaita-dark as a theme name. This might be needed in older GTK versions.
+    if (!mSystemTheme.mIsDark && !GetThemeIsDark()) {
+      g_object_set(settings, "gtk-theme-name", "Adwaita-dark", nullptr);
+      moz_gtk_refresh();
+    }
+
     fellBackToDefaultTheme = true;
   }
 
