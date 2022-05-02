@@ -4,8 +4,6 @@
 
 include protocol PBackground;
 include protocol PFileDescriptorSet;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
 include IPCStream;
 
 using struct nsID from "nsID.h";
