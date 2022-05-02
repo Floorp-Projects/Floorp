@@ -1,7 +1,9 @@
 SimpleTest.waitForExplicitFinish();
 
 // The main testing function.
-var test = function(isContent) {
+var test = async function(isContent) {
+  await SpecialPowers.contentTransformsReceived(window);
+
   // Each definition is [eventType, prefSetting]
   // Where we are setting the "privacy.resistFingerprinting" pref.
   let eventDefs = [
