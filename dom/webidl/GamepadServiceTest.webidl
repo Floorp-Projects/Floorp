@@ -12,7 +12,7 @@ interface GamepadServiceTest
   readonly attribute GamepadHand leftHand;
   readonly attribute GamepadHand rightHand;
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> addGamepad(DOMString id,
                                     GamepadMappingType mapping,
                                     GamepadHand hand,
@@ -22,27 +22,27 @@ interface GamepadServiceTest
                                     unsigned long numLightIndicator,
                                     unsigned long numTouchEvents);
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> removeGamepad(unsigned long index);
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> newButtonEvent(unsigned long index,
                       unsigned long button,
                       boolean pressed,
                       boolean touched);
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> newButtonValueEvent(unsigned long index,
                            unsigned long button,
                            boolean pressed,
                            boolean touched,
                            double value);
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> newAxisMoveEvent(unsigned long index,
                         unsigned long axis,
                         double value);
-  [Throws]
+  [NewObject]
   Promise<unsigned long> newPoseMove(unsigned long index,
                    Float32Array? orient,
                    Float32Array? pos,
@@ -51,7 +51,7 @@ interface GamepadServiceTest
                    Float32Array? linVelocity,
                    Float32Array? linAcceleration);
 
-  [Throws]
+  [NewObject]
   Promise<unsigned long> newTouch(unsigned long index, unsigned long aTouchArrayIndex,
                 unsigned long touchId, octet surfaceId,
                 Float32Array position, Float32Array? surfaceDimension);

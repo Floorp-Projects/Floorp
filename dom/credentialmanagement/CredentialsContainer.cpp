@@ -111,7 +111,7 @@ already_AddRefed<Promise> CredentialsContainer::Get(
   }
 
   EnsureWebAuthnManager();
-  return mManager->GetAssertion(aOptions.mPublicKey, aOptions.mSignal);
+  return mManager->GetAssertion(aOptions.mPublicKey, aOptions.mSignal, aRv);
 }
 
 already_AddRefed<Promise> CredentialsContainer::Create(
@@ -121,7 +121,7 @@ already_AddRefed<Promise> CredentialsContainer::Create(
   }
 
   EnsureWebAuthnManager();
-  return mManager->MakeCredential(aOptions.mPublicKey, aOptions.mSignal);
+  return mManager->MakeCredential(aOptions.mPublicKey, aOptions.mSignal, aRv);
 }
 
 already_AddRefed<Promise> CredentialsContainer::Store(
@@ -131,7 +131,7 @@ already_AddRefed<Promise> CredentialsContainer::Store(
   }
 
   EnsureWebAuthnManager();
-  return mManager->Store(aCredential);
+  return mManager->Store(aCredential, aRv);
 }
 
 already_AddRefed<Promise> CredentialsContainer::PreventSilentAccess(

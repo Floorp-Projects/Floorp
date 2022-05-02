@@ -11,7 +11,7 @@
 [Pref="dom.vr.webxr.enabled", SecureContext, Exposed=Window]
 interface XRSystem : EventTarget {
   // Methods
-  [Throws]
+  [NewObject]
   Promise<boolean> isSessionSupported(XRSessionMode mode);
   [NewObject, NeedsCallerType]
   Promise<XRSession> requestSession(XRSessionMode mode, optional XRSessionInit options = {});
@@ -55,7 +55,7 @@ interface XRSession : EventTarget {
   [Throws]
   void cancelAnimationFrame(long handle);
 
-  [Throws]
+  [NewObject]
   Promise<void> end();
 
   // Events

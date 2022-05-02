@@ -29,7 +29,7 @@ interface BaseAudioContext : EventTarget {
     [Throws, SameObject, SecureContext, Pref="dom.audioworklet.enabled"]
     readonly        attribute AudioWorklet         audioWorklet;
 
-    [Throws]
+    [NewObject]
     Promise<void> resume();
 
                     attribute EventHandler         onstatechange;
@@ -39,7 +39,7 @@ interface BaseAudioContext : EventTarget {
                                          unsigned long length,
                                          float sampleRate);
 
-    [Throws]
+    [NewObject]
     Promise<AudioBuffer> decodeAudioData(ArrayBuffer audioData,
                                          optional DecodeSuccessCallback successCallback,
                                          optional DecodeErrorCallback errorCallback);

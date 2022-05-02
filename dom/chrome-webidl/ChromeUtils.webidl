@@ -481,7 +481,7 @@ partial namespace ChromeUtils {
   /**
    * Request performance metrics to the current process & all content processes.
    */
-  [Throws]
+  [NewObject]
   Promise<sequence<PerformanceInfoDictionary>> requestPerformanceMetrics();
 
   /**
@@ -498,19 +498,19 @@ partial namespace ChromeUtils {
    * Collect results of detailed performance timing information.
    * The output is a JSON string containing performance timings.
    */
-  [Throws]
+  [NewObject]
   Promise<DOMString> collectPerfStats();
 
   /**
   * Returns a Promise containing a sequence of I/O activities
   */
-  [Throws]
+  [NewObject]
   Promise<sequence<IOActivityDataDictionary>> requestIOActivity();
 
   /**
   * Returns a Promise containing all processes info
   */
-  [Throws]
+  [NewObject]
   Promise<ParentProcInfoDictionary> requestProcInfo();
 
   /**
@@ -602,7 +602,7 @@ partial namespace ChromeUtils {
    *
    * Valid keys: "Scrolling"
    */
-  [Throws]
+  [NewObject]
   Promise<InteractionData> collectScrollingData();
 
   [Throws]

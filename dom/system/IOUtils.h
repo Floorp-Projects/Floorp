@@ -62,74 +62,88 @@ class IOUtils final {
 
   static already_AddRefed<Promise> Read(GlobalObject& aGlobal,
                                         const nsAString& aPath,
-                                        const ReadOptions& aOptions);
+                                        const ReadOptions& aOptions,
+                                        ErrorResult& aError);
 
   static already_AddRefed<Promise> ReadUTF8(GlobalObject& aGlobal,
                                             const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions);
+                                            const ReadUTF8Options& aOptions,
+                                            ErrorResult& aError);
 
   static already_AddRefed<Promise> ReadJSON(GlobalObject& aGlobal,
                                             const nsAString& aPath,
-                                            const ReadUTF8Options& aOptions);
+                                            const ReadUTF8Options& aOptions,
+                                            ErrorResult& aError);
 
   static already_AddRefed<Promise> Write(GlobalObject& aGlobal,
                                          const nsAString& aPath,
                                          const Uint8Array& aData,
-                                         const WriteOptions& aOptions);
+                                         const WriteOptions& aOptions,
+                                         ErrorResult& aError);
 
   static already_AddRefed<Promise> WriteUTF8(GlobalObject& aGlobal,
                                              const nsAString& aPath,
                                              const nsACString& aString,
-                                             const WriteOptions& aOptions);
+                                             const WriteOptions& aOptions,
+                                             ErrorResult& aError);
 
   static already_AddRefed<Promise> WriteJSON(GlobalObject& aGlobal,
                                              const nsAString& aPath,
                                              JS::Handle<JS::Value> aValue,
-                                             const WriteOptions& aOptions);
+                                             const WriteOptions& aOptions,
+                                             ErrorResult& aError);
 
   static already_AddRefed<Promise> Move(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
-                                        const MoveOptions& aOptions);
+                                        const MoveOptions& aOptions,
+                                        ErrorResult& aError);
 
   static already_AddRefed<Promise> Remove(GlobalObject& aGlobal,
                                           const nsAString& aPath,
-                                          const RemoveOptions& aOptions);
+                                          const RemoveOptions& aOptions,
+                                          ErrorResult& aError);
 
   static already_AddRefed<Promise> MakeDirectory(
       GlobalObject& aGlobal, const nsAString& aPath,
-      const MakeDirectoryOptions& aOptions);
+      const MakeDirectoryOptions& aOptions, ErrorResult& aError);
 
   static already_AddRefed<Promise> Stat(GlobalObject& aGlobal,
-                                        const nsAString& aPath);
+                                        const nsAString& aPath,
+                                        ErrorResult& aError);
 
   static already_AddRefed<Promise> Copy(GlobalObject& aGlobal,
                                         const nsAString& aSourcePath,
                                         const nsAString& aDestPath,
-                                        const CopyOptions& aOptions);
+                                        const CopyOptions& aOptions,
+                                        ErrorResult& aError);
 
   static already_AddRefed<Promise> SetModificationTime(
       GlobalObject& aGlobal, const nsAString& aPath,
-      const Optional<int64_t>& aModification);
+      const Optional<int64_t>& aModification, ErrorResult& aError);
 
   static already_AddRefed<Promise> GetChildren(
       GlobalObject& aGlobal, const nsAString& aPath,
-      const GetChildrenOptions& aOptions);
+      const GetChildrenOptions& aOptions, ErrorResult& aError);
 
   static already_AddRefed<Promise> SetPermissions(GlobalObject& aGlobal,
                                                   const nsAString& aPath,
                                                   uint32_t aPermissions,
-                                                  const bool aHonorUmask);
+                                                  const bool aHonorUmask,
+                                                  ErrorResult& aError);
 
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
-                                          const nsAString& aPath);
+                                          const nsAString& aPath,
+                                          ErrorResult& aError);
 
-  static already_AddRefed<Promise> CreateUniqueFile(
-      GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
-      const uint32_t aPermissions);
+  static already_AddRefed<Promise> CreateUniqueFile(GlobalObject& aGlobal,
+                                                    const nsAString& aParent,
+                                                    const nsAString& aPrefix,
+                                                    const uint32_t aPermissions,
+                                                    ErrorResult& aError);
   static already_AddRefed<Promise> CreateUniqueDirectory(
       GlobalObject& aGlobal, const nsAString& aParent, const nsAString& aPrefix,
-      const uint32_t aPermissions);
+      const uint32_t aPermissions, ErrorResult& aError);
 
  private:
   /**
@@ -139,30 +153,36 @@ class IOUtils final {
                                                 const nsAString& aParent,
                                                 const nsAString& aPrefix,
                                                 const uint32_t aFileType,
-                                                const uint32_t aPermissions);
+                                                const uint32_t aPermissions,
+                                                ErrorResult& aError);
 
  public:
 #if defined(XP_WIN)
   static already_AddRefed<Promise> GetWindowsAttributes(GlobalObject& aGlobal,
-                                                        const nsAString& aPath);
+                                                        const nsAString& aPath,
+                                                        ErrorResult& aError);
 
   static already_AddRefed<Promise> SetWindowsAttributes(
       GlobalObject& aGlobal, const nsAString& aPath,
-      const mozilla::dom::WindowsFileAttributes& aAttrs);
+      const mozilla::dom::WindowsFileAttributes& aAttrs, ErrorResult& aError);
 #elif defined(XP_MACOSX)
   static already_AddRefed<Promise> HasMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError);
   static already_AddRefed<Promise> GetMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError);
   static already_AddRefed<Promise> SetMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
                                                const nsACString& aAttr,
-                                               const Uint8Array& aValue);
+                                               const Uint8Array& aValue,
+                                               ErrorResult& aError);
   static already_AddRefed<Promise> DelMacXAttr(GlobalObject& aGlobal,
                                                const nsAString& aPath,
-                                               const nsACString& aAttr);
+                                               const nsACString& aAttr,
+                                               ErrorResult& aError);
 #endif
 
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
@@ -201,6 +221,7 @@ class IOUtils final {
 
   template <typename Fn>
   static already_AddRefed<Promise> WithPromiseAndState(GlobalObject& aGlobal,
+                                                       ErrorResult& aError,
                                                        Fn aFn);
 
   /**
@@ -223,7 +244,8 @@ class IOUtils final {
    *
    * @return The new promise, or |nullptr| on failure.
    */
-  static already_AddRefed<Promise> CreateJSPromise(GlobalObject& aGlobal);
+  static already_AddRefed<Promise> CreateJSPromise(GlobalObject& aGlobal,
+                                                   ErrorResult& aError);
 
   // Allow conversion of |InternalFileInfo| with |ToJSValue|.
   friend bool ToJSValue(JSContext* aCx,

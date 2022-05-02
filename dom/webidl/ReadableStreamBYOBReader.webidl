@@ -12,7 +12,7 @@ interface ReadableStreamBYOBReader {
   [Throws]
   constructor(ReadableStream stream);
 
-  [Throws]
+  [NewObject]
   Promise<ReadableStreamReadResult> read(ArrayBufferView view);
 
   [Throws]

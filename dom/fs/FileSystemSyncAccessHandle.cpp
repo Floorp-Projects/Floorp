@@ -45,11 +45,10 @@ uint64_t FileSystemSyncAccessHandle::Write(
   return 0;
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(uint64_t aSize) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(
+    uint64_t aSize, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -58,11 +57,10 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Truncate(uint64_t aSize) {
   return promise.forget();
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -71,11 +69,10 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::GetSize() {
   return promise.forget();
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -84,11 +81,10 @@ already_AddRefed<Promise> FileSystemSyncAccessHandle::Flush() {
   return promise.forget();
 }
 
-already_AddRefed<Promise> FileSystemSyncAccessHandle::Close() {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FileSystemSyncAccessHandle::Close(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

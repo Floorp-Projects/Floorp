@@ -26,11 +26,10 @@ JSObject* FileSystemWritableFileStream::WrapObject(
 // WebIDL Interface
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Write(
-    const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    const ArrayBufferViewOrArrayBufferOrBlobOrUSVStringOrWriteParams& aData,
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -40,11 +39,9 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
-    uint64_t aPosition) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    uint64_t aPosition, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -54,11 +51,9 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Seek(
 }
 
 already_AddRefed<Promise> FileSystemWritableFileStream::Truncate(
-    uint64_t aSize) {
-  IgnoredErrorResult rv;
-
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
-  if (rv.Failed()) {
+    uint64_t aSize, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

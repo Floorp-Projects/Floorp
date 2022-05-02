@@ -9,7 +9,11 @@
 
 #include "mozilla/dom/FileSystemHandle.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
 
 class FileSystemDirectoryIterator;
 struct FileSystemGetFileOptions;
@@ -36,20 +40,25 @@ class FileSystemDirectoryHandle final : public FileSystemHandle {
   [[nodiscard]] already_AddRefed<FileSystemDirectoryIterator> Values();
 
   already_AddRefed<Promise> GetFileHandle(
-      const nsAString& aName, const FileSystemGetFileOptions& aOptions);
+      const nsAString& aName, const FileSystemGetFileOptions& aOptions,
+      ErrorResult& aError);
 
   already_AddRefed<Promise> GetDirectoryHandle(
-      const nsAString& aName, const FileSystemGetDirectoryOptions& aOptions);
+      const nsAString& aName, const FileSystemGetDirectoryOptions& aOptions,
+      ErrorResult& aError);
 
-  already_AddRefed<Promise> RemoveEntry(
-      const nsAString& aName, const FileSystemRemoveOptions& aOptions);
+  already_AddRefed<Promise> RemoveEntry(const nsAString& aName,
+                                        const FileSystemRemoveOptions& aOptions,
+                                        ErrorResult& aError);
 
-  already_AddRefed<Promise> Resolve(FileSystemHandle& aPossibleDescendant);
+  already_AddRefed<Promise> Resolve(FileSystemHandle& aPossibleDescendant,
+                                    ErrorResult& aError);
 
  private:
   ~FileSystemDirectoryHandle() = default;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // DOM_FS_FILESYSTEMDIRECTORYHANDLE_H_

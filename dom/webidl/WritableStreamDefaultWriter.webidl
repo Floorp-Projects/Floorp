@@ -19,12 +19,12 @@ interface WritableStreamDefaultWriter {
   [Throws]
   Promise<void> abort(optional any reason);
 
-  [Throws]
+  [NewObject]
   Promise<void> close();
 
   [Throws]
   void releaseLock();
 
-  [Throws]
+  [NewObject]
   Promise<void> write(optional any chunk);
 };

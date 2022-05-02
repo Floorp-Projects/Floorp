@@ -113,6 +113,7 @@ interface PeerConnectionImpl  {
     unsigned short maxTime, unsigned short maxNum,
     boolean externalNegotiated, unsigned short stream);
 
+  [Throws]
   Promise<any> chain(ChainedOperation op);
   void updateNegotiationNeeded(); 
 

@@ -597,8 +597,7 @@ class ConfigureCodec {
                           mSoftwareH264Enabled);
     Telemetry::Accumulate(Telemetry::WEBRTC_HARDWARE_H264_ENABLED,
                           mHardwareH264Enabled);
-    Telemetry::Accumulate(Telemetry::WEBRTC_H264_ENABLED,
-                          mH264Enabled);
+    Telemetry::Accumulate(Telemetry::WEBRTC_H264_ENABLED, mH264Enabled);
 
     branch->GetIntPref("media.navigator.video.h264.level", &mH264Level);
     mH264Level &= 0xFF;
@@ -1112,13 +1111,17 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(PeerConnectionImpl::Operation)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(PeerConnectionImpl::Operation)
 
-PeerConnectionImpl::Operation::Operation(PeerConnectionImpl* aPc)
-    : mPromise(aPc->MakePromise()), mPc(aPc) {}
+PeerConnectionImpl::Operation::Operation(PeerConnectionImpl* aPc,
+                                         ErrorResult& aError)
+    : mPromise(aPc->MakePromise(aError)), mPc(aPc) {}
 
 PeerConnectionImpl::Operation::~Operation() = default;
 
-void PeerConnectionImpl::Operation::Call() {
-  RefPtr<dom::Promise> opPromise = CallImpl();
+void PeerConnectionImpl::Operation::Call(ErrorResult& aError) {
+  RefPtr<dom::Promise> opPromise = CallImpl(aError);
+  if (aError.Failed()) {
+    return;
+  }
   // Upon fulfillment or rejection of the promise returned by the operation,
   // run the following steps:
   // (NOTE: mPromise is p from https://w3c.github.io/webrtc-pc/#dfn-chain,
@@ -1138,7 +1141,7 @@ void PeerConnectionImpl::Operation::ResolvedCallback(
     // steps:
     // (Static analysis forces us to use a temporary)
     RefPtr<PeerConnectionImpl> pc = mPc;
-    pc->RunNextOperation();
+    pc->RunNextOperation(aRv);
   }
 }
 
@@ -1154,7 +1157,7 @@ void PeerConnectionImpl::Operation::RejectedCallback(
     // steps:
     // (Static analysis forces us to use a temporary)
     RefPtr<PeerConnectionImpl> pc = mPc;
-    pc->RunNextOperation();
+    pc->RunNextOperation(aRv);
   }
 }
 
@@ -1170,21 +1173,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PeerConnectionImpl::JSOperation)
 NS_INTERFACE_MAP_END_INHERITING(PeerConnectionImpl::Operation)
 
 PeerConnectionImpl::JSOperation::JSOperation(PeerConnectionImpl* aPc,
-                                             dom::ChainedOperation& aOp)
-    : Operation(aPc), mOperation(&aOp) {}
+                                             dom::ChainedOperation& aOp,
+                                             ErrorResult& aError)
+    : Operation(aPc, aError), mOperation(&aOp) {}
 
-RefPtr<dom::Promise> PeerConnectionImpl::JSOperation::CallImpl() {
+RefPtr<dom::Promise> PeerConnectionImpl::JSOperation::CallImpl(
+    ErrorResult& aError) {
   // Static analysis will not let us call this without a temporary :(
   RefPtr<dom::ChainedOperation> op = mOperation;
-  return op->Call();
+  return op->Call(aError);
 }
 
 already_AddRefed<dom::Promise> PeerConnectionImpl::Chain(
-    dom::ChainedOperation& aOperation) {
+    dom::ChainedOperation& aOperation, ErrorResult& aError) {
   MOZ_RELEASE_ASSERT(!mChainingOperation);
   mChainingOperation = true;
-  RefPtr<Operation> operation = new JSOperation(this, aOperation);
-  RefPtr<Promise> promise = Chain(operation);
+  RefPtr<Operation> operation = new JSOperation(this, aOperation, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+  RefPtr<Promise> promise = Chain(operation, aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
   mChainingOperation = false;
   return promise.forget();
 }
@@ -1194,12 +1205,15 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::Chain(
 // run _immediately_ (without any Promise.Then!) if the operations chain is
 // empty.
 already_AddRefed<dom::Promise> PeerConnectionImpl::Chain(
-    const RefPtr<Operation>& aOperation) {
+    const RefPtr<Operation>& aOperation, ErrorResult& aError) {
   // If connection.[[IsClosed]] is true, return a promise rejected with a newly
   // created InvalidStateError.
   if (IsClosed()) {
     CSFLogDebug(LOGTAG, "%s:%d: Peer connection is closed", __FILE__, __LINE__);
-    RefPtr<dom::Promise> error = MakePromise();
+    RefPtr<dom::Promise> error = MakePromise(aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
     error->MaybeRejectWithInvalidStateError("Peer connection is closed");
     return error.forget();
   }
@@ -1209,14 +1223,17 @@ already_AddRefed<dom::Promise> PeerConnectionImpl::Chain(
 
   // If the length of [[Operations]] is exactly 1, execute operation.
   if (mOperations.Length() == 1) {
-    aOperation->Call();
+    aOperation->Call(aError);
+    if (aError.Failed()) {
+      return nullptr;
+    }
   }
 
   // This is the promise p from https://w3c.github.io/webrtc-pc/#dfn-chain
   return do_AddRef(aOperation->GetPromise());
 }
 
-void PeerConnectionImpl::RunNextOperation() {
+void PeerConnectionImpl::RunNextOperation(ErrorResult& aError) {
   // If connection.[[IsClosed]] is true, abort these steps.
   if (IsClosed()) {
     return;
@@ -1230,7 +1247,7 @@ void PeerConnectionImpl::RunNextOperation() {
   if (mOperations.Length()) {
     // Cannot call without a temporary :(
     RefPtr<Operation> op = mOperations[0];
-    op->Call();
+    op->Call(aError);
     return;
   }
 
@@ -1246,14 +1263,10 @@ void PeerConnectionImpl::RunNextOperation() {
   UpdateNegotiationNeeded();
 }
 
-already_AddRefed<dom::Promise> PeerConnectionImpl::MakePromise() const {
+already_AddRefed<dom::Promise> PeerConnectionImpl::MakePromise(
+    ErrorResult& aError) const {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
-  ErrorResult rv;
-  RefPtr<dom::Promise> result = dom::Promise::Create(global, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.StealNSResult();
-  }
-  return result.forget();
+  return dom::Promise::Create(global, aError);
 }
 
 void PeerConnectionImpl::UpdateNegotiationNeeded() {

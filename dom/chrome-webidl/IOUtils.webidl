@@ -33,6 +33,7 @@ namespace IOUtils {
    * @return Resolves with an array of unsigned byte values read from disk,
    *         otherwise rejects with a DOMException.
    */
+  [NewObject]
   Promise<Uint8Array> read(DOMString path, optional ReadOptions opts = {});
   /**
    * Reads the UTF-8 text file located at |path| and returns the decoded
@@ -45,6 +46,7 @@ namespace IOUtils {
    * @return Resolves with the file contents encoded as a string, otherwise
    *         rejects with a DOMException.
    */
+  [NewObject]
   Promise<UTF8String> readUTF8(DOMString path, optional ReadUTF8Options opts = {});
   /**
    * Read the UTF-8 text file located at |path| and return the contents
@@ -56,6 +58,7 @@ namespace IOUtils {
    *
    * @return Resolves with the contents of the file parsed as JSON.
    */
+  [NewObject]
   Promise<any> readJSON(DOMString path, optional ReadUTF8Options opts = {});
   /**
    * Attempts to safely write |data| to a file at |path|.
@@ -74,6 +77,7 @@ namespace IOUtils {
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
+  [NewObject]
   Promise<unsigned long long> write(DOMString path, Uint8Array data, optional WriteOptions options = {});
   /**
    * Attempts to encode |string| to UTF-8, then safely write the result to a
@@ -86,6 +90,7 @@ namespace IOUtils {
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
+  [NewObject]
   Promise<unsigned long long> writeUTF8(DOMString path, UTF8String string, optional WriteOptions options = {});
   /**
    * Attempts to serialize |value| into a JSON string and encode it as into a
@@ -99,6 +104,7 @@ namespace IOUtils {
    * @return Resolves with the number of bytes successfully written to the file,
    *         otherwise rejects with a DOMException.
    */
+  [NewObject]
   Promise<unsigned long long> writeJSON(DOMString path, any value, optional WriteOptions options = {});
   /**
    * Moves the file from |sourcePath| to |destPath|, creating necessary parents.
@@ -113,6 +119,7 @@ namespace IOUtils {
    * @return Resolves if the file is moved successfully, otherwise rejects with
    *         a DOMException.
    */
+  [NewObject]
   Promise<void> move(DOMString sourcePath, DOMString destPath, optional MoveOptions options = {});
   /**
    * Removes a file or directory at |path| according to |options|.
@@ -123,6 +130,7 @@ namespace IOUtils {
    * @return Resolves if the file is removed successfully, otherwise rejects
    *         with a DOMException.
    */
+  [NewObject]
   Promise<void> remove(DOMString path, optional RemoveOptions options = {});
   /**
    * Creates a new directory at |path| according to |options|.
@@ -132,6 +140,7 @@ namespace IOUtils {
    * @return Resolves if the directory is created successfully, otherwise
    *         rejects with a DOMException.
    */
+  [NewObject]
   Promise<void> makeDirectory(DOMString path, optional MakeDirectoryOptions options = {});
   /**
    * Obtains information about a file, such as size, modification dates, etc.
@@ -144,6 +153,7 @@ namespace IOUtils {
    *
    * @see FileInfo
    */
+  [NewObject]
   Promise<FileInfo> stat(DOMString path);
   /**
    * Copies a file or directory from |sourcePath| to |destPath| according to
@@ -157,6 +167,7 @@ namespace IOUtils {
    * @return Resolves if the file was copied successfully, otherwise rejects
    *         with a DOMException.
    */
+  [NewObject]
   Promise<void> copy(DOMString sourcePath, DOMString destPath, optional CopyOptions options = {});
   /**
    * Updates the |modification| time for the file at |path|.
@@ -173,6 +184,7 @@ namespace IOUtils {
    *         milliseconds since the Unix epoch, otherwise rejects with a
    *         DOMException.
    */
+  [NewObject]
   Promise<long long> setModificationTime(DOMString path, optional long long modification);
   /**
    * Retrieves a (possibly empty) list of immediate children of the directory at
@@ -184,6 +196,7 @@ namespace IOUtils {
    *         children of the directory at |path|, otherwise rejects with a
    *         DOMException.
    */
+  [NewObject]
   Promise<sequence<DOMString>> getChildren(DOMString path, optional GetChildrenOptions options = {});
   /**
    * Set the permissions of the file at |path|.
@@ -204,6 +217,7 @@ namespace IOUtils {
    * @return Resolves if the permissions were set successfully, otherwise
    *         rejects with a DOMException.
    */
+  [NewObject]
   Promise<void> setPermissions(DOMString path, unsigned long permissions, optional boolean honorUmask = true);
   /**
    * Return whether or not the file exists at the given path.
@@ -212,6 +226,7 @@ namespace IOUtils {
    *
    * @return A promise that resolves to whether or not the given file exists.
    */
+  [NewObject]
   Promise<boolean> exists(DOMString path);
 
   /**
@@ -223,6 +238,7 @@ namespace IOUtils {
    *
    * @return A promise that resolves to a unique filename.
    */
+  [NewObject]
   Promise<DOMString> createUniqueFile(DOMString parent, DOMString prefix, optional unsigned long permissions = 0644);
 
   /**
@@ -234,6 +250,7 @@ namespace IOUtils {
    *
    * @return A promise that resolves to a unique directory name.
    */
+  [NewObject]
   Promise<DOMString> createUniqueDirectory(DOMString parent, DOMString prefix, optional unsigned long permissions = 0755);
 
 #if defined(XP_WIN)
@@ -244,6 +261,7 @@ namespace IOUtils {
    *
    * @return A promise that resolves to the Windows-specific file attributes.
    */
+  [NewObject]
   Promise<WindowsFileAttributes> getWindowsAttributes(DOMString path);
 
   /**
@@ -256,6 +274,7 @@ namespace IOUtils {
    *
    * @return A promise that resolves is the attributes were set successfully.
    */
+  [NewObject]
   Promise<void> setWindowsAttributes(DOMString path, optional WindowsFileAttributes attrs = {});
 #elif defined(XP_MACOSX)
   /**
@@ -267,6 +286,7 @@ namespace IOUtils {
    * @return A promise that resolves to whether or not the file has an extended
    *         attribute, or rejects with an error.
    */
+  [NewObject]
   Promise<boolean> hasMacXAttr(DOMString path, UTF8String attr);
   /**
    * Return the value of an extended attribute for a file.
@@ -277,6 +297,7 @@ namespace IOUtils {
    * @return A promise that resolves to the value of the extended attribute, or
    *         rejects with an error.
    */
+  [NewObject]
   Promise<Uint8Array> getMacXAttr(DOMString path, UTF8String attr);
   /**
    * Set the extended attribute on a file.
@@ -288,6 +309,7 @@ namespace IOUtils {
    * @return A promise that resolves to whether or not the file has an extended
    *         attribute, or rejects with an error.
    */
+  [NewObject]
   Promise<void> setMacXAttr(DOMString path, UTF8String attr, Uint8Array value);
   /**
    * Delete the extended attribute on a file.
@@ -298,6 +320,7 @@ namespace IOUtils {
    * @return A promise that resolves if the attribute was deleted, or rejects
    *         with an error.
    */
+  [NewObject]
   Promise<void> delMacXAttr(DOMString path, UTF8String attr);
 #endif
 };

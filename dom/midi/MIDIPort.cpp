@@ -139,7 +139,7 @@ bool MIDIPort::SysexEnabled() const {
   return mPort->SysexEnabled();
 }
 
-already_AddRefed<Promise> MIDIPort::Open() {
+already_AddRefed<Promise> MIDIPort::Open(ErrorResult& aError) {
   LOG("MIDIPort::Open");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
@@ -147,10 +147,9 @@ already_AddRefed<Promise> MIDIPort::Open() {
     p = mOpeningPromise;
     return p.forget();
   }
-  ErrorResult rv;
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
-  p = Promise::Create(go, rv);
-  if (rv.Failed()) {
+  p = Promise::Create(go, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
   mOpeningPromise = p;
@@ -158,7 +157,7 @@ already_AddRefed<Promise> MIDIPort::Open() {
   return p.forget();
 }
 
-already_AddRefed<Promise> MIDIPort::Close() {
+already_AddRefed<Promise> MIDIPort::Close(ErrorResult& aError) {
   LOG("MIDIPort::Close");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
@@ -166,10 +165,9 @@ already_AddRefed<Promise> MIDIPort::Close() {
     p = mClosingPromise;
     return p.forget();
   }
-  ErrorResult rv;
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
-  p = Promise::Create(go, rv);
-  if (rv.Failed()) {
+  p = Promise::Create(go, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
   mClosingPromise = p;
