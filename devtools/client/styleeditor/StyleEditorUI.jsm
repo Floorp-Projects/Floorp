@@ -100,6 +100,7 @@ function StyleEditorUI(toolbox, commands, panelDoc, cssProperties) {
   this._copyUrl = this._copyUrl.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
+  this._onFilterInputChange = this._onFilterInputChange.bind(this);
 
   this._prefObserver = new PrefObserver("devtools.styleeditor.");
   this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
@@ -156,33 +157,79 @@ StyleEditorUI.prototype = {
    * Build the initial UI and wire buttons with event handlers.
    */
   createUI: function() {
-    this._view = new SplitView(this._root);
+    this._filterInput = this._root.querySelector(".devtools-filterinput");
+    this._filterInputClearButton = this._root.querySelector(
+      ".devtools-searchinput-clear"
+    );
 
-    this._root
-      .querySelector(".style-editor-newButton")
-      .addEventListener("click", async () => {
+    this._uiAbortController = new AbortController();
+    const eventListenersConfig = { signal: this._uiAbortController.signal };
+
+    this._view = new SplitView(this._root);
+    this._view.on(
+      "active-summary-cleared",
+      () => {
+        this.selectedEditor = null;
+      },
+      eventListenersConfig
+    );
+    this._view.on(
+      "filter-state-change",
+      data => {
+        this._filterInput
+          .closest(".devtools-searchbox")
+          .classList.toggle("devtools-searchbox-no-match", !!data.allFiltered);
+      },
+      eventListenersConfig
+    );
+
+    this._root.querySelector(".style-editor-newButton").addEventListener(
+      "click",
+      async () => {
         const stylesheetsFront = await this.currentTarget.getFront(
           "stylesheets"
         );
         stylesheetsFront.addStyleSheet(null);
-      });
+        this._clearFilterInput();
+      },
+      eventListenersConfig
+    );
 
-    this._root
-      .querySelector(".style-editor-importButton")
-      .addEventListener("click", () => {
+    this._root.querySelector(".style-editor-importButton").addEventListener(
+      "click",
+      () => {
         this._importFromFile(this._mockImportFile || null, this._window);
-      });
+        this._clearFilterInput();
+      },
+      eventListenersConfig
+    );
 
     this._root
       .querySelector("#style-editor-options")
-      .addEventListener("click", this._onOptionsButtonClick);
+      .addEventListener(
+        "click",
+        this._onOptionsButtonClick,
+        eventListenersConfig
+      );
+
+    this._filterInput.addEventListener(
+      "input",
+      this._onFilterInputChange,
+      eventListenersConfig
+    );
+
+    this._filterInputClearButton.addEventListener(
+      "click",
+      () => this._clearFilterInput(),
+      eventListenersConfig
+    );
 
     this._panelDoc.addEventListener(
       "contextmenu",
       () => {
         this._contextMenuStyleSheet = null;
       },
-      true
+      { ...eventListenersConfig, capture: true }
     );
 
     this._optionsButton = this._panelDoc.getElementById("style-editor-options");
@@ -190,19 +237,39 @@ StyleEditorUI.prototype = {
     this._contextMenu = this._panelDoc.getElementById("sidebar-context");
     this._contextMenu.addEventListener(
       "popupshowing",
-      this._updateContextMenuItems
+      this._updateContextMenuItems,
+      eventListenersConfig
     );
 
     this._openLinkNewTabItem = this._panelDoc.getElementById(
       "context-openlinknewtab"
     );
-    this._openLinkNewTabItem.addEventListener("command", this._openLinkNewTab);
+    this._openLinkNewTabItem.addEventListener(
+      "command",
+      this._openLinkNewTab,
+      eventListenersConfig
+    );
 
     this._copyUrlItem = this._panelDoc.getElementById("context-copyurl");
-    this._copyUrlItem.addEventListener("command", this._copyUrl);
+    this._copyUrlItem.addEventListener(
+      "command",
+      this._copyUrl,
+      eventListenersConfig
+    );
 
     const nav = this._panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
+  },
+
+  _clearFilterInput() {
+    this._filterInput.value = "";
+    this._onFilterInputChange();
+  },
+
+  _onFilterInputChange() {
+    const filterInputValue = this._filterInput.value;
+    this._filterInputClearButton.toggleAttribute("hidden", !filterInputValue);
+    this._view.setFilter(filterInputValue);
   },
 
   /**
@@ -596,7 +663,7 @@ StyleEditorUI.prototype = {
     // add new sidebar item and editor to the UI
     const { summary, details } = this._view.appendItem({
       ordinal,
-      onShow: detailsEl => {
+      onShow: (detailsEl, options) => {
         this.selectedEditor = editor;
 
         (async function() {
@@ -608,7 +675,7 @@ StyleEditorUI.prototype = {
             await editor.load(inputElement, this._cssProperties);
           }
 
-          editor.onShow();
+          editor.onShow(options);
 
           this.emit("editor-selected", editor);
         }
@@ -694,7 +761,8 @@ StyleEditorUI.prototype = {
     if (
       !this.selectedEditor &&
       !this._styleSheetBoundToSelect &&
-      createdEditor.styleSheet.styleSheetIndex == 0
+      createdEditor.styleSheet.styleSheetIndex == 0 &&
+      !summary.classList.contains(SplitView.FILTERED_CLASSNAME)
     ) {
       this._selectEditor(createdEditor);
     }
@@ -967,6 +1035,9 @@ StyleEditorUI.prototype = {
         ruleCount
       )
     );
+
+    // We may need to change the summary visibility as a result of the changes.
+    this._view.handleSummaryVisibility(summary);
   },
 
   /**
@@ -1251,9 +1322,15 @@ StyleEditorUI.prototype = {
       }
     );
 
+    if (this._uiAbortController) {
+      this._uiAbortController.abort();
+      this._uiAbortController = null;
+    }
     this._clearStyleSheetEditors();
 
     this._seenSheets = null;
+    this._filterInput = null;
+    this._filterInputClearButton = null;
 
     const sidebar = this._panelDoc.querySelector(".splitview-controller");
     const sidebarWidth = sidebar.getAttribute("width");
