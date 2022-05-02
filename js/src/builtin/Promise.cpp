@@ -1022,6 +1022,39 @@ static bool IsPromiseWithDefaultResolvingFunction(PromiseObject* promise) {
 }
 
 /**
+ * Returns Promise Resolve Function's [[AlreadyResolved]].[[Value]] for
+ * a promise created by CreatePromiseObjectWithoutResolutionFunctions.
+ */
+static bool IsAlreadyResolvedPromiseWithDefaultResolvingFunction(
+    PromiseObject* promise) {
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
+
+  if (promise->as<PromiseObject>().state() != JS::PromiseState::Pending) {
+    MOZ_ASSERT(PromiseHasAnyFlag(
+        *promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS_ALREADY_RESOLVED));
+    return true;
+  }
+
+  return PromiseHasAnyFlag(
+      *promise, PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS_ALREADY_RESOLVED);
+}
+
+/**
+ * Set Promise Resolve Function's [[AlreadyResolved]].[[Value]] to true for
+ * a promise created by CreatePromiseObjectWithoutResolutionFunctions.
+ */
+static void SetAlreadyResolvedPromiseWithDefaultResolvingFunction(
+    PromiseObject* promise) {
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
+
+  promise->setFixedSlot(
+      PromiseSlot_Flags,
+      JS::Int32Value(
+          promise->flags() |
+          PROMISE_FLAG_DEFAULT_RESOLVING_FUNCTIONS_ALREADY_RESOLVED));
+}
+
+/**
  * ES2022 draft rev d03c1ec6e235a5180fa772b6178727c17974cb14
  *
  * CreateResolvingFunctions ( promise )
@@ -6167,6 +6200,34 @@ bool PromiseObject::forEachReactionRecord(
   });
 }
 
+/**
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
+ *
+ * Promise Reject Functions
+ * https://tc39.es/ecma262/#sec-promise-reject-functions
+ */
+static bool CallDefaultPromiseResolveFunction(JSContext* cx,
+                                              Handle<PromiseObject*> promise,
+                                              HandleValue resolutionValue) {
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
+
+  // Steps 1-3.
+  // (implicit)
+
+  // Step 4. Let alreadyResolved be F.[[AlreadyResolved]].
+  // Step 5. If alreadyResolved.[[Value]] is true, return undefined.
+  if (IsAlreadyResolvedPromiseWithDefaultResolvingFunction(promise)) {
+    return true;
+  }
+
+  // Step 6. Set alreadyResolved.[[Value]] to true.
+  SetAlreadyResolvedPromiseWithDefaultResolvingFunction(promise);
+
+  // Steps 7-15.
+  // (implicit) Step 16. Return undefined.
+  return ResolvePromiseInternal(cx, promise, resolutionValue);
+}
+
 /* static */
 bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
                             HandleValue resolutionValue) {
@@ -6176,7 +6237,7 @@ bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
   }
 
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return ResolvePromiseInternal(cx, promise, resolutionValue);
+    return CallDefaultPromiseResolveFunction(cx, promise, resolutionValue);
   }
 
   JSFunction* resolveFun = GetResolveFunctionFromPromise(promise);
@@ -6197,6 +6258,32 @@ bool PromiseObject::resolve(JSContext* cx, Handle<PromiseObject*> promise,
   return Call(cx, funVal, UndefinedHandleValue, resolutionValue, &dummy);
 }
 
+/**
+ * ES2023 draft rev 714fa3dd1e8237ae9c666146270f81880089eca5
+ *
+ * Promise Reject Functions
+ * https://tc39.es/ecma262/#sec-promise-reject-functions
+ */
+static bool CallDefaultPromiseRejectFunction(JSContext* cx,
+                                             Handle<PromiseObject*> promise,
+                                             HandleValue rejectionValue) {
+  MOZ_ASSERT(IsPromiseWithDefaultResolvingFunction(promise));
+
+  // Steps 1-3.
+  // (implicit)
+
+  // Step 4. Let alreadyResolved be F.[[AlreadyResolved]].
+  // Step 5. If alreadyResolved.[[Value]] is true, return undefined.
+  if (IsAlreadyResolvedPromiseWithDefaultResolvingFunction(promise)) {
+    return true;
+  }
+
+  // Step 6. Set alreadyResolved.[[Value]] to true.
+  SetAlreadyResolvedPromiseWithDefaultResolvingFunction(promise);
+
+  return RejectPromiseInternal(cx, promise, rejectionValue);
+}
+
 /* static */
 bool PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise,
                            HandleValue rejectionValue) {
@@ -6206,8 +6293,7 @@ bool PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise,
   }
 
   if (IsPromiseWithDefaultResolvingFunction(promise)) {
-    return ResolvePromise(cx, promise, rejectionValue,
-                          JS::PromiseState::Rejected);
+    return CallDefaultPromiseRejectFunction(cx, promise, rejectionValue);
   }
 
   RootedValue funVal(cx, promise->getFixedSlot(PromiseSlot_RejectFunction));
