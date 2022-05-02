@@ -21,7 +21,7 @@ async function clickButton() {
     await promiseOnlyApzControllerFlushed();
   }
 
-  synthesizeNativeMouseEventWithAPZ(
+  await synthesizeNativeMouseEventWithAPZ(
     { type: "click", target: document.getElementById("b"), offsetX: 5, offsetY: 5 },
     () => dump("Finished synthesizing click, waiting for button to be clicked...\n")
   );

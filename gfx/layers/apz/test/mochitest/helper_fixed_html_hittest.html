@@ -29,7 +29,7 @@
       // The offset is 50 CSS pixels = 100 screen pixels at 2x zoom
       // in either direction.
       let transformEndPromise = promiseTransformEnd();
-      synthesizeNativeTouchDrag(document.body, 10, 10, -50, -50);
+      await synthesizeNativeTouchDrag(document.body, 10, 10, -50, -50);
       await transformEndPromise;
 
       await promiseApzFlushedRepaints();
@@ -43,7 +43,7 @@
       // same bug as the hit-test, and the two bugs cancel out.
       var offsetX = {}, offsetY = {};
       SpecialPowers.getDOMWindowUtils(window).getVisualViewportOffsetRelativeToLayoutViewport(offsetX, offsetY);
-      synthesizeNativeMouseEventWithAPZ({
+      await synthesizeNativeMouseEventWithAPZ({
         type: "click",
         target: window,
         // The visual viewport is already offset (50, 50) CSS pixels

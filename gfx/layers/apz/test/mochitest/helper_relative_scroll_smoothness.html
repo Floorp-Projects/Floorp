@@ -85,7 +85,7 @@ async function test() {
           "Dispatched an down arrow key event");
         break;
       case "wheel":
-        synthesizeNativeWheel(window, 50, 50, 0, -50);
+        await synthesizeNativeWheel(window, 50, 50, 0, -50);
         break;
       default:
         ok(false, "Unsupported input type: " + searchParams.get("input-type"));

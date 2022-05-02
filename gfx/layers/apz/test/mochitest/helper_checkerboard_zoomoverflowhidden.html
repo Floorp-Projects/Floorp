@@ -51,7 +51,7 @@ async function test() {
   ];
 
   var touchIds = [0, 1];
-  synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+  await synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 
   await touchEndPromise;
   // Flush state and get the resolution we're at now

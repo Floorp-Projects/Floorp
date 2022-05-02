@@ -34,7 +34,7 @@ async function test() {
 
 
   let thetarget = document.getElementById("theiframe");
-  synthesizeNativeMouseEventWithAPZ({ type: "click", target: thetarget, offsetX: 5, offsetY: 5 });
+  await synthesizeNativeMouseEventWithAPZ({ type: "click", target: thetarget, offsetX: 5, offsetY: 5 });
   info("sent click");
 
   await clickPromise;
