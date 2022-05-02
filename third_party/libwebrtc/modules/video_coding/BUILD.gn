@@ -497,6 +497,7 @@ rtc_library("webrtc_vp8") {
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_numerics",
     "../../rtc_base/experiments:cpu_speed_experiment",
+    "../../rtc_base/experiments:encoder_info_settings",
     "../../rtc_base/experiments:field_trial_parser",
     "../../rtc_base/experiments:rate_control_settings",
     "../../system_wrappers:field_trial",
