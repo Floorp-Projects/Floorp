@@ -21,7 +21,7 @@ rtc_library("column_printer") {
   ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   scenario_resources = [
     "../../resources/difficult_photo_1850_1110.yuv",
     "../../resources/photo_1850_1110.yuv",

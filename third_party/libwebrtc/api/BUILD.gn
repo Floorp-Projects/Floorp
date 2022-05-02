@@ -440,22 +440,6 @@ rtc_library("test_dependency_factory") {
 }
 
 if (rtc_include_tests) {
-  rtc_library("create_video_quality_test_fixture_api") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "test/create_video_quality_test_fixture.cc",
-      "test/create_video_quality_test_fixture.h",
-    ]
-    deps = [
-      ":fec_controller_api",
-      ":network_state_predictor_api",
-      ":scoped_refptr",
-      ":video_quality_test_fixture_api",
-      "../video:video_quality_test",
-    ]
-  }
-
   # TODO(srte): Move to network_emulation sub directory.
   rtc_library("create_network_emulation_manager") {
     visibility = [ "*" ]
@@ -470,21 +454,39 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_library("create_peerconnection_quality_test_fixture") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "test/create_peerconnection_quality_test_fixture.cc",
-      "test/create_peerconnection_quality_test_fixture.h",
-    ]
+  if (!build_with_chromium) {
+    rtc_library("create_video_quality_test_fixture_api") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [
+        "test/create_video_quality_test_fixture.cc",
+        "test/create_video_quality_test_fixture.h",
+      ]
+      deps = [
+        ":fec_controller_api",
+        ":network_state_predictor_api",
+        ":scoped_refptr",
+        ":video_quality_test_fixture_api",
+        "../video:video_quality_test",
+      ]
+    }
 
-    deps = [
-      ":audio_quality_analyzer_api",
-      ":peer_connection_quality_test_fixture_api",
-      ":time_controller",
-      ":video_quality_analyzer_api",
-      "../test/pc/e2e:peerconnection_quality_test",
-    ]
+    rtc_library("create_peerconnection_quality_test_fixture") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [
+        "test/create_peerconnection_quality_test_fixture.cc",
+        "test/create_peerconnection_quality_test_fixture.h",
+      ]
+
+      deps = [
+        ":audio_quality_analyzer_api",
+        ":peer_connection_quality_test_fixture_api",
+        ":time_controller",
+        ":video_quality_analyzer_api",
+        "../test/pc/e2e:peerconnection_quality_test",
+      ]
+    }
   }
 }
 
@@ -715,7 +717,7 @@ rtc_source_set("function_view") {
 }
 
 if (rtc_include_tests) {
-  if (rtc_enable_protobuf) {
+  if (rtc_enable_protobuf && !build_with_chromium) {
     rtc_library("audioproc_f_api") {
       visibility = [ "*" ]
       testonly = true

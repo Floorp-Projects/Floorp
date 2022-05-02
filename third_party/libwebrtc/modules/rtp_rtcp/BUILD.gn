@@ -439,22 +439,24 @@ rtc_library("mock_rtp_rtcp") {
 }
 
 if (rtc_include_tests) {
-  rtc_executable("test_packet_masks_metrics") {
-    testonly = true
+  if (!build_with_chromium) {
+    rtc_executable("test_packet_masks_metrics") {
+      testonly = true
 
-    sources = [
-      "test/testFec/average_residual_loss_xor_codes.h",
-      "test/testFec/test_packet_masks_metrics.cc",
-    ]
+      sources = [
+        "test/testFec/average_residual_loss_xor_codes.h",
+        "test/testFec/test_packet_masks_metrics.cc",
+      ]
 
-    deps = [
-      ":rtp_rtcp",
-      "../../test:fileutils",
-      "../../test:test_main",
-      "../../test:test_support",
-      "//testing/gtest",
-    ]
-  }  # test_packet_masks_metrics
+      deps = [
+        ":rtp_rtcp",
+        "../../test:fileutils",
+        "../../test:test_main",
+        "../../test:test_support",
+        "//testing/gtest",
+      ]
+    }  # test_packet_masks_metrics
+  }
 
   rtc_library("rtp_rtcp_modules_tests") {
     testonly = true

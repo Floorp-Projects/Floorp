@@ -106,18 +106,20 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_library("sequence_checker_unittests") {
-    testonly = true
+  if (!build_with_chromium) {
+    rtc_library("sequence_checker_unittests") {
+      testonly = true
 
-    sources = [ "sequence_checker_unittest.cc" ]
-    deps = [
-      ":sequence_checker",
-      "..:checks",
-      "..:rtc_base_approved",
-      "..:task_queue_for_test",
-      "../../api:function_view",
-      "../../test:test_main",
-      "../../test:test_support",
-    ]
+      sources = [ "sequence_checker_unittest.cc" ]
+      deps = [
+        ":sequence_checker",
+        "..:checks",
+        "..:rtc_base_approved",
+        "..:task_queue_for_test",
+        "../../api:function_view",
+        "../../test:test_main",
+        "../../test:test_support",
+      ]
+    }
   }
 }

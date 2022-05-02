@@ -108,7 +108,7 @@ rtc_library("metrics") {
   ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_test("system_wrappers_unittests") {
     testonly = true
     sources = [

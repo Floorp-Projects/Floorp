@@ -119,17 +119,19 @@ if (rtc_include_tests) {
     ]
   }
 
-  rtc_executable("audio_mixer_test") {
-    testonly = true
-    sources = [ "audio_mixer_test.cc" ]
+  if (!build_with_chromium) {
+    rtc_executable("audio_mixer_test") {
+      testonly = true
+      sources = [ "audio_mixer_test.cc" ]
 
-    deps = [
-      ":audio_mixer_impl",
-      "../../api/audio:audio_mixer_api",
-      "../../common_audio",
-      "../../rtc_base:stringutils",
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-    ]
+      deps = [
+        ":audio_mixer_impl",
+        "../../api/audio:audio_mixer_api",
+        "../../common_audio",
+        "../../rtc_base:stringutils",
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/flags:parse",
+      ]
+    }
   }
 }

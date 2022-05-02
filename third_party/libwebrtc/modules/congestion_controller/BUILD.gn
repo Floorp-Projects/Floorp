@@ -39,7 +39,7 @@ rtc_library("congestion_controller") {
   }
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_library("congestion_controller_unittests") {
     testonly = true
 
