@@ -2308,7 +2308,7 @@ TEST(Vp9SpeedSettingsTrialsTest,
 }
 
 TEST(Vp9SpeedSettingsTrialsTest, PerLayerFlagsWithSvc) {
-  // Per-temporal and satial layer speed settings:
+  // Per-temporal and spatial layer speed settings:
   // SL0:   TL0 = speed 5, TL1/TL2 = speed 8.
   // SL1/2: TL0 = speed 7, TL1/TL2 = speed 9.
   // Deblocking-mode per spatial layer:
