@@ -231,7 +231,7 @@ rtc_library("min_video_bitrate_experiment") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_library("experiments_unittests") {
     testonly = true
 

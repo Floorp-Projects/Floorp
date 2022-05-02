@@ -14,24 +14,26 @@ if (is_android) {
 }
 
 if (false) {
-group("test") {
-  testonly = true
+if (!build_with_chromium) {
+  group("test") {
+    testonly = true
 
-  deps = [
-    ":copy_to_file_audio_capturer",
-    ":rtp_test_utils",
-    ":test_common",
-    ":test_renderer",
-    ":test_support",
-    ":video_test_common",
-  ]
-
-  if (rtc_include_tests) {
-    deps += [
-      ":test_main",
-      ":test_support_unittests",
-      "pc/e2e",
+    deps = [
+      ":copy_to_file_audio_capturer",
+      ":rtp_test_utils",
+      ":test_common",
+      ":test_renderer",
+      ":test_support",
+      ":video_test_common",
     ]
+
+    if (rtc_include_tests) {
+      deps += [
+        ":test_main",
+        ":test_support_unittests",
+        "pc/e2e",
+      ]
+    }
   }
 }
 
@@ -392,7 +394,16 @@ rtc_library("video_test_support") {
   }
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && enable_google_benchmarks) {
+  rtc_library("benchmark_main") {
+    testonly = true
+    sources = [ "benchmark_main.cc" ]
+
+    deps = [ "//third_party/google_benchmark" ]
+  }
+}
+
+if (rtc_include_tests && !build_with_chromium) {
   rtc_library("resources_dir_flag") {
     testonly = true
     visibility = [ "*" ]
@@ -447,15 +458,6 @@ if (rtc_include_tests) {
       "//third_party/abseil-cpp/absl/debugging:symbolize",
       "//third_party/abseil-cpp/absl/flags:parse",
     ]
-  }
-
-  if (enable_google_benchmarks) {
-    rtc_library("benchmark_main") {
-      testonly = true
-      sources = [ "benchmark_main.cc" ]
-
-      deps = [ "//third_party/google_benchmark" ]
-    }
   }
 
   rtc_library("test_support_test_artifacts") {
@@ -581,7 +583,7 @@ if (rtc_include_tests) {
       deps += [ ":test_support_unittests_bundle_data" ]
     }
 
-    if (!is_android && !build_with_chromium) {
+    if (!is_android) {
       # This is needed in order to avoid:
       # undefined symbol: webrtc::videocapturemodule::VideoCaptureImpl::Create
       deps += [ "../modules/video_capture:video_capture_internal_impl" ]

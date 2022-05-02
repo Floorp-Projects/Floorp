@@ -312,20 +312,22 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_executable("rnn_vad_tool") {
-    testonly = true
-    sources = [ "rnn_vad_tool.cc" ]
-    deps = [
-      ":rnn_vad",
-      ":rnn_vad_common",
-      "..:cpu_features",
-      "../../../../api:array_view",
-      "../../../../common_audio",
-      "../../../../rtc_base:rtc_base_approved",
-      "../../../../rtc_base:safe_compare",
-      "../../../../test:test_support",
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-    ]
+  if (!build_with_chromium) {
+    rtc_executable("rnn_vad_tool") {
+      testonly = true
+      sources = [ "rnn_vad_tool.cc" ]
+      deps = [
+        ":rnn_vad",
+        ":rnn_vad_common",
+        "..:cpu_features",
+        "../../../../api:array_view",
+        "../../../../common_audio",
+        "../../../../rtc_base:rtc_base_approved",
+        "../../../../rtc_base:safe_compare",
+        "../../../../test:test_support",
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/flags:parse",
+      ]
+    }
   }
 }

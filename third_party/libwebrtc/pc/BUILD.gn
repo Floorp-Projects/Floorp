@@ -809,7 +809,7 @@ rtc_source_set("libjingle_peerconnection") {
   ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   rtc_test("rtc_pc_unittests") {
     testonly = true
 

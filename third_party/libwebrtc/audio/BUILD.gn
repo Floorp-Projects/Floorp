@@ -192,7 +192,7 @@ if (rtc_include_tests) {
     ]
   }
 
-  if (rtc_enable_protobuf) {
+  if (rtc_enable_protobuf && !build_with_chromium) {
     rtc_test("low_bandwidth_audio_test") {
       testonly = true
 
@@ -279,30 +279,32 @@ if (rtc_include_tests) {
     }
   }
 
-  rtc_library("audio_perf_tests") {
-    testonly = true
+  if (!build_with_chromium) {
+    rtc_library("audio_perf_tests") {
+      testonly = true
 
-    sources = [
-      "test/audio_bwe_integration_test.cc",
-      "test/audio_bwe_integration_test.h",
-    ]
-    deps = [
-      "../api:simulated_network_api",
-      "../api/task_queue",
-      "../call:fake_network",
-      "../call:simulated_network",
-      "../common_audio",
-      "../rtc_base:rtc_base_approved",
-      "../rtc_base:task_queue_for_test",
-      "../system_wrappers",
-      "../test:field_trial",
-      "../test:fileutils",
-      "../test:test_common",
-      "../test:test_main",
-      "../test:test_support",
-      "//testing/gtest",
-    ]
+      sources = [
+        "test/audio_bwe_integration_test.cc",
+        "test/audio_bwe_integration_test.h",
+      ]
+      deps = [
+        "../api:simulated_network_api",
+        "../api/task_queue",
+        "../call:fake_network",
+        "../call:simulated_network",
+        "../common_audio",
+        "../rtc_base:rtc_base_approved",
+        "../rtc_base:task_queue_for_test",
+        "../system_wrappers",
+        "../test:field_trial",
+        "../test:fileutils",
+        "../test:test_common",
+        "../test:test_main",
+        "../test:test_support",
+        "//testing/gtest",
+      ]
 
-    data = [ "//resources/voice_engine/audio_dtx16.wav" ]
+      data = [ "//resources/voice_engine/audio_dtx16.wav" ]
+    }
   }
 }

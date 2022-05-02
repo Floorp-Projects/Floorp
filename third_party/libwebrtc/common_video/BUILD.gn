@@ -75,7 +75,7 @@ rtc_source_set("frame_counts") {
   sources = [ "frame_counts.h" ]
 }
 
-if (rtc_include_tests) {
+if (rtc_include_tests && !build_with_chromium) {
   common_video_resources = [ "../resources/foreman_cif.yuv" ]
 
   if (is_ios) {
