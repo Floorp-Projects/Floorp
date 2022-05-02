@@ -339,18 +339,13 @@ enum class BufferKind : uint8_t {
 
 struct FloatOrInt final  // For TexParameter[fi] and friends.
 {
-  const bool isFloat;
-  const GLfloat f;
-  const GLint i;
+  bool isFloat = false;
+  GLfloat f = 0;
+  GLint i = 0;
 
   explicit FloatOrInt(GLint x = 0) : isFloat(false), f(x), i(x) {}
 
   explicit FloatOrInt(GLfloat x) : isFloat(true), f(x), i(roundf(x)) {}
-
-  FloatOrInt& operator=(const FloatOrInt& x) {
-    memcpy(this, &x, sizeof(x));
-    return *this;
-  }
 };
 
 struct WebGLContextOptions {
@@ -364,7 +359,8 @@ struct WebGLContextOptions {
   bool xrCompatible = false;
   dom::WebGLPowerPreference powerPreference =
       dom::WebGLPowerPreference::Default;
-  Maybe<dom::PredefinedColorSpace> colorSpace;
+  dom::PredefinedColorSpace colorSpace = dom::PredefinedColorSpace::Srgb;
+  bool ignoreColorSpace = true;  // Our legacy behavior.
   bool shouldResistFingerprinting = true;
   bool enableDebugRendererInfo = false;
 
@@ -379,12 +375,8 @@ struct WebGLContextOptions {
 
 namespace gfx {
 
-inline ColorSpace2 ToColorSpace2(const Maybe<dom::PredefinedColorSpace> cs) {
-  if (!cs) {
-    return ColorSpace2::UNKNOWN;
-  }
-
-  switch (*cs) {
+inline ColorSpace2 ToColorSpace2(const dom::PredefinedColorSpace cs) {
+  switch (cs) {
     case dom::PredefinedColorSpace::Srgb:
       return ColorSpace2::SRGB;
     case dom::PredefinedColorSpace::Display_p3:
