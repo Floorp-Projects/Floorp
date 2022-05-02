@@ -124,6 +124,23 @@ void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
 
 }  // namespace
 
+void InputStreamHelper::SerializedComplexity(nsIInputStream* aInputStream,
+                                             uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed,
+                                             uint32_t* aPipes,
+                                             uint32_t* aTransferables) {
+  MOZ_ASSERT(aInputStream);
+
+  nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+      do_QueryInterface(aInputStream);
+  if (!serializable) {
+    MOZ_CRASH("Input stream is not serializable!");
+  }
+
+  serializable->SerializedComplexity(aMaxSize, aSizeUsed, aPipes,
+                                     aTransferables);
+}
+
 void InputStreamHelper::SerializeInputStream(
     nsIInputStream* aInputStream, InputStreamParams& aParams,
     nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
