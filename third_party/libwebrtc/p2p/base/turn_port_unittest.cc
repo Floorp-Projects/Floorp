@@ -335,8 +335,8 @@ class TurnPortTest : public ::testing::Test,
         this, &TurnPortTest::OnTurnRefreshResult);
     turn_port_->SignalTurnPortClosed.connect(this,
                                              &TurnPortTest::OnTurnPortClosed);
-    turn_port_->SignalDestroyed.connect(this,
-                                        &TurnPortTest::OnTurnPortDestroyed);
+    turn_port_->SubscribePortDestroyed(
+        [this](PortInterface* port) { OnTurnPortDestroyed(port); });
   }
 
   void CreateUdpPort() { CreateUdpPort(kLocalAddr2); }
