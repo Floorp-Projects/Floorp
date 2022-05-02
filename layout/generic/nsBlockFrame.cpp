@@ -7702,9 +7702,6 @@ nsBlockFrame::FloatAvoidingISizeToClear nsBlockFrame::ISizeToClearPastFloats(
     nsIFrame* aFloatAvoidingBlock) {
   nscoord inlineStartOffset, inlineEndOffset;
   WritingMode wm = aState.mReflowInput.GetWritingMode();
-  SizeComputationInput offsetState(aFloatAvoidingBlock,
-                                   aState.mReflowInput.mRenderingContext, wm,
-                                   aState.mContentArea.ISize(wm));
 
   FloatAvoidingISizeToClear result;
   aState.ComputeFloatAvoidingOffsets(aFloatAvoidingBlock, aFloatAvailableSpace,
@@ -7725,9 +7722,13 @@ nsBlockFrame::FloatAvoidingISizeToClear nsBlockFrame::ISizeToClearPastFloats(
                           aFloatAvoidingBlock, availSpace);
   result.borderBoxISize =
       reflowInput.ComputedSizeWithBorderPadding(wm).ISize(wm);
-  // Use the margins from offsetState rather than reflowInput so that
+
+  // Use the margins from sizingInput rather than reflowInput so that
   // they aren't reduced by ignoring margins in overconstrained cases.
-  LogicalMargin computedMargin = offsetState.ComputedLogicalMargin(wm);
+  SizeComputationInput sizingInput(aFloatAvoidingBlock,
+                                   aState.mReflowInput.mRenderingContext, wm,
+                                   aState.mContentArea.ISize(wm));
+  const LogicalMargin computedMargin = sizingInput.ComputedLogicalMargin(wm);
   result.marginIStart = computedMargin.IStart(wm);
   return result;
 }
