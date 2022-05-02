@@ -11,7 +11,7 @@
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
             sleep, waitForStorageChangedEvents, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
             openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
-            clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard,
+            clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard, setStorage,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
 
@@ -757,6 +757,22 @@ async function testDialog(url, testFn, arg = undefined) {
   let unloadPromise = BrowserTestUtils.waitForEvent(win, "unload");
   await testFn(win);
   return unloadPromise;
+}
+
+/**
+ * Initializes the test storage for a task.
+ *
+ * @param {...Object} items Can either be credit card or address objects
+ */
+async function setStorage(...items) {
+  await removeAllRecords();
+  for (let item of items) {
+    if (item["cc-number"]) {
+      await saveCreditCard(item);
+    } else {
+      await saveAddress(item);
+    }
+  }
 }
 
 add_setup(function() {
