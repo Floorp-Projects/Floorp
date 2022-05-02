@@ -197,15 +197,10 @@ void L10nMutations::FlushPendingTranslations() {
     return;
   }
 
-  Sequence<OwningNonNull<Element>> elements;
-
+  nsTArray<OwningNonNull<Element>> elements;
   for (auto& elem : mPendingElements) {
-    if (!elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
-      continue;
-    }
-
-    if (!elements.AppendElement(*elem, fallible)) {
-      mozalloc_handle_oom(0);
+    if (elem->HasAttr(nsGkAtoms::datal10nid)) {
+      elements.AppendElement(*elem);
     }
   }
 
