@@ -35,6 +35,7 @@ typedef unsigned long long GLuint64EXT;
 // The power preference settings are documented in the WebGLContextAttributes
 // section of the specification.
 enum WebGLPowerPreference { "default", "low-power", "high-performance" };
+enum PredefinedColorSpace { "srgb", "display-p3" };
 
 [GenerateInit]
 dictionary WebGLContextAttributes {
@@ -51,6 +52,10 @@ dictionary WebGLContextAttributes {
     GLboolean preserveDrawingBuffer = false;
     GLboolean failIfMajorPerformanceCaveat = false;
     WebGLPowerPreference powerPreference = "default";
+
+    // We are experimenting here, though this should be close to where we end up.
+    [Pref="webgl.colorspaces.prototype"]
+    PredefinedColorSpace colorSpace; // = "srgb"; Default is gfx::ColorSpace2::UNKNOWN for now.
 };
 
 [Exposed=(Window,Worker),
