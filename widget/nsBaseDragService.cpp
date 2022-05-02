@@ -259,16 +259,22 @@ NS_IMETHODIMP nsBaseDragService::SetDragEndPointForTests(int32_t aScreenX,
   MOZ_ASSERT(mDoingDrag);
   MOZ_ASSERT(mSourceDocument);
   MOZ_ASSERT(mSessionIsSynthesizedForTests);
+
   if (!mDoingDrag || !mSourceDocument || !mSessionIsSynthesizedForTests) {
     return NS_ERROR_FAILURE;
   }
-  nsPresContext* presContext = mSourceDocument->GetPresContext();
-  if (NS_WARN_IF(!presContext)) {
+  nsPresContext* pc = mSourceDocument->GetPresContext();
+  if (NS_WARN_IF(!pc)) {
     return NS_ERROR_FAILURE;
   }
-  SetDragEndPoint(
-      LayoutDeviceIntPoint(presContext->CSSPixelsToDevPixels(aScreenX),
-                           presContext->CSSPixelsToDevPixels(aScreenY)));
+  auto p = LayoutDeviceIntPoint::Round(CSSIntPoint(aScreenX, aScreenY) *
+                                       pc->CSSToDevPixelScale());
+  // p is screen-relative, and we want them to be top-level-widget-relative.
+  if (nsCOMPtr<nsIWidget> widget = pc->GetRootWidget()) {
+    p -= widget->WidgetToScreenOffset();
+    p += widget->WidgetToTopLevelWidgetOffset();
+  }
+  SetDragEndPoint(p);
   return NS_OK;
 }
 
@@ -656,6 +662,9 @@ nsBaseDragService::FireDragEventAtSource(EventMessage aEventMessage,
   event.mInputSource = mInputSource;
   if (aEventMessage == eDragEnd) {
     event.mRefPoint = mEndDragPoint;
+    if (widget) {
+      event.mRefPoint -= widget->WidgetToTopLevelWidgetOffset();
+    }
     event.mUserCancelled = mUserCancelled;
   }
   event.mModifiers = aKeyModifiers;

@@ -202,7 +202,7 @@ class nsBaseDragService : public nsIDragService, public nsIDragSession {
   // drag image.
   mozilla::CSSIntPoint mScreenPosition;
 
-  // the screen position where the drag ended
+  // The position relative to the top level widget where the drag ended.
   mozilla::LayoutDeviceIntPoint mEndDragPoint;
 
   uint32_t mSuppressLevel;

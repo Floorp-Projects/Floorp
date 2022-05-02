@@ -1313,6 +1313,12 @@ class nsIWidget : public nsISupports {
     return mozilla::LayoutDeviceToLayoutDeviceMatrix4x4();
   }
 
+  mozilla::LayoutDeviceIntPoint WidgetToTopLevelWidgetOffset() {
+    return mozilla::LayoutDeviceIntPoint::Round(
+        WidgetToTopLevelWidgetTransform().TransformPoint(
+            mozilla::LayoutDevicePoint()));
+  }
+
   /**
    * Given the specified client size, return the corresponding window size,
    * which includes the area for the borders and titlebar. This method

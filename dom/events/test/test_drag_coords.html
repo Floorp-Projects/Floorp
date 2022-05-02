@@ -1,0 +1,50 @@
+<!doctype html>
+<title>Test for drag event coordinates</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<style>
+  #draggable {
+    display: inline-block;
+    border: 1px solid;
+  }
+</style>
+<div draggable="true" id="draggable">Drag me</div>
+<script>
+add_task(async function test_drag_coords() {
+  let target = document.getElementById("draggable");
+  let coords = {};
+  let promises = [];
+  for (let type of ["dragstart", "dragend"]) {
+    promises.push(new Promise(function(resolve) {
+      target.addEventListener(type, function(e) {
+        info("Got " + e.type);
+        coords[e.type] = {
+          screen: {
+            x: e.screenX,
+            y: e.screenY,
+          },
+          client: {
+            x: e.clientX,
+            y: e.clientY,
+          },
+        };
+        resolve();
+      });
+    }));
+  }
+  synthesizePlainDragAndDrop({
+    srcElement: target,
+    srcX: 2,
+    srcY: 2,
+    stepX: 10,
+    stepY: 10,
+  });
+  await Promise.all(promises);
+  info(JSON.stringify(coords));
+  for (let coordType of ["screen", "client"]) {
+    is(coords.dragend[coordType].x, coords.dragstart[coordType].x + 12, `x ${coordType} is correct`);
+    is(coords.dragend[coordType].y, coords.dragstart[coordType].y + 12, `y ${coordType} is correct`);
+  }
+});
+</script>
