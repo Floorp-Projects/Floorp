@@ -905,9 +905,15 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     if (NS_SUCCEEDED(mStatus)) {
       uint64_t avail = 0;
       nsresult rv = aStream->Available(&avail);
-      if (rv == NS_BASE_STREAM_CLOSED || avail == 0) {
-        // This stream is closed or empty, let's move to the following one.
-        ++mCurrentStream;
+      if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && avail == 0)) {
+        // This stream is closed or empty, let's move to the following one,
+        // otherwise we need to re-wait on the current stream, as it currently
+        // has no data available.
+        // Unlike streams not implementing nsIAsyncInputStream, async streams
+        // cannot use `Available() == 0` to indicate EOF.
+        if (NS_FAILED(rv)) {
+          ++mCurrentStream;
+        }
         MutexAutoUnlock unlock(mLock);
         return AsyncWaitInternal();
       }
