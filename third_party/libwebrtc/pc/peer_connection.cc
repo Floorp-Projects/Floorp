@@ -528,6 +528,9 @@ RTCError PeerConnection::Initialize(
 
   // The port allocator lives on the network thread and should be initialized
   // there.
+  // TODO(bugs.webrtc.org/12427): See if we can piggyback on this call and
+  // initialize all the |transport_controller_->Subscribe*| calls below on the
+  // network thread via this invoke.
   const auto pa_result =
       network_thread()->Invoke<InitializePortAllocatorResult>(
           RTC_FROM_HERE, [this, &stun_servers, &turn_servers, &configuration] {
@@ -620,6 +623,10 @@ RTCError PeerConnection::Initialize(
   // due to lack of unit tests which trigger these scenarios.
   // TODO(bugs.webrtc.org/12160): Remove above comments.
   // callbacks for signaling_thread.
+  // TODO(bugs.webrtc.org/12427): If we can't piggyback on the above network
+  // Invoke(), then perhaps we could post these subscription calls to the
+  // network thread so that the transport controller doesn't have to do the
+  // signaling/network handling internally and use AsyncInvoker.
   transport_controller_->SubscribeIceConnectionState(
       [this](cricket::IceConnectionState s) {
         RTC_DCHECK_RUN_ON(signaling_thread());
@@ -1379,10 +1386,29 @@ RTCError PeerConnection::SetConfiguration(
 
   const bool has_local_description = local_description() != nullptr;
 
-  // In theory this shouldn't fail.
+  const bool needs_ice_restart =
+      modified_config.servers != configuration_.servers ||
+      NeedIceRestart(
+          configuration_.surface_ice_candidates_on_ice_transport_type_changed,
+          configuration_.type, modified_config.type) ||
+      modified_config.GetTurnPortPrunePolicy() !=
+          configuration_.GetTurnPortPrunePolicy();
+  cricket::IceConfig ice_config = ParseIceConfig(modified_config);
+
+  // Apply part of the configuration on the network thread.  In theory this
+  // shouldn't fail.
   if (!network_thread()->Invoke<bool>(
-          RTC_FROM_HERE, [this, &stun_servers, &turn_servers, &modified_config,
-                          has_local_description] {
+          RTC_FROM_HERE,
+          [this, needs_ice_restart, &ice_config, &stun_servers, &turn_servers,
+           &modified_config, has_local_description] {
+            // As described in JSEP, calling setConfiguration with new ICE
+            // servers or candidate policy must set a "needs-ice-restart" bit so
+            // that the next offer triggers an ICE restart which will pick up
+            // the changes.
+            if (needs_ice_restart)
+              transport_controller_->SetNeedsIceRestartFlag();
+
+            transport_controller_->SetIceConfig(ice_config);
             return ReconfigurePortAllocator_n(
                 stun_servers, turn_servers, modified_config.type,
                 modified_config.ice_candidate_pool_size,
@@ -1394,20 +1420,6 @@ RTCError PeerConnection::SetConfiguration(
     LOG_AND_RETURN_ERROR(RTCErrorType::INTERNAL_ERROR,
                          "Failed to apply configuration to PortAllocator.");
   }
-
-  // As described in JSEP, calling setConfiguration with new ICE servers or
-  // candidate policy must set a "needs-ice-restart" bit so that the next offer
-  // triggers an ICE restart which will pick up the changes.
-  if (modified_config.servers != configuration_.servers ||
-      NeedIceRestart(
-          configuration_.surface_ice_candidates_on_ice_transport_type_changed,
-          configuration_.type, modified_config.type) ||
-      modified_config.GetTurnPortPrunePolicy() !=
-          configuration_.GetTurnPortPrunePolicy()) {
-    transport_controller_->SetNeedsIceRestartFlag();
-  }
-
-  transport_controller_->SetIceConfig(ParseIceConfig(modified_config));
 
   if (configuration_.active_reset_srtp_params !=
       modified_config.active_reset_srtp_params) {
@@ -2155,6 +2167,8 @@ void PeerConnection::OnTransportControllerConnectionState(
 void PeerConnection::OnTransportControllerCandidatesGathered(
     const std::string& transport_name,
     const cricket::Candidates& candidates) {
+  // TODO(bugs.webrtc.org/12427): Expect this to come in on the network thread
+  // (not signaling as it currently does), handle appropriately.
   int sdp_mline_index;
   if (!GetLocalCandidateMediaIndex(transport_name, &sdp_mline_index)) {
     RTC_LOG(LS_ERROR)

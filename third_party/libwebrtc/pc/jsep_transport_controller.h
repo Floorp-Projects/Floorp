@@ -227,6 +227,8 @@ class JsepTransportController : public sigslot::has_slots<> {
   // F: void(const std::string&, const std::vector<cricket::Candidate>&)
   template <typename F>
   void SubscribeIceCandidateGathered(F&& callback) {
+    // TODO(bugs.webrtc.org/12427): Post this subscription to the network
+    // thread.
     signal_ice_candidates_gathered_.AddReceiver(std::forward<F>(callback));
   }
 
@@ -294,6 +296,7 @@ class JsepTransportController : public sigslot::has_slots<> {
   CallbackList<cricket::IceGatheringState> signal_ice_gathering_state_;
 
   // [mid, candidates]
+  // TODO(bugs.webrtc.org/12427): Protect this with network_thread_.
   CallbackList<const std::string&, const std::vector<cricket::Candidate>&>
       signal_ice_candidates_gathered_;
 
@@ -366,9 +369,9 @@ class JsepTransportController : public sigslot::has_slots<> {
   // Get the JsepTransport without considering the BUNDLE group. Return nullptr
   // if the JsepTransport is destroyed.
   const cricket::JsepTransport* GetJsepTransportByName(
-      const std::string& transport_name) const;
+      const std::string& transport_name) const RTC_RUN_ON(network_thread_);
   cricket::JsepTransport* GetJsepTransportByName(
-      const std::string& transport_name);
+      const std::string& transport_name) RTC_RUN_ON(network_thread_);
 
   // Creates jsep transport. Noop if transport is already created.
   // Transport is created either during SetLocalDescription (|local| == true) or
@@ -454,7 +457,7 @@ class JsepTransportController : public sigslot::has_slots<> {
   AsyncResolverFactory* const async_resolver_factory_ = nullptr;
 
   std::map<std::string, std::unique_ptr<cricket::JsepTransport>>
-      jsep_transports_by_name_;
+      jsep_transports_by_name_ RTC_GUARDED_BY(network_thread_);
   // This keeps track of the mapping between media section
   // (BaseChannel/SctpTransport) and the JsepTransport underneath.
   std::map<std::string, cricket::JsepTransport*> mid_to_transport_;
