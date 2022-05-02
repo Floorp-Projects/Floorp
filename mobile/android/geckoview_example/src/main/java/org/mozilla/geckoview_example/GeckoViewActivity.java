@@ -146,6 +146,13 @@ class WebExtensionManager
     return GeckoResult.allow();
   }
 
+  @Nullable
+  @Override
+  public GeckoResult<AllowOrDeny> onOptionalPrompt(
+      final @NonNull WebExtension extension, final String[] permissions, final String[] origins) {
+    return GeckoResult.allow();
+  }
+
   @Override
   public void onExtensionListUpdated() {
     refreshExtensionList();
