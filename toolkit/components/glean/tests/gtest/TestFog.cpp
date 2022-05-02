@@ -393,3 +393,15 @@ TEST(FOG, TestCppRateWorks)
       kDen,
       test_only_ipc::an_external_denominator.TestGetValue().unwrap().extract());
 }
+
+TEST(FOG, TestCppUrlWorks)
+{
+  auto kValue = "https://example.com/fog/gtest"_ns;
+  mozilla::glean::test_only_ipc::a_url.Set(kValue);
+
+  ASSERT_STREQ(kValue.get(),
+               mozilla::glean::test_only_ipc::a_url.TestGetValue("store1"_ns)
+                   .unwrap()
+                   .value()
+                   .get());
+}

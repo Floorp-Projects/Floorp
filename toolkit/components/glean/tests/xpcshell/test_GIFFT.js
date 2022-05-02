@@ -480,3 +480,24 @@ add_task(
     );
   }
 );
+
+add_task(function test_gifft_url() {
+  const value = "https://www.example.com";
+  Glean.testOnlyIpc.aUrl.set(value);
+
+  Assert.equal(value, Glean.testOnlyIpc.aUrl.testGetValue());
+  Assert.equal(value, scalarValue("telemetry.test.mirror_for_url"));
+});
+
+add_task(function test_gifft_url_cropped() {
+  const value = `https://example.com${"/test".repeat(47)}`;
+  Glean.testOnlyIpc.aUrl.set(value);
+
+  Assert.equal(value, Glean.testOnlyIpc.aUrl.testGetValue());
+  // We expect the mirrored URL to be truncated at the maximum
+  // length supported by string scalars.
+  Assert.equal(
+    value.substring(0, 50),
+    scalarValue("telemetry.test.mirror_for_url")
+  );
+});
