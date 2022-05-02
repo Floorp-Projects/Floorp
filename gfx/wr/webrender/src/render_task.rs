@@ -455,7 +455,7 @@ impl RenderTaskKind {
 
     pub fn new_picture(
         size: DeviceIntSize,
-        unclipped_size: DeviceSize,
+        needs_scissor_rect: bool,
         content_origin: DevicePoint,
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
@@ -468,12 +468,9 @@ impl RenderTaskKind {
     ) -> Self {
         render_task_sanity_check(&size);
 
-        let can_merge = size.width as f32 >= unclipped_size.width &&
-                        size.height as f32 >= unclipped_size.height;
-
         RenderTaskKind::Picture(PictureTask {
             content_origin,
-            can_merge,
+            can_merge: !needs_scissor_rect,
             surface_spatial_node_index,
             raster_spatial_node_index,
             device_pixel_scale,
