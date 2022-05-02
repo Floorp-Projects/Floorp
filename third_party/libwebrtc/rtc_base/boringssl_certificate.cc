@@ -291,7 +291,7 @@ std::unique_ptr<BoringSSLCertificate> BoringSSLCertificate::FromPEMString(
 
 #define OID_MATCHES(oid, oid_other)      \
   (CBS_len(&oid) == sizeof(oid_other) && \
-  0 == memcmp(CBS_data(&oid), oid_other, sizeof(oid_other)))
+   0 == memcmp(CBS_data(&oid), oid_other, sizeof(oid_other)))
 
 bool BoringSSLCertificate::GetSignatureDigestAlgorithm(
     std::string* algorithm) const {
