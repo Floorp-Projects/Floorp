@@ -16,8 +16,10 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "rtc_base/async_invoker.h"
+#include "api/scoped_refptr.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {
@@ -74,7 +76,7 @@ class FakeNetworkSocket : public rtc::AsyncSocket,
   std::map<Option, int> options_map_ RTC_GUARDED_BY(&thread_);
 
   absl::optional<EmulatedIpPacket> pending_ RTC_GUARDED_BY(thread_);
-  rtc::AsyncInvoker invoker_;
+  rtc::scoped_refptr<PendingTaskSafetyFlag> alive_;
 };
 
 FakeNetworkSocket::FakeNetworkSocket(FakeNetworkSocketServer* socket_server,
@@ -82,9 +84,13 @@ FakeNetworkSocket::FakeNetworkSocket(FakeNetworkSocketServer* socket_server,
     : socket_server_(socket_server),
       thread_(thread),
       state_(CS_CLOSED),
-      error_(0) {}
+      error_(0),
+      alive_(PendingTaskSafetyFlag::Create()) {}
 
 FakeNetworkSocket::~FakeNetworkSocket() {
+  // Abandon all pending packets.
+  alive_->SetNotAlive();
+
   Close();
   socket_server_->Unregister(this);
 }
@@ -103,7 +109,7 @@ void FakeNetworkSocket::OnPacketReceived(EmulatedIpPacket packet) {
     SignalReadEvent(this);
     RTC_DCHECK(!pending_);
   };
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_, std::move(task));
+  thread_->PostTask(ToQueuedTask(alive_, std::move(task)));
   socket_server_->WakeUp();
 }
 
