@@ -4025,7 +4025,8 @@ class Document : public nsINode,
   static bool AutomaticStorageAccessPermissionCanBeGranted(
       nsIPrincipal* aPrincipal);
 
-  already_AddRefed<Promise> AddCertException(bool aIsTemporary);
+  already_AddRefed<Promise> AddCertException(bool aIsTemporary,
+                                             ErrorResult& aError);
 
   void ReloadWithHttpsOnlyException();
 

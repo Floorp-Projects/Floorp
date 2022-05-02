@@ -223,14 +223,13 @@ WebAuthnManager::~WebAuthnManager() {
 
 already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     const PublicKeyCredentialCreationOptions& aOptions,
-    const Optional<OwningNonNull<AbortSignal>>& aSignal) {
+    const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(global, rv);
-  if (rv.Failed()) {
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -256,9 +255,9 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
   nsString origin;
   nsCString rpId;
-  rv = GetOrigin(mParent, origin, rpId);
-  if (NS_WARN_IF(rv.Failed())) {
-    promise->MaybeReject(std::move(rv));
+  nsresult rv = GetOrigin(mParent, origin, rpId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
     return promise.forget();
   }
 
@@ -453,14 +452,13 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
 already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     const PublicKeyCredentialRequestOptions& aOptions,
-    const Optional<OwningNonNull<AbortSignal>>& aSignal) {
+    const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(global, rv);
-  if (rv.Failed()) {
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
@@ -486,9 +484,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
   nsString origin;
   nsCString rpId;
-  rv = GetOrigin(mParent, origin, rpId);
-  if (NS_WARN_IF(rv.Failed())) {
-    promise->MaybeReject(std::move(rv));
+  nsresult rv = GetOrigin(mParent, origin, rpId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(rv);
     return promise.forget();
   }
 
@@ -535,9 +533,9 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   }
 
   nsAutoCString clientDataJSON;
-  nsresult srv = AssembleClientData(origin, challenge, u"webauthn.get"_ns,
-                                    aOptions.mExtensions, clientDataJSON);
-  if (NS_WARN_IF(NS_FAILED(srv))) {
+  rv = AssembleClientData(origin, challenge, u"webauthn.get"_ns,
+                          aOptions.mExtensions, clientDataJSON);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -614,8 +612,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     }
 
     // We need the SHA-256 hash of the appId.
-    srv = HashCString(NS_ConvertUTF16toUTF8(appId), appIdHash);
-    if (NS_WARN_IF(NS_FAILED(srv))) {
+    rv = HashCString(NS_ConvertUTF16toUTF8(appId), appIdHash);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
       return promise.forget();
     }
@@ -657,15 +655,14 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   return promise.forget();
 }
 
-already_AddRefed<Promise> WebAuthnManager::Store(
-    const Credential& aCredential) {
+already_AddRefed<Promise> WebAuthnManager::Store(const Credential& aCredential,
+                                                 ErrorResult& aError) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
 
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(global, rv);
-  if (rv.Failed()) {
+  RefPtr<Promise> promise = Promise::Create(global, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

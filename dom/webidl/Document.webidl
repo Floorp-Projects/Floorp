@@ -319,7 +319,7 @@ partial interface Document {
 
 // Mozilla-internal document extensions specific to error pages.
 partial interface Document {
-  [Func="Document::CallerIsTrustedAboutCertError"]
+  [Func="Document::CallerIsTrustedAboutCertError", NewObject]
   Promise<any> addCertException(boolean isTemporary);
 
   [Func="Document::CallerIsTrustedAboutHttpsOnlyError"]

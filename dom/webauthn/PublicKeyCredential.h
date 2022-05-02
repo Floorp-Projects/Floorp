@@ -42,10 +42,11 @@ class PublicKeyCredential final : public Credential {
   void SetResponse(RefPtr<AuthenticatorResponse>);
 
   static already_AddRefed<Promise>
-  IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal);
+  IsUserVerifyingPlatformAuthenticatorAvailable(GlobalObject& aGlobal,
+                                                ErrorResult& aError);
 
   static already_AddRefed<Promise> IsExternalCTAP2SecurityKeySupported(
-      GlobalObject& aGlobal);
+      GlobalObject& aGlobal, ErrorResult& aError);
 
   void GetClientExtensionResults(
       AuthenticationExtensionsClientOutputs& aResult);

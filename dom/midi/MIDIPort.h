@@ -54,8 +54,8 @@ class MIDIPort : public DOMEventTargetHelper,
   MIDIPortDeviceState State() const;
   bool SysexEnabled() const;
 
-  already_AddRefed<Promise> Open();
-  already_AddRefed<Promise> Close();
+  already_AddRefed<Promise> Open(ErrorResult& aError);
+  already_AddRefed<Promise> Close(ErrorResult& aError);
 
   // MIDIPorts observe the death of their parent MIDIAccess object, and delete
   // their reference accordingly.

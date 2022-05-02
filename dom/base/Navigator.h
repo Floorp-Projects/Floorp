@@ -133,7 +133,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   Promise* GetBattery(ErrorResult& aRv);
 
   bool CanShare(const ShareData& aData);
-  Promise* Share(const ShareData& aData, ErrorResult& aRv);
+  already_AddRefed<Promise> Share(const ShareData& aData, ErrorResult& aRv);
 
   static void AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
                       bool aUsePrefOverriddenValue);

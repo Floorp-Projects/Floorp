@@ -71,10 +71,9 @@ JSObject* FluentBundleAsyncIterator::WrapObject(
   return FluentBundleAsyncIterator_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise> FluentBundleAsyncIterator::Next() {
-  ErrorResult rv;
-  RefPtr<Promise> promise = Promise::Create(mGlobal, rv);
-  if (rv.Failed()) {
+already_AddRefed<Promise> FluentBundleAsyncIterator::Next(ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(mGlobal, aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 

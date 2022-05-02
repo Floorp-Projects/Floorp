@@ -85,13 +85,14 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
 
   already_AddRefed<Promise> MakeCredential(
       const PublicKeyCredentialCreationOptions& aOptions,
-      const Optional<OwningNonNull<AbortSignal>>& aSignal);
+      const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError);
 
   already_AddRefed<Promise> GetAssertion(
       const PublicKeyCredentialRequestOptions& aOptions,
-      const Optional<OwningNonNull<AbortSignal>>& aSignal);
+      const Optional<OwningNonNull<AbortSignal>>& aSignal, ErrorResult& aError);
 
-  already_AddRefed<Promise> Store(const Credential& aCredential);
+  already_AddRefed<Promise> Store(const Credential& aCredential,
+                                  ErrorResult& aError);
 
   // WebAuthnManagerBase
 

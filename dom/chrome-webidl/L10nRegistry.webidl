@@ -144,6 +144,7 @@ interface FluentBundleIterator {
 
 [LegacyNoInterfaceObject, Exposed=Window]
 interface FluentBundleAsyncIterator {
+  [NewObject]
   Promise<FluentBundleIteratorResult> next();
   [Alias="@@asyncIterator"] FluentBundleAsyncIterator values();
 };

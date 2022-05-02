@@ -29,6 +29,6 @@ dictionary StorageEstimate {
 
 [SecureContext]
 partial interface StorageManager {
-  [Pref="dom.fs.enabled"]
+  [Pref="dom.fs.enabled", NewObject]
   Promise<FileSystemDirectoryHandle> getDirectory();
 };

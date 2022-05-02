@@ -37,7 +37,7 @@ class FluentBundleAsyncIterator final : public nsWrapperCache {
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   // WebIDL
-  already_AddRefed<dom::Promise> Next();
+  already_AddRefed<dom::Promise> Next(ErrorResult& aError);
   already_AddRefed<FluentBundleAsyncIterator> Values();
 
  protected:
