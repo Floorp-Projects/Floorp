@@ -1023,11 +1023,7 @@ LayoutDeviceIntPoint PuppetWidget::GetChromeOffset() {
 }
 
 LayoutDeviceIntPoint PuppetWidget::WidgetToScreenOffset() {
-  auto positionRalativeToWindow =
-      WidgetToTopLevelWidgetTransform().TransformPoint(LayoutDevicePoint());
-
-  return GetWindowPosition() +
-         LayoutDeviceIntPoint::Round(positionRalativeToWindow);
+  return GetWindowPosition() + WidgetToTopLevelWidgetOffset();
 }
 
 LayoutDeviceIntPoint PuppetWidget::GetWindowPosition() {
