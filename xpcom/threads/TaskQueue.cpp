@@ -38,7 +38,10 @@ TaskQueue::~TaskQueue() {
   MOZ_ASSERT(mShutdownTasks.IsEmpty());
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(TaskQueue, AbstractThread, nsIDirectTaskDispatcher);
+NS_IMPL_ADDREF_INHERITED(TaskQueue, SupportsThreadSafeWeakPtr<TaskQueue>)
+NS_IMPL_RELEASE_INHERITED(TaskQueue, SupportsThreadSafeWeakPtr<TaskQueue>)
+NS_IMPL_QUERY_INTERFACE(TaskQueue, nsIDirectTaskDispatcher,
+                        nsISerialEventTarget, nsIEventTarget)
 
 TaskDispatcher& TaskQueue::TailDispatcher() {
   MOZ_ASSERT(IsCurrentThreadIn());

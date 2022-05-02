@@ -14,6 +14,7 @@
 #include "mozilla/Queue.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsIDirectTaskDispatcher.h"
 #include "nsThreadUtils.h"
 
@@ -46,12 +47,15 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue final : public AbstractThread, public nsIDirectTaskDispatcher {
+class TaskQueue final : public AbstractThread,
+                        public nsIDirectTaskDispatcher,
+                        public SupportsThreadSafeWeakPtr<TaskQueue> {
   class EventTargetWrapper;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDIRECTTASKDISPATCHER
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TaskQueue)
 
   static RefPtr<TaskQueue> Create(already_AddRefed<nsIEventTarget> aTarget,
                                   const char* aName,
@@ -123,6 +127,8 @@ class TaskQueue final : public AbstractThread, public nsIDirectTaskDispatcher {
   using nsISerialEventTarget::IsOnCurrentThread;
 
  private:
+  friend class SupportsThreadSafeWeakPtr<TaskQueue>;
+
   TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
             bool aSupportsTailDispatch);
 
