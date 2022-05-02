@@ -2055,19 +2055,23 @@ bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
     }
   }
 
+  uint32_t bitrate_bps =
+      stream_resource_manager_.UseBandwidthAllocationBps().value_or(
+          encoder_target_bitrate_bps_.value());
+
   absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits =
       encoder_->GetEncoderInfo().GetEncoderBitrateLimitsForResolution(
           pixel_count);
 
   if (encoder_bitrate_limits.has_value()) {
     // Use bitrate limits provided by encoder.
-    return encoder_target_bitrate_bps_.value() <
+    return bitrate_bps <
            static_cast<uint32_t>(encoder_bitrate_limits->min_start_bitrate_bps);
   }
 
-  if (encoder_target_bitrate_bps_.value() < 300000 /* qvga */) {
+  if (bitrate_bps < 300000 /* qvga */) {
     return pixel_count > 320 * 240;
-  } else if (encoder_target_bitrate_bps_.value() < 500000 /* vga */) {
+  } else if (bitrate_bps < 500000 /* vga */) {
     return pixel_count > 640 * 480;
   }
   return false;

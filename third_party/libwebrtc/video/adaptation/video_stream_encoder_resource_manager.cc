@@ -98,6 +98,8 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
         set_start_bitrate_(DataRate::Zero()),
         set_start_bitrate_time_ms_(0),
         initial_framedrop_(0),
+        use_bandwidth_allocation_(false),
+        bandwidth_allocation_(DataRate::Zero()),
         last_input_width_(0),
         last_input_height_(0) {
     RTC_DCHECK(quality_scaler_resource_);
@@ -112,10 +114,21 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
     return single_active_stream_pixels_;
   }
 
+  absl::optional<uint32_t> UseBandwidthAllocationBps() const {
+    return (use_bandwidth_allocation_ &&
+            bandwidth_allocation_ > DataRate::Zero())
+               ? absl::optional<uint32_t>(bandwidth_allocation_.bps())
+               : absl::nullopt;
+  }
+
   // Input signals.
   void SetStartBitrate(DataRate start_bitrate, int64_t now_ms) {
     set_start_bitrate_ = start_bitrate;
     set_start_bitrate_time_ms_ = now_ms;
+  }
+
+  void SetBandwidthAllocation(DataRate bandwidth_allocation) {
+    bandwidth_allocation_ = bandwidth_allocation;
   }
 
   void SetTargetBitrate(DataRate target_bitrate, int64_t now_ms) {
@@ -158,6 +171,11 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
         RTC_LOG(LS_INFO) << "Resetting initial_framedrop_ due to changed "
                             "stream parameters";
         initial_framedrop_ = 0;
+        if (single_active_stream_pixels_ &&
+            GetSingleActiveLayerPixels(codec) > *single_active_stream_pixels_) {
+          // Resolution increased.
+          use_bandwidth_allocation_ = true;
+        }
       }
     }
     last_adaptation_counters_ = adaptation_counters;
@@ -169,7 +187,10 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
 
   void OnFrameDroppedDueToSize() { ++initial_framedrop_; }
 
-  void Disable() { initial_framedrop_ = kMaxInitialFramedrop; }
+  void Disable() {
+    initial_framedrop_ = kMaxInitialFramedrop;
+    use_bandwidth_allocation_ = false;
+  }
 
   void OnQualityScalerSettingsUpdated() {
     if (quality_scaler_resource_->is_started()) {
@@ -177,7 +198,7 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
       initial_framedrop_ = 0;
     } else {
       // Quality scaling disabled so we shouldn't drop initial frames.
-      initial_framedrop_ = kMaxInitialFramedrop;
+      Disable();
     }
   }
 
@@ -194,6 +215,8 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
   // Counts how many frames we've dropped in the initial framedrop phase.
   int initial_framedrop_;
   absl::optional<uint32_t> single_active_stream_pixels_;
+  bool use_bandwidth_allocation_;
+  DataRate bandwidth_allocation_;
 
   std::vector<bool> last_active_flags_;
   VideoAdaptationCounters last_adaptation_counters_;
@@ -398,6 +421,8 @@ void VideoStreamEncoderResourceManager::SetEncoderRates(
     const VideoEncoder::RateControlParameters& encoder_rates) {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   encoder_rates_ = encoder_rates;
+  initial_frame_dropper_->SetBandwidthAllocation(
+      encoder_rates.bandwidth_allocation);
 }
 
 void VideoStreamEncoderResourceManager::OnFrameDroppedDueToSize() {
@@ -447,6 +472,12 @@ absl::optional<uint32_t>
 VideoStreamEncoderResourceManager::SingleActiveStreamPixels() const {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   return initial_frame_dropper_->single_active_stream_pixels();
+}
+
+absl::optional<uint32_t>
+VideoStreamEncoderResourceManager::UseBandwidthAllocationBps() const {
+  RTC_DCHECK_RUN_ON(encoder_queue_);
+  return initial_frame_dropper_->UseBandwidthAllocationBps();
 }
 
 void VideoStreamEncoderResourceManager::OnMaybeEncodeFrame() {
