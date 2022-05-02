@@ -17,7 +17,6 @@
 
 namespace mozilla::dom::cache {
 
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
 
 // declared in ActorUtils.h
@@ -73,15 +72,12 @@ void CacheStreamControlChild::SerializeControl(
   aReadStreamOut->controlChild() = this;
 }
 
-void CacheStreamControlChild::SerializeStream(
-    CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList) {
+void CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
+                                              nsIInputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  UniquePtr<AutoIPCStream> autoStream(
-      new AutoIPCStream(aReadStreamOut->stream()));
-  autoStream->Serialize(aStream, Manager());
-  aStreamCleanupList.AppendElement(std::move(autoStream));
+  MOZ_ALWAYS_TRUE(mozilla::ipc::SerializeIPCStream(
+      do_AddRef(aStream), aReadStreamOut->stream(), /* aAllowLazy */ false));
 }
 
 void CacheStreamControlChild::OpenStream(const nsID& aId,
