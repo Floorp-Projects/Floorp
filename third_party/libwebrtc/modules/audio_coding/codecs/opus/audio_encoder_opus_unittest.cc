@@ -809,4 +809,90 @@ TEST_P(AudioEncoderOpusTest, OpusFlagDtxAsNonSpeech) {
   EXPECT_GT(max_nonspeech_frames, 15);
 }
 
+TEST(AudioEncoderOpusTest, OpusDtxFilteringHighEnergyRefreshPackets) {
+  test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Audio-OpusAvoidNoisePumpingDuringDtx/Enabled/");
+  const std::string kInputFileName =
+      webrtc::test::ResourcePath("audio_coding/testfile16kHz", "pcm");
+  constexpr int kSampleRateHz = 16000;
+  AudioEncoderOpusConfig config;
+  config.dtx_enabled = true;
+  config.sample_rate_hz = kSampleRateHz;
+  constexpr int payload_type = 17;
+  const auto encoder = AudioEncoderOpus::MakeAudioEncoder(config, payload_type);
+  test::AudioLoop audio_loop;
+  constexpr size_t kMaxLoopLengthSaples = kSampleRateHz * 11.6f;
+  constexpr size_t kInputBlockSizeSamples = kSampleRateHz / 100;
+  EXPECT_TRUE(audio_loop.Init(kInputFileName, kMaxLoopLengthSaples,
+                              kInputBlockSizeSamples));
+  AudioEncoder::EncodedInfo info;
+  rtc::Buffer encoded(500);
+  // Encode the audio file and store the last part that corresponds to silence.
+  constexpr size_t kSilenceDurationSamples = kSampleRateHz * 0.2f;
+  std::array<int16_t, kSilenceDurationSamples> silence;
+  uint32_t rtp_timestamp = 0;
+  bool opus_entered_dtx = false;
+  bool silence_filled = false;
+  size_t timestamp_start_silence = 0;
+  while (!silence_filled && rtp_timestamp < kMaxLoopLengthSaples) {
+    encoded.Clear();
+    // Every second call to the encoder will generate an Opus packet.
+    for (int j = 0; j < 2; j++) {
+      auto next_frame = audio_loop.GetNextBlock();
+      info = encoder->Encode(rtp_timestamp, next_frame, &encoded);
+      if (opus_entered_dtx) {
+        size_t silence_frame_start = rtp_timestamp - timestamp_start_silence;
+        silence_filled = silence_frame_start >= kSilenceDurationSamples;
+        if (!silence_filled) {
+          std::copy(next_frame.begin(), next_frame.end(),
+                    silence.begin() + silence_frame_start);
+        }
+      }
+      rtp_timestamp += kInputBlockSizeSamples;
+    }
+    if (info.encoded_bytes < 2 && !opus_entered_dtx) {
+      timestamp_start_silence = rtp_timestamp;
+    }
+    opus_entered_dtx = info.encoded_bytes < 2;
+  }
+
+  EXPECT_TRUE(silence_filled);
+  // The copied 200 ms of silence is used for creating 6 bursts that are fed to
+  // the encoder, the first three ones with a larger energy and the last three
+  // with a lower energy. This test verifies that the encoder just sends refresh
+  // DTX packets during the last bursts.
+  int number_non_empty_packets_during_increase = 0;
+  int number_non_empty_packets_during_decrease = 0;
+  for (size_t burst = 0; burst < 6; ++burst) {
+    uint32_t rtp_timestamp_start = rtp_timestamp;
+    const bool increase_noise = burst < 3;
+    const float gain = increase_noise ? 1.4f : 0.0f;
+    while (rtp_timestamp < rtp_timestamp_start + kSilenceDurationSamples) {
+      encoded.Clear();
+      // Every second call to the encoder will generate an Opus packet.
+      for (int j = 0; j < 2; j++) {
+        std::array<int16_t, kInputBlockSizeSamples> silence_frame;
+        size_t silence_frame_start = rtp_timestamp - rtp_timestamp_start;
+        std::transform(
+            silence.begin() + silence_frame_start,
+            silence.begin() + silence_frame_start + kInputBlockSizeSamples,
+            silence_frame.begin(), [gain](float s) { return gain * s; });
+        info = encoder->Encode(rtp_timestamp, silence_frame, &encoded);
+        rtp_timestamp += kInputBlockSizeSamples;
+      }
+      // Tracking the number of non empty packets.
+      if (increase_noise && info.encoded_bytes > 2) {
+        number_non_empty_packets_during_increase++;
+      }
+      if (!increase_noise && info.encoded_bytes > 2) {
+        number_non_empty_packets_during_decrease++;
+      }
+    }
+  }
+  // Check that the refresh DTX packets are just sent during the decrease energy
+  // region.
+  EXPECT_EQ(number_non_empty_packets_during_increase, 0);
+  EXPECT_GT(number_non_empty_packets_during_decrease, 0);
+}
+
 }  // namespace webrtc

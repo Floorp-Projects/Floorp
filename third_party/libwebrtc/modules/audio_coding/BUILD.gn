@@ -831,6 +831,7 @@ rtc_library("webrtc_opus_wrapper") {
   }
 
   deps = [
+    "../../api:array_view",
     "../../rtc_base:checks",
     "../../rtc_base:ignore_wundef",
     "../../rtc_base:rtc_base_approved",
