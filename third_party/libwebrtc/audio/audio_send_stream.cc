@@ -168,13 +168,14 @@ AudioSendStream::AudioSendStream(
 
   RTC_DCHECK(rtp_rtcp_module_);
 
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   ConfigureStream(config, true);
-
+  UpdateCachedTargetAudioBitrateConstraints();
   pacer_thread_checker_.Detach();
 }
 
 AudioSendStream::~AudioSendStream() {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   RTC_LOG(LS_INFO) << "~AudioSendStream: " << config_.rtp.ssrc;
   RTC_DCHECK(!sending_);
   channel_send_->ResetSenderCongestionControlObjects();
@@ -186,13 +187,13 @@ AudioSendStream::~AudioSendStream() {
 }
 
 const webrtc::AudioSendStream::Config& AudioSendStream::GetConfig() const {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return config_;
 }
 
 void AudioSendStream::Reconfigure(
     const webrtc::AudioSendStream::Config& new_config) {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   ConfigureStream(new_config, false);
 }
 
@@ -351,20 +352,22 @@ void AudioSendStream::ConfigureStream(
   }
 
   channel_send_->CallEncoder([this](AudioEncoder* encoder) {
+    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
     if (!encoder) {
       return;
     }
-    worker_queue_->PostTask(
-        [this, length_range = encoder->GetFrameLengthRange()] {
-          RTC_DCHECK_RUN_ON(worker_queue_);
-          frame_length_range_ = length_range;
-        });
+    frame_length_range_ = encoder->GetFrameLengthRange();
+    UpdateCachedTargetAudioBitrateConstraints();
   });
 
   if (sending_) {
     ReconfigureBitrateObserver(new_config);
   }
+
   config_ = new_config;
+  if (!first_time) {
+    UpdateCachedTargetAudioBitrateConstraints();
+  }
 }
 
 void AudioSendStream::Start() {
@@ -379,13 +382,7 @@ void AudioSendStream::Start() {
     if (send_side_bwe_with_overhead_)
       rtp_transport_->IncludeOverheadInPacedSender();
     rtp_rtcp_module_->SetAsPartOfAllocation(true);
-    rtc::Event thread_sync_event;
-    worker_queue_->PostTask([&] {
-      RTC_DCHECK_RUN_ON(worker_queue_);
-      ConfigureBitrateObserver();
-      thread_sync_event.Set();
-    });
-    thread_sync_event.Wait(rtc::Event::kForever);
+    ConfigureBitrateObserver();
   } else {
     rtp_rtcp_module_->SetAsPartOfAllocation(false);
   }
@@ -396,7 +393,7 @@ void AudioSendStream::Start() {
 }
 
 void AudioSendStream::Stop() {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   if (!sending_) {
     return;
   }
@@ -431,14 +428,14 @@ bool AudioSendStream::SendTelephoneEvent(int payload_type,
                                          int payload_frequency,
                                          int event,
                                          int duration_ms) {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_send_->SetSendTelephoneEventPayloadType(payload_type,
                                                   payload_frequency);
   return channel_send_->SendTelephoneEventOutband(event, duration_ms);
 }
 
 void AudioSendStream::SetMuted(bool muted) {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_send_->SetInputMute(muted);
 }
 
@@ -448,7 +445,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats() const {
 
 webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
     bool has_remote_tracks) const {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   webrtc::AudioSendStream::Stats stats;
   stats.local_ssrc = config_.rtp.ssrc;
   stats.target_bitrate_bps = channel_send_->GetBitrate();
@@ -510,12 +507,14 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
 void AudioSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   channel_send_->ReceivedRTCPPacket(packet, length);
-  worker_queue_->PostTask([&]() {
+
+  {
     // Poll if overhead has changed, which it can do if ack triggers us to stop
     // sending mid/rid.
     MutexLock lock(&overhead_per_packet_lock_);
     UpdateOverheadForEncoder();
-  });
+  }
+  UpdateCachedTargetAudioBitrateConstraints();
 }
 
 uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
@@ -524,9 +523,11 @@ uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
   // Pick a target bitrate between the constraints. Overrules the allocator if
   // it 1) allocated a bitrate of zero to disable the stream or 2) allocated a
   // higher than max to allow for e.g. extra FEC.
-  auto constraints = GetMinMaxBitrateConstraints();
-  update.target_bitrate.Clamp(constraints.min, constraints.max);
-  update.stable_target_bitrate.Clamp(constraints.min, constraints.max);
+  RTC_DCHECK(cached_constraints_.has_value());
+  update.target_bitrate.Clamp(cached_constraints_->min,
+                              cached_constraints_->max);
+  update.stable_target_bitrate.Clamp(cached_constraints_->min,
+                                     cached_constraints_->max);
 
   channel_send_->OnBitrateAllocation(update);
 
@@ -537,13 +538,17 @@ uint32_t AudioSendStream::OnBitrateUpdated(BitrateAllocationUpdate update) {
 
 void AudioSendStream::SetTransportOverhead(
     int transport_overhead_per_packet_bytes) {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
-  MutexLock lock(&overhead_per_packet_lock_);
-  transport_overhead_per_packet_bytes_ = transport_overhead_per_packet_bytes;
-  UpdateOverheadForEncoder();
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  {
+    MutexLock lock(&overhead_per_packet_lock_);
+    transport_overhead_per_packet_bytes_ = transport_overhead_per_packet_bytes;
+    UpdateOverheadForEncoder();
+  }
+  UpdateCachedTargetAudioBitrateConstraints();
 }
 
 void AudioSendStream::UpdateOverheadForEncoder() {
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   size_t overhead_per_packet_bytes = GetPerPacketOverheadBytes();
   if (overhead_per_packet_ == overhead_per_packet_bytes) {
     return;
@@ -553,19 +558,11 @@ void AudioSendStream::UpdateOverheadForEncoder() {
   channel_send_->CallEncoder([&](AudioEncoder* encoder) {
     encoder->OnReceivedOverhead(overhead_per_packet_bytes);
   });
-  auto update_task = [this, overhead_per_packet_bytes] {
-    RTC_DCHECK_RUN_ON(worker_queue_);
-    if (total_packet_overhead_bytes_ != overhead_per_packet_bytes) {
-      total_packet_overhead_bytes_ = overhead_per_packet_bytes;
-      if (registered_with_allocator_) {
-        ConfigureBitrateObserver();
-      }
+  if (total_packet_overhead_bytes_ != overhead_per_packet_bytes) {
+    total_packet_overhead_bytes_ = overhead_per_packet_bytes;
+    if (registered_with_allocator_) {
+      ConfigureBitrateObserver();
     }
-  };
-  if (worker_queue_->IsCurrent()) {
-    update_task();
-  } else {
-    worker_queue_->PostTask(update_task);
   }
 }
 
@@ -603,7 +600,6 @@ const internal::AudioState* AudioSendStream::audio_state() const {
 
 void AudioSendStream::StoreEncoderProperties(int sample_rate_hz,
                                              size_t num_channels) {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
   encoder_sample_rate_hz_ = sample_rate_hz;
   encoder_num_channels_ = num_channels;
   if (sending_) {
@@ -801,7 +797,6 @@ void AudioSendStream::ReconfigureCNG(const Config& new_config) {
 
 void AudioSendStream::ReconfigureBitrateObserver(
     const webrtc::AudioSendStream::Config& new_config) {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   // Since the Config's default is for both of these to be -1, this test will
   // allow us to configure the bitrate observer if the new config has bitrate
   // limits set, but would only have us call RemoveBitrateObserver if we were
@@ -820,20 +815,13 @@ void AudioSendStream::ReconfigureBitrateObserver(
     rtp_transport_->AccountForAudioPacketsInPacedSender(true);
     if (send_side_bwe_with_overhead_)
       rtp_transport_->IncludeOverheadInPacedSender();
-    rtc::Event thread_sync_event;
-    worker_queue_->PostTask([&] {
-      RTC_DCHECK_RUN_ON(worker_queue_);
-      // We may get a callback immediately as the observer is registered, so
-      // make
-      // sure the bitrate limits in config_ are up-to-date.
-      config_.min_bitrate_bps = new_config.min_bitrate_bps;
-      config_.max_bitrate_bps = new_config.max_bitrate_bps;
+    // We may get a callback immediately as the observer is registered, so
+    // make sure the bitrate limits in config_ are up-to-date.
+    config_.min_bitrate_bps = new_config.min_bitrate_bps;
+    config_.max_bitrate_bps = new_config.max_bitrate_bps;
 
-      config_.bitrate_priority = new_config.bitrate_priority;
-      ConfigureBitrateObserver();
-      thread_sync_event.Set();
-    });
-    thread_sync_event.Wait(rtc::Event::kForever);
+    config_.bitrate_priority = new_config.bitrate_priority;
+    ConfigureBitrateObserver();
     rtp_rtcp_module_->SetAsPartOfAllocation(true);
   } else {
     rtp_transport_->AccountForAudioPacketsInPacedSender(false);
@@ -867,22 +855,25 @@ void AudioSendStream::ConfigureBitrateObserver() {
   if (allocation_settings_.priority_bitrate_raw)
     priority_bitrate = *allocation_settings_.priority_bitrate_raw;
 
-  bitrate_allocator_->AddObserver(
-      this,
-      MediaStreamAllocationConfig{
-          constraints.min.bps<uint32_t>(), constraints.max.bps<uint32_t>(), 0,
-          priority_bitrate.bps(), true,
-          allocation_settings_.bitrate_priority.value_or(
-              config_.bitrate_priority)});
+  worker_queue_->PostTask([this, constraints, priority_bitrate,
+                           config_bitrate_priority = config_.bitrate_priority] {
+    RTC_DCHECK_RUN_ON(worker_queue_);
+    bitrate_allocator_->AddObserver(
+        this,
+        MediaStreamAllocationConfig{
+            constraints.min.bps<uint32_t>(), constraints.max.bps<uint32_t>(), 0,
+            priority_bitrate.bps(), true,
+            allocation_settings_.bitrate_priority.value_or(
+                config_bitrate_priority)});
+  });
   registered_with_allocator_ = true;
 }
 
 void AudioSendStream::RemoveBitrateObserver() {
-  RTC_DCHECK(worker_thread_checker_.IsCurrent());
+  registered_with_allocator_ = false;
   rtc::Event thread_sync_event;
   worker_queue_->PostTask([this, &thread_sync_event] {
     RTC_DCHECK_RUN_ON(worker_queue_);
-    registered_with_allocator_ = false;
     bitrate_allocator_->RemoveObserver(this);
     thread_sync_event.Set();
   });
@@ -928,5 +919,24 @@ void AudioSendStream::RegisterCngPayloadType(int payload_type,
                                              int clockrate_hz) {
   channel_send_->RegisterCngPayloadType(payload_type, clockrate_hz);
 }
+
+void AudioSendStream::UpdateCachedTargetAudioBitrateConstraints() {
+  if (config_.min_bitrate_bps == -1 || config_.max_bitrate_bps == -1) {
+    // |config_| is invalid to evaluate constraints.
+    return;
+  }
+  if (!frame_length_range_.has_value()) {
+    // |frame_length_range_| have to have value to be able to evaluate
+    // constraints.
+    return;
+  }
+  AudioSendStream::TargetAudioBitrateConstraints new_constraints =
+      GetMinMaxBitrateConstraints();
+  worker_queue_->PostTask([this, new_constraints]() {
+    RTC_DCHECK_RUN_ON(worker_queue_);
+    cached_constraints_ = new_constraints;
+  });
+}
+
 }  // namespace internal
 }  // namespace webrtc
