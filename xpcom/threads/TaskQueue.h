@@ -140,11 +140,11 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
     }
   }
 
-  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsIEventTarget> mTarget GUARDED_BY(mQueueMonitor);
 
   // Monitor that protects the queue, mIsRunning, mIsShutdown and
   // mShutdownTasks;
-  Monitor mQueueMonitor MOZ_UNANNOTATED;
+  Monitor mQueueMonitor;
 
   typedef struct TaskStruct {
     nsCOMPtr<nsIRunnable> event;
@@ -152,10 +152,11 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   } TaskStruct;
 
   // Queue of tasks to run.
-  Queue<TaskStruct> mTasks;
+  Queue<TaskStruct> mTasks GUARDED_BY(mQueueMonitor);
 
   // List of tasks to run during shutdown.
-  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks;
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
+      GUARDED_BY(mQueueMonitor);
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -207,11 +208,11 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
 
   // True if we've dispatched an event to the target to execute events from
   // the queue.
-  bool mIsRunning;
+  bool mIsRunning GUARDED_BY(mQueueMonitor);
 
   // True if we've started our shutdown process.
-  bool mIsShutdown;
-  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+  bool mIsShutdown GUARDED_BY(mQueueMonitor);
+  MozPromiseHolder<ShutdownPromise> mShutdownPromise GUARDED_BY(mQueueMonitor);
 
   // The name of this TaskQueue. Useful when debugging dispatch failures.
   const char* const mName;
