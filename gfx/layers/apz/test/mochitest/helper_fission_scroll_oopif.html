@@ -32,7 +32,7 @@ let code_for_oopif_to_run = function() {
 
 async function clickOnIframe(x, y) {
   let iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
-  synthesizeNativeMouseEventWithAPZ(
+  await synthesizeNativeMouseEventWithAPZ(
     { type: "click", target: document.body, offsetX: x, offsetY: y },
     () => dump("Finished synthesizing click, waiting for OOPIF message...\n")
   );
@@ -144,7 +144,7 @@ async function test() {
   // events is trickier because they will fire in the OOPIF, so we can't just
   // use promiseMoveMouseAndScrollWheelOver directly.
   let scrolledPromise = promiseOneEvent(window, "OOPIF:Scrolled", null);
-  synthesizeNativeWheel(document.body, 50, 250, 0, -10);
+  await synthesizeNativeWheel(document.body, 50, 250, 0, -10);
   iframeY = (await scrolledPromise).data.y;
   ok(iframeY > 0, "scrollY of iframe should be >0 after scrolling");
 }

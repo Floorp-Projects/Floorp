@@ -107,7 +107,7 @@ async function test() {
     contentReceivedContextmenu = true;
   };
   document.addEventListener("contextmenu", contentListener);
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     type: "click",
     button: 2,  // eSecondary (= "right mouse button")
     target: window,

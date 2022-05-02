@@ -88,7 +88,7 @@ async function test() {
     receivedClick = true;
   };
   document.addEventListener("click", listener);
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     type: "click",
     target: subframe,
     offsetX: 50,
@@ -115,7 +115,7 @@ async function test() {
       resolve();
     }, { once: true });
   });
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     type: "click",
     target: window,
     offsetX: 22,

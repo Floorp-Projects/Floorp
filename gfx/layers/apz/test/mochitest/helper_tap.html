@@ -9,10 +9,10 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function clickButton() {
+async function clickButton() {
   document.addEventListener("click", clicked);
 
-  synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
+  await synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
     dump("Finished synthesizing tap, waiting for button to be clicked...\n");
   });
 }

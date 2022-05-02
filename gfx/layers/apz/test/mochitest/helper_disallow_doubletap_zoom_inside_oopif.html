@@ -23,7 +23,7 @@ async function test() {
   });
 
   // A double tap inside the OOP iframe.
-  synthesizeDoubleTap(document.getElementById("target"), 20, 20, useTouchpad);
+  await synthesizeDoubleTap(document.getElementById("target"), 20, 20, useTouchpad);
 
   for (let i = 0; i < 10; i++) {
     await promiseFrame();
