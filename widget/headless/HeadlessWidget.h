@@ -70,6 +70,7 @@ class HeadlessWidget : public nsBaseWidget {
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
   virtual void Resize(double aX, double aY, double aWidth, double aHeight,
                       bool aRepaint) override;
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual nsresult MakeFullScreen(bool aFullScreen) override;
   virtual void Enable(bool aState) override;
@@ -141,6 +142,7 @@ class HeadlessWidget : public nsBaseWidget {
   bool mDestroyed;
   nsIWidget* mTopLevel;
   HeadlessCompositorWidget* mCompositorWidget;
+  nsSizeMode mSizeMode;
   // The size mode before entering fullscreen mode.
   nsSizeMode mLastSizeMode;
   // The last size mode set while the window was visible.
