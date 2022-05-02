@@ -165,10 +165,11 @@ void BlockReflowState::ComputeFloatAvoidingOffsets(
     iStartOffset = 0;
     iEndOffset = 0;
   } else {
-    LogicalMargin frameMargin(wm);
-    SizeComputationInput os(aFloatAvoidingBlock, mReflowInput.mRenderingContext,
-                            wm, mContentArea.ISize(wm));
-    frameMargin = os.ComputedLogicalMargin(wm);
+    const LogicalMargin frameMargin =
+        SizeComputationInput(aFloatAvoidingBlock,
+                             mReflowInput.mRenderingContext, wm,
+                             mContentArea.ISize(wm))
+            .ComputedLogicalMargin(wm);
 
     nscoord iStartFloatIOffset =
         aFloatAvailableSpace.IStart(wm) - mContentArea.IStart(wm);
@@ -624,15 +625,15 @@ bool BlockReflowState::CanPlaceFloat(
 // how much inline-size it will occupy in the containing block's mode.
 static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
                                 nscoord aFloatAvailableISize, nsIFrame* aFloat,
-                                const SizeComputationInput& aFloatOffsetState) {
+                                const SizeComputationInput& aFloatSizingInput) {
   AutoMaybeDisableFontInflation an(aFloat);
-  WritingMode wm = aFloatOffsetState.GetWritingMode();
+  WritingMode wm = aFloatSizingInput.GetWritingMode();
 
   auto floatSize = aFloat->ComputeSize(
       aCBReflowInput.mRenderingContext, wm, aCBReflowInput.ComputedSize(wm),
       aFloatAvailableISize,
-      aFloatOffsetState.ComputedLogicalMargin(wm).Size(wm),
-      aFloatOffsetState.ComputedLogicalBorderPadding(wm).Size(wm), {},
+      aFloatSizingInput.ComputedLogicalMargin(wm).Size(wm),
+      aFloatSizingInput.ComputedLogicalBorderPadding(wm).Size(wm), {},
       ComputeSizeFlag::ShrinkWrap);
 
   WritingMode cbwm = aCBReflowInput.GetWritingMode();
@@ -642,8 +643,8 @@ static nscoord FloatMarginISize(const ReflowInput& aCBReflowInput,
   }
 
   return floatISize +
-         aFloatOffsetState.ComputedLogicalMargin(cbwm).IStartEnd(cbwm) +
-         aFloatOffsetState.ComputedLogicalBorderPadding(cbwm).IStartEnd(cbwm);
+         aFloatSizingInput.ComputedLogicalMargin(cbwm).IStartEnd(cbwm) +
+         aFloatSizingInput.ComputedLogicalBorderPadding(cbwm).IStartEnd(cbwm);
 }
 
 // A frame property that stores the last shape source / margin / etc. if there's
@@ -733,11 +734,11 @@ bool BlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat) {
 
   NS_ASSERTION(aFloat->GetParent() == mBlock, "Float frame has wrong parent");
 
-  SizeComputationInput offsets(aFloat, mReflowInput.mRenderingContext, wm,
-                               mReflowInput.ComputedISize());
+  SizeComputationInput sizingInput(aFloat, mReflowInput.mRenderingContext, wm,
+                                   mReflowInput.ComputedISize());
 
   nscoord floatMarginISize = FloatMarginISize(
-      mReflowInput, adjustedAvailableSpace.ISize(wm), aFloat, offsets);
+      mReflowInput, adjustedAvailableSpace.ISize(wm), aFloat, sizingInput);
 
   LogicalMargin floatMargin(wm);  // computed margin
   LogicalMargin floatOffsets(wm);
