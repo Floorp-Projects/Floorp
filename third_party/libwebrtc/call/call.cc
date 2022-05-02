@@ -325,7 +325,7 @@ class Call final : public webrtc::Call,
   Clock* const clock_;
   TaskQueueFactory* const task_queue_factory_;
   TaskQueueBase* const worker_thread_;
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker network_thread_;
+  TaskQueueBase* const network_thread_;
 
   const int num_cpu_cores_;
   const rtc::scoped_refptr<SharedModuleThread> module_process_thread_;
@@ -591,6 +591,10 @@ Call::Call(Clock* clock,
     : clock_(clock),
       task_queue_factory_(task_queue_factory),
       worker_thread_(GetCurrentTaskQueueOrThread()),
+      // If |network_task_queue_| was set to nullptr, network related calls
+      // must be made on |worker_thread_| (i.e. they're one and the same).
+      network_thread_(config.network_task_queue_ ? config.network_task_queue_
+                                                 : worker_thread_),
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
       module_process_thread_(std::move(module_process_thread)),
       call_stats_(new CallStats(clock_, worker_thread_)),
@@ -617,9 +621,8 @@ Call::Call(Clock* clock,
       transport_send_(std::move(transport_send)) {
   RTC_DCHECK(config.event_log != nullptr);
   RTC_DCHECK(config.trials != nullptr);
+  RTC_DCHECK(network_thread_);
   RTC_DCHECK(worker_thread_->IsCurrent());
-
-  network_thread_.Detach();
 
   // Do not remove this call; it is here to convince the compiler that the
   // WebRTC source timestamp string needs to be in the final binary.
@@ -757,7 +760,6 @@ void Call::UpdateReceiveHistograms() {
 }
 
 PacketReceiver* Call::Receiver() {
-  RTC_DCHECK_RUN_ON(worker_thread_);
   return this;
 }
 
@@ -1418,7 +1420,7 @@ void Call::DeliverPacketAsync(MediaType media_type,
                               rtc::CopyOnWriteBuffer packet,
                               int64_t packet_time_us,
                               PacketCallback callback) {
-  RTC_DCHECK_RUN_ON(&network_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
 
   TaskQueueBase* network_thread = rtc::Thread::Current();
   RTC_DCHECK(network_thread);
