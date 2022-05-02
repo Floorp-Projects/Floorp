@@ -633,10 +633,20 @@ class PeerConnectionWrapper : public webrtc::PeerConnectionObserver,
     auto delta_rpad =
         *track_stats->relative_packet_arrival_delay - audio_delay_stat_;
     auto recent_delay = delta_packets > 0 ? delta_rpad / delta_packets : -1;
+    // The purpose of these checks is to sound the alarm early if we introduce
+    // serious regressions. The numbers are not acceptable for production, but
+    // occur on slow bots.
+    //
     // An average relative packet arrival delay over the renegotiation of
     // > 100 ms indicates that something is dramatically wrong, and will impact
     // quality for sure.
+    // Worst bots:
+    // linux_x86_dbg at 0.206
+#if !defined(NDEBUG)
+    EXPECT_GT(0.25, recent_delay) << tag << " size " << desc_size;
+#else
     EXPECT_GT(0.1, recent_delay) << tag << " size " << desc_size;
+#endif
     auto delta_samples =
         *track_stats->total_samples_received - audio_samples_stat_;
     auto delta_concealed =
@@ -644,19 +654,34 @@ class PeerConnectionWrapper : public webrtc::PeerConnectionObserver,
     // These limits should be adjusted down as we improve:
     //
     // Concealing more than 4000 samples during a renegotiation is unacceptable.
-    // Concealing more than 20% of samples during a renegotiation is
-    // unacceptable.
+    // But some bots are slow.
 
-    // Current lowest scores:
-    // linux_more_configs bot at conceal rate 0.516
+    // Worst bots:
     // linux_more_configs bot at conceal count 5184
     // android_arm_rel at conceal count 9241
+    // linux_x86_dbg at 15174
+#if !defined(NDEBUG)
+    EXPECT_GT(18000U, delta_concealed) << "Concealed " << delta_concealed
+                                       << " of " << delta_samples << " samples";
+#else
     EXPECT_GT(15000U, delta_concealed) << "Concealed " << delta_concealed
                                        << " of " << delta_samples << " samples";
+#endif
+    // Concealing more than 20% of samples during a renegotiation is
+    // unacceptable.
+    // Worst bots:
+    // linux_more_configs bot at conceal rate 0.516
+    // linux_x86_dbg bot at conceal rate 0.854
     if (delta_samples > 0) {
+#if !defined(NDEBUG)
+      EXPECT_GT(0.95, 1.0 * delta_concealed / delta_samples)
+          << "Concealed " << delta_concealed << " of " << delta_samples
+          << " samples";
+#else
       EXPECT_GT(0.6, 1.0 * delta_concealed / delta_samples)
           << "Concealed " << delta_concealed << " of " << delta_samples
           << " samples";
+#endif
     }
     // Increment trailing counters
     audio_packets_stat_ = *rtp_stats->packets_received;
