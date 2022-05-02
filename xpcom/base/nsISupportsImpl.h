@@ -1354,14 +1354,26 @@ nsresult NS_FASTCALL NS_TableDrivenQI(void* aThis, REFNSIID aIID,
 
 namespace mozilla {
 class Runnable;
+namespace detail {
+class SupportsThreadSafeWeakPtrBase;
+
+// Don't NS_LOG_{ADDREF,RELEASE} when inheriting from `Runnable*` or types with
+// thread safe weak references, as it will generate incorrect refcnt logs due to
+// the thread-safe `Upgrade()` call's refcount modifications not calling through
+// the derived class' `AddRef()` and `Release()` methods.
+template <typename T>
+constexpr bool ShouldLogInheritedRefcnt =
+    !std::is_convertible_v<T*, Runnable*> &&
+    !std::is_base_of_v<SupportsThreadSafeWeakPtrBase, T>;
+}
 }  // namespace mozilla
 
-#define NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super)         \
-  MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(Class)                 \
-  nsrefcnt r = Super::AddRef();                             \
-  if (!std::is_convertible_v<Class*, mozilla::Runnable*>) { \
-    NS_LOG_ADDREF(this, r, #Class, sizeof(*this));          \
-  }                                                         \
+#define NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super)                   \
+  MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(Class)                           \
+  nsrefcnt r = Super::AddRef();                                       \
+  if constexpr (::mozilla::detail::ShouldLogInheritedRefcnt<Class>) { \
+    NS_LOG_ADDREF(this, r, #Class, sizeof(*this));                    \
+  }                                                                   \
   return r /* Purposefully no trailing semicolon */
 
 #define NS_IMPL_ADDREF_INHERITED(Class, Super)                  \
@@ -1369,11 +1381,11 @@ class Runnable;
     NS_IMPL_ADDREF_INHERITED_GUTS(Class, Super);                \
   }
 
-#define NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super)        \
-  nsrefcnt r = Super::Release();                            \
-  if (!std::is_convertible_v<Class*, mozilla::Runnable*>) { \
-    NS_LOG_RELEASE(this, r, #Class);                        \
-  }                                                         \
+#define NS_IMPL_RELEASE_INHERITED_GUTS(Class, Super)                  \
+  nsrefcnt r = Super::Release();                                      \
+  if constexpr (::mozilla::detail::ShouldLogInheritedRefcnt<Class>) { \
+    NS_LOG_RELEASE(this, r, #Class);                                  \
+  }                                                                   \
   return r /* Purposefully no trailing semicolon */
 
 #define NS_IMPL_RELEASE_INHERITED(Class, Super)                  \
