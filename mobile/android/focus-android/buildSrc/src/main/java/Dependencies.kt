@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 object Versions {
-    const val compose_version = "1.0.4"
+    const val compose_version = "1.1.1"
     const val leakcanary = "2.8.1"
 
     object AndroidX {
@@ -29,7 +29,7 @@ object Versions {
     }
 
     object Kotlin {
-        const val version = "1.5.31"
+        const val version = "1.6.10"
         const val coroutines = "1.6.0"
     }
 
