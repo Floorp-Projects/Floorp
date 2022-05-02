@@ -23,6 +23,9 @@ const SCREEN_LENGTH_DOCUMENT_HEIGHT = 4;
 const SCROLL_BEHAVIOR_SMOOTH = 0;
 const SCROLL_BEHAVIOR_AUTO = 1;
 
+const SCREEN_ORIENTATION_PORTRAIT = 0;
+const SCREEN_ORIENTATION_LANDSCAPE = 1;
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
@@ -33,6 +36,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 var EXPORTED_SYMBOLS = ["GeckoViewContentChild"];
 
 class GeckoViewContentChild extends GeckoViewActorChild {
+  constructor() {
+    super();
+    this.lastOrientation = SCREEN_ORIENTATION_PORTRAIT;
+  }
+
   actorCreated() {
     super.actorCreated();
 
@@ -103,16 +111,32 @@ class GeckoViewContentChild extends GeckoViewActorChild {
     return { history, formdata, scrolldata };
   }
 
+  orientation() {
+    const currentOrientationType = this.contentWindow?.screen.orientation.type;
+    if (!currentOrientationType) {
+      // Unfortunately, we don't know current screen orientation.
+      // Return portrait as default.
+      return SCREEN_ORIENTATION_PORTRAIT;
+    }
+    if (currentOrientationType.startsWith("landscape")) {
+      return SCREEN_ORIENTATION_LANDSCAPE;
+    }
+    return SCREEN_ORIENTATION_PORTRAIT;
+  }
+
   receiveMessage(message) {
     const { name } = message;
     debug`receiveMessage: ${name}`;
 
     switch (name) {
       case "GeckoView:DOMFullscreenEntered":
+        this.lastOrientation = this.orientation();
         this.contentWindow?.windowUtils.handleFullscreenRequests();
         break;
       case "GeckoView:DOMFullscreenExited":
-        this.contentWindow?.windowUtils.exitFullscreen();
+        // During fullscreen, window size is changed. So don't restore viewport size.
+        const restoreViewSize = this.orientation() == this.lastOrientation;
+        this.contentWindow?.windowUtils.exitFullscreen(!restoreViewSize);
         break;
       case "GeckoView:ZoomToInput": {
         const { contentWindow } = this;
