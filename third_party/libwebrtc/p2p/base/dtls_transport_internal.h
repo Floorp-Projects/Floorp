@@ -117,7 +117,6 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
   sigslot::signal2<DtlsTransportInternal*, DtlsTransportState> SignalDtlsState;
 
   // Emitted whenever the Dtls handshake failed on some transport channel.
-  sigslot::signal1<rtc::SSLHandshakeError> SignalDtlsHandshakeError;
   // F: void(rtc::SSLHandshakeError)
   template <typename F>
   void SubscribeDtlsHandshakeError(F&& callback) {

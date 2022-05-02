@@ -820,8 +820,6 @@ void DtlsTransport::set_dtls_state(DtlsTransportState state) {
 }
 
 void DtlsTransport::OnDtlsHandshakeError(rtc::SSLHandshakeError error) {
-  // Keep the old signaling for downstream usage.
-  SignalDtlsHandshakeError(error);
   SendDtlsHandshakeError(error);
 }
 
