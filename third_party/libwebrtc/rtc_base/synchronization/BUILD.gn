@@ -44,15 +44,25 @@ rtc_library("mutex") {
   }
 }
 
-rtc_library("sequence_checker") {
+rtc_source_set("sequence_checker") {
+  sources = [ "sequence_checker.h" ]
+  deps = [
+    ":sequence_checker_internal",
+    "..:checks",
+    "..:deprecation",
+    "..:macromagic",
+  ]
+}
+
+rtc_library("sequence_checker_internal") {
+  visibility = [ ":sequence_checker" ]
   sources = [
-    "sequence_checker.cc",
-    "sequence_checker.h",
+    "sequence_checker_internal.cc",
+    "sequence_checker_internal.h",
   ]
   deps = [
     ":mutex",
     "..:checks",
-    "..:criticalsection",
     "..:macromagic",
     "..:platform_thread_types",
     "..:stringutils",

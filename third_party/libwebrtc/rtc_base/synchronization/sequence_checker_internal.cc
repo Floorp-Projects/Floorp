@@ -7,15 +7,19 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "rtc_base/synchronization/sequence_checker_internal.h"
+
+#include <string>
 
 #if defined(WEBRTC_MAC)
 #include <dispatch/dispatch.h>
 #endif
 
+#include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
+namespace webrtc_sequence_checker_internal {
 namespace {
 // On Mac, returns the label of the current dispatch queue; elsewhere, return
 // null.
@@ -29,20 +33,11 @@ const void* GetSystemQueueRef() {
 
 }  // namespace
 
-std::string ExpectationToString(const webrtc::SequenceChecker* checker) {
-#if RTC_DCHECK_IS_ON
-  return checker->ExpectationToString();
-#endif
-  return std::string();
-}
-
 SequenceCheckerImpl::SequenceCheckerImpl()
     : attached_(true),
       valid_thread_(rtc::CurrentThreadRef()),
       valid_queue_(TaskQueueBase::Current()),
       valid_system_queue_(GetSystemQueueRef()) {}
-
-SequenceCheckerImpl::~SequenceCheckerImpl() = default;
 
 bool SequenceCheckerImpl::IsCurrent() const {
   const TaskQueueBase* const current_queue = TaskQueueBase::Current();
@@ -109,4 +104,12 @@ std::string SequenceCheckerImpl::ExpectationToString() const {
 }
 #endif  // RTC_DCHECK_IS_ON
 
+std::string ExpectationToString(const SequenceCheckerImpl* checker) {
+#if RTC_DCHECK_IS_ON
+  return checker->ExpectationToString();
+#endif
+  return std::string();
+}
+
+}  // namespace webrtc_sequence_checker_internal
 }  // namespace webrtc
