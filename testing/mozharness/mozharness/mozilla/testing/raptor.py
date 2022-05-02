@@ -1019,8 +1019,7 @@ class Raptor(
             # ffmpeg exists outside of this virtual environment so
             # we re-add it to the platform environment on repeated
             # local runs of browsertime visual metric tests
-            if self.browsertime_visualmetrics:
-                self.setup_local_ffmpeg()
+            self.setup_local_ffmpeg()
             _python_interp = self.config.get("exes")["python"]
 
             if "win" in self.platform_name():
@@ -1103,27 +1102,36 @@ class Raptor(
         if "ffmpeg" in os.environ["PATH"]:
             return
 
-        # linux wouldn't need bin in path
-        if "mac" in self.platform_name():
+        platform = self.platform_name()
+        btime_cache = os.path.join(self.config["mozbuild_path"], "browsertime")
+        if "mac" in platform:
             path_to_ffmpeg = os.path.join(
-                self.config["mozbuild_path"],
-                "browsertime",
+                btime_cache,
                 FFMPEG_LOCAL_CACHE["mac"],
                 "bin",
             )
-            if os.path.exists(path_to_ffmpeg):
-                os.environ["PATH"] += os.pathsep + path_to_ffmpeg
-                self.info(
-                    "Added local ffmpeg found at: %s to environment." % path_to_ffmpeg
-                )
-            else:
-                raise Exception(
-                    "No local ffmpeg binary found. Expected it to be here: %s"
-                    % path_to_ffmpeg
-                )
-        else:
+        elif "linux" in platform:
+            path_to_ffmpeg = os.path.join(
+                btime_cache,
+                FFMPEG_LOCAL_CACHE["linux"],
+            )
+        elif "windows" in platform:
+            path_to_ffmpeg = os.path.join(
+                btime_cache,
+                FFMPEG_LOCAL_CACHE["windows"],
+                "bin",
+            )
+
+        if os.path.exists(path_to_ffmpeg):
+            os.environ["PATH"] += os.pathsep + path_to_ffmpeg
+            self.browsertime_ffmpeg = path_to_ffmpeg
             self.info(
-                "Setting up local ffmpeg cache not yet supported on Windows and Linux"
+                "Added local ffmpeg found at: %s to environment." % path_to_ffmpeg
+            )
+        else:
+            raise Exception(
+                "No local ffmpeg binary found. Expected it to be here: %s"
+                % path_to_ffmpeg
             )
 
     def install(self):
