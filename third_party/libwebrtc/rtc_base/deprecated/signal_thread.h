@@ -15,9 +15,9 @@
 
 #include "rtc_base/checks.h"
 #include "rtc_base/constructor_magic.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 #include "rtc_base/deprecation.h"
 #include "rtc_base/message_handler.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
@@ -65,6 +65,12 @@ class DEPRECATED_SignalThread : public sigslot::has_slots<>,
   // Context: Main Thread.  If the worker thread is complete, deletes the
   // object immediately.  Otherwise, schedules the object to be deleted once
   // the worker thread completes.  SignalWorkDone will be signalled.
+
+  // BEWARE: This method must be called with the object's internal lock held, as
+  // if annotated RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_). Callbacks via OnWorkStop
+  // and SignalWorkDone are already holding the needed lock. It's not annotated,
+  // because it's hard to tell the compiler that functions called via
+  // SignalWorkDone already hold the lock.
   void Release();
 
   // Context: Main Thread.  Signalled when work is complete.
@@ -126,9 +132,9 @@ class DEPRECATED_SignalThread : public sigslot::has_slots<>,
   class RTC_SCOPED_LOCKABLE EnterExit {
    public:
     explicit EnterExit(DEPRECATED_SignalThread* t)
-        RTC_EXCLUSIVE_LOCK_FUNCTION(t->cs_)
+        RTC_EXCLUSIVE_LOCK_FUNCTION(t->mutex_)
         : t_(t) {
-      t_->cs_.Enter();
+      t_->mutex_.Lock();
       // If refcount_ is zero then the object has already been deleted and we
       // will be double-deleting it in ~EnterExit()! (shouldn't happen)
       RTC_DCHECK_NE(0, t_->refcount_);
@@ -141,7 +147,7 @@ class DEPRECATED_SignalThread : public sigslot::has_slots<>,
 
     ~EnterExit() RTC_UNLOCK_FUNCTION() {
       bool d = (0 == --t_->refcount_);
-      t_->cs_.Leave();
+      t_->mutex_.Unlock();
       if (d)
         delete t_;
     }
@@ -155,10 +161,10 @@ class DEPRECATED_SignalThread : public sigslot::has_slots<>,
 
   Thread* main_;
   Worker worker_;
-  RecursiveCriticalSection cs_;
-  State state_ RTC_GUARDED_BY(cs_);
-  int refcount_ RTC_GUARDED_BY(cs_);
-  bool destroy_called_ RTC_GUARDED_BY(cs_) = false;
+  webrtc::Mutex mutex_;
+  State state_ RTC_GUARDED_BY(mutex_);
+  int refcount_ RTC_GUARDED_BY(mutex_);
+  bool destroy_called_ RTC_GUARDED_BY(mutex_) = false;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(DEPRECATED_SignalThread);
 };

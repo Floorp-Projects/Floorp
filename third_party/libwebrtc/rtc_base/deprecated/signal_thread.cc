@@ -31,7 +31,7 @@ DEPRECATED_SignalThread::DEPRECATED_SignalThread()
 }
 
 DEPRECATED_SignalThread::~DEPRECATED_SignalThread() {
-  rtc::CritScope lock(&cs_);
+  webrtc::MutexLock lock(&mutex_);
   RTC_DCHECK(refcount_ == 0);
 }
 
@@ -74,9 +74,9 @@ void DEPRECATED_SignalThread::Destroy(bool wait) {
     OnWorkStop();
     if (wait) {
       // Release the thread's lock so that it can return from ::Run.
-      cs_.Leave();
+      mutex_.Unlock();
       worker_.Stop();
-      cs_.Enter();
+      mutex_.Lock();
       refcount_--;
     }
   } else {
@@ -84,8 +84,11 @@ void DEPRECATED_SignalThread::Destroy(bool wait) {
   }
 }
 
-void DEPRECATED_SignalThread::Release() {
-  EnterExit ee(this);
+// Disable analysis, to allow calls via SignalWorkDone (which already holds the
+// lock).
+// TODO(bugs.webrtc.org/11567): Add a Mutex::AssertHeld, to reenable analysis
+// and get a runtime check.
+void DEPRECATED_SignalThread::Release() RTC_NO_THREAD_SAFETY_ANALYSIS {
   RTC_DCHECK(!destroy_called_);
   RTC_DCHECK(main_->IsCurrent());
   if (kComplete == state_) {
