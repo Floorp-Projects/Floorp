@@ -7350,7 +7350,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -7359,7 +7359,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -7546,7 +7545,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **browser cycles**: 25
@@ -7554,7 +7553,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -7746,7 +7744,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -7754,7 +7752,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -8372,7 +8369,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -8380,7 +8377,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -8726,7 +8722,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -8734,7 +8730,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -8961,7 +8956,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -8969,7 +8964,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -9522,7 +9516,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -9530,7 +9524,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -9877,7 +9870,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -9885,7 +9878,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -10415,7 +10407,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -10423,7 +10415,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -10791,7 +10782,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -10799,7 +10790,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -11449,7 +11439,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -11457,7 +11447,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -11803,7 +11792,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -11811,7 +11800,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page complete wait time**: 8000
    * **page cycles**: 25
    * **page timeout**: 60000
@@ -12159,7 +12147,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -12167,7 +12155,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -12393,7 +12380,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -12401,7 +12388,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -12747,7 +12733,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -12755,7 +12741,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -13101,7 +13086,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -13109,7 +13094,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -13456,7 +13440,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -13464,7 +13448,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -14057,7 +14040,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -14065,7 +14048,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -14413,7 +14395,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -14421,7 +14403,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -14894,7 +14875,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -14902,7 +14883,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -15249,7 +15229,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -15257,7 +15237,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -15604,7 +15583,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -15612,7 +15591,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -15959,7 +15937,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -15967,7 +15945,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -16335,7 +16312,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -16343,7 +16320,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -16570,7 +16546,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -16578,7 +16554,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -16924,7 +16899,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -16932,7 +16907,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -17278,7 +17252,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -17286,7 +17260,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -17633,7 +17606,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -17641,7 +17614,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -18234,7 +18206,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -18242,7 +18214,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -18589,7 +18560,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -18597,7 +18568,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -18945,7 +18915,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -18953,7 +18923,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -19299,7 +19268,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -19307,7 +19276,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -19534,7 +19502,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -19542,7 +19510,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -20135,7 +20102,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -20143,7 +20110,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -20489,7 +20455,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 25
@@ -20497,7 +20463,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -21101,7 +21066,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 10
@@ -21110,7 +21075,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
@@ -21338,7 +21302,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 10
@@ -21347,7 +21311,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 90000
    * **playback**: mitmproxy
@@ -21575,7 +21538,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 10
@@ -21584,9 +21547,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
-   * **page timeout**: 60000
+   * **page timeout**: 240000
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-ama.manifest
    * **playback version**: 6.0.2
@@ -21812,7 +21774,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 10
@@ -21821,7 +21783,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 90000
    * **playback**: mitmproxy
@@ -22049,7 +22010,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **browser cycles**: 10
@@ -22058,7 +22019,6 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **gecko profile interval**: 1
    * **interactive**: true
    * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
    * **page cycles**: 25
    * **page timeout**: 90000
    * **playback**: mitmproxy
@@ -22290,7 +22250,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -22451,7 +22411,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -23005,7 +22965,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -23271,7 +23231,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -23432,7 +23392,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -23801,7 +23761,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -23962,7 +23922,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -24123,7 +24083,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -24284,7 +24244,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -24445,7 +24405,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -24814,7 +24774,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -24975,7 +24935,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -25136,7 +25096,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -25297,7 +25257,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -25458,7 +25418,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -25619,7 +25579,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
    * **browser cycles**: 15
@@ -25785,7 +25745,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -26111,7 +26071,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -26733,7 +26693,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -27059,7 +27019,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -27328,7 +27288,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -27597,7 +27557,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -27866,7 +27826,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -28423,7 +28383,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -28692,7 +28652,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -28961,7 +28921,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -29230,7 +29190,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -29499,7 +29459,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -30033,7 +29993,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -30688,7 +30648,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -30957,7 +30917,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -31284,7 +31244,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -31553,7 +31513,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -31823,7 +31783,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -32420,7 +32380,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -32898,7 +32858,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -33224,7 +33184,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -33821,7 +33781,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -34015,7 +33975,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -34284,7 +34244,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -34553,7 +34513,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -35150,7 +35110,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
@@ -35752,7 +35712,7 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
    **Owner**: PerfTest Team
 
-   * **alert on**: fcp, loadtime
+   * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
