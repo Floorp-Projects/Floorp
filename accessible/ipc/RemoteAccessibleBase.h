@@ -289,6 +289,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual void DOMNodeID(nsString& aID) const override;
 
   // HyperTextAccessibleBase
+  virtual int32_t GetChildOffset(uint32_t aChildIndex,
+                                 bool aInvalidateAfter = false) const override;
+  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const override;
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
  protected:
@@ -332,6 +335,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   nsAtom* GetPrimaryAction() const;
 
  private:
+  const nsTArray<int32_t>& CachedHyperTextOffsets() const;
+
   uintptr_t mParent;
   static const uintptr_t kNoParent = UINTPTR_MAX;
 

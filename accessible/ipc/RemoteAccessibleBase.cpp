@@ -13,6 +13,7 @@
 #include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -1011,6 +1012,66 @@ bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
     }
   }
   return false;
+}
+
+template <class Derived>
+const nsTArray<int32_t>& RemoteAccessibleBase<Derived>::CachedHyperTextOffsets()
+    const {
+  if (mCachedFields) {
+    if (auto offsets =
+            mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::offset)) {
+      return *offsets;
+    }
+  }
+  // Offsets aren't cached, so cache them now.
+  if (!mCachedFields) {
+    const_cast<RemoteAccessibleBase<Derived>*>(this)->mCachedFields =
+        new AccAttributes();
+  }
+  uint32_t childCount = ChildCount();
+  // This array contains the exclusive end offset for each child. That is,
+  // the start offset for child c is array index c - 1.
+  nsTArray<int32_t> newOffsets(childCount ? childCount - 1 : 0);
+  int32_t lastTextOffset = 0;
+  while (newOffsets.Length() < childCount) {
+    Accessible* child = ChildAt(newOffsets.Length());
+    lastTextOffset += static_cast<int32_t>(nsAccUtils::TextLength(child));
+    newOffsets.AppendElement(lastTextOffset);
+  }
+  mCachedFields->SetAttribute(nsGkAtoms::offset, std::move(newOffsets));
+  return *mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::offset);
+}
+
+template <class Derived>
+int32_t RemoteAccessibleBase<Derived>::GetChildOffset(
+    uint32_t aChildIndex, bool aInvalidateAfter) const {
+  if (aInvalidateAfter && mCachedFields) {
+    mCachedFields->Remove(nsGkAtoms::offset);
+  }
+  if (aChildIndex == 0) {
+    return 0;
+  }
+  MOZ_ASSERT(aChildIndex <= ChildCount());
+  auto& offsets = CachedHyperTextOffsets();
+  return offsets[aChildIndex - 1];
+}
+
+template <class Derived>
+int32_t RemoteAccessibleBase<Derived>::GetChildIndexAtOffset(
+    uint32_t aOffset) const {
+  auto& offsets = CachedHyperTextOffsets();
+  auto childCount = offsets.Length();
+  size_t index;
+  if (BinarySearch(offsets, 0, childCount, aOffset, &index)) {
+    // aOffset is the exclusive end of a child, so return the child before it.
+    return index < childCount - 1 ? index + 1 : index;
+  }
+  if (index == childCount) {
+    // aOffset is past the end of the text.
+    return -1;
+  }
+  // index points at the exclusive end after aOffset.
+  return index;
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;
