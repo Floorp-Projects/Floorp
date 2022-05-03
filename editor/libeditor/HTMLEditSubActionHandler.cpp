@@ -922,18 +922,17 @@ nsresult HTMLEditor::MaybeCreatePaddingBRElementForEmptyEditor() {
   newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
 
   // Put the node in the document.
-  nsresult rv =
-      InsertNodeWithTransaction(*newBRElement, EditorDOMPoint(rootElement, 0));
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_FAILED(rv)) {
+  CreateElementResult insertBRElementResult =
+      InsertNodeWithTransaction<Element>(*newBRElement,
+                                         EditorDOMPoint(rootElement, 0u));
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return rv;
+    return insertBRElementResult.unwrapErr();
   }
 
   // Set selection.
-  rv = CollapseSelectionToStartOf(*rootElement);
+  insertBRElementResult.IgnoreCaretPointSuggestion();
+  nsresult rv = CollapseSelectionToStartOf(*rootElement);
   if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
     NS_WARNING(
         "EditorBase::CollapseSelectionToStartOf() caused destroying the "
@@ -5410,15 +5409,14 @@ nsresult HTMLEditor::CreateStyleForInsertText(
       NS_WARNING("EditorBase::CreateTextNode() failed");
       return NS_ERROR_FAILURE;
     }
-    nsresult rv = InsertNodeWithTransaction(*newEmptyTextNode, pointToPutCaret);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_FAILED(rv)) {
+    CreateTextResult insertNewTextNodeResult =
+        InsertNodeWithTransaction<Text>(*newEmptyTextNode, pointToPutCaret);
+    if (insertNewTextNodeResult.isErr()) {
       NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return rv;
+      return insertNewTextNodeResult.unwrapErr();
     }
-    pointToPutCaret.Set(newEmptyTextNode, 0);
+    insertNewTextNodeResult.IgnoreCaretPointSuggestion();
+    pointToPutCaret.Set(newEmptyTextNode, 0u);
     putCaret = true;
 
     if (relFontSize) {

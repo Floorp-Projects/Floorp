@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"  // for SuggestCaretOption(s)
 #include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
@@ -31,8 +32,6 @@
 class nsISimpleEnumerator;
 
 namespace mozilla {
-template <class T>
-class OwningNonNull;
 
 // JoinNodesDirection is also affected to which one is new node at splitting
 // a node because a couple of undo/redo.
@@ -972,9 +971,6 @@ class MOZ_STACK_CLASS ReplaceRangeDataBase final {
   // nsAutoString.
   nsString mReplaceString;
 };
-
-using ReplaceRangeData = ReplaceRangeDataBase<EditorDOMPoint>;
-using ReplaceRangeInTextsData = ReplaceRangeDataBase<EditorDOMPointInText>;
 
 }  // namespace mozilla
 

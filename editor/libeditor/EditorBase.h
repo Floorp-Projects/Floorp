@@ -73,7 +73,6 @@ class PresShell;
 class TextComposition;
 class TextInputListener;
 class TextServicesDocument;
-
 namespace dom {
 class AbstractRange;
 class DataTransfer;
@@ -1694,9 +1693,13 @@ class EditorBase : public nsIEditor,
    *                            transaction will append the node to the
    *                            container.  Otherwise, will insert the node
    *                            before child node referred by this.
+   * @return                    If succeeded, returns the new content node and
+   *                            point to put caret.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertNodeWithTransaction(
-      nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert);
+  template <typename ContentNodeType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateNodeResultBase<ContentNodeType>
+  InsertNodeWithTransaction(ContentNodeType& aContentToInsert,
+                            const EditorDOMPoint& aPointToInsert);
 
   /**
    * InsertPaddingBRElementForEmptyLastLineWithTransaction() creates a padding
