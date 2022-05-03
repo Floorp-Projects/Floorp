@@ -124,7 +124,8 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
     ClearTypeParameterInfo& params = clearTypeParams[d];
 
     if (displayNames) {
-      outStr.AppendPrintf("%S [ ", params.displayName.get());
+      outStr.AppendPrintf(
+          "%S [ ", static_cast<const wchar_t*>(params.displayName.get()));
     }
 
     if (params.gamma >= 0) {
@@ -137,8 +138,8 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
       if (params.pixelStructure == PIXEL_STRUCT_RGB ||
           params.pixelStructure == PIXEL_STRUCT_BGR) {
         outStr.AppendPrintf(
-            "Pixel Structure: %S ",
-            (params.pixelStructure == PIXEL_STRUCT_RGB ? u"RGB" : u"BGR"));
+            "Pixel Structure: %s ",
+            (params.pixelStructure == PIXEL_STRUCT_RGB ? "RGB" : "BGR"));
       } else {
         outStr.AppendPrintf("Pixel Structure: %d ", params.pixelStructure);
       }

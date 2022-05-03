@@ -469,7 +469,8 @@ static nsresult AccountHasFamilySafetyEnabled(bool& enabled) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get sid"));
     return NS_ERROR_FAILURE;
   }
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("our sid is '%S'", sid.get()));
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("our sid is '%S'", static_cast<const wchar_t*>(sid.get())));
   bool hasSid;
   rv = usersKey->HasChild(sid, &hasSid);
   if (NS_FAILED(rv)) {
