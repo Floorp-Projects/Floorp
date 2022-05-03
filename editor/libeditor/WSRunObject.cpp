@@ -6,6 +6,7 @@
 #include "WSRunObject.h"
 
 #include "EditorDOMPoint.h"
+#include "EditorUtils.h"
 #include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
 #include "SelectionState.h"
@@ -871,15 +872,26 @@ Result<RefPtr<Element>, nsresult> WhiteSpaceVisibilityKeeper::InsertBRElement(
     }
   }
 
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
-                                  pointToInsert, nsIEditor::eNone);
+  CreateElementResult insertBRElementResult = aHTMLEditor.InsertBRElement(
+      HTMLEditor::WithTransaction::Yes, pointToInsert);
+  if (insertBRElementResult.isErr()) {
+    NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+    return Err(insertBRElementResult.unwrapErr());
+  }
+  // XXX Is this intentional selection change?
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
   NS_WARNING_ASSERTION(
-      resultOfInsertingBRElement.isOk(),
-      "HTMLEditor::InsertBRElement(WithTransaction::Yes, eNone) failed");
-  MOZ_ASSERT_IF(resultOfInsertingBRElement.isOk(),
-                resultOfInsertingBRElement.inspect());
-  return resultOfInsertingBRElement;
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
+  return insertBRElementResult.UnwrapNewNode();
 }
 
 // static
@@ -3114,15 +3126,27 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           // the beginning of soft wrapped lines, and lets the user see 2 spaces
           // when they type 2 spaces.
 
-          Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+          const CreateElementResult insertBRElementResult =
               aHTMLEditor.InsertBRElement(HTMLEditor::WithTransaction::Yes,
                                           atEndOfVisibleWhiteSpaces);
-          if (resultOfInsertingBRElement.isErr()) {
+          if (insertBRElementResult.isErr()) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-            return resultOfInsertingBRElement.unwrapErr();
+            return insertBRElementResult.unwrapErr();
           }
-          MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+          // XXX Is this intentional selection change?
+          nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+              aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                            SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                            SuggestCaret::AndIgnoreTrivialError});
+          if (NS_FAILED(rv)) {
+            NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+            return rv;
+          }
+          NS_WARNING_ASSERTION(
+              rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+              "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+          MOZ_ASSERT(insertBRElementResult.GetNewNode());
 
           atPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(

@@ -1229,18 +1229,21 @@ EditActionResult HTMLEditor::HandleInsertText(
 
         // is it a return?
         if (subStr.Equals(newlineStr)) {
-          Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-              InsertBRElement(WithTransaction::Yes, currentPoint,
-                              nsIEditor::eNone);
-          if (resultOfInsertingBRElement.isErr()) {
+          CreateElementResult insertBRElementResult =
+              InsertBRElement(WithTransaction::Yes, currentPoint);
+          if (insertBRElementResult.isErr()) {
             NS_WARNING(
-                "HTMLEditor::InsertBRElement(WithTransaction::Yes, eNone) "
-                "failed");
-            return EditActionHandled(resultOfInsertingBRElement.unwrapErr());
+                "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
+            return EditActionHandled(insertBRElementResult.unwrapErr());
           }
+          // We don't want to update selection here because we've blocked
+          // InsertNodeTransaction updating selection with
+          // dontChangeMySelection.
+          insertBRElementResult.IgnoreCaretPointSuggestion();
+          MOZ_ASSERT(!AllowsTransactionsToChangeSelection());
+
           pos++;
-          RefPtr<Element> brElement(
-              resultOfInsertingBRElement.unwrap().forget());
+          RefPtr<Element> brElement = insertBRElementResult.UnwrapNewNode();
           if (brElement->GetNextSibling()) {
             pointToInsert.Set(brElement->GetNextSibling());
           } else {
@@ -1447,16 +1450,17 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
   if (GetDefaultParagraphSeparator() == ParagraphSeparator::br ||
       !HTMLEditUtils::ShouldInsertLinefeedCharacter(atStartOfSelection,
                                                     *editingHost)) {
-    // InsertBRElement() will set selection after the new <br> element.
-    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-        InsertBRElement(WithTransaction::Yes, atStartOfSelection,
-                        nsIEditor::eNext);
-    if (resultOfInsertingBRElement.isErr()) {
+    CreateElementResult insertBRElementResult = InsertBRElement(
+        WithTransaction::Yes, atStartOfSelection, nsIEditor::eNext);
+    if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-      return resultOfInsertingBRElement.unwrapErr();
+      return insertBRElementResult.unwrapErr();
     }
-    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-    return NS_OK;
+    nsresult rv = insertBRElementResult.SuggestCaretPointTo(*this, {});
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "CreateElementResult::SuggestCaretPointTo() failed");
+    MOZ_ASSERT(insertBRElementResult.GetNewNode());
+    return rv;
   }
 
   nsresult rv = EnsureNoPaddingBRElementForEmptyEditor();
@@ -1798,13 +1802,25 @@ EditActionResult HTMLEditor::InsertParagraphSeparatorAsSubAction() {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     EditorDOMPoint endOfBlockParent;
     endOfBlockParent.SetToEndOf(editableBlockElement);
-    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+    const CreateElementResult insertBRElementResult =
         InsertBRElement(WithTransaction::Yes, endOfBlockParent);
-    if (resultOfInsertingBRElement.isErr()) {
+    if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-      return EditActionIgnored(resultOfInsertingBRElement.unwrapErr());
+      return EditActionIgnored(insertBRElementResult.unwrapErr());
     }
-    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+    // XXX Is this intentional selection change?
+    nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return EditActionHandled(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    MOZ_ASSERT(insertBRElementResult.GetNewNode());
   }
 
   RefPtr<Element> maybeNonEditableListItem =
@@ -1923,14 +1939,17 @@ CreateElementResult HTMLEditor::HandleInsertBRElement(
   // First, insert a <br> element.
   RefPtr<Element> brElement;
   if (IsInPlaintextMode()) {
-    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+    CreateElementResult insertBRElementResult =
         InsertBRElement(WithTransaction::Yes, aPointToBreak);
-    if (MOZ_UNLIKELY(resultOfInsertingBRElement.isErr())) {
+    if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-      return CreateElementResult(resultOfInsertingBRElement.unwrapErr());
+      return CreateElementResult(insertBRElementResult.unwrapErr());
     }
-    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-    brElement = resultOfInsertingBRElement.unwrap().forget();
+    // We'll return with suggesting new caret position and nobody refers
+    // selection after here.  So we don't need to update selection here.
+    insertBRElementResult.IgnoreCaretPointSuggestion();
+    MOZ_ASSERT(insertBRElementResult.GetNewNode());
+    brElement = insertBRElementResult.UnwrapNewNode();
   } else {
     EditorDOMPoint pointToBreak(aPointToBreak);
     WSRunScanner wsRunScanner(&aEditingHost, pointToBreak);
@@ -2140,15 +2159,17 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
                                                    &pointToInsert);
         AutoTrackDOMPoint trackingNewCaretPosition(RangeUpdaterRef(),
                                                    &newCaretPosition);
-        Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-            InsertBRElement(WithTransaction::Yes, newCaretPosition,
-                            nsIEditor::ePrevious);
-        if (resultOfInsertingBRElement.isErr()) {
+        CreateElementResult insertBRElementResult =
+            InsertBRElement(WithTransaction::Yes, newCaretPosition);
+        if (insertBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-          return resultOfInsertingBRElement.unwrapErr();
+          return insertBRElementResult.unwrapErr();
         }
-        MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+        // We're tracking next caret position with newCaretPosition.  Therefore,
+        // we don't need to update selection here.
+        insertBRElementResult.IgnoreCaretPointSuggestion();
+        MOZ_ASSERT(insertBRElementResult.GetNewNode());
       }
       caretAfterInsert = newCaretPosition.To<EditorRawDOMPoint>();
     }
@@ -2277,29 +2298,34 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
       leftCiteElement->GetPrimaryFrame()->IsBlockFrameOrSubclass()) {
     nsIContent* lastChild = leftCiteElement->GetLastChild();
     if (lastChild && !lastChild->IsHTMLElement(nsGkAtoms::br)) {
-      // We ignore the result here.
-      Result<RefPtr<Element>, nsresult> resultOfInsertingInvisibleBRElement =
+      const CreateElementResult insertInvisibleBRElementResult =
           InsertBRElement(WithTransaction::Yes,
                           EditorDOMPoint::AtEndOf(*leftCiteElement));
-      if (MOZ_UNLIKELY(resultOfInsertingInvisibleBRElement.isErr())) {
+      if (insertInvisibleBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return Err(resultOfInsertingInvisibleBRElement.unwrapErr());
+        return Err(insertInvisibleBRElementResult.unwrapErr());
       }
-      MOZ_ASSERT(resultOfInsertingInvisibleBRElement.inspect());
+      // We don't need to update selection here because we'll do another
+      // InsertBRElement call soon.
+      insertInvisibleBRElementResult.IgnoreCaretPointSuggestion();
+      MOZ_ASSERT(insertInvisibleBRElementResult.GetNewNode());
     }
   }
 
   // In most cases, <br> should be inserted after current cite.  However, if
   // left cite hasn't been created because the split point was start of the
   // cite node, <br> should be inserted before the current cite.
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+  CreateElementResult insertBRElementResult =
       InsertBRElement(WithTransaction::Yes,
                       splitCiteElementResult.AtSplitPoint<EditorDOMPoint>());
-  if (MOZ_UNLIKELY(resultOfInsertingBRElement.isErr())) {
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return Err(resultOfInsertingBRElement.unwrapErr());
+    return Err(insertBRElementResult.unwrapErr());
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  // We'll return with suggesting caret position.  Therefore, we don't need
+  // to update selection here.
+  insertBRElementResult.IgnoreCaretPointSuggestion();
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
 
   // if aMailCiteElement wasn't a block, we might also want another break before
   // it. We need to examine the content both before the br we just added and
@@ -2309,7 +2335,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
   if (HTMLEditUtils::IsInlineElement(aMailCiteElement)) {
     nsresult rvOfInsertingBRElement = [&]() MOZ_CAN_RUN_SCRIPT {
       EditorDOMPoint pointToCreateNewBRElement(
-          resultOfInsertingBRElement.inspect());
+          insertBRElementResult.GetNewNode());
 
       // XXX Cannot we replace this complicated check with just a call of
       //     HTMLEditUtils::IsVisibleBRElement with
@@ -2347,17 +2373,18 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
                .ReachedCurrentBlockBoundary()) {
         return NS_SUCCESS_DOM_NO_OPERATION;
       }
-      Result<RefPtr<Element>, nsresult> result =
+      CreateElementResult insertBRElementResult =
           InsertBRElement(WithTransaction::Yes, pointToCreateNewBRElement);
-      if (MOZ_UNLIKELY(result.isErr())) {
+      if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return result.unwrapErr();
+        return insertBRElementResult.unwrapErr();
       }
-      MOZ_ASSERT(result.inspect());
+      insertBRElementResult.IgnoreCaretPointSuggestion();
+      MOZ_ASSERT(insertBRElementResult.GetNewNode());
       return NS_OK;
     }();
 
-    if (MOZ_UNLIKELY(NS_FAILED(rvOfInsertingBRElement))) {
+    if (NS_FAILED(rvOfInsertingBRElement)) {
       NS_WARNING(
           "Failed to insert additional <br> element before the inline right "
           "mail-cite element");
@@ -2369,7 +2396,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     // MOZ_KnownLive(leftCiteElement) because it's grabbed by
     // splitCiteElementResult.
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*leftCiteElement));
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
@@ -2382,7 +2409,7 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     // MOZ_KnownLive(rightCiteElement) because it's grabbed by
     // splitCiteElementResult.
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightCiteElement));
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     if (NS_FAILED(rv)) {
@@ -2391,11 +2418,11 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
     }
   }
 
-  if (MOZ_UNLIKELY(!resultOfInsertingBRElement.inspect()->GetParent())) {
+  if (MOZ_UNLIKELY(!insertBRElementResult.GetNewNode()->GetParent())) {
     NS_WARNING("Inserted <br> shouldn't become an orphan node");
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  return EditorDOMPoint(resultOfInsertingBRElement.inspect());
+  return EditorDOMPoint(insertBRElementResult.GetNewNode());
 }
 
 HTMLEditor::CharPointData
@@ -2906,16 +2933,17 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
     return NS_OK;
   }
 
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      InsertBRElement(WithTransaction::Yes, aPointToInsert,
-                      nsIEditor::ePrevious);
-  if (resultOfInsertingBRElement.isErr()) {
+  CreateElementResult insertBRElementResult = InsertBRElement(
+      WithTransaction::Yes, aPointToInsert, nsIEditor::ePrevious);
+  if (insertBRElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertBRElement(WithTransaction::Yes, ePrevious) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-  return NS_OK;
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(*this, {});
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "CreateElementResult::SuggestCaretPointTo() failed");
+  return rv;
 }
 
 EditActionResult HTMLEditor::MakeOrChangeListAndListItemAsSubAction(
@@ -3756,20 +3784,19 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
         return splitNodeResult.unwrapErr();
       }
       // Put a <br> element at the split point
-      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-          InsertBRElement(WithTransaction::Yes,
-                          splitNodeResult.AtSplitPoint<EditorDOMPoint>());
-      if (resultOfInsertingBRElement.isErr()) {
+      const CreateElementResult insertBRElementResult = InsertBRElement(
+          WithTransaction::Yes, splitNodeResult.AtSplitPoint<EditorDOMPoint>());
+      if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return resultOfInsertingBRElement.unwrapErr();
+        return insertBRElementResult.unwrapErr();
       }
-      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+      MOZ_ASSERT(insertBRElementResult.GetNewNode());
       // Don't restore the selection
       restoreSelectionLater.Abort();
       // Put selection at the split point
       splitNodeResult.IgnoreCaretPointSuggestion();
       nsresult rv = CollapseSelectionTo(
-          EditorRawDOMPoint(resultOfInsertingBRElement.inspect()));
+          EditorRawDOMPoint(insertBRElementResult.GetNewNode()));
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "EditorBase::CollapseSelectionTo() failed");
       return rv;
@@ -7284,17 +7311,19 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
             const auto withTransaction =
                 aDivOrParagraphElement.IsInComposedDoc() ? WithTransaction::Yes
                                                          : WithTransaction::No;
-            Result<RefPtr<Element>, nsresult> brElementOrError =
+            CreateElementResult insertBRElementResult =
                 aHTMLEditor.InsertBRElement(
                     withTransaction,
                     EditorDOMPoint(&aDivOrParagraphElement, 0u));
-            if (brElementOrError.isErr()) {
+            if (insertBRElementResult.isErr()) {
               NS_WARNING(
                   nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
                                   ToString(withTransaction).c_str())
                       .get());
-              return brElementOrError.unwrapErr();
+              return insertBRElementResult.unwrapErr();
             }
+            // We'll update selection after inserting the new paragraph.
+            insertBRElementResult.IgnoreCaretPointSuggestion();
             return NS_OK;
           });
   if (createNewParagraphElementResult.isErr()) {
@@ -7517,20 +7546,31 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       return EditActionResult(NS_OK);
     }
 
-    Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+    CreateElementResult insertBRElementResult =
         InsertBRElement(WithTransaction::Yes, pointToInsertBR);
-    if (resultOfInsertingBRElement.isErr()) {
+    if (insertBRElementResult.isErr()) {
       NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-      return EditActionResult(resultOfInsertingBRElement.unwrapErr());
+      return EditActionResult(insertBRElementResult.unwrapErr());
     }
-    MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+    nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return EditActionResult(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+    MOZ_ASSERT(insertBRElementResult.GetNewNode());
     if (splitAfterNewBR) {
       // We split the parent after the br we've just inserted.
-      pointToSplitParentDivOrP.SetAfter(resultOfInsertingBRElement.inspect());
+      pointToSplitParentDivOrP.SetAfter(insertBRElementResult.GetNewNode());
       NS_WARNING_ASSERTION(pointToSplitParentDivOrP.IsSet(),
                            "Failed to set after the new <br>");
     }
-    brContent = resultOfInsertingBRElement.unwrap().forget();
+    brContent = insertBRElementResult.UnwrapNewNode();
   }
   EditActionResult result(
       SplitParagraph(aParentDivOrP, pointToSplitParentDivOrP, brContent));
@@ -7754,17 +7794,19 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
                   aDivOrParagraphElement.IsInComposedDoc()
                       ? WithTransaction::Yes
                       : WithTransaction::No;
-              Result<RefPtr<Element>, nsresult> brElementOrError =
+              CreateElementResult insertBRElementResult =
                   aHTMLEditor.InsertBRElement(
                       withTransaction,
                       EditorDOMPoint(&aDivOrParagraphElement, 0u));
-              if (brElementOrError.isErr()) {
+              if (insertBRElementResult.isErr()) {
                 NS_WARNING(
                     nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
                                     ToString(withTransaction).c_str())
                         .get());
-                return brElementOrError.unwrapErr();
+                return insertBRElementResult.unwrapErr();
               }
+              // We'll update selection after inserting the paragraph.
+              insertBRElementResult.IgnoreCaretPointSuggestion();
               return NS_OK;
             });
     if (createNewParagraphElementResult.isErr()) {
@@ -9337,6 +9379,7 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
 
   // Now delete the empty mailcites.  This is a separate step because we want
   // to pull out any br's and preserve them.
+  EditorDOMPoint pointToPutCaret;
   for (OwningNonNull<nsIContent>& emptyCite : arrayOfEmptyCites) {
     if (!HTMLEditUtils::IsEmptyNode(
             emptyCite, {EmptyCheckOption::TreatSingleBRElementAsVisible,
@@ -9344,13 +9387,18 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
                         EmptyCheckOption::TreatTableCellAsVisible})) {
       // We are deleting a cite that has just a `<br>`.  We want to delete cite,
       // but preserve `<br>`.
-      Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+      CreateElementResult insertBRElementResult =
           InsertBRElement(WithTransaction::Yes, EditorDOMPoint(emptyCite));
-      if (resultOfInsertingBRElement.isErr()) {
+      if (insertBRElementResult.isErr()) {
         NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-        return resultOfInsertingBRElement.unwrapErr();
+        return insertBRElementResult.unwrapErr();
       }
-      MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+      // XXX Is this intentional selection change?
+      insertBRElementResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfHasSuggestion,
+           SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT(insertBRElementResult.GetNewNode());
     }
     // MOZ_KnownLive because 'arrayOfEmptyCites' is guaranteed to keep it alive.
     rv = DeleteNodeWithTransaction(MOZ_KnownLive(emptyCite));
@@ -9361,6 +9409,18 @@ nsresult HTMLEditor::RemoveEmptyNodesIn(nsRange& aRange) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return rv;
     }
+  }
+  // XXX Is this intentional selection change?
+  if (pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
 
   return NS_OK;
@@ -9651,13 +9711,25 @@ nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {
     return NS_OK;
   }
 
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+  CreateElementResult insertBRElementResult =
       InsertBRElement(WithTransaction::Yes, EditorDOMPoint(&aElement, 0u));
-  if (resultOfInsertingBRElement.isErr()) {
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  // XXX Is this intentional selection change?
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
   return NS_OK;
 }
 
@@ -9821,14 +9893,25 @@ nsresult HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return NS_OK;
   }
 
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      InsertBRElement(WithTransaction::Yes,
-                      EditorDOMPoint(&aRemovingContainerElement, 0u));
-  if (resultOfInsertingBRElement.isErr()) {
+  CreateElementResult insertBRElementResult = InsertBRElement(
+      WithTransaction::Yes, EditorDOMPoint(&aRemovingContainerElement, 0u));
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  // XXX Is this intentional selection change?
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
   return NS_OK;
 }
 
@@ -9858,14 +9941,24 @@ nsresult HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return NS_OK;
   }
 
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
-      InsertBRElement(WithTransaction::Yes,
-                      EditorDOMPoint::AtEndOf(aRemovingContainerElement));
-  if (resultOfInsertingBRElement.isErr()) {
+  CreateElementResult insertBRElementResult = InsertBRElement(
+      WithTransaction::Yes, EditorDOMPoint::AtEndOf(aRemovingContainerElement));
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
   return NS_OK;
 }
 
