@@ -807,7 +807,6 @@ rtc_library("threading") {
     "../api:sequence_checker",
     "../api/task_queue",
     "synchronization:mutex",
-    "synchronization:sequence_checker",
     "system:no_unique_address",
     "system:rtc_export",
     "task_utils:pending_task_safety_flag",
