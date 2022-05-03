@@ -520,11 +520,13 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       SplitNodeResult splitResult =
           aHTMLEditor.SplitAncestorStyledInlineElementsAt(atPreviousContent,
                                                           nullptr, nullptr);
-      if (splitResult.Failed()) {
+      if (splitResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitAncestorStyledInlineElementsAt() failed");
-        return EditActionResult(splitResult.Rv());
+        return EditActionResult(splitResult.unwrapErr());
       }
-
+      // When adding caret suggestion to SplitNodeResult, here didn't change
+      // selection so that just ignore it.
+      splitResult.IgnoreCaretPointSuggestion();
       if (splitResult.Handled()) {
         if (nsIContent* nextContentAtSplitPoint =
                 splitResult.GetNextContent()) {
