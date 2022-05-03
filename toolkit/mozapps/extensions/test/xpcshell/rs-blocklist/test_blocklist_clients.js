@@ -198,10 +198,8 @@ add_task(
       for (const record of records) {
         await client.db.create(record);
       }
-      const list = await client.get({
-        loadDumpIfNewer: false,
-        syncIfEmpty: false,
-      });
+      await client.db.importChanges({}, 42); // Prevent from loading JSON dump.
+      const list = await client.get({ syncIfEmpty: false });
       equal(list.length, 4);
       ok(list.every(e => e.willMatch));
     }

@@ -143,6 +143,7 @@ class SearchEngineSelector {
     try {
       result = await this._remoteConfig.get({
         order: "id",
+        loadDumpIfNewer: true,
       });
     } catch (ex) {
       logConsole.error(ex);

@@ -1008,7 +1008,7 @@ const ExtensionBlocklistMLBF = {
         this._stashes = null;
         return;
       }
-      let records = await this._client.get();
+      let records = await this._client.get({ loadDumpIfNewer: true });
       if (isUpdateReplaced()) {
         return;
       }
