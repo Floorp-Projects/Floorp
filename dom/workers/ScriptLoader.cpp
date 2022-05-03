@@ -793,7 +793,7 @@ class WorkerScriptLoader final : public nsINamed {
       if (mExecutionAborted) {
         break;
       }
-      if (!EvaluateLoadInfo(aCx, loadInfo)) {
+      if (!EvaluateScript(aCx, loadInfo)) {
         mExecutionAborted = true;
         mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
       }
@@ -1596,7 +1596,7 @@ class WorkerScriptLoader final : public nsINamed {
     }
   }
 
-  bool EvaluateLoadInfo(JSContext* aCx, ScriptLoadInfo& aLoadInfo) {
+  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo& aLoadInfo) {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
     NS_ASSERTION(!aLoadInfo.mChannel, "Should no longer have a channel!");
