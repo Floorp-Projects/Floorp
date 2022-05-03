@@ -803,6 +803,7 @@ void ChannelMediaResource::UpdatePrincipal() {
   if (!secMan) {
     return;
   }
+  bool hadData = mSharedInfo->mPrincipal != nullptr;
   nsCOMPtr<nsIPrincipal> principal;
   secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
   if (nsContentUtils::CombineResourcePrincipals(&mSharedInfo->mPrincipal,
@@ -810,8 +811,44 @@ void ChannelMediaResource::UpdatePrincipal() {
     for (auto* r : mSharedInfo->mResources) {
       r->CacheClientNotifyPrincipalChanged();
     }
+    if (!mChannel) {  // Sometimes cleared during NotifyPrincipalChanged()
+      return;
+    }
   }
-
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+  auto mode = loadInfo->GetSecurityMode();
+  if (mode != nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT) {
+    MOZ_ASSERT(
+        mode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_INHERITS_SEC_CONTEXT ||
+            mode == nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+        "no-cors request");
+    bool finalResponseIsOpaque =
+        // GetChannelResultPrincipal() returns the original request URL for
+        // null-origin Responses from ServiceWorker, in which case the URL
+        // does not indicate the real source of data.  Such null-origin
+        // Responses have Basic LoadTainting.  CORS filtered Responses from
+        // ServiceWorker also cannot be mixed with no-cors cross-origin
+        // responses.
+        loadInfo->GetTainting() == LoadTainting::Opaque &&
+        // Although intermediate cross-origin redirects back to URIs with
+        // loadingPrincipal will have LoadTainting::Opaque and will taint the
+        // media element, they are not considered opaque when verifying
+        // network responses; they can be mixed with non-opaque responses from
+        // subsequent loads on the same-origin finalURI.
+        !nsContentUtils::CheckMayLoad(loadInfo->GetLoadingPrincipal(), mChannel,
+                                      /*allowIfInheritsPrincipal*/ true);
+    if (!hadData) {  // First response with data
+      mSharedInfo->mFinalResponsesAreOpaque = finalResponseIsOpaque;
+    } else if (mSharedInfo->mFinalResponsesAreOpaque != finalResponseIsOpaque) {
+      for (auto* r : mSharedInfo->mResources) {
+        r->mCallback->NotifyNetworkError(MediaResult(
+            NS_ERROR_CONTENT_BLOCKED, "opaque and non-opaque responses"));
+      }
+      // Our caller, OnStartRequest() will CloseChannel() on discovering the
+      // error, so no data will be read from the channel.
+      return;
+    }
+  }
   // ChannelMediaResource can recreate the channel. When this happens, we don't
   // want to overwrite mHadCrossOriginRedirects because the new channel could
   // skip intermediate redirects.
