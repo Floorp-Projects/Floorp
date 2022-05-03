@@ -366,16 +366,16 @@ struct ScriptLoadInfo {
   }
 };
 
-class ScriptLoaderRunnable;
+class WorkerScriptLoader;
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
-  ScriptLoaderRunnable& mScriptLoader;
+  WorkerScriptLoader& mScriptLoader;
   const bool mIsWorkerScript;
   const Span<ScriptLoadInfo> mLoadInfosToExecute;
   const bool mAllScriptsExecutable;
 
  public:
-  ScriptExecutorRunnable(ScriptLoaderRunnable& aScriptLoader,
+  ScriptExecutorRunnable(WorkerScriptLoader& aScriptLoader,
                          nsIEventTarget* aSyncLoopTarget, bool aIsWorkerScript,
                          Span<ScriptLoadInfo> aLoadInfosToExecute,
                          bool aAllScriptsExecutable);
@@ -473,9 +473,9 @@ class CacheScriptLoader final : public PromiseNativeHandler,
   NS_DECL_NSISTREAMLOADEROBSERVER
 
   CacheScriptLoader(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo& aLoadInfo,
-                    bool aIsWorkerScript, ScriptLoaderRunnable* aRunnable)
+                    bool aIsWorkerScript, WorkerScriptLoader* aLoader)
       : mLoadInfo(aLoadInfo),
-        mRunnable(aRunnable),
+        mLoader(aLoader),
         mIsWorkerScript(aIsWorkerScript),
         mFailed(false),
         mState(aWorkerPrivate->GetServiceWorkerDescriptor().State()) {
@@ -501,7 +501,7 @@ class CacheScriptLoader final : public PromiseNativeHandler,
   ~CacheScriptLoader() { AssertIsOnMainThread(); }
 
   ScriptLoadInfo& mLoadInfo;
-  const RefPtr<ScriptLoaderRunnable> mRunnable;
+  const RefPtr<WorkerScriptLoader> mLoader;
   const bool mIsWorkerScript;
   bool mFailed;
   const ServiceWorkerState mState;
@@ -521,11 +521,10 @@ class CachePromiseHandler final : public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  CachePromiseHandler(ScriptLoaderRunnable* aRunnable,
-                      ScriptLoadInfo& aLoadInfo)
-      : mRunnable(aRunnable), mLoadInfo(aLoadInfo) {
+  CachePromiseHandler(WorkerScriptLoader* aLoader, ScriptLoadInfo& aLoadInfo)
+      : mLoader(aLoader), mLoadInfo(aLoadInfo) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mRunnable);
+    MOZ_ASSERT(mLoader);
   }
 
   virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
@@ -537,7 +536,7 @@ class CachePromiseHandler final : public PromiseNativeHandler {
  private:
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
 
-  RefPtr<ScriptLoaderRunnable> mRunnable;
+  RefPtr<WorkerScriptLoader> mLoader;
   ScriptLoadInfo& mLoadInfo;
 };
 
@@ -548,9 +547,9 @@ class LoaderListener final : public nsIStreamLoaderObserver,
  public:
   NS_DECL_ISUPPORTS
 
-  LoaderListener(ScriptLoaderRunnable* aRunnable, ScriptLoadInfo& aLoadInfo)
-      : mRunnable(aRunnable), mLoadInfo(aLoadInfo) {
-    MOZ_ASSERT(mRunnable);
+  LoaderListener(WorkerScriptLoader* aLoader, ScriptLoadInfo& aLoadInfo)
+      : mLoader(aLoader), mLoadInfo(aLoadInfo) {
+    MOZ_ASSERT(mLoader);
   }
 
   NS_IMETHOD
@@ -570,7 +569,7 @@ class LoaderListener final : public nsIStreamLoaderObserver,
  private:
   ~LoaderListener() = default;
 
-  RefPtr<ScriptLoaderRunnable> mRunnable;
+  RefPtr<WorkerScriptLoader> mLoader;
   ScriptLoadInfo& mLoadInfo;
 };
 
@@ -652,7 +651,8 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
 
 NS_IMPL_ISUPPORTS(ScriptResponseHeaderProcessor, nsIRequestObserver);
 
-class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
+class WorkerScriptLoader final : public nsINamed {
+  friend class ScriptLoaderRunnable;
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
   friend class CacheScriptLoader;
@@ -676,14 +676,14 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  ScriptLoaderRunnable(WorkerPrivate* aWorkerPrivate,
-                       UniquePtr<SerializedStackHolder> aOriginStack,
-                       nsIEventTarget* aSyncLoopTarget,
-                       nsTArray<ScriptLoadInfo> aLoadInfos,
-                       const Maybe<ClientInfo>& aClientInfo,
-                       const Maybe<ServiceWorkerDescriptor>& aController,
-                       bool aIsMainScript, WorkerScriptType aWorkerScriptType,
-                       ErrorResult& aRv)
+  WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
+                     UniquePtr<SerializedStackHolder> aOriginStack,
+                     nsIEventTarget* aSyncLoopTarget,
+                     nsTArray<ScriptLoadInfo> aLoadInfos,
+                     const Maybe<ClientInfo>& aClientInfo,
+                     const Maybe<ServiceWorkerDescriptor>& aController,
+                     bool aIsMainScript, WorkerScriptType aWorkerScriptType,
+                     ErrorResult& aRv)
       : mWorkerPrivate(aWorkerPrivate),
         mOriginStack(std::move(aOriginStack)),
         mSyncLoopTarget(aSyncLoopTarget),
@@ -704,23 +704,11 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   }
 
  private:
-  ~ScriptLoaderRunnable() = default;
-
-  NS_IMETHOD
-  Run() override {
-    AssertIsOnMainThread();
-
-    nsresult rv = RunInternal();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      CancelMainThread(rv);
-    }
-
-    return NS_OK;
-  }
+  ~WorkerScriptLoader() = default;
 
   NS_IMETHOD
   GetName(nsACString& aName) override {
-    aName.AssignLiteral("ScriptLoaderRunnable");
+    aName.AssignLiteral("WorkerScriptLoader");
     return NS_OK;
   }
 
@@ -1544,19 +1532,54 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   }
 };
 
+NS_IMPL_ISUPPORTS(WorkerScriptLoader, nsINamed)
+
+class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
+  RefPtr<WorkerScriptLoader> mScriptLoader;
+
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit ScriptLoaderRunnable(WorkerScriptLoader* aScriptLoader)
+      : mScriptLoader(aScriptLoader) {
+    MOZ_ASSERT(aScriptLoader);
+  }
+
+ private:
+  ~ScriptLoaderRunnable() = default;
+
+  NS_IMETHOD
+  Run() override {
+    AssertIsOnMainThread();
+
+    nsresult rv = mScriptLoader->RunInternal();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mScriptLoader->CancelMainThread(rv);
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName.AssignLiteral("ScriptLoaderRunnable");
+    return NS_OK;
+  }
+};
+
 NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
 
 NS_IMETHODIMP
 LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext, nsresult aStatus,
                                  uint32_t aStringLen, const uint8_t* aString) {
-  return mRunnable->OnStreamComplete(aLoader, mLoadInfo, aStatus, aStringLen,
-                                     aString);
+  return mLoader->OnStreamComplete(aLoader, mLoadInfo, aStatus, aStringLen,
+                                   aString);
 }
 
 NS_IMETHODIMP
 LoaderListener::OnStartRequest(nsIRequest* aRequest) {
-  return mRunnable->OnStartRequest(aRequest, mLoadInfo);
+  return mLoader->OnStartRequest(aRequest, mLoadInfo);
 }
 
 void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
@@ -1573,7 +1596,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
   if (mLoadInfo.mCachePromise) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mLoadInfo.mCachePromise = nullptr;
-    mRunnable->MaybeExecuteFinishedScripts(mLoadInfo);
+    mLoader->MaybeExecuteFinishedScripts(mLoadInfo);
   }
 }
 
@@ -1591,7 +1614,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
 
   // This will delete the cache object and will call LoadingFinished() with an
   // error for each ongoing operation.
-  mRunnable->DeleteCache();
+  mLoader->DeleteCache();
 }
 
 nsresult CacheCreator::CreateCacheStorage(nsIPrincipal* aPrincipal) {
@@ -1755,7 +1778,7 @@ void CacheScriptLoader::Fail(nsresult aRv) {
     return;
   }
 
-  mRunnable->LoadingFinished(mLoadInfo, aRv);
+  mLoader->LoadingFinished(mLoadInfo, aRv);
 }
 
 void CacheScriptLoader::Load(Cache* aCache) {
@@ -1840,7 +1863,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
     }
 
     mLoadInfo.mCacheStatus = ScriptLoadInfo::ToBeCached;
-    rv = mRunnable->LoadScript(mLoadInfo);
+    rv = mLoader->LoadScript(mLoadInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(rv);
     }
@@ -1872,7 +1895,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
       NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
-      mRunnable->mWorkerPrivate, coep, mRunnable->mIsMainScript);
+      mLoader->mWorkerPrivate, coep, mLoader->mIsMainScript);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
@@ -1889,7 +1912,7 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 
   if (!inputStream) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
-    mRunnable->DataReceivedFromCache(
+    mLoader->DataReceivedFromCache(
         mLoadInfo, (uint8_t*)"", 0, mChannelInfo, std::move(mPrincipalInfo),
         mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
     return;
@@ -1953,7 +1976,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
 
   MOZ_ASSERT(mPrincipalInfo);
-  mRunnable->DataReceivedFromCache(
+  mLoader->DataReceivedFromCache(
       mLoadInfo, aString, aStringLen, mChannelInfo, std::move(mPrincipalInfo),
       mCSPHeaderValue, mCSPReportOnlyHeaderValue, mReferrerPolicyHeaderValue);
   return NS_OK;
@@ -2041,7 +2064,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
 };
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
-    ScriptLoaderRunnable& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
+    WorkerScriptLoader& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
     bool aIsWorkerScript, Span<ScriptLoadInfo> aLoadInfosToExecute,
     bool aAllScriptsExecutable)
     : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerPrivate,
@@ -2328,18 +2351,21 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
         return res;
       });
 
-  RefPtr<ScriptLoaderRunnable> loader = new ScriptLoaderRunnable(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
-      std::move(aLoadInfos), clientInfo, controller, aIsMainScript,
-      aWorkerScriptType, aRv);
+  RefPtr<WorkerScriptLoader> loader =
+      new WorkerScriptLoader(aWorkerPrivate, std::move(aOriginStack),
+                             syncLoopTarget, std::move(aLoadInfos), clientInfo,
+                             controller, aIsMainScript, aWorkerScriptType, aRv);
+
+  RefPtr<ScriptLoaderRunnable> loaderRunnable =
+      new ScriptLoaderRunnable(loader);
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
   RefPtr<StrongWorkerRef> workerRef =
       StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
         NS_DispatchToMainThread(NewRunnableMethod(
-            "ScriptLoader::CancelMainThreadWithBindingAborted", loader,
-            &ScriptLoaderRunnable::CancelMainThreadWithBindingAborted));
+            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", loader,
+            &WorkerScriptLoader::CancelMainThreadWithBindingAborted));
       });
 
   if (NS_WARN_IF(!workerRef)) {
@@ -2347,7 +2373,7 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  if (NS_FAILED(NS_DispatchToMainThread(loader))) {
+  if (NS_FAILED(NS_DispatchToMainThread(loaderRunnable))) {
     NS_ERROR("Failed to dispatch!");
     aRv.Throw(NS_ERROR_FAILURE);
     return;
