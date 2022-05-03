@@ -20,7 +20,9 @@ them.
     ```js
     // This simply defines the 'Debugger' constructor in this
     // Scratchpad; it doesn't actually start debugging anything.
-    Components.utils.import('resource://gre/modules/jsdebugger.jsm');
+    const { addDebuggerToGlobal } = ChromeUtils.import(
+      'resource://gre/modules/jsdebugger.jsm'
+    );
     addDebuggerToGlobal(window);
 
     (function () {
