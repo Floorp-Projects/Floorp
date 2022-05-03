@@ -751,10 +751,10 @@ NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
   bool allowURLExtension =
       GetFileNameFromChannel(channel, fileName, getter_AddRefs(uri));
 
-  uint32_t flags = VALIDATE_DEFAULT;
+  uint32_t flags = VALIDATE_ALLOW_EMPTY;
   if (aMimeContentType.Equals(APPLICATION_GUESS_FROM_EXT,
                               nsCaseInsensitiveCStringComparator)) {
-    flags = VALIDATE_GUESS_FROM_EXTENSION;
+    flags |= VALIDATE_GUESS_FROM_EXTENSION;
   }
 
   nsCOMPtr<nsIMIMEInfo> mimeInfo = ValidateFileNameForSaving(
@@ -3391,7 +3391,14 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
   // that our security checks do "the right thing"
   fileName.Trim(".", false);
 
-  if (mimeService) {
+  // If an empty filename is allowed, then return early. It will be saved
+  // using the filename of the temporary file that was created for the download.
+  if (aFlags & VALIDATE_ALLOW_EMPTY && fileName.IsEmpty()) {
+    aFileName.Truncate();
+    return mimeInfo.forget();
+  }
+
+  if (mimeInfo) {
     bool isValidExtension;
     if (extension.IsEmpty() ||
         NS_FAILED(mimeInfo->ExtensionExists(extension, &isValidExtension)) ||
@@ -3440,6 +3447,29 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
           fileName.Append(NS_ConvertUTF8toUTF16(extension));
         }
       }
+    }
+  }
+
+  // If no filename is present, use a default filename.
+  if (!(aFlags & VALIDATE_NO_DEFAULT_FILENAME) &&
+      (fileName.Length() == 0 || fileName.RFind(".") == 0)) {
+    nsCOMPtr<nsIStringBundleService> stringService =
+        mozilla::components::StringBundle::Service();
+    if (stringService) {
+      nsCOMPtr<nsIStringBundle> bundle;
+      if (NS_SUCCEEDED(stringService->CreateBundle(
+              "chrome://global/locale/contentAreaCommands.properties",
+              getter_AddRefs(bundle)))) {
+        nsAutoString defaultFileName;
+        bundle->GetStringFromName("DefaultSaveFileName", defaultFileName);
+        // Append any existing extension to the default filename.
+        fileName = defaultFileName + fileName;
+      }
+    }
+
+    // Use 'index' as a last resort.
+    if (!fileName.Length()) {
+      fileName.AssignLiteral("index");
     }
   }
 
