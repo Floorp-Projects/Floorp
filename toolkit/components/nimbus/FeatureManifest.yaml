@@ -103,6 +103,9 @@ urlbar:
       type: string
       description: >-
         Specify the messages/UI variation for QuickSuggest onboarding dialog. This value is case insensitive.
+    quickSuggestRemoteSettingsDataType:
+      type: string
+      description: The `type` of the suggestions data in remote settings. If not specified, "data" is used.
     quickSuggestRemoteSettingsEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled

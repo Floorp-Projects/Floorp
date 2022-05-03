@@ -204,10 +204,17 @@ class QSTestUtils {
   }
 
   /**
+   * Enrolls in a mock Nimbus rollout.
+   *
    * If you call UrlbarPrefs.updateFirefoxSuggestScenario() from an xpcshell
    * test, you must call this first to intialize the Nimbus urlbar feature.
+   *
+   * @param {object} value
+   *   Define any desired Nimbus variables in this object.
+   * @returns {function}
+   *   A cleanup function that will remove the mock rollout.
    */
-  async initNimbusFeature() {
+  async initNimbusFeature(value = {}) {
     this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
     await ExperimentManager.onStartup();
 
@@ -217,12 +224,20 @@ class QSTestUtils {
     this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
     let doCleanup = await ExperimentFakes.enrollWithRollout({
       featureId: NimbusFeatures.urlbar.featureId,
-      value: { enabled: true },
+      value: { enabled: true, ...value },
     });
 
     this.info?.("initNimbusFeature done");
 
-    this.registerCleanupFunction(doCleanup);
+    this.registerCleanupFunction?.(() => {
+      // If `doCleanup()` has already been called (i.e., by the caller), it will
+      // throw an error here.
+      try {
+        doCleanup();
+      } catch (error) {}
+    });
+
+    return doCleanup;
   }
 
   /**
