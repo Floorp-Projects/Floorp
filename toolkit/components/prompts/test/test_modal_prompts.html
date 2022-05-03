@@ -18,7 +18,7 @@ Prompter tests: modal prompts
 <script class="testbody" type="text/javascript">
 /* eslint-disable complexity */
 async function runTests(util) {
-  const { NetUtil } = SpecialPowers.Cu.import(
+  const { NetUtil } = SpecialPowers.ChromeUtils.import(
     "resource://gre/modules/NetUtil.jsm"
   );
 
