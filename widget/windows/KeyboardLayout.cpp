@@ -1297,7 +1297,7 @@ NativeKey::NativeKey(nsWindow* aWidget, const MSG& aMessage,
   }
 
   MOZ_LOG(gKeyLog, LogLevel::Info,
-          ("%p   NativeKey::NativeKey(), mKeyboardLayout=0x%08X, "
+          ("%p   NativeKey::NativeKey(), mKeyboardLayout=0x%p, "
            "mFocusedWndBeforeDispatch=0x%p, mDOMKeyCode=%s, "
            "mKeyNameIndex=%s, mCodeNameIndex=%s, mModKeyState=%s, "
            "mVirtualKeyCode=%s, mOriginalVirtualKeyCode=%s, "
@@ -3151,7 +3151,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
     if (doCrash) {
       nsPrintfCString info(
           "\nPeekMessage() failed to remove char message! "
-          "\nActive keyboard layout=0x%08X (%s), "
+          "\nActive keyboard layout=0x%p (%s), "
           "\nHandling message: %s, InSendMessageEx()=%s, "
           "\nFound message: %s, "
           "\nWM_NULL has been removed: %d, "
@@ -3298,7 +3298,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
          ToString(kFoundCharMsg).get()));
     nsPrintfCString info(
         "\nPeekMessage() removed unexpcted char message! "
-        "\nActive keyboard layout=0x%08X (%s), "
+        "\nActive keyboard layout=0x%p (%s), "
         "\nHandling message: %s, InSendMessageEx()=%s, "
         "\nFound message: %s, "
         "\nRemoved message: %s, ",
@@ -3341,7 +3341,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
        this, ToString(nextKeyMsg).get()));
   nsPrintfCString info(
       "\nWe lost following char message! "
-      "\nActive keyboard layout=0x%08X (%s), "
+      "\nActive keyboard layout=0x%p (%s), "
       "\nHandling message: %s, InSendMessageEx()=%s, \n"
       "Found message: %s, removed a lot of WM_NULL",
       KeyboardLayout::GetActiveLayout(),
@@ -4290,7 +4290,7 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
   mHasAltGr = false;
 
   MOZ_LOG(gKeyLog, LogLevel::Info,
-          ("KeyboardLayout::LoadLayout(aLayout=0x%08X (%s))", aLayout,
+          ("KeyboardLayout::LoadLayout(aLayout=0x%p (%s))", aLayout,
            GetLayoutName(aLayout).get()));
 
   BYTE kbdState[256];

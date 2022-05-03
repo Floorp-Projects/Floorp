@@ -1555,7 +1555,7 @@ nsresult MouseScrollHandler::SynthesizingEvent::Synthesize(
   MOZ_LOG(
       gMouseScrollLog, LogLevel::Info,
       ("MouseScrollHandler::SynthesizingEvent::Synthesize(): aCursorPoint: { "
-       "x: %d, y: %d }, aWnd=0x%X, aMessage=0x%04X, aWParam=0x%08X, "
+       "x: %d, y: %d }, aWnd=0x%p, aMessage=0x%04X, aWParam=0x%08X, "
        "aLParam=0x%08X, IsSynthesized()=%s, mStatus=%s",
        aCursorPoint.x, aCursorPoint.y, aWnd, aMessage, aWParam, aLParam,
        GetBoolName(IsSynthesizing()), GetStatusName()));
@@ -1601,7 +1601,7 @@ void MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(
 
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(): "
-           "aWidget=%p, aWidget->GetWindowHandle()=0x%X, mWnd=0x%X, "
+           "aWidget=%p, aWidget->GetWindowHandle()=0x%p, mWnd=0x%p, "
            "aMessage=0x%04X, aWParam=0x%08X, aLParam=0x%08X, mStatus=%s",
            aWidget, aWidget ? aWidget->GetWindowHandle() : 0, mWnd, aMessage,
            aWParam, aLParam, GetStatusName()));
