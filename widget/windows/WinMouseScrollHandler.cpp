@@ -115,7 +115,7 @@ void MouseScrollHandler::MaybeLogKeyState() {
     for (size_t i = 0; i < ArrayLength(keyboardState); i++) {
       if (keyboardState[i]) {
         MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
-                ("    Current key state: keyboardState[0x%02X]=0x%02X (%s)", i,
+                ("    Current key state: keyboardState[0x%02zX]=0x%02X (%s)", i,
                  keyboardState[i],
                  ((keyboardState[i] & 0x81) == 0x81) ? "Pressed and Toggled"
                  : (keyboardState[i] & 0x80)         ? "Pressed"

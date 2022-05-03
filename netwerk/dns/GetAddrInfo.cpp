@@ -180,7 +180,7 @@ _DNSQuery_A_SingleLabel(const nsACString& aCanonHost, uint16_t aAddressFamily,
         addresses.AppendElement(addr);
       });
 
-  LOG("Query for: %s has %u results", aCanonHost.BeginReading(),
+  LOG("Query for: %s has %zu results", aCanonHost.BeginReading(),
       addresses.Length());
   if (addresses.IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;
