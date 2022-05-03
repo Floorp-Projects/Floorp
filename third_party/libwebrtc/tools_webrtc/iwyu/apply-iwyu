@@ -15,48 +15,28 @@ FILE=$1
 # the following variable to "yes". This is a style guide violation.
 REMOVE_CC_INCLUDES=no
 
-if [ ! -f $FILE ]; then
-  # See if we have the root name of a .cc/.h pair
-  if [ ! -f $FILE.h ]; then
-    echo "$FILE.h not found"
-    exit 1
-  fi
-  FILE_H=$FILE.h
-  if [ ! -f $FILE.cc ]; then
-    echo "$FILE.cc not found"
-    exit 1
-  fi
-  FILE_CC=$FILE.cc
-else
-  # Exact file, no .h file
-  FILE_CC=$FILE
-  FILE_H=""
+if [ ! -f $FILE.h ]; then
+   echo "$FILE.h not found"
+   exit 1
 fi
 
-iwyu -Xiwyu --no_fwd_decls -D__X86_64__  -DWEBRTC_POSIX -I . \
-  -I third_party/abseil-cpp \
-  -I third_party/googletest/src/googlemock/include \
-  -I third_party/googletest/src/googletest/include \
-  $FILE_CC |& fix_include || echo "Some files modified"
+if [ ! -f $FILE.cc ]; then
+   echo "$FILE.cc not found"
+   exit 1
+fi 
+
+iwyu -Xiwyu --no_fwd_decls -D__X86_64__  -DWEBRTC_POSIX -I . -I third_party/abseil-cpp $FILE.cc |& fix_include || echo "Some files modified"
 
 if [ $REMOVE_CC_INCLUDES == "yes" ]; then
-  if [ -n "$FILE_H" ]; then
-    # Don't include in .cc what's already included in .h
-    grep ^#include $FILE_H | grep -v -f - $FILE_CC > $FILE_CC.new
-  else
-    cp $FILE_CC $FILE_CC.new
-  fi
-  # Don't include stuff on the banlist
-  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_CC.new > $FILE_CC
+  grep ^#include $FILE.h | grep -v -f - $FILE.cc > $FILE.ccnew
+  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE.ccnew > $FILE.cc
   rm $FILE.ccnew
 else
-  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_CC > $FILE_CC.new
-  mv $FILE_CC.new $FILE_CC
+  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE.cc > $FILE.ccnew
+  mv $FILE.ccnew $FILE.cc
 fi
-if [ -n "$FILE_H" ]; then
-  grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE_H > $FILE_H.new
-  mv $FILE_H.new $FILE_H
-fi
+grep -v -f tools_webrtc/iwyu/iwyu-filter-list $FILE.h > $FILE.hnew
+mv $FILE.hnew $FILE.h
 
 echo "Finished. Check diff, compile and git cl format before uploading."
 
