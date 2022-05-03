@@ -20,8 +20,7 @@ async function createRecords(records) {
     id: `record-${i}`,
     ...record,
   }));
-  // Prevent packaged dump to be loaded with high collection timestamp
-  return client.db.importChanges({}, 9999999999999, withId);
+  return client.db.importChanges({}, 42, withId);
 }
 
 function run_test() {
