@@ -34,6 +34,7 @@ from mozbuild.base import ExecutionSummary
 
 
 MSBUILD_NAMESPACE = "http://schemas.microsoft.com/developer/msbuild/2003"
+MSNATVIS_NAMESPACE = "http://schemas.microsoft.com/vstudio/debugger/natvis/2010"
 
 
 def get_id(name):
@@ -418,6 +419,9 @@ class VisualStudioBackend(CommonBackend):
             e = e.appendChild(doc.createElement("Value"))
             e.appendChild(doc.createTextNode("$(%s)" % k))
 
+        natvis = ig.appendChild(doc.createElement("Natvis"))
+        natvis.setAttribute("Include", "../../../toolkit/library/gecko.natvis")
+
         add_var("TopObjDir", os.path.normpath(self.environment.topobjdir))
         add_var("TopSrcDir", os.path.normpath(self.environment.topsrcdir))
         add_var("PYTHON", "$(TopObjDir)\\_virtualenv\\Scripts\\python.exe")
@@ -428,6 +432,50 @@ class VisualStudioBackend(CommonBackend):
 
         fh.write(b"\xef\xbb\xbf")
         doc.writexml(fh, addindent="  ", newl="\r\n")
+
+    def _create_natvis_type(
+        self, doc, visualizer, name, displayString, stringView=None
+    ):
+
+        t = visualizer.appendChild(doc.createElement("Type"))
+        t.setAttribute("Name", name)
+
+        ds = t.appendChild(doc.createElement("DisplayString"))
+        ds.appendChild(doc.createTextNode(displayString))
+
+        if stringView is not None:
+            sv = t.appendChild(doc.createElement("DisplayString"))
+            sv.appendChild(doc.createTextNode(stringView))
+
+    def _create_natvis_simple_string_type(self, doc, visualizer, name):
+        self._create_natvis_type(
+            doc, visualizer, name + "<char16_t>", "{mData,su}", "mData,su"
+        )
+        self._create_natvis_type(
+            doc, visualizer, name + "<char>", "{mData,s}", "mData,s"
+        )
+
+    def _create_natvis_string_tuple_type(self, doc, visualizer, chartype, formatstring):
+        t = visualizer.appendChild(doc.createElement("Type"))
+        t.setAttribute("Name", "nsTSubstringTuple<" + chartype + ">")
+
+        ds1 = t.appendChild(doc.createElement("DisplayString"))
+        ds1.setAttribute("Condition", "mHead != nullptr")
+        ds1.appendChild(
+            doc.createTextNode("{mHead,na} {mFragB->mData," + formatstring + "}")
+        )
+
+        ds2 = t.appendChild(doc.createElement("DisplayString"))
+        ds2.setAttribute("Condition", "mHead == nullptr")
+        ds2.appendChild(
+            doc.createTextNode(
+                "{mFragA->mData,"
+                + formatstring
+                + "} {mFragB->mData,"
+                + formatstring
+                + "}"
+            )
+        )
 
     def _relevant_environment_variables(self):
         # Write out the environment variables, presumably coming from
