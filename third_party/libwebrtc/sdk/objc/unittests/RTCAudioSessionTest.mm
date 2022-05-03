@@ -253,9 +253,10 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
   };
 
   id mockAVAudioSession = OCMPartialMock([AVAudioSession sharedInstance]);
-  OCMStub([[mockAVAudioSession ignoringNonObjectArgs]
-      setActive:YES withOptions:0 error:((NSError __autoreleasing **)[OCMArg anyPointer])]).
-      andDo(setActiveBlock);
+  OCMStub([[mockAVAudioSession ignoringNonObjectArgs] setActive:YES
+                                                    withOptions:0
+                                                          error:([OCMArg anyObjectRef])])
+      .andDo(setActiveBlock);
 
   id mockAudioSession = OCMPartialMock([RTC_OBJC_TYPE(RTCAudioSession) sharedInstance]);
   OCMStub([mockAudioSession session]).andReturn(mockAVAudioSession);
@@ -266,9 +267,10 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
   EXPECT_TRUE([audioSession checkLock:nil]);
   // configureWebRTCSession is forced to fail in the above mock interface,
   // so activationCount should remain 0
-  OCMExpect([[mockAVAudioSession ignoringNonObjectArgs]
-      setActive:YES withOptions:0 error:((NSError __autoreleasing **)[OCMArg anyPointer])]).
-      andDo(setActiveBlock);
+  OCMExpect([[mockAVAudioSession ignoringNonObjectArgs] setActive:YES
+                                                      withOptions:0
+                                                            error:([OCMArg anyObjectRef])])
+      .andDo(setActiveBlock);
   OCMExpect([mockAudioSession session]).andReturn(mockAVAudioSession);
   EXPECT_FALSE([audioSession configureWebRTCSession:&error]);
   EXPECT_EQ(0, audioSession.activationCount);
