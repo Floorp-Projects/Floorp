@@ -406,7 +406,7 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
     // This can only be an NS_WARNING, because it can null for xpcshell tests.
     NS_WARNING("Tried to add rule with null base dir.");
     LOG_E("Tried to add rule with null base dir. Relative path: %S, Access: %d",
-          aRelativePath.get(), aAccess);
+          static_cast<const wchar_t*>(aRelativePath.get()), aAccess);
     return;
   }
 
@@ -418,7 +418,7 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
   if (sandbox::SBOX_ALL_OK != result) {
     NS_ERROR("Failed to add file policy rule.");
     LOG_E("Failed (ResultCode %d) to add %d access to: %S", result, aAccess,
-          rulePath.get());
+          static_cast<const wchar_t*>(rulePath.get()));
   }
 }
 
