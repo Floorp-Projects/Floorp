@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Test for count/countReset in console</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -12,11 +13,11 @@
 SimpleTest.waitForExplicitFinish();
 
 function ConsoleListener() {
-  SpecialPowers.addObserver(this, "console-api-log-event");
+  addConsoleStorageListener(this);
 }
 
 ConsoleListener.prototype = {
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject) {
     let obj = aSubject.wrappedJSObject;
     if (obj.arguments[0] != "test") {
       return;
@@ -36,7 +37,7 @@ ConsoleListener.prototype = {
   },
 
   shutdown() {
-    SpecialPowers.removeObserver(this, "console-api-log-event");
+    removeConsoleStorageListener(this);
   },
 
   waitFor(cb) {

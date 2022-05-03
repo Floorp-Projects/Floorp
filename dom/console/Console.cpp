@@ -1532,15 +1532,13 @@ void MainThreadConsoleData::ProcessCallData(
     return;
   }
 
-  nsAutoString innerID, outerID;
+  nsAutoString innerID;
 
   MOZ_ASSERT(aData->mIDType != ConsoleCallData::eUnknown);
   if (aData->mIDType == ConsoleCallData::eString) {
-    outerID = aData->mOuterIDString;
     innerID = aData->mInnerIDString;
   } else {
     MOZ_ASSERT(aData->mIDType == ConsoleCallData::eNumber);
-    outerID.AppendInt(aData->mOuterIDNumber);
     innerID.AppendInt(aData->mInnerIDNumber);
   }
 
@@ -1549,7 +1547,7 @@ void MainThreadConsoleData::ProcessCallData(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "ClearEvents failed");
   }
 
-  if (NS_FAILED(mStorage->RecordEvent(innerID, outerID, eventValue))) {
+  if (NS_FAILED(mStorage->RecordEvent(innerID, eventValue))) {
     NS_WARNING("Failed to record a console event.");
   }
 }

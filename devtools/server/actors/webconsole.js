@@ -2044,7 +2044,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    * instance.
    *
    * @param object message
-   *        The original message received from console-api-log-event.
+   *        The original message received from the console storage listener.
    * @param boolean aUseObjectGlobal
    *        If |true| the object global is determined and added as a debuggee,
    *        otherwise |this.global| is used when makeDebuggeeValue() is invoked.

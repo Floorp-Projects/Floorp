@@ -12,20 +12,23 @@
   </head>
   <body>
     <script type="text/javascript">
+  const ConsoleAPIStorage = SpecialPowers.Cc[
+    "@mozilla.org/consoleAPI-storage;1"
+  ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
 
   function consoleListener() {
-    SpecialPowers.addObserver(this, "console-api-log-event");
+    this.observe = this.observe.bind(this);
+    ConsoleAPIStorage.addLogEventListener(this.observe, SpecialPowers.wrap(document).nodePrincipal);
   }
 
   var order = 0;
   consoleListener.prototype  = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject) {
     ok(true, "Something has been received");
-    is(aTopic, "console-api-log-event");
 
     var obj = aSubject.wrappedJSObject;
     if (obj.arguments[0] && obj.arguments[0].msg === 'consoleAndBlobs') {
-      SpecialPowers.removeObserver(this, "console-api-log-event");
+      ConsoleAPIStorage.removeLogEventListener(this.observe);
       is(obj.arguments[0].blob.size, 3, "The size is correct");
       is(obj.arguments[0].blob.type, 'foo/bar', "The type is correct");
       SimpleTest.finish();

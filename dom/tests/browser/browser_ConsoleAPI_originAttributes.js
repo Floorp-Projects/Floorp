@@ -12,50 +12,50 @@ const { WebExtensionPolicy } = Cu.getGlobalForObject(
 const FAKE_ADDON_ID = "test-webext-addon@mozilla.org";
 const EXPECTED_CONSOLE_ID = `addon/${FAKE_ADDON_ID}`;
 const EXPECTED_CONSOLE_MESSAGE_CONTENT = "fake-webext-addon-test-log-message";
-const ConsoleObserver = {
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
+const ConsoleObserver = {
   init() {
-    Services.obs.addObserver(this, "console-api-log-event");
+    ConsoleAPIStorage.addLogEventListener(
+      this.observe,
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+    );
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "console-api-log-event");
+    ConsoleAPIStorage.removeLogEventListener(this.observe);
   },
 
-  observe(aSubject, aTopic, aData) {
-    if (aTopic == "console-api-log-event") {
-      let consoleAPIMessage = aSubject.wrappedJSObject;
+  observe(aSubject) {
+    let consoleAPIMessage = aSubject.wrappedJSObject;
 
-      is(
-        consoleAPIMessage.arguments[0],
-        EXPECTED_CONSOLE_MESSAGE_CONTENT,
-        "the consoleAPIMessage contains the expected message"
-      );
+    is(
+      consoleAPIMessage.arguments[0],
+      EXPECTED_CONSOLE_MESSAGE_CONTENT,
+      "the consoleAPIMessage contains the expected message"
+    );
 
-      is(
-        consoleAPIMessage.addonId,
-        FAKE_ADDON_ID,
-        "the consoleAPImessage originAttributes contains the expected addonId"
-      );
+    is(
+      consoleAPIMessage.addonId,
+      FAKE_ADDON_ID,
+      "the consoleAPImessage originAttributes contains the expected addonId"
+    );
 
-      let cachedMessages = ConsoleAPIStorage.getEvents().filter(msg => {
-        return msg.addonId == FAKE_ADDON_ID;
-      });
+    let cachedMessages = ConsoleAPIStorage.getEvents().filter(msg => {
+      return msg.addonId == FAKE_ADDON_ID;
+    });
 
-      is(
-        cachedMessages.length,
-        1,
-        "found the expected cached console messages from the addon"
-      );
-      is(
-        cachedMessages[0] && cachedMessages[0].addonId,
-        FAKE_ADDON_ID,
-        "the cached message originAttributes contains the expected addonId"
-      );
+    is(
+      cachedMessages.length,
+      1,
+      "found the expected cached console messages from the addon"
+    );
+    is(
+      cachedMessages[0] && cachedMessages[0].addonId,
+      FAKE_ADDON_ID,
+      "the cached message originAttributes contains the expected addonId"
+    );
 
-      finish();
-    }
+    finish();
   },
 };
 

@@ -185,21 +185,24 @@ registerCleanupFunction(function() {
 /**
  * Watch console messages for failed propType definitions in React components.
  */
-const ConsoleObserver = {
-  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+function onConsoleMessage(subject) {
+  const message = subject.wrappedJSObject.arguments[0];
 
-  observe: function(subject) {
-    const message = subject.wrappedJSObject.arguments[0];
+  if (message && /Failed propType/.test(message.toString())) {
+    ok(false, message);
+  }
+}
 
-    if (message && /Failed propType/.test(message.toString())) {
-      ok(false, message);
-    }
-  },
-};
+const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+  Ci.nsIConsoleAPIStorage
+);
 
-Services.obs.addObserver(ConsoleObserver, "console-api-log-event");
+ConsoleAPIStorage.addLogEventListener(
+  onConsoleMessage,
+  Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+);
 registerCleanupFunction(() => {
-  Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
+  ConsoleAPIStorage.removeLogEventListener(onConsoleMessage);
 });
 
 Services.prefs.setBoolPref("devtools.inspector.three-pane-enabled", true);
