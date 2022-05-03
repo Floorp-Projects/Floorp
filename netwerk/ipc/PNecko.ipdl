@@ -22,8 +22,6 @@ include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PSimpleChannel;
 include protocol PTransportProvider;
-include protocol PChildToParentStream; //FIXME: bug #792908
-include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 include protocol PClassifierDummyChannel;
