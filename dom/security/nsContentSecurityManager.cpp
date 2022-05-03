@@ -1132,6 +1132,16 @@ nsresult nsContentSecurityManager::CheckAllowLoadInSystemPrivilegedContext(
       return NS_ERROR_CONTENT_BLOCKED;
     }
   }
+  if (contentPolicyType == ExtContentPolicy::TYPE_SCRIPT) {
+    if ((StaticPrefs::security_disallow_privileged_https_script_loads()) &&
+        (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
+#ifdef DEBUG
+      MOZ_CRASH("Disallowing SystemPrincipal load of scripts on HTTP(S).");
+#endif
+      aChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+      return NS_ERROR_CONTENT_BLOCKED;
+    }
+  }
   if (contentPolicyType == ExtContentPolicy::TYPE_STYLESHEET) {
     if (StaticPrefs::security_disallow_privileged_https_stylesheet_loads() &&
         (finalURI->SchemeIs("http") || finalURI->SchemeIs("https"))) {
