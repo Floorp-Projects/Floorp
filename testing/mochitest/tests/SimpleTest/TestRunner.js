@@ -498,10 +498,9 @@ TestRunner.runTests = function(/*url...*/) {
 
   // Initialize code coverage
   if (TestRunner.jscovDirPrefix != "") {
-    var CoverageCollector = SpecialPowers.Cu.import(
-      "resource://testing-common/CoverageUtils.jsm",
-      {}
-    ).CoverageCollector;
+    var { CoverageCollector } = SpecialPowers.ChromeUtils.import(
+      "resource://testing-common/CoverageUtils.jsm"
+    );
     coverageCollector = new CoverageCollector(TestRunner.jscovDirPrefix);
   }
 
