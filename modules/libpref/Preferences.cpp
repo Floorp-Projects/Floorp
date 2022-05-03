@@ -5692,21 +5692,33 @@ static void InitStaticPrefsFromShared() {
   // Nonetheless, it's useful to have the MOZ_ASSERT here for testing of debug
   // builds, where this scenario involving inconsistent binaries should not
   // occur.
-#define NEVER_PREF(name, cpp_type, value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)            \
-  {                                                                     \
-    StripAtomic<cpp_type> val;                                          \
-    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val); \
-    MOZ_ASSERT(NS_SUCCEEDED(rv));                                       \
-    StaticPrefs::sMirror_##full_id = val;                               \
+#define NEVER_PREF(name, cpp_type, default_value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)           \
+  {                                                                            \
+    StripAtomic<cpp_type> val;                                                 \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val);        \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
+    StaticPrefs::sMirror_##full_id = val;                                      \
   }
-#define ONCE_PREF(name, base_id, full_id, cpp_type, value)         \
-  {                                                                \
-    cpp_type val;                                                  \
-    DebugOnly<nsresult> rv =                                       \
-        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val); \
-    MOZ_ASSERT(NS_SUCCEEDED(rv));                                  \
-    StaticPrefs::sMirror_##full_id = val;                          \
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)             \
+  {                                                                            \
+    cpp_type val;                                                              \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    DebugOnly<nsresult> rv =                                                   \
+        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val);             \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
+    StaticPrefs::sMirror_##full_id = val;                                      \
   }
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
