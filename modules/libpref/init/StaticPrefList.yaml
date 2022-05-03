@@ -3648,7 +3648,7 @@
 
 - name: dom.streams.byte_streams.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.streams.writable_streams.enabled
