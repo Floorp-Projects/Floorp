@@ -212,8 +212,8 @@ already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(
   }
 
   // Option 2: A stream was serialized using normal methods or passed
-  //           as a PChildToParentStream actor.  Use the standard method for
-  //           extracting the resulting stream.
+  //           as a DataPipe.  Use the standard method for extracting the
+  //           resulting stream.
   return DeserializeIPCStream(readStream.stream());
 }
 

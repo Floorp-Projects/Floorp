@@ -32,7 +32,6 @@ enum CleanupAction { Forget, Delete };
 
 void CleanupChild(CacheReadStream& aReadStream, CleanupAction aAction) {
   // fds cleaned up by mStreamCleanupList
-  // PChildToParentStream actors cleaned up by mStreamCleanupList
 }
 
 void CleanupChild(Maybe<CacheReadStream>& aMaybeReadStream,
