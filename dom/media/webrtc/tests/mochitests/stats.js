@@ -644,7 +644,6 @@ function pedanticChecks(report) {
           `${stat.kind} test. value=${stat.retransmittedBytesSent}`
       );
 
-
       //
       // Optional fields
       //
@@ -741,7 +740,6 @@ function pedanticChecks(report) {
           `${stat.type}.totalEncodeTime is a sane number for a short ` +
             `${stat.kind} test. value=${stat.totalEncodeTime}`
         );
-
       }
     } else if (stat.type == "remote-outbound-rtp") {
       //
