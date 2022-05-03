@@ -2378,7 +2378,7 @@ void TSFTextStore::FlushPendingActions() {
         MOZ_LOG(gIMELog, LogLevel::Debug,
                 ("0x%p   TSFTextStore::FlushPendingActions() "
                  "flushing Type::eCompositionUpdate={ mData=\"%s\", "
-                 "mRanges=0x%p, mRanges->Length()=%d }",
+                 "mRanges=0x%p, mRanges->Length()=%zu }",
                  this, GetEscapedUTF8String(action.mData).get(),
                  action.mRanges.get(),
                  action.mRanges ? action.mRanges->Length() : 0));
@@ -4067,14 +4067,14 @@ TSFTextStore::RetrieveRequestedAttrs(ULONG ulCount, TS_ATTRVAL* paAttrVals,
   if (ulCount < expectedCount) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p TSFTextStore::RetrieveRequestedAttrs() FAILED due to "
-             "not enough count ulCount=%u, expectedCount=%u",
+             "not enough count ulCount=%lu, expectedCount=%lu",
              this, ulCount, expectedCount));
     return E_INVALIDARG;
   }
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p TSFTextStore::RetrieveRequestedAttrs() called "
-           "ulCount=%d, mRequestedAttrValues=%s",
+           "ulCount=%lu, mRequestedAttrValues=%s",
            this, ulCount, GetBoolName(mRequestedAttrValues)));
 
   int32_t count = 0;
@@ -6449,7 +6449,7 @@ void TSFTextStore::CreateNativeCaret() {
   if (NS_WARN_IF(queryCaretRectEvent.Failed())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
-             "eQueryCaretRect failure (offset=%d)",
+             "eQueryCaretRect failure (offset=%lld)",
              this, caretOffset));
     return;
   }
@@ -7267,8 +7267,8 @@ HRESULT
 TSFTextStore::MouseTracker::Init(TSFTextStore* aTextStore) {
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   TSFTextStore::MouseTracker::Init(aTextStore=0x%p), "
-           "aTextStore->mMouseTrackers.Length()=%d",
-           this, aTextStore->mMouseTrackers.Length()));
+           "aTextStore->mMouseTrackers.Length()=%zu",
+           this, aTextStore, aTextStore->mMouseTrackers.Length()));
 
   if (&aTextStore->mMouseTrackers.LastElement() != this) {
     MOZ_LOG(gIMELog, LogLevel::Error,
@@ -7343,7 +7343,7 @@ TSFTextStore::MouseTracker::AdviseSink(TSFTextStore* aTextStore,
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink() FAILED "
              "due to out of range, start=%ld, length=%ld, "
-             "textContent.Length()=%d",
+             "textContent.Length()=%zu",
              this, start, length, textContent.Length()));
     return E_INVALIDARG;
   }
@@ -7354,7 +7354,7 @@ TSFTextStore::MouseTracker::AdviseSink(TSFTextStore* aTextStore,
 
   MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   TSFTextStore::MouseTracker::AdviseMouseSink(), "
-           "succeeded, mRange=%s, textContent.Length()=%d",
+           "succeeded, mRange=%s, textContent.Length()=%zu",
            this, ToString(mRange).c_str(), textContent.Length()));
   return S_OK;
 }

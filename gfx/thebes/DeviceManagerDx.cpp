@@ -276,7 +276,7 @@ bool DeviceManagerDx::CreateCompositorDevices() {
 
   if (int32_t sleepSec =
           StaticPrefs::gfx_direct3d11_sleep_on_create_device_AtStartup()) {
-    printf_stderr("Attach to PID: %d\n", GetCurrentProcessId());
+    printf_stderr("Attach to PID: %lu\n", GetCurrentProcessId());
     Sleep(sleepSec * 1000);
   }
 
