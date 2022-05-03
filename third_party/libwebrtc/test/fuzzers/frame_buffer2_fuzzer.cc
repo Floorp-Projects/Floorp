@@ -78,7 +78,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     if (reader.GetNum<uint8_t>() % 2) {
       std::unique_ptr<FuzzyFrameObject> frame(new FuzzyFrameObject());
       frame->id.picture_id = reader.GetNum<int64_t>();
-      frame->id.spatial_layer = reader.GetNum<uint8_t>() % 5;
+      frame->SetSpatialIndex(reader.GetNum<uint8_t>() % 5);
       frame->SetTimestamp(reader.GetNum<uint32_t>());
       frame->num_references = reader.GetNum<uint8_t>() %
                               video_coding::EncodedFrame::kMaxFrameReferences;

@@ -49,6 +49,7 @@ RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
   if (codec_header.temporalIdx >= kMaxTemporalLayers)
     return kDrop;
 
+  frame->SetSpatialIndex(0);
   frame->id.picture_id = codec_header.pictureId & 0x7FFF;
 
   if (last_picture_id_ == -1)

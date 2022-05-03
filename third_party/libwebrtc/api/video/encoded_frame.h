@@ -23,12 +23,11 @@ namespace video_coding {
 struct VideoLayerFrameId {
   // TODO(philipel): The default ctor is currently used internaly, but have a
   //                 look if we can remove it.
-  VideoLayerFrameId() : picture_id(-1), spatial_layer(0) {}
-  VideoLayerFrameId(int64_t picture_id, uint8_t spatial_layer)
-      : picture_id(picture_id), spatial_layer(spatial_layer) {}
+  VideoLayerFrameId() : picture_id(-1) {}
+  explicit VideoLayerFrameId(int64_t picture_id) : picture_id(picture_id) {}
 
   bool operator==(const VideoLayerFrameId& rhs) const {
-    return picture_id == rhs.picture_id && spatial_layer == rhs.spatial_layer;
+    return picture_id == rhs.picture_id;
   }
 
   bool operator!=(const VideoLayerFrameId& rhs) const {
@@ -36,8 +35,6 @@ struct VideoLayerFrameId {
   }
 
   bool operator<(const VideoLayerFrameId& rhs) const {
-    if (picture_id == rhs.picture_id)
-      return spatial_layer < rhs.spatial_layer;
     return picture_id < rhs.picture_id;
   }
 
@@ -46,7 +43,6 @@ struct VideoLayerFrameId {
   bool operator>=(const VideoLayerFrameId& rhs) const { return rhs <= *this; }
 
   int64_t picture_id;
-  uint8_t spatial_layer;
 };
 
 // TODO(philipel): Remove webrtc::VCMEncodedFrame inheritance.

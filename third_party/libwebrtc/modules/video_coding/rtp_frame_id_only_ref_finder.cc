@@ -20,6 +20,7 @@ namespace video_coding {
 RtpFrameReferenceFinder::ReturnVector RtpFrameIdOnlyRefFinder::ManageFrame(
     std::unique_ptr<RtpFrameObject> frame,
     int frame_id) {
+  frame->SetSpatialIndex(0);
   frame->id.picture_id = unwrapper_.Unwrap(frame_id & (kFrameIdLength - 1));
   frame->num_references =
       frame->frame_type() == VideoFrameType::kVideoFrameKey ? 0 : 1;

@@ -431,10 +431,8 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
                  "FrameBuffer::InsertFrame Frame dropped (Invalid references)",
                  "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
                  id.picture_id);
-    RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
-                        << id.picture_id << ":"
-                        << static_cast<int>(id.spatial_layer)
-                        << ") has invalid frame references, dropping frame.";
+    RTC_LOG(LS_WARNING) << "Frame " << id.picture_id
+                        << " has invalid frame references, dropping frame.";
     return last_continuous_picture_id;
   }
 
@@ -444,10 +442,8 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
                    "FrameBuffer::InsertFrame Frames dropped (KF + Full buffer)",
                    "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
                    id.picture_id);
-      RTC_LOG(LS_WARNING) << "Inserting keyframe (picture_id:spatial_id) ("
-                          << id.picture_id << ":"
-                          << static_cast<int>(id.spatial_layer)
-                          << ") but buffer is full, clearing"
+      RTC_LOG(LS_WARNING) << "Inserting keyframe " << id.picture_id
+                          << " but buffer is full, clearing"
                              " buffer and inserting the frame.";
       ClearFramesAndHistory();
     } else {
@@ -455,10 +451,8 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
                    "FrameBuffer::InsertFrame Frame dropped (Full buffer)",
                    "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
                    id.picture_id);
-      RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
-                          << id.picture_id << ":"
-                          << static_cast<int>(id.spatial_layer)
-                          << ") could not be inserted due to the frame "
+      RTC_LOG(LS_WARNING) << "Frame " << id.picture_id
+                          << " could not be inserted due to the frame "
                              "buffer being full, dropping frame.";
       return last_continuous_picture_id;
     }
@@ -488,13 +482,10 @@ int64_t FrameBuffer::InsertFrame(std::unique_ptr<EncodedFrame> frame) {
                    "FrameBuffer::InsertFrame Frame dropped (Out of order)",
                    "remote_ssrc", pis.empty() ? 0 : pis[0].ssrc(), "picture_id",
                    id.picture_id);
-      RTC_LOG(LS_WARNING) << "Frame with (picture_id:spatial_id) ("
-                          << id.picture_id << ":"
-                          << static_cast<int>(id.spatial_layer)
-                          << ") inserted after frame ("
-                          << last_decoded_frame->picture_id << ":"
-                          << static_cast<int>(last_decoded_frame->spatial_layer)
-                          << ") was handed off for decoding, dropping frame.";
+      RTC_LOG(LS_WARNING) << "Frame " << id.picture_id
+                          << " inserted after frame "
+                          << last_decoded_frame->picture_id
+                          << " was handed off for decoding, dropping frame.";
       return last_continuous_picture_id;
     }
   }
@@ -632,7 +623,7 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
 
   // Find all dependencies that have not yet been fulfilled.
   for (size_t i = 0; i < frame.num_references; ++i) {
-    VideoLayerFrameId ref_key(frame.references[i], frame.id.spatial_layer);
+    VideoLayerFrameId ref_key(frame.references[i]);
     // Does |frame| depend on a frame earlier than the last decoded one?
     if (last_decoded_frame && ref_key <= *last_decoded_frame) {
       // Was that frame decoded? If not, this |frame| will never become
@@ -641,10 +632,9 @@ bool FrameBuffer::UpdateFrameInfoWithIncomingFrame(const EncodedFrame& frame,
         int64_t now_ms = clock_->TimeInMilliseconds();
         if (last_log_non_decoded_ms_ + kLogNonDecodedIntervalMs < now_ms) {
           RTC_LOG(LS_WARNING)
-              << "Frame with (picture_id:spatial_id) (" << id.picture_id << ":"
-              << static_cast<int>(id.spatial_layer)
-              << ") depends on a non-decoded frame more previous than"
-                 " the last decoded frame, dropping frame.";
+              << "Frame " << id.picture_id
+              << " depends on a non-decoded frame more previous than the last "
+                 "decoded frame, dropping frame.";
           last_log_non_decoded_ms_ = now_ms;
         }
         return false;
@@ -736,7 +726,6 @@ EncodedFrame* FrameBuffer::CombineAndDeleteFrames(
   // Spatial index of combined frame is set equal to spatial index of its top
   // spatial layer.
   first_frame->SetSpatialIndex(last_frame->SpatialIndex().value_or(0));
-  first_frame->id.spatial_layer = last_frame->id.spatial_layer;
 
   first_frame->video_timing_mutable()->network2_timestamp_ms =
       last_frame->video_timing().network2_timestamp_ms;
