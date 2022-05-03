@@ -12,6 +12,8 @@
 <div draggable="true" id="draggable">Drag me</div>
 <script>
 add_task(async function test_drag_coords() {
+  await SpecialPowers.contentTransformsReceived(window);
+
   let target = document.getElementById("draggable");
   let coords = {};
   let promises = [];
