@@ -724,8 +724,8 @@ void BaseCompiler::insertBreakpointStub() {
 
     // Check the filter bit.  There is one bit per function in the module.
     // Table elements are 32-bit because the masm makes that convenient.
-    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
-                       Imm32(1 << (func_.index % 32)), &L);
+    masm.branchTest32(Assembler::NonZero, Address(scratch, func_.index / 32),
+                      Imm32(1 << (func_.index % 32)), &L);
 
     // Fast path: return to the execution.
     masm.ret();
@@ -737,15 +737,15 @@ void BaseCompiler::insertBreakpointStub() {
     // Logic as above, except abiret to jump to the LR directly
     masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugFilter()),
                  scratch);
-    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
-                       Imm32(1 << (func_.index % 32)), &L);
+    masm.branchTest32(Assembler::NonZero, Address(scratch, func_.index / 32),
+                      Imm32(1 << (func_.index % 32)), &L);
     masm.abiret();
   }
 #elif defined(JS_CODEGEN_ARM)
   {
     // We must be careful not to use the SecondScratchRegister, which usually
     // is LR, as LR is live here.  This means avoiding masm abstractions such
-    // as branchTestPtr.
+    // as branchTest32.
 
     static_assert(ScratchRegister != lr);
     static_assert(Instance::offsetOfDebugFilter() < 0x1000);
@@ -766,8 +766,8 @@ void BaseCompiler::insertBreakpointStub() {
     // Logic same as ARM64.
     masm.loadPtr(Address(InstanceReg, Instance::offsetOfDebugFilter()),
                  scratch);
-    masm.branchTestPtr(Assembler::NonZero, Address(scratch, func_.index / 32),
-                       Imm32(1 << (func_.index % 32)), &L);
+    masm.branchTest32(Assembler::NonZero, Address(scratch, func_.index / 32),
+                      Imm32(1 << (func_.index % 32)), &L);
     masm.abiret();
   }
 #else
