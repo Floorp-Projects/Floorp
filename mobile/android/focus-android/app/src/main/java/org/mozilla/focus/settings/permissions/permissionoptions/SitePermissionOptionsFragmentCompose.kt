@@ -4,7 +4,6 @@
 package org.mozilla.focus.settings.permissions.permissionoptions
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.RadioButton
@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -124,41 +125,25 @@ private fun OptionPermission(
         Modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .clickable { onClick(sitePermissionOption) },
+            .selectable(
+                selected = isSelected,
+                onClick = { onClick(sitePermissionOption) },
+                role = Role.RadioButton
+            ),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        OptionPermissionRadioButton(
-            sitePermissionOption = sitePermissionOption,
-            isSelected = isSelected,
-            onClick = onClick
+        // When we use the onClick parameter in the selectable modifier we can use the onClick = null
+        // in the RadioButton component.
+        RadioButton(
+            selected = isSelected,
+            colors = RadioButtonDefaults.colors(selectedColor = focusColors.radioButtonSelected),
+            onClick = null
         )
         OptionPermissionDisplayName(
             sitePermissionOption = sitePermissionOption
         )
     }
-}
-
-/**
- * Displays a single Site Permission Option radiobutton
- *
- * @param sitePermissionOption of the item
- * @param isSelected check or uncheck the radioButton if the Option is selected or not
- * @param onClick Callback when the user taps on Option
- */
-@Composable
-private fun OptionPermissionRadioButton(
-    sitePermissionOption: SitePermissionOption,
-    isSelected: Boolean,
-    onClick: (SitePermissionOption) -> Unit
-) {
-    RadioButton(
-        selected = isSelected,
-        colors = RadioButtonDefaults.colors(selectedColor = focusColors.radioButtonSelected),
-        onClick = {
-            onClick(sitePermissionOption)
-        }
-    )
 }
 
 @Composable
