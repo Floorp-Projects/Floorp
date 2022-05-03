@@ -304,7 +304,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
     mTextPerf = MakeUnique<gfxTextPerfMetrics>();
   }
 
-  if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+  if (StaticPrefs::gfx_missing_fonts_notify()) {
     mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
   }
 
@@ -580,7 +580,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
                               MediaFeatureChangePropagation::JustThisDocument);
   }
   if (prefName.EqualsLiteral(GFX_MISSING_FONTS_NOTIFY_PREF)) {
-    if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+    if (StaticPrefs::gfx_missing_fonts_notify()) {
       if (!mMissingFonts) {
         mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
         // trigger reflow to detect missing fonts on the current page

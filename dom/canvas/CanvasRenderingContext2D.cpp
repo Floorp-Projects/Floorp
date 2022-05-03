@@ -3696,7 +3696,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
         mOp(CanvasRenderingContext2D::TextDrawOperation::FILL),
         mTextRunFlags(),
         mDoMeasureBoundingBox(false) {
-    if (Preferences::GetBool(GFX_MISSING_FONTS_NOTIFY_PREF)) {
+    if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
   }
