@@ -2521,8 +2521,66 @@ void PeerConnection::NoteUsageEvent(UsageEvent event) {
   usage_pattern_.NoteUsageEvent(event);
 }
 
+// Asynchronously adds remote candidates on the network thread.
+void PeerConnection::AddRemoteCandidate(const std::string& mid,
+                                        const cricket::Candidate& candidate) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+
+  network_thread()->PostTask(ToQueuedTask(
+      network_thread_safety_, [this, mid = mid, candidate = candidate] {
+        RTC_DCHECK_RUN_ON(network_thread());
+        std::vector<cricket::Candidate> candidates = {candidate};
+        RTCError error =
+            transport_controller_->AddRemoteCandidates(mid, candidates);
+        if (error.ok()) {
+          signaling_thread()->PostTask(ToQueuedTask(
+              signaling_thread_safety_.flag(),
+              [this, candidate = std::move(candidate)] {
+                ReportRemoteIceCandidateAdded(candidate);
+                // Candidates successfully submitted for checking.
+                if (ice_connection_state() ==
+                        PeerConnectionInterface::kIceConnectionNew ||
+                    ice_connection_state() ==
+                        PeerConnectionInterface::kIceConnectionDisconnected) {
+                  // If state is New, then the session has just gotten its first
+                  // remote ICE candidates, so go to Checking. If state is
+                  // Disconnected, the session is re-using old candidates or
+                  // receiving additional ones, so go to Checking. If state is
+                  // Connected, stay Connected.
+                  // TODO(bemasc): If state is Connected, and the new candidates
+                  // are for a newly added transport, then the state actually
+                  // _should_ move to checking.  Add a way to distinguish that
+                  // case.
+                  SetIceConnectionState(
+                      PeerConnectionInterface::kIceConnectionChecking);
+                }
+                // TODO(bemasc): If state is Completed, go back to Connected.
+              }));
+        } else {
+          RTC_LOG(LS_WARNING) << error.message();
+        }
+      }));
+}
+
 void PeerConnection::ReportUsagePattern() const {
   usage_pattern_.ReportUsagePattern(observer_);
+}
+
+void PeerConnection::ReportRemoteIceCandidateAdded(
+    const cricket::Candidate& candidate) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+
+  NoteUsageEvent(UsageEvent::REMOTE_CANDIDATE_ADDED);
+
+  if (candidate.address().IsPrivateIP()) {
+    NoteUsageEvent(UsageEvent::REMOTE_PRIVATE_CANDIDATE_ADDED);
+  }
+  if (candidate.address().IsUnresolvedIP()) {
+    NoteUsageEvent(UsageEvent::REMOTE_MDNS_CANDIDATE_ADDED);
+  }
+  if (candidate.address().family() == AF_INET6) {
+    NoteUsageEvent(UsageEvent::REMOTE_IPV6_CANDIDATE_ADDED);
+  }
 }
 
 bool PeerConnection::SrtpRequired() const {

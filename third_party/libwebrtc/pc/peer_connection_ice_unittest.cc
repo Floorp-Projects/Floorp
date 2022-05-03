@@ -497,6 +497,21 @@ TEST_P(PeerConnectionIceTest, DuplicateIceCandidateIgnoredWhenAdded) {
   EXPECT_EQ(1u, caller->GetIceCandidatesFromRemoteDescription().size());
 }
 
+TEST_P(PeerConnectionIceTest, ErrorOnInvalidRemoteIceCandidateAdded) {
+  auto caller = CreatePeerConnectionWithAudioVideo();
+  auto callee = CreatePeerConnectionWithAudioVideo();
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  // Add a candidate to the remote description with a candidate that has an
+  // invalid address (port number == 2).
+  auto answer = callee->CreateAnswerAndSetAsLocal();
+  cricket::Candidate bad_candidate =
+      CreateLocalUdpCandidate(SocketAddress("2.2.2.2", 2));
+  RTC_LOG(LS_INFO) << "Bad candidate: " << bad_candidate.ToString();
+  AddCandidateToFirstTransport(&bad_candidate, answer.get());
+  // Now the call to SetRemoteDescription should fail.
+  EXPECT_FALSE(caller->SetRemoteDescription(std::move(answer)));
+}
+
 TEST_P(PeerConnectionIceTest,
        CannotRemoveIceCandidatesWhenPeerConnectionClosed) {
   const SocketAddress kCalleeAddress("1.1.1.1", 1111);

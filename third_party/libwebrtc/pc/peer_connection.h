@@ -380,6 +380,10 @@ class PeerConnection : public PeerConnectionInternal,
   void SetIceConnectionState(IceConnectionState new_state);
   void NoteUsageEvent(UsageEvent event);
 
+  // Asynchronously adds a remote candidate on the network thread.
+  void AddRemoteCandidate(const std::string& mid,
+                          const cricket::Candidate& candidate);
+
   // Report the UMA metric SdpFormatReceived for the given remote description.
   void ReportSdpFormatReceived(
       const SessionDescriptionInterface& remote_description);
@@ -502,9 +506,7 @@ class PeerConnection : public PeerConnectionInternal,
       const cricket::CandidatePairChangeEvent& event)
       RTC_RUN_ON(signaling_thread());
 
-
   void OnNegotiationNeeded();
-
 
   // Returns the specified SCTP DataChannel in sctp_data_channels_,
   // or nullptr if not found.
@@ -589,6 +591,8 @@ class PeerConnection : public PeerConnectionInternal,
       RTC_RUN_ON(signaling_thread());
 
   void ReportUsagePattern() const RTC_RUN_ON(signaling_thread());
+
+  void ReportRemoteIceCandidateAdded(const cricket::Candidate& candidate);
 
   // JsepTransportController::Observer override.
   //

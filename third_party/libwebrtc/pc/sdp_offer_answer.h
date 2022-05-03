@@ -494,8 +494,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   bool ReadyToUseRemoteCandidate(const IceCandidateInterface* candidate,
                                  const SessionDescriptionInterface* remote_desc,
                                  bool* valid);
-  void ReportRemoteIceCandidateAdded(const cricket::Candidate& candidate)
-      RTC_RUN_ON(signaling_thread());
 
   RTCErrorOr<const cricket::ContentInfo*> FindContentInfo(
       const SessionDescriptionInterface* description,
