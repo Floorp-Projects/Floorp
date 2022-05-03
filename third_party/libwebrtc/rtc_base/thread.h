@@ -290,6 +290,11 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   const std::string& name() const { return name_; }
   bool SetName(const std::string& name, const void* obj);
 
+  // Sets the expected processing time in ms. The thread will write
+  // log messages when Invoke() takes more time than this.
+  // Default is 50 ms.
+  void SetDispatchWarningMs(int deadline);
+
   // Starts the execution of the thread.
   bool Start();
 
@@ -525,6 +530,8 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   RecursiveCriticalSection* CritForTest() { return &crit_; }
 
  private:
+  static const int kSlowDispatchLoggingThreshold = 50;  // 50 ms
+
   class QueuedTaskHandler final : public MessageHandler {
    public:
     QueuedTaskHandler() {}
@@ -613,6 +620,8 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
       task_queue_registration_;
 
   friend class ThreadManager;
+
+  int dispatch_warning_ms_ RTC_GUARDED_BY(this) = kSlowDispatchLoggingThreshold;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(Thread);
 };
