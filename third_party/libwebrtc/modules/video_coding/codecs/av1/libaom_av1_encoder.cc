@@ -54,9 +54,11 @@ constexpr float kMinimumFrameRate = 1.0;
 int GetCpuSpeed(int width, int height, int number_of_cores) {
   // For smaller resolutions, use lower speed setting (get some coding gain at
   // the cost of increased encoding complexity).
-  if (number_of_cores > 2 && width * height <= 320 * 180)
+  if (number_of_cores > 4 && width * height < 320 * 180)
     return 6;
   else if (width * height >= 1280 * 720)
+    return 9;
+  else if (width * height >= 640 * 480)
     return 8;
   else
     return 7;
@@ -283,13 +285,13 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
                         << " on control AV1E_SET_MAX_INTRA_BITRATE_PCT.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  ret = aom_codec_control(&ctx_, AV1E_SET_COEFF_COST_UPD_FREQ, 2);
+  ret = aom_codec_control(&ctx_, AV1E_SET_COEFF_COST_UPD_FREQ, 3);
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
                         << " on control AV1E_SET_COEFF_COST_UPD_FREQ.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
-  ret = aom_codec_control(&ctx_, AV1E_SET_MODE_COST_UPD_FREQ, 2);
+  ret = aom_codec_control(&ctx_, AV1E_SET_MODE_COST_UPD_FREQ, 3);
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
                         << " on control AV1E_SET_MODE_COST_UPD_FREQ.";
@@ -323,6 +325,13 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  ret = aom_codec_control(&ctx_, AV1E_SET_NOISE_SENSITIVITY, 0);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_NOISE_SENSITIVITY.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_WARPED_MOTION, 0);
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
@@ -352,7 +361,7 @@ int LibaomAv1Encoder::NumberOfThreads(int width,
                                       int number_of_cores) {
   // Keep the number of encoder threads equal to the possible number of column
   // tiles, which is (1, 2, 4, 8). See comments below for AV1E_SET_TILE_COLUMNS.
-  if (width * height >= 1280 * 720 && number_of_cores > 4) {
+  if (width * height >= 960 * 540 && number_of_cores > 4) {
     return 4;
   } else if (width * height >= 640 * 360 && number_of_cores > 2) {
     return 2;
