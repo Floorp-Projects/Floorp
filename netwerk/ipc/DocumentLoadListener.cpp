@@ -1104,9 +1104,7 @@ void DocumentLoadListener::Disconnect(bool aContinueNavigating) {
     httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
 
-  if (GetLoadingBrowsingContext()) {
-    GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
-  }
+  mEarlyHintsService.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
     ctx->EndDocumentLoad(aContinueNavigating);
@@ -2474,15 +2472,12 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     }
   }
 
-  if (GetLoadingBrowsingContext()) {
-    if (httpChannel) {
-      uint32_t responseStatus;
-      Unused << httpChannel->GetResponseStatus(&responseStatus);
-      GetLoadingBrowsingContext()->mEarlyHintsService.FinalResponse(
-          responseStatus);
-    } else {
-      GetLoadingBrowsingContext()->mEarlyHintsService.Cancel();
-    }
+  if (httpChannel) {
+    uint32_t responseStatus;
+    Unused << httpChannel->GetResponseStatus(&responseStatus);
+    mEarlyHintsService.FinalResponse(responseStatus);
+  } else {
+    mEarlyHintsService.Cancel();
   }
 
   // If we're going to be delivering this channel to a remote content
@@ -2853,11 +2848,8 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
 
 NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
   LOG(("DocumentLoadListener::EarlyHint.\n"));
-  if (GetLoadingBrowsingContext()) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-    GetLoadingBrowsingContext()->mEarlyHintsService.EarlyHint(
-        linkHeader, GetChannelCreationURI(), loadInfo);
-  }
+
+  mEarlyHintsService.EarlyHint(linkHeader);
   return NS_OK;
 }
 

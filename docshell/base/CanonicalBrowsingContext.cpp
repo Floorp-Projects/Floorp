@@ -1264,10 +1264,6 @@ void CanonicalBrowsingContext::AddFinalDiscardListener(
   mFullyDiscardedListeners.AppendElement(std::move(aListener));
 }
 
-net::EarlyHintsService* CanonicalBrowsingContext::GetEarlyHintsService() {
-  return &mEarlyHintsService;
-}
-
 void CanonicalBrowsingContext::AdjustPrivateBrowsingCount(
     bool aPrivateBrowsing) {
   if (IsDiscarded() || !EverAttached() || IsChrome()) {

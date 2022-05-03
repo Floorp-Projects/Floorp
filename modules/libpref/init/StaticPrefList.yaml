@@ -10338,12 +10338,6 @@
   value: true
   mirror: always
 
-# Enable 103 Early Hint status code (RFC 8297)
-- name: network.early-hints.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Whether to use the network process or not
 # Start a separate socket process. Performing networking on the socket process
 # is control by a sepparate pref
