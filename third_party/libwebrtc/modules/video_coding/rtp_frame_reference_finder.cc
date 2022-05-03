@@ -177,7 +177,7 @@ void RtpFrameReferenceFinder::ClearTo(uint16_t seq_num) {
 
 void RtpFrameReferenceFinder::HandOffFrames(ReturnVector frames) {
   for (auto& frame : frames) {
-    frame->id.picture_id += picture_id_offset_;
+    frame->SetId(frame->Id() + picture_id_offset_);
     for (size_t i = 0; i < frame->num_references; ++i) {
       frame->references[i] += picture_id_offset_;
     }

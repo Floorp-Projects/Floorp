@@ -52,10 +52,10 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     return kDrop;
 
   frame->SetSpatialIndex(codec_header.spatial_idx);
-  frame->id.picture_id = codec_header.picture_id & (kFrameIdLength - 1);
+  frame->SetId(codec_header.picture_id & (kFrameIdLength - 1));
 
   if (last_picture_id_ == -1)
-    last_picture_id_ = frame->id.picture_id;
+    last_picture_id_ = frame->Id();
 
   if (codec_header.flexible_mode) {
     if (codec_header.num_ref_pics > EncodedFrame::kMaxFrameReferences) {
@@ -63,8 +63,8 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     }
     frame->num_references = codec_header.num_ref_pics;
     for (size_t i = 0; i < frame->num_references; ++i) {
-      frame->references[i] = Subtract<kFrameIdLength>(frame->id.picture_id,
-                                                      codec_header.pid_diff[i]);
+      frame->references[i] =
+          Subtract<kFrameIdLength>(frame->Id(), codec_header.pid_diff[i]);
     }
 
     FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
@@ -104,10 +104,10 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
       current_ss_idx_ = Add<kMaxGofSaved>(current_ss_idx_, 1);
       scalability_structures_[current_ss_idx_] = gof;
-      scalability_structures_[current_ss_idx_].pid_start = frame->id.picture_id;
-      gof_info_.emplace(unwrapped_tl0,
-                        GofInfo(&scalability_structures_[current_ss_idx_],
-                                frame->id.picture_id));
+      scalability_structures_[current_ss_idx_].pid_start = frame->Id();
+      gof_info_.emplace(
+          unwrapped_tl0,
+          GofInfo(&scalability_structures_[current_ss_idx_], frame->Id()));
     }
 
     const auto gof_info_it = gof_info_.find(unwrapped_tl0);
@@ -118,7 +118,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
     if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
       frame->num_references = 0;
-      FrameReceivedVp9(frame->id.picture_id, info);
+      FrameReceivedVp9(frame->Id(), info);
       FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
       return kHandOff;
     }
@@ -134,7 +134,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     info = &gof_info_it->second;
 
     frame->num_references = 0;
-    FrameReceivedVp9(frame->id.picture_id, info);
+    FrameReceivedVp9(frame->Id(), info);
     FlattenFrameIdAndRefs(frame, codec_header.inter_layer_predicted);
     return kHandOff;
   } else {
@@ -147,8 +147,8 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
 
     if (codec_header.temporal_idx == 0) {
       gof_info_it = gof_info_
-                        .emplace(unwrapped_tl0, GofInfo(gof_info_it->second.gof,
-                                                        frame->id.picture_id))
+                        .emplace(unwrapped_tl0,
+                                 GofInfo(gof_info_it->second.gof, frame->Id()))
                         .first;
     }
 
@@ -160,23 +160,23 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
   auto clean_gof_info_to = gof_info_.lower_bound(old_tl0_pic_idx);
   gof_info_.erase(gof_info_.begin(), clean_gof_info_to);
 
-  FrameReceivedVp9(frame->id.picture_id, info);
+  FrameReceivedVp9(frame->Id(), info);
 
   // Make sure we don't miss any frame that could potentially have the
   // up switch flag set.
-  if (MissingRequiredFrameVp9(frame->id.picture_id, *info))
+  if (MissingRequiredFrameVp9(frame->Id(), *info))
     return kStash;
 
   if (codec_header.temporal_up_switch)
-    up_switch_.emplace(frame->id.picture_id, codec_header.temporal_idx);
+    up_switch_.emplace(frame->Id(), codec_header.temporal_idx);
 
   // Clean out old info about up switch frames.
-  uint16_t old_picture_id = Subtract<kFrameIdLength>(frame->id.picture_id, 50);
+  uint16_t old_picture_id = Subtract<kFrameIdLength>(frame->Id(), 50);
   auto up_switch_erase_to = up_switch_.lower_bound(old_picture_id);
   up_switch_.erase(up_switch_.begin(), up_switch_erase_to);
 
-  size_t diff = ForwardDiff<uint16_t, kFrameIdLength>(info->gof->pid_start,
-                                                      frame->id.picture_id);
+  size_t diff =
+      ForwardDiff<uint16_t, kFrameIdLength>(info->gof->pid_start, frame->Id());
   size_t gof_idx = diff % info->gof->num_frames_in_gof;
 
   if (info->gof->num_ref_pics[gof_idx] > EncodedFrame::kMaxFrameReferences) {
@@ -185,12 +185,12 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
   // Populate references according to the scalability structure.
   frame->num_references = info->gof->num_ref_pics[gof_idx];
   for (size_t i = 0; i < frame->num_references; ++i) {
-    frame->references[i] = Subtract<kFrameIdLength>(
-        frame->id.picture_id, info->gof->pid_diff[gof_idx][i]);
+    frame->references[i] =
+        Subtract<kFrameIdLength>(frame->Id(), info->gof->pid_diff[gof_idx][i]);
 
     // If this is a reference to a frame earlier than the last up switch point,
     // then ignore this reference.
-    if (UpSwitchInIntervalVp9(frame->id.picture_id, codec_header.temporal_idx,
+    if (UpSwitchInIntervalVp9(frame->Id(), codec_header.temporal_idx,
                               frame->references[i])) {
       --frame->num_references;
     }
@@ -330,13 +330,12 @@ void RtpVp9RefFinder::FlattenFrameIdAndRefs(RtpFrameObject* frame,
         unwrapper_.Unwrap(frame->references[i]) * kMaxSpatialLayers +
         *frame->SpatialIndex();
   }
-  frame->id.picture_id =
-      unwrapper_.Unwrap(frame->id.picture_id) * kMaxSpatialLayers +
-      *frame->SpatialIndex();
+  frame->SetId(unwrapper_.Unwrap(frame->Id()) * kMaxSpatialLayers +
+               *frame->SpatialIndex());
 
   if (inter_layer_predicted &&
       frame->num_references + 1 <= EncodedFrame::kMaxFrameReferences) {
-    frame->references[frame->num_references] = frame->id.picture_id - 1;
+    frame->references[frame->num_references] = frame->Id() - 1;
     ++frame->num_references;
   }
 }

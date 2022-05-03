@@ -19,30 +19,9 @@
 namespace webrtc {
 namespace video_coding {
 
-// NOTE: This class is still under development and may change without notice.
+// TODO(bugs.webrtc.org/12206): Remove when downstream has been updated.
 struct VideoLayerFrameId {
-  // TODO(philipel): The default ctor is currently used internaly, but have a
-  //                 look if we can remove it.
-  VideoLayerFrameId() : picture_id(-1) {}
-  explicit VideoLayerFrameId(int64_t picture_id) : picture_id(picture_id) {}
-
-  bool operator==(const VideoLayerFrameId& rhs) const {
-    return picture_id == rhs.picture_id;
-  }
-
-  bool operator!=(const VideoLayerFrameId& rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator<(const VideoLayerFrameId& rhs) const {
-    return picture_id < rhs.picture_id;
-  }
-
-  bool operator<=(const VideoLayerFrameId& rhs) const { return !(rhs < *this); }
-  bool operator>(const VideoLayerFrameId& rhs) const { return rhs < *this; }
-  bool operator>=(const VideoLayerFrameId& rhs) const { return rhs <= *this; }
-
-  int64_t picture_id;
+  int64_t picture_id = -1;
 };
 
 // TODO(philipel): Remove webrtc::VCMEncodedFrame inheritance.
@@ -69,7 +48,12 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
 
   bool is_keyframe() const { return num_references == 0; }
 
+  // TODO(bugs.webrtc.org/12206): Replace with private int64_t when downstream
+  //                              has been updated.
   VideoLayerFrameId id;
+
+  void SetId(int64_t frame_id) { id.picture_id = frame_id; }
+  int64_t Id() const { return id.picture_id; }
 
   // TODO(philipel): Add simple modify/access functions to prevent adding too
   // many |references|.

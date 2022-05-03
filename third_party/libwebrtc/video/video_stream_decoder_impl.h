@@ -96,8 +96,7 @@ class VideoStreamDecoderImpl : public VideoStreamDecoderInterface {
   int next_frame_info_index_ RTC_GUARDED_BY(bookkeeping_queue_);
   VideoStreamDecoderInterface::Callbacks* const callbacks_
       RTC_PT_GUARDED_BY(bookkeeping_queue_);
-  video_coding::VideoLayerFrameId last_continuous_id_
-      RTC_GUARDED_BY(bookkeeping_queue_);
+  int64_t last_continuous_frame_id_ RTC_GUARDED_BY(bookkeeping_queue_) = -1;
   bool keyframe_required_ RTC_GUARDED_BY(bookkeeping_queue_);
 
   absl::optional<int> current_payload_type_ RTC_GUARDED_BY(decode_queue_);

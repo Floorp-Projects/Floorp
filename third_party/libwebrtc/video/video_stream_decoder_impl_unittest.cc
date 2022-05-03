@@ -28,10 +28,7 @@ class MockVideoStreamDecoderCallbacks
     : public VideoStreamDecoderInterface::Callbacks {
  public:
   MOCK_METHOD(void, OnNonDecodableState, (), (override));
-  MOCK_METHOD(void,
-              OnContinuousUntil,
-              (const video_coding::VideoLayerFrameId& key),
-              (override));
+  MOCK_METHOD(void, OnContinuousUntil, (int64_t frame_id), (override));
   MOCK_METHOD(
       void,
       OnDecodedFrame,
@@ -149,7 +146,7 @@ class FrameBuilder {
   }
 
   FrameBuilder& WithPictureId(int picture_id) {
-    frame_->id.picture_id = picture_id;
+    frame_->SetId(picture_id);
     return *this;
   }
 

@@ -881,11 +881,10 @@ void RtpVideoStreamReceiver2::OnCompleteFrame(
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   video_coding::RtpFrameObject* rtp_frame =
       static_cast<video_coding::RtpFrameObject*>(frame.get());
-  last_seq_num_for_pic_id_[rtp_frame->id.picture_id] =
-      rtp_frame->last_seq_num();
+  last_seq_num_for_pic_id_[rtp_frame->Id()] = rtp_frame->last_seq_num();
 
   last_completed_picture_id_ =
-      std::max(last_completed_picture_id_, frame->id.picture_id);
+      std::max(last_completed_picture_id_, frame->Id());
   complete_frame_callback_->OnCompleteFrame(std::move(frame));
 }
 
