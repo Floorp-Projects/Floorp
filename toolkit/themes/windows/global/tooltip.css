@@ -19,11 +19,25 @@ tooltip {
 }
 
 @media (-moz-windows-default-theme) {
-  /* We use Window / WindowText instead on the default theme because the
-     default yellowish styles are somewhat ugly */
   tooltip {
-    background-color: Window;
-    color: WindowText;
+    /* These are the same colors as --menu-background-color and co., but we
+       can't quite use them because the default tooltip is native anonymous and
+       doesn't inherit from the root. */
+    background-color: #f9f9fb;
+    color: #15141a;
+    border-color: #cfcfd8;
+
+    /* Force a rounded-rect dropshadow to appear. */
+    -moz-window-shadow: cliprounded;
+    border-radius: 4px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    tooltip {
+      background-color: #2b2a33;
+      color: #fbfbfe;
+      border-color: #5b5b66;
+    }
   }
 }
 
