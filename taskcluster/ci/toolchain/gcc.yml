@@ -51,7 +51,7 @@ linux64-gcc-9:
         script: build-gcc-linux.sh
     fetches:
         fetch:
-            - gcc-9.3.0
+            - gcc-9.4.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
@@ -65,7 +65,7 @@ linux64-gcc-11:
         script: build-gcc-linux.sh
     fetches:
         fetch:
-            - gcc-11.1.0
+            - gcc-11.3.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
@@ -82,7 +82,7 @@ linux64-gcc-sixgill:
         toolchain-artifact: public/build/sixgill.tar.xz
     fetches:
         fetch:
-            - gcc-9.3.0
+            - gcc-9.4.0
             - gmp-6.1.0
             - isl-0.16.1
             - mpc-1.0.3
