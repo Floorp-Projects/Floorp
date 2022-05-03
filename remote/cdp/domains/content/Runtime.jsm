@@ -21,10 +21,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/cdp/domains/content/runtime/ExecutionContext.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "ConsoleAPIStorage", () => {
+  return Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+    Ci.nsIConsoleAPIStorage
+  );
+});
+
 // Import the `Debugger` constructor in the current scope
 addDebuggerToGlobal(Cu.getGlobalForObject(this));
-
-const OBSERVER_CONSOLE_API = "console-api-log-event";
 
 const CONSOLE_API_LEVEL_MAP = {
   warn: "warning",
@@ -97,7 +101,11 @@ class Runtime extends ContentProcessDomain {
       this.enabled = true;
 
       Services.console.registerListener(this);
-      Services.obs.addObserver(this, OBSERVER_CONSOLE_API);
+      this.onConsoleLogEvent = this.onConsoleLogEvent.bind(this);
+      ConsoleAPIStorage.addLogEventListener(
+        this.onConsoleLogEvent,
+        Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+      );
 
       // Spin the event loop in order to send the `executionContextCreated` event right
       // after we replied to `enable` request.
@@ -116,7 +124,7 @@ class Runtime extends ContentProcessDomain {
       this.enabled = false;
 
       Services.console.unregisterListener(this);
-      Services.obs.removeObserver(this, OBSERVER_CONSOLE_API);
+      ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
     }
   }
 
@@ -570,6 +578,11 @@ class Runtime extends ContentProcessDomain {
     }
   }
 
+  onConsoleLogEvent(message) {
+    let entry = fromConsoleAPI(message);
+    this._emitConsoleAPICalled(entry);
+  }
+
   // nsIObserver
 
   /**
@@ -581,14 +594,8 @@ class Runtime extends ContentProcessDomain {
    *     Console message.
    */
   observe(subject, topic, data) {
-    let entry;
-
-    if (topic == OBSERVER_CONSOLE_API) {
-      const message = subject.wrappedJSObject;
-      entry = fromConsoleAPI(message);
-      this._emitConsoleAPICalled(entry);
-    } else if (subject instanceof Ci.nsIScriptError && subject.hasException) {
-      entry = fromScriptError(subject);
+    if (subject instanceof Ci.nsIScriptError && subject.hasException) {
+      let entry = fromScriptError(subject);
       this._emitExceptionThrown(entry);
     }
   }

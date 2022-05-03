@@ -8,17 +8,17 @@ add_task(async function() {
 
   let p = new Promise(resolve => {
     function consoleListener() {
-      Services.obs.addObserver(this, "console-api-log-event");
+      addConsoleStorageListener(this);
     }
 
     consoleListener.prototype = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject) {
         let obj = aSubject.wrappedJSObject;
         Assert.ok(obj.arguments[0] === 42, "Message received!");
         Assert.ok(obj.ID === "jsm", "The ID is JSM");
         Assert.ok(obj.innerID.endsWith("test_basic.js"), "The innerID matches");
 
-        Services.obs.removeObserver(this, "console-api-log-event");
+        removeConsoleStorageListener(this);
         resolve();
       },
     };
