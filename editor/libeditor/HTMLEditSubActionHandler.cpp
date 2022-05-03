@@ -3299,8 +3299,8 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(splitListItemParentResult.unwrapErr());
           }
           MOZ_ASSERT(splitListItemParentResult.DidSplit());
-          // When adding caret suggestion to SplitNodeResult, here didn't change
-          // selection so that just ignore it.
+          // We'll update selection after creating new list element below.
+          // Therefore, we don't need to handle selection now.
           splitListItemParentResult.IgnoreCaretPointSuggestion();
           CreateElementResult createNewListElementResult =
               CreateAndInsertElement(
@@ -6558,6 +6558,8 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
     nsTArray<RefPtr<nsRange>>& aArrayOfRanges) {
   // Split text nodes. This is necessary, since given ranges may end in text
   // nodes in case where part of a pre-formatted elements needs to be moved.
+  EditorDOMPoint pointToPutCaret;
+  nsresult rv = NS_OK;
   IgnoredErrorResult ignoredError;
   for (RefPtr<nsRange>& range : aArrayOfRanges) {
     EditorDOMPoint atEnd(range->EndRef());
@@ -6567,11 +6569,17 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
 
     if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
       // Split the text node.
-      const SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+      SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
       if (splitAtEndResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return splitAtEndResult.unwrapErr();
+        rv = splitAtEndResult.unwrapErr();
+        break;
       }
+      splitAtEndResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
+                    pointToPutCaret.IsSet());
 
       // Correct the range.
       // The new end parent becomes the parent node of the text.
@@ -6582,12 +6590,20 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "nsRange::SetEnd() failed, but ignored");
       ignoredError.SuppressException();
-      // When adding caret suggestion to SplitNodeResult, here didn't change
-      // selection so that just ignore it.
-      splitAtEndResult.IgnoreCaretPointSuggestion();
     }
   }
-  return NS_OK;
+
+  if (!pointToPutCaret.IsSet()) {
+    return rv;
+  }
+  nsresult rvOfCollapseSelection = CollapseSelectionTo(pointToPutCaret);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvOfCollapseSelection),
+                       "EditorBase::CollapseSelectionTo() failed");
+  if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED ||
+                   rvOfCollapseSelection == NS_ERROR_EDITOR_DESTROYED)) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  return MOZ_LIKELY(NS_SUCCEEDED(rv)) ? rvOfCollapseSelection : rv;
 }
 
 nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
@@ -7317,10 +7333,12 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
           NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
           return EditActionResult(splitParentDivOrPResult.unwrapErr());
         }
-        // When adding caret suggestion to SplitNodeResult, here didn't change
-        // selection so that just ignore it.
-        splitParentDivOrPResult.IgnoreCaretPointSuggestion();
-
+        nsresult rv = splitParentDivOrPResult.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+          return EditActionHandled(rv);
+        }
         pointToSplitParentDivOrP.SetToEndOf(
             splitParentDivOrPResult.GetPreviousContent());
       }
@@ -7528,14 +7546,18 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
         return Err(splitListItemParentResult.unwrapErr());
       }
-      // When adding caret suggestion to SplitNodeResult, here didn't change
-      // selection so that just ignore it.
-      splitListItemParentResult.IgnoreCaretPointSuggestion();
       if (MOZ_UNLIKELY(!splitListItemParentResult.DidSplit())) {
         NS_WARNING(
             "HTMLEditor::SplitNodeWithTransaction() didn't split the parent of "
             "aListItemElement");
+        MOZ_ASSERT(!splitListItemParentResult.HasCaretPointSuggestion());
         return Err(NS_ERROR_FAILURE);
+      }
+      nsresult rv = splitListItemParentResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return Err(rv);
       }
       leftListElement =
           Element::FromNode(splitListItemParentResult.GetPreviousContent());
@@ -7555,7 +7577,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
       if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
         return Err(NS_ERROR_EDITOR_DESTROYED);
       }
-      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::MoveNodeWithTransaction() failed");
         return Err(rv);
       }
@@ -7567,7 +7589,7 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
     if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
@@ -9209,9 +9231,12 @@ nsresult HTMLEditor::LiftUpListItemElement(
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
       return splitListItemParentResult.unwrapErr();
     }
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitListItemParentResult.IgnoreCaretPointSuggestion();
+    nsresult rv = splitListItemParentResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return rv;
+    }
 
     leftListElement =
         Element::FromNodeOrNull(splitListItemParentResult.GetPreviousContent());

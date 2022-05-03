@@ -462,37 +462,69 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
   // Make the range an independent node.
   RefPtr<Text> textNodeForTheRange = &aText;
 
-  // Split at the end of the range.
-  EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
-  if (!atEnd.IsEndOfContainer()) {
-    // We need to split off back of text node
-    const SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
-    if (splitAtEndResult.isErr()) {
-      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return splitAtEndResult.unwrapErr();
+  auto pointToPutCaretOrError =
+      [&]() MOZ_CAN_RUN_SCRIPT -> Result<EditorDOMPoint, nsresult> {
+    EditorDOMPoint pointToPutCaret;
+    // Split at the end of the range.
+    EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+    if (!atEnd.IsEndOfContainer()) {
+      // We need to split off back of text node
+      SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+      if (splitAtEndResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtEndResult.unwrapErr());
+      }
+      if (MOZ_UNLIKELY(!splitAtEndResult.HasCaretPointSuggestion())) {
+        NS_WARNING(
+            "HTMLEditor::SplitNodeWithTransaction() didn't suggest caret "
+            "point");
+        return Err(NS_ERROR_FAILURE);
+      }
+      splitAtEndResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
+                    pointToPutCaret.IsSet());
+      textNodeForTheRange =
+          Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
     }
-    textNodeForTheRange =
-        Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitAtEndResult.IgnoreCaretPointSuggestion();
-  }
 
-  // Split at the start of the range.
-  EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
-  if (!atStart.IsStartOfContainer()) {
-    // We need to split off front of text node
-    const SplitNodeResult splitAtStartResult =
-        SplitNodeWithTransaction(atStart);
-    if (splitAtStartResult.isErr()) {
-      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return splitAtStartResult.unwrapErr();
+    // Split at the start of the range.
+    EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
+    if (!atStart.IsStartOfContainer()) {
+      // We need to split off front of text node
+      SplitNodeResult splitAtStartResult = SplitNodeWithTransaction(atStart);
+      if (splitAtStartResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtStartResult.unwrapErr());
+      }
+      if (MOZ_UNLIKELY(!splitAtStartResult.HasCaretPointSuggestion())) {
+        NS_WARNING(
+            "HTMLEditor::SplitNodeWithTransaction() didn't suggest caret "
+            "point");
+        return Err(NS_ERROR_FAILURE);
+      }
+      splitAtStartResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
+                    pointToPutCaret.IsSet());
+      textNodeForTheRange =
+          Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
     }
-    textNodeForTheRange =
-        Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitAtStartResult.IgnoreCaretPointSuggestion();
+
+    return pointToPutCaret;
+  }();
+  if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+    // Don't need to warn, it should've been done in the lambda.
+    return pointToPutCaretOrError.unwrapErr();
+  }
+  if (pointToPutCaretOrError.inspect().IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
+    }
   }
 
   if (aAttribute) {
@@ -2411,39 +2443,77 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   // Make the range an independent node.
   RefPtr<Text> textNodeForTheRange = &aTextNode;
 
-  // Split at the end of the range.
-  EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
-  if (!atEnd.IsEndOfContainer()) {
-    // We need to split off back of text node
-    const SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
-    if (splitAtEndResult.isErr()) {
-      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return splitAtEndResult.unwrapErr();
+  auto pointToPutCaretOrError =
+      [&]() MOZ_CAN_RUN_SCRIPT -> Result<EditorDOMPoint, nsresult> {
+    EditorDOMPoint pointToPutCaret;
+    // Split at the end of the range.
+    EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
+    if (!atEnd.IsEndOfContainer()) {
+      // We need to split off back of text node
+      SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+      if (splitAtEndResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtEndResult.unwrapErr());
+      }
+      if (MOZ_UNLIKELY(!splitAtEndResult.HasCaretPointSuggestion())) {
+        NS_WARNING(
+            "HTMLEditor::SplitNodeWithTransaction() didn't suggest caret "
+            "point");
+        return Err(NS_ERROR_FAILURE);
+      }
+      splitAtEndResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
+                    pointToPutCaret.IsSet());
+      textNodeForTheRange =
+          Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
+      MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
+      // When adding caret suggestion to SplitNodeResult, here didn't change
+      // selection so that just ignore it.
+      splitAtEndResult.IgnoreCaretPointSuggestion();
     }
-    textNodeForTheRange =
-        Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
-    MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitAtEndResult.IgnoreCaretPointSuggestion();
-  }
 
-  // Split at the start of the range.
-  EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
-  if (!atStart.IsStartOfContainer()) {
-    // We need to split off front of text node
-    const SplitNodeResult splitAtStartResult =
-        SplitNodeWithTransaction(atStart);
-    if (splitAtStartResult.isErr()) {
-      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return splitAtStartResult.unwrapErr();
+    // Split at the start of the range.
+    EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
+    if (!atStart.IsStartOfContainer()) {
+      // We need to split off front of text node
+      SplitNodeResult splitAtStartResult = SplitNodeWithTransaction(atStart);
+      if (splitAtStartResult.isErr()) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return Err(splitAtStartResult.unwrapErr());
+      }
+      if (MOZ_UNLIKELY(!splitAtStartResult.HasCaretPointSuggestion())) {
+        NS_WARNING(
+            "HTMLEditor::SplitNodeWithTransaction() didn't suggest caret "
+            "point");
+        return Err(NS_ERROR_FAILURE);
+      }
+      splitAtStartResult.MoveCaretPointTo(
+          pointToPutCaret, *this,
+          {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      MOZ_ASSERT_IF(AllowsTransactionsToChangeSelection(),
+                    pointToPutCaret.IsSet());
+      textNodeForTheRange =
+          Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
+      MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
+      // When adding caret suggestion to SplitNodeResult, here didn't change
+      // selection so that just ignore it.
+      splitAtStartResult.IgnoreCaretPointSuggestion();
     }
-    textNodeForTheRange =
-        Text::FromNodeOrNull(splitAtStartResult.GetNextContent());
-    MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitAtStartResult.IgnoreCaretPointSuggestion();
+
+    return pointToPutCaret;
+  }();
+  if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
+    // Don't warn here since it should be done in the lambda.
+    return pointToPutCaretOrError.unwrapErr();
+  }
+  if (pointToPutCaretOrError.inspect().IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaretOrError.inspect());
+    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+      return rv;
+    }
   }
 
   // Look for siblings that are correct type of node
