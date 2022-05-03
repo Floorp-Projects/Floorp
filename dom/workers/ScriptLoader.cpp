@@ -923,7 +923,7 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScript(ScriptLoadInfo& aLoadInfo) {
     AssertIsOnMainThread();
-    MOZ_ASSERT_IF(IsMainWorkerScript(), mWorkerScriptType != DebuggerScript);
+    MOZ_ASSERT_IF(IsMainWorkerScript(), !IsDebuggerScript());
 
     WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
 
@@ -932,7 +932,7 @@ class WorkerScriptLoader final : public nsINamed {
     // However, in Bug 863246, web content will no longer be able to load
     // resource:// URIs by default, so we need system principal to load
     // debugger scripts.
-    nsIPrincipal* principal = (mWorkerScriptType == DebuggerScript)
+    nsIPrincipal* principal = (IsDebuggerScript())
                                   ? nsContentUtils::GetSystemPrincipal()
                                   : mWorkerPrivate->GetPrincipal();
 
@@ -2299,7 +2299,7 @@ bool ScriptExecutorRunnable::IsDebuggerRunnable() const {
   // ScriptExecutorRunnable is used to execute both worker and debugger scripts.
   // In the latter case, the runnable needs to be dispatched to the debugger
   // queue.
-  return mScriptLoader.mWorkerScriptType == DebuggerScript;
+  return mScriptLoader.IsDebuggerScript();
 }
 
 bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
