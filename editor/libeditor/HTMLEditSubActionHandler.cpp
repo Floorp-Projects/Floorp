@@ -7949,18 +7949,16 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
     // element.
     // MOZ_KnownLive(*ListItemElement) because they are grabbed by
     // splitListItemResult.
-    Result<RefPtr<HTMLBRElement>, nsresult> newBRElementOrError =
+    Result<EditorDOMPoint, nsresult> pointToPutCaretOrError =
         CopyLastEditableChildStylesWithTransaction(
             MOZ_KnownLive(leftListItemElement),
             MOZ_KnownLive(rightListItemElement), aEditingHost);
-    if (MOZ_UNLIKELY(newBRElementOrError.isErr())) {
+    if (MOZ_UNLIKELY(pointToPutCaretOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::CopyLastEditableChildStylesWithTransaction() failed");
-      return Err(newBRElementOrError.unwrapErr());
+      return Err(pointToPutCaretOrError.unwrapErr());
     }
-    return newBRElementOrError.inspect()
-               ? EditorDOMPoint(newBRElementOrError.unwrap().get())
-               : EditorDOMPoint(&rightListItemElement, 0u);
+    return pointToPutCaretOrError.unwrap();
   }
 
   // If the right list item element is not empty, we need to consider where to

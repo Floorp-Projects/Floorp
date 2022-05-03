@@ -799,11 +799,10 @@ class HTMLEditor final : public EditorBase,
    * @param aNewBlock           New block container element.  All children of
    *                            this is deleted first.
    * @param aEditingHost        Current editing host.
-   * @return                    If this method creates a new <br> element for
-   *                            placeholder, this returns the new <br>
-   *                            element.
+   * @return                    If succeeded, returns a suggesting point to put
+   *                            caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<dom::HTMLBRElement>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
                                              Element& aNewBlock,
                                              Element& aEditingHost);
