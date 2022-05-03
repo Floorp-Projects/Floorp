@@ -23,6 +23,10 @@ extern const int kVideoCodecClockrate;
 extern const int kDataCodecClockrate;
 extern const int kRtpDataMaxBandwidth;  // bps
 
+extern const int kVideoMtu;
+extern const int kVideoRtpSendBufferSize;
+extern const int kVideoRtpRecvBufferSize;
+
 // Default CPU thresholds.
 extern const float kHighSystemCpuThreshold;
 extern const float kLowSystemCpuThreshold;
