@@ -595,7 +595,8 @@ bool IMMHandler::ProcessMessage(nsWindow* aWindow, UINT msg, WPARAM& wParam,
 void IMMHandler::OnInputLangChange(nsWindow* aWindow, WPARAM wParam,
                                    LPARAM lParam, MSGResult& aResult) {
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnInputLangChange, hWnd=%p, wParam=%08x, lParam=%08x",
+          ("IMMHandler::OnInputLangChange, hWnd=%p, wParam=%08zx, "
+           "lParam=%08" PRIxLPTR,
            aWindow->GetWindowHandle(), wParam, lParam));
 
   aWindow->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
@@ -627,7 +628,8 @@ bool IMMHandler::OnIMEComposition(nsWindow* aWindow, WPARAM wParam,
                                   LPARAM lParam, MSGResult& aResult) {
   MOZ_LOG(
       gIMELog, LogLevel::Info,
-      ("IMMHandler::OnIMEComposition, hWnd=%p, lParam=%08x, mIsComposing=%s, "
+      ("IMMHandler::OnIMEComposition, hWnd=%p, lParam=%08" PRIxLPTR
+       ", mIsComposing=%s, "
        "GCS_RESULTSTR=%s, GCS_COMPSTR=%s, GCS_COMPATTR=%s, GCS_COMPCLAUSE=%s, "
        "GCS_CURSORPOS=%s,",
        aWindow->GetWindowHandle(), lParam, GetBoolName(mIsComposing),
@@ -685,7 +687,7 @@ bool IMMHandler::OnIMEEndComposition(nsWindow* aWindow, MSGResult& aResult) {
 bool IMMHandler::OnIMEChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                            MSGResult& aResult) {
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnIMEChar, hWnd=%p, char=%08x",
+          ("IMMHandler::OnIMEChar, hWnd=%p, char=%08zx",
            aWindow->GetWindowHandle(), wParam));
 
   // We don't need to fire any compositionchange events from here. This method
@@ -716,13 +718,13 @@ bool IMMHandler::OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
     case IMN_CHANGECANDIDATE:
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("IMMHandler::OnIMENotify, hWnd=%p, IMN_CHANGECANDIDATE, "
-               "lParam=%08x",
+               "lParam=%08" PRIxLPTR,
                aWindow->GetWindowHandle(), lParam));
       break;
     case IMN_CLOSECANDIDATE:
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("IMMHandler::OnIMENotify, hWnd=%p, IMN_CLOSECANDIDATE, "
-               "lParam=%08x",
+               "lParam=%08" PRIxLPTR,
                aWindow->GetWindowHandle(), lParam));
       break;
     case IMN_CLOSESTATUSWINDOW:
@@ -736,10 +738,10 @@ bool IMMHandler::OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                aWindow->GetWindowHandle()));
       break;
     case IMN_OPENCANDIDATE:
-      MOZ_LOG(
-          gIMELog, LogLevel::Info,
-          ("IMMHandler::OnIMENotify, hWnd=%p, IMN_OPENCANDIDATE, lParam=%08x",
-           aWindow->GetWindowHandle(), lParam));
+      MOZ_LOG(gIMELog, LogLevel::Info,
+              ("IMMHandler::OnIMENotify, hWnd=%p, IMN_OPENCANDIDATE, "
+               "lParam=%08" PRIxLPTR,
+               aWindow->GetWindowHandle(), lParam));
       break;
     case IMN_OPENSTATUSWINDOW:
       MOZ_LOG(gIMELog, LogLevel::Info,
@@ -749,7 +751,7 @@ bool IMMHandler::OnIMENotify(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
     case IMN_SETCANDIDATEPOS:
       MOZ_LOG(gIMELog, LogLevel::Info,
               ("IMMHandler::OnIMENotify, hWnd=%p, IMN_SETCANDIDATEPOS, "
-               "lParam=%08x",
+               "lParam=%08" PRIxLPTR,
                aWindow->GetWindowHandle(), lParam));
       break;
     case IMN_SETCOMPOSITIONFONT:
@@ -818,7 +820,7 @@ bool IMMHandler::OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
       return true;
     default:
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("IMMHandler::OnIMERequest, hWnd=%p, wParam=%08x",
+              ("IMMHandler::OnIMERequest, hWnd=%p, wParam=%08zx",
                aWindow->GetWindowHandle(), wParam));
       aResult.mConsumed = false;
       return true;
@@ -828,9 +830,10 @@ bool IMMHandler::OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
 // static
 bool IMMHandler::OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                              MSGResult& aResult) {
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnIMESelect, hWnd=%p, wParam=%08x, lParam=%08x",
-           aWindow->GetWindowHandle(), wParam, lParam));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("IMMHandler::OnIMESelect, hWnd=%p, wParam=%08zx, lParam=%08" PRIxLPTR,
+       aWindow->GetWindowHandle(), wParam, lParam));
 
   // not implement yet
   aResult.mConsumed = false;
@@ -841,7 +844,7 @@ bool IMMHandler::OnIMESelect(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
 bool IMMHandler::OnIMESetContext(nsWindow* aWindow, WPARAM wParam,
                                  LPARAM lParam, MSGResult& aResult) {
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnIMESetContext, hWnd=%p, %s, lParam=%08x",
+          ("IMMHandler::OnIMESetContext, hWnd=%p, %s, lParam=%08" PRIxLPTR,
            aWindow->GetWindowHandle(), wParam ? "Active" : "Deactive", lParam));
 
   aResult.mConsumed = false;
@@ -902,10 +905,11 @@ bool IMMHandler::OnChar(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
   WPARAM recWParam;
   LPARAM recLParam;
   DequeueIMECharRecords(recWParam, recLParam);
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnChar, aWindow=%p, wParam=%08x, lParam=%08x, "
-           "recorded: wParam=%08x, lParam=%08x",
-           aWindow->GetWindowHandle(), wParam, lParam, recWParam, recLParam));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("IMMHandler::OnChar, aWindow=%p, wParam=%08zx, lParam=%08" PRIxLPTR ", "
+       "recorded: wParam=%08zx, lParam=%08" PRIxLPTR,
+       aWindow->GetWindowHandle(), wParam, lParam, recWParam, recLParam));
   // If an unexpected char message comes, we should reset the records,
   // of course, this shouldn't happen.
   if (recWParam != wParam || recLParam != lParam) {
@@ -1281,7 +1285,8 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
     }
     *oResult = needSize;
     MOZ_LOG(gIMELog, LogLevel::Info,
-            ("IMMHandler::HandleReconvert, succeeded, result=%ld", *oResult));
+            ("IMMHandler::HandleReconvert, succeeded, result=%" PRIdLPTR,
+             *oResult));
     return true;
   }
 
@@ -1310,9 +1315,10 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
                  len * sizeof(WCHAR));
   }
 
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::HandleReconvert, SUCCEEDED, pReconv=%s, result=%ld",
-           GetReconvertStringLog(pReconv).get(), *oResult));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("IMMHandler::HandleReconvert, SUCCEEDED, pReconv=%s, result=%" PRIdLPTR,
+       GetReconvertStringLog(pReconv).get(), *oResult));
 
   return true;
 }
@@ -1484,9 +1490,9 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
 
   if (!pReconv) {
     *oResult = needSize;
-    MOZ_LOG(
-        gIMELog, LogLevel::Info,
-        ("IMMHandler::HandleDocumentFeed, succeeded, result=%ld", *oResult));
+    MOZ_LOG(gIMELog, LogLevel::Info,
+            ("IMMHandler::HandleDocumentFeed, succeeded, result=%" PRIdLPTR,
+             *oResult));
     return true;
   }
 
@@ -1530,7 +1536,8 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
                paragraph.BeginReading(), len * sizeof(WCHAR));
 
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::HandleDocumentFeed, SUCCEEDED, pReconv=%s, result=%ld",
+          ("IMMHandler::HandleDocumentFeed, SUCCEEDED, pReconv=%s, "
+           "result=%" PRIdLPTR,
            GetReconvertStringLog(pReconv).get(), *oResult));
 
   return true;
@@ -2326,9 +2333,10 @@ nsresult IMMHandler::OnMouseButtonEvent(
 // static
 bool IMMHandler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                                 MSGResult& aResult) {
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnKeyDownEvent, hWnd=%p, wParam=%08x, lParam=%08x",
-           aWindow->GetWindowHandle(), wParam, lParam));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("IMMHandler::OnKeyDownEvent, hWnd=%p, wParam=%08zx, lParam=%08" PRIxLPTR,
+       aWindow->GetWindowHandle(), wParam, lParam));
   aResult.mConsumed = false;
   switch (wParam) {
     case VK_TAB:

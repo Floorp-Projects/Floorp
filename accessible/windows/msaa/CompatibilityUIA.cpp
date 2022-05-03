@@ -10,6 +10,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsdefs.h"
 #include "nspr/prenv.h"
 
 #include "nsTHashMap.h"
@@ -169,8 +170,8 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   // The section name always ends with this suffix, which is derived from the
   // current thread id and the UIA message's WPARAM and LPARAM.
   nsAutoString partialSectionSuffix;
-  partialSectionSuffix.AppendPrintf("_%08x_%08x_%08x", ::GetCurrentThreadId(),
-                                    static_cast<DWORD>(aLParam), aWParam);
+  partialSectionSuffix.AppendPrintf("_%08x_%08" PRIxLPTR "_%08zx",
+                                    ::GetCurrentThreadId(), aLParam, aWParam);
 
   // Find any named Section that matches the naming convention of the UIA shared
   // memory.

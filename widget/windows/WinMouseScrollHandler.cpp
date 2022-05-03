@@ -209,7 +209,7 @@ bool MouseScrollHandler::ProcessMessage(nsWindow* aWidget, UINT msg,
     case WM_KEYUP:
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,
               ("MouseScroll::ProcessMessage(): aWidget=%p, "
-               "msg=%s(0x%04X), wParam=0x%02X, ::GetMessageTime()=%d",
+               "msg=%s(0x%04X), wParam=0x%02zX, ::GetMessageTime()=%ld",
                aWidget,
                msg == WM_KEYDOWN ? "WM_KEYDOWN"
                : msg == WM_KEYUP ? "WM_KEYUP"
@@ -374,7 +374,8 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindow* aWidget,
 
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScroll::ProcessNativeMouseWheelMessage: aWidget=%p, "
-           "aMessage=%s, wParam=0x%08X, lParam=0x%08X, point: { x=%d, y=%d }",
+           "aMessage=%s, wParam=0x%08zX, lParam=0x%08" PRIXLPTR
+           ", point: { x=%d, y=%d }",
            aWidget,
            aMessage == WM_MOUSEWHEEL    ? "WM_MOUSEWHEEL"
            : aMessage == WM_MOUSEHWHEEL ? "WM_MOUSEHWHEEL"
@@ -494,7 +495,7 @@ bool MouseScrollHandler::ProcessNativeScrollMessage(nsWindow* aWidget,
 
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScroll::ProcessNativeScrollMessage: aWidget=%p, "
-           "aMessage=%s, wParam=0x%08X, lParam=0x%08X",
+           "aMessage=%s, wParam=0x%08zX, lParam=0x%08" PRIXLPTR,
            aWidget, aMessage == WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL",
            aWParam, aLParam));
 
@@ -552,7 +553,7 @@ void MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWidget,
   MOZ_LOG(
       gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::HandleMouseWheelMessage: aWidget=%p, "
-       "aMessage=MOZ_WM_MOUSE%sWHEEL, aWParam=0x%08X, aLParam=0x%08X",
+       "aMessage=MOZ_WM_MOUSE%sWHEEL, aWParam=0x%08zX, aLParam=0x%08" PRIXLPTR,
        aWidget, aMessage == MOZ_WM_MOUSEVWHEEL ? "V" : "H", aWParam, aLParam));
 
   mIsWaitingInternalMessage = false;
@@ -657,7 +658,7 @@ void MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(
   MOZ_LOG(
       gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::HandleScrollMessageAsMouseWheelMessage: aWidget=%p, "
-       "aMessage=MOZ_WM_%sSCROLL, aWParam=0x%08X, aLParam=0x%08X, "
+       "aMessage=MOZ_WM_%sSCROLL, aWParam=0x%08zX, aLParam=0x%08" PRIXLPTR ", "
        "wheelEvent { mRefPoint: { x: %d, y: %d }, mDeltaX: %f, mDeltaY: %f, "
        "mLineOrPageDeltaX: %d, mLineOrPageDeltaY: %d, "
        "isShift: %s, isControl: %s, isAlt: %s, isMeta: %s }",
@@ -1555,8 +1556,8 @@ nsresult MouseScrollHandler::SynthesizingEvent::Synthesize(
   MOZ_LOG(
       gMouseScrollLog, LogLevel::Info,
       ("MouseScrollHandler::SynthesizingEvent::Synthesize(): aCursorPoint: { "
-       "x: %d, y: %d }, aWnd=0x%p, aMessage=0x%04X, aWParam=0x%08X, "
-       "aLParam=0x%08X, IsSynthesized()=%s, mStatus=%s",
+       "x: %d, y: %d }, aWnd=0x%p, aMessage=0x%04X, aWParam=0x%08zX, "
+       "aLParam=0x%08" PRIXLPTR ", IsSynthesized()=%s, mStatus=%s",
        aCursorPoint.x, aCursorPoint.y, aWnd, aMessage, aWParam, aLParam,
        GetBoolName(IsSynthesizing()), GetStatusName()));
 
@@ -1602,9 +1603,10 @@ void MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(): "
            "aWidget=%p, aWidget->GetWindowHandle()=0x%p, mWnd=0x%p, "
-           "aMessage=0x%04X, aWParam=0x%08X, aLParam=0x%08X, mStatus=%s",
-           aWidget, aWidget ? aWidget->GetWindowHandle() : 0, mWnd, aMessage,
-           aWParam, aLParam, GetStatusName()));
+           "aMessage=0x%04X, aWParam=0x%08zX, aLParam=0x%08" PRIXLPTR
+           ", mStatus=%s",
+           aWidget, aWidget ? aWidget->GetWindowHandle() : nullptr, mWnd,
+           aMessage, aWParam, aLParam, GetStatusName()));
 
   // We failed to receive our sent message, we failed to do the job.
   Finish();
