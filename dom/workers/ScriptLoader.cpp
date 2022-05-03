@@ -370,13 +370,12 @@ class WorkerScriptLoader;
 
 class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   WorkerScriptLoader& mScriptLoader;
-  const bool mIsWorkerScript;
   const Span<ScriptLoadInfo> mLoadInfosToExecute;
   const bool mAllScriptsExecutable;
 
  public:
   ScriptExecutorRunnable(WorkerScriptLoader& aScriptLoader,
-                         nsIEventTarget* aSyncLoopTarget, bool aIsWorkerScript,
+                         nsIEventTarget* aSyncLoopTarget,
                          Span<ScriptLoadInfo> aLoadInfosToExecute,
                          bool aAllScriptsExecutable);
 
@@ -752,6 +751,55 @@ class WorkerScriptLoader final : public nsINamed {
     if (aLoadInfo.Finished()) {
       ExecuteFinishedScripts();
     }
+  }
+
+  bool StoreCSP() {
+    // We must be on the same worker as we started on.
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    if (!IsMainWorkerScript()) {
+      return true;
+    }
+
+    if (!mWorkerPrivate->GetJSContext()) {
+      return false;
+    }
+
+    MOZ_ASSERT(!mRv.Failed());
+
+    // Move the CSP from the workerLoadInfo in the corresponding Client
+    // where the CSP code expects it!
+    mWorkerPrivate->StoreCSPOnClient();
+    return true;
+  }
+
+  bool ProcessPendingRequests(JSContext* aCx,
+                              const Span<ScriptLoadInfo> aLoadInfosToExecute) {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+    // Don't run if something else has already failed.
+    if (mExecutionAborted) {
+      return true;
+    }
+
+    // If nothing else has failed, our ErrorResult better not be a failure
+    // either.
+    MOZ_ASSERT(!mRv.Failed(), "Who failed it and why?");
+
+    // Slightly icky action at a distance, but there's no better place to stash
+    // this value, really.
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+    MOZ_ASSERT(global);
+
+    for (ScriptLoadInfo& loadInfo : aLoadInfosToExecute) {
+      if (mExecutionAborted) {
+        break;
+      }
+      if (!EvaluateLoadInfo(aCx, loadInfo)) {
+        mExecutionAborted = true;
+        mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
+      }
+    }
+
+    return true;
   }
 
   nsresult OnStreamComplete(nsIStreamLoader* aLoader, ScriptLoadInfo& aLoadInfo,
@@ -1539,9 +1587,9 @@ class WorkerScriptLoader final : public nsINamed {
       }
 
       RefPtr<ScriptExecutorRunnable> runnable = new ScriptExecutorRunnable(
-          *this, mSyncLoopTarget, IsMainWorkerScript(),
+          *this, mSyncLoopTarget,
           Span{maybeRangeToExecute->first, maybeRangeToExecute->second},
-          /* AllLoadInfosExecutable = */ end == maybeRangeToExecute->second);
+          /* aAllScriptsExecutable = */ end == maybeRangeToExecute->second);
       if (!runnable->Dispatch()) {
         MOZ_ASSERT(false, "This should never fail!");
       }
@@ -2221,12 +2269,10 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
 
 ScriptExecutorRunnable::ScriptExecutorRunnable(
     WorkerScriptLoader& aScriptLoader, nsIEventTarget* aSyncLoopTarget,
-    bool aIsWorkerScript, Span<ScriptLoadInfo> aLoadInfosToExecute,
-    bool aAllScriptsExecutable)
+    Span<ScriptLoadInfo> aLoadInfosToExecute, bool aAllScriptsExecutable)
     : MainThreadWorkerSyncRunnable(aScriptLoader.mWorkerPrivate,
                                    aSyncLoopTarget),
       mScriptLoader(aScriptLoader),
-      mIsWorkerScript(aIsWorkerScript),
       mLoadInfosToExecute(aLoadInfosToExecute),
       mAllScriptsExecutable(aAllScriptsExecutable) {}
 
@@ -2245,21 +2291,7 @@ bool ScriptExecutorRunnable::PreRun(WorkerPrivate* aWorkerPrivate) {
       mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  if (!mIsWorkerScript) {
-    return true;
-  }
-
-  if (!aWorkerPrivate->GetJSContext()) {
-    return false;
-  }
-
-  MOZ_ASSERT(!mScriptLoader.mRv.Failed());
-
-  // Move the CSP from the workerLoadInfo in the corresponding Client
-  // where the CSP code expects it!
-  aWorkerPrivate->StoreCSPOnClient();
-
-  return true;
+  return mScriptLoader.StoreCSP();
 }
 
 bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
@@ -2271,30 +2303,7 @@ bool ScriptExecutorRunnable::WorkerRun(JSContext* aCx,
       mScriptLoader.mSyncLoopTarget == mSyncLoopTarget,
       "Unexpected SyncLoopTarget. Check if the sync loop was closed early");
 
-  // Don't run if something else has already failed.
-  if (mScriptLoader.mExecutionAborted) {
-    return true;
-  }
-
-  // If nothing else has failed, our ErrorResult better not be a failure either.
-  MOZ_ASSERT(!mScriptLoader.mRv.Failed(), "Who failed it and why?");
-
-  // Slightly icky action at a distance, but there's no better place to stash
-  // this value, really.
-  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-  MOZ_ASSERT(global);
-
-  for (ScriptLoadInfo& loadInfo : mLoadInfosToExecute) {
-    if (mScriptLoader.mExecutionAborted) {
-      break;
-    }
-    if (!mScriptLoader.EvaluateLoadInfo(aCx, loadInfo)) {
-      mScriptLoader.mExecutionAborted = true;
-      mScriptLoader.mMutedErrorFlag = loadInfo.mMutedErrorFlag.valueOr(true);
-    }
-  }
-
-  return true;
+  return mScriptLoader.ProcessPendingRequests(aCx, mLoadInfosToExecute);
 }
 
 void ScriptExecutorRunnable::PostRun(JSContext* aCx,
