@@ -77,11 +77,6 @@ CallStats::CallStats(Clock* clock, TaskQueueBase* task_queue)
       task_queue_(task_queue) {
   RTC_DCHECK(task_queue_);
   RTC_DCHECK_RUN_ON(task_queue_);
-  repeating_task_ =
-      RepeatingTaskHandle::DelayedStart(task_queue_, kUpdateInterval, [this]() {
-        UpdateAndReport();
-        return kUpdateInterval;
-      });
 }
 
 CallStats::~CallStats() {
@@ -91,6 +86,15 @@ CallStats::~CallStats() {
   repeating_task_.Stop();
 
   UpdateHistograms();
+}
+
+void CallStats::EnsureStarted() {
+  RTC_DCHECK_RUN_ON(task_queue_);
+  repeating_task_ =
+      RepeatingTaskHandle::DelayedStart(task_queue_, kUpdateInterval, [this]() {
+        UpdateAndReport();
+        return kUpdateInterval;
+      });
 }
 
 void CallStats::UpdateAndReport() {

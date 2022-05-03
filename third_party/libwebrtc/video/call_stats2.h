@@ -35,6 +35,9 @@ class CallStats {
   CallStats(Clock* clock, TaskQueueBase* task_queue);
   ~CallStats();
 
+  // Ensure that necessary repeating tasks are started.
+  void EnsureStarted();
+
   // Expose an RtcpRttStats implementation without inheriting from RtcpRttStats.
   // That allows us to separate the threading model of how RtcpRttStats is
   // used (mostly on a process thread) and how CallStats is used (mostly on
