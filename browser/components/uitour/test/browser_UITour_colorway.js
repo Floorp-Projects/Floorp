@@ -40,6 +40,11 @@ add_UITour_task(async function test_setColorway_unknown() {
 
 add_UITour_task(async function test_setColorway() {
   const id = COLORWAY_IDS.at(0);
+  if (!id) {
+    info("No colorways to test");
+    return;
+  }
+
   await gContentAPI.setConfiguration("colorway", id);
 
   ok(
@@ -50,6 +55,11 @@ add_UITour_task(async function test_setColorway() {
 
 add_UITour_task(async function test_anotherColorway() {
   const id = COLORWAY_IDS.at(-1);
+  if (!id) {
+    info("No colorways to test");
+    return;
+  }
+
   await gContentAPI.setConfiguration("colorway", id);
 
   ok(
