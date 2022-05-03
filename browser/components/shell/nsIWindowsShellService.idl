@@ -97,16 +97,6 @@ interface nsIWindowsShellService : nsISupports
   void checkPinCurrentAppToTaskbar(in bool aPrivateBrowsing);
 
   /*
-   * Do a dry run of pinCurrentAppToTaskbar() on a background thread.
-   *
-   * This does all the same checks and setup, but returns a promise that will
-   * either resolve or reject instead of throwing an error. The error specifics
-   * are lost, as the promise will only ever resolve or reject with |undefined|.
-   */
-  [implicit_jscontext]
-  Promise checkPinCurrentAppToTaskbarAsync(in bool aPrivateBrowsing);
-
-  /*
    * Search for the current executable among taskbar pins
    *
    * NOTE: Can only be run on the main thread, but the actual work occurs on a

@@ -1358,55 +1358,6 @@ nsWindowsShellService::CheckPinCurrentAppToTaskbar(
   return PinCurrentAppToTaskbarImpl(/* aCheckOnly */ true, aPrivateBrowsing);
 }
 
-NS_IMETHODIMP
-nsWindowsShellService::CheckPinCurrentAppToTaskbarAsync(
-    bool aPrivateBrowsing, JSContext* aCx, dom::Promise** aPromise) {
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise =
-      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
-
-  if (MOZ_UNLIKELY(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
-      "CheckPinCurrentAppToTaskbarAsync promise", promise);
-
-  NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          "CheckPinCurrentAppToTaskbarAsync",
-          [aPrivateBrowsing, promiseHolder = std::move(promiseHolder)] {
-            bool canPin = false;
-            HRESULT hr = CoInitialize(nullptr);
-
-            if (SUCCEEDED(hr)) {
-              canPin = NS_SUCCEEDED(PinCurrentAppToTaskbarImpl(
-                  /* aCheckOnly = */ true, aPrivateBrowsing));
-              CoUninitialize();
-            }
-
-            NS_DispatchToMainThread(NS_NewRunnableFunction(
-                "CheckPinCurrentAppToTaskbarAsync callback",
-                [canPin, promiseHolder = std::move(promiseHolder)] {
-                  dom::Promise* promise = promiseHolder.get()->get();
-
-                  if (canPin) {
-                    promise->MaybeResolveWithUndefined();
-                  } else {
-                    promise->MaybeRejectWithUndefined();
-                  }
-                }));
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
-
-  promise.forget(aPromise);
-  return NS_OK;
-}
-
 static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
   wchar_t exePath[MAXPATHLEN] = {};
   if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
