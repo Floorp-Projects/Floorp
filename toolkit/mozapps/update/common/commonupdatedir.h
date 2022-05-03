@@ -5,7 +5,6 @@
 #define COMMONUPDATEDIR_H
 
 #include "mozilla/UniquePtr.h"
-#include "nsError.h"
 
 #ifdef XP_WIN
 #  include <windows.h>

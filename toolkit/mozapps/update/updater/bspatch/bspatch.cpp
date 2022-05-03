@@ -35,14 +35,11 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <fcntl.h>
 #include <string.h>
 #include <limits.h>
 
 #if defined(XP_WIN)
 #  include <io.h>
-#else
-#  include <unistd.h>
 #endif
 
 #ifdef XP_WIN
