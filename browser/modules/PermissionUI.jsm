@@ -20,8 +20,12 @@ var EXPORTED_SYMBOLS = ["PermissionUI"];
  * permission request is coming up from content by way of the
  * nsContentPermissionHelper. The system add-on could then do the following:
  *
- * Cu.import("resource://gre/modules/Integration.jsm");
- * Cu.import("resource:///modules/PermissionUI.jsm");
+ * const { Integration } = ChromeUtils.import(
+ *   "resource://gre/modules/Integration.jsm"
+ * );
+ * const { PermissionUI } = ChromeUtils.import(
+ *   "resource:///modules/PermissionUI.jsm"
+ * );
  *
  * const SoundCardIntegration = (base) => ({
  *   __proto__: base,
