@@ -1698,7 +1698,7 @@ TEST_F(TestVp9Impl, EncoderInfoWithoutResolutionBitrateLimits) {
 
 TEST_F(TestVp9Impl, EncoderInfoWithBitrateLimitsFromFieldTrial) {
   test::ScopedFieldTrials field_trials(
-      "WebRTC-LibvpxVp9Encoder-GetEncoderInfoOverride/"
+      "WebRTC-VP9-GetEncoderInfoOverride/"
       "frame_size_pixels:123|456|789,"
       "min_start_bitrate_bps:11000|22000|33000,"
       "min_bitrate_bps:44000|55000|66000,"
