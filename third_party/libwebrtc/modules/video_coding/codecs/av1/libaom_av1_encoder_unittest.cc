@@ -18,7 +18,6 @@
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/codecs/test/encoded_video_frame_producer.h"
 #include "modules/video_coding/include/video_error_codes.h"
-#include "modules/video_coding/svc/scalability_structure_l1t2.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
