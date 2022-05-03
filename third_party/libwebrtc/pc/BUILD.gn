@@ -1169,12 +1169,12 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:rtp_test_utils",
       "../test/pc/sctp:fake_sctp_transport",
       "./scenario_tests:pc_scenario_tests",
+      "//testing/gmock:gmock",
+      "//testing/gtest:gtest",
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
-      "//third_party/googletest:gmock",
-      "//third_party/googletest:gtest",
     ]
     if (is_android) {
       deps += [ ":android_black_magic" ]
