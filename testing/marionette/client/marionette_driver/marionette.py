@@ -768,7 +768,9 @@ class Marionette(object):
         with self.using_context(self.CONTEXT_CHROME):
             self.execute_script(
                 """
-               Components.utils.import("resource://gre/modules/Preferences.jsm");
+               const { Preferences } = ChromeUtils.import(
+                 "resource://gre/modules/Preferences.jsm"
+               );
                Preferences.reset(arguments[0]);
                """,
                 script_args=(pref,),
@@ -793,7 +795,9 @@ class Marionette(object):
         with self.using_context(self.CONTEXT_CHROME):
             pref_value = self.execute_script(
                 """
-                Components.utils.import("resource://gre/modules/Preferences.jsm");
+                const { Preferences } = ChromeUtils.import(
+                  "resource://gre/modules/Preferences.jsm"
+                );
 
                 let pref = arguments[0];
                 let defaultBranch = arguments[1];
@@ -830,7 +834,9 @@ class Marionette(object):
 
             self.execute_script(
                 """
-                Components.utils.import("resource://gre/modules/Preferences.jsm");
+                const { Preferences } = ChromeUtils.import(
+                  "resource://gre/modules/Preferences.jsm"
+                );
 
                 let pref = arguments[0];
                 let value = arguments[1];

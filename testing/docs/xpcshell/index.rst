@@ -367,7 +367,7 @@ In addition to the test head, other support files can be declared in the
 ``support-files`` declaration. These files will be made available
 through the url ``resource://test`` plus the name of the file. These
 files can then be loaded in using the
-```Components.utils.import`` </en/Components.utils.import>`__ function
+``ChromeUtils.import`` function
 or other loaders. The support files can be located in other directory as
 well, and they will be made available by their filename.
 
@@ -398,8 +398,8 @@ well, and they will be made available by their filename.
    var globalValue = "A global value.";
 
    // Import support-files.
-   Components.utils.import("resource://test/module.jsm");
-   Components.utils.import("resource://test/file.jsm");
+   const { foo } = ChromeUtils.import("resource://test/module.jsm");
+   const { bar } = ChromeUtils.import("resource://test/file.jsm");
 
 .. code:: brush:
 

@@ -33,7 +33,9 @@ class MockMozCrash(object):
         with self.marionette.using_context("chrome"):
             self.crash_reporter_enabled = self.marionette.execute_script(
                 """
-                Cu.import("resource://gre/modules/AppConstants.jsm");
+                const { AppConstants } = ChromeUtils.import(
+                  "resource://gre/modules/AppConstants.jsm"
+                );
                 return AppConstants.MOZ_CRASHREPORTER;
             """
             )
