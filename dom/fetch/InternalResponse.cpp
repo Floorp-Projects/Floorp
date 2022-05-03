@@ -134,7 +134,9 @@ InternalResponseMetadata InternalResponse::GetMetadata() {
 
 void InternalResponse::ToChildToParentInternalResponse(
     ChildToParentInternalResponse* aIPCResponse,
-    mozilla::ipc::PBackgroundChild* aManager) {
+    mozilla::ipc::PBackgroundChild* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
   *aIPCResponse = ChildToParentInternalResponse(GetMetadata(), Nothing(),
                                                 UNKNOWN_BODY_SIZE, Nothing());
 
@@ -146,8 +148,9 @@ void InternalResponse::ToChildToParentInternalResponse(
     aIPCResponse->body().emplace(ChildToParentStream());
     aIPCResponse->bodySize() = bodySize;
 
-    DebugOnly<bool> ok = mozilla::ipc::SerializeIPCStream(
-        body.forget(), aIPCResponse->body()->stream(), /* aAllowLazy */ false);
+    aAutoBodyStream.reset(
+        new mozilla::ipc::AutoIPCStream(aIPCResponse->body()->stream()));
+    DebugOnly<bool> ok = aAutoBodyStream->Serialize(body, aManager);
     MOZ_ASSERT(ok);
   }
 
@@ -155,9 +158,10 @@ void InternalResponse::ToChildToParentInternalResponse(
   if (alternativeBody) {
     aIPCResponse->alternativeBody().emplace(ChildToParentStream());
 
-    DebugOnly<bool> ok = mozilla::ipc::SerializeIPCStream(
-        alternativeBody.forget(), aIPCResponse->alternativeBody()->stream(),
-        /* aAllowLazy */ false);
+    aAutoAlternativeBodyStream.reset(new mozilla::ipc::AutoIPCStream(
+        aIPCResponse->alternativeBody()->stream()));
+    DebugOnly<bool> ok =
+        aAutoAlternativeBodyStream->Serialize(alternativeBody, aManager);
     MOZ_ASSERT(ok);
   }
 }

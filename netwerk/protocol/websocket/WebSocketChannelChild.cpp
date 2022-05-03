@@ -700,12 +700,9 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream* aStream,
 
   LOG(("WebSocketChannelChild::SendBinaryStream() %p\n", this));
 
-  IPCStream ipcStream;
-  if (NS_WARN_IF(!mozilla::ipc::SerializeIPCStream(do_AddRef(aStream),
-                                                   ipcStream,
-                                                   /* aAllowLazy */ false))) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  AutoIPCStream autoStream;
+  autoStream.Serialize(aStream, static_cast<mozilla::dom::ContentChild*>(
+                                    gNeckoChild->Manager()));
 
   {
     MutexAutoLock lock(mMutex);
@@ -714,7 +711,7 @@ WebSocketChannelChild::SendBinaryStream(nsIInputStream* aStream,
     }
   }
 
-  if (!SendSendBinaryStream(ipcStream, aLength)) {
+  if (!SendSendBinaryStream(autoStream.TakeValue(), aLength)) {
     return NS_ERROR_UNEXPECTED;
   }
 

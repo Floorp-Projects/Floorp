@@ -13,10 +13,12 @@ include protocol PDocumentChannel;
 include protocol PExtensions;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
+include protocol PFileDescriptorSet;
 include protocol PHal;
 include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
+include protocol PRemoteLazyInputStream;
 include protocol PRemotePrintJob;
 include protocol PLoginReputation;
 include protocol PMedia;
@@ -25,6 +27,8 @@ include protocol PStreamFilter;
 include protocol PGMPContent;
 include protocol PGMPService;
 include protocol PGMP;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
 include protocol PSpeechSynthesis;
 #endif
@@ -459,12 +463,16 @@ sync protocol PContent
     manages PCycleCollectWithLogs;
     manages PExtensions;
     manages PExternalHelperApp;
+    manages PFileDescriptorSet;
     manages PHal;
     manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
+    manages PRemoteLazyInputStream;
     manages PRemotePrintJob;
     manages PMedia;
     manages PNecko;
+    manages PChildToParentStream;
+    manages PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
     manages PSpeechSynthesis;
 #endif
@@ -535,6 +543,8 @@ child:
                            bool isForBrowser, bool isTopLevel);
 
 both:
+    async PFileDescriptorSet(FileDescriptor fd);
+
     // For parent->child, aBrowser must be non-null; aContext can
     // be null to indicate the browser's current root document, or non-null
     // to persist a subdocument.  For child->parent, arguments are
@@ -853,11 +863,15 @@ child:
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
 
+    async PParentToChildStream();
+
     async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
 
     async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
 
     async RefreshScreens(ScreenDetails[] aScreens);
+
+    async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
     async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
     async FlushCodeCoverageCounters() returns (bool unused);
@@ -1075,6 +1089,8 @@ parent:
     async PHeapSnapshotTempFileHelper();
 
     async PNecko();
+
+    async PChildToParentStream();
 
 #ifdef MOZ_WEBSPEECH
     async PSpeechSynthesis();
