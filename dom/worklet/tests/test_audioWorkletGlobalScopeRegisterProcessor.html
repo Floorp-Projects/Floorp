@@ -31,26 +31,29 @@ function configureTest() {
 
   var expected_errors_i = 0;
 
+  const ConsoleAPIStorage = SpecialPowers.Cc[
+    "@mozilla.org/consoleAPI-storage;1"
+  ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
+
   function consoleListener() {
-    SpecialPowers.addObserver(this, "console-api-log-event");
+    this.observe = this.observe.bind(this);
+    ConsoleAPIStorage.addLogEventListener(this.observe, SpecialPowers.wrap(document).nodePrincipal);
   }
 
   consoleListener.prototype  = {
-    observe(aSubject, aTopic, aData) {
-      if (aTopic == "console-api-log-event") {
-        var obj = aSubject.wrappedJSObject;
-        if (obj.arguments[0] == expected_errors[expected_errors_i]) {
-          ok(true, "Expected error received: " + obj.arguments[0]);
-          expected_errors_i++;
-        }
+    observe(aSubject) {
+      var obj = aSubject.wrappedJSObject;
+      if (obj.arguments[0] == expected_errors[expected_errors_i]) {
+        ok(true, "Expected error received: " + obj.arguments[0]);
+        expected_errors_i++;
+      }
 
-        if (expected_errors_i == expected_errors.length) {
-          // All errors have been received, this test has been completed
-          // succesfully!
-          SpecialPowers.removeObserver(this, "console-api-log-event");
-          SimpleTest.finish();
-          return;
-        }
+      if (expected_errors_i == expected_errors.length) {
+        // All errors have been received, this test has been completed
+        // succesfully!
+        ConsoleAPIStorage.removeLogEventListener(this.observe);
+        SimpleTest.finish();
+        return;
       }
     }
   }

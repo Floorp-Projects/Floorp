@@ -25,7 +25,14 @@ async function checkMessages(expectedResult) {
   };
 
   Services.console.registerListener(errorListener);
-  Services.obs.addObserver(errorListener, "console-api-log-event");
+
+  const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+    Ci.nsIConsoleAPIStorage
+  );
+  ConsoleAPIStorage.addLogEventListener(
+    errorListener.observe,
+    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+  );
 
   await setupPolicyEngineWithJson({
     policies: {},

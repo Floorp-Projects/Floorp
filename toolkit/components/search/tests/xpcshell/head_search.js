@@ -411,21 +411,25 @@ let consoleAllowList = [
   'property "profileDir" is non-configurable and can\'t be deleted',
 ];
 
-let consoleListener = {
-  observe(subject, topic, data) {
-    let msg = subject.wrappedJSObject;
-    let messageContents = msg.arguments[0]?.message || msg.arguments[0];
-    if (
-      msg.level == "error" &&
-      !consoleAllowList.some(e => messageContents.includes(e))
-    ) {
-      Assert.ok(false, "Unexpected console message: " + messageContents);
-    }
-  },
-};
+function observe(subject) {
+  let msg = subject.wrappedJSObject;
+  let messageContents = msg.arguments[0]?.message || msg.arguments[0];
+  if (
+    msg.level == "error" &&
+    !consoleAllowList.some(e => messageContents.includes(e))
+  ) {
+    Assert.ok(false, "Unexpected console message: " + messageContents);
+  }
+}
 
-Services.obs.addObserver(consoleListener, "console-api-log-event");
+const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+  Ci.nsIConsoleAPIStorage
+);
+ConsoleAPIStorage.addLogEventListener(
+  observe,
+  Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+);
 
 registerCleanupFunction(async () => {
-  Services.obs.removeObserver(consoleListener, "console-api-log-event");
+  ConsoleAPIStorage.removeLogEventListener(observe);
 });

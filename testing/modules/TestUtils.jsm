@@ -24,6 +24,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
+const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
+  Ci.nsIConsoleAPIStorage
+);
 
 var TestUtils = {
   executeSoon(callbackFn) {
@@ -32,6 +35,64 @@ var TestUtils = {
 
   waitForTick() {
     return new Promise(resolve => this.executeSoon(resolve));
+  },
+
+  /**
+   * Waits for a console message matching the specified check function to be
+   * observed.
+   *
+   * @param {function} checkFn [optional]
+   *        Called with the message as its argument, should return true if the
+   *        notification is the expected one, or false if it should be ignored
+   *        and listening should continue.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next notification, since this is probably a bug in the test.
+   *
+   * @return {Promise}
+   * @resolves The message from the observed notification.
+   */
+  consoleMessageObserved(checkFn) {
+    return new Promise((resolve, reject) => {
+      let removed = false;
+      function observe(message) {
+        try {
+          if (checkFn && !checkFn(message)) {
+            return;
+          }
+          ConsoleAPIStorage.removeLogEventListener(observe);
+          // checkFn could reference objects that need to be destroyed before
+          // the end of the test, so avoid keeping a reference to it after the
+          // promise resolves.
+          checkFn = null;
+          removed = true;
+
+          resolve(message);
+        } catch (ex) {
+          ConsoleAPIStorage.removeLogEventListener(observe);
+          checkFn = null;
+          removed = true;
+          reject(ex);
+        }
+      }
+
+      ConsoleAPIStorage.addLogEventListener(
+        observe,
+        Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+      );
+
+      TestUtils.promiseTestFinished?.then(() => {
+        if (removed) {
+          return;
+        }
+
+        ConsoleAPIStorage.removeLogEventListener(observe);
+        let text =
+          "Console message observer not removed before the end of test";
+        reject(text);
+      });
+    });
   },
 
   /**

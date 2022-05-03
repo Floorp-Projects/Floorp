@@ -11,21 +11,24 @@
 <script type="application/javascript">
 
 function configureTest() {
+  const ConsoleAPIStorage = SpecialPowers.Cc[
+    "@mozilla.org/consoleAPI-storage;1"
+  ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
+
   function consoleListener() {
-    SpecialPowers.addObserver(this, "console-api-log-event");
+    this.observe = this.observe.bind(this);
+    ConsoleAPIStorage.addLogEventListener(this.observe, SpecialPowers.wrap(document).nodePrincipal);
   }
 
   consoleListener.prototype  = {
-    observe(aSubject, aTopic, aData) {
-      if (aTopic == "console-api-log-event") {
-        var obj = aSubject.wrappedJSObject;
-        if (obj.arguments[0] == "So far so good") {
-          ok(true, "Message received \\o/");
+    observe(aSubject) {
+      var obj = aSubject.wrappedJSObject;
+      if (obj.arguments[0] == "So far so good") {
+        ok(true, "Message received \\o/");
 
-          SpecialPowers.removeObserver(this, "console-api-log-event");
-          SimpleTest.finish();
-          return;
-        }
+        ConsoleAPIStorage.removeLogEventListener(this.observe);
+        SimpleTest.finish();
+        return;
       }
     }
   }
