@@ -100,26 +100,6 @@ namespace dom {
 
 namespace {
 
-nsIURI* GetBaseURI(bool aIsMainScript, WorkerPrivate* aWorkerPrivate) {
-  MOZ_ASSERT(aWorkerPrivate);
-  nsIURI* baseURI;
-  WorkerPrivate* parentWorker = aWorkerPrivate->GetParent();
-  if (aIsMainScript) {
-    if (parentWorker) {
-      baseURI = parentWorker->GetBaseURI();
-      NS_ASSERTION(baseURI, "Should have been set already!");
-    } else {
-      // May be null.
-      baseURI = aWorkerPrivate->GetBaseURI();
-    }
-  } else {
-    baseURI = aWorkerPrivate->GetBaseURI();
-    NS_ASSERTION(baseURI, "Should have been set already!");
-  }
-
-  return baseURI;
-}
-
 nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
                       Document* parentDoc, bool aDefaultURIEncoding,
                       nsIURI** aResult) {
@@ -729,6 +709,26 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
+  nsIURI* GetBaseURI() {
+    MOZ_ASSERT(mWorkerPrivate);
+    nsIURI* baseURI;
+    WorkerPrivate* parentWorker = mWorkerPrivate->GetParent();
+    if (mIsMainScript) {
+      if (parentWorker) {
+        baseURI = parentWorker->GetBaseURI();
+        NS_ASSERTION(baseURI, "Should have been set already!");
+      } else {
+        // May be null.
+        baseURI = mWorkerPrivate->GetBaseURI();
+      }
+    } else {
+      baseURI = mWorkerPrivate->GetBaseURI();
+      NS_ASSERTION(baseURI, "Should have been set already!");
+    }
+
+    return baseURI;
+  }
+
   void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv) {
     AssertIsOnMainThread();
 
@@ -943,7 +943,7 @@ class WorkerScriptLoader final : public nsINamed {
                    NS_ERROR_FAILURE);
 
     // Figure out our base URI.
-    nsCOMPtr<nsIURI> baseURI = GetBaseURI(mIsMainScript, mWorkerPrivate);
+    nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
     // May be null.
     nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
@@ -1860,7 +1860,7 @@ CacheLoadHandler::CacheLoadHandler(WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
   mMainThreadEventTarget = aWorkerPrivate->MainThreadEventTarget();
   MOZ_ASSERT(mMainThreadEventTarget);
-  mBaseURI = GetBaseURI(mIsWorkerScript, aWorkerPrivate);
+  mBaseURI = mLoader->GetBaseURI();
   AssertIsOnMainThread();
 }
 
