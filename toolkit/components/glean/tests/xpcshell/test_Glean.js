@@ -338,3 +338,10 @@ add_task(function test_fog_rate_works() {
     Glean.testOnlyIpc.rateWithExternalDenominator.testGetValue()
   );
 });
+
+add_task(async function test_fog_url_works() {
+  const value = "https://www.example.com/fog";
+  Glean.testOnlyIpc.aUrl.set(value);
+
+  Assert.equal(value, Glean.testOnlyIpc.aUrl.testGetValue("store1"));
+});

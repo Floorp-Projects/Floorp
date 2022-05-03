@@ -30,6 +30,7 @@ describe("<DSLinkMenu>", () => {
   describe("DS context menu options", () => {
     const ValidDSLinkMenuProps = {
       site: {},
+      pocket_button_enabled: true,
     };
 
     beforeEach(() => {
@@ -110,11 +111,7 @@ describe("<DSLinkMenu>", () => {
 
     it("should pass through the correct menu options to LinkMenu for save to Pocket button", () => {
       wrapper = shallow(
-        <DSLinkMenu
-          {...ValidDSLinkMenuProps}
-          flightId="1234"
-          saveToPocketCard={true}
-        />
+        <DSLinkMenu {...ValidDSLinkMenuProps} saveToPocketCard={true} />
       );
       wrapper
         .find(ContextMenuButton)
@@ -124,6 +121,25 @@ describe("<DSLinkMenu>", () => {
         "CheckBookmark",
         "CheckArchiveFromPocket",
         "CheckDeleteFromPocket",
+        "Separator",
+        "OpenInNewWindow",
+        "OpenInPrivateWindow",
+        "Separator",
+        "BlockUrl",
+      ]);
+    });
+
+    it("should pass through the correct menu options to LinkMenu if Pocket is disabled", () => {
+      wrapper = shallow(
+        <DSLinkMenu {...ValidDSLinkMenuProps} pocket_button_enabled={false} />
+      );
+      wrapper
+        .find(ContextMenuButton)
+        .simulate("click", { preventDefault: () => {} });
+      const linkMenuProps = wrapper.find(LinkMenu).props();
+      assert.deepEqual(linkMenuProps.options, [
+        "CheckBookmark",
+        "CheckArchiveFromPocket",
         "Separator",
         "OpenInNewWindow",
         "OpenInPrivateWindow",

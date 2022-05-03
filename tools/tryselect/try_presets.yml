@@ -85,7 +85,7 @@ geckodriver:
     query:
         - "'rusttests"
         - "'platform 'wdspec 'debug !fis"
-        - "'browsertime 'amazon 'vismet 'shippable 'firefox !fis"
+        - "'browsertime 'amazon 'shippable 'firefox !fis"
 
 perf:
     selector: fuzzy

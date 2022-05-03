@@ -1,4 +1,3 @@
-// Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 var prefetch = Cc["@mozilla.org/prefetch-service;1"].getService(
   Ci.nsIPrefetchService
 );

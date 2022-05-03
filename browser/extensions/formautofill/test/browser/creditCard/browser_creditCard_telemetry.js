@@ -156,7 +156,7 @@ add_task(async function test_popup_opened() {
   Services.telemetry.clearScalars();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
@@ -312,7 +312,7 @@ add_task(async function test_submit_creditCard_autofill() {
     ],
   });
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 
@@ -374,7 +374,7 @@ add_task(async function test_submit_creditCard_update() {
       ],
     });
 
-    await saveCreditCard(TEST_CREDIT_CARD_1);
+    await setStorage(TEST_CREDIT_CARD_1);
     let creditCards = await getCreditCards();
     is(creditCards.length, 1, "1 credit card in storage");
 
@@ -478,7 +478,7 @@ add_task(async function test_removingCreditCardsViaKeyboardDelete() {
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
   });
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
     null,
@@ -555,7 +555,7 @@ add_task(async function test_editCreditCard() {
     set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, true]],
   });
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
 
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "only one credit card is in storage");
@@ -600,9 +600,7 @@ add_task(async function test_histogram() {
   Services.telemetry.getHistogramById(CC_NUM_USES_HISTOGRAM).clear();
   Services.telemetry.setEventRecordingEnabled("creditcard", true);
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
-  await saveCreditCard(TEST_CREDIT_CARD_2);
-  await saveCreditCard(TEST_CREDIT_CARD_5);
+  await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_5);
   let creditCards = await getCreditCards();
   is(creditCards.length, 3, "3 credit cards in storage");
 
@@ -665,7 +663,7 @@ add_task(async function test_submit_creditCard_new_with_hidden_ui() {
     ],
   });
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
@@ -755,7 +753,7 @@ add_task(async function test_clear_creditCard_autofill() {
     ],
   });
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "1 credit card in storage");
 

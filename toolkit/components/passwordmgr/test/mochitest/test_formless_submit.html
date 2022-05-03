@@ -9,9 +9,12 @@
 </head>
 <body>
 <script type="application/javascript">
-const {LoginFormFactory} = SpecialPowers.Cu.import("resource://gre/modules/LoginFormFactory.jsm");
-const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm");
-const { LoginManagerChild } = LMCBackstagePass;
+const { LoginFormFactory } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/LoginFormFactory.jsm"
+);
+const { LoginManagerChild } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/LoginManagerChild.jsm"
+);
 
 function loadFrame() {
   return new Promise(resolve => {

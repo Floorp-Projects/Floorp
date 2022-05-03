@@ -19,7 +19,7 @@ namespace mozilla {
 class CallWorkerThread final : public AbstractThread,
                                public nsIDirectTaskDispatcher {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDIRECTTASKDISPATCHER
 
   explicit CallWorkerThread(
@@ -47,8 +47,8 @@ class CallWorkerThread final : public AbstractThread,
   ~CallWorkerThread() = default;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED(CallWorkerThread, AbstractThread,
-                            nsIDirectTaskDispatcher);
+NS_IMPL_ISUPPORTS(CallWorkerThread, nsIDirectTaskDispatcher,
+                  nsISerialEventTarget, nsIEventTarget);
 
 //-----------------------------------------------------------------------------
 // AbstractThread

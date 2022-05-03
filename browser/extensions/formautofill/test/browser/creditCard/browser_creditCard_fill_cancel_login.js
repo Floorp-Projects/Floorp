@@ -9,7 +9,7 @@ add_task(async function test_fill_creditCard_but_cancel_login() {
     return;
   }
 
-  await saveCreditCard(TEST_CREDIT_CARD_2);
+  await setStorage(TEST_CREDIT_CARD_2);
 
   let osKeyStoreLoginShown = OSKeyStoreTestUtils.waitForOSKeyStoreLogin(false); // cancel
   await BrowserTestUtils.withNewTab(

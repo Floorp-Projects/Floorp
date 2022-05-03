@@ -692,14 +692,20 @@ nsresult HTMLEditor::SetPositionToAbsolute(Element& aElement) {
   if (parentNode->GetChildCount() != 1) {
     return NS_OK;
   }
-  Result<RefPtr<Element>, nsresult> resultOfInsertingBRElement =
+  CreateElementResult insertBRElementResult =
       InsertBRElement(WithTransaction::Yes, EditorDOMPoint(parentNode, 0u));
-  if (resultOfInsertingBRElement.isErr()) {
+  if (insertBRElementResult.isErr()) {
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-    return resultOfInsertingBRElement.unwrapErr();
+    return insertBRElementResult.unwrapErr();
   }
-  MOZ_ASSERT(resultOfInsertingBRElement.inspect());
-  return NS_OK;
+  // XXX Is this intentional selection change?
+  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "CreateElementResult::SuggestCaretPointTo() failed");
+  MOZ_ASSERT(insertBRElementResult.GetNewNode());
+  return rv;
 }
 
 nsresult HTMLEditor::SetPositionToStatic(Element& aElement) {

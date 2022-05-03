@@ -1668,6 +1668,7 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
   // If the queue wants to be marking a particular color, switch to that color.
   // In any case, restore the mark color to whatever it was when we entered
   // this function.
+  bool willRevertToGray = markColor() == MarkColor::Gray;
   AutoSetMarkColor autoRevertColor(*this, queueMarkColor.valueOr(markColor()));
 
   // Process the mark queue by taking each object in turn, pushing it onto the
@@ -1702,6 +1703,14 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       if (markColor() == MarkColor::Gray && zone->isGCMarkingBlackOnly()) {
         // Have not yet reached the point where we can mark this object, so
         // continue with the GC.
+        queuePos--;
+        return QueueSuspended;
+      }
+
+      if (markColor() == MarkColor::Black && willRevertToGray) {
+        // If we put any black objects on the stack, we wouldn't be able to
+        // return to gray marking. So delay the marking until we're back to
+        // black marking.
         queuePos--;
         return QueueSuspended;
       }

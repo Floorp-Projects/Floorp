@@ -20,14 +20,14 @@ using namespace mozilla;
 TEST(TaskQueue, EventOrder)
 {
   RefPtr<TaskQueue> tq1 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                    "TestTaskQueue tq1", true);
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                        "TestTaskQueue tq1", true);
   RefPtr<TaskQueue> tq2 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                    "TestTaskQueue tq2", true);
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                        "TestTaskQueue tq2", true);
   RefPtr<TaskQueue> tq3 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                    "TestTaskQueue tq3", true);
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                        "TestTaskQueue tq3", true);
 
   bool errored = false;
   int counter = 0;
@@ -92,8 +92,8 @@ TEST(TaskQueue, EventOrder)
 TEST(TaskQueue, GetCurrentSerialEventTarget)
 {
   RefPtr<TaskQueue> tq1 =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                    "TestTaskQueue GetCurrentSerialEventTarget", false);
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                        "TestTaskQueue GetCurrentSerialEventTarget", false);
   Unused << tq1->Dispatch(NS_NewRunnableFunction(
       "TestTaskQueue::TestCurrentSerialEventTarget::TestBody", [tq1]() {
         nsCOMPtr<nsISerialEventTarget> thread = GetCurrentSerialEventTarget();
@@ -132,7 +132,7 @@ TEST(TaskQueue, ShutdownTask)
   auto shutdownTaskRun = std::make_shared<bool>();
   auto runnableFromShutdownRun = std::make_shared<bool>();
 
-  RefPtr<TaskQueue> tq = new TaskQueue(
+  RefPtr<TaskQueue> tq = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::SUPERVISOR), "Testing TaskQueue");
 
   nsCOMPtr<nsITargetShutdownTask> shutdownTask = new TestShutdownTask([=] {
@@ -179,7 +179,7 @@ TEST(TaskQueue, ShutdownTask)
 
 TEST(TaskQueue, UnregisteredShutdownTask)
 {
-  RefPtr<TaskQueue> tq = new TaskQueue(
+  RefPtr<TaskQueue> tq = TaskQueue::Create(
       GetMediaThreadPool(MediaThreadType::SUPERVISOR), "Testing TaskQueue");
 
   nsCOMPtr<nsITargetShutdownTask> shutdownTask =

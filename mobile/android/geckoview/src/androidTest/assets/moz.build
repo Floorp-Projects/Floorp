@@ -58,6 +58,11 @@ addons = {
         "download.js",
         "manifest.json",
     ],
+    "permission-request": [
+        "clickToRequestPermission.html",
+        "request-permission.js",
+        "manifest.json",
+    ],
 }
 
 for addon, files in addons.items():

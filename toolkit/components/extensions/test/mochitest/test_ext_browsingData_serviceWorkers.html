@@ -14,7 +14,9 @@
 <script type="text/javascript">
 "use strict";
 
-const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+const { TestUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({

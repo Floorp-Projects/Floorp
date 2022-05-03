@@ -58,6 +58,18 @@ class InsertNodeTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
+  /**
+   * SuggestPointToPutCaret() suggests a point after doing or redoing the
+   * transaction.
+   */
+  template <typename EditorDOMPointType>
+  EditorDOMPointType SuggestPointToPutCaret() const {
+    if (MOZ_UNLIKELY(!mPointToInsert.IsSet() || !mContentToInsert)) {
+      return EditorDOMPointType();
+    }
+    return EditorDOMPointType::After(mContentToInsert);
+  }
+
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const InsertNodeTransaction& aTransaction);
 

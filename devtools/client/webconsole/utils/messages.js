@@ -7,6 +7,9 @@
 const Services = require("Services");
 const l10n = require("devtools/client/webconsole/utils/l10n");
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
+const {
+  isSupportedByConsoleTable,
+} = require("devtools/shared/webconsole/messages");
 
 // URL Regex, common idioms:
 //
@@ -201,21 +204,7 @@ function transformConsoleAPICallResource(consoleMessageResource) {
       }
       break;
     case "table":
-      const supportedClasses = [
-        "Object",
-        "Map",
-        "Set",
-        "WeakMap",
-        "WeakSet",
-      ].concat(getArrayTypeNames());
-
-      if (
-        !Array.isArray(parameters) ||
-        parameters.length === 0 ||
-        !parameters[0] ||
-        !parameters[0].getGrip ||
-        !supportedClasses.includes(parameters[0].getGrip().class)
-      ) {
+      if (!isSupportedByConsoleTable(parameters)) {
         // If the class of the first parameter is not supported,
         // we handle the call as a simple console.log
         type = "log";
@@ -825,23 +814,6 @@ function isCookieSameSiteMessage(message) {
   return category == "cookieSameSite";
 }
 
-function getArrayTypeNames() {
-  return [
-    "Array",
-    "Int8Array",
-    "Uint8Array",
-    "Int16Array",
-    "Uint16Array",
-    "Int32Array",
-    "Uint32Array",
-    "Float32Array",
-    "Float64Array",
-    "Uint8ClampedArray",
-    "BigInt64Array",
-    "BigUint64Array",
-  ];
-}
-
 function getDescriptorValue(descriptor) {
   if (!descriptor) {
     return descriptor;
@@ -903,7 +875,6 @@ module.exports = {
   areMessagesSimilar,
   createWarningGroupMessage,
   createSimpleTableMessage,
-  getArrayTypeNames,
   getDescriptorValue,
   getNaturalOrder,
   getParentWarningGroupMessageId,

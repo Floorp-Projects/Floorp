@@ -1552,7 +1552,7 @@ class BufferWriter final : public nsIInputStreamCallback {
         return NS_ERROR_FAILURE;
       }
 
-      mTaskQueue = new TaskQueue(target.forget(), "nsNetUtil:BufferWriter");
+      mTaskQueue = TaskQueue::Create(target.forget(), "nsNetUtil:BufferWriter");
     }
 
     return NS_OK;

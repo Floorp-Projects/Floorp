@@ -31,6 +31,7 @@ pub(crate) mod string;
 mod string_list;
 mod timespan;
 mod timing_distribution;
+mod url;
 mod uuid;
 
 pub use self::boolean::BooleanMetric;
@@ -52,6 +53,7 @@ pub use self::string::StringMetric as LabeledStringMetric;
 pub use self::string_list::StringListMetric;
 pub use self::timespan::TimespanMetric;
 pub use self::timing_distribution::TimingDistributionMetric;
+pub use self::url::UrlMetric;
 pub use self::uuid::UuidMetric;
 
 /// Uniquely identifies a single metric within its metric type.

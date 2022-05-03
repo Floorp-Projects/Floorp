@@ -2,7 +2,7 @@
 "use strict";
 
 add_task(async function test_update_address() {
-  await saveAddress(TEST_ADDRESS_1);
+  await setStorage(TEST_ADDRESS_1);
   let addresses = await getAddresses();
   is(addresses.length, 1, "1 address in storage");
 

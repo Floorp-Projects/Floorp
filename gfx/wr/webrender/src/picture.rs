@@ -3834,7 +3834,7 @@ impl SurfaceInfo {
 /// parameters etc for an off-screen surface
 struct SurfaceAllocInfo {
     task_size: DeviceIntSize,
-    unclipped: DeviceRect,
+    needs_scissor_rect: bool,
     clipped: DeviceRect,
     clipped_local: PictureRect,
     uv_rect_kind: UvRectKind,
@@ -4827,9 +4827,25 @@ impl PicturePrimitive {
                                         }
                                     }
 
+                                    // We know that we'll never need to sample > 300 device pixels outside the tile
+                                    // for blurring, so clamp the content rect here so that we don't try to allocate
+                                    // a really large surface in the case of a drop-shadow with large offset.
+                                    let max_content_rect = (tile.local_dirty_rect.cast_unit() * device_pixel_scale)
+                                        .inflate(
+                                            MAX_BLUR_RADIUS * BLUR_SAMPLE_SCALE,
+                                            MAX_BLUR_RADIUS * BLUR_SAMPLE_SCALE,
+                                        )
+                                        .round_out()
+                                        .to_i32();
+
                                     let content_device_rect = (local_content_rect.cast_unit() * device_pixel_scale)
                                         .round_out()
                                         .to_i32();
+
+                                    let content_device_rect = content_device_rect
+                                        .intersection(&max_content_rect)
+                                        .expect("bug: no intersection with tile dirty rect");
+
                                     let content_task_size = content_device_rect.size();
                                     let normalized_content_rect = content_task_size.into();
 
@@ -4842,7 +4858,7 @@ impl PicturePrimitive {
                                             content_task_size,
                                             RenderTaskKind::new_picture(
                                                 content_task_size,
-                                                tile_cache.current_tile_size.to_f32(),
+                                                true,
                                                 content_device_rect.min.to_f32(),
                                                 surface_spatial_node_index,
                                                 // raster == surface implicitly for picture cache tiles
@@ -4892,7 +4908,7 @@ impl PicturePrimitive {
                                             },
                                             RenderTaskKind::new_picture(
                                                 composite_task_size,
-                                                tile_cache.current_tile_size.to_f32(),
+                                                true,
                                                 content_origin,
                                                 surface_spatial_node_index,
                                                 // raster == surface implicitly for picture cache tiles
@@ -5110,7 +5126,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     device_rect.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5153,7 +5169,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     device_rect.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5294,7 +5310,7 @@ impl PicturePrimitive {
                                 task_size,
                                 RenderTaskKind::new_picture(
                                     task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5323,7 +5339,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5352,7 +5368,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5382,7 +5398,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -5411,7 +5427,7 @@ impl PicturePrimitive {
                                 surface_rects.task_size,
                                 RenderTaskKind::new_picture(
                                     surface_rects.task_size,
-                                    surface_rects.unclipped.size(),
+                                    surface_rects.needs_scissor_rect,
                                     surface_rects.clipped.min,
                                     surface_spatial_node_index,
                                     raster_spatial_node_index,
@@ -6938,9 +6954,17 @@ fn get_surface_rects(
         return None;
     }
 
+    // If the final clipped surface rect is not the same or larger as the unclipped
+    // local rect of the surface, we need to enable scissor rect (which disables
+    // merging batches between this and other render tasks allocated to the same
+    // render target). This is conservative - we could do better in future by
+    // distinguishing between clips that affect the surface itself vs. clips on
+    // child primitives that don't affect this.
+    let needs_scissor_rect = !clipped_local.contains_box(&surface.unclipped_local_rect);
+
     Some(SurfaceAllocInfo {
         task_size,
-        unclipped,
+        needs_scissor_rect,
         clipped,
         clipped_local,
         uv_rect_kind,

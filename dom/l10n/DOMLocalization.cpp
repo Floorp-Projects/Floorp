@@ -296,12 +296,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ElementTranslationHandler)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 already_AddRefed<Promise> DOMLocalization::TranslateElements(
-    const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv) {
+    const nsTArray<OwningNonNull<Element>>& aElements, ErrorResult& aRv) {
   return TranslateElements(aElements, nullptr, aRv);
 }
 
 already_AddRefed<Promise> DOMLocalization::TranslateElements(
-    const Sequence<OwningNonNull<Element>>& aElements,
+    const nsTArray<OwningNonNull<Element>>& aElements,
     nsXULPrototypeDocument* aProto, ErrorResult& aRv) {
   Sequence<OwningUTF8StringOrL10nIdArgs> l10nKeys;
   RefPtr<ElementTranslationHandler> nativeHandler =
@@ -315,7 +315,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
   }
 
   for (auto& domElement : aElements) {
-    if (!domElement->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
+    if (!domElement->HasAttr(nsGkAtoms::datal10nid)) {
       continue;
     }
 
@@ -331,6 +331,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
     }
 
     if (!domElements.AppendElement(domElement, fallible)) {
+      // This can't really happen, we SetCapacity'd above...
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }

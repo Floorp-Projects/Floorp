@@ -12,13 +12,13 @@
 
 #include "nsIFactory.h"
 
-nsresult CallCreateInstance(const nsCID& aClass, nsISupports* aDelegate,
-                            const nsIID& aIID, void** aResult);
+nsresult CallCreateInstance(const nsCID& aCID, const nsIID& aIID,
+                            void** aResult);
 
-nsresult CallCreateInstance(const char* aContractID, nsISupports* aDelegate,
-                            const nsIID& aIID, void** aResult);
+nsresult CallCreateInstance(const char* aContractID, const nsIID& aIID,
+                            void** aResult);
 
-nsresult CallGetClassObject(const nsCID& aClass, const nsIID& aIID,
+nsresult CallGetClassObject(const nsCID& aCID, const nsIID& aIID,
                             void** aResult);
 
 nsresult CallGetClassObject(const char* aContractID, const nsIID& aIID,
@@ -121,34 +121,11 @@ inline const nsGetClassObjectByContractID do_GetClassObject(
 
 // type-safe shortcuts for calling |CreateInstance|
 template <class DestinationType>
-inline nsresult CallCreateInstance(const nsCID& aClass, nsISupports* aDelegate,
-                                   DestinationType** aDestination) {
-  MOZ_ASSERT(aDestination, "null parameter");
-
-  return CallCreateInstance(aClass, aDelegate,
-                            NS_GET_TEMPLATE_IID(DestinationType),
-                            reinterpret_cast<void**>(aDestination));
-}
-
-template <class DestinationType>
 inline nsresult CallCreateInstance(const nsCID& aClass,
                                    DestinationType** aDestination) {
   MOZ_ASSERT(aDestination, "null parameter");
 
-  return CallCreateInstance(aClass, nullptr,
-                            NS_GET_TEMPLATE_IID(DestinationType),
-                            reinterpret_cast<void**>(aDestination));
-}
-
-template <class DestinationType>
-inline nsresult CallCreateInstance(const char* aContractID,
-                                   nsISupports* aDelegate,
-                                   DestinationType** aDestination) {
-  MOZ_ASSERT(aContractID, "null parameter");
-  MOZ_ASSERT(aDestination, "null parameter");
-
-  return CallCreateInstance(aContractID, aDelegate,
-                            NS_GET_TEMPLATE_IID(DestinationType),
+  return CallCreateInstance(aClass, NS_GET_TEMPLATE_IID(DestinationType),
                             reinterpret_cast<void**>(aDestination));
 }
 
@@ -158,20 +135,8 @@ inline nsresult CallCreateInstance(const char* aContractID,
   MOZ_ASSERT(aContractID, "null parameter");
   MOZ_ASSERT(aDestination, "null parameter");
 
-  return CallCreateInstance(aContractID, nullptr,
-                            NS_GET_TEMPLATE_IID(DestinationType),
+  return CallCreateInstance(aContractID, NS_GET_TEMPLATE_IID(DestinationType),
                             reinterpret_cast<void**>(aDestination));
-}
-
-template <class DestinationType>
-inline nsresult CallCreateInstance(nsIFactory* aFactory, nsISupports* aDelegate,
-                                   DestinationType** aDestination) {
-  MOZ_ASSERT(aFactory, "null parameter");
-  MOZ_ASSERT(aDestination, "null parameter");
-
-  return aFactory->CreateInstance(aDelegate,
-                                  NS_GET_TEMPLATE_IID(DestinationType),
-                                  reinterpret_cast<void**>(aDestination));
 }
 
 template <class DestinationType>

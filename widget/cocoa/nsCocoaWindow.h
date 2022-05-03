@@ -256,6 +256,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX, int32_t* aY) override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
   virtual void Move(double aX, double aY) override;
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
   virtual void SetSizeMode(nsSizeMode aMode) override;
   virtual void GetWorkspaceID(nsAString& workspaceID) override;
   virtual void MoveToWorkspace(const nsAString& workspaceID) override;
@@ -404,6 +405,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mWindowMadeHere;  // true if we created the window, false for embedding
   bool mSheetNeedsShow;  // if this is a sheet, are we waiting to be shown?
                          // this is used for sibling sheet contention only
+  nsSizeMode mSizeMode;
   bool mInFullScreenMode;
   bool mInFullScreenTransition;  // true from the request to enter/exit fullscreen
                                  // (MakeFullScreen() call) to EnteredFullScreen()

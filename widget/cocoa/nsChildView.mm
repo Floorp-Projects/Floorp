@@ -222,6 +222,7 @@ nsChildView::nsChildView()
       mCompositingLock("ChildViewCompositing"),
       mBackingScaleFactor(0.0),
       mVisible(false),
+      mSizeMode(nsSizeMode_Normal),
       mDrawing(false),
       mIsDispatchPaint(false) {}
 

@@ -19,8 +19,9 @@ x
   sel.addRange(range);
   p.parentNode.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
   maybeOnSpellCheck(p.parentNode, function () {
     sendKey('DOWN');  // now after "1"
     sendKey('DOWN');  // now below the P element

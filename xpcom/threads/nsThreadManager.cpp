@@ -43,12 +43,13 @@ static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
 
 bool NS_IsMainThreadTLSInitialized() { return sTLSIsMainThread.initialized(); }
 
-class BackgroundEventTarget final : public nsIEventTarget {
+class BackgroundEventTarget final : public nsIEventTarget,
+                                    public TaskQueueTracker {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIEVENTTARGET_FULL
 
-  BackgroundEventTarget();
+  BackgroundEventTarget() = default;
 
   nsresult Init();
 
@@ -63,15 +64,9 @@ class BackgroundEventTarget final : public nsIEventTarget {
 
   nsCOMPtr<nsIThreadPool> mPool;
   nsCOMPtr<nsIThreadPool> mIOPool;
-
-  Mutex mMutex;
-  nsTArray<RefPtr<TaskQueue>> mTaskQueues GUARDED_BY(mMutex);
 };
 
-NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
-
-BackgroundEventTarget::BackgroundEventTarget()
-    : mMutex("BackgroundEventTarget::mMutex") {}
+NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget, TaskQueueTracker)
 
 nsresult BackgroundEventTarget::Init() {
   nsCOMPtr<nsIThreadPool> pool(new nsThreadPool());
@@ -192,8 +187,8 @@ BackgroundEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
 
 void BackgroundEventTarget::BeginShutdown(
     nsTArray<RefPtr<ShutdownPromise>>& promises) {
-  MutexAutoLock lock(mMutex);
-  for (auto& queue : mTaskQueues) {
+  auto queues = GetAllTrackedTaskQueues();
+  for (auto& queue : queues) {
     promises.AppendElement(queue->BeginShutdown());
   }
 }
@@ -205,12 +200,7 @@ void BackgroundEventTarget::FinishShutdown() {
 
 already_AddRefed<nsISerialEventTarget>
 BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
-  MutexAutoLock lock(mMutex);
-
-  RefPtr<TaskQueue> queue = new TaskQueue(do_AddRef(this), aName);
-  mTaskQueues.AppendElement(queue);
-
-  return queue.forget();
+  return TaskQueue::Create(do_AddRef(this), aName).forget();
 }
 
 extern "C" {
@@ -339,7 +329,7 @@ nsresult nsThreadManager::Init() {
   return NS_OK;
 }
 
-void nsThreadManager::Shutdown() {
+void nsThreadManager::ShutdownNonMainThreads() {
   MOZ_ASSERT(NS_IsMainThread(), "shutdown not called from main thread");
 
   // Prevent further access to the thread manager (no more new threads!)
@@ -378,8 +368,8 @@ void nsThreadManager::Shutdown() {
       mMainThread);
 
   {
-    // We gather the threads from the hashtable into a list, so that we avoid
-    // holding the enumerator lock while calling nsIThread::Shutdown.
+    // We gather the threads into a list, so that we avoid holding the
+    // enumerator lock while calling nsIThread::Shutdown.
     nsTArray<RefPtr<nsThread>> threadsToShutdown;
     for (auto* thread : nsThread::Enumerate()) {
       if (thread->ShutdownRequired()) {
@@ -408,10 +398,23 @@ void nsThreadManager::Shutdown() {
   // in-flight asynchronous thread shutdowns to complete.
   mMainThread->WaitForAllAsynchronousShutdowns();
 
-  // In case there are any more events somehow...
-  NS_ProcessPendingEvents(mMainThread);
-
   // There are no more background threads at this point.
+}
+
+void nsThreadManager::ShutdownMainThread() {
+  MOZ_ASSERT(!mInitialized, "Must have called BeginShutdown");
+
+  // Do NS_ProcessPendingEvents but with special handling to set
+  // mEventsAreDoomed atomically with the removal of the last event. This means
+  // that PutEvent cannot succeed if the event would be left in the main thread
+  // queue after our final call to NS_ProcessPendingEvents.
+  // See comments in `nsThread::ThreadFunc` for a more detailed explanation.
+  while (true) {
+    if (mMainThread->mEvents->ShutdownIfNoPendingEvents()) {
+      break;
+    }
+    NS_ProcessPendingEvents(mMainThread);
+  }
 
   // Normally thread shutdown clears the observer for the thread, but since the
   // main thread is special we do it manually here after we're sure all events

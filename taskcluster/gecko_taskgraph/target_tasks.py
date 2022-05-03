@@ -735,15 +735,10 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
     def filter(task):
         platform = task.attributes.get("test_platform")
         attributes = task.attributes
-        vismet = attributes.get("kind") == "visual-metrics-dep"
-        if attributes.get("unittest_suite") != "raptor" and not vismet:
+        if attributes.get("unittest_suite") != "raptor":
             return False
 
         try_name = attributes.get("raptor_try_name")
-        if vismet:
-            # Visual metric tasks are configured a bit differently
-            platform = task.task.get("extra").get("treeherder-platform")
-            try_name = task.label
 
         # Completely ignore all non-shippable platforms
         if "shippable" not in platform:

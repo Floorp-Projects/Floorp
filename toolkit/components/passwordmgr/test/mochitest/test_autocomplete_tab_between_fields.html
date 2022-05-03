@@ -29,7 +29,9 @@ let readyPromise = registerRunTests(1);
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+const { TestUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 
 async function prepareLogins(logins = []) {
   await LoginManager.removeAllUserFacingLogins();

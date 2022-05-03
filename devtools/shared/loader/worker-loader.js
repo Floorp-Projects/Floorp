@@ -403,10 +403,16 @@ var {
 
     // To ensure that the this passed to addDebuggerToGlobal is a global, the
     // Debugger object needs to be defined in a sandbox.
-    const sandbox = Cu.Sandbox(principal, {});
+    const sandbox = Cu.Sandbox(principal, {
+      wantGlobalProperties: ["ChromeUtils"],
+    });
     Cu.evalInSandbox(
-      "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-        "addDebuggerToGlobal(this);",
+      `
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  'resource://gre/modules/jsdebugger.jsm'
+);
+addDebuggerToGlobal(this);
+`,
       sandbox
     );
     const Debugger = sandbox.Debugger;

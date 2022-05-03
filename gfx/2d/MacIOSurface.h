@@ -152,6 +152,8 @@ class MacIOSurface final
   static size_t GetMaxHeight();
   CFTypeRefPtr<IOSurfaceRef> GetIOSurfaceRef() { return mIOSurfaceRef; }
 
+  void SetColorSpace(mozilla::gfx::ColorSpace2) const;
+
  private:
   CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
   const bool mHasAlpha;

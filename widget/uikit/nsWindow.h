@@ -42,6 +42,7 @@ class nsWindow final : public nsBaseWidget {
   virtual void* GetNativeData(uint32_t aDataType) override;
 
   virtual void Move(double aX, double aY) override;
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
   virtual void SetSizeMode(nsSizeMode aMode) override;
   void EnteredFullScreen(bool aFullScreen);
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
@@ -94,6 +95,7 @@ class nsWindow final : public nsBaseWidget {
 
   ChildView* mNativeView;
   bool mVisible;
+  nsSizeMode mSizeMode;
   nsTArray<nsWindow*> mChildren;
   nsWindow* mParent;
   InputContext mInputContext;

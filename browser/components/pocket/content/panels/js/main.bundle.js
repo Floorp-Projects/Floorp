@@ -168,7 +168,8 @@ function Article(props) {
     position,
     source,
     model,
-    utmParams
+    utmParams,
+    openInPocketReader
   } = props;
   const url = new URL(article.url || article.resolved_url || "");
   const urlSearchParams = new URLSearchParams(utmParams);
@@ -183,10 +184,16 @@ function Article(props) {
   const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
 
   const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
+  let constructedURL = url.href;
+
+  if (openInPocketReader && article.item_id && !url.href.match(/getpocket\.com\/read/)) {
+    constructedURL = `https://getpocket.com/read/${article.item_id}`;
+  }
+
   return /*#__PURE__*/react.createElement("li", {
     className: "stp_article_list_item"
   }, /*#__PURE__*/react.createElement(ArticleUrl, {
-    url: url.href,
+    url: constructedURL,
     savedArticle: savedArticle,
     position: position,
     source: source,
@@ -218,7 +225,8 @@ function ArticleList(props) {
     position: position,
     source: props.source,
     model: props.model,
-    utmParams: props.utmParams
+    utmParams: props.utmParams,
+    openInPocketReader: props.openInPocketReader
   })));
 }
 
@@ -344,7 +352,8 @@ function Home(props) {
       }), articles.length > 3 ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
         articles: articles.slice(0, 3),
         source: "home_recent_save",
-        utmParams: utmParams
+        utmParams: utmParams,
+        openInPocketReader: true
       }), /*#__PURE__*/react.createElement("span", {
         className: "stp_button_wide"
       }, /*#__PURE__*/react.createElement(Button_Button, {
@@ -999,7 +1008,7 @@ function Saved(props) {
     "data-l10n-id": "pocket-panel-button-remove"
   }))), savedStory && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
     articles: [savedStory],
-    savedArticle: true
+    openInPocketReader: true
   }), /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
     tags: [],
     itemUrl: itemUrl

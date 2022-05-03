@@ -63,7 +63,9 @@ addLoginsInParent(
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /** Test for Login Manager: multiple login autocomplete. **/
-let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
 // Set the pref before the document loads.
 SpecialPowers.setBoolPref("signon.autofillForms.autocompleteOff", false);

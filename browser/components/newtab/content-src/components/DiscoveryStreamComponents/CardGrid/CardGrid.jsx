@@ -110,6 +110,7 @@ export class CardGrid extends React.PureComponent {
             context_type={rec.context_type}
             bookmarkGuid={rec.bookmarkGuid}
             engagement={rec.engagement}
+            pocket_button_enabled={this.props.pocket_button_enabled}
             display_engagement_labels={this.props.display_engagement_labels}
             hideDescriptions={hideDescriptions}
             saveToPocketCard={saveToPocketCard}

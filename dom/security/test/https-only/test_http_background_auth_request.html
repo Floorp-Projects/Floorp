@@ -16,7 +16,9 @@
  * We make sure that ther HTTPS-Only Mode Error Page does *NOT* show up.
  */
 
-const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("When Auth is in progress, HTTPS-Only page should not show up");

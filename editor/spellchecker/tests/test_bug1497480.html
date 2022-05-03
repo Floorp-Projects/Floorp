@@ -23,8 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1497480
 
 /** Test for Bug 1497480 **/
 let gMisspeltWords = [];
-let maybeOnSpellCheck = SpecialPowers.Cu.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null).maybeOnSpellCheck;
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
 
 const template = document.createElement("template");
 template.innerHTML = `<div id="target" contenteditable>Test</div>`;

@@ -538,6 +538,7 @@ export class _DSCard extends React.PureComponent {
                 onMenuUpdate={this.onMenuUpdate}
                 onMenuShow={this.onMenuShow}
                 saveToPocketCard={saveToPocketCard}
+                pocket_button_enabled={this.props.pocket_button_enabled}
               />
             </div>
           </div>
@@ -561,6 +562,7 @@ export class _DSCard extends React.PureComponent {
             hostRef={this.contextMenuButtonHostRef}
             onMenuUpdate={this.onMenuUpdate}
             onMenuShow={this.onMenuShow}
+            pocket_button_enabled={this.props.pocket_button_enabled}
           />
         )}
       </div>

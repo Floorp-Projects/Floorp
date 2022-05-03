@@ -404,3 +404,11 @@ bool SwitchEmitter::emitEnd() {
   state_ = State::End;
   return true;
 }
+
+InternalSwitchEmitter::InternalSwitchEmitter(BytecodeEmitter* bce)
+    : SwitchEmitter(bce) {
+#ifdef DEBUG
+  // Skip emitDiscriminant (see the comment above InternalSwitchEmitter)
+  state_ = State::Discriminant;
+#endif
+}
