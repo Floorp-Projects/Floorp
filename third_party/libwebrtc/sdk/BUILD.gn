@@ -336,7 +336,6 @@ if (is_ios || is_mac) {
           "../rtc_base",
           "../rtc_base:checks",
           "../rtc_base:rtc_base_approved",
-          "../rtc_base/synchronization:mutex",
         ]
       }
 

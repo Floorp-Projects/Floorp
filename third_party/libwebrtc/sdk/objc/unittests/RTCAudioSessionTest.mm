@@ -113,9 +113,25 @@
 
 @interface RTCAudioSessionTest : NSObject
 
+- (void)testLockForConfiguration;
+
 @end
 
 @implementation RTCAudioSessionTest
+
+- (void)testLockForConfiguration {
+  RTC_OBJC_TYPE(RTCAudioSession) *session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
+
+  for (size_t i = 0; i < 2; i++) {
+    [session lockForConfiguration];
+    EXPECT_TRUE(session.isLocked);
+  }
+  for (size_t i = 0; i < 2; i++) {
+    EXPECT_TRUE(session.isLocked);
+    [session unlockForConfiguration];
+  }
+  EXPECT_FALSE(session.isLocked);
+}
 
 - (void)testAddAndRemoveDelegates {
   RTC_OBJC_TYPE(RTCAudioSession) *session = [RTC_OBJC_TYPE(RTCAudioSession) sharedInstance];
@@ -248,6 +264,7 @@ OCMLocation *OCMMakeLocation(id testCase, const char *fileCString, int line){
   RTC_OBJC_TYPE(RTCAudioSession) *audioSession = mockAudioSession;
   EXPECT_EQ(0, audioSession.activationCount);
   [audioSession lockForConfiguration];
+  EXPECT_TRUE([audioSession checkLock:nil]);
   // configureWebRTCSession is forced to fail in the above mock interface,
   // so activationCount should remain 0
   OCMExpect([[mockAVAudioSession ignoringNonObjectArgs] setActive:YES
@@ -298,6 +315,11 @@ class AudioSessionTest : public ::testing::Test {
     }
   }
 };
+
+TEST_F(AudioSessionTest, LockForConfiguration) {
+  RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
+  [test testLockForConfiguration];
+}
 
 TEST_F(AudioSessionTest, AddAndRemoveDelegates) {
   RTCAudioSessionTest *test = [[RTCAudioSessionTest alloc] init];
