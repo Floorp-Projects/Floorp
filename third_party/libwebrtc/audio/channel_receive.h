@@ -29,6 +29,7 @@
 #include "call/syncable.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/source_tracker.h"
 #include "system_wrappers/include/clock.h"
 
 // TODO(solenberg, nisse): This file contains a few NOLINT marks, to silence
@@ -144,6 +145,10 @@ class ChannelReceiveInterface : public RtpPacketSinkInterface {
       AudioFrame* audio_frame) = 0;
 
   virtual int PreferredSampleRate() const = 0;
+
+  // Sets the source tracker to notify about "delivered" packets when output is
+  // muted.
+  virtual void SetSourceTracker(SourceTracker* source_tracker) = 0;
 
   // Associate to a send channel.
   // Used for obtaining RTT for a receive-only channel.

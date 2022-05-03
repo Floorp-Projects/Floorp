@@ -163,6 +163,8 @@ class ChannelReceive : public ChannelReceiveInterface {
 
   int PreferredSampleRate() const override;
 
+  void SetSourceTracker(SourceTracker* source_tracker) override;
+
   // Associate to a send channel.
   // Used for obtaining RTT for a receive-only channel.
   void SetAssociatedSendChannel(const ChannelSendInterface* channel) override;
@@ -220,6 +222,7 @@ class ChannelReceive : public ChannelReceiveInterface {
   std::unique_ptr<ReceiveStatistics> rtp_receive_statistics_;
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp_;
   const uint32_t remote_ssrc_;
+  SourceTracker* source_tracker_ = nullptr;
 
   // Info for GetSyncInfo is updated on network or worker thread, and queried on
   // the worker thread.
@@ -234,6 +237,7 @@ class ChannelReceive : public ChannelReceiveInterface {
   AudioSinkInterface* audio_sink_ = nullptr;
   AudioLevel _outputAudioLevel;
 
+  Clock* const clock_;
   RemoteNtpTimeEstimator ntp_estimator_ RTC_GUARDED_BY(ts_stats_lock_);
 
   // Timestamp of the audio pulled from NetEq.
@@ -288,6 +292,21 @@ void ChannelReceive::OnReceivedPayloadData(
   if (!Playing()) {
     // Avoid inserting into NetEQ when we are not playing. Count the
     // packet as discarded.
+
+    // If we have a source_tracker_, tell it that the frame has been
+    // "delivered". Normally, this happens in AudioReceiveStream when audio
+    // frames are pulled out, but when playout is muted, nothing is pulling
+    // frames. The downside of this approach is that frames delivered this way
+    // won't be delayed for playout, and therefore will be unsynchronized with
+    // (a) audio delay when playing and (b) any audio/video synchronization. But
+    // the alternative is that muting playout also stops the SourceTracker from
+    // updating RtpSource information.
+    if (source_tracker_) {
+      RtpPacketInfos::vector_type packet_vector = {
+          RtpPacketInfo(rtpHeader, clock_->TimeInMilliseconds())};
+      source_tracker_->OnFrameDelivered(RtpPacketInfos(packet_vector));
+    }
+
     return;
   }
 
@@ -443,6 +462,10 @@ int ChannelReceive::PreferredSampleRate() const {
                   acm_receiver_.last_output_sample_rate_hz());
 }
 
+void ChannelReceive::SetSourceTracker(SourceTracker* source_tracker) {
+  source_tracker_ = source_tracker;
+}
+
 ChannelReceive::ChannelReceive(
     Clock* clock,
     ProcessThread* module_process_thread,
@@ -471,6 +494,7 @@ ChannelReceive::ChannelReceive(
                               jitter_buffer_max_packets,
                               jitter_buffer_fast_playout)),
       _outputAudioLevel(),
+      clock_(clock),
       ntp_estimator_(clock),
       playout_timestamp_rtp_(0),
       playout_delay_ms_(0),

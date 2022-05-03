@@ -132,6 +132,7 @@ struct ConfigHelper {
         }));
     EXPECT_CALL(*channel_receive_, SetDepacketizerToDecoderFrameTransformer(_))
         .Times(1);
+    EXPECT_CALL(*channel_receive_, SetSourceTracker(_));
 
     stream_config_.rtp.local_ssrc = kLocalSsrc;
     stream_config_.rtp.remote_ssrc = kRemoteSsrc;
