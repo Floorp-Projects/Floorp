@@ -480,7 +480,7 @@ int32_t NamedPipeInfo::DoRead() {
                           IsNonblocking() ? &mReadOverlapped : nullptr);
 
   if (success) {
-    LOG_NPIO_DEBUG("[%s][%p] %d bytes read", __func__, this, mReadEnd);
+    LOG_NPIO_DEBUG("[%s][%p] %lu bytes read", __func__, this, mReadEnd);
     return mReadEnd;
   }
 
@@ -552,7 +552,7 @@ int32_t NamedPipeInfo::DoWrite() {
 
   if (success) {
     mWriteBegin += bytesWritten;
-    LOG_NPIO_DEBUG("[%s][%p] %d bytes written", __func__, this, bytesWritten);
+    LOG_NPIO_DEBUG("[%s][%p] %lu bytes written", __func__, this, bytesWritten);
     return bytesWritten;
   }
 
@@ -591,7 +591,7 @@ int32_t NamedPipeInfo::DoWriteContinue() {
 
   mHasPendingWrite = false;
   mWriteBegin += bytesWritten;
-  LOG_NPIO_DEBUG("[%s][%p] %d bytes written", __func__, this, bytesWritten);
+  LOG_NPIO_DEBUG("[%s][%p] %lu bytes written", __func__, this, bytesWritten);
   return bytesWritten;
 }
 

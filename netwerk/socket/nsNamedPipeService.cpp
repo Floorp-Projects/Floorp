@@ -297,7 +297,7 @@ NamedPipeService::Run() {
     MOZ_ASSERT(obs.get());
 
     if (success) {
-      LOG_NPS_DEBUG("OnDataAvailable: obs=%p, bytes=%d", obs.get(),
+      LOG_NPS_DEBUG("OnDataAvailable: obs=%p, bytes=%lu", obs.get(),
                     bytesTransferred);
       obs->OnDataAvailable(bytesTransferred, overlapped);
     } else {

@@ -338,7 +338,7 @@ void IMMHandler::InitKeyboardLayout(nsWindow* aWindow, HKL aKeyboardLayout) {
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::InitKeyboardLayout, aKeyboardLayout=%p (\"%s\"), "
-           "sCodePage=%lu, sIMEProperty=%s, sIMEUIProperty=%s",
+           "sCodePage=%u, sIMEProperty=%s, sIMEUIProperty=%s",
            aKeyboardLayout, NS_ConvertUTF16toUTF8(sIMEName).get(), sCodePage,
            GetIMEGeneralPropertyName(sIMEProperty).get(),
            GetIMEUIPropertyName(sIMEUIProperty).get()));
@@ -982,7 +982,7 @@ void IMMHandler::HandleStartComposition(nsWindow* aWindow,
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::HandleStartComposition, START composition, "
-           "mCompositionStart=%ld",
+           "mCompositionStart=%u",
            mCompositionStart));
 }
 
@@ -1163,7 +1163,7 @@ bool IMMHandler::HandleComposition(nsWindow* aWindow,
   mClauseArray.SetLength(std::max<long>(0, clauseArrayLength));
 
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("  IMMHandler::HandleComposition, GCS_COMPCLAUSE, mClauseLength=%ld",
+          ("  IMMHandler::HandleComposition, GCS_COMPCLAUSE, mClauseLength=%zu",
            mClauseArray.Length()));
 
   //--------------------------------------------------------
@@ -1189,7 +1189,7 @@ bool IMMHandler::HandleComposition(nsWindow* aWindow,
 
   MOZ_LOG(
       gIMELog, LogLevel::Info,
-      ("  IMMHandler::HandleComposition, GCS_COMPATTR, mAttributeLength=%ld",
+      ("  IMMHandler::HandleComposition, GCS_COMPATTR, mAttributeLength=%zu",
        mAttributeArray.Length()));
 
   //--------------------------------------------------------
@@ -1293,7 +1293,7 @@ bool IMMHandler::HandleReconvert(nsWindow* aWindow, LPARAM lParam,
   if (pReconv->dwSize < needSize) {
     MOZ_LOG(gIMELog, LogLevel::Info,
             ("IMMHandler::HandleReconvert, FAILED, pReconv->dwSize=%ld, "
-             "needSize=%ld",
+             "needSize=%u",
              pReconv->dwSize, needSize));
     return false;
   }
@@ -1336,8 +1336,8 @@ bool IMMHandler::HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
   }
   if (pCharPosition->dwSize < sizeof(IMECHARPOSITION)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("IMMHandler::HandleReconvert, FAILED, pCharPosition->dwSize=%ld, "
-             "sizeof(IMECHARPOSITION)=%ld",
+            ("IMMHandler::HandleReconvert, FAILED, pCharPosition->dwSize=%lu, "
+             "sizeof(IMECHARPOSITION)=%zu",
              pCharPosition->dwSize, sizeof(IMECHARPOSITION)));
     return false;
   }
@@ -1351,7 +1351,7 @@ bool IMMHandler::HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
   if (pCharPosition->dwCharPos > len) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::HandleQueryCharPosition, FAILED, "
-             "pCharPosition->dwCharPos=%ld, len=%ld",
+             "pCharPosition->dwCharPos=%ld, len=%u",
              pCharPosition->dwCharPos, len));
     return false;
   }
@@ -1500,7 +1500,7 @@ bool IMMHandler::HandleDocumentFeed(nsWindow* aWindow, LPARAM lParam,
   if (pReconv->dwSize < needSize) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("IMMHandler::HandleDocumentFeed, FAILED, "
-             "pReconv->dwSize=%ld, needSize=%ld",
+             "pReconv->dwSize=%ld, needSize=%u",
              pReconv->dwSize, needSize));
     return false;
   }
@@ -1661,8 +1661,8 @@ void IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
       if (current > mCompositionString.Length()) {
         MOZ_LOG(gIMELog, LogLevel::Info,
                 ("  IMMHandler::DispatchCompositionChangeEvent, "
-                 "mClauseArray[%ld]=%lu. "
-                 "This is larger than mCompositionString.Length()=%lu",
+                 "mClauseArray[%u]=%u. "
+                 "This is larger than mCompositionString.Length()=%zu",
                  i + 1, current, mCompositionString.Length()));
         current = int32_t(mCompositionString.Length());
       }
@@ -1688,8 +1688,8 @@ void IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
       lastOffset = current;
 
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("  IMMHandler::DispatchCompositionChangeEvent, index=%ld, "
-               "rangeType=%s, range length=%lu",
+              ("  IMMHandler::DispatchCompositionChangeEvent, index=%u, "
+               "rangeType=%s, range length=%u",
                i, ToChar(textRangeType), length));
     }
   }
@@ -1701,8 +1701,8 @@ void IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
     uint32_t cursor = static_cast<uint32_t>(mCursorPosition);
     if (cursor > mCompositionString.Length()) {
       MOZ_LOG(gIMELog, LogLevel::Info,
-              ("  IMMHandler::CreateTextRangeArray, mCursorPosition=%ld. "
-               "This is larger than mCompositionString.Length()=%lu",
+              ("  IMMHandler::CreateTextRangeArray, mCursorPosition=%d. "
+               "This is larger than mCompositionString.Length()=%zu",
                mCursorPosition, mCompositionString.Length()));
       cursor = mCompositionString.Length();
     }
@@ -1905,7 +1905,7 @@ bool IMMHandler::GetCharacterRectOfSelectedTextAt(
       MOZ_LOG(
           gIMELog, LogLevel::Debug,
           ("IMMHandler::GetCharacterRectOfSelectedTextAt, Succeeded, "
-           "aOffset=%u, aCharRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+           "aOffset=%u, aCharRect={ x: %d, y: %d, width: %d, height: %d }, "
            "queryTextRectEvent={ mReply=%s }",
            aOffset, aCharRect.X(), aCharRect.Y(), aCharRect.Width(),
            aCharRect.Height(), ToString(queryTextRectEvent.mReply).c_str()));
@@ -1939,7 +1939,7 @@ bool IMMHandler::GetCaretRect(nsWindow* aWindow,
   }
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("IMMHandler::GetCaretRect, SUCCEEDED, "
-           "aCaretRect={ x: %ld, y: %ld, width: %ld, height: %ld }, "
+           "aCaretRect={ x: %d, y: %d, width: %d, height: %d }, "
            "queryCaretRectEvent={ mReply=%s }",
            aCaretRect.X(), aCaretRect.Y(), aCaretRect.Width(),
            aCaretRect.Height(), ToString(queryCaretRectEvent.mReply).c_str()));
@@ -2316,8 +2316,8 @@ nsresult IMMHandler::OnMouseButtonEvent(
   }
 
   MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::OnMouseButtonEvent, x,y=%ld,%ld, offset=%ld, "
-           "positioning=%ld",
+          ("IMMHandler::OnMouseButtonEvent, x,y=%d,%d, offset=%d, "
+           "positioning=%d",
            cursorPos.x, cursorPos.y, offset, positioning));
 
   // send MS_MSIME_MOUSE message to default IME window.

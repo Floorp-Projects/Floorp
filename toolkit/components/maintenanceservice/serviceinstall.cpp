@@ -562,7 +562,7 @@ BOOL StopService() {
   // The service can be in a stopped state but the exe still in use
   // so make sure the process is really gone before proceeding
   WaitForProcessExit(L"maintenanceservice.exe", 30);
-  LOG(("Done waiting for service stop, last service state: %d", lastState));
+  LOG(("Done waiting for service stop, last service state: %lu", lastState));
 
   return lastState == SERVICE_STOPPED;
 }

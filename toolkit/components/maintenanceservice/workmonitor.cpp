@@ -227,7 +227,7 @@ BOOL StartUpdateProcess(int argc, LPWSTR* argv, LPCWSTR installDir,
       // Check the return code of updater.exe to make sure we get 0
       DWORD returnCode;
       if (GetExitCodeProcess(pi.hProcess, &returnCode)) {
-        LOG(("Process finished with return code %d.", returnCode));
+        LOG(("Process finished with return code %lu.", returnCode));
         // updater returns 0 if successful.
         updateWasSuccessful = (returnCode == 0);
       } else {

@@ -1338,9 +1338,10 @@ bool MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindow* aWidget,
     // that are more easily comparable.
     sZoomUntil = ::GetTickCount() & 0x7FFFFFFF;
 
-    MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-            ("MouseScroll::Device::Elantech::HandleKeyMessage(): sZoomUntil=%d",
-             sZoomUntil));
+    MOZ_LOG(
+        gMouseScrollLog, LogLevel::Info,
+        ("MouseScroll::Device::Elantech::HandleKeyMessage(): sZoomUntil=%lu",
+         sZoomUntil));
   }
 
   return false;
