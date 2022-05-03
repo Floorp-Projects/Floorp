@@ -40,13 +40,12 @@ JSObject* NavigationPreloadManager::WrapObject(
   return NavigationPreloadManager_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(bool aEnabled) {
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), result);
+already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(
+    bool aEnabled, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
 
-  if (NS_WARN_IF(result.Failed())) {
-    result.SuppressException();
-    return promise.forget();
+  if (NS_WARN_IF(aError.Failed())) {
+    return nullptr;
   }
 
   if (!mInner) {
@@ -68,27 +67,26 @@ already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(bool aEnabled) {
   return promise.forget();
 }
 
-already_AddRefed<Promise> NavigationPreloadManager::Enable() {
-  return SetEnabled(true);
+already_AddRefed<Promise> NavigationPreloadManager::Enable(
+    ErrorResult& aError) {
+  return SetEnabled(true, aError);
 }
 
-already_AddRefed<Promise> NavigationPreloadManager::Disable() {
-  return SetEnabled(false);
+already_AddRefed<Promise> NavigationPreloadManager::Disable(
+    ErrorResult& aError) {
+  return SetEnabled(false, aError);
 }
 
 already_AddRefed<Promise> NavigationPreloadManager::SetHeaderValue(
-    const nsACString& aHeader) {
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), result);
+    const nsACString& aHeader, ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
 
-  if (NS_WARN_IF(result.Failed())) {
-    result.SuppressException();
-    return promise.forget();
+  if (NS_WARN_IF(aError.Failed())) {
+    return nullptr;
   }
 
   if (!IsValidHeader(aHeader)) {
-    result.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(aHeader);
-    promise->MaybeReject(std::move(result));
+    promise->MaybeRejectWithTypeError<MSG_INVALID_HEADER_VALUE>(aHeader);
     return promise.forget();
   }
 
@@ -111,13 +109,12 @@ already_AddRefed<Promise> NavigationPreloadManager::SetHeaderValue(
   return promise.forget();
 }
 
-already_AddRefed<Promise> NavigationPreloadManager::GetState() {
-  ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), result);
+already_AddRefed<Promise> NavigationPreloadManager::GetState(
+    ErrorResult& aError) {
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), aError);
 
-  if (NS_WARN_IF(result.Failed())) {
-    result.SuppressException();
-    return promise.forget();
+  if (NS_WARN_IF(aError.Failed())) {
+    return nullptr;
   }
 
   if (!mInner) {
