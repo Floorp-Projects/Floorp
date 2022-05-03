@@ -2245,12 +2245,12 @@ class SpecialPowersChild extends JSWindowActorChild {
    * we need to wait for the updated data.
    */
   contentTransformsReceived(win) {
-    try {
-      // throw if win is not a remote browser.
-      return win.docShell.browserChild.contentTransformsReceived();
-    } catch (e) {
-      return Promise.resolve();
+    for (; win; win = win.parent) {
+      if (win.docShell?.browserChild) {
+        return win.docShell.browserChild.contentTransformsReceived();
+      }
     }
+    return Promise.resolve();
   }
 }
 
