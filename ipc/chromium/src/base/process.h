@@ -22,6 +22,8 @@ namespace base {
 #if defined(OS_WIN)
 typedef HANDLE ProcessHandle;
 typedef DWORD ProcessId;
+// inttypes.h-like macro for ProcessId formatting.
+#  define PRIPID "lu"
 
 const ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
 
@@ -36,6 +38,8 @@ const ProcessId kInvalidProcessId = kuint32max;
 // On POSIX, our ProcessHandle will just be the PID.
 typedef pid_t ProcessHandle;
 typedef pid_t ProcessId;
+// inttypes.h-like macro for ProcessId formatting.
+#  define PRIPID "d"
 
 const ProcessHandle kInvalidProcessHandle = -1;
 const ProcessId kInvalidProcessId = -1;
