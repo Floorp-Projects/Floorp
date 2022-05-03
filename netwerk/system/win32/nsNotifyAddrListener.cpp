@@ -160,7 +160,7 @@ void nsNotifyAddrListener::HashSortedNetworkIds(std::vector<GUID> nwGUIDS,
     sha1.update(&nwGUID, sizeof(GUID));
 
     if (LOG_ENABLED()) {
-      nsPrintfCString guid("%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%lX",
+      nsPrintfCString guid("%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X",
                            nwGUID.Data1, nwGUID.Data2, nwGUID.Data3,
                            nwGUID.Data4[0], nwGUID.Data4[1], nwGUID.Data4[2],
                            nwGUID.Data4[3], nwGUID.Data4[4], nwGUID.Data4[5],

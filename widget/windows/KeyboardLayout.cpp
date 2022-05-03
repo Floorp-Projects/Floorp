@@ -2375,7 +2375,7 @@ bool NativeKey::HandleAppCommandMessage() const {
          this));
     if (mWidget->Destroyed()) {
       MOZ_LOG(gKeyLog, LogLevel::Info,
-              ("%p   NativeKey::HandleAppCommandMessage(), %s event caused "
+              ("%p   NativeKey::HandleAppCommandMessage(), keyup event caused "
                "destroying the widget",
                this));
       return true;
@@ -3103,10 +3103,10 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
             gKeyLog, LogLevel::Warning,
             ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
              "remove a char message due to message change, let's retry to "
-             "remove the message with newly found char message, ",
-             "nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, kFoundCharMsg=%s", this,
-             ToString(nextKeyMsgInAllWindows).get(), ToString(nextKeyMsg).get(),
-             ToString(kFoundCharMsg).get()));
+             "remove the message with newly found char message, "
+             "nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, kFoundCharMsg=%s",
+             this, ToString(nextKeyMsgInAllWindows).get(),
+             ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
         nextKeyMsg = nextKeyMsgInAllWindows;
         continue;
       }
@@ -3187,8 +3187,9 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
     if (removedMsg.message == WM_NULL) {
       MOZ_LOG(gKeyLog, LogLevel::Warning,
               ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
-               "remove a char message, instead, removed WM_NULL message, ",
-               "removedMsg=%s", this, ToString(removedMsg).get()));
+               "remove a char message, instead, removed WM_NULL message, "
+               "removedMsg=%s",
+               this, ToString(removedMsg).get()));
       // Check if there is the message which we're trying to remove.
       MSG newNextKeyMsg;
       if (!WinUtils::PeekMessage(&newNextKeyMsg, mMsg.hwnd, WM_KEYFIRST,

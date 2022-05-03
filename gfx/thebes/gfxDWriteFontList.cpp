@@ -227,7 +227,8 @@ void gfxDWriteFontFamily::FindStyleVariationsLocked(
            fe->Name().get(), Name().get(),
            (fe->IsItalic()) ? "italic"
                             : (fe->IsOblique() ? "oblique" : "normal"),
-           weightString.get(), fe->Stretch(), psname.get(), fullname.get()));
+           weightString.get(), fe->Stretch().AsScalar(), psname.get(),
+           fullname.get()));
     }
   }
 
@@ -1717,7 +1718,7 @@ nsresult gfxDWriteFontList::InitFontListForPlatform() {
                fe->Name().get(), gillSansMTFamily->Name().get(),
                (fe->IsItalic()) ? "italic"
                                 : (fe->IsOblique() ? "oblique" : "normal"),
-               weightString.get(), fe->Stretch()));
+               weightString.get(), fe->Stretch().AsScalar()));
         }
       }
 
