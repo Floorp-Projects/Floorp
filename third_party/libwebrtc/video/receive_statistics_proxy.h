@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "call/video_receive_stream.h"
 #include "modules/include/module_common_types.h"
 #include "modules/video_coding/include/video_coding_defines.h"
@@ -26,7 +27,6 @@
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/rate_tracker.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/quality_threshold.h"
 #include "video/stats_counter.h"

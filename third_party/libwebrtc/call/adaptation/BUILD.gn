@@ -34,6 +34,7 @@ rtc_library("resource_adaptation") {
   deps = [
     "../../api:rtp_parameters",
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
     "../../api/video:video_adaptation",
@@ -46,7 +47,6 @@ rtc_library("resource_adaptation") {
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base/experiments:balanced_degradation_settings",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:sequence_checker",
     "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:to_queued_task",
   ]
@@ -108,11 +108,11 @@ if (rtc_include_tests) {
     deps = [
       ":resource_adaptation",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../api/adaptation:resource_adaptation_api",
       "../../api/task_queue:task_queue",
       "../../api/video:video_stream_encoder",
       "../../rtc_base:rtc_base_approved",
-      "../../rtc_base/synchronization:sequence_checker",
       "../../rtc_base/task_utils:to_queued_task",
       "../../test:test_support",
     ]

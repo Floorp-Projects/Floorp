@@ -15,10 +15,10 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/audio_device/android/aaudio_wrapper.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "rtc_base/message_handler.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

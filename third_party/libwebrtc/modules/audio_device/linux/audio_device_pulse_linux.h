@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -22,7 +23,6 @@
 #include "rtc_base/event.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 
 #if defined(WEBRTC_USE_X11)

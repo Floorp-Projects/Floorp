@@ -17,11 +17,11 @@
 #include "api/audio/audio_mixer.h"
 #include "api/neteq/neteq_factory.h"
 #include "api/rtp_headers.h"
+#include "api/sequence_checker.h"
 #include "audio/audio_state.h"
 #include "call/audio_receive_stream.h"
 #include "call/syncable.h"
 #include "modules/rtp_rtcp/source/source_tracker.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

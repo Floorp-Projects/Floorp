@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/sequence_checker.h"
 #include "api/test/time_controller.h"
 #include "api/units/timestamp.h"
 #include "modules/include/module.h"
@@ -24,7 +25,6 @@
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/platform_thread_types.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/synchronization/yield_policy.h"
 
 namespace webrtc {

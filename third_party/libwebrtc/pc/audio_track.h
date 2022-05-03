@@ -16,7 +16,7 @@
 #include "api/media_stream_interface.h"
 #include "api/media_stream_track.h"
 #include "api/scoped_refptr.h"
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "api/sequence_checker.h"
 
 namespace webrtc {
 

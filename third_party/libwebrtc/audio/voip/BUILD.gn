@@ -89,6 +89,7 @@ rtc_library("audio_egress") {
   ]
   deps = [
     "..:audio",
+    "../../api:sequence_checker",
     "../../api/audio_codecs:audio_codecs_api",
     "../../api/task_queue",
     "../../call:audio_sender_interface",
@@ -99,7 +100,6 @@ rtc_library("audio_egress") {
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:sequence_checker",
     "../../rtc_base/system:no_unique_address",
     "../utility:audio_frame_operations",
   ]

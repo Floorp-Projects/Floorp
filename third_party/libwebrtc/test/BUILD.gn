@@ -53,6 +53,7 @@ rtc_library("frame_generator_impl") {
     ":frame_utils",
     "../api:frame_generator_api",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/video:encoded_image",
     "../api/video:video_frame",
     "../api/video:video_frame_i010",
@@ -72,7 +73,6 @@ rtc_library("frame_generator_impl") {
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_event",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
     "../rtc_base/system:file_wrapper",
     "../system_wrappers",
   ]
@@ -362,6 +362,7 @@ rtc_library("video_test_support") {
     ":test_support",
     ":video_test_common",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/video:encoded_image",
     "../api/video:video_frame",
     "../api/video_codecs:video_codecs_api",
@@ -377,7 +378,6 @@ rtc_library("video_test_support") {
     "../rtc_base:logging",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:rtc_event",
-    "../rtc_base/synchronization:sequence_checker",
     "../rtc_base/system:file_wrapper",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -728,6 +728,7 @@ rtc_library("direct_transport") {
   ]
   deps = [
     ":rtp_test_utils",
+    "../api:sequence_checker",
     "../api:simulated_network_api",
     "../api:transport_api",
     "../api/task_queue",
@@ -737,7 +738,6 @@ rtc_library("direct_transport") {
     "../rtc_base:macromagic",
     "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
     "../rtc_base/task_utils:repeating_task",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
@@ -763,6 +763,7 @@ rtc_library("fake_video_codecs") {
   deps = [
     "../api:fec_controller_api",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/video:encoded_image",
     "../api/video:video_bitrate_allocation",
@@ -779,7 +780,6 @@ rtc_library("fake_video_codecs") {
     "../rtc_base:rtc_task_queue",
     "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
     "../system_wrappers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]

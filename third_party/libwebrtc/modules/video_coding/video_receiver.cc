@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "api/rtp_headers.h"
+#include "api/sequence_checker.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_decoder.h"
 #include "modules/utility/include/process_thread.h"
@@ -33,7 +34,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/one_time_event.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 

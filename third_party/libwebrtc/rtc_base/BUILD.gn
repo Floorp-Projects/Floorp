@@ -75,6 +75,7 @@ rtc_library("rtc_base_approved") {
     ":type_traits",
     "../api:array_view",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "synchronization:mutex",
     "system:arch",
     "system:no_unique_address",
@@ -169,7 +170,7 @@ rtc_library("rtc_base_approved") {
     ":safe_conversions",
     ":stringutils",
     ":timeutils",
-    "synchronization:sequence_checker",
+    "../api:sequence_checker",
   ]
 }
 
@@ -222,8 +223,8 @@ rtc_library("platform_thread") {
     ":rtc_task_queue_libevent",
     ":rtc_task_queue_stdlib",
     ":rtc_task_queue_win",
+    "../api:sequence_checker",
     "synchronization:mutex",
-    "synchronization:sequence_checker",
   ]
   sources = [
     "platform_thread.cc",
@@ -236,7 +237,7 @@ rtc_library("platform_thread") {
     ":platform_thread_types",
     ":rtc_event",
     ":timeutils",
-    "synchronization:sequence_checker",
+    "../api:sequence_checker",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
@@ -490,7 +491,7 @@ rtc_source_set("rtc_operations_chain") {
     ":macromagic",
     ":refcount",
     "../api:scoped_refptr",
-    "synchronization:sequence_checker",
+    "../api:sequence_checker",
     "system:no_unique_address",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -594,7 +595,7 @@ rtc_library("weak_ptr") {
   deps = [
     ":refcount",
     "../api:scoped_refptr",
-    "synchronization:sequence_checker",
+    "../api:sequence_checker",
     "system:no_unique_address",
   ]
 }
@@ -806,6 +807,7 @@ rtc_library("threading") {
     ":timeutils",
     "../api:function_view",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "synchronization:mutex",
     "synchronization:sequence_checker",
@@ -931,12 +933,12 @@ rtc_library("rtc_base") {
     "../api:array_view",
     "../api:function_view",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/numerics",
     "../api/task_queue",
     "../system_wrappers:field_trial",
     "network:sent_packet",
     "synchronization:mutex",
-    "synchronization:sequence_checker",
     "system:file_wrapper",
     "system:inline",
     "system:no_unique_address",

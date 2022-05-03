@@ -42,6 +42,7 @@ rtc_library("common_video") {
 
   deps = [
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/units:time_delta",
     "../api/units:timestamp",

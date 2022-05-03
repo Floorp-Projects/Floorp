@@ -26,6 +26,7 @@
 #include "api/rtp_parameters.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
@@ -36,7 +37,6 @@
 #include "pc/video_rtp_track_source.h"
 #include "pc/video_track.h"
 #include "rtc_base/ref_counted_object.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

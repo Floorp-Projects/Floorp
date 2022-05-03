@@ -17,9 +17,9 @@
 #include <string>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "modules/audio_device/win/core_audio_utility_win.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

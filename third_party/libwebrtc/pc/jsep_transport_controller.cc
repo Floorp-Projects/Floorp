@@ -18,6 +18,7 @@
 
 #include "absl/algorithm/container.h"
 #include "api/rtp_parameters.h"
+#include "api/sequence_checker.h"
 #include "api/transport/enums.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/dtls_transport.h"
@@ -29,7 +30,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/socket_address.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 
 using webrtc::SdpType;

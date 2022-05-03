@@ -16,9 +16,9 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/include/module.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "video/stream_synchronization.h"
 
 namespace webrtc {

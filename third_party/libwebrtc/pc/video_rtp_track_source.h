@@ -13,6 +13,7 @@
 
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "api/video/recordable_encoded_frame.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
@@ -22,7 +23,6 @@
 #include "rtc_base/callback.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread_annotations.h"
 

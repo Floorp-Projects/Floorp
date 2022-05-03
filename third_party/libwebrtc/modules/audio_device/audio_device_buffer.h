@@ -16,11 +16,11 @@
 
 #include <atomic>
 
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 

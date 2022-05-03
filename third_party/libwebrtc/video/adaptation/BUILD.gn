@@ -33,6 +33,7 @@ rtc_library("video_adaptation") {
   deps = [
     "../../api:rtp_parameters",
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../api/adaptation:resource_adaptation_api",
     "../../api/task_queue:task_queue",
     "../../api/units:data_rate",
@@ -55,7 +56,6 @@ rtc_library("video_adaptation") {
     "../../rtc_base/experiments:quality_rampup_experiment",
     "../../rtc_base/experiments:quality_scaler_settings",
     "../../rtc_base/synchronization:mutex",
-    "../../rtc_base/synchronization:sequence_checker",
     "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/task_utils:to_queued_task",

@@ -18,13 +18,13 @@ rtc_library("async_audio_processing") {
 
   deps = [
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../api/audio:audio_frame_api",
     "../../api/audio:audio_frame_processor",
     "../../api/task_queue:task_queue",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
-    "../../rtc_base/synchronization:sequence_checker",
   ]
 }
 

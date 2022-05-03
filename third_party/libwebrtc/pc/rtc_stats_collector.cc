@@ -11,6 +11,7 @@
 #include "pc/rtc_stats_collector.h"
 
 #include <stdio.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <map>
@@ -25,6 +26,7 @@
 #include "api/rtp_parameters.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/rtp_sender_interface.h"
+#include "api/sequence_checker.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
 #include "api/task_queue/queued_task.h"
@@ -55,7 +57,6 @@
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 

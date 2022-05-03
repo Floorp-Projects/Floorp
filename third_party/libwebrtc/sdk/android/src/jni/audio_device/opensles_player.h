@@ -16,12 +16,13 @@
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
 #include <memory>
+
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/fine_audio_buffer.h"
 #include "modules/audio_device/include/audio_device_defines.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "sdk/android/src/jni/audio_device/audio_common.h"
 #include "sdk/android/src/jni/audio_device/audio_device_module.h"
 #include "sdk/android/src/jni/audio_device/opensles_common.h"

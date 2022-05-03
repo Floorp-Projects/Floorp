@@ -15,11 +15,11 @@
 #include <memory>
 #include <unordered_set>
 
+#include "api/sequence_checker.h"
 #include "audio/audio_transport_impl.h"
 #include "audio/null_audio_poller.h"
 #include "call/audio_state.h"
 #include "rtc_base/ref_count.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

@@ -25,6 +25,7 @@
 #include "api/peer_connection_factory_proxy.h"
 #include "api/peer_connection_proxy.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/sequence_checker.h"
 #include "api/transport/bitrate_settings.h"
 #include "api/units/data_rate.h"
 #include "call/audio_state.h"
@@ -47,7 +48,6 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/ref_counted_object.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/file_wrapper.h"
 
 namespace webrtc {

@@ -17,9 +17,9 @@
 #include <memory>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "modules/video_capture/video_capture_impl.h"
 #include "modules/video_capture/windows/help_functions_ds.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {

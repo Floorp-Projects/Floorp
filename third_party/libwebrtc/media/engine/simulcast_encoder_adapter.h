@@ -21,6 +21,7 @@
 
 #include "absl/types/optional.h"
 #include "api/fec_controller_override.h"
+#include "api/sequence_checker.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
@@ -28,7 +29,6 @@
 #include "modules/video_coding/utility/framerate_controller.h"
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/system/rtc_export.h"
 

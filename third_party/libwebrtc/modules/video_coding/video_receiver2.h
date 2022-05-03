@@ -11,11 +11,11 @@
 #ifndef MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 #define MODULES_VIDEO_CODING_VIDEO_RECEIVER2_H_
 
+#include "api/sequence_checker.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/generic_decoder.h"
 #include "modules/video_coding/timing.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

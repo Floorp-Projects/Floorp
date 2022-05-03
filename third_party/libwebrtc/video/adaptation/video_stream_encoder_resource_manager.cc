@@ -11,6 +11,7 @@
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
 
 #include <stdio.h>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -20,6 +21,7 @@
 #include "absl/algorithm/container.h"
 #include "absl/base/macros.h"
 #include "api/adaptation/resource.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_source_interface.h"
@@ -29,7 +31,6 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/field_trial.h"
 #include "video/adaptation/quality_scaler_resource.h"

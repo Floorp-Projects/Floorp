@@ -18,6 +18,7 @@
 
 #include "api/audio_codecs/audio_encoder_factory.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/transport/webrtc_key_value_config.h"
@@ -28,7 +29,6 @@
 #include "modules/async_audio_processing/async_audio_processing.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/network_route.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 

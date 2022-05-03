@@ -16,8 +16,8 @@
 #include <memory>
 #include <string>
 
+#include "api/sequence_checker.h"
 #include "modules/utility/include/helpers_android.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

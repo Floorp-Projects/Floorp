@@ -12,12 +12,13 @@
 #define SDK_ANDROID_SRC_JNI_AUDIO_DEVICE_AUDIO_TRACK_JNI_H_
 
 #include <jni.h>
+
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/include/audio_device_defines.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "sdk/android/src/jni/audio_device/audio_common.h"
 #include "sdk/android/src/jni/audio_device/audio_device_module.h"
 

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "modules/video_coding/decoder_database.h"
 #include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/generic_decoder.h"
@@ -25,7 +26,6 @@
 #include "modules/video_coding/timing.h"
 #include "rtc_base/one_time_event.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 

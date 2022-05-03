@@ -16,11 +16,11 @@
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
+#include "api/sequence_checker.h"
 #include "media/base/media_constants.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/trace_event.h"
 
 namespace cricket {

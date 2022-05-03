@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/timestamp.h"
 #include "api/video/recordable_encoded_frame.h"
@@ -24,7 +25,6 @@
 #include "modules/rtp_rtcp/source/source_tracker.h"
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/video_receiver2.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"

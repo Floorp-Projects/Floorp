@@ -12,9 +12,9 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "call/rtp_demuxer.h"
 #include "call/rtp_stream_receiver_controller_interface.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

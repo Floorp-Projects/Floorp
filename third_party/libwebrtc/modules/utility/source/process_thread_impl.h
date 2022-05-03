@@ -17,6 +17,7 @@
 #include <memory>
 #include <queue>
 
+#include "api/sequence_checker.h"
 #include "api/task_queue/queued_task.h"
 #include "modules/include/module.h"
 #include "modules/utility/include/process_thread.h"
@@ -24,7 +25,6 @@
 #include "rtc_base/event.h"
 #include "rtc_base/location.h"
 #include "rtc_base/platform_thread.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

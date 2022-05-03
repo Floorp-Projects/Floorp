@@ -17,11 +17,11 @@ rtc_library("repeating_task") {
     ":to_queued_task",
     "..:logging",
     "..:timeutils",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../api/units:time_delta",
     "../../api/units:timestamp",
     "../../system_wrappers:system_wrappers",
-    "../synchronization:sequence_checker",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
 }
@@ -35,7 +35,7 @@ rtc_library("pending_task_safety_flag") {
     "..:checks",
     "..:refcount",
     "../../api:scoped_refptr",
-    "../synchronization:sequence_checker",
+    "../../api:sequence_checker",
     "../system:no_unique_address",
   ]
 }

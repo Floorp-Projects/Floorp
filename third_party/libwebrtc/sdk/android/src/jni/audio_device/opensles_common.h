@@ -15,9 +15,9 @@
 #include <stddef.h>
 
 #include "api/ref_counted_base.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

@@ -18,6 +18,7 @@
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "media/base/media_engine.h"
@@ -29,7 +30,6 @@
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/rtc_certificate_generator.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

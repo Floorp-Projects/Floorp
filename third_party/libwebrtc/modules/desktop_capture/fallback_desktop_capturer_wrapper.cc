@@ -14,8 +14,8 @@
 
 #include <utility>
 
+#include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/metrics.h"
 
 namespace webrtc {

@@ -13,12 +13,12 @@
 
 #include <stdint.h>
 
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "common_video/video_render_frames.h"
 #include "rtc_base/race_checker.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 
