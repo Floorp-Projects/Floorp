@@ -1913,7 +1913,7 @@
 # Block sandboxed BrowsingContexts from navigating to external protocols.
 - name: dom.block_external_protocol_navigation_from_sandbox
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Block Insecure downloads from Secure Origins
