@@ -14,11 +14,11 @@
 #include <string>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "call/adaptation/video_source_restrictions.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {

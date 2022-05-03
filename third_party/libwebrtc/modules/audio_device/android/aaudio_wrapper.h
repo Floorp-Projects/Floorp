@@ -13,8 +13,8 @@
 
 #include <aaudio/AAudio.h>
 
+#include "api/sequence_checker.h"
 #include "modules/audio_device/include/audio_device_defines.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

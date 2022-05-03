@@ -13,10 +13,10 @@
 
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "audio_session_observer.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "rtc_base/buffer.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "sdk/objc/base/RTCMacros.h"

@@ -68,6 +68,7 @@ rtc_library("audio_device_buffer") {
   deps = [
     ":audio_device_api",
     "../../api:array_view",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../common_audio:common_audio_c",
     "../../rtc_base:checks",
@@ -164,6 +165,7 @@ rtc_library("audio_device_impl") {
     "../../api:array_view",
     "../../api:refcountedbase",
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../api/task_queue",
     "../../common_audio",
     "../../common_audio:common_audio_c",
@@ -384,6 +386,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":mock_audio_device",
       "../../api:array_view",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../api/task_queue",
       "../../api/task_queue:default_task_queue_factory",
       "../../common_audio",

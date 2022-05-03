@@ -21,6 +21,7 @@
 
 #include "absl/types/optional.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/sequence_checker.h"
 #include "api/transport/network_control.h"
 #include "audio/audio_receive_stream.h"
 #include "audio/audio_send_stream.h"
@@ -51,7 +52,6 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread_annotations.h"

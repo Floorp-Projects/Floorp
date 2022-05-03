@@ -25,9 +25,9 @@
 #include "api/rtc_error.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "pc/test/fake_audio_capture_module.h"
 #include "pc/test/fake_video_track_renderer.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 

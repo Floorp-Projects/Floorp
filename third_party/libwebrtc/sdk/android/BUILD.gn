@@ -557,12 +557,12 @@ if (current_os == "linux" || is_android) {
       ":native_api_jni",
       "../../api:libjingle_peerconnection_api",
       "../../api:scoped_refptr",
+      "../../api:sequence_checker",
       "../../rtc_base",
       "../../rtc_base:checks",
       "../../rtc_base:ip_address",
       "../../rtc_base:rtc_base_approved",
       "../../rtc_base:threading",
-      "../../rtc_base/synchronization:sequence_checker",
       "../../system_wrappers:field_trial",
       "../../system_wrappers:metrics",
     ]

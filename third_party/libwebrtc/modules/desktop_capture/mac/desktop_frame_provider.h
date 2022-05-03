@@ -17,8 +17,8 @@
 #include <map>
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "sdk/objc/helpers/scoped_cftyperef.h"
 
 namespace webrtc {

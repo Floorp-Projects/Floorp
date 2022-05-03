@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/container/inlined_vector.h"
+#include "api/sequence_checker.h"
 #include "api/video/encoded_frame.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/inter_frame_delay.h"
@@ -27,7 +28,6 @@
 #include "rtc_base/experiments/rtt_mult_experiment.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"

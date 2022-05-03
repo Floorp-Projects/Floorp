@@ -13,10 +13,10 @@
 #include <algorithm>
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "api/video/encoded_image.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/timing.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

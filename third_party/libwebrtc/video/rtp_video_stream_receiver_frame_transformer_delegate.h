@@ -14,8 +14,8 @@
 #include <memory>
 
 #include "api/frame_transformer_interface.h"
+#include "api/sequence_checker.h"
 #include "modules/video_coding/frame_object.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread.h"
 

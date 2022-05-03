@@ -16,11 +16,11 @@
 
 #include "absl/algorithm/container.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_format.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 
 namespace webrtc {

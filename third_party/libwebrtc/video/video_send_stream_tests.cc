@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/test/simulated_network.h"
@@ -39,7 +40,6 @@
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"

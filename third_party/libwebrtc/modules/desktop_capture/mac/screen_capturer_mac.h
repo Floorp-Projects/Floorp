@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_frame.h"
@@ -27,7 +28,6 @@
 #include "modules/desktop_capture/screen_capture_frame_queue.h"
 #include "modules/desktop_capture/screen_capturer_helper.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

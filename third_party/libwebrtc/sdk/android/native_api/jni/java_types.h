@@ -26,8 +26,8 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 // Abort the process if |jni| has a Java exception pending.

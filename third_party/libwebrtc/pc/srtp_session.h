@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 // Forward declaration to avoid pulling in libsrtp headers here
 struct srtp_event_data_t;

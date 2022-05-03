@@ -18,8 +18,8 @@
 
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 @class RTC_OBJC_TYPE(RTCVideoCapturer);
 @protocol RTC_OBJC_TYPE

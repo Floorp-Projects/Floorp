@@ -14,7 +14,7 @@
 #include <pulse/pulseaudio.h>
 #include <stdint.h>
 
-#include "rtc_base/synchronization/sequence_checker.h"
+#include "api/sequence_checker.h"
 
 #ifndef UINT32_MAX
 #define UINT32_MAX ((uint32_t)-1)

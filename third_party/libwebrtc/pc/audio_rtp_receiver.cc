@@ -16,13 +16,13 @@
 #include <vector>
 
 #include "api/media_stream_track_proxy.h"
+#include "api/sequence_checker.h"
 #include "pc/audio_track.h"
 #include "pc/jitter_buffer_delay.h"
 #include "pc/jitter_buffer_delay_proxy.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

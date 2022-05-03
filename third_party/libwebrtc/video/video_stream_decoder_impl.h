@@ -16,12 +16,12 @@
 #include <utility>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "api/video/video_stream_decoder.h"
 #include "modules/video_coding/frame_buffer2.h"
 #include "modules/video_coding/timing.h"
 #include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "system_wrappers/include/clock.h"
 

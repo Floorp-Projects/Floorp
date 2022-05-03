@@ -17,9 +17,9 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/sequence_checker.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/platform_thread_types.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 #include "rtc_base/deprecated/recursive_critical_section.h"
 

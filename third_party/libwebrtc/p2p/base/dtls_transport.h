@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "api/crypto/crypto_options.h"
+#include "api/sequence_checker.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "rtc_base/buffer.h"
@@ -24,7 +25,6 @@
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/stream.h"
 #include "rtc_base/strings/string_builder.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/system/no_unique_address.h"
 
 namespace rtc {

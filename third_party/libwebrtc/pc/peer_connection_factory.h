@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
 #include <memory>
 #include <string>
 
@@ -30,6 +31,7 @@
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_control.h"
 #include "api/transport/sctp_transport_factory_interface.h"
@@ -41,7 +43,6 @@
 #include "pc/connection_context.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/rtc_certificate_generator.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 

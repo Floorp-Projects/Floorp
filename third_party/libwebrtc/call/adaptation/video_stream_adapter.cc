@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "absl/types/variant.h"
+#include "api/sequence_checker.h"
 #include "api/video/video_adaptation_counters.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video_codecs/video_encoder.h"
@@ -25,7 +26,6 @@
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

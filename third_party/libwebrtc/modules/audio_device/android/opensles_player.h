@@ -15,13 +15,13 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
+#include "api/sequence_checker.h"
 #include "modules/audio_device/android/audio_common.h"
 #include "modules/audio_device/android/audio_manager.h"
 #include "modules/audio_device/android/opensles_common.h"
 #include "modules/audio_device/audio_device_generic.h"
 #include "modules/audio_device/include/audio_device_defines.h"
 #include "modules/utility/include/helpers_android.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

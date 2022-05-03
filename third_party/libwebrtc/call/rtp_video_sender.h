@@ -22,6 +22,7 @@
 #include "api/fec_controller.h"
 #include "api/fec_controller_override.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/sequence_checker.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/rtp_config.h"
@@ -38,7 +39,6 @@
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {

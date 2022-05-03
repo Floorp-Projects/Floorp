@@ -19,13 +19,13 @@
 #include <string>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ignore_wundef.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_tools/network_tester/packet_logger.h"

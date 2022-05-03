@@ -14,11 +14,12 @@
 #include <d3d11.h>
 #include <windows.graphics.capture.h>
 #include <wrl/client.h>
+
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/win/wgc_capture_source.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

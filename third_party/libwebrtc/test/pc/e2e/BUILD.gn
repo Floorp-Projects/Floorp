@@ -516,9 +516,9 @@ if (!build_with_chromium) {
       "analyzer_helper.h",
     ]
     deps = [
+      "../../../api:sequence_checker",
       "../../../api:track_id_stream_info_map",
       "../../../rtc_base:macromagic",
-      "../../../rtc_base/synchronization:sequence_checker",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
   }

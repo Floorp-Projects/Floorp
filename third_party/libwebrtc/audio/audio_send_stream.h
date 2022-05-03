@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "audio/audio_level.h"
 #include "audio/channel_send.h"
 #include "call/audio_send_stream.h"
@@ -24,7 +25,6 @@
 #include "rtc_base/experiments/struct_parameters_parser.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 
 namespace webrtc {

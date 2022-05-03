@@ -14,12 +14,12 @@
 #include <list>
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "modules/include/module.h"
 #include "modules/include/module_common_types.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

@@ -20,6 +20,7 @@
 #include "absl/types/optional.h"
 #include "api/audio/audio_mixer.h"
 #include "api/create_peerconnection_factory.h"
+#include "api/sequence_checker.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/video_decoder_factory.h"
@@ -37,7 +38,6 @@
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/string_encode.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/time_utils.h"
 #include "test/gtest.h"
 

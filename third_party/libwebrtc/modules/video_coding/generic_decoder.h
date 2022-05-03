@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 
+#include "api/sequence_checker.h"
 #include "api/units/time_delta.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -21,7 +22,6 @@
 #include "modules/video_coding/timing.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 
 namespace webrtc {
 

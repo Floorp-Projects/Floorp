@@ -416,6 +416,7 @@ rtc_library("desktop_capture_generic") {
     "../../api:function_view",
     "../../api:refcountedbase",
     "../../api:scoped_refptr",
+    "../../api:sequence_checker",
     "../../rtc_base",  # TODO(kjellander): Cleanup in bugs.webrtc.org/3806.
     "../../rtc_base:checks",
     "../../rtc_base/synchronization:mutex",

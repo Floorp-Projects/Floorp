@@ -12,6 +12,7 @@
 #define PC_PEER_CONNECTION_H_
 
 #include <stdint.h>
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -43,6 +44,7 @@
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sctp_transport_interface.h"
+#include "api/sequence_checker.h"
 #include "api/set_local_description_observer_interface.h"
 #include "api/set_remote_description_observer_interface.h"
 #include "api/stats/rtc_stats_collector_callback.h"
@@ -91,7 +93,6 @@
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"

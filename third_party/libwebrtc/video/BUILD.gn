@@ -61,6 +61,7 @@ rtc_library("video") {
     #"../api:libjingle_peerconnection_api",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api:transport_api",
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:options",
@@ -114,7 +115,6 @@ rtc_library("video") {
     "../rtc_base/experiments:quality_scaling_experiment",
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
     "../rtc_base/system:no_unique_address",
     "../rtc_base/system:thread_registry",
     "../rtc_base/task_utils:pending_task_safety_flag",
@@ -161,6 +161,7 @@ rtc_source_set("video_legacy") {
     ":video",
     "../api:array_view",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/crypto:frame_decryptor_interface",
     "../api/task_queue",
     "../api/video:encoded_image",
@@ -218,6 +219,7 @@ rtc_library("video_stream_decoder_impl") {
   ]
 
   deps = [
+    "../api:sequence_checker",
     "../api/task_queue",
     "../api/video:encoded_frame",
     "../api/video:video_frame",
@@ -274,6 +276,7 @@ rtc_library("video_stream_encoder_impl") {
 
   deps = [
     "../api:rtp_parameters",
+    "../api:sequence_checker",
     "../api/adaptation:resource_adaptation_api",
     "../api/task_queue:task_queue",
     "../api/units:data_rate",
@@ -311,7 +314,6 @@ rtc_library("video_stream_encoder_impl") {
     "../rtc_base/experiments:quality_scaling_experiment",
     "../rtc_base/experiments:rate_control_settings",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/synchronization:sequence_checker",
     "../rtc_base/system:no_unique_address",
     "../rtc_base/task_utils:pending_task_safety_flag",
     "../rtc_base/task_utils:repeating_task",
@@ -643,6 +645,7 @@ if (rtc_include_tests) {
       "../api:rtp_headers",
       "../api:rtp_parameters",
       "../api:scoped_refptr",
+      "../api:sequence_checker",
       "../api:simulated_network_api",
       "../api:transport_api",
       "../api/adaptation:resource_adaptation_api",
@@ -710,7 +713,6 @@ if (rtc_include_tests) {
       "../rtc_base:threading",
       "../rtc_base/experiments:alr_experiment",
       "../rtc_base/synchronization:mutex",
-      "../rtc_base/synchronization:sequence_checker",
       "../rtc_base/task_utils:to_queued_task",
       "../system_wrappers",
       "../system_wrappers:field_trial",

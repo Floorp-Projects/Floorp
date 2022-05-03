@@ -15,13 +15,13 @@
 #include <map>
 #include <memory>
 
+#include "api/sequence_checker.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/units/data_rate.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/random.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "test/network/network_emulation.h"
 #include "test/scenario/column_printer.h"
 

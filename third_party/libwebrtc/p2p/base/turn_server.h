@@ -19,11 +19,11 @@
 #include <utility>
 #include <vector>
 
+#include "api/sequence_checker.h"
 #include "p2p/base/port_interface.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/socket_address.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 

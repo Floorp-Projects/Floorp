@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/units/data_size.h"
 #include "api/units/time_delta.h"
@@ -30,7 +31,6 @@
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 

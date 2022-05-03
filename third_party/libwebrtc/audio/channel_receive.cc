@@ -22,6 +22,7 @@
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/frame_transformer_interface.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/sequence_checker.h"
 #include "audio/audio_level.h"
 #include "audio/channel_receive_frame_transformer_delegate.h"
 #include "audio/channel_send.h"
@@ -46,7 +47,6 @@
 #include "rtc_base/numerics/safe_minmax.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/synchronization/sequence_checker.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
 
