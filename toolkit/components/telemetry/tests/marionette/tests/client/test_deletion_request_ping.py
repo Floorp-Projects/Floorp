@@ -55,7 +55,9 @@ class TestDeletionRequestPing(TelemetryTestCase):
             return self.marionette.execute_async_script(
                 """
                 let [resolve] = arguments;
-                Cu.import("resource://gre/modules/ClientID.jsm");
+                const { ClientID } = ChromeUtils.import(
+                  "resource://gre/modules/ClientID.jsm"
+                );
                 ClientID.getClientID().then(resolve);
                 """,
                 script_timeout=1000,

@@ -7,7 +7,9 @@ var EXPORTED_SYMBOLS = ["Reflect"];
 
 /*
  * This is the js module for Reflect. Import it like so:
- *   Components.utils.import("resource://gre/modules/reflect.jsm");
+ *   const { Reflect } = ChromeUtils.import(
+ *     "resource://gre/modules/reflect.jsm"
+ *   );
  *
  * This will create a 'Reflect' object, which provides an interface to the
  * SpiderMonkey parser API.
