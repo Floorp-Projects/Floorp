@@ -1561,17 +1561,21 @@ class HTMLEditor final : public EditorBase,
    *                            Whether <br> element should be deleted or
    *                            kept if and only if a <br> element follows
    *                            split point.
+   * @param aEditingHost        The editing host with which we're handling it.
    * @param aInitializer        A function to initialize the new element before
    *                            or after (depends on the pref) connecting the
    *                            element into the DOM tree. Note that this should
    *                            not touch outside given element because doing it
    *                            would break range updater's result.
+   * @return                    If succeeded, returns the new element node and
+   *                            suggesting point to put caret.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
+      const Element& aEditingHost,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
@@ -4483,6 +4487,8 @@ class HTMLEditor final : public EditorBase,
      * Abort() cancels to restore the selection.
      */
     void Abort();
+
+    bool MaybeRestoreSelectionLater() const { return !!mHTMLEditor; }
 
    protected:
     // The lifetime must be guaranteed by the creator of this instance.
