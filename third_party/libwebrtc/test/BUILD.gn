@@ -255,10 +255,14 @@ rtc_library("perf_test") {
     "../rtc_base:criticalsection",
     "../rtc_base:logging",
     "../rtc_base:rtc_numerics",
+    "../rtc_base:stringutils",
     "../rtc_base/synchronization:mutex",
     "../test:fileutils",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
   if (rtc_enable_protobuf) {
     sources += [ "testsupport/perf_test_histogram_writer.cc" ]
     deps += [
@@ -545,6 +549,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "scenario:scenario_unittests",
       "time_controller:time_controller",
       "time_controller:time_controller_unittests",
+    ]
+    absl_deps = [
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
