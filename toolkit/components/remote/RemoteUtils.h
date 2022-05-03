@@ -18,7 +18,7 @@ static void BuildClassName(const char* aProgram, const char* aProfile,
 #  if defined XP_WIN
   nsString pfn = mozilla::widget::WinUtils::GetPackageFamilyName();
   if (!pfn.IsEmpty()) {
-    aClassName.AppendPrintf("_%s", pfn.get());
+    aClassName.AppendPrintf("_%S", static_cast<const wchar_t*>(pfn.get()));
   }
 #  endif
   aClassName.AppendPrintf("_%s_RemoteWindow", aProfile);
