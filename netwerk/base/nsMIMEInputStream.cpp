@@ -59,12 +59,6 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
  private:
   void InitStreams();
 
-  template <typename M>
-  void SerializeInternal(InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
-
   struct MOZ_STACK_CLASS ReadSegmentsState {
     nsCOMPtr<nsIInputStream> mThisStream;
     nsWriteSegmentFun mWriter{nullptr};
@@ -340,27 +334,8 @@ void nsMIMEInputStream::SerializedComplexity(uint32_t aMaxSize,
   }
 }
 
-void nsMIMEInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void nsMIMEInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-template <typename M>
-void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
-                                          FileDescriptorArray& aFileDescriptors,
-                                          bool aDelayedStart, uint32_t aMaxSize,
-                                          uint32_t* aSizeUsed, M* aManager) {
+void nsMIMEInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -377,17 +352,15 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
 
   if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
           do_QueryInterface(mStream)) {
-    InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
-                                            aFileDescriptors, aDelayedStart,
-                                            aMaxSize, aSizeUsed, aManager);
+    InputStreamHelper::SerializeInputStream(mStream, wrappedParams, aMaxSize,
+                                            aSizeUsed);
   } else {
     // Falling back to sending the underlying stream over a pipe when
     // sending an nsMIMEInputStream over IPC is potentially wasteful
     // if it is sent several times. This can possibly happen with
     // fission. There are two ways to improve this, see bug 1648369
     // and bug 1648370.
-    InputStreamHelper::SerializeInputStreamAsPipe(mStream, wrappedParams,
-                                                  aDelayedStart, aManager);
+    InputStreamHelper::SerializeInputStreamAsPipe(mStream, wrappedParams);
   }
 
   NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
@@ -397,9 +370,7 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsMIMEInputStream::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool nsMIMEInputStream::Deserialize(const InputStreamParams& aParams) {
   if (aParams.type() != InputStreamParams::TMIMEInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -410,8 +381,7 @@ bool nsMIMEInputStream::Deserialize(
 
   if (wrappedParams.isSome()) {
     nsCOMPtr<nsIInputStream> stream;
-    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
-                                                       aFileDescriptors);
+    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref());
     if (!stream) {
       NS_WARNING("Failed to deserialize wrapped stream!");
       return false;
