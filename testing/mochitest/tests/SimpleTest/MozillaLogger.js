@@ -13,9 +13,7 @@ function importJSM(jsm) {
     return ChromeUtils.import(jsm);
   }
   /* globals SpecialPowers */
-  let obj = {};
-  SpecialPowers.Cu.import(jsm, obj);
-  return SpecialPowers.wrap(obj);
+  return SpecialPowers.ChromeUtils.import(jsm);
 }
 
 // When running in release builds, we get a fake Components object in
