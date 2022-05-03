@@ -345,7 +345,7 @@ class RemoteSettingsClient extends EventEmitter {
    * @param  {Object} options.filters          Filter the results (default: `{}`).
    * @param  {String} options.order            The order to apply (eg. `"-last_modified"`).
    * @param  {boolean} options.dumpFallback    Fallback to dump data if read of local DB fails (default: `true`).
-   * @param  {boolean} options.loadDumpIfNewer Use dump data if it is newer than local data (default: `false`).
+   * @param  {boolean} options.loadDumpIfNewer Use dump data if it is newer than local data (default: `true`).
    * @param  {boolean} options.syncIfEmpty     Synchronize from server if local data is empty (default: `true`).
    * @param  {boolean} options.verifySignature Verify the signature of the local data (default: `false`).
    * @return {Promise}
@@ -355,7 +355,7 @@ class RemoteSettingsClient extends EventEmitter {
       filters = {},
       order = "", // not sorted by default.
       dumpFallback = true,
-      loadDumpIfNewer = false, // TODO bug 1718083: should default to true.
+      loadDumpIfNewer = true,
       syncIfEmpty = true,
     } = options;
     let { verifySignature = false } = options;
