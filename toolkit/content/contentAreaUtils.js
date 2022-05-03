@@ -568,28 +568,36 @@ function initFileInfo(
   aContentDisposition
 ) {
   try {
+    let uriExt = null;
     // Get an nsIURI object from aURL if possible:
     try {
       aFI.uri = makeURI(aURL, aURLCharset);
       // Assuming nsiUri is valid, calling QueryInterface(...) on it will
       // populate extra object fields (eg filename and file extension).
-      var url = aFI.uri.QueryInterface(Ci.nsIURL);
-      aFI.fileExt = url.fileExtension;
+      uriExt = aFI.uri.QueryInterface(Ci.nsIURL).fileExtension;
     } catch (e) {}
 
     // Get the default filename:
-    aFI.fileName = getDefaultFileName(
+    let fileName = getDefaultFileName(
       aFI.suggestedFileName || aFI.fileName,
       aFI.uri,
       aDocument,
       aContentDisposition
     );
-    // If aFI.fileExt is still blank, consider: aFI.suggestedFileName is supplied
-    // if saveURL(...) was the original caller (hence both aContentType and
+
+    let mimeService = this.getMIMEService();
+    aFI.fileName = mimeService.validateFileNameForSaving(
+      fileName,
+      aContentType,
+      mimeService.VALIDATE_DEFAULT
+    );
+
+    // If uriExt is blank, consider: aFI.suggestedFileName is supplied if
+    // saveURL(...) was the original caller (hence both aContentType and
     // aDocument are blank). If they were saving a link to a website then make
     // the extension .htm .
     if (
-      !aFI.fileExt &&
+      !uriExt &&
       !aDocument &&
       !aContentType &&
       /^http(s?):\/\//i.test(aURL)
@@ -597,8 +605,10 @@ function initFileInfo(
       aFI.fileExt = "htm";
       aFI.fileBaseName = aFI.fileName;
     } else {
-      aFI.fileExt = getDefaultExtension(aFI.fileName, aFI.uri, aContentType);
-      aFI.fileBaseName = getFileBaseName(aFI.fileName);
+      let idx = aFI.fileName.lastIndexOf(".");
+      aFI.fileBaseName =
+        idx >= 0 ? aFI.fileName.substring(0, idx) : aFI.fileName;
+      aFI.fileExt = idx >= 0 ? aFI.fileName.substring(idx + 1) : null;
     }
   } catch (e) {}
 }
@@ -645,9 +655,7 @@ function promiseTargetFile(
     let dir = new FileUtils.File(dirPath);
 
     if (useDownloadDir && dirExists) {
-      dir.append(
-        getNormalizedLeafName(aFpP.fileInfo.fileName, aFpP.fileInfo.fileExt)
-      );
+      dir.append(aFpP.fileInfo.fileName);
       aFpP.file = uniqueFile(dir);
       return true;
     }
@@ -688,10 +696,7 @@ function promiseTargetFile(
 
     fp.displayDirectory = dir;
     fp.defaultExtension = aFpP.fileInfo.fileExt;
-    fp.defaultString = getNormalizedLeafName(
-      aFpP.fileInfo.fileName,
-      aFpP.fileInfo.fileExt
-    );
+    fp.defaultString = aFpP.fileInfo.fileName;
     appendFiltersForContentType(
       fp,
       aFpP.contentType,
@@ -1021,11 +1026,9 @@ function getDefaultFileName(
       } catch (e) {}
     }
     if (fileName) {
-      return validateFileName(
-        Services.textToSubURI.unEscapeURIForUI(
-          fileName,
-          /* dontEscape = */ true
-        )
+      return Services.textToSubURI.unEscapeURIForUI(
+        fileName,
+        /* dontEscape = */ true
       );
     }
   }
@@ -1033,7 +1036,6 @@ function getDefaultFileName(
   let docTitle;
   if (aDocument && aDocument.title && aDocument.title.trim()) {
     // If the document looks like HTML or XML, try to use its original title.
-    docTitle = validateFileName(aDocument.title);
     let contentType = aDocument.contentType;
     if (
       contentType == "application/xhtml+xml" ||
@@ -1043,7 +1045,7 @@ function getDefaultFileName(
       contentType == "text/xml"
     ) {
       // 2) Use the document title
-      return docTitle;
+      return aDocument.title;
     }
   }
 
@@ -1051,11 +1053,9 @@ function getDefaultFileName(
     var url = aURI.QueryInterface(Ci.nsIURL);
     if (url.fileName != "") {
       // 3) Use the actual file name, if present
-      return validateFileName(
-        Services.textToSubURI.unEscapeURIForUI(
-          url.fileName,
-          /* dontEscape = */ true
-        )
+      return Services.textToSubURI.unEscapeURIForUI(
+        url.fileName,
+        /* dontEscape = */ true
       );
     }
   } catch (e) {
@@ -1070,35 +1070,22 @@ function getDefaultFileName(
 
   if (aDefaultFileName) {
     // 5) Use the caller-provided name, if any
-    return validateFileName(aDefaultFileName);
-  }
-
-  // 6) If this is a directory, use the last directory name
-  var path = aURI.pathQueryRef.match(/\/([^\/]+)\/$/);
-  if (path && path.length > 1) {
-    return validateFileName(path[1]);
+    return aDefaultFileName;
   }
 
   try {
     if (aURI.host) {
-      // 7) Use the host.
-      return validateFileName(aURI.host);
+      // 6) Use the host.
+      return aURI.host;
     }
   } catch (e) {
     // Some files have no information at all, like Javascript generated pages
   }
-  try {
-    // 8) Use the default file name
-    return ContentAreaUtils.stringBundle.GetStringFromName(
-      "DefaultSaveFileName"
-    );
-  } catch (e) {
-    // in case localized string cannot be found
-  }
-  // 9) If all else fails, use "index"
-  return "index";
+
+  return "";
 }
 
+// This is only used after the user has entered a filename.
 function validateFileName(aFileName) {
   let processed = DownloadPaths.sanitize(aFileName) || "_";
   if (AppConstants.platform == "android") {
@@ -1122,120 +1109,6 @@ function validateFileName(aFileName) {
     }
   }
   return processed;
-}
-
-// This is the set of image extensions supported by extraMimeEntries in
-// nsExternalHelperAppService.
-const kImageExtensions = new Set([
-  "art",
-  "bmp",
-  "gif",
-  "ico",
-  "cur",
-  "jpeg",
-  "jpg",
-  "jfif",
-  "pjpeg",
-  "pjp",
-  "png",
-  "apng",
-  "tiff",
-  "tif",
-  "xbm",
-  "svg",
-  "webp",
-  "avif",
-  "jxl",
-]);
-
-function getNormalizedLeafName(aFile, aDefaultExtension) {
-  if (!aDefaultExtension) {
-    return aFile;
-  }
-
-  if (AppConstants.platform == "win") {
-    // Remove trailing dots and spaces on windows
-    aFile = aFile.replace(/[\s.]+$/, "");
-  }
-
-  // Remove leading dots
-  aFile = aFile.replace(/^\.+/, "");
-
-  // Include the default extension in the file name to which we're saving.
-  var i = aFile.lastIndexOf(".");
-  let previousExtension = aFile.substr(i + 1).toLowerCase();
-  if (previousExtension != aDefaultExtension.toLowerCase()) {
-    // Suffixing the extension is the safe bet - it preserves the previous
-    // extension in case that's meaningful (e.g. various text files served
-    // with text/plain will end up as `foo.cpp.txt`, in the worst case).
-    // However, for images, the extension derived from the URL should be
-    // replaced if the content type indicates a different filetype - this makes
-    // sure that we treat e.g. feature-tested webp/avif images correctly.
-    if (kImageExtensions.has(previousExtension)) {
-      return aFile.substr(0, i + 1) + aDefaultExtension;
-    }
-    return aFile + "." + aDefaultExtension;
-  }
-
-  return aFile;
-}
-
-function getDefaultExtension(aFilename, aURI, aContentType) {
-  if (
-    aContentType == "text/plain" ||
-    aContentType == "application/octet-stream" ||
-    aURI.scheme == "ftp"
-  ) {
-    return "";
-  } // temporary fix for bug 120327
-
-  // First try the extension from the filename
-  var url = Cc["@mozilla.org/network/standard-url-mutator;1"]
-    .createInstance(Ci.nsIURIMutator)
-    .setSpec("http://example.com") // construct the URL
-    .setFilePath(aFilename)
-    .finalize()
-    .QueryInterface(Ci.nsIURL);
-
-  var ext = url.fileExtension;
-
-  // This mirrors some code in nsExternalHelperAppService::DoContent
-  // Use the filename first and then the URI if that fails
-
-  // For images, rely solely on the mime type if known.
-  // All the extension is going to do is lie to us.
-  var lookupExt = ext;
-  if (aContentType?.startsWith("image/")) {
-    lookupExt = "";
-  }
-  var mimeInfo = getMIMEInfoForType(aContentType, lookupExt);
-
-  if (ext && mimeInfo && mimeInfo.extensionExists(ext)) {
-    return ext;
-  }
-
-  // Well, that failed.  Now try the extension from the URI
-  var urlext;
-  try {
-    url = aURI.QueryInterface(Ci.nsIURL);
-    urlext = url.fileExtension;
-  } catch (e) {}
-
-  if (urlext && mimeInfo && mimeInfo.extensionExists(urlext)) {
-    return urlext;
-  }
-
-  // That failed as well. If we could lookup the MIME use the primary
-  // extension for that type.
-  try {
-    if (mimeInfo) {
-      return mimeInfo.primaryExtension;
-    }
-  } catch (e) {}
-
-  // Fall back on the extensions in the filename and URI for lack
-  // of anything better.
-  return ext || urlext;
 }
 
 function GetSaveModeForContentType(aContentType, aDocument) {
