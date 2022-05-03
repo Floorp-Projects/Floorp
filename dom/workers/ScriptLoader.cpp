@@ -703,6 +703,8 @@ class WorkerScriptLoader final : public nsINamed {
     CancelMainThread(NS_BINDING_ABORTED);
   }
 
+  bool DispatchLoadScripts();
+
  private:
   ~WorkerScriptLoader() = default;
 
@@ -922,7 +924,7 @@ class WorkerScriptLoader final : public nsINamed {
     mCacheCreator = nullptr;
   }
 
-  nsresult RunInternal() {
+  nsresult LoadScripts() {
     AssertIsOnMainThread();
 
     if (IsMainWorkerScript()) {
@@ -1552,7 +1554,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   Run() override {
     AssertIsOnMainThread();
 
-    nsresult rv = mScriptLoader->RunInternal();
+    nsresult rv = mScriptLoader->LoadScripts();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mScriptLoader->CancelMainThread(rv);
     }
@@ -1568,6 +1570,17 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 };
 
 NS_IMPL_ISUPPORTS(ScriptLoaderRunnable, nsIRunnable, nsINamed)
+
+bool WorkerScriptLoader::DispatchLoadScripts() {
+  RefPtr<ScriptLoaderRunnable> runnable = new ScriptLoaderRunnable(this);
+
+  if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+    NS_ERROR("Failed to dispatch!");
+    mRv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+  return true;
+}
 
 NS_IMETHODIMP
 LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
@@ -2356,9 +2369,6 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
                              syncLoopTarget, std::move(aLoadInfos), clientInfo,
                              controller, aIsMainScript, aWorkerScriptType, aRv);
 
-  RefPtr<ScriptLoaderRunnable> loaderRunnable =
-      new ScriptLoaderRunnable(loader);
-
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
   RefPtr<StrongWorkerRef> workerRef =
@@ -2373,13 +2383,9 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
     return;
   }
 
-  if (NS_FAILED(NS_DispatchToMainThread(loaderRunnable))) {
-    NS_ERROR("Failed to dispatch!");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+  if (loader->DispatchLoadScripts()) {
+    syncLoop.Run();
   }
-
-  syncLoop.Run();
 }
 
 } /* anonymous namespace */
