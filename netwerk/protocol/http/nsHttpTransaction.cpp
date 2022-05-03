@@ -1976,7 +1976,7 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
       mResponseHead->Reset();
       return NS_OK;
     }
-    if (!mConnection->IsProxyConnectInProgress()) {
+    {
       MutexAutoLock lock(mLock);
       mEarlyHintObserver = nullptr;
     }
