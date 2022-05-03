@@ -3623,6 +3623,15 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
         HttpBaseChannel::ReplacementReason::DocumentChannel);
   }
 
+  if (aArgs.contentDisposition()) {
+    newChannel->SetContentDisposition(*aArgs.contentDisposition());
+  }
+
+  if (aArgs.contentDispositionFilename()) {
+    newChannel->SetContentDispositionFilename(
+        *aArgs.contentDispositionFilename());
+  }
+
   if (nsCOMPtr<nsIChildChannel> childChannel = do_QueryInterface(newChannel)) {
     // Connect to the parent if this is a remote channel. If it's entirely
     // handled locally, then we'll call AsyncOpen from the docshell when

@@ -124,3 +124,52 @@ add_task(async function test_pdf_saveas_forms() {
     }
   );
 });
+
+/**
+ * Check triggering "Save Page As" on a PDF which was loaded with a custom
+ * content disposition filename defaults to using the provided filename.
+ */
+add_task(async function test_pdf_saveas_customname() {
+  // Ensure improvements_to_download_panel is enabled so that we render the
+  // attachment directly with the original request in a new tab.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.helperApps.showOpenOptionForPdfJS", true],
+      ["browser.helperApps.showOpenOptionForViewableInternally", true],
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
+  });
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TESTROOT + "file_pdf_download_link.html" },
+    async function(browser) {
+      // Click on the download link in the loaded file. This will create a new
+      // tab with the PDF loaded in it.
+      BrowserTestUtils.synthesizeMouseAtCenter("#custom_filename", {}, browser);
+      let tab = await BrowserTestUtils.waitForNewTab(gBrowser);
+      info("tab created");
+
+      // Wait for the PDF's metadata to be fully loaded before downloading, as
+      // otherwise it won't be aware of the content disposition filename yet.
+      await BrowserTestUtils.waitForContentEvent(
+        tab.linkedBrowser,
+        "metadataloaded",
+        false,
+        null,
+        true
+      );
+      info("metadata loaded");
+
+      let destFile = tempDir.clone();
+      MockFilePicker.displayDirectory = tempDir;
+      let fileSavedPromise = createPromiseForTransferComplete(
+        "custom_filename.pdf",
+        destFile
+      );
+      saveBrowser(tab.linkedBrowser);
+      await fileSavedPromise;
+      BrowserTestUtils.removeTab(tab);
+    }
+  );
+  await SpecialPowers.popPrefEnv();
+});
