@@ -49,7 +49,7 @@ linux64-clang-14-mingw-x86:
             - mingw-w64
             - libunwind
             - llvm-mingw
-            - gcc-9.3.0
+            - gcc-9.4.0
         toolchain:
             - linux64-clang-14
 
@@ -71,7 +71,7 @@ linux64-clang-14-mingw-x64:
             - mingw-w64
             - libunwind
             - llvm-mingw
-            - gcc-9.3.0
+            - gcc-9.4.0
         toolchain:
             - linux64-clang-14
 
