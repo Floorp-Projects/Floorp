@@ -26,7 +26,7 @@ class PictureInPictureVideoWrapper {
       const callback = function(mutationsList, observer) {
         let textNodeList = container
           .querySelector(".player-timedtext")
-          ?.querySelectorAll("span");
+          ?.querySelectorAll("span > span");
         if (!textNodeList || textNodeList.length < 1) {
           updateCaptionsFunction("");
           return;
