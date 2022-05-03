@@ -200,11 +200,6 @@ class DateTimeTestHelper {
       });
       bc = bc.browsingContext.children[0];
     }
-    await SpecialPowers.spawn(bc, [], async function() {
-      // Ensure that screen coordinates are ok.
-      await SpecialPowers.contentTransformsReceived(content);
-    });
-
     if (openMethod === "click") {
       await BrowserTestUtils.synthesizeMouseAtCenter("input", {}, bc);
     } else if (openMethod === "showPicker") {
