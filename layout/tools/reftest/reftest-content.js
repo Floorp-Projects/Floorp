@@ -16,9 +16,13 @@ const IO_SERVICE_CONTRACTID = "@mozilla.org/network/io-service;1"
 // "<!--CLEAR-->"
 const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2D%2D%3E";
 
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://reftest/AsyncSpellCheckTestHelper.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+const { setTimeout, clearTimeout } = ChromeUtils.import(
+    "resource://gre/modules/Timer.jsm"
+);
+const { onSpellCheck } = ChromeUtils.import(
+    "resource://reftest/AsyncSpellCheckTestHelper.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // This will load chrome Custom Elements inside chrome documents:
 ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");
