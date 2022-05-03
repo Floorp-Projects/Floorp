@@ -49,10 +49,6 @@ class nsLocalFile final : public nsILocalFileWin {
   // Called off the main thread to open the window revealing the file
   static nsresult RevealFile(const nsString& aResolvedPath);
 
-  // Checks if the filename is one of the windows reserved filenames
-  // (com1, com2, etc...) and truncates the string if so.
-  static void CheckForReservedFileName(nsString& aFileName);
-
  private:
   // CopyMove and CopySingleFile constants for |options| parameter:
   enum CopyFileOption {
