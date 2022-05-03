@@ -3,8 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const { AppConstants } = Cu.import("resource://gre/modules/AppConstants.jsm");
-const { TelemetryTestUtils } = Cu.import(
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
 );
 

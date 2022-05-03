@@ -1,4 +1,4 @@
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function ERR(response, msg) {
   dump("ERROR: " + msg + "\n");

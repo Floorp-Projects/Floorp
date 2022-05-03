@@ -2261,7 +2261,9 @@ Here's an example JS implementation of the above interface. The
 usable by the doNothing() method.
 
 ``` js
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 function MyNumberInner() {
   this.value = 111;

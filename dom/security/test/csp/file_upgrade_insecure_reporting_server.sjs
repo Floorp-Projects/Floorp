@@ -1,7 +1,7 @@
 // Custom *.sjs specifically for the needs of Bug
 // Bug 1139297 - Implement CSP upgrade-insecure-requests directive
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 // small red image
 const IMG_BYTES = atob(
