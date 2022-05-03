@@ -50,7 +50,6 @@ class Dispatcher {
  public:
   virtual ~Dispatcher() {}
   virtual uint32_t GetRequestedEvents() = 0;
-  virtual void OnPreEvent(uint32_t ff) = 0;
   virtual void OnEvent(uint32_t ff, int err) = 0;
 #if defined(WEBRTC_WIN)
   virtual WSAEVENT GetWSAEvent() = 0;
@@ -238,7 +237,6 @@ class SocketDispatcher : public Dispatcher, public PhysicalSocket {
 #endif
 
   uint32_t GetRequestedEvents() override;
-  void OnPreEvent(uint32_t ff) override;
   void OnEvent(uint32_t ff, int err) override;
 
   int Close() override;
