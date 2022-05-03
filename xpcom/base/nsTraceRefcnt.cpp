@@ -829,7 +829,7 @@ static void LogDMDFile() {
     return;
   }
 
-  nsPrintfCString fileName("%sdmd-%d.log.gz", dmdFilePrefix,
+  nsPrintfCString fileName("%sdmd-%" PRIPID ".log.gz", dmdFilePrefix,
                            base::GetCurrentProcId());
   FILE* logFile = fopen(fileName.get(), "w");
   if (NS_WARN_IF(!logFile)) {
