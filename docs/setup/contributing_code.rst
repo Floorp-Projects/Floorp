@@ -55,8 +55,7 @@ start. There are a number of ways to do this:
 
 -  `Search bugzilla <https://bugzilla.mozilla.org/query.cgi>`_ for
    relevant keywords. See pages on
-   `Bugzilla <https://developer.mozilla.org/docs/Mozilla/Bugzilla>`_ and `Searching
-   Bugzilla <https://developer.mozilla.org/docs/Mozilla/QA/Searching_Bugzilla>`_ for further
+   `Bugzilla and Searching Bugzilla <https://bmo.readthedocs.io/en/latest/using/finding.html>`_ for further
    help
 -  Learn the `bugzilla
    component <https://bugzilla.mozilla.org/describecomponents.cgi>`_,
@@ -69,9 +68,7 @@ Fixing your bug
 We leave this in your hands. Here are some further resources to help:
 
 -  Check out
-   `https://developer.mozilla.org/docs/Developer_Guide <https://developer.mozilla.org/docs/Developer_Guide>`_
-   and its parent document,
-   https://developer.mozilla.org/docs/Mozilla
+   :ref:`Our Developer_Guide and its parent document <Working on Firefox>`
 -  Our :ref:`reviewer checklist <Reviewer Checklist>` is very
    useful, if you have a patch near completion, and seek a favorable
    review
