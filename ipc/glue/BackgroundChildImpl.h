@@ -41,9 +41,6 @@ class BackgroundChildImpl : public PBackgroundChild,
   // This functions is implemented in BackgroundImpl.cpp.
   static ThreadLocal* GetThreadLocalForCurrentThread();
 
-  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
  protected:
   BackgroundChildImpl();
   virtual ~BackgroundChildImpl();
@@ -155,12 +152,6 @@ class BackgroundChildImpl : public PBackgroundChild,
 
   virtual bool DeallocPSharedWorkerChild(
       mozilla::dom::PSharedWorkerChild* aActor) override;
-
-  virtual PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
-      const FileDescriptor& aFileDescriptor) override;
-
-  virtual bool DeallocPFileDescriptorSetChild(
-      PFileDescriptorSetChild* aActor) override;
 
   virtual PCamerasChild* AllocPCamerasChild() override;
 
