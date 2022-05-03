@@ -849,9 +849,7 @@ add_task(async function test_check_open_with_internal_handler_noask() {
     }
 
     let openPDFDirectly =
-      !expectDialog &&
-      file == "file_pdf_application_pdf.pdf" &&
-      where != "frame";
+      !expectDialog && file == "file_pdf_application_pdf.pdf";
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: TEST_PATH + "blank.html" },
       async browser => {

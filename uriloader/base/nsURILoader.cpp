@@ -278,28 +278,21 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     nsCOMPtr<nsILoadInfo> loadInfo;
     aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
 
-    // But only do this for top-level documents for now. Otherwise, google
-    // documents don't export or print properly.
-    RefPtr<dom::BrowsingContext> browsingContext;
-    loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
-    if (!browsingContext->IsSubframe()) {
-      nsCOMPtr<nsIMIMEInfo> mimeInfo;
+    nsCOMPtr<nsIMIMEInfo> mimeInfo;
 
-      nsCOMPtr<nsIMIMEService> mimeSvc(
-          do_GetService(NS_MIMESERVICE_CONTRACTID));
-      NS_ENSURE_TRUE(mimeSvc, NS_ERROR_FAILURE);
-      mimeSvc->GetFromTypeAndExtension(nsLiteralCString(APPLICATION_PDF), ""_ns,
-                                       getter_AddRefs(mimeInfo));
+    nsCOMPtr<nsIMIMEService> mimeSvc(do_GetService(NS_MIMESERVICE_CONTRACTID));
+    NS_ENSURE_TRUE(mimeSvc, NS_ERROR_FAILURE);
+    mimeSvc->GetFromTypeAndExtension(nsLiteralCString(APPLICATION_PDF), ""_ns,
+                                     getter_AddRefs(mimeInfo));
 
-      if (mimeInfo) {
-        int32_t action = nsIMIMEInfo::saveToDisk;
-        mimeInfo->GetPreferredAction(&action);
+    if (mimeInfo) {
+      int32_t action = nsIMIMEInfo::saveToDisk;
+      mimeInfo->GetPreferredAction(&action);
 
-        bool alwaysAsk = true;
-        mimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
-        forceExternalHandling =
-            alwaysAsk || action != nsIMIMEInfo::handleInternally;
-      }
+      bool alwaysAsk = true;
+      mimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
+      forceExternalHandling =
+          alwaysAsk || action != nsIMIMEInfo::handleInternally;
     }
   }
 
