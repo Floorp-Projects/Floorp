@@ -323,8 +323,8 @@ if (is_android) {
       ":video_java",
       "//modules/audio_device:audio_device_java",
       "//rtc_base:base_java",
-      "//third_party/android_deps:androidx_annotation_annotation_java",
       "//third_party/android_deps:com_android_support_support_annotations_java",
+      "//third_party/androidx:androidx_annotation_annotation_java",
     ]
     srcjar_deps = [
       "//api:priority_enums",
