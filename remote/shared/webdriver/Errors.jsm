@@ -554,7 +554,7 @@ const STATUSES = new Map([
 ]);
 
 // Errors must be expored on the local this scope so that the
-// EXPORTED_SYMBOLS and the Cu.import("foo", {}) machinery sees them.
+// EXPORTED_SYMBOLS and the ChromeUtils.import("foo") machinery sees them.
 // We could assign each error definition directly to |this|, but
 // because they are Error prototypes this would mess up their names.
 for (let cls of STATUSES.values()) {
