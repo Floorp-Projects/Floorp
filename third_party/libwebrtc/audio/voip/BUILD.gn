@@ -97,7 +97,6 @@ rtc_library("audio_egress") {
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../rtc_base:logging",
     "../../rtc_base:rtc_task_queue",
-    "../../rtc_base:thread_checker",
     "../../rtc_base:timeutils",
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/synchronization:sequence_checker",

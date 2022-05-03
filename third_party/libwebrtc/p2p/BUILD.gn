@@ -90,6 +90,7 @@ rtc_library("rtc_p2p") {
     "../api:packet_socket_factory",
     "../api:rtc_error",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/crypto:options",
     "../api/rtc_event_log",
     "../api/transport:enums",

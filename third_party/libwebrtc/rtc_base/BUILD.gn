@@ -168,7 +168,6 @@ rtc_library("rtc_base_approved") {
     ":rtc_event",
     ":safe_conversions",
     ":stringutils",
-    ":thread_checker",
     ":timeutils",
     "synchronization:sequence_checker",
   ]
@@ -236,7 +235,6 @@ rtc_library("platform_thread") {
     ":macromagic",
     ":platform_thread_types",
     ":rtc_event",
-    ":thread_checker",
     ":timeutils",
     "synchronization:sequence_checker",
   ]
@@ -316,14 +314,6 @@ rtc_library("logging") {
       libs += [ "log" ]
     }
   }
-}
-
-rtc_source_set("thread_checker") {
-  sources = [ "thread_checker.h" ]
-  deps = [
-    ":deprecation",
-    "synchronization:sequence_checker",
-  ]
 }
 
 rtc_source_set("atomicops") {
@@ -1385,7 +1375,6 @@ if (rtc_include_tests) {
         "strings/string_format_unittest.cc",
         "swap_queue_unittest.cc",
         "thread_annotations_unittest.cc",
-        "thread_checker_unittest.cc",
         "time_utils_unittest.cc",
         "timestamp_aligner_unittest.cc",
         "virtual_socket_unittest.cc",
