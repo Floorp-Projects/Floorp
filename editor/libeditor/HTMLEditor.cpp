@@ -3654,9 +3654,12 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
     NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
     return Err(splitTextNodeResult.unwrapErr());
   }
-  // When adding caret suggestion to SplitNodeResult, here didn't change
-  // selection so that just ignore it.
-  splitTextNodeResult.IgnoreCaretPointSuggestion();
+  nsresult rv = splitTextNodeResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
 
   // Insert new <br> before the right node.
   auto atNextContent = splitTextNodeResult.AtNextContent<EditorDOMPoint>();
@@ -4404,15 +4407,8 @@ SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
   TopLevelEditSubActionDataRef().DidSplitContent(
       *this, *splitContent, *newContent, SplitNodeDirection::LeftNodeIsNewOne);
 
-  SplitNodeResult result(std::move(newContent), std::move(splitContent),
+  return SplitNodeResult(std::move(newContent), std::move(splitContent),
                          SplitNodeDirection::LeftNodeIsNewOne);
-  rv = result.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::CollapseSelectionTo() failed");
-    return SplitNodeResult(rv);
-  }
-  return result;
 }
 
 SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
@@ -4474,6 +4470,12 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
       if (lastResult.isErr()) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
         return lastResult;
+      }
+      nsresult rv = lastResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return SplitNodeResult(rv);
       }
 
       MOZ_ASSERT(lastResult.GetOriginalContent() == splittingContent);
