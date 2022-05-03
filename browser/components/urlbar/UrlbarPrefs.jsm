@@ -353,6 +353,7 @@ const PREF_OTHER_DEFAULTS = new Map([
 const NIMBUS_DEFAULTS = {
   experimentType: "",
   isBestMatchExperiment: false,
+  quickSuggestRemoteSettingsDataType: "data",
 };
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined

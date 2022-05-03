@@ -404,8 +404,8 @@ class QuickSuggest extends EventEmitter {
    *   The event object passed to the "sync" event listener if you're calling
    *   this from the listener.
    */
-  _queueSettingsSync(event = null) {
-    this._settingsTaskQueue.queue(async () => {
+  async _queueSettingsSync(event = null) {
+    await this._settingsTaskQueue.queue(async () => {
       // Remove local files of deleted records
       if (event?.data?.deleted) {
         await Promise.all(
@@ -420,9 +420,12 @@ class QuickSuggest extends EventEmitter {
         );
       }
 
+      let dataType = UrlbarPrefs.get("quickSuggestRemoteSettingsDataType");
+      log.debug("Loading data with type:", dataType);
+
       let [configArray, data] = await Promise.all([
         this._rs.get({ filters: { type: "configuration" } }),
-        this._rs.get({ filters: { type: "data" } }),
+        this._rs.get({ filters: { type: dataType } }),
         this._rs
           .get({ filters: { type: "icon" } })
           .then(icons =>
@@ -435,9 +438,11 @@ class QuickSuggest extends EventEmitter {
 
       this._resultsByKeyword.clear();
 
+      log.debug(`Got data with ${data.length} records`);
       for (let record of data) {
         let { buffer } = await this._rs.attachments.download(record);
         let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
+        log.debug(`Adding ${results.length} results`);
         this._addResults(results);
       }
     });
