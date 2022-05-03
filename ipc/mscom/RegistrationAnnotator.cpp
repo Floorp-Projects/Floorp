@@ -193,7 +193,7 @@ static void CheckTlbPath(JSONWriter& aJson, const nsAString& aTypelibPath) {
   RefPtr<ITypeLib> typeLib;
   HRESULT hr = LoadTypeLibEx(buf.get(), REGKIND_NONE, getter_AddRefs(typeLib));
 
-  nsPrintfCString loadResult("0x%08X", hr);
+  nsPrintfCString loadResult("0x%08lX", hr);
   aJson.StringProperty("LoadResult", loadResult);
 }
 

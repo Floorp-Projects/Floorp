@@ -1511,7 +1511,7 @@ bool TSFStaticSink::Init(ITfThreadMgr* aThreadMgr,
   if (FAILED(hr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p TSFStaticSink::Init() FAILED to get ITfSource "
-             "instance (0x%08X)",
+             "instance (0x%08lX)",
              this, hr));
     return false;
   }
@@ -1525,7 +1525,7 @@ bool TSFStaticSink::Init(ITfThreadMgr* aThreadMgr,
   if (FAILED(hr) || mIPProfileCookie == TF_INVALID_COOKIE) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p TSFStaticSink::Init() FAILED to install "
-             "ITfInputProcessorProfileActivationSink (0x%08X)",
+             "ITfInputProcessorProfileActivationSink (0x%08lX)",
              this, hr));
     return false;
   }
@@ -1550,14 +1550,14 @@ void TSFStaticSink::Destroy() {
     if (FAILED(hr)) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   TSFStaticSink::Shutdown() FAILED to get "
-               "ITfSource instance (0x%08X)",
+               "ITfSource instance (0x%08lX)",
                this, hr));
     } else {
       hr = source->UnadviseSink(mIPProfileCookie);
       if (FAILED(hr)) {
         MOZ_LOG(gIMELog, LogLevel::Error,
                 ("0x%p   TSFTextStore::Shutdown() FAILED to uninstall "
-                 "ITfInputProcessorProfileActivationSink (0x%08X)",
+                 "ITfInputProcessorProfileActivationSink (0x%08lX)",
                  this, hr));
       }
     }
@@ -1640,7 +1640,7 @@ bool TSFStaticSink::EnsureInitActiveTIPKeyboard() {
   if (FAILED(hr) || !profileMgr) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-             "to get input processor profile manager, hr=0x%08X",
+             "to get input processor profile manager, hr=0x%08lX",
              this, hr));
     return false;
   }
@@ -1651,7 +1651,7 @@ bool TSFStaticSink::EnsureInitActiveTIPKeyboard() {
     MOZ_LOG(gIMELog, LogLevel::Info,
             ("0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
              "to get active keyboard layout profile due to no active profile, "
-             "hr=0x%08X",
+             "hr=0x%08lX",
              this, hr));
     // XXX Should we call OnActivated() with arguments like non-TIP in this
     //     case?
@@ -1660,7 +1660,7 @@ bool TSFStaticSink::EnsureInitActiveTIPKeyboard() {
   if (FAILED(hr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFStaticSink::EnsureInitActiveLanguageProfile(), FAILED "
-             "to get active TIP keyboard, hr=0x%08X",
+             "to get active TIP keyboard, hr=0x%08lX",
              this, hr));
     return false;
   }
@@ -1690,7 +1690,7 @@ void TSFStaticSink::GetTIPDescription(REFCLSID aTextService, LANGID aLangID,
   if (FAILED(hr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFStaticSink::InitActiveTIPDescription() FAILED "
-             "due to GetLanguageProfileDescription() failure, hr=0x%08X",
+             "due to GetLanguageProfileDescription() failure, hr=0x%08lX",
              this, hr));
     return;
   }
@@ -1713,7 +1713,7 @@ bool TSFStaticSink::IsTIPCategoryKeyboard(REFCLSID aTextService, LANGID aLangID,
   if (FAILED(hr) || !enumLangProfiles) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFStaticSink::IsTIPCategoryKeyboard(), FAILED "
-             "to get language profiles enumerator, hr=0x%08X",
+             "to get language profiles enumerator, hr=0x%08lX",
              this, hr));
     return false;
   }
@@ -1881,7 +1881,7 @@ bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFTextStore::Init() FAILED to create ITfDocumentMgr "
-             "(0x%08X)",
+             "(0x%08lX)",
              this, hr));
     return false;
   }
@@ -1902,7 +1902,7 @@ bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   TSFTextStore::Init() FAILED to create the context "
-             "(0x%08X)",
+             "(0x%08lX)",
              this, hr));
     return false;
   }
@@ -1918,7 +1918,7 @@ bool TSFTextStore::Init(nsWindow* aWidget, const InputContext& aContext) {
   hr = documentMgr->Push(context);
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(gIMELog, LogLevel::Error,
-            ("0x%p   TSFTextStore::Init() FAILED to push the context (0x%08X)",
+            ("0x%p   TSFTextStore::Init() FAILED to push the context (0x%08lX)",
              this, hr));
     return false;
   }
@@ -6601,7 +6601,7 @@ bool TSFTextStore::GetIMEOpenState() {
   if (NS_WARN_IF(FAILED(hr))) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetIMEOpenState() FAILED due to "
-             "ITfCompartment::GetValue() failure, hr=0x%08X",
+             "ITfCompartment::GetValue() failure, hr=0x%08lX",
              hr));
     return false;
   }
@@ -6743,15 +6743,16 @@ void TSFTextStore::Initialize() {
   if (FAILED(hr) || !threadMgr) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  TSFTextStore::Initialize() FAILED to "
-             "create the thread manager, hr=0x%08X",
+             "create the thread manager, hr=0x%08lX",
              hr));
     return;
   }
 
   hr = threadMgr->Activate(&sClientId);
   if (FAILED(hr)) {
-    MOZ_LOG(gIMELog, LogLevel::Error,
-            ("  TSFTextStore::Initialize() FAILED to activate, hr=0x%08X", hr));
+    MOZ_LOG(
+        gIMELog, LogLevel::Error,
+        ("  TSFTextStore::Initialize() FAILED to activate, hr=0x%08lX", hr));
     return;
   }
 
@@ -6760,7 +6761,7 @@ void TSFTextStore::Initialize() {
   if (FAILED(hr) || !disabledDocumentMgr) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  TSFTextStore::Initialize() FAILED to create "
-             "a document manager for disabled mode, hr=0x%08X",
+             "a document manager for disabled mode, hr=0x%08lX",
              hr));
     return;
   }
@@ -6772,7 +6773,7 @@ void TSFTextStore::Initialize() {
   if (FAILED(hr) || !disabledContext) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("  TSFTextStore::Initialize() FAILED to create "
-             "a context for disabled mode, hr=0x%08X",
+             "a context for disabled mode, hr=0x%08lX",
              hr));
     return;
   }
@@ -6821,7 +6822,7 @@ already_AddRefed<ITfMessagePump> TSFTextStore::GetMessagePump() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!messagePump)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetMessagePump() FAILED to "
-             "QI message pump from the thread manager, hr=0x%08X",
+             "QI message pump from the thread manager, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6844,7 +6845,7 @@ TSFTextStore::GetDisplayAttributeMgr() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!displayAttributeMgr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetDisplayAttributeMgr() FAILED to create "
-             "a display attribute manager instance, hr=0x%08X",
+             "a display attribute manager instance, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6865,7 +6866,7 @@ already_AddRefed<ITfCategoryMgr> TSFTextStore::GetCategoryMgr() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!categoryMgr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetCategoryMgr() FAILED to create "
-             "a category manager instance, hr=0x%08X",
+             "a category manager instance, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6890,7 +6891,7 @@ already_AddRefed<ITfCompartment> TSFTextStore::GetCompartmentForOpenClose() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartmentMgr)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
-             "sThreadMgr not having ITfCompartmentMgr, hr=0x%08X",
+             "sThreadMgr not having ITfCompartmentMgr, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6901,7 +6902,7 @@ already_AddRefed<ITfCompartment> TSFTextStore::GetCompartmentForOpenClose() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!compartment)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetCompartmentForOpenClose() FAILED due to"
-             "ITfCompartmentMgr::GetCompartment() failuere, hr=0x%08X",
+             "ITfCompartmentMgr::GetCompartment() failuere, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6928,7 +6929,7 @@ TSFTextStore::GetInputProcessorProfiles() {
   if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!inputProcessorProfiles)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("TSFTextStore::GetInputProcessorProfiles() FAILED to create input "
-             "processor profiles, hr=0x%08X",
+             "processor profiles, hr=0x%08lX",
              hr));
     return nullptr;
   }
@@ -6978,7 +6979,7 @@ bool TSFTextStore::ProcessRawKeyMessage(const MSG& aMsg) {
     if (NS_WARN_IF(FAILED(hr)) || NS_WARN_IF(!keystrokeMgr)) {
       MOZ_LOG(gIMELog, LogLevel::Error,
               ("TSFTextStore::ProcessRawKeyMessage() FAILED to "
-               "QI keystroke manager from the thread manager, hr=0x%08X",
+               "QI keystroke manager from the thread manager, hr=0x%08lX",
                hr));
       return false;
     }

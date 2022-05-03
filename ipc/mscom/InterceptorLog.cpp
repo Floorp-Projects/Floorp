@@ -294,7 +294,7 @@ void Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
   } else {
     line.AppendLiteral("(IID Conversion Failed)");
   }
-  line.AppendPrintf(", [out] 0x%p)\t0x%08X\n", aInterface, aResult);
+  line.AppendPrintf(", [out] 0x%p)\t0x%08lX\n", aInterface, aResult);
 
   MutexAutoLock lock(mMutex);
   mEntries.AppendElement(std::move(line));
@@ -385,14 +385,14 @@ void Logger::CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
                            });
           line.AppendLiteral(" }");
         } else {
-          line.AppendPrintf("(GetParam failed with HRESULT 0x%08X)", hr);
+          line.AppendPrintf("(GetParam failed with HRESULT 0x%08lX)", hr);
         }
       } else {
         VariantToString(paramValue, line);
       }
     } else if (hr != DISP_E_BADVARTYPE ||
                !TryParamAsGuid(callInfo.iid, aCallFrame, paramInfo, line)) {
-      line.AppendPrintf("(GetParam failed with HRESULT 0x%08X)", hr);
+      line.AppendPrintf("(GetParam failed with HRESULT 0x%08lX)", hr);
     }
     if (paramIndex < callInfo.cParams - 1) {
       line.AppendLiteral(", ");
@@ -401,7 +401,7 @@ void Logger::CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
   line.AppendLiteral(")\t");
 
   HRESULT callResult = aCallFrame->GetReturnValue();
-  line.AppendPrintf("0x%08X\n", callResult);
+  line.AppendPrintf("0x%08lX\n", callResult);
 
   aCapturedFrame = std::move(line);
 }
