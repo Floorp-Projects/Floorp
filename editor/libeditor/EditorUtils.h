@@ -179,6 +179,9 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
   constexpr bool EditorDestroyed() const {
     return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
   }
+  constexpr bool GotUnexpectedDOMTree() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
   NodeType* GetNewNode() const { return mNode; }
   RefPtr<NodeType> UnwrapNewNode() { return std::move(mNode); }
 

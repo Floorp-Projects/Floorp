@@ -2890,13 +2890,6 @@ class HTMLEditor final : public EditorBase,
   SelectContentInternal(nsIContent& aContentToSelect);
 
   /**
-   * CollapseSelectionAfter() collapses Selection after aElement.
-   * If aElement is an orphan node or not in editing host, returns error.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CollapseSelectionAfter(Element& aElement);
-
-  /**
    * GetInclusiveAncestorByTagNameAtSelection() looks for an element node whose
    * name matches aTagName from anchor node of Selection to <body> element.
    *
@@ -3347,14 +3340,14 @@ class HTMLEditor final : public EditorBase,
    * aNode was inserted at.  aSplitAtEdges specifies if the splitting process
    * is allowed to result in empty nodes.
    *
-   * @param aNode             Node to insert.
+   * @param aContent          The content node to insert.
    * @param aPointToInsert    Insertion point.
    * @param aSplitAtEdges     Splitting can result in empty nodes?
-   * @return                  Returns inserted point if succeeded.
-   *                          Otherwise, the result is not set.
    */
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
-      nsIContent& aNode, const EditorDOMPoint& aPointToInsert,
+  template <typename NodeType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateNodeResultBase<NodeType>
+  InsertNodeIntoProperAncestorWithTransaction(
+      NodeType& aContent, const EditorDOMPoint& aPointToInsert,
       SplitAtEdges aSplitAtEdges);
 
   /**
