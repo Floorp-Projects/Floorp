@@ -383,14 +383,6 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
   return true;
 }
 
-already_AddRefed<PRemoteLazyInputStreamChild>
-BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                                      const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
-  return actor.forget();
-}
-
 PUDPSocketChild* BackgroundChildImpl::AllocPUDPSocketChild(
     const Maybe<PrincipalInfo>& aPrincipalInfo, const nsCString& aFilter) {
   MOZ_CRASH("AllocPUDPSocket should not be called");
