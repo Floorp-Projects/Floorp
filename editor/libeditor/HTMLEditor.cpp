@@ -137,6 +137,19 @@ void HTMLEditor::AutoSelectionRestorer::Abort() {
  * HTMLEditor
  *****************************************************************************/
 
+template CreateContentResult
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
+    nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert,
+    SplitAtEdges aSplitAtEdges);
+template CreateElementResult
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
+    Element& aContentToInsert, const EditorDOMPoint& aPointToInsert,
+    SplitAtEdges aSplitAtEdges);
+template CreateTextResult
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
+    Text& aContentToInsert, const EditorDOMPoint& aPointToInsert,
+    SplitAtEdges aSplitAtEdges);
+
 HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
     [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
 
@@ -1857,32 +1870,27 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_ERROR_FAILURE;
   }
 
-  EditorDOMPoint insertedPoint = InsertNodeIntoProperAncestorWithTransaction(
-      *aElement, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (!insertedPoint.IsSet()) {
+  const CreateElementResult insertElementResult =
+      InsertNodeIntoProperAncestorWithTransaction<Element>(
+          *aElement, pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
+  if (insertElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(SplitAtEdges::"
         "eAllowToCreateEmptyContainer) failed");
-    return NS_ERROR_FAILURE;
+    return EditorBase::ToGenericNSResult(insertElementResult.unwrapErr());
   }
   // Set caret after element, but check for special case
   //  of inserting table-related elements: set in first cell instead
+  insertElementResult.IgnoreCaretPointSuggestion();
   if (!SetCaretInTableCell(aElement)) {
     if (NS_WARN_IF(Destroyed())) {
       return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
     }
-    nsresult rv = CollapseSelectionAfter(*aElement);
-    if (NS_WARN_IF(Destroyed())) {
-      return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
-    }
+    nsresult rv = CollapseSelectionTo(EditorRawDOMPoint::After(*aElement));
     if (NS_FAILED(rv)) {
-      NS_WARNING("HTMLEditor::CollapseSelectionAfter() failed");
-      return rv;
+      NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
+      return EditorBase::ToGenericNSResult(rv);
     }
-  }
-
-  if (NS_WARN_IF(Destroyed())) {
-    return EditorBase::ToGenericNSResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
   // check for inserting a whole table at the end of a block. If so insert
@@ -1893,12 +1901,10 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
     return NS_OK;
   }
 
-  DebugOnly<bool> advanced = insertedPoint.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced,
-                       "Failed to advance offset from inserted point");
+  const auto afterElement = EditorDOMPoint::After(*aElement);
   // Collapse selection to the new `<br>` element node after creating it.
   const CreateElementResult insertBRElementResult =
-      InsertBRElement(WithTransaction::Yes, insertedPoint, ePrevious);
+      InsertBRElement(WithTransaction::Yes, afterElement, ePrevious);
   if (insertBRElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertBRElement(WithTransaction::Yes, ePrevious) failed");
@@ -1911,36 +1917,45 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
   return EditorBase::ToGenericNSResult(rv);
 }
 
-EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
-    nsIContent& aNode, const EditorDOMPoint& aPointToInsert,
+template <typename NodeType>
+CreateNodeResultBase<NodeType>
+HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
+    NodeType& aContentToInsert, const EditorDOMPoint& aPointToInsert,
     SplitAtEdges aSplitAtEdges) {
+  using ResultType = CreateNodeResultBase<NodeType>;
+
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return EditorDOMPoint();
+    return ResultType(NS_ERROR_FAILURE);
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   // Search up the parent chain to find a suitable container.
   EditorDOMPoint pointToInsert(aPointToInsert);
   MOZ_ASSERT(pointToInsert.IsSet());
-  while (!HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(), aNode)) {
+  while (!HTMLEditUtils::CanNodeContain(*pointToInsert.GetContainer(),
+                                        aContentToInsert)) {
     // If the current parent is a root (body or table element)
     // then go no further - we can't insert.
-    if (pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
-        HTMLEditUtils::IsAnyTableElement(pointToInsert.GetContainer())) {
-      return EditorDOMPoint();
+    if (MOZ_UNLIKELY(
+            pointToInsert.IsContainerHTMLElement(nsGkAtoms::body) ||
+            HTMLEditUtils::IsAnyTableElement(pointToInsert.GetContainer()))) {
+      NS_WARNING(
+          "There was no proper container element to insert the content node in "
+          "the document");
+      return ResultType(NS_ERROR_FAILURE);
     }
 
     // Get the next point.
-    pointToInsert.Set(pointToInsert.GetContainer());
-    if (NS_WARN_IF(!pointToInsert.IsSet())) {
-      return EditorDOMPoint();
-    }
+    pointToInsert = pointToInsert.ParentPoint();
 
-    if (!pointToInsert.IsInContentNode() ||
-        !EditorUtils::IsEditableContent(*pointToInsert.ContainerAsContent(),
-                                        EditorType::HTML)) {
-      // There's no suitable place to put the node in this editing host.
-      return EditorDOMPoint();
+    if (MOZ_UNLIKELY(
+            !pointToInsert.IsInContentNode() ||
+            !EditorUtils::IsEditableContent(*pointToInsert.ContainerAsContent(),
+                                            EditorType::HTML))) {
+      NS_WARNING(
+          "There was no proper container element to insert the content node in "
+          "the editing host");
+      return ResultType(NS_ERROR_FAILURE);
     }
   }
 
@@ -1952,50 +1967,31 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
                                      aPointToInsert, aSplitAtEdges);
     if (splitNodeResult.isErr()) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-      return EditorDOMPoint();  // TODO: Should return error with `Result`
-    }
-    nsresult rv = splitNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-      return EditorDOMPoint();
+      return ResultType(splitNodeResult.unwrapErr());
     }
     pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSet());
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
+    // Caret should be set by the caller of this method so that we don't
+    // need to handle it here.
     splitNodeResult.IgnoreCaretPointSuggestion();
   }
 
-  {
-    // After inserting a node, pointToInsert will refer next sibling of
-    // the new node but keep referring the new node's offset.
-    // This method's result should be the point at insertion, it's useful
-    // even if the new node is moved by mutation observer immediately.
-    // So, let's lock only the offset and child node should be recomputed
-    // when it's necessary.
-    AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
-    // Now we can insert the new node.
-    CreateContentResult insertContentNodeResult =
-        InsertNodeWithTransaction(aNode, pointToInsert);
-    if (insertContentNodeResult.isErr()) {
-      NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-      return EditorDOMPoint();
-    }
-    nsresult rv = insertContentNodeResult.SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CreateContentResult::SuggestCaretPointTo() failed");
-      return EditorDOMPoint();
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CreateContentResult::SuggestCaretPointTo() failed, but ignored");
+  // Now we can insert the new node.
+  ResultType insertContentNodeResult =
+      InsertNodeWithTransaction<NodeType>(aContentToInsert, pointToInsert);
+  if (MOZ_LIKELY(insertContentNodeResult.isOk()) &&
+      MOZ_UNLIKELY(NS_WARN_IF(!aContentToInsert.GetParentNode()) ||
+                   NS_WARN_IF(aContentToInsert.GetParentNode() !=
+                              pointToInsert.GetContainer()))) {
+    NS_WARNING(
+        "EditorBase::InsertNodeWithTransaction() succeeded, but the inserted "
+        "node was moved or removed by the web app");
+    insertContentNodeResult.IgnoreCaretPointSuggestion();
+    return ResultType(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  return pointToInsert;
+  NS_WARNING_ASSERTION(insertContentNodeResult.isOk(),
+                       "EditorBase::InsertNodeWithTransaction() failed");
+  return insertContentNodeResult;
 }
 
 NS_IMETHODIMP HTMLEditor::SelectElement(Element* aElement) {
@@ -2034,27 +2030,6 @@ nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::SetStartAndEndInLimiter() failed");
   return error.StealNSResult();
-}
-
-nsresult HTMLEditor::CollapseSelectionAfter(Element& aElement) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  // Be sure the element is contained in the document body
-  if (NS_WARN_IF(!IsDescendantOfEditorRoot(&aElement))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (NS_WARN_IF(!aElement.GetParentNode())) {
-    return NS_ERROR_FAILURE;
-  }
-  // Collapse selection to just after desired element,
-  EditorRawDOMPoint afterElement(EditorRawDOMPoint::After(aElement));
-  if (NS_WARN_IF(!afterElement.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-  nsresult rv = CollapseSelectionTo(afterElement);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
 }
 
 nsresult HTMLEditor::AppendContentToSelectionAsRange(nsIContent& aContent) {
