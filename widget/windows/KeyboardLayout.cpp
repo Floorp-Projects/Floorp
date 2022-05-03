@@ -3575,7 +3575,7 @@ void NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
         //     we'd get some bug reports.
         MOZ_LOG(gKeyLog, LogLevel::Warning,
                 ("%p   NativeKey::WillDispatchKeyboardEvent(), WARNING, "
-                 "ignoring %uth message due to non-printable char message, %s",
+                 "ignoring %zuth message due to non-printable char message, %s",
                  this, i + 1, ToString(mFollowingCharMsgs[i]).get()));
         continue;
       }

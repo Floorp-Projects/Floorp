@@ -5173,7 +5173,7 @@ bool TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
              "appending pending compositionstart and compositionend... "
              "PendingCompositionStart={ mSelectionStart=%ld, "
              "mSelectionLength=%ld }, PendingCompositionEnd={ mData=\"%s\" "
-             "(Length()=%u), mSelectionStart=%ld }",
+             "(Length()=%zu), mSelectionStart=%ld }",
              this, compositionStart->mSelectionStart,
              compositionStart->mSelectionLength,
              GetEscapedUTF8String(compositionEnd->mData).get(),

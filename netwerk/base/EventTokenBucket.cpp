@@ -395,7 +395,7 @@ void EventTokenBucket::WantNormalTimers() {
 }
 
 void EventTokenBucket::FineGrainResetTimerNotify() {
-  SOCKET_LOG(("EventTokenBucket::FineGrainResetTimerNotify() events = %d\n",
+  SOCKET_LOG(("EventTokenBucket::FineGrainResetTimerNotify() events = %zd\n",
               this, mEvents.GetSize()));
   mFineGrainResetTimerArmed = false;
 
