@@ -5,8 +5,8 @@
 #ifndef CASCADE_BLOOM_FILTER_CASCADE_FILTER_H_
 #define CASCADE_BLOOM_FILTER_CASCADE_FILTER_H_
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "nsICascadeFilter.h"
-#include "nsCOMPtr.h"
 
 namespace mozilla {
 

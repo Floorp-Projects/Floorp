@@ -6,18 +6,15 @@
 #include "nsISystemProxySettings.h"
 #include "mozilla/Components.h"
 #include "nsIURI.h"
-#include "nsReadableUtils.h"
 #include "nsArrayUtils.h"
 #include "prnetdb.h"
 #include "prenv.h"
-#include "nsPrintfCString.h"
-#include "nsNetCID.h"
+#include "nsInterfaceHashtable.h"
+#include "nsHashtablesFwd.h"
+#include "nsHashKeys.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIGSettingsService.h"
-#include "nsInterfaceHashtable.h"
-#include "mozilla/Attributes.h"
-#include "nsIURI.h"
 
 using namespace mozilla;
 

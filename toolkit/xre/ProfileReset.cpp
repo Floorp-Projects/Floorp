@@ -15,13 +15,11 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
-#include "nsXPCOMCIDInternal.h"
 #include "mozilla/Components.h"
 #include "mozilla/XREAppData.h"
 
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/Unused.h"
-#include "prtime.h"
 
 using namespace mozilla;
 

@@ -21,8 +21,6 @@
 #include "nsUnicharUtils.h"
 #include "nsTextFormatter.h"
 #include "nsXPCOMCID.h"
-#include "plstr.h"
-#include "mozilla/Attributes.h"
 
 #ifdef MOZ_WIDGET_COCOA
 #  include <CoreFoundation/CoreFoundation.h>
@@ -30,8 +28,6 @@
 #elif defined(XP_WIN)
 #  include <windows.h>
 #  include <shlobj.h>
-#elif defined(XP_UNIX)
-#  include <unistd.h>
 #endif
 
 #ifdef DEBUG_bsmedberg
