@@ -7,7 +7,6 @@
 #define COMPONENTS_CTYPES_H
 
 #include "nsIXPCScriptable.h"
-#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace ctypes {

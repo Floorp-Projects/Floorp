@@ -6,7 +6,6 @@
 #include "nsAlertsIconListener.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSystemAlertsService.h"
 #include "nsIAlertsService.h"

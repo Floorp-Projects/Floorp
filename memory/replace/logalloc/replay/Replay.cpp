@@ -16,11 +16,8 @@ typedef intptr_t ssize_t;
 #  include <unistd.h>
 #endif
 #ifdef XP_LINUX
-#  include <sys/types.h>
-#  include <sys/stat.h>
 #  include <fcntl.h>
 #  include <stdlib.h>
-#  include <ctype.h>
 #endif
 #include <algorithm>
 #include <cmath>
