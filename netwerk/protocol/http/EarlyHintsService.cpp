@@ -6,14 +6,53 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EarlyHintsService.h"
+#include "EarlyHintPreloader.h"
+#include "mozilla/PreloadHashKey.h"
 #include "mozilla/Telemetry.h"
+#include "nsICookieJarSettings.h"
+#include "nsNetUtil.h"
+#include "nsString.h"
+#include "mozilla/StaticPrefs_network.h"
+#include "nsIPrincipal.h"
+#include "nsILoadInfo.h"
 
 namespace mozilla::net {
 
-void EarlyHintsService::EarlyHint(const nsACString& linkHeader) {
+EarlyHintsService::EarlyHintsService()
+    : mOngoingEarlyHints(new OngoingEarlyHints()) {}
+
+// implementing the destructor in the .cpp file to allow EarlyHintsService.h
+// not to include EarlyHintPreloader.h, decoupling the two files and hopefully
+// allow faster compile times
+EarlyHintsService::~EarlyHintsService() = default;
+
+void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
+                                  nsIURI* aBaseURI, nsILoadInfo* aLoadInfo) {
   mEarlyHintsCount++;
   if (!mFirstEarlyHint) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
+  }
+
+  if (!StaticPrefs::network_early_hints_enabled()) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  if (NS_FAILED(
+          aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings)))) {
+    return;
+  }
+
+  // TODO: find out why LinkHeaderParser uses utf16 and check if it can be
+  //       changed to utf8
+  auto linkHeaders = ParseLinkHeader(NS_ConvertUTF8toUTF16(aLinkHeader));
+
+  for (auto& linkHeader : linkHeaders) {
+    EarlyHintPreloader::MaybeCreateAndInsertPreload(
+        mOngoingEarlyHints, linkHeader, aBaseURI, triggeringPrincipal,
+        cookieJarSettings);
   }
 }
 
@@ -21,11 +60,16 @@ void EarlyHintsService::FinalResponse(uint32_t aResponseStatus) {
   // We will collect telemetry mosly once for a document.
   // In case of a reddirect this will be called multiple times.
   CollectTelemetry(Some(aResponseStatus));
+  if (aResponseStatus >= 300) {
+    mOngoingEarlyHints->CancelAllOngoingPreloads();
+    mCanceled = true;
+  }
 }
 
 void EarlyHintsService::Cancel() {
   if (!mCanceled) {
     CollectTelemetry(Nothing());
+    mOngoingEarlyHints->CancelAllOngoingPreloads();
     mCanceled = true;
   }
 }
