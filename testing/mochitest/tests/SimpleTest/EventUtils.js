@@ -39,7 +39,7 @@
 // placebo for compat. An easy way to differentiate this from the real thing
 // is whether the property is read-only or not.  The real |Components| property
 // is read-only.
-/* global _EU_Ci, _EU_Cc, _EU_Cu, _EU_OS */
+/* global _EU_Ci, _EU_Cc, _EU_Cu, _EU_ChromeUtils, _EU_OS */
 window.__defineGetter__("_EU_Ci", function() {
   var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? Ci : SpecialPowers.Ci;
@@ -55,12 +55,16 @@ window.__defineGetter__("_EU_Cu", function() {
   return c && c.value && !c.writable ? Cu : SpecialPowers.Cu;
 });
 
+window.__defineGetter__("_EU_ChromeUtils", function() {
+  var c = Object.getOwnPropertyDescriptor(window, "ChromeUtils");
+  return c && c.value && !c.writable ? ChromeUtils : SpecialPowers.ChromeUtils;
+});
+
 window.__defineGetter__("_EU_OS", function() {
   delete this._EU_OS;
   try {
-    this._EU_OS = this._EU_Cu.import(
-      "resource://gre/modules/AppConstants.jsm",
-      {}
+    this._EU_OS = _EU_ChromeUtils.import(
+      "resource://gre/modules/AppConstants.jsm"
     ).platform;
   } catch (ex) {
     this._EU_OS = null;
@@ -1251,10 +1255,9 @@ function synthesizeAndWaitNativeMouseMove(
 ) {
   let browser = gBrowser.selectedTab.linkedBrowser;
   let mm = browser.messageManager;
-  let ContentTask = _EU_Cu.import(
-    "resource://testing-common/ContentTask.jsm",
-    null
-  ).ContentTask;
+  let { ContentTask } = _EU_ChromeUtils.import(
+    "resource://testing-common/ContentTask.jsm"
+  );
 
   let eventRegisteredPromise = new Promise(resolve => {
     mm.addMessageListener("Test:MouseMoveRegistered", function processed(
@@ -1390,10 +1393,9 @@ function synthesizeAndWaitKey(
   let mm = browser.messageManager;
   let keyCode = _createKeyboardEventDictionary(aKey, aEvent, null, aWindow)
     .dictionary.keyCode;
-  let ContentTask = _EU_Cu.import(
-    "resource://testing-common/ContentTask.jsm",
-    null
-  ).ContentTask;
+  let { ContentTask } = _EU_ChromeUtils.import(
+    "resource://testing-common/ContentTask.jsm"
+  );
 
   let keyRegisteredPromise = new Promise(resolve => {
     mm.addMessageListener("Test:KeyRegistered", function processed(message) {
