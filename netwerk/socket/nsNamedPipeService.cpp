@@ -153,7 +153,7 @@ NamedPipeService::AddDataObserver(void* aHandle,
   HANDLE h = CreateIoCompletionPort(aHandle, mIocp,
                                     reinterpret_cast<ULONG_PTR>(aObserver), 1);
   if (NS_WARN_IF(!h)) {
-    LOG_NPS_ERROR("CreateIoCompletionPort error (%d)", GetLastError());
+    LOG_NPS_ERROR("CreateIoCompletionPort error (%lu)", GetLastError());
     return NS_ERROR_FAILURE;
   }
   if (NS_WARN_IF(h != mIocp)) {
@@ -264,7 +264,7 @@ NamedPipeService::Run() {
          * See remarks of |GetQueuedCompletionStatus| API.
          */
 
-        LOG_NPS_ERROR("invalid overlapped (%d)", err);
+        LOG_NPS_ERROR("invalid overlapped (%lu)", err);
         continue;
       }
 
@@ -301,7 +301,7 @@ NamedPipeService::Run() {
                     bytesTransferred);
       obs->OnDataAvailable(bytesTransferred, overlapped);
     } else {
-      LOG_NPS_ERROR("GetQueuedCompletionStatus %p failed, error=%d", obs.get(),
+      LOG_NPS_ERROR("GetQueuedCompletionStatus %p failed, error=%lu", obs.get(),
                     err);
       obs->OnError(err, overlapped);
     }

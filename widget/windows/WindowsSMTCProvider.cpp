@@ -124,11 +124,11 @@ WindowsSMTCProvider::~WindowsSMTCProvider() {
   // Dispose the window
   MOZ_ASSERT(mWindow);
   if (!DestroyWindow(mWindow)) {
-    LOG("Failed to destroy the hidden window. Error Code: %d", GetLastError());
+    LOG("Failed to destroy the hidden window. Error Code: %lu", GetLastError());
   }
   if (!UnregisterClass(L"Firefox-MediaKeys", nullptr)) {
     // Note that this is logged when the class wasn't even registered.
-    LOG("Failed to unregister the class. Error Code: %d", GetLastError());
+    LOG("Failed to unregister the class. Error Code: %lu", GetLastError());
   }
 }
 
