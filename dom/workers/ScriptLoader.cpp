@@ -545,14 +545,13 @@ class LoaderListener final : public nsIStreamLoaderObserver,
                    nsresult aStatus, uint32_t aStringLen,
                    const uint8_t* aString) override;
 
-  nsresult OnStreamCompleteInternal(nsIStreamLoader* aLoader, nsresult aStatus,
-                                    uint32_t aStringLen,
-                                    const uint8_t* aString);
+  nsresult DataReceivedFromNetwork(nsIStreamLoader* aLoader, nsresult aStatus,
+                                   uint32_t aStringLen, const uint8_t* aString);
 
   NS_IMETHOD
   OnStartRequest(nsIRequest* aRequest) override;
 
-  nsresult OnStartRequestInternal(nsIRequest* aRequest);
+  nsresult PrepareForRequest(nsIRequest* aRequest);
 
   NS_IMETHOD
   OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) override {
@@ -1468,14 +1467,14 @@ NS_IMETHODIMP
 LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
                                  nsISupports* aContext, nsresult aStatus,
                                  uint32_t aStringLen, const uint8_t* aString) {
-  nsresult rv = OnStreamCompleteInternal(aLoader, aStatus, aStringLen, aString);
+  nsresult rv = DataReceivedFromNetwork(aLoader, aStatus, aStringLen, aString);
   return mLoader->OnStreamComplete(mLoadInfo, rv);
 }
 
-nsresult LoaderListener::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
-                                                  nsresult aStatus,
-                                                  uint32_t aStringLen,
-                                                  const uint8_t* aString) {
+nsresult LoaderListener::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
+                                                 nsresult aStatus,
+                                                 uint32_t aStringLen,
+                                                 const uint8_t* aString) {
   AssertIsOnMainThread();
 
   if (!mLoadInfo.mChannel) {
@@ -1678,7 +1677,7 @@ nsresult LoaderListener::OnStreamCompleteInternal(nsIStreamLoader* aLoader,
 
 NS_IMETHODIMP
 LoaderListener::OnStartRequest(nsIRequest* aRequest) {
-  nsresult rv = OnStartRequestInternal(aRequest);
+  nsresult rv = PrepareForRequest(aRequest);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRequest->Cancel(rv);
@@ -1687,7 +1686,7 @@ LoaderListener::OnStartRequest(nsIRequest* aRequest) {
   return rv;
 }
 
-nsresult LoaderListener::OnStartRequestInternal(nsIRequest* aRequest) {
+nsresult LoaderListener::PrepareForRequest(nsIRequest* aRequest) {
   AssertIsOnMainThread();
 
   // If one load info cancels or hits an error, it can race with the start
