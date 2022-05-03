@@ -50,7 +50,7 @@ Preferences.addAll([
   { id: "browser.privatebrowsing.autostart", type: "bool" },
 
   // Downloads
-  { id: "browser.download.useDownloadDir", type: "bool" },
+  { id: "browser.download.useDownloadDir", type: "bool", inverted: true },
   { id: "browser.download.always_ask_before_handling_new_types", type: "bool" },
   { id: "browser.download.folderList", type: "int" },
   { id: "browser.download.dir", type: "file" },
