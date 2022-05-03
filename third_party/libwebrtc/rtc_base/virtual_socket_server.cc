@@ -1019,13 +1019,7 @@ void PrintFunction(std::vector<std::pair<double, double> >* f) {
 #endif  // <unused>
 
 void VirtualSocketServer::UpdateDelayDistribution() {
-  Function* dist =
-      CreateDistribution(delay_mean_, delay_stddev_, delay_samples_);
-  // We take a lock just to make sure we don't leak memory.
-  {
-    CritScope cs(&delay_crit_);
-    delay_dist_.reset(dist);
-  }
+  delay_dist_ = CreateDistribution(delay_mean_, delay_stddev_, delay_samples_);
 }
 
 static double PI = 4 * atan(1.0);
@@ -1044,11 +1038,11 @@ static double Pareto(double x, double min, double k) {
 }
 #endif
 
-VirtualSocketServer::Function* VirtualSocketServer::CreateDistribution(
-    uint32_t mean,
-    uint32_t stddev,
-    uint32_t samples) {
-  Function* f = new Function();
+std::unique_ptr<VirtualSocketServer::Function>
+VirtualSocketServer::CreateDistribution(uint32_t mean,
+                                        uint32_t stddev,
+                                        uint32_t samples) {
+  auto f = std::make_unique<Function>();
 
   if (0 == stddev) {
     f->push_back(Point(mean, 1.0));
@@ -1064,7 +1058,7 @@ VirtualSocketServer::Function* VirtualSocketServer::CreateDistribution(
       f->push_back(Point(x, y));
     }
   }
-  return Resample(Invert(Accumulate(f)), 0, 1, samples);
+  return Resample(Invert(Accumulate(std::move(f))), 0, 1, samples);
 }
 
 uint32_t VirtualSocketServer::GetTransitDelay(Socket* socket) {
@@ -1093,7 +1087,8 @@ struct FunctionDomainCmp {
   }
 };
 
-VirtualSocketServer::Function* VirtualSocketServer::Accumulate(Function* f) {
+std::unique_ptr<VirtualSocketServer::Function> VirtualSocketServer::Accumulate(
+    std::unique_ptr<Function> f) {
   RTC_DCHECK(f->size() >= 1);
   double v = 0;
   for (Function::size_type i = 0; i < f->size() - 1; ++i) {
@@ -1106,7 +1101,8 @@ VirtualSocketServer::Function* VirtualSocketServer::Accumulate(Function* f) {
   return f;
 }
 
-VirtualSocketServer::Function* VirtualSocketServer::Invert(Function* f) {
+std::unique_ptr<VirtualSocketServer::Function> VirtualSocketServer::Invert(
+    std::unique_ptr<Function> f) {
   for (Function::size_type i = 0; i < f->size(); ++i)
     std::swap((*f)[i].first, (*f)[i].second);
 
@@ -1114,24 +1110,25 @@ VirtualSocketServer::Function* VirtualSocketServer::Invert(Function* f) {
   return f;
 }
 
-VirtualSocketServer::Function* VirtualSocketServer::Resample(Function* f,
-                                                             double x1,
-                                                             double x2,
-                                                             uint32_t samples) {
-  Function* g = new Function();
+std::unique_ptr<VirtualSocketServer::Function> VirtualSocketServer::Resample(
+    std::unique_ptr<Function> f,
+    double x1,
+    double x2,
+    uint32_t samples) {
+  auto g = std::make_unique<Function>();
 
   for (size_t i = 0; i < samples; i++) {
     double x = x1 + (x2 - x1) * i / (samples - 1);
-    double y = Evaluate(f, x);
+    double y = Evaluate(f.get(), x);
     g->push_back(Point(x, y));
   }
 
-  delete f;
   return g;
 }
 
-double VirtualSocketServer::Evaluate(Function* f, double x) {
-  Function::iterator iter = absl::c_lower_bound(*f, x, FunctionDomainCmp());
+double VirtualSocketServer::Evaluate(const Function* f, double x) {
+  Function::const_iterator iter =
+      absl::c_lower_bound(*f, x, FunctionDomainCmp());
   if (iter == f->begin()) {
     return (*f)[0].second;
   } else if (iter == f->end()) {
