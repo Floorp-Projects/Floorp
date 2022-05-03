@@ -467,7 +467,12 @@ var FullScreen = {
     // before the check is fine since we also check the activeness of
     // the requesting document in content-side handling code.
     if (this._isRemoteBrowser(aBrowser)) {
-      let [targetActor, inProcessBC] = this._getNextMsgRecipientActor(aActor);
+      // The cached message recipient in actor is used for fullscreen state
+      // cleanup, we should not use it while entering fullscreen.
+      let [targetActor, inProcessBC] = this._getNextMsgRecipientActor(
+        aActor,
+        false /* aUseCache */
+      );
       if (!targetActor) {
         // If there is no appropriate actor to send the message we have
         // no way to complete the transition and should abort by exiting
@@ -475,14 +480,14 @@ var FullScreen = {
         this._abortEnterFullscreen();
         return;
       }
+      // Record that the actor is waiting for its child to enter
+      // fullscreen so that if it dies we can abort.
+      targetActor.waitingForChildEnterFullscreen = true;
       targetActor.sendAsyncMessage("DOMFullscreen:Entered", {
         remoteFrameBC: inProcessBC,
       });
 
       if (inProcessBC) {
-        // Record that the actor is waiting for its child to enter
-        // fullscreen so that if it dies we can abort.
-        targetActor.waitingForChildEnterFullscreen = true;
         // We aren't messaging the request origin yet, skip this time.
         return;
       }
@@ -559,17 +564,21 @@ var FullScreen = {
    */
   cleanupDomFullscreen(aActor) {
     let needToWaitForChildExit = false;
-    let [target, inProcessBC] = this._getNextMsgRecipientActor(aActor);
+    // Use the message recipient cached in the actor if possible, especially for
+    // the case that actor is destroyed, which we are unable to find it by
+    // walking up the browsing context tree.
+    let [target, inProcessBC] = this._getNextMsgRecipientActor(
+      aActor,
+      true /* aUseCache */
+    );
     if (target) {
       needToWaitForChildExit = true;
-      if (!target.waitingForChildExitFullscreen) {
-        // Record that the actor is waiting for its child to exit fullscreen so
-        // that if it dies we can continue cleanup.
-        target.waitingForChildExitFullscreen = true;
-        target.sendAsyncMessage("DOMFullscreen:CleanUp", {
-          remoteFrameBC: inProcessBC,
-        });
-      }
+      // Record that the actor is waiting for its child to exit fullscreen so
+      // that if it dies we can continue cleanup.
+      target.waitingForChildExitFullscreen = true;
+      target.sendAsyncMessage("DOMFullscreen:CleanUp", {
+        remoteFrameBC: inProcessBC,
+      });
       if (inProcessBC) {
         return needToWaitForChildExit;
       }
@@ -614,6 +623,8 @@ var FullScreen = {
    *
    * @param {JSWindowActorParent} aActor
    *        The actor that called this function.
+   * @param {bool} aUseCache
+   *        Use the recipient cached in the aActor if available.
    *
    * @return {[JSWindowActorParent, BrowsingContext]}
    *         The parent actor which should be sent the next msg and the
@@ -623,10 +634,10 @@ var FullScreen = {
    *         the calling actor has been destroyed or its associated
    *         WindowContext is in BFCache.
    */
-  _getNextMsgRecipientActor(aActor) {
+  _getNextMsgRecipientActor(aActor, aUseCache) {
     // Walk up the cached nextMsgRecipient to find the next available actor if
     // any.
-    if (aActor.nextMsgRecipient) {
+    if (aUseCache && aActor.nextMsgRecipient) {
       let nextMsgRecipient = aActor.nextMsgRecipient;
       while (nextMsgRecipient) {
         let [actor] = nextMsgRecipient;
