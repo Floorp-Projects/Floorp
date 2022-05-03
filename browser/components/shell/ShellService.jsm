@@ -412,9 +412,9 @@ let ShellServiceInternal = {
     // Currently this only works on certain Windows versions.
     try {
       // First check if we can even pin the app where an exception means no.
-      await this.shellService
+      this.shellService
         .QueryInterface(Ci.nsIWindowsShellService)
-        .checkPinCurrentAppToTaskbarAsync(privateBrowsing);
+        .checkPinCurrentAppToTaskbar(privateBrowsing);
       let winTaskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
         Ci.nsIWinTaskbar
       );
