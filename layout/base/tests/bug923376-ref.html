@@ -3,8 +3,9 @@
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <script>
 document.body.firstChild.focus();
-SpecialPowers.Cu.import(
-  "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
 maybeOnSpellCheck(document.body.firstChild, function() {
   document.documentElement.removeAttribute("class");
 });
