@@ -74,7 +74,6 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
 
   void CreateJsepTransportController(
       JsepTransportController::Config config,
-      rtc::Thread* signaling_thread = rtc::Thread::Current(),
       rtc::Thread* network_thread = rtc::Thread::Current(),
       cricket::PortAllocator* port_allocator = nullptr) {
     config.transport_observer = this;
@@ -84,9 +83,10 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
     config.dtls_transport_factory = fake_dtls_transport_factory_.get();
     config.on_dtls_handshake_error_ = [](rtc::SSLHandshakeError s) {};
     transport_controller_ = std::make_unique<JsepTransportController>(
-        signaling_thread, network_thread, port_allocator,
-        nullptr /* async_resolver_factory */, config);
-    ConnectTransportControllerSignals();
+        network_thread, port_allocator, nullptr /* async_resolver_factory */,
+        config);
+    network_thread->Invoke<void>(RTC_FROM_HERE,
+                                 [&] { ConnectTransportControllerSignals(); });
   }
 
   void ConnectTransportControllerSignals() {
@@ -276,18 +276,14 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
 
  protected:
   void OnConnectionState(cricket::IceConnectionState state) {
-    if (!signaling_thread_->IsCurrent()) {
-      signaled_on_non_signaling_thread_ = true;
-    }
+    ice_signaled_on_thread_ = rtc::Thread::Current();
     connection_state_ = state;
     ++connection_state_signal_count_;
   }
 
   void OnStandardizedIceConnectionState(
       PeerConnectionInterface::IceConnectionState state) {
-    if (!signaling_thread_->IsCurrent()) {
-      signaled_on_non_signaling_thread_ = true;
-    }
+    ice_signaled_on_thread_ = rtc::Thread::Current();
     ice_connection_state_ = state;
     ++ice_connection_state_signal_count_;
   }
@@ -296,26 +292,20 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
       PeerConnectionInterface::PeerConnectionState state) {
     RTC_LOG(LS_INFO) << "OnCombinedConnectionState: "
                      << static_cast<int>(state);
-    if (!signaling_thread_->IsCurrent()) {
-      signaled_on_non_signaling_thread_ = true;
-    }
+    ice_signaled_on_thread_ = rtc::Thread::Current();
     combined_connection_state_ = state;
     ++combined_connection_state_signal_count_;
   }
 
   void OnGatheringState(cricket::IceGatheringState state) {
-    if (!signaling_thread_->IsCurrent()) {
-      signaled_on_non_signaling_thread_ = true;
-    }
+    ice_signaled_on_thread_ = rtc::Thread::Current();
     gathering_state_ = state;
     ++gathering_state_signal_count_;
   }
 
   void OnCandidatesGathered(const std::string& transport_name,
                             const Candidates& candidates) {
-    if (!signaling_thread_->IsCurrent()) {
-      signaled_on_non_signaling_thread_ = true;
-    }
+    ice_signaled_on_thread_ = rtc::Thread::Current();
     candidates_[transport_name].insert(candidates_[transport_name].end(),
                                        candidates.begin(), candidates.end());
     ++candidates_signal_count_;
@@ -360,7 +350,7 @@ class JsepTransportControllerTest : public JsepTransportController::Observer,
   std::unique_ptr<FakeIceTransportFactory> fake_ice_transport_factory_;
   std::unique_ptr<FakeDtlsTransportFactory> fake_dtls_transport_factory_;
   rtc::Thread* const signaling_thread_ = nullptr;
-  bool signaled_on_non_signaling_thread_ = false;
+  rtc::Thread* ice_signaled_on_thread_ = nullptr;
   // Used to verify the SignalRtpTransportChanged/SignalDtlsTransportChanged are
   // signaled correctly.
   std::map<std::string, RtpTransportInternal*> changed_rtp_transport_by_mid_;
@@ -883,11 +873,12 @@ TEST_F(JsepTransportControllerTest, SignalCandidatesGathered) {
   EXPECT_EQ(1u, candidates_[kAudioMid1].size());
 }
 
-TEST_F(JsepTransportControllerTest, IceSignalingOccursOnSignalingThread) {
+TEST_F(JsepTransportControllerTest, IceSignalingOccursOnNetworkThread) {
   network_thread_ = rtc::Thread::CreateWithSocketServer();
   network_thread_->Start();
+  EXPECT_EQ(ice_signaled_on_thread_, nullptr);
   CreateJsepTransportController(JsepTransportController::Config(),
-                                signaling_thread_, network_thread_.get(),
+                                network_thread_.get(),
                                 /*port_allocator=*/nullptr);
   CreateLocalDescriptionAndCompleteConnectionOnNetworkThread();
 
@@ -903,7 +894,7 @@ TEST_F(JsepTransportControllerTest, IceSignalingOccursOnSignalingThread) {
   EXPECT_EQ_WAIT(1u, candidates_[kVideoMid1].size(), kTimeout);
   EXPECT_EQ(2, candidates_signal_count_);
 
-  EXPECT_TRUE(!signaled_on_non_signaling_thread_);
+  EXPECT_EQ(ice_signaled_on_thread_, network_thread_.get());
 
   network_thread_->Invoke<void>(RTC_FROM_HERE,
                                 [&] { transport_controller_.reset(); });

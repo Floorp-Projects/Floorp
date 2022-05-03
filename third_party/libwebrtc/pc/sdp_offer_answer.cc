@@ -2794,7 +2794,7 @@ bool SdpOfferAnswerHandler::IceRestartPending(
 
 bool SdpOfferAnswerHandler::NeedsIceRestart(
     const std::string& content_name) const {
-  return transport_controller()->NeedsIceRestart(content_name);
+  return pc_->NeedsIceRestart(content_name);
 }
 
 absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GetDtlsRole(
