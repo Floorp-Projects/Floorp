@@ -10,12 +10,21 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 tooltip {
-  border: 1px solid InfoText;
+  border: 1px solid;
   padding: 2px 3px;
   max-width: 40em;
   background-color: InfoBackground;
   color: InfoText;
   font: message-box;
+}
+
+@media (-moz-windows-default-theme) {
+  /* We use Window / WindowText instead on the default theme because the
+     default yellowish styles are somewhat ugly */
+  tooltip {
+    background-color: Window;
+    color: WindowText;
+  }
 }
 
 tooltip:not([position]) {
