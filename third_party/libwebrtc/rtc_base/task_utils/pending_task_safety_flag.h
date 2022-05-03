@@ -19,16 +19,22 @@
 
 namespace webrtc {
 
-// Use this flag to drop pending tasks that have been posted to the "main"
-// thread/TQ and end up running after the owning instance has been
-// deleted. The owning instance signals deletion by calling SetNotAlive() from
-// its destructor.
-//
+// The PendingTaskSafetyFlag and the ScopedTaskSafety are designed to address
+// the issue where you have a task to be executed later that has references,
+// but cannot guarantee that the referenced object is alive when the task is
+// executed.
+
+// This mechanism can be used with tasks that are created and destroyed
+// on a single thread / task queue, and with tasks posted to the same
+// thread/task queue, but tasks can be posted from any thread/TQ.
+
+// Typical usage:
 // When posting a task, post a copy (capture by-value in a lambda) of the flag
-// instance and before performing the work, check the |alive()| state. Abort if
+// reference and before performing the work, check the |alive()| state. Abort if
 // alive() returns |false|:
 //
-//    // Running outside of the main thread.
+// class ExampleClass {
+// ....
 //    my_task_queue_->PostTask(ToQueuedTask(
 //        [safety = pending_task_safety_flag_, this]() {
 //          // Now running on the main thread.
@@ -36,15 +42,19 @@ namespace webrtc {
 //            return;
 //          MyMethod();
 //        }));
+//   ....
+//   ~ExampleClass() {
+//     pending_task_safety_flag_->SetNotAlive();
+//   }
+//   scoped_refptr<PendingTaskSafetyFlag> pending_task_safety_flag_
+//        = PendingTaskSafetyFlag::Create();
+// }
 //
-// Or implicitly by letting ToQueuedTask do the checking:
+// ToQueuedTask has an overload that makes this check automatic:
 //
-//    // Running outside of the main thread.
 //    my_task_queue_->PostTask(ToQueuedTask(pending_task_safety_flag_,
 //        [this]() { MyMethod(); }));
 //
-// Note that checking the state only works on the construction/destruction
-// thread of the ReceiveStatisticsProxy instance.
 class PendingTaskSafetyFlag : public rtc::RefCountInterface {
  public:
   static rtc::scoped_refptr<PendingTaskSafetyFlag> Create();
@@ -62,11 +72,22 @@ class PendingTaskSafetyFlag : public rtc::RefCountInterface {
   RTC_NO_UNIQUE_ADDRESS SequenceChecker main_sequence_;
 };
 
-// Makes using PendingTaskSafetyFlag very simple. Automatic PTSF creation
-// and signalling of destruction when the ScopedTaskSafety instance goes out
-// of scope.
-// Should be used by the class that wants tasks dropped after destruction.
-// Requirements are that the instance be constructed and destructed on
+// The ScopedTaskSafety makes using PendingTaskSafetyFlag very simple.
+// It does automatic PTSF creation and signalling of destruction when the
+// ScopedTaskSafety instance goes out of scope.
+//
+// ToQueuedTask has an overload that takes a ScopedTaskSafety too, so there
+// is no need to explicitly call the "flag" method.
+//
+// Example usage:
+//
+//     my_task_queue->PostTask(ToQueuedTask(scoped_task_safety,
+//        [this]() {
+//             // task goes here
+//        }
+//
+// This should be used by the class that wants tasks dropped after destruction.
+// The requirement is that the instance has to be constructed and destructed on
 // the same thread as the potentially dropped tasks would be running on.
 class ScopedTaskSafety {
  public:
