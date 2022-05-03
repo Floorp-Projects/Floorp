@@ -712,7 +712,7 @@ var gHistorySwipeAnimation = {
     if (box.style.opacity > 0) {
       this._isStoppingAnimation = true;
       box.style.transition = "opacity 0.2s cubic-bezier(.07,.95,0,1)";
-      box.addEventListener("transitionend", this._completeFadeOut);
+      box.addEventListener("transitionend", this, true);
       box.style.opacity = 0;
     } else {
       this._isStoppingAnimation = false;
@@ -796,6 +796,14 @@ var gHistorySwipeAnimation = {
    */
   _isSupported: function HSA__isSupported() {
     return window.matchMedia("(-moz-swipe-animation-enabled)").matches;
+  },
+
+  handleEvent: function HSA_handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "transitionend":
+        this._completeFadeOut();
+        break;
+    }
   },
 
   _completeFadeOut: function HSA__completeFadeOut(aEvent) {
