@@ -151,6 +151,7 @@ class StatsCollector : public StatsCollectorInterface {
   TrackIdMap track_ids_;
   // Raw pointer to the peer connection the statistics are gathered from.
   PeerConnectionInternal* const pc_;
+  int64_t cache_timestamp_ms_ = 0;
   double stats_gathering_started_;
   const bool use_standard_bytes_stats_;
 

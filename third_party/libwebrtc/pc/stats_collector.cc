@@ -649,15 +649,17 @@ void StatsCollector::GetStats(MediaStreamTrackInterface* track,
 void StatsCollector::UpdateStats(
     PeerConnectionInterface::StatsOutputLevel level) {
   RTC_DCHECK(pc_->signaling_thread()->IsCurrent());
-  double time_now = GetTimeNow();
-  // Calls to UpdateStats() that occur less than kMinGatherStatsPeriod number of
-  // ms apart will be ignored.
-  const double kMinGatherStatsPeriod = 50;
-  if (stats_gathering_started_ != 0 &&
-      stats_gathering_started_ + kMinGatherStatsPeriod > time_now) {
+  // Calls to UpdateStats() that occur less than kMinGatherStatsPeriodMs apart
+  // will be ignored. Using a monotonic clock specifically for this, while using
+  // a UTC clock for the reports themselves.
+  const int64_t kMinGatherStatsPeriodMs = 50;
+  int64_t cache_now_ms = rtc::TimeMillis();
+  if (cache_timestamp_ms_ != 0 &&
+      cache_timestamp_ms_ + kMinGatherStatsPeriodMs > cache_now_ms) {
     return;
   }
-  stats_gathering_started_ = time_now;
+  cache_timestamp_ms_ = cache_now_ms;
+  stats_gathering_started_ = GetTimeNow();
 
   // TODO(tommi): All of these hop over to the worker thread to fetch
   // information.  We could use an AsyncInvoker to run all of these and post
@@ -1267,7 +1269,7 @@ void StatsCollector::UpdateTrackReports() {
 }
 
 void StatsCollector::ClearUpdateStatsCacheForTest() {
-  stats_gathering_started_ = 0;
+  cache_timestamp_ms_ = 0;
 }
 
 }  // namespace webrtc
