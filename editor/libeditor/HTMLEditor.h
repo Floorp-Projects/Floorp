@@ -729,9 +729,8 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * InsertBRElement() creates a <br> element and inserts it
-   * before aPointToInsert.  Then, tries to collapse selection at or after the
-   * new <br> node if aSelect is not eNone.
+   * InsertBRElement() creates a <br> element and inserts it before
+   * aPointToInsert.
    *
    * @param aWithTransaction    Whether the inserting is new element is undoable
    *                            or not.  WithTransaction::No is useful only when
@@ -739,15 +738,16 @@ class HTMLEditor final : public EditorBase,
    *                            which has not been connected yet.
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
-   * @param aSelect             If eNone, this won't change selection.
-   *                            If eNext, selection will be collapsed after
-   *                            the <br> element.
-   *                            If ePrevious, selection will be collapsed at
-   *                            the <br> element.
-   * @return                    The new <br> node.  If failed to create new
-   *                            <br> node, returns error.
+   * @param aSelect             If eNone, returns a point to put caret which is
+   *                            suggested by InsertNodeTransaction.
+   *                            If eNext, returns a point after the new <br>
+   *                            element.
+   *                            If ePrevious, returns a point at the new <br>
+   *                            element.
+   * @return                    The new <br> node and suggesting point to put
+   *                            caret which respects aSelect.
    */
-  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult> InsertBRElement(
+  MOZ_CAN_RUN_SCRIPT CreateElementResult InsertBRElement(
       WithTransaction aWithTransaction, const EditorDOMPoint& aPointToInsert,
       EDirection aSelect = eNone);
 
