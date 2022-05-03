@@ -161,16 +161,6 @@ rtc_library("rtc_media_base") {
   ]
 }
 
-rtc_library("rtc_constants") {
-  defines = []
-  libs = []
-  deps = []
-  sources = [
-    "engine/constants.cc",
-    "engine/constants.h",
-  ]
-}
-
 rtc_library("rtc_simulcast_encoder_adapter") {
   visibility = [ "*" ]
   defines = []
@@ -232,7 +222,6 @@ rtc_library("rtc_internal_video_codecs") {
   defines = []
   libs = []
   deps = [
-    ":rtc_constants",
     ":rtc_encoder_simulcast_proxy",
     ":rtc_h264_profile_id",
     ":rtc_media_base",
@@ -281,7 +270,6 @@ rtc_library("rtc_audio_video") {
   defines = []
   libs = []
   deps = [
-    ":rtc_constants",
     ":rtc_media_base",
     "../api:call_api",
     #"../api:libjingle_peerconnection_api",
@@ -550,7 +538,6 @@ if (rtc_include_tests) {
       defines = []
       deps = [
         ":rtc_audio_video",
-        ":rtc_constants",
         ":rtc_data",
         ":rtc_encoder_simulcast_proxy",
         ":rtc_internal_video_codecs",
