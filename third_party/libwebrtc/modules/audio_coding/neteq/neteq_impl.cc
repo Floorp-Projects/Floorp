@@ -1214,6 +1214,11 @@ int NetEqImpl::GetDecision(Operation* operation,
   }
 
   controller_->ExpandDecision(*operation);
+  if ((last_mode_ == Mode::kCodecPlc) && (*operation != Operation::kExpand)) {
+    // Getting out of the PLC expand mode, reporting interruptions.
+    // NetEq PLC reports this metrics in expand.cc
+    stats_->EndExpandEvent(fs_hz_);
+  }
 
   // Check conditions for reset.
   if (new_codec_ || *operation == Operation::kUndefined) {
@@ -2159,7 +2164,7 @@ void NetEqImpl::SetSampleRateAndChannels(int fs_hz, size_t channels) {
                                expand_->overlap_length());
 
   normal_.reset(new Normal(fs_hz, decoder_database_.get(), *background_noise_,
-                           expand_.get()));
+                           expand_.get(), stats_.get()));
   accelerate_.reset(
       accelerate_factory_->Create(fs_hz, channels, *background_noise_));
   preemptive_expand_.reset(preemptive_expand_factory_->Create(
