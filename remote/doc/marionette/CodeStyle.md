@@ -46,16 +46,9 @@ your exported symbols to the shared global `this`:
 When importing symbols in Marionette code, try to be specific about
 what you need:
 
-	const {TimedPromise} = Cu.import("chrome://remote/content/marionette/sync.js", {});
-
-The [linter] will complain if you import a named symbol that is
-not in use.  If however you _need_ to import every symbol, you can:
-
-	const wait = {};
-	Cu.import("chrome://remote/content/marionette/sync.js", wait);
-
-	wait.sleep(42);
-	await wait.TimedPromise(…);
+	const { TimedPromise } = ChromeUtils.import(
+	  "chrome://remote/content/marionette/sync.js"
+	);
 
 We prefer object assignment shorthands when redefining names,
 for example when you use functionality from the `Components` global:
