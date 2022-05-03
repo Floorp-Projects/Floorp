@@ -35,7 +35,6 @@
 
 #include "nsAppRunner.h"
 #include "nsExceptionHandler.h"
-#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsJSUtils.h"
 #include "nsWidgetsCID.h"
@@ -87,8 +86,6 @@
 #include "mozilla/gfx/GPUProcessImpl.h"
 #include "mozilla/net/SocketProcessImpl.h"
 
-#include "GeckoProfiler.h"
-#include "BaseProfiler.h"
 #include "ProfilerControl.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)

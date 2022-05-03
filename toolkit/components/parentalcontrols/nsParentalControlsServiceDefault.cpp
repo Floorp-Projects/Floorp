@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsParentalControlsService.h"
-#include "nsString.h"
 #include "nsIFile.h"
 #include "mozilla/Unused.h"
 

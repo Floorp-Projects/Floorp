@@ -8,7 +8,6 @@
 
 #include "nsIAlertsService.h"
 #include "nsTHashMap.h"
-#include "nsCOMPtr.h"
 
 class nsAlertsIconListener;
 

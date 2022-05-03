@@ -9,7 +9,7 @@
 
 #include "nsINativeOSFileInternals.h"
 
-#include "mozilla/Attributes.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 
