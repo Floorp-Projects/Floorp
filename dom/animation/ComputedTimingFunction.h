@@ -14,12 +14,21 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SMILKeySpline.h"
-#include "mozilla/Variant.h"
 
 namespace mozilla {
 
 class ComputedTimingFunction {
  public:
+  enum class Type : uint8_t {
+    Ease = uint8_t(StyleTimingKeyword::Ease),            // ease
+    Linear = uint8_t(StyleTimingKeyword::Linear),        // linear
+    EaseIn = uint8_t(StyleTimingKeyword::EaseIn),        // ease-in
+    EaseOut = uint8_t(StyleTimingKeyword::EaseOut),      // ease-out
+    EaseInOut = uint8_t(StyleTimingKeyword::EaseInOut),  // ease-in-out
+    CubicBezier,                                         // cubic-bezier()
+    Step,  // step-start | step-end | steps()
+  };
+
   struct StepFunc {
     uint32_t mSteps = 1;
     StyleStepPosition mPos = StyleStepPosition::End;
@@ -40,7 +49,11 @@ class ComputedTimingFunction {
     return ComputedTimingFunction(aSteps, aPos);
   }
 
-  explicit ComputedTimingFunction(const nsTimingFunction& aFunction);
+  constexpr ComputedTimingFunction() = default;
+  explicit ComputedTimingFunction(const nsTimingFunction& aFunction) {
+    Init(aFunction);
+  }
+  void Init(const nsTimingFunction& aFunction);
 
   // BeforeFlag is used in step timing function.
   // https://drafts.csswg.org/css-easing/#before-flag
@@ -48,74 +61,60 @@ class ComputedTimingFunction {
   double GetValue(double aPortion, BeforeFlag aBeforeFlag) const;
   const SMILKeySpline* GetFunction() const {
     NS_ASSERTION(HasSpline(), "Type mismatch");
-    return mFunction.match(
-        [](const KeywordFunction& aFunction) { return &aFunction.mFunction; },
-        [](const SMILKeySpline& aFunction) { return &aFunction; },
-        [](const StepFunc& aFunction) -> const SMILKeySpline* {
-          return nullptr;
-        });
+    return &mTimingFunction;
   }
-  bool HasSpline() const { return !mFunction.is<StepFunc>(); }
-  const StepFunc& GetSteps() const { return mFunction.as<StepFunc>(); }
+  Type GetType() const { return mType; }
+  bool HasSpline() const { return mType != Type::Step; }
+  const StepFunc& GetSteps() const {
+    MOZ_ASSERT(mType == Type::Step);
+    return mSteps;
+  }
   bool operator==(const ComputedTimingFunction& aOther) const {
-    return mFunction == aOther.mFunction;
+    return mType == aOther.mType &&
+           (HasSpline() ? mTimingFunction == aOther.mTimingFunction
+                        : mSteps == aOther.mSteps);
   }
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
   }
   bool operator==(const nsTimingFunction& aOther) const {
-    return mFunction.match(
-        [&aOther](const KeywordFunction& aFunction) {
-          return aOther.mTiming.tag ==
-                     StyleComputedTimingFunction::Tag::Keyword &&
-                 aFunction.mKeyword == aOther.mTiming.keyword._0;
-        },
-        [&aOther](const SMILKeySpline& aFunction) {
-          return aOther.mTiming.tag ==
-                     StyleComputedTimingFunction::Tag::CubicBezier &&
-                 aFunction.X1() == aOther.mTiming.cubic_bezier.x1 &&
-                 aFunction.Y1() == aOther.mTiming.cubic_bezier.y1 &&
-                 aFunction.X2() == aOther.mTiming.cubic_bezier.x2 &&
-                 aFunction.Y2() == aOther.mTiming.cubic_bezier.y2;
-        },
-        [&aOther](const StepFunc& aFunction) {
-          return aOther.mTiming.tag ==
-                     StyleComputedTimingFunction::Tag::Steps &&
-                 aFunction.mSteps == uint32_t(aOther.mTiming.steps._0) &&
-                 aFunction.mPos == aOther.mTiming.steps._1;
-        });
+    switch (aOther.mTiming.tag) {
+      case StyleComputedTimingFunction::Tag::Keyword:
+        return uint8_t(mType) == uint8_t(aOther.mTiming.keyword._0);
+      case StyleComputedTimingFunction::Tag::CubicBezier:
+        return mTimingFunction.X1() == aOther.mTiming.cubic_bezier.x1 &&
+               mTimingFunction.Y1() == aOther.mTiming.cubic_bezier.y1 &&
+               mTimingFunction.X2() == aOther.mTiming.cubic_bezier.x2 &&
+               mTimingFunction.Y2() == aOther.mTiming.cubic_bezier.y2;
+      case StyleComputedTimingFunction::Tag::Steps:
+        return mSteps.mSteps == uint32_t(aOther.mTiming.steps._0) &&
+               mSteps.mPos == aOther.mTiming.steps._1;
+      default:
+        return false;
+    }
   }
   bool operator!=(const nsTimingFunction& aOther) const {
     return !(*this == aOther);
   }
+  int32_t Compare(const ComputedTimingFunction& aRhs) const;
   void AppendToString(nsACString& aResult) const;
 
   static double GetPortion(const Maybe<ComputedTimingFunction>& aFunction,
                            double aPortion, BeforeFlag aBeforeFlag) {
     return aFunction ? aFunction->GetValue(aPortion, aBeforeFlag) : aPortion;
   }
+  static int32_t Compare(const Maybe<ComputedTimingFunction>& aLhs,
+                         const Maybe<ComputedTimingFunction>& aRhs);
 
  private:
-  struct KeywordFunction {
-    KeywordFunction(mozilla::StyleTimingKeyword aKeyword,
-                    SMILKeySpline aFunction)
-        : mKeyword{aKeyword}, mFunction{aFunction} {}
-
-    bool operator==(const KeywordFunction& aOther) const {
-      return mKeyword == aOther.mKeyword && mFunction == aOther.mFunction;
-    }
-    mozilla::StyleTimingKeyword mKeyword;
-    SMILKeySpline mFunction;
-  };
-  using Function = mozilla::Variant<KeywordFunction, SMILKeySpline, StepFunc>;
-
-  static Function ConstructFunction(const nsTimingFunction& aFunction);
   ComputedTimingFunction(double x1, double y1, double x2, double y2)
-      : mFunction{AsVariant(SMILKeySpline{x1, y1, x2, y2})} {}
+      : mType(Type::CubicBezier), mTimingFunction(x1, y1, x2, y2) {}
   ComputedTimingFunction(uint32_t aSteps, StyleStepPosition aPos)
-      : mFunction{AsVariant(StepFunc{aSteps, aPos})} {}
+      : mType(Type::Step), mSteps{aSteps, aPos} {}
 
-  Function mFunction;
+  Type mType = Type::Ease;
+  SMILKeySpline mTimingFunction;
+  StepFunc mSteps;
 };
 
 inline bool operator==(const Maybe<ComputedTimingFunction>& aLHS,

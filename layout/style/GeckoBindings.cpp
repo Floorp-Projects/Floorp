@@ -1168,7 +1168,8 @@ static Keyframe* GetOrCreateKeyframe(nsTArray<Keyframe>* aKeyframes,
       aInsertPosition == KeyframeInsertPosition::Prepend ? 0 : keyframeIndex);
   keyframe->mOffset.emplace(aOffset);
   if (!aTimingFunction->IsLinear()) {
-    keyframe->mTimingFunction.emplace(*aTimingFunction);
+    keyframe->mTimingFunction.emplace();
+    keyframe->mTimingFunction->Init(*aTimingFunction);
   }
 
   return keyframe;
