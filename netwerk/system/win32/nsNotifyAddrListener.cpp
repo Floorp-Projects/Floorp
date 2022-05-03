@@ -486,7 +486,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
         continue;
       }
 
-      LOG(("Adapter %s type: %u",
+      LOG(("Adapter %s type: %lu",
            NS_ConvertUTF16toUTF8(adapter->FriendlyName).get(),
            adapter->IfType));
 

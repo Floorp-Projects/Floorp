@@ -1399,13 +1399,14 @@ bool IMMHandler::HandleQueryCharPosition(nsWindow* aWindow, LPARAM lParam,
 
   *oResult = TRUE;
 
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("IMMHandler::HandleQueryCharPosition, SUCCEEDED, pCharPosition={ "
-           "pt={ x=%d, y=%d }, cLineHeight=%d, rcDocument={ left=%d, top=%d, "
-           "right=%d, bottom=%d } }",
-           pCharPosition->pt.x, pCharPosition->pt.y, pCharPosition->cLineHeight,
-           pCharPosition->rcDocument.left, pCharPosition->rcDocument.top,
-           pCharPosition->rcDocument.right, pCharPosition->rcDocument.bottom));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("IMMHandler::HandleQueryCharPosition, SUCCEEDED, pCharPosition={ "
+       "pt={ x=%ld, y=%ld }, cLineHeight=%d, rcDocument={ left=%ld, top=%ld, "
+       "right=%ld, bottom=%ld } }",
+       pCharPosition->pt.x, pCharPosition->pt.y, pCharPosition->cLineHeight,
+       pCharPosition->rcDocument.left, pCharPosition->rcDocument.top,
+       pCharPosition->rcDocument.right, pCharPosition->rcDocument.bottom));
   return true;
 }
 
@@ -2063,8 +2064,8 @@ bool IMMHandler::SetIMERelatedWindowsPos(nsWindow* aWindow,
     }
     MOZ_LOG(gIMELog, LogLevel::Info,
             ("  IMMHandler::SetIMERelatedWindowsPos, Calling "
-             "ImmSetCandidateWindow()... ptCurrentPos={ x=%d, y=%d }, "
-             "rcArea={ left=%d, top=%d, right=%d, bottom=%d }, "
+             "ImmSetCandidateWindow()... ptCurrentPos={ x=%ld, y=%ld }, "
+             "rcArea={ left=%ld, top=%ld, right=%ld, bottom=%ld }, "
              "writingMode=%s",
              candForm.ptCurrentPos.x, candForm.ptCurrentPos.y,
              candForm.rcArea.left, candForm.rcArea.top, candForm.rcArea.right,

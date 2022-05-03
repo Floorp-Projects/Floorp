@@ -58,7 +58,7 @@ static bool FindNamedObject(const ComparatorFnT& aComparator) {
   }
 
   nsAutoString path;
-  path.AppendPrintf("\\Sessions\\%u\\BaseNamedObjects", sessionId);
+  path.AppendPrintf("\\Sessions\\%lu\\BaseNamedObjects", sessionId);
 
   UNICODE_STRING baseNamedObjectsName;
   ::RtlInitUnicodeString(&baseNamedObjectsName, path.get());
@@ -170,7 +170,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   // The section name always ends with this suffix, which is derived from the
   // current thread id and the UIA message's WPARAM and LPARAM.
   nsAutoString partialSectionSuffix;
-  partialSectionSuffix.AppendPrintf("_%08x_%08" PRIxLPTR "_%08zx",
+  partialSectionSuffix.AppendPrintf("_%08lx_%08" PRIxLPTR "_%08zx",
                                     ::GetCurrentThreadId(), aLParam, aWParam);
 
   // Find any named Section that matches the naming convention of the UIA shared

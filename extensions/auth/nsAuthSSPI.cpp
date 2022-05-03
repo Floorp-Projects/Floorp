@@ -448,7 +448,7 @@ nsAuthSSPI::GetNextToken(const void* inToken, uint32_t inTokenLen,
     return NS_OK;
   }
 
-  LOG(("InitializeSecurityContext failed [rc=%d:%s]\n", rc, MapErrorCode(rc)));
+  LOG(("InitializeSecurityContext failed [rc=%ld:%s]\n", rc, MapErrorCode(rc)));
   Reset();
   free(ob.pvBuffer);
   return NS_ERROR_FAILURE;
