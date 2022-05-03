@@ -3356,7 +3356,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 126;
+    const UI_VERSION = 127;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4149,6 +4149,21 @@ BrowserGlue.prototype = {
           true
         );
       }
+    }
+
+    if (currentUIVersion < 127) {
+      // Bug 1767440 - Clean up rollout search param prefs.
+
+      let prefsToClear = {
+        "browser.search.param.google_channel_us": "tus7",
+        "browser.search.param.google_channel_row": "trow7",
+        "browser.search.param.bing_ptag": "MOZZ0000000031",
+      };
+      Object.entries(prefsToClear).forEach(([key, value]) => {
+        if (Services.prefs.getStringPref(key, null) == value) {
+          Services.prefs.clearUserPref(key);
+        }
+      });
     }
 
     // Update the migration version.
