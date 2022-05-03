@@ -27,8 +27,7 @@ AudioSendStream::Config::Config(Transport* send_transport)
 AudioSendStream::Config::~Config() = default;
 
 std::string AudioSendStream::Config::ToString() const {
-  char buf[1024];
-  rtc::SimpleStringBuilder ss(buf);
+  rtc::StringBuilder ss;
   ss << "{rtp: " << rtp.ToString();
   ss << ", rtcp_report_interval_ms: " << rtcp_report_interval_ms;
   ss << ", send_transport: " << (send_transport ? "(Transport)" : "null");
@@ -39,8 +38,8 @@ std::string AudioSendStream::Config::ToString() const {
   ss << ", has_dscp: " << (has_dscp ? "true" : "false");
   ss << ", send_codec_spec: "
      << (send_codec_spec ? send_codec_spec->ToString() : "<unset>");
-  ss << '}';
-  return ss.str();
+  ss << "}";
+  return ss.Release();
 }
 
 AudioSendStream::Config::Rtp::Rtp() = default;
