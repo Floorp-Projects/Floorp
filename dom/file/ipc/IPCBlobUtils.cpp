@@ -8,6 +8,7 @@
 #include "RemoteLazyInputStream.h"
 #include "RemoteLazyInputStreamChild.h"
 #include "RemoteLazyInputStreamParent.h"
+#include "RemoteLazyInputStreamUtils.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundParent.h"
@@ -33,8 +34,11 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
   switch (stream.type()) {
     // Parent to child: when an nsIInputStream is sent from parent to child, the
     // child receives a RemoteLazyInputStream actor.
-    case RemoteLazyStream::TRemoteLazyInputStream: {
-      inputStream = stream.get_RemoteLazyInputStream();
+    case RemoteLazyStream::TPRemoteLazyInputStreamChild: {
+      RemoteLazyInputStreamChild* actor =
+          static_cast<RemoteLazyInputStreamChild*>(
+              stream.get_PRemoteLazyInputStreamChild());
+      inputStream = actor->CreateStream();
       break;
     }
 
@@ -125,22 +129,13 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
     return rv.StealNSResult();
   }
 
-  if (XRE_IsParentProcess()) {
-    RefPtr<RemoteLazyInputStream> stream =
-        RemoteLazyInputStream::WrapStream(inputStream);
-    if (NS_WARN_IF(!stream)) {
-      return rv.StealNSResult();
-    }
-
-    aIPCBlob.inputStream() = stream;
-    return NS_OK;
+  RemoteLazyStream stream;
+  rv = RemoteLazyInputStreamUtils::SerializeInputStream(
+      inputStream, aIPCBlob.size(), stream, aManager);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
   }
 
-  IPCStream stream;
-  if (!mozilla::ipc::SerializeIPCStream(inputStream.forget(), stream,
-                                        /* aAllowLazy */ true)) {
-    return NS_ERROR_FAILURE;
-  }
   aIPCBlob.inputStream() = stream;
   return NS_OK;
 }
