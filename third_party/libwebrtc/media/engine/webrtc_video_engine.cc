@@ -817,7 +817,6 @@ bool WebRtcVideoChannel::GetChangedSendParameters(
 
   // Never enable sending FlexFEC, unless we are in the experiment.
   if (!IsEnabled(call_->trials(), "WebRTC-FlexFEC-03")) {
-    RTC_LOG(LS_INFO) << "WebRTC-FlexFEC-03 field trial is not enabled.";
     for (VideoCodecSettings& codec : negotiated_codecs)
       codec.flexfec_payload_type = -1;
   }
