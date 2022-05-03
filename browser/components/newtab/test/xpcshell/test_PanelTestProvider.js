@@ -10,6 +10,7 @@ const { validate } = ChromeUtils.import(
 
 Cu.importGlobalProperties(["fetch"]);
 
+let CFR_SCHEMA;
 let UPDATE_ACTION_SCHEMA;
 let WHATS_NEW_SCHEMA;
 let SPOTLIGHT_SCHEMA;
@@ -20,6 +21,9 @@ add_setup(async function setup() {
     return fetch(uri, { credentials: "omit" }).then(rsp => rsp.json());
   }
 
+  CFR_SCHEMA = await fetchSchema(
+    "resource://activity-stream/schemas/CFR/ExtensionDoorhanger.schema.json"
+  );
   UPDATE_ACTION_SCHEMA = await fetchSchema(
     "resource://activity-stream/schemas/OnboardingMessage/UpdateAction.schema.json"
   );
@@ -97,5 +101,37 @@ add_task(async function test_PanelTestProvider() {
     messages.filter(m => m.template === "pb_newtab").length,
     1,
     "There is one pb_newtab message"
+  );
+});
+
+add_task(async function test_SpotlightAsCFR() {
+  let message = await PanelTestProvider.getMessages().then(msgs =>
+    msgs.find(msg => msg.id === "TCP_SPOTLIGHT_MESSAGE_95")
+  );
+
+  message = {
+    ...message,
+    content: {
+      ...message.content,
+      category: "",
+      layout: "icon_and_message",
+      bucket_id: "",
+      notification_text: "",
+      heading_text: "",
+      text: "",
+      buttons: {},
+    },
+  };
+
+  assertSchema(
+    message,
+    CFR_SCHEMA,
+    "Munged spotlight message validates with CFR ExtensionDoorhanger schema"
+  );
+
+  assertSchema(
+    message,
+    SPOTLIGHT_SCHEMA,
+    "Munged Spotlight message validates with Spotlight schema"
   );
 });
