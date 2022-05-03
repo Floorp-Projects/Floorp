@@ -7,11 +7,34 @@
 
 var EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
 
-Cu.import("resource://reftest/globals.jsm", this);
-Cu.import("resource://reftest/reftest.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+const {
+    NS_GFXINFO_CONTRACTID,
+
+    TYPE_REFTEST_EQUAL,
+    TYPE_REFTEST_NOTEQUAL,
+    TYPE_LOAD,
+    TYPE_SCRIPT,
+    TYPE_PRINT,
+
+    EXPECTED_PASS,
+    EXPECTED_FAIL,
+    EXPECTED_RANDOM,
+    EXPECTED_FUZZY,
+
+    PREF_BOOLEAN,
+    PREF_STRING,
+    PREF_INTEGER,
+
+    FOCUS_FILTER_NEEDS_FOCUS_TESTS,
+    FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS,
+
+    g,
+} = ChromeUtils.import("resource://reftest/globals.jsm", this);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const { AppConstants } = ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+);
 
 const NS_SCRIPTSECURITYMANAGER_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX = "@mozilla.org/network/protocol;1?name=";
