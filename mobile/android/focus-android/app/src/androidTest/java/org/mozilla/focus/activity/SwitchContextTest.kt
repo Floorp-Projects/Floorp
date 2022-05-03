@@ -87,6 +87,7 @@ class SwitchContextTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun switchFromSettingsToFocusTest() {
         // Initialize UiDevice instance
         val LAUNCH_TIMEOUT = 5000

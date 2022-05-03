@@ -64,6 +64,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun autoplayPermissionsSettingsItemsTest() {
         homeScreen {
         }.openMainMenu {
@@ -172,6 +173,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun cameraPermissionsSettingsItemsTest() {
         homeScreen {
         }.openMainMenu {
@@ -187,6 +189,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("See https://github.com/mozilla-mobile/focus-android/issues/6958")
     fun locationPermissionsSettingsItemsTest() {
         homeScreen {
         }.openMainMenu {
