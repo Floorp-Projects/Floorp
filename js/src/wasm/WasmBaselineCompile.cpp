@@ -3927,6 +3927,14 @@ bool BaseCompiler::emitCatch() {
   masm.loadPtr(Address(exn, (int32_t)WasmExceptionObject::offsetOfData()),
                data);
 
+  // This method can increase stk_.length() by an unbounded amount, so we need
+  // to perform an allocation here to accomodate the variable number of values.
+  // There is enough headroom for the fixed number of values.  The general case
+  // is handled in emitBody.
+  if (!stk_.reserve(stk_.length() + params.length())) {
+    return false;
+  }
+
   // This reference is pushed onto the stack because a potential rethrow
   // may need to access it. It is always popped at the end of the block.
   pushRef(exn);
@@ -4497,9 +4505,10 @@ bool BaseCompiler::pushStackResultsForCall(const ResultType& type, RegPtr temp,
     return true;
   }
 
-  // This method is the only one in the class that can increase stk_.length() by
-  // an unbounded amount, so it's the only one that requires an allocation.
-  // (The general case is handled in emitBody.)
+  // This method can increase stk_.length() by an unbounded amount, so we need
+  // to perform an allocation here to accomodate the variable number of values.
+  // There is enough headroom for any fixed number of values.  The general case
+  // is handled in emitBody.
   if (!stk_.reserve(stk_.length() + type.length())) {
     return false;
   }
