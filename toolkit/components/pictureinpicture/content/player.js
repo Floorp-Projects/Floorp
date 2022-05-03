@@ -491,15 +491,6 @@ let Player = {
    *  Event context details
    */
   onMouseUp(event) {
-    if (
-      window.screenX != this.lastScreenX ||
-      window.screenY != this.lastScreenY
-    ) {
-      this.recordEvent("move", {
-        screenX: window.screenX.toString(),
-        screenY: window.screenY.toString(),
-      });
-    }
     this.lastScreenX = window.screenX;
     this.lastScreenY = window.screenY;
 
