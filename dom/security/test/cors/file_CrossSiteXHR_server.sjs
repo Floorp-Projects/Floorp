@@ -4,7 +4,7 @@ const BinaryInputStream = CC(
   "nsIBinaryInputStream",
   "setInputStream"
 );
-Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 
 function handleRequest(request, response) {
