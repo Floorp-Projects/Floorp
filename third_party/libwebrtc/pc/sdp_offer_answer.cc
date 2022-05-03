@@ -4468,40 +4468,21 @@ bool SdpOfferAnswerHandler::UseCandidatesInSessionDescription(
 bool SdpOfferAnswerHandler::UseCandidate(
     const IceCandidateInterface* candidate) {
   RTC_DCHECK_RUN_ON(signaling_thread());
+
+  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+
   RTCErrorOr<const cricket::ContentInfo*> result =
       FindContentInfo(remote_description(), candidate);
-  if (!result.ok()) {
-    RTC_LOG(LS_ERROR) << "UseCandidate: Invalid candidate. "
-                      << result.error().message();
+  if (!result.ok())
     return false;
-  }
-  std::vector<cricket::Candidate> candidates;
-  candidates.push_back(candidate->candidate());
-  // Invoking BaseSession method to handle remote candidates.
-  RTCError error = transport_controller()->AddRemoteCandidates(
-      result.value()->name, candidates);
-  if (error.ok()) {
-    ReportRemoteIceCandidateAdded(candidate->candidate());
-    // Candidates successfully submitted for checking.
-    if (pc_->ice_connection_state() ==
-            PeerConnectionInterface::kIceConnectionNew ||
-        pc_->ice_connection_state() ==
-            PeerConnectionInterface::kIceConnectionDisconnected) {
-      // If state is New, then the session has just gotten its first remote ICE
-      // candidates, so go to Checking.
-      // If state is Disconnected, the session is re-using old candidates or
-      // receiving additional ones, so go to Checking.
-      // If state is Connected, stay Connected.
-      // TODO(bemasc): If state is Connected, and the new candidates are for a
-      // newly added transport, then the state actually _should_ move to
-      // checking.  Add a way to distinguish that case.
-      pc_->SetIceConnectionState(
-          PeerConnectionInterface::kIceConnectionChecking);
-    }
-    // TODO(bemasc): If state is Completed, go back to Connected.
-  } else {
-    RTC_LOG(LS_WARNING) << error.message();
-  }
+
+  const cricket::Candidate& c = candidate->candidate();
+  RTCError error = cricket::VerifyCandidate(c);
+  if (!error.ok())
+    return false;
+
+  pc_->AddRemoteCandidate(result.value()->name, c);
+
   return true;
 }
 
@@ -4544,20 +4525,6 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
     has_transport = (result.value()->name == *sctp_mid);
   }
   return has_transport;
-}
-
-void SdpOfferAnswerHandler::ReportRemoteIceCandidateAdded(
-    const cricket::Candidate& candidate) {
-  pc_->NoteUsageEvent(UsageEvent::REMOTE_CANDIDATE_ADDED);
-  if (candidate.address().IsPrivateIP()) {
-    pc_->NoteUsageEvent(UsageEvent::REMOTE_PRIVATE_CANDIDATE_ADDED);
-  }
-  if (candidate.address().IsUnresolvedIP()) {
-    pc_->NoteUsageEvent(UsageEvent::REMOTE_MDNS_CANDIDATE_ADDED);
-  }
-  if (candidate.address().family() == AF_INET6) {
-    pc_->NoteUsageEvent(UsageEvent::REMOTE_IPV6_CANDIDATE_ADDED);
-  }
 }
 
 RTCErrorOr<const cricket::ContentInfo*> SdpOfferAnswerHandler::FindContentInfo(
