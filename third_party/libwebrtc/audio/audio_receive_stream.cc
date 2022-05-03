@@ -24,6 +24,7 @@
 #include "audio/conversion.h"
 #include "call/rtp_config.h"
 #include "call/rtp_stream_receiver_controller_interface.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
@@ -120,8 +121,8 @@ AudioReceiveStream::AudioReceiveStream(
     webrtc::RtcEventLog* event_log,
     std::unique_ptr<voe::ChannelReceiveInterface> channel_receive)
     : audio_state_(audio_state),
-      channel_receive_(std::move(channel_receive)),
-      source_tracker_(clock) {
+      source_tracker_(clock),
+      channel_receive_(std::move(channel_receive)) {
   RTC_LOG(LS_INFO) << "AudioReceiveStream: " << config.rtp.remote_ssrc;
   RTC_DCHECK(config.decoder_factory);
   RTC_DCHECK(config.rtcp_send_transport);
@@ -134,6 +135,11 @@ AudioReceiveStream::AudioReceiveStream(
   RTC_DCHECK(packet_router);
   // Configure bandwidth estimation.
   channel_receive_->RegisterReceiverCongestionControlObjects(packet_router);
+
+  // When output is muted, ChannelReceive will directly notify the source
+  // tracker of "delivered" frames, so RtpReceiver information will continue to
+  // be updated.
+  channel_receive_->SetSourceTracker(&source_tracker_);
 
   // Register with transport.
   rtp_stream_receiver_ = receiver_controller->CreateReceiver(
