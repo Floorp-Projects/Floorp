@@ -749,7 +749,7 @@ class WorkerScriptLoader final : public nsINamed {
     // We execute the last step if we don't have a pending operation with the
     // cache and the loading is completed.
     if (aLoadInfo.Finished()) {
-      ExecuteFinishedScripts();
+      DispatchProcessPendingRequests();
     }
   }
 
@@ -973,7 +973,7 @@ class WorkerScriptLoader final : public nsINamed {
       }
     }
 
-    ExecuteFinishedScripts();
+    DispatchProcessPendingRequests();
   }
 
   void DeleteCache() {
@@ -1536,7 +1536,7 @@ class WorkerScriptLoader final : public nsINamed {
     }
   }
 
-  void ExecuteFinishedScripts() {
+  void DispatchProcessPendingRequests() {
     AssertIsOnMainThread();
 
     if (IsMainWorkerScript()) {
