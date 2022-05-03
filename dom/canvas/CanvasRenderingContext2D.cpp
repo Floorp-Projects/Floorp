@@ -2554,13 +2554,6 @@ static already_AddRefed<ComputedStyle> ResolveFilterStyleForServo(
 bool CanvasRenderingContext2D::ParseFilter(
     const nsACString& aString, StyleOwnedSlice<StyleFilter>& aFilterChain,
     ErrorResult& aError) {
-  if (!mCanvasElement && !mDocShell) {
-    NS_WARNING(
-        "Canvas element must be non-null or a docshell must be provided");
-    aError.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
-
   RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     aError.Throw(NS_ERROR_FAILURE);
@@ -3413,13 +3406,6 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
    * so we cannot have the optimization where we check if the new font
    * string is equal to the old one.
    */
-
-  if (!mCanvasElement && !mDocShell) {
-    NS_WARNING(
-        "Canvas element must be non-null or a docshell must be provided");
-    aError.Throw(NS_ERROR_FAILURE);
-    return false;
-  }
 
   RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
