@@ -185,7 +185,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
           let resolve = arguments[arguments.length - 1];
           const COMPLETE_STATE = Ci.nsIWebProgressListener.STATE_STOP +
                                  Ci.nsIWebProgressListener.STATE_IS_NETWORK;
-          let {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
+          let { TabStateFlusher } = ChromeUtils.import(
+            "resource:///modules/sessionstore/TabStateFlusher.jsm"
+          );
           let expectedURLs = Array.from(arguments[0])
           gBrowser.addTabsProgressListener({
             onStateChange(browser, webprogress, request, flags, status) {
@@ -228,7 +230,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.runAsyncCode(
             """
           let resolve = arguments[arguments.length - 1];
-          Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
+          let { FxAccountsStorageManager } = ChromeUtils.import(
+            "resource://gre/modules/FxAccountsStorage.jsm"
+          );
           let storage = new FxAccountsStorageManager();
           let data = {email: "test@test.com", uid: "uid", keyFetchToken: "top-secret"};
           storage.initialize(data);
@@ -465,7 +469,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
     def checkFxA(self):
         result = self.runAsyncCode(
             """
-          Cu.import("resource://gre/modules/FxAccountsStorage.jsm");
+          let { FxAccountsStorageManager } = ChromeUtils.import(
+            "resource://gre/modules/FxAccountsStorage.jsm"
+          );
           let resolve = arguments[arguments.length - 1];
           let storage = new FxAccountsStorageManager();
           let result = {};
@@ -528,14 +534,20 @@ class TestFirefoxRefresh(MarionetteTestCase):
           window.global = {};
           global.LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
-          global.Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-          global.FormHistory = Cu.import("resource://gre/modules/FormHistory.jsm", {}).FormHistory;
+          global.Preferences = ChromeUtils.import(
+            "resource://gre/modules/Preferences.jsm"
+          ).Preferences;
+          global.FormHistory = ChromeUtils.import(
+            "resource://gre/modules/FormHistory.jsm"
+          ).FormHistory;
         """  # NOQA: E501
         )
         self._formAutofillAvailable = self.runCode(
             """
           try {
-            global.formAutofillStorage = Cu.import("resource://formautofill/FormAutofillStorage.jsm", {}).formAutofillStorage;
+            global.formAutofillStorage = ChromeUtils.import(
+              "resource://formautofill/FormAutofillStorage.jsm"
+            ).formAutofillStorage;
           } catch(e) {
             return false;
           }
