@@ -157,7 +157,7 @@ const UNITS_GROUPS = [
 // Handle them as case-sensitive.
 const CASE_SENSITIVE_UNITS = ["PN", "Pn", "MN", "Mn"];
 
-const NUMBER_REGEX = "\\d+(?:\\.\\d+)?\\s*";
+const NUMBER_REGEX = "-?\\d+(?:\\.\\d+)?\\s*";
 const UNIT_REGEX = "[A-Za-zµ0-9_./-]+";
 
 // NOTE: This regex need to be localized upon supporting multi locales

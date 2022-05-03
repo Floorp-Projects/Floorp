@@ -10,7 +10,7 @@ const ABSOLUTE = ["celsius", "kelvin", "fahrenheit"];
 const ALIAS = ["c", "k", "f"];
 const UNITS = [...ABSOLUTE, ...ALIAS];
 
-const NUMBER_REGEX = "\\d+(?:\\.\\d+)?\\s*";
+const NUMBER_REGEX = "-?\\d+(?:\\.\\d+)?\\s*";
 const UNIT_REGEX = "\\w+";
 
 // NOTE: This regex need to be localized upon supporting multi locales
