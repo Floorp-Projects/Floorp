@@ -202,7 +202,7 @@ nsresult ChannelFromScriptURL(
   // The main service worker script should never be loaded over the network
   // in this path.  It should always be offlined by ServiceWorkerScriptCache.
   // We assert here since this error should also be caught by the runtime
-  // check in CacheScriptLoader.
+  // check in CacheLoadHandler.
   //
   // Note, if we ever allow service worker scripts to be loaded from network
   // here we need to configure the channel properly.  For example, it must
@@ -397,7 +397,7 @@ class ScriptExecutorRunnable final : public MainThreadWorkerSyncRunnable {
   bool AllScriptsExecutable() const;
 };
 
-class CacheScriptLoader;
+class CacheLoadHandler;
 
 class CacheCreator final : public PromiseNativeHandler {
  public:
@@ -410,7 +410,7 @@ class CacheCreator final : public PromiseNativeHandler {
     AssertIsOnMainThread();
   }
 
-  void AddLoader(MovingNotNull<RefPtr<CacheScriptLoader>> aLoader) {
+  void AddLoader(MovingNotNull<RefPtr<CacheLoadHandler>> aLoader) {
     AssertIsOnMainThread();
     MOZ_ASSERT(!mCacheStorage);
     mLoaders.AppendElement(std::move(aLoader));
@@ -449,7 +449,7 @@ class CacheCreator final : public PromiseNativeHandler {
   RefPtr<Cache> mCache;
   RefPtr<CacheStorage> mCacheStorage;
   nsCOMPtr<nsIGlobalObject> mSandboxGlobalObject;
-  nsTArray<NotNull<RefPtr<CacheScriptLoader>>> mLoaders;
+  nsTArray<NotNull<RefPtr<CacheLoadHandler>>> mLoaders;
 
   nsString mCacheName;
   OriginAttributes mOriginAttributes;
@@ -457,14 +457,14 @@ class CacheCreator final : public PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(CacheCreator)
 
-class CacheScriptLoader final : public PromiseNativeHandler,
-                                public nsIStreamLoaderObserver {
+class CacheLoadHandler final : public PromiseNativeHandler,
+                               public nsIStreamLoaderObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER
 
-  CacheScriptLoader(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo& aLoadInfo,
-                    bool aIsWorkerScript, WorkerScriptLoader* aLoader);
+  CacheLoadHandler(WorkerPrivate* aWorkerPrivate, ScriptLoadInfo& aLoadInfo,
+                   bool aIsWorkerScript, WorkerScriptLoader* aLoader);
 
   void Fail(nsresult aRv);
 
@@ -477,7 +477,7 @@ class CacheScriptLoader final : public PromiseNativeHandler,
                                 ErrorResult& aRv) override;
 
  private:
-  ~CacheScriptLoader() { AssertIsOnMainThread(); }
+  ~CacheLoadHandler() { AssertIsOnMainThread(); }
 
   nsresult DataReceivedFromCache(const uint8_t* aString, uint32_t aStringLen,
                                  const mozilla::dom::ChannelInfo& aChannelInfo,
@@ -503,7 +503,7 @@ class CacheScriptLoader final : public PromiseNativeHandler,
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
 
-NS_IMPL_ISUPPORTS(CacheScriptLoader, nsIStreamLoaderObserver)
+NS_IMPL_ISUPPORTS(CacheLoadHandler, nsIStreamLoaderObserver)
 
 class CachePromiseHandler final : public PromiseNativeHandler {
  public:
@@ -530,12 +530,12 @@ class CachePromiseHandler final : public PromiseNativeHandler {
 
 NS_IMPL_ISUPPORTS0(CachePromiseHandler)
 
-class LoaderListener final : public nsIStreamLoaderObserver,
-                             public nsIRequestObserver {
+class NetworkLoadHandler final : public nsIStreamLoaderObserver,
+                                 public nsIRequestObserver {
  public:
   NS_DECL_ISUPPORTS
 
-  LoaderListener(WorkerScriptLoader* aLoader, ScriptLoadInfo& aLoadInfo);
+  NetworkLoadHandler(WorkerScriptLoader* aLoader, ScriptLoadInfo& aLoadInfo);
 
   NS_IMETHOD
   OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext,
@@ -557,14 +557,15 @@ class LoaderListener final : public nsIStreamLoaderObserver,
   }
 
  private:
-  ~LoaderListener() = default;
+  ~NetworkLoadHandler() = default;
 
   RefPtr<WorkerScriptLoader> mLoader;
   WorkerPrivate* const mWorkerPrivate;
   ScriptLoadInfo& mLoadInfo;
 };
 
-NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
+NS_IMPL_ISUPPORTS(NetworkLoadHandler, nsIStreamLoaderObserver,
+                  nsIRequestObserver)
 
 class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
  public:
@@ -669,8 +670,8 @@ class WorkerScriptLoader final : public nsINamed {
   friend class ScriptLoaderRunnable;
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
-  friend class CacheScriptLoader;
-  friend class LoaderListener;
+  friend class CacheLoadHandler;
+  friend class NetworkLoadHandler;
 
   WorkerPrivate* const mWorkerPrivate;
   UniquePtr<SerializedStackHolder> mOriginStack;
@@ -899,7 +900,7 @@ class WorkerScriptLoader final : public nsINamed {
     mCacheCreator = new CacheCreator(mWorkerPrivate);
 
     for (ScriptLoadInfo& loadInfo : mLoadInfos) {
-      mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheScriptLoader>>(
+      mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheLoadHandler>>(
           mWorkerPrivate, loadInfo, IsMainWorkerScript(), this));
     }
 
@@ -1021,7 +1022,8 @@ class WorkerScriptLoader final : public nsINamed {
 
     // We need to know which index we're on in OnStreamComplete so we know
     // where to put the result.
-    RefPtr<LoaderListener> listener = new LoaderListener(this, aLoadInfo);
+    RefPtr<NetworkLoadHandler> listener =
+        new NetworkLoadHandler(this, aLoadInfo);
 
     RefPtr<ScriptResponseHeaderProcessor> headerProcessor = nullptr;
 
@@ -1343,8 +1345,8 @@ bool WorkerScriptLoader::DispatchLoadScripts() {
   return true;
 }
 
-LoaderListener::LoaderListener(WorkerScriptLoader* aLoader,
-                               ScriptLoadInfo& aLoadInfo)
+NetworkLoadHandler::NetworkLoadHandler(WorkerScriptLoader* aLoader,
+                                       ScriptLoadInfo& aLoadInfo)
     : mLoader(aLoader),
       mWorkerPrivate(aLoader->mWorkerPrivate),
       mLoadInfo(aLoadInfo) {
@@ -1352,17 +1354,18 @@ LoaderListener::LoaderListener(WorkerScriptLoader* aLoader,
 }
 
 NS_IMETHODIMP
-LoaderListener::OnStreamComplete(nsIStreamLoader* aLoader,
-                                 nsISupports* aContext, nsresult aStatus,
-                                 uint32_t aStringLen, const uint8_t* aString) {
+NetworkLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
+                                     nsISupports* aContext, nsresult aStatus,
+                                     uint32_t aStringLen,
+                                     const uint8_t* aString) {
   nsresult rv = DataReceivedFromNetwork(aLoader, aStatus, aStringLen, aString);
   return mLoader->OnStreamComplete(mLoadInfo, rv);
 }
 
-nsresult LoaderListener::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
-                                                 nsresult aStatus,
-                                                 uint32_t aStringLen,
-                                                 const uint8_t* aString) {
+nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
+                                                     nsresult aStatus,
+                                                     uint32_t aStringLen,
+                                                     const uint8_t* aString) {
   AssertIsOnMainThread();
 
   if (!mLoadInfo.mChannel) {
@@ -1564,7 +1567,7 @@ nsresult LoaderListener::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 }
 
 NS_IMETHODIMP
-LoaderListener::OnStartRequest(nsIRequest* aRequest) {
+NetworkLoadHandler::OnStartRequest(nsIRequest* aRequest) {
   nsresult rv = PrepareForRequest(aRequest);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1574,7 +1577,7 @@ LoaderListener::OnStartRequest(nsIRequest* aRequest) {
   return rv;
 }
 
-nsresult LoaderListener::PrepareForRequest(nsIRequest* aRequest) {
+nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   AssertIsOnMainThread();
 
   // If one load info cancels or hits an error, it can race with the start
@@ -1679,7 +1682,7 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  // May already have been canceled by CacheScriptLoader::Fail from
+  // May already have been canceled by CacheLoadHandler::Fail from
   // CancelMainThread.
   MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache ||
              mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
@@ -1697,7 +1700,7 @@ void CachePromiseHandler::RejectedCallback(JSContext* aCx,
                                            JS::Handle<JS::Value> aValue,
                                            ErrorResult& aRv) {
   AssertIsOnMainThread();
-  // May already have been canceled by CacheScriptLoader::Fail from
+  // May already have been canceled by CacheLoadHandler::Fail from
   // CancelMainThread.
   MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache ||
              mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
@@ -1843,10 +1846,10 @@ void CacheCreator::DeleteCache() {
   FailLoaders(NS_ERROR_FAILURE);
 }
 
-CacheScriptLoader::CacheScriptLoader(WorkerPrivate* aWorkerPrivate,
-                                     ScriptLoadInfo& aLoadInfo,
-                                     bool aIsWorkerScript,
-                                     WorkerScriptLoader* aLoader)
+CacheLoadHandler::CacheLoadHandler(WorkerPrivate* aWorkerPrivate,
+                                   ScriptLoadInfo& aLoadInfo,
+                                   bool aIsWorkerScript,
+                                   WorkerScriptLoader* aLoader)
     : mLoadInfo(aLoadInfo),
       mLoader(aLoader),
       mWorkerPrivate(aWorkerPrivate),
@@ -1861,7 +1864,7 @@ CacheScriptLoader::CacheScriptLoader(WorkerPrivate* aWorkerPrivate,
   AssertIsOnMainThread();
 }
 
-void CacheScriptLoader::Fail(nsresult aRv) {
+void CacheLoadHandler::Fail(nsresult aRv) {
   AssertIsOnMainThread();
   MOZ_ASSERT(NS_FAILED(aRv));
 
@@ -1892,7 +1895,7 @@ void CacheScriptLoader::Fail(nsresult aRv) {
   mLoader->LoadingFinished(mLoadInfo, aRv);
 }
 
-void CacheScriptLoader::Load(Cache* aCache) {
+void CacheLoadHandler::Load(Cache* aCache) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aCache);
 
@@ -1934,17 +1937,17 @@ void CacheScriptLoader::Load(Cache* aCache) {
   promise->AppendNativeHandler(this);
 }
 
-void CacheScriptLoader::RejectedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         ErrorResult& aRv) {
+void CacheLoadHandler::RejectedCallback(JSContext* aCx,
+                                        JS::Handle<JS::Value> aValue,
+                                        ErrorResult& aRv) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::Uncached);
   Fail(NS_ERROR_FAILURE);
 }
 
-void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue,
-                                         ErrorResult& aRv) {
+void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
+                                        JS::Handle<JS::Value> aValue,
+                                        ErrorResult& aRv) {
   AssertIsOnMainThread();
   // If we have already called 'Fail', we should not proceed.
   if (mFailed) {
@@ -2069,10 +2072,10 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
-                                    nsISupports* aContext, nsresult aStatus,
-                                    uint32_t aStringLen,
-                                    const uint8_t* aString) {
+CacheLoadHandler::OnStreamComplete(nsIStreamLoader* aLoader,
+                                   nsISupports* aContext, nsresult aStatus,
+                                   uint32_t aStringLen,
+                                   const uint8_t* aString) {
   AssertIsOnMainThread();
 
   mPump = nullptr;
@@ -2094,7 +2097,7 @@ CacheScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   return mLoader->OnStreamComplete(mLoadInfo, rv);
 }
 
-nsresult CacheScriptLoader::DataReceivedFromCache(
+nsresult CacheLoadHandler::DataReceivedFromCache(
     const uint8_t* aString, uint32_t aStringLen,
     const mozilla::dom::ChannelInfo& aChannelInfo,
     UniquePtr<PrincipalInfo> aPrincipalInfo, const nsACString& aCSPHeaderValue,
@@ -2187,7 +2190,7 @@ nsresult CacheScriptLoader::DataReceivedFromCache(
   return rv;
 }
 
-void CacheScriptLoader::DataReceived() {
+void CacheLoadHandler::DataReceived() {
   if (mLoader->IsMainWorkerScript()) {
     WorkerPrivate* parent = mWorkerPrivate->GetParent();
 
