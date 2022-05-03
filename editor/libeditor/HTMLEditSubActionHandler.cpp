@@ -5698,16 +5698,16 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   }
   // Put in a padding <br> element for empty last line so that it won't get
   // deleted.
-  CreateElementResult createPaddingBRResult =
+  CreateElementResult insertPaddingBRElementResult =
       InsertPaddingBRElementForEmptyLastLineWithTransaction(
           EditorDOMPoint(newDivElement, 0u));
-  if (createPaddingBRResult.isErr()) {
+  if (insertPaddingBRElementResult.isErr()) {
     NS_WARNING(
         "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
         "failed");
-    return EditActionResult(createPaddingBRResult.unwrapErr());
+    return EditActionResult(insertPaddingBRElementResult.unwrapErr());
   }
-  createPaddingBRResult.IgnoreCaretPointSuggestion();
+  insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
   rv = CollapseSelectionToStartOf(*newDivElement);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::CollapseSelectionToStartOf() failed");
@@ -7249,15 +7249,26 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   if (HTMLEditUtils::IsEmptyNode(
           *leftHeadingElement,
           {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
-    CreateElementResult createPaddingBRResult =
+    CreateElementResult insertPaddingBRElementResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
             EditorDOMPoint(leftHeadingElement, 0u));
-    if (createPaddingBRResult.isErr()) {
+    if (insertPaddingBRElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
           ") failed");
-      return Err(createPaddingBRResult.unwrapErr());
+      return Err(insertPaddingBRElementResult.unwrapErr());
     }
+    nsresult rv = insertPaddingBRElementResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
   }
 
   // Put caret at start of the right head element if it's not empty.
@@ -7911,15 +7922,18 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   if (HTMLEditUtils::IsEmptyNode(
           leftListItemElement,
           {EmptyCheckOption::TreatSingleBRElementAsVisible})) {
-    CreateElementResult createPaddingBRResult =
+    CreateElementResult insertPaddingBRElementResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
             EditorDOMPoint(&leftListItemElement, 0u));
-    if (createPaddingBRResult.isErr()) {
+    if (insertPaddingBRElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
           ") failed");
-      return Err(createPaddingBRResult.unwrapErr());
+      return Err(insertPaddingBRElementResult.unwrapErr());
     }
+    // We're returing a candidate point to put caret so that we don't need to
+    // update now.
+    insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
     return EditorDOMPoint(&rightListItemElement, 0u);
   }
 
@@ -8909,20 +8923,36 @@ nsresult HTMLEditor::InsertBRElementToEmptyListItemsAndTableCellsInRange(
       arrayOfEmptyElements, this);
 
   // Put padding <br> elements for empty <li> and <td>.
+  EditorDOMPoint pointToPutCaret;
   for (auto& emptyElement : arrayOfEmptyElements) {
     // Need to put br at END of node.  It may have empty containers in it and
     // still pass the "IsEmptyNode" test, and we want the br's to be after
     // them.  Also, we want the br to be after the selection if the selection
     // is in this node.
     EditorDOMPoint endOfNode(EditorDOMPoint::AtEndOf(emptyElement));
-    CreateElementResult createPaddingBRResult =
+    CreateElementResult insertPaddingBRElementResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfNode);
-    if (createPaddingBRResult.isErr()) {
+    if (insertPaddingBRElementResult.isErr()) {
       NS_WARNING(
           "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
           "failed");
-      return createPaddingBRResult.unwrapErr();
+      return insertPaddingBRElementResult.unwrapErr();
     }
+    insertPaddingBRElementResult.MoveCaretPointTo(
+        pointToPutCaret, *this,
+        {SuggestCaret::OnlyIfHasSuggestion,
+         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  }
+  if (pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING(
+          "EditorBase::CollapseSelectionTo() caused destroying the editor");
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
   return NS_OK;
 }
@@ -9125,13 +9155,26 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
         //     `<body>`, what are we doing?
         return NS_OK;
       }
-      CreateElementResult createPaddingBRResult =
+      CreateElementResult insertPaddingBRElementResult =
           InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
+      if (insertPaddingBRElementResult.isErr()) {
+        NS_WARNING(
+            "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction("
+            ") failed");
+        return insertPaddingBRElementResult.unwrapErr();
+      }
+      nsresult rv = insertPaddingBRElementResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
       NS_WARNING_ASSERTION(
-          createPaddingBRResult.isOk(),
-          "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
-          "failed");
-      return createPaddingBRResult.unwrapErr();
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+      return NS_OK;
     }
   }
 
@@ -9175,20 +9218,19 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
       // If it's an invisible `<br>` element, we need to insert a padding
       // `<br>` element for making empty line have one-line height.
       if (HTMLEditUtils::IsInvisibleBRElement(*previousEditableContent)) {
-        CreateElementResult createPaddingBRResult =
+        CreateElementResult insertPaddingBRElementResult =
             InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
-        if (createPaddingBRResult.isErr()) {
+        if (insertPaddingBRElementResult.isErr()) {
           NS_WARNING(
               "HTMLEditor::"
               "InsertPaddingBRElementForEmptyLastLineWithTransaction() failed");
-          return createPaddingBRResult.unwrapErr();
+          return insertPaddingBRElementResult.unwrapErr();
         }
-        // Selection stays *before* padding `<br>` element for empty last
-        // line, sticking to it.
-        point = EditorDOMPoint(createPaddingBRResult.GetNewNode(),
-                               InterlinePosition::StartOfNextLine);
-        nsresult rv = CollapseSelectionTo(point);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
+        nsresult rv = CollapseSelectionTo(
+            EditorRawDOMPoint(insertPaddingBRElementResult.GetNewNode(),
+                              InterlinePosition::StartOfNextLine));
+        if (NS_FAILED(rv)) {
           NS_WARNING("EditorBase::CollapseSelectionTo() failed");
           return rv;
         }
@@ -9713,14 +9755,27 @@ nsresult HTMLEditor::InsertPaddingBRElementForEmptyLastLineIfNeeded(
     return NS_OK;
   }
 
-  CreateElementResult createBRResult =
+  CreateElementResult insertPaddingBRElementResult =
       InsertPaddingBRElementForEmptyLastLineWithTransaction(
-          EditorDOMPoint(&aElement, 0));
+          EditorDOMPoint(&aElement, 0u));
+  if (insertPaddingBRElementResult.isErr()) {
+    NS_WARNING(
+        "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
+        "failed");
+    return insertPaddingBRElementResult.unwrapErr();
+  }
+  nsresult rv = insertPaddingBRElementResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
   NS_WARNING_ASSERTION(
-      createBRResult.isOk(),
-      "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
-      "failed");
-  return createBRResult.unwrapErr();
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  return NS_OK;
 }
 
 nsresult HTMLEditor::InsertBRElementIfEmptyBlockElement(Element& aElement) {

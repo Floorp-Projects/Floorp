@@ -1708,6 +1708,8 @@ class EditorBase : public nsIEditor,
    *
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
+   * @return                    If succeeded, returns the new <br> element and
+   *                            point to put caret around it.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   InsertPaddingBRElementForEmptyLastLineWithTransaction(

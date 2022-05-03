@@ -2115,7 +2115,7 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(IsHTMLEditor() || !aPointToInsert.IsInTextNode());
 
-  if (!aPointToInsert.IsSet()) {
+  if (MOZ_UNLIKELY(!aPointToInsert.IsSet())) {
     return CreateElementResult(NS_ERROR_FAILURE);
   }
 
@@ -2140,23 +2140,9 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
 
   CreateElementResult insertBRElementResult =
       InsertNodeWithTransaction<Element>(*newBRElement, pointToInsert);
-  if (insertBRElementResult.isErr()) {
-    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return CreateElementResult(insertBRElementResult.unwrapErr());
-  }
-
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return CreateElementResult(rv);
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
-  return CreateElementResult(std::move(newBRElement));
+  NS_WARNING_ASSERTION(insertBRElementResult.isOk(),
+                       "EditorBase::InsertNodeWithTransaction() failed");
+  return insertBRElementResult;
 }
 
 NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
@@ -3444,17 +3430,24 @@ nsresult EditorBase::EnsurePaddingBRElementInMultilineEditor() {
   RefPtr<HTMLBRElement> brElement =
       HTMLBRElement::FromNode(anonymousDivOrBodyElement->GetLastChild());
   if (!brElement) {
+    // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
+    //       in normal cases.  However, it may be required for nested edit
+    //       actions which may be caused by legacy mutation event listeners or
+    //       chrome script.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
     EditorDOMPoint endOfAnonymousDiv(
         EditorDOMPoint::AtEndOf(*anonymousDivOrBodyElement));
-    CreateElementResult createPaddingBRResult =
+    CreateElementResult insertPaddingBRElementResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
             endOfAnonymousDiv);
-    NS_WARNING_ASSERTION(
-        createPaddingBRResult.isOk(),
-        "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
-        "failed");
-    return createPaddingBRResult.unwrapErr();
+    if (insertPaddingBRElementResult.isErr()) {
+      NS_WARNING(
+          "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
+          "failed");
+      return insertPaddingBRElementResult.unwrapErr();
+    }
+    insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
+    return NS_OK;
   }
 
   // Check to see if the trailing BR is a former padding <br> element for empty
