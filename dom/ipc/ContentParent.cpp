@@ -4142,8 +4142,8 @@ void ContentParent::HandleOrphanedMinidump(nsString* aDumpId) {
     CrashReporterHost::RecordCrash(GeckoProcessType_Content,
                                    nsICrashService::CRASH_TYPE_CRASH, *aDumpId);
   } else {
-    NS_WARNING(nsPrintfCString("content process pid = %d crashed without "
-                               "leaving a minidump behind",
+    NS_WARNING(nsPrintfCString("content process pid = %" PRIPID
+                               " crashed without leaving a minidump behind",
                                OtherPid())
                    .get());
   }
