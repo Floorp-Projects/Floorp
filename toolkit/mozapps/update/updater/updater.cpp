@@ -38,22 +38,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
-#include <algorithm>
 
 #include "updatecommon.h"
 #ifdef XP_MACOSX
 #  include "updaterfileutils_osx.h"
 #endif  // XP_MACOSX
 
-#include "mozilla/Compiler.h"
-#include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 #ifdef XP_WIN
 #  include "mozilla/Maybe.h"

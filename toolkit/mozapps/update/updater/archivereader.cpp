@@ -38,9 +38,7 @@
 #include "nsVersionComparator.cpp"
 #undef UPDATER_NO_STRING_GLUE_STL
 
-#if defined(XP_UNIX)
-#  include <sys/types.h>
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
 #  include <io.h>
 #endif
 
