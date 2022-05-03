@@ -12,7 +12,9 @@
 <iframe></iframe>
 
 <script type="application/javascript">
-const { LoginFormFactory } = SpecialPowers.Cu.import("resource://gre/modules/LoginFormFactory.jsm", {});
+const { LoginFormFactory } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/LoginFormFactory.jsm"
+);
 
 add_task(async function setup() {
   const readyPromise = registerRunTests();

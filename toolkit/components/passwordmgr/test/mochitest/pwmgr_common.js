@@ -4,9 +4,8 @@
 
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 
-const { LoginTestUtils } = SpecialPowers.Cu.import(
-  "resource://testing-common/LoginTestUtils.jsm",
-  {}
+const { LoginTestUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/LoginTestUtils.jsm"
 );
 
 // Setup LoginTestUtils to report assertions to the mochitest harness.
@@ -16,13 +15,11 @@ LoginTestUtils.setAssertReporter(
   })
 );
 
-const { LoginHelper } = SpecialPowers.Cu.import(
-  "resource://gre/modules/LoginHelper.jsm",
-  {}
+const { LoginHelper } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/LoginHelper.jsm"
 );
-const { Services } = SpecialPowers.Cu.import(
-  "resource://gre/modules/Services.jsm",
-  {}
+const { Services } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
 );
 
 const {
