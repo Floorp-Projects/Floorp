@@ -387,7 +387,7 @@
           }
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "layout",
         "category",
@@ -427,5 +427,6 @@
       "required": ["id"]
     }
   },
+  "additionalProperties": true,
   "required": ["id", "groups", "content", "targeting", "template", "trigger"]
 }
