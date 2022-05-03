@@ -105,6 +105,7 @@
 
 #ifdef XP_WIN
 #  include "nsWindowsHelpers.h"
+#  include "nsLocalFile.h"
 #endif
 
 #include "mozilla/Components.h"
@@ -3449,6 +3450,10 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
       }
     }
   }
+
+#ifdef XP_WIN
+  nsLocalFile::CheckForReservedFileName(fileName);
+#endif
 
   // If no filename is present, use a default filename.
   if (!(aFlags & VALIDATE_NO_DEFAULT_FILENAME) &&
