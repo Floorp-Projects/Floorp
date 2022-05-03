@@ -176,6 +176,7 @@ rtc_library("libjingle_peerconnection_api") {
     ":rtp_parameters",
     ":rtp_transceiver_direction",
     ":scoped_refptr",
+    ":sequence_checker",
     "../rtc_base:network_constants",
     "adaptation:resource_adaptation_api",
     "audio:audio_mixer_api",

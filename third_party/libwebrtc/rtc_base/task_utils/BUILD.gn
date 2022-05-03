@@ -16,7 +16,6 @@ rtc_library("repeating_task") {
   deps = [
     ":to_queued_task",
     "..:logging",
-    "..:thread_checker",
     "..:timeutils",
     "../../api/task_queue",
     "../../api/units:time_delta",
@@ -35,7 +34,6 @@ rtc_library("pending_task_safety_flag") {
   deps = [
     "..:checks",
     "..:refcount",
-    "..:thread_checker",
     "../../api:scoped_refptr",
     "../synchronization:sequence_checker",
     "../system:no_unique_address",
