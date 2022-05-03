@@ -419,21 +419,21 @@ static const nsCString GetCharacterCodeName(WPARAM aCharCode) {
       return "ZERO WIDTH NO-BREAK SPACE (0xFEFF)"_ns;
     default: {
       if (aCharCode < ' ' || (aCharCode >= 0x80 && aCharCode < 0xA0)) {
-        return nsPrintfCString("control (0x%04X)", aCharCode);
+        return nsPrintfCString("control (0x%04zX)", aCharCode);
       }
       if (NS_IS_HIGH_SURROGATE(aCharCode)) {
-        return nsPrintfCString("high surrogate (0x%04X)", aCharCode);
+        return nsPrintfCString("high surrogate (0x%04zX)", aCharCode);
       }
       if (NS_IS_LOW_SURROGATE(aCharCode)) {
-        return nsPrintfCString("low surrogate (0x%04X)", aCharCode);
+        return nsPrintfCString("low surrogate (0x%04zX)", aCharCode);
       }
       return IS_IN_BMP(aCharCode)
                  ? nsPrintfCString(
-                       "'%s' (0x%04X)",
+                       "'%s' (0x%04zX)",
                        NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(),
                        aCharCode)
                  : nsPrintfCString(
-                       "'%s' (0x%08X)",
+                       "'%s' (0x%08zX)",
                        NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(),
                        aCharCode);
     }
@@ -555,7 +555,7 @@ static const nsCString GetMessageName(UINT aMessage) {
 
 static const nsCString GetVirtualKeyCodeName(WPARAM aVK) {
   if (aVK >= ArrayLength(kVirtualKeyName)) {
-    return nsPrintfCString("Invalid (0x%08X)", aVK);
+    return nsPrintfCString("Invalid (0x%08zX)", aVK);
   }
   return nsCString(kVirtualKeyName[aVK]);
 }
@@ -667,7 +667,7 @@ static const nsCString GetAppCommandName(WPARAM aCommand) {
     case APPCOMMAND_VOLUME_UP:
       return "APPCOMMAND_VOLUME_UP"_ns;
     default:
-      return nsPrintfCString("Unknown app command (0x%08X)", aCommand);
+      return nsPrintfCString("Unknown app command (0x%08zX)", aCommand);
   }
 }
 
@@ -680,7 +680,8 @@ static const nsCString GetAppCommandDeviceName(LPARAM aDevice) {
     case FAPPCOMMAND_OEM:
       return "FAPPCOMMAND_OEM"_ns;
     default:
-      return nsPrintfCString("Unknown app command device (0x%04X)", aDevice);
+      return nsPrintfCString("Unknown app command device (0x%04" PRIXLPTR ")",
+                             aDevice);
   }
 };
 
@@ -723,7 +724,7 @@ class MOZ_STACK_CLASS GetAppCommandKeysName final : public nsAutoCString {
     }
     if (aKeys) {
       MaybeAppendSeparator();
-      AppendPrintf("Unknown Flags (0x%04X)", aKeys);
+      AppendPrintf("Unknown Flags (0x%04zX)", aKeys);
     }
     if (IsEmpty()) {
       AssignLiteral("none (0x0000)");
@@ -749,7 +750,8 @@ static const nsCString ToString(const MSG& aMSG) {
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
       result.AppendPrintf(
-          "virtual keycode=%s, repeat count=%d, "
+          "virtual keycode=%s, repeat count=%" PRIdLPTR
+          ", "
           "scancode=0x%02X, extended key=%s, "
           "context code=%s, previous key state=%s, "
           "transition state=%s",
@@ -765,7 +767,8 @@ static const nsCString ToString(const MSG& aMSG) {
     case WM_SYSCHAR:
     case WM_SYSDEADCHAR:
       result.AppendPrintf(
-          "character code=%s, repeat count=%d, "
+          "character code=%s, repeat count=%" PRIdLPTR
+          ", "
           "scancode=0x%02X, extended key=%s, "
           "context code=%s, previous key state=%s, "
           "transition state=%s",
@@ -778,14 +781,15 @@ static const nsCString ToString(const MSG& aMSG) {
       break;
     case WM_APPCOMMAND:
       result.AppendPrintf(
-          "window handle=0x%p, app command=%s, device=%s, dwKeys=%s",
+          "window handle=0x%zx, app command=%s, device=%s, dwKeys=%s",
           aMSG.wParam,
           GetAppCommandName(GET_APPCOMMAND_LPARAM(aMSG.lParam)).get(),
           GetAppCommandDeviceName(GET_DEVICE_LPARAM(aMSG.lParam)).get(),
           GetAppCommandKeysName(GET_KEYSTATE_LPARAM(aMSG.lParam)).get());
       break;
     default:
-      result.AppendPrintf("wParam=%u, lParam=%u", aMSG.wParam, aMSG.lParam);
+      result.AppendPrintf("wParam=%zu, lParam=%" PRIdLPTR, aMSG.wParam,
+                          aMSG.lParam);
       break;
   }
   result.AppendPrintf(", hwnd=0x%p", aMSG.hwnd);
