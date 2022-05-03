@@ -2123,10 +2123,16 @@ void DataChannelConnection::HandleSendFailedEvent(
   if (ssfe->ssfe_flags & ~(SCTP_DATA_SENT | SCTP_DATA_UNSENT)) {
     DC_DEBUG(("(flags = %x) ", ssfe->ssfe_flags));
   }
-  DC_DEBUG(
-      ("message with PPID = %u, SID = %d, flags: 0x%04x due to error = 0x%08x",
-       ntohl(ssfe->ssfe_info.snd_ppid), ssfe->ssfe_info.snd_sid,
-       ssfe->ssfe_info.snd_flags, ssfe->ssfe_error));
+#ifdef XP_WIN
+#  define PRIPPID "lu"
+#else
+#  define PRIPPID "u"
+#endif
+  DC_DEBUG(("message with PPID = %" PRIPPID
+            ", SID = %d, flags: 0x%04x due to error = 0x%08x",
+            ntohl(ssfe->ssfe_info.snd_ppid), ssfe->ssfe_info.snd_sid,
+            ssfe->ssfe_info.snd_flags, ssfe->ssfe_error));
+#undef PRIPPID
   n = ssfe->ssfe_length - sizeof(struct sctp_send_failed_event);
   for (i = 0; i < n; ++i) {
     DC_DEBUG((" 0x%02x", ssfe->ssfe_data[i]));

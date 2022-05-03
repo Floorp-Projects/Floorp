@@ -109,7 +109,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
 #if defined(ACCESSIBILITY)
     auto curActCtx = ActivationContext::GetCurrent();
     if (curActCtx.isOk()) {
-      strActCtx.AppendPrintf("0x%p", curActCtx.unwrap());
+      strActCtx.AppendPrintf("0x%" PRIxPTR, curActCtx.unwrap());
     } else {
       strActCtx.AppendPrintf("HRESULT 0x%08lX", curActCtx.unwrapErr());
     }

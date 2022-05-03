@@ -4208,9 +4208,9 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
   // language) or 0xEYYYXXXX (IMM-IME), we can retrieve its name simply.
   if (layout < 0xA000 || (layout & 0xF000) == 0xE000) {
     nsAutoString key(kKeyboardLayouts);
-    key.AppendPrintf("%08X", layout < 0xA000
-                                 ? layout
-                                 : reinterpret_cast<uintptr_t>(aLayout));
+    key.AppendPrintf("%08" PRIXPTR, layout < 0xA000
+                                        ? layout
+                                        : reinterpret_cast<uintptr_t>(aLayout));
     wchar_t buf[256];
     if (NS_WARN_IF(!WinUtils::GetRegistryKey(
             HKEY_LOCAL_MACHINE, key.get(), L"Layout Text", buf, sizeof(buf)))) {
@@ -4221,7 +4221,7 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
 
   if (NS_WARN_IF((layout & 0xF000) != 0xF000)) {
     nsCString result;
-    result.AppendPrintf("Odd HKL: 0x%08X",
+    result.AppendPrintf("Odd HKL: 0x%08" PRIXPTR,
                         reinterpret_cast<uintptr_t>(aLayout));
     return result;
   }

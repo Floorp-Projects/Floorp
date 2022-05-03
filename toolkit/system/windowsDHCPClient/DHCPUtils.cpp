@@ -86,7 +86,7 @@ nsresult GetActiveDHCPNetworkAdapterName(
                 sizeof(IP_ADAPTER_ADDRESSES);
     pAddresses.resize(outBufLen / sizeof(IP_ADAPTER_ADDRESSES));
     LOG(
-        ("Trying GetAdaptersAddresses with pAddresses sized to %d and buffer "
+        ("Trying GetAdaptersAddresses with pAddresses sized to %zu and buffer "
          "length of %d",
          pAddresses.size(), outBufLen));
 
