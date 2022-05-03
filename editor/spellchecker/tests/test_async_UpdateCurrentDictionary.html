@@ -24,9 +24,10 @@ function start() {
   var textarea = document.getElementById("editor");
   textarea.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(textarea, function() {
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  )
+  onSpellCheck(textarea, function() {
     var isc = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(false);
     ok(isc, "Inline spell checker should exist after focus and spell check");
     var sc = isc.spellChecker;

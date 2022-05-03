@@ -46,8 +46,9 @@ function runTest() {
   var edit = document.getElementById("edit");
   edit.focus();
 
-  const {maybeOnSpellCheck} = SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", null);
+  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
   maybeOnSpellCheck(edit, function() {
     ok(isSpellingCheckOk(getEditor(), gMisspeltWords),
        "All misspellings before editing are accounted for.");
