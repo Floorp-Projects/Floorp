@@ -1661,10 +1661,9 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& aResult) {
     if (queryResult && translate) {
       for (int32_t i = 0; i < 2; ++i) {
         wchar_t subBlock[MAX_PATH];
-        _snwprintf(subBlock, MAX_PATH, L"\\StringFileInfo\\%04x%04x\\%s",
+        _snwprintf(subBlock, MAX_PATH, L"\\StringFileInfo\\%04x%04x\\%S",
                    (i == 0 ? translate[0].wLanguage : ::GetUserDefaultLangID()),
-                   translate[0].wCodePage,
-                   NS_ConvertASCIItoUTF16(nsDependentCString(aField)).get());
+                   translate[0].wCodePage, aField);
         subBlock[MAX_PATH - 1] = 0;
         LPVOID value = nullptr;
         UINT size;
