@@ -421,7 +421,7 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
       PR_PL(
           ("**** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't get "
            "size of DEVMODE using DocumentPropertiesW(pDeviceName = \"%s\"). "
-           "GetLastEror() = %08x\n",
+           "GetLastEror() = %08lx\n",
            NS_ConvertUTF16toUTF8(aName).get(), GetLastError()));
       return NS_ERROR_FAILURE;
     }

@@ -172,7 +172,7 @@ void BlockingIOWatcher::WatchAndCancel(Monitor& aMonitor) {
       LOG(("  cancelation signal succeeded"));
     } else {
       DWORD error = GetLastError();
-      LOG(("  cancelation signal failed with GetLastError=%u", error));
+      LOG(("  cancelation signal failed with GetLastError=%lu", error));
     }
   }
 }

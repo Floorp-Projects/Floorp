@@ -227,14 +227,14 @@ nsresult RetrieveOption(
     }
     case ERROR_INVALID_PARAMETER:
       MOZ_LOG(gDhcpUtilsLog, mozilla::LogLevel::Warning,
-              ("RetrieveOption returned %d (ERROR_INVALID_PARAMETER) when "
+              ("RetrieveOption returned %lu (ERROR_INVALID_PARAMETER) when "
                "option %d requested",
                winAPIResponse, aOption));
       rv = NS_ERROR_INVALID_ARG;
       break;
     default:
       MOZ_LOG(gDhcpUtilsLog, mozilla::LogLevel::Warning,
-              ("RetrieveOption returned %d when option %d requested",
+              ("RetrieveOption returned %lu when option %d requested",
                winAPIResponse, aOption));
       rv = NS_ERROR_FAILURE;
   }
