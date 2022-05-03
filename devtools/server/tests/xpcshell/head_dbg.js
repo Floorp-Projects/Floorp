@@ -166,10 +166,15 @@ function createLongStringFront(conn, form) {
   return front;
 }
 
-function createTestGlobal(name) {
-  const sandbox = Cu.Sandbox(
-    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+function createTestGlobal(name, options) {
+  const principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
   );
+  // NOTE: The Sandbox constructor behaves differently based on the argument
+  //       length.
+  const sandbox = options
+    ? Cu.Sandbox(principal, options)
+    : Cu.Sandbox(principal);
   sandbox.__name = name;
   // Expose a few mocks to better represent a Window object.
   // These attributes will be used by DOCUMENT_EVENT resource listener.

@@ -8,7 +8,9 @@ function run_test() {
     "resource://gre/modules/jsdebugger.jsm"
   );
   addDebuggerToGlobal(this);
-  const g = createTestGlobal("test");
+  const g = createTestGlobal("test", {
+    wantGlobalProperties: ["ChromeUtils"],
+  });
   const dbg = new Debugger();
   const gw = dbg.addDebuggee(g);
 
@@ -20,7 +22,9 @@ function run_test() {
       enumerable: true
     });
 
-    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+    const { XPCOMUtils } = ChromeUtils.import(
+      "resource://gre/modules/XPCOMUtils.jsm"
+    );
 
     // This is a CCW.
     XPCOMUtils.defineLazyGetter(this, "foo", function() { return "foo"; });
