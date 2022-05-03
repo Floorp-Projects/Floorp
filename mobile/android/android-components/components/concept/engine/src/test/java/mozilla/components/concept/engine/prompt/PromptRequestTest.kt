@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
@@ -311,5 +312,53 @@ class PromptRequestTest {
         assertTrue(onDismissCalled)
         assertFalse(onConfirmCalled)
         assertNull(confirmedCreditCard)
+    }
+
+    @Test
+    fun `WHEN calling confirm or dismiss on the SelectAddress prompt request THEN the respective callback is invoked`() {
+        val address = Address(
+            guid = "1",
+            givenName = "Firefox",
+            additionalName = "-",
+            familyName = "-",
+            organization = "-",
+            streetAddress = "street",
+            addressLevel3 = "address3",
+            addressLevel2 = "address2",
+            addressLevel1 = "address1",
+            postalCode = "1",
+            country = "Country",
+            tel = "1",
+            email = "@"
+        )
+        var onDismissCalled = false
+        var onConfirmCalled = false
+        var confirmedAddress: Address? = null
+
+        val selectAddresPromptRequest = PromptRequest.SelectAddress(
+            addresses = listOf(address),
+            onDismiss = {
+                onDismissCalled = true
+            },
+            onConfirm = {
+                confirmedAddress = it
+                onConfirmCalled = true
+            }
+        )
+
+        assertEquals(selectAddresPromptRequest.addresses, listOf(address))
+
+        selectAddresPromptRequest.onConfirm(address)
+
+        assertTrue(onConfirmCalled)
+        assertFalse(onDismissCalled)
+        assertEquals(address, confirmedAddress)
+
+        onConfirmCalled = false
+
+        selectAddresPromptRequest.onDismiss()
+
+        assertTrue(onDismissCalled)
+        assertFalse(onConfirmCalled)
     }
 }

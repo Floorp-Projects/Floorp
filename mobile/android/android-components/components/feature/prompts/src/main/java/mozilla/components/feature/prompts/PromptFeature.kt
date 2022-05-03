@@ -34,6 +34,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.Popup
 import mozilla.components.concept.engine.prompt.PromptRequest.Repost
 import mozilla.components.concept.engine.prompt.PromptRequest.SaveLoginPrompt
+import mozilla.components.concept.engine.prompt.PromptRequest.SelectAddress
 import mozilla.components.concept.engine.prompt.PromptRequest.SelectCreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest.SelectLoginPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.Share
@@ -791,6 +792,7 @@ class PromptFeature private constructor(
             is SelectLoginPrompt,
             is SelectCreditCard,
             is Share -> true
+            is SelectAddress -> false
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }

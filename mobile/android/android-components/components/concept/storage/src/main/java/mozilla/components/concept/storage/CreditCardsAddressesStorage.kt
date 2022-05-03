@@ -328,10 +328,10 @@ data class Address(
     val country: String,
     val tel: String,
     val email: String,
-    val timeCreated: Long,
-    val timeLastUsed: Long?,
-    val timeLastModified: Long,
-    val timesUsed: Long
+    val timeCreated: Long = 0L,
+    val timeLastUsed: Long? = 0L,
+    val timeLastModified: Long = 0L,
+    val timesUsed: Long = 0L
 ) : Parcelable
 
 /**

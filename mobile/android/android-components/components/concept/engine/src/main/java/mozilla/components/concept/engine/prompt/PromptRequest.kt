@@ -9,6 +9,7 @@ import android.net.Uri
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
@@ -127,6 +128,21 @@ sealed class PromptRequest(
     data class SelectLoginPrompt(
         val logins: List<Login>,
         val onConfirm: (Login) -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
+
+    /**
+     * Value type that represents a request for a select address prompt.
+     *
+     * This prompt is triggered by the user focusing on an address field.
+     *
+     * @property addresses List of addresses for the user to choose from.
+     * @property onConfirm Callback used to confirm the selected address.
+     * @property onDismiss Callback used to dismiss the address prompt.
+     */
+    data class SelectAddress(
+        val addresses: List<Address>,
+        val onConfirm: (Address) -> Unit,
         override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 

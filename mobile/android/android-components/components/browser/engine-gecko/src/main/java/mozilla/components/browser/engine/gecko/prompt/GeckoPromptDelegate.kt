@@ -8,6 +8,8 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
+import mozilla.components.browser.engine.gecko.ext.toAddress
+import mozilla.components.browser.engine.gecko.ext.toAutocompleteAddress
 import mozilla.components.browser.engine.gecko.ext.toAutocompleteCreditCard
 import mozilla.components.browser.engine.gecko.ext.toCreditCardEntry
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
@@ -17,6 +19,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
@@ -219,6 +222,39 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(promptRequest)
+        }
+
+        return geckoResult
+    }
+
+    override fun onAddressSelect(
+        session: GeckoSession,
+        request: AutocompleteRequest<Autocomplete.AddressSelectOption>
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+
+        val onConfirm: (Address) -> Unit = { address ->
+            if (!request.isComplete) {
+                geckoResult.complete(
+                    request.confirm(
+                        Autocomplete.AddressSelectOption(address.toAutocompleteAddress())
+                    )
+                )
+            }
+        }
+
+        val onDismiss: () -> Unit = {
+            request.dismissSafely(geckoResult)
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.SelectAddress(
+                    addresses = request.options.map { it.value.toAddress() },
+                    onConfirm = onConfirm,
+                    onDismiss = onDismiss
+                )
+            )
         }
 
         return geckoResult
