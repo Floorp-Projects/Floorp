@@ -7,7 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "modules/video_coding/svc/scalability_structure_l3t3.h"
+#include "modules/video_coding/svc/scalability_structure_full_svc.h"
 
 #include <vector>
 

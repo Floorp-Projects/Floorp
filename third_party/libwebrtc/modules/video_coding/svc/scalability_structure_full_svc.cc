@@ -29,9 +29,11 @@ constexpr absl::string_view ScalabilityStructureFullSvc::kFramePatternNames[];
 
 ScalabilityStructureFullSvc::ScalabilityStructureFullSvc(
     int num_spatial_layers,
-    int num_temporal_layers)
+    int num_temporal_layers,
+    ScalingFactor resolution_factor)
     : num_spatial_layers_(num_spatial_layers),
       num_temporal_layers_(num_temporal_layers),
+      resolution_factor_(resolution_factor),
       active_decode_targets_(
           (uint32_t{1} << (num_spatial_layers * num_temporal_layers)) - 1) {
   RTC_DCHECK_LE(num_spatial_layers, kMaxNumSpatialLayers);
@@ -48,8 +50,10 @@ ScalabilityStructureFullSvc::StreamConfig() const {
   result.scaling_factor_num[num_spatial_layers_ - 1] = 1;
   result.scaling_factor_den[num_spatial_layers_ - 1] = 1;
   for (int sid = num_spatial_layers_ - 1; sid > 0; --sid) {
-    result.scaling_factor_num[sid - 1] = 1;
-    result.scaling_factor_den[sid - 1] = 2 * result.scaling_factor_den[sid];
+    result.scaling_factor_num[sid - 1] =
+        resolution_factor_.num * result.scaling_factor_num[sid];
+    result.scaling_factor_den[sid - 1] =
+        resolution_factor_.den * result.scaling_factor_den[sid];
   }
   return result;
 }
@@ -283,6 +287,106 @@ void ScalabilityStructureFullSvc::OnRatesUpdated(
       SetDecodeTargetIsActive(sid, tid, active);
     }
   }
+}
+
+FrameDependencyStructure ScalabilityStructureL1T2::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 2;
+  structure.num_chains = 1;
+  structure.decode_target_protected_by_chain = {0, 0};
+  structure.templates.resize(3);
+  structure.templates[0].T(0).Dtis("SS").ChainDiffs({0});
+  structure.templates[1].T(0).Dtis("SS").ChainDiffs({2}).FrameDiffs({2});
+  structure.templates[2].T(1).Dtis("-D").ChainDiffs({1}).FrameDiffs({1});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureL1T3::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 3;
+  structure.num_chains = 1;
+  structure.decode_target_protected_by_chain = {0, 0, 0};
+  structure.templates.resize(5);
+  structure.templates[0].T(0).Dtis("SSS").ChainDiffs({0});
+  structure.templates[1].T(0).Dtis("SSS").ChainDiffs({4}).FrameDiffs({4});
+  structure.templates[2].T(1).Dtis("-DS").ChainDiffs({2}).FrameDiffs({2});
+  structure.templates[3].T(2).Dtis("--D").ChainDiffs({1}).FrameDiffs({1});
+  structure.templates[4].T(2).Dtis("--D").ChainDiffs({3}).FrameDiffs({1});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureL2T1::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 2;
+  structure.num_chains = 2;
+  structure.decode_target_protected_by_chain = {0, 1};
+  structure.templates.resize(4);
+  structure.templates[0].S(0).Dtis("SR").ChainDiffs({2, 1}).FrameDiffs({2});
+  structure.templates[1].S(0).Dtis("SS").ChainDiffs({0, 0});
+  structure.templates[2].S(1).Dtis("-S").ChainDiffs({1, 1}).FrameDiffs({2, 1});
+  structure.templates[3].S(1).Dtis("-S").ChainDiffs({1, 1}).FrameDiffs({1});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureL2T2::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 4;
+  structure.num_chains = 2;
+  structure.decode_target_protected_by_chain = {0, 0, 1, 1};
+  structure.templates.resize(6);
+  auto& templates = structure.templates;
+  templates[0].S(0).T(0).Dtis("SSSS").ChainDiffs({0, 0});
+  templates[1].S(0).T(0).Dtis("SSRR").ChainDiffs({4, 3}).FrameDiffs({4});
+  templates[2].S(0).T(1).Dtis("-D-R").ChainDiffs({2, 1}).FrameDiffs({2});
+  templates[3].S(1).T(0).Dtis("--SS").ChainDiffs({1, 1}).FrameDiffs({1});
+  templates[4].S(1).T(0).Dtis("--SS").ChainDiffs({1, 1}).FrameDiffs({4, 1});
+  templates[5].S(1).T(1).Dtis("---D").ChainDiffs({3, 2}).FrameDiffs({2, 1});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureL3T1::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 3;
+  structure.num_chains = 3;
+  structure.decode_target_protected_by_chain = {0, 1, 2};
+  auto& templates = structure.templates;
+  templates.resize(6);
+  templates[0].S(0).Dtis("SRR").ChainDiffs({3, 2, 1}).FrameDiffs({3});
+  templates[1].S(0).Dtis("SSS").ChainDiffs({0, 0, 0});
+  templates[2].S(1).Dtis("-SR").ChainDiffs({1, 1, 1}).FrameDiffs({3, 1});
+  templates[3].S(1).Dtis("-SS").ChainDiffs({1, 1, 1}).FrameDiffs({1});
+  templates[4].S(2).Dtis("--S").ChainDiffs({2, 1, 1}).FrameDiffs({3, 1});
+  templates[5].S(2).Dtis("--S").ChainDiffs({2, 1, 1}).FrameDiffs({1});
+  return structure;
+}
+
+FrameDependencyStructure ScalabilityStructureL3T3::DependencyStructure() const {
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = 9;
+  structure.num_chains = 3;
+  structure.decode_target_protected_by_chain = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+  auto& t = structure.templates;
+  t.resize(15);
+  // Templates are shown in the order frames following them appear in the
+  // stream, but in `structure.templates` array templates are sorted by
+  // (`spatial_id`, `temporal_id`) since that is a dependency descriptor
+  // requirement. Indexes are written in hex for nicer alignment.
+  t[0x1].S(0).T(0).Dtis("SSSSSSSSS").ChainDiffs({0, 0, 0});
+  t[0x6].S(1).T(0).Dtis("---SSSSSS").ChainDiffs({1, 1, 1}).FrameDiffs({1});
+  t[0xB].S(2).T(0).Dtis("------SSS").ChainDiffs({2, 1, 1}).FrameDiffs({1});
+  t[0x3].S(0).T(2).Dtis("--D--R--R").ChainDiffs({3, 2, 1}).FrameDiffs({3});
+  t[0x8].S(1).T(2).Dtis("-----D--R").ChainDiffs({4, 3, 2}).FrameDiffs({3, 1});
+  t[0xD].S(2).T(2).Dtis("--------D").ChainDiffs({5, 4, 3}).FrameDiffs({3, 1});
+  t[0x2].S(0).T(1).Dtis("-DS-RR-RR").ChainDiffs({6, 5, 4}).FrameDiffs({6});
+  t[0x7].S(1).T(1).Dtis("----DS-RR").ChainDiffs({7, 6, 5}).FrameDiffs({6, 1});
+  t[0xC].S(2).T(1).Dtis("-------DS").ChainDiffs({8, 7, 6}).FrameDiffs({6, 1});
+  t[0x4].S(0).T(2).Dtis("--D--R--R").ChainDiffs({9, 8, 7}).FrameDiffs({3});
+  t[0x9].S(1).T(2).Dtis("-----D--R").ChainDiffs({10, 9, 8}).FrameDiffs({3, 1});
+  t[0xE].S(2).T(2).Dtis("--------D").ChainDiffs({11, 10, 9}).FrameDiffs({3, 1});
+  t[0x0].S(0).T(0).Dtis("SSSRRRRRR").ChainDiffs({12, 11, 10}).FrameDiffs({12});
+  t[0x5].S(1).T(0).Dtis("---SSSRRR").ChainDiffs({1, 1, 1}).FrameDiffs({12, 1});
+  t[0xA].S(2).T(0).Dtis("------SSS").ChainDiffs({2, 1, 1}).FrameDiffs({12, 1});
+  return structure;
 }
 
 }  // namespace webrtc

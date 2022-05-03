@@ -12,15 +12,9 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
+#include "modules/video_coding/svc/scalability_structure_full_svc.h"
 #include "modules/video_coding/svc/scalability_structure_key_svc.h"
-#include "modules/video_coding/svc/scalability_structure_l1t2.h"
-#include "modules/video_coding/svc/scalability_structure_l1t3.h"
-#include "modules/video_coding/svc/scalability_structure_l2t1.h"
-#include "modules/video_coding/svc/scalability_structure_l2t1h.h"
-#include "modules/video_coding/svc/scalability_structure_l2t2.h"
 #include "modules/video_coding/svc/scalability_structure_l2t2_key_shift.h"
-#include "modules/video_coding/svc/scalability_structure_l3t1.h"
-#include "modules/video_coding/svc/scalability_structure_l3t3.h"
 #include "modules/video_coding/svc/scalability_structure_s2t1.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
@@ -41,12 +35,21 @@ std::unique_ptr<ScalableVideoController> Create() {
   return std::make_unique<T>();
 }
 
+template <typename T>
+std::unique_ptr<ScalableVideoController> CreateH() {
+  // 1.5:1 scaling, see https://w3c.github.io/webrtc-svc/#scalabilitymodes*
+  typename T::ScalingFactor factor;
+  factor.num = 2;
+  factor.den = 3;
+  return std::make_unique<T>(factor);
+}
+
 constexpr NamedStructureFactory kFactories[] = {
     {"NONE", Create<ScalableVideoControllerNoLayering>},
     {"L1T2", Create<ScalabilityStructureL1T2>},
     {"L1T3", Create<ScalabilityStructureL1T3>},
     {"L2T1", Create<ScalabilityStructureL2T1>},
-    {"L2T1h", Create<ScalabilityStructureL2T1h>},
+    {"L2T1h", CreateH<ScalabilityStructureL2T1>},
     {"L2T1_KEY", Create<ScalabilityStructureL2T1Key>},
     {"L2T2", Create<ScalabilityStructureL2T2>},
     {"L2T2_KEY", Create<ScalabilityStructureL2T2Key>},
