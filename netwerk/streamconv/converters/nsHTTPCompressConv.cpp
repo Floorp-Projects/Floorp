@@ -201,15 +201,9 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
     return NS_OK;
   }
 
-  auto outBuffer = MakeUniqueFallible<uint8_t[]>(kOutSize);
-  if (outBuffer == nullptr) {
-    self->mBrotli->mStatus = NS_ERROR_OUT_OF_MEMORY;
-    return self->mBrotli->mStatus;
-  }
-
   do {
-    outSize = kOutSize;
-    outPtr = outBuffer.get();
+    outSize = 0;
+    outPtr = nullptr;
 
     // brotli api is documented in brotli/dec/decode.h and brotli/dec/decode.c
     LOG(("nsHttpCompresssConv %p brotlihandler decompress %zu\n", self, avail));
@@ -218,13 +212,11 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
         &self->mBrotli->mState, &avail,
         reinterpret_cast<const unsigned char**>(&dataIn), &outSize, &outPtr,
         &totalOut);
-    outSize = kOutSize - outSize;
     self->mBrotli->mTotalOut = totalOut;
     self->mBrotli->mBrotliStateIsStreamEnd =
         BrotliDecoderIsFinished(&self->mBrotli->mState);
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32
-         " out=%zu\n",
-         self, static_cast<uint32_t>(res), outSize));
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32, self,
+         static_cast<uint32_t>(res)));
 
     if (res == BROTLI_DECODER_RESULT_ERROR) {
       LOG(("nsHttpCompressConv %p marking invalid encoding", self));
@@ -242,10 +234,14 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
         return self->mBrotli->mStatus;
       }
     }
-    if (outSize > 0) {
+
+    while (::BrotliDecoderHasMoreOutput(&self->mBrotli->mState)) {
+      outSize = kOutSize;
+      const uint8_t* buffer =
+          ::BrotliDecoderTakeOutput(&self->mBrotli->mState, &outSize);
       nsresult rv = self->do_OnDataAvailable(
           self->mBrotli->mRequest, self->mBrotli->mSourceOffset,
-          reinterpret_cast<const char*>(outBuffer.get()), outSize);
+          reinterpret_cast<const char*>(buffer), outSize);
       LOG(("nsHttpCompressConv %p BrotliHandler ODA rv=%" PRIx32, self,
            static_cast<uint32_t>(rv)));
       if (NS_FAILED(rv)) {
