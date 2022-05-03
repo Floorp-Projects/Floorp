@@ -18,6 +18,7 @@ const TEST_DATA = [
     category: "angle",
     cases: [
       { queryString: "1 d to d", expected: "1 deg" },
+      { queryString: "-1 d to d", expected: "-1 deg" },
       { queryString: "1 d in d", expected: "1 deg" },
       { queryString: "1 d = d", expected: "1 deg" },
       { queryString: "1 D=D", expected: "1 deg" },
@@ -67,6 +68,7 @@ const TEST_DATA = [
     category: "force",
     cases: [
       { queryString: "1 n to n", expected: "1 newton" },
+      { queryString: "-1 n to n", expected: "-1 newton" },
       { queryString: "1 n in n", expected: "1 newton" },
       { queryString: "1 n = n", expected: "1 newton" },
       { queryString: "1 N=N", expected: "1 newton" },
@@ -221,6 +223,7 @@ const TEST_DATA = [
     category: "length",
     cases: [
       { queryString: "1 meter to meter", expected: "1 m" },
+      { queryString: "-1 meter to meter", expected: "-1 m" },
       { queryString: "1 meter in meter", expected: "1 m" },
       { queryString: "1 meter = meter", expected: "1 m" },
       { queryString: "1 METER=METER", expected: "1 m" },
@@ -247,6 +250,7 @@ const TEST_DATA = [
     category: "mass",
     cases: [
       { queryString: "1 kg to kg", expected: "1 kg" },
+      { queryString: "-1 kg to kg", expected: "-1 kg" },
       { queryString: "1 kg in kg", expected: "1 kg" },
       { queryString: "1 kg = kg", expected: "1 kg" },
       { queryString: "1 KG=KG", expected: "1 kg" },
@@ -318,6 +322,7 @@ const TEST_DATA = [
         queryString: "10 f to kelvin",
         expected: `${round((10 - 32) / 1.8 + 273.15)} kelvin`,
       },
+      { queryString: "-10 c to f", expected: "14°F" },
     ],
   },
   {
