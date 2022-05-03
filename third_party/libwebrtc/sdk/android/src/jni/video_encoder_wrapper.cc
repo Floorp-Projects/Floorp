@@ -15,6 +15,7 @@
 #include "common_video/h264/h264_common.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "modules/video_coding/utility/vp8_header_parser.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "rtc_base/logging.h"
@@ -325,6 +326,19 @@ CodecSpecificInfo VideoEncoderWrapper::ParseCodecSpecificInfo(
   const bool key_frame = frame._frameType == VideoFrameType::kVideoFrameKey;
 
   CodecSpecificInfo info;
+  // For stream with scalability, NextFrameConfig should be called before
+  // encoding and used to configure encoder, then passed here e.g. via
+  // FrameExtraInfo structure. But while this encoder wrapper uses only trivial
+  // scalability, NextFrameConfig can be called here.
+  auto layer_frames = svc_controller_.NextFrameConfig(/*reset=*/key_frame);
+  RTC_DCHECK_EQ(layer_frames.size(), 1);
+  info.generic_frame_info = svc_controller_.OnEncodeDone(layer_frames[0]);
+  if (key_frame) {
+    info.template_structure = svc_controller_.DependencyStructure();
+    info.template_structure->resolutions = {
+        RenderResolution(frame._encodedWidth, frame._encodedHeight)};
+  }
+
   info.codecType = codec_settings_.codecType;
 
   switch (codec_settings_.codecType) {
