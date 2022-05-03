@@ -2247,7 +2247,7 @@ class SpecialPowersChild extends JSWindowActorChild {
   contentTransformsReceived(win) {
     for (; win; win = win.parent) {
       try {
-        return win.docShell?.browserChild.contentTransformsReceived();
+        return win.docShell.browserChild.contentTransformsReceived();
       } catch(ex) {
         // browserChild getter throws on non-e10s rather than returning null.
       }
