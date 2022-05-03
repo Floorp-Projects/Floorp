@@ -14,7 +14,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SeekableStreamWrapper.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
