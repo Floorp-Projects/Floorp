@@ -43,9 +43,6 @@
   if (outError) {
     *outError = nil;
   }
-  if (![self checkLock:outError]) {
-    return NO;
-  }
 
   // Provide an error even if there isn't one so we can log it. We will not
   // return immediately on error in this function and instead try to set
