@@ -42,6 +42,8 @@ constexpr webrtc::DataRate Interpolate(const webrtc::DataRate& a,
 constexpr char kUseLegacySimulcastLayerLimitFieldTrial[] =
     "WebRTC-LegacySimulcastLayerLimit";
 
+constexpr double kDefaultMaxRoundupRate = 0.1;
+
 // TODO(webrtc:12415): Flip this to a kill switch when this feature launches.
 bool EnableLowresBitrateInterpolation(
     const webrtc::WebRtcKeyValueConfig& trials) {
@@ -209,7 +211,7 @@ SimulcastFormat InterpolateSimulcastFormat(
                      static_cast<float>(total_pixels_up - total_pixels_down);
 
   // Use upper resolution if |rate| is below the configured threshold.
-  size_t max_layers = (max_roundup_rate && rate < max_roundup_rate.value())
+  size_t max_layers = (rate < max_roundup_rate.value_or(kDefaultMaxRoundupRate))
                           ? formats[index - 1].max_layers
                           : formats[index].max_layers;
   webrtc::DataRate max_bitrate = Interpolate(formats[index - 1].max_bitrate,
