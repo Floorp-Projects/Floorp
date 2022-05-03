@@ -29,8 +29,6 @@ internal class DefaultController(
      * See [SyncedTabsController.refreshSyncedTabs]
      */
     override fun refreshSyncedTabs() {
-        view.startLoading()
-
         scope.launch {
             accountManager.withConstellation {
                 val syncedDeviceTabs = provider.getSyncedDeviceTabs()
@@ -39,7 +37,7 @@ internal class DefaultController(
                 scope.launch(Dispatchers.Main) {
                     if (syncedDeviceTabs.isEmpty() && otherDevices?.isEmpty() == true) {
                         view.onError(ErrorType.MULTIPLE_DEVICES_UNAVAILABLE)
-                    } else if (!syncedDeviceTabs.any { it.tabs.isNotEmpty() }) {
+                    } else if (syncedDeviceTabs.all { it.tabs.isEmpty() }) {
                         view.onError(ErrorType.NO_TABS_AVAILABLE)
                     } else {
                         view.displaySyncedTabs(syncedDeviceTabs)
@@ -57,6 +55,7 @@ internal class DefaultController(
      * See [SyncedTabsController.syncAccount]
      */
     override fun syncAccount() {
+        view.startLoading()
         scope.launch {
             accountManager.withConstellation { refreshDevices() }
             accountManager.syncNow(SyncReason.User, customEngineSubset = listOf(SyncEngine.Tabs))

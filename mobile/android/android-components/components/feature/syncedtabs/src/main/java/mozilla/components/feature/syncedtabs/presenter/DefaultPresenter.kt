@@ -77,7 +77,6 @@ internal class DefaultPresenter(
             return
         }
 
-        controller.refreshSyncedTabs()
         controller.syncAccount()
     }
 
@@ -86,8 +85,11 @@ internal class DefaultPresenter(
     }
 
     companion object {
+        // This status isn't always set before it's inspected. This causes erroneous reports of the
+        // sync engine being unavailable. Tabs are included in sync by default, so it's safe to
+        // default to true until they are deliberately disabled.
         private fun isSyncedTabsEngineEnabled(context: Context): Boolean {
-            return SyncEnginesStorage(context).getStatus()[SyncEngine.Tabs] ?: false
+            return SyncEnginesStorage(context).getStatus()[SyncEngine.Tabs] ?: true
         }
     }
 
@@ -103,7 +105,6 @@ internal class DefaultPresenter(
         override fun onAuthenticated(account: OAuthAccount, authType: AuthType) {
             CoroutineScope(Dispatchers.Main).launch {
                 controller.syncAccount()
-                controller.refreshSyncedTabs()
             }
         }
 

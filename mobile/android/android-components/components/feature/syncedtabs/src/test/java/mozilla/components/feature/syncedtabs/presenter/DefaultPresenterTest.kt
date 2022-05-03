@@ -156,7 +156,6 @@ class DefaultPresenterTest {
         shadowOf(getMainLooper()).idle()
 
         verify(controller).syncAccount()
-        verify(controller).refreshSyncedTabs()
     }
 
     @Test
