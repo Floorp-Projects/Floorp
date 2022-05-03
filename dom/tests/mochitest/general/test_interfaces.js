@@ -25,9 +25,8 @@
 // channel/OS) or one of the is* constants below (in cases when
 // exposure is affected by channel or OS in a nontrivial way).
 
-const { AppConstants } = SpecialPowers.Cu.import(
-  "resource://gre/modules/AppConstants.jsm",
-  {}
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
 
 const isNightly = AppConstants.NIGHTLY_BUILD;

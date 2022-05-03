@@ -66,8 +66,9 @@ function getXHRDoc(t) {
   });
 }
 
-const {AppConstants} =
-  SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 if (AppConstants.NIGHTLY_BUILD) {
   promise_test(t => {
     let anim;

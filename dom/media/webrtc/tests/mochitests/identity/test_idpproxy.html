@@ -7,9 +7,9 @@
 <body>
   <script class="testbody" type="application/javascript">
 "use strict";
-var Cu = SpecialPowers.Cu;
-var rtcid = Cu.import("resource://gre/modules/media/IdpSandbox.jsm");
-var IdpSandbox = rtcid.IdpSandbox;
+var { IdpSandbox } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/media/IdpSandbox.jsm"
+);
 var dummyPayload = JSON.stringify({
   this: 'is',
   a: ['stu', 6],

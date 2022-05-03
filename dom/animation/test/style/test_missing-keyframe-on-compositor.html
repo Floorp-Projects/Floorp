@@ -545,8 +545,9 @@ promise_test(t => {
 }, 'Transform value for animation with no keyframe at offset 1 and its ' +
    'iterationComposite is accumulate');
 
-const {AppConstants} =
-  SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 if (AppConstants.NIGHTLY_BUILD) {
   promise_test(t => {
     var div;

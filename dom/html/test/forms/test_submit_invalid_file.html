@@ -31,7 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=702949
 
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(function() {
-    var FileUtils = SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm").FileUtils;
+    var { FileUtils } = SpecialPowers.ChromeUtils.import(
+      "resource://gre/modules/FileUtils.jsm"
+    );
 
     var i = document.getElementsByTagName('input')[0];
 

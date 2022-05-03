@@ -32,9 +32,8 @@
      * received by the server (*.sjs) were actually *https* requests.
      */
 
-    const { AppConstants } = SpecialPowers.Cu.import(
-      "resource://gre/modules/AppConstants.jsm",
-      {}
+    const { AppConstants } = SpecialPowers.ChromeUtils.import(
+      "resource://gre/modules/AppConstants.jsm"
     );
     const splitRegex = /^(.*)-(.*)$/
     const testConfig = {
