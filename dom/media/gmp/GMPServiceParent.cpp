@@ -28,6 +28,7 @@
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -562,6 +563,21 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
         aContentProcess);
     mMainThread->Dispatch(task.forget());
     return;
+  }
+
+  {
+    nsTArray<nsCString> tags;
+    tags.AppendElement("h264"_ns);
+
+    bool has_h264 = false;
+    if (mScannedPluginOnDisk) {
+      nsresult rv;
+      rv = HasPluginForAPI(nsLiteralCString(GMP_API_VIDEO_ENCODER), &tags,
+                           &has_h264);
+      has_h264 = NS_SUCCEEDED(rv) && has_h264;
+    }
+    Telemetry::Accumulate(Telemetry::MEDIA_GMP_UPDATE_CONTENT_PROCESS_HAS_H264,
+                          has_h264);
   }
 
   typedef mozilla::dom::GMPCapabilityData GMPCapabilityData;
