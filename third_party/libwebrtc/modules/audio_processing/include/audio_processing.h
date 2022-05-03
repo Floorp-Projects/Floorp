@@ -533,8 +533,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
 
   // Enqueues a runtime setting. Returns a bool indicating whether the
   // enqueueing was successfull.
-  // TODO(b/177830919): Change this to pure virtual.
-  virtual bool PostRuntimeSetting(RuntimeSetting setting) { return false; }
+  virtual bool PostRuntimeSetting(RuntimeSetting setting) = 0;
 
   // Accepts and produces a 10 ms frame interleaved 16 bit integer audio as
   // specified in |input_config| and |output_config|. |src| and |dest| may use
