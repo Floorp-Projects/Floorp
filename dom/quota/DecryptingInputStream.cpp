@@ -86,14 +86,6 @@ void DecryptingInputStreamBase::SerializedComplexity(uint32_t aMaxSize,
       ->SerializedComplexity(aMaxSize, aSizeUsed, aPipes, aTransferables);
 }
 
-void DecryptingInputStreamBase::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  MOZ_CRASH("Not implemented");
-}
-
 size_t DecryptingInputStreamBase::PlainLength() const {
   MOZ_ASSERT(mNextByte <= mPlainBytes);
   return mPlainBytes - mNextByte;

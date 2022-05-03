@@ -25,9 +25,7 @@ class BackgroundDataBridgeParent;
 
 // The IPC actor implements PSocketProcessChild in child process.
 // This is allocated and kept alive by SocketProcessImpl.
-class SocketProcessChild final
-    : public PSocketProcessChild,
-      public mozilla::ipc::ChildToParentStreamActorManager {
+class SocketProcessChild final : public PSocketProcessChild {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessChild)
 
