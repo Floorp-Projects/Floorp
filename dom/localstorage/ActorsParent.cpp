@@ -8526,6 +8526,15 @@ nsresult QuotaClient::AboutToClearOrigins(
     return NS_OK;
   }
 
+  // There can be no data for the system principal in the archive or the shadow
+  // database. This early return silences potential warnings caused by failed
+  // `CreateAerchivedOriginScope` because it calls `GenerateOriginKey2` which
+  // doesn't support the system principal.
+  if (aOriginScope.IsOrigin() &&
+      aOriginScope.GetOrigin() == QuotaManager::GetOriginForChrome()) {
+    return NS_OK;
+  }
+
   const bool shadowWrites = gShadowWrites;
 
   QM_TRY_INSPECT(const auto& archivedOriginScope,

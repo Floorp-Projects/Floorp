@@ -37,6 +37,19 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.common += [
     "common/test_storage_manager_persisted.js",
 ]
 
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules += [
+    "modules/content/Assert.js",
+    "modules/content/ModuleLoader.js",
+    "modules/content/StorageUtils.js",
+    "modules/content/WorkerDriver.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules.worker += [
+    "modules/content/worker/Assert.js",
+    "modules/content/worker/head.js",
+    "modules/content/worker/ModuleLoader.js",
+]
+
 TEST_HARNESS_FILES.xpcshell.dom.quota.test.common += [
     "common/file.js",
     "common/global.js",
@@ -48,4 +61,9 @@ TEST_HARNESS_FILES.xpcshell.dom.quota.test.common += [
 TEST_HARNESS_FILES.xpcshell.dom.quota.test.xpcshell.common += [
     "xpcshell/common/head.js",
     "xpcshell/common/utils.js",
+]
+
+TESTING_JS_MODULES.dom.quota.test.modules += [
+    "modules/system/ModuleLoader.jsm",
+    "modules/system/StorageUtils.jsm",
 ]
