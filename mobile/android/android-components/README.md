@@ -71,7 +71,7 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Icons**](components/browser/icons/README.md) - A component for loading and storing website icons (like [Favicons](https://en.wikipedia.org/wiki/Favicon)).
 
-* ⚪ [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
+* 🔵 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
 * ⚪ [**Menu 2**](components/browser/menu2/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
@@ -81,9 +81,9 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Storage-Sync**](components/browser/storage-sync/README.md) - A syncable implementation of browser storage backed by [application-services' Places lib](https://github.com/mozilla/application-services).
 
-* ⚪ [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
+* 🔵 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
-* 🔴 [**Thumbnails**](components/browser/thumbnails/README.md) - A component for loading and storing website thumbnails (screenshot of the website).
+* 🔵 [**Thumbnails**](components/browser/thumbnails/README.md) - A component for loading and storing website thumbnails (screenshot of the website).
 
 * 🔵 [**Toolbar**](components/browser/toolbar/README.md) - A customizable toolbar for browsers.
 
@@ -101,7 +101,7 @@ _API contracts and abstraction layers for browser components._
 
 * 🔵 [**Storage**](components/concept/storage/README.md) - Abstract definition of a browser storage component.
 
-* ⚪ [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
+* 🔵 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
 
 * 🔵 [**Toolbar**](components/concept/toolbar/README.md) - Abstract definition of a browser toolbar component.
 
@@ -113,7 +113,7 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Accounts Push**](components/feature/accounts-push/README.md) - Feature of use cases for FxA Account that work with push support.
 
-* 🔴 [**Autofill**](components/feature/autofill/README.md) - A component that provides support for Android's Autofill framework.
+* 🔵 [**Autofill**](components/feature/autofill/README.md) - A component that provides support for Android's Autofill framework.
 
 * 🔵 [**Awesomebar**](components/feature/awesomebar/README.md) - A component that connects a [concept-awesomebar](components/concept/awesomebar/README.md) implementation to a [concept-toolbar](components/concept/toolbar/README.md) implementation and provides implementations of various suggestion providers.
 
@@ -123,7 +123,7 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Custom Tabs**](components/feature/customtabs/README.md) - A component for providing [Custom Tabs](https://developer.chrome.com/multidevice/android/customtabs) functionality in browsers.
 
-* ⚪ [**Downloads**](components/feature/downloads/README.md) - A component to perform downloads using the [Android downloads manager](https://developer.android.com/reference/android/app/DownloadManager).
+* 🔵 [**Downloads**](components/feature/downloads/README.md) - A component to perform downloads using the [Android downloads manager](https://developer.android.com/reference/android/app/DownloadManager).
 
 * 🔵 [**Intent**](components/feature/intent/README.md) - A component that provides intent processing functionality by combining various other feature modules.
 
@@ -155,11 +155,11 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
 
-* ⚪ [**Remote Tabs**](components/feature/remotetabs/README.md) - Feature that provides access to other device's tabs in the same account.
+* 🔵 [**Remote Tabs**](components/feature/remotetabs/README.md) - Feature that provides access to other device's tabs in the same account.
 
 * 🔵 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
 
-* ⚪ [**WebAuthn**](components/feature/webauthn/README.md) - A feature that provides WebAuthn functionality for supported engines.
+* 🔵 [**WebAuthn**](components/feature/webauthn/README.md) - A feature that provides WebAuthn functionality for supported engines.
 
 * 🔵 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
 
@@ -191,7 +191,7 @@ _Components and libraries to interact with backend services._
 
 * 🔵 [**Firefox Sync - Logins**](components/service/sync-logins/README.md) - A library for integrating with Firefox Sync - Logins.
 
-* 🔴 [**Firefox Sync - Autofill**](components/service/sync-autofill/README.md) - A library for integrating with Firefox Sync - Autofill.
+* 🔵 [**Firefox Sync - Autofill**](components/service/sync-autofill/README.md) - A library for integrating with Firefox Sync - Autofill.
 
 * 🔵 [**Glean**](components/service/glean/README.md) - A client-side telemetry SDK for collecting metrics and sending them to Mozilla's telemetry service (eventually replacing [service-telemetry](components/service/telemetry/README.md)).
 
@@ -199,9 +199,9 @@ _Components and libraries to interact with backend services._
 
 * 🔴 [**Nimbus**](components/service/nimbus/README.md) - A wrapper for the Nimbus SDK.
 
-* 🔴 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
+* 🔵 [**Pocket**](components/service/pocket/README.md) - A library for communicating with the Pocket API.
 
-* 🔴 [**Contile**](components/service/contile/README.md) - A library for communicating with the Contile services API.
+* 🔵 [**Contile**](components/service/contile/README.md) - A library for communicating with the Contile services API.
 
 ## Support
 
