@@ -2296,11 +2296,12 @@ void TSFTextStore::FlushPendingActions() {
     switch (action.mType) {
       case PendingAction::Type::eKeyboardEvent:
         if (mDestroyed) {
-          MOZ_LOG(gIMELog, LogLevel::Warning,
-                  ("0x%p   TSFTextStore::FlushPendingActions() "
-                   "IGNORED pending KeyboardEvent(%s) due to already destroyed",
-                   action.mKeyMsg.message == WM_KEYDOWN ? "eKeyDown" : "eKeyUp",
-                   this));
+          MOZ_LOG(
+              gIMELog, LogLevel::Warning,
+              ("0x%p   TSFTextStore::FlushPendingActions() "
+               "IGNORED pending KeyboardEvent(%s) due to already destroyed",
+               this,
+               action.mKeyMsg.message == WM_KEYDOWN ? "eKeyDown" : "eKeyUp"));
         }
         MOZ_DIAGNOSTIC_ASSERT(action.mKeyMsg.message == WM_KEYDOWN ||
                               action.mKeyMsg.message == WM_KEYUP);
@@ -2695,10 +2696,11 @@ TSFTextStore::GetStatus(TS_STATUS* pdcs) {
 STDMETHODIMP
 TSFTextStore::QueryInsert(LONG acpTestStart, LONG acpTestEnd, ULONG cch,
                           LONG* pacpResultStart, LONG* pacpResultEnd) {
-  MOZ_LOG(gIMELog, LogLevel::Info,
-          ("0x%p TSFTextStore::QueryInsert(acpTestStart=%ld, "
-           "acpTestEnd=%ld, cch=%lu, pacpResultStart=0x%p, pacpResultEnd=0x%p)",
-           this, acpTestStart, acpTestEnd, cch, acpTestStart, acpTestEnd));
+  MOZ_LOG(
+      gIMELog, LogLevel::Info,
+      ("0x%p TSFTextStore::QueryInsert(acpTestStart=%ld, "
+       "acpTestEnd=%ld, cch=%lu, pacpResultStart=0x%p, pacpResultEnd=0x%p)",
+       this, acpTestStart, acpTestEnd, cch, pacpResultStart, pacpResultEnd));
 
   if (!pacpResultStart || !pacpResultEnd) {
     MOZ_LOG(gIMELog, LogLevel::Error,

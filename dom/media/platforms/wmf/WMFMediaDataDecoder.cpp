@@ -62,7 +62,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
       "WMFMediaDataDecoder::ProcessError for decoder with description %s with "
       "reason: %s",
       GetDescriptionName().get(), aReason);
-  LOG(markerString.get());
+  LOG("%s", markerString.get());
   PROFILER_MARKER_TEXT("WMFDecoder Error", MEDIA_PLAYBACK, {}, markerString);
 
   // TODO: For the error DXGI_ERROR_DEVICE_RESET, we could return

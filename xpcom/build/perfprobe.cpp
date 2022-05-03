@@ -126,7 +126,7 @@ ULONG WINAPI ControlCallback(WMIDPREQUESTCODE aRequestCode, PVOID aContext,
       // Note: We only accept one handle
       if ((HANDLE)sessionHandle == INVALID_HANDLE_VALUE) {
         ULONG result = GetLastError();
-        LOG(("Probes: ControlCallback failed, %ul", result));
+        LOG(("Probes: ControlCallback failed, %lu", result));
         return result;
       } else if (context->mIsActive && context->mSessionHandle &&
                  context->mSessionHandle != sessionHandle) {

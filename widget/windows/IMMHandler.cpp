@@ -858,7 +858,8 @@ bool IMMHandler::OnIMESetContext(nsWindow* aWindow, WPARAM wParam,
   // the WM_IME_SETCONTEXT on the top level window.
   if (IsTopLevelWindowOfComposition(aWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Info,
-            ("  IMMHandler::OnIMESetContext, hWnd=%p is top level window"));
+            ("  IMMHandler::OnIMESetContext, hWnd=%p is top level window",
+             aWindow->GetWindowHandle()));
     return true;
   }
 

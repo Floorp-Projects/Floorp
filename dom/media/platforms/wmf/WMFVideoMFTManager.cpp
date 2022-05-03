@@ -375,7 +375,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   if (!mDXVAFailureReason.IsEmpty()) {
     // DXVA failure reason being set can mean that D3D11 failed, or that DXVA is
     // entirely disabled.
-    LOG(nsPrintfCString("DXVA failure: %s", mDXVAFailureReason.get()).get());
+    LOG("DXVA failure: %s", mDXVAFailureReason.get());
   }
 
   if (!mUseHwAccel) {

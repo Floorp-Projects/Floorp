@@ -3118,22 +3118,25 @@ static void LogOSError(const char* aPrefix, const void* aObjPtr) {
 
 #  ifdef XP_WIN
   DWORD errCode = WSAGetLastError();
-  LPVOID errMessage;
-  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS,
-                NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                (LPTSTR)&errMessage, 0, NULL);
+  char* errMessage;
+  FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                     FORMAT_MESSAGE_IGNORE_INSERTS,
+                 NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                 (LPSTR)&errMessage, 0, NULL);
+  NS_WARNING(nsPrintfCString("%s [%p] OS error[0x%lx] %s",
+                             aPrefix ? aPrefix : "nsSocketTransport", aObjPtr,
+                             errCode,
+                             errMessage ? errMessage : "<no error text>")
+                 .get());
+  LocalFree(errMessage);
 #  else
   int errCode = errno;
   char* errMessage = strerror(errno);
-#  endif
   NS_WARNING(nsPrintfCString("%s [%p] OS error[0x%x] %s",
                              aPrefix ? aPrefix : "nsSocketTransport", aObjPtr,
                              errCode,
                              errMessage ? errMessage : "<no error text>")
                  .get());
-#  ifdef XP_WIN
-  LocalFree(errMessage);
 #  endif
 #endif
 }
