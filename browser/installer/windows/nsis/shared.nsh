@@ -85,6 +85,20 @@
   ; Fix the distribution.ini file if applicable
   ${FixDistributionsINI}
 
+  ; https://bugzilla.mozilla.org/show_bug.cgi?id=1616355
+  ; Migrate postSigningData file if present, and if it doesn't already exist.
+  ${GetLocalAppDataFolder} $0
+  ${If} ${FileExists} "$INSTDIR\postSigningData"
+    ; If it already exists, just delete the appdata one.
+    ; It's possible this was for a different install, but it's impossible to
+    ; know for sure, so we may as well just get rid of it.
+    Delete /REBOOTOK "$0\Mozilla\Firefox\postSigningData"
+  ${Else}
+    ${If} ${FileExists} "$0\Mozilla\Firefox\postSigningData"
+      Rename "$0\Mozilla\Firefox\postSigningData" "$INSTDIR\postSigningData"
+    ${EndIf}
+  ${EndIf}
+
   RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
   ; Register AccessibleHandler.dll with COM (this requires write access to HKLM)

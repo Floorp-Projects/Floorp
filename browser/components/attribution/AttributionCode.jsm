@@ -78,10 +78,7 @@ var AttributionCode = {
    */
   get attributionFile() {
     if (AppConstants.platform == "win") {
-      let file = Services.dirsvc.get("LocalAppData", Ci.nsIFile);
-      // appinfo does not exist in xpcshell, so we need defaults.
-      file.append(Services.appinfo.vendor || "mozilla");
-      file.append(AppConstants.MOZ_APP_NAME);
+      let file = Services.dirsvc.get("GreD", Ci.nsIFile);
       file.append("postSigningData");
       return file;
     } else if (AppConstants.platform == "macosx") {
