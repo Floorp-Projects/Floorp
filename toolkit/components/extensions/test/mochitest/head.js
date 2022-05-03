@@ -2,10 +2,10 @@
 
 /* exported AppConstants, Assert, AppTestDelegate */
 
-var { AppConstants } = SpecialPowers.Cu.import(
+var { AppConstants } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
-var { AppTestDelegate } = SpecialPowers.Cu.import(
+var { AppTestDelegate } = SpecialPowers.ChromeUtils.import(
   "resource://specialpowers/AppTestDelegate.jsm"
 );
 
@@ -83,7 +83,7 @@ function waitForLoad(win) {
 /* exported loadChromeScript */
 function loadChromeScript(fn) {
   let wrapper = `
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 (${fn.toString()})();`;
 
   return SpecialPowers.loadChromeScript(new Function(wrapper));

@@ -240,6 +240,9 @@ addAccessibleTask(
 <h1 id="h1">content</h1>
 <button id="buttonContent">content</button>
 <button id="buttonLabel" aria-label="label">content</button>
+<button id="buttonEmpty"></button>
+<button id="buttonSummary"><details><summary>test</summary></details></button>
+<div id="div"></div>
   `,
   async function(browser, docAcc) {
     const h1 = findAccessibleChildByID(docAcc, "h1");
@@ -248,6 +251,12 @@ addAccessibleTask(
     testAbsentAttrs(buttonContent, { "explicit-name": "" });
     const buttonLabel = findAccessibleChildByID(docAcc, "buttonLabel");
     testAttrs(buttonLabel, { "explicit-name": "true" }, true);
+    const buttonEmpty = findAccessibleChildByID(docAcc, "buttonEmpty");
+    testAbsentAttrs(buttonEmpty, { "explicit-name": "" });
+    const buttonSummary = findAccessibleChildByID(docAcc, "buttonSummary");
+    testAbsentAttrs(buttonSummary, { "explicit-name": "" });
+    const div = findAccessibleChildByID(docAcc, "div");
+    testAbsentAttrs(div, { "explicit-name": "" });
 
     info("Setting aria-label on h1");
     let nameChanged = waitForEvent(EVENT_NAME_CHANGE, h1);

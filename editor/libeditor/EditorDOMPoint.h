@@ -637,7 +637,7 @@ class EditorDOMPointBase final {
       const StrongPtr<ContainerType>& aContainer,
       InterlinePosition aInterlinePosition = InterlinePosition::Undefined) {
     MOZ_ASSERT(aContainer.get());
-    return After(*aContainer.get());
+    return After(*aContainer.get(), aInterlinePosition);
   }
   template <typename PT, typename CT>
   MOZ_NEVER_INLINE_DEBUG static SelfType After(

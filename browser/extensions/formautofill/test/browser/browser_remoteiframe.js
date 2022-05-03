@@ -13,9 +13,7 @@ add_task(async function setup_storage() {
       [ENABLED_AUTOFILL_ADDRESSES_CAPTURE_PREF, true],
     ],
   });
-  await saveAddress(TEST_ADDRESS_2);
-  await saveAddress(TEST_ADDRESS_4);
-  await saveAddress(TEST_ADDRESS_5);
+  await setStorage(TEST_ADDRESS_2, TEST_ADDRESS_4, TEST_ADDRESS_5);
 });
 
 // Verify that form fillin works in a remote iframe, and that changing

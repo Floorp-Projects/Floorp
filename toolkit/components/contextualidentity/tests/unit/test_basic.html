@@ -2,7 +2,9 @@
 
 do_get_profile();
 
-Cu.import("resource://gre/modules/ContextualIdentityService.jsm");
+const { ContextualIdentityService } = ChromeUtils.import(
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 
 const TEST_STORE_FILE_NAME = "test-containers.json";
 

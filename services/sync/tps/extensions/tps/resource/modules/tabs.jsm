@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* This is a JavaScript module (JSM) to be imported via
-   Components.utils.import() and acts as a singleton.
+   ChromeUtils.import() and acts as a singleton.
    Only the following listed symbols will exposed on import, and only when
    and where imported. */
 
@@ -20,7 +20,6 @@ const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 Services.mm.loadFrameScript(
   "data:application/javascript;charset=utf-8," +
     encodeURIComponent(`
-  Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
   addEventListener("load", function(event) {
     let subframe = event.target != content.document;
     sendAsyncMessage("tps:loadEvent", {subframe: subframe, url: event.target.documentURI});

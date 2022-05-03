@@ -660,241 +660,11 @@ bool BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand) {
   return true;
 }
 
-namespace {
-
-class NonLocalExitControl {
- public:
-  enum Kind {
-    // IteratorClose is handled especially inside the exception unwinder.
-    Throw,
-
-    // A 'continue' statement does not call IteratorClose for the loop it
-    // is continuing, i.e. excluding the target loop.
-    Continue,
-
-    // A 'break' or 'return' statement does call IteratorClose for the
-    // loop it is breaking out of or returning from, i.e. including the
-    // target loop.
-    Break,
-    Return
-  };
-
- private:
-  BytecodeEmitter* bce_;
-  const uint32_t savedScopeNoteIndex_;
-  const int savedDepth_;
-  uint32_t openScopeNoteIndex_;
-  Kind kind_;
-
-  NonLocalExitControl(const NonLocalExitControl&) = delete;
-
-  [[nodiscard]] bool leaveScope(EmitterScope* scope);
-
- public:
-  NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
-      : bce_(bce),
-        savedScopeNoteIndex_(bce->bytecodeSection().scopeNoteList().length()),
-        savedDepth_(bce->bytecodeSection().stackDepth()),
-        openScopeNoteIndex_(bce->innermostEmitterScope()->noteIndex()),
-        kind_(kind) {}
-
-  ~NonLocalExitControl() {
-    for (uint32_t n = savedScopeNoteIndex_;
-         n < bce_->bytecodeSection().scopeNoteList().length(); n++) {
-      bce_->bytecodeSection().scopeNoteList().recordEnd(
-          n, bce_->bytecodeSection().offset());
-    }
-    bce_->bytecodeSection().setStackDepth(savedDepth_);
-  }
-
-  [[nodiscard]] bool prepareForNonLocalJump(NestableControl* target);
-
-  [[nodiscard]] bool prepareForNonLocalJumpToOutermost() {
-    return prepareForNonLocalJump(nullptr);
-  }
-};
-
-bool NonLocalExitControl::leaveScope(EmitterScope* es) {
-  if (!es->leave(bce_, /* nonLocal = */ true)) {
-    return false;
-  }
-
-  // As we pop each scope due to the non-local jump, emit notes that
-  // record the extent of the enclosing scope. These notes will have
-  // their ends recorded in ~NonLocalExitControl().
-  GCThingIndex enclosingScopeIndex = ScopeNote::NoScopeIndex;
-  if (es->enclosingInFrame()) {
-    enclosingScopeIndex = es->enclosingInFrame()->index();
-  }
-  if (!bce_->bytecodeSection().scopeNoteList().append(
-          enclosingScopeIndex, bce_->bytecodeSection().offset(),
-          openScopeNoteIndex_)) {
-    return false;
-  }
-  openScopeNoteIndex_ = bce_->bytecodeSection().scopeNoteList().length() - 1;
-
-  return true;
-}
-
-/*
- * Emit additional bytecode(s) for non-local jumps.
- */
-bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
-  EmitterScope* es = bce_->innermostEmitterScope();
-  int npops = 0;
-
-  AutoCheckUnstableEmitterScope cues(bce_);
-
-  // For 'continue', 'break', and 'return' statements, emit IteratorClose
-  // bytecode inline. 'continue' statements do not call IteratorClose for
-  // the loop they are continuing.
-  bool emitIteratorClose =
-      kind_ == Continue || kind_ == Break || kind_ == Return;
-  bool emitIteratorCloseAtTarget = emitIteratorClose && kind_ != Continue;
-
-  auto flushPops = [&npops](BytecodeEmitter* bce) {
-    if (npops && !bce->emitPopN(npops)) {
-      return false;
-    }
-    npops = 0;
-    return true;
-  };
-
-  // If we are closing multiple for-of loops, the resulting FOR_OF_ITERCLOSE
-  // trynotes must be appropriately nested. Each FOR_OF_ITERCLOSE starts when
-  // we close the corresponding for-of iterator, and continues until the
-  // actual jump.
-  Vector<BytecodeOffset, 4> forOfIterCloseScopeStarts(bce_->cx);
-
-  // Walk the nestable control stack and patch jumps.
-  for (NestableControl* control = bce_->innermostNestableControl;
-       control != target; control = control->enclosing()) {
-    // Walk the scope stack and leave the scopes we entered. Leaving a scope
-    // may emit administrative ops like JSOp::PopLexicalEnv but never anything
-    // that manipulates the stack.
-    for (; es != control->emitterScope(); es = es->enclosingInFrame()) {
-      if (!leaveScope(es)) {
-        return false;
-      }
-    }
-
-    switch (control->kind()) {
-      case StatementKind::Finally: {
-        TryFinallyControl& finallyControl = control->as<TryFinallyControl>();
-        if (finallyControl.emittingSubroutine()) {
-          /*
-           * There's a [resume-index-or-exception, throwing] pair on
-           * the stack that we need to pop. If the script is not a
-           * noScriptRval script, we also need to pop the cached rval.
-           */
-          if (bce_->sc->noScriptRval()) {
-            npops += 2;
-          } else {
-            npops += 3;
-          }
-        } else {
-          if (!flushPops(bce_)) {
-            return false;
-          }
-          if (!bce_->emitJumpToFinally(&finallyControl.finallyJumps_)) {
-            //      [stack] ...
-            return false;
-          }
-          finallyControl.setHasNonLocalJumps();
-        }
-        break;
-      }
-
-      case StatementKind::ForOfLoop:
-        if (emitIteratorClose) {
-          if (!flushPops(bce_)) {
-            return false;
-          }
-          BytecodeOffset tryNoteStart;
-          ForOfLoopControl& loopinfo = control->as<ForOfLoopControl>();
-          if (!loopinfo.emitPrepareForNonLocalJumpFromScope(
-                  bce_, *es,
-                  /* isTarget = */ false, &tryNoteStart)) {
-            //      [stack] ...
-            return false;
-          }
-          if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
-            return false;
-          }
-        } else {
-          // The iterator next method, the iterator, and the current
-          // value are on the stack.
-          npops += 3;
-        }
-        break;
-
-      case StatementKind::ForInLoop:
-        if (!flushPops(bce_)) {
-          return false;
-        }
-
-        // The iterator and the current value are on the stack.
-        if (!bce_->emit1(JSOp::EndIter)) {
-          //        [stack] ...
-          return false;
-        }
-        break;
-
-      default:
-        break;
-    }
-  }
-
-  if (!flushPops(bce_)) {
-    return false;
-  }
-
-  if (target && emitIteratorCloseAtTarget && target->is<ForOfLoopControl>()) {
-    BytecodeOffset tryNoteStart;
-    ForOfLoopControl& loopinfo = target->as<ForOfLoopControl>();
-    if (!loopinfo.emitPrepareForNonLocalJumpFromScope(bce_, *es,
-                                                      /* isTarget = */ true,
-                                                      &tryNoteStart)) {
-      //            [stack] ... UNDEF UNDEF UNDEF
-      return false;
-    }
-    if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
-      return false;
-    }
-  }
-
-  EmitterScope* targetEmitterScope =
-      target ? target->emitterScope() : bce_->varEmitterScope;
-  for (; es != targetEmitterScope; es = es->enclosingInFrame()) {
-    if (!leaveScope(es)) {
-      return false;
-    }
-  }
-
-  // Close FOR_OF_ITERCLOSE trynotes.
-  BytecodeOffset end = bce_->bytecodeSection().offset();
-  for (BytecodeOffset start : forOfIterCloseScopeStarts) {
-    if (!bce_->addTryNote(TryNoteKind::ForOfIterClose, 0, start, end)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-}  // anonymous namespace
-
-bool BytecodeEmitter::emitGoto(NestableControl* target, JumpList* jumplist,
-                               GotoKind kind) {
+bool BytecodeEmitter::emitGoto(NestableControl* target, GotoKind kind) {
   NonLocalExitControl nle(this, kind == GotoKind::Continue
-                                    ? NonLocalExitControl::Continue
-                                    : NonLocalExitControl::Break);
-
-  if (!nle.prepareForNonLocalJump(target)) {
-    return false;
-  }
-
-  return emitJump(JSOp::Goto, jumplist);
+                                    ? NonLocalExitKind::Continue
+                                    : NonLocalExitKind::Break);
+  return nle.emitNonLocalJump(target);
 }
 
 AbstractScopePtr BytecodeEmitter::innermostScope() const {
@@ -5049,44 +4819,24 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
   return true;
 }
 
-[[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump) {
-  // Emit the following:
-  //
-  //     ResumeIndex <resumeIndex>
-  //     False
-  //     Goto <target>
-  //   resumeOffset:
-  //     JumpTarget
-  //
-  // The order is important: the Baseline Interpreter relies on JSOp::JumpTarget
-  // setting the frame's ICEntry when resuming at resumeOffset.
-
-  BytecodeOffset off;
-  if (!emitN(JSOp::ResumeIndex, 3, &off)) {
+[[nodiscard]] bool BytecodeEmitter::emitJumpToFinally(JumpList* jump,
+                                                      uint32_t idx) {
+  // Push the continuation index.
+  if (!emitNumberOp(idx)) {
     return false;
   }
 
+  // Push |throwing|.
   if (!emit1(JSOp::False)) {
     return false;
   }
 
+  // Jump to the finally block.
   if (!emitJumpNoFallthrough(JSOp::Goto, jump)) {
     return false;
   }
 
-  // When we return from the finally, the resume index and throwing
-  // values will have been popped.
-  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() - 2);
-
-  uint32_t resumeIndex;
-  if (!allocateResumeIndex(bytecodeSection().offset(), &resumeIndex)) {
-    return false;
-  }
-
-  SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
-
-  JumpTarget target;
-  return emitJumpTarget(&target);
+  return true;
 }
 
 bool BytecodeEmitter::emitIf(TernaryNode* ifNode) {
@@ -6139,7 +5889,7 @@ bool BytecodeEmitter::emitBreak(TaggedParserAtomIndex label) {
     target = findInnermostNestableControl<BreakableControl>(isNotLabel);
   }
 
-  return emitGoto(target, &target->breaks, GotoKind::Break);
+  return emitGoto(target, GotoKind::Break);
 }
 
 bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
@@ -6157,7 +5907,7 @@ bool BytecodeEmitter::emitContinue(TaggedParserAtomIndex label) {
   } else {
     target = findInnermostNestableControl<LoopControl>();
   }
-  return emitGoto(target, &target->continues, GotoKind::Continue);
+  return emitGoto(target, GotoKind::Continue);
 }
 
 bool BytecodeEmitter::emitGetFunctionThis(NameNode* thisName) {
@@ -6308,33 +6058,33 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
   }
 
   /*
-   * EmitNonLocalJumpFixup may add fixup bytecode to close open try
-   * blocks having finally clauses and to exit intermingled let blocks.
-   * We can't simply transfer control flow to our caller in that case,
-   * because we must execute those finally clauses from inner to outer,
-   * with the correct stack pointer (i.e., after popping any with,
-   * for/in, etc., slots nested inside the finally's try).
+   * The return value is currently on the stack. We would like to
+   * generate JSOp::Return, but if we have work to do before returning,
+   * we will instead generate JSOp::SetRval / JSOp::RetRval.
    *
-   * In this case we mutate JSOp::Return into JSOp::SetRval and add an
-   * extra JSOp::RetRval after the fixups.
+   * We don't know whether we will need fixup code until after calling
+   * prepareForNonLocalJumpToOutermost, so we start by generating
+   * JSOp::SetRval, then mutate it to JSOp::Return in finishReturn if it
+   * wasn't needed.
    */
-  BytecodeOffset top = bytecodeSection().offset();
+  BytecodeOffset setRvalOffset = bytecodeSection().offset();
+  if (!emit1(JSOp::SetRval)) {
+    return false;
+  }
 
+  NonLocalExitControl nle(this, NonLocalExitKind::Return);
+  return nle.emitReturn(setRvalOffset);
+}
+
+bool BytecodeEmitter::finishReturn(BytecodeOffset setRvalOffset) {
   bool needsFinalYield =
       sc->isFunctionBox() && sc->asFunctionBox()->needsFinalYield();
   bool isDerivedClassConstructor =
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
-
-  if (!emit1((needsFinalYield || isDerivedClassConstructor) ? JSOp::SetRval
-                                                            : JSOp::Return)) {
-    return false;
-  }
-
-  NonLocalExitControl nle(this, NonLocalExitControl::Return);
-
-  if (!nle.prepareForNonLocalJumpToOutermost()) {
-    return false;
-  }
+  bool isSimpleReturn =
+      setRvalOffset.valid() &&
+      setRvalOffset + BytecodeOffsetDiff(JSOpLength_SetRval) ==
+          bytecodeSection().offset();
 
   if (needsFinalYield) {
     // We know that .generator is on the function scope, as we just exited
@@ -6372,13 +6122,16 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
       return false;
     }
   } else if (isDerivedClassConstructor) {
-    MOZ_ASSERT(JSOp(bytecodeSection().code()[top.value()]) == JSOp::SetRval);
     if (!emitJump(JSOp::Goto, &endOfDerivedClassConstructorBody)) {
       return false;
     }
-  } else if (top + BytecodeOffsetDiff(JSOpLength_Return) !=
-             bytecodeSection().offset()) {
-    bytecodeSection().code()[top.value()] = jsbytecode(JSOp::SetRval);
+  } else if (isSimpleReturn) {
+    // We haven't generated any code since the JSOp::SetRval, so we can replace
+    // it with a JSOp::Return. See |emitReturn| above.
+    MOZ_ASSERT(JSOp(bytecodeSection().code()[setRvalOffset.value()]) ==
+               JSOp::SetRval);
+    bytecodeSection().code()[setRvalOffset.value()] = jsbytecode(JSOp::Return);
+  } else {
     if (!emitReturnRval()) {
       return false;
     }

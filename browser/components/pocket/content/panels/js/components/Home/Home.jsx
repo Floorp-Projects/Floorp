@@ -95,6 +95,7 @@ function Home(props) {
                 articles={articles.slice(0, 3)}
                 source="home_recent_save"
                 utmParams={utmParams}
+                openInPocketReader={true}
               />
               <span className="stp_button_wide">
                 <Button

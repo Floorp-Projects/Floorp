@@ -27,15 +27,9 @@ var elem_de;
 var editor_de;
 var script;
 
-var maybeOnSpellCheck =
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-               .maybeOnSpellCheck;
-
-var onSpellCheck =
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-               .onSpellCheck;
+var { maybeOnSpellCheck, onSpellCheck } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
 
 /** Test for Bug 697981 **/
 SimpleTest.waitForExplicitFinish();

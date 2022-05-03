@@ -22,7 +22,9 @@ class TestProxyCapabilities(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             self.marionette.execute_script(
                 """
-                Cu.import("resource://gre/modules/Preferences.jsm");
+                const { Preferences } = ChromeUtils.import(
+                  "resource://gre/modules/Preferences.jsm"
+                );
                 Preferences.resetBranch("network.proxy");
             """
             )

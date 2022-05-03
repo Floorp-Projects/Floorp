@@ -12670,6 +12670,11 @@
   value: true
   mirror: always
 
+- name: webgl.colorspaces.prototype
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: webgl.debug.incomplete-tex-color
   type: RelaxedAtomicUint32
   value: 0

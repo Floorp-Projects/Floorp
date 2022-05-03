@@ -69,9 +69,10 @@ var loadListener = async function(evt) {
   editor.setSpellcheckUserOverride(true);
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, async function() {
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
+  onSpellCheck(elem, async function() {
     let spellchecker = inlineSpellChecker.spellChecker;
     let currentDictionaries = spellchecker.getCurrentDictionaries();
     is(currentDictionaries.length, 1, "expected one dictionary");

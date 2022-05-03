@@ -2846,12 +2846,20 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
-  describe("#updatePersonalizationScores", () => {
+  describe("#observe", () => {
     it("should call updatePersonalizationScores on idle daily", async () => {
       sandbox.stub(feed, "updatePersonalizationScores").returns();
       feed.observe(null, "idle-daily");
       assert.calledOnce(feed.updatePersonalizationScores);
     });
+    it("should call configReset on Pocket button pref change", async () => {
+      sandbox.stub(feed, "configReset").returns();
+      feed.observe(null, "nsPref:changed", "extensions.pocket.enabled");
+      assert.calledOnce(feed.configReset);
+    });
+  });
+
+  describe("#updatePersonalizationScores", () => {
     it("should update recommendationProvider on updatePersonalizationScores", async () => {
       feed.store.getState = () => ({
         Prefs: {

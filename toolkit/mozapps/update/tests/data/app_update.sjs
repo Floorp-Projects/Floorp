@@ -8,13 +8,10 @@
  * Server side http server script for application update tests.
  */
 
-// ChromeUtils isn't available in sjs files so disable the eslint rule for it.
-/* eslint-disable mozilla/use-chromeutils-import */
-
 // Definitions from test and other files used by the tests
 /* global getState */
 
-Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function getTestDataFile(aFilename) {
   let file = Services.dirsvc.get("CurWorkD", Ci.nsIFile);

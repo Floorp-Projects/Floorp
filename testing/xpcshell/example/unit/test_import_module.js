@@ -8,7 +8,7 @@
 
 /**
  * Ensures that tests can import a module in the same folder through:
- * Components.utils.import("resource://test/module.jsm");
+ * ChromeUtils.import("resource://test/module.jsm");
  */
 
 function run_test() {

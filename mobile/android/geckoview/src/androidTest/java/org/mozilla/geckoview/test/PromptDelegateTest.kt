@@ -509,6 +509,56 @@ class PromptDelegateTest : BaseSessionTest() {
         })
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test fun dateTestByTap() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // By removing first element in PROMPT_HTML_PATH, dateexample becomes first element.
+        //
+        // TODO: What better calculation of element bounds for synthesizeTap?
+        mainSession.evaluateJS("""
+            document.getElementById('selectexample').remove();
+            document.getElementById('dateexample').getBoundingClientRect();
+        """.trimIndent())
+        mainSession.synthesizeTap(10, 10)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("<input type=date> is tapped", PromptDelegate.DateTimePrompt.Type.DATE, equalTo(prompt.type))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun monthTestByTap() {
+        // Gecko doesn't have the widget for <input type=month>. But GeckoView can show the picker.
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // TODO: What better calculation of element bounds for synthesizeTap?
+        mainSession.evaluateJS("""
+            document.getElementById('selectexample').remove();
+            document.getElementById('dateexample').remove();
+            document.getElementById('weekexample').getBoundingClientRect();
+        """.trimIndent())
+        mainSession.synthesizeTap(10, 10)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("<input type=month> is tapped", PromptDelegate.DateTimePrompt.Type.MONTH, equalTo(prompt.type))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+    }
+
     @Test fun fileTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 

@@ -106,9 +106,10 @@ function continueTest(evt) {
   var inlineSpellChecker = editor.getInlineSpellChecker(true);
   const is_en_US = SpecialPowers.Services.locale.appLocaleAsBCP47 == "en-US";
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(elem, async function() {
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
+  onSpellCheck(elem, async function() {
     var spellchecker = inlineSpellChecker.spellChecker;
     let currentDictionaries;
     try {

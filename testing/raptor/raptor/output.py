@@ -18,6 +18,18 @@ from logger.logger import RaptorLogger
 
 LOG = RaptorLogger(component="perftest-output")
 
+VISUAL_METRICS = [
+    "SpeedIndex",
+    "ContentfulSpeedIndex",
+    "PerceptualSpeedIndex",
+    "FirstVisualChange",
+    "LastVisualChange",
+    "VisualReadiness",
+    "VisualComplete85",
+    "VisualComplete95",
+    "VisualComplete99",
+]
+
 
 @six.add_metaclass(ABCMeta)
 class PerftestOutput(object):
@@ -1482,6 +1494,8 @@ class BrowsertimeOutput(PerftestOutput):
         def _process(subtest):
             if test["type"] == "power":
                 subtest["value"] = filters.mean(subtest["replicates"])
+            elif subtest["name"] in VISUAL_METRICS:
+                subtest["value"] = filters.median(subtest["replicates"])
             else:
                 subtest["value"] = filters.median(
                     filters.ignore_first(subtest["replicates"], 1)

@@ -424,7 +424,7 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
   nsCOMPtr<nsIEventTarget> sts =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
-  auto taskQueue = MakeRefPtr<TaskQueue>(sts.forget(), "RecvGetPrincipalKey");
+  auto taskQueue = TaskQueue::Create(sts.forget(), "RecvGetPrincipalKey");
   RefPtr<Parent<Super>> that(this);
 
   InvokeAsync(

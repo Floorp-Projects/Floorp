@@ -161,6 +161,7 @@ class nsWindow final : public nsBaseWidget {
   bool IsEnabled() const override;
 
   void SetZIndex(int32_t aZIndex) override;
+  nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   void GetWorkspaceID(nsAString& workspaceID) override;
   void MoveToWorkspace(const nsAString& workspaceID) override;
@@ -526,6 +527,7 @@ class nsWindow final : public nsBaseWidget {
   // in some reasonable time when page content is not updated.
   int mCompositorPauseTimeoutID = 0;
 
+  nsSizeMode mSizeMode = nsSizeMode_Normal;
   nsSizeMode mSizeState = nsSizeMode_Normal;
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;

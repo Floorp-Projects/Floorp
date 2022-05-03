@@ -117,6 +117,7 @@ this.permissions = class extends ExtensionAPIPersistent {
                 wrappedJSObject: {
                   browser,
                   name: context.extension.name,
+                  id: context.extension.id,
                   icon: context.extension.iconURL,
                   permissions: { permissions, origins },
                   resolve,

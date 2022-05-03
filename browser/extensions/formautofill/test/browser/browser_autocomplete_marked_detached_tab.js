@@ -21,9 +21,7 @@ function checkPopup(autoCompletePopup) {
 }
 
 add_task(async function setup_storage() {
-  await saveAddress(TEST_ADDRESS_1);
-  await saveAddress(TEST_ADDRESS_2);
-  await saveAddress(TEST_ADDRESS_3);
+  await setStorage(TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3);
 });
 
 add_task(async function test_detach_tab_marked() {

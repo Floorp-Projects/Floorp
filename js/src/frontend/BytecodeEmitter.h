@@ -597,8 +597,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   uint32_t getOffsetForLoop(ParseNode* nextpn);
 
   enum class GotoKind { Break, Continue };
-  [[nodiscard]] bool emitGoto(NestableControl* target, JumpList* jumplist,
-                              GotoKind kind);
+  [[nodiscard]] bool emitGoto(NestableControl* target, GotoKind kind);
 
   [[nodiscard]] bool emitGCIndexOp(JSOp op, GCThingIndex index);
 
@@ -765,7 +764,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] MOZ_NEVER_INLINE bool emitSwitch(SwitchStatement* switchStmt);
   [[nodiscard]] MOZ_NEVER_INLINE bool emitTry(TryNode* tryNode);
 
-  [[nodiscard]] bool emitJumpToFinally(JumpList* jump);
+  [[nodiscard]] bool emitJumpToFinally(JumpList* jump, uint32_t idx);
 
   // emitDestructuringLHSRef emits the lhs expression's reference.
   // If the lhs expression is object property |OBJ.prop|, it emits |OBJ|.
@@ -858,6 +857,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitShortCircuitAssignment(AssignmentNode* node);
 
   [[nodiscard]] bool emitReturn(UnaryNode* returnNode);
+  [[nodiscard]] bool finishReturn(BytecodeOffset setRvalOffset);
+
   [[nodiscard]] bool emitExpressionStatement(UnaryNode* exprStmt);
   [[nodiscard]] bool emitStatementList(ListNode* stmtList);
 

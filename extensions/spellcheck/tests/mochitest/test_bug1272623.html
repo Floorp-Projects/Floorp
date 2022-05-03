@@ -27,6 +27,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
 
 /** Test for Bug 1272623 **/
 
+  var maybeOnSpellCheck;
+
   async function performCorrection(misspelled, area) {
     synthesizeMouseAtCenter($(misspelled), {}, window);
     await new Promise(resolve => maybeOnSpellCheck($(area), resolve));
@@ -61,9 +63,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1272623
   }
 
   add_task(async function() {
-    /* global maybeOnSpellCheck */
-    SpecialPowers.Cu.import(
-      "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+    maybeOnSpellCheck = SpecialPowers.ChromeUtils.import(
+      "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+    ).maybeOnSpellCheck;
 
     // Wait for the page to be ready
     await new Promise(resolve => SimpleTest.waitForFocus(() => SimpleTest.executeSoon(resolve), window));

@@ -29,9 +29,10 @@ SimpleTest.waitForFocus(() => {
 
   textarea.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-  .onSpellCheck(textarea, () => {
+  const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
+  onSpellCheck(textarea, () => {
     // Callback parameter isn't set
     spellChecker.UpdateCurrentDictionary();
 

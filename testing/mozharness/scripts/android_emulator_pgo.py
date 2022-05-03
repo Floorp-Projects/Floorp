@@ -267,7 +267,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             driver.set_context("chrome")
             driver.execute_script(
                 """
-                Components.utils.import("resource://gre/modules/Services.jsm");
+                const { Services } = ChromeUtils.import(
+                  "resource://gre/modules/Services.jsm"
+                );
                 let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                     .createInstance(Components.interfaces.nsISupportsPRBool);
                 Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
@@ -276,7 +278,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             )
             driver.execute_script(
                 """
-                Components.utils.import("resource://gre/modules/Services.jsm");
+                const { Services } = ChromeUtils.import(
+                  "resource://gre/modules/Services.jsm"
+                );
                 Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit)
             """
             )

@@ -22,9 +22,9 @@ namespace mozilla {
 
 DAV1DDecoder::DAV1DDecoder(const CreateDecoderParams& aParams)
     : mInfo(aParams.VideoConfig()),
-      mTaskQueue(
-          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                        "Dav1dDecoder")),
+      mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "Dav1dDecoder")),
       mImageContainer(aParams.mImageContainer),
       mImageAllocator(aParams.mKnowsCompositor) {}
 

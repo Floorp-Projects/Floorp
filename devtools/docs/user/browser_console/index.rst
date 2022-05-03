@@ -82,7 +82,7 @@ One exported symbol from ``Console.jsm`` is ``console``. Below is an example of 
 
 .. code-block:: JavaScript
 
-  Components.utils.import("resource://gre/modules/Console.jsm");
+  const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   console.log("Hello from Firefox code"); //output messages to the console</pre>
 
 Learn more:

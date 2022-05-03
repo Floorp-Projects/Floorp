@@ -48,6 +48,7 @@ EXPORTS.mozilla.glean.bindings += [
     "bindings/private/StringList.h",
     "bindings/private/Timespan.h",
     "bindings/private/TimingDistribution.h",
+    "bindings/private/Url.h",
     "bindings/private/Uuid.h",
 ]
 
@@ -79,6 +80,7 @@ UNIFIED_SOURCES += [
     "bindings/private/StringList.cpp",
     "bindings/private/Timespan.cpp",
     "bindings/private/TimingDistribution.cpp",
+    "bindings/private/Url.cpp",
     "bindings/private/Uuid.cpp",
     "ipc/FOGIPC.cpp",
     "ipc/Support.cpp",

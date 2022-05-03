@@ -1393,8 +1393,12 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Called when the child frame has fully exit fullscreen, so that the parent
    * process can also fully exit.
+   *
+   * @param aDontResoreViewSize false if content view size is restored by
+   *                            original view size that is on entering full
+   *                            screen.
    */
-  void exitFullscreen();
+  void exitFullscreen([optional] in boolean aDontRestoreViewSize);
 
   /**
    * If sendQueryContentEvent()'s aAdditionalFlags argument is

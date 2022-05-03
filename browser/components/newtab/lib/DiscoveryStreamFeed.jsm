@@ -65,6 +65,7 @@ const PREF_FLIGHT_BLOCKS = "discoverystream.flight.blocks";
 const PREF_REC_IMPRESSIONS = "discoverystream.rec.impressions";
 const PREF_COLLECTIONS_ENABLED =
   "discoverystream.sponsored-collections.enabled";
+const PREF_POCKET_BUTTON = "extensions.pocket.enabled";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
 const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
 const PREF_PERSONALIZATION_OVERRIDE =
@@ -455,6 +456,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         PREF_COLLECTIONS_ENABLED
       ];
 
+      const pocketButtonEnabled = Services.prefs.getBoolPref(
+        PREF_POCKET_BUTTON
+      );
+
       const pocketConfig =
         this.store.getState().Prefs.values?.pocketConfig || {};
 
@@ -481,7 +486,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         fourCardLayout: pocketConfig.fourCardLayout,
         loadMore: pocketConfig.loadMore,
         lastCardMessageEnabled: pocketConfig.lastCardMessageEnabled,
-        saveToPocketCard: pocketConfig.saveToPocketCard,
+        pocketButtonEnabled,
+        saveToPocketCard: pocketButtonEnabled && pocketConfig.saveToPocketCard,
         newFooterSection: pocketConfig.newFooterSection,
         hideDescriptions: pocketConfig.hideDescriptions,
         compactGrid: pocketConfig.compactGrid,
@@ -1001,6 +1007,13 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     switch (topic) {
       case "idle-daily":
         this.updatePersonalizationScores();
+        break;
+      case "nsPref:changed":
+        // If the Pocket button was turned on or off, we need to update the cards
+        // because cards show menu options for the Pocket button that need to be removed.
+        if (data === PREF_POCKET_BUTTON) {
+          this.configReset();
+        }
         break;
     }
   }
@@ -1657,6 +1670,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         if (this.config.enabled) {
           await this.enable();
         }
+        Services.prefs.addObserver(PREF_POCKET_BUTTON, this);
         break;
       case at.DISCOVERY_STREAM_DEV_SYSTEM_TICK:
       case at.SYSTEM_TICK:
@@ -1835,6 +1849,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         // When this feed is shutting down:
         this.uninitPrefs();
         this._recommendationProvider = null;
+        Services.prefs.removeObserver(PREF_POCKET_BUTTON, this);
         break;
       case at.BLOCK_URL: {
         // If we block a story that also has a flight_id
@@ -1873,6 +1888,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
      `loadMore` Hide half the Pocket stories behind a load more button.
      `lastCardMessageEnabled` Shows a message card at the end of the feed.
      `newFooterSection` Changes the layout of the topics section.
+     `pocketButtonEnabled` Removes Pocket context menu items from cards.
      `saveToPocketCard` Cards have a save to Pocket button over their thumbnail on hover.
      `hideDescriptions` Hide or display descriptions for Pocket stories.
      `compactGrid` Reduce the number of pixels between the Pocket cards.
@@ -1895,6 +1911,7 @@ getHardcodedLayout = ({
   loadMore = false,
   lastCardMessageEnabled = false,
   newFooterSection = false,
+  pocketButtonEnabled = false,
   saveToPocketCard = false,
   hideDescriptions = true,
   compactGrid = false,
@@ -1931,6 +1948,7 @@ getHardcodedLayout = ({
                 properties: {
                   items: 3,
                 },
+                pocketButtonEnabled,
                 header: {
                   title: "",
                 },
@@ -1997,6 +2015,7 @@ getHardcodedLayout = ({
           },
           loadMore,
           lastCardMessageEnabled,
+          pocketButtonEnabled,
           saveToPocketCard,
           cta_variant: "link",
           header: {

@@ -42,6 +42,7 @@ CHECK_EVENT_SIZEOF(OFF_T, ev_off_t);
 CHECK_EVENT_SIZEOF(PTHREAD_T, pthread_t);
 CHECK_EVENT_SIZEOF(SHORT, short);
 CHECK_EVENT_SIZEOF(SIZE_T, size_t);
+CHECK_EVENT_SIZEOF(TIME_T, time_t);
 CHECK_EVENT_SIZEOF(VOID_P, void*);
 
 // Lifecycle of struct event

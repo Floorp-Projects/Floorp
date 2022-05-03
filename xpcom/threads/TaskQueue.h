@@ -14,12 +14,15 @@
 #include "mozilla/Queue.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskDispatcher.h"
+#include "mozilla/ThreadSafeWeakPtr.h"
 #include "nsIDirectTaskDispatcher.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
 
 typedef MozPromise<bool, bool, false> ShutdownPromise;
+
+class TaskQueueTrackerEntry;
 
 // Abstracts executing runnables in order on an arbitrary event target. The
 // runnables dispatched to the TaskQueue will be executed in the order in which
@@ -46,15 +49,19 @@ typedef MozPromise<bool, bool, false> ShutdownPromise;
 // A TaskQueue does not require explicit shutdown, however it provides a
 // BeginShutdown() method that places TaskQueue in a shut down state and returns
 // a promise that gets resolved once all pending tasks have completed
-class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
+class TaskQueue final : public AbstractThread,
+                        public nsIDirectTaskDispatcher,
+                        public SupportsThreadSafeWeakPtr<TaskQueue> {
   class EventTargetWrapper;
 
  public:
-  TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
-            bool aSupportsTailDispatch = false);
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDIRECTTASKDISPATCHER
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TaskQueue)
+
+  static RefPtr<TaskQueue> Create(already_AddRefed<nsIEventTarget> aTarget,
+                                  const char* aName,
+                                  bool aSupportsTailDispatch = false);
 
   TaskDispatcher& TailDispatcher() override;
 
@@ -121,7 +128,12 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   bool IsCurrentThreadIn() const override;
   using nsISerialEventTarget::IsOnCurrentThread;
 
- protected:
+ private:
+  friend class SupportsThreadSafeWeakPtr<TaskQueue>;
+
+  TaskQueue(already_AddRefed<nsIEventTarget> aTarget, const char* aName,
+            bool aSupportsTailDispatch);
+
   virtual ~TaskQueue();
 
   // Blocks until all task finish executing. Called internally by methods
@@ -132,19 +144,17 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable, uint32_t aFlags,
                           DispatchReason aReason = NormalDispatch);
 
-  void MaybeResolveShutdown() {
-    mQueueMonitor.AssertCurrentThreadOwns();
-    if (mIsShutdown && !mIsRunning) {
-      mShutdownPromise.ResolveIfExists(true, __func__);
-      mTarget = nullptr;
-    }
-  }
+  void MaybeResolveShutdown();
 
-  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsIEventTarget> mTarget GUARDED_BY(mQueueMonitor);
+
+  // Handle for this TaskQueue being registered with our target if it implements
+  // TaskQueueTracker.
+  UniquePtr<TaskQueueTrackerEntry> mTrackerEntry GUARDED_BY(mQueueMonitor);
 
   // Monitor that protects the queue, mIsRunning, mIsShutdown and
   // mShutdownTasks;
-  Monitor mQueueMonitor MOZ_UNANNOTATED;
+  Monitor mQueueMonitor;
 
   typedef struct TaskStruct {
     nsCOMPtr<nsIRunnable> event;
@@ -152,10 +162,11 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
   } TaskStruct;
 
   // Queue of tasks to run.
-  Queue<TaskStruct> mTasks;
+  Queue<TaskStruct> mTasks GUARDED_BY(mQueueMonitor);
 
   // List of tasks to run during shutdown.
-  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks;
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
+      GUARDED_BY(mQueueMonitor);
 
   // The thread currently running the task queue. We store a reference
   // to this so that IsCurrentThreadIn() can tell if the current thread
@@ -207,11 +218,11 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
 
   // True if we've dispatched an event to the target to execute events from
   // the queue.
-  bool mIsRunning;
+  bool mIsRunning GUARDED_BY(mQueueMonitor);
 
   // True if we've started our shutdown process.
-  bool mIsShutdown;
-  MozPromiseHolder<ShutdownPromise> mShutdownPromise;
+  bool mIsShutdown GUARDED_BY(mQueueMonitor);
+  MozPromiseHolder<ShutdownPromise> mShutdownPromise GUARDED_BY(mQueueMonitor);
 
   // The name of this TaskQueue. Useful when debugging dispatch failures.
   const char* const mName;
@@ -228,6 +239,41 @@ class TaskQueue : public AbstractThread, public nsIDirectTaskDispatcher {
     RefPtr<TaskQueue> mQueue;
   };
 };
+
+#define MOZILLA_TASKQUEUETRACKER_IID                 \
+  {                                                  \
+    0x765c4b56, 0xd5f6, 0x4a9f, {                    \
+      0x91, 0xcf, 0x51, 0x47, 0xb3, 0xc1, 0x7e, 0xa6 \
+    }                                                \
+  }
+
+// XPCOM "interface" which may be implemented by nsIEventTarget implementations
+// which want to keep track of what TaskQueue instances are currently targeting
+// them. This may be used to asynchronously shutdown TaskQueues targeting a
+// threadpool or other event target before the threadpool goes away.
+//
+// This explicitly TaskQueue-aware tracker is used instead of
+// `nsITargetShutdownTask` as the operations required to shut down a TaskQueue
+// are asynchronous, which is not a requirement of that interface.
+class TaskQueueTracker : public nsISupports {
+ public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_TASKQUEUETRACKER_IID)
+
+  // Get a strong reference to every TaskQueue currently tracked by this
+  // TaskQueueTracker. May be called from any thraed.
+  nsTArray<RefPtr<TaskQueue>> GetAllTrackedTaskQueues();
+
+ protected:
+  virtual ~TaskQueueTracker();
+
+ private:
+  friend class TaskQueueTrackerEntry;
+
+  Mutex mMutex{"TaskQueueTracker"};
+  LinkedList<TaskQueueTrackerEntry> mEntries GUARDED_BY(mMutex);
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(TaskQueueTracker, MOZILLA_TASKQUEUETRACKER_IID)
 
 }  // namespace mozilla
 

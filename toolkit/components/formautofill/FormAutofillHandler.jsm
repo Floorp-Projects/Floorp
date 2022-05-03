@@ -1331,19 +1331,17 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       creditCard.record["cc-number"]
     );
 
-    // Normalize cc-exp-month and cc-exp-year using the cc-exp field
-    if (creditCard.record["cc-exp"]) {
-      let { month, year } = CreditCard.normalizeExpiration({
-        expirationString: creditCard.record["cc-exp"],
-        expirationMonth: creditCard.record["cc-exp-month"],
-        expirationYear: creditCard.record["cc-exp-year"],
-      });
-      if (month) {
-        creditCard.record["cc-exp-month"] = month;
-      }
-      if (year) {
-        creditCard.record["cc-exp-year"] = year;
-      }
+    // Normalize cc-exp-month and cc-exp-year
+    let { month, year } = CreditCard.normalizeExpiration({
+      expirationString: creditCard.record["cc-exp"],
+      expirationMonth: creditCard.record["cc-exp-month"],
+      expirationYear: creditCard.record["cc-exp-year"],
+    });
+    if (month) {
+      creditCard.record["cc-exp-month"] = month;
+    }
+    if (year) {
+      creditCard.record["cc-exp-year"] = year;
     }
   }
 }

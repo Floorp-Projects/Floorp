@@ -2454,11 +2454,6 @@ bool BaselineInterpreterCodeGen::emit_Uint24() {
   return true;
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ResumeIndex() {
-  return emit_Uint24();
-}
-
 template <>
 bool BaselineCompilerCodeGen::emit_Double() {
   frame.push(GET_INLINE_VALUE(handler.pc()));
@@ -4615,20 +4610,6 @@ void BaselineInterpreterCodeGen::jumpToResumeEntry(Register resumeIndex,
                                                    Register scratch2) {
   loadScript(scratch1);
   emitInterpJumpToResumeEntry(scratch1, resumeIndex, scratch2);
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_Retsub() {
-  frame.popRegsAndSync(1);
-
-  // R0 contains the resumeIndex to jump to.
-  Register resumeIndexReg = R0.scratchReg();
-  masm.unboxInt32(R0, resumeIndexReg);
-
-  Register scratch1 = R2.scratchReg();
-  Register scratch2 = R1.scratchReg();
-  jumpToResumeEntry(resumeIndexReg, scratch1, scratch2);
-  return true;
 }
 
 template <>

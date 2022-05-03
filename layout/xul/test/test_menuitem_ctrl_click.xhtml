@@ -27,7 +27,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1630828
 <script type="application/javascript">
 <![CDATA[
 
-const { AppConstants } = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 
 function waitForEvent(target, event) {
   info(`Waiting for ${event} event.`);

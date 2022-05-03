@@ -16,6 +16,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorForwards.h"
+#include "mozilla/EditorUtils.h"  // for SuggestCaretOption(s)
 #include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Element.h"
@@ -30,8 +32,6 @@
 class nsISimpleEnumerator;
 
 namespace mozilla {
-template <class T>
-class OwningNonNull;
 
 // JoinNodesDirection is also affected to which one is new node at splitting
 // a node because a couple of undo/redo.
@@ -249,14 +249,23 @@ inline MoveNodeResult MoveNodeHandled(
  * SplitNodeResult is a simple class for
  * HTMLEditor::SplitNodeDeepWithTransaction().
  * This makes the callers' code easier to read.
+ * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
+ *       same API.  Then, changing to/from Result<*, nsresult> can be easier.
+ *       For now, we should give same API name rather than same as
+ *       mozilla::ErrorResult.
  *****************************************************************************/
 class MOZ_STACK_CLASS SplitNodeResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
+  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
+  //      isErr() must not required to wrap with them.
+  bool isOk() const { return NS_SUCCEEDED(mRv); }
+  bool isErr() const { return NS_FAILED(mRv); }
+  constexpr nsresult inspectErr() const { return mRv; }
+  constexpr nsresult unwrapErr() const { return inspectErr(); }
   bool Handled() const { return mPreviousNode || mNextNode; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+  constexpr bool EditorDestroyed() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
+  }
 
   /**
    * DidSplit() returns true if a node was actually split.
@@ -267,7 +276,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * GetPreviousContent() returns previous content node at the split point.
    */
   MOZ_KNOWN_LIVE nsIContent* GetPreviousContent() const {
-    MOZ_ASSERT(Succeeded());
+    MOZ_ASSERT(isOk());
     if (mGivenSplitPoint.IsSet()) {
       return mGivenSplitPoint.IsEndOfContainer() ? mGivenSplitPoint.GetChild()
                                                  : nullptr;
@@ -286,7 +295,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * GetNextContent() returns next content node at the split point.
    */
   MOZ_KNOWN_LIVE nsIContent* GetNextContent() const {
-    MOZ_ASSERT(Succeeded());
+    MOZ_ASSERT(isOk());
     if (mGivenSplitPoint.IsSet()) {
       return !mGivenSplitPoint.IsEndOfContainer() ? mGivenSplitPoint.GetChild()
                                                   : nullptr;
@@ -306,7 +315,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * returns nullptr if no node was split.
    */
   MOZ_KNOWN_LIVE nsIContent* GetNewContent() const {
-    MOZ_ASSERT(Succeeded());
+    MOZ_ASSERT(isOk());
     if (!DidSplit()) {
       return nullptr;
     }
@@ -325,7 +334,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * Returns original content node which is (or is just tried to be) split.
    */
   MOZ_KNOWN_LIVE nsIContent* GetOriginalContent() const {
-    MOZ_ASSERT(Succeeded());
+    MOZ_ASSERT(isOk());
     if (mGivenSplitPoint.IsSet()) {
       return mGivenSplitPoint.GetChild();
     }
@@ -348,7 +357,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    */
   template <typename EditorDOMPointType>
   EditorDOMPointType AtSplitPoint() const {
-    if (Failed()) {
+    if (isErr()) {
       return EditorDOMPointType();
     }
     if (mGivenSplitPoint.IsSet()) {
@@ -360,7 +369,44 @@ class MOZ_STACK_CLASS SplitNodeResult final {
     return EditorDOMPointType::After(mPreviousNode);
   }
 
+  /**
+   * Suggest caret position to aHTMLEditor.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const HTMLEditor& aHTMLEditor, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  constexpr EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const HTMLEditor& aHTMLEditor,
+                        const SuggestCaretOptions& aOptions);
+
   SplitNodeResult() = delete;
+  SplitNodeResult(const SplitNodeResult&) = delete;
+  SplitNodeResult& operator=(const SplitNodeResult&) = delete;
+  SplitNodeResult(SplitNodeResult&&) = default;
+  SplitNodeResult& operator=(SplitNodeResult&&) = default;
 
   /**
    * This constructor shouldn't be used by anybody except methods which
@@ -370,6 +416,10 @@ class MOZ_STACK_CLASS SplitNodeResult final {
    * @param aSplitNode  The node which was split.
    * @param aDirection  The split direction which the HTML editor tried to split
    *                    a node with.
+   * @param aDeeperSplitNodeResult
+   *                    If the splitter has already split a child or a
+   *                    descendant of the latest split node, the split node
+   *                    result should be specified.
    */
   SplitNodeResult(nsIContent& aNewNode, nsIContent& aSplitNode,
                   SplitNodeDirection aDirection)
@@ -379,6 +429,7 @@ class MOZ_STACK_CLASS SplitNodeResult final {
         mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                       ? &aSplitNode
                       : &aNewNode),
+        mCaretPoint(EditorDOMPoint::AtEndOf(mPreviousNode)),
         mRv(NS_OK),
         mDirection(aDirection) {}
   SplitNodeResult(nsCOMPtr<nsIContent>&& aNewNode,
@@ -390,9 +441,13 @@ class MOZ_STACK_CLASS SplitNodeResult final {
         mNextNode(aDirection == SplitNodeDirection::LeftNodeIsNewOne
                       ? std::move(aSplitNode)
                       : std::move(aNewNode)),
+        mCaretPoint(MOZ_LIKELY(mPreviousNode)
+                        ? EditorDOMPoint::AtEndOf(mPreviousNode)
+                        : EditorDOMPoint()),
         mRv(NS_OK),
         mDirection(aDirection) {
-    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode);
+    MOZ_DIAGNOSTIC_ASSERT(mNextNode);
   }
 
   /**
@@ -405,35 +460,85 @@ class MOZ_STACK_CLASS SplitNodeResult final {
   }
 
   SplitNodeResult ToHandledResult() const {
+    mHandledCaretPoint = true;
     SplitNodeResult result(NS_OK, mDirection);
     result.mPreviousNode = GetPreviousContent();
     result.mNextNode = GetNextContent();
     MOZ_DIAGNOSTIC_ASSERT(result.Handled());
+    // Don't recompute the caret position because in this case, split has not
+    // occurred yet.  In the case,  the caller shouldn't need to update
+    // selection.
+    result.mCaretPoint = mCaretPoint;
     return result;
   }
 
   static inline SplitNodeResult HandledButDidNotSplitDueToEndOfContainer(
-      nsIContent& aNotSplitNode, SplitNodeDirection aDirection) {
+      nsIContent& aNotSplitNode, SplitNodeDirection aDirection,
+      const SplitNodeResult* aDeeperSplitNodeResult = nullptr) {
     SplitNodeResult result(NS_OK, aDirection);
     result.mPreviousNode = &aNotSplitNode;
+    // Caret should be put at the last split point instead of current node.
+    if (aDeeperSplitNodeResult) {
+      result.mCaretPoint = aDeeperSplitNodeResult->mCaretPoint;
+      aDeeperSplitNodeResult->mHandledCaretPoint = true;
+    }
     return result;
   }
 
   static inline SplitNodeResult HandledButDidNotSplitDueToStartOfContainer(
-      nsIContent& aNotSplitNode, SplitNodeDirection aDirection) {
+      nsIContent& aNotSplitNode, SplitNodeDirection aDirection,
+      const SplitNodeResult* aDeeperSplitNodeResult = nullptr) {
     SplitNodeResult result(NS_OK, aDirection);
     result.mNextNode = &aNotSplitNode;
+    // Caret should be put at the last split point instead of current node.
+    if (aDeeperSplitNodeResult) {
+      result.mCaretPoint = aDeeperSplitNodeResult->mCaretPoint;
+      aDeeperSplitNodeResult->mHandledCaretPoint = true;
+    }
     return result;
   }
 
   template <typename PT, typename CT>
   static inline SplitNodeResult NotHandled(
       const EditorDOMPointBase<PT, CT>& aGivenSplitPoint,
-      SplitNodeDirection aDirection) {
+      SplitNodeDirection aDirection,
+      const SplitNodeResult* aDeeperSplitNodeResult = nullptr) {
     SplitNodeResult result(NS_OK, aDirection);
     result.mGivenSplitPoint = aGivenSplitPoint;
+    // Caret should be put at the last split point instead of current node.
+    if (aDeeperSplitNodeResult) {
+      result.mCaretPoint = aDeeperSplitNodeResult->mCaretPoint;
+      aDeeperSplitNodeResult->mHandledCaretPoint = true;
+    }
     return result;
   }
+
+  /**
+   * Returns aSplitNodeResult as-is unless it didn't split a node but
+   * aDeeperSplitNodeResult has already split a child or a descendant and has a
+   * valid point to put caret around there.  In the case, this return
+   * aSplitNodeResult which suggests a caret position around the last split
+   * point.
+   */
+  static inline SplitNodeResult MergeWithDeeperSplitNodeResult(
+      SplitNodeResult&& aSplitNodeResult,
+      const SplitNodeResult& aDeeperSplitNodeResult) {
+    aSplitNodeResult.mHandledCaretPoint = false;
+    aDeeperSplitNodeResult.mHandledCaretPoint = true;
+    if (aSplitNodeResult.DidSplit() ||
+        !aDeeperSplitNodeResult.mCaretPoint.IsSet()) {
+      return std::move(aSplitNodeResult);
+    }
+    SplitNodeResult result(std::move(aSplitNodeResult));
+    result.mCaretPoint = aDeeperSplitNodeResult.mCaretPoint;
+    return result;
+  }
+
+#ifdef DEBUG
+  ~SplitNodeResult() {
+    MOZ_ASSERT_IF(isOk(), !mCaretPoint.IsSet() || mHandledCaretPoint);
+  }
+#endif
 
  private:
   SplitNodeResult(nsresult aRv, SplitNodeDirection aDirection)
@@ -455,8 +560,13 @@ class MOZ_STACK_CLASS SplitNodeResult final {
   // for representing the point.
   EditorDOMPoint mGivenSplitPoint;
 
+  // The point which is a good point to put caret from point of view the
+  // splitter.
+  EditorDOMPoint mCaretPoint;
+
   nsresult mRv;
   SplitNodeDirection mDirection;
+  bool mutable mHandledCaretPoint = false;
 };
 
 /*****************************************************************************
@@ -537,13 +647,22 @@ class MOZ_STACK_CLASS JoinNodesResult final {
 /*****************************************************************************
  * SplitRangeOffFromNodeResult class is a simple class for methods which split a
  * node at 2 points for making part of the node split off from the node.
+ * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
+ *       same API.  Then, changing to/from Result<*, nsresult> can be easier.
+ *       For now, we should give same API name rather than same as
+ *       mozilla::ErrorResult.
  *****************************************************************************/
 class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
+  //      isErr() must not required to wrap with them.
+  bool isOk() const { return NS_SUCCEEDED(mRv); }
+  bool isErr() const { return NS_FAILED(mRv); }
+  constexpr nsresult inspectErr() const { return mRv; }
+  constexpr nsresult unwrapErr() const { return inspectErr(); }
+  constexpr bool EditorDestroyed() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
+  }
 
   /**
    * GetLeftContent() returns new created node before the part of quarried out.
@@ -583,18 +702,27 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
         mRightContent(aRightContent),
         mRv(NS_OK) {}
 
-  SplitRangeOffFromNodeResult(SplitNodeResult& aSplitResultAtLeftOfMiddleNode,
-                              SplitNodeResult& aSplitResultAtRightOfMiddleNode)
+  SplitRangeOffFromNodeResult(SplitNodeResult&& aSplitResultAtLeftOfMiddleNode,
+                              SplitNodeResult&& aSplitResultAtRightOfMiddleNode)
       : mRv(NS_OK) {
-    if (aSplitResultAtLeftOfMiddleNode.Succeeded()) {
-      mLeftContent = aSplitResultAtLeftOfMiddleNode.GetPreviousContent();
+    // The given results are created for creating this instance so that the
+    // caller may not need to handle with them.  For making who taking the
+    // reposible clearer, we should move them into this constructor.
+    SplitNodeResult splitResultAtLeftOfMiddleNode(
+        std::move(aSplitResultAtLeftOfMiddleNode));
+    SplitNodeResult splitResultARightOfMiddleNode(
+        std::move(aSplitResultAtRightOfMiddleNode));
+    splitResultAtLeftOfMiddleNode.IgnoreCaretPointSuggestion();
+    splitResultARightOfMiddleNode.IgnoreCaretPointSuggestion();
+    if (splitResultAtLeftOfMiddleNode.isOk()) {
+      mLeftContent = splitResultAtLeftOfMiddleNode.GetPreviousContent();
     }
-    if (aSplitResultAtRightOfMiddleNode.Succeeded()) {
-      mRightContent = aSplitResultAtRightOfMiddleNode.GetNextContent();
-      mMiddleContent = aSplitResultAtRightOfMiddleNode.GetPreviousContent();
+    if (splitResultARightOfMiddleNode.isOk()) {
+      mRightContent = splitResultARightOfMiddleNode.GetNextContent();
+      mMiddleContent = splitResultARightOfMiddleNode.GetPreviousContent();
     }
-    if (!mMiddleContent && aSplitResultAtLeftOfMiddleNode.Succeeded()) {
-      mMiddleContent = aSplitResultAtLeftOfMiddleNode.GetNextContent();
+    if (!mMiddleContent && splitResultAtLeftOfMiddleNode.isOk()) {
+      mMiddleContent = splitResultAtLeftOfMiddleNode.GetNextContent();
     }
   }
 
@@ -623,24 +751,37 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final {
 /*****************************************************************************
  * SplitRangeOffResult class is a simple class for methods which splits
  * specific ancestor elements at 2 DOM points.
+ * TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
+ *       same API.  Then, changing to/from Result<*, nsresult> can be easier.
+ *       For now, we should give same API name rather than same as
+ *       mozilla::ErrorResult.
  *****************************************************************************/
 class MOZ_STACK_CLASS SplitRangeOffResult final {
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
-  bool Handled() const { return mHandled; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
+  //      isErr() must not required to wrap with them.
+  bool isOk() const { return NS_SUCCEEDED(mRv); }
+  bool isErr() const { return NS_FAILED(mRv); }
+  constexpr nsresult inspectErr() const { return mRv; }
+  constexpr nsresult unwrapErr() const { return inspectErr(); }
+  constexpr bool Handled() const { return mHandled; }
+  constexpr bool EditorDestroyed() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
+  }
 
   /**
    * This is at right node of split at start point.
    */
-  const EditorDOMPoint& SplitPointAtStart() const { return mSplitPointAtStart; }
+  constexpr const EditorDOMPoint& SplitPointAtStart() const {
+    return mSplitPointAtStart;
+  }
   /**
    * This is at right node of split at end point.  I.e., not in the range.
    * This is after the range.
    */
-  const EditorDOMPoint& SplitPointAtEnd() const { return mSplitPointAtEnd; }
+  constexpr const EditorDOMPoint& SplitPointAtEnd() const {
+    return mSplitPointAtEnd;
+  }
 
   SplitRangeOffResult() = delete;
 
@@ -663,10 +804,10 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
    *                                    running some script.
    * @param aSplitNodeResultAtEnd       Raw split node result at start point.
    */
-  SplitRangeOffResult(const EditorDOMPoint& aTrackedRangeStart,
-                      const SplitNodeResult& aSplitNodeResultAtStart,
-                      const EditorDOMPoint& aTrackedRangeEnd,
-                      const SplitNodeResult& aSplitNodeResultAtEnd)
+  SplitRangeOffResult(EditorDOMPoint&& aTrackedRangeStart,
+                      SplitNodeResult&& aSplitNodeResultAtStart,
+                      EditorDOMPoint&& aTrackedRangeEnd,
+                      SplitNodeResult&& aSplitNodeResultAtEnd)
       : mSplitPointAtStart(aTrackedRangeStart),
         mSplitPointAtEnd(aTrackedRangeEnd),
         mRv(NS_OK),
@@ -674,8 +815,15 @@ class MOZ_STACK_CLASS SplitRangeOffResult final {
                  aSplitNodeResultAtEnd.Handled()) {
     MOZ_ASSERT(mSplitPointAtStart.IsSet());
     MOZ_ASSERT(mSplitPointAtEnd.IsSet());
-    MOZ_ASSERT(aSplitNodeResultAtStart.Succeeded());
-    MOZ_ASSERT(aSplitNodeResultAtEnd.Succeeded());
+    MOZ_ASSERT(aSplitNodeResultAtStart.isOk());
+    MOZ_ASSERT(aSplitNodeResultAtEnd.isOk());
+    // The given results are created for creating this instance so that the
+    // caller may not need to handle with them.  For making who taking the
+    // reposible clearer, we should move them into this constructor.
+    SplitNodeResult splitNodeResultAtStart(std::move(aSplitNodeResultAtStart));
+    SplitNodeResult splitNodeResultAtEnd(std::move(aSplitNodeResultAtEnd));
+    splitNodeResultAtStart.IgnoreCaretPointSuggestion();
+    splitNodeResultAtEnd.IgnoreCaretPointSuggestion();
   }
 
   explicit SplitRangeOffResult(nsresult aRv) : mRv(aRv), mHandled(false) {
@@ -823,9 +971,6 @@ class MOZ_STACK_CLASS ReplaceRangeDataBase final {
   // nsAutoString.
   nsString mReplaceString;
 };
-
-using ReplaceRangeData = ReplaceRangeDataBase<EditorDOMPoint>;
-using ReplaceRangeInTextsData = ReplaceRangeDataBase<EditorDOMPointInText>;
 
 }  // namespace mozilla
 

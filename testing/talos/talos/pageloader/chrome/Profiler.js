@@ -37,7 +37,6 @@ var Profiler;
     profiler_featuresArray,
     profiler_dir;
 
-  /* eslint-disable mozilla/use-chromeutils-import */
   try {
     // eslint-disable-next-line mozilla/use-services
     _profiler = Cc["@mozilla.org/tools/profiler;1"].getService(Ci.nsIProfiler);
@@ -127,8 +126,10 @@ var Profiler;
           profile => {
             let profileFile = profiler_dir + "/" + currentTest + ".profile";
 
-            const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
-            const { FileUtils } = Cu.import(
+            const { NetUtil } = ChromeUtils.import(
+              "resource://gre/modules/NetUtil.jsm"
+            );
+            const { FileUtils } = ChromeUtils.import(
               "resource://gre/modules/FileUtils.jsm"
             );
 

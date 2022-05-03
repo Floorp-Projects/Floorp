@@ -66,6 +66,7 @@ class RaptorRunner(MozbuildObject):
         self.device_name = kwargs["device_name"]
         self.enable_marionette_trace = kwargs["enable_marionette_trace"]
         self.browsertime_visualmetrics = kwargs["browsertime_visualmetrics"]
+        self.browsertime_node = kwargs["browsertime_node"]
         self.clean = kwargs["clean"]
 
         if Conditions.is_android(self) or kwargs["app"] in ANDROID_BROWSERS:
@@ -178,6 +179,7 @@ class RaptorRunner(MozbuildObject):
             "device_name": self.device_name,
             "enable_marionette_trace": self.enable_marionette_trace,
             "browsertime_visualmetrics": self.browsertime_visualmetrics,
+            "browsertime_node": self.browsertime_node,
             "mozbuild_path": get_state_dir(),
             "clean": self.clean,
         }
@@ -193,7 +195,6 @@ class RaptorRunner(MozbuildObject):
             # `tools/browsertime/mach_commands.py` but integrating it here will take more effort.
             self.config.update(
                 {
-                    "browsertime_node": browsertime.node_path(),
                     "browsertime_browsertimejs": browsertime.browsertime_path(),
                     "browsertime_vismet_script": browsertime.visualmetrics_path(),
                 }
@@ -231,6 +232,14 @@ class RaptorRunner(MozbuildObject):
                     return _get_browsertime_package()["_from"]
 
             def _should_install():
+                # If ffmpeg doesn't exist in the .mozbuild directory,
+                # then we should install
+                btime_cache = os.path.join(self.config["mozbuild_path"], "browsertime")
+                if not os.path.exists(btime_cache) or not any(
+                    ["ffmpeg" in cache_dir for cache_dir in os.listdir(btime_cache)]
+                ):
+                    return True
+
                 # If browsertime doesn't exist, install it
                 if not os.path.exists(
                     self.config["browsertime_browsertimejs"]
@@ -273,6 +282,15 @@ class RaptorRunner(MozbuildObject):
                         "Run `./mach browsertime --setup --clobber` to set it up."
                     )
 
+                # Bug 1766112 - For the time being, we need to trigger a
+                # clean build to upgrade browsertime. This should be disabled
+                # after some time.
+                print(
+                    "Setting --clean to True to rebuild Python "
+                    "environment for Browsertime upgrade..."
+                )
+                self.config["clean"] = True
+
             print("Using browsertime version %s from %s" % _get_browsertime_version())
 
         finally:
@@ -305,6 +323,95 @@ class RaptorRunner(MozbuildObject):
         return raptor_mh.run()
 
 
+def setup_node(command_context):
+    """Fetch the latest node-16 binary and install it into the .mozbuild directory."""
+    from mozbuild.artifact_commands import artifact_toolchain
+    from mozbuild.nodeutil import find_node_executable
+    from distutils.version import StrictVersion
+    import platform
+
+    print("Setting up node for browsertime...")
+    state_dir = get_state_dir()
+    cache_path = os.path.join(state_dir, "browsertime", "node-16")
+
+    def __check_for_node():
+        # Check standard locations first
+        node_exe = find_node_executable(min_version=StrictVersion("16.0.0"))
+        if node_exe and (node_exe[0] is not None):
+            return node_exe[0]
+        if not os.path.exists(cache_path):
+            return None
+
+        # Check the browsertime-specific node location next
+        node_name = "node"
+        if platform.system() == "Windows":
+            node_name = "node.exe"
+            node_exe_path = os.path.join(
+                state_dir,
+                "browsertime",
+                "node-16",
+                "node",
+            )
+        else:
+            node_exe_path = os.path.join(
+                state_dir,
+                "browsertime",
+                "node-16",
+                "node",
+                "bin",
+            )
+
+        node_exe = os.path.join(node_exe_path, node_name)
+        if not os.path.exists(node_exe):
+            return None
+
+        return node_exe
+
+    node_exe = __check_for_node()
+    if node_exe is None:
+        toolchain_job = "{}-node-16"
+        plat = platform.system()
+        if plat == "Windows":
+            toolchain_job = toolchain_job.format("win64")
+        elif plat == "Darwin":
+            toolchain_job = toolchain_job.format("macosx64")
+        else:
+            toolchain_job = toolchain_job.format("linux64")
+
+        print(
+            "Downloading Node v16 from Taskcluster toolchain {}...".format(
+                toolchain_job
+            )
+        )
+
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path, exist_ok=True)
+
+        # Change directories to where node should be installed
+        # before installing. Otherwise, it gets installed in the
+        # top level of the repo (or the current working directory).
+        cur_dir = os.getcwd()
+        os.chdir(cache_path)
+        artifact_toolchain(
+            command_context,
+            verbose=False,
+            from_build=[toolchain_job],
+            no_unpack=False,
+            retry=0,
+            cache_dir=cache_path,
+        )
+        os.chdir(cur_dir)
+
+        node_exe = __check_for_node()
+        if node_exe is None:
+            raise Exception("Could not find Node v16 binary for Raptor-Browsertime")
+
+        print("Finished downloading Node v16 from Taskcluster")
+
+    print("Node v16+ found at: %s" % node_exe)
+    return node_exe
+
+
 def create_parser():
     sys.path.insert(0, HERE)  # allow to import the raptor package
     from raptor.cmdline import create_parser
@@ -324,6 +431,9 @@ def run_raptor(command_context, **kwargs):
     from raptor.power import enable_charging, disable_charging
 
     build_obj = command_context
+
+    # Setup node for browsertime
+    kwargs["browsertime_node"] = setup_node(command_context)
 
     is_android = Conditions.is_android(build_obj) or kwargs["app"] in ANDROID_BROWSERS
 

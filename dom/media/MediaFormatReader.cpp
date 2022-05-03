@@ -501,9 +501,9 @@ class MediaFormatReader::DemuxerProxy {
 
  public:
   explicit DemuxerProxy(MediaDataDemuxer* aDemuxer)
-      : mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                          "DemuxerProxy::mTaskQueue")),
+      : mTaskQueue(TaskQueue::Create(
+            GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+            "DemuxerProxy::mTaskQueue")),
         mData(new Data(aDemuxer)) {
     MOZ_COUNT_CTOR(DemuxerProxy);
   }
@@ -853,9 +853,10 @@ MediaFormatReader::DemuxerProxy::NotifyDataArrived() {
 
 MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
                                      MediaDataDemuxer* aDemuxer)
-    : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
-                               "MediaFormatReader::mTaskQueue",
-                               /* aSupportsTailDispatch = */ true)),
+    : mTaskQueue(
+          TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                            "MediaFormatReader::mTaskQueue",
+                            /* aSupportsTailDispatch = */ true)),
       mAudio(this, MediaData::Type::AUDIO_DATA,
              StaticPrefs::media_audio_max_decode_error()),
       mVideo(this, MediaData::Type::VIDEO_DATA,
@@ -998,12 +999,12 @@ nsresult MediaFormatReader::Init() {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 
   mAudio.mTaskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "MFR::mAudio::mTaskQueue");
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "MFR::mAudio::mTaskQueue");
 
   mVideo.mTaskQueue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "MFR::mVideo::mTaskQueue");
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "MFR::mVideo::mTaskQueue");
 
   return NS_OK;
 }

@@ -164,9 +164,12 @@ NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
       EditorDOMPoint(mKeepingContent,
                      std::min(mJoinedOffset, mKeepingContent->Length())),
       removedContent);
-  NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
+  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
                        "HTMLEditor::DoSplitNode() failed");
-  return splitNodeResult.Rv();
+  // When adding caret suggestion to SplitNodeResult, here didn't change
+  // selection so that just ignore it.
+  splitNodeResult.IgnoreCaretPointSuggestion();
+  return splitNodeResult.unwrapErr();
 }
 
 NS_IMETHODIMP JoinNodesTransaction::RedoTransaction() {

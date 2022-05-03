@@ -43,8 +43,6 @@ namespace jit {
   /* Generators / Async (bug 1317690) */ \
   _(IsGenClosing)                        \
   _(Resume)                              \
-  /* try-finally */                      \
-  _(Retsub)                              \
   /* Misc */                             \
   _(DelName)                             \
   _(SetIntrinsic)                        \

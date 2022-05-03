@@ -2610,20 +2610,6 @@
      */ \
     MACRO(Exception, exception, NULL, 1, 0, 1, JOF_BYTE) \
     /*
-     * Push `resumeIndex`.
-     *
-     * This value must be used only by `JSOp::Retsub`.
-     *
-     * The stack depth when retsub resumes at the given offset must
-     * agree with any other paths to that offset.
-     *
-     *   Category: Control flow
-     *   Type: Exceptions
-     *   Operands: uint24_t resumeIndex
-     *   Stack: => resumeIndex
-     */ \
-    MACRO(ResumeIndex, resume_index, NULL, 4, 0, 1, JOF_RESUMEINDEX) \
-    /*
      * No-op instruction that marks the start of a `finally` block.
      *
      *   Category: Control flow
@@ -2632,20 +2618,6 @@
      *   Stack: =>
      */ \
     MACRO(Finally, finally, NULL, 1, 0, 0, JOF_BYTE) \
-    /*
-     * Jump to the instruction at the offset given by
-     * `script->resumeOffsets(resumeIndex)`, in bytes from the start of the
-     * current script's bytecode.
-     *
-     * This is used at the end of finally blocks to jump to the correct
-     * continuation.
-     *
-     *   Category: Control flow
-     *   Type: Exceptions
-     *   Operands:
-     *   Stack: resumeIndex =>
-     */ \
-    MACRO(Retsub, retsub, NULL, 1, 1, 0, JOF_BYTE) \
     /*
      * Push `MagicValue(JS_UNINITIALIZED_LEXICAL)`, a magic value used to mark
      * a binding as uninitialized.
@@ -3527,13 +3499,15 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
+  IF_RECORD_TUPLE(/* empty */, MACRO(223))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(224))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(225))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(226))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(227))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
   IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
-  IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
+  MACRO(230)                                   \
+  MACRO(231)                                   \
   MACRO(232)                                   \
   MACRO(233)                                   \
   MACRO(234)                                   \

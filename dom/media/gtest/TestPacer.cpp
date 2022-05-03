@@ -16,7 +16,7 @@ template <typename T>
 class PacerTest {
  protected:
   explicit PacerTest(TimeDuration aDuplicationInterval)
-      : mTaskQueue(MakeRefPtr<TaskQueue>(
+      : mTaskQueue(TaskQueue::Create(
             GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER), "PacerTest")),
         mPacer(MakeRefPtr<Pacer<T>>(mTaskQueue, aDuplicationInterval)),
         mInterval(aDuplicationInterval) {}

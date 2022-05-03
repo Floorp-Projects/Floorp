@@ -10,6 +10,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorForwards.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
@@ -29,8 +30,6 @@
 class nsITransferable;
 
 namespace mozilla {
-template <class T>
-class OwningNonNull;
 
 /***************************************************************************
  * EditActionResult is useful to return multiple results of an editor
@@ -135,21 +134,89 @@ inline EditActionResult EditActionCanceled(nsresult aRv = NS_OK) {
  * CreateNodeResultBase is a simple class for CreateSomething() methods
  * which want to return new node.
  */
-template <typename NodeType>
-class CreateNodeResultBase;
 
-typedef CreateNodeResultBase<dom::Element> CreateElementResult;
+#define NS_INSTANTIATE_CREATE_NODE_RESULT_METHOD(aResultType, aMethodName, \
+                                                 ...)                      \
+  template aResultType CreateContentResult::aMethodName(__VA_ARGS__);      \
+  template aResultType CreateElementResult::aMethodName(__VA_ARGS__);      \
+  template aResultType CreateTextResult::aMethodName(__VA_ARGS__);
 
+#define NS_INSTANTIATE_CREATE_NODE_RESULT_CONST_METHOD(aResultType,         \
+                                                       aMethodName, ...)    \
+  template aResultType CreateContentResult::aMethodName(__VA_ARGS__) const; \
+  template aResultType CreateElementResult::aMethodName(__VA_ARGS__) const; \
+  template aResultType CreateTextResult::aMethodName(__VA_ARGS__) const;
+
+enum class SuggestCaret {
+  // If specified, the method returns NS_OK when there is no recommended caret
+  // position.
+  OnlyIfHasSuggestion,
+  // If specified and if EditorBase::AllowsTransactionsToChangeSelection
+  // returns false, the method does nothing and returns NS_OK.
+  OnlyIfTransactionsAllowedToDoIt,
+  // If specified, the method returns
+  // NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR even if
+  // EditorBase::CollapseSelectionTo returns an error except when
+  // NS_ERROR_EDITOR_DESTROYED.
+  AndIgnoreTrivialError,
+};
+
+// TODO: Perhaps, we can make this inherits mozilla::Result for guaranteeing
+//       same API.  Then, changing to/from Result<*, nsresult> can be easier.
+//       For now, we should give same API name rather than same as
+//       mozilla::ErrorResult.
 template <typename NodeType>
 class MOZ_STACK_CLASS CreateNodeResultBase final {
   typedef CreateNodeResultBase<NodeType> SelfType;
 
  public:
-  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
-  bool Failed() const { return NS_FAILED(mRv); }
-  nsresult Rv() const { return mRv; }
-  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+  // FYI: NS_SUCCEEDED and NS_FAILED contain MOZ_(UN)LIKELY so that isOk() and
+  // isErr() must not required to wrap with them.
+  bool isOk() const { return NS_SUCCEEDED(mRv); }
+  bool isErr() const { return NS_FAILED(mRv); }
+  constexpr nsresult inspectErr() const { return mRv; }
+  constexpr nsresult unwrapErr() const { return inspectErr(); }
+  constexpr bool EditorDestroyed() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_DESTROYED);
+  }
+  constexpr bool GotUnexpectedDOMTree() const {
+    return MOZ_UNLIKELY(mRv == NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  }
   NodeType* GetNewNode() const { return mNode; }
+  RefPtr<NodeType> UnwrapNewNode() { return std::move(mNode); }
+
+  /**
+   * Suggest caret position to aEditorBase.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
+      const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const;
+
+  /**
+   * IgnoreCaretPointSuggestion() should be called if the method does not want
+   * to use caret position recommended by this instance.
+   */
+  void IgnoreCaretPointSuggestion() const { mHandledCaretPoint = true; }
+
+  bool HasCaretPointSuggestion() const { return mCaretPoint.IsSet(); }
+  EditorDOMPoint&& UnwrapCaretPoint() {
+    mHandledCaretPoint = true;
+    return std::move(mCaretPoint);
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const SuggestCaretOptions& aOptions) {
+    MOZ_ASSERT(!aOptions.contains(SuggestCaret::AndIgnoreTrivialError));
+    MOZ_ASSERT(
+        !aOptions.contains(SuggestCaret::OnlyIfTransactionsAllowedToDoIt));
+    if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion) &&
+        !mCaretPoint.IsSet()) {
+      return false;
+    }
+    aPointToPutCaret = UnwrapCaretPoint();
+    return true;
+  }
+  bool MoveCaretPointTo(EditorDOMPoint& aPointToPutCaret,
+                        const EditorBase& aEditorBase,
+                        const SuggestCaretOptions& aOptions);
 
   CreateNodeResultBase() = delete;
 
@@ -159,23 +226,46 @@ class MOZ_STACK_CLASS CreateNodeResultBase final {
 
   explicit CreateNodeResultBase(NodeType* aNode)
       : mNode(aNode), mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
+  explicit CreateNodeResultBase(NodeType* aNode,
+                                const EditorDOMPoint& aCandidateCaretPoint)
+      : mNode(aNode),
+        mCaretPoint(aCandidateCaretPoint),
+        mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
+  explicit CreateNodeResultBase(NodeType* aNode,
+                                EditorDOMPoint&& aCandidateCaretPoint)
+      : mNode(aNode),
+        mCaretPoint(std::move(aCandidateCaretPoint)),
+        mRv(aNode ? NS_OK : NS_ERROR_FAILURE) {}
 
   explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode)
       : mNode(std::move(aNode)), mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+  explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
+                                const EditorDOMPoint& aCandidateCaretPoint)
+      : mNode(std::move(aNode)),
+        mCaretPoint(aCandidateCaretPoint),
+        mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+  explicit CreateNodeResultBase(RefPtr<NodeType>&& aNode,
+                                EditorDOMPoint&& aCandidateCaretPoint)
+      : mNode(std::move(aNode)),
+        mCaretPoint(std::move(aCandidateCaretPoint)),
+        mRv(mNode.get() ? NS_OK : NS_ERROR_FAILURE) {}
+
+#ifdef DEBUG
+  ~CreateNodeResultBase() {
+    MOZ_ASSERT_IF(isOk(), !mCaretPoint.IsSet() || mHandledCaretPoint);
+  }
+#endif
 
   CreateNodeResultBase(const SelfType& aOther) = delete;
   SelfType& operator=(const SelfType& aOther) = delete;
   CreateNodeResultBase(SelfType&& aOther) = default;
   SelfType& operator=(SelfType&& aOther) = default;
 
-  already_AddRefed<NodeType> forget() {
-    mRv = NS_ERROR_NOT_INITIALIZED;
-    return mNode.forget();
-  }
-
  private:
   RefPtr<NodeType> mNode;
+  EditorDOMPoint mCaretPoint;
   nsresult mRv;
+  bool mutable mHandledCaretPoint = false;
 };
 
 /***************************************************************************

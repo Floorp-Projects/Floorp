@@ -22,7 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 -->
 
 <script>
-  const {AppConstants} = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm", {});
+  const { AppConstants } = SpecialPowers.ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
 
   //For tests that require setTimeout, set the timeout interval
   var TIMEOUT_INTERVAL = 100;

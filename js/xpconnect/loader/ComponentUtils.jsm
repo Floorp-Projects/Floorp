@@ -9,7 +9,9 @@
  * loader.
  *
  * Import into a JS component using
- * 'Components.utils.import("resource://gre/modules/ComponentUtils.jsm");'
+ * const { ComponentUtils } = ChromeUtils.import(
+ *   "resource://gre/modules/ComponentUtils.jsm"
+ * );
  *
  * Exposing a JS 'class' as a component using these utility methods consists
  * of several steps:

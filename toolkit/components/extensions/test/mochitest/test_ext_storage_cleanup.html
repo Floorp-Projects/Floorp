@@ -12,9 +12,9 @@
 <script type="text/javascript">
 "use strict";
 
-const {
-  ExtensionStorageIDB,
-} = SpecialPowers.Cu.import("resource://gre/modules/ExtensionStorageIDB.jsm");
+const { ExtensionStorageIDB } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/ExtensionStorageIDB.jsm"
+);
 
 const storageTestHelpers = {
   storageLocal: {

@@ -47,7 +47,7 @@ class VideoFrameConverter {
   explicit VideoFrameConverter(
       const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : mTimestampMaker(aTimestampMaker),
-        mTaskQueue(MakeAndAddRef<TaskQueue>(
+        mTaskQueue(TaskQueue::Create(
             GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
             "VideoFrameConverter")),
         mPacer(MakeAndAddRef<Pacer<FrameToProcess>>(

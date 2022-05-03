@@ -13,7 +13,6 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
-#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsDebug.h"     // for NS_ASSERTION, etc.
 #include "nsError.h"     // for NS_ERROR_NOT_INITIALIZED, etc.
@@ -114,27 +113,15 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> splittingContent = *mSplitContent;
   // MOZ_KnownLive(*mNewContent): it's grabbed by newNode
-  SplitNodeResult splitNodeResult = DoTransactionInternal(
+  const SplitNodeResult splitNodeResult = DoTransactionInternal(
       htmlEditor, splittingContent, MOZ_KnownLive(*mNewContent), mSplitOffset);
-  if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
+  if (splitNodeResult.isErr()) {
     NS_WARNING("SplitNodeTransaction::DoTransactionInternal() failed");
-    return EditorBase::ToGenericNSResult(splitNodeResult.Rv());
+    return EditorBase::ToGenericNSResult(splitNodeResult.unwrapErr());
   }
-
-  if (!htmlEditor->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
-  }
-
-  NS_WARNING_ASSERTION(
-      !htmlEditor->Destroyed(),
-      "The editor has gone but SplitNodeTransaction keeps trying to modify "
-      "Selection");
-  MOZ_DIAGNOSTIC_ASSERT(splitNodeResult.GetNewContent());
-  htmlEditor->CollapseSelectionTo(
-      EditorRawDOMPoint::AtEndOf(*splitNodeResult.GetNewContent()), error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return error.StealNSResult();
+  // The user should handle selection rather here.
+  splitNodeResult.IgnoreCaretPointSuggestion();
+  return NS_OK;
 }
 
 SplitNodeResult SplitNodeTransaction::DoTransactionInternal(
@@ -156,8 +143,11 @@ SplitNodeResult SplitNodeTransaction::DoTransactionInternal(
       EditorDOMPoint(&aSplittingContent,
                      std::min(aSplitOffset, aSplittingContent.Length())),
       aNewContent);
-  NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
+  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
                        "HTMLEditor::DoSplitNode() failed");
+  // When adding caret suggestion to SplitNodeResult, here didn't change
+  // selection so that just ignore it.
+  splitNodeResult.IgnoreCaretPointSuggestion();
   return splitNodeResult;
 }
 
@@ -209,11 +199,14 @@ NS_IMETHODIMP SplitNodeTransaction::RedoTransaction() {
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> newContent = *mNewContent;
   const OwningNonNull<nsIContent> splittingContent = *mSplitContent;
-  SplitNodeResult splitNodeResult = DoTransactionInternal(
+  const SplitNodeResult splitNodeResult = DoTransactionInternal(
       htmlEditor, splittingContent, newContent, mSplitOffset);
-  NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
+  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
                        "SplitNodeTransaction::DoTransactionInternal() failed");
-  return EditorBase::ToGenericNSResult(splitNodeResult.Rv());
+  // When adding caret suggestion to SplitNodeResult, here didn't change
+  // selection so that just ignore it.
+  splitNodeResult.IgnoreCaretPointSuggestion();
+  return EditorBase::ToGenericNSResult(splitNodeResult.unwrapErr());
 }
 
 }  // namespace mozilla

@@ -16,9 +16,15 @@
 
   SimpleTest.waitForExplicitFinish();
 
-  const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
-  const { AppConstants } = SpecialPowers.Cu.import("resource://gre/modules/AppConstants.jsm");
-  const { PlacesUtils } = SpecialPowers.Cu.import("resource://gre/modules/PlacesUtils.jsm");
+  const { Services } = SpecialPowers.ChromeUtils.import(
+    "resource://gre/modules/Services.jsm"
+  );
+  const { AppConstants } = SpecialPowers.ChromeUtils.import(
+    "resource://gre/modules/AppConstants.jsm"
+  );
+  const { PlacesUtils } = SpecialPowers.ChromeUtils.import(
+    "resource://gre/modules/PlacesUtils.jsm"
+  );
 
   // Some of the clipboard code requires reading or writing "text/unicode" when
   // actually "text/plain" is desired.

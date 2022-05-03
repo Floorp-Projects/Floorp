@@ -626,3 +626,34 @@ interface nsIGleanRate : nsISupports
   [implicit_jscontext]
   jsval testGetValue([optional] in AUTF8String aPingName);
 };
+
+[scriptable, uuid(a59672c4-bc48-4bfe-8f9c-6f408a59d819)]
+interface nsIGleanUrl : nsISupports
+{
+  /*
+  * Sets to the specified stringified URL.
+  *
+  * @param value The stringified URL to set the metric to.
+  */
+  void set(in AUTF8String value);
+
+  /**
+   * **Test-only API**
+   *
+   * Gets the currently stored value as a string.
+   *
+   * This function will attempt to await the last parent-process task (if any)
+   * writing to the the metric's storage engine before returning a value.
+   * This function will not wait for data from child processes.
+   *
+   * This doesn't clear the stored value.
+   * Parent process only. Panics in child processes.
+   *
+   * @param aPingName The (optional) name of the ping to retrieve the metric
+   *        for. Defaults to the first value in `send_in_pings`.
+   *
+   * @return value of the stored metric, or undefined if there is no value.
+   */
+  [implicit_jscontext]
+  jsval testGetValue([optional] in AUTF8String aPingName);
+};

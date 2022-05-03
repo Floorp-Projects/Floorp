@@ -308,6 +308,10 @@ class nsChildView final : public nsBaseWidget {
 
   virtual void Enable(bool aState) override;
   virtual bool IsEnabled() const override;
+
+  virtual nsSizeMode SizeMode() override { return mSizeMode; }
+  virtual void SetSizeMode(nsSizeMode aMode) override { mSizeMode = aMode; }
+
   virtual void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
@@ -554,6 +558,7 @@ class nsChildView final : public nsBaseWidget {
   mutable CGFloat mBackingScaleFactor;
 
   bool mVisible;
+  nsSizeMode mSizeMode;
   bool mDrawing;
   bool mIsDispatchPaint;  // Is a paint event being dispatched
 

@@ -729,9 +729,8 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * InsertBRElement() creates a <br> element and inserts it
-   * before aPointToInsert.  Then, tries to collapse selection at or after the
-   * new <br> node if aSelect is not eNone.
+   * InsertBRElement() creates a <br> element and inserts it before
+   * aPointToInsert.
    *
    * @param aWithTransaction    Whether the inserting is new element is undoable
    *                            or not.  WithTransaction::No is useful only when
@@ -739,15 +738,16 @@ class HTMLEditor final : public EditorBase,
    *                            which has not been connected yet.
    * @param aPointToInsert      The DOM point where should be <br> node inserted
    *                            before.
-   * @param aSelect             If eNone, this won't change selection.
-   *                            If eNext, selection will be collapsed after
-   *                            the <br> element.
-   *                            If ePrevious, selection will be collapsed at
-   *                            the <br> element.
-   * @return                    The new <br> node.  If failed to create new
-   *                            <br> node, returns error.
+   * @param aSelect             If eNone, returns a point to put caret which is
+   *                            suggested by InsertNodeTransaction.
+   *                            If eNext, returns a point after the new <br>
+   *                            element.
+   *                            If ePrevious, returns a point at the new <br>
+   *                            element.
+   * @return                    The new <br> node and suggesting point to put
+   *                            caret which respects aSelect.
    */
-  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult> InsertBRElement(
+  MOZ_CAN_RUN_SCRIPT CreateElementResult InsertBRElement(
       WithTransaction aWithTransaction, const EditorDOMPoint& aPointToInsert,
       EDirection aSelect = eNone);
 
@@ -799,11 +799,10 @@ class HTMLEditor final : public EditorBase,
    * @param aNewBlock           New block container element.  All children of
    *                            this is deleted first.
    * @param aEditingHost        Current editing host.
-   * @return                    If this method creates a new <br> element for
-   *                            placeholder, this returns the new <br>
-   *                            element.
+   * @return                    If succeeded, returns a suggesting point to put
+   *                            caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<dom::HTMLBRElement>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
                                              Element& aNewBlock,
                                              Element& aEditingHost);
@@ -1140,13 +1139,14 @@ class HTMLEditor final : public EditorBase,
    * HandleInsertBRElement() inserts a <br> element into aInsertToBreak.
    * This may split container elements at the point and/or may move following
    * <br> element to immediately after the new <br> element if necessary.
-   * XXX This modifies Selection, but should return CreateElementResult instead.
    *
    * @param aInsertToBreak      The point where new <br> element will be
    *                            inserted before.
    * @param aEditingHost        Current active editing host.
+   * @return                    If succeeded, returns new <br> element and
+   *                            candidate caret point.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult HandleInsertBRElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult HandleInsertBRElement(
       const EditorDOMPoint& aInsertToBreak, Element& aEditingHost);
 
   /**
@@ -1517,10 +1517,10 @@ class HTMLEditor final : public EditorBase,
    *                            element into the DOM tree. Note that this should
    *                            not touch outside given element because doing it
    *                            would break range updater's result.
-   * @return                    The created new element node or an error.
+   * @return                    The created new element node and candidate caret
+   *                            position.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateAndInsertElement(
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult CreateAndInsertElement(
       WithTransaction aWithTransaction, nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
@@ -1560,17 +1560,21 @@ class HTMLEditor final : public EditorBase,
    *                            Whether <br> element should be deleted or
    *                            kept if and only if a <br> element follows
    *                            split point.
+   * @param aEditingHost        The editing host with which we're handling it.
    * @param aInitializer        A function to initialize the new element before
    *                            or after (depends on the pref) connecting the
    *                            element into the DOM tree. Note that this should
    *                            not touch outside given element because doing it
    *                            would break range updater's result.
+   * @return                    If succeeded, returns the new element node and
+   *                            suggesting point to put caret.
    */
   enum class BRElementNextToSplitPoint { Keep, Delete };
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateElementResult
   InsertElementWithSplittingAncestorsWithTransaction(
       nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
+      const Element& aEditingHost,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
@@ -2886,13 +2890,6 @@ class HTMLEditor final : public EditorBase,
   SelectContentInternal(nsIContent& aContentToSelect);
 
   /**
-   * CollapseSelectionAfter() collapses Selection after aElement.
-   * If aElement is an orphan node or not in editing host, returns error.
-   */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  CollapseSelectionAfter(Element& aElement);
-
-  /**
    * GetInclusiveAncestorByTagNameAtSelection() looks for an element node whose
    * name matches aTagName from anchor node of Selection to <body> element.
    *
@@ -3343,14 +3340,14 @@ class HTMLEditor final : public EditorBase,
    * aNode was inserted at.  aSplitAtEdges specifies if the splitting process
    * is allowed to result in empty nodes.
    *
-   * @param aNode             Node to insert.
+   * @param aContent          The content node to insert.
    * @param aPointToInsert    Insertion point.
    * @param aSplitAtEdges     Splitting can result in empty nodes?
-   * @return                  Returns inserted point if succeeded.
-   *                          Otherwise, the result is not set.
    */
-  MOZ_CAN_RUN_SCRIPT EditorDOMPoint InsertNodeIntoProperAncestorWithTransaction(
-      nsIContent& aNode, const EditorDOMPoint& aPointToInsert,
+  template <typename NodeType>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT CreateNodeResultBase<NodeType>
+  InsertNodeIntoProperAncestorWithTransaction(
+      NodeType& aContent, const EditorDOMPoint& aPointToInsert,
       SplitAtEdges aSplitAtEdges);
 
   /**
@@ -4483,6 +4480,8 @@ class HTMLEditor final : public EditorBase,
      */
     void Abort();
 
+    bool MaybeRestoreSelectionLater() const { return !!mHTMLEditor; }
+
    protected:
     // The lifetime must be guaranteed by the creator of this instance.
     MOZ_KNOWN_LIVE HTMLEditor* mHTMLEditor = nullptr;
@@ -4630,21 +4629,53 @@ class HTMLEditor final : public EditorBase,
 
   ParagraphSeparator mDefaultParagraphSeparator;
 
-  friend class AlignStateAtSelection;
-  friend class AutoSelectionSetterAfterTableEdit;
-  friend class AutoSetTemporaryAncestorLimiter;
-  friend class CSSEditUtils;
-  friend class EditorBase;
-  friend class EmptyEditableFunctor;
-  friend class JoinNodesTransaction;
-  friend class ListElementSelectionState;
-  friend class ListItemElementSelectionState;
-  friend class ParagraphStateAtSelection;
-  friend class SlurpBlobEventListener;
-  friend class SplitNodeTransaction;
-  friend class WhiteSpaceVisibilityKeeper;
-  friend class WSRunScanner;
-  friend class WSScanResult;
+  friend class
+      AlignStateAtSelection;  // CollectEditableTargetNodes,
+                              // CollectNonEditableNodes,
+                              // GetSelectionRangesExtendedToHardLineStartAndEnd
+  friend class AutoSelectionSetterAfterTableEdit;  // SetSelectionAfterEdit
+  friend class
+      AutoSetTemporaryAncestorLimiter;  // InitializeSelectionAncestorLimit
+  friend class CSSEditUtils;            // DoTransactionInternal, HasAttributes,
+                                        // RemoveContainerWithTransaction
+  friend class EditorBase;              // ComputeTargetRanges,
+                            // GetChangedRangeForTopLevelEditSubAction,
+                            // GetSelectedRangeItemForTopLevelEditSubAction,
+                            // MaybeCreatePaddingBRElementForEmptyEditor,
+                            // PrepareToInsertBRElement,
+                            // ReflectPaddingBRElementForEmptyEditor,
+                            // RefreshEditingUI,
+                            // RemoveEmptyInclusiveAncestorInlineElements,
+                            // mComposerUpdater, mHasBeforeINputBeenCancelded
+  friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
+                                      // DoSplitNode, RangeUpdaterRef
+  friend class
+      ListElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectNonEditableNodes
+  friend class
+      ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                      // CollectNonEditableNodes
+  friend class
+      ParagraphStateAtSelection;  // CollectChildren,
+                                  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectListChildren,
+                                  // CollectNonEditableNodes,
+                                  // CollectTableChildren
+  friend class SlurpBlobEventListener;  // BlobReader
+  friend class SplitNodeResult;         // CollapseSelectionTo
+  friend class SplitNodeTransaction;    // DoJoinNodes, DoSplitNode
+  friend class
+      WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
+                                   // CanMoveOrDeleteSomethingInHardLine,
+                                   // ChangeListElementType,
+                                   // DeleteNodeWithTransaction,
+                                   // DeleteTextAndTextNodesWithTransaction,
+                                   // JoinNearestEditableNodesWithTransaction,
+                                   // MoveChildrenWithTransaction,
+                                   // MoveOneHardLineContents,
+                                   // MoveToEndOfCOntainer,
+                                   // SplitAncestorStyledInlineElementsAt,
+                                   // TreatEmptyTextNodes
 };
 
 /**
