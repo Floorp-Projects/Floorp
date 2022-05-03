@@ -88,4 +88,15 @@ TEST(SimulcastEncoderAdapterSettingsTest, GetResolutionBitrateLimitsWithList) {
           VideoEncoder::ResolutionBitrateLimits{789, 33000, 66000, 99000}));
 }
 
+TEST(EncoderSettingsTest, CommonSettingsUsedIfEncoderNameUnspecified) {
+  webrtc::test::ScopedFieldTrials field_trials(
+      "WebRTC-VP8-GetEncoderInfoOverride/requested_resolution_alignment:2/"
+      "WebRTC-GetEncoderInfoOverride/requested_resolution_alignment:3/");
+
+  LibvpxVp8EncoderInfoSettings vp8_settings;
+  EXPECT_EQ(2, vp8_settings.requested_resolution_alignment());
+  LibvpxVp9EncoderInfoSettings vp9_settings;
+  EXPECT_EQ(3, vp9_settings.requested_resolution_alignment());
+}
+
 }  // namespace webrtc

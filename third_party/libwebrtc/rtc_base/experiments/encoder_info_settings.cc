@@ -51,6 +51,11 @@ EncoderInfoSettings::EncoderInfoSettings(std::string name)
            [](BitrateLimit* b) { return &b->max_bitrate_bps; })},
       {});
 
+  if (field_trial::FindFullName(name).empty()) {
+    // Encoder name not found, use common string applying to all encoders.
+    name = "WebRTC-GetEncoderInfoOverride";
+  }
+
   ParseFieldTrial({&bitrate_limits, &requested_resolution_alignment_,
                    &apply_alignment_to_all_simulcast_layers_},
                   field_trial::FindFullName(name));
@@ -79,6 +84,6 @@ LibvpxVp8EncoderInfoSettings::LibvpxVp8EncoderInfoSettings()
     : EncoderInfoSettings("WebRTC-VP8-GetEncoderInfoOverride") {}
 
 LibvpxVp9EncoderInfoSettings::LibvpxVp9EncoderInfoSettings()
-    : EncoderInfoSettings("WebRTC-LibvpxVp9Encoder-GetEncoderInfoOverride") {}
+    : EncoderInfoSettings("WebRTC-VP9-GetEncoderInfoOverride") {}
 
 }  // namespace webrtc
