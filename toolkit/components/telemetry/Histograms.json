@@ -10640,15 +10640,6 @@
     "description": "Reports if a Firefox succeeded or failed in fetching the GMP update.xml from balrog, and which method was used to verify the download.",
     "bug_numbers": [1714621]
   },
-  "MEDIA_GMP_UPDATE_CONTENT_PROCESS_HAS_H264": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "105",
-    "kind": "boolean",
-    "bug_numbers": [1767334],
-    "description": "Whether H264 encoding is an available capability for being sent to the content processes"
-  },
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
