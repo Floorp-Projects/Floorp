@@ -438,3 +438,67 @@ add_task(async () => {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async () => {
+  // Set the default values for an OS that supports swipe to nav, except for
+  // whole-page-pixel-size which varies by OS, we vary it in differente tests
+  // in this file.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-threshold", 0.25],
+      // Set the velocity-contribution to 0 so we can exactly control the
+      // values in the swipe tracker via the delta in the events that we send.
+      ["widget.swipe.success-velocity-contribution", 0.0],
+      ["widget.swipe.whole-page-pixel-size", 550.0],
+    ],
+  });
+
+  const firstPage = "about:about";
+  const secondPage = "about:mozilla";
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    firstPage,
+    true /* waitForLoad */
+  );
+
+  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+  // and we cannot go forward to the next page.
+  ok(!gBrowser.webNavigation.canGoForward);
+
+  let startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    firstPage
+  );
+  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    firstPage
+  );
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 2);
+
+  // Make sure the gesture triggered going back to the previous page.
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(gBrowser.webNavigation.canGoForward);
+
+  while (
+    gHistorySwipeAnimation._prevBox != null ||
+    gHistorySwipeAnimation._nextBox != null
+  ) {
+    await new Promise(r => requestAnimationFrame(r));
+  }
+
+  ok(
+    gHistorySwipeAnimation._prevBox == null &&
+      gHistorySwipeAnimation._nextBox == null
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
