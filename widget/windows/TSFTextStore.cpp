@@ -1612,7 +1612,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType, LANGID langid, REFCLSID rclsid,
   }
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p TSFStaticSink::OnActivated(dwProfileType=%s (0x%08X), "
-           "langid=0x%08X, rclsid=%s, catid=%s, guidProfile=%s, hkl=0x%08X, "
+           "langid=0x%08X, rclsid=%s, catid=%s, guidProfile=%s, hkl=0x%p, "
            "dwFlags=0x%08X (TF_IPSINK_FLAG_ACTIVE: %s)), mIsIMM_IME=%s, "
            "mActiveTIPDescription=\"%s\"",
            this,
