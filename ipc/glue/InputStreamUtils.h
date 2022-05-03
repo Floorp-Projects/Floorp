@@ -18,23 +18,16 @@ namespace ipc {
 class FileDescriptor;
 class PFileDescriptorSetChild;
 class PFileDescriptorSetParent;
-class PChildToParentStreamChild;
-class PParentToChildStreamParent;
 
-// Provide two interfaces for sending PParentToChildStream and
-// PFileDescriptorSet constructor messages.
+// Provide two interfaces for sending PFileDescriptorSet constructor messages.
 class ParentToChildStreamActorManager {
  public:
-  virtual PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) = 0;
   virtual PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) = 0;
 };
 
 class ChildToParentStreamActorManager {
  public:
-  virtual PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild* aActor) = 0;
   virtual PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) = 0;
 };
@@ -78,17 +71,6 @@ class InputStreamHelper {
   static void SerializeInputStreamAsPipe(
       nsIInputStream* aInputStream, InputStreamParams& aParams,
       bool aDelayedStart, ChildToParentStreamActorManager* aManager);
-
-  // After the sending of the inputStream into the IPC pipe, some of the
-  // InputStreamParams data struct needs to be activated (IPCRemoteStream).
-  // These 2 methods do that.
-  static void PostSerializationActivation(InputStreamParams& aParams,
-                                          bool aConsumedByIPC,
-                                          bool aDelayedStart);
-
-  static void PostSerializationActivation(Maybe<InputStreamParams>& aParams,
-                                          bool aConsumedByIPC,
-                                          bool aDelayedStart);
 
   static already_AddRefed<nsIInputStream> DeserializeInputStream(
       const InputStreamParams& aParams,

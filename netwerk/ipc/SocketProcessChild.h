@@ -72,16 +72,9 @@ class SocketProcessChild final
       const FileDescriptor& fd);
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor);
 
-  PChildToParentStreamChild* AllocPChildToParentStreamChild();
-  bool DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor);
-  PParentToChildStreamChild* AllocPParentToChildStreamChild();
-  bool DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor);
-
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
 
-  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild* aActor) override;
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
   already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild(
