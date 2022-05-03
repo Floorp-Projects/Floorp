@@ -195,19 +195,19 @@ bool Logger::VariantToString(const VARIANT& aVariant, nsACString& aOut,
                              LONG aIndex) {
   switch (aVariant.vt) {
     case VT_DISPATCH: {
-      aOut.AppendPrintf("(IDispatch*) 0x%0p", aVariant.pdispVal);
+      aOut.AppendPrintf("(IDispatch*) 0x%p", aVariant.pdispVal);
       return true;
     }
     case VT_DISPATCH | VT_BYREF: {
-      aOut.AppendPrintf("(IDispatch*) 0x%0p", (aVariant.ppdispVal)[aIndex]);
+      aOut.AppendPrintf("(IDispatch*) 0x%p", (aVariant.ppdispVal)[aIndex]);
       return true;
     }
     case VT_UNKNOWN: {
-      aOut.AppendPrintf("(IUnknown*) 0x%0p", aVariant.punkVal);
+      aOut.AppendPrintf("(IUnknown*) 0x%p", aVariant.punkVal);
       return true;
     }
     case VT_UNKNOWN | VT_BYREF: {
-      aOut.AppendPrintf("(IUnknown*) 0x%0p", (aVariant.ppunkVal)[aIndex]);
+      aOut.AppendPrintf("(IUnknown*) 0x%p", (aVariant.ppunkVal)[aIndex]);
       return true;
     }
     case VT_VARIANT | VT_BYREF: {
@@ -284,7 +284,7 @@ void Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
     strGeckoDuration.AppendLiteral("(none)");
   }
 
-  nsPrintfCString line("%.3f\t%s\t%s\t0x%0p\tIUnknown::QueryInterface\t([in] ",
+  nsPrintfCString line("%.3f\t%s\t%s\t0x%p\tIUnknown::QueryInterface\t([in] ",
                        elapsed, strOverheadDuration.get(),
                        strGeckoDuration.get(), aTarget);
 
