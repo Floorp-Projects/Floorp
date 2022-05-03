@@ -335,6 +335,7 @@ class SettingsPrivacyTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/24573")
     @Test
     fun openExternalLinksInPrivateTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
