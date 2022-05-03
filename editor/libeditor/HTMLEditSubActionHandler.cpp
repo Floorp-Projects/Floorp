@@ -8356,19 +8356,9 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
   SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
       MOZ_KnownLive(*pointToInsert.GetChild()), aStartOfDeepestRightNode,
       SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (splitNodeResult.isErr()) {
-    NS_WARNING(
-        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-        "eAllowToCreateEmptyContainer) failed");
-    return splitNodeResult;
-  }
-  nsresult rv = splitNodeResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-    return SplitNodeResult(rv);
-  }
+  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
+                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+                       "eAllowToCreateEmptyContainer) failed");
   return splitNodeResult;
 }
 
@@ -8386,8 +8376,8 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
         "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() failed");
     return Err(splitNodeResult.unwrapErr());
   }
-  // When adding caret suggestion to SplitNodeResult, here didn't change
-  // selection so that just ignore it.
+  // We'll update selection below, and nobody touches selection until then.
+  // Therefore, we don't need to touch selection here.
   splitNodeResult.IgnoreCaretPointSuggestion();
 
   // If current handling node has been moved from the container by a
@@ -10137,14 +10127,14 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           const SplitNodeResult splitNodeResult =
               MaybeSplitAncestorsForInsertWithTransaction(
                   MOZ_KnownLive(*ULOrOLOrDLTagName), atContent);
-          if (splitNodeResult.isErr()) {
+          if (splitNodeResult.isOk()) {
             NS_WARNING(
                 "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() "
                 "failed");
             return splitNodeResult.unwrapErr();
           }
-          // When adding caret suggestion to SplitNodeResult, here didn't change
-          // selection so that just ignore it.
+          // We'll update selection after creating a list element below.
+          // Therefore, we don't need to touch selection here.
           splitNodeResult.IgnoreCaretPointSuggestion();
         } else {
           // If we've not had a target <div> element yet, let's insert a <div>
@@ -10240,8 +10230,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
                 "failed");
             return splitNodeResult.unwrapErr();
           }
-          // When adding caret suggestion to SplitNodeResult, here didn't change
-          // selection so that just ignore it.
+          // We'll update selection after creating a list element below.
+          // Therefore, we don't need to touch selection here.
           splitNodeResult.IgnoreCaretPointSuggestion();
         } else {
           // If we've not had a target <div> element yet, let's insert a <div>
