@@ -2399,6 +2399,71 @@ TEST_P(PeerConnectionIntegrationTest, CallTransferredForCaller) {
   ASSERT_TRUE(ExpectNewFrames(media_expectations));
 }
 
+#ifdef WEBRTC_HAVE_SCTP
+
+// This test causes a PeerConnection to enter Disconnected state, and
+// sends data on a DataChannel while disconnected.
+// The data should be surfaced when the connection reestablishes.
+TEST_P(PeerConnectionIntegrationTest, DataChannelWhileDisconnected) {
+  CreatePeerConnectionWrappers();
+  ConnectFakeSignaling();
+  caller()->CreateDataChannel();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(callee()->data_observer(), kDefaultTimeout);
+  std::string data1 = "hello first";
+  caller()->data_channel()->Send(DataBuffer(data1));
+  EXPECT_EQ_WAIT(data1, callee()->data_observer()->last_message(),
+                 kDefaultTimeout);
+  // Cause a network outage
+  virtual_socket_server()->set_drop_probability(1.0);
+  EXPECT_EQ_WAIT(PeerConnectionInterface::kIceConnectionDisconnected,
+                 caller()->standardized_ice_connection_state(),
+                 kDefaultTimeout);
+  std::string data2 = "hello second";
+  caller()->data_channel()->Send(DataBuffer(data2));
+  // Remove the network outage. The connection should reestablish.
+  virtual_socket_server()->set_drop_probability(0.0);
+  EXPECT_EQ_WAIT(data2, callee()->data_observer()->last_message(),
+                 kDefaultTimeout);
+}
+
+// This test causes a PeerConnection to enter Disconnected state,
+// sends data on a DataChannel while disconnected, and then triggers
+// an ICE restart.
+// The data should be surfaced when the connection reestablishes.
+TEST_P(PeerConnectionIntegrationTest, DataChannelWhileDisconnectedIceRestart) {
+  CreatePeerConnectionWrappers();
+  ConnectFakeSignaling();
+  caller()->CreateDataChannel();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(callee()->data_observer(), kDefaultTimeout);
+  std::string data1 = "hello first";
+  caller()->data_channel()->Send(DataBuffer(data1));
+  EXPECT_EQ_WAIT(data1, callee()->data_observer()->last_message(),
+                 kDefaultTimeout);
+  // Cause a network outage
+  virtual_socket_server()->set_drop_probability(1.0);
+  ASSERT_EQ_WAIT(PeerConnectionInterface::kIceConnectionDisconnected,
+                 caller()->standardized_ice_connection_state(),
+                 kDefaultTimeout);
+  std::string data2 = "hello second";
+  caller()->data_channel()->Send(DataBuffer(data2));
+
+  // Trigger an ICE restart. The signaling channel is not affected by
+  // the network outage.
+  caller()->SetOfferAnswerOptions(IceRestartOfferAnswerOptions());
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  // Remove the network outage. The connection should reestablish.
+  virtual_socket_server()->set_drop_probability(0.0);
+  EXPECT_EQ_WAIT(data2, callee()->data_observer()->last_message(),
+                 kDefaultTimeout);
+}
+
+#endif  // WEBRTC_HAVE_SCTP
+
 // This test sets up a non-bundled call and negotiates bundling at the same
 // time as starting an ICE restart. When bundling is in effect in the restart,
 // the DTLS-SRTP context should be successfully reset.
