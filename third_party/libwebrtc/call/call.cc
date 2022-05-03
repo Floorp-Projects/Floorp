@@ -675,6 +675,8 @@ void Call::EnsureStarted() {
   }
   is_started_ = true;
 
+  call_stats_->EnsureStarted();
+
   // This call seems to kick off a number of things, so probably better left
   // off being kicked off on request rather than in the ctor.
   transport_send_ptr_->RegisterTargetTransferRateObserver(this);
