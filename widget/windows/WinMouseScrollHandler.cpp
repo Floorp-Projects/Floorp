@@ -375,7 +375,7 @@ void MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindow* aWidget,
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
           ("MouseScroll::ProcessNativeMouseWheelMessage: aWidget=%p, "
            "aMessage=%s, wParam=0x%08zX, lParam=0x%08" PRIXLPTR
-           ", point: { x=%d, y=%d }",
+           ", point: { x=%ld, y=%ld }",
            aWidget,
            aMessage == WM_MOUSEWHEEL    ? "WM_MOUSEWHEEL"
            : aMessage == WM_MOUSEHWHEEL ? "WM_MOUSEHWHEEL"

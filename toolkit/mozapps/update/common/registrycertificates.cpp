@@ -68,7 +68,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
                              nullptr, nullptr, nullptr, nullptr, nullptr,
                              nullptr, nullptr);
   if (retCode != ERROR_SUCCESS) {
-    LOG_WARN(("Could not query info key.  (%d)", retCode));
+    LOG_WARN(("Could not query info key.  (%ld)", retCode));
     RegCloseKey(baseKey);
     return FALSE;
   }
@@ -80,7 +80,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
     retCode = RegEnumKeyExW(baseKey, i, subkeyBuffer, &subkeyBufferCount,
                             nullptr, nullptr, nullptr, nullptr);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Could not enum certs.  (%d)", retCode));
+      LOG_WARN(("Could not enum certs.  (%ld)", retCode));
       RegCloseKey(baseKey);
       return FALSE;
     }
@@ -132,7 +132,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
 
     retCode = VerifyCertificateTrustForFile(filePath);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Error on certificate trust check.  (%d)", retCode));
+      LOG_WARN(("Error on certificate trust check.  (%ld)", retCode));
       RegCloseKey(subKey);
       continue;  // Try the next subkey
     }

@@ -3160,7 +3160,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
           "\nFound message: %s, "
           "\nWM_NULL has been removed: %d, "
           "\nNext key message in all windows: %s, "
-          "time=%d, ",
+          "time=%ld, ",
           KeyboardLayout::GetActiveLayout(),
           KeyboardLayout::GetActiveLayoutName().get(), ToString(mMsg).get(),
           GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get(), i,
@@ -3168,7 +3168,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       CrashReporter::AppendAppNotesToCrashReport(info);
       MSG nextMsg;
       if (WinUtils::PeekMessage(&nextMsg, 0, 0, 0, PM_NOREMOVE | PM_NOYIELD)) {
-        nsPrintfCString info("\nNext message in all windows: %s, time=%d",
+        nsPrintfCString info("\nNext message in all windows: %s, time=%ld",
                              ToString(nextMsg).get(), nextMsg.time);
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {

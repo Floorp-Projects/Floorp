@@ -461,7 +461,7 @@ int CALLBACK GDIFontFamily::FamilyAddStylesProc(
   if (LOG_FONTLIST_ENABLED()) {
     LOG_FONTLIST(
         ("(fontlist) added (%s) to family (%s)"
-         " with style: %s weight: %d stretch: normal",
+         " with style: %s weight: %ld stretch: normal",
          fe->Name().get(), ff->Name().get(),
          (logFont.lfItalic == 0xff) ? "italic" : "normal", logFont.lfWeight));
   }

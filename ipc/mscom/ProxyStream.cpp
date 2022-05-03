@@ -111,7 +111,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
     if (curActCtx.isOk()) {
       strActCtx.AppendPrintf("0x%p", curActCtx.unwrap());
     } else {
-      strActCtx.AppendPrintf("HRESULT 0x%08X", curActCtx.unwrapErr());
+      strActCtx.AppendPrintf("HRESULT 0x%08lX", curActCtx.unwrapErr());
     }
 
     ActivationContext::GetCurrentManifestPath(manifestPath);

@@ -24,7 +24,7 @@ namespace mozilla {
 static bool QueryStringValue(const void* aBlock, DWORD aTranslation,
                              const wchar_t* aFieldName, nsAString& aResult) {
   nsAutoString path;
-  path.AppendPrintf("\\StringFileInfo\\%02X%02X%02X%02X\\%S",
+  path.AppendPrintf("\\StringFileInfo\\%02lX%02lX%02lX%02lX\\%S",
                     (aTranslation & 0x0000ff00) >> 8,
                     (aTranslation & 0x000000ff),
                     (aTranslation & 0xff000000) >> 24,
