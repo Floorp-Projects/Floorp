@@ -3926,8 +3926,6 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
   // current text run
   RefPtr<gfxTextRun> mTextRun;
 
-  RefPtr<nsPresContext> mPresContext;
-
   // pointer to a screen reference context used to measure text and such
   RefPtr<DrawTarget> mDrawTarget;
 
@@ -4071,8 +4069,6 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   }
 
   CanvasBidiProcessor processor;
-
-  processor.mPresContext = presContext;
 
   // If we don't have a ComputedStyle, we can't set up vertical-text flags
   // (for now, at least; perhaps we need new Canvas API to control this).
