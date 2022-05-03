@@ -61,10 +61,8 @@ bool ServoCSSParser::ParseFontShorthandForMatching(
     const nsACString& aValue, URLExtraData* aUrl, StyleFontFamilyList& aList,
     StyleComputedFontStyleDescriptor& aStyle, float& aStretch, float& aWeight,
     float* aSize) {
-  float dummySize;
   return Servo_ParseFontShorthandForMatching(&aValue, aUrl, &aList, &aStyle,
-                                             &aStretch, &aWeight,
-                                             aSize ? aSize : &dummySize);
+                                             &aStretch, &aWeight, aSize);
 }
 
 /* static */
