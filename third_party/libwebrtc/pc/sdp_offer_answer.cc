@@ -4478,8 +4478,10 @@ bool SdpOfferAnswerHandler::UseCandidate(
 
   const cricket::Candidate& c = candidate->candidate();
   RTCError error = cricket::VerifyCandidate(c);
-  if (!error.ok())
-    return false;
+  if (!error.ok()) {
+    RTC_LOG(LS_WARNING) << "Invalid candidate: " << c.ToString();
+    return true;
+  }
 
   pc_->AddRemoteCandidate(result.value()->name, c);
 
