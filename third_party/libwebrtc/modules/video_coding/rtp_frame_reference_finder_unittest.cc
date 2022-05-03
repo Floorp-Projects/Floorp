@@ -73,7 +73,7 @@ class TestRtpFrameReferenceFinder : public ::testing::Test,
 
   void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override {
     int64_t pid = frame->id.picture_id;
-    uint16_t sidx = frame->id.spatial_layer;
+    uint16_t sidx = *frame->SpatialIndex();
     auto frame_it = frames_from_callback_.find(std::make_pair(pid, sidx));
     if (frame_it != frames_from_callback_.end()) {
       ADD_FAILURE() << "Already received frame with (pid:sidx): (" << pid << ":"

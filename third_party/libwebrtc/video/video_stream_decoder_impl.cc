@@ -64,7 +64,7 @@ void VideoStreamDecoderImpl::OnFrame(
   RTC_DCHECK_RUN_ON(&bookkeeping_queue_);
 
   uint64_t continuous_pid = frame_buffer_.InsertFrame(std::move(frame));
-  video_coding::VideoLayerFrameId continuous_id(continuous_pid, 0);
+  video_coding::VideoLayerFrameId continuous_id(continuous_pid);
   if (last_continuous_id_ < continuous_id) {
     last_continuous_id_ = continuous_id;
     callbacks_->OnContinuousUntil(last_continuous_id_);

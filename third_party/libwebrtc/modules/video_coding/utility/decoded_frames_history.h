@@ -39,18 +39,10 @@ class DecodedFramesHistory {
   absl::optional<uint32_t> GetLastDecodedFrameTimestamp();
 
  private:
-  struct LayerHistory {
-    LayerHistory();
-    ~LayerHistory();
-    // Cyclic bitset buffer. Stores last known |window_size| bits.
-    std::vector<bool> buffer;
-    absl::optional<int64_t> last_picture_id;
-  };
-
   int PictureIdToIndex(int64_t frame_id) const;
 
-  const int window_size_;
-  std::vector<LayerHistory> layers_;
+  std::vector<bool> buffer_;
+  absl::optional<int64_t> last_picture_id_;
   absl::optional<VideoLayerFrameId> last_decoded_frame_;
   absl::optional<uint32_t> last_decoded_frame_timestamp_;
 };

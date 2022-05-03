@@ -96,6 +96,7 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
   }
 
   UpdateLastPictureIdWithPadding(frame->id.picture_id);
+  frame->SetSpatialIndex(0);
   frame->id.picture_id = rtp_seq_num_unwrapper_.Unwrap(frame->id.picture_id);
   return kHandOff;
 }
