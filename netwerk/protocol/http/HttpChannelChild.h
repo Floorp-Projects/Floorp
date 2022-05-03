@@ -113,8 +113,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   [[nodiscard]] bool IsSuspended();
 
-  void OnCopyComplete(nsresult aStatus) override;
-
   // Callback while background channel is ready.
   void OnBackgroundChildReady(HttpBackgroundChannelChild* aBgChild);
   // Callback while background channel is destroyed.
