@@ -330,16 +330,16 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       } fixed_digital;
       struct AdaptiveDigital {
         bool enabled = false;
-        float vad_probability_attack = 1.f;
+        float vad_probability_attack = 0.3f;
         LevelEstimator level_estimator = kRms;
-        int level_estimator_adjacent_speech_frames_threshold = 1;
+        int level_estimator_adjacent_speech_frames_threshold = 6;
         // TODO(crbug.com/webrtc/7494): Remove `use_saturation_protector`.
         bool use_saturation_protector = true;
         float initial_saturation_margin_db = 20.f;
-        float extra_saturation_margin_db = 2.f;
-        int gain_applier_adjacent_speech_frames_threshold = 1;
+        float extra_saturation_margin_db = 5.f;
+        int gain_applier_adjacent_speech_frames_threshold = 6;
         float max_gain_change_db_per_second = 3.f;
-        float max_output_noise_level_dbfs = -50.f;
+        float max_output_noise_level_dbfs = -55.f;
         bool sse2_allowed = true;
         bool avx2_allowed = true;
         bool neon_allowed = true;
