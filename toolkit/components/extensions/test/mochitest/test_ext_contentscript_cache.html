@@ -48,7 +48,7 @@ add_task(async function test_contentscript_cache() {
   let origin = await extension.awaitMessage("origin");
   let scriptUrl = `${origin}/content_script.js`;
 
-  const { ExtensionProcessScript } = SpecialPowers.Cu.import(
+  const { ExtensionProcessScript } = SpecialPowers.ChromeUtils.import(
     "resource://gre/modules/ExtensionProcessScript.jsm"
   );
   let ext = ExtensionProcessScript.getExtensionChild(extension.id);

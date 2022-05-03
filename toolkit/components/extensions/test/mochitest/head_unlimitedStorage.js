@@ -5,7 +5,7 @@
 /* exported checkSitePermissions */
 
 const { Services } = SpecialPowers;
-const { NetUtil } = SpecialPowers.Cu.import(
+const { NetUtil } = SpecialPowers.ChromeUtils.import(
   "resource://gre/modules/NetUtil.jsm"
 );
 
