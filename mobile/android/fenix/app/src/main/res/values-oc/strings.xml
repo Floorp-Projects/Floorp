@@ -1654,6 +1654,8 @@
     <string name="addresses_manage_addresses">Gestion de las adreças</string>
     <!-- The header for the full name of an address -->
     <string name="addresses_full_name">Nom complèt</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Adreça postala</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Vila</string>
     <!-- The header for the state of an address -->
