@@ -364,7 +364,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
         mUseHwAccel = true;
       } else {
         mDXVAFailureReason = nsPrintfCString(
-            "MFT_MESSAGE_SET_D3D_MANAGER failed with code %X", hr);
+            "MFT_MESSAGE_SET_D3D_MANAGER failed with code %lX", hr);
       }
     } else {
       mDXVAFailureReason.AssignLiteral(

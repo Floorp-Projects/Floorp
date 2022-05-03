@@ -191,14 +191,14 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
   HRESULT hr = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL,
                                 IID_INetworkListManager, getter_AddRefs(nlm));
   if (NS_WARN_IF(FAILED(hr))) {
-    LOG(("CoCreateInstance error: %X", hr));
+    LOG(("CoCreateInstance error: %lX", hr));
     return;
   }
   RefPtr<IEnumNetworks> enumNetworks;
   hr = nlm->GetNetworks(NLM_ENUM_NETWORK_CONNECTED,
                         getter_AddRefs(enumNetworks));
   if (NS_WARN_IF(FAILED(hr))) {
-    LOG(("GetNetworks error: %X", hr));
+    LOG(("GetNetworks error: %lX", hr));
     return;
   }
 

@@ -308,7 +308,7 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
                                               getter_AddRefs(mSwapChain));
     if (FAILED(hr)) {
       aError.Assign(
-          nsPrintfCString("RcANGLE(swap chain create failed %x)", hr));
+          nsPrintfCString("RcANGLE(swap chain create failed %lx)", hr));
       return false;
     }
 

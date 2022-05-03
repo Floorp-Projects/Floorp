@@ -70,7 +70,7 @@ RefPtr<MediaDataDecoder::DecodePromise> WMFMediaDataDecoder::ProcessError(
   // up to 3 times.
   return DecodePromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                  RESULT_DETAIL("%s:%x", aReason, aError)),
+                  RESULT_DETAIL("%s:%lx", aReason, aError)),
       __func__);
 }
 
