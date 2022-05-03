@@ -27,7 +27,9 @@ addLoginsInParent(
   </form>
 <pre id="test">
 <script>
-let {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+let { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/ContentTaskUtils.jsm"
+);
 
 add_task(async function setup() {
   ok(readyPromise, "check promise is available");
