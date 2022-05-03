@@ -226,6 +226,7 @@ SendSideBandwidthEstimation::SendSideBandwidthEstimation(
       low_loss_threshold_(kDefaultLowLossThreshold),
       high_loss_threshold_(kDefaultHighLossThreshold),
       bitrate_threshold_(kDefaultBitrateThreshold),
+      loss_based_bandwidth_estimation_(key_value_config),
       receiver_limit_caps_only_("Enabled") {
   RTC_DCHECK(event_log);
   if (BweLossExperimentIsEnabled()) {
