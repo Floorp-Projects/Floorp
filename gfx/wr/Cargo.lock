@@ -2347,6 +2347,7 @@ dependencies = [
  "glsl",
  "glutin",
  "image",
+ "libc",
  "log",
  "mozangle",
  "ndk-glue",
