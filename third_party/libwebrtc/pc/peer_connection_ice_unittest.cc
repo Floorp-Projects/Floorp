@@ -497,7 +497,10 @@ TEST_P(PeerConnectionIceTest, DuplicateIceCandidateIgnoredWhenAdded) {
   EXPECT_EQ(1u, caller->GetIceCandidatesFromRemoteDescription().size());
 }
 
-TEST_P(PeerConnectionIceTest, ErrorOnInvalidRemoteIceCandidateAdded) {
+// TODO(tommi): Re-enable after updating RTCPeerConnection-blockedPorts.html in
+// Chromium (the test needs setRemoteDescription to succeed for an invalid
+// candidate).
+TEST_P(PeerConnectionIceTest, DISABLED_ErrorOnInvalidRemoteIceCandidateAdded) {
   auto caller = CreatePeerConnectionWithAudioVideo();
   auto callee = CreatePeerConnectionWithAudioVideo();
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
