@@ -77,7 +77,7 @@ var checkResult = async function(isRemote, browserKey, uri) {
         sessionHistory.count - 1
       );
 
-      var { E10SUtils } = SpecialPowers.Cu.import(
+      var { E10SUtils } = SpecialPowers.ChromeUtils.import(
         "resource://gre/modules/E10SUtils.jsm"
       );
 
