@@ -90,6 +90,7 @@ class DummyAudioProcessing : public AudioProcessing {
   void SetRuntimeSetting(RuntimeSetting) override {
     MOZ_CRASH("Unexpected call");
   }
+  bool PostRuntimeSetting(RuntimeSetting setting) override { return false; }
   int ProcessStream(const int16_t* const, const StreamConfig&,
                     const StreamConfig&, int16_t* const) override {
     MOZ_CRASH("Unexpected call");
