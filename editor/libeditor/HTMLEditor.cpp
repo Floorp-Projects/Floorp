@@ -5715,7 +5715,7 @@ nsresult HTMLEditor::SetBackgroundColorAsAction(const nsAString& aColor,
   return EditorBase::ToGenericNSResult(rv);
 }
 
-Result<RefPtr<HTMLBRElement>, nsresult>
+Result<EditorDOMPoint, nsresult>
 HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
                                                        Element& aNewBlock,
                                                        Element& aEditingHost) {
@@ -5728,10 +5728,10 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
   for (const OwningNonNull<nsIContent>& child : newBlockChildren) {
     // MOZ_KNownLive(child) because of bug 1622253
     nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(child));
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
       return Err(rv);
     }
@@ -5758,13 +5758,13 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
         &aEditingHost);
   }
   if (!deepestEditableContent) {
-    return RefPtr<HTMLBRElement>();
+    return EditorDOMPoint(&aNewBlock, 0u);
   }
 
   Element* deepestVisibleEditableElement =
       deepestEditableContent->GetAsElementOrParentElement();
   if (!deepestVisibleEditableElement) {
-    return RefPtr<HTMLBRElement>();
+    return EditorDOMPoint(&aNewBlock, 0u);
   }
 
   // Clone inline elements to keep current style in the new block.
@@ -5772,7 +5772,6 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
   //     far from aPreviousBlock.  Probably, we should clone inline containers
   //     from ancestor to descendants without transactions, then, insert it
   //     after that with transaction.
-  EditorDOMPoint pointToPutCaret;
   RefPtr<Element> lastClonedElement, firstClonedElement;
   for (RefPtr<Element> elementInPreviousBlock = deepestVisibleEditableElement;
        elementInPreviousBlock && elementInPreviousBlock != &aPreviousBlock;
@@ -5806,10 +5805,10 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
             "HTMLEditor::CreateAndInsertElement(WithTransaction::Yes) failed");
         return Err(createNewElementResult.unwrapErr());
       }
-      createNewElementResult.MoveCaretPointTo(
-          pointToPutCaret, *this,
-          {SuggestCaret::OnlyIfHasSuggestion,
-           SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      // We'll return with a point suggesting new caret position and the
+      // following path does not require an update of selection here.
+      // Therefore, we don't need to update selection here.
+      createNewElementResult.IgnoreCaretPointSuggestion();
       firstClonedElement = lastClonedElement =
           createNewElementResult.UnwrapNewNode();
       continue;
@@ -5823,27 +5822,15 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
       return Err(NS_ERROR_FAILURE);
     }
     CloneAttributesWithTransaction(*lastClonedElement, *elementInPreviousBlock);
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    if (NS_WARN_IF(Destroyed())) {
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-  }
-
-  if (pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      NS_WARNING(
-          "EditorBase::CollapseSelectionTo() caused destroying the editor");
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
 
   if (!firstClonedElement) {
     // XXX Even if no inline elements are cloned, shouldn't we create new
     //     <br> element for aNewBlock?
-    return RefPtr<HTMLBRElement>();
+    return EditorDOMPoint(&aNewBlock, 0u);
   }
 
   CreateElementResult insertBRElementResult = InsertBRElement(
@@ -5852,21 +5839,9 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(Element& aPreviousBlock,
     NS_WARNING("HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
     return Err(insertBRElementResult.unwrapErr());
   }
-  // XXX Is this intentional selection change?
-  nsresult rv = insertBRElementResult.SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
+  insertBRElementResult.IgnoreCaretPointSuggestion();
   MOZ_ASSERT(insertBRElementResult.GetNewNode());
-  return RefPtr<HTMLBRElement>(
-      HTMLBRElement::FromNode(insertBRElementResult.GetNewNode()));
+  return EditorDOMPoint(insertBRElementResult.GetNewNode());
 }
 
 nsresult HTMLEditor::GetElementOrigin(Element& aElement, int32_t& aX,
