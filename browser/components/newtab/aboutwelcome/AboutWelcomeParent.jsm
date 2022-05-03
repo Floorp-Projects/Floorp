@@ -226,7 +226,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         page: "about:welcome",
       },
       message_id: this.AWMessageId,
-      id: "ABOUT_WELCOME",
     });
   }
 
