@@ -48,20 +48,38 @@ class DOMFullscreenParent extends JSWindowActorParent {
     }
   }
 
+  /**
+   * Clean up fullscreen state and resume chrome UI if window is in fullscreen
+   * and this actor is the one where the original fullscreen enter or
+   * exit request comes.
+   */
+  _cleanupFullscreenStateAndResumeChromeUI(aWindow) {
+    this.cleanupDomFullscreen(aWindow);
+    if (this.requestOrigin == this && aWindow.document.fullscreen) {
+      aWindow.windowUtils.remoteFrameFullscreenReverted();
+    }
+  }
+
   didDestroy() {
     this._didDestroy = true;
 
     let window = this._fullscreenWindow;
     if (!window) {
-      if (this.waitingForChildExitFullscreen) {
+      let topBrowsingContext = this.browsingContext.top;
+      let browser = topBrowsingContext.embedderElement;
+      if (!browser) {
+        return;
+      }
+
+      if (
+        this.waitingForChildExitFullscreen ||
+        this.waitingForChildEnterFullscreen
+      ) {
         this.waitingForChildExitFullscreen = false;
+        this.waitingForChildEnterFullscreen = false;
         // We were destroyed while waiting for our DOMFullscreenChild to exit
-        // and have exited fullscreen, run cleanup steps anyway.
-        let topBrowsingContext = this.browsingContext.top;
-        let browser = topBrowsingContext.embedderElement;
-        if (browser) {
-          this.cleanupDomFullscreen(browser.ownerGlobal);
-        }
+        // or enter fullscreen, run cleanup steps anyway.
+        this._cleanupFullscreenStateAndResumeChromeUI(browser.ownerGlobal);
       }
       return;
     }
@@ -93,9 +111,9 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
     } else if (this.waitingForChildExitFullscreen) {
       this.waitingForChildExitFullscreen = false;
-      // We were destroyed while waiting for our DOMFullscreenChild to exit and
-      // have exited fullscreen, run cleanup steps anyway.
-      this.cleanupDomFullscreen(window);
+      // We were destroyed while waiting for our DOMFullscreenChild to exit
+      // run cleanup steps anyway.
+      this._cleanupFullscreenStateAndResumeChromeUI(window);
     }
     this.updateFullscreenWindowReference(window);
   }
@@ -114,7 +132,6 @@ class DOMFullscreenParent extends JSWindowActorParent {
     switch (aMessage.name) {
       case "DOMFullscreen:Request": {
         this.waitingForChildExitFullscreen = false;
-        this.nextMsgRecipient = null;
         this.requestOrigin = this;
         this.addListeners(window);
         window.windowUtils.remoteFrameFullscreenChanged(browser);
