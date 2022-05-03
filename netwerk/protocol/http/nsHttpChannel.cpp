@@ -5771,7 +5771,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return NS_FAILED(mStatus) ? mStatus : NS_ERROR_FAILURE;
   }
 
-  if (MaybeWaitForUploadStreamLength(listener, nullptr)) {
+  if (MaybeWaitForUploadStreamNormalization(listener, nullptr)) {
     return NS_OK;
   }
 
