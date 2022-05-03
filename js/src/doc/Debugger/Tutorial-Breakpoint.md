@@ -44,8 +44,12 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
 5.  Click on the Scratchpad panel and enter the following code:
 
     ```js
-    Components.utils.import("resource://gre/modules/jsdebugger.jsm");
-    Components.utils.import("resource://gre/modules/Console.jsm");
+    const { addDebuggerToGlobal } = ChromeUtils.import(
+      "resource://gre/modules/jsdebugger.jsm"
+    );
+    const { console } = ChromeUtils.import(
+      "resource://gre/modules/Console.jsm"
+    );
 
     // This simply defines 'Debugger' in this Scratchpad;
     // it doesn't actually start debugging anything.

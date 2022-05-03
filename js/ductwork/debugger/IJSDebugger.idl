@@ -6,7 +6,9 @@
 
 /**
  * Do not use this interface. Instead, write:
- *     Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ *     const { addDebuggerToGlobal } = ChromeUtils.import(
+ *       "resource://gre/modules/jsdebugger.jsm"
+ *     );
  *     addDebuggerToGlobal(global);
  */
 [scriptable, uuid(a36fa816-31da-4b23-bc97-6412771f0867)]

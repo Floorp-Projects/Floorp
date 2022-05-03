@@ -7,7 +7,9 @@ var EXPORTED_SYMBOLS = [ "addDebuggerToGlobal", "addSandboxedDebuggerToGlobal" ]
 
 /*
  * This is the js module for Debugger. Import it like so:
- *   Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+ *   const { addDebuggerToGlobal } = ChromeUtils.import(
+ *     "resource://gre/modules/jsdebugger.jsm"
+ *   );
  *   addDebuggerToGlobal(this);
  *
  * This will create a 'Debugger' object, which provides an interface to debug

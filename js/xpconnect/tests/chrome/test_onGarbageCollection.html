@@ -16,12 +16,19 @@
 
     // Instantiate `Debugger` in a sandbox as Debugger requires to be created
     // in a compartment different than the debuggee.
-    let sandbox = Cu.Sandbox(Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
-                             {freshCompartment: true});
-    Cu.evalInSandbox(
-      "Components.utils.import('resource://gre/modules/jsdebugger.jsm');" +
-      "addDebuggerToGlobal(this);",
-      sandbox
+    let sandbox = Cu.Sandbox(
+      Components.Constructor("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+      {
+        freshCompartment: true,
+        wantGlobalProperties: ["ChromeUtils"],
+      }
+    );
+    Cu.evalInSandbox(`
+const { addDebuggerToGlobal } = ChromeUtils.import(
+  'resource://gre/modules/jsdebugger.jsm'
+);
+addDebuggerToGlobal(this);
+`, sandbox
     );
 
     const dbg = new sandbox.Debugger(this);
