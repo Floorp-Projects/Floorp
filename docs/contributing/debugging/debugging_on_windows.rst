@@ -1,14 +1,10 @@
 Debugging On Windows
 ====================
 
-+--------------------------------------------------------------------+
-| This page is an import from MDN and the contents might be outdated |
-+--------------------------------------------------------------------+
-
 This document explains how to debug Gecko based applications such as
-Firefox, Thunderbird, and SeaMonkey on Windows using the Visual C++ IDE.
+Firefox, Thunderbird, and SeaMonkey on Windows using the Visual Studio IDE.
 
-If VC++ and your Gecko application hang shortly after you launch the
+If VS and your Gecko application hang shortly after you launch the
 application under the debugger, see `Problems Loading Debug
 Symbols <#problems-loading-debug-symbols>`__.
 
@@ -42,23 +38,24 @@ then, already attached in the debugger.
 
 Alternatively, if you have generated the Visual Studio solution, via
 ``./mach build-backend -b VisualStudio``, opening this solution allows
-you to run ``firefox.exe`` directly in the debugger. Making it the
-startup project, by right clicking on it (it appears bold when it's the
-case) can be useful. Breakpoints are kept across runs, this can be a
-good way to debug startup issues.
+you to run ``firefox.exe`` directly in the debugger. To make it the
+startup project, right click on the project and select ``Set As Startup
+Project``. It appears bold when it's the case. Breakpoints are kept
+across runs, this can be a good way to debug startup issues.
 
 **Run the program until you hit an assertion.** You will get a dialog
 box asking if you would like to debug. Hit "Cancel". The MSDEV IDE will
 launch and load the file where the assertion happened. This will also
-create a Visual C++ Mozilla project in the directory of the executable
+create a Visual Studio Mozilla project in the directory of the executable
 by default.
 
 **Attach the debugger to an existing Mozilla process**.  In the Visual
 Studio, select Debug > Attach to Process. If you want to debug a content
 process, you can **hover on the tab** of page you want to debug, which
 would show the pid. You can then select the process from dialog opened
-from "Attach to Process". For more information, see `Attach to Running
-Processes with the Visual Studio
+from "Attach to Process". You can open ``about:processes`` to see the pid
+for all subprocesses, including tabs but also GPU, networking etc.
+For more information, see `Attach to Running Processes with the Visual Studio
 Debugger <http://msdn.microsoft.com/en-us/library/vstudio/3s68z0b3.aspx>`__.
 
 **Starting an MSIX installed Firefox with the debugger**. In Visual
@@ -73,132 +70,55 @@ Refer to the steps to :ref:`use the Mozilla symbol
 server <Using The Mozilla Symbol Server>` and :ref:`source
 server <Using The Mozilla Source Server>`
 
-Creating a Visual C++ project for Firefox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Creating a Visual Studio project for Firefox
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please refer to :ref:`this <Visual Studio Projects>`.
 
 Changing/setting the executable to debug
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VC++ 6.0: To change or set the executable to debug, go to Project >
-Settings..., Debug tab and select General from the drop down list.
-"Executable for debug session:" should show the executable you are
-debugging. If it is empty or incorrect, use the arrow button and select
-Browse... to locate the executable.
+To change or set the executable to debug, go to Project > Properties >
+Debugging > Command. (As of Visual Studio 2022.)
+
+It should show the executable you are debugging. If it is empty or
+incorrect, manually add the correct path to the executable.
 
 Command line parameters and environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-VC++ 6.0: To change or set the command line options, go to Project >
-Settings..., Debug tab and select General from the drop down list.
-"Program arguments:" should show the options.
+To change or set the command line options, go to Project > Properties >
+Debugging > Command Arguments.
 
 Some common options would be the URL of the file you want the browser to
 open as soon as it starts, starting the Profile Manager, or selecting a
 profile. You can also redirect the console output to a file (by adding
 "``> filename.txt``" for example, without the quotes).
 
-In VC 7 and 8 this option is called Project > Properties > Debugging >
-Command Arguments. VC 8 also allows you to set environment variables
-there.
-
-Setting breakpoints in DLLs which are not yet loaded in memory
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-VC++ 6.0: Go to Project > Settings..., Debug tab and select "Additional
-DLLs" from the drop down list. Check "Locate Additional DLLs" option.
-For each DLL, click the "New" button which creates a new entry and then
-hit the "..." buttons which lets you browse to the DLL. You will only be
-able to add one DLL at a time.
-
-VC++ 7.0 automatically finds additional DLLs.
-
 Customizing the debugger's variable value view
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can customize how Visual C++ displays classes in the variable view.
-By default VC++ displays "{...}" and you need to click the small + icon
+You can customize how Visual Studio displays classes in the variable view.
+By default VS displays "{...}" and you need to click the small + icon
 to expand the members. You can change this behaviour, and make Visual
-C++ display whatever data member you want in whatever order, formatter
+Studio display whatever data member you want in whatever order, formatted
 however you like instead of just "{...}".
 
-You need to locate a file called "AUTOEXP.DAT" in your Visual C++
-installation. By default it will be:
+You need to locate a file called "gecko.natvis" under toolkit/library.
+The file contains a list of types and how they should be displayed in
+the debugger. It is XML and after a little practice you should be well
+on your way.
 
-VC++ 6.0:
+To understand the file in detail refer to `Create custom views of C++
+objects in the debugger using the Natvis framework
+<https://docs.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects>`__
 
-.. code::
-
-   C:\Program Files\Microsoft Visual Studio\Common\MSDev98\Bin\AUTOEXP.DAT
-
-VC++ 7.0:
-
-.. code::
-
-   C:\Program Files\Microsoft Visual Studio .NET 2003\Common7\Packages\Debugger\AUTOEXP.DAT
-
-The file has information about the format in the beginning, and after a
-little practice you should be well on your way. Here are some entries
-that will make your life easier:
-
-::
-
-   ;; Mozilla (1.7beta and later)
-   nsAutoString=<mData,su>
-   nsString=<mData,su>
-   nsCString=<mData,s>
-   nsCAutoString=<mData,s>
-   nsRect=x=<x,d> y=<y,d> width=<width,d>; height=<height,d>
-   nsStaticAtomWrapper=<mStaticAtom->mString,s>
-   nsIAtom=<mString,su>
-   ; the following are not necessary in vc8
-   nsCOMPtr<*>=<mRawPtr,x>
-   nsRefPtr=<mRawPtr,x>
-   nsAutoPtr=<mRawPtr,x>
-
-After you have made the changes and saved the file, you will need to
-restart Visual C++ for the changes to take effect.
-
-For XPCOM Strings (the "external" string API) you can use the following
-values:
-
-::
-
-   ;; Mozilla (1.9)
-   ; Internal Strings
-   nsAString_internal=<mData,su>, length=<mLength,u>
-   nsACString_internal=<mData,s>, length=<mLength,u>
-   ; XPCOM Strings
-   nsAString=<nsStringContainer.v,su>, length=<nsStringContainer.d1,u>
-   nsACString=<nsCStringContainer.v,s>, length=<nsCStringContainer.d1,u>
-   nsStringContainer=<v,su>, length=<d1,u>
-   nsCStringContainer=<v,s>, length=<d1,u>
-
-There is a more extensive version of this file in progress in
-`AutoExpForVC8. <https://developer.mozilla.org/en-US/docs/Mozilla/Debugging/AutoExpForVC8>`__
-
-Avoiding stepping into certain functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can avoid stepping into certain functions, such as nsCOMPtr methods,
-using an undocumented feature of VC. See the blog post `How to Not Step
-Into Functions using the Visual C++
-Debugger <http://blogs.msdn.com/andypennell/archive/2004/02/06/69004.aspx>`__
-for details.
-
-Here are some wildcards you can use (tested with VC 8):
-
-.. code::
-
-   nsCOMPtr.*\:\:.*=NoStepInto
-   (nsG|g)etter_*AddRefs.*=NoStepInto
-   NS_ConvertUTF.*
-   ; Might be too broad:
-   (ns|Promise)[^\:]*[sS]tring.*
-   ...add common functions to this list
-
-should probably make a .reg file for easy importing
+The file already comes with a number of entries that will make your life
+easier, like support for several string types. If you need to add a custom
+type, or want to change an existing entry for debugging purposes, you can
+easily edit the file. For your convenience it is included in all generated
+Visual Studio projects, and if you edit and save it within Visual Studio, it
+will pick up the changes immediately.
 
 Obtaining ``stdout`` and other ``FILE`` handles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,7 +133,7 @@ debugging methods (such as ``nsGenericElement::List``) that take a
    Debug.EvaluateStatement {,,msvcr80d}(&__iob_func()[1])
 
 (Alternatively you can evaluate ``{,,msvcr80d}(&__iob_func()[1])`` in
-the QuickWatch window)
+the Immediate window)
 
 Similarly, you can open a file on the disk using ``fopen``:
 
@@ -278,11 +198,6 @@ memory view to get it to update on that part of the memory. Change the
 value of the memory to "90", close the memory view and hit "F5" to
 continue.
 
-| Confused? See the screenshot below:
-| |Screenshot of disabling assertions|
-
-VC++ 7.0?
-
 Automatically handling ASSERTIONS without a debugger attached
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -307,10 +222,9 @@ You need to make sure this configure parameter is set:
 
 .. code::
 
-   --enable-debugger-info-modules=yes
+   ac_add_options --enable-debug
 
-You can also choose to include or exclude specific modules. This is
-particularly useful to avoid linking layout with debugging information.
+You can also choose to include or exclude specific modules.
 
 Console debugging
 ~~~~~~~~~~~~~~~~~
@@ -348,77 +262,27 @@ command-line argument.
 Debugging JavaScript
 ~~~~~~~~~~~~~~~~~~~~
 
-Use `Venkman <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Venkman>`__, the JavaScript Debugger for Mozilla.
-
 You can use helper functions from
 `nsXPConnect.cpp <https://searchfox.org/mozilla-central/source/js/xpconnect/src/nsXPConnect.cpp>`__
 to inspect and modify the state of JavaScript code from the MSVS
 debugger.
 
 For example, to print current JavaScript stack to stdout, evaluate this
-in QuickWatch window:
+in Immediate window:
 
 .. code::
 
    {,,xul}DumpJSStack()
 
-Visual C++ will show you something in the quick watch window, but
+Visual Studio will show you something in the quick watch window, but
 not the stack, you have to look in the OS console for the output.
 
-Also this magical command only works when the VC++ stack is in certain
-states. It works when you have js_Interpret() in the newest stackframe
+Also this magical command only works when you have JS on the VS stack.
 
 Debugging minidumps
 ~~~~~~~~~~~~~~~~~~~
 
 See :ref:`debugging a minidump <Debugging A Minidump>`.
-
-Debugging treeherder builds
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-See `Running Windows Debug Builds <https://developer.mozilla.org/en-US/docs/Archive/Mozilla/Running_Windows_Debug_Builds>`__
-
-Problems Loading Debug Symbols
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If both your application and Visual C++ hang shortly after launching the
-application under the debugger, you may be hitting a known deadlock in
-the way Visual Studio downloads debug symbols for the system libraries;
-see
-https://connect.microsoft.com/VisualStudio/feedback/details/422970/hang-loading-rasapi32-pdb-when-using-symbol-server.
-
-There are two ways to work around this problem:
-
-#. Turn off automatic symbol downloading for system libraries: in Tools
-   > Options > Debugging > Symbols, uncheck the Microsoft symbol server.
-#. Pre-load all the Windows debug symbols. These instructions apply to
-   Visual Studio 10 on Windows 7; other software versions likely need to
-   have file paths adjusted.
-
-   #. Locate the Microsoft utility "SymChk.exe" on your system (it will
-      likely be in the installation directory of your Windows Debugging
-      Tools).
-
-   #. Find the directory where Visual Studio caches downloaded symbols;
-      in VC++ 10 open the menu to Tools > Options > Debugging  > Symbols
-      and copy the field "Cache symbols in this directory".
-
-   #. In a command window, run
-
-      ::
-
-         symchk.exe /r C:\windows\SysWOW64\ /s "SRV*<your cache symbols directory>\MicrosoftPublicSymbols*http://msdl.microsoft.com/download/symbols"
-
-      |
-      | Note the "``\MicrosoftPublicSymbols``" appended to the cache
-        directory configured in Visual Studio.
-
-Downloading all symbols can take a long time; you can replace
-C:\windows\SysWOW64\\ with the name of a single .DLL to download symbols
-only for the specific libraries you are trying to debug. Unfortunately,
-it's hard to know which symbols to download without having VS hang and
-seeing the "Downloading symbols for <library>" status at the bottom left
-of the main window.
 
 Problems post-mortem debugging on Windows 7 SP1 x64?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
