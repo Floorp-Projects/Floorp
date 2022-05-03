@@ -1582,6 +1582,10 @@
     <string name="addressess_confirm_dialog_ok_button">Delete</string>
     <!-- The text for the negative button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_cancel_button">Cancel</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Save address</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Delete address</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Add search engine</string>
