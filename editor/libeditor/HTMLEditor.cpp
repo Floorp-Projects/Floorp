@@ -1949,6 +1949,13 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return EditorDOMPoint();  // TODO: Should return error with `Result`
     }
+    nsresult rv = splitNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return EditorDOMPoint();
+    }
     pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSet());
     // When adding caret suggestion to SplitNodeResult, here didn't change
@@ -4471,13 +4478,7 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
         return lastResult;
       }
-      nsresult rv = lastResult.SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
-        return SplitNodeResult(rv);
-      }
-
+      MOZ_ASSERT(lastResult.HasCaretPointSuggestion());
       MOZ_ASSERT(lastResult.GetOriginalContent() == splittingContent);
       if (splittingContent == &aMostAncestorToSplit) {
         // Actually, we split aMostAncestorToSplit.

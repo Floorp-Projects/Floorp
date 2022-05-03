@@ -1963,6 +1963,13 @@ CreateElementResult HTMLEditor::HandleInsertBRElement(
             "eDoNotCreateEmptyContainer) failed");
         return CreateElementResult(splitLinkNodeResult.unwrapErr());
       }
+      nsresult rv = splitLinkNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return CreateElementResult(rv);
+      }
       pointToBreak = splitLinkNodeResult.AtSplitPoint<EditorDOMPoint>();
       // When adding caret suggestion to SplitNodeResult, here didn't change
       // selection so that just ignore it.
@@ -2223,14 +2230,23 @@ HTMLEditor::HandleInsertParagraphInMailCiteElement(
       return SplitNodeResult(NS_ERROR_FAILURE);
     }
 
-    SplitNodeResult result =
+    SplitNodeResult splitResult =
         SplitNodeDeepWithTransaction(aMailCiteElement, pointToSplit,
                                      SplitAtEdges::eDoNotCreateEmptyContainer);
-    NS_WARNING_ASSERTION(
-        result.isOk(),
-        "HTMLEditor::SplitNodeDeepWithTransaction(aMailCiteElement, "
-        "SplitAtEdges::eDoNotCreateEmptyContainer) failed");
-    return result;
+    if (splitResult.isErr()) {
+      NS_WARNING(
+          "HTMLEditor::SplitNodeDeepWithTransaction(aMailCiteElement, "
+          "SplitAtEdges::eDoNotCreateEmptyContainer) failed");
+      return splitResult;
+    }
+    nsresult rv = splitResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return SplitNodeResult(rv);
+    }
+    return splitResult;
   }();
   if (splitCiteElementResult.isErr()) {
     NS_WARNING("Failed to split a mail-cite element");
@@ -5066,22 +5082,42 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   if (MOZ_UNLIKELY(NS_WARN_IF(splitAtStartResult.EditorDestroyed()))) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(splitAtStartResult.isOk(),
-                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-                       "eDoNotCreateEmptyContainer) failed");
+  NS_WARNING_ASSERTION(
+      splitAtStartResult.isOk(),
+      "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+      "eDoNotCreateEmptyContainer) at start of middle element failed");
 
   // Split at after the end
-  EditorDOMPoint atAfterEnd(&aEndOfMiddleElement);
-  DebugOnly<bool> advanced = atAfterEnd.AdvanceOffset();
-  NS_WARNING_ASSERTION(advanced, "Failed to advance offset after the end node");
+  auto atAfterEnd = EditorDOMPoint::After(aEndOfMiddleElement);
   SplitNodeResult splitAtEndResult = SplitNodeDeepWithTransaction(
       aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
   if (MOZ_UNLIKELY(NS_WARN_IF(splitAtEndResult.EditorDestroyed()))) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
-  NS_WARNING_ASSERTION(splitAtEndResult.isOk(),
-                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-                       "eDoNotCreateEmptyContainer) failed");
+  NS_WARNING_ASSERTION(
+      splitAtEndResult.isOk(),
+      "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+      "eDoNotCreateEmptyContainer) after end of middle element failed");
+
+  if (AllowsTransactionsToChangeSelection() &&
+      (splitAtStartResult.HasCaretPointSuggestion() ||
+       splitAtEndResult.HasCaretPointSuggestion())) {
+    const SplitNodeResult& splitNodeResultHavingLatestCaretSuggestion =
+        [&]() -> SplitNodeResult& {
+      if (splitAtEndResult.HasCaretPointSuggestion()) {
+        splitAtStartResult.IgnoreCaretPointSuggestion();
+        return splitAtEndResult;
+      }
+      return splitAtStartResult;
+    }();
+    nsresult rv =
+        splitNodeResultHavingLatestCaretSuggestion.SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return SplitRangeOffFromNodeResult(rv);
+    }
+  }
 
   return SplitRangeOffFromNodeResult(std::move(splitAtStartResult),
                                      std::move(splitAtEndResult));
@@ -5244,10 +5280,14 @@ nsresult HTMLEditor::CreateStyleForInsertText(
             "eAllowToCreateEmptyContainer) failed");
         return splitTextNodeResult.unwrapErr();
       }
+      nsresult rv = splitTextNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return rv;
+      }
       pointToPutCaret = splitTextNodeResult.AtSplitPoint<EditorDOMPoint>();
-      // When adding caret suggestion to SplitNodeResult, here didn't change
-      // selection so that just ignore it.
-      splitTextNodeResult.IgnoreCaretPointSuggestion();
     }
     if (!pointToPutCaret.IsInContentNode() ||
         !HTMLEditUtils::IsContainerNode(
@@ -6856,7 +6896,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
             *aRangeItem.mEndContainer->AsContent(), editingHost);
 
     if (mostAncestorInlineContentAtEnd) {
-      const SplitNodeResult splitEndInlineResult = SplitNodeDeepWithTransaction(
+      SplitNodeResult splitEndInlineResult = SplitNodeDeepWithTransaction(
           *mostAncestorInlineContentAtEnd, aRangeItem.EndPoint(),
           SplitAtEdges::eDoNotCreateEmptyContainer);
       if (splitEndInlineResult.isErr()) {
@@ -6864,6 +6904,15 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
         return splitEndInlineResult.unwrapErr();
+      }
+      // Unfortunately, we need to collapse selection here for
+      // GetActiveEditingHost() since it refers selection.
+      nsresult rv = splitEndInlineResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+        return rv;
       }
       if (MOZ_UNLIKELY(editingHost != GetActiveEditingHost())) {
         NS_WARNING(
@@ -6881,9 +6930,6 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
       }
       aRangeItem.mEndContainer = splitPointAtEnd.GetContainer();
       aRangeItem.mEndOffset = splitPointAtEnd.Offset();
-      // When adding caret suggestion to SplitNodeResult, here didn't change
-      // selection so that just ignore it.
-      splitEndInlineResult.IgnoreCaretPointSuggestion();
     }
   }
 
@@ -6896,7 +6942,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
           *aRangeItem.mStartContainer->AsContent(), editingHost);
 
   if (mostAncestorInlineContentAtStart) {
-    const SplitNodeResult splitStartInlineResult = SplitNodeDeepWithTransaction(
+    SplitNodeResult splitStartInlineResult = SplitNodeDeepWithTransaction(
         *mostAncestorInlineContentAtStart, aRangeItem.StartPoint(),
         SplitAtEdges::eDoNotCreateEmptyContainer);
     if (splitStartInlineResult.isErr()) {
@@ -6904,6 +6950,14 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
           "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) failed");
       return splitStartInlineResult.unwrapErr();
+    }
+    // XXX Why don't we check editing host like above??
+    nsresult rv = splitStartInlineResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return rv;
     }
     // XXX If we split only here because of collapsed range, we're modifying
     //     only start point of aRangeItem.  Shouldn't we modify end point here
@@ -6918,9 +6972,6 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     }
     aRangeItem.mStartContainer = splitPointAtStart.GetContainer();
     aRangeItem.mStartOffset = splitPointAtStart.Offset();
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitStartInlineResult.IgnoreCaretPointSuggestion();
   }
 
   return NS_OK;
@@ -6955,7 +7006,13 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.unwrapErr();
     }
-
+    nsresult rv = splitNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return rv;
+    }
     // Put previous node at the split point.
     if (nsIContent* previousContent = splitNodeResult.GetPreviousContent()) {
       // Might not be a left node.  A break might have been at the very
@@ -6969,7 +7026,7 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
 
     // Move break outside of container and also put in node list
     // MOZ_KnownLive because 'arrayOfBRElements' is guaranteed to keep it alive.
-    nsresult rv = MoveNodeWithTransaction(
+    rv = MoveNodeWithTransaction(
         MOZ_KnownLive(brElement),
         splitNodeResult.AtNextContent<EditorDOMPoint>());
     if (NS_WARN_IF(Destroyed())) {
@@ -7023,22 +7080,26 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
         MOZ_ASSERT(pointToSplit.IsInContentNode());
 
         // Split the header
-        SplitNodeResult result = SplitNodeDeepWithTransaction(
+        SplitNodeResult splitResult = SplitNodeDeepWithTransaction(
             aHeadingElement, pointToSplit,
             SplitAtEdges::eAllowToCreateEmptyContainer);
         NS_WARNING_ASSERTION(
-            result.isOk(),
+            splitResult.isOk(),
             "HTMLEditor::SplitNodeDeepWithTransaction(aHeadingElement, "
             "SplitAtEdges::eAllowToCreateEmptyContainer) failed");
-        return result;
+        return splitResult;
       }();
   if (splitHeadingResult.isErr()) {
     NS_WARNING("Failed to splitting aHeadingElement");
     return Err(splitHeadingResult.unwrapErr());
   }
-  // When adding caret suggestion to SplitNodeResult, here didn't change
-  // selection so that just ignore it.
-  splitHeadingResult.IgnoreCaretPointSuggestion();
+  nsresult rv = splitHeadingResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
   if (MOZ_UNLIKELY(!splitHeadingResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
@@ -7083,7 +7144,7 @@ HTMLEditor::HandleInsertParagraphInHeadingElement(
   // If the right heading element is empty, delete it.
   // MOZ_KnownLive(rightHeadingElement) because it's grabbed by
   // splitHeadingResult.
-  nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
+  rv = DeleteNodeWithTransaction(MOZ_KnownLive(*rightHeadingElement));
   if (NS_WARN_IF(Destroyed())) {
     return Err(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -7426,9 +7487,13 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
     return splitDivOrPResult.unwrapErr();
   }
-  // When adding caret suggestion to SplitNodeResult, here didn't change
-  // selection so that just ignore it.
-  splitDivOrPResult.IgnoreCaretPointSuggestion();
+  nsresult rv = splitDivOrPResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+    return rv;
+  }
   if (MOZ_UNLIKELY(!splitDivOrPResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction() didn't split any nodes");
@@ -7462,7 +7527,7 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
   // Remove ID attribute on the paragraph from the right node.
   // MOZ_KnownLive(rightDivOrParagraphElement) because it's grabbed by
   // splitDivOrPResult.
-  nsresult rv = RemoveAttributeWithTransaction(
+  rv = RemoveAttributeWithTransaction(
       MOZ_KnownLive(*rightDivOrParagraphElement), *nsGkAtoms::id);
   if (NS_WARN_IF(Destroyed())) {
     return NS_ERROR_EDITOR_DESTROYED;
@@ -7664,18 +7729,17 @@ HTMLEditor::HandleInsertParagraphInListItemElement(
   const SplitNodeResult splitListItemResult =
       SplitNodeDeepWithTransaction(aListItemElement, pointToSplit,
                                    SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (splitListItemResult.EditorDestroyed()) {
-    NS_WARNING(
-        "HTMLEditor::SplitNodeDeepWithTransaction() caused destroying the "
-        "editor");
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+  if (splitListItemResult.isErr()) {
+    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
+    return Err(splitListItemResult.unwrapErr());
   }
-  NS_WARNING_ASSERTION(
-      splitListItemResult.isOk(),
-      "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
-  // When adding caret suggestion to SplitNodeResult, here didn't change
-  // selection so that just ignore it.
-  splitListItemResult.IgnoreCaretPointSuggestion();
+  nsresult rv = splitListItemResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+    return Err(rv);
+  }
 
   if (MOZ_UNLIKELY(!aListItemElement.GetParent())) {
     NS_WARNING("Somebody disconnected the target listitem from the parent");
@@ -8292,9 +8356,19 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
   SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
       MOZ_KnownLive(*pointToInsert.GetChild()), aStartOfDeepestRightNode,
       SplitAtEdges::eAllowToCreateEmptyContainer);
-  NS_WARNING_ASSERTION(splitNodeResult.isOk(),
-                       "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
-                       "eAllowToCreateEmptyContainer) failed");
+  if (splitNodeResult.isErr()) {
+    NS_WARNING(
+        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
+        "eAllowToCreateEmptyContainer) failed");
+    return splitNodeResult;
+  }
+  nsresult rv = splitNodeResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+    return SplitNodeResult(rv);
+  }
   return splitNodeResult;
 }
 

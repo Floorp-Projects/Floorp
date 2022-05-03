@@ -975,9 +975,14 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult;
     }
-    // When adding caret suggestion to SplitNodeResult, here didn't change
-    // selection so that just ignore it.
-    splitNodeResult.IgnoreCaretPointSuggestion();
+    nsresult rv = splitNodeResult.SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("SplitNodeResult::SuggestCaretPointTo() failed");
+      return SplitNodeResult(rv);
+    }
+
     // If it's not handled, it means that `content` is not a splitable node
     // like a void element even if it has some children, and the split point
     // is middle of it.
