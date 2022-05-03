@@ -9,7 +9,6 @@ include protocol PProfiler;
 include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
 include protocol PHttpConnectionMgr;
-include protocol PFileDescriptorSet;
 include protocol PInputChannelThrottleQueue;
 include protocol PBackgroundStarter;
 include protocol PAltService;
@@ -94,7 +93,6 @@ sync protocol PSocketProcess
 {
   manages PDNSRequest;
   manages PWebrtcTCPSocket;
-  manages PFileDescriptorSet;
   manages PHttpTransaction;
   manages PHttpConnectionMgr;
   manages PInputChannelThrottleQueue;
@@ -229,7 +227,6 @@ child:
 #endif  // defined(XP_WIN)
 
 both:
-  async PFileDescriptorSet(FileDescriptor fd);
   async PDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                     uint16_t type, OriginAttributes originAttributes,
                     uint32_t flags);

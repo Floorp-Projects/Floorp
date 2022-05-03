@@ -18,7 +18,6 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/extensions/StreamFilterParent.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
