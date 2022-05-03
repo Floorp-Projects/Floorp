@@ -7,7 +7,7 @@ var EXPORTED_SYMBOLS = ["ctypes"];
 
 /*
  * This is the js module for ctypes. Import it like so:
- *   Components.utils.import("resource://gre/modules/ctypes.jsm");
+ *   const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
  *
  * This will create a 'ctypes' object, which provides an interface to describe
  * and instantiate C types and call C functions from a dynamic library.

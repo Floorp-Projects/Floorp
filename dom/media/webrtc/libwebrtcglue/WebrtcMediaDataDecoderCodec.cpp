@@ -17,8 +17,8 @@ namespace mozilla {
 
 WebrtcMediaDataDecoder::WebrtcMediaDataDecoder(nsACString& aCodecMimeType)
     : mThreadPool(GetMediaThreadPool(MediaThreadType::SUPERVISOR)),
-      mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
-                               "WebrtcMediaDataDecoder::mTaskQueue")),
+      mTaskQueue(TaskQueue::Create(do_AddRef(mThreadPool),
+                                   "WebrtcMediaDataDecoder::mTaskQueue")),
       mImageContainer(MakeAndAddRef<layers::ImageContainer>(
           layers::ImageContainer::ASYNCHRONOUS)),
       mFactory(new PDMFactory()),
@@ -150,8 +150,8 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
   }
 
   RefPtr<TaskQueue> tq =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "webrtc decode TaskQueue");
+      TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+                        "webrtc decode TaskQueue");
   RefPtr<MediaDataDecoder> decoder;
 
   media::Await(do_AddRef(mThreadPool), InvokeAsync(tq, __func__, [&] {

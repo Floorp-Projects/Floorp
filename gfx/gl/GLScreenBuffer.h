@@ -69,7 +69,7 @@ class SwapChain final {
 
   void ClearPool();
   const auto& FrontBuffer() const { return mFrontBuffer; }
-  UniquePtr<SwapChainPresenter> Acquire(const gfx::IntSize&);
+  UniquePtr<SwapChainPresenter> Acquire(const gfx::IntSize&, gfx::ColorSpace2);
 };
 
 }  // namespace gl

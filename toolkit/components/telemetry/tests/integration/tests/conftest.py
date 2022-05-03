@@ -110,7 +110,9 @@ class Browser(object):
         """
 
         script = """\
-        let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+        let { Services } = ChromeUtils.import(
+          "resource://gre/modules/Services.jsm"
+        );
         Services.telemetry.setEventRecordingEnabled("navigation", true);
         """
 
@@ -127,8 +129,12 @@ class Browser(object):
         """Return the ID of the current client."""
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             return self.marionette.execute_script(
-                'Cu.import("resource://gre/modules/ClientID.jsm");'
-                "return ClientID.getCachedClientID();"
+                """\
+                const { ClientID } = ChromeUtils.import(
+                  "resource://gre/modules/ClientID.jsm"
+                );
+                return ClientID.getCachedClientID();
+            """
             )
 
     def get_default_search_engine(self):
@@ -162,7 +168,9 @@ class Browser(object):
             # triggers an "environment-change" ping.
             script = """\
                     let [resolve] = arguments;
-            Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
+            const { TelemetryEnvironment } = ChromeUtils.import(
+              "resource://gre/modules/TelemetryEnvironment.jsm"
+            );
             TelemetryEnvironment.onInitialized().then(resolve);
             """
 

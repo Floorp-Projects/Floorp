@@ -42,15 +42,21 @@ class TestSwitchToWindowContent(WindowManagerMixin, MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             return self.marionette.execute_script(
                 """
-                Components.utils.import("resource://gre/modules/AppConstants.jsm");
+                const { AppConstants } = ChromeUtils.import(
+                  "resource://gre/modules/AppConstants.jsm"
+                );
 
                 let win = null;
 
                 if (AppConstants.MOZ_APP_NAME == "fennec") {
-                  Components.utils.import("resource://gre/modules/Services.jsm");
+                  const { Services } = ChromeUtils.import(
+                    "resource://gre/modules/Services.jsm"
+                  );
                   win = Services.wm.getMostRecentWindow("navigator:browser");
                 } else {
-                  Components.utils.import("resource:///modules/BrowserWindowTracker.jsm");
+                  const { BrowserWindowTracker } = ChromeUtils.import(
+                    "resource:///modules/BrowserWindowTracker.jsm"
+                  );
                   win = BrowserWindowTracker.getTopWindow();
                 }
 

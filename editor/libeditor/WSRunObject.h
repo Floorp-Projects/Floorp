@@ -13,6 +13,7 @@
 #include "HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
@@ -1459,12 +1460,12 @@ class WhiteSpaceVisibilityKeeper final {
    * @param aPointToInsert  The point to insert new <br> element.  Note that
    *                        it'll be inserted before this point.  I.e., the
    *                        point will be the point of new <br>.
-   * @return                The new <br> node.  If failed to create new <br>
-   *                        node, returns nullptr.
+   * @return                If succeeded, returns the new <br> element and
+   *                        point to put caret.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<RefPtr<Element>, nsresult>
-  InsertBRElement(HTMLEditor& aHTMLEditor,
-                  const EditorDOMPoint& aPointToInsert);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static CreateElementResult InsertBRElement(
+      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPointToInsert,
+      Element& aEditingHost);
 
   /**
    * InsertText() inserts aStringToInsert to aPointToInsert and makes any needed

@@ -64,9 +64,9 @@ class DOMLocalization : public intl::Localization {
   already_AddRefed<Promise> TranslateFragment(nsINode& aNode, ErrorResult& aRv);
 
   already_AddRefed<Promise> TranslateElements(
-      const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
+      const nsTArray<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
   already_AddRefed<Promise> TranslateElements(
-      const Sequence<OwningNonNull<Element>>& aElements,
+      const nsTArray<OwningNonNull<Element>>& aElements,
       nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
   already_AddRefed<Promise> TranslateRoots(ErrorResult& aRv);

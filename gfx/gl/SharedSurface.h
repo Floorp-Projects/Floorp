@@ -60,9 +60,23 @@ struct PartialSharedSurfaceDesc {
   const SharedSurfaceType type;
   const layers::TextureType consumerType;
   const bool canRecycle;
+
+  bool operator==(const PartialSharedSurfaceDesc& rhs) const {
+    return gl == rhs.gl && type == rhs.type &&
+           consumerType == rhs.consumerType && canRecycle == rhs.canRecycle;
+  }
 };
 struct SharedSurfaceDesc : public PartialSharedSurfaceDesc {
   gfx::IntSize size = {};
+  gfx::ColorSpace2 colorSpace = gfx::ColorSpace2::UNKNOWN;
+
+  bool operator==(const SharedSurfaceDesc& rhs) const {
+    return PartialSharedSurfaceDesc::operator==(rhs) && size == rhs.size &&
+           colorSpace == rhs.colorSpace;
+  }
+  bool operator!=(const SharedSurfaceDesc& rhs) const {
+    return !(*this == rhs);
+  }
 };
 
 class SharedSurface {
@@ -166,8 +180,9 @@ class SurfaceFactory {
       const SharedSurfaceDesc&) = 0;
 
  public:
-  UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) {
-    return CreateSharedImpl({mDesc, size});
+  UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size,
+                                        gfx::ColorSpace2 cs) {
+    return CreateSharedImpl({mDesc, size, cs});
   }
 };
 

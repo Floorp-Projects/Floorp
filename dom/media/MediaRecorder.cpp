@@ -822,7 +822,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     }
 
     mEncoderThread =
-        MakeAndAddRef<TaskQueue>(pool.forget(), "MediaRecorderReadThread");
+        TaskQueue::Create(pool.forget(), "MediaRecorderReadThread");
 
     MOZ_DIAGNOSTIC_ASSERT(!mShutdownBlocker);
     // Add a shutdown blocker so mEncoderThread can be shutdown async.

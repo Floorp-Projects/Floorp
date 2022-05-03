@@ -136,6 +136,7 @@ nsCocoaWindow::nsCocoaWindow()
       mAnimationType(nsIWidget::eGenericWindowAnimation),
       mWindowMadeHere(false),
       mSheetNeedsShow(false),
+      mSizeMode(nsSizeMode_Normal),
       mInFullScreenMode(false),
       mInFullScreenTransition(false),
       mIgnoreOcclusionCount(0),

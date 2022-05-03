@@ -842,6 +842,15 @@ struct ReflowInput : public SizeComputationInput {
     return mDiscoveredClearance && *mDiscoveredClearance;
   }
 
+  // Returns true if we should apply automatic minimum on the block axis.
+  //
+  // The automatic minimum size in the ratio-dependent axis of a box with a
+  // preferred aspect ratio that is neither a replaced element nor a scroll
+  // container is its min-content size clamped from above by its maximum size.
+  //
+  // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
+  bool ShouldApplyAutomaticMinimumOnBlockAxis() const;
+
   // Compute the offsets for a relative position element
   //
   // @param aWM the writing mode of aCBSize and the returned offsets.

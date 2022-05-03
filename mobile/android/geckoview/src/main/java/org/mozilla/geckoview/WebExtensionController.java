@@ -285,13 +285,26 @@ public class WebExtensionController {
       return null;
     }
 
-    /*
-    TODO: Bug 1601420
+    /**
+     * Called whenever permissions are requested. This is intended as an opportunity for the app to
+     * prompt the user for the permissions required by this extension at runtime.
+     *
+     * @param extension The {@link WebExtension} that is about to be installed. You can use {@link
+     *     WebExtension#metaData} to gather information about this extension when building the user
+     *     prompt dialog.
+     * @param permissions The permissions that are requested.
+     * @param origins The requested host permissions.
+     * @return A {@link GeckoResult} that completes to either {@link AllowOrDeny#ALLOW ALLOW} if the
+     *     request should be approved or {@link AllowOrDeny#DENY DENY} if the request should be
+     *     denied. A null value will be interpreted as {@link AllowOrDeny#DENY DENY}.
+     */
+    @Nullable
     default GeckoResult<AllowOrDeny> onOptionalPrompt(
-            WebExtension extension,
-            String[] optionalPermissions) {
-        return null;
-    } */
+        final @NonNull WebExtension extension,
+        final @NonNull String[] permissions,
+        final @NonNull String[] origins) {
+      return null;
+    }
   }
 
   public interface DebuggerDelegate {
@@ -755,6 +768,9 @@ public class WebExtensionController {
               } else if ("GeckoView:WebExtension:Download".equals(event)) {
                 download(message, extension);
                 return;
+              } else if ("GeckoView:WebExtension:OptionalPrompt".equals(event)) {
+                optionalPrompt(message, extension);
+                return;
               }
 
               // GeckoView:WebExtension:Connect and GeckoView:WebExtension:Message
@@ -863,6 +879,34 @@ public class WebExtensionController {
     }
 
     callback.resolveTo(
+        promptResponse.map(
+            allowOrDeny -> {
+              final GeckoBundle response = new GeckoBundle(1);
+              response.putBoolean("allow", AllowOrDeny.ALLOW.equals(allowOrDeny));
+              return response;
+            }));
+  }
+
+  private void optionalPrompt(final Message message, final WebExtension extension) {
+    if (mPromptDelegate == null) {
+      Log.e(
+          LOGTAG,
+          "Tried to request optional permissions for extension "
+              + extension.id
+              + " but no delegate is registered");
+      return;
+    }
+
+    final String[] permissions =
+        message.bundle.getBundle("permissions").getStringArray("permissions");
+    final String[] origins = message.bundle.getBundle("permissions").getStringArray("origins");
+    final GeckoResult<AllowOrDeny> promptResponse =
+        mPromptDelegate.onOptionalPrompt(extension, permissions, origins);
+    if (promptResponse == null) {
+      return;
+    }
+
+    message.callback.resolveTo(
         promptResponse.map(
             allowOrDeny -> {
               final GeckoBundle response = new GeckoBundle(1);

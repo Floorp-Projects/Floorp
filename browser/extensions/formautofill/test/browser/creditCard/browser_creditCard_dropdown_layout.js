@@ -4,9 +4,7 @@ const CC_URL =
   "https://example.org/browser/browser/extensions/formautofill/test/browser/creditCard/autocomplete_creditcard_basic.html";
 
 add_task(async function setup_storage() {
-  await saveCreditCard(TEST_CREDIT_CARD_1);
-  await saveCreditCard(TEST_CREDIT_CARD_2);
-  await saveCreditCard(TEST_CREDIT_CARD_3);
+  await setStorage(TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3);
 });
 
 async function reopenPopupWithResizedInput(browser, selector, newSize) {

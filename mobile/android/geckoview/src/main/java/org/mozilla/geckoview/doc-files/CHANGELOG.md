@@ -19,12 +19,14 @@ exclude: true
   above when rendering in to a `SurfaceView`.
   ([bug 1762424]({{bugzilla}}1762424))
 - ⚠️ Deprecated old `GeckoDisplay.surfaceChanged` functions [[1]][101.4] [[2]][101.5].
+- Add [`WebExtensionController.optionalPrompt`][101.6] to allow handling of optional permission requests from extensions.
 
 [101.1]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(org.mozilla.geckoview.GeckoDisplay.SurfaceInfo)
 [101.2]: {{javadoc_uri}}/GeckoDisplay.SurfaceInfo.html
 [101.3]: https://developer.android.com/reference/android/view/SurfaceControl
 [101.4]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(android.view.Surface,int,int)
 [101.5]: {{javadoc_uri}}/GeckoDisplay.html#surfaceChanged(android.view.Surface,int,int,int,int)
+[101.6]: {{javadoc_uri}}/WebExtensionController.html#optionalPrompt(org.mozilla.geckoview.WebExtension.Message,org.mozilla.geckoview.WebExtension)
 
 ## v100
 - ⚠️ Changed [`GeckoSession.isOpen`][100.1] to `@UiThread`.
@@ -1164,4 +1166,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f05b7e0bc1dbbfe6f8aa189c552cd871d512e0f9
+[api-version]: 65d9eba33afce690f3c8af1d3b8eb5c51fab1e3d

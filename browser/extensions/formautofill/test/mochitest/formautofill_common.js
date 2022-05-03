@@ -9,7 +9,7 @@ let formFillChromeScript;
 let defaultTextColor;
 let expectingPopup = null;
 
-const { FormAutofillUtils } = SpecialPowers.Cu.import(
+const { FormAutofillUtils } = SpecialPowers.ChromeUtils.import(
   "resource://autofill/FormAutofillUtils.jsm"
 );
 

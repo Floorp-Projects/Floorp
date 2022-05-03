@@ -51,9 +51,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
                   : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9
                                                          : StreamType::Unknown),
-      mTaskQueue(
-          new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                        "AppleVTDecoder")),
+      mTaskQueue(TaskQueue::Create(
+          GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
+          "AppleVTDecoder")),
       mMaxRefFrames(
           mStreamType != StreamType::H264 ||
                   aOptions.contains(CreateDecoderParams::Option::LowLatency)

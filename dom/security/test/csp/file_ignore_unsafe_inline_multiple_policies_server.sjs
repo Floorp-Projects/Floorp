@@ -2,7 +2,7 @@
 // * Bug 1004703 - ignore 'unsafe-inline' if nonce- or hash-source specified
 // * Bug 1198422: should not block inline script if default-src is not specified
 
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.

@@ -356,23 +356,27 @@ class nsBlockFrame : public nsContainerFrame {
    * Returns whether aFrame is a block frame that will wrap its contents
    * around floats intruding on it from the outside.  (aFrame need not
    * be a block frame, but if it's not, the result will be false.)
+   *
+   * Note: We often use the term "float-avoiding block" to refer to
+   * block-level frames for whom this function returns false.
    */
   static bool BlockCanIntersectFloats(nsIFrame* aFrame);
 
   /**
    * Returns the inline size that needs to be cleared past floats for
-   * blocks that cannot intersect floats.  aState must already have
-   * GetFloatAvailableSpace called on it for the block-dir position that we
-   * care about (which need not be its current mBCoord)
+   * blocks that avoid (i.e. cannot intersect) floats.  aState must already
+   * have GetFloatAvailableSpace called on it for the block-dir position that
+   * we care about (which need not be its current mBCoord)
    */
-  struct ReplacedElementISizeToClear {
+  struct FloatAvoidingISizeToClear {
     // Note that we care about the inline-start margin but can ignore
     // the inline-end margin.
     nscoord marginIStart, borderBoxISize;
   };
-  static ReplacedElementISizeToClear ISizeToClearPastFloats(
+  static FloatAvoidingISizeToClear ISizeToClearPastFloats(
       const BlockReflowState& aState,
-      const mozilla::LogicalRect& aFloatAvailableSpace, nsIFrame* aFrame);
+      const mozilla::LogicalRect& aFloatAvailableSpace,
+      nsIFrame* aFloatAvoidingBlock);
 
   /**
    * Creates a contination for aFloat and adds it to the list of overflow

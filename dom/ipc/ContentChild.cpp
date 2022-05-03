@@ -110,7 +110,7 @@
 #include "mozilla/layers/ContentProcessController.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #ifdef NS_PRINTING
-#include "mozilla/layout/RemotePrintJobChild.h"
+#  include "mozilla/layout/RemotePrintJobChild.h"
 #endif
 #include "mozilla/loader/ScriptCacheActors.h"
 #include "mozilla/media/MediaChild.h"

@@ -8,9 +8,9 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { getArrayTypeNames } = require("devtools/shared/webconsole/messages");
 const {
   l10n,
-  getArrayTypeNames,
   getDescriptorValue,
 } = require("devtools/client/webconsole/utils/messages");
 loader.lazyGetter(this, "MODE", function() {

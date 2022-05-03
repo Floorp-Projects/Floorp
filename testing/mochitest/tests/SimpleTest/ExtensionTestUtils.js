@@ -1,6 +1,5 @@
-const { ExtensionTestCommon } = SpecialPowers.Cu.import(
-  "resource://testing-common/ExtensionTestCommon.jsm",
-  {}
+const { ExtensionTestCommon } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/ExtensionTestCommon.jsm"
 );
 
 var ExtensionTestUtils = {

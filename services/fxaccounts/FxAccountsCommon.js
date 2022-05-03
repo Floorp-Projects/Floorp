@@ -327,7 +327,7 @@ for (let id in exports) {
   this[id] = exports[id];
 }
 
-// Allow this file to be imported via Components.utils.import().
+// Allow this file to be imported via ChromeUtils.import().
 var EXPORTED_SYMBOLS = Object.keys(exports);
 
 // Set these up now that everything has been loaded into |this|.

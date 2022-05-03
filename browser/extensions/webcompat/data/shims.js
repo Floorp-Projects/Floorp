@@ -608,6 +608,19 @@ const AVAILABLE_SHIMS = [
     matches: ["*://js.maxmind.com/js/apis/geoip2/*/geoip2.js"],
     onlyIfBlockedByETP: true,
   },
+  {
+    id: "WebTrends",
+    platform: "all",
+    name: "WebTrends",
+    bug: "1766414",
+    file: "webtrends.js",
+    matches: [
+      "*://s.webtrends.com/js/advancedLinkTracking.js",
+      "*://s.webtrends.com/js/webtrends.js",
+      "*://s.webtrends.com/js/webtrends.min.js",
+    ],
+    onlyIfBlockedByETP: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;

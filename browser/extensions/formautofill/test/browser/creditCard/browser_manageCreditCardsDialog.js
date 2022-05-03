@@ -41,11 +41,13 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.reduceTimerPrecision", false]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
-  await saveCreditCard(TEST_CREDIT_CARD_2);
-  await saveCreditCard(TEST_CREDIT_CARD_3);
-  await saveCreditCard(TEST_CREDIT_CARD_4);
-  await saveCreditCard(TEST_CREDIT_CARD_5);
+  await setStorage(
+    TEST_CREDIT_CARD_1,
+    TEST_CREDIT_CARD_2,
+    TEST_CREDIT_CARD_3,
+    TEST_CREDIT_CARD_4,
+    TEST_CREDIT_CARD_5
+  );
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
@@ -142,7 +144,7 @@ add_task(async function test_removingSingleAndMultipleCreditCards() {
 });
 
 add_task(async function test_removingCreditCardsViaKeyboardDelete() {
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
     null,
@@ -172,7 +174,7 @@ add_task(async function test_creditCardsDialogWatchesStorageChanges() {
 
   let selRecords = win.document.querySelector(TEST_SELECTORS.selRecords);
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   await BrowserTestUtils.waitForEvent(selRecords, "RecordsLoaded");
   is(selRecords.length, 1, "One credit card is shown");
 
@@ -186,11 +188,11 @@ add_task(async function test_showCreditCardIcons() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.reduceTimerPrecision", false]],
   });
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
   let unknownCard = Object.assign({}, TEST_CREDIT_CARD_3, {
     "cc-type": "gringotts",
   });
-  await saveCreditCard(unknownCard);
+  await setStorage(unknownCard);
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,
@@ -251,7 +253,7 @@ add_task(async function test_hasEditLoginPrompt() {
     return;
   }
 
-  await saveCreditCard(TEST_CREDIT_CARD_1);
+  await setStorage(TEST_CREDIT_CARD_1);
 
   let win = window.openDialog(
     MANAGE_CREDIT_CARDS_DIALOG_URL,

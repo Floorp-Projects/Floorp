@@ -101,11 +101,7 @@ inline void JustTestingCompilation() {
   CallQueryReferent(myWeakRef, &myITestService);
 
   /* Test CallCreateInstance */
-
-  CallCreateInstance(kTestServiceCID, mySupportsPtr, &myITestService);
   CallCreateInstance(kTestServiceCID, &myITestService);
-  CallCreateInstance(NS_TEST_SERVICE_CONTRACTID, mySupportsPtr,
-                     &myITestService);
   CallCreateInstance(NS_TEST_SERVICE_CONTRACTID, &myITestService);
 
   /* Test CallGetService */

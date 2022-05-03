@@ -143,15 +143,15 @@ class BlockReflowState {
 
   // Returns the first coordinate >= aBCoord that clears the
   // floats indicated by aBreakType and has enough inline size between floats
-  // (or no floats remaining) to accomodate aReplacedBlock.
+  // (or no floats remaining) to accomodate aFloatAvoidingBlock.
   enum class ClearFloatsResult : uint8_t {
     BCoordNoChange,
     BCoordAdvanced,
     FloatsPushedOrSplit,
   };
   std::tuple<nscoord, ClearFloatsResult> ClearFloats(
-      nscoord aBCoord, mozilla::StyleClear aBreakType,
-      nsIFrame* aReplacedBlock = nullptr);
+      nscoord aBCoord, StyleClear aBreakType,
+      nsIFrame* aFloatAvoidingBlock = nullptr);
 
   nsFloatManager* FloatManager() const {
     MOZ_ASSERT(mReflowInput.mFloatManager,
@@ -165,9 +165,9 @@ class BlockReflowState {
   // Return false if it did not advance, which only happens for
   // constrained heights (and means that we should get pushed to the
   // next column/page).
-  bool AdvanceToNextBand(const mozilla::LogicalRect& aFloatAvailableSpace,
+  bool AdvanceToNextBand(const LogicalRect& aFloatAvailableSpace,
                          nscoord* aBCoord) const {
-    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
+    WritingMode wm = mReflowInput.GetWritingMode();
     if (aFloatAvailableSpace.BSize(wm) > 0) {
       // See if there's room in the next band.
       *aBCoord += aFloatAvailableSpace.BSize(wm);
@@ -183,8 +183,8 @@ class BlockReflowState {
     return true;
   }
 
-  bool ReplacedBlockFitsInAvailSpace(
-      nsIFrame* aReplacedBlock,
+  bool FloatAvoidingBlockFitsInAvailSpace(
+      nsIFrame* aFloatAvoidingBlock,
       const nsFlowAreaRect& aFloatAvailableSpace) const;
 
   bool IsAdjacentWithTop() const {
@@ -194,23 +194,24 @@ class BlockReflowState {
   /**
    * Return mBlock's computed physical border+padding with GetSkipSides applied.
    */
-  const mozilla::LogicalMargin& BorderPadding() const { return mBorderPadding; }
+  const LogicalMargin& BorderPadding() const { return mBorderPadding; }
 
   // Reconstruct the previous block-end margin that goes before |aLine|.
   void ReconstructMarginBefore(nsLineList::iterator aLine);
 
   // Caller must have called GetFloatAvailableSpace for the correct position
   // (which need not be the current mBCoord).
-  void ComputeReplacedBlockOffsetsForFloats(
-      nsIFrame* aFrame, const mozilla::LogicalRect& aFloatAvailableSpace,
-      nscoord& aIStartResult, nscoord& aIEndResult) const;
+  void ComputeFloatAvoidingOffsets(nsIFrame* aFloatAvoidingBlock,
+                                   const LogicalRect& aFloatAvailableSpace,
+                                   nscoord& aIStartResult,
+                                   nscoord& aIEndResult) const;
 
   // Compute the amount of available space for reflowing a block frame at the
   // current block-direction coordinate mBCoord. Caller must have called
   // GetFloatAvailableSpace for the current mBCoord.
-  mozilla::LogicalRect ComputeBlockAvailSpace(
-      nsIFrame* aFrame, const nsFlowAreaRect& aFloatAvailableSpace,
-      bool aBlockAvoidsFloats);
+  LogicalRect ComputeBlockAvailSpace(nsIFrame* aFrame,
+                                     const nsFlowAreaRect& aFloatAvailableSpace,
+                                     bool aBlockAvoidsFloats);
 
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
@@ -259,7 +260,7 @@ class BlockReflowState {
   // mContentArea.BEnd() should only be called after checking that
   // mContentArea.BSize is not NS_UNCONSTRAINEDSIZE; otherwise
   // coordinate overflow may occur.
-  mozilla::LogicalRect mContentArea;
+  LogicalRect mContentArea;
   nscoord ContentIStart() const {
     return mContentArea.IStart(mReflowInput.GetWritingMode());
   }
@@ -281,8 +282,8 @@ class BlockReflowState {
         "ContentBSize() is unconstrained, so ContentBEnd() may overflow.");
     return mContentArea.BEnd(mReflowInput.GetWritingMode());
   }
-  mozilla::LogicalSize ContentSize(mozilla::WritingMode aWM) const {
-    mozilla::WritingMode wm = mReflowInput.GetWritingMode();
+  LogicalSize ContentSize(WritingMode aWM) const {
+    WritingMode wm = mReflowInput.GetWritingMode();
     return mContentArea.Size(wm).ConvertTo(aWM, wm);
   }
 
@@ -329,10 +330,10 @@ class BlockReflowState {
   nscoord mBCoord;
 
   // mBlock's computed physical border+padding with GetSkipSides applied.
-  mozilla::LogicalMargin mBorderPadding;
+  LogicalMargin mBorderPadding;
 
   // The overflow areas of all floats placed so far
-  mozilla::OverflowAreas mFloatOverflowAreas;
+  OverflowAreas mFloatOverflowAreas;
 
   nsFloatCacheFreeList mFloatCacheFreeList;
 
@@ -385,7 +386,7 @@ class BlockReflowState {
   // place the line. When redoing the line, it will be used to query the
   // accurate float available space in AddFloat() and
   // nsBlockFrame::PlaceLine().
-  mozilla::Maybe<nscoord> mLineBSize;
+  Maybe<nscoord> mLineBSize;
 
  private:
   bool CanPlaceFloat(nscoord aFloatISize,

@@ -3477,8 +3477,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(Uint16) { PUSH_INT32((int32_t)GET_UINT16(REGS.pc)); }
     END_CASE(Uint16)
 
-    CASE(Uint24)
-    CASE(ResumeIndex) { PUSH_INT32((int32_t)GET_UINT24(REGS.pc)); }
+    CASE(Uint24) { PUSH_INT32((int32_t)GET_UINT24(REGS.pc)); }
     END_CASE(Uint24)
 
     CASE(Int8) { PUSH_INT32(GET_INT8(REGS.pc)); }
@@ -4093,16 +4092,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(FinishTuple)
 #endif
 
-    CASE(Retsub) {
-      Value resumeIndex;
-      POP_COPY_TO(resumeIndex);
-      MOZ_ASSERT(resumeIndex.toInt32() >= 0);
-
-      uint32_t offset = script->resumeOffsets()[resumeIndex.toInt32()];
-      REGS.pc = script->offsetToPC(offset);
-      ADVANCE_AND_DISPATCH(0);
-    }
-
     CASE(Exception) {
       PUSH_NULL();
       MutableHandleValue res = REGS.stackHandleAt(-1);
@@ -4560,7 +4549,7 @@ error:
 
     case FinallyContinuation: {
       /*
-       * Push (exception, true) pair for finally to indicate that [retsub]
+       * Push (exception, true) pair for finally to indicate that we
        * should rethrow the exception.
        */
       ReservedRooted<Value> exception(&rootValue0);

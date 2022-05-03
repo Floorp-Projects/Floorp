@@ -70,7 +70,7 @@ static nsresult InitContext(vpx_codec_ctx_t* aCtx, const VideoInfo& aInfo,
 VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
     : mImageContainer(aParams.mImageContainer),
       mImageAllocator(aParams.mKnowsCompositor),
-      mTaskQueue(new TaskQueue(
+      mTaskQueue(TaskQueue::Create(
           GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER), "VPXDecoder")),
       mInfo(aParams.VideoConfig()),
       mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType)),

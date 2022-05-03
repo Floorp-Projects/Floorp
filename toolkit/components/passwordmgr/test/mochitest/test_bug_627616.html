@@ -78,12 +78,10 @@
                         {expectedDialogs: 0, test: testAnonymousNoAuth}];
 
     let mm = runInParent(() => {
-      const { classes: parentCc, interfaces: parentCi, utils: parentCu } = Components;
+      const { classes: parentCc, interfaces: parentCi } = Components;
 
       let {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
       let {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-      parentCu.import("resource://gre/modules/Timer.jsm");
-      parentCu.import("resource://gre/modules/XPCOMUtils.jsm");
 
       let channel = NetUtil.newChannel({
         uri: "http://example.com",

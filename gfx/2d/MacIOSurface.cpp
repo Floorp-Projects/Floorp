@@ -634,3 +634,27 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
   }
   return err;
 }
+
+void MacIOSurface::SetColorSpace(const mozilla::gfx::ColorSpace2 cs) const {
+  Maybe<CFStringRef> str;
+  switch (cs) {
+    case gfx::ColorSpace2::UNKNOWN:
+      break;
+    case gfx::ColorSpace2::SRGB:
+      str = Some(kCGColorSpaceSRGB);
+      break;
+    case gfx::ColorSpace2::DISPLAY_P3:
+      str = Some(kCGColorSpaceDisplayP3);
+      break;
+    case gfx::ColorSpace2::BT601_525:  // Doesn't really have a better option.
+    case gfx::ColorSpace2::BT709:
+      str = Some(kCGColorSpaceITUR_709);
+      break;
+    case gfx::ColorSpace2::BT2020:
+      str = Some(kCGColorSpaceITUR_2020);
+      break;
+  }
+  if (str) {
+    IOSurfaceSetValue(mIOSurfaceRef.get(), CFSTR("IOSurfaceColorSpace"), *str);
+  }
+}

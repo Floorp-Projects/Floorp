@@ -22,7 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1154791
 
 <script class="testbody" type="application/javascript">
 
-let {maybeOnSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+let { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
 
 /** Test for Bug 1154791 **/
 SimpleTest.waitForExplicitFinish();

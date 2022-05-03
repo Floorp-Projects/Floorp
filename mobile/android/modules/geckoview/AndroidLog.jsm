@@ -10,7 +10,8 @@
  * <http://developer.android.com/reference/android/util/Log.html>.
  *
  * // Import it as a JSM:
- * let Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog;
+ * let Log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm")
+ *   .AndroidLog;
  *
  * // Or require it in a chrome worker:
  * importScripts("resource://gre/modules/workers/require.js");

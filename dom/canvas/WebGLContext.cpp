@@ -113,6 +113,8 @@ bool WebGLContextOptions::operator==(const WebGLContextOptions& r) const {
   eq &= (failIfMajorPerformanceCaveat == r.failIfMajorPerformanceCaveat);
   eq &= (xrCompatible == r.xrCompatible);
   eq &= (powerPreference == r.powerPreference);
+  eq &= (colorSpace == r.colorSpace);
+  eq &= (ignoreColorSpace == r.ignoreColorSpace);
   return eq;
 }
 
@@ -865,6 +867,13 @@ constexpr auto MakeArray(Args... args) -> std::array<T, sizeof...(Args)> {
   return {{static_cast<T>(args)...}};
 }
 
+inline gfx::ColorSpace2 ToColorSpace2(const WebGLContextOptions& options) {
+  if (options.ignoreColorSpace) {
+    return gfx::ColorSpace2::UNKNOWN;
+  }
+  return gfx::ToColorSpace2(options.colorSpace);
+}
+
 // -
 
 // For an overview of how WebGL compositing works, see:
@@ -875,7 +884,8 @@ bool WebGLContext::PresentInto(gl::SwapChain& swapChain) {
   if (!ValidateAndInitFB(nullptr)) return false;
 
   {
-    auto presenter = swapChain.Acquire(mDefaultFB->mSize);
+    const auto colorSpace = ToColorSpace2(mOptions);
+    auto presenter = swapChain.Acquire(mDefaultFB->mSize, colorSpace);
     if (!presenter) {
       GenerateWarning("Swap chain surface creation failed.");
       LoseContext();
@@ -916,7 +926,8 @@ bool WebGLContext::PresentIntoXR(gl::SwapChain& swapChain,
                                  const gl::MozFramebuffer& fb) {
   OnEndOfFrame();
 
-  auto presenter = swapChain.Acquire(fb.mSize);
+  const auto colorSpace = ToColorSpace2(mOptions);
+  auto presenter = swapChain.Acquire(fb.mSize, colorSpace);
   if (!presenter) {
     GenerateWarning("Swap chain surface creation failed.");
     LoseContext();
@@ -1002,7 +1013,9 @@ void WebGLContext::CopyToSwapChain(WebGLFramebuffer* const srcFb,
 
   InitSwapChain(*gl, srcFb->mSwapChain, consumerType);
 
-  auto presenter = srcFb->mSwapChain.Acquire(size);
+  // ColorSpace will need to be part of SwapChainOptions for DTWebgl.
+  const auto colorSpace = ToColorSpace2(mOptions);
+  auto presenter = srcFb->mSwapChain.Acquire(size, colorSpace);
   if (!presenter) {
     GenerateWarning("Swap chain surface creation failed.");
     LoseContext();

@@ -564,26 +564,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 ]
                 results.append(power_result)
 
-            if self.browsertime_visualmetrics:
-                vismet_result = {
-                    "bt_ver": bt_ver,
-                    "browser": bt_browser,
-                    "url": bt_url,
-                    "name": "%s%s" % (test_name, extra),
-                    "measurements": {},
-                    "statistics": {},
-                }
-                for cycle in raw_result["visualMetrics"]:
-                    for metric in cycle:
-                        if "progress" in metric.lower():
-                            # Bug 1665750 - Determine if we should display progress
-                            continue
-                        vismet_result["measurements"].setdefault(metric, []).append(
-                            cycle[metric]
-                        )
-                vismet_result["statistics"] = raw_result["statistics"]["visualMetrics"]
-                results.append(vismet_result)
-
             custom_types = raw_result["extras"][0]
             if custom_types:
                 for custom_type in custom_types:
@@ -631,6 +611,19 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                     bt_result["statistics"][bt] = _get_raptor_val(
                         raw_result["statistics"]["timings"], raptor, retval={}
                     )
+
+                if self.browsertime_visualmetrics:
+                    for cycle in raw_result["visualMetrics"]:
+                        for metric in cycle:
+                            if "progress" in metric.lower():
+                                # Bug 1665750 - Determine if we should display progress
+                                continue
+                            bt_result["measurements"].setdefault(metric, []).append(
+                                cycle[metric]
+                            )
+                            bt_result["statistics"][metric] = raw_result["statistics"][
+                                "visualMetrics"
+                            ][metric]
 
             results.append(bt_result)
 

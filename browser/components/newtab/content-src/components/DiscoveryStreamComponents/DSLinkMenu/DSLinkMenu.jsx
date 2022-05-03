@@ -9,12 +9,16 @@ import React from "react";
 export class DSLinkMenu extends React.PureComponent {
   render() {
     const { index, dispatch } = this.props;
+    let pocketMenuOptions = [];
+    if (this.props.pocket_button_enabled) {
+      pocketMenuOptions = this.props.saveToPocketCard
+        ? ["CheckDeleteFromPocket"]
+        : ["CheckSavedToPocket"];
+    }
     const TOP_STORIES_CONTEXT_MENU_OPTIONS = [
       "CheckBookmark",
       "CheckArchiveFromPocket",
-      ...(this.props.saveToPocketCard
-        ? ["CheckDeleteFromPocket"]
-        : ["CheckSavedToPocket"]),
+      ...pocketMenuOptions,
       "Separator",
       "OpenInNewWindow",
       "OpenInPrivateWindow",

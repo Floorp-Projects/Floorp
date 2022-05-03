@@ -60,33 +60,16 @@ bool TryEmitter::emitTry() {
 }
 
 bool TryEmitter::emitJumpToFinallyWithFallthrough() {
-  // The finally block expects two values on the stack: a boolean to
-  // indicate whether we're currently throwing an exception (false
-  // in this case), and either a resume index or the exception being
-  // thrown. Push the resume index for the code immediately
-  // following the finally.
-  BytecodeOffset off;
-  if (!bce_->emitN(JSOp::ResumeIndex, 3, &off)) {
-    return false;
-  }
-  if (!controlInfo_->defaultResumeIndexOffsets_.append(off)) {
-    return false;
-  }
+  uint32_t stackDepthForNextBlock = bce_->bytecodeSection().stackDepth();
 
-  // Push false for |throwing|.
-  if (!bce_->emit1(JSOp::False)) {
-    return false;
-  }
-
-  // Jump to the finally block.
-  if (!bce_->emitJumpNoFallthrough(JSOp::Goto, &controlInfo_->finallyJumps_)) {
+  // The fallthrough continuation is special-cased with index 0.
+  uint32_t idx = TryFinallyControl::SpecialContinuations::Fallthrough;
+  if (!bce_->emitJumpToFinally(&controlInfo_->finallyJumps_, idx)) {
     return false;
   }
 
   // Reset the stack depth for the following catch or finally block.
-  uint32_t stackDepthForNextBlock = bce_->bytecodeSection().stackDepth() - 2;
   bce_->bytecodeSection().setStackDepth(stackDepthForNextBlock);
-
   return true;
 }
 
@@ -261,14 +244,15 @@ bool TryEmitter::emitFinallyEnd() {
     return false;
   }
 
-  if (controlInfo_ && controlInfo_->hasNonLocalJumps()) {
-    if (!bce_->emit1(JSOp::Retsub)) {
+  if (controlInfo_ && !controlInfo_->continuations_.empty()) {
+    if (!controlInfo_->emitContinuations(bce_)) {
       return false;
     }
   } else {
     // If there are no non-local jumps, then the only possible jump target
     // is the code immediately following this finally block. Instead of
-    // emitting a retsub, we can simply pop the resume index and fall through.
+    // emitting a tableswitch, we can simply pop the continuation index
+    // and fall through.
     if (!bce_->emit1(JSOp::Pop)) {
       return false;
     }
@@ -297,24 +281,7 @@ bool TryEmitter::emitEnd() {
 
   MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
-  // Fix up ResumeIndex ops pointing to the code following the finally block.
-  if (hasFinally() && controlInfo_) {
-    MOZ_ASSERT(!catchAndFinallyJump_.offset.valid());
-
-    JumpTarget target;
-    if (!bce_->emitJumpTarget(&target)) {
-      return false;
-    }
-
-    uint32_t resumeIndex;
-    if (!bce_->allocateResumeIndex(target.offset, &resumeIndex)) {
-      return false;
-    }
-
-    for (BytecodeOffset offset : controlInfo_->defaultResumeIndexOffsets_) {
-      SET_RESUMEINDEX(bce_->bytecodeSection().code(offset), resumeIndex);
-    }
-  } else {
+  if (catchAndFinallyJump_.offset.valid()) {
     // Fix up the end-of-try/catch jumps to come here.
     if (!bce_->emitJumpTargetAndPatch(catchAndFinallyJump_)) {
       return false;

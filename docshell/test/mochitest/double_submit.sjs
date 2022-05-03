@@ -2,8 +2,7 @@
 
 let self = this;
 
-// eslint-disable-next-line mozilla/use-chromeutils-import
-let { setTimeout } = Cu.import("resource://gre/modules/Timer.jsm");
+let { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 const CC = Components.Constructor;
 const BinaryInputStream = CC(

@@ -15,7 +15,9 @@ Prompter tests: modal prompts
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/Services.jsm"
+);
 
 function checkPromptState(promptState, expectedState) {
     // XXX check title? OS X has title in content

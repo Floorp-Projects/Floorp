@@ -147,6 +147,13 @@ template EditorRawDOMPoint EditorBase::GetFirstIMESelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 template EditorRawDOMPoint EditorBase::GetLastIMESelectionEndPoint() const;
 
+template CreateContentResult EditorBase::InsertNodeWithTransaction(
+    nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert);
+template CreateElementResult EditorBase::InsertNodeWithTransaction(
+    Element& aContentToInsert, const EditorDOMPoint& aPointToInsert);
+template CreateTextResult EditorBase::InsertNodeWithTransaction(
+    Text& aContentToInsert, const EditorDOMPoint& aPointToInsert);
+
 template EditorDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
 template EditorRawDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
@@ -2032,21 +2039,37 @@ NS_IMETHODIMP EditorBase::InsertNode(nsINode* aNodeToInsert,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  uint32_t offset = std::min(aOffset, aContainer->Length());
-  rv = InsertNodeWithTransaction(*contentToInsert,
-                                 EditorDOMPoint(aContainer, offset));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::InsertNodeWithTransaction() failed");
-  return EditorBase::ToGenericNSResult(rv);
+  const uint32_t offset = std::min(aOffset, aContainer->Length());
+  CreateContentResult insertContentResult = InsertNodeWithTransaction(
+      *contentToInsert, EditorDOMPoint(aContainer, offset));
+  if (insertContentResult.isErr()) {
+    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+    return EditorBase::ToGenericNSResult(insertContentResult.unwrapErr());
+  }
+  rv = insertContentResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateContentResult::SuggestCaretPointTo() failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateContentResult::SuggestCaretPointTo() failed, but ignored");
+  return NS_OK;
 }
 
-nsresult EditorBase::InsertNodeWithTransaction(
-    nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert) {
+template <typename ContentNodeType>
+CreateNodeResultBase<ContentNodeType> EditorBase::InsertNodeWithTransaction(
+    ContentNodeType& aContentToInsert, const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT_IF(IsTextEditor(), !aContentToInsert.IsText());
 
+  using ResultType = CreateNodeResultBase<ContentNodeType>;
+
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
+    return ResultType(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
@@ -2054,7 +2077,7 @@ nsresult EditorBase::InsertNodeWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertNode, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+    return ResultType(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -2075,7 +2098,15 @@ nsresult EditorBase::InsertNodeWithTransaction(
     TopLevelEditSubActionDataRef().DidInsertContent(*this, aContentToInsert);
   }
 
-  return rv;
+  if (NS_WARN_IF(Destroyed())) {
+    return ResultType(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_FAILED(rv)) {
+    return ResultType(rv);
+  }
+
+  return ResultType(&aContentToInsert,
+                    transaction->SuggestPointToPutCaret<EditorDOMPoint>());
 }
 
 CreateElementResult
@@ -2084,7 +2115,7 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(IsHTMLEditor() || !aPointToInsert.IsInTextNode());
 
-  if (!aPointToInsert.IsSet()) {
+  if (MOZ_UNLIKELY(!aPointToInsert.IsSet())) {
     return CreateElementResult(NS_ERROR_FAILURE);
   }
 
@@ -2107,16 +2138,11 @@ EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
   }
   newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
 
-  nsresult rv = InsertNodeWithTransaction(*newBRElement, pointToInsert);
-  if (NS_WARN_IF(Destroyed())) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
-    return CreateElementResult(rv);
-  }
-
-  return CreateElementResult(std::move(newBRElement));
+  CreateElementResult insertBRElementResult =
+      InsertNodeWithTransaction<Element>(*newBRElement, pointToInsert);
+  NS_WARNING_ASSERTION(insertBRElementResult.isOk(),
+                       "EditorBase::InsertNodeWithTransaction() failed");
+  return insertBRElementResult;
 }
 
 NS_IMETHODIMP EditorBase::DeleteNode(nsINode* aNode) {
@@ -2819,25 +2845,34 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
     CheckedUint32 newOffset;
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
-      RefPtr<nsTextNode> newNode = CreateTextNode(u""_ns);
-      if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+      RefPtr<nsTextNode> newTextNode = CreateTextNode(u""_ns);
+      if (NS_WARN_IF(!newTextNode)) {
         return Err(NS_ERROR_FAILURE);
       }
       // then we insert it into the dom tree
-      nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-      if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-        return Err(NS_ERROR_EDITOR_DESTROYED);
-      }
-      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+      CreateTextResult insertTextNodeResult =
+          InsertNodeWithTransaction<Text>(*newTextNode, pointToInsert);
+      if (insertTextNodeResult.isErr()) {
         NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+        return Err(insertTextNodeResult.unwrapErr());
+      }
+      nsresult rv = insertTextNodeResult.SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CreateTextResult::SuggestCaretPointTo() failed");
         return Err(rv);
       }
-      pointToInsert.Set(newNode, 0u);
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CreateTextResult::SuggestCaretPointTo() failed, but ignored");
+      pointToInsert.Set(newTextNode, 0u);
       newOffset = aStringToInsert.Length();
     } else {
       newOffset = aStringToInsert.Length();
       newOffset += pointToInsert.Offset();
-      if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+      if (NS_WARN_IF(!newOffset.isValid())) {
         return Err(NS_ERROR_FAILURE);
       }
     }
@@ -2849,7 +2884,7 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
           "destroying the editor");
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
       return Err(rv);
     }
@@ -2859,7 +2894,7 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
   if (pointToInsert.IsInTextNode()) {
     CheckedUint32 newOffset = aStringToInsert.Length();
     newOffset += pointToInsert.Offset();
-    if (MOZ_UNLIKELY(NS_WARN_IF(!newOffset.isValid()))) {
+    if (NS_WARN_IF(!newOffset.isValid())) {
       return Err(NS_ERROR_FAILURE);
     }
     // we are inserting text into an existing text node.
@@ -2872,7 +2907,7 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
           "destroying the editor");
       return Err(NS_ERROR_EDITOR_DESTROYED);
     }
-    if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    if (NS_FAILED(rv)) {
       NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
       return Err(rv);
     }
@@ -2881,22 +2916,30 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
 
   // we are inserting text into a non-text node.  first we have to create a
   // textnode (this also populates it with the text)
-  RefPtr<nsTextNode> newNode = CreateTextNode(aStringToInsert);
-  if (MOZ_UNLIKELY(NS_WARN_IF(!newNode))) {
+  RefPtr<nsTextNode> newTextNode = CreateTextNode(aStringToInsert);
+  if (NS_WARN_IF(!newTextNode)) {
     return Err(NS_ERROR_FAILURE);
   }
   // then we insert it into the dom tree
-  nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
-  if (MOZ_UNLIKELY(Destroyed())) {
-    NS_WARNING(
-        "EditorBase::InsertNodeWithTransaction() caused destroying the editor");
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  CreateTextResult insertTextNodeResult =
+      InsertNodeWithTransaction<Text>(*newTextNode, pointToInsert);
+  if (insertTextNodeResult.isErr()) {
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
+    return Err(insertTextNodeResult.unwrapErr());
+  }
+  nsresult rv = insertTextNodeResult.SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CreateTextResult::SuggestCaretPointTo() failed");
     return Err(rv);
   }
-  return EditorDOMPoint(newNode, aStringToInsert.Length());
+  NS_WARNING_ASSERTION(
+      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+      "CreateTextResult::SuggestCaretPointTo() failed, but ignored");
+  return EditorDOMPoint(insertTextNodeResult.UnwrapNewNode(),
+                        aStringToInsert.Length());
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
@@ -3387,17 +3430,24 @@ nsresult EditorBase::EnsurePaddingBRElementInMultilineEditor() {
   RefPtr<HTMLBRElement> brElement =
       HTMLBRElement::FromNode(anonymousDivOrBodyElement->GetLastChild());
   if (!brElement) {
+    // TODO: Remove AutoTransactionsConserveSelection here.  It's not necessary
+    //       in normal cases.  However, it may be required for nested edit
+    //       actions which may be caused by legacy mutation event listeners or
+    //       chrome script.
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
     EditorDOMPoint endOfAnonymousDiv(
         EditorDOMPoint::AtEndOf(*anonymousDivOrBodyElement));
-    CreateElementResult createPaddingBRResult =
+    CreateElementResult insertPaddingBRElementResult =
         InsertPaddingBRElementForEmptyLastLineWithTransaction(
             endOfAnonymousDiv);
-    NS_WARNING_ASSERTION(
-        createPaddingBRResult.Succeeded(),
-        "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
-        "failed");
-    return createPaddingBRResult.Rv();
+    if (insertPaddingBRElementResult.isErr()) {
+      NS_WARNING(
+          "EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
+          "failed");
+      return insertPaddingBRElementResult.unwrapErr();
+    }
+    insertPaddingBRElementResult.IgnoreCaretPointSuggestion();
+    return NS_OK;
   }
 
   // Check to see if the trailing BR is a former padding <br> element for empty
