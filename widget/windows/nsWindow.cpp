@@ -1816,7 +1816,8 @@ static bool ShouldHaveRoundedMenuDropShadow(nsWindow* aWindow) {
 // XXX this is apparently still needed in Windows 7 and later
 void nsWindow::ClearThemeRegion() {
   if (mWindowType == eWindowType_popup &&
-      (mPopupType == ePopupTypeMenu || mPopupType == ePopupTypePanel) &&
+      (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypeMenu ||
+       mPopupType == ePopupTypePanel) &&
       ShouldHaveRoundedMenuDropShadow(this)) {
     SetWindowRgn(mWnd, nullptr, false);
   } else if (!HasGlass() &&
@@ -1830,9 +1831,9 @@ void nsWindow::ClearThemeRegion() {
 void nsWindow::SetThemeRegion() {
   // Clip the window to the rounded rect area of the popup if needed.
   if (mWindowType == eWindowType_popup &&
-      (mPopupType == ePopupTypeMenu || mPopupType == ePopupTypePanel)) {
-    nsView* view = nsView::GetViewFor(this);
-    if (view) {
+      (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypeMenu ||
+       mPopupType == ePopupTypePanel)) {
+    if (nsView* view = nsView::GetViewFor(this)) {
       LayoutDeviceIntSize size =
           nsLayoutUtils::GetBorderRadiusForMenuDropShadow(view->GetFrame());
       if (size.width || size.height) {
