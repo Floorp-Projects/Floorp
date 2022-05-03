@@ -72,10 +72,12 @@ SimpleTest.waitForFocus(async () => {
     let inlineSpellchecker = SpecialPowers.wrap(textarea).editor.getInlineSpellChecker(true);
     textarea.value = "abx ";
     await new Promise(resolve => {
-      SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-        .onSpellCheck(textarea, () => {
-            SimpleTest.executeSoon(resolve);
-        });
+      const { onSpellCheck } = SpecialPowers.ChromeUtils.import(
+        "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+      );
+      onSpellCheck(textarea, () => {
+        SimpleTest.executeSoon(resolve);
+      });
     });
     let anonymousDivElement = SpecialPowers.wrap(textarea).editor.rootElement;
     let misspelledWord = inlineSpellchecker.getMisspelledWord(anonymousDivElement.firstChild, 0);

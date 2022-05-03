@@ -21,7 +21,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1761273
 
 const Ci = SpecialPowers.Ci;
 
-let {getDictionaryContentPref, onSpellCheck} = SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+let {
+  getDictionaryContentPref,
+  onSpellCheck,
+} = SpecialPowers.ChromeUtils.import(
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+);
 
 /** Test for Bug 1402822 **/
 SimpleTest.waitForExplicitFinish();

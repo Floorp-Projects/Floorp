@@ -45,9 +45,10 @@ function runTest() {
   editDoc().designMode = "on";
   editDoc().defaultView.focus();
 
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm")
-               .maybeOnSpellCheck(editDoc().documentElement, evalTest);
+  const { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
+  maybeOnSpellCheck(editDoc().documentElement, evalTest);
 }
 
 function evalTest() {
