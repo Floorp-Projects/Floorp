@@ -559,7 +559,7 @@ HRESULT MFTEncoder::ProcessEvents() {
         mDrainState = DrainState::DRAINED;
         break;
       default:
-        MFT_ENC_LOGE("unsupported event: %x", evType);
+        MFT_ENC_LOGE("unsupported event: %lx", evType);
     }
   }
 

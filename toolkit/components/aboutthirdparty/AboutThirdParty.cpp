@@ -351,7 +351,7 @@ class KnownModule final {
                                              nsAString& aResult) {
     nsAutoStringN<60> subkey;
     subkey.AppendPrintf(
-        "CLSID\\{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\"
+        "CLSID\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\"
         "InProcServer32",
         aGuid.Data1, aGuid.Data2, aGuid.Data3, aGuid.Data4[0], aGuid.Data4[1],
         aGuid.Data4[2], aGuid.Data4[3], aGuid.Data4[4], aGuid.Data4[5],

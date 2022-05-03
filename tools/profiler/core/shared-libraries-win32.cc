@@ -101,7 +101,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       MOZ_ASSERT(breakpadId.IsEmpty());
       const GUID& pdbSig = debugInfo->pdbSignature;
       breakpadId.AppendPrintf(
-          "%08X"                              // m0
+          "%08lX"                             // m0
           "%04X%04X"                          // m1,m2
           "%02X%02X%02X%02X%02X%02X%02X%02X"  // m3
           "%X",                               // pdbAge

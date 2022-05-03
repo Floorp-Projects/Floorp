@@ -122,7 +122,7 @@ Logger::Logger(const nsACString& aLeafBaseName)
     return;
   }
   DWORD pid = GetCurrentProcessId();
-  leafName.AppendPrintf("%u.log", pid);
+  leafName.AppendPrintf("%lu.log", pid);
   // Using AppendNative here because Windows
   rv = logFileName->AppendNative(leafName);
   if (NS_FAILED(rv)) {
@@ -214,19 +214,19 @@ bool Logger::VariantToString(const VARIANT& aVariant, nsACString& aOut,
       return VariantToString((aVariant.pvarVal)[aIndex], aOut);
     }
     case VT_I4 | VT_BYREF: {
-      aOut.AppendPrintf("%d", aVariant.plVal[aIndex]);
+      aOut.AppendPrintf("%ld", aVariant.plVal[aIndex]);
       return true;
     }
     case VT_UI4 | VT_BYREF: {
-      aOut.AppendPrintf("%u", aVariant.pulVal[aIndex]);
+      aOut.AppendPrintf("%lu", aVariant.pulVal[aIndex]);
       return true;
     }
     case VT_I4: {
-      aOut.AppendPrintf("%d", aVariant.lVal);
+      aOut.AppendPrintf("%ld", aVariant.lVal);
       return true;
     }
     case VT_UI4: {
-      aOut.AppendPrintf("%u", aVariant.ulVal);
+      aOut.AppendPrintf("%lu", aVariant.ulVal);
       return true;
     }
     case VT_EMPTY: {
