@@ -285,7 +285,7 @@ no_such_var = "foo"; // assignment to undeclared variable
 # A test that crashes outright.
 TEST_CRASHING = """
 function run_test () {
-  Components.utils.import("resource://gre/modules/ctypes.jsm", this);
+  const { ctypes } = ChromeUtils.import("resource://gre/modules/ctypes.jsm");
   let zero = new ctypes.intptr_t(8);
   let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
   badptr.contents;
@@ -295,7 +295,9 @@ function run_test () {
 # A test for asynchronous cleanup functions
 ASYNC_CLEANUP = """
 function run_test() {
-  let { PromiseUtils } = Components.utils.import("resource://gre/modules/PromiseUtils.jsm", this);
+  let { PromiseUtils } = ChromeUtils.import(
+    "resource://gre/modules/PromiseUtils.jsm"
+  );
 
   // The list of checkpoints in the order we encounter them.
   let checkpoints = [];
