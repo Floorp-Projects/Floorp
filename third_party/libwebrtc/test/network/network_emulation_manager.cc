@@ -270,7 +270,7 @@ NetworkEmulationManagerImpl::CreateEmulatedNetworkManagerInterface(
 }
 
 void NetworkEmulationManagerImpl::GetStats(
-    rtc::ArrayView<EmulatedEndpoint*> endpoints,
+    rtc::ArrayView<EmulatedEndpoint* const> endpoints,
     std::function<void(std::unique_ptr<EmulatedNetworkStats>)> stats_callback) {
   task_queue_.PostTask([endpoints, stats_callback]() {
     EmulatedNetworkStatsBuilder stats_builder;
