@@ -16,13 +16,13 @@ if CONFIG['MOZ_SYSTEM_LIBEVENT']:
 UNIFIED_SOURCES += [
     'libevent/buffer.c',
     'libevent/bufferevent.c',
+    'libevent/bufferevent_filter.c',
     'libevent/bufferevent_ratelim.c',
     'libevent/bufferevent_sock.c',
     'libevent/evdns.c',
     'libevent/event.c',
     'libevent/event_tagging.c',
     'libevent/evmap.c',
-    'libevent/evrpc.c',
     'libevent/evthread.c',
     'libevent/evthread_pthread.c',
     'libevent/evutil.c',
@@ -35,6 +35,11 @@ UNIFIED_SOURCES += [
     'libevent/select.c',
     'libevent/signal.c',
     'libevent/strlcpy.c',
+]
+
+SOURCES += [
+    'libevent/bufferevent_pair.c', # conflicting types errors
+    'libevent/evrpc.c',            # conflicting TAILQ_ENTRY definition
 ]
 
 if os_macosx or os_bsd:
