@@ -12,7 +12,9 @@
 <iframe></iframe>
 
 <script type="application/javascript">
-const { LoginManagerChild } = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerChild.jsm", {});
+const { LoginManagerChild } = SpecialPowers.ChromeUtils.import(
+  "resource://gre/modules/LoginManagerChild.jsm"
+);
 
 add_task(async function setup() {
   const readyPromise = registerRunTests();

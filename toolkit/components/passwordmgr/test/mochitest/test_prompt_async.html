@@ -10,8 +10,12 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
     <script class="testbody" type="text/javascript">
-      const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
-      const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+      const { NetUtil } = SpecialPowers.ChromeUtils.import(
+        "resource://gre/modules/NetUtil.jsm"
+      );
+      const { TestUtils } = SpecialPowers.ChromeUtils.import(
+        "resource://testing-common/TestUtils.jsm"
+      );
       const EXAMPLE_COM = "http://example.com/tests/toolkit/components/passwordmgr/test/mochitest/";
       const EXAMPLE_ORG = "http://example.org/tests/toolkit/components/passwordmgr/test/mochitest/";
       let mozproxyOrigin;
