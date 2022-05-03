@@ -37,7 +37,7 @@ job-defaults:
                     subject: '[{product_name}] Raptor-Browsertime job "{task_name}" failed'
                     to-addresses: [perftest-alerts@mozilla.com]
             default: {}
-    run-on-tasks-for: [github-pull-request]
+    run-on-tasks-for: []
     treeherder:
         kind: test
         tier: 2
