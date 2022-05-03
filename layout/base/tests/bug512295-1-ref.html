@@ -12,8 +12,9 @@ x
   var p = document.getElementById('p');
   var div = p.parentNode;
   div.focus();
-  SpecialPowers.Cu.import(
-    "resource://testing-common/AsyncSpellCheckTestHelper.jsm", window);
+  var { maybeOnSpellCheck } = SpecialPowers.ChromeUtils.import(
+    "resource://testing-common/AsyncSpellCheckTestHelper.jsm"
+  );
   maybeOnSpellCheck(div, function () {
     var sel = window.getSelection();
     sel.removeAllRanges();
