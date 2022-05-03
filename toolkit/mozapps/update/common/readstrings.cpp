@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <limits.h>
 #include <string.h>
 #include <stdio.h>
 #include "readstrings.h"

@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
 static void WriteMsg(const NS_tchar* path, const char* status) {
