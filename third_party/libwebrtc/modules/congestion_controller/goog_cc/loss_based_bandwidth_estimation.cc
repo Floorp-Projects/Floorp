@@ -14,9 +14,9 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/match.h"
 #include "api/units/data_rate.h"
 #include "api/units/time_delta.h"
+#include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace {
@@ -74,16 +74,10 @@ double ExponentialUpdate(TimeDelta window, TimeDelta interval) {
   return 1.0f - exp(interval / window * -1.0);
 }
 
-bool IsEnabled(const webrtc::WebRtcKeyValueConfig& key_value_config,
-               absl::string_view name) {
-  return absl::StartsWith(key_value_config.Lookup(name), "Enabled");
-}
-
 }  // namespace
 
-LossBasedControlConfig::LossBasedControlConfig(
-    const WebRtcKeyValueConfig* key_value_config)
-    : enabled(IsEnabled(*key_value_config, kBweLossBasedControl)),
+LossBasedControlConfig::LossBasedControlConfig()
+    : enabled(field_trial::IsEnabled(kBweLossBasedControl)),
       min_increase_factor("min_incr", 1.02),
       max_increase_factor("max_incr", 1.08),
       increase_low_rtt("incr_low_rtt", TimeDelta::Millis(200)),
@@ -101,6 +95,7 @@ LossBasedControlConfig::LossBasedControlConfig(
       allow_resets("resets", false),
       decrease_interval("decr_intvl", TimeDelta::Millis(300)),
       loss_report_timeout("timeout", TimeDelta::Millis(6000)) {
+  std::string trial_string = field_trial::FindFullName(kBweLossBasedControl);
   ParseFieldTrial(
       {&min_increase_factor, &max_increase_factor, &increase_low_rtt,
        &increase_high_rtt, &decrease_factor, &loss_window, &loss_max_window,
@@ -108,15 +103,14 @@ LossBasedControlConfig::LossBasedControlConfig(
        &loss_bandwidth_balance_increase, &loss_bandwidth_balance_decrease,
        &loss_bandwidth_balance_exponent, &allow_resets, &decrease_interval,
        &loss_report_timeout},
-      key_value_config->Lookup(kBweLossBasedControl));
+      trial_string);
 }
 LossBasedControlConfig::LossBasedControlConfig(const LossBasedControlConfig&) =
     default;
 LossBasedControlConfig::~LossBasedControlConfig() = default;
 
-LossBasedBandwidthEstimation::LossBasedBandwidthEstimation(
-    const WebRtcKeyValueConfig* key_value_config)
-    : config_(key_value_config),
+LossBasedBandwidthEstimation::LossBasedBandwidthEstimation()
+    : config_(LossBasedControlConfig()),
       average_loss_(0),
       average_loss_max_(0),
       loss_based_bitrate_(DataRate::Zero()),
