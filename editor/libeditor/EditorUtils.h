@@ -30,8 +30,6 @@
 class nsITransferable;
 
 namespace mozilla {
-template <class T>
-class OwningNonNull;
 
 /***************************************************************************
  * EditActionResult is useful to return multiple results of an editor
