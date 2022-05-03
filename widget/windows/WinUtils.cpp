@@ -1978,7 +1978,7 @@ bool WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath) {
       nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr));
 
   if (handle == INVALID_HANDLE_VALUE) {
-    LOG_E("Failed to open file handle to resolve path. GetLastError=%d",
+    LOG_E("Failed to open file handle to resolve path. GetLastError=%lu",
           GetLastError());
     return false;
   }
@@ -1986,7 +1986,7 @@ bool WinUtils::ResolveJunctionPointsAndSymLinks(std::wstring& aPath) {
   DWORD pathLen = GetFinalPathNameByHandleW(
       handle, path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
   if (pathLen == 0 || pathLen >= MAX_PATH) {
-    LOG_E("GetFinalPathNameByHandleW failed. GetLastError=%d", GetLastError());
+    LOG_E("GetFinalPathNameByHandleW failed. GetLastError=%lu", GetLastError());
     return false;
   }
   aPath = path;

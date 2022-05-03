@@ -275,7 +275,7 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
 #if defined(OS_WIN)
   if (!::ReplaceFileA(aFilename, tempFilename, nullptr, 0, 0, 0)) {
     NS_WARNING(
-        nsPrintfCString("ReplaceFileA failed: %d\n", GetLastError()).get());
+        nsPrintfCString("ReplaceFileA failed: %lu\n", GetLastError()).get());
     return false;
   }
 #elif defined(OS_POSIX)

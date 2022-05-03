@@ -98,7 +98,7 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
     context.Reason.SimpleReasonString = RequestTypeLPWSTR(aType);
     HANDLE handle = PowerCreateRequest(&context);
     if (!handle) {
-      WAKE_LOCK_LOG("Failed to create handle for %s, error=%d",
+      WAKE_LOCK_LOG("Failed to create handle for %s, error=%lu",
                     RequestTypeStr(aType), GetLastError());
       return nullptr;
     }
@@ -147,7 +147,7 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
     if (PowerSetRequest(handle, aType)) {
       WAKE_LOCK_LOG("Requested %s lock", RequestTypeStr(aType));
     } else {
-      WAKE_LOCK_LOG("Failed to request %s lock, error=%d",
+      WAKE_LOCK_LOG("Failed to request %s lock, error=%lu",
                     RequestTypeStr(aType), GetLastError());
       SetHandle(nullptr, aType);
     }
@@ -161,7 +161,7 @@ class WinWakeLockListener final : public nsIDOMMozWakeLockListener {
 
     WAKE_LOCK_LOG("Prepare to release wakelock for %s", RequestTypeStr(aType));
     if (!PowerClearRequest(GetHandle(aType), aType)) {
-      WAKE_LOCK_LOG("Failed to release %s lock, error=%d",
+      WAKE_LOCK_LOG("Failed to release %s lock, error=%lu",
                     RequestTypeStr(aType), GetLastError());
       return;
     }

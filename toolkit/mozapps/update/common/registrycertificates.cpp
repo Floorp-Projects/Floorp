@@ -43,14 +43,14 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
   LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, maintenanceServiceKey, 0,
                                KEY_READ | KEY_WOW64_64KEY, &baseKey);
   if (retCode != ERROR_SUCCESS) {
-    LOG_WARN(("Could not open key.  (%d)", retCode));
+    LOG_WARN(("Could not open key.  (%ld)", retCode));
     // Our tests run with a different apply directory for each test.
     // We use this registry key on our test machines to store the
     // allowed name/issuers.
     retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, TEST_ONLY_FALLBACK_KEY_PATH, 0,
                             KEY_READ | KEY_WOW64_64KEY, &baseKey);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Could not open fallback key.  (%d)", retCode));
+      LOG_WARN(("Could not open fallback key.  (%ld)", retCode));
       return FALSE;
     } else if (allowFallbackKeySkip) {
       LOG_WARN(
@@ -90,7 +90,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
     retCode = RegOpenKeyExW(baseKey, subkeyBuffer, 0,
                             KEY_READ | KEY_WOW64_64KEY, &subKey);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Could not open subkey.  (%d)", retCode));
+      LOG_WARN(("Could not open subkey.  (%ld)", retCode));
       continue;  // Try the next subkey
     }
 
@@ -103,7 +103,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
     retCode = RegQueryValueExW(subKey, L"name", 0, nullptr, (LPBYTE)name,
                                &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Could not obtain name from registry.  (%d)", retCode));
+      LOG_WARN(("Could not obtain name from registry.  (%ld)", retCode));
       RegCloseKey(subKey);
       continue;  // Try the next subkey
     }
@@ -113,7 +113,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
     retCode = RegQueryValueExW(subKey, L"issuer", 0, nullptr, (LPBYTE)issuer,
                                &valueBufSize);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Could not obtain issuer from registry.  (%d)", retCode));
+      LOG_WARN(("Could not obtain issuer from registry.  (%ld)", retCode));
       RegCloseKey(subKey);
       continue;  // Try the next subkey
     }
@@ -125,7 +125,7 @@ BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
 
     retCode = CheckCertificateForPEFile(filePath, allowedCertificate);
     if (retCode != ERROR_SUCCESS) {
-      LOG_WARN(("Error on certificate check.  (%d)", retCode));
+      LOG_WARN(("Error on certificate check.  (%ld)", retCode));
       RegCloseKey(subKey);
       continue;  // Try the next subkey
     }
