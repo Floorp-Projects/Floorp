@@ -687,7 +687,7 @@ void VideoReceiveStream2::HandleEncodedFrame(
     keyframe_required_ = false;
     frame_decoded_ = true;
 
-    decoded_frame_picture_id = frame->id.picture_id;
+    decoded_frame_picture_id = frame->Id();
 
     if (decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME)
       force_request_key_frame = true;

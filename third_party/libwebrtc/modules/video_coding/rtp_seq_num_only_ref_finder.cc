@@ -86,18 +86,18 @@ RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
 
   // Since keyframes can cause reordering we can't simply assign the
   // picture id according to some incrementing counter.
-  frame->id.picture_id = frame->last_seq_num();
+  frame->SetId(frame->last_seq_num());
   frame->num_references =
       frame->frame_type() == VideoFrameType::kVideoFrameDelta;
   frame->references[0] = rtp_seq_num_unwrapper_.Unwrap(last_picture_id_gop);
-  if (AheadOf<uint16_t>(frame->id.picture_id, last_picture_id_gop)) {
-    seq_num_it->second.first = frame->id.picture_id;
-    seq_num_it->second.second = frame->id.picture_id;
+  if (AheadOf<uint16_t>(frame->Id(), last_picture_id_gop)) {
+    seq_num_it->second.first = frame->Id();
+    seq_num_it->second.second = frame->Id();
   }
 
-  UpdateLastPictureIdWithPadding(frame->id.picture_id);
+  UpdateLastPictureIdWithPadding(frame->Id());
   frame->SetSpatialIndex(0);
-  frame->id.picture_id = rtp_seq_num_unwrapper_.Unwrap(frame->id.picture_id);
+  frame->SetId(rtp_seq_num_unwrapper_.Unwrap(frame->Id()));
   return kHandOff;
 }
 

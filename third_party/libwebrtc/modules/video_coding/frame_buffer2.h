@@ -58,7 +58,6 @@ class FrameBuffer {
 
   // Insert a frame into the frame buffer. Returns the picture id
   // of the last continuous frame or -1 if there is no continuous frame.
-  // TODO(philipel): Return a VideoLayerFrameId and not only the picture id.
   int64_t InsertFrame(std::unique_ptr<EncodedFrame> frame);
 
   // Get the next frame for decoding. Will return at latest after
@@ -99,7 +98,7 @@ class FrameBuffer {
 
     // Which other frames that have direct unfulfilled dependencies
     // on this frame.
-    absl::InlinedVector<VideoLayerFrameId, 8> dependent_frames;
+    absl::InlinedVector<int64_t, 8> dependent_frames;
 
     // A frame is continiuous if it has all its referenced/indirectly
     // referenced frames.
@@ -119,7 +118,7 @@ class FrameBuffer {
     std::unique_ptr<EncodedFrame> frame;
   };
 
-  using FrameMap = std::map<VideoLayerFrameId, FrameInfo>;
+  using FrameMap = std::map<int64_t, FrameInfo>;
 
   // Check that the references of |frame| are valid.
   bool ValidReferences(const EncodedFrame& frame) const;
@@ -182,8 +181,7 @@ class FrameBuffer {
   VCMJitterEstimator jitter_estimator_ RTC_GUARDED_BY(mutex_);
   VCMTiming* const timing_ RTC_GUARDED_BY(mutex_);
   VCMInterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(mutex_);
-  absl::optional<VideoLayerFrameId> last_continuous_frame_
-      RTC_GUARDED_BY(mutex_);
+  absl::optional<int64_t> last_continuous_frame_ RTC_GUARDED_BY(mutex_);
   std::vector<FrameMap::iterator> frames_to_decode_ RTC_GUARDED_BY(mutex_);
   bool stopped_ RTC_GUARDED_BY(mutex_);
   VCMVideoProtection protection_mode_ RTC_GUARDED_BY(mutex_);

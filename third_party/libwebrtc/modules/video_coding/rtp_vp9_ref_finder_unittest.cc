@@ -163,7 +163,7 @@ class HasFrameMatcher : public MatcherInterface<const FrameVector&> {
                        MatchResultListener* result_listener) const override {
     auto it = std::find_if(frames.begin(), frames.end(),
                            [this](const std::unique_ptr<EncodedFrame>& f) {
-                             return f->id.picture_id == frame_id_;
+                             return f->Id() == frame_id_;
                            });
     if (it == frames.end()) {
       if (result_listener->IsInterested()) {
@@ -635,7 +635,7 @@ TEST_F(RtpVp9RefFinderTest, WrappingFlexReference) {
   ASSERT_EQ(1UL, frames_.size());
   const EncodedFrame& frame = *frames_[0];
 
-  ASSERT_EQ(frame.id.picture_id - frame.references[0], 5);
+  ASSERT_EQ(frame.Id() - frame.references[0], 5);
 }
 
 TEST_F(RtpVp9RefFinderTest, GofPidJump) {

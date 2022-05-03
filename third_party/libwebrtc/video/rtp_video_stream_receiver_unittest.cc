@@ -861,8 +861,8 @@ TEST_F(RtpVideoStreamReceiverTest, ParseGenericDescriptorOnePacket) {
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce(Invoke([kSpatialIndex](video_coding::EncodedFrame* frame) {
         EXPECT_EQ(frame->num_references, 2U);
-        EXPECT_EQ(frame->references[0], frame->id.picture_id - 90);
-        EXPECT_EQ(frame->references[1], frame->id.picture_id - 80);
+        EXPECT_EQ(frame->references[0], frame->Id() - 90);
+        EXPECT_EQ(frame->references[1], frame->Id() - 80);
         EXPECT_EQ(frame->SpatialIndex(), kSpatialIndex);
         EXPECT_THAT(frame->PacketInfos(), SizeIs(1));
       }));
@@ -997,13 +997,13 @@ TEST_F(RtpVideoStreamReceiverTest, UnwrapsFrameId) {
   int64_t first_picture_id;
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
-        first_picture_id = frame->id.picture_id;
+        first_picture_id = frame->Id();
       });
   inject_packet(/*wrapped_frame_id=*/0xffff);
 
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
-        EXPECT_EQ(frame->id.picture_id - first_picture_id, 3);
+        EXPECT_EQ(frame->Id() - first_picture_id, 3);
       });
   inject_packet(/*wrapped_frame_id=*/0x0002);
 }
@@ -1068,7 +1068,7 @@ TEST_F(RtpVideoStreamReceiverDependencyDescriptorTest, UnwrapsFrameId) {
   int64_t first_picture_id;
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
-        first_picture_id = frame->id.picture_id;
+        first_picture_id = frame->Id();
       });
   InjectPacketWith(stream_structure, keyframe_descriptor);
 
@@ -1085,11 +1085,11 @@ TEST_F(RtpVideoStreamReceiverDependencyDescriptorTest, UnwrapsFrameId) {
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
         // 0x0002 - 0xfff0
-        EXPECT_EQ(frame->id.picture_id - first_picture_id, 18);
+        EXPECT_EQ(frame->Id() - first_picture_id, 18);
       })
       .WillOnce([&](video_coding::EncodedFrame* frame) {
         // 0xfffe - 0xfff0
-        EXPECT_EQ(frame->id.picture_id - first_picture_id, 14);
+        EXPECT_EQ(frame->Id() - first_picture_id, 14);
       });
   InjectPacketWith(stream_structure, deltaframe2_descriptor);
   InjectPacketWith(stream_structure, deltaframe1_descriptor);
@@ -1154,7 +1154,7 @@ TEST_F(RtpVideoStreamReceiverDependencyDescriptorTest,
 
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
-        EXPECT_EQ(frame->id.picture_id & 0xFFFF, 3);
+        EXPECT_EQ(frame->Id() & 0xFFFF, 3);
       });
   InjectPacketWith(stream_structure2, keyframe2_descriptor);
   InjectPacketWith(stream_structure1, keyframe1_descriptor);
@@ -1166,7 +1166,7 @@ TEST_F(RtpVideoStreamReceiverDependencyDescriptorTest,
   deltaframe_descriptor.frame_number = 4;
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame)
       .WillOnce([&](video_coding::EncodedFrame* frame) {
-        EXPECT_EQ(frame->id.picture_id & 0xFFFF, 4);
+        EXPECT_EQ(frame->Id() & 0xFFFF, 4);
       });
   InjectPacketWith(stream_structure2, deltaframe_descriptor);
 }
