@@ -42,6 +42,10 @@ class ChildToParentStreamActorManager {
 // If you want to serialize an inputStream, please use AutoIPCStream.
 class InputStreamHelper {
  public:
+  static void SerializedComplexity(nsIInputStream* aInputStream,
+                                   uint32_t aMaxSize, uint32_t* aSizeUsed,
+                                   uint32_t* aPipes, uint32_t* aTransferables);
+
   // These 2 methods allow to serialize an inputStream into InputStreamParams.
   // The manager is needed in case a stream needs to serialize itself as
   // IPCRemoteStream.
