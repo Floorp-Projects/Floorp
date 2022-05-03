@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/dom/FetchEventOpParent.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"

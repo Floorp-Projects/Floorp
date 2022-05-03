@@ -110,9 +110,9 @@ nsresult HttpTransactionParent::Init(
   HttpConnectionInfoCloneArgs infoArgs;
   nsHttpConnectionInfo::SerializeHttpConnectionInfo(cinfo, infoArgs);
 
-  Maybe<mozilla::ipc::IPCStream> ipcStream;
-  if (!mozilla::ipc::SerializeIPCStream(do_AddRef(requestBody), ipcStream,
-                                        /* aAllowLazy */ false)) {
+  mozilla::ipc::AutoIPCStream autoStream;
+  if (requestBody &&
+      !autoStream.Serialize(requestBody, SocketProcessParent::GetSingleton())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -144,8 +144,10 @@ nsresult HttpTransactionParent::Init(
 
   // TODO: Figure out if we have to implement nsIThreadRetargetableRequest in
   // bug 1544378.
-  if (!SendInit(caps, infoArgs, *requestHead, ipcStream, requestContentLength,
-                requestBodyHasHeaders, topLevelOuterContentWindowId,
+  if (!SendInit(caps, infoArgs, *requestHead,
+                requestBody ? Some(autoStream.TakeValue()) : Nothing(),
+                requestContentLength, requestBodyHasHeaders,
+                topLevelOuterContentWindowId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
                 classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
                 !!mTransactionObserver, pushedStreamArg, throttleQueue,
