@@ -176,7 +176,9 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
             # triggers an "environment-change" ping.
             script = """\
             let [resolve] = arguments;
-            Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
+            const { TelemetryEnvironment } = ChromeUtils.import(
+              "resource://gre/modules/TelemetryEnvironment.jsm"
+            );
             TelemetryEnvironment.onInitialized().then(resolve);
             """
 
@@ -203,8 +205,12 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Return the ID of the current client."""
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             return self.marionette.execute_script(
-                'Cu.import("resource://gre/modules/ClientID.jsm");'
-                "return ClientID.getCachedClientID();"
+                """\
+                const { ClientID } = ChromeUtils.import(
+                  "resource://gre/modules/ClientID.jsm"
+                );
+                return ClientID.getCachedClientID();
+                """
             )
 
     @property
@@ -212,8 +218,12 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         """Return the ID of the current subsession."""
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             ping_data = self.marionette.execute_script(
-                'Cu.import("resource://gre/modules/TelemetryController.jsm");'
-                "return TelemetryController.getCurrentPingData(true);"
+                """\
+                const { TelemetryController } = ChromeUtils.import(
+                  "resource://gre/modules/TelemetryController.jsm"
+                );
+                return TelemetryController.getCurrentPingData(true);
+                """
             )
             return ping_data[u"payload"][u"info"][u"subsessionId"]
 
