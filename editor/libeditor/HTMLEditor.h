@@ -4631,21 +4631,53 @@ class HTMLEditor final : public EditorBase,
 
   ParagraphSeparator mDefaultParagraphSeparator;
 
-  friend class AlignStateAtSelection;
-  friend class AutoSelectionSetterAfterTableEdit;
-  friend class AutoSetTemporaryAncestorLimiter;
-  friend class CSSEditUtils;
-  friend class EditorBase;
-  friend class EmptyEditableFunctor;
-  friend class JoinNodesTransaction;
-  friend class ListElementSelectionState;
-  friend class ListItemElementSelectionState;
-  friend class ParagraphStateAtSelection;
-  friend class SlurpBlobEventListener;
-  friend class SplitNodeTransaction;
-  friend class WhiteSpaceVisibilityKeeper;
-  friend class WSRunScanner;
-  friend class WSScanResult;
+  friend class
+      AlignStateAtSelection;  // CollectEditableTargetNodes,
+                              // CollectNonEditableNodes,
+                              // GetSelectionRangesExtendedToHardLineStartAndEnd
+  friend class AutoSelectionSetterAfterTableEdit;  // SetSelectionAfterEdit
+  friend class
+      AutoSetTemporaryAncestorLimiter;  // InitializeSelectionAncestorLimit
+  friend class CSSEditUtils;            // DoTransactionInternal, HasAttributes,
+                                        // RemoveContainerWithTransaction
+  friend class EditorBase;              // ComputeTargetRanges,
+                            // GetChangedRangeForTopLevelEditSubAction,
+                            // GetSelectedRangeItemForTopLevelEditSubAction,
+                            // MaybeCreatePaddingBRElementForEmptyEditor,
+                            // PrepareToInsertBRElement,
+                            // ReflectPaddingBRElementForEmptyEditor,
+                            // RefreshEditingUI,
+                            // RemoveEmptyInclusiveAncestorInlineElements,
+                            // mComposerUpdater, mHasBeforeINputBeenCancelded
+  friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
+                                      // DoSplitNode, RangeUpdaterRef
+  friend class
+      ListElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectNonEditableNodes
+  friend class
+      ListItemElementSelectionState;  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                      // CollectNonEditableNodes
+  friend class
+      ParagraphStateAtSelection;  // CollectChildren,
+                                  // CollectEditTargetNodesInExtendedSelectionRanges,
+                                  // CollectListChildren,
+                                  // CollectNonEditableNodes,
+                                  // CollectTableChildren
+  friend class SlurpBlobEventListener;  // BlobReader
+  friend class SplitNodeResult;         // CollapseSelectionTo
+  friend class SplitNodeTransaction;    // DoJoinNodes, DoSplitNode
+  friend class
+      WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
+                                   // CanMoveOrDeleteSomethingInHardLine,
+                                   // ChangeListElementType,
+                                   // DeleteNodeWithTransaction,
+                                   // DeleteTextAndTextNodesWithTransaction,
+                                   // JoinNearestEditableNodesWithTransaction,
+                                   // MoveChildrenWithTransaction,
+                                   // MoveOneHardLineContents,
+                                   // MoveToEndOfCOntainer,
+                                   // SplitAncestorStyledInlineElementsAt,
+                                   // TreatEmptyTextNodes
 };
 
 /**
