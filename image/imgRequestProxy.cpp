@@ -747,6 +747,16 @@ imgRequestProxy::GetMimeType(char** aMimeType) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+imgRequestProxy::GetFileName(nsACString& aFileName) {
+  if (!GetOwner()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GetOwner()->GetFileName(aFileName);
+  return NS_OK;
+}
+
 imgRequestProxy* imgRequestProxy::NewClonedProxy() {
   return new imgRequestProxy();
 }

@@ -151,6 +151,8 @@ class imgRequest final : public nsIStreamListener,
   /// Returns a non-owning pointer to this imgRequest's MIME type.
   const char* GetMimeType() const { return mContentType.get(); }
 
+  void GetFileName(nsACString& aFileName);
+
   /// @return the priority of the underlying network request, or
   /// PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
   int32_t Priority() const;
