@@ -4,6 +4,8 @@
 
 //! Specified values for font properties
 
+use crate::context::QuirksMode;
+use crate::font_metrics::FontMetricsProvider;
 use crate::parser::{Parse, ParserContext};
 use crate::values::computed::font::{FamilyName, FontFamilyList, FontStyleAngle, SingleFontFamily};
 use crate::values::computed::FontSizeAdjust as ComputedFontSizeAdjust;
@@ -829,7 +831,30 @@ impl FontSizeKeyword {
     #[cfg(feature = "gecko")]
     #[inline]
     fn to_length(&self, cx: &Context) -> NonNegativeLength {
-        use crate::context::QuirksMode;
+        let gecko_font = cx.style().get_font().gecko();
+        let family = &gecko_font.mFont.family.families;
+        unsafe {
+            Atom::with(gecko_font.mLanguage.mRawPtr, |language| {
+                self.to_length_without_context(
+                    cx.quirks_mode,
+                    cx.font_metrics_provider,
+                    language,
+                    family,
+                )
+            })
+        }
+    }
+
+    /// Resolve a keyword length without any context, with explicit arguments.
+    #[cfg(feature = "gecko")]
+    #[inline]
+    pub fn to_length_without_context(
+        &self,
+        quirks_mode: QuirksMode,
+        font_metrics_provider: &dyn FontMetricsProvider,
+        language: &Atom,
+        family: &FontFamilyList,
+    ) -> NonNegativeLength {
 
         // The tables in this function are originally from
         // nsRuleNode::CalcFontPointSize in Gecko:
@@ -875,23 +900,12 @@ impl FontSizeKeyword {
 
         static FONT_SIZE_FACTORS: [i32; 8] = [60, 75, 89, 100, 120, 150, 200, 300];
 
-        let ref gecko_font = cx.style().get_font().gecko();
-        let generic = gecko_font
-            .mFont
-            .family
-            .families
-            .single_generic()
-            .unwrap_or(computed::GenericFontFamily::None);
-        let base_size = unsafe {
-            Atom::with(gecko_font.mLanguage.mRawPtr, |atom| {
-                cx.font_metrics_provider.get_size(atom, generic)
-            })
-        };
-
+        let generic = family.single_generic().unwrap_or(computed::GenericFontFamily::None);
+        let base_size = font_metrics_provider.get_size(language, generic);
         let base_size_px = base_size.px().round() as i32;
         let html_size = self.html_size() as usize;
         NonNegative(if base_size_px >= 9 && base_size_px <= 16 {
-            let mapping = if cx.quirks_mode == QuirksMode::Quirks {
+            let mapping = if quirks_mode == QuirksMode::Quirks {
                 QUIRKS_FONT_SIZE_MAPPING
             } else {
                 FONT_SIZE_MAPPING
