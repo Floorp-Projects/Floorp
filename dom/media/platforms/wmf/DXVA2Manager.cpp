@@ -720,10 +720,11 @@ bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
                     DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT};
     for (const GUID& guid : guids) {
       BOOL supported = false;
-      hr = videoDevice->CheckVideoDecoderFormat(&DXVA2_ModeH264_VLD_NoFGT,
-                                                DXGI_FORMAT_NV12, &supported);
+      hr = videoDevice->CheckVideoDecoderFormat(&guid, DXGI_FORMAT_NV12,
+                                                &supported);
       if (SUCCEEDED(hr) && supported) {
         desc.Guid = guid;
+        break;
       }
     }
   } else if (subtype == MFVideoFormat_VP80) {
