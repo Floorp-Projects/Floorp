@@ -359,7 +359,6 @@ module.exports = {
         "mozilla/reject-importGlobalProperties": "off",
         "mozilla/use-cc-etc": "off",
         "mozilla/use-chromeutils-generateqi": "off",
-        "mozilla/use-chromeutils-import": "off",
         "mozilla/use-includes-instead-of-indexOf": "off",
         "mozilla/use-ownerGlobal": "off",
         "mozilla/use-services": "off",
