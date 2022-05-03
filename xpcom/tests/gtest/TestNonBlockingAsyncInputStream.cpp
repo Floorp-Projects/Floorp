@@ -284,14 +284,9 @@ class QIInputStream final : public nsIInputStream,
   // nsIIPCSerializableInputStream
   void SerializedComplexity(uint32_t, uint32_t*, uint32_t*,
                             uint32_t*) override {}
-  void Serialize(mozilla::ipc::InputStreamParams&, FileDescriptorArray&, bool,
-                 uint32_t, uint32_t*,
-                 mozilla::ipc::ParentToChildStreamActorManager*) override {}
-  void Serialize(mozilla::ipc::InputStreamParams&, FileDescriptorArray&, bool,
-                 uint32_t, uint32_t*,
-                 mozilla::ipc::ChildToParentStreamActorManager*) override {}
-  bool Deserialize(const mozilla::ipc::InputStreamParams&,
-                   const FileDescriptorArray&) override {
+  void Serialize(mozilla::ipc::InputStreamParams&, uint32_t,
+                 uint32_t*) override {}
+  bool Deserialize(const mozilla::ipc::InputStreamParams&) override {
     return false;
   }
 
