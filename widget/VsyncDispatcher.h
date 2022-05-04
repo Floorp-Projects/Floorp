@@ -31,6 +31,8 @@ class VsyncObserver {
   virtual ~VsyncObserver() = default;
 };  // VsyncObserver
 
+class VsyncDispatcher;
+
 // Used to dispatch vsync events in the parent process to compositors.
 //
 // When the compositor is in-process, CompositorWidgets own a
@@ -43,17 +45,14 @@ class VsyncObserver {
 // This observer forwards vsync notifications (on the vsync thread) to a
 // dedicated vsync I/O thread, which then forwards the notification to the
 // compositor thread in the compositor process.
-class CompositorVsyncDispatcher final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncDispatcher)
+class CompositorVsyncDispatcher final : public VsyncObserver {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncDispatcher, override)
 
  public:
-  CompositorVsyncDispatcher();
-  explicit CompositorVsyncDispatcher(RefPtr<gfx::VsyncSource> aVsyncSource);
+  explicit CompositorVsyncDispatcher(RefPtr<VsyncDispatcher> aVsyncDispatcher);
 
   // Called on the vsync thread when a hardware vsync occurs
-  void NotifyVsync(const VsyncEvent& aVsync);
-
-  void MoveToSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);
+  void NotifyVsync(const VsyncEvent& aVsync) override;
 
   // Compositor vsync observers must be added/removed on the compositor thread
   void SetCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
@@ -63,13 +62,14 @@ class CompositorVsyncDispatcher final {
   virtual ~CompositorVsyncDispatcher();
   void ObserveVsync(bool aEnable);
 
-  RefPtr<gfx::VsyncSource> mVsyncSource;
+  RefPtr<VsyncDispatcher> mVsyncDispatcher;
   Mutex mCompositorObserverLock MOZ_UNANNOTATED;
   RefPtr<VsyncObserver> mCompositorVsyncObserver;
   bool mDidShutdown;
 };
 
 // Dispatch vsync events to various observers. This is used by:
+//  - CompositorVsyncDispatcher
 //  - Parent process refresh driver timers
 //  - IPC for content process refresh driver timers (VsyncParent <->
 //  VsyncMainChild)
