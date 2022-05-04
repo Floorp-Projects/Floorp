@@ -186,14 +186,23 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
           pixel_type *JXL_RESTRICT r = channel.Row(y);
           std::fill(r, r + channel.w, v);
         }
-
       } else {
         JXL_DEBUG_V(8, "Fast track.");
-        for (size_t y = 0; y < channel.h; y++) {
-          pixel_type *JXL_RESTRICT r = channel.Row(y);
-          for (size_t x = 0; x < channel.w; x++) {
-            uint32_t v = reader->ReadHybridUintClustered(ctx_id, br);
-            r[x] = make_pixel(v, multiplier, offset);
+        if (multiplier == 1 && offset == 0) {
+          for (size_t y = 0; y < channel.h; y++) {
+            pixel_type *JXL_RESTRICT r = channel.Row(y);
+            for (size_t x = 0; x < channel.w; x++) {
+              uint32_t v = reader->ReadHybridUintClustered(ctx_id, br);
+              r[x] = UnpackSigned(v);
+            }
+          }
+        } else {
+          for (size_t y = 0; y < channel.h; y++) {
+            pixel_type *JXL_RESTRICT r = channel.Row(y);
+            for (size_t x = 0; x < channel.w; x++) {
+              uint32_t v = reader->ReadHybridUintClustered(ctx_id, br);
+              r[x] = make_pixel(v, multiplier, offset);
+            }
           }
         }
       }
@@ -355,12 +364,36 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
       pixel_type *JXL_RESTRICT p = channel.Row(y);
       PrecomputeReferences(channel, y, *image, chan, &references);
       InitPropsRow(&properties, static_props, y);
-      for (size_t x = 0; x < channel.w; x++) {
-        PredictionResult res =
-            PredictTreeNoWP(&properties, channel.w, p + x, onerow, x, y,
-                            tree_lookup, references);
-        uint64_t v = reader->ReadHybridUintClustered(res.context, br);
-        p[x] = make_pixel(v, res.multiplier, res.guess);
+      if (y > 1 && channel.w > 8 && references.w == 0) {
+        for (size_t x = 0; x < 2; x++) {
+          PredictionResult res =
+              PredictTreeNoWP(&properties, channel.w, p + x, onerow, x, y,
+                              tree_lookup, references);
+          uint64_t v = reader->ReadHybridUintClustered(res.context, br);
+          p[x] = make_pixel(v, res.multiplier, res.guess);
+        }
+        for (size_t x = 2; x < channel.w - 2; x++) {
+          PredictionResult res =
+              PredictTreeNoWPNEC(&properties, channel.w, p + x, onerow, x, y,
+                                 tree_lookup, references);
+          uint64_t v = reader->ReadHybridUintClustered(res.context, br);
+          p[x] = make_pixel(v, res.multiplier, res.guess);
+        }
+        for (size_t x = channel.w - 2; x < channel.w; x++) {
+          PredictionResult res =
+              PredictTreeNoWP(&properties, channel.w, p + x, onerow, x, y,
+                              tree_lookup, references);
+          uint64_t v = reader->ReadHybridUintClustered(res.context, br);
+          p[x] = make_pixel(v, res.multiplier, res.guess);
+        }
+      } else {
+        for (size_t x = 0; x < channel.w; x++) {
+          PredictionResult res =
+              PredictTreeNoWP(&properties, channel.w, p + x, onerow, x, y,
+                              tree_lookup, references);
+          uint64_t v = reader->ReadHybridUintClustered(res.context, br);
+          p[x] = make_pixel(v, res.multiplier, res.guess);
+        }
       }
     }
   } else {

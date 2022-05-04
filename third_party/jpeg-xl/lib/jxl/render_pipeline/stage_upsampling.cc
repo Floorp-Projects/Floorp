@@ -40,7 +40,7 @@ class UpsamplingStage : public RenderPipelineStage {
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  float* JXL_RESTRICT temp) const final {
+                  size_t thread_id) const final {
     PROFILER_ZONE("Upsampling");
     static HWY_FULL(float) df;
     size_t shift = settings_.shift_x;

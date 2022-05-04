@@ -265,6 +265,7 @@ Status FrameDecoder::InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
   decoded->duration = frame_header_.animation_frame.duration;
 
   if (!frame_header_.nonserialized_is_preview &&
+      (frame_header_.is_last || frame_header_.animation_frame.duration > 0) &&
       (frame_header_.frame_type == kRegularFrame ||
        frame_header_.frame_type == kSkipProgressive)) {
     ++dec_state_->visible_frame_index;
@@ -556,10 +557,11 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
                                     size_t num_passes, size_t thread,
                                     bool force_draw, bool dc_only) {
   PROFILER_ZONE("process_group");
+  size_t group_dim = frame_dim_.group_dim;
   const size_t gx = ac_group_id % frame_dim_.xsize_groups;
   const size_t gy = ac_group_id / frame_dim_.xsize_groups;
-  const size_t x = gx * frame_dim_.group_dim;
-  const size_t y = gy * frame_dim_.group_dim;
+  const size_t x = gx * group_dim;
+  const size_t y = gy * group_dim;
 
   RenderPipelineInput render_pipeline_input =
       dec_state_->render_pipeline->GetInputBuffers(ac_group_id, thread);
@@ -577,7 +579,7 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
   }
 
   // don't limit to image dimensions here (is done in DecodeGroup)
-  const Rect mrect(x, y, frame_dim_.group_dim, frame_dim_.group_dim);
+  const Rect mrect(x, y, group_dim, group_dim);
   for (size_t i = 0; i < frame_header_.passes.num_passes; i++) {
     int minShift, maxShift;
     frame_header_.passes.GetDownsamplingBracket(i, minShift, maxShift);
@@ -612,14 +614,14 @@ Status FrameDecoder::ProcessACGroup(size_t ac_group_id,
           rects[c].first = r.first;
           size_t x1 = r.second.x0() + r.second.xsize();
           size_t y1 = r.second.y0() + r.second.ysize();
-          rects[c].second = Rect(r.second.x0() + ix * kGroupDim,
-                                 r.second.y0() + iy * kGroupDim, kGroupDim,
-                                 kGroupDim, x1, y1);
+          rects[c].second = Rect(r.second.x0() + ix * group_dim,
+                                 r.second.y0() + iy * group_dim, group_dim,
+                                 group_dim, x1, y1);
         }
         Random3Planes(dec_state_->visible_frame_index,
                       dec_state_->nonvisible_frame_index,
-                      (gx * frame_header_.upsampling + ix) * kGroupDim,
-                      (gy * frame_header_.upsampling + iy) * kGroupDim,
+                      (gx * frame_header_.upsampling + ix) * group_dim,
+                      (gy * frame_header_.upsampling + iy) * group_dim,
                       rects[0], rects[1], rects[2]);
       }
     }
@@ -792,8 +794,8 @@ Status FrameDecoder::ProcessSections(const SectionInfo* sections, size_t num,
     JXL_RETURN_IF_ERROR(RunOnPool(
         pool_, 0, ac_group_sec.size(),
         [this](size_t num_threads) {
-          PrepareStorage(num_threads, decoded_passes_per_ac_group_.size());
-          return true;
+          return PrepareStorage(num_threads,
+                                decoded_passes_per_ac_group_.size());
         },
         [this, &ac_group_sec, &num_ac_passes, &num, &sections, &section_status,
          &has_error](size_t g, size_t thread) {
@@ -863,8 +865,8 @@ Status FrameDecoder::Flush() {
     JXL_RETURN_IF_ERROR(RunOnPool(
         pool_, 0, decoded_passes_per_ac_group_.size(),
         [this](const size_t num_threads) {
-          PrepareStorage(num_threads, decoded_passes_per_ac_group_.size());
-          return true;
+          return PrepareStorage(num_threads,
+                                decoded_passes_per_ac_group_.size());
         },
         [this, &has_error](const uint32_t g, size_t thread) {
           if (decoded_passes_per_ac_group_[g] ==

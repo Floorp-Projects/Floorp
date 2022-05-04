@@ -28,7 +28,6 @@ HWY_INLINE HWY_MAYBE_UNUSED Vec<Rebind<float, DI>> AdjustQuantBias(
     const float* HWY_RESTRICT biases) {
   const Rebind<float, DI> df;
 
-#if JXL_HIGH_PRECISION
   const auto quant = ConvertTo(df, quant_i);
 
   // Compare |quant|, keep sign bit for negating result.
@@ -56,12 +55,6 @@ HWY_INLINE HWY_MAYBE_UNUSED Vec<Rebind<float, DI>> AdjustQuantBias(
       NegMulAdd(Set(df, biases[3]), ApproximateReciprocal(quant), quant);
 
   return IfThenElse(is_01, one_bias, bias);
-#else
-  auto sign = IfThenElseZero(quant_i < Zero(di), Set(di, INT32_MIN));
-  return BitCast(df, IfThenElse(Abs(quant_i) == Set(di, 1),
-                                sign | BitCast(di, Set(df, biases[c])),
-                                BitCast(di, ConvertTo(df, quant_i))));
-#endif
 }
 
 }  // namespace

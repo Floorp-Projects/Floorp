@@ -95,6 +95,7 @@ bool ProcessSOF(const uint8_t* data, const size_t len, JpegReadMode mode,
   int height = ReadUint16(data, pos);
   int width = ReadUint16(data, pos);
   int num_components = ReadUint8(data, pos);
+  // 'jbrd' is hardcoded for 8bits:
   JXL_JPEG_VERIFY_INPUT(precision, 8, 8, PRECISION);
   JXL_JPEG_VERIFY_INPUT(height, 1, kMaxDimPixels, HEIGHT);
   JXL_JPEG_VERIFY_INPUT(width, 1, kMaxDimPixels, WIDTH);

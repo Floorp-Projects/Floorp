@@ -132,7 +132,7 @@ ParseContentRangeHeaderString(const nsAutoCString& aRangeStr) {
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
-  if (rangeStart >= rangeEnd) {
+  if (rangeStart > rangeEnd) {
     return Err(NS_ERROR_ILLEGAL_VALUE);
   }
 

@@ -10,43 +10,8 @@
 #include <stddef.h>
 
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/sanitizer_definitions.h"
 #include "lib/jxl/image.h"
-
-#ifdef MEMORY_SANITIZER
-#define JXL_MEMORY_SANITIZER 1
-#elif defined(__has_feature)
-#if __has_feature(memory_sanitizer)
-#define JXL_MEMORY_SANITIZER 1
-#else
-#define JXL_MEMORY_SANITIZER 0
-#endif
-#else
-#define JXL_MEMORY_SANITIZER 0
-#endif
-
-#ifdef ADDRESS_SANITIZER
-#define JXL_ADDRESS_SANITIZER 1
-#elif defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define JXL_ADDRESS_SANITIZER 1
-#else
-#define JXL_ADDRESS_SANITIZER 0
-#endif
-#else
-#define JXL_ADDRESS_SANITIZER 0
-#endif
-
-#ifdef THREAD_SANITIZER
-#define JXL_THREAD_SANITIZER 1
-#elif defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define JXL_THREAD_SANITIZER 1
-#else
-#define JXL_THREAD_SANITIZER 0
-#endif
-#else
-#define JXL_THREAD_SANITIZER 0
-#endif
 
 #if JXL_MEMORY_SANITIZER
 #include <stdio.h>

@@ -20,6 +20,7 @@
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_icc_codec.h"
+#include "lib/jxl/exif.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image_bundle.h"
@@ -64,51 +65,6 @@ PassDefinition progressive_passes_dc_quant_ac_full_ac[] = {
      /*suitable_for_downsampling_of_at_least=*/0},
 };
 
-constexpr uint16_t kExifOrientationTag = 274;
-
-// Parses the Exif data just enough to extract any render-impacting info.
-// If the Exif data is invalid or could not be parsed, then it is treated
-// as a no-op.
-// TODO (jon): tag 1 can be used to represent Adobe RGB 1998 if it has value
-// "R03"
-// TODO (jon): set intrinsic dimensions according to
-// https://discourse.wicg.io/t/proposal-exif-image-resolution-auto-and-from-image/4326/24
-void InterpretExif(const PaddedBytes& exif, CodecMetadata* metadata) {
-  if (exif.size() < 12) return;  // not enough bytes for a valid exif blob
-  const uint8_t* t = exif.data();
-  bool bigendian = false;
-  if (LoadLE32(t) == 0x2A004D4D) {
-    bigendian = true;
-  } else if (LoadLE32(t) != 0x002A4949) {
-    return;  // not a valid tiff header
-  }
-  t += 4;
-  uint32_t offset = (bigendian ? LoadBE32(t) : LoadLE32(t));
-  if (exif.size() < 12 + offset + 2 || offset < 8) return;
-  t += offset - 4;
-  uint16_t nb_tags = (bigendian ? LoadBE16(t) : LoadLE16(t));
-  t += 2;
-  while (nb_tags > 0) {
-    if (t + 12 >= exif.data() + exif.size()) return;
-    uint16_t tag = (bigendian ? LoadBE16(t) : LoadLE16(t));
-    t += 2;
-    uint16_t type = (bigendian ? LoadBE16(t) : LoadLE16(t));
-    t += 2;
-    uint32_t count = (bigendian ? LoadBE32(t) : LoadLE32(t));
-    t += 4;
-    uint16_t value = (bigendian ? LoadBE16(t) : LoadLE16(t));
-    t += 4;
-    if (tag == kExifOrientationTag) {
-      if (type == 3 && count == 1) {
-        if (value >= 1 && value <= 8) {
-          metadata->m.orientation = value;
-        }
-      }
-    }
-    nb_tags--;
-  }
-}
-
 Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
                                   const CodecInOut* io,
                                   CodecMetadata* metadata) {
@@ -121,9 +77,7 @@ Status PrepareCodecMetadataFromIO(const CompressParams& cparams,
   // Keep ICC profile in lossless modes because a reconstructed profile may be
   // slightly different (quantization).
   // Also keep ICC in JPEG reconstruction mode as we need byte-exact profiles.
-  const bool lossless_modular =
-      cparams.modular_mode && cparams.quality_pair.first == 100.0f;
-  if (!lossless_modular && !io->Main().IsJPEG()) {
+  if (!cparams.IsLossless() && !io->Main().IsJPEG()) {
     metadata->m.color_encoding.DecideIfWantICC();
   }
 

@@ -905,7 +905,7 @@ run_benchmark() {
 
   local benchmark_args=(
     --input "${src_img_dir}/*.png"
-    --codec=jpeg:yuv420:q85,webp:q80,jxl:fast:d1,jxl:fast:d1:downsampling=8,jxl:fast:d4,jxl:fast:d4:downsampling=8,jxl:cheetah:m,jxl:m:cheetah:P6,jxl:m:falcon:q80
+    --codec=jpeg:yuv420:q85,webp:q80,jxl:d1:6,jxl:d1:6:downsampling=8,jxl:d5:6,jxl:d5:6:downsampling=8,jxl:m:d0:2,jxl:m:d0:3,jxl:m:d2:2
     --output_dir "${output_dir}"
     --noprofiler --show_progress
     --num_threads="${num_threads}"
@@ -1020,11 +1020,11 @@ cmd_arm_benchmark() {
   )
 
   local images=(
-    "third_party/testdata/imagecompression.info/flower_foveon.png"
+    "third_party/testdata/third_party/imagecompression.info/flower_foveon.png"
   )
 
   local jpg_images=(
-    "third_party/testdata/imagecompression.info/flower_foveon.png.im_q85_420.jpg"
+    "third_party/testdata/third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg"
   )
 
   if [[ "${SKIP_CPUSET:-}" == "1" ]]; then

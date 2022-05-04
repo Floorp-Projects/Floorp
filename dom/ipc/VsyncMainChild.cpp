@@ -64,7 +64,7 @@ mozilla::ipc::IPCResult VsyncMainChild::RecvNotify(const VsyncEvent& aVsync,
 
   mVsyncRate = TimeDuration::FromMilliseconds(aVsyncRate);
 
-  for (VsyncObserver* observer : mObservers.ForwardRange()) {
+  for (RefPtr<VsyncObserver> observer : mObservers.ForwardRange()) {
     observer->NotifyVsync(aVsync);
   }
   return IPC_OK();

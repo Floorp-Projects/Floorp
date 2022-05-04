@@ -22,19 +22,6 @@
 namespace jxl {
 namespace {
 
-uint64_t DecodeVarInt(const uint8_t* input, size_t inputSize, size_t* pos) {
-  size_t i;
-  uint64_t ret = 0;
-  for (i = 0; *pos + i < inputSize && i < 10; ++i) {
-    ret |= uint64_t(input[*pos + i] & 127) << uint64_t(7 * i);
-    // If the next-byte flag is not set, stop
-    if ((input[*pos + i] & 128) == 0) break;
-  }
-  // TODO: Return a decoding error if i == 10.
-  *pos += i + 1;
-  return ret;
-}
-
 // Shuffles or interleaves bytes, for example with width 2, turns "ABCDabcd"
 // into "AaBbCcDc". Transposes a matrix of ceil(size / width) columns and
 // width rows. There are size elements, size may be < width * height, if so the

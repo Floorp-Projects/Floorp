@@ -36,10 +36,10 @@ void VsyncParent::UpdateVsyncSource(
   }
 }
 
-bool VsyncParent::NotifyVsync(const VsyncEvent& aVsync) {
+void VsyncParent::NotifyVsync(const VsyncEvent& aVsync) {
   if (IsOnInitialThread()) {
     DispatchVsyncEvent(aVsync);
-    return true;
+    return;
   }
 
   // Called on hardware vsync thread. We should post to current ipc thread.
@@ -48,7 +48,6 @@ bool VsyncParent::NotifyVsync(const VsyncEvent& aVsync) {
       &VsyncParent::DispatchVsyncEvent, aVsync);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToThreadQueue(
       vsyncEvent.forget(), mInitialThread, EventQueuePriority::Vsync));
-  return true;
 }
 
 void VsyncParent::DispatchVsyncEvent(const VsyncEvent& aVsync) {

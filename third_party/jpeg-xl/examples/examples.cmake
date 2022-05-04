@@ -9,13 +9,3 @@ add_executable(decode_progressive ${CMAKE_CURRENT_LIST_DIR}/decode_progressive.c
 target_link_libraries(decode_progressive jxl_dec jxl_threads)
 add_executable(encode_oneshot ${CMAKE_CURRENT_LIST_DIR}/encode_oneshot.cc)
 target_link_libraries(encode_oneshot jxl jxl_threads)
-
-add_executable(jxlinfo ${CMAKE_CURRENT_LIST_DIR}/jxlinfo.c)
-target_link_libraries(jxlinfo jxl)
-
-if(NOT ${SANITIZER} STREQUAL "none")
-  # Linking a C test binary with the C++ JPEG XL implementation when using
-  # address sanitizer is not well supported by clang 9, so force using clang++
-  # for linking this test if a sanitizer is used.
-  set_target_properties(jxlinfo PROPERTIES LINKER_LANGUAGE CXX)
-endif()  # SANITIZER != "none"

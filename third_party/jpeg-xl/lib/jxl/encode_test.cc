@@ -38,6 +38,7 @@ TEST(EncodeTest, AddFrameAfterCloseInputTest) {
   basic_info.xsize = xsize;
   basic_info.ysize = ysize;
   basic_info.uses_original_profile = false;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding,
@@ -58,7 +59,7 @@ TEST(EncodeTest, AddJPEGAfterCloseTest) {
   JxlEncoderCloseInput(enc.get());
 
   const std::string jpeg_path =
-      "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
+      "third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
 
   JxlEncoderFrameSettings* frame_settings =
@@ -85,6 +86,7 @@ TEST(EncodeTest, AddFrameBeforeColorEncodingTest) {
   basic_info.xsize = xsize;
   basic_info.ysize = ysize;
   basic_info.uses_original_profile = true;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlEncoderFrameSettings* frame_settings =
       JxlEncoderFrameSettingsCreate(enc.get(), NULL);
@@ -173,6 +175,8 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
   } else {
     basic_info.uses_original_profile = false;
   }
+  // 16-bit alpha means this requires level 10
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc, 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc, &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding,
@@ -198,7 +202,6 @@ void VerifyFrameEncoding(size_t xsize, size_t ysize, JxlEncoder* enc,
   }
   compressed.resize(next_out - compressed.data());
   EXPECT_EQ(JXL_ENC_SUCCESS, process_result);
-
   jxl::DecompressParams dparams;
   jxl::CodecInOut decoded_io;
   EXPECT_TRUE(jxl::DecodeFile(
@@ -630,6 +633,7 @@ TEST(EncodeTest, SingleFrameBoundedJXLCTest) {
   basic_info.xsize = xsize;
   basic_info.ysize = ysize;
   basic_info.uses_original_profile = false;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding,
@@ -739,7 +743,7 @@ TEST(EncodeTest, CodestreamLevelTest) {
 }
 
 TEST(EncodeTest, CodestreamLevelVerificationTest) {
-  JxlPixelFormat pixel_format = {4, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
+  JxlPixelFormat pixel_format = {4, JXL_TYPE_UINT8, JXL_BIG_ENDIAN, 0};
 
   JxlBasicInfo basic_info;
   jxl::test::JxlBasicInfoSetFromPixelFormat(&basic_info, &pixel_format);
@@ -755,21 +759,20 @@ TEST(EncodeTest, CodestreamLevelVerificationTest) {
   // Set an image dimension that is too large for level 5, but fits in level 10
 
   basic_info.xsize = 1ull << 30ull;
+  EXPECT_EQ(JXL_ENC_ERROR, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
-
   EXPECT_EQ(10, JxlEncoderGetRequiredCodestreamLevel(enc.get()));
 
   // Set an image dimension that is too large even for level 10
 
   basic_info.xsize = 1ull << 31ull;
-  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
-
-  EXPECT_EQ(-1, JxlEncoderGetRequiredCodestreamLevel(enc.get()));
+  EXPECT_EQ(JXL_ENC_ERROR, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
 }
 
 TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   const std::string jpeg_path =
-      "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
+      "third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
 
   JxlEncoderPtr enc = JxlEncoderMake(nullptr);
@@ -900,6 +903,7 @@ TEST(EncodeTest, BasicInfoTest) {
   basic_info.animation.tps_denominator = 77;
   basic_info.animation.num_loops = 10;
   basic_info.animation.have_timecodes = JXL_TRUE;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding, /*is_gray=*/false);
@@ -1001,6 +1005,7 @@ TEST(EncodeTest, AnimationHeaderTest) {
   basic_info.animation.tps_numerator = 1000;
   basic_info.animation.tps_denominator = 1;
   basic_info.animation.have_timecodes = JXL_TRUE;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding, /*is_gray=*/false);
@@ -1102,6 +1107,7 @@ TEST(EncodeTest, CroppedFrameTest) {
   basic_info.xsize = 100;
   basic_info.ysize = 100;
   basic_info.uses_original_profile = JXL_TRUE;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
   JxlColorEncoding color_encoding;
   JxlColorEncodingSetToSRGB(&color_encoding, /*is_gray=*/false);
@@ -1194,6 +1200,7 @@ TEST(EncodeTest, BoxTest) {
     basic_info.xsize = xsize;
     basic_info.ysize = ysize;
     basic_info.uses_original_profile = false;
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc.get(), 10));
     EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc.get(), &basic_info));
     JxlColorEncoding color_encoding;
     JxlColorEncodingSetToSRGB(&color_encoding,
@@ -1300,7 +1307,7 @@ TEST(EncodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGFrameTest)) {
     for (int skip_color_encoding = 0; skip_color_encoding < 2;
          skip_color_encoding++) {
       const std::string jpeg_path =
-          "imagecompression.info/flower_foveon_cropped.jpg";
+          "third_party/imagecompression.info/flower_foveon_cropped.jpg";
       const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
       jxl::CodecInOut orig_io;
       ASSERT_TRUE(SetFromBytes(jxl::Span<const uint8_t>(orig), &orig_io,

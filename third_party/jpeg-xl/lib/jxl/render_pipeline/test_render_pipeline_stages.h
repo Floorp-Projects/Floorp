@@ -22,7 +22,7 @@ class UpsampleXSlowStage : public RenderPipelineStage {
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  float* JXL_RESTRICT temp) const final {
+                  size_t thread_id) const final {
     for (size_t c = 0; c < input_rows.size(); c++) {
       const float* row = GetInputRow(input_rows, c, 0);
       float* row_out = GetOutputRow(output_rows, c, 0);
@@ -52,7 +52,7 @@ class UpsampleYSlowStage : public RenderPipelineStage {
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  float* JXL_RESTRICT temp) const final {
+                  size_t thread_id) const final {
     for (size_t c = 0; c < input_rows.size(); c++) {
       const float* rowp = GetInputRow(input_rows, c, -1);
       const float* rowc = GetInputRow(input_rows, c, 0);
@@ -84,7 +84,7 @@ class Check0FinalStage : public RenderPipelineStage {
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  float* JXL_RESTRICT temp) const final {
+                  size_t thread_id) const final {
     for (size_t c = 0; c < input_rows.size(); c++) {
       for (size_t x = 0; x < xsize; x++) {
         JXL_CHECK(fabsf(GetInputRow(input_rows, c, 0)[x]) < 1e-8);

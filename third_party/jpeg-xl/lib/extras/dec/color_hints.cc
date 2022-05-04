@@ -42,9 +42,7 @@ Status ApplyColorHints(const ColorHints& color_hints,
 
           got_color_space = true;
         } else if (key == "icc_pathname") {
-          PaddedBytes icc;
-          JXL_RETURN_IF_ERROR(ReadFile(value, &icc));
-          ppf->icc = std::vector<uint8_t>{icc.data(), icc.data() + icc.size()};
+          JXL_RETURN_IF_ERROR(ReadFile(value, &ppf->icc));
           got_color_space = true;
         } else {
           JXL_WARNING("Ignoring %s hint", key.c_str());

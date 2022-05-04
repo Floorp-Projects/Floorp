@@ -116,18 +116,12 @@ void RenderPipeline::InputReady(
   ProcessBuffers(group_id, thread_id);
 }
 
-void RenderPipeline::PrepareForThreads(size_t num, bool use_group_ids) {
-  temp_buffers_.resize(num);
-  for (auto& thread_buffer : temp_buffers_) {
-    size_t size = 0;
-    for (const auto& stage : stages_) {
-      size = std::max(stage->settings_.temp_buffer_size, size);
-    }
-    if (size) {
-      thread_buffer = AllocateArray(sizeof(float) * size);
-    }
+Status RenderPipeline::PrepareForThreads(size_t num, bool use_group_ids) {
+  for (const auto& stage : stages_) {
+    JXL_RETURN_IF_ERROR(stage->PrepareForThreads(num));
   }
   PrepareForThreadsInternal(num, use_group_ids);
+  return true;
 }
 
 void RenderPipelineInput::Done() {

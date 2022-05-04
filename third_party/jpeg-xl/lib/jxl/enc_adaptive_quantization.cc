@@ -1102,9 +1102,10 @@ ImageBundle RoundtripImage(const Image3F& opsin, PassesEncoderState* enc_state,
   JXL_CHECK(dec_state->PreparePipeline(&decoded, options));
 
   hwy::AlignedUniquePtr<GroupDecCache[]> group_dec_caches;
-  const auto allocate_storage = [&](const size_t num_threads) {
-    dec_state->render_pipeline->PrepareForThreads(num_threads,
-                                                  /*use_group_ids=*/false);
+  const auto allocate_storage = [&](const size_t num_threads) -> Status {
+    JXL_RETURN_IF_ERROR(
+        dec_state->render_pipeline->PrepareForThreads(num_threads,
+                                                      /*use_group_ids=*/false));
     group_dec_caches = hwy::MakeUniqueAlignedArray<GroupDecCache>(num_threads);
     return true;
   };

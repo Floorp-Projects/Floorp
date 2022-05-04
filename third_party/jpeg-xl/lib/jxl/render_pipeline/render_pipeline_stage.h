@@ -55,10 +55,6 @@ class RenderPipelineStage {
     size_t shift_x = 0;
     size_t shift_y = 0;
 
-    // Size (in floats) of the (aligned) per-thread temporary buffer to pass to
-    // ProcessRow.
-    size_t temp_buffer_size = 0;
-
     static Settings ShiftX(size_t shift, size_t border) {
       Settings settings;
       settings.border_x = border;
@@ -73,8 +69,7 @@ class RenderPipelineStage {
       return settings;
     }
 
-    static Settings Symmetric(size_t shift, size_t border,
-                              size_t temp_buffer_size = 0) {
+    static Settings Symmetric(size_t shift, size_t border) {
       Settings settings;
       settings.border_x = settings.border_y = border;
       settings.shift_x = settings.shift_y = shift;
@@ -103,7 +98,7 @@ class RenderPipelineStage {
   // of floats; concurrent calls will have different buffers.
   virtual void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                           size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                          float* JXL_RESTRICT temp) const = 0;
+                          size_t thread_id) const = 0;
 
  protected:
   explicit RenderPipelineStage(Settings settings) : settings_(settings) {}
@@ -114,6 +109,8 @@ class RenderPipelineStage {
   // actually need to use this information.
   virtual void SetInputSizes(
       const std::vector<std::pair<size_t, size_t>>& input_sizes) {}
+
+  virtual Status PrepareForThreads(size_t num_threads) { return true; }
 
   // How each channel will be processed. Channels are numbered starting from
   // color channels (always 3) and followed by all other channels.

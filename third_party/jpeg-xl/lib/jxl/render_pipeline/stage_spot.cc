@@ -17,7 +17,7 @@ class SpotColorStage : public RenderPipelineStage {
 
   void ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                   size_t xextra, size_t xsize, size_t xpos, size_t ypos,
-                  float* JXL_RESTRICT temp) const final {
+                  size_t thread_id) const final {
     // TODO(veluca): add SIMD.
     PROFILER_ZONE("RenderSpotColors");
     float scale = spot_color_[3];

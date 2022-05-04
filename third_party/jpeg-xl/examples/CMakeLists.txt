@@ -25,9 +25,6 @@ target_link_libraries(decode_progressive PkgConfig::Jxl PkgConfig::JxlThreads)
 add_executable(encode_oneshot encode_oneshot.cc)
 target_link_libraries(encode_oneshot PkgConfig::Jxl PkgConfig::JxlThreads)
 
-add_executable(jxlinfo jxlinfo.c)
-target_link_libraries(jxlinfo PkgConfig::Jxl)
-
 
 # Building a static binary with the static libjxl dependencies. How to load
 # static library configs from pkg-config and how to build static binaries
