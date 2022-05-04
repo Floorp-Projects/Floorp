@@ -8,14 +8,23 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+/**
+ * [ViewModel] to keep track of the profiler state
+ */
 class ProfilerViewModel : ViewModel() {
-    var isProfilerActive : MutableLiveData<Boolean> = MutableLiveData()
+    var isProfilerActive: MutableLiveData<Boolean> = MutableLiveData()
 
+    /**
+     * @return profiler status
+     */
     fun getProfilerState(): LiveData<Boolean> {
         return isProfilerActive
     }
 
-    fun setProfilerState(isActive: Boolean){
+    /**
+     * @param isActive whether the profiler is active or not
+     */
+    fun setProfilerState(isActive: Boolean) {
         isProfilerActive.value = isActive
     }
 }

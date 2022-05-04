@@ -65,15 +65,20 @@ class ProfilerStopDialogFragment : DialogFragment() {
     private fun StopProfilerCard() {
 
         val viewStateObserver = remember { mutableStateOf(CardState.UrlWarningState) }
-        Dialog(onDismissRequest = {
-            // In the waiting state, we do not want the users to be able to click away from the dialogue
-            // since the user needs to wait for the profiler data to be ready and we don't want to handle
-            // the process in the background.
-            if (viewStateObserver.value != CardState.WaitForProfilerState) {
-                profilerViewModel.setProfilerState(requireContext().components.core.engine.profiler!!.isProfilerActive())
-                this@ProfilerStopDialogFragment.dismiss()
+        Dialog(
+            onDismissRequest = {
+                // In the waiting state, we do not want the users to be able to click away from the dialogue
+                // since the user needs to wait for the profiler data to be ready and we don't want to handle
+                // the process in the background.
+                if (viewStateObserver.value != CardState.WaitForProfilerState) {
+                    profilerViewModel.setProfilerState(
+                        requireContext()
+                            .components.core.engine.profiler!!.isProfilerActive()
+                    )
+                    this@ProfilerStopDialogFragment.dismiss()
+                }
             }
-        }) {
+        ) {
             when (viewStateObserver.value) {
                 CardState.UrlWarningState -> {
                     UrlWarningCard(viewStateObserver)
@@ -111,7 +116,7 @@ class ProfilerStopDialogFragment : DialogFragment() {
                 ) {
                     TextButton(
                         onClick = {
-                           displayToastAndDismiss(R.string.profile_stop_dialogue_cancel_save)
+                            displayToastAndDismiss(R.string.profile_stop_dialogue_cancel_save)
                         }
                     ) {
                         Text(stringResource(R.string.profiler_start_cancel))

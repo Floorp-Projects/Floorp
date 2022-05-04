@@ -151,9 +151,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 }
             }
 
-        profilerViewModel.getProfilerState().observe(this, Observer<Boolean>{
-            updateProfilerUI(it)
-        })
+        profilerViewModel.getProfilerState().observe(
+            this,
+            Observer<Boolean> {
+                updateProfilerUI(it)
+            }
+        )
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -497,7 +500,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_secret_debug_info)
             )?.isVisible = showSecretDebugMenuThisSession
-            preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession && (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
+            preferenceStartProfiler?.isVisible = showSecretDebugMenuThisSession &&
+                (requireContext().components.core.engine.profiler?.isProfilerActive() != null)
         }
         setupAmoCollectionOverridePreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
@@ -660,7 +664,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         return browsers.isFirefoxDefaultBrowser
     }
 
-    private fun updateProfilerUI(profilerStatus: Boolean){
+    private fun updateProfilerUI(profilerStatus: Boolean) {
         if (profilerStatus) {
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_start_profiler))?.title =
                 resources.getString(R.string.profiler_stop)

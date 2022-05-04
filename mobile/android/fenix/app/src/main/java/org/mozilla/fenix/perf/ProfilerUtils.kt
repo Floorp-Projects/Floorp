@@ -14,14 +14,9 @@ import mozilla.components.concept.fetch.Response
 import org.json.JSONObject
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStreamReader
-import java.util.zip.GZIPInputStream
 
 private const val PROFILER_API = "https://api.profiler.firefox.com/compressed-store"
 private const val PROFILER_SERVER_HEADER = "application/vnd.firefox-profiler+json;version=1.0"
@@ -80,7 +75,7 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
 object ProfilerUtils {
 
     private fun saveProfileUrlToClipboardAndToast(profileResult: ByteArray, context: Context): String {
-        //The profile is saved to a temporary file since our fetch API takes a file or a string.
+        // The profile is saved to a temporary file since our fetch API takes a file or a string.
         // Converting the ByteArray to a String would hurt the encoding, which we need to preserve.
         val outputFile = createTemporaryFile(profileResult, context)
         val response = networkCallToProfilerServer(outputFile, context)
