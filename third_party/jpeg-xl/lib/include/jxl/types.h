@@ -16,6 +16,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jxl/jxl_export.h"
+
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
@@ -41,27 +43,25 @@ typedef enum {
    * for HDR and wide gamut images when color profile conversion is required. */
   JXL_TYPE_FLOAT = 0,
 
-  /** Use 1-bit packed in uint8_t, first pixel in LSB, padded to uint8_t per
-   * row.
-   * TODO(lode): support first in MSB, other padding.
-   */
-  JXL_TYPE_BOOLEAN,
-
   /** Use type uint8_t. May clip wide color gamut data.
    */
-  JXL_TYPE_UINT8,
+  JXL_TYPE_UINT8 = 2,
 
   /** Use type uint16_t. May clip wide color gamut data.
    */
-  JXL_TYPE_UINT16,
-
-  /** Use type uint32_t. May clip wide color gamut data.
-   */
-  JXL_TYPE_UINT32,
+  JXL_TYPE_UINT16 = 3,
 
   /** Use 16-bit IEEE 754 half-precision floating point values */
-  JXL_TYPE_FLOAT16,
+  JXL_TYPE_FLOAT16 = 5,
 } JxlDataType;
+
+/* DEPRECATED: bit-packed 1-bit data type. Use JXL_TYPE_UINT8 instead.
+ */
+static const int JXL_DEPRECATED JXL_TYPE_BOOLEAN = 1;
+
+/* DEPRECATED: uint32_t data type. Use JXL_TYPE_FLOAT instead.
+ */
+static const int JXL_DEPRECATED JXL_TYPE_UINT32 = 4;
 
 /** Ordering of multi-byte data.
  */

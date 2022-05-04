@@ -75,8 +75,8 @@ Status EncodeImagePGX(const CodecInOut* io, const ColorEncoding& c_desired,
       ConvertToExternal(*transformed, bits_per_sample,
                         /*float_out=*/false,
                         /*num_channels=*/1, JXL_BIG_ENDIAN, stride, pool,
-                        pixels.data(), pixels.size(), /*out_callback=*/nullptr,
-                        /*out_opaque=*/nullptr, metadata.GetOrientation()));
+                        pixels.data(), pixels.size(),
+                        /*out_callback=*/{}, metadata.GetOrientation()));
 
   char header[kMaxHeaderSize];
   int header_size = 0;

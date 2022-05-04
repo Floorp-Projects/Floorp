@@ -46,11 +46,9 @@ class LowMemoryRenderPipeline final : public RenderPipeline {
 
   bool use_group_ids_;
 
-  // Storage for borders between groups.
-  // We also store the extremal borders for simplicity. Horizontal borders are
-  // stored in an image as wide as the main frame, in top-to-bottom order (top
-  // border of a group first, followed by the bottom border, followed by top
-  // border of the next group). Vertical borders are similarly stored.
+  // Storage for borders between groups. Borders of adjacent groups are stacked
+  // together, e.g. bottom border of current group is followed by top border
+  // of next group.
   std::vector<ImageF> borders_horizontal_;
   std::vector<ImageF> borders_vertical_;
 

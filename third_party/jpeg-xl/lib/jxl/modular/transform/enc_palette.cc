@@ -550,18 +550,15 @@ Status FwdPalette(Image &input, uint32_t begin_c, uint32_t end_c,
                   bool lossy, Predictor &predictor,
                   const weighted::Header &wp_header) {
   PaletteIterationData palette_iteration_data;
-  uint32_t nb = end_c - begin_c + 1;
   uint32_t nb_colors_orig = nb_colors;
   uint32_t nb_deltas_orig = nb_deltas;
-  // if no channel palette special case
-  if ((lossy || nb != 1) && input.bitdepth >= 8) {
+  // preprocessing pass in case of lossy palette
+  if (lossy && input.bitdepth >= 8) {
     JXL_RETURN_IF_ERROR(FwdPaletteIteration(
-        input, begin_c, end_c, nb_colors, nb_deltas, ordered, lossy, predictor,
-        wp_header, palette_iteration_data));
+        input, begin_c, end_c, nb_colors_orig, nb_deltas_orig, ordered, lossy,
+        predictor, wp_header, palette_iteration_data));
   }
   palette_iteration_data.final_run = true;
-  nb_colors = nb_colors_orig;
-  nb_deltas = nb_deltas_orig;
   return FwdPaletteIteration(input, begin_c, end_c, nb_colors, nb_deltas,
                              ordered, lossy, predictor, wp_header,
                              palette_iteration_data);

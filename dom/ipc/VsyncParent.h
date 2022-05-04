@@ -32,7 +32,7 @@ class VsyncParent final : public PVsyncParent, public VsyncObserver {
  private:
   virtual ~VsyncParent() = default;
 
-  virtual bool NotifyVsync(const VsyncEvent& aVsync) override;
+  void NotifyVsync(const VsyncEvent& aVsync) override;
   virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   mozilla::ipc::IPCResult RecvObserve();

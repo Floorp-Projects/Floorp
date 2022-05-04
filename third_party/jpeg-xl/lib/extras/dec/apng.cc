@@ -43,6 +43,7 @@
 #include <utility>
 #include <vector>
 
+#include "jxl/codestream_header.h"
 #include "jxl/encode.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
@@ -55,6 +56,12 @@ namespace jxl {
 namespace extras {
 
 namespace {
+
+/* hIST chunk tail is not proccesed properly; skip this chunk completely;
+   see https://github.com/glennrp/libpng/pull/413 */
+const png_byte kIgnoredPngChunks[] = {
+    104, 73, 83, 84, '\0' /* hIST */
+};
 
 // Returns floating-point value from the PNG encoding (times 10^5).
 static double F64FromU32(const uint32_t x) {
@@ -163,6 +170,31 @@ class BlobsReaderPNG {
     return true;
   }
 
+  // Returns false if invalid.
+  static JXL_INLINE Status DecodeDecimal(const char** pos, const char* end,
+                                         uint32_t* JXL_RESTRICT value) {
+    size_t len = 0;
+    *value = 0;
+    while (*pos < end) {
+      char next = **pos;
+      if (next >= '0' && next <= '9') {
+        *value = (*value * 10) + static_cast<uint32_t>(next - '0');
+        len++;
+        if (len > 8) {
+          break;
+        }
+      } else {
+        // Do not consume terminator (non-decimal digit).
+        break;
+      }
+      (*pos)++;
+    }
+    if (len == 0 || len > 8) {
+      return JXL_FAILURE("Failed to parse decimal");
+    }
+    return true;
+  }
+
   // Parses a PNG text chunk with key of the form "Raw profile type ####", with
   // #### a type.
   // Returns whether it could successfully parse the content.
@@ -196,17 +228,15 @@ class BlobsReaderPNG {
     // We parsed so far a \n, some number of non \n characters and are now
     // pointing at a \n.
     if (*(pos++) != '\n') return false;
-    unsigned long bytes_to_decode;
-    const int fields = sscanf(pos, "%8lu", &bytes_to_decode);
-    if (fields != 1) return false;  // Failed to decode metadata header
-    JXL_ASSERT(pos + 8 <= encoded_end);
-    pos += 8;  // read %8lu
+    uint32_t bytes_to_decode = 0;
+    JXL_RETURN_IF_ERROR(DecodeDecimal(&pos, encoded_end, &bytes_to_decode));
 
-    // We need 2*bytes for the hex values plus 1 byte every 36 values.
+    // We need 2*bytes for the hex values plus 1 byte every 36 values,
+    // plus terminal \n for length.
     const unsigned long needed_bytes =
         bytes_to_decode * 2 + 1 + DivCeil(bytes_to_decode, 36);
     if (needed_bytes != static_cast<size_t>(encoded_end - pos)) {
-      return JXL_FAILURE("Not enough bytes to parse %lu bytes in hex",
+      return JXL_FAILURE("Not enough bytes to parse %d bytes in hex",
                          bytes_to_decode);
     }
     JXL_ASSERT(bytes->empty());
@@ -251,7 +281,7 @@ constexpr uint32_t kId_cHRM = 0x4D524863;
 constexpr uint32_t kId_eXIf = 0x66495865;
 
 struct APNGFrame {
-  PaddedBytes pixels;
+  std::vector<uint8_t> pixels;
   std::vector<uint8_t*> rows;
   unsigned int w, h, delay_num, delay_den;
 };
@@ -270,7 +300,7 @@ struct Reader {
 };
 
 const unsigned long cMaxPNGSize = 1000000UL;
-const size_t kMaxPNGChunkSize = 100000000;  // 100 MB
+const size_t kMaxPNGChunkSize = 1lu << 30;  // 1 GB
 
 void info_fn(png_structp png_ptr, png_infop info_ptr) {
   png_set_expand(png_ptr);
@@ -284,11 +314,12 @@ void row_fn(png_structp png_ptr, png_bytep new_row, png_uint_32 row_num,
             int pass) {
   APNGFrame* frame = (APNGFrame*)png_get_progressive_ptr(png_ptr);
   JXL_CHECK(frame);
+  JXL_CHECK(row_num < frame->rows.size());
   JXL_CHECK(frame->rows[row_num] < frame->pixels.data() + frame->pixels.size());
   png_progressive_combine_row(png_ptr, frame->rows[row_num], new_row);
 }
 
-inline unsigned int read_chunk(Reader* r, PaddedBytes* pChunk) {
+inline unsigned int read_chunk(Reader* r, std::vector<uint8_t>* pChunk) {
   unsigned char len[4];
   if (r->Read(&len, 4)) {
     const auto size = png_get_uint_32(len);
@@ -307,8 +338,8 @@ inline unsigned int read_chunk(Reader* r, PaddedBytes* pChunk) {
 }
 
 int processing_start(png_structp& png_ptr, png_infop& info_ptr, void* frame_ptr,
-                     bool hasInfo, PaddedBytes& chunkIHDR,
-                     std::vector<PaddedBytes>& chunksInfo) {
+                     bool hasInfo, std::vector<uint8_t>& chunkIHDR,
+                     std::vector<std::vector<uint8_t>>& chunksInfo) {
   unsigned char header[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -318,6 +349,9 @@ int processing_start(png_structp& png_ptr, png_infop& info_ptr, void* frame_ptr,
   if (setjmp(png_jmpbuf(png_ptr))) {
     return 1;
   }
+
+  png_set_keep_unknown_chunks(png_ptr, 1, kIgnoredPngChunks,
+                              (int)sizeof(kIgnoredPngChunks) / 5);
 
   png_set_crc_action(png_ptr, PNG_CRC_QUIET_USE, PNG_CRC_QUIET_USE);
   png_set_progressive_read_fn(png_ptr, frame_ptr, info_fn, row_fn, NULL);
@@ -380,9 +414,9 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
   unsigned char sig[8];
   png_structp png_ptr = nullptr;
   png_infop info_ptr = nullptr;
-  PaddedBytes chunk;
-  PaddedBytes chunkIHDR;
-  std::vector<PaddedBytes> chunksInfo;
+  std::vector<uint8_t> chunk;
+  std::vector<uint8_t> chunkIHDR;
+  std::vector<std::vector<uint8_t>> chunksInfo;
   bool isAnimated = false;
   bool hasInfo = false;
   APNGFrame frameRaw = {};
@@ -594,8 +628,7 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
           auto ok = png_get_iCCP(png_ptr, info_ptr, &name, &compression_type,
                                  &profile, &proflen);
           if (ok && proflen) {
-            ppf->icc.resize(proflen);
-            memcpy(ppf->icc.data(), profile, proflen);
+            ppf->icc.assign(profile, profile + proflen);
             have_color = true;
           } else {
             // TODO(eustas): JXL_WARNING?
@@ -670,7 +703,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         has_nontrivial_background && frame.dispose_op != DISPOSE_OP_PREVIOUS;
     size_t x0 = frame.x0;
     size_t y0 = frame.y0;
-
+    size_t xsize = frame.data.xsize;
+    size_t ysize = frame.data.ysize;
     if (previous_frame_should_be_cleared) {
       size_t xs = frame.data.xsize;
       size_t ys = frame.data.ysize;
@@ -710,6 +744,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
 
         x0 = px0;
         y0 = py0;
+        xsize = pxs;
+        ysize = pys;
         should_blend = false;
         ppf->frames.emplace_back(std::move(new_data));
       } else {
@@ -718,12 +754,15 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
         memset(blank.pixels(), 0, blank.pixels_size);
         ppf->frames.emplace_back(std::move(blank));
         auto& pframe = ppf->frames.back();
-        pframe.x0 = px0;
-        pframe.y0 = py0;
+        pframe.frame_info.layer_info.crop_x0 = px0;
+        pframe.frame_info.layer_info.crop_y0 = py0;
+        pframe.frame_info.layer_info.xsize = frame.xsize;
+        pframe.frame_info.layer_info.ysize = frame.ysize;
         pframe.frame_info.duration = 0;
-        pframe.blend = false;
-        pframe.use_for_next_frame = true;
-
+        pframe.frame_info.layer_info.have_crop = 0;
+        pframe.frame_info.layer_info.blend_info.blendmode = JXL_BLEND_REPLACE;
+        pframe.frame_info.layer_info.blend_info.source = 0;
+        pframe.frame_info.layer_info.save_as_reference = 1;
         ppf->frames.emplace_back(std::move(frame.data));
       }
     } else {
@@ -731,79 +770,28 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
     }
 
     auto& pframe = ppf->frames.back();
-    pframe.x0 = x0;
-    pframe.y0 = y0;
+    pframe.frame_info.layer_info.crop_x0 = x0;
+    pframe.frame_info.layer_info.crop_y0 = y0;
+    pframe.frame_info.layer_info.xsize = xsize;
+    pframe.frame_info.layer_info.ysize = ysize;
     pframe.frame_info.duration = frame.duration;
-    pframe.blend = should_blend;
-    pframe.use_for_next_frame = use_for_next_frame;
+    pframe.frame_info.layer_info.blend_info.blendmode =
+        should_blend ? JXL_BLEND_BLEND : JXL_BLEND_REPLACE;
+    bool is_full_size = x0 == 0 && y0 == 0 && xsize == ppf->info.xsize &&
+                        ysize == ppf->info.ysize;
+    pframe.frame_info.layer_info.have_crop = is_full_size ? 0 : 1;
+    pframe.frame_info.layer_info.blend_info.source = should_blend ? 1 : 0;
+    pframe.frame_info.layer_info.blend_info.alpha = 0;
+    pframe.frame_info.layer_info.save_as_reference = use_for_next_frame ? 1 : 0;
 
-    if (has_nontrivial_background &&
-        frame.dispose_op == DISPOSE_OP_BACKGROUND) {
-      previous_frame_should_be_cleared = true;
-    } else {
-      previous_frame_should_be_cleared = false;
-    }
+    previous_frame_should_be_cleared =
+        has_nontrivial_background && frame.dispose_op == DISPOSE_OP_BACKGROUND;
   }
   if (ppf->frames.empty()) return JXL_FAILURE("No frames decoded");
   ppf->frames.back().frame_info.is_last = true;
 
   return true;
 }
-
-static void PngWrite(png_structp png_ptr, png_bytep data, png_size_t length) {
-  PaddedBytes* bytes = static_cast<PaddedBytes*>(png_get_io_ptr(png_ptr));
-  bytes->append(data, data + length);
-}
-
-// Stores XMP and EXIF/IPTC into key/value strings for PNG
-class BlobsWriterPNG {
- public:
-  static Status Encode(const Blobs& blobs, std::vector<std::string>* strings) {
-    if (!blobs.exif.empty()) {
-      JXL_RETURN_IF_ERROR(EncodeBase16("exif", blobs.exif, strings));
-    }
-    if (!blobs.iptc.empty()) {
-      JXL_RETURN_IF_ERROR(EncodeBase16("iptc", blobs.iptc, strings));
-    }
-    if (!blobs.xmp.empty()) {
-      JXL_RETURN_IF_ERROR(EncodeBase16("xmp", blobs.xmp, strings));
-    }
-    return true;
-  }
-
- private:
-  static JXL_INLINE char EncodeNibble(const uint8_t nibble) {
-    JXL_ASSERT(nibble < 16);
-    return (nibble < 10) ? '0' + nibble : 'a' + nibble - 10;
-  }
-
-  static Status EncodeBase16(const std::string& type, const PaddedBytes& bytes,
-                             std::vector<std::string>* strings) {
-    // Encoding: base16 with newline after 72 chars.
-    const size_t base16_size =
-        2 * bytes.size() + DivCeil(bytes.size(), size_t(36)) + 1;
-    std::string base16;
-    base16.reserve(base16_size);
-    for (size_t i = 0; i < bytes.size(); ++i) {
-      if (i % 36 == 0) base16.push_back('\n');
-      base16.push_back(EncodeNibble(bytes[i] >> 4));
-      base16.push_back(EncodeNibble(bytes[i] & 0x0F));
-    }
-    base16.push_back('\n');
-    JXL_ASSERT(base16.length() == base16_size);
-
-    char key[30];
-    snprintf(key, sizeof(key), "Raw profile type %s", type.c_str());
-
-    char header[30];
-    snprintf(header, sizeof(header), "\n%s\n%8" PRIuS, type.c_str(),
-             bytes.size());
-
-    strings->push_back(std::string(key));
-    strings->push_back(std::string(header) + base16);
-    return true;
-  }
-};
 
 }  // namespace extras
 }  // namespace jxl

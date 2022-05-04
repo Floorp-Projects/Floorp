@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include "jxl/decode.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/span.h"
@@ -159,7 +160,7 @@ class FrameDecoder {
     dec_state_->rgb_output = rgb_output;
     dec_state_->rgb_output_is_rgba = is_rgba;
     dec_state_->rgb_stride = stride;
-    JXL_ASSERT(dec_state_->pixel_callback == nullptr);
+    JXL_ASSERT(!dec_state_->pixel_callback.IsPresent());
 #if !JXL_HIGH_PRECISION
     if (decoded_->metadata()->xyb_encoded &&
         dec_state_->output_encoding_info.color_encoding.IsSRGB() &&
@@ -181,12 +182,10 @@ class FrameDecoder {
   // orientation. Performing this operation is not yet supported, so this
   // results in not setting the buffer if the image has a non-identity EXIF
   // orientation. When outputting to the ImageBundle, no orientation is undone.
-  void MaybeSetFloatCallback(
-      const std::function<void(const float* pixels, size_t x, size_t y,
-                               size_t num_pixels)>& cb,
-      bool is_rgba, bool undo_orientation) const {
+  void MaybeSetFloatCallback(const PixelCallback& pixel_callback, bool is_rgba,
+                             bool undo_orientation) const {
     if (!CanDoLowMemoryPath(undo_orientation)) return;
-    dec_state_->pixel_callback = cb;
+    dec_state_->pixel_callback = pixel_callback;
     dec_state_->rgb_output_is_rgba = is_rgba;
     JXL_ASSERT(dec_state_->rgb_output == nullptr);
   }
@@ -196,7 +195,7 @@ class FrameDecoder {
   // callback has been used.
   bool HasRGBBuffer() const {
     return dec_state_->rgb_output != nullptr ||
-           dec_state_->pixel_callback != nullptr;
+           dec_state_->pixel_callback.IsPresent();
   }
 
  private:
@@ -216,18 +215,19 @@ class FrameDecoder {
   // `GetStorageLocation` must be smaller than the `num_threads` value passed
   // here. The value of `task` passed to `GetStorageLocation` must be smaller
   // than the value of `num_tasks` passed here.
-  void PrepareStorage(size_t num_threads, size_t num_tasks) {
+  Status PrepareStorage(size_t num_threads, size_t num_tasks) {
     size_t storage_size = std::min(num_threads, num_tasks);
     if (storage_size > group_dec_caches_.size()) {
       group_dec_caches_.resize(storage_size);
     }
     use_task_id_ = num_threads > num_tasks;
     if (dec_state_->render_pipeline) {
-      dec_state_->render_pipeline->PrepareForThreads(
+      JXL_RETURN_IF_ERROR(dec_state_->render_pipeline->PrepareForThreads(
           storage_size,
           /*use_group_ids=*/modular_frame_decoder_.UsesFullImage() &&
-              frame_header_.encoding == FrameEncoding::kVarDCT);
+              frame_header_.encoding == FrameEncoding::kVarDCT));
     }
+    return true;
   }
 
   size_t GetStorageLocation(size_t thread, size_t task) {
@@ -242,18 +242,8 @@ class FrameDecoder {
   // (uint8 output buffer or float pixel callback).
   // TODO(veluca): reduce this set of restrictions.
   bool CanDoLowMemoryPath(bool undo_orientation) const {
-    if (undo_orientation &&
-        decoded_->metadata()->GetOrientation() != Orientation::kIdentity) {
-      return false;
-    }
-    if (NeedsBlending(dec_state_)) return false;
-    if (frame_header_.CanBeReferenced()) return false;
-    if (render_spotcolors_ &&
-        decoded_->metadata()->Find(ExtraChannel::kSpotColor)) {
-      return false;
-    }
-    if (decoded_->AlphaIsPremultiplied()) return false;
-    return true;
+    return !(undo_orientation &&
+             decoded_->metadata()->GetOrientation() != Orientation::kIdentity);
   }
 
   PassesDecoderState* dec_state_;

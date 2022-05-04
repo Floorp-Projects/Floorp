@@ -32,11 +32,10 @@ class TestVsyncObserver : public VsyncObserver {
   TestVsyncObserver()
       : mDidGetVsyncNotification(false), mVsyncMonitor("VsyncMonitor") {}
 
-  virtual bool NotifyVsync(const VsyncEvent& aVsync) override {
+  virtual void NotifyVsync(const VsyncEvent& aVsync) override {
     MonitorAutoLock lock(mVsyncMonitor);
     mDidGetVsyncNotification = true;
     mVsyncMonitor.Notify();
-    return true;
   }
 
   void WaitForVsyncNotification() {

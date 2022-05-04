@@ -2715,6 +2715,7 @@ void CodeGenerator::visitWasmBinarySimd128WithConstant(
   FloatRegister lhs = ToFloatRegister(ins->lhsDest());
   const SimdConstant& rhs = ins->rhs();
   FloatRegister dest = ToFloatRegister(ins->output());
+  FloatRegister temp = ToTempFloatRegisterOrInvalid(ins->getTemp(0));
 
   switch (ins->simdOp()) {
     case wasm::SimdOp::I8x16Add:
@@ -2851,6 +2852,9 @@ void CodeGenerator::visitWasmBinarySimd128WithConstant(
       break;
     case wasm::SimdOp::I32x4LeS:
       masm.compareInt32x4(Assembler::LessThanOrEqual, lhs, rhs, dest);
+      break;
+    case wasm::SimdOp::I64x2Mul:
+      masm.mulInt64x2(lhs, rhs, dest, temp);
       break;
     case wasm::SimdOp::F32x4Eq:
       masm.compareFloat32x4(Assembler::Equal, lhs, rhs, dest);

@@ -3719,7 +3719,7 @@ class LWasmBinarySimd128 : public LInstructionHelper<1, 2, 2> {
   static bool SpecializeForConstantRhs(wasm::SimdOp op);
 };
 
-class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 0> {
+class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 1> {
   SimdConstant rhs_;
 
  public:
@@ -3729,9 +3729,11 @@ class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 0> {
   static constexpr uint32_t LhsDest = 0;
 
   LWasmBinarySimd128WithConstant(const LAllocation& lhs,
-                                 const SimdConstant& rhs)
+                                 const SimdConstant& rhs,
+                                 const LDefinition& temp)
       : LInstructionHelper(classOpcode), rhs_(rhs) {
     setOperand(Lhs, lhs);
+    setTemp(0, temp);
   }
 
   const LAllocation* lhs() { return getOperand(Lhs); }

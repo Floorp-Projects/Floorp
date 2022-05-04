@@ -220,7 +220,7 @@ struct AuxOut {
     Image3MinMax(image, &min, &max);
     Image3B normalized(image.xsize(), image.ysize());
     for (size_t c = 0; c < 3; ++c) {
-      float mul = min[c] == max[c] ? 0 : (1.0f / (max[c] - min[c]));
+      float mul = min[c] == max[c] ? 0 : (255.0f / (max[c] - min[c]));
       for (size_t y = 0; y < image.ysize(); ++y) {
         const T* JXL_RESTRICT row_in = image.ConstPlaneRow(c, y);
         uint8_t* JXL_RESTRICT row_out = normalized.PlaneRow(c, y);
