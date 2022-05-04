@@ -89,13 +89,14 @@
     <box class="splitview-controller">
       <box class="splitview-main">
         <toolbar class="devtools-toolbar">
-          <hbox class="devtools-toolbarbutton-group">
-            <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                        data-l10n-id="styleeditor-new-button"/>
-            <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                        data-l10n-id="styleeditor-import-button"/>
-          </hbox>
-          <spacer/>
+          <toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                      data-l10n-id="styleeditor-new-button"/>
+          <toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                      data-l10n-id="styleeditor-import-button"/>
+          <toolbaritem class="devtools-searchbox" flex="1">
+            <html:input class="devtools-filterinput" data-l10n-id="styleeditor-filter-input"/>
+            <html:button class="devtools-searchinput-clear" tabindex="-1" hidden=""></html:button>
+          </toolbaritem>
           <toolbarbutton id="style-editor-options"
                       class="devtools-toolbarbutton devtools-option-toolbarbutton"
                       data-l10n-id="styleeditor-options-button"/>
@@ -105,14 +106,16 @@
               persist="height">
         <html:ol class="splitview-nav" tabindex="0"></html:ol>
         <html:div class="splitview-nav placeholder empty">
-          <html:p><html:strong
-            data-l10n-id="styleeditor-no-stylesheet"
-          ></html:strong></html:p>
-          <html:p
-            data-l10n-id="styleeditor-no-stylesheet-tip"><html:a class="style-editor-newButton"
-                                                                data-l10n-name="append-new-stylesheet" href="#"/></html:p>
-            </html:div>
-
+          <html:p>
+            <html:strong data-l10n-id="styleeditor-no-stylesheet"></html:strong>
+          </html:p>
+          <html:p data-l10n-id="styleeditor-no-stylesheet-tip">
+            <html:a class="style-editor-newButton" data-l10n-name="append-new-stylesheet" href="#"/>
+          </html:p>
+        </html:div>
+        <html:div class="splitview-nav placeholder all-filtered">
+          <html:p data-l10n-id="styleeditor-stylesheet-all-filtered"></html:p>
+        </html:div>
       </box> <!-- .splitview-nav-container -->
     </box>   <!-- .splitview-controller -->
     <splitter class="devtools-side-splitter devtools-invisible-splitter"/>
