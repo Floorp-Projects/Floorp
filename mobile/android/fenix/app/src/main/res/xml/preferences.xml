@@ -211,5 +211,10 @@
             app:iconSpaceReserved="false"
             android:title="@string/preferences_nimbus_experiments"
             app:isPreferenceVisible="false" />
+        <androidx.preference.Preference
+            android:key="@string/pref_key_start_profiler"
+            app:iconSpaceReserved="false"
+            android:title="@string/preferences_start_profiler"
+            app:isPreferenceVisible="false" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>
