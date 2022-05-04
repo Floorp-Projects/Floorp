@@ -8,25 +8,6 @@ import mozperftest.utils as utils
 import pathlib
 from mozperftest.runner import HERE
 
-WPT_METRICS = [
-    "firstContentfulPaint",
-    "timeToContentfulPaint",
-    "visualComplete90",
-    "firstPaint",
-    "visualComplete99",
-    "visualComplete",
-    "SpeedIndex",
-    "bytesIn",
-    "bytesOut",
-    "TTFB",
-    "fullyLoadedCPUms",
-    "fullyLoadedCPUpct",
-    "domElements",
-    "domContentLoadedEventStart",
-    "domContentLoadedEventEnd",
-    "loadEventStart",
-    "loadEventEnd",
-]
 ACCEPTED_BROWSERS = ["Chrome", "Firefox"]
 
 ACCEPTED_CONNECTIONS = [
@@ -196,6 +177,7 @@ class WebPageTest(Layer):
         options = metadata.script["options"]
         test_list = options["test_list"]
         self.statistic_types = options["test_parameters"]["statistics"]
+        self.wpt_browser_metrics = options["browser_metrics"]
         self.pre_run_error_checks(options["test_parameters"], test_list)
         self.create_and_run_wpt_threaded_tests(test_list, metadata)
         return metadata
@@ -339,22 +321,23 @@ class WebPageTest(Layer):
 
     def add_wpt_run_to_metadata(self, wbt_run, metadata, website):
         requested_values = self.extract_desired_values_from_wpt_run(wbt_run)
-        metadata.add_result(
-            {
-                "name": ("WebPageTest:" + re.match(r"(^.\w+)", website)[0]),
-                "framework": {"name": "mozperftest"},
-                "transformer": "mozperftest.test.webpagetest:WebPageTestData",
-                "shouldAlert": True,
-                "results": [
-                    {
-                        "values": [int(metric_value)],
-                        "name": metric_name,
-                        "shouldAlert": True,
-                    }
-                    for metric_name, metric_value in requested_values.items()
-                ],
-            }
-        )
+        if requested_values is not None:
+            metadata.add_result(
+                {
+                    "name": ("WebPageTest:" + re.match(r"(^.\w+)", website)[0]),
+                    "framework": {"name": "mozperftest"},
+                    "transformer": "mozperftest.test.webpagetest:WebPageTestData",
+                    "shouldAlert": True,
+                    "results": [
+                        {
+                            "values": [metric_value],
+                            "name": metric_name,
+                            "shouldAlert": True,
+                        }
+                        for metric_name, metric_value in requested_values.items()
+                    ],
+                }
+            )
 
     def extract_desired_values_from_wpt_run(self, wpt_run):
         view_types = ["firstView"]
@@ -363,10 +346,23 @@ class WebPageTest(Layer):
         desired_values = {}
         for statistic in self.statistic_types:
             for view in view_types:
-                for value in WPT_METRICS:
+                for value in self.wpt_browser_metrics:
+                    if isinstance(wpt_run["data"][statistic][view], list):
+                        self.error(f"Fail {wpt_run['data']['url']}")
+                        return
                     if value not in wpt_run["data"][statistic][view].keys():
-                        raise WPTDataProcessingError(f"{value} not found wpt results ")
-                    desired_values[f"{value}.{view}.{statistic}"] = wpt_run["data"][
-                        statistic
-                    ][view][value]
+                        raise WPTDataProcessingError(f"{value} not found wpt results")
+                    desired_values[f"{value}.{view}.{statistic}"] = int(
+                        wpt_run["data"][statistic][view][value]
+                    )
+        try:
+            desired_values["browserVersion"] = float(
+                re.match(
+                    r"\d+.\d+",
+                    wpt_run["data"]["runs"]["1"]["firstView"]["browserVersion"],
+                )[0]
+            )
+            desired_values["webPagetestVersion"] = float(wpt_run["webPagetestVersion"])
+        except Exception:
+            self.error("Issue found with processing browser/WPT version")
         return desired_values
