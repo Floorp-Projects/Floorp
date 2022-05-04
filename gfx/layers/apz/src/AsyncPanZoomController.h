@@ -580,6 +580,8 @@ class AsyncPanZoomController {
   // @see mozilla::WheelDeltaAdjustmentStrategy
   bool IsContentOfHonouredTargetRightToLeft(bool aHonoursRoot) const;
 
+  bool IsZero(const ParentLayerPoint& aPoint) const;
+
  protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AsyncPanZoomController();
