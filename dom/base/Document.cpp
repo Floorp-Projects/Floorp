@@ -17445,12 +17445,60 @@ Document::AutomaticStorageAccessPermissionCanBeGranted(bool hasUserActivation) {
 
 bool Document::AutomaticStorageAccessPermissionCanBeGranted(
     nsIPrincipal* aPrincipal) {
-  if (!StaticPrefs::dom_storage_access_auto_grants()) {
-    return false;
-  }
+  nsAutoCString prefix;
+  AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 
   if (!ContentBlockingUserInteraction::Exists(aPrincipal)) {
     return false;
+  }
+
+  PermissionManager* permManager = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!permManager)) {
+    return false;
+  }
+
+  using Permissions = nsTArray<RefPtr<nsIPermission>>;
+  Permissions perms;
+  nsresult rv = permManager->GetAllWithTypePrefix(prefix, perms);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsAutoCString prefix2(prefix);
+  prefix2.Append('^');
+  using Origins = nsTArray<nsCString>;
+  Origins origins;
+
+  for (const auto& perm : perms) {
+    nsAutoCString type;
+    rv = perm->GetType(type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+    // Let's make sure that we're not looking at a permission for
+    // https://exampletracker.company when we mean to look for the
+    // permission for https://exampletracker.com!
+    if (type != prefix && StringHead(type, prefix2.Length()) != prefix2) {
+      continue;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = perm->GetPrincipal(getter_AddRefs(principal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    nsAutoCString origin;
+    rv = principal->GetOrigin(origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+
+    ToLowerCase(origin);
+
+    if (origins.IndexOf(origin) == Origins::NoIndex) {
+      origins.AppendElement(origin);
+    }
   }
 
   nsCOMPtr<nsIBrowserUsage> bu = do_ImportModule(
@@ -17460,18 +17508,11 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
   }
 
   uint32_t uniqueDomainsVisitedInPast24Hours = 0;
-  nsresult rv = bu->GetUniqueDomainsVisitedInPast24Hours(
+  rv = bu->GetUniqueDomainsVisitedInPast24Hours(
       &uniqueDomainsVisitedInPast24Hours);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
-
-  Maybe<size_t> maybeOriginsThirdPartyHasAccessTo =
-      AntiTrackingUtils::CountSitesAllowStorageAccess(aPrincipal);
-  if (maybeOriginsThirdPartyHasAccessTo.isNothing()) {
-    return false;
-  }
-  size_t originsThirdPartyHasAccessTo = maybePermissionCount.value();
 
   // one percent of the number of top-levels origins visited in the current
   // session (but not to exceed 24 hours), or the value of the
@@ -17482,7 +17523,10 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
                StaticPrefs::dom_storage_access_max_concurrent_auto_grants()),
       0);
 
-  return permissionCount < maxConcurrentAutomaticGrants;
+  size_t originsThirdPartyHasAccessTo = origins.Length();
+
+  return StaticPrefs::dom_storage_access_auto_grants() &&
+         originsThirdPartyHasAccessTo < maxConcurrentAutomaticGrants;
 }
 
 void Document::RecordNavigationTiming(ReadyState aReadyState) {
