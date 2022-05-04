@@ -1270,7 +1270,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var showContileFeature by lazyFeatureFlagPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_contile),
         default = { homescreenSections[HomeScreenSection.CONTILE_TOP_SITES] == true },
-        featureFlag = FeatureFlags.contileFeature,
+        featureFlag = true,
     )
 
     /**

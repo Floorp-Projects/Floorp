@@ -13,8 +13,7 @@
         android:dependency="@string/pref_key_show_top_sites"
         android:layout="@layout/checkbox_left_sub_preference"
         android:key="@string/pref_key_enable_contile"
-        android:title="@string/customize_toggle_contile"
-        app:isPreferenceVisible="false" />
+        android:title="@string/customize_toggle_contile" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_recent_tabs"

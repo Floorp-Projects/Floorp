@@ -30,12 +30,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_contile).apply {
-            isVisible = FeatureFlags.contileFeature
-            isChecked = context.settings().showContileFeature
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_allow_third_party_root_certs).apply {
             isVisible = true
             isChecked = context.settings().allowThirdPartyRootCerts

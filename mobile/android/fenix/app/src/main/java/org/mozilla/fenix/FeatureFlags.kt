@@ -78,11 +78,6 @@ object FeatureFlags {
     const val showWallpapers = true
 
     /**
-     * Enables the Contile top sites.
-     */
-    const val contileFeature = true
-
-    /**
      * Enables history improvement features.
      */
     const val historyImprovementFeatures = true
