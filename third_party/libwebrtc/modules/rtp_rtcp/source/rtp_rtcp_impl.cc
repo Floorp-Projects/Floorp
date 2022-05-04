@@ -192,7 +192,7 @@ void ModuleRtpRtcpImpl::Process() {
   if (rtcp_sender_.TimeToSendRTCPReport())
     rtcp_sender_.SendRTCP(GetFeedbackState(), kRtcpReport);
 
-  if (TMMBR() && rtcp_receiver_.UpdateTmmbrTimers()) {
+  if (rtcp_sender_.TMMBR() && rtcp_receiver_.UpdateTmmbrTimers()) {
     rtcp_receiver_.NotifyTmmbrUpdated();
   }
 }
@@ -478,19 +478,6 @@ int32_t ModuleRtpRtcpImpl::SetCNAME(const char* c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-int32_t ModuleRtpRtcpImpl::AddMixedCNAME(uint32_t ssrc, const char* c_name) {
-  return rtcp_sender_.AddMixedCNAME(ssrc, c_name);
-}
-
-int32_t ModuleRtpRtcpImpl::RemoveMixedCNAME(const uint32_t ssrc) {
-  return rtcp_sender_.RemoveMixedCNAME(ssrc);
-}
-
-int32_t ModuleRtpRtcpImpl::RemoteCNAME(const uint32_t remote_ssrc,
-                                       char c_name[RTCP_CNAME_SIZE]) const {
-  return rtcp_receiver_.CNAME(remote_ssrc, c_name);
-}
-
 int32_t ModuleRtpRtcpImpl::RemoteNTP(uint32_t* received_ntpsecs,
                                      uint32_t* received_ntpfrac,
                                      uint32_t* rtcp_arrival_time_secs,
@@ -539,39 +526,6 @@ int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
 // Normal SR and RR are triggered via the process function.
 int32_t ModuleRtpRtcpImpl::SendRTCP(RTCPPacketType packet_type) {
   return rtcp_sender_.SendRTCP(GetFeedbackState(), packet_type);
-}
-
-int32_t ModuleRtpRtcpImpl::SetRTCPApplicationSpecificData(
-    const uint8_t sub_type,
-    const uint32_t name,
-    const uint8_t* data,
-    const uint16_t length) {
-  RTC_NOTREACHED() << "Not implemented";
-  return -1;
-}
-
-// TODO(asapersson): Replace this method with the one below.
-int32_t ModuleRtpRtcpImpl::DataCountersRTP(size_t* bytes_sent,
-                                           uint32_t* packets_sent) const {
-  StreamDataCounters rtp_stats;
-  StreamDataCounters rtx_stats;
-  rtp_sender_->packet_sender.GetDataCounters(&rtp_stats, &rtx_stats);
-
-  if (bytes_sent) {
-    // TODO(http://crbug.com/webrtc/10525): Bytes sent should only include
-    // payload bytes, not header and padding bytes.
-    *bytes_sent = rtp_stats.transmitted.payload_bytes +
-                  rtp_stats.transmitted.padding_bytes +
-                  rtp_stats.transmitted.header_bytes +
-                  rtx_stats.transmitted.payload_bytes +
-                  rtx_stats.transmitted.padding_bytes +
-                  rtx_stats.transmitted.header_bytes;
-  }
-  if (packets_sent) {
-    *packets_sent =
-        rtp_stats.transmitted.packets + rtx_stats.transmitted.packets;
-  }
-  return 0;
 }
 
 void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
@@ -632,12 +586,6 @@ void ModuleRtpRtcpImpl::SetExtmapAllowMixed(bool extmap_allow_mixed) {
   rtp_sender_->packet_generator.SetExtmapAllowMixed(extmap_allow_mixed);
 }
 
-int32_t ModuleRtpRtcpImpl::RegisterSendRtpHeaderExtension(
-    const RTPExtensionType type,
-    const uint8_t id) {
-  return rtp_sender_->packet_generator.RegisterRtpHeaderExtension(type, id);
-}
-
 void ModuleRtpRtcpImpl::RegisterRtpHeaderExtension(absl::string_view uri,
                                                    int id) {
   bool registered =
@@ -652,15 +600,6 @@ int32_t ModuleRtpRtcpImpl::DeregisterSendRtpHeaderExtension(
 void ModuleRtpRtcpImpl::DeregisterSendRtpHeaderExtension(
     absl::string_view uri) {
   rtp_sender_->packet_generator.DeregisterRtpHeaderExtension(uri);
-}
-
-// (TMMBR) Temporary Max Media Bit Rate.
-bool ModuleRtpRtcpImpl::TMMBR() const {
-  return rtcp_sender_.TMMBR();
-}
-
-void ModuleRtpRtcpImpl::SetTMMBRStatus(const bool enable) {
-  rtcp_sender_.SetTMMBRStatus(enable);
 }
 
 void ModuleRtpRtcpImpl::SetTmmbn(std::vector<rtcp::TmmbItem> bounding_set) {
