@@ -10,24 +10,24 @@
 # any new metrics files' metrics will not get columns in any datasets.
 
 # The list of all Glean metrics.yaml files, relative to the top src dir.
-# New additions should be added to the bottom of the list.
+# Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 metrics_yamls = [
+    "browser/base/content/metrics.yaml",
+    "browser/components/metrics.yaml",
+    "browser/modules/metrics.yaml",
+    "dom/media/metrics.yaml",
+    "dom/metrics.yaml",
+    "gfx/metrics.yaml",
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/glean/tests/test_metrics.yaml",
-    "toolkit/mozapps/update/metrics.yaml",
-    "browser/base/content/metrics.yaml",
-    "dom/media/metrics.yaml",
-    "gfx/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
-    "toolkit/xre/metrics.yaml",
-    "browser/modules/metrics.yaml",
-    "browser/components/metrics.yaml",
     "toolkit/components/telemetry/metrics.yaml",
-    "dom/metrics.yaml",
+    "toolkit/mozapps/update/metrics.yaml",
+    "toolkit/xre/metrics.yaml",
 ]
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
-# New additions should be added to the bottom of the list.
+# Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 pings_yamls = [
     "toolkit/components/glean/pings.yaml",
     "toolkit/components/glean/tests/test_pings.yaml",
@@ -37,6 +37,7 @@ pings_yamls = [
 # The list of tags that are allowed in the above to files, and their
 # descriptions. Currently we restrict to a set scraped from bugzilla
 # (via `./mach update-glean-tags`)
+# Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 tags_yamls = [
     "toolkit/components/glean/tags.yaml",
 ]
