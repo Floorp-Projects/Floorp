@@ -457,14 +457,12 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // per-widget VsyncSource which is independent from the gfxPlatform's global
   // VsyncSource.
   static RefPtr<VsyncRefreshDriverTimer>
-  CreateForParentProcessWithLocalVsyncSource(
-      RefPtr<gfx::VsyncSource>&& aVsyncSource) {
+  CreateForParentProcessWithLocalVsyncDispatcher(
+      RefPtr<VsyncDispatcher>&& aVsyncDispatcher) {
     MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    RefPtr<VsyncDispatcher> vsyncDispatcher =
-        aVsyncSource->GetVsyncDispatcher();
     RefPtr<VsyncRefreshDriverTimer> timer =
-        new VsyncRefreshDriverTimer(std::move(vsyncDispatcher), nullptr);
+        new VsyncRefreshDriverTimer(std::move(aVsyncDispatcher), nullptr);
     return timer.forget();
   }
 
@@ -1113,11 +1111,11 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
     nsPresContext* pc = GetPresContext();
     nsCOMPtr<nsIWidget> widget = pc->GetRootWidget();
     if (widget) {
-      if (RefPtr<gfx::VsyncSource> localVsyncSource =
-              widget->GetVsyncSource()) {
-        mOwnTimer =
-            VsyncRefreshDriverTimer::CreateForParentProcessWithLocalVsyncSource(
-                std::move(localVsyncSource));
+      if (RefPtr<VsyncDispatcher> vsyncDispatcher =
+              widget->GetVsyncDispatcher()) {
+        mOwnTimer = VsyncRefreshDriverTimer::
+            CreateForParentProcessWithLocalVsyncDispatcher(
+                std::move(vsyncDispatcher));
         sRegularRateTimerList->AppendElement(mOwnTimer.get());
         return;
       }
