@@ -362,7 +362,11 @@ class RemoteAgentParentProcess {
       // Used to wait until the initial application window has been opened.
       case "browser-idle-startup-tasks-finished":
       case "mail-idle-startup-tasks-finished":
-        Services.obs.removeObserver(this, topic);
+        Services.obs.removeObserver(
+          this,
+          "browser-idle-startup-tasks-finished"
+        );
+        Services.obs.removeObserver(this, "mail-idle-startup-tasks-finished");
         this.#browserStartupFinished.resolve();
         break;
 
