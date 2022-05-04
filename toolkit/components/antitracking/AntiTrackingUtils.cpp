@@ -153,6 +153,69 @@ bool AntiTrackingUtils::IsStorageAccessPermission(nsIPermission* aPermission,
 }
 
 // static
+Maybe<size_t> AntiTrackingUtils::CountSitesAllowStorageAccess(
+    nsIPrincipal* aPrincipal) {
+  PermissionManager* permManager = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!permManager)) {
+    return Nothing();
+  }
+
+  nsAutoCString prefix;
+  AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
+
+  using Permissions = nsTArray<RefPtr<nsIPermission>>;
+  Permissions perms;
+  nsresult rv = permManager->GetAllWithTypePrefix(prefix, perms);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Nothing();
+  }
+
+  // Create a set of unique origins
+  using Origins = nsTArray<nsCString>;
+  Origins origins;
+
+  // Iterate over all permissions that have a prefix equal to the expected
+  // permission we are looking for. This includes two things we need to remove:
+  // duplicates and origin strings that have a prefix of aPrincipal's origin
+  // string, e.g. https://example.company when aPrincipal is
+  // https://example.com.
+  for (const auto& perm : perms) {
+    nsAutoCString type;
+    rv = perm->GetType(type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Nothing();
+    }
+    // Let's make sure that we're not looking at a permission for
+    // https://exampletracker.company when we mean to look for the
+    // permission for https://exampletracker.com!
+    if (type != prefix) {
+      continue;
+    }
+
+    nsCOMPtr<nsIPrincipal> principal;
+    rv = perm->GetPrincipal(getter_AddRefs(principal));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Nothing();
+    }
+
+    nsAutoCString origin;
+    rv = principal->GetOrigin(origin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Nothing();
+    }
+
+    ToLowerCase(origin);
+
+    // Append if it would not be a duplicate
+    if (origins.IndexOf(origin) == Origins::NoIndex) {
+      origins.AppendElement(origin);
+    }
+  }
+
+  return Some(origins.Length());
+}
+
+// static
 bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
                                                const nsAutoCString& aType,
                                                bool aIsInPrivateBrowsing,
