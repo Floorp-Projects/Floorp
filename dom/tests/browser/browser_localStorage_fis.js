@@ -128,6 +128,11 @@ const lastWriteState = Object.assign({}, initialWriteState, {
  *   7. Close tabs and clear origin storage.
  */
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       // Stop the preallocated process manager from speculatively creating
@@ -223,6 +228,11 @@ add_task(async function() {
  *   11. Close tabs and clear origin storage.
  */
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.ipc.processPrelaunch.enabled", false],
@@ -329,6 +339,11 @@ add_task(async function() {
  *   11. Close tabs and clear origin storage.
  **/
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["dom.ipc.processPrelaunch.enabled", false],

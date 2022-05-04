@@ -45,10 +45,6 @@ async function testSteps() {
     ok(fileSize > 0, "archive file size is greater than zero");
   }
 
-  info("Setting pref");
-
-  SpecialPowers.setBoolPref("dom.storage.next_gen", true);
-
   // Profile 1 - Nonexistent apps store file.
   info("Clearing");
 

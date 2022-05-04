@@ -521,6 +521,11 @@ add_task(async function() {
  * it with something bigger and the other one removes it.
  */
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       // Force multiple web and webIsolated content processes so that the
@@ -593,6 +598,11 @@ add_task(async function() {
  * Verify that snapshot usage is correctly updated after each operation.
  */
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       // Force multiple web and webIsolated content processes so that the
@@ -677,6 +687,11 @@ add_task(async function() {
  * Verify that datastore in the parent is correctly updated after a checkpoint.
  */
 add_task(async function() {
+  if (!Services.domStorageManager.nextGenLocalStorageEnabled) {
+    ok(true, "Test ignored when the next gen local storage is not enabled.");
+    return;
+  }
+
   await SpecialPowers.pushPrefEnv({
     set: [
       // Force multiple web and webIsolated content processes so that the

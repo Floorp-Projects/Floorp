@@ -15,7 +15,10 @@ async function testSteps() {
 
   info("Setting prefs");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
+  Services.prefs.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    false
+  );
   Services.prefs.setBoolPref("dom.storage.snapshot_reusing", false);
 
   for (const principal of principals) {

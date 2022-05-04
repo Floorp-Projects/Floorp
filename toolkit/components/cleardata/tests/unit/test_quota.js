@@ -14,8 +14,8 @@
 // Skip localStorage tests when using legacy localStorage. The legacy
 // localStorage implementation does not support clearing data by principal. See
 // Bug 1688221, Bug 1688665.
-const skipLocalStorageTests = !Services.prefs.getBoolPref(
-  "dom.storage.next_gen"
+const skipLocalStorageTests = Services.prefs.getBoolPref(
+  "dom.storage.enable_unsupported_legacy_implementation"
 );
 
 /**
