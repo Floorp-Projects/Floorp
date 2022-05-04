@@ -659,7 +659,29 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_settingsFragment_to_startProfilerDialog"
+            app:destination="@id/profilerStartDialogFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_settingsFragment_to_stopProfilerDialog"
+            app:destination="@id/profilerStopDialogFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
+    <dialog
+        android:id="@+id/profilerStartDialogFragment"
+        android:name="org.mozilla.fenix.perf.ProfilerStartDialogFragment">
+    </dialog>
+    <dialog
+        android:id="@+id/profilerStopDialogFragment"
+        android:name="org.mozilla.fenix.perf.ProfilerStopDialogFragment">
+    </dialog>
     <fragment
         android:id="@+id/tabsSettingsFragment"
         android:name="org.mozilla.fenix.settings.TabsSettingsFragment"
