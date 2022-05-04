@@ -89,8 +89,7 @@ void CompositorVsyncDispatcher::Shutdown() {
 }
 
 VsyncDispatcher::VsyncDispatcher(gfx::VsyncSource* aVsyncSource)
-    : mVsyncSource(aVsyncSource),
-      mVsyncObservers("VsyncDispatcher::mVsyncObservers") {
+    : mVsyncSource(aVsyncSource), mState("VsyncDispatcher::mState") {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -106,19 +105,57 @@ void VsyncDispatcher::MoveToSource(gfx::VsyncSource* aVsyncSource) {
 }
 
 void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
-  auto observers = mVsyncObservers.Lock();
+  nsTArray<RefPtr<VsyncObserver>> observers;
+  bool shouldDispatchToMainThread = false;
+  {
+    // Copy out the observers so that we don't keep the mutex
+    // locked while notifying vsync.
+    auto state = mState.Lock();
+    observers = state->mObservers.Clone();
+    shouldDispatchToMainThread = !state->mMainThreadObservers.IsEmpty() &&
+                                 (state->mLastVsyncIdSentToMainThread ==
+                                  state->mLastMainThreadProcessedVsyncId);
+  }
 
-  for (const auto& observer : *observers) {
+  for (const auto& observer : observers) {
     observer->NotifyVsync(aVsync);
+  }
+
+  if (shouldDispatchToMainThread) {
+    auto state = mState.Lock();
+    state->mLastVsyncIdSentToMainThread = aVsync.mId;
+    NS_DispatchToMainThread(NewRunnableMethod<VsyncEvent>(
+        "VsyncDispatcher::NotifyMainThreadObservers", this,
+        &VsyncDispatcher::NotifyMainThreadObservers, aVsync));
+  }
+}
+
+void VsyncDispatcher::NotifyMainThreadObservers(VsyncEvent aEvent) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsTArray<RefPtr<VsyncObserver>> observers;
+  {
+    // Copy out the main thread observers so that we don't keep the mutex
+    // locked while notifying vsync.
+    auto state = mState.Lock();
+    observers.AppendElements(state->mMainThreadObservers);
+  }
+
+  for (const auto& observer : observers) {
+    observer->NotifyVsync(aEvent);
+  }
+
+  {  // Scope lock
+    auto state = mState.Lock();
+    state->mLastMainThreadProcessedVsyncId = aEvent.mId;
   }
 }
 
 void VsyncDispatcher::AddVsyncObserver(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(aVsyncObserver);
   {  // scope lock - called on PBackground thread or main thread
-    auto observers = mVsyncObservers.Lock();
-    if (!observers->Contains(aVsyncObserver)) {
-      observers->AppendElement(aVsyncObserver);
+    auto state = mState.Lock();
+    if (!state->mObservers.Contains(aVsyncObserver)) {
+      state->mObservers.AppendElement(aVsyncObserver);
     }
   }
 
@@ -128,8 +165,30 @@ void VsyncDispatcher::AddVsyncObserver(VsyncObserver* aVsyncObserver) {
 void VsyncDispatcher::RemoveVsyncObserver(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(aVsyncObserver);
   {  // scope lock - called on PBackground thread or main thread
-    auto observers = mVsyncObservers.Lock();
-    observers->RemoveElement(aVsyncObserver);
+    auto state = mState.Lock();
+    state->mObservers.RemoveElement(aVsyncObserver);
+  }
+
+  UpdateVsyncStatus();
+}
+
+void VsyncDispatcher::AddMainThreadObserver(VsyncObserver* aObserver) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aObserver);
+  {
+    auto state = mState.Lock();
+    state->mMainThreadObservers.AppendElement(aObserver);
+  }
+
+  UpdateVsyncStatus();
+}
+
+void VsyncDispatcher::RemoveMainThreadObserver(VsyncObserver* aObserver) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aObserver);
+  {
+    auto state = mState.Lock();
+    state->mMainThreadObservers.RemoveElement(aObserver);
   }
 
   UpdateVsyncStatus();
@@ -147,9 +206,8 @@ void VsyncDispatcher::UpdateVsyncStatus() {
 }
 
 bool VsyncDispatcher::NeedsVsync() {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto observers = mVsyncObservers.Lock();
-  return !observers->IsEmpty();
+  auto state = mState.Lock();
+  return !state->mObservers.IsEmpty() || !state->mMainThreadObservers.IsEmpty();
 }
 
 }  // namespace mozilla
