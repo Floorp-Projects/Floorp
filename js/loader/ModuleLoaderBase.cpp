@@ -8,6 +8,7 @@
 #include "LoadedScript.h"
 #include "ModuleLoadRequest.h"
 #include "ScriptLoadRequest.h"
+#include "mozilla/dom/ScriptSettings.h"  // AutoJSAPI
 #include "mozilla/dom/ScriptTrace.h"
 
 #include "js/Array.h"  // JS::GetArrayLength
@@ -31,6 +32,7 @@
 
 using mozilla::GetMainThreadSerialEventTarget;
 using mozilla::Preferences;
+using mozilla::UniquePtr;
 using mozilla::dom::AutoJSAPI;
 
 namespace JS::loader {
@@ -1097,6 +1099,50 @@ void ModuleLoaderBase::CancelAndClearDynamicImports() {
     FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
   }
   mDynamicImportRequests.CancelRequestsAndClear();
+}
+
+UniquePtr<ImportMap> ModuleLoaderBase::ParseImportMap(
+    ScriptLoadRequest* aRequest) {
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(GetGlobalObject())) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(aRequest->IsTextSource());
+  MaybeSourceText maybeSource;
+  nsresult rv = aRequest->GetScriptSource(jsapi.cx(), &maybeSource);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  JS::SourceText<char16_t>& text = maybeSource.ref<SourceText<char16_t>>();
+  ReportWarningHelper warning{mLoader, aRequest};
+
+  // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
+  // https://wicg.github.io/import-maps/#integration-prepare-a-script
+  // Insert the following case to prepare a script step 25.2:
+  // (Impl Note: the latest html spec is step 27.2)
+  // Switch on the script's type:
+  // "importmap"
+  // Step 1. Let import map parse result be the result of create an import map
+  // parse result, given source text, base URL and settings object.
+  //
+  // Impl note: According to the spec, ImportMap::ParseString will throw a
+  // TypeError if there's any invalid key/value in the text. After the parsing
+  // is done, we should report the error if there's any, this is done in
+  // ~AutoJSAPI.
+  //
+  // See https://wicg.github.io/import-maps/#register-an-import-map, step 7.
+  return ImportMap::ParseString(jsapi.cx(), text, aRequest->mBaseURL, warning);
+}
+
+void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
+  // Check for aImportMap is done in ScriptLoader.
+  MOZ_ASSERT(aImportMap);
+
+  // Step 8. Set element’s node document's import map to import map parse
+  // result’s import map.
+  mImportMap = std::move(aImportMap);
 }
 
 #undef LOG
