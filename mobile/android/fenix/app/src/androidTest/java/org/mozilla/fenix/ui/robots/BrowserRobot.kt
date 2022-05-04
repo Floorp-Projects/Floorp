@@ -631,6 +631,25 @@ class BrowserRobot {
     }
 
     fun verifyPrefilledLoginCredentials(userName: String) {
+        var currentTries = 0
+        // Sometimes the assertion of the pre-filled logins fails so we are re-trying after refreshing the page
+        while (currentTries++ < 3) {
+            try {
+                mDevice.waitForObjects(userNameTextBox)
+                assertTrue(userNameTextBox.text.equals(userName))
+
+                break
+            } catch (e: AssertionError) {
+                browserScreen {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    clearUserNameLoginCredential()
+                    clickSuggestedLoginsButton()
+                    verifySuggestedUserName(userName)
+                    clickLoginSuggestion(userName)
+                }
+            }
+        }
         mDevice.waitForObjects(userNameTextBox)
         assertTrue(userNameTextBox.text.equals(userName))
     }
