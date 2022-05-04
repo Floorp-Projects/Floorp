@@ -37,7 +37,7 @@ class gfxAndroidPlatform final : public gfxPlatform {
   bool FontHintingEnabled() override;
   bool RequiresLinearZoom() override;
 
-  already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateGlobalHardwareVsyncSource()
       override;
 
  protected:

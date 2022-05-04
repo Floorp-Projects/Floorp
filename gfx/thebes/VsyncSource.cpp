@@ -106,7 +106,7 @@ Maybe<TimeDuration> VsyncSource::GetFastestVsyncRate() {
   }
 
   mozilla::gfx::VsyncSource* vsyncSource =
-      gfxPlatform::GetPlatform()->GetHardwareVsync();
+      gfxPlatform::GetPlatform()->GetGlobalVsync();
   if (vsyncSource && vsyncSource->IsVsyncEnabled()) {
     retVal.emplace(vsyncSource->GetVsyncRate());
   }

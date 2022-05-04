@@ -953,12 +953,13 @@ class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
 };
 #endif
 
-already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
+already_AddRefed<gfx::VsyncSource>
+gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
 #ifdef MOZ_X11
   if (IsHeadless() || IsWaylandDisplay()) {
     // On Wayland we can not create a global hardware based vsync source, thus
     // use a software based one here. We create window specific ones later.
-    return gfxPlatform::CreateHardwareVsyncSource();
+    return CreateSoftwareVsyncSource();
   }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -983,7 +984,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
     RefPtr<GtkVsyncSource> vsyncSource = new GtkVsyncSource();
     if (!vsyncSource->Setup()) {
       NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
-      return gfxPlatform::CreateHardwareVsyncSource();
+      return CreateSoftwareVsyncSource();
     }
     return vsyncSource.forget();
   }
@@ -991,7 +992,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   RefPtr<VsyncSource> softwareVsync = new XrandrSoftwareVsyncSource();
   return softwareVsync.forget();
 #else
-  return gfxPlatform::CreateHardwareVsyncSource();
+  return CreateSoftwareVsyncSource();
 #endif
 }
 
