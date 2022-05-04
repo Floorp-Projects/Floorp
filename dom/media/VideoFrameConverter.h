@@ -20,7 +20,6 @@
 #include "api/video/video_frame.h"
 #include "common_video/include/video_frame_buffer_pool.h"
 #include "common_video/include/video_frame_buffer.h"
-#include "rtc_base/keep_ref_until_done.h"
 
 // The number of frame buffers VideoFrameConverter may create before returning
 // errors.
@@ -339,7 +338,9 @@ class VideoFrameConverter {
 
     MOZ_ASSERT(aFrame.mImage->GetSize() == aFrame.mSize);
 
-    if (layers::PlanarYCbCrImage* image = aFrame.mImage->AsPlanarYCbCrImage()) {
+    RefPtr<layers::PlanarYCbCrImage> image =
+        aFrame.mImage->AsPlanarYCbCrImage();
+    if (image) {
       dom::ImageUtils utils(image);
       if (utils.GetFormat() == dom::ImageBitmapFormat::YUV420P &&
           image->GetData()) {
@@ -349,7 +350,7 @@ class VideoFrameConverter {
                 aFrame.mImage->GetSize().width, aFrame.mImage->GetSize().height,
                 data->mYChannel, data->mYStride, data->mCbChannel,
                 data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
-                rtc::KeepRefUntilDone(image));
+                [image] { /* keep reference alive*/ });
 
         MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
                 ("VideoFrameConverter %p: Sending an I420 video frame", this));

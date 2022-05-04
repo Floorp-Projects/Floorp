@@ -11,7 +11,6 @@
 #include "VideoUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/media/MediaUtils.h"
-#include "rtc_base/keep_ref_until_done.h"
 
 namespace mozilla {
 
