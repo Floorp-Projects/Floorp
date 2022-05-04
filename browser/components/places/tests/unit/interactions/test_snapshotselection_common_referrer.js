@@ -21,7 +21,6 @@ add_task(async function test_setup() {
   await addInteractions([
     {
       url: TEST_SEARCH_URL,
-      referrer: "",
     },
     {
       url: TEST_PRODUCT_A_URL,
@@ -33,7 +32,6 @@ add_task(async function test_setup() {
     },
     {
       url: TEST_PRODUCT_C_URL,
-      referrer: "",
     },
   ]);
 
