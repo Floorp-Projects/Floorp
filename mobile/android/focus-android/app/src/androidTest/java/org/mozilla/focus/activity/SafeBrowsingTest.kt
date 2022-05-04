@@ -6,6 +6,7 @@ package org.mozilla.focus.activity
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.R
@@ -98,6 +99,7 @@ class SafeBrowsingTest {
 
     @SmokeTest
     @Test
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/6967")
     fun unblockSafeBrowsingTest() {
         val malwareURl = "http://itisatrap.org/firefox/its-an-attack.html"
 

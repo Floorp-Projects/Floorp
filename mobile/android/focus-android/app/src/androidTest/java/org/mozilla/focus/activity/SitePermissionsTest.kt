@@ -52,6 +52,7 @@ class SitePermissionsTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/6967")
     fun sitePermissionsSettingsItemsTest() {
         homeScreen {
         }.openMainMenu {
@@ -106,6 +107,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/6967")
     // Tests the autoplay setting: Allow audio and video on a video with autoplay attribute and not muted
     fun allowAudioVideoAutoplayPermissionTest() {
         val videoPage = getMediaTestAsset(webServer, "videoPage")
@@ -127,6 +129,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/6967")
     // Tests the autoplay setting: Allow audio and video on a video with autoplay and muted attributes
     fun allowAudioVideoAutoplayPermissionOnMutedVideoTest() {
         val mutedVideoPage = getMediaTestAsset(webServer, "mutedVideoPage")
@@ -151,6 +154,7 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    @Ignore("https://github.com/mozilla-mobile/focus-android/issues/6967")
     // Tests the autoplay setting: Block audio and video
     fun blockAudioVideoAutoplayPermissionTest() {
         val videoPage = getMediaTestAsset(webServer, "videoPage")
