@@ -905,20 +905,27 @@ StyleSheetEditor.prototype = {
    * @return {array} key binding objects for the source editor
    */
   _getKeyBindings: function() {
-    const bindings = {};
-    const keybind = Editor.accel(getString("saveStyleSheet.commandkey"));
+    const saveStyleSheetKeybind = Editor.accel(
+      getString("saveStyleSheet.commandkey")
+    );
+    const focusFilterInputKeybind = Editor.accel(
+      getString("focusFilterInput.commandkey")
+    );
 
-    bindings[keybind] = () => {
-      this.saveToFile(this.savedFile);
+    return {
+      Esc: false,
+      [saveStyleSheetKeybind]: () => {
+        this.saveToFile(this.savedFile);
+      },
+      ["Shift-" + saveStyleSheetKeybind]: () => {
+        this.saveToFile();
+      },
+      // We can't simply ignore this (with `false`, or returning `CodeMirror.Pass`), as the
+      // event isn't received by the event listener in StyleSheetUI.
+      [focusFilterInputKeybind]: () => {
+        this.emit("filter-input-keyboard-shortcut");
+      },
     };
-
-    bindings["Shift-" + keybind] = () => {
-      this.saveToFile();
-    };
-
-    bindings.Esc = false;
-
-    return bindings;
   },
 
   _getStyleSheetsFront() {
