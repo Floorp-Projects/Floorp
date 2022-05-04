@@ -321,7 +321,8 @@ class RemoteAgentParentProcess {
           this.#allowHosts = this.handleAllowHostsFlag(subject);
           this.#allowOrigins = this.handleAllowOriginsFlag(subject);
 
-          Services.obs.addObserver(this, "sessionstore-windows-restored");
+          Services.obs.addObserver(this, "browser-idle-startup-tasks-finished");
+          Services.obs.addObserver(this, "mail-idle-startup-tasks-finished");
           Services.obs.addObserver(this, "quit-application");
 
           // With Bug 1717899 we will extend the lifetime of the Remote Agent to
@@ -358,9 +359,9 @@ class RemoteAgentParentProcess {
 
         break;
 
-      // For now only used in CDP to wait until all the application windows
-      // have been opened and fully restored.
-      case "sessionstore-windows-restored":
+      // Used to wait until the initial application window has been opened.
+      case "browser-idle-startup-tasks-finished":
+      case "mail-idle-startup-tasks-finished":
         Services.obs.removeObserver(this, topic);
         this.#browserStartupFinished.resolve();
         break;
