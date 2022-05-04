@@ -559,6 +559,34 @@ class PromptDelegateTest : BaseSessionTest() {
         })
     }
 
+    @WithDisplay(width = 100, height = 100)
+    @Test fun dateTestParameters() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
+
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        mainSession.evaluateJS("""
+            document.getElementById('selectexample').remove();
+            document.getElementById('dateexample').min = "2022-01-01";
+            document.getElementById('dateexample').max = "2022-12-31";
+            document.getElementById('dateexample').step = "10";
+            document.getElementById('dateexample').getBoundingClientRect();
+        """.trimIndent())
+        mainSession.synthesizeTap(10, 10)
+
+        sessionRule.waitUntilCalled(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onDateTimePrompt(session: GeckoSession, prompt: PromptDelegate.DateTimePrompt): GeckoResult<PromptDelegate.PromptResponse> {
+                assertThat("<input type=date> is tapped", prompt.type, equalTo(PromptDelegate.DateTimePrompt.Type.DATE))
+                assertThat("min value is exported", prompt.minValue, equalTo("2022-01-01"))
+                assertThat("max value is exported", prompt.maxValue, equalTo("2022-12-31"))
+                assertThat("step value is exported", prompt.stepValue, equalTo("10"))
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+    }
+
     @Test fun fileTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
