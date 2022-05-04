@@ -40,7 +40,7 @@ static inline Status VisitNameString(Visitor* JXL_RESTRICT visitor,
     name->resize(name_length);
   }
   for (size_t i = 0; i < name_length; i++) {
-    uint32_t c = (*name)[i];
+    uint32_t c = static_cast<uint8_t>((*name)[i]);
     JXL_QUIET_RETURN_IF_ERROR(visitor->Bits(8, 0, &c));
     (*name)[i] = static_cast<char>(c);
   }

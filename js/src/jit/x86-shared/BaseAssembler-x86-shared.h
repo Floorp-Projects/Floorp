@@ -767,6 +767,9 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, offset, base, src0,
                   dst);
   }
+  void vpmuludq_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst) {
+    twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, address, src0, dst);
+  }
 
   void vpmaddwd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
     twoByteOpSimd("vpmaddwd", VEX_PD, OP2_PMADDWD_VdqWdq, src1, src0, dst);
@@ -4219,6 +4222,11 @@ class BaseAssembler : public GenericAssembler {
                     int32_t scale, XMMRegisterID dst) {
     threeByteOpSimd("vpmovzxdq", VEX_PD, OP3_PMOVZXDQ_VdqWdq, ESCAPE_38, offset,
                     base, index, scale, invalid_xmm, dst);
+  }
+
+  void vphaddd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst) {
+    threeByteOpSimd("vphaddd", VEX_PD, OP3_PHADDD_VdqWdq, ESCAPE_38, src1, src0,
+                    dst);
   }
 
   void vpalignr_irr(unsigned imm, XMMRegisterID src1, XMMRegisterID src0,

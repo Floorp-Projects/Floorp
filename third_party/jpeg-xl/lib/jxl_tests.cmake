@@ -85,7 +85,7 @@ add_library(jxl_testlib-static STATIC ${TESTLIB_FILES})
     ${JPEGXL_COVERAGE_FLAGS}
   )
 target_compile_definitions(jxl_testlib-static PUBLIC
-  -DTEST_DATA_PATH="${PROJECT_SOURCE_DIR}/third_party/testdata")
+  -DTEST_DATA_PATH="${JPEGXL_TEST_DATA_PATH}")
 target_include_directories(jxl_testlib-static PUBLIC
   "${PROJECT_SOURCE_DIR}"
 )

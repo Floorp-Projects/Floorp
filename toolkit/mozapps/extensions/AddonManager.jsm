@@ -4177,6 +4177,16 @@ var AddonManager = {
     return AddonManagerInternal.hasAddonType(addonType);
   },
 
+  hasProvider(name) {
+    if (!gStarted) {
+      throw Components.Exception(
+        "AddonManager is not initialized",
+        Cr.NS_ERROR_NOT_INITIALIZED
+      );
+    }
+    return !!AddonManagerInternal._getProviderByName(name);
+  },
+
   /**
    * Determines whether an Addon should auto-update or not.
    *

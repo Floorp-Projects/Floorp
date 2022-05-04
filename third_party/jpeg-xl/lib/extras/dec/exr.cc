@@ -29,18 +29,6 @@ using ExrInt64 = decltype(std::declval<OpenEXR::IStream>().tellg());
 constexpr int kExrBitsPerSample = 16;
 constexpr int kExrAlphaBits = 16;
 
-size_t GetNumThreads(ThreadPool* pool) {
-  size_t exr_num_threads = 1;
-  JXL_CHECK(RunOnPool(
-      pool, 0, 1,
-      [&](size_t num_threads) {
-        exr_num_threads = num_threads;
-        return true;
-      },
-      [&](uint32_t /* task */, size_t /*thread*/) {}, "DecodeImageEXRThreads"));
-  return exr_num_threads;
-}
-
 class InMemoryIStream : public OpenEXR::IStream {
  public:
   // The data pointed to by `bytes` must outlive the InMemoryIStream.
@@ -74,15 +62,8 @@ class InMemoryIStream : public OpenEXR::IStream {
 }  // namespace
 
 Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      const SizeConstraints& constraints, ThreadPool* pool,
+                      const SizeConstraints& constraints,
                       PackedPixelFile* ppf) {
-  // Get the number of threads we should be using for OpenEXR.
-  // OpenEXR creates its own set of threads, independent from ours. `pool` is
-  // only used for converting from a buffer of OpenEXR::Rgba to Image3F.
-  // TODO(sboukortt): look into changing that with OpenEXR 2.3 which allows
-  // custom thread pools according to its changelog.
-  OpenEXR::setGlobalThreadCount(GetNumThreads(pool));
-
   InMemoryIStream is(bytes);
 
 #ifdef __EXCEPTIONS
@@ -149,27 +130,24 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
         input_rows.data() - input.dataWindow().min.x - start_y * row_size,
         /*xStride=*/1, /*yStride=*/row_size);
     input.readPixels(start_y, end_y);
-    JXL_RETURN_IF_ERROR(RunOnPool(
-        pool, start_y, end_y + 1, ThreadPool::NoInit,
-        [&](const uint32_t exr_y, size_t /* thread */) {
-          const int image_y = exr_y - input.displayWindow().min.y;
-          const OpenEXR::Rgba* const JXL_RESTRICT input_row =
-              &input_rows[(exr_y - start_y) * row_size];
-          uint8_t* row = static_cast<uint8_t*>(frame.color.pixels()) +
-                         frame.color.stride * image_y;
-          const uint32_t pixel_size =
-              (3 + (has_alpha ? 1 : 0)) * kExrBitsPerSample / 8;
-          for (int exr_x = std::max(input.dataWindow().min.x,
-                                    input.displayWindow().min.x);
-               exr_x <=
-               std::min(input.dataWindow().max.x, input.displayWindow().max.x);
-               ++exr_x) {
-            const int image_x = exr_x - input.displayWindow().min.x;
-            memcpy(row + image_x * pixel_size,
-                   input_row + (exr_x - input.dataWindow().min.x), pixel_size);
-          }
-        },
-        "DecodeImageEXR"));
+    for (int exr_y = start_y; exr_y <= end_y; ++exr_y) {
+      const int image_y = exr_y - input.displayWindow().min.y;
+      const OpenEXR::Rgba* const JXL_RESTRICT input_row =
+          &input_rows[(exr_y - start_y) * row_size];
+      uint8_t* row = static_cast<uint8_t*>(frame.color.pixels()) +
+                     frame.color.stride * image_y;
+      const uint32_t pixel_size =
+          (3 + (has_alpha ? 1 : 0)) * kExrBitsPerSample / 8;
+      for (int exr_x =
+               std::max(input.dataWindow().min.x, input.displayWindow().min.x);
+           exr_x <=
+           std::min(input.dataWindow().max.x, input.displayWindow().max.x);
+           ++exr_x) {
+        const int image_x = exr_x - input.displayWindow().min.x;
+        memcpy(row + image_x * pixel_size,
+               input_row + (exr_x - input.dataWindow().min.x), pixel_size);
+      }
+    }
   }
 
   ppf->color_encoding.transfer_function = JXL_TRANSFER_FUNCTION_LINEAR;

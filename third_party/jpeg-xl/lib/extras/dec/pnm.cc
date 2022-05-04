@@ -19,7 +19,6 @@ namespace {
 struct HeaderPNM {
   size_t xsize;
   size_t ysize;
-  bool is_bit;     // PBM
   bool is_gray;    // PGM
   bool has_alpha;  // PAM
   size_t bits_per_sample;
@@ -39,14 +38,9 @@ class Parser {
     const uint8_t type = pos_[1];
     pos_ += 2;
 
-    header->is_bit = false;
-
     switch (type) {
       case '4':
-        header->is_bit = true;
-        header->is_gray = true;
-        header->bits_per_sample = 1;
-        return ParseHeaderPNM(header, pos);
+        return JXL_FAILURE("pbm not supported");
 
       case '5':
         header->is_gray = true;
@@ -169,7 +163,7 @@ class Parser {
     return true;
   }
 
-  Status MatchString(const char* keyword) {
+  Status MatchString(const char* keyword, bool skipws = true) {
     const uint8_t* ppos = pos_;
     while (*keyword) {
       if (ppos >= end_) return JXL_FAILURE("PAM: unexpected end of input");
@@ -178,14 +172,18 @@ class Parser {
       keyword++;
     }
     pos_ = ppos;
-    JXL_RETURN_IF_ERROR(SkipWhitespace());
+    if (skipws) {
+      JXL_RETURN_IF_ERROR(SkipWhitespace());
+    } else {
+      JXL_RETURN_IF_ERROR(SkipSingleWhitespace());
+    }
     return true;
   }
 
   Status ParseHeaderPAM(HeaderPNM* header, const uint8_t** pos) {
     size_t depth = 3;
     size_t max_val = 255;
-    while (!MatchString("ENDHDR")) {
+    while (!MatchString("ENDHDR", /*skipws=*/false)) {
       JXL_RETURN_IF_ERROR(SkipWhitespace());
       if (MatchString("WIDTH")) {
         JXL_RETURN_IF_ERROR(ParseUnsigned(&header->xsize));
@@ -231,7 +229,11 @@ class Parser {
     if (max_val == 0 || max_val >= 65536) {
       return JXL_FAILURE("PAM: bad MAXVAL");
     }
-    header->bits_per_sample = CeilLog2Nonzero(max_val);
+    // e.g When `max_val` is 1 , we want 1 bit:
+    header->bits_per_sample = FloorLog2Nonzero(max_val) + 1;
+    if ((1u << header->bits_per_sample) - 1 != max_val)
+      return JXL_FAILURE("PNM: unsupported MaxVal (expected 2^n - 1)");
+    // PAM does not pack bits as in PBM.
 
     header->floating_point = false;
     header->big_endian = true;
@@ -246,15 +248,15 @@ class Parser {
     JXL_RETURN_IF_ERROR(SkipWhitespace());
     JXL_RETURN_IF_ERROR(ParseUnsigned(&header->ysize));
 
-    if (!header->is_bit) {
-      JXL_RETURN_IF_ERROR(SkipWhitespace());
-      size_t max_val;
-      JXL_RETURN_IF_ERROR(ParseUnsigned(&max_val));
-      if (max_val == 0 || max_val >= 65536) {
-        return JXL_FAILURE("PNM: bad MaxVal");
-      }
-      header->bits_per_sample = CeilLog2Nonzero(max_val);
+    JXL_RETURN_IF_ERROR(SkipWhitespace());
+    size_t max_val;
+    JXL_RETURN_IF_ERROR(ParseUnsigned(&max_val));
+    if (max_val == 0 || max_val >= 65536) {
+      return JXL_FAILURE("PNM: bad MaxVal");
     }
+    header->bits_per_sample = FloorLog2Nonzero(max_val) + 1;
+    if ((1u << header->bits_per_sample) - 1 != max_val)
+      return JXL_FAILURE("PNM: unsupported MaxVal (expected 2^n - 1)");
     header->floating_point = false;
     header->big_endian = true;
 
@@ -276,7 +278,12 @@ class Parser {
     // indicate endianness. All software expects nominal range 0..1.
     double scale;
     JXL_RETURN_IF_ERROR(ParseSigned(&scale));
-    header->big_endian = scale >= 0.0;
+    if (scale == 0.0) {
+      return JXL_FAILURE("PFM: bad scale factor value.");
+    } else if (std::abs(scale) != 1.0) {
+      JXL_WARNING("PFM: Discarding non-unit scale factor");
+    }
+    header->big_endian = scale > 0.0;
     header->bits_per_sample = 32;
     header->floating_point = true;
 
@@ -341,12 +348,8 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
     // There's no float16 pnm version.
     data_type = JXL_TYPE_FLOAT;
   } else {
-    if (header.bits_per_sample > 16) {
-      data_type = JXL_TYPE_UINT32;
-    } else if (header.bits_per_sample > 8) {
+    if (header.bits_per_sample > 8) {
       data_type = JXL_TYPE_UINT16;
-    } else if (header.is_bit) {
-      data_type = JXL_TYPE_BOOLEAN;
     } else {
       data_type = JXL_TYPE_UINT8;
     }
@@ -363,6 +366,7 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   ppf->frames.emplace_back(header.xsize, header.ysize, format);
   auto* frame = &ppf->frames.back();
 
+  frame->color.bitdepth_from_format = false;
   frame->color.flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
   size_t pnm_remaining_size = bytes.data() + bytes.size() - pos;
   if (pnm_remaining_size < frame->color.pixels_size) {

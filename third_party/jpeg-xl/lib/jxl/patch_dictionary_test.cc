@@ -24,8 +24,7 @@ TEST(PatchDictionaryTest, GrayscaleModular) {
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
 
   CompressParams cparams;
-  cparams.color_transform = jxl::ColorTransform::kNone;
-  cparams.modular_mode = true;
+  cparams.SetLossless();
   cparams.patches = jxl::Override::kOn;
   DecompressParams dparams;
 

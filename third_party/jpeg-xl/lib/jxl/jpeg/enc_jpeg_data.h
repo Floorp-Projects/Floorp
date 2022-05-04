@@ -8,11 +8,13 @@
 
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/codec_in_out.h"
+#include "lib/jxl/enc_params.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 
 namespace jxl {
 namespace jpeg {
-Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes);
+Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes,
+                      const CompressParams& cparams);
 
 Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
                                     ColorEncoding* color_encoding);

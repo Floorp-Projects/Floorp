@@ -156,9 +156,6 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
   if (!decoder.CheckANSFinalState()) {
     return JXL_FAILURE("ANS checksum failure.");
   }
-  if (!HasAny()) {
-    return JXL_FAILURE("Decoded patch dictionary but got none");
-  }
 
   ComputePatchCache();
   return true;
@@ -237,51 +234,4 @@ void PatchDictionary::AddOneRow(float* const* inout, size_t y, size_t x0,
                     shared_->metadata->m.extra_channel_info);
   }
 }
-
-void PatchDictionary::AddTo(Image3F* opsin, const Rect& opsin_rect,
-                            float* const* extra_channels,
-                            const Rect& image_rect) const {
-  JXL_CHECK(SameSize(opsin_rect, image_rect));
-  if (patch_starts_.empty()) return;
-  size_t num_ec = shared_->metadata->m.num_extra_channels;
-  std::vector<const float*> fg_ptrs(3 + num_ec);
-  std::vector<float*> bg_ptrs(3 + num_ec);
-  for (size_t y = image_rect.y0(); y < image_rect.y0() + image_rect.ysize();
-       y++) {
-    if (y + 1 >= patch_starts_.size()) continue;
-    for (size_t id = patch_starts_[y]; id < patch_starts_[y + 1]; id++) {
-      const PatchPosition& pos = positions_[sorted_patches_[id]];
-      size_t by = pos.y;
-      size_t bx = pos.x;
-      size_t xsize = pos.ref_pos.xsize;
-      JXL_DASSERT(y >= by);
-      JXL_DASSERT(y < by + pos.ref_pos.ysize);
-      size_t iy = y - by;
-      size_t ref = pos.ref_pos.ref;
-      if (bx >= image_rect.x0() + image_rect.xsize()) continue;
-      if (bx + xsize < image_rect.x0()) continue;
-      size_t x0 = std::max(bx, image_rect.x0());
-      size_t x1 = std::min(bx + xsize, image_rect.x0() + image_rect.xsize());
-      for (size_t c = 0; c < 3; c++) {
-        fg_ptrs[c] =
-            shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
-                c, pos.ref_pos.y0 + iy) +
-            pos.ref_pos.x0 + x0 - bx;
-        bg_ptrs[c] = opsin_rect.PlaneRow(opsin, c, y - image_rect.y0()) + x0 -
-                     image_rect.x0();
-      }
-      for (size_t i = 0; i < num_ec; i++) {
-        fg_ptrs[3 + i] =
-            shared_->reference_frames[ref].frame->extra_channels()[i].ConstRow(
-                pos.ref_pos.y0 + iy) +
-            pos.ref_pos.x0 + x0 - bx;
-        bg_ptrs[3 + i] = extra_channels[i] + x0 - image_rect.x0();
-      }
-      PerformBlending(bg_ptrs.data(), fg_ptrs.data(), bg_ptrs.data(), 0,
-                      x1 - x0, pos.blending[0], pos.blending.data() + 1,
-                      shared_->metadata->m.extra_channel_info);
-    }
-  }
-}
-
 }  // namespace jxl

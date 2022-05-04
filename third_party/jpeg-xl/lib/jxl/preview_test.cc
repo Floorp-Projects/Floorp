@@ -34,7 +34,7 @@ using test::Roundtrip;
 TEST(PreviewTest, RoundtripGivenPreview) {
   ThreadPool* pool = nullptr;
   const PaddedBytes orig =
-      ReadTestData("wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+      ReadTestData("third_party/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io;
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, pool));
   io.ShrinkTo(io.xsize() / 8, io.ysize() / 8);

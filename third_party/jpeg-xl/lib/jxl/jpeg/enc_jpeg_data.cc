@@ -230,7 +230,8 @@ Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
   return color_encoding->SetICC(std::move(icc_profile));
 }
 
-Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes) {
+Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes,
+                      const CompressParams& cparams) {
   jpeg_data.app_marker_type.resize(jpeg_data.app_data.size(),
                                    AppMarkerType::kUnknown);
   JXL_RETURN_IF_ERROR(DetectIccProfile(jpeg_data));
@@ -241,7 +242,9 @@ Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes) {
   *bytes = std::move(writer).TakeBytes();
   BrotliEncoderState* brotli_enc =
       BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
-  BrotliEncoderSetParameter(brotli_enc, BROTLI_PARAM_QUALITY, 11);
+  int effort = cparams.brotli_effort;
+  if (effort < 0) effort = 11 - static_cast<int>(cparams.speed_tier);
+  BrotliEncoderSetParameter(brotli_enc, BROTLI_PARAM_QUALITY, effort);
   size_t total_data = 0;
   for (size_t i = 0; i < jpeg_data.app_data.size(); i++) {
     if (jpeg_data.app_marker_type[i] != AppMarkerType::kUnknown) {

@@ -211,7 +211,7 @@ PaddedBytes CreateTestJXLCodestream(
                             jpeg_bytes.data() + jpeg_bytes.size());
     EXPECT_TRUE(jxl::jpeg::DecodeImageJPG(
         jxl::Span<const uint8_t>(jpeg_bytes.data(), jpeg_bytes.size()), &io));
-    EXPECT_TRUE(EncodeJPEGData(*io.Main().jpeg_data, &jpeg_data));
+    EXPECT_TRUE(EncodeJPEGData(*io.Main().jpeg_data, &jpeg_data, cparams));
     io.metadata.m.xyb_encoded = false;
 #else   // JPEGXL_ENABLE_JPEG
     JXL_ABORT(
@@ -1234,7 +1234,8 @@ TEST_P(DecodeTestParam, PixelTest) {
         io.Main(), 16,
         /*float_out=*/false, orig_channels, JXL_BIG_ENDIAN,
         xsize * 2 * orig_channels, nullptr, pixels.data(), pixels.size(),
-        nullptr, nullptr, static_cast<jxl::Orientation>(config.orientation)));
+        /*out_callback=*/{},
+        static_cast<jxl::Orientation>(config.orientation)));
   }
   if (config.upsampling == 1) {
     EXPECT_EQ(0u, jxl::test::ComparePixels(pixels.data(), pixels2.data(), xsize,
@@ -1406,12 +1407,8 @@ std::ostream& operator<<(std::ostream& os, const PixelTestConfig& c) {
     case JXL_TYPE_FLOAT16:
       os << "f16";
       break;
-    case JXL_TYPE_UINT32:
-      os << "u32";
-      break;
-    case JXL_TYPE_BOOLEAN:
-      os << "b";
-      break;
+    default:
+      JXL_ASSERT(false);
   };
   if (jxl::test::GetDataBits(c.data_type) > jxl::kBitsPerByte) {
     if (c.endianness == JXL_NATIVE_ENDIAN) {
@@ -3568,7 +3565,7 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructTestCodestream)) {
 
 TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   const std::string jpeg_path =
-      "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
+      "third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
   ASSERT_TRUE(
@@ -3586,7 +3583,8 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
                                /*aux_out=*/nullptr));
 
   jxl::PaddedBytes jpeg_data;
-  ASSERT_TRUE(EncodeJPEGData(*orig_io.Main().jpeg_data.get(), &jpeg_data));
+  ASSERT_TRUE(
+      EncodeJPEGData(*orig_io.Main().jpeg_data.get(), &jpeg_data, cparams));
   jxl::PaddedBytes container;
   container.append(jxl::kContainerHeader,
                    jxl::kContainerHeader + sizeof(jxl::kContainerHeader));
@@ -4100,7 +4098,7 @@ TEST(DecodeTest, SpotColorTest) {
   cparams.speed_tier = jxl::SpeedTier::kLightning;
   cparams.modular_mode = true;
   cparams.color_transform = jxl::ColorTransform::kNone;
-  cparams.quality_pair = {100, 100};
+  cparams.butteraugli_distance = 0.f;
 
   jxl::PaddedBytes compressed;
   std::unique_ptr<jxl::PassesEncoderState> enc_state =

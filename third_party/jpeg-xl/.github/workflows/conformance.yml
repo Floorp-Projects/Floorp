@@ -98,8 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # 'main_level10' currently fails
-        name: [main_level5]
+        name: [main_level5, main_level10]
     steps:
     - name: Install deps
       run: |

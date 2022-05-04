@@ -254,10 +254,9 @@ Status LoopFilterFromParams(const CompressParams& cparams,
   }
   // Strength of EPF in modular mode.
   if (frame_header->encoding == FrameEncoding::kModular &&
-      cparams.quality_pair.first < 100) {
+      !cparams.IsLossless()) {
     // TODO(veluca): this formula is nonsense.
-    loop_filter->epf_sigma_for_modular =
-        20.0f * (1.0f - cparams.quality_pair.first / 100);
+    loop_filter->epf_sigma_for_modular = cparams.butteraugli_distance;
   }
   if (frame_header->encoding == FrameEncoding::kModular &&
       cparams.lossy_palette) {
@@ -1105,12 +1104,6 @@ Status EncodeFrame(const CompressParams& cparams_orig,
     return JXL_FAILURE("Butteraugli distance is too low (%f)",
                        cparams.butteraugli_distance);
   }
-  if (cparams.butteraugli_distance > 0.9f && cparams.modular_mode == false &&
-      cparams.quality_pair.first == 100) {
-    // in case the color image is lossy, make the alpha slightly lossy too
-    cparams.quality_pair.first =
-        std::max(90.f, 99.f - 0.3f * cparams.butteraugli_distance);
-  }
 
   if (ib.IsJPEG()) {
     cparams.gaborish = Override::kOff;
@@ -1228,8 +1221,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
               // input is already in XYB.
       CopyImageTo(ib.color(), &opsin);
     }
-    bool lossless = (frame_header->encoding == FrameEncoding::kModular &&
-                     cparams.quality_pair.first == 100);
+    bool lossless = cparams.IsLossless();
     if (ib.HasAlpha() && !ib.AlphaIsPremultiplied() &&
         frame_header->frame_type == FrameType::kRegularFrame &&
         !ApplyOverride(cparams.keep_invisible, lossless) &&

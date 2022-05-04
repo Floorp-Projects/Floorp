@@ -35,28 +35,28 @@ constexpr size_t kMaxHeaderSize = 200;
 Status EncodeHeader(const PackedPixelFile& ppf, const size_t bits_per_sample,
                     const bool little_endian, char* header,
                     int* JXL_RESTRICT chars_written) {
-  if (ppf.info.alpha_bits > 0) return JXL_FAILURE("PNM: can't store alpha");
   bool is_gray = ppf.info.num_color_channels <= 2;
   size_t oriented_xsize =
       ppf.info.orientation <= 4 ? ppf.info.xsize : ppf.info.ysize;
   size_t oriented_ysize =
       ppf.info.orientation <= 4 ? ppf.info.ysize : ppf.info.xsize;
-
-  if (bits_per_sample == 32) {  // PFM
+  if (ppf.info.alpha_bits > 0) {  // PAM
+    if (bits_per_sample > 16) return JXL_FAILURE("PNM cannot have > 16 bits");
+    const uint32_t max_val = (1U << bits_per_sample) - 1;
+    *chars_written =
+        snprintf(header, kMaxHeaderSize,
+                 "P7\nWIDTH %" PRIuS "\nHEIGHT %" PRIuS
+                 "\nDEPTH %u\nMAXVAL %u\nTUPLTYPE %s\nENDHDR\n",
+                 oriented_xsize, oriented_ysize, is_gray ? 2 : 4, max_val,
+                 is_gray ? "GRAYSCALE_ALPHA" : "RGB_ALPHA");
+    JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
+                        kMaxHeaderSize);
+  } else if (bits_per_sample == 32) {  // PFM
     const char type = is_gray ? 'f' : 'F';
     const double scale = little_endian ? -1.0 : 1.0;
     *chars_written =
         snprintf(header, kMaxHeaderSize, "P%c\n%" PRIuS " %" PRIuS "\n%.1f\n",
                  type, oriented_xsize, oriented_ysize, scale);
-    JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
-                        kMaxHeaderSize);
-  } else if (bits_per_sample == 1) {  // PBM
-    if (is_gray) {
-      return JXL_FAILURE("Cannot encode color as PBM");
-    }
-    *chars_written =
-        snprintf(header, kMaxHeaderSize, "P4\n%" PRIuS " %" PRIuS "\n",
-                 oriented_xsize, oriented_ysize);
     JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
                         kMaxHeaderSize);
   } else {  // PGM/PPM
@@ -100,7 +100,7 @@ Status EncodeImagePNM(const PackedPixelFile& ppf, size_t bits_per_sample,
                       ThreadPool* pool, size_t frame_index,
                       std::vector<uint8_t>* bytes) {
   const bool floating_point = bits_per_sample > 16;
-  // Choose native for PFM; PGM/PPM require big-endian (N/A for PBM)
+  // Choose native for PFM; PGM/PPM require big-endian
   const JxlEndianness endianness =
       floating_point ? JXL_NATIVE_ENDIAN : JXL_BIG_ENDIAN;
   if (!ppf.metadata.exif.empty() || !ppf.metadata.iptc.empty() ||

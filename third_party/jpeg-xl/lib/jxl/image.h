@@ -194,87 +194,94 @@ class Image3;
 // shifting the pointer by x0/y0 allows this to apply to multiple images with
 // different resolutions (e.g. color transform and quantization field).
 // Can compare using SameSize(rect1, rect2).
-class Rect {
+template <typename T>
+class RectT {
  public:
   // Most windows are xsize_max * ysize_max, except those on the borders where
   // begin + size_max > end.
-  constexpr Rect(size_t xbegin, size_t ybegin, size_t xsize_max,
-                 size_t ysize_max, size_t xend, size_t yend)
+  constexpr RectT(T xbegin, T ybegin, size_t xsize_max, size_t ysize_max,
+                  T xend, T yend)
       : x0_(xbegin),
         y0_(ybegin),
         xsize_(ClampedSize(xbegin, xsize_max, xend)),
         ysize_(ClampedSize(ybegin, ysize_max, yend)) {}
 
   // Construct with origin and known size (typically from another Rect).
-  constexpr Rect(size_t xbegin, size_t ybegin, size_t xsize, size_t ysize)
+  constexpr RectT(T xbegin, T ybegin, size_t xsize, size_t ysize)
       : x0_(xbegin), y0_(ybegin), xsize_(xsize), ysize_(ysize) {}
 
   // Construct a rect that covers a whole image/plane/ImageBundle etc.
-  template <typename Image>
-  explicit Rect(const Image& image)
-      : Rect(0, 0, image.xsize(), image.ysize()) {}
+  template <typename ImageT>
+  explicit RectT(const ImageT& image)
+      : RectT(0, 0, image.xsize(), image.ysize()) {}
 
-  Rect() : Rect(0, 0, 0, 0) {}
+  RectT() : RectT(0, 0, 0, 0) {}
 
-  Rect(const Rect&) = default;
-  Rect& operator=(const Rect&) = default;
+  RectT(const RectT&) = default;
+  RectT& operator=(const RectT&) = default;
 
   // Construct a subrect that resides in an image/plane/ImageBundle etc.
-  template <typename Image>
-  Rect Crop(const Image& image) const {
-    return Rect(x0_, y0_, xsize_, ysize_, image.xsize(), image.ysize());
+  template <typename ImageT>
+  RectT Crop(const ImageT& image) const {
+    return Intersection(RectT(image));
   }
 
   // Construct a subrect that resides in the [0, ysize) x [0, xsize) region of
   // the current rect.
-  Rect Crop(size_t area_xsize, size_t area_ysize) const {
-    return Rect(x0_, y0_, xsize_, ysize_, area_xsize, area_ysize);
+  RectT Crop(size_t area_xsize, size_t area_ysize) const {
+    return Intersection(RectT(0, 0, area_xsize, area_ysize));
   }
 
   // Returns a rect that only contains `num` lines with offset `y` from `y0()`.
-  Rect Lines(size_t y, size_t num) const {
+  RectT Lines(size_t y, size_t num) const {
     JXL_DASSERT(y + num <= ysize_);
-    return Rect(x0_, y0_ + y, xsize_, num);
+    return RectT(x0_, y0_ + y, xsize_, num);
   }
 
-  Rect Line(size_t y) const { return Lines(y, 1); }
+  RectT Line(size_t y) const { return Lines(y, 1); }
 
-  JXL_MUST_USE_RESULT Rect Intersection(const Rect& other) const {
-    return Rect(std::max(x0_, other.x0_), std::max(y0_, other.y0_), xsize_,
-                ysize_, std::min(x0_ + xsize_, other.x0_ + other.xsize_),
-                std::min(y0_ + ysize_, other.y0_ + other.ysize_));
+  JXL_MUST_USE_RESULT RectT Intersection(const RectT& other) const {
+    return RectT(std::max(x0_, other.x0_), std::max(y0_, other.y0_), xsize_,
+                 ysize_, std::min(x0_ + xsize_, other.x0_ + other.xsize_),
+                 std::min(y0_ + ysize_, other.y0_ + other.ysize_));
   }
 
-  JXL_MUST_USE_RESULT Rect Translate(int64_t x_offset, int64_t y_offset) const {
-    return Rect(x0_ + x_offset, y0_ + y_offset, xsize_, ysize_);
+  JXL_MUST_USE_RESULT RectT Translate(int64_t x_offset,
+                                      int64_t y_offset) const {
+    return RectT(x0_ + x_offset, y0_ + y_offset, xsize_, ysize_);
   }
 
-  template <typename T>
-  T* Row(Plane<T>* image, size_t y) const {
+  template <typename V>
+  V* Row(Plane<V>* image, size_t y) const {
+    JXL_DASSERT(y + y0_ >= 0);
     return image->Row(y + y0_) + x0_;
   }
 
-  template <typename T>
-  const T* Row(const Plane<T>* image, size_t y) const {
+  template <typename V>
+  const V* Row(const Plane<V>* image, size_t y) const {
+    JXL_DASSERT(y + y0_ >= 0);
     return image->Row(y + y0_) + x0_;
   }
 
-  template <typename T>
-  T* PlaneRow(Image3<T>* image, const size_t c, size_t y) const {
+  template <typename V>
+  V* PlaneRow(Image3<V>* image, const size_t c, size_t y) const {
+    JXL_DASSERT(y + y0_ >= 0);
     return image->PlaneRow(c, y + y0_) + x0_;
   }
 
-  template <typename T>
-  const T* ConstRow(const Plane<T>& image, size_t y) const {
+  template <typename V>
+  const V* ConstRow(const Plane<V>& image, size_t y) const {
+    JXL_DASSERT(y + y0_ >= 0);
     return image.ConstRow(y + y0_) + x0_;
   }
 
-  template <typename T>
-  const T* ConstPlaneRow(const Image3<T>& image, size_t c, size_t y) const {
+  template <typename V>
+  const V* ConstPlaneRow(const Image3<V>& image, size_t c, size_t y) const {
+    JXL_DASSERT(y + y0_ >= 0);
     return image.ConstPlaneRow(c, y + y0_) + x0_;
   }
 
-  bool IsInside(const Rect& other) const {
+  bool IsInside(const RectT& other) const {
     return x0_ >= other.x0() && x0_ + xsize_ <= other.x0() + other.xsize_ &&
            y0_ >= other.y0() && y0_ + ysize_ <= other.y0() + other.ysize();
   }
@@ -283,28 +290,32 @@ class Rect {
   // Plane<T> or Image3<T>; however if ImageT is Rect, results are nonsensical.
   template <class ImageT>
   bool IsInside(const ImageT& image) const {
-    return (x0_ + xsize_ <= image.xsize()) && (y0_ + ysize_ <= image.ysize());
+    return IsInside(RectT(image));
   }
 
-  size_t x0() const { return x0_; }
-  size_t y0() const { return y0_; }
+  T x0() const { return x0_; }
+  T y0() const { return y0_; }
   size_t xsize() const { return xsize_; }
   size_t ysize() const { return ysize_; }
+  T x1() const { return x0_ + xsize_; }
+  T y1() const { return y0_ + ysize_; }
 
  private:
   // Returns size_max, or whatever is left in [begin, end).
-  static constexpr size_t ClampedSize(size_t begin, size_t size_max,
-                                      size_t end) {
-    return (begin + size_max <= end) ? size_max
-                                     : (end > begin ? end - begin : 0);
+  static constexpr size_t ClampedSize(T begin, size_t size_max, T end) {
+    return (static_cast<T>(begin + size_max) <= end)
+               ? size_max
+               : (end > begin ? end - begin : 0);
   }
 
-  size_t x0_;
-  size_t y0_;
+  T x0_;
+  T y0_;
 
   size_t xsize_;
   size_t ysize_;
 };
+
+using Rect = RectT<size_t>;
 
 // Currently, we abuse Image to either refer to an image that owns its storage
 // or one that doesn't. In similar vein, we abuse Image* function parameters to
