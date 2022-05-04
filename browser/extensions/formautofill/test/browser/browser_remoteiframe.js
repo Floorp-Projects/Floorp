@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 const IFRAME_URL_PATH = BASE_URL + "autocomplete_iframe.html";
@@ -43,7 +44,11 @@ add_task(async function test_iframe_autocomplete() {
   await expectWarningText(browser, "Also autofills organization, email");
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  let onLoaded = BrowserTestUtils.browserLoaded(browser, true);
+  let promiseShown = promiseNotificationShown();
+
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  let loadPromise = BrowserTestUtils.browserLoaded(browser, true);
   await SpecialPowers.spawn(iframeBC, [], async function() {
     Assert.equal(
       content.document.getElementById("street-address").value,
@@ -53,21 +58,20 @@ add_task(async function test_iframe_autocomplete() {
 
     let org = content.document.getElementById("organization");
     Assert.equal(org.value, "World Wide Web Consortium");
+
+    // Now, modify the organization.
+    org.setUserInput("Example Inc.");
+
+    await new Promise(resolve => content.setTimeout(resolve, 1000));
+    content.document.querySelector("input[type=submit]").click();
   });
 
-  let onPopupShown = waitForPopupShown();
-  await focusUpdateSubmitForm(iframeBC, {
-    focusSelector: "#organization",
-    newValues: {
-      "#organization": "Example Inc.",
-    },
-  });
-  await onPopupShown;
-  await onLoaded;
+  await loadPromise;
+  await promiseShown;
 
-  let onUpdated = waitForStorageChangedEvents("update");
+  let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
   await clickDoorhangerButton(MAIN_BUTTON);
-  await onUpdated;
+  await onChanged;
 
   // Check that the organization was updated properly.
   let addresses = await getAddresses();
@@ -83,21 +87,19 @@ add_task(async function test_iframe_autocomplete() {
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
-  await waitForAutofill(iframeBC, "#organization", "Example Inc.");
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
   // Open the dropdown and select the Clear Form item.
-  await openPopupForSubframe(browser, iframeBC, "#street-address");
+  await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
   await SpecialPowers.spawn(iframeBC, [], async function() {
-    await ContentTaskUtils.waitForCondition(() => {
-      return (
-        content.document.getElementById("street-address").value == "" &&
-        content.document.getElementById("country").value == "" &&
-        content.document.getElementById("organization").value == ""
-      );
-    });
+    Assert.equal(content.document.getElementById("street-address").value, "");
+    Assert.equal(content.document.getElementById("country").value, "");
+    Assert.equal(content.document.getElementById("organization").value, "");
   });
 
   await BrowserTestUtils.removeTab(tab);
