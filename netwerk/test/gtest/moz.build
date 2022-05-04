@@ -37,7 +37,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
 if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
     UNIFIED_SOURCES += [
         "TestPACMan.cpp",
-        "TestPartiallySeekableInputStream.cpp",
         "TestURIMutator.cpp",
     ]
 

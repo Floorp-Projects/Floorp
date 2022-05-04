@@ -232,7 +232,7 @@ static void DumpNeuteredMessage(HWND hwnd, UINT uMsg) {
   }
 
   log.AppendLiteral(" during a synchronous IPC message for window ");
-  log.AppendPrintf("0x%X", hwnd);
+  log.AppendPrintf("0x%p", hwnd);
 
   wchar_t className[256] = {0};
   if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {

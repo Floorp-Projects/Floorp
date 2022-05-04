@@ -138,7 +138,7 @@ void ConsoleUtils::ReportForServiceWorkerScopeInternal(
     return;
   }
 
-  storage->RecordEvent(u"ServiceWorker"_ns, aScope, eventValue);
+  storage->RecordEvent(u"ServiceWorker"_ns, eventValue);
 }
 
 JSObject* ConsoleUtils::GetOrCreateSandbox(JSContext* aCx) {

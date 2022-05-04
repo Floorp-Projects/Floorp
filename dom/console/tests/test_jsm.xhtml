@@ -9,6 +9,7 @@
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="head.js"/>
 
   <script type="application/javascript">
   <![CDATA[
@@ -29,52 +30,50 @@ function promiseConsoleListenerCalled() {
     let consoleListener = {
       count: 0,
 
-      observe: function(aSubject, aTopic, aData) {
-        if (aTopic == "console-api-log-event") {
-          var obj = aSubject.wrappedJSObject;
-          ok(obj.chromeContext, "JSM is always a chrome context");
+      observe: function(aSubject) {
+        var obj = aSubject.wrappedJSObject;
+        ok(obj.chromeContext, "JSM is always a chrome context");
 
-          if (obj.innerID == JSM) {
-            is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-            is(obj.arguments[0], "Hello world!", "Message matches");
-            is(obj.consoleID, "", "No consoleID for console API");
-            is(obj.prefix, "", "prefix is empty by default");
+        if (obj.innerID == JSM) {
+          is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+          is(obj.arguments[0], "Hello world!", "Message matches");
+          is(obj.consoleID, "", "No consoleID for console API");
+          is(obj.prefix, "", "prefix is empty by default");
 
-            // We want to see 2 messages from this innerID, the first is generated
-            // by console.log, the second one from createInstance().log();
-            ++this.count;
-          } else if (obj.innerID == "CUSTOM INNER") {
-            is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-            is(obj.arguments[0], "Hello world!", "Message matches");
-            is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
-            is(obj.prefix, "_PREFIX_", "prefix is set by consoleInstance");
-            // We expect to see 2 messages from this innerID.
-            ++this.count;
-          } else if (obj.innerID == "LEVEL") {
-            // Nothing special... just we don't want to see 'invisible' messages.
-            is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-            is(obj.arguments[0], "Hello world!", "Message matches");
-            is(obj.prefix, "", "prefix is empty by default");
-            // We expect to see 2 messages from this innerID.
-            ++this.count;
-          } else if (obj.innerID == "NO PREF") {
-            // Nothing special... just we don't want to see 'invisible' messages.
-            is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-            is(obj.arguments[0], "Hello world!", "Message matches");
-            is(obj.prefix, "", "prefix is empty by default");
-            // We expect to see 2 messages from this innerID.
-            ++this.count;
-          }
+          // We want to see 2 messages from this innerID, the first is generated
+          // by console.log, the second one from createInstance().log();
+          ++this.count;
+        } else if (obj.innerID == "CUSTOM INNER") {
+          is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+          is(obj.arguments[0], "Hello world!", "Message matches");
+          is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
+          is(obj.prefix, "_PREFIX_", "prefix is set by consoleInstance");
+          // We expect to see 2 messages from this innerID.
+          ++this.count;
+        } else if (obj.innerID == "LEVEL") {
+          // Nothing special... just we don't want to see 'invisible' messages.
+          is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+          is(obj.arguments[0], "Hello world!", "Message matches");
+          is(obj.prefix, "", "prefix is empty by default");
+          // We expect to see 2 messages from this innerID.
+          ++this.count;
+        } else if (obj.innerID == "NO PREF") {
+          // Nothing special... just we don't want to see 'invisible' messages.
+          is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+          is(obj.arguments[0], "Hello world!", "Message matches");
+          is(obj.prefix, "", "prefix is empty by default");
+          // We expect to see 2 messages from this innerID.
+          ++this.count;
+        }
 
-          if (this.count == 8) {
-            is(dumpCalled, 2, "Dump has been called!");
-            Services.obs.removeObserver(consoleListener, "console-api-log-event");
-            resolve();
-          }
+        if (this.count == 8) {
+          is(dumpCalled, 2, "Dump has been called!");
+          removeConsoleStorageListener(consoleListener);
+          resolve();
         }
       }
     }
-    Services.obs.addObserver(consoleListener, "console-api-log-event");
+    addConsoleStorageListener(consoleListener);
   });
 }
 

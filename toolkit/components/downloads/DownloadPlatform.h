@@ -7,9 +7,7 @@
 
 #include "mozIDownloadPlatform.h"
 
-#include "nsCOMPtr.h"
-
-class nsIURI;
+#include "nsISupports.h"
 
 class DownloadPlatform : public mozIDownloadPlatform {
  protected:

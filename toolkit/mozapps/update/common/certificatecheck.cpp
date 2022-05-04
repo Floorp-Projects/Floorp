@@ -37,7 +37,7 @@ CheckCertificateForPEFile(LPCWSTR filePath, CertificateCheckInfo& infoToMatch) {
       0, &encoding, &contentType, &formatType, &certStore, &cryptMsg, nullptr);
   if (!result) {
     lastError = GetLastError();
-    LOG_WARN(("CryptQueryObject failed.  (%d)", lastError));
+    LOG_WARN(("CryptQueryObject failed.  (%lu)", lastError));
     goto cleanup;
   }
 
@@ -47,7 +47,7 @@ CheckCertificateForPEFile(LPCWSTR filePath, CertificateCheckInfo& infoToMatch) {
                             &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
-    LOG_WARN(("CryptMsgGetParam failed.  (%d)", lastError));
+    LOG_WARN(("CryptMsgGetParam failed.  (%lu)", lastError));
     goto cleanup;
   }
 
@@ -55,7 +55,7 @@ CheckCertificateForPEFile(LPCWSTR filePath, CertificateCheckInfo& infoToMatch) {
   signerInfo = (PCMSG_SIGNER_INFO)LocalAlloc(LPTR, signerInfoSize);
   if (!signerInfo) {
     lastError = GetLastError();
-    LOG_WARN(("Unable to allocate memory for Signer Info.  (%d)", lastError));
+    LOG_WARN(("Unable to allocate memory for Signer Info.  (%lu)", lastError));
     goto cleanup;
   }
 
@@ -65,7 +65,7 @@ CheckCertificateForPEFile(LPCWSTR filePath, CertificateCheckInfo& infoToMatch) {
                             (PVOID)signerInfo, &signerInfoSize);
   if (!result) {
     lastError = GetLastError();
-    LOG_WARN(("CryptMsgGetParam failed.  (%d)", lastError));
+    LOG_WARN(("CryptMsgGetParam failed.  (%lu)", lastError));
     goto cleanup;
   }
 
@@ -78,13 +78,13 @@ CheckCertificateForPEFile(LPCWSTR filePath, CertificateCheckInfo& infoToMatch) {
                                  (PVOID)&certInfo, nullptr);
   if (!certContext) {
     lastError = GetLastError();
-    LOG_WARN(("CertFindCertificateInStore failed.  (%d)", lastError));
+    LOG_WARN(("CertFindCertificateInStore failed.  (%lu)", lastError));
     goto cleanup;
   }
 
   if (!DoCertificateAttributesMatch(certContext, infoToMatch)) {
     lastError = ERROR_NOT_FOUND;
-    LOG_WARN(("Certificate did not match issuer or name.  (%d)", lastError));
+    LOG_WARN(("Certificate did not match issuer or name.  (%lu)", lastError));
     goto cleanup;
   }
 
@@ -122,22 +122,22 @@ BOOL DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
                                CERT_NAME_ISSUER_FLAG, nullptr, nullptr, 0);
 
     if (!dwData) {
-      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
+      LOG_WARN(("CertGetNameString failed.  (%lu)", GetLastError()));
       return FALSE;
     }
 
     // Allocate memory for Issuer name buffer.
     szName = (LPWSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
-      LOG_WARN(
-          ("Unable to allocate memory for issuer name.  (%d)", GetLastError()));
+      LOG_WARN(("Unable to allocate memory for issuer name.  (%lu)",
+                GetLastError()));
       return FALSE;
     }
 
     // Get Issuer name.
     if (!CertGetNameStringW(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE,
                             CERT_NAME_ISSUER_FLAG, nullptr, szName, dwData)) {
-      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
+      LOG_WARN(("CertGetNameString failed.  (%lu)", GetLastError()));
       LocalFree(szName);
       return FALSE;
     }
@@ -157,14 +157,14 @@ BOOL DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     dwData = CertGetNameString(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
                                nullptr, nullptr, 0);
     if (!dwData) {
-      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
+      LOG_WARN(("CertGetNameString failed.  (%lu)", GetLastError()));
       return FALSE;
     }
 
     // Allocate memory for the name buffer.
     szName = (LPWSTR)LocalAlloc(LPTR, dwData * sizeof(WCHAR));
     if (!szName) {
-      LOG_WARN(("Unable to allocate memory for subject name.  (%d)",
+      LOG_WARN(("Unable to allocate memory for subject name.  (%lu)",
                 GetLastError()));
       return FALSE;
     }
@@ -172,7 +172,7 @@ BOOL DoCertificateAttributesMatch(PCCERT_CONTEXT certContext,
     // Obtain the name.
     if (!(CertGetNameStringW(certContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0,
                              nullptr, szName, dwData))) {
-      LOG_WARN(("CertGetNameString failed.  (%d)", GetLastError()));
+      LOG_WARN(("CertGetNameString failed.  (%lu)", GetLastError()));
       LocalFree(szName);
       return FALSE;
     }
@@ -235,7 +235,7 @@ VerifyCertificateTrustForFile(LPCWSTR filePath) {
   DWORD lastError = GetLastError();
   LOG_WARN(
       ("There was an error validating trust of the certificate for file"
-       " \"%ls\". Returned: %d.  (%d)",
+       " \"%ls\". Returned: %ld.  (%lu)",
        filePath, ret, lastError));
   return ret;
 }

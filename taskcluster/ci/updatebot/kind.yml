@@ -6,6 +6,7 @@ loader: gecko_taskgraph.loader.transform:loader
 
 kind-dependencies:
     - fetch
+    - toolchain
 
 transforms:
     - gecko_taskgraph.transforms.release_notifications:transforms
@@ -70,6 +71,9 @@ jobs:
                 - on-failed
                 - on-exception
             emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
+        fetches:
+            toolchain:
+                - linux64-rust
 
     cron-win:
         description: Cron Job for Updatebot (Windows)

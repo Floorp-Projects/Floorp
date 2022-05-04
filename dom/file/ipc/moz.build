@@ -27,7 +27,6 @@ EXPORTS.mozilla += [
     "RemoteLazyInputStreamParent.h",
     "RemoteLazyInputStreamStorage.h",
     "RemoteLazyInputStreamThread.h",
-    "RemoteLazyInputStreamUtils.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -39,13 +38,11 @@ UNIFIED_SOURCES += [
     "RemoteLazyInputStreamParent.cpp",
     "RemoteLazyInputStreamStorage.cpp",
     "RemoteLazyInputStreamThread.cpp",
-    "RemoteLazyInputStreamUtils.cpp",
     "TemporaryIPCBlobChild.cpp",
     "TemporaryIPCBlobParent.cpp",
 ]
 
 IPDL_SOURCES += [
-    "BlobTypes.ipdlh",
     "IPCBlob.ipdlh",
     "PFileCreator.ipdl",
     "PRemoteLazyInputStream.ipdl",

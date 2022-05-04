@@ -419,21 +419,21 @@ static const nsCString GetCharacterCodeName(WPARAM aCharCode) {
       return "ZERO WIDTH NO-BREAK SPACE (0xFEFF)"_ns;
     default: {
       if (aCharCode < ' ' || (aCharCode >= 0x80 && aCharCode < 0xA0)) {
-        return nsPrintfCString("control (0x%04X)", aCharCode);
+        return nsPrintfCString("control (0x%04zX)", aCharCode);
       }
       if (NS_IS_HIGH_SURROGATE(aCharCode)) {
-        return nsPrintfCString("high surrogate (0x%04X)", aCharCode);
+        return nsPrintfCString("high surrogate (0x%04zX)", aCharCode);
       }
       if (NS_IS_LOW_SURROGATE(aCharCode)) {
-        return nsPrintfCString("low surrogate (0x%04X)", aCharCode);
+        return nsPrintfCString("low surrogate (0x%04zX)", aCharCode);
       }
       return IS_IN_BMP(aCharCode)
                  ? nsPrintfCString(
-                       "'%s' (0x%04X)",
+                       "'%s' (0x%04zX)",
                        NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(),
                        aCharCode)
                  : nsPrintfCString(
-                       "'%s' (0x%08X)",
+                       "'%s' (0x%08zX)",
                        NS_ConvertUTF16toUTF8(nsAutoString(aCharCode)).get(),
                        aCharCode);
     }
@@ -555,7 +555,7 @@ static const nsCString GetMessageName(UINT aMessage) {
 
 static const nsCString GetVirtualKeyCodeName(WPARAM aVK) {
   if (aVK >= ArrayLength(kVirtualKeyName)) {
-    return nsPrintfCString("Invalid (0x%08X)", aVK);
+    return nsPrintfCString("Invalid (0x%08zX)", aVK);
   }
   return nsCString(kVirtualKeyName[aVK]);
 }
@@ -667,7 +667,7 @@ static const nsCString GetAppCommandName(WPARAM aCommand) {
     case APPCOMMAND_VOLUME_UP:
       return "APPCOMMAND_VOLUME_UP"_ns;
     default:
-      return nsPrintfCString("Unknown app command (0x%08X)", aCommand);
+      return nsPrintfCString("Unknown app command (0x%08zX)", aCommand);
   }
 }
 
@@ -680,7 +680,8 @@ static const nsCString GetAppCommandDeviceName(LPARAM aDevice) {
     case FAPPCOMMAND_OEM:
       return "FAPPCOMMAND_OEM"_ns;
     default:
-      return nsPrintfCString("Unknown app command device (0x%04X)", aDevice);
+      return nsPrintfCString("Unknown app command device (0x%04" PRIXLPTR ")",
+                             aDevice);
   }
 };
 
@@ -723,7 +724,7 @@ class MOZ_STACK_CLASS GetAppCommandKeysName final : public nsAutoCString {
     }
     if (aKeys) {
       MaybeAppendSeparator();
-      AppendPrintf("Unknown Flags (0x%04X)", aKeys);
+      AppendPrintf("Unknown Flags (0x%04zX)", aKeys);
     }
     if (IsEmpty()) {
       AssignLiteral("none (0x0000)");
@@ -749,7 +750,8 @@ static const nsCString ToString(const MSG& aMSG) {
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
       result.AppendPrintf(
-          "virtual keycode=%s, repeat count=%d, "
+          "virtual keycode=%s, repeat count=%" PRIdLPTR
+          ", "
           "scancode=0x%02X, extended key=%s, "
           "context code=%s, previous key state=%s, "
           "transition state=%s",
@@ -765,7 +767,8 @@ static const nsCString ToString(const MSG& aMSG) {
     case WM_SYSCHAR:
     case WM_SYSDEADCHAR:
       result.AppendPrintf(
-          "character code=%s, repeat count=%d, "
+          "character code=%s, repeat count=%" PRIdLPTR
+          ", "
           "scancode=0x%02X, extended key=%s, "
           "context code=%s, previous key state=%s, "
           "transition state=%s",
@@ -778,14 +781,15 @@ static const nsCString ToString(const MSG& aMSG) {
       break;
     case WM_APPCOMMAND:
       result.AppendPrintf(
-          "window handle=0x%p, app command=%s, device=%s, dwKeys=%s",
+          "window handle=0x%zx, app command=%s, device=%s, dwKeys=%s",
           aMSG.wParam,
           GetAppCommandName(GET_APPCOMMAND_LPARAM(aMSG.lParam)).get(),
           GetAppCommandDeviceName(GET_DEVICE_LPARAM(aMSG.lParam)).get(),
           GetAppCommandKeysName(GET_KEYSTATE_LPARAM(aMSG.lParam)).get());
       break;
     default:
-      result.AppendPrintf("wParam=%u, lParam=%u", aMSG.wParam, aMSG.lParam);
+      result.AppendPrintf("wParam=%zu, lParam=%" PRIdLPTR, aMSG.wParam,
+                          aMSG.lParam);
       break;
   }
   result.AppendPrintf(", hwnd=0x%p", aMSG.hwnd);
@@ -1297,7 +1301,7 @@ NativeKey::NativeKey(nsWindow* aWidget, const MSG& aMessage,
   }
 
   MOZ_LOG(gKeyLog, LogLevel::Info,
-          ("%p   NativeKey::NativeKey(), mKeyboardLayout=0x%08X, "
+          ("%p   NativeKey::NativeKey(), mKeyboardLayout=0x%p, "
            "mFocusedWndBeforeDispatch=0x%p, mDOMKeyCode=%s, "
            "mKeyNameIndex=%s, mCodeNameIndex=%s, mModKeyState=%s, "
            "mVirtualKeyCode=%s, mOriginalVirtualKeyCode=%s, "
@@ -2371,7 +2375,7 @@ bool NativeKey::HandleAppCommandMessage() const {
          this));
     if (mWidget->Destroyed()) {
       MOZ_LOG(gKeyLog, LogLevel::Info,
-              ("%p   NativeKey::HandleAppCommandMessage(), %s event caused "
+              ("%p   NativeKey::HandleAppCommandMessage(), keyup event caused "
                "destroying the widget",
                this));
       return true;
@@ -3099,10 +3103,10 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
             gKeyLog, LogLevel::Warning,
             ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
              "remove a char message due to message change, let's retry to "
-             "remove the message with newly found char message, ",
-             "nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, kFoundCharMsg=%s", this,
-             ToString(nextKeyMsgInAllWindows).get(), ToString(nextKeyMsg).get(),
-             ToString(kFoundCharMsg).get()));
+             "remove the message with newly found char message, "
+             "nextKeyMsgInAllWindows=%s, nextKeyMsg=%s, kFoundCharMsg=%s",
+             this, ToString(nextKeyMsgInAllWindows).get(),
+             ToString(nextKeyMsg).get(), ToString(kFoundCharMsg).get()));
         nextKeyMsg = nextKeyMsgInAllWindows;
         continue;
       }
@@ -3151,12 +3155,12 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
     if (doCrash) {
       nsPrintfCString info(
           "\nPeekMessage() failed to remove char message! "
-          "\nActive keyboard layout=0x%08X (%s), "
+          "\nActive keyboard layout=0x%p (%s), "
           "\nHandling message: %s, InSendMessageEx()=%s, "
           "\nFound message: %s, "
           "\nWM_NULL has been removed: %d, "
           "\nNext key message in all windows: %s, "
-          "time=%d, ",
+          "time=%ld, ",
           KeyboardLayout::GetActiveLayout(),
           KeyboardLayout::GetActiveLayoutName().get(), ToString(mMsg).get(),
           GetResultOfInSendMessageEx().get(), ToString(kFoundCharMsg).get(), i,
@@ -3164,7 +3168,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
       CrashReporter::AppendAppNotesToCrashReport(info);
       MSG nextMsg;
       if (WinUtils::PeekMessage(&nextMsg, 0, 0, 0, PM_NOREMOVE | PM_NOYIELD)) {
-        nsPrintfCString info("\nNext message in all windows: %s, time=%d",
+        nsPrintfCString info("\nNext message in all windows: %s, time=%ld",
                              ToString(nextMsg).get(), nextMsg.time);
         CrashReporter::AppendAppNotesToCrashReport(info);
       } else {
@@ -3183,8 +3187,9 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
     if (removedMsg.message == WM_NULL) {
       MOZ_LOG(gKeyLog, LogLevel::Warning,
               ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
-               "remove a char message, instead, removed WM_NULL message, ",
-               "removedMsg=%s", this, ToString(removedMsg).get()));
+               "remove a char message, instead, removed WM_NULL message, "
+               "removedMsg=%s",
+               this, ToString(removedMsg).get()));
       // Check if there is the message which we're trying to remove.
       MSG newNextKeyMsg;
       if (!WinUtils::PeekMessage(&newNextKeyMsg, mMsg.hwnd, WM_KEYFIRST,
@@ -3298,7 +3303,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
          ToString(kFoundCharMsg).get()));
     nsPrintfCString info(
         "\nPeekMessage() removed unexpcted char message! "
-        "\nActive keyboard layout=0x%08X (%s), "
+        "\nActive keyboard layout=0x%p (%s), "
         "\nHandling message: %s, InSendMessageEx()=%s, "
         "\nFound message: %s, "
         "\nRemoved message: %s, ",
@@ -3341,7 +3346,7 @@ bool NativeKey::GetFollowingCharMessage(MSG& aCharMsg) {
        this, ToString(nextKeyMsg).get()));
   nsPrintfCString info(
       "\nWe lost following char message! "
-      "\nActive keyboard layout=0x%08X (%s), "
+      "\nActive keyboard layout=0x%p (%s), "
       "\nHandling message: %s, InSendMessageEx()=%s, \n"
       "Found message: %s, removed a lot of WM_NULL",
       KeyboardLayout::GetActiveLayout(),
@@ -3571,7 +3576,7 @@ void NativeKey::WillDispatchKeyboardEvent(WidgetKeyboardEvent& aKeyboardEvent,
         //     we'd get some bug reports.
         MOZ_LOG(gKeyLog, LogLevel::Warning,
                 ("%p   NativeKey::WillDispatchKeyboardEvent(), WARNING, "
-                 "ignoring %uth message due to non-printable char message, %s",
+                 "ignoring %zuth message due to non-printable char message, %s",
                  this, i + 1, ToString(mFollowingCharMsgs[i]).get()));
         continue;
       }
@@ -4204,9 +4209,9 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
   // language) or 0xEYYYXXXX (IMM-IME), we can retrieve its name simply.
   if (layout < 0xA000 || (layout & 0xF000) == 0xE000) {
     nsAutoString key(kKeyboardLayouts);
-    key.AppendPrintf("%08X", layout < 0xA000
-                                 ? layout
-                                 : reinterpret_cast<uintptr_t>(aLayout));
+    key.AppendPrintf("%08" PRIXPTR, layout < 0xA000
+                                        ? layout
+                                        : reinterpret_cast<uintptr_t>(aLayout));
     wchar_t buf[256];
     if (NS_WARN_IF(!WinUtils::GetRegistryKey(
             HKEY_LOCAL_MACHINE, key.get(), L"Layout Text", buf, sizeof(buf)))) {
@@ -4217,7 +4222,7 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
 
   if (NS_WARN_IF((layout & 0xF000) != 0xF000)) {
     nsCString result;
-    result.AppendPrintf("Odd HKL: 0x%08X",
+    result.AppendPrintf("Odd HKL: 0x%08" PRIXPTR,
                         reinterpret_cast<uintptr_t>(aLayout));
     return result;
   }
@@ -4290,7 +4295,7 @@ void KeyboardLayout::LoadLayout(HKL aLayout) {
   mHasAltGr = false;
 
   MOZ_LOG(gKeyLog, LogLevel::Info,
-          ("KeyboardLayout::LoadLayout(aLayout=0x%08X (%s))", aLayout,
+          ("KeyboardLayout::LoadLayout(aLayout=0x%p (%s))", aLayout,
            GetLayoutName(aLayout).get()));
 
   BYTE kbdState[256];

@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
 #  include "mozilla/StackWalkThread.h"
@@ -639,7 +638,6 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
      MOZ_STACKWALK_SUPPORTS_MACOSX)
 
 #  include <stdlib.h>
-#  include <string.h>
 #  include <stdio.h>
 
 // On glibc 2.1, the Dl_info api defined in <dlfcn.h> is only exposed

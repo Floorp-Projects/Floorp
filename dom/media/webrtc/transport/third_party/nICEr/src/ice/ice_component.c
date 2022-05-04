@@ -579,7 +579,7 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
         r_log(LOG_ICE, LOG_DEBUG,
               "ICE-STREAM(%s): Creating socket for address %s (turn server %s)",
               component->stream->label, addr.as_string,
-              component->stream->turn_servers[j].turn_server.addr);
+              component->stream->turn_servers[j].turn_server.addr.as_string);
 
         /* Create a local socket */
         if((r=nr_socket_factory_create_socket(ctx->socket_factory,&addr,&local_sock))){

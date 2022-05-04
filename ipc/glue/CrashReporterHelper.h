@@ -61,8 +61,8 @@ class CrashReporterHelper {
       CrashReporterHost::RecordCrash(PT, nsICrashService::CRASH_TYPE_CRASH,
                                      aMinidumpId);
     } else {
-      NS_WARNING(nsPrintfCString("child process pid = %d crashed without "
-                                 "leaving a minidump behind",
+      NS_WARNING(nsPrintfCString("child process pid = %" PRIPID
+                                 " crashed without leaving a minidump behind",
                                  aPid)
                      .get());
     }

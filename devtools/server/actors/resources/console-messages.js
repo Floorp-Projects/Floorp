@@ -200,7 +200,7 @@ function getConsoleTableMessageItems(targetActor, result) {
  * @param TargetActor targetActor
  *        The related target actor
  * @param object message
- *        The original message received from console-api-log-event.
+ *        The original message received from the console storage listener.
  * @return object
  *         The object that can be sent to the remote client.
  */

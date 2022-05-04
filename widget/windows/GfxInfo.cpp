@@ -124,7 +124,8 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
     ClearTypeParameterInfo& params = clearTypeParams[d];
 
     if (displayNames) {
-      outStr.AppendPrintf("%S [ ", params.displayName.get());
+      outStr.AppendPrintf(
+          "%S [ ", static_cast<const wchar_t*>(params.displayName.get()));
     }
 
     if (params.gamma >= 0) {
@@ -137,8 +138,8 @@ GfxInfo::GetCleartypeParameters(nsAString& aCleartypeParams) {
       if (params.pixelStructure == PIXEL_STRUCT_RGB ||
           params.pixelStructure == PIXEL_STRUCT_BGR) {
         outStr.AppendPrintf(
-            "Pixel Structure: %S ",
-            (params.pixelStructure == PIXEL_STRUCT_RGB ? u"RGB" : u"BGR"));
+            "Pixel Structure: %s ",
+            (params.pixelStructure == PIXEL_STRUCT_RGB ? "RGB" : "BGR"));
       } else {
         outStr.AppendPrintf("Pixel Structure: %d ", params.pixelStructure);
       }
@@ -1699,11 +1700,12 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(8, 15, 10, 2869), "FEATURE_FAILURE_INTEL_W7_HW_DECODING");
 
     /* Bug 1203199/1092166: DXVA startup crashes on some intel drivers. */
-    APPEND_TO_DRIVER_BLOCKLIST_RANGE(OperatingSystem::Windows, DeviceFamily::IntelAll,
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE(
+        OperatingSystem::Windows, DeviceFamily::IntelAll,
         nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE, V(9,17,10,0), V(9,17,10,2849),
-        "FEATURE_FAILURE_BUG_1203199_1", "Intel driver > 9.17.10.2849");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(9, 17, 10, 0), V(9, 17, 10, 2849), "FEATURE_FAILURE_BUG_1203199_1",
+        "Intel driver > 9.17.10.2849");
 
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows, DeviceFamily::Nvidia8800GTS,

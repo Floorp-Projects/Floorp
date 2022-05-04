@@ -39,7 +39,7 @@ void PrintEvent(UINT msg, uint64_t wParam, uint64_t lParam, uint64_t retValue,
         (msg != WM_SETCURSOR && msg != WM_MOUSEMOVE && msg != WM_NCHITTEST)) {
       MOZ_LOG(
           gWindowsEventLog, LogLevel::Info,
-          ("%6d - 0x%04X (0x%08llX 0x%08llX) %s: 0x%08llX (%s)\n",
+          ("%6ld - 0x%04X (0x%08llX 0x%08llX) %s: 0x%08llX (%s)\n",
            gEventCounter++, msg, wParam, lParam, msgText ? msgText : "Unknown",
            retValue, result ? "true" : "false"));
       gLastEventMsg = msg;

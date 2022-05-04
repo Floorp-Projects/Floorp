@@ -72,11 +72,11 @@ static MOZ_ALWAYS_INLINE nsresult _CallDnsQuery_A_Windows(
                                    nullptr, &dnsData, nullptr);
     if (status == DNS_INFO_NO_RECORDS || status == DNS_ERROR_RCODE_NAME_ERROR ||
         !dnsData) {
-      LOG("No DNS records found for %s. status=%X. reqFamily = %X\n",
+      LOG("No DNS records found for %s. status=%lX. reqFamily = %X\n",
           aHost.BeginReading(), status, reqFamily);
       return NS_ERROR_FAILURE;
     } else if (status != NOERROR) {
-      LOG_WARNING("DnsQuery_A failed with status %X.\n", status);
+      LOG_WARNING("DnsQuery_A failed with status %lX.\n", status);
       return NS_ERROR_UNEXPECTED;
     }
 
@@ -180,7 +180,7 @@ _DNSQuery_A_SingleLabel(const nsACString& aCanonHost, uint16_t aAddressFamily,
         addresses.AppendElement(addr);
       });
 
-  LOG("Query for: %s has %u results", aCanonHost.BeginReading(),
+  LOG("Query for: %s has %zu results", aCanonHost.BeginReading(),
       addresses.Length());
   if (addresses.IsEmpty()) {
     return NS_ERROR_UNKNOWN_HOST;

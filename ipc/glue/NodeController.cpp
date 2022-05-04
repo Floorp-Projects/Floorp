@@ -281,7 +281,7 @@ void NodeController::DropPeer(NodeName aNodeName) {
     state->mPendingMerges.Remove(aNodeName, &pendingMerges);
   }
 
-  NODECONTROLLER_LOG(LogLevel::Info, "Dropping Peer %s (pid: %d)",
+  NODECONTROLLER_LOG(LogLevel::Info, "Dropping Peer %s (pid: %" PRIPID ")",
                      ToString(aNodeName).c_str(),
                      channel ? channel->OtherPid() : base::kInvalidProcessId);
 

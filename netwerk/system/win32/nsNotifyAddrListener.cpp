@@ -160,7 +160,7 @@ void nsNotifyAddrListener::HashSortedNetworkIds(std::vector<GUID> nwGUIDS,
     sha1.update(&nwGUID, sizeof(GUID));
 
     if (LOG_ENABLED()) {
-      nsPrintfCString guid("%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X%lX",
+      nsPrintfCString guid("%08lX%04X%04X%02X%02X%02X%02X%02X%02X%02X%02X",
                            nwGUID.Data1, nwGUID.Data2, nwGUID.Data3,
                            nwGUID.Data4[0], nwGUID.Data4[1], nwGUID.Data4[2],
                            nwGUID.Data4[3], nwGUID.Data4[4], nwGUID.Data4[5],
@@ -191,14 +191,14 @@ void nsNotifyAddrListener::calculateNetworkId(void) {
   HRESULT hr = CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL,
                                 IID_INetworkListManager, getter_AddRefs(nlm));
   if (NS_WARN_IF(FAILED(hr))) {
-    LOG(("CoCreateInstance error: %X", hr));
+    LOG(("CoCreateInstance error: %lX", hr));
     return;
   }
   RefPtr<IEnumNetworks> enumNetworks;
   hr = nlm->GetNetworks(NLM_ENUM_NETWORK_CONNECTED,
                         getter_AddRefs(enumNetworks));
   if (NS_WARN_IF(FAILED(hr))) {
-    LOG(("GetNetworks error: %X", hr));
+    LOG(("GetNetworks error: %lX", hr));
     return;
   }
 
@@ -486,7 +486,7 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void) {
         continue;
       }
 
-      LOG(("Adapter %s type: %u",
+      LOG(("Adapter %s type: %lu",
            NS_ConvertUTF16toUTF8(adapter->FriendlyName).get(),
            adapter->IfType));
 

@@ -81,7 +81,7 @@ RefPtr<MediaDataEncoder::InitPromise> WMFMediaDataEncoder<T>::ProcessInit() {
   mscom::EnsureMTA([&]() { hr = InitMFTEncoder(encoder); });
 
   if (FAILED(hr)) {
-    WMF_ENC_LOGE("init MFTEncoder: error = 0x%X", hr);
+    WMF_ENC_LOGE("init MFTEncoder: error = 0x%lX", hr);
     return InitPromise::CreateAndReject(
         MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                     RESULT_DETAIL("Can't create the MFT encoder.")),

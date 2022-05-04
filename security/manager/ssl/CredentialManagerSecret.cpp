@@ -56,7 +56,7 @@ nsresult CredentialManagerSecret::StoreSecret(const nsACString& aSecret,
     // Windows doesn't allow blobs larger than CRED_MAX_CREDENTIAL_BLOB_SIZE
     // bytes.
     MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
-            ("StoreSecret secret must not be larger than 512 bytes (got %d)",
+            ("StoreSecret secret must not be larger than 512 bytes (got %zd)",
              aSecret.Length()));
     return NS_ERROR_FAILURE;
   }
@@ -74,7 +74,7 @@ nsresult CredentialManagerSecret::StoreSecret(const nsACString& aSecret,
   BOOL ok = CredWriteA(&cred, 0);
   if (!ok) {
     MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
-            ("CredWriteW failed %d", GetLastError()));
+            ("CredWriteW failed %lu", GetLastError()));
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -104,7 +104,7 @@ nsresult CredentialManagerSecret::RetrieveSecret(
   ScopedCREDENTIALA pcred(pcred_raw);
   if (!ok) {
     MOZ_LOG(gCredentialManagerSecretLog, LogLevel::Debug,
-            ("CredReadA failed %d", GetLastError()));
+            ("CredReadA failed %lu", GetLastError()));
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(pcred);

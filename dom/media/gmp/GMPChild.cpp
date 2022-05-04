@@ -521,7 +521,7 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
 
 #ifdef XP_WIN
     return IPC_FAIL(this,
-                    nsPrintfCString("Failed to get lib path with error(%d).",
+                    nsPrintfCString("Failed to get lib path with error(%lu).",
                                     GetLastError())
                         .get());
 #else
@@ -558,7 +558,7 @@ mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
         NS_ConvertUTF16toUTF8(mPluginPath));
 
 #ifdef XP_WIN
-    return IPC_FAIL(this, nsPrintfCString("Failed to load GMP with error(%d).",
+    return IPC_FAIL(this, nsPrintfCString("Failed to load GMP with error(%lu).",
                                           GetLastError())
                               .get());
 #else

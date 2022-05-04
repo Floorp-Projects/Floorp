@@ -10,6 +10,12 @@ const STORAGE_MAX_EVENTS = 1000;
 
 var _consoleStorage = new Map();
 
+// NOTE: these listeners used to just be added as observers and notified via
+// Services.obs.notifyObservers. However, that has enough overhead to be a
+// problem for this. Using an explicit global array is much cheaper, and
+// should be equivalent.
+var _logEventListeners = [];
+
 const CONSOLEAPISTORAGE_CID = Components.ID(
   "{96cf7855-dfa9-4c6d-8276-f9705b4890f2}"
 );
@@ -95,18 +101,58 @@ ConsoleAPIStorageService.prototype = {
   },
 
   /**
+   * Adds a listener to be notified of log events.
+   *
+   * @param jsval [aListener]
+   *        A JS listener which will be notified with the message object when
+   *        a log event occurs.
+   * @param nsIPrincipal [aPrincipal]
+   *        The principal of the listener - used to determine if we need to
+   *        clone the message before forwarding it.
+   */
+  addLogEventListener: function CS_addLogEventListener(aListener, aPrincipal) {
+    // If our listener has a less-privileged principal than us, then they won't
+    // be able to access the log event object which was populated for our
+    // scope. Accordingly we need to clone it for these listeners.
+    //
+    // XXX: AFAICT these listeners which we need to clone messages for are all
+    // tests. Alternative solutions are welcome.
+    const clone = !aPrincipal.subsumes(
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+    );
+    _logEventListeners.push({
+      callback: aListener,
+      clone,
+    });
+  },
+
+  /**
+   * Removes a listener added with `addLogEventListener`.
+   *
+   * @param jsval [aListener]
+   *        A JS listener which was added with `addLogEventListener`.
+   */
+  removeLogEventListener: function CS_removeLogEventListener(aListener) {
+    const index = _logEventListeners.findIndex(l => l.callback === aListener);
+    if (index != -1) {
+      _logEventListeners.splice(index, 1);
+    } else {
+      Cu.reportError(
+        "Attempted to remove a log event listener that does not exist."
+      );
+    }
+  },
+
+  /**
    * Record an event associated with the given window ID.
    *
    * @param string aId
    *        The ID of the inner window for which the event occurred or "jsm" for
    *        messages logged from JavaScript modules..
-   * @param string aOuterId
-   *        This ID is used as 3rd parameters for the console-api-log-event
-   *        notification.
    * @param object aEvent
    *        A JavaScript object you want to store.
    */
-  recordEvent: function CS_recordEvent(aId, aOuterId, aEvent) {
+  recordEvent: function CS_recordEvent(aId, aEvent) {
     if (!_consoleStorage.has(aId)) {
       _consoleStorage.set(aId, []);
     }
@@ -120,8 +166,13 @@ ConsoleAPIStorageService.prototype = {
       storage.shift();
     }
 
-    Services.obs.notifyObservers(aEvent, "console-api-log-event", aOuterId);
-    Services.obs.notifyObservers(aEvent, "console-storage-cache-event", aId);
+    for (let { callback, clone } of _logEventListeners) {
+      if (clone) {
+        callback(Cu.cloneInto(aEvent, callback));
+      } else {
+        callback(aEvent);
+      }
+    }
   },
 
   /**

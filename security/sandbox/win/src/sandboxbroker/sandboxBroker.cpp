@@ -323,14 +323,14 @@ bool SandboxBroker::LaunchApp(const wchar_t* aPath, const wchar_t* aArguments,
     }
 
     LOG_E(
-        "Failed (ResultCode %d) to SpawnTarget with last_error=%d, "
+        "Failed (ResultCode %d) to SpawnTarget with last_error=%lu, "
         "last_warning=%d",
         result, last_error, last_warning);
 
     return false;
   } else if (sandbox::SBOX_ALL_OK != last_warning) {
     // If there was a warning (but the result was still ok), log it and proceed.
-    LOG_W("Warning on SpawnTarget with last_error=%d, last_warning=%d",
+    LOG_W("Warning on SpawnTarget with last_error=%lu, last_warning=%d",
           last_error, last_warning);
   }
 
@@ -406,7 +406,7 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
     // This can only be an NS_WARNING, because it can null for xpcshell tests.
     NS_WARNING("Tried to add rule with null base dir.");
     LOG_E("Tried to add rule with null base dir. Relative path: %S, Access: %d",
-          aRelativePath.get(), aAccess);
+          static_cast<const wchar_t*>(aRelativePath.get()), aAccess);
     return;
   }
 
@@ -418,7 +418,7 @@ static void AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
   if (sandbox::SBOX_ALL_OK != result) {
     NS_ERROR("Failed to add file policy rule.");
     LOG_E("Failed (ResultCode %d) to add %d access to: %S", result, aAccess,
-          rulePath.get());
+          static_cast<const wchar_t*>(rulePath.get()));
   }
 }
 
@@ -674,7 +674,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
         StaticPrefs::widget_non_native_theme_enabled();
     result = mPolicy->SetAlternateDesktop(useAlternateWinstation);
     if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-      LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+      LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
             ::GetLastError());
     }
   }
@@ -1055,7 +1055,7 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
 
   result = mPolicy->SetAlternateDesktop(true);
   if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
           ::GetLastError());
   }
 
@@ -1167,7 +1167,7 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
 
   result = mPolicy->SetAlternateDesktop(true);
   if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
           ::GetLastError());
   }
 
@@ -1283,7 +1283,7 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
 
   result = mPolicy->SetAlternateDesktop(true);
   if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
           ::GetLastError());
   }
 
@@ -1396,7 +1396,7 @@ bool SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
 
   result = mPolicy->SetAlternateDesktop(true);
   if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
           ::GetLastError());
   }
 

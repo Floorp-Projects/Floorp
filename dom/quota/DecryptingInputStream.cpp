@@ -78,12 +78,12 @@ NS_IMETHODIMP DecryptingInputStreamBase::GetCloneable(bool* aCloneable) {
   return NS_OK;
 }
 
-void DecryptingInputStreamBase::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  MOZ_CRASH("Not implemented");
+void DecryptingInputStreamBase::SerializedComplexity(uint32_t aMaxSize,
+                                                     uint32_t* aSizeUsed,
+                                                     uint32_t* aPipes,
+                                                     uint32_t* aTransferables) {
+  (*mBaseIPCSerializableInputStream)
+      ->SerializedComplexity(aMaxSize, aSizeUsed, aPipes, aTransferables);
 }
 
 size_t DecryptingInputStreamBase::PlainLength() const {

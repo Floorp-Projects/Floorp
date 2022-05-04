@@ -227,7 +227,8 @@ void gfxDWriteFontFamily::FindStyleVariationsLocked(
            fe->Name().get(), Name().get(),
            (fe->IsItalic()) ? "italic"
                             : (fe->IsOblique() ? "oblique" : "normal"),
-           weightString.get(), fe->Stretch(), psname.get(), fullname.get()));
+           weightString.get(), fe->Stretch().AsScalar(), psname.get(),
+           fullname.get()));
     }
   }
 
@@ -570,7 +571,7 @@ nsresult gfxDWriteFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     }
   }
 
-  LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
+  LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %zu hash: %8.8x%s\n",
                 mName.get(), charmap->SizeOfIncludingThis(moz_malloc_size_of),
                 charmap->mHash, mCharacterMap == charmap ? " new" : ""));
   if (LOG_CMAPDATA_ENABLED()) {
@@ -1717,7 +1718,7 @@ nsresult gfxDWriteFontList::InitFontListForPlatform() {
                fe->Name().get(), gillSansMTFamily->Name().get(),
                (fe->IsItalic()) ? "italic"
                                 : (fe->IsOblique() ? "oblique" : "normal"),
-               weightString.get(), fe->Stretch()));
+               weightString.get(), fe->Stretch().AsScalar()));
         }
       }
 

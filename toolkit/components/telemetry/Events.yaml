@@ -2560,25 +2560,6 @@ pictureinpicture:
       - 1730039
     expiry_version: "never"
     release_channel_collection: opt-out
-  move:
-    objects: ["player"]
-    description: >
-      Recorded when the Picture-in-Picture player window is moved.
-    extra_keys:
-      screenX: The screen X coordinate that the window was moved to
-      screenY: The screen Y coordinate that the window was moved to
-    notification_emails:
-      - mconley@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1560590
-      - 1678202
-      - 1730039
-    expiry_version: "never"
-    release_channel_collection: opt-out
   saw_toggle:
     objects: ["toggle"]
     description: >

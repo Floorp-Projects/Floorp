@@ -9,7 +9,6 @@ function test() {
   let beforeEvents;
   let afterEvents;
   let storageShouldOccur;
-  let consoleObserver;
   let testURI =
     "http://example.com/browser/dom/tests/browser/test-console-api.html";
   let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(
@@ -34,30 +33,23 @@ function test() {
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
       () => {
-        consoleObserver = {
-          observe(aSubject, aTopic, aData) {
-            if (aTopic == "console-api-log-event") {
-              afterEvents = ConsoleAPIStorage.getEvents(innerID);
-              is(
-                beforeEvents.length == afterEvents.length - 1,
-                storageShouldOccur,
-                "storage should" + (storageShouldOccur ? "" : " not") + " occur"
-              );
+        function observe(aSubject) {
+          afterEvents = ConsoleAPIStorage.getEvents(innerID);
+          is(
+            beforeEvents.length == afterEvents.length - 1,
+            storageShouldOccur,
+            "storage should" + (storageShouldOccur ? "" : " not") + " occur"
+          );
 
-              executeSoon(function() {
-                Services.obs.removeObserver(
-                  consoleObserver,
-                  "console-api-log-event"
-                );
-                aCallback();
-              });
-            }
-          },
-        };
+          executeSoon(function() {
+            ConsoleAPIStorage.removeLogEventListener(observe);
+            aCallback();
+          });
+        }
 
-        aWindow.Services.obs.addObserver(
-          consoleObserver,
-          "console-api-log-event"
+        ConsoleAPIStorage.addLogEventListener(
+          observe,
+          aWindow.document.nodePrincipal
         );
         aWindow.nativeConsole.log(
           "foo bar baz (private: " + aIsPrivateMode + ")"

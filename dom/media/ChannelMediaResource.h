@@ -68,11 +68,14 @@ class ChannelMediaResource
   struct SharedInfo {
     NS_INLINE_DECL_REFCOUNTING(SharedInfo);
 
-    SharedInfo() : mHadCrossOriginRedirects(false) {}
-
-    nsCOMPtr<nsIPrincipal> mPrincipal;
     nsTArray<ChannelMediaResource*> mResources;
-    bool mHadCrossOriginRedirects;
+    // Null if there is not yet any data from any origin.
+    nsCOMPtr<nsIPrincipal> mPrincipal;
+    // Meaningful only when mPrincipal is non-null,
+    // unaffected by intermediate cross-origin redirects.
+    bool mFinalResponsesAreOpaque = false;
+
+    bool mHadCrossOriginRedirects = false;
 
    private:
     ~SharedInfo() = default;

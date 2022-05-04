@@ -136,7 +136,7 @@ static const char* ExpandLogFileName(const char* aFilename,
 
   const char* pidTokenPtr = strstr(aFilename, kPIDToken);
   if (pidTokenPtr &&
-      SprintfLiteral(buffer, "%.*s%s%d%s%s",
+      SprintfLiteral(buffer, "%.*s%s%" PRIPID "%s%s",
                      static_cast<int>(pidTokenPtr - aFilename), aFilename,
                      XRE_IsParentProcess() ? "-main." : "-child.",
                      base::GetCurrentProcId(), pidTokenPtr + strlen(kPIDToken),
@@ -275,7 +275,7 @@ bool LimitFileToLessThanSize(const char* aFilename, uint32_t aSize,
 #if defined(OS_WIN)
   if (!::ReplaceFileA(aFilename, tempFilename, nullptr, 0, 0, 0)) {
     NS_WARNING(
-        nsPrintfCString("ReplaceFileA failed: %d\n", GetLastError()).get());
+        nsPrintfCString("ReplaceFileA failed: %lu\n", GetLastError()).get());
     return false;
   }
 #elif defined(OS_POSIX)

@@ -120,7 +120,7 @@ void LogMessageForProtocol(const char* aTopLevelProtocol,
                            const char* aContextDescription, uint32_t aMessageId,
                            MessageDirection aDirection) {
   nsPrintfCString logMessage(
-      "[time: %" PRId64 "][%d%s%d] [%s] %s %s\n", PR_Now(),
+      "[time: %" PRId64 "][%" PRIPID "%s%" PRIPID "] [%s] %s %s\n", PR_Now(),
       base::GetCurrentProcId(),
       aDirection == MessageDirection::eReceiving ? "<-" : "->", aOtherPid,
       aTopLevelProtocol, aContextDescription,

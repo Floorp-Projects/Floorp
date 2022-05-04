@@ -518,6 +518,49 @@ pub fn main() {
     #[cfg(feature = "env_logger")]
     env_logger::init();
 
+    // By default on Android, the ndk_glue crate will redirect stdout and stderr to logcat. Logcat,
+    // however, truncates long lines, meaning our base64 image dumps will be truncated. To avoid
+    // this, copy ndk_glue's code to redirect stdout and stderr to logcat, but additionally write
+    // it to a file which can later be pulled from the device.
+    #[cfg(target_os = "android")]
+    {
+        use std::ffi::{CStr, CString};
+        use std::fs::File;
+        use std::io::{BufRead, BufReader, Write};
+        use std::os::unix::io::{FromRawFd, RawFd};
+        use std::thread;
+
+        let mut out_path = PathBuf::new();
+        out_path.push(ndk_glue::native_activity().external_data_path().to_str().unwrap());
+        out_path.push("wrench");
+        out_path.push("stdout");
+        let mut out_file = File::create(&out_path).expect("Failed to create stdout file");
+
+        let mut logpipe: [RawFd; 2] = Default::default();
+        unsafe {
+            libc::pipe(logpipe.as_mut_ptr());
+            libc::dup2(logpipe[1], libc::STDOUT_FILENO);
+            libc::dup2(logpipe[1], libc::STDERR_FILENO);
+        }
+
+        thread::spawn(move || {
+            let tag = CStr::from_bytes_with_nul(b"Wrench\0").unwrap();
+            let mut reader = BufReader::new(unsafe { File::from_raw_fd(logpipe[0]) });
+            let mut buffer = String::new();
+            loop {
+                buffer.clear();
+                if let Ok(len) = reader.read_line(&mut buffer) {
+                    if len == 0 {
+                        break;
+                    } else if let Ok(msg) = CString::new(buffer.clone()) {
+                        out_file.write_all(msg.as_bytes()).ok();
+                        ndk_glue::android_log(log::Level::Info, tag, &msg);
+                    }
+                }
+            }
+        });
+    }
+
     #[cfg(target_os = "macos")]
     {
         use core_foundation::{self as cf, base::TCFType};

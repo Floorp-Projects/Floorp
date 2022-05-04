@@ -4,10 +4,6 @@
 
 include protocol PClientManager;
 include protocol PClientHandleOp;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
-include protocol PFileDescriptorSet;
-include protocol PRemoteLazyInputStream;
 include ClientIPCTypes;
 
 include "mozilla/ipc/ProtocolMessageUtils.h";

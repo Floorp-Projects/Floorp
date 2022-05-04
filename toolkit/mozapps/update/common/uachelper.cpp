@@ -120,7 +120,7 @@ BOOL UACHelper::DisableUnneededPrivileges(HANDLE token, LPCTSTR* unneededPrivs,
     if (!OpenProcessToken(process, TOKEN_ALL_ACCESS_P, &obtainedToken)) {
       LOG_WARN(
           ("Could not obtain token for current process, no "
-           "privileges changed. (%d)",
+           "privileges changed. (%lu)",
            GetLastError()));
       return FALSE;
     }
@@ -132,7 +132,7 @@ BOOL UACHelper::DisableUnneededPrivileges(HANDLE token, LPCTSTR* unneededPrivs,
     if (SetPrivilege(token, unneededPrivs[i], FALSE)) {
       LOG(("Disabled unneeded token privilege: %s.", unneededPrivs[i]));
     } else {
-      LOG(("Could not disable token privilege value: %s. (%d)",
+      LOG(("Could not disable token privilege value: %s. (%lu)",
            unneededPrivs[i], GetLastError()));
       result = FALSE;
     }

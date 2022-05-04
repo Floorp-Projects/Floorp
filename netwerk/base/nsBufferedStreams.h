@@ -58,6 +58,7 @@ class nsBufferedStream : public nsISeekableStream {
 
   bool mBufferDisabled{false};
   bool mEOF{false};  // True if mStream is at EOF
+  bool mSeekable{true};
   uint8_t mGetBufferCount{0};
 };
 
@@ -110,12 +111,6 @@ class nsBufferedInputStream final : public nsBufferedStream,
 
  protected:
   virtual ~nsBufferedInputStream() = default;
-
-  template <typename M>
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
 
   NS_IMETHOD Fill() override;
   NS_IMETHOD Flush() override { return NS_OK; }  // no-op for input streams

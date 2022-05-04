@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIPrincipal.idl"
 
 [scriptable, uuid(9e32a7b6-c4d1-4d9a-87b9-1ef6b75c27a9)]
 interface nsIConsoleAPIStorage : nsISupports
@@ -22,18 +23,35 @@ interface nsIConsoleAPIStorage : nsISupports
   jsval getEvents([optional] in AString aId);
 
   /**
+   * Adds a listener to be notified of log events.
+   *
+   * @param jsval [aListener]
+   *        A JS listener which will be notified with the message object when
+   *        a log event occurs.
+   * @param nsIPrincipal [aPrincipal]
+   *        The principal of the listener - used to determine if we need to
+   *        clone the message before forwarding it.
+   */
+  void addLogEventListener(in jsval aListener, in nsIPrincipal aPrincipal);
+
+  /**
+   * Removes a listener added with `addLogEventListener`.
+   *
+   * @param jsval [aListener]
+   *        A JS listener which was added with `addLogEventListener`.
+   */
+  void removeLogEventListener(in jsval aListener);
+
+  /**
    * Record an event associated with the given window ID.
    *
    * @param string aId
    *        The ID of the inner window for which the event occurred or "jsm" for
    *        messages logged from JavaScript modules..
-   * @param string aOuterId
-   *        This ID is used as 3rd parameters for the console-api-log-event
-   *        notification.
    * @param object aEvent
    *        A JavaScript object you want to store.
    */
-  void recordEvent(in AString aId, in AString aOuterId, in jsval aEvent);
+  void recordEvent(in AString aId, in jsval aEvent);
 
   /**
    * Clear storage data for the given window.

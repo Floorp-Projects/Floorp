@@ -14,7 +14,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SeekableStreamWrapper.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -59,12 +58,6 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
 
  private:
   void InitStreams();
-
-  template <typename M>
-  void SerializeInternal(InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
 
   struct MOZ_STACK_CLASS ReadSegmentsState {
     nsCOMPtr<nsIInputStream> mThisStream;
@@ -153,11 +146,6 @@ nsMIMEInputStream::VisitHeaders(nsIHttpHeaderVisitor* visitor) {
 NS_IMETHODIMP
 nsMIMEInputStream::SetData(nsIInputStream* aStream) {
   NS_ENSURE_FALSE(mStartedReading, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aStream);
-  if (!seekable) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
   mStream = aStream;
   return NS_OK;
@@ -270,7 +258,8 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
   nsCOMPtr<nsIInputStreamCallback> callback = aCallback ? this : nullptr;
   {
     MutexAutoLock lock(mMutex);
-    if (mAsyncWaitCallback && aCallback) {
+    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
+                   mAsyncWaitCallback != aCallback)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -332,27 +321,21 @@ nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
   return inst->QueryInterface(iid, result);
 }
 
-void nsMIMEInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
+void nsMIMEInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed,
+                                             uint32_t* aPipes,
+                                             uint32_t* aTransferables) {
+  if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+          do_QueryInterface(mStream)) {
+    InputStreamHelper::SerializedComplexity(mStream, aMaxSize, aSizeUsed,
+                                            aPipes, aTransferables);
+  } else {
+    *aPipes = 1;
+  }
 }
 
-void nsMIMEInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-template <typename M>
-void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
-                                          FileDescriptorArray& aFileDescriptors,
-                                          bool aDelayedStart, uint32_t aMaxSize,
-                                          uint32_t* aSizeUsed, M* aManager) {
+void nsMIMEInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -369,17 +352,15 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
 
   if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
           do_QueryInterface(mStream)) {
-    InputStreamHelper::SerializeInputStream(mStream, wrappedParams,
-                                            aFileDescriptors, aDelayedStart,
-                                            aMaxSize, aSizeUsed, aManager);
+    InputStreamHelper::SerializeInputStream(mStream, wrappedParams, aMaxSize,
+                                            aSizeUsed);
   } else {
     // Falling back to sending the underlying stream over a pipe when
     // sending an nsMIMEInputStream over IPC is potentially wasteful
     // if it is sent several times. This can possibly happen with
     // fission. There are two ways to improve this, see bug 1648369
     // and bug 1648370.
-    InputStreamHelper::SerializeInputStreamAsPipe(mStream, wrappedParams,
-                                                  aDelayedStart, aManager);
+    InputStreamHelper::SerializeInputStreamAsPipe(mStream, wrappedParams);
   }
 
   NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
@@ -389,9 +370,7 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsMIMEInputStream::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool nsMIMEInputStream::Deserialize(const InputStreamParams& aParams) {
   if (aParams.type() != InputStreamParams::TMIMEInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -402,25 +381,13 @@ bool nsMIMEInputStream::Deserialize(
 
   if (wrappedParams.isSome()) {
     nsCOMPtr<nsIInputStream> stream;
-    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
-                                                       aFileDescriptors);
+    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref());
     if (!stream) {
       NS_WARNING("Failed to deserialize wrapped stream!");
       return false;
     }
 
-    // nsMIMEInputStream requires that the underlying data stream be seekable,
-    // as is checked in `SetData`. Ensure that the stream we deserialized is
-    // seekable before using it.
-    nsCOMPtr<nsIInputStream> seekable;
-    nsresult rv = mozilla::SeekableStreamWrapper::MaybeWrap(
-        stream.forget(), getter_AddRefs(seekable));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to ensure wrapped input stream is seekable");
-      return false;
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(SetData(seekable));
+    MOZ_ALWAYS_SUCCEEDS(SetData(stream));
   }
 
   mHeaders = params.headers().Clone();

@@ -167,6 +167,8 @@ const EXPECTED_HTTPS_RESULT = {
   },
 };
 
+let cleanUpQuickSuggest;
+
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
@@ -177,7 +179,9 @@ add_task(async function init() {
   let engine = await addTestSuggestionsEngine();
   await Services.search.setDefault(engine);
 
-  await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
+  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
+    REMOTE_SETTINGS_DATA
+  );
 });
 
 // Tests with only non-sponsored suggestions enabled with a matching search
@@ -1203,4 +1207,49 @@ add_task(async function block() {
   }
 
   await UrlbarProviderQuickSuggest.clearBlockedSuggestions();
+});
+
+// Makes sure remote settings data is fetched using the correct `type` based on
+// the value of the `quickSuggestRemoteSettingsDataType` Nimbus variable.
+add_task(async function remoteSettingsDataType() {
+  // `QuickSuggestTestUtils.ensureQuickSuggestInit()` stubs
+  // `UrlbarQuickSuggest._queueSettingsSync()`, which we want to test below, so
+  // remove the stub by calling the cleanup function it returned.
+  await cleanUpQuickSuggest();
+
+  // We need to spy on `UrlbarQuickSuggest._rs.get()`, but `_rs` is created
+  // lazily. Set `suggest.quicksuggest.sponsored` to trigger its creation.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  await UrlbarQuickSuggest.readyPromise;
+
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(UrlbarQuickSuggest._rs, "get");
+
+  for (let dataType of [undefined, "test-data-type"]) {
+    // Set up a mock Nimbus rollout with the data type.
+    let value = {};
+    if (dataType) {
+      value.quickSuggestRemoteSettingsDataType = dataType;
+    }
+    let cleanUpNimbus = await QuickSuggestTestUtils.initNimbusFeature(value);
+
+    // This call will trigger `UrlbarQuickSuggest._rs.get()`.
+    await UrlbarQuickSuggest._queueSettingsSync();
+
+    let expectedDataType = dataType || "data";
+    Assert.ok(
+      spy.calledWith({ filters: { type: expectedDataType } }),
+      "_rs.get() called with expected data type: " + expectedDataType
+    );
+
+    spy.resetHistory();
+    await cleanUpNimbus();
+  }
+
+  sandbox.restore();
+
+  // Restore the stub for the remainder of the test.
+  cleanUpQuickSuggest = await QuickSuggestTestUtils.ensureQuickSuggestInit(
+    REMOTE_SETTINGS_DATA
+  );
 });
