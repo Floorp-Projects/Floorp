@@ -26,6 +26,8 @@ const {
 const { PluralForm } = require("devtools/shared/plural-form");
 const { PrefObserver } = require("devtools/client/shared/prefs");
 
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+
 loader.lazyRequireGetter(
   this,
   "KeyCodes",
@@ -122,6 +124,9 @@ function StyleEditorUI(toolbox, commands, panelDoc, cssProperties) {
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
   this._onFilterInputChange = this._onFilterInputChange.bind(this);
+  this._onFocusFilterInputKeyboardShortcut = this._onFocusFilterInputKeyboardShortcut.bind(
+    this
+  );
 
   this._prefObserver = new PrefObserver("devtools.styleeditor.");
   this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
@@ -278,6 +283,14 @@ StyleEditorUI.prototype = {
       eventListenersConfig
     );
 
+    this._shortcuts = new KeyShortcuts({
+      window: this._window,
+    });
+    this._shortcuts.on(
+      `CmdOrCtrl+${getString("focusFilterInput.commandkey")}`,
+      this._onFocusFilterInputKeyboardShortcut
+    );
+
     const nav = this._panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
   },
@@ -291,6 +304,15 @@ StyleEditorUI.prototype = {
     const filterInputValue = this._filterInput.value;
     this._filterInputClearButton.toggleAttribute("hidden", !filterInputValue);
     this._view.setFilter(filterInputValue);
+  },
+
+  _onFocusFilterInputKeyboardShortcut(e) {
+    // Prevent the print modal to be displayed.
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    this._filterInput.select();
   },
 
   /**
@@ -488,6 +510,10 @@ StyleEditorUI.prototype = {
     editor.on("linked-css-file", this._summaryChange.bind(this, editor));
     editor.on("linked-css-file-error", this._summaryChange.bind(this, editor));
     editor.on("error", this._onError);
+    editor.on(
+      "filter-input-keyboard-shortcut",
+      this._onFocusFilterInputKeyboardShortcut
+    );
 
     // onMediaRulesChanged fires media-rules-changed, so call the function after
     // registering the listener in order to ensure to get media-rules-changed event.
@@ -1365,5 +1391,10 @@ StyleEditorUI.prototype = {
     this._sourceMapPrefObserver.destroy();
     this._prefObserver.off(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
     this._prefObserver.destroy();
+
+    if (this._shortcuts) {
+      this._shortcuts.destroy();
+      this._shortcuts = null;
+    }
   },
 };
