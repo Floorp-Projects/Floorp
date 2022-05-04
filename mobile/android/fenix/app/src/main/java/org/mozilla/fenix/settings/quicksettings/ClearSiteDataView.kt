@@ -18,7 +18,6 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.QuicksettingsClearSiteDataBinding
 import org.mozilla.fenix.ext.components
@@ -59,11 +58,6 @@ class ClearSiteDataView(
     )
 
     fun update(webInfoState: WebsiteInfoState) {
-        if (!FeatureFlags.showClearSiteData) {
-            setVisibility(false)
-            return
-        }
-
         websiteUrl = webInfoState.websiteUrl
 
         setVisibility(true)

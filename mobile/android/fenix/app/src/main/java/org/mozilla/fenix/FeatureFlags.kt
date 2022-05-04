@@ -68,11 +68,6 @@ object FeatureFlags {
     const val showHomeOnboarding = false
 
     /**
-     * Enables showing the option to clear site data.
-     */
-    const val showClearSiteData = true
-
-    /**
      * Enables history improvement features.
      */
     const val historyImprovementFeatures = true
