@@ -8,12 +8,9 @@
 #include "js/experimental/CTypes.h"  // JS::CTypesCallbacks, JS::InitCTypesClass, JS::SetCTypesCallbacks
 #include "js/MemoryFunctions.h"
 #include "js/PropertyAndElement.h"  // JS_GetProperty
-#include "nsMemory.h"
 #include "nsString.h"
 #include "nsNativeCharsetUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozJSComponentLoader.h"
-#include "nsZipArchive.h"
 #include "xpc_make_class.h"
 
 namespace mozilla::ctypes {

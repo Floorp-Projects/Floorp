@@ -9,26 +9,29 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(TEST_URI, async aBrowser => {
     let duration = await SpecialPowers.spawn(aBrowser, [], function(opts) {
+      const ConsoleAPIStorage = Cc[
+        "@mozilla.org/consoleAPI-storage;1"
+      ].getService(Ci.nsIConsoleAPIStorage);
+
       return new Promise(resolve => {
-        let ConsoleObserver = {
-          QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+        function observe(aSubject) {
+          var obj = aSubject.wrappedJSObject;
+          if (
+            obj.arguments.length != 1 ||
+            obj.arguments[0] != "bug1004814" ||
+            obj.level != "timeEnd"
+          ) {
+            return;
+          }
 
-          observe(aSubject, aTopic, aData) {
-            var obj = aSubject.wrappedJSObject;
-            if (
-              obj.arguments.length != 1 ||
-              obj.arguments[0] != "bug1004814" ||
-              obj.level != "timeEnd"
-            ) {
-              return;
-            }
+          ConsoleAPIStorage.removeLogEventListener(observe);
+          resolve(obj.timer.duration);
+        }
 
-            Services.obs.removeObserver(this, "console-api-log-event");
-            resolve(obj.timer.duration);
-          },
-        };
-
-        Services.obs.addObserver(ConsoleObserver, "console-api-log-event");
+        ConsoleAPIStorage.addLogEventListener(
+          observe,
+          Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+        );
 
         var w = new content.Worker("worker_bug1004814.js");
         w.postMessage(true);

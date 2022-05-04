@@ -199,8 +199,9 @@ static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   const ErrNum errorNumber = MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
   MOZ_RELEASE_ASSERT(GetErrorArgCount(errorNumber) == 2);
   JS_ReportErrorNumberUC(aCx, GetErrorMessage, nullptr,
-                         static_cast<unsigned>(errorNumber), funcNameStr.get(),
-                         ifaceName.get());
+                         static_cast<unsigned>(errorNumber),
+                         static_cast<const char16_t*>(funcNameStr.get()),
+                         static_cast<const char16_t*>(ifaceName.get()));
   return false;
 }
 

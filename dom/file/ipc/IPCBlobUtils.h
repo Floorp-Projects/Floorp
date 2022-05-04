@@ -66,11 +66,10 @@
  * and its size is lower than 1Mb, we are able to recreate the stream completely
  * on the parent side. This happens, basically with any kind of child-to-parent
  * stream except for huge memory streams. In this case we end up using
- * PChildToParentStream. See more information in IPCStreamUtils.h.
+ * DataPipe. See more information in IPCStreamUtils.h.
  *
- * In order to populate IPCStream correctly, we use AutoIPCStream as documented
- * in IPCStreamUtils.h. Note that we use the 'delayed start' feature because,
- * often, the stream doesn't need to be read on the parent side.
+ * In order to populate IPCStream correctly, we use SerializeIPCStream as
+ * documented in IPCStreamUtils.h.
  *
  * Parent to Child Blob Serialization
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,11 +6,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 add_task(async function() {
   let p = new Promise(resolve => {
     function consoleListener() {
-      Services.obs.addObserver(this, "console-api-log-event");
+      addConsoleStorageListener(this);
     }
 
     consoleListener.prototype = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject) {
         let obj = aSubject.wrappedJSObject;
         Assert.ok(obj.arguments[0] === "Hello world!", "Message received!");
         Assert.ok(obj.ID === "scope", "The ID is the scope");
@@ -23,7 +23,7 @@ add_task(async function() {
         Assert.ok(obj.columnNumber === 24, "The columnNumber matches");
         Assert.ok(obj.level === "error", "The level is correct");
 
-        Services.obs.removeObserver(this, "console-api-log-event");
+        removeConsoleStorageListener(this);
         resolve();
       },
     };

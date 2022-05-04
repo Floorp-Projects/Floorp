@@ -81,9 +81,9 @@ LSPAnnotationGatherer::Run() {
     str.AppendLiteral(" : ");
     str.AppendInt(providers[i].iProtocol);
     str.AppendLiteral(" : ");
-    str.AppendPrintf("0x%x", providers[i].dwServiceFlags1);
+    str.AppendPrintf("0x%lx", providers[i].dwServiceFlags1);
     str.AppendLiteral(" : ");
-    str.AppendPrintf("0x%x", providers[i].dwProviderFlags);
+    str.AppendPrintf("0x%lx", providers[i].dwProviderFlags);
     str.AppendLiteral(" : ");
 
     wchar_t path[MAX_PATH];

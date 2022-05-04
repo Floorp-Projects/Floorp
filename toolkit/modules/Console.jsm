@@ -355,7 +355,7 @@ function parseStack(aStack) {
 
 /**
  * Format a frame coming from Components.stack such that it can be used by the
- * Browser Console, via console-api-log-event notifications.
+ * Browser Console, via ConsoleAPIStorage notifications.
  *
  * @param {object} aFrame
  *        The stack frame from which to begin the walk.
@@ -363,7 +363,7 @@ function parseStack(aStack) {
  *        Maximum stack trace depth. Default is 0 - no depth limit.
  * @return {object[]}
  *         An array of {filename, lineNumber, functionName, language} objects.
- *         These objects follow the same format as other console-api-log-event
+ *         These objects follow the same format as other ConsoleAPIStorage
  *         messages.
  */
 function getStack(aFrame, aMaxDepth = 0) {
@@ -522,8 +522,8 @@ function createMultiLineDumper(aLevel) {
 }
 
 /**
- * Send a Console API message. This function will send a console-api-log-event
- * notification through the nsIObserverService.
+ * Send a Console API message. This function will send a notification through
+ * the nsIConsoleAPIStorage service.
  *
  * @param {object} aConsole
  *        The instance of ConsoleAPI performing the logging.
@@ -584,7 +584,7 @@ function sendConsoleAPIMessage(aConsole, aLevel, aFrame, aArgs, aOptions = {}) {
     Ci.nsIConsoleAPIStorage
   );
   if (ConsoleAPIStorage) {
-    ConsoleAPIStorage.recordEvent("jsm", null, consoleEvent);
+    ConsoleAPIStorage.recordEvent("jsm", consoleEvent);
   }
 }
 

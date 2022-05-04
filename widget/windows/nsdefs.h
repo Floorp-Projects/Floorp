@@ -24,6 +24,17 @@
 #  define VERIFY(exp) (exp)
 #endif  // !_DEBUG
 
+// inttypes.h-like macro for LONG_PTR/LPARAM formatting.
+#ifdef HAVE_64BIT_BUILD
+#  define PRIdLPTR "lld"
+#  define PRIxLPTR "llx"
+#  define PRIXLPTR "llX"
+#else
+#  define PRIdLPTR "ld"
+#  define PRIxLPTR "lx"
+#  define PRIXLPTR "lX"
+#endif
+
 // Win32 logging modules:
 // nsWindow, nsSound, and nsClipboard
 //

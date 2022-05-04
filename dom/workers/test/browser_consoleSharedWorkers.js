@@ -10,14 +10,37 @@ add_task(async function test() {
   await BrowserTestUtils.browserLoaded(gBrowser.getBrowserForTab(tab));
 
   let promise = new Promise(resolve => {
+    const ConsoleAPIStorage = SpecialPowers.Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
+
     function consoleListener() {
-      Services.obs.addObserver(this, "console-api-log-event");
+      this.onConsoleLogEvent = this.onConsoleLogEvent.bind(this);
+      ConsoleAPIStorage.addLogEventListener(
+        this.onConsoleLogEvent,
+        SpecialPowers.wrap(document).nodePrincipal
+      );
       Services.obs.addObserver(this, "console-api-profiler");
     }
 
     var order = 0;
     consoleListener.prototype = {
-      observe: (aSubject, aTopic, aData) => {
+      onConsoleLogEvent(aSubject) {
+        var obj = aSubject.wrappedJSObject;
+        is(
+          obj.arguments[0],
+          "Hello world from a SharedWorker!",
+          "A message from a SharedWorker \\o/"
+        );
+        is(obj.ID, "sharedWorker_console.js", "The ID is SharedWorker");
+        is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
+        is(order++, 1, "Then a log message.");
+
+        ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
+        resolve();
+      },
+
+      observe: (aSubject, aTopic) => {
         ok(true, "Something has been received");
 
         if (aTopic == "console-api-profiler") {
@@ -30,23 +53,6 @@ add_task(async function test() {
           is(order++, 0, "First a profiler message.");
 
           Services.obs.removeObserver(cl, "console-api-profiler");
-          return;
-        }
-
-        if (aTopic == "console-api-log-event") {
-          var obj = aSubject.wrappedJSObject;
-          is(
-            obj.arguments[0],
-            "Hello world from a SharedWorker!",
-            "A message from a SharedWorker \\o/"
-          );
-          is(obj.ID, "sharedWorker_console.js", "The ID is SharedWorker");
-          is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
-          is(order++, 1, "Then a log message.");
-
-          Services.obs.removeObserver(cl, "console-api-log-event");
-          resolve();
-          return;
         }
       },
     };

@@ -122,7 +122,7 @@ Logger::Logger(const nsACString& aLeafBaseName)
     return;
   }
   DWORD pid = GetCurrentProcessId();
-  leafName.AppendPrintf("%u.log", pid);
+  leafName.AppendPrintf("%lu.log", pid);
   // Using AppendNative here because Windows
   rv = logFileName->AppendNative(leafName);
   if (NS_FAILED(rv)) {
@@ -195,38 +195,38 @@ bool Logger::VariantToString(const VARIANT& aVariant, nsACString& aOut,
                              LONG aIndex) {
   switch (aVariant.vt) {
     case VT_DISPATCH: {
-      aOut.AppendPrintf("(IDispatch*) 0x%0p", aVariant.pdispVal);
+      aOut.AppendPrintf("(IDispatch*) 0x%p", aVariant.pdispVal);
       return true;
     }
     case VT_DISPATCH | VT_BYREF: {
-      aOut.AppendPrintf("(IDispatch*) 0x%0p", (aVariant.ppdispVal)[aIndex]);
+      aOut.AppendPrintf("(IDispatch*) 0x%p", (aVariant.ppdispVal)[aIndex]);
       return true;
     }
     case VT_UNKNOWN: {
-      aOut.AppendPrintf("(IUnknown*) 0x%0p", aVariant.punkVal);
+      aOut.AppendPrintf("(IUnknown*) 0x%p", aVariant.punkVal);
       return true;
     }
     case VT_UNKNOWN | VT_BYREF: {
-      aOut.AppendPrintf("(IUnknown*) 0x%0p", (aVariant.ppunkVal)[aIndex]);
+      aOut.AppendPrintf("(IUnknown*) 0x%p", (aVariant.ppunkVal)[aIndex]);
       return true;
     }
     case VT_VARIANT | VT_BYREF: {
       return VariantToString((aVariant.pvarVal)[aIndex], aOut);
     }
     case VT_I4 | VT_BYREF: {
-      aOut.AppendPrintf("%d", aVariant.plVal[aIndex]);
+      aOut.AppendPrintf("%ld", aVariant.plVal[aIndex]);
       return true;
     }
     case VT_UI4 | VT_BYREF: {
-      aOut.AppendPrintf("%u", aVariant.pulVal[aIndex]);
+      aOut.AppendPrintf("%lu", aVariant.pulVal[aIndex]);
       return true;
     }
     case VT_I4: {
-      aOut.AppendPrintf("%d", aVariant.lVal);
+      aOut.AppendPrintf("%ld", aVariant.lVal);
       return true;
     }
     case VT_UI4: {
-      aOut.AppendPrintf("%u", aVariant.ulVal);
+      aOut.AppendPrintf("%lu", aVariant.ulVal);
       return true;
     }
     case VT_EMPTY: {
@@ -284,7 +284,7 @@ void Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
     strGeckoDuration.AppendLiteral("(none)");
   }
 
-  nsPrintfCString line("%.3f\t%s\t%s\t0x%0p\tIUnknown::QueryInterface\t([in] ",
+  nsPrintfCString line("%.3f\t%s\t%s\t0x%p\tIUnknown::QueryInterface\t([in] ",
                        elapsed, strOverheadDuration.get(),
                        strGeckoDuration.get(), aTarget);
 
@@ -294,7 +294,7 @@ void Logger::LogQI(HRESULT aResult, IUnknown* aTarget, REFIID aIid,
   } else {
     line.AppendLiteral("(IID Conversion Failed)");
   }
-  line.AppendPrintf(", [out] 0x%p)\t0x%08X\n", aInterface, aResult);
+  line.AppendPrintf(", [out] 0x%p)\t0x%08lX\n", aInterface, aResult);
 
   MutexAutoLock lock(mMutex);
   mEntries.AppendElement(std::move(line));
@@ -385,14 +385,14 @@ void Logger::CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
                            });
           line.AppendLiteral(" }");
         } else {
-          line.AppendPrintf("(GetParam failed with HRESULT 0x%08X)", hr);
+          line.AppendPrintf("(GetParam failed with HRESULT 0x%08lX)", hr);
         }
       } else {
         VariantToString(paramValue, line);
       }
     } else if (hr != DISP_E_BADVARTYPE ||
                !TryParamAsGuid(callInfo.iid, aCallFrame, paramInfo, line)) {
-      line.AppendPrintf("(GetParam failed with HRESULT 0x%08X)", hr);
+      line.AppendPrintf("(GetParam failed with HRESULT 0x%08lX)", hr);
     }
     if (paramIndex < callInfo.cParams - 1) {
       line.AppendLiteral(", ");
@@ -401,7 +401,7 @@ void Logger::CaptureFrame(ICallFrame* aCallFrame, IUnknown* aTargetInterface,
   line.AppendLiteral(")\t");
 
   HRESULT callResult = aCallFrame->GetReturnValue();
-  line.AppendPrintf("0x%08X\n", callResult);
+  line.AppendPrintf("0x%08lX\n", callResult);
 
   aCapturedFrame = std::move(line);
 }

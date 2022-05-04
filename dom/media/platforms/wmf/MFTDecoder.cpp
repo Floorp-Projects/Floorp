@@ -74,7 +74,7 @@ MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
   delete inInfo;
   delete outInfo;
   if (FAILED(hr)) {
-    NS_WARNING(nsPrintfCString("MFTEnumEx failed with code %x", hr).get());
+    NS_WARNING(nsPrintfCString("MFTEnumEx failed with code %lx", hr).get());
     return hr;
   }
   if (actsNum == 0) {
@@ -98,7 +98,7 @@ MFTDecoder::Create(const GUID& aCategory, const GUID& aInSubtype,
       IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
   NS_WARNING_ASSERTION(
       SUCCEEDED(hr),
-      nsPrintfCString("IMFActivate::ActivateObject failed with code %x", hr)
+      nsPrintfCString("IMFActivate::ActivateObject failed with code %lx", hr)
           .get());
   return hr;
 }

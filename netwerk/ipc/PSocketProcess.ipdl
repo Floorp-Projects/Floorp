@@ -9,9 +9,6 @@ include protocol PProfiler;
 include protocol PWebrtcTCPSocket;
 include protocol PHttpTransaction;
 include protocol PHttpConnectionMgr;
-include protocol PFileDescriptorSet;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
 include protocol PInputChannelThrottleQueue;
 include protocol PBackgroundStarter;
 include protocol PAltService;
@@ -19,7 +16,6 @@ include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
-include protocol PRemoteLazyInputStream;
 include protocol PProxyAutoConfig;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -96,18 +92,14 @@ sync protocol PSocketProcess
 {
   manages PDNSRequest;
   manages PWebrtcTCPSocket;
-  manages PFileDescriptorSet;
   manages PHttpTransaction;
   manages PHttpConnectionMgr;
-  manages PChildToParentStream;
-  manages PParentToChildStream;
   manages PInputChannelThrottleQueue;
   manages PAltService;
   manages PAltSvcTransaction;
   manages PTRRService;
   manages PProxyConfigLookup;
   manages PNativeDNSResolverOverride;
-  manages PRemoteLazyInputStream;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -122,7 +114,6 @@ parent:
 
   /* tabId is only required for web-proxy support, which isn't always needed */
   async PWebrtcTCPSocket(TabId? tabId);
-  async PChildToParentStream();
   async ObserveHttpActivity(HttpActivityArgs aActivityArgs,
                             uint32_t aActivityType,
                             uint32_t aActivitySubtype,
@@ -181,7 +172,6 @@ child:
   async SocketProcessTelemetryPing();
 
   async PHttpTransaction();
-  async PParentToChildStream();
   async PHttpConnectionMgr(HttpHandlerInitArgs aArgs);
   async UpdateDeviceModelId(nsCString aModelId);
 
@@ -198,8 +188,6 @@ child:
                     nsCString[] aDNSSuffixList);
   async PNativeDNSResolverOverride();
   async NotifyObserver(nsCString aTopic, nsString aData);
-
-  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
   async GetSocketData()
     returns (SocketDataArgs data);
@@ -235,7 +223,6 @@ child:
 #endif  // defined(XP_WIN)
 
 both:
-  async PFileDescriptorSet(FileDescriptor fd);
   async PDNSRequest(nsCString hostName, nsCString trrServer, int32_t port,
                     uint16_t type, OriginAttributes originAttributes,
                     uint32_t flags);

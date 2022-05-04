@@ -7,7 +7,7 @@
 #define COMPONENTS_REFLECT_H
 
 #include "nsIXPCScriptable.h"
-#include "mozilla/Attributes.h"
+#include "nsISupports.h"
 
 namespace mozilla {
 namespace reflect {

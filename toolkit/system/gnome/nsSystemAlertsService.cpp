@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsComponentManagerUtils.h"
-#include "nsXULAppAPI.h"
 #include "nsSystemAlertsService.h"
 #include "nsAlertsIconListener.h"
 

@@ -58,7 +58,7 @@ int wmain(int argc, WCHAR** argv) {
 
     bool ret = SvcInstall(action);
     if (!ret) {
-      LOG_WARN(("Could not install service.  (%d)", GetLastError()));
+      LOG_WARN(("Could not install service.  (%lu)", GetLastError()));
       LogFinish();
       return 1;
     }
@@ -77,7 +77,7 @@ int wmain(int argc, WCHAR** argv) {
 
     LOG(("Upgrading service if installed..."));
     if (!SvcInstall(UpgradeSvc)) {
-      LOG_WARN(("Could not upgrade service.  (%d)", GetLastError()));
+      LOG_WARN(("Could not upgrade service.  (%lu)", GetLastError()));
       LogFinish();
       return 1;
     }
@@ -95,7 +95,7 @@ int wmain(int argc, WCHAR** argv) {
     }
     LOG(("Uninstalling service..."));
     if (!SvcUninstall()) {
-      LOG_WARN(("Could not uninstall service.  (%d)", GetLastError()));
+      LOG_WARN(("Could not uninstall service.  (%lu)", GetLastError()));
       LogFinish();
       return 1;
     }
@@ -116,7 +116,7 @@ int wmain(int argc, WCHAR** argv) {
   // This call returns when the service has stopped.
   // The process should simply terminate when the call returns.
   if (!StartServiceCtrlDispatcherW(DispatchTable)) {
-    LOG_WARN(("StartServiceCtrlDispatcher failed.  (%d)", GetLastError()));
+    LOG_WARN(("StartServiceCtrlDispatcher failed.  (%lu)", GetLastError()));
   }
 
   return 0;
@@ -243,7 +243,7 @@ void WINAPI SvcMain(DWORD argc, LPWSTR* argv) {
   // Register the handler function for the service
   gSvcStatusHandle = RegisterServiceCtrlHandlerW(SVC_NAME, SvcCtrlHandler);
   if (!gSvcStatusHandle) {
-    LOG_WARN(("RegisterServiceCtrlHandler failed.  (%d)", GetLastError()));
+    LOG_WARN(("RegisterServiceCtrlHandler failed.  (%lu)", GetLastError()));
     ExecuteServiceCommand(argc, argv);
     LogFinish();
     exit(1);

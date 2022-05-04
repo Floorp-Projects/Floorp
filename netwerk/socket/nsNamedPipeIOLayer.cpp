@@ -242,13 +242,13 @@ nsresult NamedPipeInfo::Connect(const nsAString& aPath) {
                   FILE_FLAG_OVERLAPPED, nullptr);
 
   if (pipe == INVALID_HANDLE_VALUE) {
-    LOG_NPIO_ERROR("[%p] CreateFile error (%d)", this, GetLastError());
+    LOG_NPIO_ERROR("[%p] CreateFile error (%lu)", this, GetLastError());
     return NS_ERROR_FAILURE;
   }
 
   DWORD pipeMode = PIPE_READMODE_MESSAGE;
   if (!SetNamedPipeHandleState(pipe, &pipeMode, nullptr, nullptr)) {
-    LOG_NPIO_ERROR("[%p] SetNamedPipeHandleState error (%d)", this,
+    LOG_NPIO_ERROR("[%p] SetNamedPipeHandleState error (%lu)", this,
                    GetLastError());
     CloseHandle(pipe);
     return NS_ERROR_FAILURE;
@@ -480,7 +480,7 @@ int32_t NamedPipeInfo::DoRead() {
                           IsNonblocking() ? &mReadOverlapped : nullptr);
 
   if (success) {
-    LOG_NPIO_DEBUG("[%s][%p] %d bytes read", __func__, this, mReadEnd);
+    LOG_NPIO_DEBUG("[%s][%p] %lu bytes read", __func__, this, mReadEnd);
     return mReadEnd;
   }
 
@@ -494,7 +494,7 @@ int32_t NamedPipeInfo::DoRead() {
       break;
 
     default:
-      LOG_NPIO_ERROR("[%s] ReadFile failed (%d)", __func__, GetLastError());
+      LOG_NPIO_ERROR("[%s] ReadFile failed (%lu)", __func__, GetLastError());
       Disconnect();
       PR_SetError(PR_IO_ERROR, 0);
       return -1;
@@ -518,19 +518,19 @@ int32_t NamedPipeInfo::DoReadContinue() {
       return -1;
     }
 
-    LOG_NPIO_DEBUG("[%s][%p] %d bytes read", __func__, this, mReadEnd);
+    LOG_NPIO_DEBUG("[%s][%p] %lu bytes read", __func__, this, mReadEnd);
     return mReadEnd;
   }
 
   switch (GetLastError()) {
     case ERROR_MORE_DATA:
       mHasPendingRead = false;
-      LOG_NPIO_DEBUG("[%s][%p] %d bytes read", __func__, this, mReadEnd);
+      LOG_NPIO_DEBUG("[%s][%p] %lu bytes read", __func__, this, mReadEnd);
       return mReadEnd;
     case ERROR_IO_INCOMPLETE:  // still in progress
       break;
     default:
-      LOG_NPIO_ERROR("[%s]: GetOverlappedResult failed (%d)", __func__,
+      LOG_NPIO_ERROR("[%s]: GetOverlappedResult failed (%lu)", __func__,
                      GetLastError());
       Disconnect();
       PR_SetError(PR_IO_ERROR, 0);
@@ -552,12 +552,12 @@ int32_t NamedPipeInfo::DoWrite() {
 
   if (success) {
     mWriteBegin += bytesWritten;
-    LOG_NPIO_DEBUG("[%s][%p] %d bytes written", __func__, this, bytesWritten);
+    LOG_NPIO_DEBUG("[%s][%p] %lu bytes written", __func__, this, bytesWritten);
     return bytesWritten;
   }
 
   if (GetLastError() != ERROR_IO_PENDING) {
-    LOG_NPIO_ERROR("[%s] WriteFile failed (%d)", __func__, GetLastError());
+    LOG_NPIO_ERROR("[%s] WriteFile failed (%lu)", __func__, GetLastError());
     Disconnect();
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
@@ -582,7 +582,7 @@ int32_t NamedPipeInfo::DoWriteContinue() {
       return 0;
     }
 
-    LOG_NPIO_ERROR("[%s] GetOverlappedResult failed (%d)", __func__,
+    LOG_NPIO_ERROR("[%s] GetOverlappedResult failed (%lu)", __func__,
                    GetLastError());
     Disconnect();
     PR_SetError(PR_IO_ERROR, 0);
@@ -591,7 +591,7 @@ int32_t NamedPipeInfo::DoWriteContinue() {
 
   mHasPendingWrite = false;
   mWriteBegin += bytesWritten;
-  LOG_NPIO_DEBUG("[%s][%p] %d bytes written", __func__, this, bytesWritten);
+  LOG_NPIO_DEBUG("[%s][%p] %lu bytes written", __func__, this, bytesWritten);
   return bytesWritten;
 }
 

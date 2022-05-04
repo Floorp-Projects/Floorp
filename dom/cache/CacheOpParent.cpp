@@ -12,13 +12,11 @@
 #include "mozilla/dom/cache/ManagerId.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/SavedTypes.h"
-#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 
 namespace mozilla::dom::cache {
 
-using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PBackgroundParent;
 
 CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager, CacheId aCacheId,
@@ -212,8 +210,8 @@ already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(
   }
 
   // Option 2: A stream was serialized using normal methods or passed
-  //           as a PChildToParentStream actor.  Use the standard method for
-  //           extracting the resulting stream.
+  //           as a DataPipe.  Use the standard method for extracting the
+  //           resulting stream.
   return DeserializeIPCStream(readStream.stream());
 }
 

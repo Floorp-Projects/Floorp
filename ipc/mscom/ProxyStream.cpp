@@ -53,7 +53,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   HRESULT createStreamResult =
       CreateStream(aInitBuf, aInitBufSize, getter_AddRefs(mStream));
   if (FAILED(createStreamResult)) {
-    nsPrintfCString hrAsStr("0x%08X", createStreamResult);
+    nsPrintfCString hrAsStr("0x%08lX", createStreamResult);
     CrashReporter::AnnotateCrashReport(kCrashReportKey, hrAsStr);
     return;
   }
@@ -109,9 +109,9 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
 #if defined(ACCESSIBILITY)
     auto curActCtx = ActivationContext::GetCurrent();
     if (curActCtx.isOk()) {
-      strActCtx.AppendPrintf("0x%p", curActCtx.unwrap());
+      strActCtx.AppendPrintf("0x%" PRIxPTR, curActCtx.unwrap());
     } else {
-      strActCtx.AppendPrintf("HRESULT 0x%08X", curActCtx.unwrapErr());
+      strActCtx.AppendPrintf("HRESULT 0x%08lX", curActCtx.unwrapErr());
     }
 
     ActivationContext::GetCurrentManifestPath(manifestPath);
@@ -134,7 +134,7 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   mStream = nullptr;
 
   if (FAILED(unmarshalResult) || !mUnmarshaledProxy) {
-    nsPrintfCString hrAsStr("0x%08X", unmarshalResult);
+    nsPrintfCString hrAsStr("0x%08lX", unmarshalResult);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::CoUnmarshalInterfaceResult, hrAsStr);
     AnnotateInterfaceRegistration(aIID);
@@ -350,14 +350,14 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   }
 
   if (FAILED(createStreamResult)) {
-    nsPrintfCString hrAsStr("0x%08X", createStreamResult);
+    nsPrintfCString hrAsStr("0x%08lX", createStreamResult);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::CreateStreamOnHGlobalFailure, hrAsStr);
   }
 
   if (FAILED(marshalResult)) {
     AnnotateInterfaceRegistration(aIID);
-    nsPrintfCString hrAsStr("0x%08X", marshalResult);
+    nsPrintfCString hrAsStr("0x%08lX", marshalResult);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::CoMarshalInterfaceFailure, hrAsStr);
 #if defined(ACCESSIBILITY)
@@ -368,13 +368,13 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   }
 
   if (FAILED(statResult)) {
-    nsPrintfCString hrAsStr("0x%08X", statResult);
+    nsPrintfCString hrAsStr("0x%08lX", statResult);
     CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::StatFailure,
                                        hrAsStr);
   }
 
   if (FAILED(getHGlobalResult)) {
-    nsPrintfCString hrAsStr("0x%08X", getHGlobalResult);
+    nsPrintfCString hrAsStr("0x%08lX", getHGlobalResult);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::GetHGlobalFromStreamFailure, hrAsStr);
   }

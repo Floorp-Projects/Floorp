@@ -142,7 +142,7 @@ void WMFDecoderModule::Init() {
         // E_FAIL should be logged by CreateMFTDecoder. Skipping those codes
         // will help to keep the logs readable.
         WmfDecoderModuleMarkerAndLog("WMFInit Decoder Failed",
-                                     "%s failed with code 0x%x",
+                                     "%s failed with code 0x%lx",
                                      StreamTypeToString(type), hr);
       }
     }

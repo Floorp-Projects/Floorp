@@ -13,7 +13,6 @@
 #include "nsString.h"
 #include "nsNetCID.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMCID.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"
 #include "nsProxyRelease.h"
@@ -36,20 +35,13 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/ArrayBuffer.h"  // JS::GetArrayBufferByteLength,IsArrayBufferObject,NewArrayBufferWithContents,StealArrayBufferContents
-#include "js/Conversions.h"
 #include "js/experimental/TypedData.h"  // JS_NewUint8ArrayWithBuffer
-#include "js/MemoryFunctions.h"
-#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
 
 #include <algorithm>
 #if defined(XP_UNIX)
-#  include <unistd.h>
 #  include <errno.h>
-#  include <fcntl.h>
-#  include <sys/stat.h>
-#  include <sys/uio.h>
 #endif  // defined (XP_UNIX)
 
 #if defined(XP_WIN)

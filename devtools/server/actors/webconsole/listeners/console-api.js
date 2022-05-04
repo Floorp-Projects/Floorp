@@ -5,7 +5,6 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
-const Services = require("Services");
 const ChromeUtils = require("ChromeUtils");
 const {
   CONSOLE_WORKER_IDS,
@@ -59,7 +58,7 @@ class ConsoleAPIListener {
 
   /**
    * The function which is notified of window.console API calls. It is invoked with one
-   * argument: the console API call object that comes from the observer service.
+   * argument: the console API call object that comes from the ConsoleAPIStorage service.
    *
    * @type function
    */
@@ -72,24 +71,34 @@ class ConsoleAPIListener {
   addonId = null;
 
   /**
-   * Initialize the window.console API observer.
+   * Initialize the window.console API listener.
    */
   init() {
-    // Note that the observer is process-wide. We will filter the messages as
-    // needed, see CAL_observe().
-    Services.obs.addObserver(this, "console-api-log-event");
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
+
+    // Note that the listener is process-wide. We will filter the messages as
+    // needed, see onConsoleAPILogEvent().
+    this.onConsoleAPILogEvent = this.onConsoleAPILogEvent.bind(this);
+    ConsoleAPIStorage.addLogEventListener(
+      this.onConsoleAPILogEvent,
+      // We create a principal here to get the privileged principal of this
+      // script. Note that this is importantly *NOT* the principal of the
+      // content we are observing, as that would not have access to the
+      // message object created in ConsoleAPIStorage.jsm's scope.
+      Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+    );
   }
 
   /**
-   * The console API message observer. When messages are received from the
-   * observer service we forward them to the remote Web Console instance.
+   * The console API message listener. When messages are received from the
+   * ConsoleAPIStorage service we forward them to the remote Web Console instance.
    *
    * @param object message
-   *        The message object receives from the observer service.
-   * @param string topic
-   *        The message topic received from the observer service.
+   *        The message object receives from the ConsoleAPIStorage service.
    */
-  observe(message, topic) {
+  onConsoleAPILogEvent(message) {
     if (!this.handler) {
       return;
     }
@@ -233,7 +242,10 @@ class ConsoleAPIListener {
    * Destroy the console API listener.
    */
   destroy() {
-    Services.obs.removeObserver(this, "console-api-log-event");
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
+    ConsoleAPIStorage.removeLogEventListener(this.onConsoleAPILogEvent);
     this.window = this.handler = null;
   }
 }

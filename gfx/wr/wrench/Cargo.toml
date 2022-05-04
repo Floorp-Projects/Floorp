@@ -52,6 +52,7 @@ dwrote = "0.11"
 mozangle = { version = "0.3.2", features = ["egl"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
+libc = "0.2"
 ndk-glue = "0.5"
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]

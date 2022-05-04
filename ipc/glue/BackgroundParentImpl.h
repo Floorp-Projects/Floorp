@@ -15,14 +15,7 @@ namespace mozilla::ipc {
 
 // Instances of this class should never be created directly. This class is meant
 // to be inherited in BackgroundImpl.
-class BackgroundParentImpl : public PBackgroundParent,
-                             public ParentToChildStreamActorManager {
- public:
-  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) override;
-  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
+class BackgroundParentImpl : public PBackgroundParent {
  protected:
   BackgroundParentImpl();
   virtual ~BackgroundParentImpl();
@@ -143,10 +136,6 @@ class BackgroundParentImpl : public PBackgroundParent,
 
   already_AddRefed<PIdleSchedulerParent> AllocPIdleSchedulerParent() override;
 
-  already_AddRefed<PRemoteLazyInputStreamParent>
-  AllocPRemoteLazyInputStreamParent(const nsID& aID,
-                                    const uint64_t& aSize) override;
-
   PTemporaryIPCBlobParent* AllocPTemporaryIPCBlobParent() override;
 
   mozilla::ipc::IPCResult RecvPTemporaryIPCBlobConstructor(
@@ -203,12 +192,6 @@ class BackgroundParentImpl : public PBackgroundParent,
 
   bool DeallocPSharedWorkerParent(PSharedWorkerParent* aActor) override;
 
-  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const FileDescriptor& aFileDescriptor) override;
-
-  bool DeallocPFileDescriptorSetParent(
-      PFileDescriptorSetParent* aActor) override;
-
   already_AddRefed<PVsyncParent> AllocPVsyncParent() override;
 
   already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
@@ -240,16 +223,6 @@ class BackgroundParentImpl : public PBackgroundParent,
       const nsCString& origin, const nsString& channel) override;
 
   bool DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) override;
-
-  PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
-
-  bool DeallocPChildToParentStreamParent(
-      PChildToParentStreamParent* aActor) override;
-
-  PParentToChildStreamParent* AllocPParentToChildStreamParent() override;
-
-  bool DeallocPParentToChildStreamParent(
-      PParentToChildStreamParent* aActor) override;
 
   PServiceWorkerManagerParent* AllocPServiceWorkerManagerParent() override;
 

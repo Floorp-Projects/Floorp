@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
-include protocol PRemoteLazyInputStream;
-
 include IPCStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+[RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 
 namespace mozilla {
 
@@ -17,7 +14,7 @@ union RemoteLazyStream
 {
   // Parent to Child: The child will receive a RemoteLazyInputStream. Nothing
   // can be done with it except retrieving the size.
-  PRemoteLazyInputStream;
+  RemoteLazyInputStream;
 
   // Child to Parent: Normal serialization.
   IPCStream;

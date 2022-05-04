@@ -20,15 +20,12 @@
 
 #include "prthread.h"
 #include "prmon.h"
-#include "plstr.h"
 #include "prio.h"
 
 #include "nsString.h"
-#include "nsServiceManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#include "nsIObserverService.h"
 #include "nsExceptionHandler.h"
 #include "GeckoProfiler.h"
 #include "nsThreadUtils.h"
@@ -43,12 +40,10 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"

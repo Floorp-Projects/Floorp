@@ -283,7 +283,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd,
 
   if (NS_WARN_IF(!SUCCEEDED(result))) {
 #ifdef DEBUG
-    printf_stderr("PrintDlgExW failed with %x\n", result);
+    printf_stderr("PrintDlgExW failed with %lx\n", result);
 #endif
     return NS_ERROR_FAILURE;
   }

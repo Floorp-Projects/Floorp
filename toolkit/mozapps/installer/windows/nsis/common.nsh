@@ -7993,9 +7993,7 @@
         ClearErrors
         StrCpy $0 "0"
       ${Else}
-        ${GetLocalAppDataFolder} $1
-        CreateDirectory "$1\Mozilla\Firefox"
-        CopyFiles /SILENT "$EXEDIR\postSigningData" "$1\Mozilla\Firefox"
+        CopyFiles /SILENT "$EXEDIR\postSigningData" "$INSTDIR"
       ${Endif}
 
       Pop $1    ; Stack: old $0
