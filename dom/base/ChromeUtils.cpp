@@ -55,7 +55,6 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsIException.h"
-#include "VsyncSource.h"
 
 namespace mozilla::dom {
 

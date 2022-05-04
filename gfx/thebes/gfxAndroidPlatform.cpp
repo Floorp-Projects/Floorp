@@ -359,7 +359,7 @@ class AndroidVsyncSource final : public VsyncSource,
 };
 
 already_AddRefed<mozilla::gfx::VsyncSource>
-gfxAndroidPlatform::CreateGlobalHardwareVsyncSource() {
+gfxAndroidPlatform::CreateHardwareVsyncSource() {
   // Vsync was introduced since JB (API 16~18) but inaccurate. Enable only for
   // KK (API 19) and later.
   if (jni::GetAPIVersion() >= 19) {
@@ -368,5 +368,5 @@ gfxAndroidPlatform::CreateGlobalHardwareVsyncSource() {
   }
 
   NS_WARNING("Vsync not supported. Falling back to software vsync");
-  return GetSoftwareVsyncSource();
+  return gfxPlatform::CreateHardwareVsyncSource();
 }

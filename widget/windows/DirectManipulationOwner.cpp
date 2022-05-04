@@ -362,15 +362,14 @@ DManipEventHandler::OnInteraction(
       mObserver = new VObserver(this);
     }
 
-    gfxWindowsPlatform::GetPlatform()
-        ->GetGlobalVsyncDispatcher()
-        ->AddMainThreadObserver(mObserver);
+    gfxWindowsPlatform::GetPlatform()->GetHardwareVsync()->AddGenericObserver(
+        mObserver);
   }
 
   if (mObserver && interaction == DIRECTMANIPULATION_INTERACTION_END) {
     gfxWindowsPlatform::GetPlatform()
-        ->GetGlobalVsyncDispatcher()
-        ->RemoveMainThreadObserver(mObserver);
+        ->GetHardwareVsync()
+        ->RemoveGenericObserver(mObserver);
   }
 
   return S_OK;
@@ -681,8 +680,8 @@ void DirectManipulationOwner::Destroy() {
     mDmHandler->mOwner = nullptr;
     if (mDmHandler->mObserver) {
       gfxWindowsPlatform::GetPlatform()
-          ->GetGlobalVsyncDispatcher()
-          ->RemoveMainThreadObserver(mDmHandler->mObserver);
+          ->GetHardwareVsync()
+          ->RemoveGenericObserver(mDmHandler->mObserver);
       mDmHandler->mObserver->ClearOwner();
       mDmHandler->mObserver = nullptr;
     }
