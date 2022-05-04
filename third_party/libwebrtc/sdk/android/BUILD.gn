@@ -141,10 +141,12 @@ if (is_android) {
 
     suppressed_configs += [ "//build/config/android:hide_all_but_jni_onload" ]
     configs += [ "//build/config/android:hide_all_but_jni" ]
+    ldflags = [ "-lEGL" ]
 
     deps = [
       ":libjingle_peerconnection_jni",
       ":libjingle_peerconnection_metrics_default_jni",
+      ":video_egl_jni",
       "../../pc:libjingle_peerconnection",
       "../../rtc_base",
     ]
@@ -665,6 +667,17 @@ if (current_os == "linux" || is_android) {
       "//third_party/libyuv",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
+  # Sources here require -lEGL linker flag. It is separated from video_jni
+  # target for backwards compatibility.
+  rtc_library("video_egl_jni") {
+    visibility = [ "*" ]
+    sources = [ "src/jni/egl_base_10_impl.cc" ]
+    deps = [
+      ":generated_video_egl_jni",
+      ":native_api_jni",
+    ]
   }
 
   rtc_library("peerconnection_jni") {
@@ -1214,6 +1227,12 @@ if (current_os == "linux" || is_android) {
       "src/java/org/webrtc/VideoEncoderWrapper.java",
       "src/java/org/webrtc/WrappedNativeI420Buffer.java",
     ]
+    namespace = "webrtc::jni"
+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
+  }
+
+  generate_jni("generated_video_egl_jni") {
+    sources = [ "src/java/org/webrtc/EglBase10Impl.java" ]
     namespace = "webrtc::jni"
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
   }
