@@ -1079,7 +1079,7 @@ gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
   if (!osxVsyncSource->IsVsyncEnabled()) {
     NS_WARNING(
         "OS X Vsync source not enabled. Falling back to software vsync.");
-    return CreateSoftwareVsyncSource();
+    return GetSoftwareVsyncSource();
   }
 
   osxVsyncSource->DisableVsync();
