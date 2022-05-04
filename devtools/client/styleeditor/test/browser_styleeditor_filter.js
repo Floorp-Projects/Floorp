@@ -50,8 +50,9 @@ add_task(async function() {
   );
 
   const setFilterInputValue = value => {
-    filterInput.focus();
-    filterInput.value = "";
+    // The keyboard shortcut focuses the input and select its content, so we should
+    // be able to type right-away.
+    synthesizeKeyShortcut("CmdOrCtrl+P");
     EventUtils.sendString(value);
   };
 
