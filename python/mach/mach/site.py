@@ -319,11 +319,14 @@ class MachSiteManager:
         if self._site_packages_source == SitePackagesSource.NONE:
             return SiteUpToDateResult(True)
         elif self._site_packages_source == SitePackagesSource.SYSTEM:
-            _assert_pip_check(self._sys_path(), "mach", self._requirements)
+            _assert_pip_check(
+                self._topsrcdir, self._sys_path(), "mach", self._requirements
+            )
             return SiteUpToDateResult(True)
         elif self._site_packages_source == SitePackagesSource.VENV:
             environment = self._virtualenv()
             return _is_venv_up_to_date(
+                self._topsrcdir,
                 environment,
                 self._pthfile_lines(environment),
                 self._requirements,
@@ -379,6 +382,7 @@ class MachSiteManager:
 
         environment = self._virtualenv()
         _create_venv_with_pthfile(
+            self._topsrcdir,
             environment,
             self._pthfile_lines(environment),
             True,
@@ -556,6 +560,7 @@ class CommandSiteManager:
                 )
 
             _create_venv_with_pthfile(
+                self._topsrcdir,
                 self._virtualenv,
                 self._pthfile_lines(),
                 self._populate_virtualenv,
@@ -724,12 +729,14 @@ class CommandSiteManager:
         pthfile_lines = self._pthfile_lines()
         if self._mach_site_packages_source == SitePackagesSource.SYSTEM:
             _assert_pip_check(
+                self._topsrcdir,
                 pthfile_lines,
                 self._site_name,
                 self._requirements if not self._populate_virtualenv else None,
             )
 
         return _is_venv_up_to_date(
+            self._topsrcdir,
             self._virtualenv,
             pthfile_lines,
             self._requirements,
@@ -1014,6 +1021,12 @@ def resolve_requirements(topsrcdir, site_name):
         )
 
 
+def _virtualenv_py_path(topsrcdir):
+    return os.path.join(
+        topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
+    )
+
+
 def _resolve_installed_packages(python_executable):
     pip_json = subprocess.check_output(
         [
@@ -1032,7 +1045,7 @@ def _resolve_installed_packages(python_executable):
     return {package["name"]: package["version"] for package in installed_packages}
 
 
-def _assert_pip_check(pthfile_lines, virtualenv_name, requirements):
+def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name, requirements):
     """Check if the provided pthfile lines have a package incompatibility
 
     If there's an incompatibility, raise an exception and allow it to bubble up since
@@ -1066,9 +1079,8 @@ def _assert_pip_check(pthfile_lines, virtualenv_name, requirements):
         subprocess.check_call(
             [
                 sys.executable,
-                "-m",
-                "venv",
-                "--without-pip",
+                _virtualenv_py_path(topsrcdir),
+                "--no-download",
                 check_env_path,
             ],
             stdout=subprocess.DEVNULL,
@@ -1147,6 +1159,7 @@ def _deprioritize_venv_packages(virtualenv, populate_virtualenv):
 
 
 def _create_venv_with_pthfile(
+    topsrcdir,
     target_venv,
     pthfile_lines,
     populate_with_pip,
@@ -1162,12 +1175,11 @@ def _create_venv_with_pthfile(
 
     subprocess.check_call(
         [
-            sys.executable,
-            "-m",
-            "venv",
+            metadata.original_python.python_path,
+            _virtualenv_py_path(topsrcdir),
             # pip, setuptools and wheel are vendored and inserted into the virtualenv
             # scope automatically, so "virtualenv" doesn't need to seed it.
-            "--without-pip",
+            "--no-seed",
             virtualenv_root,
         ]
     )
@@ -1186,6 +1198,7 @@ def _create_venv_with_pthfile(
 
 
 def _is_venv_up_to_date(
+    topsrcdir,
     target_venv,
     expected_pthfile_lines,
     requirements,
@@ -1194,12 +1207,23 @@ def _is_venv_up_to_date(
     if not os.path.exists(target_venv.prefix):
         return SiteUpToDateResult(False, f'"{target_venv.prefix}" does not exist')
 
-    # Modifications to any of the requirements manifest files mean the virtualenv should
-    # be rebuilt:
+    # Modifications to any of the following files mean the virtualenv should be
+    # rebuilt:
+    # * The `virtualenv` package
+    # * Any of our requirements manifest files
+    virtualenv_package = os.path.join(
+        topsrcdir,
+        "third_party",
+        "python",
+        "virtualenv",
+        "virtualenv",
+        "version.py",
+    )
+    deps = [virtualenv_package] + requirements.requirements_paths
     metadata_mtime = os.path.getmtime(
         os.path.join(target_venv.prefix, METADATA_FILENAME)
     )
-    for dep_file in requirements.requirements_paths:
+    for dep_file in deps:
         if os.path.getmtime(dep_file) > metadata_mtime:
             return SiteUpToDateResult(
                 False, f'"{dep_file}" has changed since the virtualenv was created'
