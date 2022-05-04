@@ -103,11 +103,16 @@ function continueToNextStepSync() {
 }
 
 function enableTesting() {
-  SpecialPowers.setBoolPref("dom.storage.next_gen", true);
+  SpecialPowers.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    false
+  );
 }
 
 function resetTesting() {
-  SpecialPowers.clearUserPref("dom.storage.next_gen");
+  SpecialPowers.clearUserPref(
+    "dom.storage.enable_unsupported_legacy_implementation"
+  );
 }
 
 function setGlobalLimit(globalLimit) {

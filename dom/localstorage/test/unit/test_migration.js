@@ -50,7 +50,10 @@ async function testSteps() {
 
   info("Setting pref");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
+  Services.prefs.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    false
+  );
 
   info("Stage 1 - Testing archived data migration");
 

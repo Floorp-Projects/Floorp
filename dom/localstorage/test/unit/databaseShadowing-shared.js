@@ -23,13 +23,19 @@ const corruptedValue = beginning + replacement + replacement + ending;
 function enableNextGenLocalStorage() {
   info("Setting pref");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
+  Services.prefs.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    false
+  );
 }
 
 function disableNextGenLocalStorage() {
   info("Setting pref");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", false);
+  Services.prefs.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    true
+  );
 }
 
 function storeData() {
