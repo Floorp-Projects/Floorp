@@ -165,7 +165,7 @@ void VsyncDispatcher::UpdateVsyncStatus() {
     return;
   }
 
-  mVsyncSource->NotifyRefreshTimerVsyncStatus(NeedsVsync());
+  mVsyncSource->NotifyVsyncDispatcherVsyncStatus(NeedsVsync());
 }
 
 bool VsyncDispatcher::NeedsVsync() {
