@@ -2,15 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file defines the metrics that are recorded by the Glean SDK. They are
-# automatically converted to platform-specific code at build time using the
-# `glean_parser` PyPI package.
-
 # Adding a new metric? We have docs for that!
 # https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Core :: DOM: Content Processes"
 
 power:
   cpu_time_bogus_values:
@@ -113,9 +111,6 @@ power:
     type: counter
     description: >
       Total CPU time used by all processes in ms.
-    metadata: &metadata
-      tags:
-        - "Core :: DOM: Content Processes"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1736040
     data_reviews:
@@ -131,7 +126,6 @@ power:
     type: counter
     description: >
       Total GPU time used by all processes in ms.
-    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
     data_reviews:

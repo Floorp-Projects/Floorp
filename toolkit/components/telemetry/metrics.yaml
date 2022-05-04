@@ -2,16 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file defines the metrics that are recorded by the Glean SDK. They are
-# automatically converted to platform-specific code at build time using the
-# `glean_parser` PyPI package.
-
 # This file is for Internal Telemetry Use Only.
 # Please don't add anything here unless you have the permission of a
 # Telemetry Module Peer.
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - "Toolkit :: Telemetry"
 
 legacy.telemetry:
   client_id:
@@ -25,9 +23,6 @@ legacy.telemetry:
       to go first), or between when a client_id has been removed and when it
       has been regenerated.
       Does not need to be sent in the Glean "deletion-request" ping.
-    metadata: &metadata
-      tags:
-        - "Toolkit :: Telemetry"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1755549
     data_reviews:
