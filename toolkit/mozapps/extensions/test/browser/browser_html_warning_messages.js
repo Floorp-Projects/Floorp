@@ -7,10 +7,6 @@
 let gProvider;
 const { STATE_BLOCKED, STATE_SOFTBLOCKED } = Ci.nsIBlocklistService;
 
-const brandBundle = Services.strings.createBundle(
-  "chrome://branding/locale/brand.properties"
-);
-const appName = brandBundle.GetStringFromName("brandShortName");
 const appVersion = Services.appinfo.version;
 const SUPPORT_URL = Services.urlFormatter.formatURL(
   Services.prefs.getStringPref("app.support.baseURL")
@@ -28,21 +24,32 @@ async function checkMessageState(id, addonType, expected) {
     if (!expected) {
       ok(messageBar.hidden, "message is hidden");
     } else {
-      let { linkText, linkUrl, text, type } = expected;
+      const { linkUrl, text, type } = expected;
 
+      await BrowserTestUtils.waitForMutationCondition(
+        messageBar,
+        { attributes: true },
+        () => !messageBar.hidden
+      );
       ok(!messageBar.hidden, "message is visible");
+
       is(messageBar.getAttribute("type"), type, "message has the right type");
-      is(
-        messageBar.querySelector("span").textContent,
+      const textSpan = messageBar.querySelector("span");
+      Assert.deepEqual(
+        document.l10n.getAttributes(textSpan),
         text,
-        "message has the right text"
+        "message l10n data is set correctly"
       );
 
-      let link = messageBar.querySelector("button");
+      const link = messageBar.querySelector("button");
       if (linkUrl) {
         ok(!link.hidden, "link is visible");
-        is(link.textContent, linkText, "link text is correct");
-        let newTab = BrowserTestUtils.waitForNewTab(gBrowser, linkUrl);
+        is(
+          link.getAttribute("data-l10n-id"),
+          `${text.id}-link`,
+          "link l10n id is correct"
+        );
+        const newTab = BrowserTestUtils.waitForNewTab(gBrowser, linkUrl);
         link.click();
         BrowserTestUtils.removeTab(await newTab);
       } else {
@@ -101,8 +108,9 @@ add_task(async function testNoMessageLangpack() {
 });
 
 add_task(async function testBlocked() {
-  let id = "blocked@mochi.test";
-  let linkUrl = "https://example.com/addon-blocked";
+  const id = "blocked@mochi.test";
+  const linkUrl = "https://example.com/addon-blocked";
+  const name = "Blocked";
   gProvider.createAddons([
     {
       appDisabled: true,
@@ -110,13 +118,12 @@ add_task(async function testBlocked() {
       blocklistURL: linkUrl,
       id,
       isActive: false,
-      name: "Blocked",
+      name,
     },
   ]);
   await checkMessageState(id, "extension", {
-    linkText: "More Information",
     linkUrl,
-    text: "Blocked has been disabled due to security or stability issues.",
+    text: { id: "details-notification-blocked", args: { name } },
     type: "error",
   });
 });
@@ -130,22 +137,19 @@ add_task(async function testUnsignedDisabled() {
   const sigPref = "xpinstall.signatures.required";
   Services.prefs.setBoolPref(sigPref, true);
 
-  let id = "unsigned@mochi.test";
+  const id = "unsigned@mochi.test";
+  const name = "Unsigned";
   gProvider.createAddons([
     {
       appDisabled: true,
       id,
-      name: "Unsigned",
+      name,
       signedState: AddonManager.SIGNEDSTATE_MISSING,
     },
   ]);
   await checkMessageState(id, "extension", {
-    linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
-    text:
-      "Unsigned could not be verified for use in " +
-      appName +
-      " and has been disabled.",
+    text: { id: "details-notification-unsigned-and-disabled", args: { name } },
     type: "error",
   });
 
@@ -166,61 +170,58 @@ add_task(async function testUnsignedDisabled() {
 });
 
 add_task(async function testUnsignedLangpackDisabled() {
-  let id = "unsigned-langpack@mochi.test";
+  const id = "unsigned-langpack@mochi.test";
+  const name = "Unsigned";
   gProvider.createAddons([
     {
       appDisabled: true,
       id,
-      name: "Unsigned",
+      name,
       signedState: AddonManager.SIGNEDSTATE_MISSING,
       type: "locale",
     },
   ]);
   await checkMessageState(id, "locale", {
-    linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
-    text:
-      "Unsigned could not be verified for use in " +
-      appName +
-      " and has been disabled.",
+    text: { id: "details-notification-unsigned-and-disabled", args: { name } },
     type: "error",
   });
 });
 
 add_task(async function testIncompatible() {
-  let id = "incompatible@mochi.test";
+  const id = "incompatible@mochi.test";
+  const name = "Incompatible";
   gProvider.createAddons([
     {
       appDisabled: true,
       id,
       isActive: false,
       isCompatible: false,
-      name: "Incompatible",
+      name,
     },
   ]);
   await checkMessageState(id, "extension", {
-    text:
-      "Incompatible is incompatible with " + appName + " " + appVersion + ".",
+    text: {
+      id: "details-notification-incompatible",
+      args: { name, version: appVersion },
+    },
     type: "warning",
   });
 });
 
 add_task(async function testUnsignedEnabled() {
-  let id = "unsigned-allowed@mochi.test";
+  const id = "unsigned-allowed@mochi.test";
+  const name = "Unsigned";
   gProvider.createAddons([
     {
       id,
-      name: "Unsigned",
+      name,
       signedState: AddonManager.SIGNEDSTATE_MISSING,
     },
   ]);
   await checkMessageState(id, "extension", {
-    linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
-    text:
-      "Unsigned could not be verified for use in " +
-      appName +
-      ". Proceed with caution.",
+    text: { id: "details-notification-unsigned", args: { name } },
     type: "warning",
   });
 });
@@ -230,22 +231,19 @@ add_task(async function testUnsignedLangpackEnabled() {
     set: [["extensions.langpacks.signatures.required", false]],
   });
 
-  let id = "unsigned-allowed-langpack@mochi.test";
+  const id = "unsigned-allowed-langpack@mochi.test";
+  const name = "Unsigned Langpack";
   gProvider.createAddons([
     {
       id,
-      name: "Unsigned Langpack",
+      name,
       signedState: AddonManager.SIGNEDSTATE_MISSING,
       type: "locale",
     },
   ]);
   await checkMessageState(id, "locale", {
-    linkText: "More Information",
     linkUrl: SUPPORT_URL + "unsigned-addons",
-    text:
-      "Unsigned Langpack could not be verified for use in " +
-      appName +
-      ". Proceed with caution.",
+    text: { id: "details-notification-unsigned", args: { name } },
     type: "warning",
   });
 
@@ -253,8 +251,9 @@ add_task(async function testUnsignedLangpackEnabled() {
 });
 
 add_task(async function testSoftBlocked() {
-  let id = "softblocked@mochi.test";
-  let linkUrl = "https://example.com/addon-blocked";
+  const id = "softblocked@mochi.test";
+  const linkUrl = "https://example.com/addon-blocked";
+  const name = "Soft Blocked";
   gProvider.createAddons([
     {
       appDisabled: true,
@@ -262,31 +261,31 @@ add_task(async function testSoftBlocked() {
       blocklistURL: linkUrl,
       id,
       isActive: false,
-      name: "Soft Blocked",
+      name,
     },
   ]);
   await checkMessageState(id, "extension", {
-    linkText: "More Information",
     linkUrl,
-    text: "Soft Blocked is known to cause security or stability issues.",
+    text: { id: "details-notification-softblocked", args: { name } },
     type: "warning",
   });
 });
 
 add_task(async function testPluginInstalling() {
-  let id = "plugin-installing@mochi.test";
+  const id = "plugin-installing@mochi.test";
+  const name = "Plugin Installing";
   gProvider.createAddons([
     {
       id,
       isActive: true,
       isGMPlugin: true,
       isInstalled: false,
-      name: "Plugin Installing",
+      name,
       type: "plugin",
     },
   ]);
   await checkMessageState(id, "plugin", {
-    text: "Plugin Installing will be installed shortly.",
+    text: { id: "details-notification-gmp-pending", args: { name } },
     type: "warning",
   });
 });

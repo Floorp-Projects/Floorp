@@ -438,16 +438,6 @@ function wait_for_window_open(aCallback) {
   return log_callback(p, aCallback);
 }
 
-function get_string(aName, ...aArgs) {
-  var bundle = Services.strings.createBundle(
-    "chrome://mozapps/locale/extensions/extensions.properties"
-  );
-  if (!aArgs.length) {
-    return bundle.GetStringFromName(aName);
-  }
-  return bundle.formatStringFromName(aName, aArgs);
-}
-
 function formatDate(aDate) {
   const dtOptions = { year: "numeric", month: "long", day: "numeric" };
   return aDate.toLocaleDateString(undefined, dtOptions);
