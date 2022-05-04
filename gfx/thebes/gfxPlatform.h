@@ -55,6 +55,7 @@ class SourceSurface;
 class DataSourceSurface;
 class ScaledFont;
 class VsyncSource;
+class SoftwareVsyncSource;
 class ContentDeviceData;
 class GPUDeviceData;
 class FeatureState;
@@ -685,7 +686,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   /**
    * Update the frame rate (called e.g. after pref changes).
    */
-  static void ReInitFrameRate();
+  static void ReInitFrameRate(const char* aPrefIgnored, void* aDataIgnored);
 
   /**
    * Update force subpixel AA quality setting (called after pref
@@ -819,13 +820,16 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   virtual void WillShutdown();
 
-  // Create a software vsync source (which uses a timer internally).
+  // Return a hardware vsync source for this platform.
+  already_AddRefed<mozilla::gfx::VsyncSource> GetGlobalHardwareVsyncSource();
+
+  // Return a software vsync source (which uses a timer internally).
   // Can be used as a fallback for platforms without hardware vsync,
   // and when the layout.frame_rate pref is set to a non-negative value.
-  already_AddRefed<mozilla::gfx::VsyncSource> CreateSoftwareVsyncSource();
+  already_AddRefed<mozilla::gfx::VsyncSource> GetSoftwareVsyncSource();
 
   // Create the platform-specific global vsync source. Can fall back to
-  // CreateSoftwareVsyncSource().
+  // GetSoftwareVsyncSource().
   virtual already_AddRefed<mozilla::gfx::VsyncSource>
   CreateGlobalHardwareVsyncSource() = 0;
 
@@ -928,12 +932,20 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   // max number of entries in word cache
   int32_t mWordCacheMaxEntries;
 
-  // Hardware vsync source. Only valid on parent process
-  RefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
-
-  // The vsync dispatcher for the hardware vsync source. Only non-null in the
-  // parent process.
+  // The global vsync dispatcher. Only non-null in the parent process.
+  // Its underlying VsyncSource is either mGlobalHardwareVsyncSource
+  // or mSoftwareVsyncSource.
   RefPtr<mozilla::VsyncDispatcher> mVsyncDispatcher;
+
+  // Cached software vsync source. Only non-null in the parent process,
+  // and only after the first time GetHardwareVsyncSource has been called.
+  RefPtr<mozilla::gfx::VsyncSource> mGlobalHardwareVsyncSource;
+
+  // Cached software vsync source. Only non-null in the parent process,
+  // and only after the first time GetSoftwareVsyncSource has been called.
+  // Used as a fallback source if hardware vsync is not available,
+  // or when the layout.frame_rate pref is set.
+  RefPtr<mozilla::gfx::SoftwareVsyncSource> mSoftwareVsyncSource;
 
   RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
 

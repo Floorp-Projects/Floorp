@@ -368,5 +368,5 @@ gfxAndroidPlatform::CreateGlobalHardwareVsyncSource() {
   }
 
   NS_WARNING("Vsync not supported. Falling back to software vsync");
-  return CreateSoftwareVsyncSource();
+  return GetSoftwareVsyncSource();
 }
