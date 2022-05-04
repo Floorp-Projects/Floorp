@@ -362,7 +362,6 @@ class SettingsPrivacyTest {
         }
     }
 
-    @Ignore("Intermittent: https://github.com/mozilla-mobile/fenix/issues/22188")
     @Test
     fun launchPageShortcutInPrivateModeTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -376,6 +375,7 @@ class SettingsPrivacyTest {
             addShortcutName(pageShortcutName)
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
+            verifyShortcutAdded(pageShortcutName)
         }
 
         mDevice.waitForIdle()

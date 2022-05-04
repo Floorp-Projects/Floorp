@@ -18,6 +18,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
+import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
@@ -62,6 +63,13 @@ class AddToHomeScreenRobot {
         }
     }
 
+    fun verifyShortcutAdded(shortcutTitle: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text(shortcutTitle))
+                .waitForExists(waitingTime)
+        )
+    }
+
     class Transition {
         fun openHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.wait(
@@ -76,13 +84,14 @@ class AddToHomeScreenRobot {
 
         fun searchAndOpenHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.pressHome()
-            mDevice.waitForIdle()
 
             fun homeScreenView() = UiScrollable(UiSelector().scrollable(true))
-            homeScreenView().setAsHorizontalList()
+            homeScreenView().waitForExists(waitingTime)
 
             fun shortcut() =
-                homeScreenView().getChildByText(UiSelector().textContains(title), title)
+                homeScreenView()
+                    .setAsHorizontalList()
+                    .getChildByText(UiSelector().textContains(title), title, true)
             shortcut().clickAndWaitForNewWindow()
 
             BrowserRobot().interact()
