@@ -120,14 +120,8 @@ def test_sites_compatible(tmpdir: str):
     subprocess.check_call(
         [
             sys.executable,
-            str(
-                Path(topsrcdir)
-                / "third_party"
-                / "python"
-                / "virtualenv"
-                / "virtualenv.py"
-            ),
-            "--no-download",
+            "-m",
+            "venv",
             str(work_dir / "env"),
         ]
     )
