@@ -39,7 +39,10 @@ async function doTest(profile) {
 async function testSteps() {
   info("Setting pref");
 
-  Services.prefs.setBoolPref("dom.storage.next_gen", true);
+  Services.prefs.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    false
+  );
 
   // XXX This should be refactored into separate sub test cases.
 

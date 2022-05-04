@@ -290,7 +290,7 @@ add_task(async function test_browserData_on_aboutnewtab_and_file_data() {
 });
 
 add_task(async function test_browserData_should_not_remove_extension_data() {
-  if (!SpecialPowers.getBoolPref("dom.storage.next_gen")) {
+  if (SpecialPowers.getBoolPref("dom.storage.enable_unsupported_legacy_implementation")) {
     // When LSNG isn't enabled, the browsingData API does still clear
     // all the extensions localStorage if called without a list of specific
     // origins to clear.

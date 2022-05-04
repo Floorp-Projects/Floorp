@@ -6,9 +6,8 @@
 async function testSteps() {
   const principal = getPrincipal("https://example.com");
 
-  info("Setting prefs");
+  info("Setting pref");
 
-  SpecialPowers.setBoolPref("dom.storage.next_gen", true);
   Services.prefs.setBoolPref("dom.storage.client_validation", false);
 
   info("Clearing");
