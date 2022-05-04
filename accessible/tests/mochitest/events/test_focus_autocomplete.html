@@ -22,7 +22,7 @@
         EVENT_FOCUS,
         evt => evt.accessible.role == ROLE_COMBOBOX_OPTION
       );
-      if (!event.accessible.name) {
+      while (!event.accessible.name) {
         // Sometimes, the name is null for a very short time after the focus
         // event.
         await waitForEvent(EVENT_NAME_CHANGE, event.accessible);
