@@ -516,7 +516,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       MOZ_ASSERT(NS_IsMainThread());
     }
 
-    bool NotifyVsync(const VsyncEvent& aVsync) override {
+    void NotifyVsync(const VsyncEvent& aVsync) override {
       // Compress vsync notifications such that only 1 may run at a time
       // This is so that we don't flood the refresh driver with vsync messages
       // if the main thread is blocked for long periods of time
@@ -525,7 +525,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         bool hadPendingVsync = pendingVsync->isSome();
         *pendingVsync = Some(aVsync);
         if (hadPendingVsync) {
-          return true;
+          return;
         }
       }
 
@@ -534,7 +534,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
         // the main thread. No need to use a runnable, just call
         // NotifyVsyncOnMainThread() directly.
         NotifyVsyncOnMainThread();
-        return true;
+        return;
       }
 
       // In the parent process, NotifyVsync is called on the vsync thread, which
@@ -551,7 +551,6 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           useVsyncPriority ? nsIRunnablePriority::PRIORITY_VSYNC
                            : nsIRunnablePriority::PRIORITY_NORMAL);
       NS_DispatchToMainThread(vsyncEvent);
-      return true;
     }
 
     bool ShouldGiveNonVsyncTasksMoreTime() {
