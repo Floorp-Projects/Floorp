@@ -67,6 +67,7 @@ def _ParseArgs():
     parser.add_argument(
         '-o',
         '--output-dir',
+        type=os.path.abspath,
         default=SDK_OUTPUT_DIR,
         help='Specifies a directory to output the build artifacts to. '
         'If specified together with -c, deletes the dir.')
