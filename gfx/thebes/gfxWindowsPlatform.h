@@ -181,7 +181,7 @@ class gfxWindowsPlatform final : public gfxPlatform {
   bool HandleDeviceReset();
   void UpdateBackendPrefs();
 
-  already_AddRefed<mozilla::gfx::VsyncSource> CreateGlobalHardwareVsyncSource()
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
       override;
   static mozilla::Atomic<size_t> sD3D11SharedTextures;
   static mozilla::Atomic<size_t> sD3D9SharedTextures;

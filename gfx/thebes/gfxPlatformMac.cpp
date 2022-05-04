@@ -1073,13 +1073,13 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
 }
 
 already_AddRefed<mozilla::gfx::VsyncSource>
-gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
+gfxPlatformMac::CreateHardwareVsyncSource() {
   RefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
   osxVsyncSource->EnableVsync();
   if (!osxVsyncSource->IsVsyncEnabled()) {
     NS_WARNING(
         "OS X Vsync source not enabled. Falling back to software vsync.");
-    return GetSoftwareVsyncSource();
+    return gfxPlatform::CreateHardwareVsyncSource();
   }
 
   osxVsyncSource->DisableVsync();

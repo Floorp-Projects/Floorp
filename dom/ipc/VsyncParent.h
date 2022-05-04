@@ -27,7 +27,7 @@ class VsyncParent final : public PVsyncParent, public VsyncObserver {
 
  public:
   VsyncParent();
-  void UpdateVsyncDispatcher(const RefPtr<VsyncDispatcher>& aVsyncDispatcher);
+  void UpdateVsyncSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);
 
  private:
   virtual ~VsyncParent() = default;
@@ -47,7 +47,8 @@ class VsyncParent final : public PVsyncParent, public VsyncObserver {
   bool mObservingVsync;
   bool mDestroyed;
   nsCOMPtr<nsIThread> mInitialThread;
-  RefPtr<VsyncDispatcher> mVsyncDispatcher;
+  RefPtr<gfx::VsyncSource> mVsyncSource;
+  RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
 };
 
 }  // namespace mozilla::dom

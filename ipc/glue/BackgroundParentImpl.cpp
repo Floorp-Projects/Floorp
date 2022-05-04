@@ -660,10 +660,7 @@ BackgroundParentImpl::AllocPVsyncParent() {
   AssertIsOnBackgroundThread();
 
   RefPtr<mozilla::dom::VsyncParent> actor = new mozilla::dom::VsyncParent();
-
-  RefPtr<mozilla::VsyncDispatcher> vsyncDispatcher =
-      gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
-  actor->UpdateVsyncDispatcher(vsyncDispatcher);
+  actor->UpdateVsyncSource(nullptr);
   return actor.forget();
 }
 

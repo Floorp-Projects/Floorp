@@ -555,7 +555,7 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
-  UpdateVsyncParentVsyncDispatcher();
+  UpdateVsyncParentVsyncSource();
 
   VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
     if (auto* browserParent = aBrowser->GetBrowserParent()) {
@@ -1428,7 +1428,7 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
 PVsyncParent* BrowserParent::AllocPVsyncParent() {
   MOZ_ASSERT(!mVsyncParent);
   mVsyncParent = new VsyncParent();
-  UpdateVsyncParentVsyncDispatcher();
+  UpdateVsyncParentVsyncSource();
   return mVsyncParent.get();
 }
 
@@ -1438,16 +1438,13 @@ bool BrowserParent::DeallocPVsyncParent(PVsyncParent* aActor) {
   return true;
 }
 
-void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
+void BrowserParent::UpdateVsyncParentVsyncSource() {
   if (!mVsyncParent) {
     return;
   }
 
   if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-    if (RefPtr<VsyncDispatcher> vsyncDispatcher =
-            widget->GetVsyncDispatcher()) {
-      mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
-    }
+    mVsyncParent->UpdateVsyncSource(widget->GetVsyncSource());
   }
 }
 
