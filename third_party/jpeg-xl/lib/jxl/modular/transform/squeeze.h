@@ -75,10 +75,6 @@ inline pixel_type_w SmoothTendency(pixel_type_w B, pixel_type_w a,
   return diff;
 }
 
-void InvHSqueeze(Image &input, int c, int rc, ThreadPool *pool);
-
-void InvVSqueeze(Image &input, int c, int rc, ThreadPool *pool);
-
 void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
                               const Image &image);
 

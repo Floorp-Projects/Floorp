@@ -789,18 +789,9 @@ void ZeroFillPlane(Plane<T>* image, Rect rect) {
   }
 }
 
-// First, image is padded horizontally, with the rightmost value.
-// Next, image is padded vertically, by repeating the last line.
-ImageF PadImage(const ImageF& in, size_t xsize, size_t ysize);
-
 // Pad an image with xborder columns on each vertical side and yboder rows
 // above and below, mirroring the image.
 Image3F PadImageMirror(const Image3F& in, size_t xborder, size_t yborder);
-
-// First, image is padded horizontally, with the rightmost value.
-// Next, image is padded vertically, by repeating the last line.
-// Prefer PadImageToBlockMultipleInPlace if padding to kBlockDim.
-Image3F PadImageToMultiple(const Image3F& in, size_t N);
 
 // Same as above, but operates in-place. Assumes that the `in` image was
 // allocated large enough.

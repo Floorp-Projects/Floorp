@@ -46,7 +46,7 @@ jobs:
           # Build scalar-only hwy instructions.
           - name: scalar
             mode: release
-            cxxflags: -DHWY_DISABLED_TARGETS=~HWY_SCALAR
+            cxxflags: -DHWY_COMPILE_ONLY_SCALAR
           # Disabling optional features to speed up msan build a little bit.
           - name: msan
             skip_install: true
@@ -59,8 +59,6 @@ jobs:
             apt_pkgs: gcovr
             # Coverage builds require a bit more RAM.
             env_test_stack_size: 2048
-            # Exclude roundtrip tests from the unittest coverage.
-            ctest_args: -E '^JxlTest'
           # Build with support for decoding to JPEG bytes disabled. Produces a
           # smaller build if only decoding to pixels is needed.
           - name: release-nojpeg
@@ -149,6 +147,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-${{ steps.git-env.outputs.parent }}-${{ matrix.name }}
     - name: Build
+      if: matrix.name != 'coverage' || env.WILL_RUN_TESTS == 'true'
       run: |
         mkdir -p ${CCACHE_DIR}
         echo "max_size = 200M" > ${CCACHE_DIR}/ccache.conf
@@ -216,10 +215,10 @@ jobs:
         files: build/coverage.xml
     - name: Fast benchmark ${{ matrix.mode }}
       if: |
-        github.event_name == 'push' ||
+        matrix.name != 'coverage' && (github.event_name == 'push' ||
         (github.event_name == 'pull_request' && (
          matrix.test_in_pr ||
-         contains(github.event.pull_request.labels.*.names, 'CI:full')))
+         contains(github.event.pull_request.labels.*.names, 'CI:full'))))
       run: |
         STORE_IMAGES=0 ./ci.sh fast_benchmark
     # Run gbench once, just to make sure it runs, not for actual benchmarking.
@@ -310,7 +309,6 @@ jobs:
           # Build dependencies
           cmake
           doxygen
-          libgtest-dev:${{ matrix.arch }}
           ninja-build
           pkg-config
           qemu-user-static

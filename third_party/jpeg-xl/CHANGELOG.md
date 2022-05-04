@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    the non-coalesced case.
  - decoder API: new function `JxlDecoderGetExtraChannelBlendInfo` to get
    the blending information for extra channels in the non-coalesced case.
+ - decoder API: new function `JxlDecoderSetMultithreadedImageOutCallback`,
+   allowing output callbacks to receive more information about the number of
+   threads on which they are running.
  - encoder API: added ability to set several encoder options to frames using
    `JxlEncoderFrameSettingsSetOption`
  - encoder API: new functions `JxlEncoderSetFrameHeader` and

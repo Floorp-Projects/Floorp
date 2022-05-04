@@ -49,6 +49,7 @@
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_image_bundle.h"
+#include "lib/jxl/exif.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/image.h"
@@ -70,7 +71,12 @@ class BlobsWriterPNG {
  public:
   static Status Encode(const Blobs& blobs, std::vector<std::string>* strings) {
     if (!blobs.exif.empty()) {
-      JXL_RETURN_IF_ERROR(EncodeBase16("exif", blobs.exif, strings));
+      // PNG viewers typically ignore Exif orientation but not all of them do
+      // (and e.g. cjxl doesn't), so we overwrite the Exif orientation to the
+      // identity to avoid repeated orientation.
+      std::vector<uint8_t> exif = blobs.exif;
+      ResetExifOrientation(exif);
+      JXL_RETURN_IF_ERROR(EncodeBase16("exif", exif, strings));
     }
     if (!blobs.iptc.empty()) {
       JXL_RETURN_IF_ERROR(EncodeBase16("iptc", blobs.iptc, strings));
@@ -87,7 +93,8 @@ class BlobsWriterPNG {
     return (nibble < 10) ? '0' + nibble : 'a' + nibble - 10;
   }
 
-  static Status EncodeBase16(const std::string& type, const PaddedBytes& bytes,
+  static Status EncodeBase16(const std::string& type,
+                             const std::vector<uint8_t>& bytes,
                              std::vector<std::string>* strings) {
     // Encoding: base16 with newline after 72 chars.
     const size_t base16_size =
@@ -158,12 +165,12 @@ Status EncodeImageAPNG(const CodecInOut* io, const ColorEncoding& c_desired,
     size_t stride = ib.oriented_xsize() *
                     DivCeil(c_desired.Channels() * bits_per_sample + alpha_bits,
                             kBitsPerByte);
-    PaddedBytes raw_bytes(stride * ib.oriented_ysize());
+    std::vector<uint8_t> raw_bytes(stride * ib.oriented_ysize());
     JXL_RETURN_IF_ERROR(ConvertToExternal(
         *transformed, bits_per_sample, /*float_out=*/false,
         c_desired.Channels() + (ib.HasAlpha() ? 1 : 0), JXL_BIG_ENDIAN, stride,
-        pool, raw_bytes.data(), raw_bytes.size(), /*out_callback=*/nullptr,
-        /*out_opaque=*/nullptr, metadata.GetOrientation()));
+        pool, raw_bytes.data(), raw_bytes.size(),
+        /*out_callback=*/{}, metadata.GetOrientation()));
 
     int width = ib.oriented_xsize();
     int height = ib.oriented_ysize();
@@ -188,10 +195,10 @@ Status EncodeImageAPNG(const CodecInOut* io, const ColorEncoding& c_desired,
 
       std::vector<std::string> textstrings;
       JXL_RETURN_IF_ERROR(BlobsWriterPNG::Encode(io->blobs, &textstrings));
-      for (size_t i = 0; i + 1 < textstrings.size(); i += 2) {
+      for (size_t kk = 0; kk + 1 < textstrings.size(); kk += 2) {
         png_text text;
-        text.key = const_cast<png_charp>(textstrings[i].c_str());
-        text.text = const_cast<png_charp>(textstrings[i + 1].c_str());
+        text.key = const_cast<png_charp>(textstrings[kk].c_str());
+        text.text = const_cast<png_charp>(textstrings[kk + 1].c_str());
         text.compression = PNG_TEXT_COMPRESSION_zTXt;
         png_set_text(png_ptr, info_ptr, &text, 1);
       }
@@ -241,7 +248,7 @@ Status EncodeImageAPNG(const CodecInOut* io, const ColorEncoding& c_desired,
     png_write_image(png_ptr, &rows[0]);
     png_write_flush(png_ptr);
     if (count > 0) {
-      PaddedBytes fdata(4);
+      std::vector<uint8_t> fdata(4);
       png_save_uint_32(fdata.data(), anim_chunks++);
       size_t p = pos;
       while (p + 8 < bytes->size()) {
@@ -250,7 +257,8 @@ Status EncodeImageAPNG(const CodecInOut* io, const ColorEncoding& c_desired,
         JXL_ASSERT(bytes->operator[](p + 5) == 'D');
         JXL_ASSERT(bytes->operator[](p + 6) == 'A');
         JXL_ASSERT(bytes->operator[](p + 7) == 'T');
-        fdata.append(bytes->data() + p + 8, bytes->data() + p + 8 + len);
+        fdata.insert(fdata.end(), bytes->data() + p + 8,
+                     bytes->data() + p + 8 + len);
         p += len + 12;
       }
       bytes->resize(pos);

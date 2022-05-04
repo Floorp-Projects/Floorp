@@ -31,31 +31,6 @@ constexpr size_t kMinBytes = 9;
 
 }  // namespace
 
-std::string ExtensionFromCodec(Codec codec, const bool is_gray,
-                               const size_t bits_per_sample) {
-  switch (codec) {
-    case Codec::kJPG:
-      return ".jpg";
-    case Codec::kPGX:
-      return ".pgx";
-    case Codec::kPNG:
-      return ".png";
-    case Codec::kPNM:
-      if (is_gray) return ".pgm";
-      return (bits_per_sample == 32) ? ".pfm" : ".ppm";
-    case Codec::kGIF:
-      return ".gif";
-    case Codec::kEXR:
-      return ".exr";
-    case Codec::kPSD:
-      return ".psd";
-    case Codec::kUnknown:
-      return std::string();
-  }
-  JXL_UNREACHABLE;
-  return std::string();
-}
-
 Codec CodecFromExtension(std::string extension,
                          size_t* JXL_RESTRICT bits_per_sample) {
   std::transform(
@@ -68,10 +43,8 @@ Codec CodecFromExtension(std::string extension,
 
   if (extension == ".pgx") return Codec::kPGX;
 
-  if (extension == ".pbm") {
-    if (bits_per_sample != nullptr) *bits_per_sample = 1;
-    return Codec::kPNM;
-  }
+  if (extension == ".pam") return Codec::kPNM;
+  if (extension == ".pnm") return Codec::kPNM;
   if (extension == ".pgm") return Codec::kPNM;
   if (extension == ".ppm") return Codec::kPNM;
   if (extension == ".pfm") {
@@ -83,16 +56,13 @@ Codec CodecFromExtension(std::string extension,
 
   if (extension == ".exr") return Codec::kEXR;
 
-  if (extension == ".psd") return Codec::kPSD;
-
   return Codec::kUnknown;
 }
 
 Status DecodeBytes(const Span<const uint8_t> bytes,
                    const ColorHints& color_hints,
                    const SizeConstraints& constraints,
-                   extras::PackedPixelFile* ppf, ThreadPool* pool,
-                   Codec* orig_codec) {
+                   extras::PackedPixelFile* ppf, Codec* orig_codec) {
   if (bytes.size() < kMinBytes) return JXL_FAILURE("Too few bytes");
 
   *ppf = extras::PackedPixelFile();
@@ -123,7 +93,7 @@ Status DecodeBytes(const Span<const uint8_t> bytes,
   }
 #endif
 #if JPEGXL_ENABLE_EXR
-  else if (DecodeImageEXR(bytes, color_hints, constraints, pool, ppf)) {
+  else if (DecodeImageEXR(bytes, color_hints, constraints, ppf)) {
     codec = Codec::kEXR;
   }
 #endif

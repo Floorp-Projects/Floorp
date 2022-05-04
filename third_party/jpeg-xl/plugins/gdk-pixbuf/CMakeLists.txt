@@ -63,14 +63,18 @@ if(BUILD_TESTING AND NOT MINGW)
       set(XVFB_PROGRAM_PREFIX "")
     endif()
 
-    add_test(
-      NAME pixbufloader_test_jxl
-      COMMAND
-        ${XVFB_PROGRAM_PREFIX} $<TARGET_FILE:pixbufloader_test>
-        "${CMAKE_CURRENT_SOURCE_DIR}/loaders_test.cache"
-        "${CMAKE_SOURCE_DIR}/third_party/testdata/jxl/blending/cropped_traffic_light.jxl"
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    set_tests_properties(pixbufloader_test_jxl PROPERTIES SKIP_RETURN_CODE 254)
+    # libX11.so and libgdk-x11-2.0.so are not compiled with MSAN -> report
+    # use-of-uninitialized-value for string some internal string value.
+    if (NOT (SANITIZER STREQUAL "msan"))
+      add_test(
+        NAME pixbufloader_test_jxl
+        COMMAND
+          ${XVFB_PROGRAM_PREFIX} $<TARGET_FILE:pixbufloader_test>
+          "${CMAKE_CURRENT_SOURCE_DIR}/loaders_test.cache"
+          "${CMAKE_SOURCE_DIR}/third_party/testdata/jxl/blending/cropped_traffic_light.jxl"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      )
+      set_tests_properties(pixbufloader_test_jxl PROPERTIES SKIP_RETURN_CODE 254)
+    endif()
   endif()  # Gdk_FOUND
 endif()  # BUILD_TESTING

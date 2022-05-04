@@ -36,10 +36,6 @@ void SetMetadataFromPixelFormat(const JxlPixelFormat* pixel_format,
       metadata->SetFloat16Samples();
       potential_alpha_bits = 16;
       break;
-    case JXL_TYPE_UINT32:
-      metadata->SetUintSamples(32);
-      potential_alpha_bits = 16;
-      break;
     case JXL_TYPE_UINT16:
       metadata->SetUintSamples(16);
       potential_alpha_bits = 16;
@@ -48,10 +44,8 @@ void SetMetadataFromPixelFormat(const JxlPixelFormat* pixel_format,
       metadata->SetUintSamples(8);
       potential_alpha_bits = 8;
       break;
-    case JXL_TYPE_BOOLEAN:
-      metadata->SetUintSamples(2);
-      potential_alpha_bits = 2;
-      break;
+    default:
+      JXL_ABORT("Unhandled JxlDataType");
   }
   if (pixel_format->num_channels == 2 || pixel_format->num_channels == 4) {
     metadata->SetAlphaBits(potential_alpha_bits);
@@ -116,9 +110,10 @@ void JxlButteraugliApiSetIntensityTarget(JxlButteraugliApi* api, float v) {
 
 void JxlButteraugliApiDestroy(JxlButteraugliApi* api) {
   if (api) {
+    JxlMemoryManager local_memory_manager = api->memory_manager;
     // Call destructor directly since custom free function is used.
     api->~JxlButteraugliApi();
-    jxl::MemoryManagerFree(&api->memory_manager, api);
+    jxl::MemoryManagerFree(&local_memory_manager, api);
   }
 }
 
@@ -200,8 +195,9 @@ float JxlButteraugliResultGetMaxDistance(const JxlButteraugliResult* result) {
 
 void JxlButteraugliResultDestroy(JxlButteraugliResult* result) {
   if (result) {
+    JxlMemoryManager local_memory_manager = result->memory_manager;
     // Call destructor directly since custom free function is used.
     result->~JxlButteraugliResult();
-    jxl::MemoryManagerFree(&result->memory_manager, result);
+    jxl::MemoryManagerFree(&local_memory_manager, result);
   }
 }

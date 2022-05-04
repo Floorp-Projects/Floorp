@@ -98,8 +98,10 @@ Status InitializePassesEncoder(const Image3F& opsin, const JxlCmsInterface& cms,
     // and kModular for the smallest DC (first in the bitstream)
     if (cparams.progressive_dc == 0) {
       cparams.modular_mode = true;
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          99.f - enc_state->cparams.butteraugli_distance * 0.2f;
+      // TODO(jon): tweak mapping from image dist to dist for modular DC
+      cparams.butteraugli_distance =
+          std::max(kMinButteraugliDistance,
+                   enc_state->cparams.butteraugli_distance * 0.03f);
     }
     ImageBundle ib(&shared.metadata->m);
     // This is a lie - dc is in XYB

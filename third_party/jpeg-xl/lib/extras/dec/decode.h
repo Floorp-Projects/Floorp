@@ -33,8 +33,7 @@ enum class Codec : uint32_t {
   kPGX,
   kJPG,
   kGIF,
-  kEXR,
-  kPSD
+  kEXR
 };
 
 static inline constexpr uint64_t EnumBits(Codec /*unused*/) {
@@ -49,12 +48,8 @@ static inline constexpr uint64_t EnumBits(Codec /*unused*/) {
 #if JPEGXL_ENABLE_EXR
          | MakeBit(Codec::kEXR)
 #endif
-         | MakeBit(Codec::kPSD);
+      ;
 }
-
-// Lower case ASCII including dot, e.g. ".png".
-std::string ExtensionFromCodec(Codec codec, bool is_gray,
-                               size_t bits_per_sample);
 
 // If and only if extension is ".pfm", *bits_per_sample is updated to 32 so
 // that Encode() would encode to PFM instead of PPM.
@@ -65,8 +60,7 @@ Codec CodecFromExtension(std::string extension,
 // color_space_hint may specify the color space, otherwise, defaults to sRGB.
 Status DecodeBytes(Span<const uint8_t> bytes, const ColorHints& color_hints,
                    const SizeConstraints& constraints,
-                   extras::PackedPixelFile* ppf, ThreadPool* pool = nullptr,
-                   Codec* orig_codec = nullptr);
+                   extras::PackedPixelFile* ppf, Codec* orig_codec = nullptr);
 
 }  // namespace extras
 }  // namespace jxl
