@@ -26,13 +26,11 @@ APZTaskRunnable::Run() {
   mPendingRepaintRequestMap.clear();
   mNeedsFlushCompleteNotification = false;
   mRegisteredPresShellId = 0;
+  RefPtr<GeckoContentController> controller = mController;
 
   // We need to process pending RepaintRequests first.
   while (!requests.empty()) {
-    mController->RequestContentRepaint(requests.front());
-    if (!mController) {
-      return NS_OK;
-    }
+    controller->RequestContentRepaint(requests.front());
     requests.pop_front();
   }
 
@@ -40,7 +38,6 @@ APZTaskRunnable::Run() {
     // Then notify "apz-repaints-flushed" so that we can ensure that all pending
     // scroll position updates have finished when the "apz-repaints-flushed"
     // arrives.
-    RefPtr<GeckoContentController> controller = mController;
     controller->NotifyFlushComplete();
   }
 
@@ -53,10 +50,9 @@ void APZTaskRunnable::QueueRequest(const RepaintRequest& aRequest) {
   if (IsTestControllingRefreshesEnabled()) {
     // Flush all pending requests and notification just in case the refresh
     // driver mode was changed before flushing them.
+    RefPtr<GeckoContentController> controller = mController;
     Run();
-    if (mController) {
-      mController->RequestContentRepaint(aRequest);
-    }
+    controller->RequestContentRepaint(aRequest);
     return;
   }
   EnsureRegisterAsEarlyRunner();
@@ -87,11 +83,9 @@ void APZTaskRunnable::QueueFlushCompleteNotification() {
   if (IsTestControllingRefreshesEnabled()) {
     // Flush all pending requests and notification just in case the refresh
     // driver mode was changed before flushing them.
+    RefPtr<GeckoContentController> controller = mController;
     Run();
-    if (mController) {
-      RefPtr<GeckoContentController> controller = mController;
-      controller->NotifyFlushComplete();
-    }
+    controller->NotifyFlushComplete();
     return;
   }
 
