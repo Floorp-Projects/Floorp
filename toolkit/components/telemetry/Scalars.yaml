@@ -1383,9 +1383,23 @@ privacy:
     description: >
       Records if a client is opted into dFPI in standard ETP mode as part of the
       rollout experiment. 0: opted out, 1: opted in, 2: not part of the
-      experiment, 3: part of the phase 2 rollout
+      experiment
     expires: "106"
     kind: uint
+    notification_emails:
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  dfpi_rollout_tcpByDefault_feature:
+    bug_numbers:
+      - 1767415
+    description: >
+      Keeps track of whether the Nimbus tcpByDefault feature is enabled (true) or disabled (false) for a client.
+    expires: "108"
+    kind: boolean
     notification_emails:
       - pbz@mozilla.com
     release_channel_collection: opt-out

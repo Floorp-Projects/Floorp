@@ -1739,7 +1739,10 @@ BrowserGlue.prototype = {
     // For phase 2 we enable dFPI / TCP for all clients which are part of the
     // rollout.
     if (NimbusFeatures.tcpByDefault.isEnabled()) {
-      Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 3);
+      Services.telemetry.scalarSet(
+        "privacy.dfpi_rollout_tcpByDefault_feature",
+        true
+      );
 
       // Enable TCP by updating the default pref state for cookie behaviour. This
       // means we won't override user choice.
@@ -1750,6 +1753,10 @@ BrowserGlue.prototype = {
 
       return;
     }
+    Services.telemetry.scalarSet(
+      "privacy.dfpi_rollout_tcpByDefault_feature",
+      false
+    );
 
     // For the initial rollout of dFPI, set the default cookieBehavior based on the pref
     // set during onboarding when the user chooses to enable protections or not.
