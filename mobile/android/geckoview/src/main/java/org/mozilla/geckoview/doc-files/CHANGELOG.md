@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v102
+- Added [`DateTimePrompt.stepValue`][102.1] to export [`step`][102.2] attribute of input element.
+  ([bug 1499635]({{bugzilla}}1499635))
+
+[102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
+[102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
+
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
   This allows the caller to provide a [`SurfaceControl`][101.3] object, which must be set on SDK level 29 and
@@ -1166,4 +1173,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 65d9eba33afce690f3c8af1d3b8eb5c51fab1e3d
+[api-version]: 2e222c719dbf147894067f5035682b205aefc2fb
