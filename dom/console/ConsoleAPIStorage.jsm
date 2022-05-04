@@ -167,10 +167,15 @@ ConsoleAPIStorageService.prototype = {
     }
 
     for (let { callback, clone } of _logEventListeners) {
-      if (clone) {
-        callback(Cu.cloneInto(aEvent, callback));
-      } else {
-        callback(aEvent);
+      try {
+        if (clone) {
+          callback(Cu.cloneInto(aEvent, callback));
+        } else {
+          callback(aEvent);
+        }
+      } catch (e) {
+        // A failing listener should not prevent from calling other listeners.
+        Cu.reportError(e);
       }
     }
   },
