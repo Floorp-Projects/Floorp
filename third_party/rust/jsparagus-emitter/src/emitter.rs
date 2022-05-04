@@ -1017,17 +1017,8 @@ impl InstructionWriter {
         self.emit_op(Opcode::Exception);
     }
 
-    pub fn resume_index(&mut self, resume_index: u24) {
-        self.emit_op(Opcode::ResumeIndex);
-        self.write_u24(resume_index);
-    }
-
     pub fn finally(&mut self) {
         self.emit_op(Opcode::Finally);
-    }
-
-    pub fn retsub(&mut self) {
-        self.emit_op(Opcode::Retsub);
     }
 
     pub fn uninitialized(&mut self) {

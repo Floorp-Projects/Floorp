@@ -2617,7 +2617,7 @@ version = "0.3.100"
 [[package]]
 name = "jsparagus"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "jsparagus-ast",
  "jsparagus-emitter",
@@ -2631,7 +2631,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-ast"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "bumpalo",
  "indexmap",
@@ -2640,7 +2640,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-emitter"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "bumpalo",
  "byteorder",
@@ -2653,7 +2653,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-generated-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "bumpalo",
  "jsparagus-ast",
@@ -2663,12 +2663,12 @@ dependencies = [
 [[package]]
 name = "jsparagus-json-log"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 
 [[package]]
 name = "jsparagus-parser"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "arrayvec 0.5.2",
  "bumpalo",
@@ -2680,7 +2680,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-scope"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "indexmap",
  "jsparagus-ast",
@@ -2690,7 +2690,7 @@ dependencies = [
 [[package]]
 name = "jsparagus-stencil"
 version = "0.1.0"
-source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=ac4a33d7b9ba2fd921cd59977fc49b8350901b36#ac4a33d7b9ba2fd921cd59977fc49b8350901b36"
+source = "git+https://github.com/mozilla-spidermonkey/jsparagus?rev=8e3bb9d83bf0d503279a1ffde104337d1ef18703#8e3bb9d83bf0d503279a1ffde104337d1ef18703"
 dependencies = [
  "jsparagus-ast",
 ]
