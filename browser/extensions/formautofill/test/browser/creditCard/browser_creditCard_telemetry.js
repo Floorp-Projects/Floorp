@@ -209,7 +209,7 @@ add_task(async function test_submit_creditCard_new() {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
-        let onPopupShown = waitForPopupShown();
+        let promiseShown = promiseNotificationShown();
         let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
 
         await focusUpdateSubmitForm(browser, {
@@ -223,7 +223,7 @@ add_task(async function test_submit_creditCard_new() {
           },
         });
 
-        await onPopupShown;
+        await promiseShown;
         await clickDoorhangerButton(command, idx);
         if (expectChanged !== undefined) {
           await onChanged;
@@ -382,7 +382,7 @@ add_task(async function test_submit_creditCard_update() {
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: CREDITCARD_FORM_URL },
       async function(browser) {
-        let onPopupShown = waitForPopupShown();
+        let promiseShown = promiseNotificationShown();
         let onChanged = TestUtils.topicObserved("formautofill-storage-changed");
 
         await openPopupOn(browser, "form #cc-name");
@@ -397,7 +397,7 @@ add_task(async function test_submit_creditCard_update() {
             "#cc-exp-year": "2019",
           },
         });
-        await onPopupShown;
+        await promiseShown;
         await clickDoorhangerButton(command, idx);
         if (expectChanged !== undefined) {
           await onChanged;
