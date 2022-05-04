@@ -14,11 +14,11 @@ async function test() {
   // Scroll down to the iframe. Do it in two drags instead of one in case the
   // device screen is short.
   let transformEnd = promiseTransformEnd();
-  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
   await transformEnd;
 
   transformEnd = promiseTransformEnd();
-  synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
+  await synthesizeNativeTouchDrag(window, 10, 200, 0, -175);
   await transformEnd;
 
   // Now the top of the visible area should be at y=350 of the top-level page,
@@ -35,7 +35,7 @@ async function test() {
   // Scroll the iframe by 150px.
   var subframe = document.getElementById("subframe");
   transformEnd = promiseTransformEnd();
-  synthesizeNativeTouchDrag(subframe, 10, 100, 0, -150);
+  await synthesizeNativeTouchDrag(subframe, 10, 100, 0, -150);
   await transformEnd;
 
   // Flush any pending paints on the APZ side, and wait for the main thread

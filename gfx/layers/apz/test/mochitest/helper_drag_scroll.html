@@ -49,7 +49,7 @@ async function downMouseAndHandleEvent(x, y) {
       resolve();
     }, {capture: true, once: true});
   });
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     target: bar,
     offsetX: x,
     offsetY: y,
@@ -91,7 +91,7 @@ async function moveMouseAndHandleEvent(x, y) {
     bar.addEventListener("mousemove", mouseOnTarget, true);
     window.addEventListener("mousemove", mouseOffTarget);
   });
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     target: bar,
     offsetX: x,
     offsetY: y,

@@ -38,7 +38,7 @@ async function test() {
     document.addEventListener("click", resolve);
   });
 
-  synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
+  await synthesizeNativeTap(document.getElementById("b"), 5, 5, function() {
     dump("Finished synthesizing tap, waiting for button to be clicked...\n");
   });
 

@@ -54,7 +54,7 @@ async function test() {
     });
   });
 
-  synthesizeNativeTap(target, 10, 10);
+  await synthesizeNativeTap(target, 10, 10);
   await mouseUpPromise;
 
   is(mouseUpEvent.target, target, "mouseup event targeted the correct element");
