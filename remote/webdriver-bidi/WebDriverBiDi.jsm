@@ -166,14 +166,12 @@ class WebDriverBiDi {
       return;
     }
 
-    // Starting WebDriver BiDi too early can cause issues with clients in not
-    // being able to find any available browsing context. Also when closing
-    // the application while it's still starting up can cause shutdown hangs.
-    // As such WebDriver BiDi will be started when all the initial application
-    // windows have been fully restored (workaround for bug 1764420).
-    logger.debug(
-      `Awaiting all initial windows to be restored before enabling the protocol`
-    );
+    // Creating a WebDriver BiDi session too early can cause issues with
+    // clients in not being able to find any available browsing context.
+    // Also when closing the application while it's still starting up can
+    // cause shutdown hangs. As such WebDriver BiDi will return a new session
+    // once the initial application window has finished initializing.
+    logger.debug(`Waiting for initial application window to be loaded`);
     await this.agent.browserStartupFinished;
 
     this._running = true;
