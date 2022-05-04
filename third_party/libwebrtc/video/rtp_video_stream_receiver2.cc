@@ -322,8 +322,6 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
 }
 
 RtpVideoStreamReceiver2::~RtpVideoStreamReceiver2() {
-  RTC_DCHECK(secondary_sinks_.empty());
-
   process_thread_->DeRegisterModule(rtp_rtcp_.get());
 
   if (packet_router_)
@@ -681,8 +679,8 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
     rtp_receive_statistics_->OnRtpPacket(packet);
   }
 
-  for (RtpPacketSinkInterface* secondary_sink : secondary_sinks_) {
-    secondary_sink->OnRtpPacket(packet);
+  if (config_.rtp.packet_sink_) {
+    config_.rtp.packet_sink_->OnRtpPacket(packet);
   }
 }
 
@@ -936,26 +934,6 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
     const {
   return packet_buffer_.LastReceivedKeyframePacketMs();
-}
-
-void RtpVideoStreamReceiver2::AddSecondarySink(RtpPacketSinkInterface* sink) {
-  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  RTC_DCHECK(!absl::c_linear_search(secondary_sinks_, sink));
-  secondary_sinks_.push_back(sink);
-}
-
-void RtpVideoStreamReceiver2::RemoveSecondarySink(
-    const RtpPacketSinkInterface* sink) {
-  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  auto it = absl::c_find(secondary_sinks_, sink);
-  if (it == secondary_sinks_.end()) {
-    // We might be rolling-back a call whose setup failed mid-way. In such a
-    // case, it's simpler to remove "everything" rather than remember what
-    // has already been added.
-    RTC_LOG(LS_WARNING) << "Removal of unknown sink.";
-    return;
-  }
-  secondary_sinks_.erase(it);
 }
 
 // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
