@@ -10,7 +10,10 @@ function* testSteps() {
 
   info("Setting pref");
 
-  SpecialPowers.setBoolPref("dom.storage.next_gen", false);
+  SpecialPowers.setBoolPref(
+    "dom.storage.enable_unsupported_legacy_implementation",
+    true
+  );
 
   // Profile 1
   info("Clearing");
