@@ -267,6 +267,7 @@ dependencies {
     implementation "org.mozilla.components:lib-crash-sentry:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-media:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:lib-auth:${AndroidComponents.VERSION}"
 
     implementation "org.mozilla.components:service-glean:${AndroidComponents.VERSION}", {
         exclude group: 'org.mozilla.telemetry', module: 'glean-native'

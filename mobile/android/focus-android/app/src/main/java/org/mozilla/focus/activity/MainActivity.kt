@@ -19,6 +19,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.lib.auth.canUseBiometricFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -30,7 +31,6 @@ import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.R
 import org.mozilla.focus.appreview.AppReviewUtils
-import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.ext.updateSecureWindowFlags
@@ -322,7 +322,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     // Handles the edge case of a user removing all enrolled prints while auth was enabled
     private fun checkBiometricStillValid() {
         // Disable biometrics if the user is no longer eligible due to un-enrolling fingerprints:
-        if (!Biometrics.hasFingerprintHardware(this)) {
+        if (!canUseBiometricFeature()) {
             PreferenceManager.getDefaultSharedPreferences(this)
                 .edit().putBoolean(
                     getString(R.string.pref_key_biometric),

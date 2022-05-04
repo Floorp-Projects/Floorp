@@ -5,6 +5,7 @@
 package org.mozilla.focus.biometrics
 
 import android.content.Context
+import android.os.Build
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -13,8 +14,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.lib.auth.canUseBiometricFeature
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
@@ -47,7 +50,10 @@ class LockObserver(
             if (tabCount == 0L && topSitesList.isNullOrEmpty()) {
                 return@launch
             }
-            if (Biometrics.isBiometricsEnabled(context)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                context.settings.shouldUseBiometrics() &&
+                context.canUseBiometricFeature()
+            ) {
                 appStore.dispatch(AppAction.Lock)
             }
         }

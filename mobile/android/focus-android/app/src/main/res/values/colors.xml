@@ -132,4 +132,14 @@
     <color name="cfr_pop_up_shape_end_color">#AB71FF</color>
     <color name="cfr_pop_up_shape_start_color">#592ACB</color>
     <color name="cfr_triangle_color">#FFFFFF</color>
+
+    <!-- Biometric screen colors -->
+    <color name="biometric_show_button_background">#312A64</color>
+    <color name="biometric_background_fragment_one">#D3D4FA</color>
+    <color name="biometric_background_fragment_two">#D7D6F9</color>
+    <color name="biometric_background_fragment_three">#ECEAFA</color>
+    <color name="biometric_background_fragment_four">#F0EFFA</color>
+    <color name="biometric_background_fragment_five">#D9D3F5</color>
+    <color name="biometric_background_fragment_six">#D6C9EB</color>
+
 </resources>

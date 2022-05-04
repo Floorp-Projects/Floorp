@@ -11,7 +11,7 @@ import org.mozilla.focus.autocomplete.AutocompleteAddFragment
 import org.mozilla.focus.autocomplete.AutocompleteListFragment
 import org.mozilla.focus.autocomplete.AutocompleteRemoveFragment
 import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
-import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
+import org.mozilla.focus.biometrics.BiometricAuthenticationFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
 import org.mozilla.focus.fragment.BrowserFragment
@@ -161,7 +161,7 @@ class MainActivityNavigation(
         }
 
         val fragmentManager = activity.supportFragmentManager
-        if (fragmentManager.findFragmentByTag(BiometricAuthenticationDialogFragment.FRAGMENT_TAG) != null) {
+        if (fragmentManager.findFragmentByTag(BiometricAuthenticationFragment.FRAGMENT_TAG) != null) {
             return
         }
 
@@ -176,8 +176,10 @@ class MainActivityNavigation(
             transaction.remove(fragment)
         }
 
-        BiometricAuthenticationDialogFragment()
-            .show(transaction, BiometricAuthenticationDialogFragment.FRAGMENT_TAG)
+        fragmentManager
+            .beginTransaction()
+            .replace(R.id.container, BiometricAuthenticationFragment(), BiometricAuthenticationFragment.FRAGMENT_TAG)
+            .commit()
     }
 
     @Suppress("ComplexMethod")
