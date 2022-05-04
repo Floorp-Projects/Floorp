@@ -12,6 +12,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SVGContextPaint.h"
@@ -108,7 +109,7 @@ NS_IMPL_ISUPPORTS(gfxFontCache::MemoryReporter, nsIMemoryReporter)
 /*virtual*/
 gfxTextRunFactory::~gfxTextRunFactory() {
   // Should not be dropped by stylo
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!ServoStyleSet::IsCurrentThreadInServoTraversal());
 }
 
 NS_IMETHODIMP

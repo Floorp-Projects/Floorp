@@ -2218,8 +2218,10 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
       runVisualText.Assign(text + start, subRunLength);
       if (int32_t(runVisualText.Length()) < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
-      FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
-                        subRunLength, bidiClass);
+      if (aPresContext) {
+        FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
+                          subRunLength, bidiClass);
+      }
 
       aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();
