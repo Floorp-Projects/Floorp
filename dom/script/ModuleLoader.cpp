@@ -113,6 +113,17 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   nsresult rv = GetScriptLoader()->StartLoadInternal(aRequest, securityFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // https://wicg.github.io/import-maps/#document-acquiring-import-maps
+  //
+  // An import map is accepted if and only if it is added (i.e., its
+  // corresponding script element is added) before the first module load is
+  // started, even if the loading of the import map file doesn’t finish before
+  // the first module load is started.
+  if (!aRequest->GetScriptLoadContext()->IsPreload()) {
+    LOG(("ScriptLoadRequest (%p): SetAcquiringImportMaps false", aRequest));
+    SetAcquiringImportMaps(false);
+  }
+
   LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
 
   return NS_OK;
