@@ -7,7 +7,6 @@
 #include "AccessCheck.h"
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ContentEvents.h"
