@@ -78,26 +78,34 @@ class WebDriverBiDi {
    * @throws {SessionNotCreatedError}
    *     If, for whatever reason, a session could not be created.
    */
-  createSession(capabilities, sessionlessConnection) {
+  async createSession(capabilities, sessionlessConnection) {
     if (this.session) {
       throw new error.SessionNotCreatedError(
         "Maximum number of active sessions"
       );
     }
 
-    this._session = new WebDriverSession(capabilities, sessionlessConnection);
+    const session = new WebDriverSession(capabilities, sessionlessConnection);
 
     // When the Remote Agent is listening, and a BiDi WebSocket connection
     // has been requested, register a path handler for the session.
     let webSocketUrl = null;
     if (
       this.agent.running &&
-      (this.session.capabilities.get("webSocketUrl") || sessionlessConnection)
+      (session.capabilities.get("webSocketUrl") || sessionlessConnection)
     ) {
-      this.agent.server.registerPathHandler(this.session.path, this.session);
-      webSocketUrl = `${this.address}${this.session.path}`;
+      // Creating a WebDriver BiDi session too early can cause issues with
+      // clients in not being able to find any available browsing context.
+      // Also when closing the application while it's still starting up can
+      // cause shutdown hangs. As such WebDriver BiDi will return a new session
+      // once the initial application window has finished initializing.
+      logger.debug(`Waiting for initial application window to be loaded`);
+      await this.agent.browserStartupFinished;
 
-      logger.debug(`Registered session handler: ${this.session.path}`);
+      this.agent.server.registerPathHandler(session.path, session);
+      webSocketUrl = `${this.address}${session.path}`;
+
+      logger.debug(`Registered session handler: ${session.path}`);
 
       if (sessionlessConnection) {
         // Remove temporary session-less connection
@@ -107,7 +115,9 @@ class WebDriverBiDi {
 
     // Also update the webSocketUrl capability to contain the session URL if
     // a path handler has been registered. Otherwise set its value to null.
-    this.session.capabilities.set("webSocketUrl", webSocketUrl);
+    session.capabilities.set("webSocketUrl", webSocketUrl);
+
+    this._session = session;
 
     return {
       sessionId: this.session.id,
@@ -165,14 +175,6 @@ class WebDriverBiDi {
     if (this._running) {
       return;
     }
-
-    // Creating a WebDriver BiDi session too early can cause issues with
-    // clients in not being able to find any available browsing context.
-    // Also when closing the application while it's still starting up can
-    // cause shutdown hangs. As such WebDriver BiDi will return a new session
-    // once the initial application window has finished initializing.
-    logger.debug(`Waiting for initial application window to be loaded`);
-    await this.agent.browserStartupFinished;
 
     this._running = true;
 
