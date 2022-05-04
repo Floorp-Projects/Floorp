@@ -13,7 +13,6 @@ import mozilla.appservices.remotetabs.RemoteTab
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -37,7 +36,7 @@ class RemoteTabsStorageTest {
     @Before
     fun setup() {
         crashReporter = mock()
-        remoteTabs = spy(RemoteTabsStorage(testContext, crashReporter))
+        remoteTabs = spy(RemoteTabsStorage(crashReporter))
         apiMock = mock(RemoteTabsProvider::class.java)
         `when`(remoteTabs.api).thenReturn(apiMock)
     }
