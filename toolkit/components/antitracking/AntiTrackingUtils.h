@@ -8,6 +8,7 @@
 #define mozilla_antitrackingutils_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Maybe.h"
 #include "nsStringFwd.h"
 #include "ContentBlockingNotifier.h"
 
@@ -59,6 +60,10 @@ class AntiTrackingUtils final {
                                      bool aIsInPrivateBrowsing,
                                      uint32_t* aRejectedReason,
                                      uint32_t aBlockedReason);
+
+  // Returns the number of sites that give this principal's origin storage
+  // access.
+  static Maybe<size_t> CountSitesAllowStorageAccess(nsIPrincipal* aPrincipal);
 
   // Returns the storage permission state for the given channel. And this is
   // meant to be called in the parent process. This only reflects the fact that
