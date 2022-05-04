@@ -1,75 +1,205 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-  <string name="action_cancel">Kanselleer</string>
-  <string name="action_ok">OK</string>
-  <string name="action_save">Stoor</string>
-  <string name="urlbar_hint">Soek, of tik adres in</string>
-  <string name="teaser">Outomatiese privaat-lees modus.\nLees. Vergeet. Herhaal.</string>
-  <string name="feedback_erase">Jou leesrekord is uitgevee.</string>
-  <string name="search_hint">Soek vir %1$s</string>
-  <string name="menu_share">Deel...</string>
-  <string name="menu_report_site_issue">Rapporteer \'n probleem met die webwerf</string>
-  <string name="menu_open_with_default_browser2">Maak oop in %1$s</string>
-  <string name="menu_open_with_a_browser2">Maak oop in ...</string>
-  <string name="menu_add_to_home_screen">Voeg by tuisskerm</string>
-  <string name="menu_whats_new">Wat’s nuut?</string>
-  <string name="menu_settings">Instellings</string>
-  <string name="menu_about">Inligting hieroor</string>
-  <string name="menu_help">Hulp</string>
-  <string name="menu_rights">Jou regte</string>
-  <string name="menu_custom_tab_branding">Moontlik gemaak deur %1$s</string>
-  <string name="share_dialog_title">Deel via</string>
-  <string name="notification_erase_text">Skrap leesgeskiedenis</string>
-  <string name="notification_action_open">Maak oop</string>
-  <string name="notification_action_erase_and_open">Skrap en maak oop</string>
-  <string name="shortcut_erase_short_label">Skrap</string>
-  <string name="shortcut_erase_long_label">Skrap leesgeskiedenis</string>
-  <string name="text_selection_search_action">Soek privaat</string>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
 
-  <string name="preference_privacy_and_security_header">Privaatheid en sekuriteit</string>
-  <string name="preference_privacy_and_security_summary">Naspoor-koekies, data keuses</string>
-  <string name="preference_search_summary">Stel verstekwaardes, outovoltooi</string>
-  <string name="preference_mozilla_summary">Meer oor %1$s, hulp</string>
-  <string name="preference_category_tracking_protection">Naspoor-beskerming</string>
-  <string name="preference_category_web_content">Webinhoud</string>
-  <string name="preference_category_switching_apps">Wissel tussen toepassings</string>
-  <string name="preference_category_general">Algemeen</string>
-  <string name="preference_category_data_collection_use">Data versameling &amp; gebruik</string>
-  <string name="preference_category_search">Soek</string>
-  <string name="preference_search_engine_default">Verstek</string>
-  <string name="preference_state_on">Aan</string>
-  <string name="preference_state_off">Af</string>
-  <string name="preference_subitem_autocomplete">URL Outovoltooi</string>
-  <string name="preference_category_data_choices">Datakeuses</string>
-  <string name="preference_autocomplete_learn_more">Meer inligting</string>
-  <string name="preference_autocomplete_add_hint">Plak of tik URL</string>
-  <string name="preference_autocomplete_add_example">Voorbeeld: voorbeeld.com</string>
-  <string name="preference_autocomplete_menu_remove">Verwyder</string>
-  <string name="preference_autocomplete_action_remove_content_description">Verwyder</string>
-  <string name="preference_language">Taal</string>
-  <string name="preference_category_privacy">Privaatheid</string>
-  <string name="preference_privacy_block_ads_summary">Sommige advertensies hou rekord van jou webwerfbesoeke, selfs al kliek jy nie op hulle nie</string>
-  <string name="preference_privacy_block_social">Blokkeer sosiale speurders</string>
-  <string name="preference_privacy_should_block_cookies_no_option">Nee</string>
-  <string name="preference_privacy_should_block_cookies_yes_option">Ja</string>
-  <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry_summary">Meer inligting</string>
-  <string name="preference_privacy_notice">Privaatheidkennisgewing</string>
-  <string name="preference_search_remove_title">Verwyder soekenjins</string>
-  <string name="preference_search_remove">Verwyder</string>
-  <string name="action_option_add_search_engine">Voeg soekenjin by</string>
-  <string name="search_add_manually_save">Stoor</string>
-  <string name="search_add_confirmation">Nuwe soekenjin bygevoeg.</string>
-  <string name="content_description_lock">Beveiligde verbinding</string>
-  <string name="accessibility_announcement_loading">Besig om te laai</string>
-  <string name="accessibility_announcement_loading_finished">Webwerf gelaai</string>
-  <string name="content_description_menu">Meer keuses</string>
-  <string name="content_description_forward">Navigeer vorentoe</string>
-  <string name="content_description_reload">Herlaai webwerf</string>
-  <string name="content_description_back">Navigeer terug</string>
-  <string name="content_description_customtab_exit">Gaan terug na vorige toep</string>
-  <string name="your_rights">Jou regte</string>
-  <string name="download_snackbar_open">Maak oop</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Kanselleer</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">OK</string>
+
+    <string name="action_save">Stoor</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Soek, of tik adres in</string>
+
+    <string name="teaser">Outomatiese privaat-lees modus.\nLees. Vergeet. Herhaal.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Jou leesrekord is uitgevee.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Soek vir %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Deel…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Rapporteer \'n probleem met die webwerf</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Maak oop in %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Maak oop in…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Voeg by tuisskerm</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Wat’s nuut?</string>
+    <string name="menu_settings">Instellings</string>
+    <string name="menu_about">Inligting hieroor</string>
+    <string name="menu_help">Hulp</string>
+    <string name="menu_rights">Jou regte</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Moontlik gemaak deur %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Deel via</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Skrap leesgeskiedenis</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Maak oop</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Skrap en maak oop</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Skrap</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Skrap leesgeskiedenis</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">Soek privaat</string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Privaatheid en sekuriteit</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Naspoor-koekies, data keuses</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Stel verstekwaardes, outovoltooi</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Meer oor %1$s, hulp</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Webinhoud</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Wissel tussen toepassings</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Algemeen</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Data versameling &amp; gebruik</string>
+
+    <string name="preference_category_search">Soek</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Verstek</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Aan</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Af</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">URL Outovoltooi</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Datakeuses</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Meer inligting</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Plak of tik URL</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Voorbeeld: voorbeeld.com</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Verwyder</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Verwyder</string>
+
+    <string name="preference_language">Taal</string>
+
+    <string name="preference_category_privacy">Privaatheid</string>
+    <string name="preference_privacy_block_ads_summary">Sommige advertensies hou rekord van jou webwerfbesoeke, selfs al kliek jy nie op hulle nie</string>
+    <string name="preference_privacy_block_social">Blokkeer sosiale speurders</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Meer inligting</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Privaatheidkennisgewing</string>
+
+    <string name="preference_search_remove_title">Verwyder soekenjins</string>
+    <string name="preference_search_remove">Verwyder</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Voeg soekenjin by</string>
+
+    <string name="search_add_manually_save">Stoor</string>
+
+    <string name="search_add_confirmation">Nuwe soekenjin bygevoeg.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Beveiligde verbinding</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Besig om te laai</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Webwerf gelaai</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Meer keuses</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Navigeer vorentoe</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Herlaai webwerf</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Navigeer terug</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Gaan terug na vorige toep</string>
+
+    <string name="your_rights">Jou regte</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Maak oop</string>
 
 
 
@@ -79,20 +209,42 @@
 
 
 
-  <string name="firstrun_search_title">Jou soek, jou manier</string>
-  <string name="firstrun_close_button">Reg so!</string>
-  <string name="firstrun_next_button">Volgende</string>
-  <string name="content_blocking_disabled">-</string>
-  <string name="dialog_addtohomescreen_action_add">Voeg by</string>
-  <string name="dialog_addtohomescreen_action_cancel">Kanselleer</string>
-  <string name="tabs_tray_action_erase">Skrap blaaigeskiedenis</string>
-  <string name="download_firefox">Laai Firefox af</string>
-  <string name="gv_prompt_username_hint">Gebruikersnaam</string>
-  <string name="gv_prompt_password_hint">Wagwoord</string>
-  <string name="gv_prompt_clear">Vee uit</string>
-  <string name="security_popup_secure_connection">Beveiligde verbinding</string>
-  <string name="security_popup_insecure_connection">Onbeveiligde verbinding</string>
-  <string name="security_popup_security_verified">Geverifieer deur: %1$s</string>
+  <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Jou soek, jou manier</string>
 
+    <string name="firstrun_close_button">Reg so!</string>
+    <string name="firstrun_next_button">Volgende</string>
 
-</resources>
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Voeg by</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Kanselleer</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Skrap blaaigeskiedenis</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Laai Firefox af</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Gebruikersnaam</string>
+    <string name="gv_prompt_password_hint">Wagwoord</string>
+    <string name="gv_prompt_clear">Vee uit</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Beveiligde verbinding</string>
+    <string name="security_popup_insecure_connection">Onbeveiligde verbinding</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Geverifieer deur: %1$s</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tracking protection bottom sheet -->
+
+    </resources>

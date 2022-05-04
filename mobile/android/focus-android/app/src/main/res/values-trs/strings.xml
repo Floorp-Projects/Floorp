@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -28,7 +28,7 @@
     <string name="search_hint">Nana\'uì\' %1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
-    <string name="menu_share">Ga\'ninj gan\'an riña duguî\'t...</string>
+    <string name="menu_share">Ga\'ninj gan\'an riña duguî\'t…</string>
 
     <!-- Menu item: Report an issue on the current site -->
     <string name="menu_report_site_issue">Natà’ sa ‘iaj sun a’nan’ riña sitiô na</string>
@@ -741,7 +741,7 @@
     <string name="preference_open_new_tab">Naduna riña dunikò\' duguî\'t rakïj ñanj ra\'ñanj chre</string>
 
     <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
-    <string name="preference_category_safe_browsing">NItaj si ahi huaj Gache nunt</string>
+    <string moz:removedIn="97" name="preference_category_safe_browsing">NItaj si ahi huaj Gache nunt</string>
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">Narán riña nej sitiô diga\'ñu\'unj ni sa yi\'ìi</string>
     <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
@@ -822,4 +822,4 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
 
-</resources>
+    </resources>

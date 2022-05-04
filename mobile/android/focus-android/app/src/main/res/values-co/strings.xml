@@ -28,7 +28,7 @@
     <string name="search_hint">Ricercà %1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
-    <string name="menu_share">Sparte...</string>
+    <string name="menu_share">Sparte…</string>
 
     <!-- Menu item: Report an issue on the current site -->
     <string name="menu_report_site_issue">Signalà un penseru nant’à stu situ</string>
@@ -42,7 +42,7 @@
       will be shown if there are multiple browsers and we do not know which one is the default
       browser or in case Focus is actually the default browser. Clicking this menu item will show
       a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
-    <string name="menu_open_with_a_browser2">Apre cù...</string>
+    <string name="menu_open_with_a_browser2">Apre cù…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Fissà à u screnu d’accolta</string>
@@ -407,7 +407,7 @@
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we start
      loading a website -->
-    <string name="accessibility_announcement_loading">Caricamentu...</string>
+    <string name="accessibility_announcement_loading">Caricamentu</string>
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we
      finished loading a website -->
