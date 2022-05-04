@@ -75,6 +75,15 @@ class CompositorVsyncDispatcher final {
 //  VsyncMainChild)
 //  - IPC for content process worker requestAnimationFrame (VsyncParent <->
 //  VsyncWorkerChild)
+//
+// This class is only used in the parent process.
+// There is one global vsync dispatcher for the global VsyncSource which is
+// managed by gfxPlatform.
+// On Linux Wayland, there is also one vsync source and vsync dispatcher per
+// widget.
+// A vsync dispatcher can become associated with a different VsyncSource during
+// its lifetime. This happens, for example, when the layout.frame_rate pref is
+// modified.
 class VsyncDispatcher final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncDispatcher)
 
