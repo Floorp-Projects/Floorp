@@ -45,6 +45,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    dailymotion: {
+      "https://*.dailymotion.com/*": {
+        videoWrapperScriptPath: "video-wrappers/dailymotion.js",
+      },
+    },
+
     funimation: {
       "https://*.funimation.com/*": {
         videoWrapperScriptPath: "video-wrappers/funimation.js",
