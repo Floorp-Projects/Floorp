@@ -10,6 +10,7 @@
 
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 
+#include "jxl/decode.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/coeff_order.h"
@@ -28,6 +29,31 @@ namespace jxl {
 
 constexpr size_t kSigmaBorder = 1;
 constexpr size_t kSigmaPadding = 2;
+
+struct PixelCallback {
+  PixelCallback() = default;
+  PixelCallback(JxlImageOutInitCallback init, JxlImageOutRunCallback run,
+                JxlImageOutDestroyCallback destroy, void* init_opaque)
+      : init(init), run(run), destroy(destroy), init_opaque(init_opaque) {
+#if JXL_ENABLE_ASSERT
+    const bool has_init = init != nullptr;
+    const bool has_run = run != nullptr;
+    const bool has_destroy = destroy != nullptr;
+    JXL_ASSERT(has_init == has_run && has_run == has_destroy);
+#endif
+  }
+
+  bool IsPresent() const { return run != nullptr; }
+
+  void* Init(size_t num_threads, size_t num_pixels) const {
+    return init(init_opaque, num_threads, num_pixels);
+  }
+
+  JxlImageOutInitCallback init = nullptr;
+  JxlImageOutRunCallback run = nullptr;
+  JxlImageOutDestroyCallback destroy = nullptr;
+  void* init_opaque = nullptr;
+};
 
 // Per-frame decoder state. All the images here should be accessed through a
 // group rect (either with block units or pixel units).
@@ -65,7 +91,8 @@ struct PassesDecoderState {
   bool rgb_output_is_rgba;
 
   // Callback for line-by-line output.
-  std::function<void(const float*, size_t, size_t, size_t)> pixel_callback;
+  PixelCallback pixel_callback;
+
   // Buffer of upsampling * kApplyImageFeaturesTileDim ones.
   std::vector<float> opaque_alpha;
   // One row per thread
@@ -106,7 +133,6 @@ struct PassesDecoderState {
         std::pow(1 / (1.25f), shared->frame_header.b_qm_scale - 2.0f);
 
     rgb_output = nullptr;
-    pixel_callback = nullptr;
     rgb_output_is_rgba = false;
     fast_xyb_srgb8_conversion = false;
     used_acs = 0;

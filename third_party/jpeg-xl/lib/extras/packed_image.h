@@ -64,6 +64,12 @@ class PackedImage {
   // Whether the y coordinate is flipped (y=0 is the last row).
   bool flipped_y = false;
 
+  // Whether the range is determined by format or by JxlBasicInfo
+  // e.g. if format is UINT16 and JxlBasicInfo bits_per_sample is 10,
+  // then if bitdepth_from_format == true, the range is 0..65535
+  // while if bitdepth_from_format == false, the range is 0..1023.
+  bool bitdepth_from_format = true;
+
   // The number of bytes per row.
   size_t stride;
 
@@ -73,21 +79,17 @@ class PackedImage {
 
   static size_t BitsPerChannel(JxlDataType data_type) {
     switch (data_type) {
-      case JXL_TYPE_BOOLEAN:
-        return 1;
       case JXL_TYPE_UINT8:
         return 8;
       case JXL_TYPE_UINT16:
         return 16;
-      case JXL_TYPE_UINT32:
-        return 32;
       case JXL_TYPE_FLOAT:
         return 32;
       case JXL_TYPE_FLOAT16:
         return 16;
-        // No default, give compiler error if new type not handled.
+      default:
+        JXL_ABORT("Unhandled JxlDataType");
     }
-    return 0;  // Indicate invalid data type.
   }
 
  private:
@@ -115,16 +117,6 @@ class PackedFrame {
   // The Frame metadata.
   JxlFrameHeader frame_info = {};
   std::string name;
-
-  // Offset of the frame in the image.
-  // TODO(deymo): Add support in the API for this.
-  size_t x0 = 0;
-  size_t y0 = 0;
-
-  // Whether this frame should be blended with the previous one.
-  // TODO(deymo): Maybe add support for this in the API.
-  bool blend = false;
-  bool use_for_next_frame = false;
 
   // The pixel data for the color (or grayscale) channels.
   PackedImage color;

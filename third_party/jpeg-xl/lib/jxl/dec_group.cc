@@ -740,7 +740,7 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
         // Arguments set to 0/nullptr are not used.
         dec_state->upsampler8x->ProcessRow(input_rows, output_rows,
                                            /*xextra=*/0, src_rect.xsize(), 0, 0,
-                                           nullptr);
+                                           thread);
       }
     }
     return true;

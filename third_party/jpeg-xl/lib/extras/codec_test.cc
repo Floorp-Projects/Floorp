@@ -29,6 +29,31 @@ namespace jxl {
 namespace extras {
 namespace {
 
+std::string ExtensionFromCodec(Codec codec, const bool is_gray,
+                               const bool has_alpha,
+                               const size_t bits_per_sample) {
+  switch (codec) {
+    case Codec::kJPG:
+      return ".jpg";
+    case Codec::kPGX:
+      return ".pgx";
+    case Codec::kPNG:
+      return ".png";
+    case Codec::kPNM:
+      if (has_alpha) return ".pam";
+      if (is_gray) return ".pgm";
+      return (bits_per_sample == 32) ? ".pfm" : ".ppm";
+    case Codec::kGIF:
+      return ".gif";
+    case Codec::kEXR:
+      return ".exr";
+    case Codec::kUnknown:
+      return std::string();
+  }
+  JXL_UNREACHABLE;
+  return std::string();
+}
+
 CodecInOut CreateTestImage(const size_t xsize, const size_t ysize,
                            const bool is_gray, const bool add_alpha,
                            const size_t bits_per_sample,
@@ -76,7 +101,7 @@ void TestRoundTrip(Codec codec, const size_t xsize, const size_t ysize,
   // grayscale, and somehow does not have sufficient precision for this test.
   if (codec == Codec::kEXR) return;
   printf("Codec %s bps:%" PRIuS " gr:%d al:%d\n",
-         ExtensionFromCodec(codec, is_gray, bits_per_sample).c_str(),
+         ExtensionFromCodec(codec, is_gray, add_alpha, bits_per_sample).c_str(),
          bits_per_sample, is_gray, add_alpha);
 
   ColorEncoding c_native;
@@ -231,11 +256,11 @@ CodecInOut DecodeRoundtrip(const std::string& pathname, ThreadPool* pool,
 TEST(CodecTest, TestMetadataSRGB) {
   ThreadPoolInternal pool(12);
 
-  const char* paths[] = {"raw.pixls/DJI-FC6310-16bit_srgb8_v4_krita.png",
-                         "raw.pixls/Google-Pixel2XL-16bit_srgb8_v4_krita.png",
-                         "raw.pixls/HUAWEI-EVA-L09-16bit_srgb8_dt.png",
-                         "raw.pixls/Nikon-D300-12bit_srgb8_dt.png",
-                         "raw.pixls/Sony-DSC-RX1RM2-14bit_srgb8_v4_krita.png"};
+  const char* paths[] = {"third_party/raw.pixls/DJI-FC6310-16bit_srgb8_v4_krita.png",
+                         "third_party/raw.pixls/Google-Pixel2XL-16bit_srgb8_v4_krita.png",
+                         "third_party/raw.pixls/HUAWEI-EVA-L09-16bit_srgb8_dt.png",
+                         "third_party/raw.pixls/Nikon-D300-12bit_srgb8_dt.png",
+                         "third_party/raw.pixls/Sony-DSC-RX1RM2-14bit_srgb8_v4_krita.png"};
   for (const char* relative_pathname : paths) {
     const CodecInOut io =
         DecodeRoundtrip(relative_pathname, Codec::kPNG, &pool);
@@ -260,9 +285,9 @@ TEST(CodecTest, TestMetadataLinear) {
   ThreadPoolInternal pool(12);
 
   const char* paths[3] = {
-      "raw.pixls/Google-Pixel2XL-16bit_acescg_g1_v4_krita.png",
-      "raw.pixls/HUAWEI-EVA-L09-16bit_709_g1_dt.png",
-      "raw.pixls/Nikon-D300-12bit_2020_g1_dt.png",
+      "third_party/raw.pixls/Google-Pixel2XL-16bit_acescg_g1_v4_krita.png",
+      "third_party/raw.pixls/HUAWEI-EVA-L09-16bit_709_g1_dt.png",
+      "third_party/raw.pixls/Nikon-D300-12bit_2020_g1_dt.png",
   };
   const WhitePoint white_points[3] = {WhitePoint::kCustom, WhitePoint::kD65,
                                       WhitePoint::kD65};
@@ -292,8 +317,8 @@ TEST(CodecTest, TestMetadataICC) {
   ThreadPoolInternal pool(12);
 
   const char* paths[] = {
-      "raw.pixls/DJI-FC6310-16bit_709_v4_krita.png",
-      "raw.pixls/Sony-DSC-RX1RM2-14bit_709_v4_krita.png",
+      "third_party/raw.pixls/DJI-FC6310-16bit_709_v4_krita.png",
+      "third_party/raw.pixls/Sony-DSC-RX1RM2-14bit_709_v4_krita.png",
   };
   for (const char* relative_pathname : paths) {
     const CodecInOut io =
@@ -315,28 +340,28 @@ TEST(CodecTest, TestMetadataICC) {
   }
 }
 
-TEST(CodecTest, TestPNGSuite) {
+TEST(CodecTest, Testthird_party/pngsuite) {
   ThreadPoolInternal pool(12);
 
   // Ensure we can load PNG with text, japanese UTF-8, compressed text.
-  (void)DecodeRoundtrip("pngsuite/ct1n0g04.png", Codec::kPNG, &pool);
-  (void)DecodeRoundtrip("pngsuite/ctjn0g04.png", Codec::kPNG, &pool);
-  (void)DecodeRoundtrip("pngsuite/ctzn0g04.png", Codec::kPNG, &pool);
+  (void)DecodeRoundtrip("third_party/pngsuite/ct1n0g04.png", Codec::kPNG, &pool);
+  (void)DecodeRoundtrip("third_party/pngsuite/ctjn0g04.png", Codec::kPNG, &pool);
+  (void)DecodeRoundtrip("third_party/pngsuite/ctzn0g04.png", Codec::kPNG, &pool);
 
   // Extract gAMA
   const CodecInOut b1 =
-      DecodeRoundtrip("pngsuite/g10n3p04.png", Codec::kPNG, &pool);
+      DecodeRoundtrip("third_party/pngsuite/g10n3p04.png", Codec::kPNG, &pool);
   EXPECT_TRUE(b1.metadata.color_encoding.tf.IsLinear());
 
   // Extract cHRM
   const CodecInOut b_p =
-      DecodeRoundtrip("pngsuite/ccwn2c08.png", Codec::kPNG, &pool);
+      DecodeRoundtrip("third_party/pngsuite/ccwn2c08.png", Codec::kPNG, &pool);
   EXPECT_EQ(Primaries::kSRGB, b_p.metadata.color_encoding.primaries);
   EXPECT_EQ(WhitePoint::kD65, b_p.metadata.color_encoding.white_point);
 
   // Extract EXIF from (new-style) dedicated chunk
   const CodecInOut b_exif =
-      DecodeRoundtrip("pngsuite/exif2c08.png", Codec::kPNG, &pool);
+      DecodeRoundtrip("third_party/pngsuite/exif2c08.png", Codec::kPNG, &pool);
   EXPECT_EQ(978, b_exif.blobs.exif.size());
 }
 #endif
@@ -359,13 +384,13 @@ void VerifyWideGamutMetadata(const std::string& relative_pathname,
 
 TEST(CodecTest, TestWideGamut) {
   ThreadPoolInternal pool(12);
-  // VerifyWideGamutMetadata("wide-gamut-tests/P3-sRGB-color-bars.png",
+  // VerifyWideGamutMetadata("third_party/wide-gamut-tests/P3-sRGB-color-bars.png",
   //                        Primaries::kP3, &pool);
-  VerifyWideGamutMetadata("wide-gamut-tests/P3-sRGB-color-ring.png",
+  VerifyWideGamutMetadata("third_party/wide-gamut-tests/P3-sRGB-color-ring.png",
                           Primaries::kP3, &pool);
-  // VerifyWideGamutMetadata("wide-gamut-tests/R2020-sRGB-color-bars.png",
+  // VerifyWideGamutMetadata("third_party/wide-gamut-tests/R2020-sRGB-color-bars.png",
   //                        Primaries::k2100, &pool);
-  // VerifyWideGamutMetadata("wide-gamut-tests/R2020-sRGB-color-ring.png",
+  // VerifyWideGamutMetadata("third_party/wide-gamut-tests/R2020-sRGB-color-ring.png",
   //                        Primaries::k2100, &pool);
 }
 

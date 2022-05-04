@@ -710,11 +710,6 @@ void FindBestPatchDictionary(const Image3F& opsin,
   CompressParams cparams = state->cparams;
   // Recursive application of patches could create very weird issues.
   cparams.patches = Override::kOff;
-  // TODO(veluca): possibly change heuristics here.
-  if (!cparams.modular_mode) {
-    cparams.quality_pair.first = cparams.quality_pair.second =
-        90.f - cparams.butteraugli_distance * 5.f;
-  }
 
   RoundtripPatchFrame(&reference_frame, state, 0, cparams, cms, pool, true);
 

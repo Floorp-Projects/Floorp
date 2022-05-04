@@ -228,11 +228,18 @@ void QuantizeChannel(Channel& ch, const int q) {
 // fit in pixel_type
 Status float_to_int(const float* const row_in, pixel_type* const row_out,
                     size_t xsize, unsigned int bits, unsigned int exp_bits,
-                    bool fp, float factor) {
+                    bool fp, double dfactor) {
   JXL_ASSERT(sizeof(pixel_type) * 8 >= bits);
   if (!fp) {
-    for (size_t x = 0; x < xsize; ++x) {
-      row_out[x] = row_in[x] * factor + (row_in[x] < 0 ? -0.5f : 0.5f);
+    if (bits > 22) {
+      for (size_t x = 0; x < xsize; ++x) {
+        row_out[x] = row_in[x] * dfactor + (row_in[x] < 0 ? -0.5 : 0.5);
+      }
+    } else {
+      float factor = dfactor;
+      for (size_t x = 0; x < xsize; ++x) {
+        row_out[x] = row_in[x] * factor + (row_in[x] < 0 ? -0.5f : 0.5f);
+      }
     }
     return true;
   }
@@ -296,8 +303,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     : frame_dim(frame_header.ToFrameDimensions()), cparams(cparams_orig) {
   size_t num_streams =
       ModularStreamId::Num(frame_dim, frame_header.passes.num_passes);
-  if (cparams.modular_mode &&
-      cparams.quality_pair == std::pair<float, float>{100.0, 100.0}) {
+  if (cparams.IsLossless()) {
     switch (cparams.decoding_speed_tier) {
       case 0:
         break;
@@ -322,18 +328,17 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     }
   }
   if (cparams.decoding_speed_tier >= 1 && cparams.responsive &&
-      cparams.quality_pair == std::make_pair(100.f, 100.f)) {
+      cparams.IsLossless()) {
     cparams.options.tree_kind =
         ModularOptions::TreeKind::kTrivialTreeNoPredictor;
     cparams.options.nb_repeats = 0;
   }
   stream_images.resize(num_streams);
-  if (cquality > 100) cquality = quality;
 
   // use a sensible default if nothing explicit is specified:
   // Squeeze for lossy, no squeeze for lossless
   if (cparams.responsive < 0) {
-    if (quality == 100) {
+    if (cparams.IsLossless()) {
       cparams.responsive = 0;
     } else {
       cparams.responsive = 1;
@@ -396,14 +401,14 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     // no explicit predictor(s) given, set a good default
     if ((cparams.speed_tier <= SpeedTier::kTortoise ||
          cparams.modular_mode == false) &&
-        quality == 100 && cparams.responsive == false) {
+        cparams.IsLossless() && cparams.responsive == false) {
       // TODO(veluca): allow all predictors that don't break residual
       // multipliers in lossy mode.
       cparams.options.predictor = Predictor::Variable;
     } else if (cparams.responsive || cparams.lossy_palette) {
       // zero predictor for Squeeze residues and lossy palette
       cparams.options.predictor = Predictor::Zero;
-    } else if (quality < 100) {
+    } else if (!cparams.IsLossless()) {
       // If not responsive and lossy. TODO(veluca): use near_lossless instead?
       cparams.options.predictor = Predictor::Gradient;
     } else if (cparams.speed_tier < SpeedTier::kFalcon) {
@@ -419,6 +424,12 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
   } else {
     delta_pred = cparams.options.predictor;
     if (cparams.lossy_palette) cparams.options.predictor = Predictor::Zero;
+  }
+  if (!cparams.IsLossless()) {
+    if (cparams.options.predictor == Predictor::Weighted ||
+        cparams.options.predictor == Predictor::Variable ||
+        cparams.options.predictor == Predictor::Best)
+      cparams.options.predictor = Predictor::Zero;
   }
   tree_splits.push_back(0);
   if (cparams.modular_mode == false) {
@@ -499,17 +510,29 @@ Status ModularFrameEncoder::ComputeEncodingData(
     }
   }
 
+  // in the non-float case, there is an implicit 0 sign bit
+  int max_bitdepth =
+      do_color ? metadata.bit_depth.bits_per_sample + (fp ? 0 : 1) : 0;
   Image& gi = stream_images[0];
   gi = Image(xsize, ysize, metadata.bit_depth.bits_per_sample, nb_chans);
   int c = 0;
   if (cparams.color_transform == ColorTransform::kXYB &&
       cparams.modular_mode == true) {
-    static const float enc_factors[3] = {32768.0f, 2048.0f, 2048.0f};
+    float enc_factors[3] = {32768.0f, 2048.0f, 2048.0f};
+    if (cparams.butteraugli_distance > 0 && !cparams.responsive) {
+      // quantize XYB here and then treat it as a lossless image
+      enc_factors[0] *= 1.f / (1.f + 23.f * cparams.butteraugli_distance);
+      enc_factors[1] *= 1.f / (1.f + 14.f * cparams.butteraugli_distance);
+      enc_factors[2] *= 1.f / (1.f + 14.f * cparams.butteraugli_distance);
+      cparams.butteraugli_distance = 0;
+    }
     if (cparams.manual_xyb_factors.size() == 3) {
       DequantMatricesSetCustomDC(&enc_state->shared.matrices,
                                  cparams.manual_xyb_factors.data());
+      // TODO(jon): update max_bitdepth in this case
     } else {
       DequantMatricesSetCustomDC(&enc_state->shared.matrices, enc_factors);
+      max_bitdepth = 12;
     }
   }
   pixel_type maxval = gi.bitdepth < 32 ? (1u << gi.bitdepth) - 1 : 0;
@@ -523,7 +546,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
       // XYB is encoded as YX(B-Y)
       if (cparams.color_transform == ColorTransform::kXYB && c < 2)
         c_out = 1 - c_out;
-      float factor = maxval;
+      double factor = maxval;
       if (cparams.color_transform == ColorTransform::kXYB)
         factor = enc_state->shared.matrices.InvDCQuant(c);
       if (c == 2 && cparams.color_transform == ColorTransform::kXYB) {
@@ -535,6 +558,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
           for (size_t x = 0; x < xsize; ++x) {
             row_out[x] = row_in[x] * factor + 0.5f;
             row_out[x] -= row_Y[x];
+            // zero the lsb of B
+            row_out[x] = row_out[x] / 2 * 2;
           }
         }
       } else {
@@ -581,7 +606,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
     int bits = eci.bit_depth.bits_per_sample;
     int exp_bits = eci.bit_depth.exponent_bits_per_sample;
     bool fp = eci.bit_depth.floating_point_sample;
-    float factor = (fp ? 1 : ((1u << eci.bit_depth.bits_per_sample) - 1));
+    double factor = (fp ? 1 : ((1u << eci.bit_depth.bits_per_sample) - 1));
+    if (bits + (fp ? 0 : 1) > max_bitdepth) max_bitdepth = bits + (fp ? 0 : 1);
     std::atomic<bool> has_error{false};
     JXL_RETURN_IF_ERROR(RunOnPool(
         pool, 0, gi.channel[c].plane.ysize(), ThreadPool::NoInit,
@@ -599,9 +625,16 @@ Status ModularFrameEncoder::ComputeEncodingData(
   }
   JXL_ASSERT(c == nb_chans);
 
+  int level_max_bitdepth = (cparams.level == 5 ? 16 : 32);
+  if (max_bitdepth > level_max_bitdepth)
+    return JXL_FAILURE(
+        "Bitdepth too high for level %i (need %i bits, have only %i in this "
+        "level)",
+        cparams.level, max_bitdepth, level_max_bitdepth);
+
   // Set options and apply transformations
 
-  if (quality < 100) {
+  if (cparams.butteraugli_distance > 0) {
     if (cparams.palette_colors != 0) {
       JXL_DEBUG_V(3, "Lossy encode, not doing palette transforms");
     }
@@ -704,65 +737,59 @@ Status ModularFrameEncoder::ComputeEncodingData(
     }
   }
 
+  // don't do an RCT if we're short on bits
   if (cparams.color_transform == ColorTransform::kNone && do_color && !fp &&
-      gi.channel.size() - gi.nb_meta_channels >= 3) {
+      gi.channel.size() - gi.nb_meta_channels >= 3 &&
+      max_bitdepth + 1 < level_max_bitdepth) {
     if (cparams.colorspace == 1 ||
         (cparams.colorspace < 0 &&
-         (quality < 100 || cparams.speed_tier > SpeedTier::kHare))) {
+         (!cparams.IsLossless() || cparams.speed_tier > SpeedTier::kHare))) {
       Transform ycocg{TransformId::kRCT};
       ycocg.rct_type = 6;
       ycocg.begin_c = gi.nb_meta_channels;
       do_transform(gi, ycocg, weighted::Header(), pool);
+      max_bitdepth++;
     } else if (cparams.colorspace >= 2) {
       Transform sg(TransformId::kRCT);
       sg.begin_c = gi.nb_meta_channels;
       sg.rct_type = cparams.colorspace - 2;
       do_transform(gi, sg, weighted::Header(), pool);
+      max_bitdepth++;
     }
   }
 
-  if (cparams.responsive && !gi.channel.empty()) {
+  // don't do squeeze if we don't have some spare bits
+  if (cparams.responsive && !gi.channel.empty() &&
+      max_bitdepth + 2 < level_max_bitdepth) {
     Transform t(TransformId::kSqueeze);
     t.squeezes = cparams.squeezes;
     do_transform(gi, t, weighted::Header(), pool);
+    max_bitdepth += 2;
   }
+
+  if (max_bitdepth + 1 > level_max_bitdepth) {
+    // force no group RCTs if we don't have a spare bit
+    cparams.colorspace = 0;
+  }
+  JXL_ASSERT(max_bitdepth <= level_max_bitdepth);
 
   std::vector<uint32_t> quants;
 
-  if (quality < 100 || cquality < 100) {
+  if (cparams.butteraugli_distance > 0) {
     quants.resize(gi.channel.size(), 1);
-    JXL_DEBUG_V(
-        2,
-        "Adding quantization constants corresponding to luma quality %.2f "
-        "and chroma quality %.2f",
-        quality, cquality);
+    float quality = 0.25f * cparams.butteraugli_distance;
+    JXL_DEBUG_V(2,
+                "Adding quantization constants corresponding to distance %.3f ",
+                quality);
     if (!cparams.responsive) {
       JXL_DEBUG_V(1,
                   "Warning: lossy compression without Squeeze "
                   "transform is just color quantization.");
-      quality = (400 + quality) / 5;
-      cquality = (400 + cquality) / 5;
-    }
-
-    // convert 'quality' to quantization scaling factor
-    if (quality > 50) {
-      quality = 200.0 - quality * 2.0;
-    } else {
-      quality = 900.0 - quality * 16.0;
-    }
-    if (cquality > 50) {
-      cquality = 200.0 - cquality * 2.0;
-    } else {
-      cquality = 900.0 - cquality * 16.0;
+      quality *= 0.1f;
     }
     if (cparams.color_transform != ColorTransform::kXYB) {
-      quality *= 0.01f * maxval / 255.f;
-      cquality *= 0.01f * maxval / 255.f;
-    } else {
-      quality *= 0.01f;
-      cquality *= 0.01f;
+      quality *= maxval / 255.f;
     }
-
     if (cparams.options.nb_repeats == 0) {
       return JXL_FAILURE("nb_repeats = 0 not supported with modular lossy!");
     }
@@ -773,17 +800,18 @@ Status ModularFrameEncoder::ComputeEncodingData(
       if (shift > 0) shift--;
       int q;
       // assuming default Squeeze here
-      int component = ((i - gi.nb_meta_channels) % nb_chans);
+      int component =
+          (do_color ? 0 : 3) + ((i - gi.nb_meta_channels) % nb_chans);
       // last 4 channels are final chroma residuals
       if (nb_chans > 2 && i >= gi.channel.size() - 4 && cparams.responsive) {
         component = 1;
       }
       if (cparams.color_transform == ColorTransform::kXYB && component < 3) {
-        q = (component == 0 ? quality : cquality) * squeeze_quality_factor_xyb *
+        q = quality * squeeze_quality_factor_xyb *
             squeeze_xyb_qtable[component][shift];
       } else {
         if (cparams.colorspace != 0 && component > 0 && component < 3) {
-          q = cquality * squeeze_quality_factor * squeeze_chroma_qtable[shift];
+          q = quality * squeeze_quality_factor * squeeze_chroma_qtable[shift];
         } else {
           q = quality * squeeze_quality_factor * squeeze_luma_factor *
               squeeze_luma_qtable[shift];
@@ -1288,12 +1316,10 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
     if (gi.channel.empty()) return true;
     // Do some per-group transforms
 
-    float quality = cparams.quality_pair.first;
-
     // Local palette
     // TODO(veluca): make this work with quantize-after-prediction in lossy
     // mode.
-    if (quality == 100 && cparams.palette_colors != 0 &&
+    if (cparams.butteraugli_distance == 0.f && cparams.palette_colors != 0 &&
         cparams.speed_tier < SpeedTier::kCheetah) {
       // all-channel palette (e.g. RGBA)
       if (gi.channel.size() - gi.nb_meta_channels > 1) {
@@ -1321,8 +1347,9 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
     }
 
     // Local channel palette
-    if (cparams.channel_colors_percent > 0 && quality == 100 &&
-        !cparams.lossy_palette && cparams.speed_tier < SpeedTier::kCheetah &&
+    if (cparams.channel_colors_percent > 0 &&
+        cparams.butteraugli_distance == 0.f && !cparams.lossy_palette &&
+        cparams.speed_tier < SpeedTier::kCheetah &&
         !(cparams.responsive && cparams.decoding_speed_tier >= 1)) {
       // single channel palette (like FLIF's ChannelCompact)
       size_t nb_channels = gi.channel.size() - gi.nb_meta_channels;
@@ -1348,8 +1375,9 @@ Status ModularFrameEncoder::PrepareStreamParams(const Rect& rect,
 
   // lossless and no specific color transform specified: try Nothing, YCoCg,
   // and 17 RCTs
-  if (cparams.color_transform == ColorTransform::kNone && quality == 100 &&
-      cparams.colorspace < 0 && gi.channel.size() - gi.nb_meta_channels >= 3 &&
+  if (cparams.color_transform == ColorTransform::kNone &&
+      cparams.IsLossless() && cparams.colorspace < 0 &&
+      gi.channel.size() - gi.nb_meta_channels >= 3 &&
       cparams.responsive == false && do_color &&
       cparams.speed_tier <= SpeedTier::kHare) {
     Transform sg(TransformId::kRCT);

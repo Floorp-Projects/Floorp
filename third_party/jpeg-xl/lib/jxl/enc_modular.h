@@ -80,8 +80,7 @@ class ModularFrameEncoder {
   std::vector<uint8_t> context_map;
   FrameDimensions frame_dim;
   CompressParams cparams;
-  float quality = cparams.quality_pair.first;
-  float cquality = cparams.quality_pair.second;
+  float quality = 100.f;
   std::vector<size_t> tree_splits;
   std::vector<ModularMultiplierInfo> multiplier_info;
   std::vector<std::vector<uint32_t>> gi_channel;

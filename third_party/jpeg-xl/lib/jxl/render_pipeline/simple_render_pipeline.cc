@@ -182,10 +182,8 @@ void SimpleRenderPipeline::ProcessBuffers(size_t group_id, size_t thread_id) {
                 (y << stage->settings_.shift_y) + iy + kRenderPipelineXOffset);
           }
         }
-        stage->ProcessRow(
-            input_rows, output_rows, /*xextra=*/0, xsize,
-            /*xpos=*/0, y,
-            reinterpret_cast<float*>(temp_buffers_[thread_id].get()));
+        stage->ProcessRow(input_rows, output_rows, /*xextra=*/0, xsize,
+                          /*xpos=*/0, y, thread_id);
       }
     }
 
