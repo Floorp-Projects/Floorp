@@ -1582,6 +1582,10 @@
     <string name="preferences_credit_cards_add_credit_card">クレジットカードを追加</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">保存したカードを管理</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">アドレスを追加</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">アドレスの管理</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">カードの追加</string>
 
@@ -1636,6 +1640,31 @@
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ロックを解除して保存したクレジットカード情報を使用します</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">アドレスを追加</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">アドレスの管理</string>
+    <!-- The header for the full name of an address -->
+    <string name="addresses_full_name">フルネーム</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">番地</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">市区町村</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">都道府県</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">郵便番号</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">電話番号</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">メールアドレス</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">保存</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">キャンセル</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">アドレスを削除</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>

@@ -691,7 +691,7 @@
     <string name="studies_restart_dialog_cancel">Адмяніць</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Выхад з праграмы, каб прымяніць змены...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Выхад з праграмы, каб прымяніць змены…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1543,7 +1543,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню сартавання лагінаў</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Крэдытныя карты</string>
 

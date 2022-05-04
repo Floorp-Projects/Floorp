@@ -1694,7 +1694,7 @@
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Шуморо браузери комилан аз нав тарҳрезишуда интизор аст, ки ба шумо бо самаранокӣ ва хусусиятҳои такмилёфта барои кори бештар дар Интернет кумак мерасонад.\n\nЛутфан, интизор шавед, то мо %s-ро навсозӣ кунем, аз он ҷумла</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s нав шуда истодааст...</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s нав шуда истодааст…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Оғоз кардани %s</string>
     <!-- Accessibility description text for a completed migration item -->

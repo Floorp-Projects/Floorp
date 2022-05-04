@@ -31,12 +31,6 @@
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">মাল্টিলেক্ট মোড থেকে প্রস্থান করুন</string>
 
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">%1$s নির্বাচিত</string>
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">%1$s অনির্বাচিত</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">মাল্টিসিলেক্ট মোড থেকে বেরিয়ে গেছেন</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">নির্বাচিত</string>
 
@@ -44,19 +38,14 @@
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">সাম্প্রতিক বুকমার্ক</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all">সব দেখান</string>
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">সব দেখান</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s হচ্ছে Mozilla দ্বারা তৈরি।</string>
 
-    <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">আপনি একটি ব্যক্তিগত সেশনে আছেন</string>
     <string name="private_browsing_common_myths">
        ব্যাক্তিগত ব্রাউজিং সম্পর্কে কিছু ভুল ধারণা
     </string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">সেশন মুছুন</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -88,12 +77,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">নতুন ব্যক্তিগত ট্যাব</string>
 
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">শীর্ষ সাইটগুলি</string>
-
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">ট্যাব খুলুন</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">পিছনে</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -102,10 +86,6 @@
     <string name="browser_menu_refresh">রিফ্রেশ</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">থামুন</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">বুকমার্ক</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">বুকমার্ক সম্পাদনা করুন</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">অ্যাড-অনগুলো</string>
     <!-- Text displayed when there are no add-ons to be shown -->
@@ -127,14 +107,10 @@
     <string name="browser_menu_install_on_homescreen">ইনস্টল</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">পাতায় অনুসন্ধান করুন</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">ব্যক্তিগত ট্যাব</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">সংগ্রহে সংরক্ষণ করুন</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">শেয়ার</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">এর সাথে শেয়ার করুন…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s এ খোলা</string>
@@ -148,8 +124,6 @@
     <string name="browser_menu_read">পাঠক দর্শন</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">অ্যাপে খুলুন</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">আবির্ভাব</string>
 
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">যোগ করুন</string>
@@ -159,15 +133,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">হোম স্ক্রিন</string>
 
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">সংযোগ স্থাপন করতে ব্যর্থ। অজানা URL স্কিম।</string>
-
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">নির্বাচিত ভাষা</string>
-    <!-- Content description for search icon -->
-    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">অনুসন্ধান করুন</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">ডিভাইসের ভাষা অনুসরণ করুন</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -191,7 +159,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">ঠিকানা বারে টাইপ করা সবকিছ %s আপনার ডিফল্ট অনুসন্ধান ইঞ্জিনের মাধ্যমে আপনার সাথে শেয়ার করবে।</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">আরও জানুন</string>
+    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">আরও জানুন</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">অনুসন্ধান করুন</string>
@@ -205,8 +173,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">সেটিংস</string>
-    <!-- Preference category for basic settings -->
-    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">মৌলিক বিষয়াদি</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">সাধারণ</string>
     <!-- Preference category for all links about Fenix -->
@@ -217,27 +183,15 @@
     <string name="preferences_search">অনুসন্ধান</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">এড্রেস বার</string>
-    <!-- Preference linking to help about Fenix -->
-    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">সহায়তা</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play তে রেট</string>
-    <!-- Preference for giving feedback about Fenix -->
-    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">প্রতিক্রিয়া জানান</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">%1$s সম্পর্কে</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">আপনার অধিকারগুলো</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">পাসওয়ার্ড</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">ক্রেডিট কার্ড এবং ঠিকানা</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">ডিফল্ট ব্রাউজার হিসাবে নির্ধারণ করুন</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">উচ্চপর্যায়</string>
-    <!-- Preference category for privacy settings -->
-    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">গোপনীয়তা</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">গোপনীয়তা এবং সুরক্ষা</string>
     <!-- Preference for advanced site permissions -->
@@ -260,8 +214,6 @@
     <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync সার্ভার সংশোধিত হয়েছে। পরিবর্তনগুলি প্রয়োগ করতে অ্যাপ্লিকেশন বন্ধ করুন…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">অ্যাকাউন্ট</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">সাইন ইন</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">টুলবার</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -281,10 +233,6 @@
     <string name="preferences_data_choices">ডাটা পছন্দ</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">তথ্য সংগ্রহ</string>
-    <!-- Preference linking to the privacy notice -->
-    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">গোপনীয়তা বিজ্ঞপ্তি</string>
-    <!-- Preference category for developer tools -->
-    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">ডেভেলপার টুলস</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB এর মাধ্যমে রিমোট ডিবাগিং</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -359,63 +307,32 @@
     <string name="fxa_received_tab_channel_description">অন্যান্য Firefox ডিভাইস থেকে প্রাপ্ত ট্যাবগুলির জন্য নোটিফিকেশন।</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">ট্যাব এসেছে</string>
-    <!-- When multiple tabs have been received -->
-    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">ট্যাবগুলো এসেছে</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">%s ট্যাব থেকে</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">ট্র্যাকিং সুরক্ষা</string>
-    <!-- Preference switch for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">ট্র্যাকিং সুরক্ষা</string>
-    <!-- Preference switch description for tracking protection -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">অনলাইনে আপনাকে ট্র্যাক করে এমন কন্টেন্ট এবং স্ক্রিপ্টগুলি ব্লক করুন</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">ব্যতিক্রমসমূহ</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">এই ওয়েবসাইটগুলির জন্য ট্র্যাকিং সুরক্ষা বন্ধ রয়েছে</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">সমস্ত সাইটের জন্য চালু করুন</string>
 
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">আরও জানুন</string>
 
-    <!-- Preference switch for Telemetry -->
-    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">টেলিমেট্রি</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ব্যবহার এবং প্রযুক্তিগত তথ্য</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">আমাদের %1$s আরও উন্নত করতে সহায়তা করতে Mozilla -র সাথে আপনার ব্রাউজার সম্পর্কিত কর্মক্ষমতা, ব্যবহার, হার্ডওয়্যার এবং কাস্টমাইজেশন তথ্য শেয়ার করুন</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">বিপণন তথ্য</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">আমাদের মোবাইল বিপণন বিক্রেতা লিয়ানপ্লামের সাথে আপনি %1$s এ কী বৈশিষ্ট্যগুলি ব্যবহার করেন সে সম্পর্কে তথ্য শেয়ার করুন।</string>
-    <!-- Title for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">পরীক্ষানিরীক্ষা</string>
-    <!-- Summary for experiments preferences -->
-    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">পরীক্ষামূলক বৈশিষ্ট্যগুলির জন্য Mozilla কে ইনস্টল এবং তথ্য সংগ্রহ করার অনুমতি প্রদান করুন</string>
-    <!-- Preference switch for crash reporter -->
-    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">ক্র্যাশ রিপোর্টার</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Mozilla লোকেশন সার্ভিস</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">%s স্বাস্থ্য রিপোর্ট</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Sync চালু করুন</string>
-    <!-- Preference for account login -->
-    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">সাইন ইন</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">পুনরায় সংযোগ করতে সাইন ইন করুন</string>
     <!-- Preference for removing FxA account -->
     <string name="preferences_sync_remove_account">অ্যাকাউন্ট মুছুন</string>
-
-    <!-- Button to open camera for pairing -->
-    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">ক্যামেরা খুলুন</string>
-    <!-- Button to cancel pairing -->
-    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">বাতিল</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -434,10 +351,6 @@
     <string name="preference_follow_device_theme">ডিভাইসের থিম অনুসরণ করুন</string>
 
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">সেশনসমূহ</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">স্ক্রিনশটগুলি</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ডাউনলোডগুলো</string>
     <!-- Option in library to open Bookmarks page -->
@@ -452,14 +365,8 @@
     <string name="library_desktop_bookmarks_unfiled">অন্যান্য বুকমার্ক</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ইতিহাস</string>
-    <!-- Option in Library to open Reading List -->
-    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">পড়ার তালিকা</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">অনুসন্ধান</string>
     <!-- Settings Page Title -->
     <string name="settings_title">সেটিংস</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">ইতিহাস আইটেম মেনু</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">বন্ধ করুন</string>
 
@@ -501,27 +408,17 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">ট্যাব খুলুন</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">ব্যক্তিগত সেশন</string>
-    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">ব্যক্তিগত ট্যাব</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ট্যাব যোগ করুন</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">ব্যক্তিগত</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">ট্যাব খুলুন</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">সংগ্রহে সংরক্ষণ করুন</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">নির্বাচন</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">সম্প্রতি বন্ধ করা ট্যাব</string>
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">ট্যাবের সেটিংস</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">সব ট্যাব বন্ধ করুন</string>
-    <!-- Shortcut action to open new tab -->
-    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">নতুন ট্যাব</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">বুকমার্ক</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -532,24 +429,8 @@
     <string name="close_tab_title">%s ট্যাব বন্ধ করুন</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">ট্যাব মেনু খুলুন</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">সব ট্যাব বন্ধ করুন</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">ট্যাব শেয়ার করুন</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">ট্যাব মেনু</string>
-    <!-- Tab menu item to share the tab -->
-    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">ট্যাব শেয়ার করুন</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">মুছুন</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">সংরক্ষণ</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">শেয়ার</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">বর্তমান সেশনের চিত্র</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">সংগ্রহে সংরক্ষণ করুন</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">সংগ্রহ মুছে ফেলুন</string>
     <!-- Text for the menu button to rename a collection -->
@@ -568,34 +449,21 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ব্যক্তিগত মোড)</string>
 
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">সংরক্ষণ</string>
-
-    <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ইতিহাস মুছুন</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">আপনি কি নিশ্চিত আপনি নিজের ইতিহাস সাফ করতে চান?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">ইতিহাস মুছে ফেলা হয়েছে</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s মুছে ফেলা হয়েছে</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">পরিষ্কার</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">মুছুন</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d নির্বাচিত</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">%1$d আইটেমগুলি মুছুন</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">আজ</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">গতকাল</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">শেষ 24 ঘন্টা</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">গত 7 দিন</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -607,8 +475,6 @@
     <string name="history_empty_message">এখানে কোন ইতিহাস নেই</string>
 
 
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">খুলুন</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">অপসারণ</string>
 
@@ -616,8 +482,6 @@
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">দুঃখিত। %1$s পৃষ্ঠাটি লোড করতে পারেছে না।</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">আপনি নীচে এই ট্যাবটি পুনরুদ্ধার বা বন্ধ করার চেষ্টা করতে পারেন।</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Mozilla তে ক্র্যাশ রিপোর্ট পাঠান</string>
     <!-- Close tab button text on the tab crash page -->
@@ -625,23 +489,9 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">ট্যাব পুনরুদ্ধার করুন</string>
 
-    <!-- Content Description for session item menu button -->
-    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">সেশন অপশন</string>
-
-    <!-- Content Description for session item share button -->
-    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">শেয়ার সেশন</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">বুকমার্ক মেনু</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">বুকমার্ক সম্পাদনা করুন</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">ফোল্ডার নির্বাচন করুন</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">আপনি কি নিশ্চিত যে আপনি এই ফোল্ডারটি মুছতে চান?</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">%1$s কে মুছে ফেলা হয়েছে</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">ফোল্ডার যোগ করুন</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -650,8 +500,6 @@
     <string name="edit_bookmark_snackbar_action">EDIT</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">সম্পাদনা</string>
-    <!-- Bookmark overflow menu select button -->
-    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">নির্বাচন</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">অনুলিপি</string>
     <!-- Bookmark overflow menu share button -->
@@ -699,8 +547,6 @@
     <string name="bookmark_undo_deletion">UNDO</string>
 
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">অনুমতিসমূহ</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">সেটিংস এ যান</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -709,8 +555,6 @@
     <string name="quick_settings_sheet">দ্রুত সেটিংস শীট</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">সুপারিশকৃত</string>
-    <!-- button that allows editing site permissions settings -->
-    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">সাইটের অনুমতিগুলি পরিচালনা করুন</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">অনুমতিগুলি সাফ করুন</string>
     <!-- Button label for clearing a site permission-->
@@ -796,14 +640,10 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">সংরক্ষণ এবং শেয়ার করুন</string>
-    <!-- Share screen header -->
     <string name="share_header_2">শেয়ার</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">শেয়ার</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">লিংক শেয়ার করুন</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ডিভাইসে পাঠান</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -836,50 +676,28 @@
     <string name="sync_add_new_device_connect_button">অন্য ডিভাইস সংযুক্ত করুন…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">ব্যক্তিগত ব্রাউজিং সেশন</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">ব্যক্তিগত ট্যাবগুলি মুছুন</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">ব্যক্তিগত ট্যাবগুলি বন্ধ করুন</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">খুলুন</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">মুছুন এবং খুলুন</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">যার দ্বারা চালিত</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">সংগ্রহ মুছে ফেলা হয়েছে</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">সংগ্রহের নামকরণ</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">ট্যাব মোছা হয়েছে</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">ট্যাব মোছা হয়েছে</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">ট্যাব বন্ধ করা হয়েছে</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">ট্যাব বন্ধ করা হয়েছে</string>
-    <!-- Text shown in snackbar when user closes tabs -->
-    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">ট্যাব বন্ধ করা হয়েছে!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">শীর্ষ সাইটগুলিতে যুক্ত হয়েছে!</string>
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">শীর্ষ সাইটগুলিতে যুক্ত হয়েছে!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ব্যক্তিগত ট্যাব বন্ধ হয়েছে</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">ব্যক্তিগত ট্যাব বন্ধ হয়েছে</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">ব্যক্তিগত ট্যাব মোছা হয়েছে</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">সাইট অপসারণ করা হয়েছে</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">পূর্বাবস্থায় ফিরুন</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">নিশ্চিত</string>
+    <string name="snackbar_top_site_removed">সাইট অপসারণ করা হয়েছে</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">%2$s খুলতে %1$s কে অনুমতি দিন</string>
@@ -915,11 +733,6 @@
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ঠিকানাগুলি</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">ইতিহাস</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d পৃষ্ঠা</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">কুকিস</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -934,8 +747,6 @@
     <string name="preferences_delete_browsing_data_button">ব্রাউজারের ডাটা মুছে ফেলুন</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">প্রস্থান করার সময় ব্রাউজিং ডেটা মুছুন</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">আপনি মূল মেনু থেকে &quot;Quit&quot; নির্বাচন করলে স্বয়ংক্রিয়ভাবে ব্রাউজিং ডেটা মুছে যাবে</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">আপনি মূল মেনু থেকে  \&quot;Quit\&quot;  নির্বাচন করলে স্বয়ংক্রিয়ভাবে ব্রাউজিং ডেটা মুছে যাবে</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -952,29 +763,17 @@
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">ব্রাউজিং ডেটা মুছে ফেলা হয়েছে</string>
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
-    <string name="deleting_browsing_data_in_progress">ব্রাউজিং ডেটা মুছে ফেলা হচ্ছে ...</string>
+    <string name="deleting_browsing_data_in_progress">ব্রাউজিং ডেটা মুছে ফেলা হচ্ছে …</string>
 
     <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">নতুন Nightly তে পরিবর্তন করুন</string>
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">নতুন Nightly তে পরিবর্তন করুন</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s এ আপনাকে স্বাগতম!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">ইতিমধ্যে একটি অ্যাকাউন্ট আছে?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">হ্যাঁ, আমাকে সাইন ইন করুন</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">সাইন ইন হচ্ছে…</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">সাইন আউট থাকুন</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync চালু আছে</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">সাইন-ইন করতে ব্যর্থ</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">কঠোর (প্রস্তাবিত)</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">আপনার গোপনীয়তা</string>
     <!-- Text for the button to read the privacy notice -->
@@ -1008,8 +807,6 @@
     <string name="sign_in_ready_for_scan">স্ক্যান করতে প্রস্তুত</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">আপনার ক্যামেরা দিয়ে সাইন ইন করুন</string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox আপনার অ্যাকাউন্টের সাথে sync করা বন্ধ করবে, কিন্তু এই ডিভাইসে আপনার ব্রাউজ করা কোন তথ্য মুছে ফেলা হবে না।</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">সংযোগ বিচ্ছিন্ন করুন</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1045,8 +842,6 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">সমস্ত ট্যাবে</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">শুধুমাত্র ব্যক্তিগত ট্যাবগুলিতে</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">শুধুমাত্র কাস্টম ট্যাবগুলিতে</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">ক্রিপ্টোমাইনারস</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1069,8 +864,6 @@
     <string name="etp_panel_on">এই সাইটের জন্য সুরক্ষা ON আছে</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">এই সাইটের জন্য সুরক্ষা OFF আছে</string>
-    <!-- About page Your rights link text -->
-    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">আপনার অধিকারগুলো</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s এ নতুন যা আছে</string>
     <!-- Open source licenses page title
@@ -1086,12 +879,6 @@
 
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">লাইসেন্স এর তথ্য</string>
-
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 ট্যাব</string>
-
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d ট্যাব</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1123,10 +910,6 @@
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">লগইনগুলো Sync করুন</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">পুনঃসংযোগ</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Sync করতে সাইন ইন করুন</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">সংরক্ষিত লগইনগুলো</string>
     <!-- Preference to access list of saved logins -->
@@ -1135,38 +918,18 @@
     <string name="preferences_passwords_exceptions">ব্যতিক্রমসমূহ</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">লগইন অনুসন্ধান করুন</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">বর্ণানুক্রমে</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">সম্প্রতি ব্যবহৃত</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">সাইট</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">ইউজারনেম</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">পাসওয়ার্ড</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">আপনার PIN টি আবার প্রবেশ করুন</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">আপনার সংরক্ষিত লগইনগুলি দেখতে আনলক করুন</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">আরো জানুন</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">আপনি কি %s কে এই লগইনটি সংরক্ষণ করাতে চান?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">সংরক্ষণ করুন</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">সংরক্ষণ করবেন না</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">ক্লিপবোর্ডে পাসওয়ার্ড কপি করা হয়েছে</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">সাইটটি ক্লিপবোর্ডে কপি করা হয়েছে</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">কপি পাসওয়ার্ড</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">ইউজারনেম কপি করুন</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">সাইট কপি করুন</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
     <string name="saved_login_reveal_password">পাসওয়ার্ড দেখান</string>
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
@@ -1205,15 +968,11 @@
     <string name="search_add_custom_engine_name_hint">নাম</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">&quot;%s&quot; দিয়ে কোয়েরি প্রতিস্থাপন করুন। উদাহরণ: \nhttps://www.google.com/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">বিস্তারিত জানুন</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">কাস্টম সার্চ ইঞ্জিনের খুঁটিনাটি</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">সার্চ ইঞ্জিনের নাম লিখুন</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">&quot;%s&quot; নামের সার্চ ইঞ্জিন ইতিমধ্যে বিদ্যমান।</string>
     <!-- Text shown when a user creates a new search engine -->
     <string name="search_add_custom_engine_success_message">%s তৈরি করা হয়েছে</string>
     <!-- Text shown when a user successfully edits a custom search engine -->
@@ -1222,15 +981,15 @@
     <string name="search_delete_search_engine_success_message">%s মুছে ফেলা হয়েছে</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">একটি সম্পূর্ণ নতুন %s এ আপনাকে স্বাগতম</string>
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">একটি সম্পূর্ণ নতুন %s এ আপনাকে স্বাগতম</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">%s আপডেট হচ্ছে…</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s আপডেট হচ্ছে…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">%s শুরু করুন</string>
+    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s শুরু করুন</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">মাইগ্রেশন সম্পন্ন হয়েছে</string>
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">মাইগ্রেশন সম্পন্ন হয়েছে</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">পাসওয়ার্ডগুলো</string>
+    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">পাসওয়ার্ডগুলো</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">এটির অনুমতি দেওয়ার জন্য:</string>
@@ -1241,12 +1000,10 @@
     <string name="confirm_clear_permissions_on_all_sites">আপনি কি নিশ্চিত যে আপনি সব সাইটের সব অনুমতি সাফ করতে চান?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
     <string name="confirm_clear_permissions_site">আপনি কি নিশ্চিত যে আপনি এই সাইটের জন্য সব অনুমতি সাফ করতে চান?</string>
-    <!-- Label for the Pocket default top site -->
-    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">শীর্ষ প্রবন্ধ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">আপনি কি নিশ্চিত যে আপনি এই বুকমার্কটি মুছতে চান?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">শীর্ষ সাইটে যোগ করুন</string>
+    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">শীর্ষ সাইটে যোগ করুন</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">যাচাই করা হয়েছে : %1$s দিয়ে</string>
@@ -1257,8 +1014,6 @@
     <string name="login_deletion_confirmation">আপনি কি নিশ্চিত যে আপনি এই লগইনটি মুছতে চান?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">মুছে ফেলুন</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">পরিবর্তনসমূহ বাতিল করুন</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">পাসওয়ার্ড প্রয়োজন</string>
 

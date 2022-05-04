@@ -705,7 +705,7 @@
     <string name="studies_restart_dialog_cancel">취소</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">변경 사항을 적용하기 위해 애플리케이션을 종료하는 중…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

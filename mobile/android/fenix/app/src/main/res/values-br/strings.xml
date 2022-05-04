@@ -1044,7 +1044,7 @@
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Nʼeus trevnad ebet kennasket</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">Gouzout hirocʼh a-zivout ar cʼhas ivinelloù...</string>
+    <string name="sync_add_new_device_learn_button">Gouzout hirocʼh a-zivout ar cʼhas ivinelloù…</string>
     <!-- Text for the button to connect another device -->
     <string name="sync_add_new_device_connect_button">Kennaskañ un trevnad all…</string>
 
@@ -1273,8 +1273,6 @@
     <string name="sign_in_with_email">Ober gant ur chomlec’h postel kentoc’h</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Kont ebet? <u>Krouit unan</u> evit goubredañ Firefox etre an trevnadoù.]]></string>
-    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="sign_out_confirmation_message_2">Paouezet e vo goubredañ gant ho kont, met ne vo ket dilamet ho roadennoù merdeiñ war an trevnad-mañ.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">Digennaskañ</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1517,7 +1515,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Lañser rummañ an titouroù kennaskañ</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kartennoù kred</string>
     <!-- Preference for saving and autofilling credit cards -->

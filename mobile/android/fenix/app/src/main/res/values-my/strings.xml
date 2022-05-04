@@ -319,7 +319,7 @@
     <string name="customize_addon_collection_user_hint">စုဆောင်းမှုပိုင်ရှင် (အသုံးပြုသူ အိုင်ဒီ)</string>
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">အပို စုဆောင်းမှုကို ပြုပြင်ပြီး ဖြစ်သည်။ အပြောင်းအလဲများ လျှောက်ထားရန် လျှောက်လွှာ မှ ထွက်ပါ ...</string>
+    <string name="toast_customize_addon_collection_done">အပို စုဆောင်းမှုကို ပြုပြင်ပြီး ဖြစ်သည်။ အပြောင်းအလဲများ လျှောက်ထားရန် လျှောက်လွှာ မှ ထွက်ပါ …</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -1318,7 +1318,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ဝင်ရန် မီနူးကို စီပါ</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">အကြွေးဝယ် ကတ်များ</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1424,7 +1423,7 @@
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">အွန်လိုင်းတွင်ပိုမိုကောင်းမွန်သောစွမ်းဆောင်ရည်၊လုပ်ဆောင်ချက်များနှင့်ဖန်တီးထားသောဘရောက်ဇာကသင့်ကိုစောင့်နေပါတယ် \n\n %s တွင် မွမ်းမံနေသည်ကိုကျေးဇူးပြုပြီးခေတ္တစောင့်ပေးပါ။</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s မွမ်းမံနေသည် ...</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s မွမ်းမံနေသည် …</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s ကိုစတင်ပါ</string>
     <!-- Accessibility description text for a completed migration item -->

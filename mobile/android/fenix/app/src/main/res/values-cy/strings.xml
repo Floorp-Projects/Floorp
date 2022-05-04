@@ -354,7 +354,7 @@
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Gweinydd Sync Cyfaddas</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Mae Cyfrif Firefox/gweinydd Sync wedi’i addasu. Yn gadael y rhaglen i osod y newidiadau...</string>
+    <string name="toast_override_fxa_sync_server_done">Mae Cyfrif Firefox/gweinydd Sync wedi’i addasu. Yn gadael y rhaglen i osod y newidiadau…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Cyfrif</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -692,7 +692,7 @@
     <string name="studies_restart_dialog_cancel">Diddymu</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Yn gadael y rhaglen er mwyn gosod y newidiadau...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Yn gadael y rhaglen er mwyn gosod y newidiadau…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

@@ -1742,7 +1742,7 @@
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">Un navigator completemente reconcipite te attende, con prestation e functionalitate meliorate pro adjutar te a facer plus cosas in linea.\n\nAttende durante que nos actualisa %s con tu datos:</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Actualisation de %s...</string>
+    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">Actualisation de %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">Initiar %s</string>
     <!-- Accessibility description text for a completed migration item -->

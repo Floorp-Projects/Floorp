@@ -1050,9 +1050,9 @@
     <!-- Text for the warning message on the Add new device screen -->
     <string name="sync_add_new_device_message">Կապակցված սարքեր չկան</string>
     <!-- Text for the button to learn about sending tabs -->
-    <string name="sync_add_new_device_learn_button">Իմացեք Ուղարկել ներդիրների մասին...</string>
+    <string name="sync_add_new_device_learn_button">Իմացեք Ուղարկել ներդիրների մասին…</string>
     <!-- Text for the button to connect another device -->
-    <string name="sync_add_new_device_connect_button">Կապակցվել այլ սարք...</string>
+    <string name="sync_add_new_device_connect_button">Կապակցվել այլ սարք…</string>
 
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
@@ -1523,7 +1523,6 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Տեսակավորել մուտագրումների ցանկը</string>
 
-    <!-- Credit Cards Autofill -->
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Բանկային քարտեր</string>
     <!-- Preference for saving and autofilling credit cards -->

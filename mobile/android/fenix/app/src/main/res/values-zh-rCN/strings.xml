@@ -713,7 +713,7 @@
     <string name="studies_restart_dialog_cancel">取消</string>
 
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">退出应用程序以应用更改...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">退出应用程序以应用更改…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->

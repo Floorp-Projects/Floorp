@@ -699,7 +699,7 @@
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">Batal</string>
     <!-- Toast shown after turning on/off studies preferences -->
-    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Keluar dari aplikasi untuk menerapkan perubahan...</string>
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Keluar dari aplikasi untuk menerapkan perubahan…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
