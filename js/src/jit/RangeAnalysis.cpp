@@ -3390,6 +3390,10 @@ void MDiv::collectRangeInfoPreTrunc() {
   if (rhsRange.isFiniteNonNegative()) {
     canBeNegativeZero_ = false;
   }
+
+  if (fallible()) {
+    setGuardRangeBailoutsUnchecked();
+  }
 }
 
 void MMul::collectRangeInfoPreTrunc() {
@@ -3426,6 +3430,9 @@ void MMod::collectRangeInfoPreTrunc() {
   }
   if (!rhsRange.canBeZero()) {
     canBeDivideByZero_ = false;
+  }
+  if (type() == MIRType::Int32 && fallible()) {
+    setGuardRangeBailoutsUnchecked();
   }
 }
 
