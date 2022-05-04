@@ -8,4 +8,4 @@ export DUMP_SYMS_PATH="${MOZ_FETCHES_DIR}/dump_syms/dump_syms"
 
 mkdir -p artifacts && \
 ulimit -n 16384 && \
-PYTHONPATH=$PWD python3 "${base}/symsrv-fetch.py" artifacts/target.crashreporter-symbols.zip
+python3 "${base}/symsrv-fetch.py" artifacts/target.crashreporter-symbols.zip
