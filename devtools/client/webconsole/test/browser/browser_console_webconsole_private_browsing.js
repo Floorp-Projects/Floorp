@@ -26,16 +26,16 @@ const PRIVATE_TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test consol
 
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
-  await addTab(NON_PRIVATE_TEST_URI);
+  const publicTab = await addTab(NON_PRIVATE_TEST_URI);
 
   await pushPref("devtools.browsertoolbox.fission", false);
-  await testBrowserConsole();
+  await testBrowserConsole(publicTab);
 
   await pushPref("devtools.browsertoolbox.fission", true);
-  await testBrowserConsole();
+  await testBrowserConsole(publicTab);
 });
 
-async function testBrowserConsole() {
+async function testBrowserConsole(publicTab) {
   const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
@@ -63,6 +63,26 @@ async function testBrowserConsole() {
   await onLogMessage;
   await onErrorMessage;
   ok(true, "Messages are displayed as expected");
+
+  info("Check that commands executed in private windows aren't put in history");
+  const privateCommand = `"command in private window"`;
+  await executeAndWaitForMessage(hud, privateCommand, "", ".result");
+
+  const publicHud = await openConsole(publicTab);
+  const historyMessage = await executeAndWaitForMessage(
+    publicHud,
+    ":history",
+    "",
+    ".simpleTable"
+  );
+
+  ok(
+    Array.from(
+      historyMessage.node.querySelectorAll("tr td:last-of-type")
+    ).every(td => td.textContent !== privateCommand),
+    "command from private window wasn't added to the history"
+  );
+  await closeConsole(publicTab);
 
   info("test cached messages");
   await closeConsole(privateTab);

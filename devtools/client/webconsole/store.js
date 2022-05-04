@@ -94,7 +94,7 @@ function configureStore(webConsoleUI, options = {}) {
       prefsService,
       ...options.thunkArgs,
     }),
-    historyPersistence,
+    historyPersistence.bind(null, webConsoleUI),
     eventTelemetry.bind(null, options.telemetry, sessionId)
   );
 
