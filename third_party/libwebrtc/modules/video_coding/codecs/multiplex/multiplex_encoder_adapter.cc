@@ -18,7 +18,6 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/video_common.h"
 #include "modules/video_coding/codecs/multiplex/include/augmented_video_frame_buffer.h"
-#include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
@@ -204,16 +203,18 @@ int MultiplexEncoderAdapter::Encode(
     return rv;
 
   // Encode AXX
-  const I420ABufferInterface* yuva_buffer =
+  rtc::scoped_refptr<VideoFrameBuffer> frame_buffer =
       supports_augmented_data_
-          ? augmented_video_frame_buffer->GetVideoFrameBuffer()->GetI420A()
-          : input_image.video_frame_buffer()->GetI420A();
+          ? augmented_video_frame_buffer->GetVideoFrameBuffer()
+          : input_image.video_frame_buffer();
+  const I420ABufferInterface* yuva_buffer = frame_buffer->GetI420A();
   rtc::scoped_refptr<I420BufferInterface> alpha_buffer =
       WrapI420Buffer(input_image.width(), input_image.height(),
                      yuva_buffer->DataA(), yuva_buffer->StrideA(),
                      multiplex_dummy_planes_.data(), yuva_buffer->StrideU(),
                      multiplex_dummy_planes_.data(), yuva_buffer->StrideV(),
-                     rtc::KeepRefUntilDone(input_image.video_frame_buffer()));
+                     // To keep reference alive.
+                     [frame_buffer] {});
   VideoFrame alpha_image = VideoFrame::Builder()
                                .set_video_frame_buffer(alpha_buffer)
                                .set_timestamp_rtp(input_image.timestamp())

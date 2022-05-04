@@ -32,7 +32,6 @@ extern "C" {
 #include "common_video/include/video_frame_buffer.h"
 #include "modules/video_coding/codecs/h264/h264_color_space.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
@@ -302,8 +301,9 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
   VideoFrame* input_frame =
       static_cast<VideoFrame*>(av_buffer_get_opaque(av_frame_->buf[0]));
   RTC_DCHECK(input_frame);
-  const webrtc::I420BufferInterface* i420_buffer =
-      input_frame->video_frame_buffer()->GetI420();
+  rtc::scoped_refptr<VideoFrameBuffer> frame_buffer =
+      input_frame->video_frame_buffer();
+  const webrtc::I420BufferInterface* i420_buffer = frame_buffer->GetI420();
 
   // When needed, FFmpeg applies cropping by moving plane pointers and adjusting
   // frame width/height. Ensure that cropped buffers lie within the allocated
@@ -330,7 +330,9 @@ int32_t H264DecoderImpl::Decode(const EncodedImage& input_image,
       av_frame_->width, av_frame_->height, av_frame_->data[kYPlaneIndex],
       av_frame_->linesize[kYPlaneIndex], av_frame_->data[kUPlaneIndex],
       av_frame_->linesize[kUPlaneIndex], av_frame_->data[kVPlaneIndex],
-      av_frame_->linesize[kVPlaneIndex], rtc::KeepRefUntilDone(i420_buffer));
+      av_frame_->linesize[kVPlaneIndex],
+      // To keep reference alive.
+      [frame_buffer] {});
 
   if (preferred_output_format_ == VideoFrameBuffer::Type::kNV12) {
     const I420BufferInterface* cropped_i420 = cropped_buffer->GetI420();

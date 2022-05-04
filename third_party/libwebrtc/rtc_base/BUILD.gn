@@ -978,7 +978,6 @@ rtc_library("rtc_base") {
     #"helpers.h",
     #"http_common.cc",
     #"http_common.h",
-    "keep_ref_until_done.h",
     #"mdns_responder_interface.h",
     #"message_digest.cc",
     #"message_digest.h",
@@ -1049,7 +1048,6 @@ rtc_library("rtc_base") {
     include_dirs = [ "../../boringssl/src/include" ]
   } else {
     sources += [
-      "callback.h",
       "log_sinks.cc",
       "log_sinks.h",
       "rolling_accumulator.h",
@@ -1492,7 +1490,6 @@ if (rtc_include_tests) {
       defines = []
 
       sources = [
-        "callback_unittest.cc",
         "crc32_unittest.cc",
         "data_rate_limiter_unittest.cc",
         "fake_clock_unittest.cc",

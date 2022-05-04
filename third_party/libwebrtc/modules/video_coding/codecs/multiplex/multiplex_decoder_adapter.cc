@@ -17,7 +17,6 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "modules/video_coding/codecs/multiplex/include/augmented_video_frame_buffer.h"
 #include "modules/video_coding/codecs/multiplex/multiplex_encoded_image_packer.h"
-#include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
