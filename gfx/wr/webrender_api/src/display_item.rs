@@ -948,6 +948,9 @@ bitflags! {
         /// If true, this stacking context is a blend container than contains
         /// mix-blend-mode children (and should thus be isolated).
         const IS_BLEND_CONTAINER = 1 << 1;
+        /// If true, apply clip masks from this stacking context to individual items
+        /// instead of the overall stacking context
+        const APPLY_CLIPS_TO_ITEMS = 1 << 2;
     }
 }
 
