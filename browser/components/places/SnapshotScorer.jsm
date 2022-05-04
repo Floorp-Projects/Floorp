@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 
 /**
  * @typedef {object} RecommendationGroup
- *   A set of recommendatins with an associated weight to apply to their scores.
+ *   A set of recommendations with an associated weight to apply to their scores.
  * @property {Recommendation[]} recommendations
  *   The recommended snapshot.
  * @property {number} weight
@@ -161,7 +161,9 @@ const SnapshotScorer = new (class SnapshotScorer {
       }
     }
 
-    return recommendations.sort((a, b) => b.score - a.score);
+    return this.dedupeSnapshots(recommendations).sort(
+      (a, b) => b.score - a.score
+    );
   }
 
   /**
@@ -204,6 +206,14 @@ const SnapshotScorer = new (class SnapshotScorer {
         // If the existing match does not have a search query, simply continue
         // as it is the preferred option.
         if (!existing.hasSearch) {
+          continue;
+        }
+
+        // If we have scores, select the best one from the highest score.
+        if ("score" in newRecommendation) {
+          if (newRecommendation.score > existing.score) {
+            matchingMap.set(key, newRecommendation);
+          }
           continue;
         }
 
