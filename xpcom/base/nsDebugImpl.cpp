@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/Printf.h"
+#include "mozilla/ProfilerMarkers.h"
 
 #include "MainThreadUtils.h"
 #include "nsDebugImpl.h"
@@ -302,6 +303,66 @@ bool FixedBuffer::append(const char* aBuf, size_t aLen) {
   return true;
 }
 
+namespace geckoprofiler::markers {
+
+struct DebugBreakMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("DebugBreak");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   uint32_t aSeverity,
+                                   const ProfilerString8View& aStr,
+                                   const ProfilerString8View& aExpr,
+                                   const ProfilerString8View& aFile,
+                                   int32_t aLine) {
+    nsAutoCString sevString("WARNING");
+    switch (aSeverity) {
+      case NS_DEBUG_ASSERTION:
+        sevString = "ASSERTION";
+        break;
+
+      case NS_DEBUG_BREAK:
+        sevString = "BREAK";
+        break;
+
+      case NS_DEBUG_ABORT:
+        sevString = "ABORT";
+        break;
+    }
+    aWriter.StringProperty("Severity", sevString);
+    // The 'name' property is searchable on the front-end.
+    if (aStr.Length() != 0) {
+      aWriter.StringProperty("Message", aStr);
+      aWriter.StringProperty("name", aStr);
+    } else if (aExpr.Length() != 0) {
+      aWriter.StringProperty("name", aExpr);
+    }
+    if (aExpr.Length() != 0) {
+      aWriter.StringProperty("Expression", aExpr);
+    }
+    if (aFile.Length() != 0) {
+      aWriter.StringProperty("File", aFile);
+    }
+    if (aLine != 0) {
+      aWriter.IntProperty("Line", aLine);
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::TimelineOverview, MS::Location::MarkerChart,
+              MS::Location::MarkerTable};
+    schema.SetAllLabels("{marker.data.Severity}: {marker.data.name}");
+    schema.AddKeyFormat("Message", MS::Format::String);
+    schema.AddKeyFormat("Severity", MS::Format::String);
+    schema.AddKeyFormat("Expression", MS::Format::String);
+    schema.AddKeyFormat("File", MS::Format::String);
+    schema.AddKeyFormat("Line", MS::Format::Integer);
+    return schema;
+  }
+};
+
+}  // namespace geckoprofiler::markers
+
 EXPORT_XPCOM_API(void)
 NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
               const char* aFile, int32_t aLine) {
@@ -366,6 +427,12 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", buf.buffer);
 #endif
+
+  PROFILER_MARKER("NS_DebugBreak", OTHER, MarkerStack::Capture(),
+                  DebugBreakMarker, aSeverity,
+                  ProfilerString8View::WrapNullTerminatedString(aStr),
+                  ProfilerString8View::WrapNullTerminatedString(aExpr),
+                  ProfilerString8View::WrapNullTerminatedString(aFile), aLine);
 
   // Write the message to stderr unless it's a warning and MOZ_IGNORE_WARNINGS
   // is set.
