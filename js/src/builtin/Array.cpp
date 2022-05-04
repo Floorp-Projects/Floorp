@@ -4251,6 +4251,13 @@ bool js::array_includes(JSContext* cx, unsigned argc, Value* vp) {
         std::min(nobj->getDenseInitializedLength(), uint32_t(len));
     const Value* elements = nobj->getDenseElements();
 
+    // Trailing holes are treated as |undefined|.
+    if (uint32_t(len) > length && searchElement.isUndefined()) {
+      // |undefined| is strictly equal only to |undefined|.
+      args.rval().setBoolean(true);
+      return true;
+    }
+
     auto iterator = [elements, start, length](JSContext* cx, auto cmp,
                                               MutableHandleValue rval) {
       for (uint32_t i = start; i < length; i++) {
