@@ -131,10 +131,6 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStream {
 
   Stats GetStats() const override { return mStats; }
 
-  void AddSecondarySink(webrtc::RtpPacketSinkInterface* sink) override {}
-  void RemoveSecondarySink(
-      const webrtc::RtpPacketSinkInterface* sink) override {}
-
   std::vector<webrtc::RtpSource> GetSources() const override {
     return std::vector<webrtc::RtpSource>();
   }
