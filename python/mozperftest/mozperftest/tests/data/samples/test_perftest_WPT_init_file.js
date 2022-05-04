@@ -16,11 +16,12 @@ module.exports = {
   owner: "Performance Testing Team",
   name: "webpagetest",
   description:
-    "Run webpagetest performance pageload test against Alexa top 50 websites",
-  longDescription: `This mozperftest gets webpagetest to run pageload tests against the 50 most popular websites and provide data.
-  The full list of data returned from webpagetest: firstContentfulPaint, timeToContentfulPaint, visualComplete90,
-  firstPaint, visualComplete99, visualComplete, SpeedIndex, bytesIn,bytesOut,TTFB,fullyLoadedCPUms, fullyLoadedCPUpct,
-  domElements, domContentLoadedEventStart, domContentLoadedEventEnd, loadEventStart, loadEventEnd`,
+    "Run webpagetest performance pageload tests on Firefox against Alexa top 50 websites",
+  longDescription: `This mozperftest gets webpagetest to run pageload tests on Firefox against the 50 most popular
+  websites and provide data. The full list of data returned from webpagetest: firstContentfulPaint,
+  timeToContentfulPaint, visualComplete90, firstPaint, visualComplete99, visualComplete, SpeedIndex, bytesIn, bytesOut,
+  TTFB, fullyLoadedCPUms, fullyLoadedCPUpct, domElements, domContentLoadedEventStart, domContentLoadedEventEnd,
+  loadEventStart, loadEventEnd`,
   options: {
     test_parameters: {
       location: "ec2-us-east-1",
@@ -89,6 +90,25 @@ module.exports = {
       "huanqiu.com",
       "amazon.co.jp",
       "okezone.com",
+    ],
+    browser_metrics: [
+      "firstContentfulPaint",
+      "timeToContentfulPaint",
+      "visualComplete90",
+      "firstPaint",
+      "visualComplete99",
+      "visualComplete",
+      "SpeedIndex",
+      "bytesIn",
+      "bytesOut",
+      "TTFB",
+      "fullyLoadedCPUms",
+      "fullyLoadedCPUpct",
+      "domElements",
+      "domContentLoadedEventStart",
+      "domContentLoadedEventEnd",
+      "loadEventStart",
+      "loadEventEnd",
     ],
   },
 };
