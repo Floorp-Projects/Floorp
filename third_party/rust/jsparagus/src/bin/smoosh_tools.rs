@@ -700,6 +700,18 @@ where
     write_file(cargo, filtered_lines.join("\n"))
 }
 
+fn update_gkrust(args: &SimpleArgs) -> Result<(), Error> {
+    log_info!("Updating gkrust-shared");
+
+    let build = BuildTree::try_new(args)?;
+
+    check_command(
+        Command::new("cargo")
+            .args(["update", "-p", "gkrust-shared"])
+            .current_dir(build.moz.topsrcdir),
+    )
+}
+
 fn run_mach(command_args: &[&str], args: &SimpleArgs) -> Result<(), Error> {
     let build = BuildTree::try_new(args)?;
 
@@ -721,6 +733,8 @@ fn build(args: &SimpleArgs) -> Result<(), Error> {
             jsparagus: jsparagus.topsrcdir,
         },
     )?;
+
+    update_gkrust(args)?;
 
     run_mach(&["build"], args)
 }

@@ -449,6 +449,12 @@ impl ScriptStencil {
             .set(ImmutableScriptFlagsEnum::HasMappedArgsObj);
     }
 
+    pub fn set_function_has_new_target_binding(&mut self) {
+        debug_assert!(self.is_lazy_function());
+        self.immutable_flags
+            .set(ImmutableScriptFlagsEnum::FunctionHasNewTargetBinding);
+    }
+
     pub fn is_arrow_function(&self) -> bool {
         self.is_function() && self.fun_flags.is_arrow()
     }
