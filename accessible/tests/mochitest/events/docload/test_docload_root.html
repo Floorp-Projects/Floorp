@@ -37,7 +37,7 @@
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, gRootAcc),
+        new asyncInvokerChecker(EVENT_REORDER, gRootAcc),
         // We use a function here to get the target because gDialog isn't set
         // yet, but it will be when the function is called.
         new invokerChecker(EVENT_FOCUS, () => gDialog.document)

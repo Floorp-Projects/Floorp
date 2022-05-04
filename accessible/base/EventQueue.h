@@ -68,6 +68,9 @@ class EventQueue {
    * SwapElements() on it.
    */
   nsTArray<RefPtr<AccEvent>> mEvents;
+
+  // Pending focus event.
+  RefPtr<AccEvent> mFocusEvent;
 };
 
 }  // namespace a11y
