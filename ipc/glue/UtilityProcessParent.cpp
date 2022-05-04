@@ -85,6 +85,15 @@ void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   if (aWhy == AbnormalShutdown) {
     nsAutoString dumpID;
+
+    if (mCrashReporter) {
+#if defined(MOZ_SANDBOX)
+      mCrashReporter->AddAnnotation(
+          CrashReporter::Annotation::UtilityProcessSandboxingKind,
+          (unsigned int)mHost->mSandbox);
+#endif
+    }
+
     GenerateCrashReport(OtherPid(), &dumpID);
 
     // It's okay for dumpID to be empty if there was no minidump generated
