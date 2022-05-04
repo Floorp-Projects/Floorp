@@ -116,7 +116,7 @@ TEST_F(VsyncTester, CompositorGetVsyncNotifications) {
   ASSERT_FALSE(mVsyncSource->IsVsyncEnabled());
 
   RefPtr<CompositorVsyncDispatcher> vsyncDispatcher =
-      new CompositorVsyncDispatcher();
+      new CompositorVsyncDispatcher(mVsyncSource->GetVsyncDispatcher());
   RefPtr<TestVsyncObserver> testVsyncObserver = new TestVsyncObserver();
 
   vsyncDispatcher->SetCompositorVsyncObserver(testVsyncObserver);

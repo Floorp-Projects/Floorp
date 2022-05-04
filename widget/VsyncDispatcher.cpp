@@ -15,31 +15,17 @@ using namespace mozilla::layers;
 
 namespace mozilla {
 
-CompositorVsyncDispatcher::CompositorVsyncDispatcher()
-    : mVsyncSource(gfxPlatform::GetPlatform()->GetHardwareVsync()),
-      mCompositorObserverLock("CompositorObserverLock"),
-      mDidShutdown(false) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mVsyncSource->RegisterCompositorVsyncDispatcher(this);
-}
-
 CompositorVsyncDispatcher::CompositorVsyncDispatcher(
-    RefPtr<gfx::VsyncSource> aVsyncSource)
-    : mVsyncSource(std::move(aVsyncSource)),
+    RefPtr<VsyncDispatcher> aVsyncDispatcher)
+    : mVsyncDispatcher(std::move(aVsyncDispatcher)),
       mCompositorObserverLock("CompositorObserverLock"),
       mDidShutdown(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-
-  mVsyncSource->RegisterCompositorVsyncDispatcher(this);
 }
 
 CompositorVsyncDispatcher::~CompositorVsyncDispatcher() {
   MOZ_ASSERT(XRE_IsParentProcess());
-  // We auto remove this vsync dispatcher from the vsync source in the
-  // nsBaseWidget
 }
 
 void CompositorVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
@@ -52,13 +38,6 @@ void CompositorVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   }
 }
 
-void CompositorVsyncDispatcher::MoveToSource(
-    const RefPtr<gfx::VsyncSource>& aVsyncSource) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess());
-  mVsyncSource = aVsyncSource;
-}
-
 void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -67,9 +46,9 @@ void CompositorVsyncDispatcher::ObserveVsync(bool aEnable) {
   }
 
   if (aEnable) {
-    mVsyncSource->EnableCompositorVsyncDispatcher(this);
+    mVsyncDispatcher->AddVsyncObserver(this);
   } else {
-    mVsyncSource->DisableCompositorVsyncDispatcher(this);
+    mVsyncDispatcher->RemoveVsyncObserver(this);
   }
 }
 
@@ -106,8 +85,7 @@ void CompositorVsyncDispatcher::Shutdown() {
     MutexAutoLock lock(mCompositorObserverLock);
     mCompositorVsyncObserver = nullptr;
   }
-  mVsyncSource->DeregisterCompositorVsyncDispatcher(this);
-  mVsyncSource = nullptr;
+  mVsyncDispatcher = nullptr;
 }
 
 VsyncDispatcher::VsyncDispatcher(gfx::VsyncSource* aVsyncSource)

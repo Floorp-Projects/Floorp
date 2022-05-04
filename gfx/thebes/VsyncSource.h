@@ -16,7 +16,6 @@
 
 namespace mozilla {
 class VsyncDispatcher;
-class CompositorVsyncDispatcher;
 class VsyncObserver;
 struct VsyncEvent;
 
@@ -31,7 +30,6 @@ class VsyncSource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncSource)
 
   typedef mozilla::VsyncDispatcher VsyncDispatcher;
-  typedef mozilla::CompositorVsyncDispatcher CompositorVsyncDispatcher;
 
  public:
   VsyncSource();
@@ -54,15 +52,6 @@ class VsyncSource {
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
                            const TimeStamp& aOutputTimestamp);
   void NotifyGenericObservers(VsyncEvent aEvent);
-
-  void EnableCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DisableCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void RegisterCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DeregisterCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
 
   void NotifyVsyncDispatcherVsyncStatus(bool aEnable);
   virtual TimeDuration GetVsyncRate();
@@ -96,10 +85,6 @@ class VsyncSource {
 
   Mutex mDispatcherLock MOZ_UNANNOTATED;
   bool mVsyncDispatcherNeedsVsync;
-  nsTArray<RefPtr<CompositorVsyncDispatcher>>
-      mEnabledCompositorVsyncDispatchers;
-  nsTArray<RefPtr<CompositorVsyncDispatcher>>
-      mRegisteredCompositorVsyncDispatchers;
   RefPtr<VsyncDispatcher> mVsyncDispatcher;
   nsTArray<RefPtr<VsyncObserver>>
       mGenericObservers;  // can only be touched from the main thread
