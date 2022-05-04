@@ -62,11 +62,14 @@ box,
   background-position: center left;
 }
 
+.splitview-nav > li:not(.splitview-active):where(:hover, :focus-within) {
+  background-color: var(--theme-selection-background-hover);
+}
+
 /* Toolbars */
 
 .splitview-main > .devtools-toolbar {
-  background-origin: border-box;
-  background-clip: border-box;
+  height: 29px;
 }
 
 .splitview-main > toolbar,

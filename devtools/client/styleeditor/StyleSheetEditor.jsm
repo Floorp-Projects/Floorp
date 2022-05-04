@@ -542,14 +542,22 @@ StyleSheetEditor.prototype = {
 
   /**
    * Event handler for when the editor is shown.
+   *
+   * @param {Object} options
+   * @param {String} options.reason: Indicates why the editor is shown
    */
-  onShow: function() {
+  onShow: function(options = {}) {
     if (this.sourceEditor) {
       // CodeMirror needs refresh to restore scroll position after hiding and
       // showing the editor.
       this.sourceEditor.refresh();
     }
-    this.focus();
+
+    // We don't want to focus the editor if it was shown because of the list being filtered,
+    // as the user might still be typing in the filter input.
+    if (options.reason !== "filter-auto") {
+      this.focus();
+    }
   },
 
   /**
