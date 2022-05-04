@@ -20,6 +20,7 @@
 #include "nsContentUtils.h"
 #include "nsIAccessiblePivot.h"
 #include "nsILineIterator.h"
+#include "nsStyleStructInlines.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
 #include "nsUnicodeProperties.h"
@@ -45,12 +46,14 @@ namespace mozilla::a11y {
 
 static int32_t RenderedToContentOffset(LocalAccessible* aAcc,
                                        uint32_t aRenderedOffset) {
-  if (aAcc->LocalParent() && aAcc->LocalParent()->IsTextField()) {
+  nsTextFrame* frame = do_QueryFrame(aAcc->GetFrame());
+  MOZ_ASSERT(frame);
+  if (frame->StyleText()->WhiteSpaceIsSignificant() &&
+      frame->StyleText()->NewlineIsSignificant(frame)) {
+    // Spaces and new lines aren't altered, so the content and rendered offsets
+    // are the same. This happens in pre-formatted text and text fields.
     return static_cast<int32_t>(aRenderedOffset);
   }
-
-  nsIFrame* frame = aAcc->GetFrame();
-  MOZ_ASSERT(frame && frame->IsTextFrame());
 
   nsIFrame::RenderedText text =
       frame->GetRenderedText(aRenderedOffset, aRenderedOffset + 1,
@@ -61,12 +64,14 @@ static int32_t RenderedToContentOffset(LocalAccessible* aAcc,
 
 static uint32_t ContentToRenderedOffset(LocalAccessible* aAcc,
                                         int32_t aContentOffset) {
-  if (aAcc->LocalParent() && aAcc->LocalParent()->IsTextField()) {
+  nsTextFrame* frame = do_QueryFrame(aAcc->GetFrame());
+  MOZ_ASSERT(frame);
+  if (frame->StyleText()->WhiteSpaceIsSignificant() &&
+      frame->StyleText()->NewlineIsSignificant(frame)) {
+    // Spaces and new lines aren't altered, so the content and rendered offsets
+    // are the same. This happens in pre-formatted text and text fields.
     return aContentOffset;
   }
-
-  nsIFrame* frame = aAcc->GetFrame();
-  MOZ_ASSERT(frame && frame->IsTextFrame());
 
   nsIFrame::RenderedText text =
       frame->GetRenderedText(aContentOffset, aContentOffset + 1,
