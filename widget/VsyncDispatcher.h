@@ -19,12 +19,12 @@ class VsyncObserver {
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
  public:
-  // The method called when a vsync occurs. Return true if some work was done.
+  // The method is called when a vsync occurs.
   // In general, this vsync notification will occur on the hardware vsync
   // thread from VsyncSource. But it might also be called on PVsync ipc thread
   // if this notification is cross process. Thus all observer should check the
   // thread model before handling the real task.
-  virtual bool NotifyVsync(const VsyncEvent& aVsync) = 0;
+  virtual void NotifyVsync(const VsyncEvent& aVsync) = 0;
 
  protected:
   VsyncObserver() = default;

@@ -72,11 +72,10 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
                                           override)
 
    public:
-    bool NotifyVsync(const mozilla::VsyncEvent& aVsync) override {
+    void NotifyVsync(const mozilla::VsyncEvent& aVsync) override {
       if (mOwner) {
         mOwner->Update();
       }
-      return true;
     }
     explicit VObserver(DManipEventHandler* aOwner) : mOwner(aOwner) {}
 
