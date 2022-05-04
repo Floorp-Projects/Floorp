@@ -18,7 +18,7 @@ The flow of our rendering engine is as follows:
 1. Hardware Vsync event occurs on an OS specific *Hardware Vsync Thread*
    on a per monitor basis.
 2. The *Hardware Vsync Thread* attached to the monitor notifies the
-   ``CompositorVsyncDispatchers`` and ``RefreshTimerVsyncDispatcher``.
+   ``CompositorVsyncDispatchers`` and ``VsyncDispatcher``.
 3. For every Firefox window on the specific monitor, notify a
    ``CompositorVsyncDispatcher``. The ``CompositorVsyncDispatcher`` is
    specific to one window.
@@ -30,9 +30,9 @@ The flow of our rendering engine is as follows:
    UI process, which sends an IPDL message to the ``VsyncBridgeParent``
    on the compositor thread of the GPU process, which then dispatches to
    ``CompositorVsyncScheduler::Observer``.
-6. The ``RefreshTimerVsyncDispatcher`` notifies the Chrome
+6. The ``VsyncDispatcher`` notifies the Chrome
    ``RefreshTimer`` that a vsync has occurred.
-7. The ``RefreshTimerVsyncDispatcher`` sends IPC messages to all content
+7. The ``VsyncDispatcher`` sends IPC messages to all content
    processes to tick their respective active ``RefreshTimer``.
 8. The ``Compositor`` dispatches input events on the *Compositor
    Thread*, then composites. Input events are only dispatched on the
@@ -69,7 +69,7 @@ callback fetches all ``CompositorVsyncDispatchers`` associated with the
 has occurred with the vsync’s timestamp. It is the responsibility of the
 ``CompositorVsyncDispatcher`` to notify the ``Compositor`` that is
 awaiting vsync notifications. The ``Display`` will then notify the
-associated ``RefreshTimerVsyncDispatcher``, which should notify all
+associated ``VsyncDispatcher``, which should notify all
 active ``RefreshDrivers`` to tick.
 
 All ``Display`` objects are encapsulated in a ``VsyncSource`` object.
@@ -326,15 +326,15 @@ Instead, we create a new ``RefreshTimer``, the ``VsyncRefreshTimer``
 which ticks based on vsync messages. We replace the current active timer
 with a ``VsyncRefreshTimer``. All tabs will then tick based on this new
 active timer. Since the ``RefreshTimer`` has a lifetime of the process,
-we only need to create a single ``RefreshTimerVsyncDispatcher`` per
+we only need to create a single ``VsyncDispatcher`` per
 ``Display`` when Firefox starts. Even if we do not have any content
 processes, the Chrome process will still need a ``VsyncRefreshTimer``,
-thus we can associate the ``RefreshTimerVsyncDispatcher`` with each
+thus we can associate the ``VsyncDispatcher`` with each
 ``Display``.
 
 When Firefox starts, we initially create a new ``VsyncRefreshTimer`` in
 the Chrome process. The ``VsyncRefreshTimer`` will listen to vsync
-notifications from ``RefreshTimerVsyncDispatcher`` on the global
+notifications from ``VsyncDispatcher`` on the global
 ``Display``. When nsRefreshDriver::Shutdown executes, it will delete the
 ``VsyncRefreshTimer``. This creates a problem as all the
 ``RefreshTimers`` are currently manually memory managed whereas
@@ -377,17 +377,17 @@ messages should be sent across the channel. After ActorDestroy is
 called, the IPDL machinery will delete the **VsyncParent/Child** pair.
 The ``VsyncParent``, due to being a ``VsyncObserver``, is ref counted.
 After ``VsyncParent::ActorDestroy`` is called, it unregisters itself
-from the ``RefreshTimerVsyncDispatcher``, which holds the last reference
+from the ``VsyncDispatcher``, which holds the last reference
 to the ``VsyncParent``, and the object will be deleted.
 
 Thus the overall flow during normal execution is:
 
-1. VsyncSource::Display::RefreshTimerVsyncDispatcher receives a Vsync
+1. VsyncSource::Display::VsyncDispatcher receives a Vsync
    notification from the OS in the parent process.
-2. RefreshTimerVsyncDispatcher notifies
+2. VsyncDispatcher notifies
    VsyncRefreshTimer::RefreshDriverVsyncObserver that a vsync occurred on
    the parent process on the hardware vsync thread.
-3. RefreshTimerVsyncDispatcher notifies the VsyncParent on the hardware
+3. VsyncDispatcher notifies the VsyncParent on the hardware
    vsync thread that a vsync occurred.
 4. The VsyncRefreshTimer::RefreshDriverVsyncObserver in the parent
    process posts a task to the main thread that ticks the refresh
@@ -426,7 +426,7 @@ multiple ``RefreshDrivers``.
 
 When a tab or window changes monitors, the ``nsIWidget`` receives a
 display changed notification. Based on which display the window is on,
-the window switches to the correct ``RefreshTimerVsyncDispatcher`` and
+the window switches to the correct ``VsyncDispatcher`` and
 ``CompositorVsyncDispatcher`` on the parent process based on the display
 id. Each ``TabParent`` should also send a notification to their child.
 Each ``TabChild``, given the display ID, switches to the correct
@@ -444,7 +444,7 @@ Object Lifetime
    associated with the VsyncDispatcher
 2. CompositorVsyncScheduler::Observer - Lives and dies the same time as
    the CompositorBridgeParent.
-3. RefreshTimerVsyncDispatcher - As long as the associated display
+3. VsyncDispatcher - As long as the associated display
    object, which is the lifetime of Firefox.
 4. VsyncSource - Lives as long as the gfxPlatform on the chrome process,
    which is the lifetime of Firefox.
