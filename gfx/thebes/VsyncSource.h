@@ -51,7 +51,6 @@ class VsyncSource {
   //     callback is called.
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
                            const TimeStamp& aOutputTimestamp);
-  void NotifyGenericObservers(VsyncEvent aEvent);
 
   void NotifyVsyncDispatcherVsyncStatus(bool aEnable);
   virtual TimeDuration GetVsyncRate();
@@ -61,14 +60,6 @@ class VsyncSource {
   virtual void DisableVsync() = 0;
   virtual bool IsVsyncEnabled() = 0;
   virtual void Shutdown() = 0;
-
-  // Add and remove a generic observer for vsync. Note that keeping an observer
-  // registered means vsync will keep firing, which may impact power usage. So
-  // this is intended only for "short term" vsync observers. These methods must
-  // be called on the parent process main thread, and the observer will likewise
-  // be notified on the parent process main thread.
-  void AddGenericObserver(VsyncObserver* aObserver);
-  void RemoveGenericObserver(VsyncObserver* aObserver);
 
   void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
 
@@ -86,12 +77,7 @@ class VsyncSource {
   Mutex mDispatcherLock MOZ_UNANNOTATED;
   bool mVsyncDispatcherNeedsVsync;
   RefPtr<VsyncDispatcher> mVsyncDispatcher;
-  nsTArray<RefPtr<VsyncObserver>>
-      mGenericObservers;  // can only be touched from the main thread
   VsyncId mVsyncId;
-  VsyncId mLastVsyncIdSentToMainThread;     // hold mDispatcherLock to touch
-  VsyncId mLastMainThreadProcessedVsyncId;  // hold mDispatcherLock to touch
-  bool mHasGenericObservers;                // hold mDispatcherLock to touch
 };
 
 }  // namespace gfx
