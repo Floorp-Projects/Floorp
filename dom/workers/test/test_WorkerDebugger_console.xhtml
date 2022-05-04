@@ -22,20 +22,23 @@
 
     consoleMessagesReceived = 0;
     function test() {
+      const ConsoleAPIStorage = SpecialPowers.Cc[
+        "@mozilla.org/consoleAPI-storage;1"
+      ].getService(SpecialPowers.Ci.nsIConsoleAPIStorage);
+
       function consoleListener() {
-        Services.obs.addObserver(this, "console-api-log-event");
+        this.observe = this.observe.bind(this);
+        ConsoleAPIStorage.addLogEventListener(this.observe, SpecialPowers.wrap(document).nodePrincipal);
       }
 
       consoleListener.prototype  = {
-        observe: function(aSubject, aTopic, aData) {
-          if (aTopic == "console-api-log-event") {
-            var obj = aSubject.wrappedJSObject;
-            if (obj.arguments[0] == "Hello from the debugger script!" &&
-                !consoleMessagesReceived) {
-              consoleMessagesReceived++;
-              ok(true, "Something has been received");
-              Services.obs.removeObserver(this, "console-api-log-event");
-            }
+        observe: function(aSubject) {
+          var obj = aSubject.wrappedJSObject;
+          if (obj.arguments[0] == "Hello from the debugger script!" &&
+              !consoleMessagesReceived) {
+            consoleMessagesReceived++;
+            ok(true, "Something has been received");
+            ConsoleAPIStorage.removeLogEventListener(this.observe);
           }
         }
       }

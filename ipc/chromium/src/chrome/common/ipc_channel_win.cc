@@ -823,7 +823,7 @@ bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
                          nullptr));  // Default security descriptor.
   if (!server) {
     NS_WARNING(
-        nsPrintfCString("CreateNamedPipeW Failed %u", ::GetLastError()).get());
+        nsPrintfCString("CreateNamedPipeW Failed %lu", ::GetLastError()).get());
     return false;
   }
 
@@ -837,7 +837,7 @@ bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
                     OPEN_EXISTING, kFlags, nullptr));
   if (!client) {
     NS_WARNING(
-        nsPrintfCString("CreateFileW Failed %u", ::GetLastError()).get());
+        nsPrintfCString("CreateFileW Failed %lu", ::GetLastError()).get());
     return false;
   }
 
@@ -846,7 +846,7 @@ bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {
   if (::ConnectNamedPipe(server->get(), nullptr) ||
       ::GetLastError() != ERROR_PIPE_CONNECTED) {
     NS_WARNING(
-        nsPrintfCString("ConnectNamedPipe Failed %u", ::GetLastError()).get());
+        nsPrintfCString("ConnectNamedPipe Failed %lu", ::GetLastError()).get());
     return false;
   }
   return true;

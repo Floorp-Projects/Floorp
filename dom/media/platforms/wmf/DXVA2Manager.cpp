@@ -361,8 +361,8 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
       D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
       (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'), D3DFMT_X8R8G8B8);
   if (!SUCCEEDED(hr)) {
-    aFailureReason =
-        nsPrintfCString("CheckDeviceFormatConversion failed with error %X", hr);
+    aFailureReason = nsPrintfCString(
+        "CheckDeviceFormatConversion failed with error %lX", hr);
     return hr;
   }
 
@@ -385,7 +385,8 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
                                   D3DCREATE_MIXED_VERTEXPROCESSING,
                               &params, nullptr, getter_AddRefs(device));
   if (!SUCCEEDED(hr)) {
-    aFailureReason = nsPrintfCString("CreateDeviceEx failed with error %X", hr);
+    aFailureReason =
+        nsPrintfCString("CreateDeviceEx failed with error %lX", hr);
     return hr;
   }
 
@@ -397,7 +398,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
 
   hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
   if (!SUCCEEDED(hr)) {
-    aFailureReason = nsPrintfCString("CreateQuery failed with error %X", hr);
+    aFailureReason = nsPrintfCString("CreateQuery failed with error %lX", hr);
     return hr;
   }
 
@@ -409,13 +410,13 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
                                               getter_AddRefs(deviceManager));
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "DXVA2CreateDirect3DDeviceManager9 failed with error %X", hr);
+        "DXVA2CreateDirect3DDeviceManager9 failed with error %lX", hr);
     return hr;
   }
   hr = deviceManager->ResetDevice(device, resetToken);
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "IDirect3DDeviceManager9::ResetDevice failed with error %X", hr);
+        "IDirect3DDeviceManager9::ResetDevice failed with error %lX", hr);
     return hr;
   }
 
@@ -424,7 +425,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   hr = deviceManager->OpenDeviceHandle(&deviceHandle);
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "IDirect3DDeviceManager9::OpenDeviceHandle failed with error %X", hr);
+        "IDirect3DDeviceManager9::OpenDeviceHandle failed with error %lX", hr);
     return hr;
   }
 
@@ -433,7 +434,8 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   deviceManager->CloseDeviceHandle(deviceHandle);
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "IDirectXVideoDecoderServer::GetVideoService failed with error %X", hr);
+        "IDirectXVideoDecoderServer::GetVideoService failed with error %lX",
+        hr);
     return hr;
   }
 
@@ -443,7 +445,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
         "IDirectXVideoDecoderServer::GetDecoderDeviceGuids failed with error "
-        "%X",
+        "%lX",
         hr);
     return hr;
   }
@@ -468,7 +470,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
   hr = d3d9Ex->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &adapter);
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "IDirect3D9Ex::GetAdapterIdentifier failed with error %X", hr);
+        "IDirect3D9Ex::GetAdapterIdentifier failed with error %lX", hr);
     return hr;
   }
 
@@ -720,10 +722,11 @@ bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
                     DXVA2_Intel_ClearVideo_ModeH264_VLD_NoFGT};
     for (const GUID& guid : guids) {
       BOOL supported = false;
-      hr = videoDevice->CheckVideoDecoderFormat(&DXVA2_ModeH264_VLD_NoFGT,
-                                                DXGI_FORMAT_NV12, &supported);
+      hr = videoDevice->CheckVideoDecoderFormat(&guid, DXGI_FORMAT_NV12,
+                                                &supported);
       if (SUCCEEDED(hr) && supported) {
         desc.Guid = guid;
+        break;
       }
     }
   } else if (subtype == MFVideoFormat_VP80) {
@@ -909,14 +912,14 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
                                       getter_AddRefs(mDXGIDeviceManager));
   if (!SUCCEEDED(hr)) {
     aFailureReason =
-        nsPrintfCString("MFCreateDXGIDeviceManager failed with code %X", hr);
+        nsPrintfCString("MFCreateDXGIDeviceManager failed with code %lX", hr);
     return hr;
   }
 
   hr = mDXGIDeviceManager->ResetDevice(mDevice, mDeviceManagerToken);
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString(
-        "IMFDXGIDeviceManager::ResetDevice failed with code %X", hr);
+        "IMFDXGIDeviceManager::ResetDevice failed with code %lX", hr);
     return hr;
   }
 
@@ -933,7 +936,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     if (!SUCCEEDED(hr)) {
       aFailureReason = nsPrintfCString(
           "MFTDecoder::Create of Video Processor MFT for color conversion "
-          "failed with code %X",
+          "failed with code %lX",
           hr);
       return;
     }
@@ -943,7 +946,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     if (!SUCCEEDED(hr)) {
       aFailureReason = nsPrintfCString(
           "MFTDecoder::SendMFTMessage(MFT_MESSAGE_"
-          "SET_D3D_MANAGER) failed with code %X",
+          "SET_D3D_MANAGER) failed with code %lX",
           hr);
       return;
     }
@@ -959,7 +962,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
       static_cast<IDXGIDevice**>(getter_AddRefs(dxgiDevice)));
   if (!SUCCEEDED(hr)) {
     aFailureReason =
-        nsPrintfCString("QI to IDXGIDevice failed with code %X", hr);
+        nsPrintfCString("QI to IDXGIDevice failed with code %lX", hr);
     return hr;
   }
 
@@ -967,7 +970,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
   hr = dxgiDevice->GetAdapter(adapter.StartAssignment());
   if (!SUCCEEDED(hr)) {
     aFailureReason =
-        nsPrintfCString("IDXGIDevice::GetAdapter failed with code %X", hr);
+        nsPrintfCString("IDXGIDevice::GetAdapter failed with code %lX", hr);
     return hr;
   }
 
@@ -975,7 +978,7 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
   hr = adapter->GetDesc(&adapterDesc);
   if (!SUCCEEDED(hr)) {
     aFailureReason =
-        nsPrintfCString("IDXGIAdapter::GetDesc failed with code %X", hr);
+        nsPrintfCString("IDXGIAdapter::GetDesc failed with code %lX", hr);
     return hr;
   }
 

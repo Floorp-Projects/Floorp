@@ -200,8 +200,10 @@ void SessionChangeObserver::OnWinEventProc(HWND aHwnd, UINT aMsg,
     if (!::ProcessIdToSessionId(::GetCurrentProcessId(), &currentSessionId)) {
       isCurrentSession = Nothing();
     } else {
-      LOG("SessionChangeObserver::OnWinEventProc() aWParam %d aLParam %d "
-          "currentSessionId %d this %p",
+      LOG("SessionChangeObserver::OnWinEventProc() aWParam %zu aLParam "
+          "%" PRIdLPTR
+          " "
+          "currentSessionId %lu this %p",
           aWParam, aLParam, currentSessionId, this);
 
       isCurrentSession = Some(static_cast<DWORD>(aLParam) == currentSessionId);

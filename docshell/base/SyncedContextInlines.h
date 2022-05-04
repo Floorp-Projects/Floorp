@@ -276,12 +276,13 @@ typename Transaction<Context>::IndexSet Transaction<Context>::Validate(
   if (!revertTxn.mModified.isEmpty()) {
     // NOTE: Logging with modified IndexSet from revert transaction, and values
     // from this transaction, so we log the failed values we're going to revert.
-    MOZ_LOG(Context::GetSyncLog(), LogLevel::Debug,
-            ("Transaction::PartialRevert(#%" PRIx64 ", pid %d): %s",
-             aOwner->Id(), aSource ? aSource->OtherPid() : base::kInvalidProcessId,
-             FormatTransaction<Context>(revertTxn.mModified, mValues,
-                                        revertTxn.mValues)
-                 .get()));
+    MOZ_LOG(
+        Context::GetSyncLog(), LogLevel::Debug,
+        ("Transaction::PartialRevert(#%" PRIx64 ", pid %" PRIPID "): %s",
+         aOwner->Id(), aSource ? aSource->OtherPid() : base::kInvalidProcessId,
+         FormatTransaction<Context>(revertTxn.mModified, mValues,
+                                    revertTxn.mValues)
+             .get()));
 
     mModified -= revertTxn.mModified;
 

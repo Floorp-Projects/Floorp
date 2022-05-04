@@ -16,79 +16,32 @@ namespace mozilla {
 namespace ipc {
 
 class FileDescriptor;
-class PFileDescriptorSetChild;
-class PFileDescriptorSetParent;
-class PChildToParentStreamChild;
-class PParentToChildStreamParent;
 
-// Provide two interfaces for sending PParentToChildStream and
-// PFileDescriptorSet constructor messages.
-class ParentToChildStreamActorManager {
- public:
-  virtual PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) = 0;
-  virtual PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) = 0;
-};
-
-class ChildToParentStreamActorManager {
- public:
-  virtual PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild* aActor) = 0;
-  virtual PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) = 0;
-};
-
-// If you want to serialize an inputStream, please use AutoIPCStream.
+// If you want to serialize an inputStream, please use SerializeIPCStream or
+// nsIInputStream directly.
 class InputStreamHelper {
  public:
+  static void SerializedComplexity(nsIInputStream* aInputStream,
+                                   uint32_t aMaxSize, uint32_t* aSizeUsed,
+                                   uint32_t* aPipes, uint32_t* aTransferables);
+
   // These 2 methods allow to serialize an inputStream into InputStreamParams.
   // The manager is needed in case a stream needs to serialize itself as
   // IPCRemoteStream.
   // The stream serializes itself fully only if the resulting IPC message will
-  // be smaller than |aMaxSize|. Otherwise, the stream serializes itself as
-  // IPCRemoteStream, and, its content will be sent to the other side of the IPC
-  // pipe in chunks. This sending can start immediatelly or at the first read
-  // based on the value of |aDelayedStart|. The IPC message size is returned
-  // into |aSizeUsed|.
+  // be smaller than |aMaxSize|. Otherwise, the stream serializes itself as a
+  // DataPipe, and, its content will be sent to the other side of the IPC pipe
+  // in chunks. The IPC message size is returned into |aSizeUsed|.
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
-                                   nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart, uint32_t aMaxSize,
-                                   uint32_t* aSizeUsed,
-                                   ParentToChildStreamActorManager* aManager);
+                                   uint32_t aMaxSize, uint32_t* aSizeUsed);
 
-  static void SerializeInputStream(nsIInputStream* aInputStream,
-                                   InputStreamParams& aParams,
-                                   nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart, uint32_t aMaxSize,
-                                   uint32_t* aSizeUsed,
-                                   ChildToParentStreamActorManager* aManager);
-
-  // When a stream wants to serialize itself as IPCRemoteStream, it uses one of
-  // these methods.
-  static void SerializeInputStreamAsPipe(
-      nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, ParentToChildStreamActorManager* aManager);
-
-  static void SerializeInputStreamAsPipe(
-      nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, ChildToParentStreamActorManager* aManager);
-
-  // After the sending of the inputStream into the IPC pipe, some of the
-  // InputStreamParams data struct needs to be activated (IPCRemoteStream).
-  // These 2 methods do that.
-  static void PostSerializationActivation(InputStreamParams& aParams,
-                                          bool aConsumedByIPC,
-                                          bool aDelayedStart);
-
-  static void PostSerializationActivation(Maybe<InputStreamParams>& aParams,
-                                          bool aConsumedByIPC,
-                                          bool aDelayedStart);
+  // When a stream wants to serialize itself as a DataPipe, it uses this method.
+  static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                         InputStreamParams& aParams);
 
   static already_AddRefed<nsIInputStream> DeserializeInputStream(
-      const InputStreamParams& aParams,
-      const nsTArray<FileDescriptor>& aFileDescriptors);
+      const InputStreamParams& aParams);
 };
 
 }  // namespace ipc

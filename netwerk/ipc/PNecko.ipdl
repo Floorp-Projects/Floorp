@@ -18,12 +18,9 @@ include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PDNSRequest;
-include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PSimpleChannel;
 include protocol PTransportProvider;
-include protocol PChildToParentStream; //FIXME: bug #792908
-include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 include protocol PClassifierDummyChannel;

@@ -35,23 +35,20 @@ add_task(async function() {
 
     let observerPromise = new Promise(resolve => {
       let apiCallCount = 0;
-      let ConsoleObserver = {
-        QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
-
-        observe(aSubject, aTopic, aData) {
-          if (aTopic == "console-storage-cache-event") {
-            apiCallCount++;
-            info(`Received ${apiCallCount} "console-storage-cache-event"`);
-            if (apiCallCount == 4) {
-              Services.obs.removeObserver(this, "console-storage-cache-event");
-              resolve();
-            }
-          }
-        },
-      };
+      function observe(aSubject) {
+        apiCallCount++;
+        info(`Received ${apiCallCount} console log events`);
+        if (apiCallCount == 4) {
+          ConsoleAPIStorage.removeLogEventListener(observe);
+          resolve();
+        }
+      }
 
       info("Setting up observer");
-      Services.obs.addObserver(ConsoleObserver, "console-storage-cache-event");
+      ConsoleAPIStorage.addLogEventListener(
+        observe,
+        Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
+      );
     });
 
     info("Emit a few console API logs");
@@ -60,7 +57,7 @@ add_task(async function() {
     content.console.warn("this", "is", "a", "warn", "message");
     content.console.error("this", "is", "a", "error", "message");
 
-    info("Wait for the corresponding console-storage-cache-event");
+    info("Wait for the corresponding log event");
     await observerPromise;
 
     const innerWindowId = content.windowGlobalChild.innerWindowId;

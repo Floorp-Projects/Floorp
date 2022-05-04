@@ -78,18 +78,24 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.netflix.com/search*": { policy: TOGGLE_POLICIES.HIDDEN },
     },
 
-    tubi: {
-      "https://*.tubitv.com/*": {
-        videoWrapperScriptPath: "video-wrappers/tubi.js",
-      },
-    },
-
     piped: {
       "https://*.piped.kavin.rocks/*": {
         videoWrapperScriptPath: "video-wrappers/piped.js",
       },
       "https://*.piped.silkky.cloud/*": {
         videoWrapperScriptPath: "video-wrappers/piped.js",
+      },
+    },
+
+    sonyliv: {
+      "https://*.sonyliv.com/*": {
+        videoWrapperScriptPath: "video-wrappers/sonyliv.js",
+      },
+    },
+
+    tubi: {
+      "https://*.tubitv.com/*": {
+        videoWrapperScriptPath: "video-wrappers/tubi.js",
       },
     },
 

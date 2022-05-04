@@ -5,9 +5,8 @@
 
 #include "reflect.h"
 #include "jsapi.h"
-#include "nsMemory.h"
+
 #include "nsString.h"
-#include "nsNativeCharsetUtils.h"
 #include "xpc_make_class.h"
 
 namespace mozilla::reflect {

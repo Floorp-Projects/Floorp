@@ -421,7 +421,7 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
       PR_PL(
           ("**** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't get "
            "size of DEVMODE using DocumentPropertiesW(pDeviceName = \"%s\"). "
-           "GetLastEror() = %08x\n",
+           "GetLastEror() = %08lx\n",
            NS_ConvertUTF16toUTF8(aName).get(), GetLastError()));
       return NS_ERROR_FAILURE;
     }
@@ -464,7 +464,7 @@ nsresult nsDeviceContextSpecWin::GetDataFromPrinter(const nsAString& aName,
       ::HeapFree(::GetProcessHeap(), 0, pDevMode);
       PR_PL(
           ("***** nsDeviceContextSpecWin::GetDataFromPrinter - "
-           "DocumentProperties call failed code: %d/0x%x\n",
+           "DocumentProperties call failed code: %ld/0x%lx\n",
            ret, ret));
       DISPLAY_LAST_ERROR
       return NS_ERROR_FAILURE;

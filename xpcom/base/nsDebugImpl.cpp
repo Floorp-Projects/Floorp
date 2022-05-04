@@ -349,10 +349,10 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
   const char* currentThreadName =
       isMainthread ? "Main Thread" : PR_GetThreadName(currentThread);
   if (currentThreadName) {
-    buf.print("%d, %s] %s", base::GetCurrentProcId(), currentThreadName,
-              nonPIDBuf.buffer);
+    buf.print("%" PRIPID ", %s] %s", base::GetCurrentProcId(),
+              currentThreadName, nonPIDBuf.buffer);
   } else {
-    buf.print("%d, Unnamed thread %p] %s", base::GetCurrentProcId(),
+    buf.print("%" PRIPID ", Unnamed thread %p] %s", base::GetCurrentProcId(),
               currentThread, nonPIDBuf.buffer);
   }
 

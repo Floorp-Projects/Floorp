@@ -8,7 +8,6 @@
 #include "HttpLog.h"
 
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/ContentParent.h"
@@ -492,24 +491,11 @@ bool HttpChannelParent::DoAsyncOpen(
 
   nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(uploadStream);
   if (stream) {
-    int64_t length;
-    if (InputStreamLengthHelper::GetSyncLength(stream, &length)) {
-      httpChannel->InternalSetUploadStreamLength(length >= 0 ? length : 0);
-    } else {
-      // Wait for the nputStreamLengthHelper::GetAsyncLength callback.
-      ++mAsyncOpenBarrier;
-
-      // Let's resolve the size of the stream. The following operation is always
-      // async.
-      RefPtr<HttpChannelParent> self = this;
-      InputStreamLengthHelper::GetAsyncLength(stream, [self, httpChannel](
-                                                          int64_t aLength) {
-        httpChannel->InternalSetUploadStreamLength(aLength >= 0 ? aLength : 0);
-        self->TryInvokeAsyncOpen(NS_OK);
-      });
+    rv = httpChannel->InternalSetUploadStream(stream);
+    if (NS_FAILED(rv)) {
+      return SendFailedAsyncOpen(rv);
     }
 
-    httpChannel->InternalSetUploadStream(stream);
     httpChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
@@ -584,14 +570,6 @@ bool HttpChannelParent::DoAsyncOpen(
             self->TryInvokeAsyncOpen(aStatus);
           })
       ->Track(mRequest);
-
-  // The stream, received from the child process, must be cloneable and seekable
-  // in order to allow devtools to inspect its content.
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("HttpChannelParent::EnsureUploadStreamIsCloneable",
-                             [self]() { self->TryInvokeAsyncOpen(NS_OK); });
-  ++mAsyncOpenBarrier;
-  mChannel->EnsureUploadStreamIsCloneable(r);
   return true;
 }
 
@@ -1478,19 +1456,17 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenOriginalCacheInputStream() {
   if (mIPCClosed) {
     return IPC_OK();
   }
-  AutoIPCStream autoStream;
+  Maybe<IPCStream> ipcStream;
   if (mCacheEntry) {
     nsCOMPtr<nsIInputStream> inputStream;
     nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
     if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << autoStream.Serialize(inputStream,
-                                     static_cast<ContentParent*>(pcp));
+      Unused << mozilla::ipc::SerializeIPCStream(
+          inputStream.forget(), ipcStream, /* aAllowLazy */ false);
     }
   }
 
-  Unused << SendOriginalCacheInputStreamAvailable(
-      autoStream.TakeOptionalValue());
+  Unused << SendOriginalCacheInputStreamAvailable(ipcStream);
   return IPC_OK();
 }
 

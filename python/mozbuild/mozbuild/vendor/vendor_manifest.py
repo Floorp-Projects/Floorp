@@ -501,7 +501,7 @@ class VendorManifest(MozbuildObject):
                 replacement = update["with"].replace("{revision}", revision)
                 _replace_in_file(
                     file,
-                    pattern,
+                    update["pattern"],
                     replacement,
                     regex=update["action"] == "replace-in-file",
                 )

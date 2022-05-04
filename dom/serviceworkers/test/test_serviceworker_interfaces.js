@@ -261,7 +261,13 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PushSubscriptionOptions" },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  "ReadableByteStreamController",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "ReadableStream",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "ReadableStreamBYOBReader",
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  "ReadableStreamBYOBRequest",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "ReadableStreamDefaultController",
   // IMPORTANT: Do not change this list without review from a DOM peer!

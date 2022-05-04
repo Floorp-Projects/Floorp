@@ -184,7 +184,7 @@ nsresult GDIFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
     Unused << charmap.forget();
   }
 
-  LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %d hash: %8.8x%s\n",
+  LOG_FONTLIST(("(fontlist-cmap) name: %s, size: %zd hash: %8.8x%s\n",
                 mName.get(), charmap->SizeOfIncludingThis(moz_malloc_size_of),
                 charmap->mHash, mCharacterMap == charmap ? " new" : ""));
   if (LOG_CMAPDATA_ENABLED()) {
@@ -461,7 +461,7 @@ int CALLBACK GDIFontFamily::FamilyAddStylesProc(
   if (LOG_FONTLIST_ENABLED()) {
     LOG_FONTLIST(
         ("(fontlist) added (%s) to family (%s)"
-         " with style: %s weight: %d stretch: normal",
+         " with style: %s weight: %ld stretch: normal",
          fe->Name().get(), ff->Name().get(),
          (logFont.lfItalic == 0xff) ? "italic" : "normal", logFont.lfWeight));
   }

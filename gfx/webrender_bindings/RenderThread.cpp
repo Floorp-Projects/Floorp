@@ -1207,14 +1207,14 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE(
   auto gl = gl::GLContextEGL::CreateEGLPBufferOffscreenContext(
       egl, {flags}, dummySize, &failureId);
   if (!gl || !gl->IsANGLE()) {
-    aError.Assign(nsPrintfCString("RcANGLE(create GL context failed: %x, %s)",
+    aError.Assign(nsPrintfCString("RcANGLE(create GL context failed: %p, %s)",
                                   gl.get(), failureId.get()));
     return nullptr;
   }
 
   if (!gl->MakeCurrent()) {
     aError.Assign(
-        nsPrintfCString("RcANGLE(make current GL context failed: %x, %x)",
+        nsPrintfCString("RcANGLE(make current GL context failed: %p, %x)",
                         gl.get(), gl->mEgl->mLib->fGetError()));
     return nullptr;
   }

@@ -444,8 +444,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   bool haveMeaningfulMimeType =
       !aMIMEType.IsEmpty() &&
       !aMIMEType.LowerCaseEqualsLiteral(APPLICATION_OCTET_STREAM);
-  LOG(("Extension lookup on '%s' with mimetype '%s'%s\n", fileExtension.get(),
-       flatType.get(),
+  LOG(("Extension lookup on '%S' with mimetype '%s'%s\n",
+       static_cast<const wchar_t*>(fileExtension.get()), flatType.get(),
        haveMeaningfulMimeType ? " (treated as meaningful)" : ""));
 
   RefPtr<nsMIMEInfoWin> mi;
@@ -477,14 +477,14 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
        !typeFromExtEquals(fileExtension.get(), flatType.get()))) {
     usedMimeTypeExtensionForLookup = true;
     fileExtension = extensionFromMimeType;
-    LOG(("Now using '%s' mimetype's default file extension '%s' for lookup\n",
-         flatType.get(), fileExtension.get()));
+    LOG(("Now using '%s' mimetype's default file extension '%S' for lookup\n",
+         flatType.get(), static_cast<const wchar_t*>(fileExtension.get())));
   }
 
   // If we have an extension, use it for lookup:
   mi = GetByExtension(fileExtension, flatType.get());
-  LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(),
-       mi.get()));
+  LOG(("Extension lookup on '%S' found: 0x%p\n",
+       static_cast<const wchar_t*>(fileExtension.get()), mi.get()));
 
   if (mi) {
     bool hasDefault = false;
@@ -494,8 +494,9 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     if (!hasDefault && !usedMimeTypeExtensionForLookup) {
       RefPtr<nsMIMEInfoWin> miFromMimeType =
           GetByExtension(extensionFromMimeType, flatType.get());
-      LOG(("Mime-based ext. lookup for '%s' found 0x%p\n",
-           extensionFromMimeType.get(), miFromMimeType.get()));
+      LOG(("Mime-based ext. lookup for '%S' found 0x%p\n",
+           static_cast<const wchar_t*>(extensionFromMimeType.get()),
+           miFromMimeType.get()));
       if (miFromMimeType) {
         nsAutoString desc;
         miFromMimeType->GetDefaultDescription(desc);
@@ -510,8 +511,8 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   // different:
   if (!extensionFromMimeType.IsEmpty() && !usedMimeTypeExtensionForLookup) {
     mi = GetByExtension(extensionFromMimeType, flatType.get());
-    LOG(("Mime-based ext. lookup for '%s' found 0x%p\n",
-         extensionFromMimeType.get(), mi.get()));
+    LOG(("Mime-based ext. lookup for '%S' found 0x%p\n",
+         static_cast<const wchar_t*>(extensionFromMimeType.get()), mi.get()));
   }
   if (mi) {
     mi.forget(aMIMEInfo);

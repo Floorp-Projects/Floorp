@@ -8,7 +8,6 @@
 
 #include "ActorsChild.h"  // IndexedDB
 #include "BroadcastChannelChild.h"
-#include "FileDescriptorSetChild.h"
 #ifdef MOZ_WEBRTC
 #  include "CamerasChild.h"
 #endif
@@ -46,10 +45,7 @@
 #include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
-#include "mozilla/ipc/PChildToParentStreamChild.h"
-#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/net/HttpBackgroundChannelChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -387,27 +383,6 @@ bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
   return true;
 }
 
-already_AddRefed<PRemoteLazyInputStreamChild>
-BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                                      const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
-  return actor.forget();
-}
-
-PFileDescriptorSetChild* BackgroundChildImpl::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFileDescriptor) {
-  return new FileDescriptorSetChild(aFileDescriptor);
-}
-
-bool BackgroundChildImpl::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
-}
-
 PUDPSocketChild* BackgroundChildImpl::AllocPUDPSocketChild(
     const Maybe<PrincipalInfo>& aPrincipalInfo, const nsCString& aFilter) {
   MOZ_CRASH("AllocPUDPSocket should not be called");
@@ -522,28 +497,6 @@ bool BackgroundChildImpl::DeallocPMessagePortChild(PMessagePortChild* aActor) {
   RefPtr<dom::MessagePortChild> child =
       dont_AddRef(static_cast<dom::MessagePortChild*>(aActor));
   MOZ_ASSERT(child);
-  return true;
-}
-
-PChildToParentStreamChild*
-BackgroundChildImpl::AllocPChildToParentStreamChild() {
-  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPChildToParentStreamChild(
-    PChildToParentStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PParentToChildStreamChild*
-BackgroundChildImpl::AllocPParentToChildStreamChild() {
-  return mozilla::ipc::AllocPParentToChildStreamChild();
-}
-
-bool BackgroundChildImpl::DeallocPParentToChildStreamChild(
-    PParentToChildStreamChild* aActor) {
-  delete aActor;
   return true;
 }
 
@@ -669,17 +622,6 @@ bool BackgroundChildImpl::DeallocPMediaTransportChild(
     dom::PMediaTransportChild* aActor) {
   delete aActor;
   return true;
-}
-
-PChildToParentStreamChild*
-BackgroundChildImpl::SendPChildToParentStreamConstructor(
-    PChildToParentStreamChild* aActor) {
-  return PBackgroundChild::SendPChildToParentStreamConstructor(aActor);
-}
-
-PFileDescriptorSetChild* BackgroundChildImpl::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  return PBackgroundChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
 }  // namespace mozilla::ipc

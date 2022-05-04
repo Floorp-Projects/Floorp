@@ -105,7 +105,7 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
       (IDCompositionDesktopDevice**)getter_AddRefs(desktopDevice));
   if (FAILED(hr)) {
     aError.Assign(nsPrintfCString(
-        "DCLayerTree(get IDCompositionDesktopDevice failed %x)", hr));
+        "DCLayerTree(get IDCompositionDesktopDevice failed %lx)", hr));
     return false;
   }
 
@@ -113,14 +113,14 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
                                           getter_AddRefs(mCompositionTarget));
   if (FAILED(hr)) {
     aError.Assign(nsPrintfCString(
-        "DCLayerTree(create DCompositionTarget failed %x)", hr));
+        "DCLayerTree(create DCompositionTarget failed %lx)", hr));
     return false;
   }
 
   hr = mCompositionDevice->CreateVisual(getter_AddRefs(mRootVisual));
   if (FAILED(hr)) {
     aError.Assign(nsPrintfCString(
-        "DCLayerTree(create root DCompositionVisual failed %x)", hr));
+        "DCLayerTree(create root DCompositionVisual failed %lx)", hr));
     return false;
   }
 
@@ -128,7 +128,7 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
       mCompositionDevice->CreateVisual(getter_AddRefs(mDefaultSwapChainVisual));
   if (FAILED(hr)) {
     aError.Assign(nsPrintfCString(
-        "DCLayerTree(create swap chain DCompositionVisual failed %x)", hr));
+        "DCLayerTree(create swap chain DCompositionVisual failed %lx)", hr));
     return false;
   }
 

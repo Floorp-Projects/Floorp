@@ -2043,16 +2043,16 @@ nsresult nsDataObj ::BuildPlatformHTML(const char* inOurHTML,
 
   // These implicitly must match kNumberLength, above.
   clipboardString.Append(kStartHTMLPrefix);
-  clipboardString.AppendPrintf("%08u", startHTMLOffset);
+  clipboardString.AppendPrintf("%08zu", startHTMLOffset);
 
   clipboardString.Append(kEndHTMLPrefix);
-  clipboardString.AppendPrintf("%08u", endHTMLOffset);
+  clipboardString.AppendPrintf("%08zu", endHTMLOffset);
 
   clipboardString.Append(kStartFragPrefix);
-  clipboardString.AppendPrintf("%08u", startFragOffset);
+  clipboardString.AppendPrintf("%08zu", startFragOffset);
 
   clipboardString.Append(kEndFragPrefix);
-  clipboardString.AppendPrintf("%08u", endFragOffset);
+  clipboardString.AppendPrintf("%08zu", endFragOffset);
 
   if (sourceURLLength > 0) {
     clipboardString.Append(kStartSourceURLPrefix);

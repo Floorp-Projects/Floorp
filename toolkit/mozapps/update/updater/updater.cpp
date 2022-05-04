@@ -742,7 +742,7 @@ static int ensure_copy(const NS_tchar* path, const NS_tchar* dest) {
   bool result = CopyFileW(path, dest, false);
   if (!result) {
     LOG(("ensure_copy: failed to copy the file " LOG_S " over to " LOG_S
-         ", lasterr: %x",
+         ", lasterr: %lx",
          path, dest, GetLastError()));
     return WRITE_ERROR_FILE_COPY;
   }
@@ -1447,7 +1447,7 @@ int AddFile::Execute() {
   char sourcefile[MAXPATHLEN];
   if (!WideCharToMultiByte(CP_UTF8, 0, mRelPath.get(), -1, sourcefile,
                            MAXPATHLEN, nullptr, nullptr)) {
-    LOG(("error converting wchar to utf8: %d", GetLastError()));
+    LOG(("error converting wchar to utf8: %lu", GetLastError()));
     return STRING_CONVERSION_ERROR;
   }
 
@@ -1634,14 +1634,14 @@ int PatchFile::Prepare() {
   // Lock the patch file, so it can't be messed with between
   // when we're done creating it and when we go to apply it.
   if (!LockFile((HANDLE)_get_osfhandle(fileno(mPatchStream)), 0, 0, -1, -1)) {
-    LOG(("Couldn't lock patch file: %d", GetLastError()));
+    LOG(("Couldn't lock patch file: %lu", GetLastError()));
     return LOCK_ERROR_PATCH_FILE;
   }
 
   char sourcefile[MAXPATHLEN];
   if (!WideCharToMultiByte(CP_UTF8, 0, mPatchFile, -1, sourcefile, MAXPATHLEN,
                            nullptr, nullptr)) {
-    LOG(("error converting wchar to utf8: %d", GetLastError()));
+    LOG(("error converting wchar to utf8: %lu", GetLastError()));
     return STRING_CONVERSION_ERROR;
   }
 
@@ -2490,7 +2490,7 @@ static int ProcessReplaceRequest() {
   while (rv == WRITE_ERROR && (retries++ < max_retries)) {
     LOG(
         ("PerformReplaceRequest: destDir rename attempt %d failed. "
-         "File: " LOG_S ". Last error: %d, err: %d",
+         "File: " LOG_S ". Last error: %lu, err: %d",
          retries, destDir, GetLastError(), rv));
 
     Sleep(100);
@@ -3263,7 +3263,7 @@ int NS_main(int argc, NS_tchar** argv) {
                    NS_T("%s"), gWorkingDirPath);
       if (!PathRemoveFileSpecW(workingDirParent)) {
         WriteStatusFile(REMOVE_FILE_SPEC_ERROR);
-        LOG(("Error calling PathRemoveFileSpecW: %d", GetLastError()));
+        LOG(("Error calling PathRemoveFileSpecW: %lu", GetLastError()));
         output_finish();
         return 1;
       }
@@ -3940,7 +3940,7 @@ int NS_main(int argc, NS_tchar** argv) {
           lastWriteError = GetLastError();
           LOG(
               ("NS_main: callback app file open attempt %d failed. "
-               "File: " LOG_S ". Last error: %d",
+               "File: " LOG_S ". Last error: %lu",
                retries, targetPath, lastWriteError));
 
           Sleep(100);
@@ -4547,7 +4547,7 @@ static NS_tchar* GetManifestContents(const NS_tchar* manifest) {
 
     if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, mbuf, -1, wrb,
                              ms.st_size + 1)) {
-      LOG(("GetManifestContents: error converting utf8 to utf16le: %d",
+      LOG(("GetManifestContents: error converting utf8 to utf16le: %lu",
            GetLastError()));
       free(mbuf);
       free(wrb);

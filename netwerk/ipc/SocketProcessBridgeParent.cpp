@@ -16,16 +16,19 @@ namespace net {
 SocketProcessBridgeParent::SocketProcessBridgeParent(
     ProcessId aId, Endpoint<PSocketProcessBridgeParent>&& aEndpoint)
     : mId(aId), mClosed(false) {
-  LOG((
-      "CONSTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent mId=%d\n",
-      mId));
+  LOG(
+      ("CONSTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent "
+       "mId=%" PRIPID "\n",
+       mId));
   MOZ_COUNT_CTOR(SocketProcessBridgeParent);
   DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
 }
 
 SocketProcessBridgeParent::~SocketProcessBridgeParent() {
-  LOG(("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent mId=%d\n",
+  LOG(
+      ("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent "
+       "mId=%" PRIPID "\n",
        mId));
   MOZ_COUNT_DTOR(SocketProcessBridgeParent);
 }
@@ -38,7 +41,7 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvTest() {
 
 mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
     Endpoint<PBackgroundStarterParent>&& aEndpoint) {
-  LOG(("SocketProcessBridgeParent::RecvInitBackground mId=%d\n", mId));
+  LOG(("SocketProcessBridgeParent::RecvInitBackground mId=%" PRIPID "\n", mId));
   if (!ipc::BackgroundParent::AllocStarter(nullptr, std::move(aEndpoint))) {
     return IPC_FAIL(this, "BackgroundParent::Alloc failed");
   }
@@ -47,7 +50,7 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
 }
 
 void SocketProcessBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  LOG(("SocketProcessBridgeParent::ActorDestroy mId=%d\n", mId));
+  LOG(("SocketProcessBridgeParent::ActorDestroy mId=%" PRIPID "\n", mId));
 
   mClosed = true;
   GetCurrentSerialEventTarget()->Dispatch(

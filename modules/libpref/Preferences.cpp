@@ -5692,21 +5692,33 @@ static void InitStaticPrefsFromShared() {
   // Nonetheless, it's useful to have the MOZ_ASSERT here for testing of debug
   // builds, where this scenario involving inconsistent binaries should not
   // occur.
-#define NEVER_PREF(name, cpp_type, value)
-#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)            \
-  {                                                                     \
-    StripAtomic<cpp_type> val;                                          \
-    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val); \
-    MOZ_ASSERT(NS_SUCCEEDED(rv));                                       \
-    StaticPrefs::sMirror_##full_id = val;                               \
+#define NEVER_PREF(name, cpp_type, default_value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value)           \
+  {                                                                            \
+    StripAtomic<cpp_type> val;                                                 \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    DebugOnly<nsresult> rv = Internals::GetSharedPrefValue(name, &val);        \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
+    StaticPrefs::sMirror_##full_id = val;                                      \
   }
-#define ONCE_PREF(name, base_id, full_id, cpp_type, value)         \
-  {                                                                \
-    cpp_type val;                                                  \
-    DebugOnly<nsresult> rv =                                       \
-        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val); \
-    MOZ_ASSERT(NS_SUCCEEDED(rv));                                  \
-    StaticPrefs::sMirror_##full_id = val;                          \
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value)             \
+  {                                                                            \
+    cpp_type val;                                                              \
+    if (!XRE_IsParentProcess() && IsString<cpp_type>::value &&                 \
+        sCrashOnBlocklistedPref) {                                             \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          !ShouldSanitizePreference(name, XRE_IsContentProcess()),             \
+          "Should not access the preference '" name "' in Content Processes"); \
+    }                                                                          \
+    DebugOnly<nsresult> rv =                                                   \
+        Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val);             \
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed accessing " name);                    \
+    StaticPrefs::sMirror_##full_id = val;                                      \
   }
 #include "mozilla/StaticPrefListAll.h"
 #undef NEVER_PREF
@@ -5754,20 +5766,58 @@ struct PrefListEntry {
 
 // These prefs are not useful in child processes.
 static const PrefListEntry sParentOnlyPrefBranchList[] = {
-    PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+    // Remove prefs with user data
     PREF_LIST_ENTRY("datareporting.policy."),
-    // PREF_LIST_ENTRY("browser.safebrowsing.provider."),
-    // PREF_LIST_ENTRY("browser.shell."),
-    // PREF_LIST_ENTRY("browser.slowStartup."),
-    // PREF_LIST_ENTRY("browser.startup."),
-    // PREF_LIST_ENTRY("extensions.getAddons.cache."),
-    // PREF_LIST_ENTRY("media.gmp-manager."),
-    // PREF_LIST_ENTRY("media.gmp-gmpopenh264."),
-    // PREF_LIST_ENTRY("privacy.sanitize."),
+    PREF_LIST_ENTRY("browser.download.lastDir"),
+    PREF_LIST_ENTRY("browser.newtabpage.pinned"),
+    PREF_LIST_ENTRY("browser.uiCustomization.state"),
+    PREF_LIST_ENTRY("browser.urlbar"),
+    PREF_LIST_ENTRY("browser.urlbar.resultGroups"),
+    PREF_LIST_ENTRY("devtools.debugger.pending-selected-location"),
+    PREF_LIST_ENTRY("identity.fxaccounts."),
+    PREF_LIST_ENTRY("services."),
+
+    // Remove UUIDs
+    PREF_LIST_ENTRY("app.normandy.user_id"),
+    PREF_LIST_ENTRY("browser.newtabpage.activity-stream.impressionId"),
+    PREF_LIST_ENTRY("browser.pageActions.persistedActions"),
+    PREF_LIST_ENTRY("browser.startup.lastColdStartupCheck"),
+    PREF_LIST_ENTRY("dom.push.userAgentID"),
+    PREF_LIST_ENTRY("extensions.webextensions.uuids"),
+    PREF_LIST_ENTRY("privacy.userContext.extension"),
+    PREF_LIST_ENTRY("toolkit.telemetry.cachedClientID"),
+
+    // Remove IDs that could be used to correlate across origins
+    PREF_LIST_ENTRY("app.update.lastUpdateTime."),
+    PREF_LIST_ENTRY(
+        "browser.contentblocking.cfr-milestone.milestone-shown-time"),
+    PREF_LIST_ENTRY("browser.contextual-services.contextId"),
+    PREF_LIST_ENTRY("browser.laterrun.bookkeeping.profileCreationTime"),
+    PREF_LIST_ENTRY("browser.newtabpage.activity-stream.discoverystream."),
+    PREF_LIST_ENTRY("browser.region.update.updated"),
+    PREF_LIST_ENTRY("browser.safebrowsing.provider"),
+    PREF_LIST_ENTRY("browser.sessionstore.upgradeBackup.latestBuildID"),
+    PREF_LIST_ENTRY("browser.shell.mostRecentDateSetAsDefault"),
+    PREF_LIST_ENTRY("fission.experiment.max-origins.last-"),
+    PREF_LIST_ENTRY("idle.lastDailyNotification"),
+    PREF_LIST_ENTRY("media.gmp-gmpopenh264.lastUpdate"),
+    PREF_LIST_ENTRY("media.gmp-manager.lastCheck"),
+    PREF_LIST_ENTRY("places.database.lastMaintenance"),
+    PREF_LIST_ENTRY("privacy.purge_trackers.last_purge"),
+    PREF_LIST_ENTRY("security.sandbox.content.tempDirSuffix"),
+    PREF_LIST_ENTRY("storage.vacuum.last.places.sqlite"),
+    PREF_LIST_ENTRY("toolkit.startup.last_success"),
+
+    // Remove fingerprintable things
+    PREF_LIST_ENTRY("browser.startup.homepage_override.buildID"),
+    PREF_LIST_ENTRY("extensions.lastAppBuildId"),
+    PREF_LIST_ENTRY("media.gmp-manager.buildID"),
+    PREF_LIST_ENTRY("toolkit.telemetry.previousBuildID"),
 };
 
 static const PrefListEntry sDynamicPrefOverrideList[]{
-    PREF_LIST_ENTRY("print.printer_")};
+    PREF_LIST_ENTRY("print.printer_"),
+};
 
 #undef PREF_LIST_ENTRY
 

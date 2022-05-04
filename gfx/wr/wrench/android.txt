@@ -45,6 +45,11 @@ Compiling and running:
         adb shell am start -n org.mozilla.wrench/android.app.NativeActivity
             (or click the icon in the launcher)
 
+    Inspect the output:
+        stdout and stderr will be redirected to the logcat, however, long lines will be truncated
+        meaning the reftest analyzer will not work correctly. We therefore additionally redirect the
+        output to the file /storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/stdout.
+
 Release mode:
 -------------
 
