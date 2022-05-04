@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.components
@@ -62,6 +63,15 @@ class AddressManagementFragment : Fragment() {
                         onAddAddressButtonClick = interactor::onAddAddressButtonClick
                     )
                 }
+            }
+        }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        consumeFrom(store) { state ->
+            if (!state.isLoading && state.addresses.isEmpty()) {
+                findNavController().popBackStack()
+                return@consumeFrom
             }
         }
     }
