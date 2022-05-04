@@ -6,7 +6,6 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"

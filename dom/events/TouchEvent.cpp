@@ -15,7 +15,6 @@
 #include "mozilla/TouchEvents.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
-#include "nsExceptionHandler.h"
 
 namespace mozilla::dom {
 
