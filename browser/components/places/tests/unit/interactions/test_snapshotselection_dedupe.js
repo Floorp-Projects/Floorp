@@ -7,7 +7,7 @@
 
 let now = Date.now();
 
-const URLS = [
+const TEST_DATA = [
   // These urls are deduplicated down to the one without the query.
   {
     url: "https://example.com/1?foo=135246",
@@ -35,11 +35,21 @@ const URLS = [
     url: "https://example.com/2?foo=531245",
     title: "Example2",
     created_at: now - 10000,
+    // pinned will give this a higher score even though it is not the most
+    // recent visit.
+    pinned: true,
   },
   {
     url: "https://example.com/2?foo=341256",
     title: "Example2",
     created_at: now - 1000,
+  },
+  // This is a snapshot for relevancy which won't be returned in that set as
+  // it is the snapshot being visited.
+  {
+    url: "https://example.com/relevant",
+    title: "Relevant",
+    created_at: now - 50000,
   },
 ];
 
@@ -53,9 +63,14 @@ add_setup(async () => {
     false
   );
 
-  await addInteractions(URLS);
-  for (let { url } of URLS) {
-    await Snapshots.add({ url });
+  await addInteractions(TEST_DATA);
+  for (let { url, pinned } of TEST_DATA) {
+    await Snapshots.add({
+      url,
+      userPersisted: pinned
+        ? Snapshots.USER_PERSISTED.PINNED
+        : Snapshots.USER_PERSISTED.NO,
+    });
   }
 });
 
@@ -76,6 +91,35 @@ add_task(async function test_dedupe() {
     // Deduped to most recent.
     { url: "https://example.com/2?foo=341256", title: "Example2" },
     // No duplicates of this URL, so we expect it to be included.
+    { url: "https://example.com/foo", title: "Other" },
+    // This is really for the next test, but shows up here as it is in the list.
+    { url: "https://example.com/relevant", title: "Relevant" },
+  ]);
+});
+
+add_task(async function test_relevancy_dedupe() {
+  let selector = new SnapshotSelector({
+    count: 10,
+    filterAdult: false,
+    sourceWeights: {
+      CommonReferrer: 0,
+      Overlapping: 3,
+    },
+    getCurrentSessionUrls: () => new Set(),
+  });
+  selector.setUrl("https://example.com/relevant");
+
+  let snapshotPromise = selector.once("snapshots-updated");
+  selector.rebuild();
+  let snapshots = await snapshotPromise;
+
+  await assertSnapshotList(snapshots, [
+    {
+      url: "https://example.com/2?foo=531245",
+      title: "Example2",
+      userPersisted: Snapshots.USER_PERSISTED.PINNED,
+    },
+    { url: "https://example.com/1", title: "Example1" },
     { url: "https://example.com/foo", title: "Other" },
   ]);
 });
