@@ -1342,11 +1342,11 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.DateTimePrompt extends GeckoSession.PromptDelegate.BasePrompt {
-    ctor protected DateTimePrompt(@NonNull String, @Nullable String, int, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@NonNull String);
     field @Nullable public final String defaultValue;
     field @Nullable public final String maxValue;
     field @Nullable public final String minValue;
+    field @Nullable public final String stepValue;
     field public final int type;
   }
 

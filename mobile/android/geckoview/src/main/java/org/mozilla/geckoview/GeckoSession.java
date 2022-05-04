@@ -4520,19 +4520,35 @@ public class GeckoSession {
       /** A String representing the maximum value allowed by content. */
       public final @Nullable String maxValue;
 
-      protected DateTimePrompt(
+      /** A String representing the step value allowed by content. */
+      public final @Nullable String stepValue;
+
+      /** For testing. */
+      private DateTimePrompt() {
+        // Initialize final members
+        super("", null, null);
+        this.type = Type.DATE;
+        this.defaultValue = null;
+        this.minValue = null;
+        this.maxValue = null;
+        this.stepValue = null;
+      }
+
+      /* package */ DateTimePrompt(
           @NonNull final String id,
           @Nullable final String title,
           @DatetimeType final int type,
           @Nullable final String defaultValue,
           @Nullable final String minValue,
           @Nullable final String maxValue,
+          @Nullable final String stepValue,
           @NonNull final Observer observer) {
         super(id, title, observer);
         this.type = type;
         this.defaultValue = defaultValue;
         this.minValue = minValue;
         this.maxValue = maxValue;
+        this.stepValue = stepValue;
       }
 
       /**

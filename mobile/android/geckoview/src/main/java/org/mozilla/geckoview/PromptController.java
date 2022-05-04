@@ -284,6 +284,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
       final String defaultValue = info.getString("value");
       final String minValue = info.getString("min");
       final String maxValue = info.getString("max");
+      final String stepValue = info.getString("step");
       return new DateTimePrompt(
           info.getString("id"),
           info.getString("title"),
@@ -291,6 +292,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
           defaultValue,
           minValue,
           maxValue,
+          stepValue,
           observer);
     }
 

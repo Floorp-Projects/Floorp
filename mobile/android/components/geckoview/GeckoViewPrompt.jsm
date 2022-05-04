@@ -189,6 +189,7 @@ class PromptFactory {
         value: aElement.value,
         min: aElement.min,
         max: aElement.max,
+        step: aElement.step,
       },
       result => {
         // OK: result
