@@ -9,13 +9,13 @@
 #include "gfxPlatform.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla;
+namespace mozilla::gfx {
 
 SoftwareVsyncSource::SoftwareVsyncSource() : mVsyncEnabled(false) {
   // Mimic 60 fps
   MOZ_ASSERT(NS_IsMainThread());
   const double rate = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
-  mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
+  mVsyncRate = TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
   MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
                      "GFX: Could not start software vsync thread");
@@ -79,13 +79,12 @@ bool SoftwareVsyncSource::IsInSoftwareVsyncThread() {
   return mVsyncThread->thread_id() == PlatformThread::CurrentId();
 }
 
-void SoftwareVsyncSource::NotifyVsync(
-    const mozilla::TimeStamp& aVsyncTimestamp,
-    const mozilla::TimeStamp& aOutputTimestamp) {
+void SoftwareVsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
+                                      const TimeStamp& aOutputTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
 
-  mozilla::TimeStamp displayVsyncTime = aVsyncTimestamp;
-  mozilla::TimeStamp now = mozilla::TimeStamp::Now();
+  TimeStamp displayVsyncTime = aVsyncTimestamp;
+  TimeStamp now = TimeStamp::Now();
   // Posted tasks can only have integer millisecond delays
   // whereas TimeDurations can have floating point delays.
   // Thus the vsync timestamp can be in the future, which large parts
@@ -102,24 +101,22 @@ void SoftwareVsyncSource::NotifyVsync(
   ScheduleNextVsync(aVsyncTimestamp);
 }
 
-mozilla::TimeDuration SoftwareVsyncSource::GetVsyncRate() { return mVsyncRate; }
+TimeDuration SoftwareVsyncSource::GetVsyncRate() { return mVsyncRate; }
 
-void SoftwareVsyncSource::ScheduleNextVsync(
-    mozilla::TimeStamp aVsyncTimestamp) {
+void SoftwareVsyncSource::ScheduleNextVsync(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
-  mozilla::TimeStamp nextVsync = aVsyncTimestamp + mVsyncRate;
-  mozilla::TimeDuration delay = nextVsync - mozilla::TimeStamp::Now();
+  TimeStamp nextVsync = aVsyncTimestamp + mVsyncRate;
+  TimeDuration delay = nextVsync - TimeStamp::Now();
   if (delay.ToMilliseconds() < 0) {
-    delay = mozilla::TimeDuration::FromMilliseconds(0);
-    nextVsync = mozilla::TimeStamp::Now();
+    delay = TimeDuration::FromMilliseconds(0);
+    nextVsync = TimeStamp::Now();
   }
 
   TimeStamp outputTime = nextVsync + mVsyncRate;
 
-  mCurrentVsyncTask =
-      NewCancelableRunnableMethod<mozilla::TimeStamp, mozilla::TimeStamp>(
-          "SoftwareVsyncSource::NotifyVsync", this,
-          &SoftwareVsyncSource::NotifyVsync, nextVsync, outputTime);
+  mCurrentVsyncTask = NewCancelableRunnableMethod<TimeStamp, TimeStamp>(
+      "SoftwareVsyncSource::NotifyVsync", this,
+      &SoftwareVsyncSource::NotifyVsync, nextVsync, outputTime);
 
   RefPtr<Runnable> addrefedTask = mCurrentVsyncTask;
   mVsyncThread->message_loop()->PostDelayedTask(addrefedTask.forget(),
@@ -133,3 +130,5 @@ void SoftwareVsyncSource::Shutdown() {
   delete mVsyncThread;
   mVsyncThread = nullptr;
 }
+
+}  // namespace mozilla::gfx

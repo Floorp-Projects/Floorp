@@ -2998,7 +2998,8 @@ RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
  */
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatform::CreateSoftwareVsyncSource() {
-  RefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
+  RefPtr<mozilla::gfx::VsyncSource> softwareVsync =
+      new mozilla::gfx::SoftwareVsyncSource();
   return softwareVsync.forget();
 }
 
