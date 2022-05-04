@@ -5214,6 +5214,13 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         gfxDWriteFont::UpdateSystemTextVars();
         break;
       }
+      if (wParam == SPI_SETWORKAREA) {
+        // NB: We also refresh screens on WM_DISPLAYCHANGE but the rcWork
+        // values are sometimes wrong at that point.  This message then
+        // arrives soon afterward, when we can get the right rcWork values.
+        ScreenHelperWin::RefreshScreens();
+        break;
+      }
       if (auto lParamString = reinterpret_cast<const wchar_t*>(lParam)) {
         if (!wcscmp(lParamString, L"ImmersiveColorSet")) {
           // This affects system colors (-moz-win-accentcolor), so gotta pass
