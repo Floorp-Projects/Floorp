@@ -17,7 +17,7 @@ add_task(async function test_first_time_save() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     let tabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       "about:preferences#privacy"
@@ -31,7 +31,7 @@ add_task(async function test_first_time_save() {
       },
     });
 
-    await promiseShown;
+    await onPopupShown;
     let cb = getDoorhangerCheckbox();
     ok(cb.hidden, "Sync checkbox should be hidden");
     // Open the panel via main button
@@ -100,7 +100,7 @@ add_task(async function test_first_time_save_with_sync_account() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     let tabPromise = BrowserTestUtils.waitForNewTab(
       gBrowser,
       "about:preferences#privacy-address-autofill"
@@ -114,7 +114,7 @@ add_task(async function test_first_time_save_with_sync_account() {
       },
     });
 
-    await promiseShown;
+    await onPopupShown;
     let cb = getDoorhangerCheckbox();
     ok(!cb.hidden, "Sync checkbox should be visible");
 
