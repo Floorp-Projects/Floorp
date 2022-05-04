@@ -41,14 +41,20 @@ DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
   // constructor is called we don't have one yet because null is passed as the
   // content node. So we do it here after a Document is associated with the
   // accessible.
-  SessionAccessibility::RegisterAccessible(this);
+  if (!IPCAccessibilityActive()) {
+    MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+    SessionAccessibility::RegisterAccessible(this);
+  }
 }
 
 DocAccessibleWrap::~DocAccessibleWrap() {}
 
 void DocAccessibleWrap::Shutdown() {
   // Unregister here before disconnecting from PresShell.
-  SessionAccessibility::RegisterAccessible(this);
+  if (!IPCAccessibilityActive()) {
+    MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+    SessionAccessibility::UnregisterAccessible(this);
+  }
   DocAccessible::Shutdown();
 }
 

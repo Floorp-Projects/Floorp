@@ -19,6 +19,7 @@ namespace a11y {
 class AccessibleWrap;
 class AccAttributes;
 class Accessible;
+class RemoteAccessible;
 class RootAccessibleWrap;
 class BatchData;
 
