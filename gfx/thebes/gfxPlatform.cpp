@@ -2981,7 +2981,7 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
 }
 
 RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
-  MOZ_ASSERT(mVsyncDispatcher != nullptr,
+  MOZ_ASSERT(mVsyncDispatcher,
              "mVsyncDispatcher should have been initialized by ReInitFrameRate "
              "during gfxPlatform init");
   MOZ_ASSERT(XRE_IsParentProcess());
