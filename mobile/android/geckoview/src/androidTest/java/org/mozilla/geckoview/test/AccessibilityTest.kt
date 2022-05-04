@@ -197,6 +197,68 @@ class AccessibilityTest : BaseSessionTest() {
         })
     }
 
+    @Test fun testAccessibilityFocusAboutMozilla() {
+        var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
+        mainSession.loadUri("about:license")
+
+        sessionRule.waitUntilCalled(object: GeckoSession.NavigationDelegate {
+            override fun onLoadRequest(session: GeckoSession,
+                                       request: GeckoSession.NavigationDelegate.LoadRequest)
+                    : GeckoResult<AllowOrDeny>? {
+                return GeckoResult.allow()
+            }
+        })
+
+        // XXX: Local pages do not dispatch focus events when loaded
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled
+            override fun onWinStateChanged(event: AccessibilityEvent) { }
+
+            @AssertCalled
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        provider.performAction(View.NO_ID,
+                AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Header is a11y focused", node.contentDescription.toString(),
+                        equalTo("Licenses"))
+            }
+        })
+
+        provider.performAction(nodeId,
+                AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, null)
+
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Next text leaf is focused", node.text.toString(),
+                        equalTo("All of the "))
+            }
+        })
+
+        val bundle = Bundle()
+        bundle.putString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING, "LINK")
+
+        provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT, bundle)
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAccessibilityFocused(event: AccessibilityEvent) {
+                nodeId = getSourceId(event)
+                val node = createNodeInfo(nodeId)
+                assertThat("Accessibility focus on a with href",
+                        node.contentDescription as String, equalTo("free"))
+            }
+        })
+    }
+
     @Test fun testAccessibilityFocus() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         mainSession.loadTestPath(INPUTS_PATH)
