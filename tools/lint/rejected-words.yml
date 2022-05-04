@@ -425,7 +425,6 @@ avoid-blacklist-and-whitelist:
         - toolkit/xre/nsAppRunner.cpp
         - toolkit/xre/nsEmbedFunctions.cpp
         - toolkit/xre/nsXREDirProvider.cpp
-        - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/fuzzing/faulty/Faulty.cpp
         - tools/fuzzing/faulty/Faulty.h
         - tools/fuzzing/ipc/ProtocolFuzzer.cpp

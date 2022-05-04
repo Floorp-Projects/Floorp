@@ -16,8 +16,8 @@
 
 
 # This script will read a CSV of modules from Socorro, and try to retrieve
-# missing symbols from Microsoft's symbol server. It honors a blacklist
-# (blacklist.txt) of symbols that are known to be from our applications,
+# missing symbols from Microsoft's symbol server. It honors a list
+# (ignorelist.txt) of symbols that are known to be from our applications,
 # and it maintains its own list of symbols that the MS symbol server
 # doesn't have (skiplist.txt).
 #
@@ -191,9 +191,9 @@ async def get_skiplist():
     return skiplist
 
 
-def get_missing_symbols(missing_symbols, skiplist, blacklist):
+def get_missing_symbols(missing_symbols, skiplist, ignorelist):
     modules = defaultdict(set)
-    stats = {"blacklist": 0, "skiplist": 0}
+    stats = {"ignorelist": 0, "skiplist": 0}
     for line in missing_symbols:
         line = line.rstrip()
         bits = line.split(",")
@@ -204,8 +204,8 @@ def get_missing_symbols(missing_symbols, skiplist, blacklist):
         if len(bits) >= 4:
             code_file, code_id = bits[2:4]
         if pdb and debug_id and pdb.endswith(".pdb"):
-            if pdb.lower() in blacklist:
-                stats["blacklist"] += 1
+            if pdb.lower() in ignorelist:
+                stats["ignorelist"] += 1
                 continue
 
             if skiplist.get(debug_id) != pdb.lower():
@@ -439,7 +439,7 @@ def get_base_data(url):
         return await asyncio.gather(
             fetch_missing_symbols(url),
             # Symbols that we know belong to us, so don't ask Microsoft for them.
-            get_list("blacklist.txt"),
+            get_list("ignorelist.txt"),
             # Symbols that we know belong to Microsoft, so don't skiplist them.
             get_list("known-microsoft-symbols.txt"),
             # Symbols that we've asked for in the past unsuccessfully
@@ -486,11 +486,11 @@ def main():
     aiohttp_logger.setLevel(logging.INFO)
     log.info("Started")
 
-    missing_symbols, blacklist, known_ms_symbols, skiplist = get_base_data(
+    missing_symbols, ignorelist, known_ms_symbols, skiplist = get_base_data(
         args.missing_symbols
     )
 
-    modules, stats_skipped = get_missing_symbols(missing_symbols, skiplist, blacklist)
+    modules, stats_skipped = get_missing_symbols(missing_symbols, skiplist, ignorelist)
 
     symbol_path = mkdtemp("symsrvfetch")
     temp_path = mkdtemp(prefix="symcache")
@@ -517,7 +517,7 @@ def main():
         )
 
     log.info(
-        f"{stats_collect['is_there']} already present, {stats_skipped['blacklist']} in blacklist, "
+        f"{stats_collect['is_there']} already present, {stats_skipped['ignorelist']} in ignored list, "
         f"{stats_skipped['skiplist']} skipped, {stats_collect['no_pdb']} not found, "
         f"{stats_dump['dump_error']} processed with errors, "
         f"{stats_dump['no_bin']} processed but with no binaries (x86_64)"
