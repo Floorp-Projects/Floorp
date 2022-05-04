@@ -2472,6 +2472,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                          FloatRegister dest, FloatRegister temp)
       DEFINED_ON(x86_shared);
 
+  inline void mulInt64x2(FloatRegister lhs, const SimdConstant& rhs,
+                         FloatRegister dest, FloatRegister temp)
+      DEFINED_ON(x86_shared);
+
   inline void mulInt64x2(FloatRegister lhs, FloatRegister rhs,
                          FloatRegister dest, FloatRegister temp1,
                          FloatRegister temp2) DEFINED_ON(arm64);
