@@ -29,7 +29,8 @@ constexpr size_t kTimeoutMs = 10000;  // Some tests are expected to time out.
 
 void SetEncoderSpecific(VideoEncoderConfig* encoder_config,
                         VideoCodecType type,
-                        bool automatic_resize) {
+                        bool automatic_resize,
+                        size_t num_spatial_layers) {
   if (type == kVideoCodecVP8) {
     VideoCodecVP8 vp8 = VideoEncoder::GetDefaultVp8Settings();
     vp8.automaticResizeOn = automatic_resize;
@@ -38,6 +39,7 @@ void SetEncoderSpecific(VideoEncoderConfig* encoder_config,
   } else if (type == kVideoCodecVP9) {
     VideoCodecVP9 vp9 = VideoEncoder::GetDefaultVp9Settings();
     vp9.automaticResizeOn = automatic_resize;
+    vp9.numberOfSpatialLayers = num_spatial_layers;
     encoder_config->encoder_specific_settings = new rtc::RefCountedObject<
         VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9);
   }
@@ -101,7 +103,7 @@ void QualityScalingTest::RunTest(VideoEncoderFactory* encoder_factory,
     }
 
     size_t GetNumVideoStreams() const override {
-      return streams_active_.size();
+      return (payload_name_ == "VP9") ? 1 : streams_active_.size();
     }
 
     void ModifyVideoConfigs(
@@ -115,14 +117,19 @@ void QualityScalingTest::RunTest(VideoEncoderFactory* encoder_factory,
       encoder_config->codec_type = codec_type;
       encoder_config->max_bitrate_bps =
           std::max(start_bps_, encoder_config->max_bitrate_bps);
+      if (payload_name_ == "VP9") {
+        // Simulcast layers indicates which spatial layers are active.
+        encoder_config->simulcast_layers.resize(streams_active_.size());
+      }
       double scale_factor = 1.0;
       for (int i = streams_active_.size() - 1; i >= 0; --i) {
         VideoStream& stream = encoder_config->simulcast_layers[i];
         stream.active = streams_active_[i];
         stream.scale_resolution_down_by = scale_factor;
-        scale_factor *= 2.0;
+        scale_factor *= (payload_name_ == "VP9") ? 1.0 : 2.0;
       }
-      SetEncoderSpecific(encoder_config, codec_type, automatic_resize_);
+      SetEncoderSpecific(encoder_config, codec_type, automatic_resize_,
+                         streams_active_.size());
     }
 
     void PerformTest() override {
@@ -152,7 +159,7 @@ TEST_F(QualityScalingTest, AdaptsDownForHighQp_Vp8) {
           /*automatic_resize=*/true, /*expect_adaptation=*/true);
 }
 
-TEST_F(QualityScalingTest, NoAdaptDownForHighQpWithResizeOff_Vp8) {
+TEST_F(QualityScalingTest, NoAdaptDownForHighQpIfScalingOff_Vp8) {
   // qp_low:1, qp_high:1 -> kHighQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,1,0,0,0,0" + kEnd);
 
@@ -172,7 +179,7 @@ TEST_F(QualityScalingTest, NoAdaptDownForNormalQp_Vp8) {
           /*automatic_resize=*/true, /*expect_adaptation=*/false);
 }
 
-TEST_F(QualityScalingTest, AdaptsDownForLowStartBitrate) {
+TEST_F(QualityScalingTest, AdaptsDownForLowStartBitrate_Vp8) {
   // qp_low:1, qp_high:127 -> kNormalQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
 
@@ -193,7 +200,7 @@ TEST_F(QualityScalingTest, NoAdaptDownForLowStartBitrate_Simulcast) {
 }
 
 TEST_F(QualityScalingTest,
-       AdaptsDownForLowStartBitrate_SimulcastOneActiveHighRes) {
+       AdaptsDownForLowStartBitrate_HighestStreamActive_Vp8) {
   // qp_low:1, qp_high:127 -> kNormalQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
 
@@ -204,7 +211,7 @@ TEST_F(QualityScalingTest,
 }
 
 TEST_F(QualityScalingTest,
-       NoAdaptDownForLowStartBitrate_SimulcastOneActiveLowRes) {
+       NoAdaptDownForLowStartBitrate_LowestStreamActive_Vp8) {
   // qp_low:1, qp_high:127 -> kNormalQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
 
@@ -214,7 +221,7 @@ TEST_F(QualityScalingTest,
           /*automatic_resize=*/true, /*expect_adaptation=*/false);
 }
 
-TEST_F(QualityScalingTest, NoAdaptDownForLowStartBitrateWithScalingOff) {
+TEST_F(QualityScalingTest, NoAdaptDownForLowStartBitrateIfScalingOff_Vp8) {
   // qp_low:1, qp_high:127 -> kNormalQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
 
@@ -224,7 +231,18 @@ TEST_F(QualityScalingTest, NoAdaptDownForLowStartBitrateWithScalingOff) {
           /*automatic_resize=*/false, /*expect_adaptation=*/false);
 }
 
-TEST_F(QualityScalingTest, NoAdaptDownForHighQp_Vp9) {
+TEST_F(QualityScalingTest, AdaptsDownForHighQp_Vp9) {
+  // qp_low:1, qp_high:1 -> kHighQp
+  test::ScopedFieldTrials field_trials(kPrefix + "0,0,1,1,0,0" + kEnd +
+                                       "WebRTC-VP9QualityScaler/Enabled/");
+
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP9Encoder::Create(); });
+  RunTest(&encoder_factory, "VP9", {true}, kHighStartBps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/true);
+}
+
+TEST_F(QualityScalingTest, NoAdaptDownForHighQpIfScalingOff_Vp9) {
   // qp_low:1, qp_high:1 -> kHighQp
   test::ScopedFieldTrials field_trials(kPrefix + "0,0,1,1,0,0" + kEnd +
                                        "WebRTC-VP9QualityScaler/Disabled/");
@@ -235,6 +253,41 @@ TEST_F(QualityScalingTest, NoAdaptDownForHighQp_Vp9) {
           /*automatic_resize=*/true, /*expect_adaptation=*/false);
 }
 
+TEST_F(QualityScalingTest, AdaptsDownForLowStartBitrate_Vp9) {
+  // qp_low:1, qp_high:255 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "0,0,1,255,0,0" + kEnd +
+                                       "WebRTC-VP9QualityScaler/Enabled/");
+
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP9Encoder::Create(); });
+  RunTest(&encoder_factory, "VP9", {true}, kLowStartBps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/true);
+}
+
+TEST_F(QualityScalingTest,
+       NoAdaptDownForLowStartBitrate_LowestStreamActive_Vp9) {
+  // qp_low:1, qp_high:255 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "0,0,1,255,0,0" + kEnd +
+                                       "WebRTC-VP9QualityScaler/Enabled/");
+
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP9Encoder::Create(); });
+  RunTest(&encoder_factory, "VP9", {true, false, false}, kLowStartBps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/false);
+}
+
+TEST_F(QualityScalingTest,
+       AdaptsDownForLowStartBitrate_MiddleStreamActive_Vp9) {
+  // qp_low:1, qp_high:255 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "0,0,1,255,0,0" + kEnd +
+                                       "WebRTC-VP9QualityScaler/Enabled/");
+
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return VP9Encoder::Create(); });
+  RunTest(&encoder_factory, "VP9", {false, true, false}, kLowStartBps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/true);
+}
+
 #if defined(WEBRTC_USE_H264)
 TEST_F(QualityScalingTest, AdaptsDownForHighQp_H264) {
   // qp_low:1, qp_high:1 -> kHighQp
@@ -243,6 +296,16 @@ TEST_F(QualityScalingTest, AdaptsDownForHighQp_H264) {
   test::FunctionVideoEncoderFactory encoder_factory(
       []() { return H264Encoder::Create(cricket::VideoCodec("H264")); });
   RunTest(&encoder_factory, "H264", {true}, kHighStartBps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/true);
+}
+
+TEST_F(QualityScalingTest, AdaptsDownForLowStartBitrate_H264) {
+  // qp_low:1, qp_high:51 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "0,0,0,0,1,51" + kEnd);
+
+  test::FunctionVideoEncoderFactory encoder_factory(
+      []() { return H264Encoder::Create(cricket::VideoCodec("H264")); });
+  RunTest(&encoder_factory, "H264", {true}, kLowStartBps,
           /*automatic_resize=*/true, /*expect_adaptation=*/true);
 }
 #endif  // defined(WEBRTC_USE_H264)
