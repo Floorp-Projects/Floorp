@@ -14,10 +14,12 @@
 #include "nsISupportsImpl.h"
 #include "VsyncSource.h"
 
+namespace mozilla::gfx {
+
 // Fallback option to use a software timer to mimic vsync. Useful for gtests
 // To mimic a hardware vsync thread, we create a dedicated software timer
 // vsync thread.
-class SoftwareVsyncSource : public mozilla::gfx::VsyncSource {
+class SoftwareVsyncSource : public VsyncSource {
  public:
   explicit SoftwareVsyncSource();
   virtual ~SoftwareVsyncSource();
@@ -26,19 +28,20 @@ class SoftwareVsyncSource : public mozilla::gfx::VsyncSource {
   void DisableVsync() override;
   bool IsVsyncEnabled() override;
   bool IsInSoftwareVsyncThread();
-  void NotifyVsync(const mozilla::TimeStamp& aVsyncTimestamp,
-                   const mozilla::TimeStamp& aOutputTimestamp) override;
-  mozilla::TimeDuration GetVsyncRate() override;
-  void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
+  void NotifyVsync(const TimeStamp& aVsyncTimestamp,
+                   const TimeStamp& aOutputTimestamp) override;
+  TimeDuration GetVsyncRate() override;
+  void ScheduleNextVsync(TimeStamp aVsyncTimestamp);
   void Shutdown() override;
 
  protected:
-  mozilla::TimeDuration mVsyncRate;
+  TimeDuration mVsyncRate;
   // Use a chromium thread because nsITimers* fire on the main thread
   base::Thread* mVsyncThread;
-  RefPtr<mozilla::CancelableRunnable>
-      mCurrentVsyncTask;  // only access on vsync thread
-  bool mVsyncEnabled;     // Only access on main thread
+  RefPtr<CancelableRunnable> mCurrentVsyncTask;  // only access on vsync thread
+  bool mVsyncEnabled;                            // Only access on main thread
 };
+
+}  // namespace mozilla::gfx
 
 #endif /* GFX_SOFTWARE_VSYNC_SOURCE_H */
