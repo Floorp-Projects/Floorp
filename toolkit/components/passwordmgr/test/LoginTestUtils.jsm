@@ -638,16 +638,15 @@ LoginTestUtils.remoteSettings = {
       id: "some-fake-ID-abc",
       relatedRealms,
     });
-    await db.importChanges({}, 1234567);
+    await db.importChanges({}, 9999999999999);
   },
   async cleanWebsitesWithSharedCredentials() {
     let db = await RemoteSettings(this.relatedRealmsCollection).db;
-    await db.clear();
-    await db.importChanges({}, 1234);
+    await db.importChanges({}, 9999999999999, [], { clear: true });
   },
   async updateTimestamp() {
     let db = await RemoteSettings(this.relatedRealmsCollection).db;
-    await db.importChanges({}, 12345678);
+    await db.importChanges({}, 9999999999999 + 1);
   },
   improvedPasswordRulesCollection: "password-rules",
 
@@ -667,11 +666,10 @@ LoginTestUtils.remoteSettings = {
       Domain: origin,
       "password-rules": rules,
     });
-    await db.importChanges({}, 1234567);
+    await db.importChanges({}, 9999999999999);
   },
   async cleanImprovedPasswordRules() {
     let db = await RemoteSettings(this.improvedPasswordRulesCollection).db;
-    await db.clear();
-    await db.importChanges({}, 1234);
+    await db.importChanges({}, 9999999999999, [], { clear: true });
   },
 };
