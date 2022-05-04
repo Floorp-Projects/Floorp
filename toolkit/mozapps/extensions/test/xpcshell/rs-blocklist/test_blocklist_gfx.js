@@ -8,7 +8,7 @@ const SAMPLE_GFX_RECORD = {
   feature: "DIRECT3D_9_LAYERS",
   devices: ["0x0a6c", "geforce"],
   featureStatus: "BLOCKED_DRIVER_VERSION",
-  last_modified: 1458035931837,
+  last_modified: 9999999999999, // High timestamp to prevent load of dump
   os: "WINNT 6.1",
   id: "3f947f16-37c2-4e96-d356-78b26363729b",
   versionRange: { minVersion: 0, maxVersion: "*" },
