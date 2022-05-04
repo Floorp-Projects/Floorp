@@ -22,7 +22,6 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "modules/video_coding/utility/vp9_uncompressed_header_parser.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/keep_ref_until_done.h"
 #include "rtc_base/logging.h"
 #include "libyuv/include/libyuv/convert.h"
 #include "vpx/vp8dx.h"
@@ -277,7 +276,7 @@ int LibvpxVp9Decoder::ReturnFrame(
   // This buffer contains all of |img|'s image data, a reference counted
   // Vp9FrameBuffer. (libvpx is done with the buffers after a few
   // vpx_codec_decode calls or vpx_codec_destroy).
-  Vp9FrameBufferPool::Vp9FrameBuffer* img_buffer =
+  rtc::scoped_refptr<Vp9FrameBufferPool::Vp9FrameBuffer> img_buffer =
       static_cast<Vp9FrameBufferPool::Vp9FrameBuffer*>(img->fb_priv);
 
   // The buffer can be used directly by the VideoFrame (without copy) by
@@ -312,7 +311,7 @@ int LibvpxVp9Decoder::ReturnFrame(
               // WrappedI420Buffer's mechanism for allowing the release of its
               // frame buffer is through a callback function. This is where we
               // should release |img_buffer|.
-              rtc::KeepRefUntilDone(img_buffer));
+              [img_buffer] {});
         }
       } else if (img->fmt == VPX_IMG_FMT_I444) {
         img_wrapped_buffer = WrapI444Buffer(
@@ -323,7 +322,7 @@ int LibvpxVp9Decoder::ReturnFrame(
             // WrappedI444Buffer's mechanism for allowing the release of its
             // frame buffer is through a callback function. This is where we
             // should release |img_buffer|.
-            rtc::KeepRefUntilDone(img_buffer));
+            [img_buffer] {});
       } else {
         RTC_LOG(LS_ERROR)
             << "Unsupported pixel format produced by the decoder: "
@@ -339,7 +338,7 @@ int LibvpxVp9Decoder::ReturnFrame(
           reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_U]),
           img->stride[VPX_PLANE_U] / 2,
           reinterpret_cast<const uint16_t*>(img->planes[VPX_PLANE_V]),
-          img->stride[VPX_PLANE_V] / 2, rtc::KeepRefUntilDone(img_buffer));
+          img->stride[VPX_PLANE_V] / 2, [img_buffer] {});
       break;
     default:
       RTC_LOG(LS_ERROR) << "Unsupported bit depth produced by the decoder: "

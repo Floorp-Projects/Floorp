@@ -21,7 +21,6 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/keep_ref_until_done.h"
 #include "test/frame_utils.h"
 
 namespace webrtc {
@@ -368,7 +367,8 @@ void ScrollingImageFrameGenerator::CropSourceToScrolledImage(
                      &i420_buffer->DataY()[offset_y], i420_buffer->StrideY(),
                      &i420_buffer->DataU()[offset_u], i420_buffer->StrideU(),
                      &i420_buffer->DataV()[offset_v], i420_buffer->StrideV(),
-                     KeepRefUntilDone(i420_buffer)),
+                     // To keep reference alive.
+                     [i420_buffer] {}),
       update_rect);
 }
 
