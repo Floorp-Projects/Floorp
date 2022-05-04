@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
   modal: "chrome://remote/content/marionette/modal.js",
   PageLoadStrategy: "chrome://remote/content/shared/webdriver/Capabilities.jsm",
+  ProgressListener: "chrome://remote/content/shared/Navigate.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
   truncate: "chrome://remote/content/shared/Format.jsm",
 });
@@ -213,12 +214,32 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     requireBeforeUnload = true,
   } = options;
 
-  const chromeWindow = browsingContextFn().topChromeWindow;
+  const browsingContext = browsingContextFn();
+  const chromeWindow = browsingContext.topChromeWindow;
   const pageLoadStrategy = driver.currentSession.pageLoadStrategy;
 
   // Return immediately if no load event is expected
-  if (!loadEventExpected || pageLoadStrategy === PageLoadStrategy.None) {
+  if (!loadEventExpected) {
     await callback();
+    return Promise.resolve();
+  }
+
+  // When not waiting for page load events, do not return until the navigation has actually started.
+  if (pageLoadStrategy === PageLoadStrategy.None) {
+    const listener = new ProgressListener(browsingContext.webProgress, {
+      resolveWhenStarted: true,
+      waitForExplicitStart: true,
+    });
+    const navigated = listener.start();
+    navigated.finally(() => {
+      if (listener.isStarted) {
+        listener.stop();
+      }
+    });
+
+    await callback();
+    await navigated;
+
     return Promise.resolve();
   }
 
