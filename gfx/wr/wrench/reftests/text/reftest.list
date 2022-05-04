@@ -85,4 +85,4 @@ skip_on(android) fuzzy(120,20800) == raster_root_C_8192.yaml raster_root_C_ref.y
 == subpx-bg-mask.yaml subpx-bg-mask-ref.yaml
 platform(linux,mac) == rotate-snap-clip.yaml rotate-snap-clip-ref.yaml
 platform(linux,mac) == rotate-snap-filter.yaml rotate-snap-filter-ref.yaml
-fuzzy(4,6600) == mix-blend-layers.yaml mix-blend-layers-ref.yaml
+fuzzy-if(env(android,device),47,6860) fuzzy-if(not(env(android,device)),4,6600) == mix-blend-layers.yaml mix-blend-layers-ref.yaml # Android device is Samsung Galaxy A51
