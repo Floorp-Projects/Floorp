@@ -15,7 +15,7 @@ async function test() {
   });
   await promiseApzFlushedRepaints();
 
-  synthesizeTouchpadPan(20, 100, [0,0,0], [10,100,0], {});
+  await synthesizeTouchpadPan(20, 100, [0,0,0], [10,100,0], {});
 
   await waitToClearOutAnyPotentialScrolls(window);
   await promise;

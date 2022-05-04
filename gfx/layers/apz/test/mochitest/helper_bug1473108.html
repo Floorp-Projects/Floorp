@@ -36,13 +36,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1473108
 
   <script type="application/javascript">
 
-  waitUntilApzStable().then(() => {
+  waitUntilApzStable().then(async () => {
     let target = document.getElementById("target");
     target.addEventListener("click", function(e) {
       is(e.target, target, `Clicked on at (${e.clientX}, ${e.clientY})`);
       subtestDone();
     });
-    synthesizeNativeTap(target, 5, 5);
+    await synthesizeNativeTap(target, 5, 5);
   });
 
 </script>

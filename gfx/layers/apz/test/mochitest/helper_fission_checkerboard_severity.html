@@ -97,7 +97,7 @@ async function test() {
   // thus as a result it will report a checkerboard event if there had been
   // checkerboarding.
   iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
-  synthesizeNativeMouseEventWithAPZ(
+  await synthesizeNativeMouseEventWithAPZ(
     { type: "click", target: iframe, offsetX: 10, offsetY: 10 },
     () => dump("Finished synthesizing click, waiting for OOPIF message...\n")
   );

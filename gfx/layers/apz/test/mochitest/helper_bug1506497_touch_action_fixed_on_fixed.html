@@ -45,7 +45,7 @@ async function test() {
     );
   });
 
-  synthesizeNativeTouchDrag(document.getElementById("boxOnTop"), 5, 5, 0, -50);
+  await synthesizeNativeTouchDrag(document.getElementById("boxOnTop"), 5, 5, 0, -50);
   dump("finished drag, waiting for touchend listener...");
   await promiseTouchEnd;
 
