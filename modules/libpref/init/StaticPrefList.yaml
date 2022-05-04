@@ -3577,11 +3577,15 @@
   value: 25 * 1024
   mirror: always
 
-# Whether or not LSNG (Next Generation Local Storage) is enabled.
-# See bug 1599979 for enabling this unconditionally (second attempt).
-- name: dom.storage.next_gen
+# Whether or not the unsupported legacy implemenation should be enabled. Please
+# don't advertise this pref as a way for disabling LSNG. This pref is intended
+# for internal testing only and will be removed in near future. Accidental
+# disabling of LSNG can lead to a data loss in a combination with disabled
+# shadow writes. Disabling of shadow writes is the initial step towards
+# removing legacy implementation and will be done soon.
+- name: dom.storage.enable_unsupported_legacy_implementation
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
   do_not_use_directly: true
 
