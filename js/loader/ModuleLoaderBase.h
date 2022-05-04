@@ -24,6 +24,7 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/UniquePtr.h"
+#include "ResolveResult.h"
 
 class nsIURI;
 
@@ -267,14 +268,15 @@ class ModuleLoaderBase : public nsISupports {
   static bool HostGetSupportedImportAssertions(
       JSContext* aCx, JS::ImportAssertionVector& aValues);
 
-  already_AddRefed<nsIURI> ResolveModuleSpecifier(LoadedScript* aScript,
-                                                  const nsAString& aSpecifier);
+  ResolveResult ResolveModuleSpecifier(LoadedScript* aScript,
+                                       const nsAString& aSpecifier);
 
   static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
                                        const nsAString& aSpecifier,
+                                       ResolveError aError,
                                        uint32_t aLineNumber,
                                        uint32_t aColumnNumber,
-                                       JS::MutableHandle<JS::Value> errorOut);
+                                       JS::MutableHandle<JS::Value> aErrorOut);
 
   enum class RestartRequest { No, Yes };
   nsresult StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
