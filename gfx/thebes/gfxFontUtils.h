@@ -11,8 +11,6 @@
 #include <new>
 #include <utility>
 #include "gfxPlatform.h"
-#include "ipc/IPCMessageUtils.h"
-#include "ipc/IPCMessageUtilsSpecializations.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
@@ -51,6 +49,11 @@ typedef struct hb_blob_t hb_blob_t;
 
 class SharedBitSet;
 
+namespace IPC {
+template <typename T>
+struct ParamTraits;
+}
+
 class gfxSparseBitSet {
  private:
   friend class SharedBitSet;
@@ -65,6 +68,9 @@ class gfxSparseBitSet {
     }
     uint8_t mBits[BLOCK_SIZE];
   };
+
+  friend struct IPC::ParamTraits<gfxSparseBitSet>;
+  friend struct IPC::ParamTraits<Block>;
 
  public:
   gfxSparseBitSet() = default;
@@ -331,37 +337,9 @@ class gfxSparseBitSet {
   }
 
  private:
-  friend struct IPC::ParamTraits<gfxSparseBitSet>;
-  friend struct IPC::ParamTraits<gfxSparseBitSet::Block>;
   CopyableTArray<uint16_t> mBlockIndex;
   CopyableTArray<Block> mBlocks;
 };
-
-namespace IPC {
-template <>
-struct ParamTraits<gfxSparseBitSet> {
-  typedef gfxSparseBitSet paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mBlockIndex);
-    WriteParam(aWriter, aParam.mBlocks);
-  }
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mBlockIndex) &&
-           ReadParam(aReader, &aResult->mBlocks);
-  }
-};
-
-template <>
-struct ParamTraits<gfxSparseBitSet::Block> {
-  typedef gfxSparseBitSet::Block paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    aWriter->WriteBytes(&aParam, sizeof(aParam));
-  }
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
-  }
-};
-}  // namespace IPC
 
 /**
  * SharedBitSet is a version of gfxSparseBitSet that is intended to be used
