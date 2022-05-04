@@ -54,9 +54,11 @@ def _ParseArgs():
     parser = argparse.ArgumentParser(description='libwebrtc.aar generator.')
     parser.add_argument(
         '--build-dir',
+        type=os.path.abspath,
         help='Build dir. By default will create and use temporary dir.')
     parser.add_argument('--output',
                         default='libwebrtc.aar',
+                        type=os.path.abspath,
                         help='Output file of the script.')
     parser.add_argument(
         '--arch',
