@@ -36,7 +36,7 @@ const TOPIC_DELETED = "places-snapshots-deleted";
  * @param {InteractionInfo[]} interactions
  */
 async function addInteractions(interactions) {
-  await PlacesTestUtils.addVisits(interactions.map(i => i.url));
+  await PlacesTestUtils.addVisits(interactions);
 
   for (let interaction of interactions) {
     await Interactions.store.add({
