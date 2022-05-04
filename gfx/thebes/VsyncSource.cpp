@@ -29,8 +29,6 @@ VsyncSource::~VsyncSource() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mDispatcherLock);
   mVsyncDispatcher = nullptr;
-  MOZ_ASSERT(mRegisteredCompositorVsyncDispatchers.Length() == 0);
-  MOZ_ASSERT(mEnabledCompositorVsyncDispatchers.Length() == 0);
 }
 
 void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
@@ -55,10 +53,6 @@ void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
 
   mVsyncId = mVsyncId.Next();
   const VsyncEvent event(mVsyncId, aVsyncTimestamp, aOutputTimestamp);
-
-  for (size_t i = 0; i < mEnabledCompositorVsyncDispatchers.Length(); i++) {
-    mEnabledCompositorVsyncDispatchers[i]->NotifyVsync(event);
-  }
 
   mVsyncDispatcher->NotifyVsync(event);
 
@@ -87,58 +81,6 @@ TimeDuration VsyncSource::GetVsyncRate() {
   return TimeDuration::FromMilliseconds(1000.0 / 60.0);
 }
 
-void VsyncSource::RegisterCompositorVsyncDispatcher(
-    CompositorVsyncDispatcher* aCompositorVsyncDispatcher) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCompositorVsyncDispatcher);
-  {  // scope lock
-    MutexAutoLock lock(mDispatcherLock);
-    mRegisteredCompositorVsyncDispatchers.AppendElement(
-        aCompositorVsyncDispatcher);
-  }
-}
-
-void VsyncSource::DeregisterCompositorVsyncDispatcher(
-    CompositorVsyncDispatcher* aCompositorVsyncDispatcher) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCompositorVsyncDispatcher);
-  {  // Scope lock
-    MutexAutoLock lock(mDispatcherLock);
-    mRegisteredCompositorVsyncDispatchers.RemoveElement(
-        aCompositorVsyncDispatcher);
-  }
-}
-
-void VsyncSource::EnableCompositorVsyncDispatcher(
-    CompositorVsyncDispatcher* aCompositorVsyncDispatcher) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCompositorVsyncDispatcher);
-  {  // scope lock
-    MutexAutoLock lock(mDispatcherLock);
-    if (!mEnabledCompositorVsyncDispatchers.Contains(
-            aCompositorVsyncDispatcher)) {
-      mEnabledCompositorVsyncDispatchers.AppendElement(
-          aCompositorVsyncDispatcher);
-    }
-  }
-  UpdateVsyncStatus();
-}
-
-void VsyncSource::DisableCompositorVsyncDispatcher(
-    CompositorVsyncDispatcher* aCompositorVsyncDispatcher) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCompositorVsyncDispatcher);
-  {  // Scope lock
-    MutexAutoLock lock(mDispatcherLock);
-    if (mEnabledCompositorVsyncDispatchers.Contains(
-            aCompositorVsyncDispatcher)) {
-      mEnabledCompositorVsyncDispatchers.RemoveElement(
-          aCompositorVsyncDispatcher);
-    }
-  }
-  UpdateVsyncStatus();
-}
-
 void VsyncSource::AddGenericObserver(VsyncObserver* aObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObserver);
@@ -160,17 +102,7 @@ void VsyncSource::MoveListenersToNewSource(
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mDispatcherLock);
   MutexAutoLock newLock(aNewSource->mDispatcherLock);
-  aNewSource->mRegisteredCompositorVsyncDispatchers.AppendElements(
-      std::move(mRegisteredCompositorVsyncDispatchers));
-  aNewSource->mEnabledCompositorVsyncDispatchers.AppendElements(
-      std::move(mEnabledCompositorVsyncDispatchers));
   aNewSource->mGenericObservers.AppendElements(std::move(mGenericObservers));
-
-  for (size_t i = 0;
-       i < aNewSource->mRegisteredCompositorVsyncDispatchers.Length(); i++) {
-    aNewSource->mRegisteredCompositorVsyncDispatchers[i]->MoveToSource(
-        aNewSource);
-  }
 
   aNewSource->mVsyncDispatcher = mVsyncDispatcher;
   mVsyncDispatcher->MoveToSource(aNewSource);
@@ -193,8 +125,7 @@ void VsyncSource::UpdateVsyncStatus() {
   bool enableVsync = false;
   {  // scope lock
     MutexAutoLock lock(mDispatcherLock);
-    enableVsync = !mEnabledCompositorVsyncDispatchers.IsEmpty() ||
-                  mVsyncDispatcherNeedsVsync || !mGenericObservers.IsEmpty();
+    enableVsync = mVsyncDispatcherNeedsVsync || !mGenericObservers.IsEmpty();
     mHasGenericObservers = !mGenericObservers.IsEmpty();
   }
 

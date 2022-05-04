@@ -3498,8 +3498,8 @@ void nsWindow::CreateCompositorVsyncDispatcher() {
     MutexAutoLock lock(*mCompositorVsyncDispatcherLock);
     if (!mCompositorVsyncDispatcher) {
       LOG_VSYNC("  create CompositorVsyncDispatcher()");
-      mCompositorVsyncDispatcher =
-          new CompositorVsyncDispatcher(mWaylandVsyncSource);
+      mCompositorVsyncDispatcher = new CompositorVsyncDispatcher(
+          mWaylandVsyncSource->GetVsyncDispatcher());
     }
   }
 }
