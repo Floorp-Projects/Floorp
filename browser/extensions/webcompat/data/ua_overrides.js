@@ -714,11 +714,14 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1743429",
     config: {
       matches: [
+        "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.edf.com/*", // Bug 1764786
         "*://*.wordpress.org/*", // Bug 1743431
         "*://bethesda.net/*", // #94607
         "*://cdn-vzn.yottaa.net/*", // Bug 1764795
         "*://citoyens.telerecours.fr/*", // #101066
+        "*://www.connexus.com/*", // Bug 1765925
+        "*://dsae.co.za/*", // Bug 1765925
         "*://genehmigung.ahs-vwa.at/*", // #100063
         "*://moje.pzu.pl/*", // #99772
         "*://mon.allianzbanque.fr/*", // #101074
@@ -809,9 +812,9 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://www.southportvisiter.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.staffordshire-live.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.stokesentinel.co.uk/*", // Bug 1762928 (Reach Plc)
+        "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.twitch.tv/*", // Bug 1764591
         "*://www.walesonline.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.wharf.co.uk/*", // Bug 1762928 (Reach Plc)
       ],
