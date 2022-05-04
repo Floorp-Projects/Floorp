@@ -114,18 +114,30 @@ bool SessionAccessibility::IsCacheEnabled() {
   return StaticPrefs::accessibility_cache_enabled_AtStartup();
 }
 
-mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
-  java::GeckoBundle::GlobalRef ret = nullptr;
+void SessionAccessibility::GetNodeInfo(int32_t aID,
+                                       mozilla::jni::Object::Param aNodeInfo) {
   RefPtr<SessionAccessibility> self(this);
-  nsAppShell::SyncRunEvent([this, self, aID, &ret] {
+  nsAppShell::SyncRunEvent(
+      [this, self, aID, aNodeInfo = jni::Object::GlobalRef(aNodeInfo)] {
+        if (Accessible* acc = GetAccessibleByID(aID)) {
+          PopulateNodeInfo(acc, aNodeInfo);
+        } else {
+          AALOG("oops, nothing for %d", aID);
+        }
+      });
+}
+
+int SessionAccessibility::GetNodeClassName(int32_t aID) {
+  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
+  int32_t classNameEnum = java::SessionAccessibility::CLASSNAME_VIEW;
+  RefPtr<SessionAccessibility> self(this);
+  nsAppShell::SyncRunEvent([this, self, aID, &classNameEnum] {
     if (Accessible* acc = GetAccessibleByID(aID)) {
-      ret = ToBundle(acc);
-    } else {
-      AALOG("oops, nothing for %d", aID);
+      classNameEnum = AccessibleWrap::AndroidClass(acc);
     }
   });
 
-  return mozilla::jni::Object::Ref::From(ret);
+  return classNameEnum;
 }
 
 void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
@@ -783,6 +795,142 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
   GECKOBUNDLE_FINISH(nodeInfo);
 
   return nodeInfo;
+}
+
+void SessionAccessibility::PopulateNodeInfo(
+    Accessible* aAccessible, mozilla::jni::Object::Param aNodeInfo) {
+  nsAutoString name;
+  aAccessible->Name(name);
+  nsAutoString textValue;
+  aAccessible->Value(textValue);
+  nsAutoString nodeID;
+  aAccessible->DOMNodeID(nodeID);
+  nsAutoString accDesc;
+  aAccessible->Description(accDesc);
+  uint64_t state = aAccessible->State();
+  LayoutDeviceIntRect bounds = aAccessible->Bounds();
+  uint8_t actionCount = aAccessible->ActionCount();
+  int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
+  Accessible* parent = virtualViewID != kNoID ? aAccessible->Parent() : nullptr;
+  int32_t parentID = parent ? AccessibleWrap::GetVirtualViewID(parent) : 0;
+  role role = aAccessible->Role();
+  if (role == roles::LINK && !(state & states::LINKED)) {
+    // A link without the linked state (<a> with no href) shouldn't be presented
+    // as a link.
+    role = roles::TEXT;
+  }
+
+  uint32_t flags = AccessibleWrap::GetFlags(role, state, actionCount);
+  int32_t className = AccessibleWrap::AndroidClass(aAccessible);
+
+  nsAutoString hint;
+  nsAutoString text;
+  nsAutoString description;
+  if (state & states::EDITABLE) {
+    // An editable field's name is populated in the hint.
+    hint.Assign(name);
+    text.Assign(textValue);
+  } else {
+    if (role == roles::LINK || role == roles::HEADING) {
+      description.Assign(name);
+    } else {
+      text.Assign(name);
+    }
+  }
+
+  if (!accDesc.IsEmpty()) {
+    if (!hint.IsEmpty()) {
+      // If this is an editable, the description is concatenated with a
+      // whitespace directly after the name.
+      hint.AppendLiteral(" ");
+    }
+    hint.Append(accDesc);
+  }
+
+  if ((state & states::REQUIRED) != 0) {
+    nsAutoString requiredString;
+    if (LocalizeString("stateRequired", requiredString)) {
+      if (!hint.IsEmpty()) {
+        // If the hint is non-empty, concatenate with a comma for a brief pause.
+        hint.AppendLiteral(", ");
+      }
+      hint.Append(requiredString);
+    }
+  }
+
+  RefPtr<AccAttributes> attributes = aAccessible->Attributes();
+
+  nsAutoString geckoRole;
+  nsAutoString roleDescription;
+  if (virtualViewID != kNoID) {
+    AccessibleWrap::GetRoleDescription(role, attributes, geckoRole,
+                                       roleDescription);
+  }
+
+  int32_t inputType = 0;
+  if (attributes) {
+    nsString inputTypeAttr;
+    attributes->GetAttribute(nsGkAtoms::textInputType, inputTypeAttr);
+    inputType = AccessibleWrap::GetInputType(inputTypeAttr);
+  }
+
+  auto childCount = aAccessible->ChildCount();
+  nsTArray<int32_t> children(childCount);
+  if (!nsAccUtils::MustPrune(aAccessible)) {
+    for (uint32_t i = 0; i < childCount; i++) {
+      auto child = aAccessible->ChildAt(i);
+      children.AppendElement(AccessibleWrap::GetVirtualViewID(child));
+    }
+  }
+
+  const int32_t boundsArray[4] = {bounds.x, bounds.y, bounds.x + bounds.width,
+                                  bounds.y + bounds.height};
+
+  mSessionAccessibility->PopulateNodeInfo(
+      aNodeInfo, virtualViewID, parentID, jni::IntArray::From(children), flags,
+      className, jni::IntArray::New(boundsArray, 4), jni::StringParam(text),
+      jni::StringParam(description), jni::StringParam(hint),
+      jni::StringParam(geckoRole), jni::StringParam(roleDescription),
+      jni::StringParam(nodeID), inputType);
+
+  if (aAccessible->HasNumericValue()) {
+    double curValue = aAccessible->CurValue();
+    double minValue = aAccessible->MinValue();
+    double maxValue = aAccessible->MaxValue();
+    double step = aAccessible->Step();
+
+    int32_t rangeType = 0;  // integer
+    if (maxValue == 1 && minValue == 0) {
+      rangeType = 2;  // percent
+    } else if (std::round(step) != step) {
+      rangeType = 1;  // float;
+    }
+
+    mSessionAccessibility->PopulateNodeRangeInfo(
+        aNodeInfo, rangeType, static_cast<float>(minValue),
+        static_cast<float>(maxValue), static_cast<float>(curValue));
+  }
+
+  if (attributes) {
+    Maybe<int32_t> rowIndex =
+        attributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
+    if (rowIndex) {
+      mSessionAccessibility->PopulateNodeCollectionItemInfo(aNodeInfo,
+                                                            *rowIndex, 1, 0, 1);
+    }
+
+    Maybe<int32_t> rowCount =
+        attributes->GetAttribute<int32_t>(nsGkAtoms::child_item_count);
+    if (rowCount) {
+      int32_t selectionMode = 0;
+      if (aAccessible->IsSelect()) {
+        selectionMode = (state & states::MULTISELECTABLE) ? 2 : 1;
+      }
+      mSessionAccessibility->PopulateNodeCollectionInfo(
+          aNodeInfo, *rowCount, 1, selectionMode,
+          attributes->HasAttribute(nsGkAtoms::tree));
+    }
+  }
 }
 
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
