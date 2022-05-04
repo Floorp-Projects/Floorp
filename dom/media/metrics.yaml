@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file defines the metrics that are recorded by the Glean SDK. They are
-# automatically converted to platform-specific code at build time using the
-# `glean_parser` PyPI package.
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
 
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Audio/Video'
 
 gmp:
   update_xml_fetch_result:
@@ -36,9 +37,9 @@ gmp:
       This captures 3 different data points: success or failure of the request,
       if cert pinning or content signatures were used to verify the result, and
       the reason for failure, if the request failed.
-    metadata: &metadata
+    metadata:
       tags:
-        - "Core :: Audio/Video: GMP"
+        - 'Core :: Audio/Video: GMP'
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1739664
     data_reviews:
