@@ -2026,6 +2026,7 @@ impl YamlFrameReader {
             .unwrap_or(RasterSpace::Screen);
         let is_backdrop_root = yaml["backdrop-root"].as_bool().unwrap_or(false);
         let is_blend_container = yaml["blend-container"].as_bool().unwrap_or(false);
+        let apply_clips_to_items = yaml["apply-clips-to-items"].as_bool().unwrap_or(false);
 
         if is_root {
             if let Some(vector) = yaml["scroll-offset"].as_vector() {
@@ -2047,6 +2048,7 @@ impl YamlFrameReader {
         let mut flags = StackingContextFlags::empty();
         flags.set(StackingContextFlags::IS_BACKDROP_ROOT, is_backdrop_root);
         flags.set(StackingContextFlags::IS_BLEND_CONTAINER, is_blend_container);
+        flags.set(StackingContextFlags::APPLY_CLIPS_TO_ITEMS, apply_clips_to_items);
 
         dl.push_stacking_context(
             bounds.min,

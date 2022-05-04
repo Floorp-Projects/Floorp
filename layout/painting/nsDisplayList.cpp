@@ -7853,8 +7853,9 @@ static void ComputeMaskGeometry(PaintFramesParams& aParams) {
 
 nsDisplayMasksAndClipPaths::nsDisplayMasksAndClipPaths(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const ActiveScrolledRoot* aActiveScrolledRoot)
-    : nsDisplayEffectsBase(aBuilder, aFrame, aList, aActiveScrolledRoot, true) {
+    const ActiveScrolledRoot* aActiveScrolledRoot, bool aApplyClipToChildren)
+    : nsDisplayEffectsBase(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
+      mApplyClipToChildren(aApplyClipToChildren) {
   MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
 
   nsPresContext* presContext = mFrame->PresContext();
@@ -8195,6 +8196,9 @@ bool nsDisplayMasksAndClipPaths::CreateWebRenderCommands(
     wr::StackingContextParams params;
     params.clip = wr::WrStackingContextClip::ClipId(*clip);
     params.opacity = opacity.ptrOr(nullptr);
+    if (mApplyClipToChildren) {
+      params.flags |= wr::StackingContextFlags::APPLY_CLIPS_TO_ITEMS;
+    }
     layer.emplace(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder, params,
                   bounds);
     sc = layer.ptr();
@@ -8317,20 +8321,23 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
     return true;
   }
 
+  bool snap;
+  nsRect bounds = GetBounds(aDisplayListBuilder, &snap);
+
   nsCSSRendering::ImageLayerClipState clip;
   nsCSSRendering::GetImageLayerClip(
       mFrame->StyleBackground()->BottomLayer(), mFrame, *mFrame->StyleBorder(),
-      mBackdropRect, mBackdropRect, false,
-      mFrame->PresContext()->AppUnitsPerDevPixel(), &clip);
+      bounds, bounds, false, mFrame->PresContext()->AppUnitsPerDevPixel(),
+      &clip);
 
-  LayoutDeviceRect bounds = LayoutDeviceRect::FromAppUnits(
-      mBackdropRect, mFrame->PresContext()->AppUnitsPerDevPixel());
+  LayoutDeviceRect deviceBounds = LayoutDeviceRect::FromAppUnits(
+      bounds, mFrame->PresContext()->AppUnitsPerDevPixel());
 
   wr::ComplexClipRegion region =
       wr::ToComplexClipRegion(clip.mBGClipArea, clip.mRadii,
                               mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  aBuilder.PushBackdropFilter(wr::ToLayoutRect(bounds), region,
+  aBuilder.PushBackdropFilter(wr::ToLayoutRect(deviceBounds), region,
                               wrFilters.filters, wrFilters.filter_datas,
                               !BackfaceIsHidden());
 
@@ -8340,8 +8347,8 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
-  nsDisplayWrapList::CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
-                                             aDisplayListBuilder);
+  nsDisplayEffectsBase::CreateWebRenderCommands(aBuilder, aResources, sc,
+                                                aManager, aDisplayListBuilder);
   return true;
 }
 
