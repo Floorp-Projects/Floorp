@@ -810,7 +810,6 @@ nsWebBrowser::SaveDocument(nsISupports* aDocumentish, nsISupports* aFile,
   nsresult rv;
   mPersist = do_CreateInstance(NS_WEBBROWSERPERSIST_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  RefPtr<nsIWebBrowserPersist> localPersist(mPersist);
   mPersist->SetProgressListener(this);
   mPersist->SetPersistFlags(mPersistFlags);
   mPersist->GetCurrentState(&mPersistCurrentState);
