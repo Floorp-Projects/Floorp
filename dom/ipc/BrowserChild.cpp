@@ -175,8 +175,8 @@ static BrowserChildMap* sBrowserChildren;
 StaticMutex sBrowserChildrenMutex;
 
 already_AddRefed<Document> BrowserChild::GetTopLevelDocument() const {
-  nsCOMPtr<Document> doc;
-  WebNavigation()->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  nsCOMPtr<Document> doc = docShell ? docShell->GetExtantDocument() : nullptr;
   return doc.forget();
 }
 
@@ -3168,8 +3168,9 @@ void BrowserChild::ReinitRendering() {
     lm->SetLayersObserverEpoch(mLayersObserverEpoch);
   }
 
-  nsCOMPtr<Document> doc(GetTopLevelDocument());
-  doc->NotifyLayerManagerRecreated();
+  if (nsCOMPtr<Document> doc = GetTopLevelDocument()) {
+    doc->NotifyLayerManagerRecreated();
+  }
 
   if (mRenderLayers) {
     SchedulePaint();
@@ -3217,16 +3218,13 @@ void BrowserChild::NotifyJankedAnimations(
 
 mozilla::ipc::IPCResult BrowserChild::RecvUIResolutionChanged(
     const float& aDpi, const int32_t& aRounding, const double& aScale) {
-  nsCOMPtr<Document> document(GetTopLevelDocument());
-  if (!document) {
-    return IPC_OK();
-  }
-
   ScreenIntSize oldScreenSize = GetInnerSize();
   if (aDpi > 0) {
     mPuppetWidget->UpdateBackingScaleCache(aDpi, aRounding, aScale);
   }
-  RefPtr<nsPresContext> presContext = document->GetPresContext();
+  nsCOMPtr<Document> document(GetTopLevelDocument());
+  RefPtr<nsPresContext> presContext =
+      document ? document->GetPresContext() : nullptr;
   if (presContext) {
     presContext->UIResolutionChangedSync();
   }
