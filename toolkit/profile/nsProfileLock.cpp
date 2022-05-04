@@ -453,48 +453,6 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
     // assume we tried an NFS that does not support it. Now, try with symlink.
     rv = LockWithSymlink(lockFile, false);
   }
-
-  if (NS_SUCCEEDED(rv)) {
-    // Check for the old-style lock used by pre-mozilla 1.3 builds.
-    // Those builds used an earlier check to prevent the application
-    // from launching if another instance was already running. Because
-    // of that, we don't need to create an old-style lock as well.
-    struct LockProcessInfo {
-      ProcessSerialNumber psn;
-      unsigned long launchDate;
-    };
-
-    PRFileDesc* fd = nullptr;
-    int32_t ioBytes;
-    ProcessInfoRec processInfo;
-    LockProcessInfo lockProcessInfo;
-
-    rv = lockFile->SetLeafName(OLD_LOCKFILE_NAME);
-    if (NS_FAILED(rv)) return rv;
-    rv = lockFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
-    if (NS_SUCCEEDED(rv)) {
-      ioBytes = PR_Read(fd, &lockProcessInfo, sizeof(LockProcessInfo));
-      PR_Close(fd);
-
-      if (ioBytes == sizeof(LockProcessInfo)) {
-#  ifdef __LP64__
-        processInfo.processAppRef = nullptr;
-#  else
-        processInfo.processAppSpec = nullptr;
-#  endif
-        processInfo.processName = nullptr;
-        processInfo.processInfoLength = sizeof(ProcessInfoRec);
-        if (::GetProcessInformation(&lockProcessInfo.psn, &processInfo) ==
-                noErr &&
-            processInfo.processLaunchDate == lockProcessInfo.launchDate) {
-          return NS_ERROR_FILE_ACCESS_DENIED;
-        }
-      } else {
-        NS_WARNING("Could not read lock file - ignoring lock");
-      }
-    }
-    rv = NS_OK;  // Don't propagate error from OpenNSPRFileDesc.
-  }
 #elif defined(XP_UNIX)
   // Get the old lockfile name
   nsCOMPtr<nsIFile> oldLockFile;
