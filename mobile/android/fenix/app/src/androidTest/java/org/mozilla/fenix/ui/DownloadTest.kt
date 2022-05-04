@@ -94,6 +94,7 @@ class DownloadTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/25002")
     @Test
     fun testDownloadCompleteNotification() {
         downloadFile = "smallZip.zip"
@@ -140,6 +141,7 @@ class DownloadTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/17485")
     @SmokeTest
     @Test
         /* Verifies downloads in the Downloads Menu:
