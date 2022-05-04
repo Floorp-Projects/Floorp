@@ -16,7 +16,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -24,7 +23,6 @@
 #include "mozilla/net/WebSocketFrame.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsICookieService.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsStringFlags.h"
@@ -43,20 +41,6 @@ LazyLogModule gLogger("LocalStorage");
 }  // namespace
 
 const char16_t* kLocalStorageType = u"localStorage";
-
-void MaybeEnableNextGenLocalStorage() {
-  if (StaticPrefs::dom_storage_next_gen_DoNotUseDirectly()) {
-    return;
-  }
-
-  if (!Preferences::GetBool("dom.storage.next_gen_auto_enabled_by_cause1")) {
-    if (StaticPrefs::network_cookie_lifetimePolicy() ==
-        nsICookieService::ACCEPT_SESSION) {
-      Preferences::SetBool("dom.storage.next_gen", true);
-      Preferences::SetBool("dom.storage.next_gen_auto_enabled_by_cause1", true);
-    }
-  }
-}
 
 bool NextGenLocalStorageEnabled() {
   if (XRE_IsParentProcess()) {
