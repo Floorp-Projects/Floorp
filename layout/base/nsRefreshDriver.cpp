@@ -443,12 +443,11 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
  public:
   // This is used in the parent process for all platforms except Linux Wayland.
   static RefPtr<VsyncRefreshDriverTimer>
-  CreateForParentProcessWithGlobalHardwareVsync() {
+  CreateForParentProcessWithGlobalVsync() {
     MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    RefPtr<gfx::VsyncSource> vsyncSource =
-        gfxPlatform::GetPlatform()->GetHardwareVsync();
-    RefPtr<VsyncDispatcher> vsyncDispatcher = vsyncSource->GetVsyncDispatcher();
+    RefPtr<VsyncDispatcher> vsyncDispatcher =
+        gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
     RefPtr<VsyncRefreshDriverTimer> timer =
         new VsyncRefreshDriverTimer(std::move(vsyncDispatcher), nullptr);
     return timer.forget();
@@ -1138,8 +1137,8 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
       // Make sure all vsync systems are ready.
       gfxPlatform::GetPlatform();
       // In parent process, we can create the VsyncRefreshDriverTimer directly.
-      sRegularRateTimer = VsyncRefreshDriverTimer::
-          CreateForParentProcessWithGlobalHardwareVsync();
+      sRegularRateTimer =
+          VsyncRefreshDriverTimer::CreateForParentProcessWithGlobalVsync();
     } else {
       PBackgroundChild* actorChild =
           BackgroundChild::GetOrCreateForCurrentThread();
