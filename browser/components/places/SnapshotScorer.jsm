@@ -165,6 +165,65 @@ const SnapshotScorer = new (class SnapshotScorer {
   }
 
   /**
+   * De-dupes snapshots based on matching titles and query parameters.
+   *
+   * @param {Recommendation[]} recommendations
+   *   An array of snapshots recommendations to de-dupe.
+   * @returns {Recommendation[]}
+   *   A deduped array.
+   */
+  dedupeSnapshots(recommendations) {
+    // A map that uses the url plus the title as the key. The values are
+    // objects with a hasSearch property, and an optional score property.
+    let matchingMap = new Map();
+    let result = [];
+
+    // First build a map of urls and titles mapping to snapshots data.
+    for (let recommendation of recommendations) {
+      let url;
+      try {
+        url = new URL(recommendation.snapshot.url);
+      } catch (ex) {
+        // If we can't analyse the URL, we simply add the snapshot to the
+        // results regardless.
+        result.push(recommendation);
+        continue;
+      }
+      let newRecommendation = { ...recommendation, hasSearch: !!url.search };
+      url.search = recommendation.snapshot.title;
+      let key = url.href;
+      let existing = matchingMap.get(key);
+      if (existing) {
+        // If the new recommendation doesn't have a search query, then
+        // set that as the preferred option.
+        if (!newRecommendation.hasSearch) {
+          matchingMap.set(key, newRecommendation);
+          continue;
+        }
+
+        // If the existing match does not have a search query, simply continue
+        // as it is the preferred option.
+        if (!existing.hasSearch) {
+          continue;
+        }
+
+        // Otherwise, work out the best one to pick based on the most recently
+        // visited.
+        if (
+          newRecommendation.snapshot.lastInteractionAt.getTime() >
+          existing.snapshot.lastInteractionAt.getTime()
+        ) {
+          matchingMap.set(key, newRecommendation);
+        }
+      } else {
+        matchingMap.set(key, newRecommendation);
+      }
+    }
+
+    return [...result, ...matchingMap.values()];
+  }
+
+  /**
    * Test-only. Overrides the time used in the scoring algorithm with a
    * specific time which allows for deterministic tests.
    *
