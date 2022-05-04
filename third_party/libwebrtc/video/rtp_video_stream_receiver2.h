@@ -176,13 +176,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   absl::optional<int64_t> LastReceivedPacketMs() const;
   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
 
-  // RtpDemuxer only forwards a given RTP packet to one sink. However, some
-  // sinks, such as FlexFEC, might wish to be informed of all of the packets
-  // a given sink receives (or any set of sinks). They may do so by registering
-  // themselves as secondary sinks.
-  void AddSecondarySink(RtpPacketSinkInterface* sink);
-  void RemoveSecondarySink(const RtpPacketSinkInterface* sink);
-
   // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
   // stats at all, and even on the most recent libwebrtc code there does not
   // seem to be any support for these stats right now. So, we hack this in.
@@ -348,9 +341,6 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   int16_t last_payload_type_ RTC_GUARDED_BY(worker_task_checker_) = -1;
 
   bool has_received_frame_ RTC_GUARDED_BY(worker_task_checker_);
-
-  std::vector<RtpPacketSinkInterface*> secondary_sinks_
-      RTC_GUARDED_BY(worker_task_checker_);
 
   absl::optional<uint32_t> last_received_rtp_timestamp_
       RTC_GUARDED_BY(worker_task_checker_);

@@ -45,7 +45,7 @@ class VCMTiming;
 
 namespace internal {
 
-class VideoReceiveStream : public webrtc::VideoReceiveStream,
+class VideoReceiveStream : public webrtc::DEPRECATED_VideoReceiveStream,
                            public rtc::VideoSinkInterface<VideoFrame>,
                            public NackSender,
                            public video_coding::OnCompleteFrameCallback,
