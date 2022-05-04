@@ -857,6 +857,8 @@ var GMPProvider = {
   observe(subject, topic, data) {
     if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
       AddonManagerPrivate.registerProvider(GMPProvider, ["plugin"]);
+      Services.obs.notifyObservers(null, "gmp-provider-registered");
+
       Services.obs.removeObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
     }
   },
