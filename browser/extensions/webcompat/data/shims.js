@@ -397,7 +397,10 @@ const AVAILABLE_SHIMS = [
     name: "Integral Ad Science PET",
     bug: "1713701",
     file: "iaspet.js",
-    matches: ["*://cdn.adsafeprotected.com/iasPET.1.js"],
+    matches: [
+      "*://cdn.adsafeprotected.com/iasPET.1.js",
+      "*://static.adsafeprotected.com/iasPET.1.js",
+    ],
     onlyIfBlockedByETP: true,
   },
   {
