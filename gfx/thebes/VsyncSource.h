@@ -64,7 +64,7 @@ class VsyncSource {
   void DeregisterCompositorVsyncDispatcher(
       CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
 
-  void NotifyRefreshTimerVsyncStatus(bool aEnable);
+  void NotifyVsyncDispatcherVsyncStatus(bool aEnable);
   virtual TimeDuration GetVsyncRate();
 
   // These should all only be called on the main thread
@@ -95,7 +95,7 @@ class VsyncSource {
   void UpdateVsyncStatus();
 
   Mutex mDispatcherLock MOZ_UNANNOTATED;
-  bool mRefreshTimerNeedsVsync;
+  bool mVsyncDispatcherNeedsVsync;
   nsTArray<RefPtr<CompositorVsyncDispatcher>>
       mEnabledCompositorVsyncDispatchers;
   nsTArray<RefPtr<CompositorVsyncDispatcher>>
