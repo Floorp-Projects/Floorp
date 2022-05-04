@@ -39,7 +39,7 @@ root:
           color: [255, 127, 255, 1]
         - type: rect
           bounds: [120, 50, 50, 50]
-          color: [128, 255, 198, 1]
+          color: [128, 255, 200, 1]
         - type: rect
           bounds: [120, 100, 50, 50]
           color: [255, 255, 255, 1]

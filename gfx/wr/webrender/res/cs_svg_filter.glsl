@@ -442,7 +442,7 @@ vec4 ComponentTransfer(vec4 colora) {
             case COMPONENT_TRANSFER_TABLE:
             case COMPONENT_TRANSFER_DISCRETE:
                 // fetch value from lookup table
-                k = int(floor(colora[i]*255.0));
+                k = int(floor(colora[i]*255.0 + 0.5));
                 texel = fetch_from_gpu_cache_1_direct(vData.xy + ivec2(offset + k/4, 0));
                 colora[i] = clamp(texel[k % 4], 0.0, 1.0);
                 // offset plus 256/4 blocks
