@@ -1549,6 +1549,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
 pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.enabled", false);
 
+pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", false);
+
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "FR");
 // List of locales that get stories, regardless of region-stories-config.

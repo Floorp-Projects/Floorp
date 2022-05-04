@@ -325,6 +325,12 @@ pocketNewtab:
         browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled
       description: >-
         Updates the sponsored label position to below the image for Pocket cards on newtab.
+    sendToPocket:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled
+      description: >-
+        Decides what to do when a logged out user click "Save to Pocket" from a Pocket card.
     recsPersonalized:
       type: boolean
       fallbackPref: >-
