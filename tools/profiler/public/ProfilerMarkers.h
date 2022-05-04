@@ -150,6 +150,7 @@ mozilla::ProfileBufferBlockIndex profiler_add_marker(
           aOptions.ThreadId().ThreadId())) {
     return {};
   }
+  AUTO_PROFILER_LABEL("profiler_add_marker", PROFILER);
   return ::AddMarkerToBuffer(profiler_get_core_buffer(), aName, aCategory,
                              std::move(aOptions), aMarkerType,
                              aPayloadArguments...);
