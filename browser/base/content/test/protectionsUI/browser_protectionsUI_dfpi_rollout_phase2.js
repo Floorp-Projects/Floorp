@@ -37,6 +37,11 @@ function cleanup() {
   // Reset the rollout scalar back to 2 = unset. We have to simulate this on
   // test cleanup, because BrowserGlue only sets this once initially.
   Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 2);
+  // Same for the tcpByDefault feature probe.
+  Services.telemetry.scalarSet(
+    "privacy.dfpi_rollout_tcpByDefault_feature",
+    false
+  );
 }
 
 /**
@@ -56,13 +61,20 @@ async function waitForAndAssertPrefState(pref, expectedValue, message) {
 }
 
 function testTelemetryState(
-  expectedValue,
-  message = "Scalar should have correct value"
+  expectedValueOptIn,
+  expectedValueTCPByDefault,
+  message = "Scalars should have correct value"
 ) {
   TelemetryTestUtils.assertScalar(
     TelemetryTestUtils.getProcessScalars("parent"),
     "privacy.dfpi_rollout_enabledByDefault",
-    expectedValue,
+    expectedValueOptIn,
+    message
+  );
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "privacy.dfpi_rollout_tcpByDefault_feature",
+    expectedValueTCPByDefault,
     message
   );
 }
@@ -158,7 +170,7 @@ add_task(async function test_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, "Telemetry should indicate not enrolled.");
+  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
 
   let cookieBehaviorChange = waitForAndAssertPrefState(
     COOKIE_BEHAVIOR_PREF,
@@ -197,7 +209,7 @@ add_task(async function test_phase2() {
     "Preferences section should still not be visible."
   );
 
-  testTelemetryState(3, "Telemetry should indicate phase 2");
+  testTelemetryState(2, true, "Telemetry should indicate phase 2");
 
   await doEnrollmentCleanup();
   cleanup();
@@ -235,7 +247,7 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, "Telemetry should indicate not enrolled.");
+  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
 
   info("Set the phase 1 rollout pref indicating user opt-out state.");
   // This simulates the prefs set when the user opts out via the messaging
@@ -249,7 +261,7 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     `After opt-out TCP is still disabled by default.`
   );
 
-  testTelemetryState(0, "Telemetry indicates opt-out.");
+  testTelemetryState(0, false, "Telemetry indicates opt-out.");
 
   ok(
     !NimbusFeatures.tcpByDefault.isEnabled(),
@@ -293,7 +305,7 @@ add_task(async function test_phase1_opt_out_to_phase2() {
     "Preferences section should no longer be visible."
   );
 
-  testTelemetryState(3, "Telemetry should indicate phase 2.");
+  testTelemetryState(0, true, "Telemetry should indicate phase 2.");
 
   await doEnrollmentCleanup();
   cleanup();
@@ -331,7 +343,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     "TCP preferences section should not be visible initially."
   );
 
-  testTelemetryState(2, "Telemetry should indicate not enrolled.");
+  testTelemetryState(2, false, "Telemetry should indicate not enrolled.");
 
   info("Set the phase 1 rollout pref indicator user opt-in state.");
   // This simulates the prefs set when the user opts-in via the messaging
@@ -344,7 +356,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     `TCP is enabled default.`
   );
 
-  testTelemetryState(1, "Telemetry indicates opt-in.");
+  testTelemetryState(1, false, "Telemetry indicates opt-in.");
 
   ok(
     !NimbusFeatures.tcpByDefault.isEnabled(),
@@ -396,7 +408,7 @@ add_task(async function test_phase1_opt_in_to_phase2() {
     "Preferences section should still not be visible."
   );
 
-  testTelemetryState(3, "Telemetry should indicate phase 2.");
+  testTelemetryState(1, true, "Telemetry should indicate phase 2.");
 
   info(
     "Changing opt-in choice after phase 2 enrollment should not disable TCP."
