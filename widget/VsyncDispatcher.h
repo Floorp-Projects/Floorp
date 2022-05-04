@@ -77,13 +77,12 @@ class CompositorVsyncDispatcher final : public VsyncObserver {
 //  VsyncWorkerChild)
 //
 // This class is only used in the parent process.
-// There is one global vsync dispatcher for the global VsyncSource which is
-// managed by gfxPlatform.
+// There is one global vsync dispatcher which is managed by gfxPlatform.
 // On Linux Wayland, there is also one vsync source and vsync dispatcher per
 // widget.
-// A vsync dispatcher can become associated with a different VsyncSource during
-// its lifetime. This happens, for example, when the layout.frame_rate pref is
-// modified.
+// A vsync dispatcher can swap out its underlying VsyncSource. This happens, for
+// example, when the layout.frame_rate pref is modified, causing us to switch
+// between hardware vsync and software vsync.
 class VsyncDispatcher final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncDispatcher)
 
@@ -93,9 +92,14 @@ class VsyncDispatcher final {
   // Please check CompositorVsyncDispatcher::NotifyVsync().
   void NotifyVsync(const VsyncEvent& aVsync);
 
-  void MoveToSource(gfx::VsyncSource* aVsyncSource);
+  // Swap out the underlying vsync source. Can be called on any thread.
+  // aVsyncSource must be non-null.
+  void SetVsyncSource(gfx::VsyncSource* aVsyncSource);
 
-  TimeDuration GetVsyncRate() { return mVsyncSource->GetVsyncRate(); }
+  // Always non-null.
+  RefPtr<gfx::VsyncSource> GetCurrentVsyncSource();
+
+  TimeDuration GetVsyncRate();
 
   // Add a vsync observer to this dispatcher. This is a no-op if the observer is
   // already registered. Can be called from any thread.
@@ -116,22 +120,28 @@ class VsyncDispatcher final {
 
  private:
   virtual ~VsyncDispatcher();
+
+  // Can be called on any thread.
   void UpdateVsyncStatus();
-  bool NeedsVsync();
 
   // Can only be called on the main thread.
   void NotifyMainThreadObservers(VsyncEvent aEvent);
 
-  // We need to hold a weak ref to the vsync source we belong to in order to
-  // notify it of our vsync requirement. The vsync source holds a RefPtr to us,
-  // so we can't hold a RefPtr back without causing a cyclic dependency.
-  gfx::VsyncSource* mVsyncSource;
-
   struct State {
+    explicit State(gfx::VsyncSource* aVsyncSource)
+        : mCurrentVsyncSource(aVsyncSource) {}
+    State(State&&) = default;
+    ~State() = default;
+
     nsTArray<RefPtr<VsyncObserver>> mObservers;
     nsTArray<RefPtr<VsyncObserver>> mMainThreadObservers;
     VsyncId mLastVsyncIdSentToMainThread;
     VsyncId mLastMainThreadProcessedVsyncId;
+
+    // Always non-null.
+    RefPtr<gfx::VsyncSource> mCurrentVsyncSource;
+
+    bool mIsObservingVsync = false;
   };
 
   DataMutex<State> mState;
