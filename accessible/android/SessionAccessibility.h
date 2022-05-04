@@ -50,7 +50,8 @@ class SessionAccessibility final
   using Base::AttachNative;
   using Base::DisposeNative;
   bool IsCacheEnabled();
-  jni::Object::LocalRef GetNodeInfo(int32_t aID);
+  void GetNodeInfo(int32_t aID, mozilla::jni::Object::Param aNodeInfo);
+  int GetNodeClassName(int32_t aID);
   void SetText(int32_t aID, jni::String::Param aText);
   void Click(int32_t aID);
   void Pivot(int32_t aID, int32_t aGranularity, bool aForward, bool aInclusive);
@@ -130,6 +131,9 @@ class SessionAccessibility final
       const double& aMaxVal = UnspecifiedNaN<double>(),
       const double& aStep = UnspecifiedNaN<double>(),
       AccAttributes* aAttributes = nullptr);
+
+  void PopulateNodeInfo(Accessible* aAccessible,
+                        mozilla::jni::Object::Param aNodeInfo);
 
   void SetAttached(bool aAttached, already_AddRefed<Runnable> aRunnable);
 
