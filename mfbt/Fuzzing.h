@@ -52,15 +52,15 @@
       }                               \
     } while (false)
 
-#  define MOZ_FUZZING_NYX_PRINTF(aFormat, ...)                     \
-    do {                                                           \
-      if (nyx_puts) {                                              \
-        char msgbuf[2048];                                         \
-        snprintf(msgbuf, sizeof(msgbuf), "" aFormat, __VA_ARGS__); \
-        nyx_puts(msgbuf);                                          \
-      } else {                                                     \
-        fprintf(stderr, aFormat, __VA_ARGS__);                     \
-      }                                                            \
+#  define MOZ_FUZZING_NYX_PRINTF(aFormat, ...)                         \
+    do {                                                               \
+      if (nyx_puts) {                                                  \
+        char msgbuf[2048];                                             \
+        snprintf(msgbuf, sizeof(msgbuf) - 1, "" aFormat, __VA_ARGS__); \
+        nyx_puts(msgbuf);                                              \
+      } else {                                                         \
+        fprintf(stderr, aFormat, __VA_ARGS__);                         \
+      }                                                                \
     } while (false)
 
 #  ifdef FUZZ_DEBUG
