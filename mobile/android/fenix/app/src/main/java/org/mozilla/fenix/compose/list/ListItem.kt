@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,14 +37,14 @@ private val ICON_SIZE = 24.dp
 
 /**
  * List item used to display a label with an optional description text and
- * an optional, interactable icon at the end.
+ * an optional [IconButton] at the end.
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
- * @param iconPainter [Painter] used to display a [ListItemIcon] after the list item.
+ * @param iconPainter [Painter] used to display an [IconButton] after the list item.
  * @param iconDescription Content description of the icon.
  * @param onIconClick Called when the user clicks on the icon.
  */
@@ -64,27 +65,33 @@ fun TextListItem(
         description = description,
         maxDescriptionLines = maxDescriptionLines,
         onClick = onClick,
-        afterListAction = {
-            iconPainter?.let {
-                ListItemIcon(
+    ) {
+        if (iconPainter != null && onIconClick != null) {
+            IconButton(
+                onClick = onIconClick,
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(ICON_SIZE),
+            ) {
+                Icon(
                     painter = iconPainter,
-                    iconDescription = iconDescription,
-                    onClick = onIconClick,
+                    contentDescription = iconDescription,
+                    tint = FirefoxTheme.colors.iconPrimary,
                 )
             }
         }
-    )
+    }
 }
 
 /**
  * List item used to display a label and a [Favicon] with an optional description text and
- * an optional, interactable icon at the end.
+ * an optional [IconButton] at the end.
  *
  * @param label The label in the list item.
  * @param description An optional description text below the label.
  * @param onClick Called when the user clicks on the item.
  * @param url Website [url] for which the favicon will be shown.
- * @param iconPainter [Painter] used to display a [ListItemIcon] after the list item.
+ * @param iconPainter [Painter] used to display an [IconButton] after the list item.
  * @param iconDescription Content description of the icon.
  * @param onIconClick Called when the user clicks on the icon.
  */
@@ -110,12 +117,19 @@ fun FaviconListItem(
             )
         },
         afterListAction = {
-            iconPainter?.let {
-                ListItemIcon(
-                    painter = iconPainter,
-                    iconDescription = iconDescription,
+            if (iconPainter != null && onIconClick != null) {
+                IconButton(
                     onClick = onIconClick,
-                )
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(ICON_SIZE),
+                ) {
+                    Icon(
+                        painter = iconPainter,
+                        contentDescription = iconDescription,
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                }
             }
         }
     )
@@ -123,14 +137,14 @@ fun FaviconListItem(
 
 /**
  * List item used to display a label and an icon at the beginning with an optional description
- * text and an optional, interactable icon at the end.
+ * text and an optional [IconButton] at the end.
  *
  * @param label The label in the list item.
  * @param description An optional description text below the label.
  * @param onClick Called when the user clicks on the item.
- * @param beforeIconPainter [Painter] used to display a [ListItemIcon] before the list item.
+ * @param beforeIconPainter [Painter] used to display an [Icon] before the list item.
  * @param beforeIconDescription Content description of the icon.
- * @param afterIconPainter [Painter] used to display a [ListItemIcon] after the list item.
+ * @param afterIconPainter [Painter] used to display an [IconButton] after the list item.
  * @param afterIconDescription Content description of the icon.
  * @param onAfterIconClick Called when the user clicks on the icon.
  */
@@ -150,19 +164,27 @@ fun IconListItem(
         description = description,
         onClick = onClick,
         beforeListAction = {
-            ListItemIcon(
+            Icon(
                 painter = beforeIconPainter,
-                iconDescription = beforeIconDescription,
-                onClick = null,
+                contentDescription = beforeIconDescription,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                tint = FirefoxTheme.colors.iconPrimary,
             )
         },
         afterListAction = {
-            afterIconPainter?.let {
-                ListItemIcon(
-                    painter = afterIconPainter,
-                    iconDescription = afterIconDescription,
+            if (afterIconPainter != null && onAfterIconClick != null) {
+                IconButton(
                     onClick = onAfterIconClick,
-                )
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(ICON_SIZE),
+                ) {
+                    Icon(
+                        painter = afterIconPainter,
+                        contentDescription = afterIconDescription,
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                }
             }
         }
     )
@@ -225,39 +247,6 @@ private fun ListItem(
     }
 }
 
-/**
- * Base Icon Composable used to display a [Painter] in a [ListItem].
- *
- * @param painter [Painter] used to display the icon.
- * @param iconDescription Content description of the icon.
- * @param onClick Called when the user clicks on the icon.
- */
-@Composable
-private fun ListItemIcon(
-    painter: Painter,
-    iconDescription: String? = null,
-    onClick: (() -> Unit)? = null,
-) {
-    Box(
-        modifier = when (onClick != null) {
-            true -> Modifier.clickable { onClick() }
-            false -> Modifier
-        }.then(
-            Modifier
-                .padding(horizontal = 16.dp)
-                .defaultMinSize(minHeight = LIST_ITEM_HEIGHT),
-        ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = iconDescription,
-            modifier = Modifier.size(ICON_SIZE),
-            tint = FirefoxTheme.colors.iconPrimary,
-        )
-    }
-}
-
 @Composable
 @Preview(name = "TextListItem", uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun TextListItemPreview() {
@@ -290,6 +279,7 @@ private fun TextListItemWithIconPreview() {
                 label = "Label + right icon",
                 iconPainter = painterResource(R.drawable.ic_menu),
                 iconDescription = "click me",
+                onIconClick = { println("icon click") },
             )
         }
     }
@@ -310,7 +300,10 @@ private fun IconListItemPreview() {
 }
 
 @Composable
-@Preview(name = "IconListItem with an interactable right icon", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(
+    name = "IconListItem with an interactable right icon",
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 private fun IconListItemWithRightIconPreview() {
     FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
@@ -327,7 +320,10 @@ private fun IconListItemWithRightIconPreview() {
 }
 
 @Composable
-@Preview(name = "FaviconListItem with a right icon and onClicks", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(
+    name = "FaviconListItem with a right icon and onClicks",
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 private fun FaviconListItemPreview() {
     FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
         Box(Modifier.background(FirefoxTheme.colors.layer1)) {
