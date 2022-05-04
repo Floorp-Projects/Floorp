@@ -654,16 +654,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool UsesOffMainThreadCompositing();
 
   /**
-   * Get the global vsync source for each platform.
-   * Should only exist and be valid on the parent process
-   */
-  virtual mozilla::gfx::VsyncSource* GetGlobalVsync() {
-    MOZ_ASSERT(mVsyncSource != nullptr);
-    MOZ_ASSERT(XRE_IsParentProcess());
-    return mVsyncSource;
-  }
-
-  /**
    * Returns the global vsync dispatcher. There is only one global vsync
    * dispatcher and it stays around for the entire lifetime of the process.
    * Must only be called in the parent process.

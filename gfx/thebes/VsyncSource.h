@@ -7,6 +7,7 @@
 #define GFX_VSYNCSOURCE_H
 
 #include "nsTArray.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
@@ -52,7 +53,10 @@ class VsyncSource {
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
                            const TimeStamp& aOutputTimestamp);
 
-  void NotifyVsyncDispatcherVsyncStatus(bool aEnable);
+  // Can be called on any thread
+  void AddVsyncDispatcher(VsyncDispatcher* aDispatcher);
+  void RemoveVsyncDispatcher(VsyncDispatcher* aDispatcher);
+
   virtual TimeDuration GetVsyncRate();
 
   // These should all only be called on the main thread
@@ -61,10 +65,6 @@ class VsyncSource {
   virtual bool IsVsyncEnabled() = 0;
   virtual void Shutdown() = 0;
 
-  void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
-
-  RefPtr<VsyncDispatcher> GetVsyncDispatcher();
-
   // Returns the rate of the fastest enabled VsyncSource or Nothing().
   static Maybe<TimeDuration> GetFastestVsyncRate();
 
@@ -72,12 +72,21 @@ class VsyncSource {
   virtual ~VsyncSource();
 
  private:
+  // Can be called on any thread
   void UpdateVsyncStatus();
 
-  Mutex mDispatcherLock MOZ_UNANNOTATED;
-  bool mVsyncDispatcherNeedsVsync;
-  RefPtr<VsyncDispatcher> mVsyncDispatcher;
-  VsyncId mVsyncId;
+  struct State {
+    // The set of VsyncDispatchers which are registered with this source.
+    // At the moment, the length of this array is always zero or one.
+    // The ability to register multiple dispatchers is not used yet; it is
+    // intended for when we have one dispatcher per widget.
+    nsTArray<RefPtr<VsyncDispatcher>> mDispatchers;
+
+    // The vsync ID which we used for the last vsync event.
+    VsyncId mVsyncId;
+  };
+
+  DataMutex<State> mState;
 };
 
 }  // namespace gfx
