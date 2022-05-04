@@ -78,7 +78,7 @@ void PerformBlending(const float* const* bg, const float* const* fg,
     } else if (ec_blending[i].mode == PatchBlendMode::kReplace) {
       memcpy(tmp.Row(3 + i), fg[3 + i] + x0, xsize * sizeof(**fg));
     } else if (ec_blending[i].mode == PatchBlendMode::kNone) {
-      memcpy(tmp.Row(3 + i), bg[3 + i] + x0, xsize * sizeof(**fg));
+      if (xsize) memcpy(tmp.Row(3 + i), bg[3 + i] + x0, xsize * sizeof(**fg));
     } else {
       JXL_ABORT("Unreachable");
     }

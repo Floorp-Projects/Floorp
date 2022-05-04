@@ -14,6 +14,8 @@
 
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/compiler_specific.h"
+
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
@@ -39,35 +41,41 @@ HWY_INLINE Vec<DF> Concat4(const DF df, V v0, V v1, V v2, V v3) {
 
 // Stores v0[0], v1[0], v0[1], v1[1], ... to mem, in this order. Mem must be
 // aligned.
-template <class DF, class V>
-void StoreInterleaved(const DF df, V v0, V v1, float* mem) {
+template <class DF, class V, typename T>
+void StoreInterleaved(const DF df, V v0, V v1, T* mem) {
+  static_assert(sizeof(T) == 4, "only use StoreInterleaved for 4-byte types");
 #if HWY_TARGET == HWY_SCALAR
   Store(v0, df, mem);
   Store(v1, df, mem + 1);
 #elif !HWY_CAP_GE256
   Store(InterleaveLower(df, v0, v1), df, mem);
   Store(InterleaveUpper(df, v0, v1), df, mem + Lanes(df));
-#elif !HWY_CAP_GE512
-  auto t0 = InterleaveLower(df, v0, v1);
-  auto t1 = InterleaveUpper(df, v0, v1);
-  Store(ConcatLowerLower(df, t1, t0), df, mem);
-  Store(ConcatUpperUpper(df, t1, t0), df, mem + Lanes(df));
 #else
-  auto t0 = InterleaveLower(df, v0, v1);
-  auto t1 = InterleaveUpper(df, v0, v1);
-  Store(Concat4(df, Quarter<0>(df, t0), Quarter<0>(df, t1), Quarter<1>(df, t0),
-                Quarter<1>(df, t1)),
-        df, mem);
-  Store(Concat4(df, Quarter<2>(df, t0), Quarter<2>(df, t1), Quarter<3>(df, t0),
-                Quarter<3>(df, t1)),
-        df, mem + Lanes(df));
+  if (!HWY_CAP_GE512 || Lanes(df) == 8) {
+    auto t0 = InterleaveLower(df, v0, v1);
+    auto t1 = InterleaveUpper(df, v0, v1);
+    Store(ConcatLowerLower(df, t1, t0), df, mem);
+    Store(ConcatUpperUpper(df, t1, t0), df, mem + Lanes(df));
+  } else {
+#if HWY_CAP_GE512
+    auto t0 = InterleaveLower(df, v0, v1);
+    auto t1 = InterleaveUpper(df, v0, v1);
+    Store(Concat4(df, Quarter<0>(df, t0), Quarter<0>(df, t1),
+                  Quarter<1>(df, t0), Quarter<1>(df, t1)),
+          df, mem);
+    Store(Concat4(df, Quarter<2>(df, t0), Quarter<2>(df, t1),
+                  Quarter<3>(df, t0), Quarter<3>(df, t1)),
+          df, mem + Lanes(df));
+#endif
+  }
 #endif
 }
 
 // Stores v0[0], v1[0], v2[0], v3[0], v0[1] ... to mem, in this order. Mem must
 // be aligned.
-template <class DF, class V>
-void StoreInterleaved(const DF df, V v0, V v1, V v2, V v3, float* mem) {
+template <class DF, class V, typename T>
+void StoreInterleaved(const DF df, V v0, V v1, V v2, V v3, T* mem) {
+  static_assert(sizeof(T) == 4, "only use StoreInterleaved for 4-byte types");
 #if HWY_TARGET == HWY_SCALAR
   Store(v0, df, mem);
   Store(v1, df, mem + 1);
@@ -254,6 +262,84 @@ void StoreInterleaved(const DF df, V v0, V v1, V v2, V v3, V v4, V v5, V v6,
         df, mem + 7 * Lanes(df));
 #endif
 }
+
+#if HWY_CAP_GE256
+JXL_INLINE void Transpose8x8Block(const int32_t* JXL_RESTRICT from,
+                                  int32_t* JXL_RESTRICT to, size_t fromstride) {
+  const HWY_CAPPED(int32_t, 8) d;
+  auto i0 = Load(d, from);
+  auto i1 = Load(d, from + 1 * fromstride);
+  auto i2 = Load(d, from + 2 * fromstride);
+  auto i3 = Load(d, from + 3 * fromstride);
+  auto i4 = Load(d, from + 4 * fromstride);
+  auto i5 = Load(d, from + 5 * fromstride);
+  auto i6 = Load(d, from + 6 * fromstride);
+  auto i7 = Load(d, from + 7 * fromstride);
+
+  const auto q0 = InterleaveLower(d, i0, i2);
+  const auto q1 = InterleaveLower(d, i1, i3);
+  const auto q2 = InterleaveUpper(d, i0, i2);
+  const auto q3 = InterleaveUpper(d, i1, i3);
+  const auto q4 = InterleaveLower(d, i4, i6);
+  const auto q5 = InterleaveLower(d, i5, i7);
+  const auto q6 = InterleaveUpper(d, i4, i6);
+  const auto q7 = InterleaveUpper(d, i5, i7);
+
+  const auto r0 = InterleaveLower(d, q0, q1);
+  const auto r1 = InterleaveUpper(d, q0, q1);
+  const auto r2 = InterleaveLower(d, q2, q3);
+  const auto r3 = InterleaveUpper(d, q2, q3);
+  const auto r4 = InterleaveLower(d, q4, q5);
+  const auto r5 = InterleaveUpper(d, q4, q5);
+  const auto r6 = InterleaveLower(d, q6, q7);
+  const auto r7 = InterleaveUpper(d, q6, q7);
+
+  i0 = ConcatLowerLower(d, r4, r0);
+  i1 = ConcatLowerLower(d, r5, r1);
+  i2 = ConcatLowerLower(d, r6, r2);
+  i3 = ConcatLowerLower(d, r7, r3);
+  i4 = ConcatUpperUpper(d, r4, r0);
+  i5 = ConcatUpperUpper(d, r5, r1);
+  i6 = ConcatUpperUpper(d, r6, r2);
+  i7 = ConcatUpperUpper(d, r7, r3);
+
+  Store(i0, d, to);
+  Store(i1, d, to + 1 * 8);
+  Store(i2, d, to + 2 * 8);
+  Store(i3, d, to + 3 * 8);
+  Store(i4, d, to + 4 * 8);
+  Store(i5, d, to + 5 * 8);
+  Store(i6, d, to + 6 * 8);
+  Store(i7, d, to + 7 * 8);
+}
+#elif HWY_TARGET != HWY_SCALAR
+JXL_INLINE void Transpose8x8Block(const int32_t* JXL_RESTRICT from,
+                                  int32_t* JXL_RESTRICT to, size_t fromstride) {
+  const HWY_CAPPED(int32_t, 4) d;
+  for (size_t n = 0; n < 8; n += 4) {
+    for (size_t m = 0; m < 8; m += 4) {
+      auto p0 = Load(d, from + n * fromstride + m);
+      auto p1 = Load(d, from + (n + 1) * fromstride + m);
+      auto p2 = Load(d, from + (n + 2) * fromstride + m);
+      auto p3 = Load(d, from + (n + 3) * fromstride + m);
+      const auto q0 = InterleaveLower(d, p0, p2);
+      const auto q1 = InterleaveLower(d, p1, p3);
+      const auto q2 = InterleaveUpper(d, p0, p2);
+      const auto q3 = InterleaveUpper(d, p1, p3);
+
+      const auto r0 = InterleaveLower(d, q0, q1);
+      const auto r1 = InterleaveUpper(d, q0, q1);
+      const auto r2 = InterleaveLower(d, q2, q3);
+      const auto r3 = InterleaveUpper(d, q2, q3);
+      Store(r0, d, to + m * 8 + n);
+      Store(r1, d, to + (1 + m) * 8 + n);
+      Store(r2, d, to + (2 + m) * 8 + n);
+      Store(r3, d, to + (3 + m) * 8 + n);
+    }
+  }
+}
+
+#endif
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE

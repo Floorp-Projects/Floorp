@@ -78,24 +78,13 @@ void JxlBasicInfoSetFromPixelFormat(JxlBasicInfo* basic_info,
       basic_info->bits_per_sample = 16;
       basic_info->exponent_bits_per_sample = 0;
       break;
-    case JXL_TYPE_UINT32:
-      basic_info->bits_per_sample = 32;
-      basic_info->exponent_bits_per_sample = 0;
-      break;
-    case JXL_TYPE_BOOLEAN:
-      basic_info->bits_per_sample = 1;
-      basic_info->exponent_bits_per_sample = 0;
-      break;
+    default:
+      JXL_ABORT("Unhandled JxlDataType");
   }
   if (pixel_format->num_channels == 2 || pixel_format->num_channels == 4) {
-    basic_info->alpha_exponent_bits = 0;
-    if (basic_info->bits_per_sample == 32) {
-      basic_info->alpha_bits = 16;
-      basic_info->num_extra_channels = 1;
-    } else {
-      basic_info->alpha_bits = basic_info->bits_per_sample;
-      basic_info->num_extra_channels = 1;
-    }
+    basic_info->alpha_exponent_bits = basic_info->exponent_bits_per_sample;
+    basic_info->alpha_bits = basic_info->bits_per_sample;
+    basic_info->num_extra_channels = 1;
   } else {
     basic_info->alpha_exponent_bits = 0;
     basic_info->alpha_bits = 0;
@@ -431,39 +420,33 @@ float LoadBEFloat16(const uint8_t* p) {
 
 size_t GetPrecision(JxlDataType data_type) {
   switch (data_type) {
-    case JXL_TYPE_BOOLEAN:
-      return 1;
     case JXL_TYPE_UINT8:
       return 8;
     case JXL_TYPE_UINT16:
       return 16;
-    case JXL_TYPE_UINT32:
-      return 32;
     case JXL_TYPE_FLOAT:
       // Floating point mantissa precision
       return 24;
     case JXL_TYPE_FLOAT16:
       return 11;
+    default:
+      JXL_ABORT("Unhandled JxlDataType");
   }
-  JXL_ASSERT(false);  // unknown type
 }
 
 size_t GetDataBits(JxlDataType data_type) {
   switch (data_type) {
-    case JXL_TYPE_BOOLEAN:
-      return 1;
     case JXL_TYPE_UINT8:
       return 8;
     case JXL_TYPE_UINT16:
       return 16;
-    case JXL_TYPE_UINT32:
-      return 32;
     case JXL_TYPE_FLOAT:
       return 32;
     case JXL_TYPE_FLOAT16:
       return 16;
+    default:
+      JXL_ABORT("Unhandled JxlDataType");
   }
-  JXL_ASSERT(false);  // unknown type
 }
 
 // Procedure to convert pixels to double precision, not efficient, but
@@ -483,23 +466,7 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
                            jxl::kBitsPerByte);
   if (format.align > 1) stride = jxl::RoundUpTo(stride, format.align);
 
-  if (format.data_type == JXL_TYPE_BOOLEAN) {
-    for (size_t y = 0; y < ysize; ++y) {
-      jxl::BitReader br(jxl::Span<const uint8_t>(pixels + stride * y, stride));
-      for (size_t x = 0; x < xsize; ++x) {
-        size_t j = (y * xsize + x) * 4;
-        double r = br.ReadBits(1);
-        double g = gray ? r : br.ReadBits(1);
-        double b = gray ? r : br.ReadBits(1);
-        double a = alpha ? br.ReadBits(1) : 1;
-        result[j + 0] = r;
-        result[j + 1] = g;
-        result[j + 2] = b;
-        result[j + 3] = a;
-      }
-      JXL_CHECK(br.Close());
-    }
-  } else if (format.data_type == JXL_TYPE_UINT8) {
+  if (format.data_type == JXL_TYPE_UINT8) {
     double mul = 1.0 / 255.0;  // Multiplier to bring to 0-1.0 range
     for (size_t y = 0; y < ysize; ++y) {
       for (size_t x = 0; x < xsize; ++x) {
@@ -536,31 +503,6 @@ std::vector<double> ConvertToRGBA32(const uint8_t* pixels, size_t xsize,
           a = alpha ? (pixels[i + num_channels * 2 - 1] << 8) +
                           pixels[i + num_channels * 2 - 2]
                     : 65535;
-        }
-        result[j + 0] = r * mul;
-        result[j + 1] = g * mul;
-        result[j + 2] = b * mul;
-        result[j + 3] = a * mul;
-      }
-    }
-  } else if (format.data_type == JXL_TYPE_UINT32) {
-    double mul = 1.0 / 4294967295.0;  // Multiplier to bring to 0-1.0 range
-    for (size_t y = 0; y < ysize; ++y) {
-      for (size_t x = 0; x < xsize; ++x) {
-        size_t j = (y * xsize + x) * 4;
-        size_t i = y * stride + x * num_channels * 4;
-        double r, g, b, a;
-        if (format.endianness == JXL_BIG_ENDIAN) {
-          r = LoadBE32(pixels + i);
-          g = gray ? r : LoadBE32(pixels + i + 4);
-          b = gray ? r : LoadBE32(pixels + i + 8);
-          a = alpha ? LoadBE32(pixels + i + num_channels * 2 - 4) : 4294967295;
-
-        } else {
-          r = LoadLE32(pixels + i);
-          g = gray ? r : LoadLE32(pixels + i + 4);
-          b = gray ? r : LoadLE32(pixels + i + 8);
-          a = alpha ? LoadLE32(pixels + i + num_channels * 2 - 4) : 4294967295;
         }
         result[j + 0] = r * mul;
         result[j + 1] = g * mul;

@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "jxl/codestream_header.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/sanitizers.h"
 
@@ -257,15 +258,26 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
     GraphicsControlBlock gcb;
     DGifSavedExtensionToGCB(gif.get(), i, &gcb);
     msan::UnpoisonMemory(&gcb, sizeof(gcb));
-
+    bool is_full_size = total_rect.x0() == 0 && total_rect.y0() == 0 &&
+                        total_rect.xsize() == canvas.color.xsize &&
+                        total_rect.ysize() == canvas.color.ysize;
     if (ppf->info.have_animation) {
       frame->frame_info.duration = gcb.DelayTime;
-      frame->x0 = total_rect.x0();
-      frame->y0 = total_rect.y0();
+      frame->frame_info.layer_info.have_crop = static_cast<int>(!is_full_size);
+      frame->frame_info.layer_info.crop_x0 = total_rect.x0();
+      frame->frame_info.layer_info.crop_y0 = total_rect.y0();
+      frame->frame_info.layer_info.xsize = frame->color.xsize;
+      frame->frame_info.layer_info.ysize = frame->color.ysize;
       if (last_base_was_none) {
         replace = true;
       }
-      frame->blend = !replace;
+      frame->frame_info.layer_info.blend_info.blendmode =
+          replace ? JXL_BLEND_REPLACE : JXL_BLEND_BLEND;
+      // We always only reference at most the last frame
+      frame->frame_info.layer_info.blend_info.source =
+          last_base_was_none ? 0u : 1u;
+      frame->frame_info.layer_info.blend_info.clamp = 1;
+      frame->frame_info.layer_info.blend_info.alpha = 0;
       // TODO(veluca): this could in principle be implemented.
       if (last_base_was_none &&
           (total_rect.x0() != 0 || total_rect.y0() != 0 ||
@@ -278,14 +290,14 @@ Status DecodeImageGIF(Span<const uint8_t> bytes, const ColorHints& color_hints,
       switch (gcb.DisposalMode) {
         case DISPOSE_DO_NOT:
         case DISPOSE_BACKGROUND:
-          frame->use_for_next_frame = true;
+          frame->frame_info.layer_info.save_as_reference = 1u;
           last_base_was_none = false;
           break;
         case DISPOSE_PREVIOUS:
-          frame->use_for_next_frame = false;
+          frame->frame_info.layer_info.save_as_reference = 0u;
           break;
         default:
-          frame->use_for_next_frame = false;
+          frame->frame_info.layer_info.save_as_reference = 0u;
           last_base_was_none = true;
       }
     }

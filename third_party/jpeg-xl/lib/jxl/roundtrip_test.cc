@@ -51,7 +51,6 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
         io.metadata.m.SetAlphaBits(8);
         break;
       case JXL_TYPE_UINT16:
-      case JXL_TYPE_UINT32:
       case JXL_TYPE_FLOAT:
       case JXL_TYPE_FLOAT16:
         io.metadata.m.SetAlphaBits(16);
@@ -267,8 +266,9 @@ void VerifyRoundtripCompression(
     auto channel_type = extra_channel.first;
     JxlExtraChannelInfo channel_info;
     JxlEncoderInitExtraChannelInfo(channel_type, &channel_info);
-    channel_info.bits_per_sample = basic_info.bits_per_sample;
-    channel_info.exponent_bits_per_sample = basic_info.exponent_bits_per_sample;
+    channel_info.bits_per_sample = (lossless ? basic_info.bits_per_sample : 8);
+    channel_info.exponent_bits_per_sample =
+        (lossless ? basic_info.exponent_bits_per_sample : 0);
     channel_infos.push_back(channel_info);
   }
   for (size_t index = 0; index < channel_infos.size(); index++) {
@@ -446,12 +446,6 @@ void VerifyRoundtripCompression(
                                          extra_channel_output_pixel_format),
                 0u);
       EXPECT_EQ(extra_channel, extra_channel_bytes);
-    } else {
-      EXPECT_EQ(jxl::test::ComparePixels(
-                    extra_channel.data(), extra_channel_bytes.data(), xsize,
-                    ysize, extra_channel_pixel_format,
-                    extra_channel_output_pixel_format, 16.0),
-                0u);
     }
   }
 }
@@ -588,6 +582,7 @@ TEST(RoundtripTest, ExtraBoxesTest) {
   basic_info.xsize = xsize;
   basic_info.ysize = ysize;
   basic_info.uses_original_profile = false;
+  EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetCodestreamLevel(enc, 10));
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetBasicInfo(enc, &basic_info));
   JxlColorEncoding color_encoding;
   if (pixel_format.data_type == JXL_TYPE_FLOAT) {
@@ -806,7 +801,7 @@ TEST(RoundtripTest, TestICCProfile) {
 #if JPEGXL_ENABLE_JPEG  // Loading .jpg files requires libjpeg support.
 TEST(RoundtripTest, JXL_TRANSCODE_JPEG_TEST(TestJPEGReconstruction)) {
   const std::string jpeg_path =
-      "imagecompression.info/flower_foveon.png.im_q85_420.jpg";
+      "third_party/imagecompression.info/flower_foveon.png.im_q85_420.jpg";
   const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
   ASSERT_TRUE(

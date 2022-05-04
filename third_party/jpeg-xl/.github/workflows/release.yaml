@@ -146,6 +146,11 @@ jobs:
         cd "git-${git_version}"
         make prefix=/usr -j4 install
 
+    - name: Set git safe dir
+      run: |
+        export GIT_CEILING_DIRECTORIES=/__w # only work before git v2.35.2
+        git config --global --add safe.directory /__w/libjxl/libjxl
+
     - name: Checkout the source
       uses: actions/checkout@v2
       with:

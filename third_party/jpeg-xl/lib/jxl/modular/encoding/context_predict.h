@@ -304,7 +304,7 @@ class MATreeLookup {
     int64_t offset;
     int32_t multiplier;
   };
-  LookupResult Lookup(const Properties &properties) const {
+  JXL_INLINE LookupResult Lookup(const Properties &properties) const {
     uint32_t pos = 0;
     while (true) {
       const FlatDecisionNode &node = nodes_[pos];
@@ -416,6 +416,7 @@ enum PredictorMode {
   kUseWP = 2,
   kForceComputeProperties = 4,
   kAllPredictions = 8,
+  kNoEdgeCases = 16
 };
 
 JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
@@ -461,7 +462,7 @@ JXL_INLINE pixel_type_w PredictOne(Predictor p, pixel_type_w left,
 }
 
 template <int mode>
-inline PredictionResult Predict(
+JXL_INLINE PredictionResult Predict(
     Properties *p, size_t w, const pixel_type *JXL_RESTRICT pp,
     const intptr_t onerow, const size_t x, const size_t y, Predictor predictor,
     const MATreeLookup *lookup, const Channel *references,
@@ -470,13 +471,15 @@ inline PredictionResult Predict(
   size_t offset = 3;
   constexpr bool compute_properties =
       mode & kUseTree || mode & kForceComputeProperties;
-  pixel_type_w left = (x ? pp[-1] : (y ? pp[-onerow] : 0));
-  pixel_type_w top = (y ? pp[-onerow] : left);
-  pixel_type_w topleft = (x && y ? pp[-1 - onerow] : left);
-  pixel_type_w topright = (x + 1 < w && y ? pp[1 - onerow] : top);
-  pixel_type_w leftleft = (x > 1 ? pp[-2] : left);
-  pixel_type_w toptop = (y > 1 ? pp[-onerow - onerow] : top);
-  pixel_type_w toprightright = (x + 2 < w && y ? pp[2 - onerow] : topright);
+  constexpr bool nec = mode & kNoEdgeCases;
+  pixel_type_w left = (nec || x ? pp[-1] : (y ? pp[-onerow] : 0));
+  pixel_type_w top = (nec || y ? pp[-onerow] : left);
+  pixel_type_w topleft = (nec || (x && y) ? pp[-1 - onerow] : left);
+  pixel_type_w topright = (nec || (x + 1 < w && y) ? pp[1 - onerow] : top);
+  pixel_type_w leftleft = (nec || x > 1 ? pp[-2] : left);
+  pixel_type_w toptop = (nec || y > 1 ? pp[-onerow - onerow] : top);
+  pixel_type_w toprightright =
+      (nec || (x + 2 < w && y) ? pp[2 - onerow] : topright);
 
   if (compute_properties) {
     // location
@@ -506,7 +509,7 @@ inline PredictionResult Predict(
     wp_pred = wp_state->Predict<compute_properties>(
         x, y, w, top, left, topright, topleft, toptop, p, offset);
   }
-  if (compute_properties) {
+  if (!nec && compute_properties) {
     offset += weighted::kNumProperties;
     // Extra properties.
     const pixel_type *JXL_RESTRICT rp = references->Row(x);
@@ -562,6 +565,15 @@ inline PredictionResult PredictTreeNoWP(Properties *p, size_t w,
                                         const MATreeLookup &tree_lookup,
                                         const Channel &references) {
   return detail::Predict<detail::kUseTree>(
+      p, w, pp, onerow, x, y, Predictor::Zero, &tree_lookup, &references,
+      /*wp_state=*/nullptr, /*predictions=*/nullptr);
+}
+// Only use for y > 1, x > 1, x < w-2, and empty references
+JXL_INLINE PredictionResult
+PredictTreeNoWPNEC(Properties *p, size_t w, const pixel_type *JXL_RESTRICT pp,
+                   const intptr_t onerow, const int x, const int y,
+                   const MATreeLookup &tree_lookup, const Channel &references) {
+  return detail::Predict<detail::kUseTree | detail::kNoEdgeCases>(
       p, w, pp, onerow, x, y, Predictor::Zero, &tree_lookup, &references,
       /*wp_state=*/nullptr, /*predictions=*/nullptr);
 }

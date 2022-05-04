@@ -87,7 +87,7 @@ class RenderPipeline {
   // storage is allocated for each group, not each thread. The behaviour is
   // undefined if calling this function multiple times with a different value
   // for `use_group_ids`.
-  void PrepareForThreads(size_t num, bool use_group_ids);
+  Status PrepareForThreads(size_t num, bool use_group_ids);
 
   // Retrieves a buffer where input data should be stored by the callee. When
   // input has been provided for all buffers, the pipeline will complete its
@@ -114,9 +114,6 @@ class RenderPipeline {
   FrameDimensions frame_dimensions_;
 
   std::vector<uint8_t> group_completed_passes_;
-
-  // Indexed by thread_id
-  std::vector<CacheAlignedUniquePtr> temp_buffers_;
 
   friend class RenderPipelineInput;
 

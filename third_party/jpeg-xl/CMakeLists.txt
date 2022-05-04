@@ -191,6 +191,15 @@ endif()  # JPEGXL_STATIC
 set(THREADS_PREFER_PTHREAD_FLAG YES)
 find_package(Threads REQUIRED)
 
+# These settings are important to drive check_cxx_source_compiles
+# See CMP0067 (min cmake version is 3.10 anyway)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+
+# Atomics
+find_package(Atomics REQUIRED)
+
 if(JPEGXL_STATIC)
   if (MINGW)
     # In MINGW libstdc++ uses pthreads directly. When building statically a
@@ -298,10 +307,6 @@ endif ()  # !MSVC
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
-
 add_subdirectory(third_party)
 
 # Copy the JXL license file to the output build directory.
@@ -311,6 +316,10 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
 # Enable tests regardless of where they are defined.
 enable_testing()
 include(CTest)
+# Specify default location of `testdata`:
+if(NOT DEFINED JPEGXL_TEST_DATA_PATH)
+  set(JPEGXL_TEST_DATA_PATH "${PROJECT_SOURCE_DIR}/third_party/testdata")
+endif()
 
 # Libraries.
 add_subdirectory(lib)
@@ -419,7 +428,7 @@ if (ASCIIDOC_PY_FOUND)
     list(APPEND MANPAGES "${PAGE}.1")
   endforeach()
   add_custom_target(manpages ALL DEPENDS ${MANPAGES})
-  install(FILES ${MANPAGE_FILES} DESTINATION share/man/man1)
+  install(FILES ${MANPAGE_FILES} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endif()  # ASCIIDOC_PY_FOUND
 else()
   message(WARNING "asciidoc was not found, the man pages will not be installed.")

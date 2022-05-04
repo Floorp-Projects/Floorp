@@ -21,7 +21,6 @@
 #include "lib/extras/enc/exr.h"
 #endif
 
-#include "lib/extras/codec_psd.h"
 #include "lib/extras/dec/decode.h"
 #include "lib/extras/enc/pgx.h"
 #include "lib/extras/enc/pnm.h"
@@ -43,13 +42,9 @@ Status SetFromBytes(const Span<const uint8_t> bytes,
   if (bytes.size() < kMinBytes) return JXL_FAILURE("Too few bytes");
 
   extras::PackedPixelFile ppf;
-  if (extras::DecodeBytes(bytes, color_hints, io->constraints, &ppf, pool,
+  if (extras::DecodeBytes(bytes, color_hints, io->constraints, &ppf,
                           orig_codec)) {
     return ConvertPackedPixelFileToCodecInOut(ppf, pool, io);
-  } else if (extras::DecodeImagePSD(bytes, color_hints, pool, io)) {
-    // TODO(deymo): Migrate PSD codec too.
-    if (orig_codec) *orig_codec = extras::Codec::kPSD;
-    return true;
   }
   return JXL_FAILURE("Codecs failed to decode");
 }
@@ -124,9 +119,6 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
                                     bytes);
     case extras::Codec::kGIF:
       return JXL_FAILURE("Encoding to GIF is not implemented");
-    case extras::Codec::kPSD:
-      return extras::EncodeImagePSD(&io, c_desired, bits_per_sample, pool,
-                                    bytes);
     case extras::Codec::kEXR:
 #if JPEGXL_ENABLE_EXR
       return extras::EncodeImageEXR(&io, c_desired, pool, bytes);
@@ -147,10 +139,13 @@ Status EncodeToFile(const CodecInOut& io, const ColorEncoding& c_desired,
   const extras::Codec codec =
       extras::CodecFromExtension(extension, &bits_per_sample);
 
-  // Warn about incorrect usage of PBM/PGM/PGX/PPM - only the latter supports
+  // Warn about incorrect usage of PGM/PGX/PPM - only the latter supports
   // color, but CodecFromExtension lumps them all together.
   if (codec == extras::Codec::kPNM && extension != ".pfm") {
-    if (!io.Main().IsGray() && extension != ".ppm") {
+    if (io.Main().HasAlpha() && extension != ".pam") {
+      JXL_WARNING(
+          "For images with alpha, the filename should end with .pam.\n");
+    } else if (!io.Main().IsGray() && extension == ".pgm") {
       JXL_WARNING("For color images, the filename should end with .ppm.\n");
     } else if (io.Main().IsGray() && extension == ".ppm") {
       JXL_WARNING(

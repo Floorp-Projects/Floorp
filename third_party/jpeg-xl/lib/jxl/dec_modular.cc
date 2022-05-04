@@ -89,6 +89,16 @@ HWY_EXPORT(MultiplySum);       // Local function
 HWY_EXPORT(RgbFromSingle);     // Local function
 HWY_EXPORT(SingleFromSingle);  // Local function
 
+// Slow conversion using double precision multiplication, only
+// needed when the bit depth is too high for single precision
+void SingleFromSingleAccurate(const size_t xsize,
+                              const pixel_type* const JXL_RESTRICT row_in,
+                              const double factor, float* row_out) {
+  for (size_t x = 0; x < xsize; x++) {
+    row_out[x] = row_in[x] * factor;
+  }
+}
+
 // convert custom [bits]-bit float (with [exp_bits] exponent bits) stored as int
 // back to binary32 float
 void int_to_float(const pixel_type* const JXL_RESTRICT row_in,
@@ -457,9 +467,9 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
   const auto* metadata = frame_header.nonserialized_metadata;
   JXL_CHECK(gi.transform.empty());
 
-  auto get_row = [&](Rect r, size_t c, size_t y) {
-    return render_pipeline_input.GetBuffer(c).second.Row(
-        render_pipeline_input.GetBuffer(c).first, y);
+  auto get_row = [&](size_t c, size_t y) {
+    const auto& buffer = render_pipeline_input.GetBuffer(c);
+    return buffer.second.Row(buffer.first, y);
   };
 
   size_t c = 0;
@@ -470,9 +480,9 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
     const bool fp = metadata->m.bit_depth.floating_point_sample &&
                     frame_header.color_transform != ColorTransform::kXYB;
     for (; c < 3; c++) {
-      float factor = full_image.bitdepth < 32
-                         ? 1.f / ((1u << full_image.bitdepth) - 1)
-                         : 0;
+      double factor = full_image.bitdepth < 32
+                          ? 1.0 / ((1u << full_image.bitdepth) - 1)
+                          : 0;
       size_t c_in = c;
       if (frame_header.color_transform == ColorTransform::kXYB) {
         factor = dec_state->shared->matrices.DCQuants()[c];
@@ -513,7 +523,7 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
                   mr.Row(&ch_in.plane, y);
               const pixel_type* const JXL_RESTRICT row_in_Y =
                   mr.Row(&gi.channel[0].plane, y);
-              float* const JXL_RESTRICT row_out = get_row(r, c, y);
+              float* const JXL_RESTRICT row_out = get_row(c, y);
               HWY_DYNAMIC_DISPATCH(MultiplySum)
               (xsize_shifted, row_in, row_in_Y, factor, row_out);
             },
@@ -529,11 +539,11 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
                   mr.Row(&ch_in.plane, y);
               if (rgb_from_gray) {
                 for (size_t cc = 0; cc < 3; cc++) {
-                  float* const JXL_RESTRICT row_out = get_row(r, cc, y);
+                  float* const JXL_RESTRICT row_out = get_row(cc, y);
                   int_to_float(row_in, row_out, xsize_shifted, bits, exp_bits);
                 }
               } else {
-                float* const JXL_RESTRICT row_out = get_row(r, c, y);
+                float* const JXL_RESTRICT row_out = get_row(c, y);
                 int_to_float(row_in, row_out, xsize_shifted, bits, exp_bits);
               }
             },
@@ -546,13 +556,27 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
               const pixel_type* const JXL_RESTRICT row_in =
                   mr.Row(&ch_in.plane, y);
               if (rgb_from_gray) {
-                HWY_DYNAMIC_DISPATCH(RgbFromSingle)
-                (xsize_shifted, row_in, factor, get_row(r, 0, y),
-                 get_row(r, 1, y), get_row(r, 2, y));
+                if (full_image.bitdepth < 23) {
+                  HWY_DYNAMIC_DISPATCH(RgbFromSingle)
+                  (xsize_shifted, row_in, factor, get_row(0, y), get_row(1, y),
+                   get_row(2, y));
+                } else {
+                  SingleFromSingleAccurate(xsize_shifted, row_in, factor,
+                                           get_row(0, y));
+                  SingleFromSingleAccurate(xsize_shifted, row_in, factor,
+                                           get_row(1, y));
+                  SingleFromSingleAccurate(xsize_shifted, row_in, factor,
+                                           get_row(2, y));
+                }
               } else {
-                float* const JXL_RESTRICT row_out = get_row(r, c, y);
-                HWY_DYNAMIC_DISPATCH(SingleFromSingle)
-                (xsize_shifted, row_in, factor, row_out);
+                float* const JXL_RESTRICT row_out = get_row(c, y);
+                if (full_image.bitdepth < 23) {
+                  HWY_DYNAMIC_DISPATCH(SingleFromSingle)
+                  (xsize_shifted, row_in, factor, row_out);
+                } else {
+                  SingleFromSingleAccurate(xsize_shifted, row_in, factor,
+                                           row_out);
+                }
               }
             },
             "ModularIntToFloat"));
@@ -572,7 +596,7 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
     int exp_bits = eci.bit_depth.exponent_bits_per_sample;
     bool fp = eci.bit_depth.floating_point_sample;
     JXL_ASSERT(fp || bits < 32);
-    const float mul = fp ? 0 : (1.0f / ((1u << bits) - 1));
+    const double factor = fp ? 0 : (1.0 / ((1u << bits) - 1));
     JXL_ASSERT(c < gi.channel.size());
     Channel& ch_in = gi.channel[c];
     Rect r = render_pipeline_input.GetBuffer(3 + ec).second;
@@ -589,8 +613,11 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
       if (fp) {
         int_to_float(row_in, row_out, r.xsize(), bits, exp_bits);
       } else {
-        for (size_t x = 0; x < r.xsize(); ++x) {
-          row_out[x] = row_in[x] * mul;
+        if (full_image.bitdepth < 23) {
+          HWY_DYNAMIC_DISPATCH(SingleFromSingle)
+          (r.xsize(), row_in, factor, row_out);
+        } else {
+          SingleFromSingleAccurate(r.xsize(), row_in, factor, row_out);
         }
       }
     }
@@ -621,11 +648,10 @@ Status ModularFrameDecoder::FinalizeDecoding(PassesDecoderState* dec_state,
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, dec_state->shared->frame_dim.num_groups,
       [&](size_t num_threads) {
-        dec_state->render_pipeline->PrepareForThreads(
+        return dec_state->render_pipeline->PrepareForThreads(
             num_threads,
             /*use_group_ids=*/dec_state->shared->frame_header.encoding ==
                 FrameEncoding::kVarDCT);
-        return true;
       },
       [&](const uint32_t group, size_t thread_id) {
         RenderPipelineInput input =
