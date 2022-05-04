@@ -36,6 +36,9 @@ const Targets = require("devtools/server/actors/targets/index");
 const { TargetActorRegistry } = ChromeUtils.import(
   "resource://devtools/server/actors/targets/target-actor-registry.jsm"
 );
+const { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const EXTENSION_CONTENT_JSM = "resource://gre/modules/ExtensionContent.jsm";
 
@@ -280,6 +283,8 @@ const windowGlobalTargetPrototype = {
 
     // Save references to the original document we attached to
     this._originalWindow = this.window;
+
+    this.isPrivate = PrivateBrowsingUtils.isContentWindowPrivate(this.window);
 
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
@@ -604,6 +609,7 @@ const windowGlobalTargetPrototype = {
       isTopLevelTarget: this.isTopLevelTarget,
       ignoreSubFrames: this.ignoreSubFrames,
       isPopup,
+      isPrivate: this.isPrivate,
       traits: {
         // @backward-compat { version 64 } Exposes a new trait to help identify
         // BrowsingContextActor's inherited actors from the client side.

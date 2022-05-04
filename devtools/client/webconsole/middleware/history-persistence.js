@@ -18,7 +18,7 @@ loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
  * History persistence middleware is responsible for loading
  * and maintaining history of executed expressions in JSTerm.
  */
-function historyPersistenceMiddleware(store) {
+function historyPersistenceMiddleware(webConsoleUI, store) {
   let historyLoaded = false;
   asyncStorage.getItem("webConsoleHistory").then(
     value => {
@@ -44,7 +44,14 @@ function historyPersistenceMiddleware(store) {
 
     // Save the current history entries when modified, but wait till
     // entries from the previous session are loaded.
-    if (historyLoaded && triggerStoreActions.includes(action.type)) {
+    const { isPrivate } =
+      webConsoleUI.hud?.commands?.targetCommand?.targetFront?.targetForm || {};
+
+    if (
+      !isPrivate &&
+      historyLoaded &&
+      triggerStoreActions.includes(action.type)
+    ) {
       const state = store.getState();
       asyncStorage
         .setItem("webConsoleHistory", state.history.entries)
