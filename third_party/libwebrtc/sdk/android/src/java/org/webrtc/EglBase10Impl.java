@@ -41,6 +41,7 @@ class EglBase10Impl implements EglBase10 {
   private static class Context implements EglBase10.Context {
     private final EGL10 egl;
     private final EGLContext eglContext;
+    private final EGLConfig eglContextConfig;
 
     @Override
     public EGLContext getRawContext() {
@@ -50,21 +51,23 @@ class EglBase10Impl implements EglBase10 {
     @Override
     public long getNativeEglContext() {
       EGLContext previousContext = egl.eglGetCurrentContext();
-      EGLDisplay previousDisplay = egl.eglGetCurrentDisplay();
+      EGLDisplay currentDisplay = egl.eglGetCurrentDisplay();
       EGLSurface previousDrawSurface = egl.eglGetCurrentSurface(EGL10.EGL_DRAW);
       EGLSurface previousReadSurface = egl.eglGetCurrentSurface(EGL10.EGL_READ);
       EGLSurface tempEglSurface = null;
 
-      EGLDisplay defaultDisplay = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+      if (currentDisplay == EGL10.EGL_NO_DISPLAY) {
+        currentDisplay = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+      }
 
       try {
         if (previousContext != eglContext) {
           int[] surfaceAttribs = {EGL10.EGL_WIDTH, 1, EGL10.EGL_HEIGHT, 1, EGL10.EGL_NONE};
-          EGLConfig eglConfig = getEglConfig(egl, defaultDisplay, EglBase.CONFIG_PIXEL_BUFFER);
-
-          tempEglSurface = egl.eglCreatePbufferSurface(defaultDisplay, eglConfig, surfaceAttribs);
-          if (!egl.eglMakeCurrent(defaultDisplay, tempEglSurface, tempEglSurface, eglContext)) {
-            throw new RuntimeException("Failed to make temporary EGL surface active.");
+          tempEglSurface =
+              egl.eglCreatePbufferSurface(currentDisplay, eglContextConfig, surfaceAttribs);
+          if (!egl.eglMakeCurrent(currentDisplay, tempEglSurface, tempEglSurface, eglContext)) {
+            throw new RuntimeException(
+                "Failed to make temporary EGL surface active: " + egl.eglGetError());
           }
         }
 
@@ -72,15 +75,16 @@ class EglBase10Impl implements EglBase10 {
       } finally {
         if (tempEglSurface != null) {
           egl.eglMakeCurrent(
-              previousDisplay, previousDrawSurface, previousReadSurface, previousContext);
-          egl.eglDestroySurface(defaultDisplay, tempEglSurface);
+              currentDisplay, previousDrawSurface, previousReadSurface, previousContext);
+          egl.eglDestroySurface(currentDisplay, tempEglSurface);
         }
       }
     }
 
-    public Context(EGL10 egl, EGLContext eglContext) {
+    public Context(EGL10 egl, EGLContext eglContext, EGLConfig eglContextConfig) {
       this.egl = egl;
       this.eglContext = eglContext;
+      this.eglContextConfig = eglContextConfig;
     }
   }
 
@@ -210,7 +214,7 @@ class EglBase10Impl implements EglBase10 {
 
   @Override
   public org.webrtc.EglBase.Context getEglBaseContext() {
-    return new Context(egl, eglContext);
+    return new Context(egl, eglContext, eglConfig);
   }
 
   @Override
