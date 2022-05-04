@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 
 /**
  * @typedef {object} RecommendationGroup
- *   A set of recommendations with an associated weight to apply to their scores.
+ *   A set of recommendatins with an associated weight to apply to their scores.
  * @property {Recommendation[]} recommendations
  *   The recommended snapshot.
  * @property {number} weight
@@ -161,76 +161,7 @@ const SnapshotScorer = new (class SnapshotScorer {
       }
     }
 
-    return this.dedupeSnapshots(recommendations).sort(
-      (a, b) => b.score - a.score
-    );
-  }
-
-  /**
-   * De-dupes snapshots based on matching titles and query parameters.
-   *
-   * @param {Recommendation[]} recommendations
-   *   An array of snapshots recommendations to de-dupe.
-   * @returns {Recommendation[]}
-   *   A deduped array.
-   */
-  dedupeSnapshots(recommendations) {
-    // A map that uses the url plus the title as the key. The values are
-    // objects with a hasSearch property, and an optional score property.
-    let matchingMap = new Map();
-    let result = [];
-
-    // First build a map of urls and titles mapping to snapshots data.
-    for (let recommendation of recommendations) {
-      let url;
-      try {
-        url = new URL(recommendation.snapshot.url);
-      } catch (ex) {
-        // If we can't analyse the URL, we simply add the snapshot to the
-        // results regardless.
-        result.push(recommendation);
-        continue;
-      }
-      let newRecommendation = { ...recommendation, hasSearch: !!url.search };
-      url.search = recommendation.snapshot.title;
-      let key = url.href;
-      let existing = matchingMap.get(key);
-      if (existing) {
-        // If the new recommendation doesn't have a search query, then
-        // set that as the preferred option.
-        if (!newRecommendation.hasSearch) {
-          matchingMap.set(key, newRecommendation);
-          continue;
-        }
-
-        // If the existing match does not have a search query, simply continue
-        // as it is the preferred option.
-        if (!existing.hasSearch) {
-          continue;
-        }
-
-        // If we have scores, select the best one from the highest score.
-        if ("score" in newRecommendation) {
-          if (newRecommendation.score > existing.score) {
-            matchingMap.set(key, newRecommendation);
-          }
-          continue;
-        }
-
-        // Otherwise, work out the best one to pick based on the most recently
-        // visited.
-        if (
-          newRecommendation.snapshot.lastInteractionAt.getTime() >
-          existing.snapshot.lastInteractionAt.getTime()
-        ) {
-          matchingMap.set(key, newRecommendation);
-        }
-      } else {
-        matchingMap.set(key, newRecommendation);
-      }
-    }
-
-    return [...result, ...matchingMap.values()];
+    return recommendations.sort((a, b) => b.score - a.score);
   }
 
   /**

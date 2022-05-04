@@ -49,15 +49,6 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
  */
 
 /**
- * @typedef {object} Recommendation
- *   The details of a specific recommendation for a snapshot.
- * @property {Snapshot} snapshot
- *   The snapshot this recommendation relates to.
- * @property {number} score
- *   The score for the snapshot.
- */
-
-/**
  * A snapshot selector is responsible for generating a list of snapshots based
  * on the current context. The context initially is just the url of the page
  * being viewed but will evolve to include things like the search terms that
@@ -213,29 +204,23 @@ class SnapshotSelector extends EventEmitter {
     let context = { ...this.#context };
     logConsole.debug("Building snapshots", context);
 
-    // We query for more snapshots than we need so that we can account for
-    // deduplicating and filtering out adult sites. This may not catch all
-    // cases, but saves the complexity of repeated queries.
+    // Generally, we query for one more than we need in case the current url is
+    // returned. In the case of filtering out adult sites, we query for a few
+    // more entries than requested, in case the most recent snapshots are all adult.
+    // This may not catch all cases, but saves the complexity of repeated queries.
     let snapshots = await Snapshots.query({
-      limit: context.count * 4,
+      limit: context.filterAdult ? context.count * 4 : context.count + 1,
       type: context.type,
     });
 
-    snapshots = snapshots.filter(snapshot => {
-      if (snapshot.url == context.url) {
-        return false;
-      }
-      return !context.filterAdult || !FilterAdult.isAdultUrl(snapshot.url);
-    });
-
-    snapshots = SnapshotScorer.dedupeSnapshots(
-      snapshots.map(s => ({
-        snapshot: s,
-      }))
-    )
-      .slice(0, context.count)
-      .map(s => s.snapshot)
-      .slice();
+    snapshots = snapshots
+      .filter(snapshot => {
+        if (snapshot.url == context.url) {
+          return false;
+        }
+        return !context.filterAdult || !FilterAdult.isAdultUrl(snapshot.url);
+      })
+      .slice(0, context.count);
 
     this.#snapshotsGenerated(snapshots);
   }

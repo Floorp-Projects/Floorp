@@ -61,15 +61,14 @@ var PlacesTestUtils = Object.freeze({
         throw new Error("Unsupported type passed to addVisits");
       }
 
-      let referrer;
       let info = { url: place.uri || place.url };
       let spec =
         info.url instanceof Ci.nsIURI ? info.url.spec : new URL(info.url).href;
       info.title = "title" in place ? place.title : "test visit for " + spec;
       if (typeof place.referrer == "string") {
-        referrer = Services.io.newURI(place.referrer);
+        place.referrer = Services.io.newURI(place.referrer);
       } else if (place.referrer && URL.isInstance(place.referrer)) {
-        referrer = Services.io.newURI(place.referrer.href);
+        place.referrer = Services.io.newURI(place.referrer.href);
       }
       let visitDate = place.visitDate;
       if (visitDate) {
@@ -93,7 +92,7 @@ var PlacesTestUtils = Object.freeze({
         {
           transition: place.transition,
           date: visitDate,
-          referrer,
+          referrer: place.referrer,
         },
       ];
       infos.push(info);

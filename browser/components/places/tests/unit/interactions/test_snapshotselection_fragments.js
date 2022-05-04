@@ -24,6 +24,7 @@ add_task(async function test_snapshot_selection_fragments() {
   await addInteractions([
     {
       url: TEST_URL1,
+      referrer: "",
     },
   ]);
   await Snapshots.add({ url: TEST_FRAGMENT_URL1 });
