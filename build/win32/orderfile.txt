@@ -5829,7 +5829,7 @@ _ZN5style7sharing17SHARING_CACHE_KEY7__getit17he592e433f2be153cE
 ?GetRootPresContext@nsPresContext@@QBEPAVnsRootPresContext@@XZ
 ?AddChildRefreshTimer@VsyncDispatcher@mozilla@@QAEXPAVVsyncObserver@2@@Z
 ??1VsyncDispatcher@mozilla@@EAE@XZ
-?NotifyRefreshTimerVsyncStatus@Display@VsyncSource@gfx@mozilla@@QAEX_N@Z
+?NotifyVsyncDispatcherVsyncStatus@Display@VsyncSource@gfx@mozilla@@QAEX_N@Z
 ?GetVsyncRate@D3DVsyncDisplay@D3DVsyncSource@@UAE?AV?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@XZ
 ?PostTask@MessageLoop@@QAEXU?$already_AddRefed@VnsIRunnable@@@@@Z
 ?_Growmap@?$deque@UPendingTask@MessageLoop@@V?$allocator@UPendingTask@MessageLoop@@@std@@@std@@IAEXI@Z

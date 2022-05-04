@@ -19,7 +19,7 @@ namespace gfx {
 
 VsyncSource::VsyncSource()
     : mDispatcherLock("display dispatcher lock"),
-      mRefreshTimerNeedsVsync(false),
+      mVsyncDispatcherNeedsVsync(false),
       mHasGenericObservers(false) {
   MOZ_ASSERT(NS_IsMainThread());
   mVsyncDispatcher = new VsyncDispatcher(this);
@@ -177,9 +177,9 @@ void VsyncSource::MoveListenersToNewSource(
   mVsyncDispatcher = nullptr;
 }
 
-void VsyncSource::NotifyRefreshTimerVsyncStatus(bool aEnable) {
+void VsyncSource::NotifyVsyncDispatcherVsyncStatus(bool aEnable) {
   MOZ_ASSERT(NS_IsMainThread());
-  mRefreshTimerNeedsVsync = aEnable;
+  mVsyncDispatcherNeedsVsync = aEnable;
   UpdateVsyncStatus();
 }
 
@@ -194,7 +194,7 @@ void VsyncSource::UpdateVsyncStatus() {
   {  // scope lock
     MutexAutoLock lock(mDispatcherLock);
     enableVsync = !mEnabledCompositorVsyncDispatchers.IsEmpty() ||
-                  mRefreshTimerNeedsVsync || !mGenericObservers.IsEmpty();
+                  mVsyncDispatcherNeedsVsync || !mGenericObservers.IsEmpty();
     mHasGenericObservers = !mGenericObservers.IsEmpty();
   }
 
