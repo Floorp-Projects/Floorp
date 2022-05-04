@@ -38,10 +38,6 @@ class VideoStreamDecoderInterface {
     // Called when the VideoStreamDecoder enters a non-decodable state.
     virtual void OnNonDecodableState() = 0;
 
-    // TODO(bugs.webrtc.org/12206): Remove when downstream has been updated.
-    virtual void OnContinuousUntil(const video_coding::VideoLayerFrameId& key) {
-    }
-
     virtual void OnContinuousUntil(int64_t frame_id) {}
 
     virtual void OnDecodedFrame(VideoFrame frame,
