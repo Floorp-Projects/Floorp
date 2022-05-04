@@ -55,7 +55,7 @@ class gfxPlatformGtk final : public gfxPlatform {
 
   bool AccelerateLayersByDefault() override;
 
-  already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateGlobalHardwareVsyncSource()
       override;
 
   bool IsX11Display() { return mIsX11Display; }
