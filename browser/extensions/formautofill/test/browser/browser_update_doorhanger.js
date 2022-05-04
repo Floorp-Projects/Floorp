@@ -9,7 +9,7 @@ add_task(async function test_update_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #organization");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -25,7 +25,7 @@ add_task(async function test_update_address() {
       form.querySelector("input[type=submit]").click();
     });
 
-    await promiseShown;
+    await onPopupShown;
     await clickDoorhangerButton(MAIN_BUTTON);
   });
 
@@ -41,7 +41,7 @@ add_task(async function test_create_new_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -57,7 +57,7 @@ add_task(async function test_create_new_address() {
       form.querySelector("input[type=submit]").click();
     });
 
-    await promiseShown;
+    await onPopupShown;
     await clickDoorhangerButton(SECONDARY_BUTTON);
   });
 
@@ -73,7 +73,7 @@ add_task(async function test_create_new_address_merge() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -89,7 +89,7 @@ add_task(async function test_create_new_address_merge() {
       form.querySelector("input[type=submit]").click();
     });
 
-    await promiseShown;
+    await onPopupShown;
     await clickDoorhangerButton(SECONDARY_BUTTON);
   });
 
@@ -104,7 +104,7 @@ add_task(async function test_submit_untouched_fields() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #organization");
     info("before down");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
@@ -129,7 +129,7 @@ add_task(async function test_submit_untouched_fields() {
       info("after submit");
     });
 
-    await promiseShown;
+    await onPopupShown;
     await clickDoorhangerButton(MAIN_BUTTON);
   });
 
@@ -145,7 +145,7 @@ add_task(async function test_submit_reduced_fields() {
 
   let url = BASE_URL + "autocomplete_simple_basic.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    let promiseShown = promiseNotificationShown();
+    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form#simple input[name=tel]");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
@@ -161,7 +161,7 @@ add_task(async function test_submit_reduced_fields() {
       form.querySelector("input[type=submit]").click();
     });
 
-    await promiseShown;
+    await onPopupShown;
     await clickDoorhangerButton(MAIN_BUTTON);
   });
 
