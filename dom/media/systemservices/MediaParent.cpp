@@ -37,10 +37,11 @@ mozilla::LazyLogModule gMediaParentLog("MediaParent");
 
 namespace mozilla::media {
 
-StaticMutex sOriginKeyStoreStsMutex;
+StaticMutex sOriginKeyStoreMutex;
+static OriginKeyStore* sOriginKeyStore = nullptr;
 
-class OriginKeyStore {
-  NS_INLINE_DECL_REFCOUNTING(OriginKeyStore);
+class OriginKeyStore : public nsISupports {
+  NS_DECL_THREADSAFE_ISUPPORTS
   class OriginKey {
    public:
     static const size_t DecodedLength = 18;
@@ -374,29 +375,28 @@ class OriginKeyStore {
   };
 
  private:
-  static OriginKeyStore* sOriginKeyStore;
-
   virtual ~OriginKeyStore() {
-    MOZ_ASSERT(NS_IsMainThread());
+    StaticMutexAutoLock lock(sOriginKeyStoreMutex);
     sOriginKeyStore = nullptr;
     LOG(("%s", __FUNCTION__));
   }
 
  public:
-  static RefPtr<OriginKeyStore> Get() {
+  static OriginKeyStore* Get() {
     MOZ_ASSERT(NS_IsMainThread());
+    StaticMutexAutoLock lock(sOriginKeyStoreMutex);
     if (!sOriginKeyStore) {
       sOriginKeyStore = new OriginKeyStore();
     }
-    return RefPtr(sOriginKeyStore);
+    return sOriginKeyStore;
   }
 
-  // Only accessed on StreamTS threads
-  OriginKeysLoader mOriginKeys GUARDED_BY(sOriginKeyStoreStsMutex);
-  OriginKeysTable mPrivateBrowsingOriginKeys
-      GUARDED_BY(sOriginKeyStoreStsMutex);
+  // Only accessed on StreamTS thread
+  OriginKeysLoader mOriginKeys;
+  OriginKeysTable mPrivateBrowsingOriginKeys;
 };
-OriginKeyStore* OriginKeyStore::sOriginKeyStore = nullptr;
+
+NS_IMPL_ISUPPORTS0(OriginKeyStore)
 
 template <class Super>
 mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
@@ -429,19 +429,23 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
 
   InvokeAsync(
       taskQueue, __func__,
-      [this, that, profileDir, aPrincipalInfo, aPersist]() {
+      [that, profileDir, aPrincipalInfo, aPersist]() {
         MOZ_ASSERT(!NS_IsMainThread());
 
-        StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
-        mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+        StaticMutexAutoLock lock(sOriginKeyStoreMutex);
+        if (!sOriginKeyStore) {
+          return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                      __func__);
+        }
+        sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
 
         nsresult rv;
         nsAutoCString result;
         if (IsPrincipalInfoPrivate(aPrincipalInfo)) {
-          rv = mOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(
+          rv = sOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(
               aPrincipalInfo, result);
         } else {
-          rv = mOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo,
+          rv = sOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo,
                                                             result, aPersist);
         }
 
@@ -478,17 +482,19 @@ mozilla::ipc::IPCResult Parent<Super>::RecvSanitizeOriginKeys(
   nsCOMPtr<nsIEventTarget> sts =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
-  RefPtr<Parent<Super>> that(this);
 
   rv = sts->Dispatch(
       NewRunnableFrom(
-          [this, that, profileDir, aSinceWhen, aOnlyPrivateBrowsing]() {
+          [profileDir, aSinceWhen, aOnlyPrivateBrowsing]() -> nsresult {
             MOZ_ASSERT(!NS_IsMainThread());
-            StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
-            mOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
+            StaticMutexAutoLock lock(sOriginKeyStoreMutex);
+            if (!sOriginKeyStore) {
+              return NS_ERROR_FAILURE;
+            }
+            sOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
             if (!aOnlyPrivateBrowsing) {
-              mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
-              mOriginKeyStore->mOriginKeys.Clear(aSinceWhen);
+              sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+              sOriginKeyStore->mOriginKeys.Clear(aSinceWhen);
             }
             return NS_OK;
           }),

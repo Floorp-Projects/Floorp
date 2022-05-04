@@ -40,9 +40,7 @@ class NonE10s {
  */
 class RefCountedParent {
  public:
-  // mOriginKeyStore must be released on the main thread.
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_MAIN_THREAD(
-      RefCountedParent);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedParent)
 
  protected:
   virtual ~RefCountedParent() = default;
