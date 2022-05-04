@@ -205,12 +205,6 @@ li.linked-file-error .stylesheet-rule-count {
   margin-inline-end: 2px;
 }
 
-.devtools-searchinput,
-.devtools-filterinput {
-  max-width: 25ex;
-  font-size: 11px;
-}
-
 .placeholder a {
   text-decoration: underline;
 }
