@@ -4,6 +4,10 @@
 
 -myfirefox-brand-name = My Firefox
 
+toolbar-button-firefox-view =
+  .label = { -myfirefox-brand-name }
+  .tooltiptext = { -myfirefox-brand-name }
+
 myfirefox-page-title = { -myfirefox-brand-name }
 
 myfirefox-colorway-button = Colorway Closet
