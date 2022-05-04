@@ -75,3 +75,8 @@ Mozilla.org changes:
 - 28 March 2022
   Backport upstream fix for CVE-2018-25032
   See bug #1761799
+  
+- 29 March 2022
+  Sync'ed with 1.2.12 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #1761764
