@@ -2997,7 +2997,7 @@ RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
  *  X = Software vsync at a rate of X times per second.
  */
 already_AddRefed<mozilla::gfx::VsyncSource>
-gfxPlatform::CreateHardwareVsyncSource() {
+gfxPlatform::CreateSoftwareVsyncSource() {
   RefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
   return softwareVsync.forget();
 }
@@ -3036,10 +3036,9 @@ void gfxPlatform::ReInitFrameRate() {
 
     // Start a new one:
     if (gfxPlatform::ForceSoftwareVsync()) {
-      gPlatform->mVsyncSource =
-          (gPlatform)->gfxPlatform::CreateHardwareVsyncSource();
+      gPlatform->mVsyncSource = gPlatform->CreateSoftwareVsyncSource();
     } else {
-      gPlatform->mVsyncSource = gPlatform->CreateHardwareVsyncSource();
+      gPlatform->mVsyncSource = gPlatform->CreateGlobalHardwareVsyncSource();
     }
     // Tidy up old vsync source.
     if (oldSource) {

@@ -654,10 +654,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   static bool UsesOffMainThreadCompositing();
 
   /**
-   * Get the hardware vsync source for each platform.
+   * Get the global vsync source for each platform.
    * Should only exist and be valid on the parent process
    */
-  virtual mozilla::gfx::VsyncSource* GetHardwareVsync() {
+  virtual mozilla::gfx::VsyncSource* GetGlobalVsync() {
     MOZ_ASSERT(mVsyncSource != nullptr);
     MOZ_ASSERT(XRE_IsParentProcess());
     return mVsyncSource;
@@ -829,11 +829,15 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   virtual void WillShutdown();
 
-  /**
-   * Initialized hardware vsync based on each platform.
-   */
+  // Create a software vsync source (which uses a timer internally).
+  // Can be used as a fallback for platforms without hardware vsync,
+  // and when the layout.frame_rate pref is set to a non-negative value.
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateSoftwareVsyncSource();
+
+  // Create the platform-specific global vsync source. Can fall back to
+  // CreateSoftwareVsyncSource().
   virtual already_AddRefed<mozilla::gfx::VsyncSource>
-  CreateHardwareVsyncSource();
+  CreateGlobalHardwareVsyncSource() = 0;
 
   // Returns whether or not layers should be accelerated by default on this
   // platform.
