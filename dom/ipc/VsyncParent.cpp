@@ -20,12 +20,17 @@ VsyncParent::VsyncParent()
       mDestroyed(false),
       mInitialThread(NS_GetCurrentThread()) {}
 
-void VsyncParent::UpdateVsyncDispatcher(
-    const RefPtr<VsyncDispatcher>& aVsyncDispatcher) {
+void VsyncParent::UpdateVsyncSource(
+    const RefPtr<gfx::VsyncSource>& aVsyncSource) {
+  mVsyncSource = aVsyncSource;
+  if (!mVsyncSource) {
+    mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
+  }
+
   if (mObservingVsync && mVsyncDispatcher) {
     mVsyncDispatcher->RemoveVsyncObserver(this);
   }
-  mVsyncDispatcher = aVsyncDispatcher;
+  mVsyncDispatcher = mVsyncSource->GetRefreshTimerVsyncDispatcher();
   if (mObservingVsync) {
     mVsyncDispatcher->AddVsyncObserver(this);
   }
@@ -54,7 +59,7 @@ void VsyncParent::DispatchVsyncEvent(const VsyncEvent& aVsync) {
   // NotifyVsync(). We use mObservingVsync and mDestroyed flags to skip this
   // notification.
   if (mObservingVsync && !mDestroyed) {
-    TimeDuration vsyncRate = mVsyncDispatcher->GetVsyncRate();
+    TimeDuration vsyncRate = mVsyncSource->GetVsyncRate();
     Unused << SendNotify(aVsync, vsyncRate.ToMilliseconds());
   }
 }

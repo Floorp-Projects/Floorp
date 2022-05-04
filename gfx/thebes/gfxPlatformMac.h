@@ -70,7 +70,7 @@ class gfxPlatformMac : public gfxPlatform {
     return true;
   }
 
-  already_AddRefed<mozilla::gfx::VsyncSource> CreateGlobalHardwareVsyncSource()
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
       override;
 
   // lower threshold on font anti-aliasing

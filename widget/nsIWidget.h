@@ -42,6 +42,10 @@
 #include "nsWidgetInitData.h"
 #include "nsXULAppAPI.h"
 
+#ifdef MOZ_IS_GCC
+#  include "VsyncSource.h"
+#endif
+
 // forward declarations
 class nsIBidiKeyboard;
 class nsIRollupListener;
@@ -53,7 +57,6 @@ class nsIRunnable;
 
 namespace mozilla {
 enum class NativeKeyBindingsType : uint8_t;
-class VsyncDispatcher;
 class WidgetGUIEvent;
 class WidgetInputEvent;
 class WidgetKeyboardEvent;
@@ -80,6 +83,9 @@ struct FrameMetrics;
 class LayerManager;
 class WebRenderBridgeChild;
 }  // namespace layers
+namespace gfx {
+class VsyncSource;
+}  // namespace gfx
 namespace widget {
 class TextEventDispatcher;
 class TextEventDispatcherListener;
@@ -1992,13 +1998,10 @@ class nsIWidget : public nsISupports {
   virtual bool SetNeedFastSnaphot() { return false; }
 
   /**
-   * If this widget has its own vsync dispatcher, return it, otherwise return
-   * nullptr. An example of such a local vsync dispatcher would be Wayland frame
-   * callbacks.
+   * If this widget has its own vsync source, return it, otherwise return
+   * nullptr. An example of such local source would be Wayland frame callbacks.
    */
-  virtual RefPtr<mozilla::VsyncDispatcher> GetVsyncDispatcher() {
-    return nullptr;
-  }
+  virtual RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() { return nullptr; }
 
   /**
    * Returns true if the widget requires synchronous repaints on resize,

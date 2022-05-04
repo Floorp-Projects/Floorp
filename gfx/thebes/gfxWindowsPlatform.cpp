@@ -1789,12 +1789,12 @@ class D3DVsyncSource final : public VsyncSource {
 };  // D3DVsyncSource
 
 already_AddRefed<mozilla::gfx::VsyncSource>
-gfxWindowsPlatform::CreateGlobalHardwareVsyncSource() {
+gfxWindowsPlatform::CreateHardwareVsyncSource() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "GFX: Not in main thread.");
 
   if (!DwmCompositionEnabled()) {
     NS_WARNING("DWM not enabled, falling back to software vsync");
-    return GetSoftwareVsyncSource();
+    return gfxPlatform::CreateHardwareVsyncSource();
   }
 
   RefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
