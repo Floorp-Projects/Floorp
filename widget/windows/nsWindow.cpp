@@ -1834,13 +1834,11 @@ void nsWindow::SetThemeRegion() {
       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypeMenu ||
        mPopupType == ePopupTypePanel)) {
     if (nsView* view = nsView::GetViewFor(this)) {
-      LayoutDeviceIntSize size =
+      LayoutDeviceSize size =
           nsLayoutUtils::GetBorderRadiusForMenuDropShadow(view->GetFrame());
       if (size.width || size.height) {
-        int32_t width =
-            NSToIntRound(size.width * GetDesktopToDeviceScale().scale);
-        int32_t height =
-            NSToIntRound(size.height * GetDesktopToDeviceScale().scale);
+        int32_t width = NSToIntRound(size.width);
+        int32_t height = NSToIntRound(size.height);
         HRGN region = CreateRoundRectRgn(0, 0, mBounds.Width() + 1,
                                          mBounds.Height() + 1, width, height);
         if (!SetWindowRgn(mWnd, region, false)) {
