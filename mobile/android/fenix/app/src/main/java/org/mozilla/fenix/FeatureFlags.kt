@@ -73,11 +73,6 @@ object FeatureFlags {
     const val showClearSiteData = true
 
     /**
-     * Enables showing the wallpaper functionality.
-     */
-    const val showWallpapers = true
-
-    /**
      * Enables history improvement features.
      */
     const val historyImprovementFeatures = true

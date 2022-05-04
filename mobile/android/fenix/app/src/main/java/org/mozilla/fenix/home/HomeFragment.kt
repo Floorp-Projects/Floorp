@@ -1073,8 +1073,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun shouldEnableWallpaper() =
-        FeatureFlags.showWallpapers &&
-            (activity as? HomeActivity)?.themeManager?.currentTheme?.isPrivate?.not() ?: false
+        (activity as? HomeActivity)?.themeManager?.currentTheme?.isPrivate?.not() ?: false
 
     companion object {
         const val ALL_NORMAL_TABS = "all_normal"

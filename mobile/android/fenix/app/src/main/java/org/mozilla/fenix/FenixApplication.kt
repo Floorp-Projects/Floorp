@@ -796,10 +796,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     @OptIn(DelicateCoroutinesApi::class)
     open fun downloadWallpapers() {
-        if (FeatureFlags.showWallpapers) {
-            GlobalScope.launch {
-                components.wallpaperManager.downloadAllRemoteWallpapers()
-            }
+        GlobalScope.launch {
+            components.wallpaperManager.downloadAllRemoteWallpapers()
         }
     }
 }

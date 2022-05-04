@@ -147,7 +147,6 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
                 )
                 true
             }
-            isVisible = FeatureFlags.showWallpapers
         }
 
         addToRadioGroup(
