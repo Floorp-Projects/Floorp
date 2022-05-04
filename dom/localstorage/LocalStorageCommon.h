@@ -226,8 +226,6 @@ class MOZ_STACK_CLASS LSNotifyInfo {
   nsString& oldValue() { return mOldValue; }
 };
 
-void MaybeEnableNextGenLocalStorage();
-
 /**
  * A check of LSNG being enabled, the value is latched once initialized so
  * changing the preference during runtime has no effect. May be called on any
