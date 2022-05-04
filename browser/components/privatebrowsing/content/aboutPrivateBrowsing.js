@@ -188,9 +188,9 @@ async function renderPromo({
 }
 
 /**
- * For every PB newtab loaded a second is pre-rendered in the background.
+ * For every PB newtab loaded, a second is pre-rendered in the background.
  * We need to guard against invalid impressions by checking visibility state.
- * If visible record otherwise listen for visibility change and record later.
+ * If visible, record. Otherwise, listen for visibility change and record later.
  */
 function recordOnceVisible(message) {
   const recordImpression = () => {
@@ -217,6 +217,24 @@ function recordOnceVisible(message) {
   }
 }
 
+// The PB newtab may be pre-rendered. Once the tab is visible, check to make sure the message wasn't blocked after the initial render. If it was, remove the promo.
+async function handlePromoOnPreload(message) {
+  async function removePromoIfBlocked() {
+    if (document.visibilityState === "visible") {
+      let blocked = await RPMSendQuery("IsPromoBlocked", message);
+      if (blocked) {
+        const container = document.querySelector(".promo");
+        container.remove();
+      }
+    }
+    document.removeEventListener("visibilitychange", removePromoIfBlocked);
+  }
+  // Only add the listener to pre-rendered tabs that aren't visible
+  if (document.visibilityState !== "visible") {
+    document.addEventListener("visibilitychange", removePromoIfBlocked);
+  }
+}
+
 async function setupFeatureConfig() {
   let config = null;
   let message = null;
@@ -239,6 +257,7 @@ async function setupFeatureConfig() {
   let hasRendered = await renderPromo(config);
   if (hasRendered && message) {
     recordOnceVisible(message);
+    await handlePromoOnPreload(message);
   }
   // For tests
   document.documentElement.setAttribute("PrivateBrowsingRenderComplete", true);
