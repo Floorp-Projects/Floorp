@@ -148,8 +148,9 @@ async def fetch_missing_symbols(u):
     log.info("Trying missing symbols from %s" % u)
     async with ClientSession() as client:
         async with client.get(u, headers=HEADERS) as resp:
+            # The server currently does not set an encoding so force it to UTF-8
+            data = await resp.text("UTF-8")
             # just skip the first line since it contains column headers
-            data = await resp.text()
             return data.splitlines()[1:]
 
 
