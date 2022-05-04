@@ -449,6 +449,11 @@ void MacroAssemblerX86::vpmaddubswSimd128(const SimdConstant& v,
   vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaddubsw_mr);
 }
 
+void MacroAssemblerX86::vpmuludqSimd128(const SimdConstant& v,
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmuludq_mr);
+}
+
 void MacroAssemblerX86::finish() {
   // Last instruction may be an indirect jump so eagerly insert an undefined
   // instruction byte to prevent processors from decoding data values into
