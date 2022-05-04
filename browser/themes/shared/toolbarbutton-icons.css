@@ -29,7 +29,7 @@ toolbar {
 
 .toolbarbutton-animatable-box,
 .toolbarbutton-1 {
-  color: inherit !important;
+  color: inherit;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--toolbarbutton-icon-fill);
 }
@@ -480,4 +480,8 @@ toolbarbutton.bookmark-item {
 
 #import-button {
   list-style-image: url("chrome://browser/skin/import.svg");
+}
+
+#firefox-view-button {
+  list-style-image: url("chrome://branding/content/icon32.png");
 }
