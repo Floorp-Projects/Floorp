@@ -1147,10 +1147,8 @@ void nsBaseWidget::CreateCompositorVsyncDispatcher() {
     }
     MutexAutoLock lock(*mCompositorVsyncDispatcherLock.get());
     if (!mCompositorVsyncDispatcher) {
-      RefPtr<gfx::VsyncSource> globalVsync =
-          gfxPlatform::GetPlatform()->GetHardwareVsync();
       RefPtr<VsyncDispatcher> vsyncDispatcher =
-          globalVsync->GetVsyncDispatcher();
+          gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
       mCompositorVsyncDispatcher =
           new CompositorVsyncDispatcher(std::move(vsyncDispatcher));
     }
