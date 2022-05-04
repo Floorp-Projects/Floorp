@@ -448,8 +448,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     RefPtr<gfx::VsyncSource> vsyncSource =
         gfxPlatform::GetPlatform()->GetHardwareVsync();
-    RefPtr<RefreshTimerVsyncDispatcher> vsyncDispatcher =
-        vsyncSource->GetRefreshTimerVsyncDispatcher();
+    RefPtr<VsyncDispatcher> vsyncDispatcher = vsyncSource->GetVsyncDispatcher();
     RefPtr<VsyncRefreshDriverTimer> timer = new VsyncRefreshDriverTimer(
         std::move(vsyncSource), std::move(vsyncDispatcher), nullptr);
     return timer.forget();
@@ -463,8 +462,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
       RefPtr<gfx::VsyncSource>&& aVsyncSource) {
     MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-    RefPtr<RefreshTimerVsyncDispatcher> vsyncDispatcher =
-        aVsyncSource->GetRefreshTimerVsyncDispatcher();
+    RefPtr<VsyncDispatcher> vsyncDispatcher =
+        aVsyncSource->GetVsyncDispatcher();
     RefPtr<VsyncRefreshDriverTimer> timer = new VsyncRefreshDriverTimer(
         std::move(aVsyncSource), std::move(vsyncDispatcher), nullptr);
     return timer.forget();
@@ -618,10 +617,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
   };  // RefreshDriverVsyncObserver
 
-  VsyncRefreshDriverTimer(
-      RefPtr<gfx::VsyncSource>&& aVsyncSource,
-      RefPtr<RefreshTimerVsyncDispatcher>&& aVsyncDispatcher,
-      RefPtr<VsyncMainChild>&& aVsyncChild)
+  VsyncRefreshDriverTimer(RefPtr<gfx::VsyncSource>&& aVsyncSource,
+                          RefPtr<VsyncDispatcher>&& aVsyncDispatcher,
+                          RefPtr<VsyncMainChild>&& aVsyncChild)
       : mVsyncSource(aVsyncSource),
         mVsyncDispatcher(aVsyncDispatcher),
         mVsyncChild(aVsyncChild),
@@ -906,7 +904,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
 
   // Used in the parent process. We register mVsyncObserver with it for the
   // duration during which we want to receive vsync notifications.
-  RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  RefPtr<VsyncDispatcher> mVsyncDispatcher;
   // Used it the content process. We register mVsyncObserver with it for the
   // duration during which we want to receive vsync notifications. The
   // mVsyncChild will be always available before VsyncChild::ActorDestroy().
