@@ -8,3 +8,5 @@ JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
