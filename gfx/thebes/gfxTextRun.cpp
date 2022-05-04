@@ -11,6 +11,7 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPresData.h"
 
@@ -1865,7 +1866,7 @@ gfxFontGroup::gfxFontGroup(nsPresContext* aPresContext,
 
 gfxFontGroup::~gfxFontGroup() {
   // Should not be dropped by stylo
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!ServoStyleSet::IsCurrentThreadInServoTraversal());
 }
 
 static StyleGenericFontFamily GetDefaultGeneric(nsAtom* aLanguage) {
@@ -1878,6 +1879,7 @@ void gfxFontGroup::BuildFontList() {
   // initialize fonts in the font family list
   AutoTArray<FamilyAndGeneric, 10> fonts;
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+  mFontListGeneration = pfl->GetGeneration();
 
   // lookup fonts in the fontlist
   for (const StyleSingleFontFamily& name : mFamilyList.list.AsSpan()) {
@@ -1921,8 +1923,6 @@ void gfxFontGroup::BuildFontList() {
       AddFamilyToFontList(f.mFamily.mUnshared, f.mGeneric);
     }
   }
-
-  mFontListGeneration = pfl->GetGeneration();
 }
 
 void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
@@ -1979,7 +1979,7 @@ void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
                                        StyleGenericFontFamily aGeneric) {
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
   if (!aFamily->IsInitialized()) {
-    if (!NS_IsMainThread()) {
+    if (!NS_IsMainThread() && ServoStyleSet::Current()) {
       // If we need to initialize a Family record, but we're on a style
       // worker thread, we have to defer it.
       ServoStyleSet* set = ServoStyleSet::Current();
