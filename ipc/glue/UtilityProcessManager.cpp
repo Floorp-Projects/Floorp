@@ -187,10 +187,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
         CrashReporter::AnnotateCrashReport(
             CrashReporter::Annotation::UtilityProcessStatus, "Running"_ns);
 
-        CrashReporter::AnnotateCrashReport(
-            CrashReporter::Annotation::UtilityProcessSandboxingKind,
-            (unsigned int)aSandbox);
-
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
       [self, p, aSandbox](nsresult aError) {
