@@ -48,7 +48,7 @@ class VsyncParent final : public PVsyncParent, public VsyncObserver {
   bool mDestroyed;
   nsCOMPtr<nsIThread> mInitialThread;
   RefPtr<gfx::VsyncSource> mVsyncSource;
-  RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  RefPtr<VsyncDispatcher> mVsyncDispatcher;
 };
 
 }  // namespace mozilla::dom

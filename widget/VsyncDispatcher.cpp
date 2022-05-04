@@ -110,25 +110,24 @@ void CompositorVsyncDispatcher::Shutdown() {
   mVsyncSource = nullptr;
 }
 
-RefreshTimerVsyncDispatcher::RefreshTimerVsyncDispatcher(
-    gfx::VsyncSource* aVsyncSource)
+VsyncDispatcher::VsyncDispatcher(gfx::VsyncSource* aVsyncSource)
     : mVsyncSource(aVsyncSource),
-      mVsyncObservers("RefreshTimerVsyncDispatcher::mVsyncObservers") {
+      mVsyncObservers("VsyncDispatcher::mVsyncObservers") {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-RefreshTimerVsyncDispatcher::~RefreshTimerVsyncDispatcher() {
+VsyncDispatcher::~VsyncDispatcher() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void RefreshTimerVsyncDispatcher::MoveToSource(gfx::VsyncSource* aVsyncSource) {
+void VsyncDispatcher::MoveToSource(gfx::VsyncSource* aVsyncSource) {
   MOZ_ASSERT(NS_IsMainThread());
   mVsyncSource = aVsyncSource;
 }
 
-void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
+void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   auto observers = mVsyncObservers.Lock();
 
   for (const auto& observer : *observers) {
@@ -136,8 +135,7 @@ void RefreshTimerVsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
   }
 }
 
-void RefreshTimerVsyncDispatcher::AddVsyncObserver(
-    VsyncObserver* aVsyncObserver) {
+void VsyncDispatcher::AddVsyncObserver(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(aVsyncObserver);
   {  // scope lock - called on PBackground thread or main thread
     auto observers = mVsyncObservers.Lock();
@@ -149,8 +147,7 @@ void RefreshTimerVsyncDispatcher::AddVsyncObserver(
   UpdateVsyncStatus();
 }
 
-void RefreshTimerVsyncDispatcher::RemoveVsyncObserver(
-    VsyncObserver* aVsyncObserver) {
+void VsyncDispatcher::RemoveVsyncObserver(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(aVsyncObserver);
   {  // scope lock - called on PBackground thread or main thread
     auto observers = mVsyncObservers.Lock();
@@ -160,18 +157,18 @@ void RefreshTimerVsyncDispatcher::RemoveVsyncObserver(
   UpdateVsyncStatus();
 }
 
-void RefreshTimerVsyncDispatcher::UpdateVsyncStatus() {
+void VsyncDispatcher::UpdateVsyncStatus() {
   if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NewRunnableMethod(
-        "RefreshTimerVsyncDispatcher::UpdateVsyncStatus", this,
-        &RefreshTimerVsyncDispatcher::UpdateVsyncStatus));
+    NS_DispatchToMainThread(
+        NewRunnableMethod("VsyncDispatcher::UpdateVsyncStatus", this,
+                          &VsyncDispatcher::UpdateVsyncStatus));
     return;
   }
 
   mVsyncSource->NotifyRefreshTimerVsyncStatus(NeedsVsync());
 }
 
-bool RefreshTimerVsyncDispatcher::NeedsVsync() {
+bool VsyncDispatcher::NeedsVsync() {
   MOZ_ASSERT(NS_IsMainThread());
   auto observers = mVsyncObservers.Lock();
   return !observers->IsEmpty();

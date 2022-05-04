@@ -138,8 +138,7 @@ TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications) {
   mVsyncSource->DisableVsync();
   ASSERT_FALSE(mVsyncSource->IsVsyncEnabled());
 
-  RefPtr<RefreshTimerVsyncDispatcher> vsyncDispatcher =
-      mVsyncSource->GetRefreshTimerVsyncDispatcher();
+  RefPtr<VsyncDispatcher> vsyncDispatcher = mVsyncSource->GetVsyncDispatcher();
   ASSERT_TRUE(vsyncDispatcher != nullptr);
 
   RefPtr<TestVsyncObserver> testVsyncObserver = new TestVsyncObserver();
