@@ -28,6 +28,7 @@
 #include "mozilla/a11y/PDocAccessibleChild.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/a11y/DocAccessibleParent.h"
 
 // icu TRUE conflicting with java::sdk::Boolean::TRUE()
 // https://searchfox.org/mozilla-central/rev/ce02064d8afc8673cef83c92896ee873bd35e7ae/intl/icu/source/common/unicode/umachine.h#265
@@ -43,7 +44,10 @@ using namespace mozilla::a11y;
 //-----------------------------------------------------
 AccessibleWrap::AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc)
     : LocalAccessible(aContent, aDoc), mID(SessionAccessibility::kUnsetID) {
-  SessionAccessibility::RegisterAccessible(this);
+  if (!IPCAccessibilityActive()) {
+    MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+    SessionAccessibility::RegisterAccessible(this);
+  }
 }
 
 //-----------------------------------------------------
@@ -239,7 +243,10 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 }
 
 void AccessibleWrap::Shutdown() {
-  SessionAccessibility::UnregisterAccessible(this);
+  if (!IPCAccessibilityActive()) {
+    MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+    SessionAccessibility::UnregisterAccessible(this);
+  }
   LocalAccessible::Shutdown();
 }
 
