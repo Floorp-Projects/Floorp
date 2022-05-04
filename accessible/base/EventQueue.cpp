@@ -32,6 +32,11 @@ bool EventQueue::PushEvent(AccEvent* aEvent) {
                    aEvent->Document() == mDocument,
                "Queued event belongs to another document!");
 
+  if (aEvent->mEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    mFocusEvent = aEvent;
+    return true;
+  }
+
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier, or change the return type to void.
   mEvents.AppendElement(aEvent);
@@ -302,27 +307,38 @@ void EventQueue::CoalesceSelChangeEvents(AccSelChangeEvent* aTailEvent,
 void EventQueue::ProcessEventQueue() {
   // Process only currently queued events.
   const nsTArray<RefPtr<AccEvent> > events = std::move(mEvents);
-
   uint32_t eventCount = events.Length();
 #ifdef A11Y_LOG
-  if (eventCount > 0 && logging::IsEnabled(logging::eEvents)) {
+  if ((eventCount > 0 || mFocusEvent) && logging::IsEnabled(logging::eEvents)) {
     logging::MsgBegin("EVENTS", "events processing");
     logging::Address("document", mDocument);
     logging::MsgEnd();
   }
 #endif
 
+  if (mFocusEvent) {
+    // Always fire a pending focus event before all other events. We do this for
+    // two reasons:
+    // 1. It prevents extraneous screen reader speech if the name, states, etc.
+    // of the currently focused item change at the same time as another item is
+    // focused. If aria-activedescendant is used, even setting
+    // aria-activedescendant before changing other properties results in the
+    // property change events being queued before the focus event because we
+    // process  aria-activedescendant async.
+    // 2. It improves perceived performance. Focus changes should be reported as
+    // soon as possible, so clients should handle focus events before they spend
+    // time on anything else.
+    RefPtr<AccEvent> event = std::move(mFocusEvent);
+    if (!event->mAccessible->IsDefunct()) {
+      FocusMgr()->ProcessFocusEvent(event);
+    }
+  }
+
   for (uint32_t idx = 0; idx < eventCount; idx++) {
     AccEvent* event = events[idx];
     if (event->mEventRule != AccEvent::eDoNotEmit) {
       LocalAccessible* target = event->GetAccessible();
       if (!target || target->IsDefunct()) continue;
-
-      // Dispatch the focus event if target is still focused.
-      if (event->mEventType == nsIAccessibleEvent::EVENT_FOCUS) {
-        FocusMgr()->ProcessFocusEvent(event);
-        continue;
-      }
 
       // Dispatch caret moved and text selection change events.
       if (event->mEventType ==
