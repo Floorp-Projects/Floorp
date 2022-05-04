@@ -366,4 +366,8 @@ impl<'alloc> Pass<'alloc> for ScopePass<'alloc> {
     ) {
         self.builder.on_switch();
     }
+
+    fn visit_enum_expression_variant_new_target_expression(&mut self) {
+        self.builder.on_new_target();
+    }
 }

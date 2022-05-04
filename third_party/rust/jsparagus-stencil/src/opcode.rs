@@ -174,9 +174,7 @@ macro_rules! using_opcode_database {
                 (Try, try_, NULL, 1, 0, 0, JOF_BYTE),
                 (TryDestructuring, try_destructuring, NULL, 1, 0, 0, JOF_BYTE),
                 (Exception, exception, NULL, 1, 0, 1, JOF_BYTE),
-                (ResumeIndex, resume_index, NULL, 4, 0, 1, JOF_RESUMEINDEX),
                 (Finally, finally, NULL, 1, 0, 0, JOF_BYTE),
-                (Retsub, retsub, NULL, 1, 1, 0, JOF_BYTE),
                 (Uninitialized, uninitialized, NULL, 1, 0, 1, JOF_BYTE),
                 (InitLexical, init_lexical, NULL, 4, 1, 1, JOF_LOCAL|JOF_NAME),
                 (InitGLexical, init_g_lexical, NULL, 5, 1, 1, JOF_ATOM|JOF_NAME|JOF_PROPINIT|JOF_GNAME|JOF_IC),
@@ -308,7 +306,7 @@ const JOF_QARG: u32 = 11;
 /// var or block-local variable
 const JOF_LOCAL: u32 = 12;
 
-/// yield, await, or retsub resume index
+/// yield or await resume index
 const JOF_RESUMEINDEX: u32 = 13;
 
 /// inline DoubleValue
