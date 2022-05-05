@@ -22,8 +22,8 @@ namespace webrtc {
 
 // TODO(deadbeef): Move this to .cc file and out of api/. What threads methods
 // are called on is an implementation detail.
-BEGIN_PRIMARY_PROXY_MAP(PeerConnectionFactory)
-PROXY_PRIMARY_THREAD_DESTRUCTOR()
+BEGIN_SIGNALING_PROXY_MAP(PeerConnectionFactory)
+PROXY_SIGNALING_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, SetOptions, const Options&)
 PROXY_METHOD4(rtc::scoped_refptr<PeerConnectionInterface>,
               CreatePeerConnection,

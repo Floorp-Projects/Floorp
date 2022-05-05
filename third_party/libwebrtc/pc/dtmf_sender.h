@@ -99,9 +99,9 @@ class DtmfSender : public DtmfSenderInterface, public sigslot::has_slots<> {
 };
 
 // Define proxy for DtmfSenderInterface.
-BEGIN_PRIMARY_PROXY_MAP(DtmfSender)
+BEGIN_SIGNALING_PROXY_MAP(DtmfSender)
 
-PROXY_PRIMARY_THREAD_DESTRUCTOR()
+PROXY_SIGNALING_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, RegisterObserver, DtmfSenderObserverInterface*)
 PROXY_METHOD0(void, UnregisterObserver)
 PROXY_METHOD0(bool, CanInsertDtmf)
