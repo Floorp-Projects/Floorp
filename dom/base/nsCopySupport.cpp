@@ -32,6 +32,8 @@
 #include "nsHTMLDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIFrame.h"
+#include "nsIURI.h"
+#include "nsGenericHTMLElement.h"
 
 // image copy stuff
 #include "nsIImageLoadingContent.h"
@@ -602,39 +604,70 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
   nsCOMPtr<nsINode> node = do_QueryInterface(aImageElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
-  if (NS_WARN_IF(!mimeService)) {
-    return NS_ERROR_FAILURE;
-  }
+  // Fix the file extension in the URL if necessary
+  nsCOMPtr<nsIMIMEService> mimeService =
+      do_GetService(NS_MIMESERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(mimeService, NS_OK);
 
   nsCOMPtr<nsIURI> imgUri;
   rv = aImgRequest->GetFinalURI(getter_AddRefs(imgUri));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIURL> imgUrl = do_QueryInterface(imgUri);
+  NS_ENSURE_TRUE(imgUrl, NS_OK);
+
+  nsAutoCString extension;
+  rv = imgUrl->GetFileExtension(extension);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString mimeType;
+  rv = aImgRequest->GetMimeType(getter_Copies(mimeType));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIMIMEInfo> mimeInfo;
+  mimeService->GetFromTypeAndExtension(mimeType, ""_ns,
+                                       getter_AddRefs(mimeInfo));
+  NS_ENSURE_TRUE(mimeInfo, NS_OK);
+
   nsAutoCString spec;
-  rv = imgUri->GetSpec(spec);
+  rv = imgUrl->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // pass out the image source string
   nsString imageSourceString;
   CopyUTF8toUTF16(spec, imageSourceString);
 
-  nsCString mimeType;
-  rv = aImgRequest->GetMimeType(getter_Copies(mimeType));
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool validExtension;
+  if (extension.IsEmpty() ||
+      NS_FAILED(mimeInfo->ExtensionExists(extension, &validExtension)) ||
+      !validExtension) {
+    // Fix the file extension in the URL
+    nsAutoCString primaryExtension;
+    mimeInfo->GetPrimaryExtension(primaryExtension);
+    if (!primaryExtension.IsEmpty()) {
+      rv = NS_MutateURI(imgUri)
+               .Apply(&nsIURLMutator::SetFileExtension, primaryExtension,
+                      nullptr)
+               .Finalize(imgUrl);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   nsAutoCString fileName;
-  rv = aImgRequest->GetFileName(fileName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  imgUrl->GetFileName(fileName);
 
-  nsAutoString validFileName = NS_ConvertUTF8toUTF16(fileName);
-  mimeService->ValidateFileNameForSaving(
-      validFileName, mimeType, nsIMIMEService::VALIDATE_DEFAULT, validFileName);
+  NS_UnescapeURL(fileName);
+
+  // make the filename safe for the filesystem
+  fileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
+
+  nsString imageDestFileName;
+  CopyUTF8toUTF16(fileName, imageDestFileName);
 
   rv = AppendString(aTransferable, imageSourceString, kFilePromiseURLMime);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AppendString(aTransferable, validFileName, kFilePromiseDestFilename);
+  rv = AppendString(aTransferable, imageDestFileName, kFilePromiseDestFilename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(node->NodePrincipal());

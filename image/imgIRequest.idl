@@ -101,14 +101,6 @@ interface imgIRequest : nsIRequest
   readonly attribute string mimeType;
 
   /**
-   * The filename that should be used when saving the image. This is determined
-   * from the Content-Disposition, if present, or the uri of the image. This
-   * filename should be validated using nsIMIMEService::GetValidFilenameForSaving
-   * before creating the file.
-   */
-  readonly attribute ACString fileName;
-
-  /**
    * Clone this request; the returned request will have aObserver as the
    * observer.  aObserver will be notified synchronously (before the clone()
    * call returns) with all the notifications that have already been dispatched
