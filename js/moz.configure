@@ -840,13 +840,14 @@ set_define("ENABLE_WASM_SIMD", wasm_simd)
 # =====================================================================
 
 
-@depends(target, c_compiler, moz_debug)
-def wasm_verify_serialization_for_size(target, c_compiler, debug):
+@depends(target, c_compiler, moz_debug, milestone)
+def wasm_verify_serialization_for_size(target, c_compiler, debug, milestone):
     if (
         debug == True
         and target.kernel == "Linux"
         and target.cpu == "x86_64"
         and c_compiler.type == "clang"
+        and milestone.is_nightly
     ):
         return True
     return
