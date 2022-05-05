@@ -159,7 +159,14 @@
                /* flag predicate     */ IsSimdPrivilegedContext(cx) &&        \
                   !IsFuzzingCranelift(cx),                                    \
                /* shell flag         */ "moz-intgemm",                        \
-               /* preference name    */ "moz_intgemm")
+               /* preference name    */ "moz_intgemm")                        \
+  EXPERIMENTAL(/* capitalized name   */ TestSerialization,                    \
+               /* lower case name    */ testSerialization,                    \
+               /* compile predicate  */ 1,                                    \
+               /* compiler predicate */ IonAvailable(cx),                     \
+               /* flag predicate     */ true,                                 \
+               /* shell flag         */ "test-serialization",                 \
+               /* preference name    */ "test-serialization")
 
 // clang-format on
 

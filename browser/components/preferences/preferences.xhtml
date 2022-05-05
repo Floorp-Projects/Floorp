@@ -167,14 +167,14 @@
       <spacer flex="1"/>
 
       <vbox class="sidebar-footer-list">
-        <label id="addonsButton" class="sidebar-footer-link" is="text-link">
+        <html:a id="addonsButton" class="sidebar-footer-link" href="about:addons">
           <image class="sidebar-footer-icon addons-icon"/>
           <label class="sidebar-footer-label" flex="1" data-l10n-id="addons-button-label"></label>
-        </label>
-        <label id="helpButton" class="sidebar-footer-link" is="text-link">
+        </html:a>
+        <html:a id="helpButton" class="sidebar-footer-link" target="_blank">
           <image class="sidebar-footer-icon help-icon"/>
           <label class="sidebar-footer-label" flex="1" data-l10n-id="help-button-label"></label>
-        </label>
+        </html:a>
       </vbox>
     </vbox>
 
@@ -191,11 +191,7 @@
                 <image class="info-icon"></image>
               </hbox>
               <hbox align="center" flex="1">
-                <label flex="1"
-                       href="about:policies"
-                       useoriginprincipal="true"
-                       is="text-link"
-                       data-l10n-id="managed-notice"/>
+                <html:a href="about:policies" target="_blank" data-l10n-id="managed-notice"/>
               </hbox>
             </hbox>
             <search-textbox

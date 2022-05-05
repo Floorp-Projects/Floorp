@@ -4404,7 +4404,7 @@ _moz_cairo_dwrite_set_cleartype_params
 ?DwmCompositionEnabled@gfxWindowsPlatform@@QAE_NXZ
 ??_GgfxWindowsPlatform@@UAEPAXI@Z
 ??0Display@VsyncSource@gfx@mozilla@@QAE@XZ
-??0RefreshTimerVsyncDispatcher@mozilla@@QAE@PAVDisplay@VsyncSource@gfx@1@@Z
+??0VsyncDispatcher@mozilla@@QAE@PAVDisplay@VsyncSource@gfx@1@@Z
 ?destroy_sandbox@?$rlbox_sandbox@Vrlbox_noop_sandbox@rlbox@@@rlbox@@QAE?A?<auto>@@XZ
 ?Start@Thread@base@@QAE_NXZ
 ?Run@MessagePumpDefault@base@@UAEXPAVDelegate@MessagePump@2@@Z
@@ -5824,12 +5824,12 @@ _ZN5style7sharing17SHARING_CACHE_KEY7__getit17he592e433f2be153cE
 ??8?$StyleGenericCrossFadeImage@U?$StyleGenericImage@U?$StyleGenericGradient@UStyleLineDirection@mozilla@@TStyleLengthPercentageUnion@2@UStyleCSSPixelLength@2@T32@U?$StyleGenericPosition@TStyleLengthPercentageUnion@mozilla@@T12@@2@UStyleAngle@2@UStyleAngleOrPercentage@2@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@@mozilla@@U?$StyleGenericMozImageRect@UStyleNumberOrPercentage@mozilla@@UStyleComputedUrl@2@@2@UStyleComputedUrl@2@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@UStylePercentage@2@@mozilla@@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@@mozilla@@QBE_NABU01@@Z
 ?Csp@nsDocShellLoadState@@QBEPAVnsIContentSecurityPolicy@@XZ
 ?GetNextTickHint@nsRefreshDriver@@SA?AV?$Maybe@VTimeStamp@mozilla@@@mozilla@@XZ
-?GetRefreshTimerVsyncDispatcher@VsyncSource@gfx@mozilla@@QAE?AV?$RefPtr@VRefreshTimerVsyncDispatcher@mozilla@@@@XZ
+?GetVsyncDispatcher@VsyncSource@gfx@mozilla@@QAE?AV?$RefPtr@VVsyncDispatcher@mozilla@@@@XZ
 ?IsInLayoutAsapMode@gfxPlatform@@SA_NXZ
 ?GetRootPresContext@nsPresContext@@QBEPAVnsRootPresContext@@XZ
-?AddChildRefreshTimer@RefreshTimerVsyncDispatcher@mozilla@@QAEXPAVVsyncObserver@2@@Z
-??1RefreshTimerVsyncDispatcher@mozilla@@EAE@XZ
-?NotifyRefreshTimerVsyncStatus@Display@VsyncSource@gfx@mozilla@@QAEX_N@Z
+?AddChildRefreshTimer@VsyncDispatcher@mozilla@@QAEXPAVVsyncObserver@2@@Z
+??1VsyncDispatcher@mozilla@@EAE@XZ
+?NotifyVsyncDispatcherVsyncStatus@Display@VsyncSource@gfx@mozilla@@QAEX_N@Z
 ?GetVsyncRate@D3DVsyncDisplay@D3DVsyncSource@@UAE?AV?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@XZ
 ?PostTask@MessageLoop@@QAEXU?$already_AddRefed@VnsIRunnable@@@@@Z
 ?_Growmap@?$deque@UPendingTask@MessageLoop@@V?$allocator@UPendingTask@MessageLoop@@@std@@@std@@IAEXI@Z
@@ -5899,7 +5899,7 @@ _ZN5style7sharing17SHARING_CACHE_KEY7__getit17he592e433f2be153cE
 ?SendSetIsInitialDocument@PWindowGlobalChild@dom@mozilla@@QAE_NAB_N@Z
 ?Run@?$RunnableMethodImpl@$$CBV?$RefPtr@VVideoFrameContainer@mozilla@@@@P8VideoFrameContainer@mozilla@@AEXXZ$00$0A@$$V@detail@mozilla@@UAG?AW4nsresult@@XZ
 ?NotifyVsync@Display@VsyncSource@gfx@mozilla@@UAEXABVTimeStamp@4@0@Z
-?NotifyVsync@RefreshTimerVsyncDispatcher@mozilla@@QAEXABUVsyncEvent@2@@Z
+?NotifyVsync@VsyncDispatcher@mozilla@@QAEXABUVsyncEvent@2@@Z
 ?Release@nsGlobalWindowOuter@@UAGKXZ
 ?QueryInterface@PrioritizableRunnable@mozilla@@UAG?AW4nsresult@@ABUnsID@@PAPAX@Z
 ?AddRef@nsGlobalWindowOuter@@UAGKXZ
@@ -6834,7 +6834,7 @@ Servo_StyleSet_BuildFontFeatureValueSet
 ?DeallocManagee@PBackgroundIDBFactoryChild@indexedDB@dom@mozilla@@UAEXHPAVIProtocol@ipc@4@@Z
 ?DeallocPBackgroundIDBFactoryRequestChild@BackgroundFactoryChild@indexedDB@dom@mozilla@@QAE_NPAVPBackgroundIDBFactoryRequestChild@234@@Z
 ?Disconnect@nsRefreshDriver@@QAEXXZ
-?RemoveChildRefreshTimer@RefreshTimerVsyncDispatcher@mozilla@@QAEXPAVVsyncObserver@2@@Z
+?RemoveChildRefreshTimer@VsyncDispatcher@mozilla@@QAEXPAVVsyncObserver@2@@Z
 ?DisableVsync@D3DVsyncDisplay@D3DVsyncSource@@UAEXXZ
 ?finishSingleParseTask@GlobalHelperThreadState@js@@AAEPAVJSScript@@PAUJSContext@@W4ParseTaskKind@2@PAVOffThreadToken@JS@@W4StartEncoding@2@@Z
 ?GetCanceled@DocumentChannel@net@mozilla@@UAG?AW4nsresult@@PA_N@Z

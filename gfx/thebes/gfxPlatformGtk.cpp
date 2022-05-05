@@ -852,12 +852,11 @@ class GtkVsyncSource final : public VsyncSource {
   bool mVsyncEnabled;
 };
 
-class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
+class XrandrSoftwareVsyncSource final
+    : public mozilla::gfx::SoftwareVsyncSource {
  public:
-  XrandrSoftwareVsyncSource() {
+  XrandrSoftwareVsyncSource() : SoftwareVsyncSource(ComputeVsyncRate()) {
     MOZ_ASSERT(NS_IsMainThread());
-
-    UpdateVsyncRate();
 
     GdkScreen* defaultScreen = gdk_screen_get_default();
     g_signal_connect(defaultScreen, "monitors-changed",
@@ -868,7 +867,7 @@ class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
   // Request the current refresh rate via xrandr. It is hard to find the
   // "correct" one, thus choose the highest one, assuming this will usually
   // give the best user experience.
-  void UpdateVsyncRate() {
+  static mozilla::TimeDuration ComputeVsyncRate() {
     struct _XDisplay* dpy = gdk_x11_get_default_xdisplay();
 
     // Use the default software refresh rate as lower bound. Allowing lower
@@ -917,13 +916,13 @@ class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
     }
 
     const double rate = 1000.0 / highestRefreshRate;
-    mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
+    return mozilla::TimeDuration::FromMilliseconds(rate);
   }
 
   static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
     XrandrSoftwareVsyncSource* self =
         static_cast<XrandrSoftwareVsyncSource*>(aClosure);
-    self->UpdateVsyncRate();
+    self->SetVsyncRate(ComputeVsyncRate());
   }
 
   // from xrandr.c
@@ -953,12 +952,13 @@ class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
 };
 #endif
 
-already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
+already_AddRefed<gfx::VsyncSource>
+gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
 #ifdef MOZ_X11
   if (IsHeadless() || IsWaylandDisplay()) {
     // On Wayland we can not create a global hardware based vsync source, thus
     // use a software based one here. We create window specific ones later.
-    return gfxPlatform::CreateHardwareVsyncSource();
+    return GetSoftwareVsyncSource();
   }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -983,7 +983,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
     RefPtr<GtkVsyncSource> vsyncSource = new GtkVsyncSource();
     if (!vsyncSource->Setup()) {
       NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
-      return gfxPlatform::CreateHardwareVsyncSource();
+      return GetSoftwareVsyncSource();
     }
     return vsyncSource.forget();
   }
@@ -991,7 +991,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
   RefPtr<VsyncSource> softwareVsync = new XrandrSoftwareVsyncSource();
   return softwareVsync.forget();
 #else
-  return gfxPlatform::CreateHardwareVsyncSource();
+  return CreateSoftwareVsyncSource();
 #endif
 }
 

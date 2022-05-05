@@ -257,6 +257,11 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
         break;
 
       case TryNoteKind::Catch:
+        // If we're closing a generator, we have to skip catch blocks.
+        if (cx->isClosingGenerator()) {
+          break;
+        }
+
         if (cx->isExceptionPending()) {
           // Ion can compile try-catch, but bailing out to catch
           // exceptions is slow. Reset the warm-up counter so that if we
@@ -438,8 +443,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
     MOZ_ASSERT(cx->isExceptionPending());
     switch (tn->kind()) {
       case TryNoteKind::Catch: {
-        // If we're closing a legacy generator, we have to skip catch
-        // blocks.
+        // If we're closing a generator, we have to skip catch blocks.
         if (cx->isClosingGenerator()) {
           break;
         }

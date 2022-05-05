@@ -1541,6 +1541,21 @@ void nsAccessibilityService::MarkupAttributes(
   }
 }
 
+#if defined(ANDROID)
+#  include "mozilla/Monitor.h"
+#  include "mozilla/Maybe.h"
+
+static Maybe<Monitor> sAndroidMonitor;
+
+mozilla::Monitor& nsAccessibilityService::GetAndroidMonitor() {
+  if (!sAndroidMonitor.isSome()) {
+    sAndroidMonitor.emplace("nsAccessibility::sAndroidMonitor");
+  }
+
+  return *sAndroidMonitor;
+}
+#endif
+
 LocalAccessible* nsAccessibilityService::AddNativeRootAccessible(
     void* aAtkAccessible) {
 #ifdef MOZ_ACCESSIBILITY_ATK

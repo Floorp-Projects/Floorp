@@ -654,3 +654,10 @@ pkgconf:
         artifact-name: pkgconf.tar.zst
         strip-components: 1
         add-prefix: pkgconf/
+
+aflplusplus-4.0:
+    description: AFL++ 4.00 source
+    fetch:
+        type: git
+        repo: https://github.com/AFLplusplus/AFLplusplus
+        revision: ac80678592ea4a790ab2eedccfec4e3bc9f96447

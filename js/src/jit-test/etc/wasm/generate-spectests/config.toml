@@ -1,6 +1,6 @@
 # Standard 'directives.txt' prologues for jit-tests
 harness_directive = "|jit-test| skip-if: true"
-directive = "|jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemorySupported(); local-include:harness/harness.js"
+directive = "|jit-test| test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; test-also=--wasm-test-serialization; test-also=--test-wasm-await-tier2; test-also=--disable-wasm-huge-memory; skip-variant-if: --disable-wasm-huge-memory, !wasmHugeMemorySupported(); local-include:harness/harness.js"
 
 # Failing tests across all testsuites
 excluded_tests = [

@@ -394,8 +394,8 @@ bool StackMapGenerator::createStackMap(
                                   sizeof(Frame) / sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < sizeof(Frame) / sizeof(void*); i++) {
-    MOZ_ASSERT(stackMap->getBit(stackMap->numMappedWords -
-                                stackMap->frameOffsetFromTop + i) == 0);
+    MOZ_ASSERT(stackMap->getBit(stackMap->header.numMappedWords -
+                                stackMap->header.frameOffsetFromTop + i) == 0);
   }
 #endif
 
@@ -413,7 +413,7 @@ bool StackMapGenerator::createStackMap(
 #ifdef DEBUG
   {
     // Crosscheck the map pointer counting.
-    uint32_t nw = stackMap->numMappedWords;
+    uint32_t nw = stackMap->header.numMappedWords;
     uint32_t np = 0;
     for (uint32_t i = 0; i < nw; i++) {
       np += stackMap->getBit(i);

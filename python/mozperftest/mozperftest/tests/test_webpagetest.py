@@ -13,12 +13,31 @@ from mozperftest.test.webpagetest import (
     WPTBrowserSelectionError,
     WPTInvalidURLError,
     WPTLocationSelectionError,
-    WPT_METRICS,
     WPTInvalidConnectionSelection,
     ACCEPTED_STATISTICS,
     WPTInvalidStatisticsError,
     WPTDataProcessingError,
 )
+
+WPT_METRICS = [
+    "firstContentfulPaint",
+    "timeToContentfulPaint",
+    "visualComplete90",
+    "firstPaint",
+    "visualComplete99",
+    "visualComplete",
+    "SpeedIndex",
+    "bytesIn",
+    "bytesOut",
+    "TTFB",
+    "fullyLoadedCPUms",
+    "fullyLoadedCPUpct",
+    "domElements",
+    "domContentLoadedEventStart",
+    "domContentLoadedEventEnd",
+    "loadEventStart",
+    "loadEventEnd",
+]
 
 
 class WPTTests:
@@ -48,7 +67,9 @@ def init_placeholder_wpt_data(fvonly=False, invalid_results=False):
             "average": views,
             "standardDeviation": views,
             "median": views,
-        }
+            "runs": {"1": {"firstView": {"browserVersion": 101.1}}},
+        },
+        "webPagetestVersion": 21.0,
     }
     exclude_metrics = 0 if not invalid_results else 2
     for metric in WPT_METRICS[exclude_metrics:]:

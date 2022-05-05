@@ -250,6 +250,7 @@ function init_all() {
     helpButton.setAttribute("href", helpUrl);
 
     document.getElementById("addonsButton").addEventListener("click", e => {
+      e.preventDefault();
       if (e.button >= 2) {
         // Ignore right clicks.
         return;

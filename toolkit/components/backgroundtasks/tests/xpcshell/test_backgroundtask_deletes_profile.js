@@ -112,7 +112,11 @@ add_task(c, async function test_backgroundtask_cleans_up_stale_profiles() {
   // Invoke the task.
   exitCode = await do_backgroundtask("unique_profile", {
     extraArgs: [sentinel],
-    extraEnv: { TMP: tmp.path, MOZ_LOG: moz_log },
+    extraEnv: {
+      TMP: tmp.path,
+      MOZ_LOG: moz_log,
+      MOZ_BACKGROUNDTASKS_PURGE_STALE_PROFILES: "always",
+    },
   });
   Assert.equal(0, exitCode);
 

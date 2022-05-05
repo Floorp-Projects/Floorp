@@ -952,7 +952,7 @@ bool ModuleGenerator::finishCodegen() {
 bool ModuleGenerator::finishMetadataTier() {
   // The stackmaps aren't yet sorted.  Do so now, since we'll need to
   // binary-search them at GC time.
-  metadataTier_->stackMaps.sort();
+  metadataTier_->stackMaps.finishAndSort();
 
   // The try notes also need to be sorted to simplify lookup.
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -962,7 +962,7 @@ bool ModuleGenerator::finishMetadataTier() {
 #ifdef DEBUG
   // Check that the stackmap contains no duplicates, since that could lead to
   // ambiguities about stack slot pointerness.
-  uint8_t* previousNextInsnAddr = nullptr;
+  const uint8_t* previousNextInsnAddr = nullptr;
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
     const StackMaps::Maplet& maplet = metadataTier_->stackMaps.get(i);
     MOZ_ASSERT_IF(i > 0, uintptr_t(maplet.nextInsnAddr) >
@@ -1230,10 +1230,38 @@ SharedModule ModuleGenerator::finishModule(
     return nullptr;
   }
 
+  if (!isAsmJS() && compileArgs_->features.testSerialization) {
+    MOZ_RELEASE_ASSERT(mode() == CompileMode::Once &&
+                       tier() == Tier::Serialized);
+
+    Bytes serializedBytes;
+    if (!module->serialize(*linkData_, &serializedBytes)) {
+      return nullptr;
+    }
+
+    MutableModule deserializedModule =
+        Module::deserialize(serializedBytes.begin(), serializedBytes.length());
+    if (!deserializedModule) {
+      return nullptr;
+    }
+    module = deserializedModule;
+
+    // Perform storeOptimizedEncoding here instead of below so we don't have to
+    // re-serialize the module.
+    if (maybeTier2Listener) {
+      maybeTier2Listener->storeOptimizedEncoding(serializedBytes.begin(),
+                                                 serializedBytes.length());
+      maybeTier2Listener = nullptr;
+    }
+  }
+
   if (mode() == CompileMode::Tier1) {
     module->startTier2(*compileArgs_, bytecode, maybeTier2Listener);
   } else if (tier() == Tier::Serialized && maybeTier2Listener) {
-    module->serialize(*linkData_, *maybeTier2Listener);
+    Bytes bytes;
+    if (module->serialize(*linkData_, &bytes)) {
+      maybeTier2Listener->storeOptimizedEncoding(bytes.begin(), bytes.length());
+    }
   }
 
   return module;

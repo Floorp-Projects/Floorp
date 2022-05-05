@@ -7,6 +7,7 @@
 #define GFX_VSYNCSOURCE_H
 
 #include "nsTArray.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
@@ -15,8 +16,7 @@
 #include "mozilla/layers/LayersTypes.h"
 
 namespace mozilla {
-class RefreshTimerVsyncDispatcher;
-class CompositorVsyncDispatcher;
+class VsyncDispatcher;
 class VsyncObserver;
 struct VsyncEvent;
 
@@ -30,8 +30,7 @@ namespace gfx {
 class VsyncSource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncSource)
 
-  typedef mozilla::RefreshTimerVsyncDispatcher RefreshTimerVsyncDispatcher;
-  typedef mozilla::CompositorVsyncDispatcher CompositorVsyncDispatcher;
+  typedef mozilla::VsyncDispatcher VsyncDispatcher;
 
  public:
   VsyncSource();
@@ -53,18 +52,11 @@ class VsyncSource {
   //     callback is called.
   virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp,
                            const TimeStamp& aOutputTimestamp);
-  void NotifyGenericObservers(VsyncEvent aEvent);
 
-  void EnableCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DisableCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void RegisterCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
-  void DeregisterCompositorVsyncDispatcher(
-      CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
+  // Can be called on any thread
+  void AddVsyncDispatcher(VsyncDispatcher* aDispatcher);
+  void RemoveVsyncDispatcher(VsyncDispatcher* aDispatcher);
 
-  void NotifyRefreshTimerVsyncStatus(bool aEnable);
   virtual TimeDuration GetVsyncRate();
 
   // These should all only be called on the main thread
@@ -73,18 +65,6 @@ class VsyncSource {
   virtual bool IsVsyncEnabled() = 0;
   virtual void Shutdown() = 0;
 
-  // Add and remove a generic observer for vsync. Note that keeping an observer
-  // registered means vsync will keep firing, which may impact power usage. So
-  // this is intended only for "short term" vsync observers. These methods must
-  // be called on the parent process main thread, and the observer will likewise
-  // be notified on the parent process main thread.
-  void AddGenericObserver(VsyncObserver* aObserver);
-  void RemoveGenericObserver(VsyncObserver* aObserver);
-
-  void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
-
-  RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
-
   // Returns the rate of the fastest enabled VsyncSource or Nothing().
   static Maybe<TimeDuration> GetFastestVsyncRate();
 
@@ -92,21 +72,21 @@ class VsyncSource {
   virtual ~VsyncSource();
 
  private:
+  // Can be called on any thread
   void UpdateVsyncStatus();
 
-  Mutex mDispatcherLock MOZ_UNANNOTATED;
-  bool mRefreshTimerNeedsVsync;
-  nsTArray<RefPtr<CompositorVsyncDispatcher>>
-      mEnabledCompositorVsyncDispatchers;
-  nsTArray<RefPtr<CompositorVsyncDispatcher>>
-      mRegisteredCompositorVsyncDispatchers;
-  RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
-  nsTArray<RefPtr<VsyncObserver>>
-      mGenericObservers;  // can only be touched from the main thread
-  VsyncId mVsyncId;
-  VsyncId mLastVsyncIdSentToMainThread;     // hold mDispatcherLock to touch
-  VsyncId mLastMainThreadProcessedVsyncId;  // hold mDispatcherLock to touch
-  bool mHasGenericObservers;                // hold mDispatcherLock to touch
+  struct State {
+    // The set of VsyncDispatchers which are registered with this source.
+    // At the moment, the length of this array is always zero or one.
+    // The ability to register multiple dispatchers is not used yet; it is
+    // intended for when we have one dispatcher per widget.
+    nsTArray<RefPtr<VsyncDispatcher>> mDispatchers;
+
+    // The vsync ID which we used for the last vsync event.
+    VsyncId mVsyncId;
+  };
+
+  DataMutex<State> mState;
 };
 
 }  // namespace gfx

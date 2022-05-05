@@ -10,7 +10,9 @@ function testCached(code, imports, test) {
     compileStreaming(cache)
     .then(m => {
          test(new Instance(m, imports));
-         assertEq(wasmLoadedFromCache(m), false);
+         if (!wasmTestSerializationEnabled()) {
+             assertEq(wasmLoadedFromCache(m), false);
+         }
          while (!wasmHasTier2CompilationCompleted(m)) {
             sleep(1);
          }
