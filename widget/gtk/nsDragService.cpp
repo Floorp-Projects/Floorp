@@ -1931,8 +1931,8 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext) {
   DrawDrag(mSourceNode, mRegion, mScreenPosition, &dragRect, &surface, &pc);
   if (!pc) return;
 
-  LayoutDeviceIntPoint screenPoint =
-      ConvertToUnscaledDevPixels(pc, mScreenPosition);
+  const auto screenPoint =
+      LayoutDeviceIntPoint::Round(mScreenPosition * pc->CSSToDevPixelScale());
   int32_t offsetX = screenPoint.x - dragRect.x;
   int32_t offsetY = screenPoint.y - dragRect.y;
 

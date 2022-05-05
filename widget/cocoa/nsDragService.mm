@@ -611,8 +611,8 @@ void nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoin
               return;
             }
 
-            nsPoint pt = LayoutDevicePixel::ToAppUnits(
-                devPoint, pc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+            nsPoint pt =
+                LayoutDevicePixel::ToAppUnits(devPoint, pc->DeviceContext()->AppUnitsPerDevPixel());
             CSSIntPoint screenPoint = CSSIntPoint(nsPresContext::AppUnitsToIntCSSPixels(pt.x),
                                                   nsPresContext::AppUnitsToIntCSSPixels(pt.y));
 
