@@ -5871,13 +5871,11 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
  public:
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              nsDisplayList* aList,
-                             const ActiveScrolledRoot* aActiveScrolledRoot,
-                             bool aApplyClipToChildren);
+                             const ActiveScrolledRoot* aActiveScrolledRoot);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
-        mDestRects(aOther.mDestRects.Clone()),
-        mApplyClipToChildren(aOther.mApplyClipToChildren) {
+        mDestRects(aOther.mDestRects.Clone()) {
     MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
   }
 
@@ -5942,7 +5940,6 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
   NS_DISPLAY_ALLOW_CLONING()
 
   nsTArray<nsRect> mDestRects;
-  bool mApplyClipToChildren;
 };
 
 class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
@@ -5973,12 +5970,12 @@ class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
   bool CreatesStackingContextHelper() override { return true; }
 };
 
-class nsDisplayBackdropFilters : public nsDisplayEffectsBase {
+class nsDisplayBackdropFilters : public nsDisplayWrapList {
  public:
   nsDisplayBackdropFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           nsDisplayList* aList)
-      : nsDisplayEffectsBase(aBuilder, aFrame, aList),
-        mBounds(aFrame->GetPaddingRectRelativeToSelf()) {
+                           nsDisplayList* aList, const nsRect& aBackdropRect)
+      : nsDisplayWrapList(aBuilder, aFrame, aList),
+        mBackdropRect(aBackdropRect) {
     MOZ_COUNT_CTOR(nsDisplayBackdropFilters);
   }
 
@@ -6000,16 +5997,10 @@ class nsDisplayBackdropFilters : public nsDisplayEffectsBase {
     return !aBuilder->IsPaintingForWebRender();
   }
 
-  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
-    *aSnap = false;
-
-    return mBounds + ToReferenceFrame();
-  }
-
   bool CreatesStackingContextHelper() override { return true; }
 
  private:
-  nsRect mBounds;
+  nsRect mBackdropRect;
 };
 
 /**
