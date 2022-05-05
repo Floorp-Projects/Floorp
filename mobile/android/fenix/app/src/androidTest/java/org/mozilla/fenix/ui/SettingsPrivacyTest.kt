@@ -301,6 +301,7 @@ class SettingsPrivacyTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/23816")
     @SmokeTest
     @Test
     fun verifyMultipleLoginsSelectionsTest() {
