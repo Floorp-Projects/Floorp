@@ -20,7 +20,6 @@
 namespace mozilla::dom::cache {
 
 using mozilla::Unused;
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::IPCStream;
 
 // ----------------------------------------------------------------------------
@@ -32,13 +31,9 @@ class ReadStream::Inner final : public ReadStream::Controllable {
  public:
   Inner(StreamControl* aControl, const nsID& aId, nsIInputStream* aStream);
 
-  void Serialize(Maybe<CacheReadStream>* aReadStreamOut,
-                 nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
-                 ErrorResult& aRv);
+  void Serialize(Maybe<CacheReadStream>* aReadStreamOut, ErrorResult& aRv);
 
-  void Serialize(CacheReadStream* aReadStreamOut,
-                 nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
-                 ErrorResult& aRv);
+  void Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv);
 
   // ReadStream::Controllable methods
   virtual void CloseStream() override;
@@ -191,18 +186,16 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
   mControl->AddReadStream(SafeRefPtrFromThis());
 }
 
-void ReadStream::Inner::Serialize(
-    Maybe<CacheReadStream>* aReadStreamOut,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
+void ReadStream::Inner::Serialize(Maybe<CacheReadStream>* aReadStreamOut,
+                                  ErrorResult& aRv) {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   aReadStreamOut->emplace(CacheReadStream());
-  Serialize(&aReadStreamOut->ref(), aStreamCleanupList, aRv);
+  Serialize(&aReadStreamOut->ref(), aRv);
 }
 
-void ReadStream::Inner::Serialize(
-    CacheReadStream* aReadStreamOut,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
+void ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
+                                  ErrorResult& aRv) {
   MOZ_ASSERT(mOwningEventTarget->IsOnCurrentThread());
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
 
@@ -219,7 +212,7 @@ void ReadStream::Inner::Serialize(
 
   {
     MutexAutoLock lock(mMutex);
-    mControl->SerializeStream(aReadStreamOut, mStream, aStreamCleanupList);
+    mControl->SerializeStream(aReadStreamOut, mStream);
   }
 
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().isNothing() ||
@@ -554,16 +547,13 @@ already_AddRefed<ReadStream> ReadStream::Create(
       static_cast<CacheStreamControlParent*>(aControl), aId, aStream));
 }
 
-void ReadStream::Serialize(
-    Maybe<CacheReadStream>* aReadStreamOut,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
-  mInner->Serialize(aReadStreamOut, aStreamCleanupList, aRv);
+void ReadStream::Serialize(Maybe<CacheReadStream>* aReadStreamOut,
+                           ErrorResult& aRv) {
+  mInner->Serialize(aReadStreamOut, aRv);
 }
 
-void ReadStream::Serialize(
-    CacheReadStream* aReadStreamOut,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
-  mInner->Serialize(aReadStreamOut, aStreamCleanupList, aRv);
+void ReadStream::Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv) {
+  mInner->Serialize(aReadStreamOut, aRv);
 }
 
 ReadStream::ReadStream(SafeRefPtr<ReadStream::Inner> aInner)
