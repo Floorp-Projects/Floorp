@@ -78,6 +78,14 @@ NS_IMETHODIMP DecryptingInputStreamBase::GetCloneable(bool* aCloneable) {
   return NS_OK;
 }
 
+void DecryptingInputStreamBase::SerializedComplexity(uint32_t aMaxSize,
+                                                     uint32_t* aSizeUsed,
+                                                     uint32_t* aPipes,
+                                                     uint32_t* aTransferables) {
+  (*mBaseIPCSerializableInputStream)
+      ->SerializedComplexity(aMaxSize, aSizeUsed, aPipes, aTransferables);
+}
+
 void DecryptingInputStreamBase::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
