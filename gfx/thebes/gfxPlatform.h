@@ -45,6 +45,7 @@ typedef struct FT_LibraryRec_* FT_Library;
 namespace mozilla {
 struct StyleFontFamilyList;
 class LogModule;
+class VsyncDispatcher;
 namespace layers {
 class FrameStats;
 }
@@ -663,6 +664,13 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   }
 
   /**
+   * Returns the global vsync dispatcher. There is only one global vsync
+   * dispatcher and it stays around for the entire lifetime of the process.
+   * Must only be called in the parent process.
+   */
+  RefPtr<mozilla::VsyncDispatcher> GetGlobalVsyncDispatcher();
+
+  /**
    * True if layout rendering should use ASAP mode, which means
    * the refresh driver and compositor should render ASAP.
    * Used for talos testing purposes
@@ -928,6 +936,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   // Hardware vsync source. Only valid on parent process
   RefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
+
+  // The vsync dispatcher for the hardware vsync source. Only non-null in the
+  // parent process.
+  RefPtr<mozilla::VsyncDispatcher> mVsyncDispatcher;
 
   RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
 
