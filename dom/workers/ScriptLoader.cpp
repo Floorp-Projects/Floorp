@@ -81,6 +81,7 @@ using mozilla::ipc::PrincipalInfo;
 namespace mozilla {
 namespace dom {
 
+namespace workerinternals {
 namespace {
 
 nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
@@ -231,9 +232,144 @@ nsresult ChannelFromScriptURL(
   return rv;
 }
 
+void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
+                    UniquePtr<SerializedStackHolder> aOriginStack,
+                    const nsTArray<nsString>& aScriptURLs, bool aIsMainScript,
+                    WorkerScriptType aWorkerScriptType, ErrorResult& aRv) {
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  NS_ASSERTION(!aScriptURLs.IsEmpty(), "Bad arguments!");
+
+  AutoSyncLoopHolder syncLoop(aWorkerPrivate, Canceling);
+  nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
+  if (!syncLoopTarget) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  Maybe<ClientInfo> clientInfo;
+  Maybe<ServiceWorkerDescriptor> controller;
+  nsIGlobalObject* global =
+      aWorkerScriptType == WorkerScript
+          ? static_cast<nsIGlobalObject*>(aWorkerPrivate->GlobalScope())
+          : aWorkerPrivate->DebuggerGlobalScope();
+
+  clientInfo = global->GetClientInfo();
+  controller = global->GetController();
+
+  nsTArray<ScriptLoadInfo> aLoadInfos =
+      TransformIntoNewArray(aScriptURLs, [](const auto& scriptURL) {
+        ScriptLoadInfo res;
+        res.mURL = scriptURL;
+        return res;
+      });
+
+  RefPtr<loader::WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
+      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
+      std::move(aLoadInfos), clientInfo, controller, aIsMainScript,
+      aWorkerScriptType, aRv);
+
+  NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
+
+  RefPtr<StrongWorkerRef> workerRef =
+      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
+        NS_DispatchToMainThread(NewRunnableMethod(
+            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", loader,
+            &loader::WorkerScriptLoader::CancelMainThreadWithBindingAborted));
+      });
+
+  if (NS_WARN_IF(!workerRef)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (loader->DispatchLoadScripts()) {
+    syncLoop.Run();
+  }
+}
+
+class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
+  const nsAString& mScriptURL;
+  const ClientInfo mClientInfo;
+  WorkerLoadInfo& mLoadInfo;
+  nsresult mResult;
+
+ public:
+  ChannelGetterRunnable(WorkerPrivate* aParentWorker,
+                        const nsAString& aScriptURL, WorkerLoadInfo& aLoadInfo)
+      : WorkerMainThreadRunnable(aParentWorker,
+                                 "ScriptLoader :: ChannelGetter"_ns),
+        mScriptURL(aScriptURL)
+        // ClientInfo should always be present since this should not be called
+        // if parent's status is greater than Running.
+        ,
+        mClientInfo(aParentWorker->GlobalScope()->GetClientInfo().ref()),
+        mLoadInfo(aLoadInfo),
+        mResult(NS_ERROR_FAILURE) {
+    MOZ_ASSERT(aParentWorker);
+    aParentWorker->AssertIsOnWorkerThread();
+  }
+
+  virtual bool MainThreadRun() override {
+    AssertIsOnMainThread();
+
+    // Initialize the WorkerLoadInfo principal to our triggering principal
+    // before doing anything else.  Normally we do this in the WorkerPrivate
+    // Constructor, but we can't do so off the main thread when creating
+    // a nested worker.  So do it here instead.
+    mLoadInfo.mLoadingPrincipal = mWorkerPrivate->GetPrincipal();
+    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mLoadingPrincipal);
+
+    mLoadInfo.mPrincipal = mLoadInfo.mLoadingPrincipal;
+
+    // Figure out our base URI.
+    nsCOMPtr<nsIURI> baseURI = mWorkerPrivate->GetBaseURI();
+    MOZ_ASSERT(baseURI);
+
+    // May be null.
+    nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
+
+    mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
+    mLoadInfo.mCookieJarSettings = mWorkerPrivate->CookieJarSettings();
+
+    // Nested workers use default uri encoding.
+    nsCOMPtr<nsIURI> url;
+    mResult =
+        ConstructURI(mScriptURL, baseURI, parentDoc, true, getter_AddRefs(url));
+    NS_ENSURE_SUCCESS(mResult, true);
+
+    Maybe<ClientInfo> clientInfo;
+    clientInfo.emplace(mClientInfo);
+
+    nsCOMPtr<nsIChannel> channel;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        ReferrerInfo::CreateForFetch(mLoadInfo.mLoadingPrincipal, nullptr);
+    mLoadInfo.mReferrerInfo =
+        static_cast<ReferrerInfo*>(referrerInfo.get())
+            ->CloneWithNewPolicy(mWorkerPrivate->GetReferrerPolicy());
+
+    mResult = workerinternals::ChannelFromScriptURLMainThread(
+        mLoadInfo.mLoadingPrincipal, parentDoc, mLoadInfo.mLoadGroup, url,
+        clientInfo,
+        // Nested workers are always dedicated.
+        nsIContentPolicy::TYPE_INTERNAL_WORKER, mLoadInfo.mCookieJarSettings,
+        mLoadInfo.mReferrerInfo, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(mResult, true);
+
+    mResult = mLoadInfo.SetPrincipalsAndCSPFromChannel(channel);
+    NS_ENSURE_SUCCESS(mResult, true);
+
+    mLoadInfo.mChannel = std::move(channel);
+    return true;
+  }
+
+  nsresult GetResult() const { return mResult; }
+
+ private:
+  virtual ~ChannelGetterRunnable() = default;
+};
+
 }  //  anonymous namespace
 
-namespace workerinternals {
 namespace loader {
 
 class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
@@ -1032,146 +1168,6 @@ bool ScriptExecutorRunnable::AllScriptsExecutable() const {
 }
 
 } /* namespace loader */
-
-namespace {
-
-class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
-  const nsAString& mScriptURL;
-  const ClientInfo mClientInfo;
-  WorkerLoadInfo& mLoadInfo;
-  nsresult mResult;
-
- public:
-  ChannelGetterRunnable(WorkerPrivate* aParentWorker,
-                        const nsAString& aScriptURL, WorkerLoadInfo& aLoadInfo)
-      : WorkerMainThreadRunnable(aParentWorker,
-                                 "ScriptLoader :: ChannelGetter"_ns),
-        mScriptURL(aScriptURL)
-        // ClientInfo should always be present since this should not be called
-        // if parent's status is greater than Running.
-        ,
-        mClientInfo(aParentWorker->GlobalScope()->GetClientInfo().ref()),
-        mLoadInfo(aLoadInfo),
-        mResult(NS_ERROR_FAILURE) {
-    MOZ_ASSERT(aParentWorker);
-    aParentWorker->AssertIsOnWorkerThread();
-  }
-
-  virtual bool MainThreadRun() override {
-    AssertIsOnMainThread();
-
-    // Initialize the WorkerLoadInfo principal to our triggering principal
-    // before doing anything else.  Normally we do this in the WorkerPrivate
-    // Constructor, but we can't do so off the main thread when creating
-    // a nested worker.  So do it here instead.
-    mLoadInfo.mLoadingPrincipal = mWorkerPrivate->GetPrincipal();
-    MOZ_DIAGNOSTIC_ASSERT(mLoadInfo.mLoadingPrincipal);
-
-    mLoadInfo.mPrincipal = mLoadInfo.mLoadingPrincipal;
-
-    // Figure out our base URI.
-    nsCOMPtr<nsIURI> baseURI = mWorkerPrivate->GetBaseURI();
-    MOZ_ASSERT(baseURI);
-
-    // May be null.
-    nsCOMPtr<Document> parentDoc = mWorkerPrivate->GetDocument();
-
-    mLoadInfo.mLoadGroup = mWorkerPrivate->GetLoadGroup();
-    mLoadInfo.mCookieJarSettings = mWorkerPrivate->CookieJarSettings();
-
-    // Nested workers use default uri encoding.
-    nsCOMPtr<nsIURI> url;
-    mResult =
-        ConstructURI(mScriptURL, baseURI, parentDoc, true, getter_AddRefs(url));
-    NS_ENSURE_SUCCESS(mResult, true);
-
-    Maybe<ClientInfo> clientInfo;
-    clientInfo.emplace(mClientInfo);
-
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        ReferrerInfo::CreateForFetch(mLoadInfo.mLoadingPrincipal, nullptr);
-    mLoadInfo.mReferrerInfo =
-        static_cast<ReferrerInfo*>(referrerInfo.get())
-            ->CloneWithNewPolicy(mWorkerPrivate->GetReferrerPolicy());
-
-    mResult = workerinternals::ChannelFromScriptURLMainThread(
-        mLoadInfo.mLoadingPrincipal, parentDoc, mLoadInfo.mLoadGroup, url,
-        clientInfo,
-        // Nested workers are always dedicated.
-        nsIContentPolicy::TYPE_INTERNAL_WORKER, mLoadInfo.mCookieJarSettings,
-        mLoadInfo.mReferrerInfo, getter_AddRefs(channel));
-    NS_ENSURE_SUCCESS(mResult, true);
-
-    mResult = mLoadInfo.SetPrincipalsAndCSPFromChannel(channel);
-    NS_ENSURE_SUCCESS(mResult, true);
-
-    mLoadInfo.mChannel = std::move(channel);
-    return true;
-  }
-
-  nsresult GetResult() const { return mResult; }
-
- private:
-  virtual ~ChannelGetterRunnable() = default;
-};
-
-void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
-                    UniquePtr<SerializedStackHolder> aOriginStack,
-                    const nsTArray<nsString>& aScriptURLs, bool aIsMainScript,
-                    WorkerScriptType aWorkerScriptType, ErrorResult& aRv) {
-  aWorkerPrivate->AssertIsOnWorkerThread();
-  NS_ASSERTION(!aScriptURLs.IsEmpty(), "Bad arguments!");
-
-  AutoSyncLoopHolder syncLoop(aWorkerPrivate, Canceling);
-  nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
-  if (!syncLoopTarget) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  Maybe<ClientInfo> clientInfo;
-  Maybe<ServiceWorkerDescriptor> controller;
-  nsIGlobalObject* global =
-      aWorkerScriptType == WorkerScript
-          ? static_cast<nsIGlobalObject*>(aWorkerPrivate->GlobalScope())
-          : aWorkerPrivate->DebuggerGlobalScope();
-
-  clientInfo = global->GetClientInfo();
-  controller = global->GetController();
-
-  nsTArray<ScriptLoadInfo> aLoadInfos =
-      TransformIntoNewArray(aScriptURLs, [](const auto& scriptURL) {
-        ScriptLoadInfo res;
-        res.mURL = scriptURL;
-        return res;
-      });
-
-  RefPtr<loader::WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
-      aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
-      std::move(aLoadInfos), clientInfo, controller, aIsMainScript,
-      aWorkerScriptType, aRv);
-
-  NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
-
-  RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader", [loader]() {
-        NS_DispatchToMainThread(NewRunnableMethod(
-            "WorkerScriptLoader::CancelMainThreadWithBindingAborted", loader,
-            &loader::WorkerScriptLoader::CancelMainThreadWithBindingAborted));
-      });
-
-  if (NS_WARN_IF(!workerRef)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  if (loader->DispatchLoadScripts()) {
-    syncLoop.Run();
-  }
-}
-
-} /* anonymous namespace */
 
 nsresult ChannelFromScriptURLMainThread(
     nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
