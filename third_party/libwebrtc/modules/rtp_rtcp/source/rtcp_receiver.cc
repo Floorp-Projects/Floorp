@@ -747,7 +747,6 @@ void RTCPReceiver::HandleSdes(const CommonHeader& rtcp_block,
   }
 
   for (const rtcp::Sdes::Chunk& chunk : sdes.chunks()) {
-    received_cnames_[chunk.ssrc] = chunk.cname;
     if (cname_callback_)
       cname_callback_->OnCname(chunk.ssrc, chunk.cname);
   }
@@ -815,7 +814,6 @@ void RTCPReceiver::HandleBye(const CommonHeader& rtcp_block) {
     tmmbr_info->ready_for_delete = true;
 
   last_fir_.erase(bye.sender_ssrc());
-  received_cnames_.erase(bye.sender_ssrc());
   auto it = received_rrtrs_ssrc_it_.find(bye.sender_ssrc());
   if (it != received_rrtrs_ssrc_it_.end()) {
     received_rrtrs_.erase(it->second);
@@ -1203,20 +1201,6 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
       }
     }
   }
-}
-
-int32_t RTCPReceiver::CNAME(uint32_t remoteSSRC,
-                            char cName[RTCP_CNAME_SIZE]) const {
-  RTC_DCHECK(cName);
-
-  MutexLock lock(&rtcp_receiver_lock_);
-  auto received_cname_it = received_cnames_.find(remoteSSRC);
-  if (received_cname_it == received_cnames_.end())
-    return -1;
-
-  size_t length = received_cname_it->second.copy(cName, RTCP_CNAME_SIZE - 1);
-  cName[length] = 0;
-  return 0;
 }
 
 std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {

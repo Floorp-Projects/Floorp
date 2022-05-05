@@ -67,9 +67,6 @@ class RTCPReceiver final {
   void SetRemoteSSRC(uint32_t ssrc);
   uint32_t RemoteSSRC() const;
 
-  // Get received cname.
-  int32_t CNAME(uint32_t remote_ssrc, char cname[RTCP_CNAME_SIZE]) const;
-
   // Get received NTP.
   // The types for the arguments below derive from the specification:
   // - `remote_sender_packet_count`: `RTCSentRtpStreamStats.packetsSent` [1]
@@ -281,8 +278,6 @@ class RTCPReceiver final {
 
   ReportBlockMap received_report_blocks_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   std::map<uint32_t, LastFirStatus> last_fir_
-      RTC_GUARDED_BY(rtcp_receiver_lock_);
-  std::map<uint32_t, std::string> received_cnames_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
 
   // The last time we received an RTCP Report block for this module.
