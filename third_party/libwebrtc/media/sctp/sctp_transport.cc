@@ -55,8 +55,19 @@ constexpr int kSctpSuccessReturn = 1;
 namespace {
 
 // The biggest SCTP packet. Starting from a 'safe' wire MTU value of 1280,
-// take off 80 bytes for DTLS/TURN/TCP/IP overhead.
-static constexpr size_t kSctpMtu = 1200;
+// take off 85 bytes for DTLS/TURN/TCP/IP and ciphertext overhead.
+//
+// Additionally, it's possible that TURN adds an additional 4 bytes of overhead
+// after a channel has been established, so we subtract an additional 4 bytes.
+//
+// 1280 IPV6 MTU
+//  -40 IPV6 header
+//   -8 UDP
+//  -24 GCM Cipher
+//  -13 DTLS record header
+//   -4 TURN ChannelData
+// = 1191 bytes.
+static constexpr size_t kSctpMtu = 1191;
 
 // Set the initial value of the static SCTP Data Engines reference count.
 ABSL_CONST_INIT int g_usrsctp_usage_count = 0;
