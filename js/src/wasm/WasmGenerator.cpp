@@ -952,7 +952,7 @@ bool ModuleGenerator::finishCodegen() {
 bool ModuleGenerator::finishMetadataTier() {
   // The stackmaps aren't yet sorted.  Do so now, since we'll need to
   // binary-search them at GC time.
-  metadataTier_->stackMaps.sort();
+  metadataTier_->stackMaps.finishAndSort();
 
   // The try notes also need to be sorted to simplify lookup.
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -962,7 +962,7 @@ bool ModuleGenerator::finishMetadataTier() {
 #ifdef DEBUG
   // Check that the stackmap contains no duplicates, since that could lead to
   // ambiguities about stack slot pointerness.
-  uint8_t* previousNextInsnAddr = nullptr;
+  const uint8_t* previousNextInsnAddr = nullptr;
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
     const StackMaps::Maplet& maplet = metadataTier_->stackMaps.get(i);
     MOZ_ASSERT_IF(i > 0, uintptr_t(maplet.nextInsnAddr) >

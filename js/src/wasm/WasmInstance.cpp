@@ -1739,9 +1739,9 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // We have to calculate |scanStart|, the lowest address that is described by
   // |map|, by consulting |map->frameOffsetFromTop|.
 
-  const size_t numMappedBytes = map->numMappedWords * sizeof(void*);
+  const size_t numMappedBytes = map->header.numMappedWords * sizeof(void*);
   const uintptr_t scanStart = uintptr_t(frame) +
-                              (map->frameOffsetFromTop * sizeof(void*)) -
+                              (map->header.frameOffsetFromTop * sizeof(void*)) -
                               numMappedBytes;
   MOZ_ASSERT(0 == scanStart % sizeof(void*));
 
@@ -1772,12 +1772,12 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // created by a exit stub, and so the highest word of that should be a
   // constant created by (code created by) GenerateTrapExit.
   MOZ_ASSERT_IF(
-      map->numExitStubWords > 0,
-      stackWords[map->numExitStubWords - 1 - TrapExitDummyValueOffsetFromTop] ==
-          TrapExitDummyValue);
+      map->header.numExitStubWords > 0,
+      stackWords[map->header.numExitStubWords - 1 -
+                 TrapExitDummyValueOffsetFromTop] == TrapExitDummyValue);
 
   // And actually hand them off to the GC.
-  for (uint32_t i = 0; i < map->numMappedWords; i++) {
+  for (uint32_t i = 0; i < map->header.numMappedWords; i++) {
     if (map->getBit(i) == 0) {
       continue;
     }
@@ -1798,7 +1798,7 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 
   // Finally, deal with any GC-managed fields in the DebugFrame, if it is
   // present and those fields may be live.
-  if (map->hasDebugFrameWithLiveRefs) {
+  if (map->header.hasDebugFrameWithLiveRefs) {
     DebugFrame* debugFrame = DebugFrame::from(frame);
     char* debugFrameP = (char*)debugFrame;
 
