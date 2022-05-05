@@ -25,6 +25,7 @@
 #include "wasm/WasmCode.h"
 #include "wasm/WasmException.h"
 #include "wasm/WasmJS.h"
+#include "wasm/WasmSerialize.h"
 #include "wasm/WasmTable.h"
 
 namespace JS {
@@ -210,6 +211,8 @@ class Module : public JS::WasmModule {
   // Generated code analysis support:
 
   bool extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const;
+
+  WASM_DECLARE_FRIEND_SERIALIZE_ARGS(Module, const wasm::LinkData& linkData);
 };
 
 using MutableModule = RefPtr<Module>;
