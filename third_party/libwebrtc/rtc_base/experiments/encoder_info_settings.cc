@@ -32,6 +32,25 @@ std::vector<VideoEncoder::ResolutionBitrateLimits> ToResolutionBitrateLimits(
 
 }  // namespace
 
+// Default bitrate limits for simulcast with one active stream:
+// {frame_size_pixels, min_start_bitrate_bps, min_bitrate_bps, max_bitrate_bps}.
+std::vector<VideoEncoder::ResolutionBitrateLimits>
+EncoderInfoSettings::GetDefaultSinglecastBitrateLimits() {
+  return {{320 * 180, 0, 30000, 300000},
+          {480 * 270, 200000, 30000, 500000},
+          {640 * 360, 300000, 30000, 800000},
+          {960 * 540, 500000, 30000, 1500000},
+          {1280 * 720, 900000, 30000, 2500000}};
+}
+
+absl::optional<VideoEncoder::ResolutionBitrateLimits>
+EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+    int frame_size_pixels) {
+  VideoEncoder::EncoderInfo info;
+  info.resolution_bitrate_limits = GetDefaultSinglecastBitrateLimits();
+  return info.GetEncoderBitrateLimitsForResolution(frame_size_pixels);
+}
+
 EncoderInfoSettings::EncoderInfoSettings(std::string name)
     : requested_resolution_alignment_("requested_resolution_alignment"),
       apply_alignment_to_all_simulcast_layers_(

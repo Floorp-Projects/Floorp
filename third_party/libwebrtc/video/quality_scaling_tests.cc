@@ -15,6 +15,7 @@
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "rtc_base/experiments/encoder_info_settings.h"
 #include "test/call_test.h"
 #include "test/field_trial.h"
 #include "test/frame_generator_capturer.h"
@@ -24,7 +25,7 @@ namespace {
 constexpr int kWidth = 1280;
 constexpr int kHeight = 720;
 constexpr int kLowStartBps = 100000;
-constexpr int kHighStartBps = 600000;
+constexpr int kHighStartBps = 1000000;
 constexpr size_t kTimeoutMs = 10000;  // Some tests are expected to time out.
 
 void SetEncoderSpecific(VideoEncoderConfig* encoder_config,
@@ -56,6 +57,10 @@ class QualityScalingTest : public test::CallTest {
 
   const std::string kPrefix = "WebRTC-Video-QualityScaling/Enabled-";
   const std::string kEnd = ",0,0,0.9995,0.9999,1/";
+  const absl::optional<VideoEncoder::ResolutionBitrateLimits>
+      kSinglecastLimits720p =
+          EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+              1280 * 720);
 };
 
 void QualityScalingTest::RunTest(const std::string& payload_name,
@@ -210,8 +215,39 @@ TEST_F(QualityScalingTest,
   // qp_low:1, qp_high:127 -> kNormalQp
   test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
 
-  RunTest("VP8", {false, false, true}, kLowStartBps,
+  RunTest("VP8", {false, false, true},
+          kSinglecastLimits720p->min_start_bitrate_bps - 1,
           /*automatic_resize=*/true, /*expect_adaptation=*/true);
+}
+
+TEST_F(QualityScalingTest, NoAdaptDownForLowStartBitrateIfBitrateEnough_Vp8) {
+  // qp_low:1, qp_high:127 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
+
+  RunTest("VP8", {false, false, true},
+          kSinglecastLimits720p->min_start_bitrate_bps,
+          /*automatic_resize=*/true, /*expect_adaptation=*/false);
+}
+
+TEST_F(QualityScalingTest,
+       NoAdaptDownForLowStartBitrateIfDefaultLimitsDisabled_Vp8) {
+  // qp_low:1, qp_high:127 -> kNormalQp
+  test::ScopedFieldTrials field_trials(
+      kPrefix + "1,127,0,0,0,0" + kEnd +
+      "WebRTC-DefaultBitrateLimitsKillSwitch/Enabled/");
+
+  RunTest("VP8", {false, false, true},
+          kSinglecastLimits720p->min_start_bitrate_bps - 1,
+          /*automatic_resize=*/true, /*expect_adaptation=*/false);
+}
+
+TEST_F(QualityScalingTest,
+       NoAdaptDownForLowStartBitrate_OneStreamSinglecastLimitsNotUsed_Vp8) {
+  // qp_low:1, qp_high:127 -> kNormalQp
+  test::ScopedFieldTrials field_trials(kPrefix + "1,127,0,0,0,0" + kEnd);
+
+  RunTest("VP8", {true}, kSinglecastLimits720p->min_start_bitrate_bps - 1,
+          /*automatic_resize=*/true, /*expect_adaptation=*/false);
 }
 
 TEST_F(QualityScalingTest, NoAdaptDownForHighQp_LowestStreamActive_Vp8) {
