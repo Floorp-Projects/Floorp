@@ -75,7 +75,8 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
                           const VideoConfig& config);
   // Creates sink, that will allow video quality analyzer to get access to
   // the rendered frames. If corresponding video track has
-  // |output_dump_file_name| in its VideoConfig, then video also will be written
+  // |output_dump_file_name| in its VideoConfig, which was used for
+  // CreateFramePreprocessor(...), then video also will be written
   // into that file.
   std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> CreateVideoSink(
       absl::string_view peer_name);
