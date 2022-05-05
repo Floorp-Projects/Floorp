@@ -2181,6 +2181,12 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
     setProcessingScriptTag.emplace(context);
   }
 
+  // https://wicg.github.io/import-maps/#integration-script-type
+  // Switch on the script's type for scriptElement:
+  // "importmap"
+  //    Assert: Never reached.
+  MOZ_ASSERT(!aRequest->IsImportMapRequest());
+
   if (aRequest->IsModuleRequest()) {
     return aRequest->AsModuleRequest()->EvaluateModule();
   }
