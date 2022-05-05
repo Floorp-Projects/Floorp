@@ -13,6 +13,7 @@
 
 #include "CompositorWidget.h"
 #include "MozContainer.h"
+#include "VsyncSource.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -248,7 +249,7 @@ class nsWindow final : public nsBaseWidget {
 
   void SetProgress(unsigned long progressPercent);
 
-  RefPtr<mozilla::gfx::VsyncSource> GetVsyncSource() override;
+  RefPtr<mozilla::VsyncDispatcher> GetVsyncDispatcher() override;
   bool SynchronouslyRepaintOnResize() override;
 
   void OnDPIChanged(void);
@@ -914,6 +915,7 @@ class nsWindow final : public nsBaseWidget {
 #endif
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::WaylandVsyncSource> mWaylandVsyncSource;
+  RefPtr<mozilla::VsyncDispatcher> mWaylandVsyncDispatcher;
   LayoutDeviceIntPoint mNativePointerLockCenter;
   zwp_locked_pointer_v1* mLockedPointer = nullptr;
   zwp_relative_pointer_v1* mRelativePointer = nullptr;
