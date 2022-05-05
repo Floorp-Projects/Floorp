@@ -410,6 +410,18 @@ class nsBidiPresUtils {
       int32_t aPosResolveCount, nscoord* aWidth /* may be null */);
 
   /**
+   * Simplified form of ProcessText body, used when aText is a single Unicode
+   * character (one UTF-16 codepoint, or a surrogate pair).
+   */
+  static void ProcessOneChar(const char16_t* aText, size_t aLength,
+                             mozilla::intl::BidiEmbeddingLevel aBaseLevel,
+                             nsPresContext* aPresContext,
+                             BidiProcessor& aprocessor, Mode aMode,
+                             nsBidiPositionResolve* aPosResolve,
+                             int32_t aPosResolveCount, nscoord* aWidth,
+                             mozilla::intl::Bidi* aBidiEngine);
+
+  /**
    * Traverse the child frames of the block element and:
    *  Set up an array of the frames in logical order
    *  Create a string containing the text content of all the frames
