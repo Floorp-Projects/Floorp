@@ -3555,16 +3555,29 @@
     "releaseChannelCollection": "opt-out",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"]
   },
-  "HTTP_CHANNEL_ONSTART_SUCCESS_TRR2" : {
+  "HTTP_CHANNEL_PAGE_ONSTART_SUCCESS_TRR3" : {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
-    "kind": "boolean",
+    "kind": "enumerated",
     "keyed": true,
-    "description": "Successfully started HTTP channels when TRR is enabled; Keyed by TRR domain",
-    "bug_numbers": [1640867, 1646452],
+    "n_values": 16,
+    "description": "Successfully started HTTP channels for page loading when TRR is enabled; Keyed by TRR domain",
+    "bug_numbers": [1767417],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
+  },
+  "HTTP_CHANNEL_SUB_ONSTART_SUCCESS_TRR3" : {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 16,
+    "description": "Successfully started HTTP channels for resource loading when TRR is enabled; Keyed by TRR domain",
+    "bug_numbers": [1767417],
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
   },
   "HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR" : {
     "record_in_processes": ["main"],
