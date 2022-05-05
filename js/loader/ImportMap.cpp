@@ -257,9 +257,9 @@ static UniquePtr<ScopeMap> SortAndNormalizeScopes(
       return nullptr;
     }
     if (!isMap) {
+      const char16_t* scope = scopePrefix.get();
       JS_ReportErrorNumberUC(aCx, js::GetErrorMessage, nullptr,
-                             JSMSG_IMPORT_MAPS_SCOPE_VALUE_NOT_A_MAP,
-                             scopePrefix.get());
+                             JSMSG_IMPORT_MAPS_SCOPE_VALUE_NOT_A_MAP, scope);
       return nullptr;
     }
 
