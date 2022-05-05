@@ -75,8 +75,17 @@ class HomeActivityIntentTestRule(
 
 // changing the device preference for Touch and Hold delay, to avoid long-clicks instead of a single-click
 fun setLongTapTimeout(delay: Int) {
-    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-    mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
+    // Issue: https://github.com/mozilla-mobile/fenix/issues/25132
+    var attempts = 0
+    while (attempts++ < 3) {
+        try {
+            val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
+            break
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+        }
+    }
 }
 
 private fun skipOnboardingBeforeLaunch() {
