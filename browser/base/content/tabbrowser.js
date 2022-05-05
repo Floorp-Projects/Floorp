@@ -5561,7 +5561,6 @@
           .replace("#1", pluralCount);
       };
 
-      let alignToTab = true;
       let label;
       const selectedTabs = this.selectedTabs;
       const contextTabInSelection = selectedTabs.includes(tab);
@@ -5569,7 +5568,6 @@
         ? selectedTabs.length
         : 1;
       if (tab.mOverCloseButton) {
-        alignToTab = false;
         label = tab.selected
           ? stringWithShortcut(
               "tabs.closeTabs.tooltip",
@@ -5605,7 +5603,6 @@
             gTabBrowserBundle.GetStringFromName(stringID)
           ).replace("#1", affectedTabsLength);
         }
-        alignToTab = false;
       } else {
         label = this.getTabTooltip(tab);
       }
