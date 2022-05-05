@@ -376,7 +376,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
       NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
-      mLoader->mWorkerPrivate, coep, mLoader->IsMainScript());
+      mWorkerPrivate, coep, mLoader->IsMainScript());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
