@@ -160,6 +160,13 @@ features:
             URGENT:
               priority: 100
               max-display-count: 10
+          messages:
+            default-browser:
+              text: default_browser_experiment_card_text
+              action: "MAKE_DEFAULT_BROWSER"
+              trigger: [ "I_AM_NOT_DEFAULT_BROWSER" ]
+              style: "DEFAULT"
+              button-label: preferences_set_as_default_browser
 
       - channel: developer
         value:
@@ -170,15 +177,7 @@ features:
             EXPIRES_QUICKLY:
               priority: 100
               max-display-count: 1
-      - channel: nightly
-        value:
-          messages:
-            default-browser:
-              text: default_browser_experiment_card_text
-              action: "MAKE_DEFAULT_BROWSER"
-              trigger: [ "I_AM_NOT_DEFAULT_BROWSER" ]
-              style: "DEFAULT"
-              button-label: preferences_set_as_default_browser
+
   unified-search:
     description: A feature allowing user to easily search for specified results directly in the search bar.
     variables:
