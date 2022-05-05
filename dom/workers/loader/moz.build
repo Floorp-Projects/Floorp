@@ -14,11 +14,12 @@ EXPORTS.mozilla.dom += [
 
 # Private stuff.
 EXPORTS.mozilla.dom.workerinternals += [
+    "CacheLoadHandler.h",
     "ScriptResponseHeaderProcessor.h",
 ]
 
-
 UNIFIED_SOURCES += [
+    "CacheLoadHandler.cpp",
     "ScriptResponseHeaderProcessor.cpp",
 ]
 
