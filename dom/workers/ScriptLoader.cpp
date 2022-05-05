@@ -820,6 +820,12 @@ class WorkerScriptLoader final : public nsINamed {
 
   bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
 
+  void SetController(const Maybe<ServiceWorkerDescriptor>& aDescriptor) {
+    mController = aDescriptor;
+  }
+
+  Maybe<ServiceWorkerDescriptor>& GetController() { return mController; }
+
   void CancelMainThread(nsresult aCancelResult) {
     AssertIsOnMainThread();
 
@@ -1551,7 +1557,7 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
 
     nsCOMPtr<nsILoadInfo> chanLoadInfo = channel->LoadInfo();
     if (chanLoadInfo) {
-      mLoader->mController = chanLoadInfo->GetController();
+      mLoader->SetController(chanLoadInfo->GetController());
     }
 
     // If we are loading a blob URL we must inherit the controller
@@ -1562,8 +1568,8 @@ nsresult NetworkLoadHandler::DataReceivedFromNetwork(nsIStreamLoader* aLoader,
     // https://github.com/w3c/ServiceWorker/issues/1261
     //
     if (IsBlobURI(mWorkerPrivate->GetBaseURI())) {
-      MOZ_DIAGNOSTIC_ASSERT(mLoader->mController.isNothing());
-      mLoader->mController = mWorkerPrivate->GetParentController();
+      MOZ_DIAGNOSTIC_ASSERT(mLoader->GetController().isNothing());
+      mLoader->SetController(mWorkerPrivate->GetParentController());
     }
   }
 
