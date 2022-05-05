@@ -86,6 +86,7 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   void SetDtlsState(DtlsTransportState state) {
     dtls_state_ = state;
     SignalDtlsState(this, dtls_state_);
+    SendDtlsState(this, dtls_state_);
   }
 
   // Simulates the two DTLS transports connecting to each other.
