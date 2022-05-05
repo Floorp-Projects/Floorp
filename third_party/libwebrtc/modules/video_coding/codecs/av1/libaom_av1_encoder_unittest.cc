@@ -103,23 +103,6 @@ TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
   EXPECT_TRUE(encoded_frames[5].codec_specific_info.end_of_picture);
 }
 
-TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
-  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
-  VideoCodec codec_settings = DefaultCodecSettings();
-  // Configure encoder with 3 spatial layers.
-  codec_settings.SetScalabilityMode("L3T1");
-  // Odd width and height values should not make encoder crash.
-  codec_settings.width = 623;
-  codec_settings.height = 405;
-  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
-            WEBRTC_VIDEO_CODEC_OK);
-  EncodedVideoFrameProducer evfp(*encoder);
-  evfp.SetResolution(RenderResolution{623, 405});
-  std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
-      evfp.SetNumInputFrames(2).Encode();
-  ASSERT_THAT(encoded_frames, SizeIs(6));
-}
-
 TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
