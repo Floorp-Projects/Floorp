@@ -270,8 +270,7 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
   nsCOMPtr<nsIInputStreamCallback> callback = aCallback ? this : nullptr;
   {
     MutexAutoLock lock(mMutex);
-    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
-                   mAsyncWaitCallback != aCallback)) {
+    if (mAsyncWaitCallback && aCallback) {
       return NS_ERROR_FAILURE;
     }
 
@@ -331,19 +330,6 @@ nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
   if (!inst) return NS_ERROR_OUT_OF_MEMORY;
 
   return inst->QueryInterface(iid, result);
-}
-
-void nsMIMEInputStream::SerializedComplexity(uint32_t aMaxSize,
-                                             uint32_t* aSizeUsed,
-                                             uint32_t* aPipes,
-                                             uint32_t* aTransferables) {
-  if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-          do_QueryInterface(mStream)) {
-    InputStreamHelper::SerializedComplexity(mStream, aMaxSize, aSizeUsed,
-                                            aPipes, aTransferables);
-  } else {
-    *aPipes = 1;
-  }
 }
 
 void nsMIMEInputStream::Serialize(
