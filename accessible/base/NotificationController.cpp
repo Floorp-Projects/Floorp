@@ -71,7 +71,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
       cb.NoteXPCOMChild(list->ElementAt(i));
     }
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvents)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelocations)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -104,7 +103,6 @@ void NotificationController::Shutdown() {
   mTextHash.Clear();
   mContentInsertions.Clear();
   mNotifications.Clear();
-  mFocusEvent = nullptr;
   mEvents.Clear();
   mRelocations.Clear();
   mEventTree.Clear();
@@ -978,7 +976,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
   if (mContentInsertions.Count() == 0 && mNotifications.IsEmpty() &&
-      !mFocusEvent && mEvents.IsEmpty() && mTextHash.Count() == 0 &&
+      mEvents.IsEmpty() && mTextHash.Count() == 0 &&
       mHangingChildDocuments.IsEmpty() &&
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       mPresShell->RemoveRefreshObserver(this, FlushType::Display)) {
