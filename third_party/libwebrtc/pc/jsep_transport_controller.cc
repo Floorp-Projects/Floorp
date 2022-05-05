@@ -506,8 +506,12 @@ JsepTransportController::CreateDtlsSrtpTransport(
   dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport,
                                          rtcp_dtls_transport);
   dtls_srtp_transport->SetActiveResetSrtpParams(active_reset_srtp_params_);
-  dtls_srtp_transport->SignalDtlsStateChange.connect(
-      this, &JsepTransportController::UpdateAggregateStates_n);
+  // Capturing this in the callback because JsepTransportController will always
+  // outlive the DtlsSrtpTransport.
+  dtls_srtp_transport->SetOnDtlsStateChange([this]() {
+    RTC_DCHECK_RUN_ON(this->network_thread_);
+    this->UpdateAggregateStates_n();
+  });
   return dtls_srtp_transport;
 }
 
