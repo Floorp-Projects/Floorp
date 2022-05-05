@@ -107,6 +107,8 @@
     <color name="fx_mobile_icon_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Secondary Icon -->
     <color name="fx_mobile_icon_color_action_secondary">@color/photonDarkGrey90</color>
+    <!-- Action Tertiary Icon -->
+    <color name="fx_mobile_icon_color_action_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet50</color>
     <!-- Reader, ETP Shield -->
@@ -232,6 +234,12 @@
     <color name="fx_mobile_private_icon_color_accent_pink" tools:ignore="UnusedResources">@color/photonPink20</color>
     <color name="fx_mobile_private_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen20</color>
     <color name="fx_mobile_private_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow20</color>
+    <!-- Action Primary Icon -->
+    <color name="fx_mobile_private_icon_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <!-- Action Secondary Icon -->
+    <color name="fx_mobile_private_icon_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <!-- Action Tertiary Icon -->
+    <color name="fx_mobile_private_icon_color_action_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_private_icon_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet20</color>
     <!-- Reader, ETP Shield -->

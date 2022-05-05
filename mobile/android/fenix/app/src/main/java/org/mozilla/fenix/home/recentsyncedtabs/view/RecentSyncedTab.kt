@@ -20,17 +20,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +36,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.compose.ThumbnailCard
+import org.mozilla.fenix.compose.button.Button
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
@@ -134,30 +131,20 @@ fun RecentSyncedTab(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
+                text = if (tab != null) {
+                    stringResource(R.string.recent_tabs_see_all_synced_tabs_button_text)
+                } else {
+                    ""
+                },
+                textColor = FirefoxTheme.colors.textActionSecondary,
+                backgroundColor = if (tab == null) {
+                    FirefoxTheme.colors.layer3
+                } else {
+                    FirefoxTheme.colors.actionSecondary
+                },
+                tint = FirefoxTheme.colors.iconActionSecondary,
                 onClick = onSeeAllSyncedTabsButtonClick,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    backgroundColor = if (tab == null) {
-                        FirefoxTheme.colors.layer3
-                    } else {
-                        FirefoxTheme.colors.actionSecondary
-                    }
-                ),
-                elevation = ButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .height(36.dp)
-                    .fillMaxWidth()
-            ) {
-                if (tab != null) {
-                    Text(
-                        text = stringResource(R.string.recent_tabs_see_all_synced_tabs_button_text),
-                        textAlign = TextAlign.Center,
-                        color = FirefoxTheme.colors.textActionSecondary
-                    )
-                }
-            }
+            )
         }
     }
 }

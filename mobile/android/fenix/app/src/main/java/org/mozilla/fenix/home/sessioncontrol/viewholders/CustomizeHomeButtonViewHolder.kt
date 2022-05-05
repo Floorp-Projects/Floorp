@@ -7,28 +7,17 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders
 import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ButtonDefaults.outlinedButtonColors
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LifecycleOwner
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.ComposeViewHolder
+import org.mozilla.fenix.compose.button.TertiaryButton
 import org.mozilla.fenix.home.sessioncontrol.CustomizeHomeIteractor
-import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
 
 class CustomizeHomeButtonViewHolder(
     composeView: ComposeView,
@@ -40,56 +29,21 @@ class CustomizeHomeButtonViewHolder(
         val LAYOUT_ID = View.generateViewId()
     }
 
+    init {
+        val horizontalPadding =
+            composeView.resources.getDimensionPixelSize(R.dimen.home_item_horizontal_margin)
+        composeView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
     @Composable
     override fun Content() {
         Column {
             Spacer(modifier = Modifier.height(68.dp))
 
-            CustomizeHomeButton(
-                onButtonClick = { interactor.openCustomizeHomePage() }
+            TertiaryButton(
+                text = stringResource(R.string.browser_menu_customize_home_1),
+                onClick = interactor::openCustomizeHomePage,
             )
         }
-    }
-}
-
-/**
- * A "Customize homepage" button.
- *
- * @param onButtonClick Invoked when the user clicks on the button.
- */
-@Composable
-fun CustomizeHomeButton(
-    onButtonClick: () -> Unit
-) {
-    Button(
-        onClick = { onButtonClick() },
-        modifier = Modifier
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth()
-            .height(36.dp),
-        elevation = ButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-        colors = outlinedButtonColors(
-            backgroundColor = FirefoxTheme.colors.actionTertiary,
-            contentColor = FirefoxTheme.colors.textActionTertiary
-        )
-    ) {
-        Text(
-            text = stringResource(R.string.browser_menu_customize_home_1),
-            fontSize = 14.sp,
-            fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
-            letterSpacing = 0.5.sp,
-            lineHeight = 16.sp,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-@Preview
-fun CustomizeHomeButtonPreview() {
-    FirefoxTheme(theme = Theme.getTheme(isPrivate = false)) {
-        CustomizeHomeButton(
-            onButtonClick = {}
-        )
     }
 }
