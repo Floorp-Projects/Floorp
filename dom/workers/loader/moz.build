@@ -12,6 +12,17 @@ EXPORTS.mozilla.dom += [
     "ScriptLoadInfo.h",
 ]
 
+# Private stuff.
+EXPORTS.mozilla.dom.workerinternals += [
+    "ScriptResponseHeaderProcessor.h",
+]
+
+
+UNIFIED_SOURCES += [
+    "ScriptResponseHeaderProcessor.cpp",
+]
+
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
