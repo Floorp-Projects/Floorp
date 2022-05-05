@@ -31,6 +31,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
+#include "nsEscape.h"
 
 #include "plstr.h"   // PL_strcasestr(...)
 #include "prtime.h"  // for PR_Now
@@ -38,6 +39,7 @@
 #include "nsIProtocolHandler.h"
 #include "imgIRequest.h"
 #include "nsProperties.h"
+#include "nsIURL.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizeOfState.h"
@@ -459,6 +461,30 @@ already_AddRefed<image::Image> imgRequest::GetImage() const {
   MutexAutoLock lock(mMutex);
   RefPtr<image::Image> image = mImage;
   return image.forget();
+}
+
+void imgRequest::GetFileName(nsACString& aFileName) {
+  nsAutoString fileName;
+
+  nsCOMPtr<nsISupportsCString> supportscstr;
+  if (NS_SUCCEEDED(mProperties->Get("content-disposition",
+                                    NS_GET_IID(nsISupportsCString),
+                                    getter_AddRefs(supportscstr))) &&
+      supportscstr) {
+    nsAutoCString cdHeader;
+    supportscstr->GetData(cdHeader);
+    NS_GetFilenameFromDisposition(fileName, cdHeader);
+  }
+
+  if (fileName.IsEmpty()) {
+    nsCOMPtr<nsIURL> imgUrl(do_QueryInterface(mURI));
+    if (imgUrl) {
+      imgUrl->GetFileName(aFileName);
+      NS_UnescapeURL(aFileName);
+    }
+  } else {
+    aFileName = NS_ConvertUTF16toUTF8(fileName);
+  }
 }
 
 int32_t imgRequest::Priority() const {
