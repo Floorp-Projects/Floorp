@@ -2092,13 +2092,21 @@ void HyperTextAccessible::Shutdown() {
 }
 
 bool HyperTextAccessible::RemoveChild(LocalAccessible* aAccessible) {
-  InvalidateCachedHyperTextOffsets();
+  const int32_t childIndex = aAccessible->IndexInParent();
+  if (childIndex < static_cast<int64_t>(mOffsets.Length())) {
+    mOffsets.RemoveLastElements(mOffsets.Length() -
+                                aAccessible->IndexInParent());
+  }
+
   return AccessibleWrap::RemoveChild(aAccessible);
 }
 
 bool HyperTextAccessible::InsertChildAt(uint32_t aIndex,
                                         LocalAccessible* aChild) {
-  InvalidateCachedHyperTextOffsets();
+  if (aIndex < mOffsets.Length()) {
+    mOffsets.RemoveLastElements(mOffsets.Length() - aIndex);
+  }
+
   return AccessibleWrap::InsertChildAt(aIndex, aChild);
 }
 
@@ -2188,6 +2196,65 @@ nsresult HyperTextAccessible::RenderedToContentOffset(
   *aContentOffset = text.mOffsetWithinNodeText;
 
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// HyperTextAccessible public
+
+int32_t HyperTextAccessible::GetChildOffset(uint32_t aChildIndex,
+                                            bool aInvalidateAfter) const {
+  if (aChildIndex == 0) {
+    if (aInvalidateAfter) mOffsets.Clear();
+
+    return aChildIndex;
+  }
+
+  int32_t count = mOffsets.Length() - aChildIndex;
+  if (count > 0) {
+    if (aInvalidateAfter) mOffsets.RemoveElementsAt(aChildIndex, count);
+
+    return mOffsets[aChildIndex - 1];
+  }
+
+  uint32_t lastOffset =
+      mOffsets.IsEmpty() ? 0 : mOffsets[mOffsets.Length() - 1];
+
+  while (mOffsets.Length() < aChildIndex) {
+    LocalAccessible* child = mChildren[mOffsets.Length()];
+    lastOffset += nsAccUtils::TextLength(child);
+    mOffsets.AppendElement(lastOffset);
+  }
+
+  return mOffsets[aChildIndex - 1];
+}
+
+int32_t HyperTextAccessible::GetChildIndexAtOffset(uint32_t aOffset) const {
+  uint32_t lastOffset = 0;
+  const uint32_t offsetCount = mOffsets.Length();
+
+  if (offsetCount > 0) {
+    lastOffset = mOffsets[offsetCount - 1];
+    if (aOffset < lastOffset) {
+      size_t index;
+      if (BinarySearch(mOffsets, 0, offsetCount, aOffset, &index)) {
+        return (index < (offsetCount - 1)) ? index + 1 : index;
+      }
+
+      return (index == offsetCount) ? -1 : index;
+    }
+  }
+
+  uint32_t childCount = ChildCount();
+  while (mOffsets.Length() < childCount) {
+    LocalAccessible* child = LocalChildAt(mOffsets.Length());
+    lastOffset += nsAccUtils::TextLength(child);
+    mOffsets.AppendElement(lastOffset);
+    if (aOffset < lastOffset) return mOffsets.Length() - 1;
+  }
+
+  if (aOffset == lastOffset) return mOffsets.Length() - 1;
+
+  return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
