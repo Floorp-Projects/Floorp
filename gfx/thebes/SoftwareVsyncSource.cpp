@@ -11,11 +11,11 @@
 
 namespace mozilla::gfx {
 
-SoftwareVsyncSource::SoftwareVsyncSource() : mVsyncEnabled(false) {
-  // Mimic 60 fps
+SoftwareVsyncSource::SoftwareVsyncSource(const TimeDuration& aInitialVsyncRate)
+    : mVsyncEnabled(false),
+      mVsyncRate(TimeDuration{aInitialVsyncRate},
+                 "SoftwareVsyncSource::mVsyncRate") {
   MOZ_ASSERT(NS_IsMainThread());
-  const double rate = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
-  mVsyncRate = TimeDuration::FromMilliseconds(rate);
   mVsyncThread = new base::Thread("SoftwareVsyncThread");
   MOZ_RELEASE_ASSERT(mVsyncThread->Start(),
                      "GFX: Could not start software vsync thread");
@@ -45,7 +45,7 @@ void SoftwareVsyncSource::EnableVsync() {
 
   MOZ_ASSERT(IsInSoftwareVsyncThread());
   TimeStamp vsyncTime = TimeStamp::Now();
-  TimeStamp outputTime = vsyncTime + mVsyncRate;
+  TimeStamp outputTime = vsyncTime + GetVsyncRate();
   NotifyVsync(vsyncTime, outputTime);
 }
 
@@ -101,18 +101,27 @@ void SoftwareVsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
   ScheduleNextVsync(aVsyncTimestamp);
 }
 
-TimeDuration SoftwareVsyncSource::GetVsyncRate() { return mVsyncRate; }
+TimeDuration SoftwareVsyncSource::GetVsyncRate() {
+  auto rate = mVsyncRate.Lock();
+  return *rate;
+}
+
+void SoftwareVsyncSource::SetVsyncRate(const TimeDuration& aNewRate) {
+  auto rate = mVsyncRate.Lock();
+  *rate = aNewRate;
+}
 
 void SoftwareVsyncSource::ScheduleNextVsync(TimeStamp aVsyncTimestamp) {
   MOZ_ASSERT(IsInSoftwareVsyncThread());
-  TimeStamp nextVsync = aVsyncTimestamp + mVsyncRate;
+  TimeDuration vsyncRate = GetVsyncRate();
+  TimeStamp nextVsync = aVsyncTimestamp + vsyncRate;
   TimeDuration delay = nextVsync - TimeStamp::Now();
   if (delay.ToMilliseconds() < 0) {
     delay = TimeDuration::FromMilliseconds(0);
     nextVsync = TimeStamp::Now();
   }
 
-  TimeStamp outputTime = nextVsync + mVsyncRate;
+  TimeStamp outputTime = nextVsync + vsyncRate;
 
   mCurrentVsyncTask = NewCancelableRunnableMethod<TimeStamp, TimeStamp>(
       "SoftwareVsyncSource::NotifyVsync", this,
