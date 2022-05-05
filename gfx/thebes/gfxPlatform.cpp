@@ -3040,21 +3040,19 @@ void gfxPlatform::ReInitFrameRate() {
     } else {
       gPlatform->mVsyncSource = gPlatform->CreateGlobalHardwareVsyncSource();
     }
-    // Tidy up old vsync source.
-    if (oldSource) {
-      oldSource->MoveListenersToNewSource(gPlatform->mVsyncSource);
-      oldSource->Shutdown();
-    }
 
     if (gPlatform->mVsyncDispatcher) {
-      // Our global vsync dispatcher should always stay the same. It should just
-      // swap out its underlying source.
-      MOZ_RELEASE_ASSERT(gPlatform->mVsyncDispatcher ==
-                         gPlatform->mVsyncSource->GetVsyncDispatcher());
+      // Swap out the dispatcher's underlying source.
+      gPlatform->mVsyncDispatcher->SetVsyncSource(gPlatform->mVsyncSource);
     } else {
       // Initial assignment of the vsync dispatcher.
       gPlatform->mVsyncDispatcher =
-          gPlatform->mVsyncSource->GetVsyncDispatcher();
+          new VsyncDispatcher(gPlatform->mVsyncSource);
+    }
+
+    // Shut down the old vsync source.
+    if (oldSource) {
+      oldSource->Shutdown();
     }
   }
 }

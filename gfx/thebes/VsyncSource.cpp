@@ -17,60 +17,68 @@
 namespace mozilla {
 namespace gfx {
 
-VsyncSource::VsyncSource()
-    : mDispatcherLock("display dispatcher lock"),
-      mVsyncDispatcherNeedsVsync(false) {
+VsyncSource::VsyncSource() : mState("VsyncSource::State") {
   MOZ_ASSERT(NS_IsMainThread());
-  mVsyncDispatcher = new VsyncDispatcher(this);
 }
 
-VsyncSource::~VsyncSource() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mDispatcherLock);
-  mVsyncDispatcher = nullptr;
-}
+VsyncSource::~VsyncSource() { MOZ_ASSERT(NS_IsMainThread()); }
 
+// Called on the vsync thread
 void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
                               const TimeStamp& aOutputTimestamp) {
-  // Called on the vsync thread
-  MutexAutoLock lock(mDispatcherLock);
+  VsyncId vsyncId;
+  nsTArray<RefPtr<VsyncDispatcher>> dispatchers;
 
-  // mVsyncDispatcher might be null here if MoveListenersToNewSource
-  // was called concurrently with this function and won the race to acquire
-  // mDispatcherLock. In this case the new VsyncSource that is replacing this
-  // one will handle notifications from now on, so we can abort.
-  if (!mVsyncDispatcher) {
-    return;
+  {
+    auto state = mState.Lock();
+    vsyncId = state->mVsyncId.Next();
+    dispatchers = state->mDispatchers.Clone();
+    state->mVsyncId = vsyncId;
   }
 
-  mVsyncId = mVsyncId.Next();
-  const VsyncEvent event(mVsyncId, aVsyncTimestamp, aOutputTimestamp);
-  mVsyncDispatcher->NotifyVsync(event);
+  // Notify our listeners, outside of the lock.
+  const VsyncEvent event(vsyncId, aVsyncTimestamp, aOutputTimestamp);
+  for (const auto& dispatcher : dispatchers) {
+    dispatcher->NotifyVsync(event);
+  }
 }
 
+void VsyncSource::AddVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher) {
+  MOZ_ASSERT(aVsyncDispatcher);
+  {
+    auto state = mState.Lock();
+    if (!state->mDispatchers.Contains(aVsyncDispatcher)) {
+      state->mDispatchers.AppendElement(aVsyncDispatcher);
+    }
+  }
+
+  UpdateVsyncStatus();
+}
+
+void VsyncSource::RemoveVsyncDispatcher(VsyncDispatcher* aVsyncDispatcher) {
+  MOZ_ASSERT(aVsyncDispatcher);
+  {
+    auto state = mState.Lock();
+    state->mDispatchers.RemoveElement(aVsyncDispatcher);
+  }
+
+  UpdateVsyncStatus();
+}
+
+// This is the base class implementation. Subclasses override this method.
 TimeDuration VsyncSource::GetVsyncRate() {
   // If hardware queries fail / are unsupported, we have to just guess.
   return TimeDuration::FromMilliseconds(1000.0 / 60.0);
 }
 
-void VsyncSource::MoveListenersToNewSource(
-    const RefPtr<VsyncSource>& aNewSource) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mDispatcherLock);
-  MutexAutoLock newLock(aNewSource->mDispatcherLock);
-
-  aNewSource->mVsyncDispatcher = mVsyncDispatcher;
-  mVsyncDispatcher->MoveToSource(aNewSource);
-  mVsyncDispatcher = nullptr;
-}
-
-void VsyncSource::NotifyVsyncDispatcherVsyncStatus(bool aEnable) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mVsyncDispatcherNeedsVsync = aEnable;
-  UpdateVsyncStatus();
-}
-
 void VsyncSource::UpdateVsyncStatus() {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "VsyncSource::UpdateVsyncStatus",
+        [self = RefPtr{this}] { self->UpdateVsyncStatus(); }));
+    return;
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
   // WARNING: This function SHOULD NOT BE CALLED WHILE HOLDING LOCKS
   // NotifyVsync grabs a lock to dispatch vsync events
@@ -79,8 +87,8 @@ void VsyncSource::UpdateVsyncStatus() {
   // stop while the vsync thread is in NotifyVsync.
   bool enableVsync = false;
   {  // scope lock
-    MutexAutoLock lock(mDispatcherLock);
-    enableVsync = mVsyncDispatcherNeedsVsync;
+    auto state = mState.Lock();
+    enableVsync = !state->mDispatchers.IsEmpty();
   }
 
   if (enableVsync) {
@@ -94,10 +102,6 @@ void VsyncSource::UpdateVsyncStatus() {
   }
 }
 
-RefPtr<VsyncDispatcher> VsyncSource::GetVsyncDispatcher() {
-  return mVsyncDispatcher;
-}
-
 // static
 Maybe<TimeDuration> VsyncSource::GetFastestVsyncRate() {
   Maybe<TimeDuration> retVal;
@@ -105,9 +109,10 @@ Maybe<TimeDuration> VsyncSource::GetFastestVsyncRate() {
     return retVal;
   }
 
-  mozilla::gfx::VsyncSource* vsyncSource =
-      gfxPlatform::GetPlatform()->GetGlobalVsync();
-  if (vsyncSource && vsyncSource->IsVsyncEnabled()) {
+  RefPtr<VsyncDispatcher> vsyncDispatcher =
+      gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
+  RefPtr<VsyncSource> vsyncSource = vsyncDispatcher->GetCurrentVsyncSource();
+  if (vsyncSource->IsVsyncEnabled()) {
     retVal.emplace(vsyncSource->GetVsyncRate());
   }
 
