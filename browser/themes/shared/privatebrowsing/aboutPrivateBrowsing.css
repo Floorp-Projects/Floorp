@@ -71,13 +71,13 @@ p {
 }
 
 .wordmark {
+  display: inline-block;
   background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
   background-size: 172px;
-  -moz-context-properties: fill;
-  display: inline-block;
-  fill: #fff;
-  height: 96px;
   margin-inline-start: 15px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  height: 96px;
   width: 172px;
 }
 
@@ -187,8 +187,10 @@ p {
   background-position-x: right 12px;
 }
 
-.search-inner-wrapper .search-handoff-button:hover {
+.search-inner-wrapper .search-handoff-button:hover,
+.search-inner-wrapper .search-handoff-button:hover:active {
   background-color: #fff;
+  color: inherit;
 }
 
 .search-handoff-button.focused:not(.disabled) .fake-caret {
@@ -225,13 +227,19 @@ p {
 
 .fake-caret {
   animation: caret-animation 1.3s steps(5, start) infinite;
-  background: rgb(12, 12, 13);
+  background-color: rgb(12, 12, 13);
   display: none;
   inset-inline-start: 47px;
   height: 17px;
   position: absolute;
   top: 16px;
   width: 1px;
+}
+
+@media (prefers-contrast) {
+  .fake-caret {
+    background-color: ButtonText;
+  }
 }
 
 .search-banner {
@@ -277,6 +285,7 @@ p {
   background-position: left 32px top 20px;
   background-repeat: no-repeat;
   background-size: 32px;
+  border: 1px solid transparent;
   border-radius: 6px;
   letter-spacing: -0.2px;
   padding: 20px;
@@ -332,6 +341,7 @@ p {
 
 .promo-visible {
   display: flex;
+  border: 1px solid transparent;
   border-radius: 6px;
   background-color: rgba(0, 0, 0, 0.2);
 }
@@ -351,11 +361,15 @@ p {
 
 @media not (prefers-contrast) {
   .promo-dismiss {
-    opacity: 0.5;
+    opacity: 0.6;
   }
 
   .promo-dismiss:hover {
-    background-color: var(--in-content-button-background) !important;
+    background-color: color-mix(in srgb, currentColor 10%, transparent) !important;
+  }
+
+  .promo-dismiss:hover:active {
+    background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
   }
 }
 
@@ -373,22 +387,11 @@ p {
   align-items: center;
 }
 
-.promo-cta .button {
-  text-decoration: none;
-  padding: 11px 15px;
+.promo-cta .primary.button {
+  padding-block: 11px;
   margin: 8px 0;
-  appearance: button;
-  background-color: var(--in-content-primary-button-background);
-  color: var(--in-content-primary-button-text-color);
-  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--in-content-primary-button-background);
-}
-
-.promo-cta .button:hover {
-  background-color: var(--in-content-primary-button-background-hover);
-  color: var(--in-content-primary-button-text-color-hover);
 }
 
 .promo.bottom .promo-cta {
