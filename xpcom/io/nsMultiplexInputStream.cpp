@@ -124,6 +124,12 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
                                     uint32_t* aPipes, uint32_t* aTransferables,
                                     bool* aSerializeAsPipe);
 
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams,
+                         FileDescriptorArray& aFileDescriptors,
+                         bool aDelayedStart, uint32_t aMaxSize,
+                         uint32_t* aSizeUsed, M* aManager);
+
   static nsresult ReadSegCb(nsIInputStream* aIn, void* aClosure,
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
@@ -905,15 +911,9 @@ nsMultiplexInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     if (NS_SUCCEEDED(mStatus)) {
       uint64_t avail = 0;
       nsresult rv = aStream->Available(&avail);
-      if (rv == NS_BASE_STREAM_CLOSED || (NS_SUCCEEDED(rv) && avail == 0)) {
-        // This stream is closed or empty, let's move to the following one,
-        // otherwise we need to re-wait on the current stream, as it currently
-        // has no data available.
-        // Unlike streams not implementing nsIAsyncInputStream, async streams
-        // cannot use `Available() == 0` to indicate EOF.
-        if (NS_FAILED(rv)) {
-          ++mCurrentStream;
-        }
+      if (rv == NS_BASE_STREAM_CLOSED || avail == 0) {
+        // This stream is closed or empty, let's move to the following one.
+        ++mCurrentStream;
         MutexAutoUnlock unlock(mLock);
         return AsyncWaitInternal();
       }
@@ -1033,8 +1033,26 @@ void nsMultiplexInputStream::SerializedComplexityInternal(
   }
 }
 
-void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
-                                       uint32_t aMaxSize, uint32_t* aSizeUsed) {
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+void nsMultiplexInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+template <typename M>
+void nsMultiplexInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MutexAutoLock lock(mLock);
 
   // Check if we should serialize this stream as a pipe to reduce complexity.
@@ -1045,7 +1063,8 @@ void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
   if (serializeAsPipe) {
     *aSizeUsed = 0;
     MutexAutoUnlock unlock(mLock);
-    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
+                                                  aManager);
     return;
   }
 
@@ -1061,9 +1080,10 @@ void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
     streams.SetCapacity(streamCount);
     for (uint32_t index = 0; index < streamCount; index++) {
       uint32_t sizeUsed = 0;
-      InputStreamHelper::SerializeInputStream(mStreams[index].mOriginalStream,
-                                              *streams.AppendElement(),
-                                              maxSize.value(), &sizeUsed);
+      InputStreamHelper::SerializeInputStream(
+          mStreams[index].mOriginalStream, *streams.AppendElement(),
+          aFileDescriptors, aDelayedStart, maxSize.value(), &sizeUsed,
+          aManager);
 
       MOZ_ASSERT(maxSize.value() >= sizeUsed);
 
@@ -1085,7 +1105,9 @@ void nsMultiplexInputStream::Serialize(InputStreamParams& aParams,
   *aSizeUsed = totalSizeUsed.value();
 }
 
-bool nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams) {
+bool nsMultiplexInputStream::Deserialize(
+    const InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   if (aParams.type() != InputStreamParams::TMultiplexInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -1098,8 +1120,8 @@ bool nsMultiplexInputStream::Deserialize(const InputStreamParams& aParams) {
 
   uint32_t streamCount = streams.Length();
   for (uint32_t index = 0; index < streamCount; index++) {
-    nsCOMPtr<nsIInputStream> stream =
-        InputStreamHelper::DeserializeInputStream(streams[index]);
+    nsCOMPtr<nsIInputStream> stream = InputStreamHelper::DeserializeInputStream(
+        streams[index], aFileDescriptors);
     if (!stream) {
       NS_WARNING("Deserialize failed!");
       return false;

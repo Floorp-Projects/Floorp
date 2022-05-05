@@ -25,6 +25,7 @@ using namespace mozilla::ipc;
 
 namespace mozilla::dom::ipc {
 
+using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::IPCStream;
 using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PBackgroundParent;
@@ -61,6 +62,7 @@ StructuredCloneData& StructuredCloneData::operator=(
   mBlobImplArray = std::move(aOther.mBlobImplArray);
   mExternalData = std::move(aOther.mExternalData);
   mSharedData = std::move(aOther.mSharedData);
+  mIPCStreams = std::move(aOther.mIPCStreams);
   mInitialized = aOther.mInitialized;
 
   return *this;
@@ -179,16 +181,24 @@ bool BuildClonedMessageData(M* aManager, StructuredCloneData& aData,
 
   const nsTArray<nsCOMPtr<nsIInputStream>>& inputStreams = aData.InputStreams();
   if (!inputStreams.IsEmpty()) {
+    if (NS_WARN_IF(
+            !aData.IPCStreams().SetCapacity(inputStreams.Length(), fallible))) {
+      return false;
+    }
+
     nsTArray<IPCStream>& streams = aClonedData.inputStreams();
     uint32_t length = inputStreams.Length();
     streams.SetCapacity(length);
     for (uint32_t i = 0; i < length; ++i) {
-      IPCStream value;
-      if (!mozilla::ipc::SerializeIPCStream(do_AddRef(inputStreams[i]), value,
-                                            /* aAllowLazy */ false)) {
+      AutoIPCStream* stream = aData.IPCStreams().AppendElement(fallible);
+      if (NS_WARN_IF(!stream)) {
         return false;
       }
-      streams.AppendElement(value);
+
+      if (!stream->Serialize(inputStreams[i], aManager)) {
+        return false;
+      }
+      streams.AppendElement(stream->TakeValue());
     }
   }
 

@@ -23,6 +23,7 @@
 
 namespace mozilla {
 namespace ipc {
+class AutoIPCStream;
 class PBackgroundChild;
 class PBackgroundParent;
 class PrincipalInfo;
@@ -51,9 +52,12 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   static SafeRefPtr<InternalResponse> FromIPC(
       const ParentToParentInternalResponse& aIPCResponse);
 
+  // Note: the AutoIPCStreams must outlive the ChildToParentInternalResponse.
   void ToChildToParentInternalResponse(
       ChildToParentInternalResponse* aIPCResponse,
-      mozilla::ipc::PBackgroundChild* aManager);
+      mozilla::ipc::PBackgroundChild* aManager,
+      UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+      UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
 
   ParentToParentInternalResponse ToParentToParentInternalResponse();
 

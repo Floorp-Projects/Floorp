@@ -5,118 +5,257 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteLazyInputStreamParent.h"
-#include "RemoteLazyInputStreamStorage.h"
-#include "mozilla/InputStreamLengthHelper.h"
-#include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/ipc/InputStreamParams.h"
-#include "mozilla/ipc/ProtocolUtils.h"
-#include "nsStreamUtils.h"
-#include "nsServiceManagerUtils.h"
-#include "nsNetCID.h"
+#include "mozilla/InputStreamLengthHelper.h"
+#include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
 
-extern mozilla::LazyLogModule gRemoteLazyStreamLog;
+template <typename M>
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::CreateCommon(nsIInputStream* aInputStream,
+                                          uint64_t aSize, uint64_t aChildID,
+                                          nsresult* aRv, M* aManager) {
+  MOZ_ASSERT(aInputStream);
+  MOZ_ASSERT(aRv);
 
-RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(const nsID& aID)
-    : mID(aID) {
-  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
-  if (storage) {
-    storage->ActorCreated(mID);
+  nsID id;
+  *aRv = nsID::GenerateUUIDInPlace(id);
+  if (NS_WARN_IF(NS_FAILED(*aRv))) {
+    return nullptr;
   }
+
+  auto storageOrErr = RemoteLazyInputStreamStorage::Get();
+
+  if (NS_WARN_IF(storageOrErr.isErr())) {
+    *aRv = storageOrErr.unwrapErr();
+    return nullptr;
+  }
+
+  auto storage = storageOrErr.unwrap();
+  storage->AddStream(aInputStream, id, aSize, aChildID);
+
+  RefPtr<RemoteLazyInputStreamParent> parent =
+      new RemoteLazyInputStreamParent(id, aSize, aManager);
+  return parent.forget();
 }
+
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
+                                    PBackgroundParent* aManager) {
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      new RemoteLazyInputStreamParent(aID, aSize, aManager);
+
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+
+  if (storage) {
+    actor->mCallback = storage->TakeCallback(aID);
+    return actor.forget();
+  }
+
+  return nullptr;
+}
+
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
+                                    uint64_t aSize, uint64_t aChildID,
+                                    nsresult* aRv,
+                                    mozilla::ipc::PBackgroundParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
+
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(const nsID& aID, uint64_t aSize,
+                                    net::SocketProcessParent* aManager) {
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      new RemoteLazyInputStreamParent(aID, aSize, aManager);
+
+  auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+
+  if (storage) {
+    actor->mCallback = storage->TakeCallback(aID);
+    return actor.forget();
+  }
+
+  return nullptr;
+}
+
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(
+    nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
+    nsresult* aRv, mozilla::net::SocketProcessParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
+
+template already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::CreateCommon<mozilla::net::SocketProcessParent>(
+    nsIInputStream*, uint64_t, uint64_t, nsresult*,
+    mozilla::net::SocketProcessParent*);
+
+/* static */
+already_AddRefed<RemoteLazyInputStreamParent>
+RemoteLazyInputStreamParent::Create(nsIInputStream* aInputStream,
+                                    uint64_t aSize, uint64_t aChildID,
+                                    nsresult* aRv,
+                                    mozilla::dom::ContentParent* aManager) {
+  return CreateCommon(aInputStream, aSize, aChildID, aRv, aManager);
+}
+
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
+    const nsID& aID, uint64_t aSize, dom::ContentParent* aManager)
+    : mID(aID),
+      mSize(aSize),
+      mContentManager(aManager),
+      mPBackgroundManager(nullptr),
+      mSocketProcessManager(nullptr),
+      mMigrating(false) {}
+
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
+    const nsID& aID, uint64_t aSize, PBackgroundParent* aManager)
+    : mID(aID),
+      mSize(aSize),
+      mContentManager(nullptr),
+      mPBackgroundManager(aManager),
+      mSocketProcessManager(nullptr),
+      mMigrating(false) {}
+
+RemoteLazyInputStreamParent::RemoteLazyInputStreamParent(
+    const nsID& aID, uint64_t aSize, net::SocketProcessParent* aManager)
+    : mID(aID),
+      mSize(aSize),
+      mContentManager(nullptr),
+      mPBackgroundManager(nullptr),
+      mSocketProcessManager(aManager),
+      mMigrating(false) {}
 
 void RemoteLazyInputStreamParent::ActorDestroy(
     IProtocol::ActorDestroyReason aReason) {
+  MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
+
+  mContentManager = nullptr;
+  mPBackgroundManager = nullptr;
+  mSocketProcessManager = nullptr;
+
+  RefPtr<RemoteLazyInputStreamParentCallback> callback;
+  mCallback.swap(callback);
+
   auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
+
+  if (mMigrating) {
+    if (callback && storage) {
+      // We need to assign this callback to the next parent.
+      storage->StoreCallback(mID, callback);
+    }
+    return;
+  }
+
   if (storage) {
-    storage->ActorDestroyed(mID);
+    storage->ForgetStream(mID);
+  }
+
+  if (callback) {
+    callback->ActorDestroyed(mID);
   }
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvClone(
-    mozilla::ipc::Endpoint<PRemoteLazyInputStreamParent>&& aCloneEndpoint) {
-  if (!aCloneEndpoint.IsValid()) {
-    return IPC_FAIL(this, "Unexpected invalid endpoint in RecvClone");
-  }
+void RemoteLazyInputStreamParent::SetCallback(
+    RemoteLazyInputStreamParentCallback* aCallback) {
+  MOZ_ASSERT(aCallback);
+  MOZ_ASSERT(!mCallback);
 
-  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Debug,
-          ("Parent::RecvClone %s", nsIDToCString(mID).get()));
-
-  auto* newActor = new RemoteLazyInputStreamParent(mID);
-  aCloneEndpoint.Bind(newActor);
-
-  return IPC_OK();
+  mCallback = aCallback;
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvStreamNeeded(
-    uint64_t aStart, uint64_t aLength, StreamNeededResolver&& aResolver) {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvStreamNeeded() {
+  MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
+
   nsCOMPtr<nsIInputStream> stream;
   auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
   if (storage) {
-    storage->GetStream(mID, aStart, aLength, getter_AddRefs(stream));
+    storage->GetStream(mID, 0, mSize, getter_AddRefs(stream));
   }
 
   if (!stream) {
-    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Warning,
-            ("Parent::RecvStreamNeeded not available! %s",
-             nsIDToCString(mID).get()));
-    aResolver(Nothing());
+    if (!SendStreamReady(Nothing())) {
+      return IPC_FAIL(this, "SendStreamReady failed");
+    }
+
     return IPC_OK();
   }
 
-  Maybe<IPCStream> ipcStream;
-  if (NS_WARN_IF(!SerializeIPCStream(stream.forget(), ipcStream,
-                                     /* aAllowLazy */ false))) {
-    return IPC_FAIL(this, "IPCStream serialization failed!");
+  mozilla::ipc::AutoIPCStream ipcStream;
+  bool ok = false;
+
+  if (mContentManager) {
+    MOZ_ASSERT(NS_IsMainThread());
+    ok = ipcStream.Serialize(stream, mContentManager);
+  } else if (mPBackgroundManager) {
+    ok = ipcStream.Serialize(stream, mPBackgroundManager);
+  } else {
+    MOZ_ASSERT(mSocketProcessManager);
+    ok = ipcStream.Serialize(stream, mSocketProcessManager);
   }
 
-  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
-          ("Parent::RecvStreamNeeded resolve %s", nsIDToCString(mID).get()));
-  aResolver(ipcStream);
+  if (NS_WARN_IF(!ok)) {
+    return IPC_FAIL(this, "SendStreamReady failed");
+  }
+
+  if (!SendStreamReady(Some(ipcStream.TakeValue()))) {
+    return IPC_FAIL(this, "SendStreamReady failed");
+  }
+
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvLengthNeeded(
-    LengthNeededResolver&& aResolver) {
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvLengthNeeded() {
+  MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
+
   nsCOMPtr<nsIInputStream> stream;
   auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
   if (storage) {
-    storage->GetStream(mID, 0, UINT64_MAX, getter_AddRefs(stream));
+    storage->GetStream(mID, 0, mSize, getter_AddRefs(stream));
   }
 
   if (!stream) {
-    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Warning,
-            ("Parent::RecvLengthNeeded not available! %s",
-             nsIDToCString(mID).get()));
-    aResolver(-1);
+    if (!SendLengthReady(-1)) {
+      return IPC_FAIL(this, "SendLengthReady failed");
+    }
+
     return IPC_OK();
   }
 
   int64_t length = -1;
   if (InputStreamLengthHelper::GetSyncLength(stream, &length)) {
-    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
-            ("Parent::RecvLengthNeeded sync resolve %" PRId64 "! %s", length,
-             nsIDToCString(mID).get()));
-    aResolver(length);
+    Unused << SendLengthReady(length);
     return IPC_OK();
   }
 
-  InputStreamLengthHelper::GetAsyncLength(
-      stream, [aResolver, id = mID](int64_t aLength) {
-        MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
-                ("Parent::RecvLengthNeeded async resolve %" PRId64 "! %s",
-                 aLength, nsIDToCString(id).get()));
-        aResolver(aLength);
-      });
+  RefPtr<RemoteLazyInputStreamParent> self = this;
+  InputStreamLengthHelper::GetAsyncLength(stream, [self](int64_t aLength) {
+    if (self->mContentManager || self->mPBackgroundManager ||
+        self->mSocketProcessManager) {
+      Unused << self->SendLengthReady(aLength);
+    }
+  });
+
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvGoodbye() {
-  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
-          ("Parent::RecvGoodbye! %s", nsIDToCString(mID).get()));
-  Close();
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvClose() {
+  MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
+
+  Unused << Send__delete__(this);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RemoteLazyInputStreamParent::Recv__delete__() {
+  MOZ_ASSERT(mContentManager || mPBackgroundManager || mSocketProcessManager);
+  mMigrating = true;
   return IPC_OK();
 }
 
