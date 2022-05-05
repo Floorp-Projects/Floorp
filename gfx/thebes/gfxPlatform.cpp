@@ -36,6 +36,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Base64.h"
+#include "mozilla/VsyncDispatcher.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Components.h"
@@ -1242,6 +1243,7 @@ void gfxPlatform::Shutdown() {
   }
 
   gPlatform->mVsyncSource = nullptr;
+  gPlatform->mVsyncDispatcher = nullptr;
 
   // Shut down the default GL context provider.
   GLContextProvider::Shutdown();
@@ -2978,6 +2980,14 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
   return result;
 }
 
+RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
+  MOZ_ASSERT(mVsyncDispatcher != nullptr,
+             "mVsyncDispatcher should have been initialized by ReInitFrameRate "
+             "during gfxPlatform init");
+  MOZ_ASSERT(XRE_IsParentProcess());
+  return mVsyncDispatcher;
+}
+
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
@@ -3035,6 +3045,17 @@ void gfxPlatform::ReInitFrameRate() {
     if (oldSource) {
       oldSource->MoveListenersToNewSource(gPlatform->mVsyncSource);
       oldSource->Shutdown();
+    }
+
+    if (gPlatform->mVsyncDispatcher) {
+      // Our global vsync dispatcher should always stay the same. It should just
+      // swap out its underlying source.
+      MOZ_RELEASE_ASSERT(gPlatform->mVsyncDispatcher ==
+                         gPlatform->mVsyncSource->GetVsyncDispatcher());
+    } else {
+      // Initial assignment of the vsync dispatcher.
+      gPlatform->mVsyncDispatcher =
+          gPlatform->mVsyncSource->GetVsyncDispatcher();
     }
   }
 }
