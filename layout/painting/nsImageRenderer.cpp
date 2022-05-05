@@ -83,6 +83,10 @@ bool nsImageRenderer::PrepareImage() {
     }
   }
 
+  const bool canDrawPartial =
+      (mFlags & nsImageRenderer::FLAG_DRAW_PARTIAL_FRAMES) && isImageRequest &&
+      !mImage->IsRect();
+
   if (!mImage->IsComplete()) {
     MOZ_DIAGNOSTIC_ASSERT(isImageRequest);
 
@@ -105,13 +109,16 @@ bool nsImageRenderer::PrepareImage() {
         return false;
       }
 
-      // Special case: If not errored, and we requested a sync decode, and the
-      // image has loaded, push on through because the Draw() will do a sync
-      // decode then.
+      // If not errored, and we requested a sync decode, and the image has
+      // loaded, push on through because the Draw() will do a sync decode then.
       const bool syncDecodeWillComplete =
           (mFlags & FLAG_SYNC_DECODE_IMAGES) &&
           (imageStatus & imgIRequest::STATUS_LOAD_COMPLETE);
-      if (!syncDecodeWillComplete) {
+
+      // If we can draw partial then proceed if we at least have the size
+      // available.
+      if (!(syncDecodeWillComplete ||
+            (canDrawPartial && mImage->IsSizeAvailable()))) {
         mPrepareResult = ImgDrawResult::NOT_READY;
         return false;
       }
@@ -120,10 +127,13 @@ bool nsImageRenderer::PrepareImage() {
 
   if (isImageRequest) {
     nsCOMPtr<imgIContainer> srcImage;
-    DebugOnly<nsresult> rv = request->GetImage(getter_AddRefs(srcImage));
-    MOZ_ASSERT(NS_SUCCEEDED(rv) && srcImage,
+    nsresult rv = request->GetImage(getter_AddRefs(srcImage));
+    MOZ_ASSERT(canDrawPartial || (NS_SUCCEEDED(rv) && srcImage),
                "If GetImage() is failing, mImage->IsComplete() "
                "should have returned false");
+    if (!NS_SUCCEEDED(rv)) {
+      srcImage = nullptr;
+    }
 
     if (srcImage) {
       srcImage = nsLayoutUtils::OrientImage(
