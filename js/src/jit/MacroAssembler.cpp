@@ -3750,12 +3750,10 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
   append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 [[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
   wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
   return append(tryNote, tryNoteIndex);
 }
-#endif
 
 std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
     uint32_t amount, wasm::BytecodeOffset trapOffset) {

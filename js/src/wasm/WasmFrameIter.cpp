@@ -1596,12 +1596,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:
       return "call to native struct.new (in wasm)";
-#if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
-#endif
     case SymbolicAddress::ArrayNew:
       return "call to native array.new (in wasm)";
     case SymbolicAddress::RefTest:

@@ -124,10 +124,8 @@ enum class SymbolicAddress {
   PostBarrierPrecise,
   PostBarrierFiltering,
   StructNew,
-#if defined(ENABLE_WASM_EXCEPTIONS)
   ExceptionNew,
   ThrowException,
-#endif
   ArrayNew,
   InlineTypedObjectClass,
 #define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
@@ -246,10 +244,8 @@ extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierPrecise;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
-#ifdef ENABLE_WASM_EXCEPTIONS
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
-#endif
 extern const SymbolicAddressSignature SASigArrayNew;
 extern const SymbolicAddressSignature SASigRefTest;
 extern const SymbolicAddressSignature SASigRttSub;

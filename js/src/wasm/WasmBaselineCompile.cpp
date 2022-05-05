@@ -1104,7 +1104,6 @@ void BaseCompiler::popBlockResults(ResultType type, StackHeight stackBase,
   }
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 // This function is similar to popBlockResults, but additionally handles the
 // implicit exception pointer that is pushed to the value stack on entry to
 // a catch handler by dropping it appropriately.
@@ -1127,7 +1126,6 @@ void BaseCompiler::popCatchResults(ResultType type, StackHeight stackBase) {
   }
   fr.popStackBeforeBranch(stackBase, type);
 }
-#endif
 
 Stk BaseCompiler::captureStackResult(const ABIResult& result,
                                      StackHeight resultsBase,
@@ -1646,7 +1644,7 @@ bool BaseCompiler::pushCallResults(const FunctionCall& call, ResultType type,
 //////////////////////////////////////////////////////////////////////////////
 //
 // Exception handling
-#ifdef ENABLE_WASM_EXCEPTIONS
+
 // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
 // at the end of a series of catch blocks (if none matched the exception).
 bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
@@ -1679,7 +1677,6 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
 }
-#endif
 
 ////////////////////////////////////////////////////////////
 //
@@ -3585,11 +3582,9 @@ bool BaseCompiler::emitEnd() {
       // This is emitted here after `doReturn` to avoid being executed in the
       // normal return path of a function, and instead only when a `delegate`
       // jumps to it.
-#ifdef ENABLE_WASM_EXCEPTIONS
       if (!emitBodyDelegateThrowPad()) {
         return false;
       }
-#endif
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
       return iter_.endFunction(iter_.end());
@@ -3616,7 +3611,6 @@ bool BaseCompiler::emitEnd() {
       }
       iter_.popEnd();
       break;
-#ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
@@ -3625,7 +3619,6 @@ bool BaseCompiler::emitEnd() {
       }
       iter_.popEnd();
       break;
-#endif
   }
 
   return true;
@@ -3808,7 +3801,6 @@ bool BaseCompiler::emitBrTable() {
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 bool BaseCompiler::emitTry() {
   ResultType params;
   if (!iter_.readTry(&params)) {
@@ -3967,14 +3959,14 @@ bool BaseCompiler::emitCatch() {
         break;
       }
       case ValType::V128: {
-#  ifdef ENABLE_WASM_SIMD
+#ifdef ENABLE_WASM_SIMD
         RegV128 reg = needV128();
         masm.loadUnalignedSimd128(Address(data, offset), reg);
         pushV128(reg);
         break;
-#  else
+#else
         MOZ_CRASH("No SIMD support");
-#  endif
+#endif
       }
       case ValType::Rtt:
       case ValType::Ref: {
@@ -4263,17 +4255,17 @@ bool BaseCompiler::emitThrow() {
   const TagOffsetVector& offsets = tagDesc.type->argOffsets_;
 
   // Load the tag object
-#  ifdef RABALDR_PIN_INSTANCE
+#ifdef RABALDR_PIN_INSTANCE
   RegPtr tls(InstanceReg);
-#  else
+#else
   RegPtr tls = needPtr();
   fr.loadTlsPtr(tls);
-#  endif
+#endif
   RegRef tag = needRef();
   loadTag(tls, tagIndex, tag);
-#  ifndef RABALDR_PIN_INSTANCE
+#ifndef RABALDR_PIN_INSTANCE
   freePtr(tls);
-#  endif
+#endif
 
   // Create the new exception object that we will throw.
   pushRef(tag);
@@ -4317,14 +4309,14 @@ bool BaseCompiler::emitThrow() {
         break;
       }
       case ValType::V128: {
-#  ifdef ENABLE_WASM_SIMD
+#ifdef ENABLE_WASM_SIMD
         RegV128 reg = popV128();
         masm.storeUnalignedSimd128(reg, Address(data, offset));
         freeV128(reg);
         break;
-#  else
+#else
         MOZ_CRASH("No SIMD support");
-#  endif
+#endif
       }
       case ValType::Rtt:
       case ValType::Ref: {
@@ -4371,7 +4363,6 @@ bool BaseCompiler::emitRethrow() {
 
   return throwFrom(exn, lineOrBytecode);
 }
-#endif
 
 bool BaseCompiler::emitDrop() {
   if (!iter_.readDrop()) {
@@ -8461,7 +8452,6 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitIf());
       case uint16_t(Op::Else):
         CHECK_NEXT(emitElse());
-#ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!moduleEnv_.exceptionsEnabled()) {
           return iter_.unrecognizedOpcode(&op);
@@ -8494,7 +8484,6 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitRethrow());
-#endif
       case uint16_t(Op::Br):
         CHECK_NEXT(emitBr());
       case uint16_t(Op::BrIf):

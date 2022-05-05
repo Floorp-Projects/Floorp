@@ -82,9 +82,7 @@ struct CompiledCode {
   jit::CodeLabelVector codeLabels;
   StackMaps stackMaps;
   CraneliftReusableData craneliftReusableData;
-#ifdef ENABLE_WASM_EXCEPTIONS
   WasmTryNoteVector tryNotes;
-#endif
 
   [[nodiscard]] bool swap(jit::MacroAssembler& masm);
   [[nodiscard]] bool swapCranelift(jit::MacroAssembler& masm,
@@ -99,9 +97,7 @@ struct CompiledCode {
     symbolicAccesses.clear();
     codeLabels.clear();
     stackMaps.clear();
-#ifdef ENABLE_WASM_EXCEPTIONS
     tryNotes.clear();
-#endif
     // The cranelift reusable data resets itself lazily.
     MOZ_ASSERT(empty());
   }
@@ -109,12 +105,8 @@ struct CompiledCode {
   bool empty() {
     return bytes.empty() && codeRanges.empty() && callSites.empty() &&
            callSiteTargets.empty() && trapSites.empty() &&
-           symbolicAccesses.empty() && codeLabels.empty() &&
-#ifdef ENABLE_WASM_EXCEPTIONS
-           tryNotes.empty() && stackMaps.empty();
-#else
+           symbolicAccesses.empty() && codeLabels.empty() && tryNotes.empty() &&
            stackMaps.empty();
-#endif
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

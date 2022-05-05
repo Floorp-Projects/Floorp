@@ -7945,7 +7945,6 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   const MWasmCallBase* callBase = lir->callBase();
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   // If this call is in Wasm try code block, initialise a WasmTryNote for this
   // call.
   bool inTry = callBase->inTry();
@@ -7955,7 +7954,6 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     wasm::WasmTryNote& tryNote = tryNotes[tryNoteIndex];
     tryNote.begin = masm.currentOffset();
   }
-#endif
 
   MOZ_ASSERT((sizeof(wasm::Frame) + masm.framePushed()) % WasmStackAlignment ==
              0);
@@ -8073,7 +8071,6 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     MOZ_ASSERT(!switchRealm);
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   if (inTry) {
     // Set the end of the try note range
     size_t tryNoteIndex = callBase->tryNoteIndex();
@@ -8093,7 +8090,6 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
     jumpToBlock(lir->mirCatchable()->getSuccessor(
         MWasmCallCatchable::FallthroughBranchIndex));
   }
-#endif
 }
 
 void CodeGenerator::visitWasmCallLandingPrePad(LWasmCallLandingPrePad* lir) {
