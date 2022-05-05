@@ -3229,7 +3229,7 @@ Toolbox.prototype = {
   },
 
   /**
-   * See: https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
+   * See: https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#manually-testing-ui-with-pseudolocalization
    *
    * @param {"bidi" | "accented" | "none"} pseudoLocale
    */
