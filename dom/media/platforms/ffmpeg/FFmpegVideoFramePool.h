@@ -102,7 +102,7 @@ class VideoFrameSurface<LIBAV_VER> {
 
   const RefPtr<DMABufSurface> mSurface;
   const FFmpegLibWrapper* mLib;
-  AVBufferRef* mAVHWDeviceContext;
+  AVBufferRef* mAVHWFrameContext;
   AVBufferRef* mHWAVBuffer;
 };
 
