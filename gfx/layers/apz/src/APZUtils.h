@@ -76,8 +76,7 @@ inline bool ScrollSourceAllowsOverscroll(ScrollSource aSource) {
 // isn't too large.
 const float COORDINATE_EPSILON = 0.02f;
 
-template <typename Units>
-static bool IsZero(const gfx::PointTyped<Units>& aPoint) {
+inline bool IsZero(const CSSPoint& aPoint) {
   return FuzzyEqualsAdditive(aPoint.x, 0.0f, COORDINATE_EPSILON) &&
          FuzzyEqualsAdditive(aPoint.y, 0.0f, COORDINATE_EPSILON);
 }
