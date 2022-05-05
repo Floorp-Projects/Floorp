@@ -272,16 +272,6 @@ class DateTimeFormat final {
                                  Nothing{}, aTimeZoneOverride);
   }
 
-  /**
-   * Create a DateTimeFormat from a UTF-8 skeleton.
-   *
-   * See the TryCreateFromSkeleton for const char16_t for documentation.
-   */
-  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
-      Span<const char> aLocale, Span<const char> aSkeleton,
-      DateTimePatternGenerator* aDateTimePatternGenerator,
-      Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
-
  private:
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char16_t> aSkeleton,
