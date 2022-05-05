@@ -339,7 +339,7 @@ void VideoReceiveStream2::Start() {
     // Create up to maximum_pre_stream_decoders_ up front, wait the the other
     // decoders until they are requested (i.e., we receive the corresponding
     // payload).
-    if (decoders_count < maximum_pre_stream_decoders_) {
+    if (decoders_count < static_cast<int>(maximum_pre_stream_decoders_)) {
       CreateAndRegisterExternalDecoder(decoder);
       ++decoders_count;
     }
