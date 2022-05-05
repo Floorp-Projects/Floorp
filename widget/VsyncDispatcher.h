@@ -75,11 +75,11 @@ class CompositorVsyncDispatcher final {
 //  VsyncMainChild)
 //  - IPC for content process worker requestAnimationFrame (VsyncParent <->
 //  VsyncWorkerChild)
-class RefreshTimerVsyncDispatcher final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefreshTimerVsyncDispatcher)
+class VsyncDispatcher final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncDispatcher)
 
  public:
-  explicit RefreshTimerVsyncDispatcher(gfx::VsyncSource* aVsyncSource);
+  explicit VsyncDispatcher(gfx::VsyncSource* aVsyncSource);
 
   // Please check CompositorVsyncDispatcher::NotifyVsync().
   void NotifyVsync(const VsyncEvent& aVsync);
@@ -95,7 +95,7 @@ class RefreshTimerVsyncDispatcher final {
   void RemoveVsyncObserver(VsyncObserver* aVsyncObserver);
 
  private:
-  virtual ~RefreshTimerVsyncDispatcher();
+  virtual ~VsyncDispatcher();
   void UpdateVsyncStatus();
   bool NeedsVsync();
 
