@@ -110,8 +110,7 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   decodedImage.set_packet_infos(frameInfo->packet_infos);
   decodedImage.set_rotation(frameInfo->rotation);
 
-  if (low_latency_renderer_enabled_ && frameInfo->playout_delay.min_ms == 0 &&
-      frameInfo->playout_delay.max_ms > 0) {
+  if (low_latency_renderer_enabled_) {
     absl::optional<int> max_composition_delay_in_frames =
         _timing->MaxCompositionDelayInFrames();
     if (max_composition_delay_in_frames) {
@@ -253,7 +252,6 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   _frameInfos[_nextFrameInfoIdx].decodeStart = now;
   _frameInfos[_nextFrameInfoIdx].renderTimeMs = frame.RenderTimeMs();
   _frameInfos[_nextFrameInfoIdx].rotation = frame.rotation();
-  _frameInfos[_nextFrameInfoIdx].playout_delay = frame.PlayoutDelay();
   _frameInfos[_nextFrameInfoIdx].timing = frame.video_timing();
   _frameInfos[_nextFrameInfoIdx].ntp_time_ms =
       frame.EncodedImage().ntp_time_ms_;
