@@ -358,41 +358,6 @@ GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILU
 NS_IMETHODIMP
 GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) { return NS_ERROR_FAILURE; }
 
-/* readonly attribute Array<DOMString> displayInfo; */
-NS_IMETHODIMP
-GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
-  nsAutoreleasePool localPool;
-  for (NSScreen* screen in [NSScreen screens]) {
-    NSRect rect = [screen frame];
-    nsString desc;
-    desc.AppendPrintf("%dx%d scale:%f", (int32_t)rect.size.width, (int32_t)rect.size.height,
-                      nsCocoaUtils::GetBackingScaleFactor(screen));
-    aDisplayInfo.AppendElement(desc);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
-  nsAutoreleasePool localPool;
-  for (NSScreen* screen in [NSScreen screens]) {
-    NSRect rect = [screen frame];
-    aDisplayWidth.AppendElement((uint32_t)rect.size.width);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
-  nsAutoreleasePool localPool;
-  for (NSScreen* screen in [NSScreen screens]) {
-    NSRect rect = [screen frame];
-    aDisplayHeight.AppendElement((uint32_t)rect.size.height);
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 GfxInfo::GetDrmRenderDevice(nsACString& aDrmRenderDevice) { return NS_ERROR_NOT_IMPLEMENTED; }
 
@@ -502,32 +467,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
 
   return GfxInfoBase::GetFeatureStatusImpl(aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo,
                                            aFailureId, &os);
-}
-
-nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
-  nsAutoreleasePool localPool;
-  // Getting the refresh rate is a little hard on OS X. We could use
-  // CVDisplayLinkGetNominalOutputVideoRefreshPeriod, but that's a little
-  // involved. Ideally we could query it from vsync. For now, we leave it out.
-  int32_t deviceCount = 0;
-  for (NSScreen* screen in [NSScreen screens]) {
-    NSRect rect = [screen frame];
-
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value((int)rect.size.width));
-    JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
-
-    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value((int)rect.size.height));
-    JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
-
-    JS::Rooted<JS::Value> scale(aCx, JS::NumberValue(nsCocoaUtils::GetBackingScaleFactor(screen)));
-    JS_SetProperty(aCx, obj, "scale", scale);
-
-    JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
-    JS_SetElement(aCx, aOutArray, deviceCount++, element);
-  }
-  return NS_OK;
 }
 
 #ifdef DEBUG

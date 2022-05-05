@@ -565,10 +565,6 @@ class WinUtils {
 
   static void EnableWindowOcclusion(const bool aEnable);
 
-  static void GetDisplayOrientation(const char16ptr_t aName,
-                                    hal::ScreenOrientation& aOrientation,
-                                    uint16_t& aAngle);
-
  private:
   static WhitelistVec BuildWhitelist();
 
