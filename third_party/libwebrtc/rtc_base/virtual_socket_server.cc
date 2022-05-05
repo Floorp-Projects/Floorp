@@ -54,7 +54,6 @@ const int NUM_SAMPLES = 1000;
 
 enum {
   MSG_ID_PACKET,
-  MSG_ID_ADDRESS_BOUND,
   MSG_ID_CONNECT,
   MSG_ID_DISCONNECT,
   MSG_ID_SIGNALREADEVENT,
@@ -377,8 +376,6 @@ void VirtualSocket::OnMessage(Message* pmsg) {
         SignalCloseEvent(this, error);
       }
     }
-  } else if (pmsg->message_id == MSG_ID_ADDRESS_BOUND) {
-    SignalAddressReady(this, GetLocalAddress());
   } else if (pmsg->message_id == MSG_ID_SIGNALREADEVENT) {
     if (!recv_buffer_.empty()) {
       SignalReadEvent(this);
@@ -696,13 +693,7 @@ int VirtualSocketServer::Bind(VirtualSocket* socket,
   SocketAddress normalized(addr.ipaddr().Normalized(), addr.port());
 
   AddressMap::value_type entry(normalized, socket);
-  if (bindings_->insert(entry).second) {
-    // Post a message here such that test case could have chance to
-    // process the local address. (i.e. SetAlternativeLocalAddress).
-    msg_queue_->Post(RTC_FROM_HERE, socket, MSG_ID_ADDRESS_BOUND);
-    return 0;
-  }
-  return -1;
+  return bindings_->insert(entry).second ? 0 : -1;
 }
 
 int VirtualSocketServer::Bind(VirtualSocket* socket, SocketAddress* addr) {

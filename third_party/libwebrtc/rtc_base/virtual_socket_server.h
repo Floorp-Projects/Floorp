@@ -369,9 +369,6 @@ class VirtualSocket : public AsyncSocket,
   // Removes stale packets from the network. Returns current size.
   size_t PurgeNetworkPackets(int64_t cur_time);
 
-  // For testing purpose only. Fired when client socket is bound to an address.
-  sigslot::signal2<VirtualSocket*, const SocketAddress&> SignalAddressReady;
-
  private:
   struct NetworkEntry {
     size_t size;
