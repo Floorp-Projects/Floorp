@@ -798,6 +798,33 @@ const TESTCASES_FILL_SELECT = [
   },
 ];
 
+const TESTCASES_BOTH_CHANGED_AND_UNCHANGED = [
+  {
+    description:
+      "Form with a disabled input and non-disabled inputs. The 'country' field should not change",
+    document: `<form>
+              <input id="given-name" autocomplete="given-name">
+              <input id="family-name" autocomplete="family-name">
+              <input id="street-addr" autocomplete="street-address">
+              <input id="country" autocomplete="country" disabled value="DE">
+             </form>`,
+    focusedInputId: "given-name",
+    profileData: {
+      guid: "123",
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "100 Main Street",
+      country: "CA",
+    },
+    expectedResult: {
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-addr": "100 Main Street",
+      country: "DE",
+    },
+  },
+];
+
 function do_test(testcases, testFn) {
   for (let tc of testcases) {
     (function() {
@@ -934,6 +961,64 @@ do_test(TESTCASES_FILL_SELECT, (testcase, element) => {
       element.addEventListener(
         "input",
         () => {
+          Assert.equal(
+            element.value,
+            testcase.expectedResult[id],
+            "Check the " + id + " field was filled with correct data"
+          );
+          resolve();
+        },
+        { once: true }
+      );
+    }),
+  ];
+});
+
+do_test(TESTCASES_BOTH_CHANGED_AND_UNCHANGED, (testcase, element) => {
+  // Ensure readonly and disabled inputs are not autofilled
+  if (element.readOnly || element.disabled) {
+    return [
+      new Promise((resolve, reject) => {
+        // Make sure no change or input event is fired when no change occurs.
+        let cleaner;
+        let timer = setTimeout(() => {
+          let id = element.id;
+          element.removeEventListener("change", cleaner);
+          element.removeEventListener("input", cleaner);
+          Assert.equal(
+            element.value,
+            testcase.expectedResult[id],
+            "Check no value is changed on the " + id + " field"
+          );
+          resolve();
+        }, 1000);
+        cleaner = event => {
+          clearTimeout(timer);
+          reject(`${event.type} event should not fire`);
+        };
+        element.addEventListener("change", cleaner);
+        element.addEventListener("input", cleaner);
+      }),
+    ];
+  }
+  let id = element.id;
+  // Ensure that non-disabled and non-readonly fields are filled correctly
+  return [
+    new Promise(resolve => {
+      element.addEventListener(
+        "input",
+        () => {
+          Assert.ok(true, "Checking " + id + " field fires input event");
+          resolve();
+        },
+        { once: true }
+      );
+    }),
+    new Promise(resolve => {
+      element.addEventListener(
+        "change",
+        () => {
+          Assert.ok(true, "Checking " + id + " field fires change event");
           Assert.equal(
             element.value,
             testcase.expectedResult[id],
