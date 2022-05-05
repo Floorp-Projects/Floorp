@@ -87,7 +87,8 @@ class DatabaseFileManager final
 
   // XXX When getting rid of FileHelper, this method should be removed/made
   // private.
-  [[nodiscard]] nsresult SyncDeleteFile(nsIFile& aFile, nsIFile& aJournalFile);
+  [[nodiscard]] nsresult SyncDeleteFile(nsIFile& aFile,
+                                        nsIFile& aJournalFile) const;
 
   [[nodiscard]] nsresult AsyncDeleteFile(int64_t aFileId);
 
