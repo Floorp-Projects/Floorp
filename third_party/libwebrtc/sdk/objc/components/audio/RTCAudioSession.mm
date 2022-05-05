@@ -16,7 +16,7 @@
 
 #include "rtc_base/atomic_ops.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
+#include "rtc_base/synchronization/mutex.h"
 
 #import "RTCAudioSessionConfiguration.h"
 #import "base/RTCLogging.h"
@@ -35,10 +35,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 // TODO(tkchin): Consider more granular locking. We're not expecting a lot of
 // lock contention so coarse locks should be fine for now.
 @implementation RTC_OBJC_TYPE (RTCAudioSession) {
-  rtc::RecursiveCriticalSection _crit;
+  webrtc::Mutex _mutex;
   AVAudioSession *_session;
   volatile int _activationCount;
-  volatile int _lockRecursionCount;
   volatile int _webRTCSessionCount;
   BOOL _isActive;
   BOOL _useManualAudio;
@@ -151,10 +150,6 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   }
 }
 
-- (BOOL)isLocked {
-  return _lockRecursionCount > 0;
-}
-
 - (void)setUseManualAudio:(BOOL)useManualAudio {
   @synchronized(self) {
     if (_useManualAudio == useManualAudio) {
@@ -234,20 +229,11 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 #pragma clang diagnostic ignored "-Wthread-safety-analysis"
 
 - (void)lockForConfiguration {
-  _crit.Enter();
-  rtc::AtomicOps::Increment(&_lockRecursionCount);
+  _mutex.Lock();
 }
 
 - (void)unlockForConfiguration {
-  // Don't let threads other than the one that called lockForConfiguration
-  // unlock.
-  if (_crit.TryEnter()) {
-    rtc::AtomicOps::Decrement(&_lockRecursionCount);
-    // One unlock for the tryLock, and another one to actually unlock. If this
-    // was called without anyone calling lock, we will hit an assertion.
-    _crit.Leave();
-    _crit.Leave();
-  }
+  _mutex.Unlock();
 }
 
 #pragma clang diagnostic pop
@@ -346,13 +332,8 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   return self.session.preferredIOBufferDuration;
 }
 
-// TODO(tkchin): Simplify the amount of locking happening here. Likely that we
-// can just do atomic increments / decrements.
 - (BOOL)setActive:(BOOL)active
             error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   int activationCount = _activationCount;
   if (!active && activationCount == 0) {
     RTCLogWarning(@"Attempting to deactivate without prior activation.");
@@ -409,85 +390,52 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 - (BOOL)setCategory:(NSString *)category
         withOptions:(AVAudioSessionCategoryOptions)options
               error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setCategory:category withOptions:options error:outError];
 }
 
 - (BOOL)setMode:(NSString *)mode error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setMode:mode error:outError];
 }
 
 - (BOOL)setInputGain:(float)gain error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setInputGain:gain error:outError];
 }
 
 - (BOOL)setPreferredSampleRate:(double)sampleRate error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setPreferredSampleRate:sampleRate error:outError];
 }
 
 - (BOOL)setPreferredIOBufferDuration:(NSTimeInterval)duration
                                error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setPreferredIOBufferDuration:duration error:outError];
 }
 
 - (BOOL)setPreferredInputNumberOfChannels:(NSInteger)count
                                     error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setPreferredInputNumberOfChannels:count error:outError];
 }
 - (BOOL)setPreferredOutputNumberOfChannels:(NSInteger)count
                                      error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setPreferredOutputNumberOfChannels:count error:outError];
 }
 
 - (BOOL)overrideOutputAudioPort:(AVAudioSessionPortOverride)portOverride
                           error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session overrideOutputAudioPort:portOverride error:outError];
 }
 
 - (BOOL)setPreferredInput:(AVAudioSessionPortDescription *)inPort
                     error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setPreferredInput:inPort error:outError];
 }
 
 - (BOOL)setInputDataSource:(AVAudioSessionDataSourceDescription *)dataSource
                      error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setInputDataSource:dataSource error:outError];
 }
 
 - (BOOL)setOutputDataSource:(AVAudioSessionDataSourceDescription *)dataSource
                       error:(NSError **)outError {
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   return [self.session setOutputDataSource:dataSource error:outError];
 }
 
@@ -608,18 +556,6 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 
 #pragma mark - Private
 
-+ (NSError *)lockError {
-  NSDictionary *userInfo = @{
-    NSLocalizedDescriptionKey:
-        @"Must call lockForConfiguration before calling this method."
-  };
-  NSError *error =
-      [[NSError alloc] initWithDomain:kRTCAudioSessionErrorDomain
-                                 code:kRTCAudioSessionErrorLockRequired
-                             userInfo:userInfo];
-  return error;
-}
-
 - (std::vector<__weak id<RTC_OBJC_TYPE(RTCAudioSessionDelegate)> >)delegates {
   @synchronized(self) {
     // Note: this returns a copy.
@@ -681,24 +617,9 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   }
 }
 
-- (BOOL)checkLock:(NSError **)outError {
-  // Check ivar instead of trying to acquire lock so that we won't accidentally
-  // acquire lock if it hasn't already been called.
-  if (!self.isLocked) {
-    if (outError) {
-      *outError = [RTC_OBJC_TYPE(RTCAudioSession) lockError];
-    }
-    return NO;
-  }
-  return YES;
-}
-
 - (BOOL)beginWebRTCSession:(NSError **)outError {
   if (outError) {
     *outError = nil;
-  }
-  if (![self checkLock:outError]) {
-    return NO;
   }
   rtc::AtomicOps::Increment(&_webRTCSessionCount);
   [self notifyDidStartPlayOrRecord];
@@ -709,9 +630,6 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
   if (outError) {
     *outError = nil;
   }
-  if (![self checkLock:outError]) {
-    return NO;
-  }
   rtc::AtomicOps::Decrement(&_webRTCSessionCount);
   [self notifyDidStopPlayOrRecord];
   return YES;
@@ -720,9 +638,6 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 - (BOOL)configureWebRTCSession:(NSError **)outError {
   if (outError) {
     *outError = nil;
-  }
-  if (![self checkLock:outError]) {
-    return NO;
   }
   RTCLog(@"Configuring audio session for WebRTC.");
 
@@ -783,9 +698,6 @@ NSString * const kRTCAudioSessionOutputVolumeSelector = @"outputVolume";
 - (BOOL)unconfigureWebRTCSession:(NSError **)outError {
   if (outError) {
     *outError = nil;
-  }
-  if (![self checkLock:outError]) {
-    return NO;
   }
   RTCLog(@"Unconfiguring audio session for WebRTC.");
   [self setActive:NO error:outError];
