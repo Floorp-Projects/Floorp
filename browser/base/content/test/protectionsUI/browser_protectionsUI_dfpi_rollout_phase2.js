@@ -9,6 +9,10 @@ const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
 
+const { EnterprisePolicyTesting } = ChromeUtils.import(
+  "resource://testing-common/EnterprisePolicyTesting.jsm"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "BrowserGlue",
@@ -440,3 +444,125 @@ add_task(async function test_phase1_opt_in_to_phase2() {
   await doEnrollmentCleanup();
   cleanup();
 });
+
+/**
+ * Tests that in phase 2+ we don't target clients with enterprise policy setting
+ * a cookie behavior.
+ */
+add_task(async function test_phase2_enterprise_policy_with_cookie_behavior() {
+  // Disable TCP by default.
+  setDefaultCookieBehavior(Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+
+  is(
+    defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+    Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+    "TCP is disabled by default."
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+    "No user value for cookie behavior."
+  );
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      Cookies: {
+        Locked: false,
+        Behavior: "accept",
+      },
+    },
+  });
+
+  is(
+    defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+    Ci.nsICookieService.BEHAVIOR_ACCEPT,
+    "Cookie behavior is set to ACCEPT by enterprise policy."
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+    "No user value for cookie behavior."
+  );
+
+  // Enable Nimbus feature for phase 2.
+  let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "tcpByDefault",
+    value: { enabled: true },
+  });
+
+  is(
+    defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+    Ci.nsICookieService.BEHAVIOR_ACCEPT,
+    "Cookie behavior is *still* set to ACCEPT_ALL by enterprise policy."
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+    "No user value for cookie behavior."
+  );
+
+  await doEnrollmentCleanup();
+  cleanup();
+});
+
+/**
+ * Tests that in phase 2+ still target clients with enterprise policy *not*
+ * setting a cookie behavior.
+ */
+add_task(
+  async function test_phase2_enterprise_policy_without_cookie_behavior() {
+    // Disable TCP by default.
+    setDefaultCookieBehavior(Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+
+    is(
+      defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      "TCP is disabled by default."
+    );
+    ok(
+      !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+      "No user value for cookie behavior."
+    );
+
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+      policies: {
+        PopupBlocking: {
+          Locked: true,
+        },
+      },
+    });
+
+    is(
+      defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      "Cookie behavior is still set to BEHAVIOR_REJECT_TRACKER."
+    );
+    ok(
+      !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+      "No user value for cookie behavior."
+    );
+
+    let cookieBehaviorChange = waitForAndAssertPrefState(
+      COOKIE_BEHAVIOR_PREF,
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+      "Cookie behavior updates to TCP enabled after tcpByDefault enrollment."
+    );
+
+    // Enable Nimbus feature for phase 2.
+    let doEnrollmentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+      featureId: "tcpByDefault",
+      value: { enabled: true },
+    });
+
+    await cookieBehaviorChange;
+    is(
+      defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF),
+      Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+      "TCP is enabled by default."
+    );
+    ok(
+      !Services.prefs.prefHasUserValue(COOKIE_BEHAVIOR_PREF),
+      "No user value for cookie behavior."
+    );
+
+    await doEnrollmentCleanup();
+    cleanup();
+  }
+);
