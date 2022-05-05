@@ -29,7 +29,7 @@ class UnrestrictedDoubleOrKeyframeAnimationOptions;
 }  // namespace dom
 
 struct TimingParams {
-  constexpr TimingParams() = default;
+  TimingParams() = default;
 
   TimingParams(float aDuration, float aDelay, float aIterationCount,
                dom::PlaybackDirection aDirection, dom::FillMode aFillMode)
