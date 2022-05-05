@@ -23,7 +23,7 @@ RefPtr<layers::Image> VideoFrameSurface<LIBAV_VER>::GetAsImage() {
 VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
     : mSurface(aSurface),
       mLib(nullptr),
-      mAVHWDeviceContext(nullptr),
+      mAVHWFrameContext(nullptr),
       mHWAVBuffer(nullptr) {
   // Create global refcount object to track mSurface usage over
   // gects rendering engine. We can't release it until it's used
@@ -38,20 +38,21 @@ VideoFrameSurface<LIBAV_VER>::VideoFrameSurface(DMABufSurface* aSurface)
 void VideoFrameSurface<LIBAV_VER>::LockVAAPIData(
     AVCodecContext* aAVCodecContext, AVFrame* aAVFrame,
     FFmpegLibWrapper* aLib) {
+  MOZ_DIAGNOSTIC_ASSERT(aAVCodecContext->hw_frames_ctx);
   mLib = aLib;
-  mAVHWDeviceContext = aLib->av_buffer_ref(aAVCodecContext->hw_device_ctx);
+  mAVHWFrameContext = aLib->av_buffer_ref(aAVCodecContext->hw_frames_ctx);
   mHWAVBuffer = aLib->av_buffer_ref(aAVFrame->buf[0]);
   FFMPEG_LOG(
       "VideoFrameSurface: VAAPI locking dmabuf surface UID = %d "
-      "mAVHWDeviceContext %p mHWAVBuffer %p",
-      mSurface->GetUID(), mAVHWDeviceContext, mHWAVBuffer);
+      "mAVHWFrameContext %p mHWAVBuffer %p",
+      mSurface->GetUID(), mAVHWFrameContext, mHWAVBuffer);
 }
 
 void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   FFMPEG_LOG(
       "VideoFrameSurface: VAAPI releasing dmabuf surface UID = %d "
-      "aForFrameRecycle %d mLib %p mAVHWDeviceContext %p mHWAVBuffer %p",
-      mSurface->GetUID(), aForFrameRecycle, mLib, mAVHWDeviceContext,
+      "aForFrameRecycle %d mLib %p mAVHWFrameContext %p mHWAVBuffer %p",
+      mSurface->GetUID(), aForFrameRecycle, mLib, mAVHWFrameContext,
       mHWAVBuffer);
 
   // It's possible to unref GPU data while IsUsed() is still set.
@@ -62,7 +63,7 @@ void VideoFrameSurface<LIBAV_VER>::ReleaseVAAPIData(bool aForFrameRecycle) {
   // is closed.
   if (mLib) {
     mLib->av_buffer_unref(&mHWAVBuffer);
-    mLib->av_buffer_unref(&mAVHWDeviceContext);
+    mLib->av_buffer_unref(&mAVHWFrameContext);
     mLib = nullptr;
   }
 
