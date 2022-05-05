@@ -289,6 +289,10 @@ int Node::GetStatus(const PortRef& port_ref, PortStatus* port_status) {
       port->next_sequence_num_to_send - port->last_sequence_num_acknowledged -
       1;
 
+#ifdef FUZZING_SNAPSHOT
+  port_status->peer_node_name = port->peer_node_name;
+#endif
+
   return OK;
 }
 

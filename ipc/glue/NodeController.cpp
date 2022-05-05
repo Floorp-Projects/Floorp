@@ -270,6 +270,10 @@ already_AddRefed<NodeChannel> NodeController::GetNodeChannel(
 void NodeController::DropPeer(NodeName aNodeName) {
   AssertIOThread();
 
+#ifdef FUZZING_SNAPSHOT
+  MOZ_FUZZING_IPC_DROP_PEER("NodeController::DropPeer");
+#endif
+
   Invite invite;
   RefPtr<NodeChannel> channel;
   nsTArray<PortRef> pendingMerges;
