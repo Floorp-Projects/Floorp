@@ -54,6 +54,7 @@ constexpr NamedStructureFactory kFactories[] = {
     {"L2T2", Create<ScalabilityStructureL2T2>},
     {"L2T2_KEY", Create<ScalabilityStructureL2T2Key>},
     {"L2T2_KEY_SHIFT", Create<ScalabilityStructureL2T2KeyShift>},
+    {"L2T3_KEY", Create<ScalabilityStructureL2T3Key>},
     {"L3T1", Create<ScalabilityStructureL3T1>},
     {"L3T3", Create<ScalabilityStructureL3T3>},
     {"L3T3_KEY", Create<ScalabilityStructureL3T3Key>},

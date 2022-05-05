@@ -304,6 +304,7 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L2T2", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY_SHIFT", /*num_temporal_units=*/4},
+           SvcTestParam{"L2T3_KEY", /*num_temporal_units=*/8},
            SvcTestParam{"L3T3_KEY", /*num_temporal_units=*/8}),
     [](const testing::TestParamInfo<SvcTestParam>& info) {
       return info.param.name;
