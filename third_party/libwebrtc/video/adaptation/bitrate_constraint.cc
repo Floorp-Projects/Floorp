@@ -61,7 +61,7 @@ bool BitrateConstraint::IsAdaptationUpAllowed(
     }
 
     absl::optional<uint32_t> current_frame_size_px =
-        VideoStreamEncoderResourceManager::GetSingleActiveLayerPixels(
+        VideoStreamAdapter::GetSingleActiveLayerPixels(
             encoder_settings_->video_codec());
     if (!current_frame_size_px.has_value()) {
       return true;
