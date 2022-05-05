@@ -91,6 +91,7 @@ class InitExpr {
   [[nodiscard]] bool clone(const InitExpr& src);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(InitExpr);
 };
 
 }  // namespace wasm

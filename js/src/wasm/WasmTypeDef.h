@@ -174,6 +174,7 @@ class FuncType {
 #endif
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(FuncType);
 };
 
 struct FuncTypeHashPolicy {
@@ -239,6 +240,7 @@ class StructType {
   [[nodiscard]] bool computeLayout();
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(StructType);
 };
 
 using StructTypeVector = Vector<StructType, 0, SystemAllocPolicy>;
@@ -456,6 +458,7 @@ class TypeDef {
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(TypeDef);
 };
 
 using TypeDefVector = Vector<TypeDef, 0, SystemAllocPolicy>;

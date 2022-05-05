@@ -122,6 +122,7 @@ class Export {
   uint32_t tableIndex() const;
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(Export);
 };
 
 WASM_DECLARE_CACHEABLE_POD(Export::CacheablePod);
@@ -282,6 +283,7 @@ class GlobalDesc {
   ValType type() const { return initial_.type(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(GlobalDesc);
 };
 
 using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;

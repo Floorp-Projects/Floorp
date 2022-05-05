@@ -71,8 +71,7 @@ static uint32_t RoundupCodeLength(uint32_t codeLength) {
   return RoundUp(codeLength, ExecutableCodePageSize);
 }
 
-/* static */
-UniqueCodeBytes CodeSegment::AllocateCodeBytes(uint32_t codeLength) {
+UniqueCodeBytes wasm::AllocateCodeBytes(uint32_t codeLength) {
   if (codeLength > MaxCodeBytesPerProcess) {
     return nullptr;
   }
@@ -147,7 +146,7 @@ void FreeCode::operator()(uint8_t* bytes) {
   DeallocateExecutableMemory(bytes, codeLength);
 }
 
-static bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
+bool wasm::StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
   for (LinkData::InternalLink link : linkData.internalLinks) {
     CodeLabel label;
     label.patchAt()->bind(link.patchAtOffset);
@@ -180,7 +179,7 @@ static bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
   return true;
 }
 
-static void StaticallyUnlink(uint8_t* base, const LinkData& linkData) {
+void wasm::StaticallyUnlink(uint8_t* base, const LinkData& linkData) {
   for (LinkData::InternalLink link : linkData.internalLinks) {
     CodeLabel label;
     label.patchAt()->bind(link.patchAtOffset);
