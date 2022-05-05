@@ -991,14 +991,29 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     max_framerate = std::max(stream.max_framerate, max_framerate);
   }
 
-  main_queue_->PostTask(
-      ToQueuedTask(task_safety_, [this, max_framerate, alignment]() {
+  // The resolutions that we're actually encoding with.
+  std::vector<rtc::VideoSinkWants::FrameSize> encoder_resolutions;
+  // TODO(hbos): For the case of SVC, also make use of |codec.spatialLayers|.
+  // For now, SVC layers are handled by the VP9 encoder.
+  for (const auto& simulcastStream : codec.simulcastStream) {
+    if (!simulcastStream.active)
+      continue;
+    encoder_resolutions.emplace_back(simulcastStream.width,
+                                     simulcastStream.height);
+  }
+  main_queue_->PostTask(ToQueuedTask(
+      task_safety_, [this, max_framerate, alignment,
+                     encoder_resolutions = std::move(encoder_resolutions)]() {
         RTC_DCHECK_RUN_ON(main_queue_);
         if (max_framerate !=
                 video_source_sink_controller_.frame_rate_upper_limit() ||
-            alignment != video_source_sink_controller_.resolution_alignment()) {
+            alignment != video_source_sink_controller_.resolution_alignment() ||
+            encoder_resolutions !=
+                video_source_sink_controller_.resolutions()) {
           video_source_sink_controller_.SetFrameRateUpperLimit(max_framerate);
           video_source_sink_controller_.SetResolutionAlignment(alignment);
+          video_source_sink_controller_.SetResolutions(
+              std::move(encoder_resolutions));
           video_source_sink_controller_.PushSourceSinkSettings();
         }
       }));
