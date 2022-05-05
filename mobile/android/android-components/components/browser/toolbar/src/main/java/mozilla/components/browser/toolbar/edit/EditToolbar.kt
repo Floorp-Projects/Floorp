@@ -248,6 +248,10 @@ class EditToolbar internal constructor(
         views.editActionsEnd.addAction(action)
     }
 
+    internal fun removeEditActionEnd(action: Toolbar.Action) {
+        views.editActionsEnd.removeAction(action)
+    }
+
     /**
      * Updates the text of the URL input field. Note: this does *not* affect the value of url itself
      * and is only a visual change

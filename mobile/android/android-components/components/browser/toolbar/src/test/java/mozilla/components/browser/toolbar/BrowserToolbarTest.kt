@@ -493,6 +493,22 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `WHEN removing action end THEN it will be forwarded to the edit toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        val edit: EditToolbar = mock()
+        toolbar.edit = edit
+
+        val action = BrowserToolbar.Button(mock(), "QR code scanner") {
+            // Do nothing
+        }
+
+        toolbar.removeEditActionEnd(action)
+
+        verify(edit).removeEditActionEnd(action)
+    }
+
+    @Test
     fun `cast to view`() {
         // Given
         val toolbar = BrowserToolbar(testContext)

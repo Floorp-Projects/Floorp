@@ -153,14 +153,19 @@ interface Toolbar {
     fun addNavigationAction(action: Action)
 
     /**
-     * Adds an action to be displayed in edit mode.
+     * Adds an action to be displayed at the start of the URL in edit mode.
      */
     fun addEditActionStart(action: Action)
 
     /**
-     * Adds an action to be displayed in edit mode.
+     * Adds an action to be displayed at the end of the URL in edit mode.
      */
     fun addEditActionEnd(action: Action)
+
+    /**
+     * Removes an action at the end of the URL in edit mode.
+     */
+    fun removeEditActionEnd(action: Action)
 
     /**
      * Casts this toolbar to an Android View object.

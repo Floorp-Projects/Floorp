@@ -324,6 +324,13 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Removes an action end of the URL in edit mode.
+     */
+    override fun removeEditActionEnd(action: Toolbar.Action) {
+        edit.removeEditActionEnd(action)
+    }
+
+    /**
      * Switches to URL editing mode.
      */
     override fun editMode() {
