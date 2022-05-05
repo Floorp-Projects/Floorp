@@ -46,24 +46,6 @@ bool FuncType::canHaveJitExit() const {
          JitOptions.enableWasmJitExit;
 }
 
-size_t FuncType::serializedSize() const {
-  return SerializedPodVectorSize(results_) + SerializedPodVectorSize(args_);
-}
-
-uint8_t* FuncType::serialize(uint8_t* cursor) const {
-  cursor = SerializePodVector(cursor, results_);
-  cursor = SerializePodVector(cursor, args_);
-  return cursor;
-}
-
-const uint8_t* FuncType::deserialize(const uint8_t* cursor) {
-  cursor = DeserializePodVector(cursor, &results_);
-  if (!cursor) {
-    return nullptr;
-  }
-  return DeserializePodVector(cursor, &args_);
-}
-
 size_t FuncType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return args_.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -128,119 +110,12 @@ bool StructType::computeLayout() {
   return true;
 }
 
-size_t StructType::serializedSize() const {
-  return SerializedPodVectorSize(fields_) + sizeof(size_);
-}
-
-uint8_t* StructType::serialize(uint8_t* cursor) const {
-  cursor = SerializePodVector(cursor, fields_);
-  cursor = WriteBytes(cursor, &size_, sizeof(size_));
-  return cursor;
-}
-
-const uint8_t* StructType::deserialize(const uint8_t* cursor) {
-  (cursor = DeserializePodVector(cursor, &fields_)) &&
-      (cursor = ReadBytes(cursor, &size_, sizeof(size_)));
-  return cursor;
-}
-
 size_t StructType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return fields_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-size_t ArrayType::serializedSize() const {
-  return sizeof(elementType_) + sizeof(isMutable_);
-}
-
-uint8_t* ArrayType::serialize(uint8_t* cursor) const {
-  cursor = WriteBytes(cursor, &elementType_, sizeof(elementType_));
-  cursor = WriteBytes(cursor, &isMutable_, sizeof(isMutable_));
-  return cursor;
-}
-
-const uint8_t* ArrayType::deserialize(const uint8_t* cursor) {
-  (cursor = ReadBytes(cursor, &elementType_, sizeof(elementType_))) &&
-      (cursor = ReadBytes(cursor, &isMutable_, sizeof(isMutable_)));
-  return cursor;
-}
-
 size_t ArrayType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return 0;
-}
-
-size_t TypeDef::serializedSize() const {
-  size_t size = sizeof(kind_);
-  switch (kind_) {
-    case TypeDefKind::Struct: {
-      size += structType_.serializedSize();
-      break;
-    }
-    case TypeDefKind::Func: {
-      size += funcType_.serializedSize();
-      break;
-    }
-    case TypeDefKind::Array: {
-      size += arrayType_.serializedSize();
-      break;
-    }
-    case TypeDefKind::None: {
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
-  return size;
-}
-
-uint8_t* TypeDef::serialize(uint8_t* cursor) const {
-  cursor = WriteBytes(cursor, &kind_, sizeof(kind_));
-  switch (kind_) {
-    case TypeDefKind::Struct: {
-      cursor = structType_.serialize(cursor);
-      break;
-    }
-    case TypeDefKind::Func: {
-      cursor = funcType_.serialize(cursor);
-      break;
-    }
-    case TypeDefKind::Array: {
-      cursor = arrayType_.serialize(cursor);
-      break;
-    }
-    case TypeDefKind::None: {
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
-  return cursor;
-}
-
-const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
-  cursor = ReadBytes(cursor, &kind_, sizeof(kind_));
-  // kind_ was replaced -- call in-place constructors for union members.
-  switch (kind_) {
-    case TypeDefKind::Struct: {
-      StructType* structType = new (&structType_) StructType();
-      cursor = structType->deserialize(cursor);
-      break;
-    }
-    case TypeDefKind::Func: {
-      FuncType* funcType = new (&funcType_) FuncType();
-      cursor = funcType->deserialize(cursor);
-      break;
-    }
-    case TypeDefKind::Array: {
-      cursor = arrayType_.deserialize(cursor);
-      break;
-    }
-    case TypeDefKind::None: {
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
-  return cursor;
 }
 
 size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
@@ -692,22 +567,6 @@ TypeIdDesc TypeIdDesc::immediate(const TypeDef& type) {
 
   MOZ_ASSERT(shift <= sTotalBits);
   return TypeIdDesc(TypeIdDescKind::Immediate, immediate);
-}
-
-size_t TypeDefWithId::serializedSize() const {
-  return TypeDef::serializedSize() + sizeof(TypeIdDesc);
-}
-
-uint8_t* TypeDefWithId::serialize(uint8_t* cursor) const {
-  cursor = TypeDef::serialize(cursor);
-  cursor = WriteBytes(cursor, &id, sizeof(id));
-  return cursor;
-}
-
-const uint8_t* TypeDefWithId::deserialize(const uint8_t* cursor) {
-  cursor = TypeDef::deserialize(cursor);
-  cursor = ReadBytes(cursor, &id, sizeof(id));
-  return cursor;
 }
 
 size_t TypeDefWithId::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {

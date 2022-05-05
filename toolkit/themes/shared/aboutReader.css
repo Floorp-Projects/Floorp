@@ -542,8 +542,8 @@ button:disabled {
 }
 
 .color-scheme-buttons > label {
+  padding: 12px;
   height: 34px;
-  width: 70px;
   font-size: 12px;
   /* Center the labels horizontally as well as vertically */
   display: inline-flex;

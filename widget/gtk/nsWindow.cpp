@@ -12,6 +12,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <wchar.h>
 
+#include "VsyncSource.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
@@ -567,6 +568,7 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource->Shutdown();
     mWaylandVsyncSource = nullptr;
   }
+  mWaylandVsyncDispatcher = nullptr;
   g_clear_pointer(&mXdgToken, xdg_activation_token_v1_destroy);
 #endif
 
@@ -3499,7 +3501,7 @@ void nsWindow::CreateCompositorVsyncDispatcher() {
     if (!mCompositorVsyncDispatcher) {
       LOG_VSYNC("  create CompositorVsyncDispatcher()");
       mCompositorVsyncDispatcher =
-          new CompositorVsyncDispatcher(mWaylandVsyncSource);
+          new CompositorVsyncDispatcher(mWaylandVsyncDispatcher);
     }
   }
 }
@@ -5864,6 +5866,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       StaticPrefs::widget_wayland_vsync_enabled_AtStartup() &&
       mWindowType == eWindowType_toplevel) {
     mWaylandVsyncSource = new WaylandVsyncSource();
+    mWaylandVsyncDispatcher = new VsyncDispatcher(mWaylandVsyncSource);
     LOG_VSYNC("  created WaylandVsyncSource)");
     MOZ_RELEASE_ASSERT(mWaylandVsyncSource);
   }
@@ -7004,10 +7007,10 @@ already_AddRefed<nsIScreen> nsWindow::GetWidgetScreen() {
   return screen.forget();
 }
 
-RefPtr<VsyncSource> nsWindow::GetVsyncSource() {
+RefPtr<VsyncDispatcher> nsWindow::GetVsyncDispatcher() {
 #ifdef MOZ_WAYLAND
-  if (mWaylandVsyncSource) {
-    return mWaylandVsyncSource;
+  if (mWaylandVsyncDispatcher) {
+    return mWaylandVsyncDispatcher;
   }
 #endif
   return nullptr;

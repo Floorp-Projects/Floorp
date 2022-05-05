@@ -745,6 +745,8 @@ pref("browser.tabs.tooltipsShowPidAndActiveness", true);
 pref("browser.tabs.tooltipsShowPidAndActiveness", false);
 #endif
 
+pref("browser.tabs.firefox-view", false);
+
 // allow_eval_* is enabled on Firefox Desktop only at this
 // point in time
 pref("security.allow_eval_with_system_principal", false);
@@ -1546,6 +1548,8 @@ pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "1,5,7
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
 pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.enabled", false);
+
+pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", false);
 
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "FR");

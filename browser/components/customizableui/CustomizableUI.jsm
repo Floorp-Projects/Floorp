@@ -274,11 +274,16 @@ var CustomizableUIInternal = {
       CustomizableUI.AREA_TABSTRIP,
       {
         type: CustomizableUI.TYPE_TOOLBAR,
-        defaultPlacements: [
-          "tabbrowser-tabs",
-          "new-tab-button",
-          "alltabs-button",
-        ],
+        defaultPlacements: Services.prefs.getBoolPref(
+          "browser.tabs.firefox-view"
+        )
+          ? [
+              "firefox-view-button",
+              "tabbrowser-tabs",
+              "new-tab-button",
+              "alltabs-button",
+            ]
+          : ["tabbrowser-tabs", "new-tab-button", "alltabs-button"],
         defaultCollapsed: null,
       },
       true

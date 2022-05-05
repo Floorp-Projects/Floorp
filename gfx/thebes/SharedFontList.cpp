@@ -105,11 +105,11 @@ Family::Family(FontList* aList, const InitData& aData)
 
 class SetCharMapRunnable : public mozilla::Runnable {
  public:
-  SetCharMapRunnable(uint32_t aListGeneration, Face* aFace,
+  SetCharMapRunnable(uint32_t aListGeneration, Pointer aFacePtr,
                      gfxCharacterMap* aCharMap)
       : Runnable("SetCharMapRunnable"),
         mListGeneration(aListGeneration),
-        mFace(aFace),
+        mFacePtr(aFacePtr),
         mCharMap(aCharMap) {}
 
   NS_IMETHOD Run() override {
@@ -117,26 +117,26 @@ class SetCharMapRunnable : public mozilla::Runnable {
     if (!list || list->GetGeneration() != mListGeneration) {
       return NS_OK;
     }
-    dom::ContentChild::GetSingleton()->SendSetCharacterMap(
-        mListGeneration, list->ToSharedPointer(mFace), *mCharMap);
+    dom::ContentChild::GetSingleton()->SendSetCharacterMap(mListGeneration,
+                                                           mFacePtr, *mCharMap);
     return NS_OK;
   }
 
  private:
   uint32_t mListGeneration;
-  Face* mFace;
+  Pointer mFacePtr;
   RefPtr<gfxCharacterMap> mCharMap;
 };
 
 void Face::SetCharacterMap(FontList* aList, gfxCharacterMap* aCharMap) {
   if (!XRE_IsParentProcess()) {
+    Pointer ptr = aList->ToSharedPointer(this);
     if (NS_IsMainThread()) {
-      Pointer ptr = aList->ToSharedPointer(this);
       dom::ContentChild::GetSingleton()->SendSetCharacterMap(
           aList->GetGeneration(), ptr, *aCharMap);
     } else {
       NS_DispatchToMainThread(
-          new SetCharMapRunnable(aList->GetGeneration(), this, aCharMap));
+          new SetCharMapRunnable(aList->GetGeneration(), ptr, aCharMap));
     }
     return;
   }

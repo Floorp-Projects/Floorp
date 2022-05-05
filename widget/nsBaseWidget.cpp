@@ -585,6 +585,10 @@ nsIntSize nsIWidget::CustomCursorSize(const Cursor& aCursor) {
   return {width, height};
 }
 
+RefPtr<mozilla::VsyncDispatcher> nsIWidget::GetVsyncDispatcher() {
+  return nullptr;
+}
+
 //-------------------------------------------------------------------------
 //
 // Add a child to the list of children
@@ -1147,7 +1151,10 @@ void nsBaseWidget::CreateCompositorVsyncDispatcher() {
     }
     MutexAutoLock lock(*mCompositorVsyncDispatcherLock.get());
     if (!mCompositorVsyncDispatcher) {
-      mCompositorVsyncDispatcher = new CompositorVsyncDispatcher();
+      RefPtr<VsyncDispatcher> vsyncDispatcher =
+          gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
+      mCompositorVsyncDispatcher =
+          new CompositorVsyncDispatcher(std::move(vsyncDispatcher));
     }
   }
 }

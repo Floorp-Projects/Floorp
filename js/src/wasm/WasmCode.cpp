@@ -41,6 +41,7 @@
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmStubs.h"
+#include "wasm/WasmUtility.h"
 
 using namespace js;
 using namespace js::jit;
@@ -50,31 +51,6 @@ using mozilla::BinarySearchIf;
 using mozilla::MakeEnumeratedRange;
 using mozilla::PodAssign;
 
-size_t LinkData::SymbolicLinkArray::serializedSize() const {
-  size_t size = 0;
-  for (const Uint32Vector& offsets : *this) {
-    size += SerializedPodVectorSize(offsets);
-  }
-  return size;
-}
-
-uint8_t* LinkData::SymbolicLinkArray::serialize(uint8_t* cursor) const {
-  for (const Uint32Vector& offsets : *this) {
-    cursor = SerializePodVector(cursor, offsets);
-  }
-  return cursor;
-}
-
-const uint8_t* LinkData::SymbolicLinkArray::deserialize(const uint8_t* cursor) {
-  for (Uint32Vector& offsets : *this) {
-    cursor = DeserializePodVector(cursor, &offsets);
-    if (!cursor) {
-      return nullptr;
-    }
-  }
-  return cursor;
-}
-
 size_t LinkData::SymbolicLinkArray::sizeOfExcludingThis(
     MallocSizeOf mallocSizeOf) const {
   size_t size = 0;
@@ -82,29 +58,6 @@ size_t LinkData::SymbolicLinkArray::sizeOfExcludingThis(
     size += offsets.sizeOfExcludingThis(mallocSizeOf);
   }
   return size;
-}
-
-size_t LinkData::serializedSize() const {
-  return sizeof(pod()) + SerializedPodVectorSize(internalLinks) +
-         symbolicLinks.serializedSize();
-}
-
-uint8_t* LinkData::serialize(uint8_t* cursor) const {
-  MOZ_ASSERT(tier == Tier::Serialized);
-
-  cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-  cursor = SerializePodVector(cursor, internalLinks);
-  cursor = symbolicLinks.serialize(cursor);
-  return cursor;
-}
-
-const uint8_t* LinkData::deserialize(const uint8_t* cursor) {
-  MOZ_ASSERT(tier == Tier::Serialized);
-
-  (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-      (cursor = DeserializePodVector(cursor, &internalLinks)) &&
-      (cursor = symbolicLinks.deserialize(cursor));
-  return cursor;
 }
 
 CodeSegment::~CodeSegment() {
@@ -118,8 +71,7 @@ static uint32_t RoundupCodeLength(uint32_t codeLength) {
   return RoundUp(codeLength, ExecutableCodePageSize);
 }
 
-/* static */
-UniqueCodeBytes CodeSegment::AllocateCodeBytes(uint32_t codeLength) {
+UniqueCodeBytes wasm::AllocateCodeBytes(uint32_t codeLength) {
   if (codeLength > MaxCodeBytesPerProcess) {
     return nullptr;
   }
@@ -194,7 +146,7 @@ void FreeCode::operator()(uint8_t* bytes) {
   DeallocateExecutableMemory(bytes, codeLength);
 }
 
-static bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
+bool wasm::StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
   for (LinkData::InternalLink link : linkData.internalLinks) {
     CodeLabel label;
     label.patchAt()->bind(link.patchAtOffset);
@@ -227,7 +179,7 @@ static bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData) {
   return true;
 }
 
-static void StaticallyUnlink(uint8_t* base, const LinkData& linkData) {
+void wasm::StaticallyUnlink(uint8_t* base, const LinkData& linkData) {
   for (LinkData::InternalLink link : linkData.internalLinks) {
     CodeLabel label;
     label.patchAt()->bind(link.patchAtOffset);
@@ -405,145 +357,26 @@ bool ModuleSegment::initialize(IsTier2 isTier2, const CodeTier& codeTier,
   return CodeSegment::initialize(codeTier);
 }
 
-size_t ModuleSegment::serializedSize() const {
-  return sizeof(uint32_t) + length();
-}
-
 void ModuleSegment::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf,
                                   size_t* code, size_t* data) const {
   CodeSegment::addSizeOfMisc(mallocSizeOf, code);
   *data += mallocSizeOf(this);
 }
 
-uint8_t* ModuleSegment::serialize(uint8_t* cursor,
-                                  const LinkData& linkData) const {
-  MOZ_ASSERT(tier() == Tier::Serialized);
-
-  cursor = WriteScalar<uint32_t>(cursor, length());
-  uint8_t* serializedBase = cursor;
-  cursor = WriteBytes(cursor, base(), length());
-  StaticallyUnlink(serializedBase, linkData);
-  return cursor;
-}
-
-/* static */ const uint8_t* ModuleSegment::deserialize(
-    const uint8_t* cursor, const LinkData& linkData,
-    UniqueModuleSegment* segment) {
-  uint32_t length;
-  cursor = ReadScalar<uint32_t>(cursor, &length);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  UniqueCodeBytes bytes = AllocateCodeBytes(length);
-  if (!bytes) {
-    return nullptr;
-  }
-
-  cursor = ReadBytes(cursor, bytes.get(), length);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  *segment = js::MakeUnique<ModuleSegment>(Tier::Serialized, std::move(bytes),
-                                           length, linkData);
-  if (!*segment) {
-    return nullptr;
-  }
-
-  return cursor;
-}
-
 const CodeRange* ModuleSegment::lookupRange(const void* pc) const {
   return codeTier().lookupRange(pc);
-}
-
-size_t FuncExport::serializedSize() const {
-  return funcType_.serializedSize() + sizeof(pod);
-}
-
-uint8_t* FuncExport::serialize(uint8_t* cursor) const {
-  cursor = funcType_.serialize(cursor);
-  cursor = WriteBytes(cursor, &pod, sizeof(pod));
-  return cursor;
-}
-
-const uint8_t* FuncExport::deserialize(const uint8_t* cursor) {
-  (cursor = funcType_.deserialize(cursor)) &&
-      (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
-  return cursor;
 }
 
 size_t FuncExport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return funcType_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-size_t FuncImport::serializedSize() const {
-  return funcType_.serializedSize() + sizeof(pod);
-}
-
-uint8_t* FuncImport::serialize(uint8_t* cursor) const {
-  cursor = funcType_.serialize(cursor);
-  cursor = WriteBytes(cursor, &pod, sizeof(pod));
-  return cursor;
-}
-
-const uint8_t* FuncImport::deserialize(const uint8_t* cursor) {
-  (cursor = funcType_.deserialize(cursor)) &&
-      (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
-  return cursor;
-}
-
 size_t FuncImport::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return funcType_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-static size_t StringLengthWithNullChar(const char* chars) {
-  return chars ? strlen(chars) + 1 : 0;
-}
-
-size_t CacheableChars::serializedSize() const {
-  return sizeof(uint32_t) + StringLengthWithNullChar(get());
-}
-
-uint8_t* CacheableChars::serialize(uint8_t* cursor) const {
-  uint32_t lengthWithNullChar = StringLengthWithNullChar(get());
-  cursor = WriteScalar<uint32_t>(cursor, lengthWithNullChar);
-  cursor = WriteBytes(cursor, get(), lengthWithNullChar);
-  return cursor;
-}
-
-const uint8_t* CacheableChars::deserialize(const uint8_t* cursor) {
-  uint32_t lengthWithNullChar;
-  cursor = ReadBytes(cursor, &lengthWithNullChar, sizeof(uint32_t));
-
-  if (lengthWithNullChar) {
-    reset(js_pod_malloc<char>(lengthWithNullChar));
-    if (!get()) {
-      return nullptr;
-    }
-
-    cursor = ReadBytes(cursor, get(), lengthWithNullChar);
-  } else {
-    MOZ_ASSERT(!get());
-  }
-
-  return cursor;
-}
-
 size_t CacheableChars::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return mallocSizeOf(get());
-}
-
-size_t MetadataTier::serializedSize() const {
-  return SerializedPodVectorSize(funcToCodeRange) +
-         SerializedPodVectorSize(codeRanges) +
-         SerializedPodVectorSize(callSites) +
-#ifdef ENABLE_WASM_EXCEPTIONS
-         SerializedPodVectorSize(tryNotes) +
-#endif
-         trapSites.serializedSize() + SerializedVectorSize(funcImports) +
-         SerializedVectorSize(funcExports);
 }
 
 size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
@@ -556,32 +389,6 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
          SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
          SizeOfVectorExcludingThis(funcExports, mallocSizeOf);
-}
-
-uint8_t* MetadataTier::serialize(uint8_t* cursor) const {
-  cursor = SerializePodVector(cursor, funcToCodeRange);
-  cursor = SerializePodVector(cursor, codeRanges);
-  cursor = SerializePodVector(cursor, callSites);
-#ifdef ENABLE_WASM_EXCEPTIONS
-  cursor = SerializePodVector(cursor, tryNotes);
-#endif
-  cursor = trapSites.serialize(cursor);
-  cursor = SerializeVector(cursor, funcImports);
-  cursor = SerializeVector(cursor, funcExports);
-  return cursor;
-}
-
-/* static */ const uint8_t* MetadataTier::deserialize(const uint8_t* cursor) {
-  (cursor = DeserializePodVector(cursor, &funcToCodeRange)) &&
-      (cursor = DeserializePodVector(cursor, &codeRanges)) &&
-      (cursor = DeserializePodVector(cursor, &callSites)) &&
-#ifdef ENABLE_WASM_EXCEPTIONS
-      (cursor = DeserializePodVector(cursor, &tryNotes)) &&
-#endif
-      (cursor = trapSites.deserialize(cursor)) &&
-      (cursor = DeserializeVector(cursor, &funcImports)) &&
-      (cursor = DeserializeVector(cursor, &funcExports));
-  return cursor;
 }
 
 UniqueLazyStubSegment LazyStubSegment::create(const CodeTier& codeTier,
@@ -965,54 +772,6 @@ bool MetadataTier::clone(const MetadataTier& src) {
   return true;
 }
 
-size_t Metadata::serializedSize() const {
-  return sizeof(pod()) + SerializedVectorSize(types) +
-         SerializedPodVectorSize(typesRenumbering) +
-         SerializedVectorSize(globals) + SerializedPodVectorSize(tables) +
-#ifdef ENABLE_WASM_EXCEPTIONS
-         SerializedVectorSize(tags) +
-#endif
-         sizeof(moduleName) + SerializedPodVectorSize(funcNames) +
-         filename.serializedSize() + sourceMapURL.serializedSize();
-}
-
-uint8_t* Metadata::serialize(uint8_t* cursor) const {
-  MOZ_ASSERT(!debugEnabled && debugFuncArgTypes.empty() &&
-             debugFuncReturnTypes.empty());
-  cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
-  cursor = SerializeVector(cursor, types);
-  cursor = SerializePodVector(cursor, typesRenumbering);
-  cursor = SerializeVector(cursor, globals);
-  cursor = SerializePodVector(cursor, tables);
-#ifdef ENABLE_WASM_EXCEPTIONS
-  cursor = SerializeVector(cursor, tags);
-#endif
-  cursor = WriteBytes(cursor, &moduleName, sizeof(moduleName));
-  cursor = SerializePodVector(cursor, funcNames);
-  cursor = filename.serialize(cursor);
-  cursor = sourceMapURL.serialize(cursor);
-  return cursor;
-}
-
-/* static */ const uint8_t* Metadata::deserialize(const uint8_t* cursor) {
-  (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
-      (cursor = DeserializeVector(cursor, &types)) &&
-      (cursor = DeserializePodVector(cursor, &typesRenumbering)) &&
-      (cursor = DeserializeVector(cursor, &globals)) &&
-      (cursor = DeserializePodVector(cursor, &tables)) &&
-#ifdef ENABLE_WASM_EXCEPTIONS
-      (cursor = DeserializeVector(cursor, &tags)) &&
-#endif
-      (cursor = ReadBytes(cursor, &moduleName, sizeof(moduleName))) &&
-      (cursor = DeserializePodVector(cursor, &funcNames)) &&
-      (cursor = filename.deserialize(cursor)) &&
-      (cursor = sourceMapURL.deserialize(cursor));
-  debugEnabled = false;
-  debugFuncArgTypes.clear();
-  debugFuncReturnTypes.clear();
-  return cursor;
-}
-
 size_t Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return SizeOfVectorExcludingThis(types, mallocSizeOf) +
          typesRenumbering.sizeOfExcludingThis(mallocSizeOf) +
@@ -1112,42 +871,6 @@ bool CodeTier::initialize(IsTier2 isTier2, const Code& code,
 
   MOZ_ASSERT(initialized());
   return true;
-}
-
-size_t CodeTier::serializedSize() const {
-  return segment_->serializedSize() + metadata_->serializedSize();
-}
-
-uint8_t* CodeTier::serialize(uint8_t* cursor, const LinkData& linkData) const {
-  cursor = metadata_->serialize(cursor);
-  cursor = segment_->serialize(cursor, linkData);
-  return cursor;
-}
-
-/* static */ const uint8_t* CodeTier::deserialize(const uint8_t* cursor,
-                                                  const LinkData& linkData,
-                                                  UniqueCodeTier* codeTier) {
-  auto metadata = js::MakeUnique<MetadataTier>(Tier::Serialized);
-  if (!metadata) {
-    return nullptr;
-  }
-  cursor = metadata->deserialize(cursor);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  UniqueModuleSegment segment;
-  cursor = ModuleSegment::deserialize(cursor, linkData, &segment);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  *codeTier = js::MakeUnique<CodeTier>(std::move(metadata), std::move(segment));
-  if (!*codeTier) {
-    return nullptr;
-  }
-
-  return cursor;
 }
 
 void CodeTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
@@ -1518,50 +1241,6 @@ void Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
   for (auto t : tiers()) {
     codeTier(t).addSizeOfMisc(mallocSizeOf, code, data);
   }
-}
-
-size_t Code::serializedSize() const {
-  return metadata().serializedSize() +
-         codeTier(Tier::Serialized).serializedSize();
-}
-
-uint8_t* Code::serialize(uint8_t* cursor, const LinkData& linkData) const {
-  MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
-
-  cursor = metadata().serialize(cursor);
-  cursor = codeTier(Tier::Serialized).serialize(cursor, linkData);
-  return cursor;
-}
-
-/* static */ const uint8_t* Code::deserialize(const uint8_t* cursor,
-                                              const LinkData& linkData,
-                                              Metadata& metadata,
-                                              SharedCode* out) {
-  cursor = metadata.deserialize(cursor);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  UniqueCodeTier codeTier;
-  cursor = CodeTier::deserialize(cursor, linkData, &codeTier);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  JumpTables jumpTables;
-  if (!jumpTables.init(CompileMode::Once, codeTier->segment(),
-                       codeTier->metadata().codeRanges)) {
-    return nullptr;
-  }
-
-  MutableCode code =
-      js_new<Code>(std::move(codeTier), metadata, std::move(jumpTables));
-  if (!code || !code->initialize(linkData)) {
-    return nullptr;
-  }
-
-  *out = code;
-  return cursor;
 }
 
 void Code::disassemble(JSContext* cx, Tier tier, int kindSelection,

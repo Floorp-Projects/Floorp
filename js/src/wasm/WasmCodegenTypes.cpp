@@ -83,31 +83,6 @@ void TrapSiteVectorArray::shrinkStorageToFit() {
   }
 }
 
-size_t TrapSiteVectorArray::serializedSize() const {
-  size_t ret = 0;
-  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    ret += SerializedPodVectorSize((*this)[trap]);
-  }
-  return ret;
-}
-
-uint8_t* TrapSiteVectorArray::serialize(uint8_t* cursor) const {
-  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    cursor = SerializePodVector(cursor, (*this)[trap]);
-  }
-  return cursor;
-}
-
-const uint8_t* TrapSiteVectorArray::deserialize(const uint8_t* cursor) {
-  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    cursor = DeserializePodVector(cursor, &(*this)[trap]);
-    if (!cursor) {
-      return nullptr;
-    }
-  }
-  return cursor;
-}
-
 size_t TrapSiteVectorArray::sizeOfExcludingThis(
     MallocSizeOf mallocSizeOf) const {
   size_t ret = 0;

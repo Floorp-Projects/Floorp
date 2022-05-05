@@ -27,7 +27,6 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
-#include "wasm/WasmSerialize.h"  // SerializableRefPtr
 
 namespace js {
 
@@ -100,12 +99,12 @@ using UniqueDebugState = UniquePtr<DebugState>;
 
 struct DataSegment;
 using MutableDataSegment = RefPtr<DataSegment>;
-using SharedDataSegment = SerializableRefPtr<const DataSegment>;
+using SharedDataSegment = RefPtr<const DataSegment>;
 using DataSegmentVector = Vector<SharedDataSegment, 0, SystemAllocPolicy>;
 
 struct ElemSegment;
 using MutableElemSegment = RefPtr<ElemSegment>;
-using SharedElemSegment = SerializableRefPtr<const ElemSegment>;
+using SharedElemSegment = RefPtr<const ElemSegment>;
 using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
 
 struct ExceptionTag;

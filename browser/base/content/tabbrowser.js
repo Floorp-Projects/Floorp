@@ -1108,7 +1108,9 @@
 
       this._selectedBrowser = newBrowser;
       this._selectedTab = newTab;
-      this.showTab(newTab);
+      if (newTab != window.__firefoxViewTab) {
+        this.showTab(newTab);
+      }
 
       this._appendStatusPanel();
 
@@ -3765,7 +3767,7 @@
         return;
       }
 
-      var isLastTab = this.tabs.length - this._removingTabs.length == 1;
+      let isLastTab = !aTab.hidden && this.visibleTabs.length == 1;
       let windowUtils = window.windowUtils;
       // We have to sample the tab width now, since _beginRemoveTab might
       // end up modifying the DOM in such a way that aTab gets a new
@@ -3911,7 +3913,7 @@
 
       var closeWindow = false;
       var newTab = false;
-      if (this.tabs.length - this._removingTabs.length == 1) {
+      if (!aTab.hidden && this.visibleTabs.length == 1) {
         closeWindow =
           closeWindowWithLastTab != null
             ? closeWindowWithLastTab
@@ -7002,7 +7004,7 @@ var TabBarVisibility = {
     let collapse = false;
     if (
       !gBrowser /* gBrowser isn't initialized yet */ ||
-      gBrowser.tabs.length - gBrowser._removingTabs.length == 1
+      gBrowser.visibleTabs.length == 1
     ) {
       collapse = !window.toolbar.visible;
     }

@@ -25,10 +25,7 @@ add_task(async function test_support_tab_line() {
   let selectedTab = newWin.document.querySelector(".tabbrowser-tab[selected]");
   let tab = selectedTab.querySelector(".tab-background");
   let element = tab;
-  // The computed style for the "border" property returns an empty string because
-  // the browser computes it as shorthand for border-right, border-left, .etc. Which
-  // is why we are referencing border-right here.
-  let property = "border-right-color";
+  let property = "outline-color";
   let computedValue = newWin.getComputedStyle(element)[property];
   let expectedColor = `rgb(${hexToRGB(TAB_LINE_COLOR).join(", ")})`;
 

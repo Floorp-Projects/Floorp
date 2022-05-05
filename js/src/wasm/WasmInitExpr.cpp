@@ -26,6 +26,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSerialize.h"
+#include "wasm/WasmUtility.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
@@ -549,55 +550,6 @@ bool InitExpr::clone(const InitExpr& src) {
   literal_ = src.literal_;
   type_ = src.type_;
   return true;
-}
-
-size_t InitExpr::serializedSize() const {
-  size_t size = sizeof(kind_) + sizeof(type_);
-  switch (kind_) {
-    case InitExprKind::Literal:
-      size += sizeof(literal_);
-      break;
-    case InitExprKind::Variable:
-      size += SerializedPodVectorSize(bytecode_);
-      break;
-    default:
-      MOZ_CRASH();
-  }
-  return size;
-}
-
-uint8_t* InitExpr::serialize(uint8_t* cursor) const {
-  cursor = WriteBytes(cursor, &kind_, sizeof(kind_));
-  cursor = WriteBytes(cursor, &type_, sizeof(type_));
-  switch (kind_) {
-    case InitExprKind::Literal:
-      cursor = WriteBytes(cursor, &literal_, sizeof(literal_));
-      break;
-    case InitExprKind::Variable:
-      cursor = SerializePodVector(cursor, bytecode_);
-      break;
-    default:
-      MOZ_CRASH();
-  }
-  return cursor;
-}
-
-const uint8_t* InitExpr::deserialize(const uint8_t* cursor) {
-  if (!(cursor = ReadBytes(cursor, &kind_, sizeof(kind_))) ||
-      !(cursor = ReadBytes(cursor, &type_, sizeof(type_)))) {
-    return nullptr;
-  }
-  switch (kind_) {
-    case InitExprKind::Literal:
-      cursor = ReadBytes(cursor, &literal_, sizeof(literal_));
-      break;
-    case InitExprKind::Variable:
-      cursor = DeserializePodVector(cursor, &bytecode_);
-      break;
-    default:
-      MOZ_CRASH();
-  }
-  return cursor;
 }
 
 size_t InitExpr::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {

@@ -9,7 +9,10 @@
 #include "nsImportModule.h"
 #include "nsPrintfCString.h"
 #include "nsProfileLock.h"
+#include "nsTSubstring.h"
 #include "nsXULAppAPI.h"
+#include "prenv.h"
+#include "prtime.h"
 #include "SpecialSystemDirectory.h"
 
 #include "mozilla/CmdLineAndEnvUtils.h"
@@ -203,8 +206,55 @@ nsresult BackgroundTasks::CreateTemporaryProfileDirectoryImpl(
 
 nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
     nsIFile* const aRoot, const nsCString& aPrefix) {
+  nsresult rv;
+
+  if (MOZ_LOG_TEST(sBackgroundTasksLog, LogLevel::Info)) {
+    nsAutoString path;
+    if (NS_SUCCEEDED(aRoot->GetPath(path))) {
+      MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+              ("Checking \"%s\" for stale profiles matching \"%s\".",
+               NS_LossyConvertUTF16toASCII(path.get()).get(), aPrefix.get()));
+    }
+  }
+
+  // Check how old a background task should be before being deleted.
+  PRTime timeoutMillis = 60 * 1000;  // Default to 1 minute.
+  bool deleteAll = false;
+  // MOZ_BACKGROUNDTASKS_PURGE_STALE_PROFILES = ["0"+ in ms, "always", "never"]
+  nsAutoCString envTimeoutStr(
+      PR_GetEnv("MOZ_BACKGROUNDTASKS_PURGE_STALE_PROFILES"));
+
+  if (!envTimeoutStr.IsEmpty()) {
+    int64_t envTimeoutMillis = envTimeoutStr.ToInteger64(&rv);
+    if (NS_SUCCEEDED(rv)) {
+      if (envTimeoutMillis >= 0) {
+        timeoutMillis = envTimeoutMillis;
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Setting stale profile age to %sms", envTimeoutStr.get()));
+      } else {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+                ("MOZ_BACKGROUNDTASKS_PURGE_STALE_PROFILES is set less than 0, "
+                 "using default timeout instead."));
+      }
+    } else {
+      if (envTimeoutStr.Equals("always")) {
+        deleteAll = true;
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Deleting profiles regardless of age."));
+      } else if (envTimeoutStr.Equals("never")) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Info,
+                ("Skipping cleanup of stale background task profiles."));
+        return NS_OK;
+      } else {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+                ("MOZ_BACKGROUNDTASKS_PURGE_STALE_PROFILES is set to invalid "
+                 "value, using default timeout instead."));
+      }
+    }
+  }
+
   nsCOMPtr<nsIDirectoryEnumerator> entries;
-  nsresult rv = aRoot->GetDirectoryEntries(getter_AddRefs(entries));
+  rv = aRoot->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFile> entry;
@@ -230,12 +280,37 @@ nsresult BackgroundTasks::RemoveStaleTemporaryProfileDirectories(
       continue;
     }
 
+    if (!deleteAll) {
+      // Skip profiles that were recently created to prevent deleting a profile
+      // after creating the directory but before creating the lockfile.
+      PRTime profileModifyTime;
+      if (NS_FAILED(entry->GetLastModifiedTime(&profileModifyTime))) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+                ("Skipping deletion of %s, unable to retrieve when profile was "
+                 "last modified.",
+                 entryName.get()));
+        continue;
+      }
+      PRTime now = PR_Now() / PR_USEC_PER_MSEC;
+      // Timeout only needs to be large enough to prevent deleting a temporary
+      // profile between it being created and locked.
+      if (now - profileModifyTime < timeoutMillis) {
+        MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Debug,
+                ("Skipping deletion of %s, profile is not yet stale.",
+                 entryName.get()));
+        continue;
+      }
+    }
+
     // Check if the profile is locked. If successful drop the lock so we can
     // delete the folder. Background tasks' temporary profiles are not reused or
     // remembered once released, so we don't need to hold this lock while
     // deleting it.
     nsProfileLock lock;
     if (NS_FAILED(lock.Lock(entry, nullptr)) || NS_FAILED(lock.Unlock())) {
+      MOZ_LOG(sBackgroundTasksLog, mozilla::LogLevel::Warning,
+              ("Skipping deletion of %s, unable to lock/unlock profile.",
+               entryName.get()));
       continue;
     }
 

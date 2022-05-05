@@ -2908,7 +2908,7 @@ moz_cairo_dwrite_set_cleartype_params
 ?DwmCompositionEnabled@gfxWindowsPlatform@@QEAA_NXZ
 ??_GgfxWindowsPlatform@@UEAAPEAXI@Z
 ??0Display@VsyncSource@gfx@mozilla@@QEAA@XZ
-??0RefreshTimerVsyncDispatcher@mozilla@@QEAA@PEAVDisplay@VsyncSource@gfx@1@@Z
+??0VsyncDispatcher@mozilla@@QEAA@PEAVDisplay@VsyncSource@gfx@1@@Z
 ?destroy_sandbox@?$rlbox_sandbox@Vrlbox_noop_sandbox@rlbox@@@rlbox@@QEAA?A?<auto>@@XZ
 ?Start@Thread@base@@QEAA_NXZ
 ?Run@MessagePumpDefault@base@@UEAAXPEAVDelegate@MessagePump@2@@Z
@@ -3996,12 +3996,12 @@ ZN5style7stylist7Stylist17append_stylesheet17he70cadcba5340a98E
 ?AccessKey@ApplicationAccessible@a11y@mozilla@@UEBA?AVKeyBinding@23@XZ
 ??8?$StyleGenericCrossFadeImage@U?$StyleGenericImage@U?$StyleGenericGradient@UStyleLineDirection@mozilla@@TStyleLengthPercentageUnion@2@UStyleCSSPixelLength@2@T32@U?$StyleGenericPosition@TStyleLengthPercentageUnion@mozilla@@T12@@2@UStyleAngle@2@UStyleAngleOrPercentage@2@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@@mozilla@@U?$StyleGenericMozImageRect@UStyleNumberOrPercentage@mozilla@@UStyleComputedUrl@2@@2@UStyleComputedUrl@2@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@UStylePercentage@2@@mozilla@@U?$StyleGenericColor@UStyleRGBA@mozilla@@@2@@mozilla@@QEBA_NAEBU01@@Z
 ?GetNextTickHint@nsRefreshDriver@@SA?AV?$Maybe@VTimeStamp@mozilla@@@mozilla@@XZ
-?GetRefreshTimerVsyncDispatcher@VsyncSource@gfx@mozilla@@QEAA?AV?$RefPtr@VRefreshTimerVsyncDispatcher@mozilla@@@@XZ
+?GetVsyncDispatcher@VsyncSource@gfx@mozilla@@QEAA?AV?$RefPtr@VVsyncDispatcher@mozilla@@@@XZ
 ?IsInLayoutAsapMode@gfxPlatform@@SA_NXZ
 ?GetRootPresContext@nsPresContext@@QEBAPEAVnsRootPresContext@@XZ
-?AddChildRefreshTimer@RefreshTimerVsyncDispatcher@mozilla@@QEAAXPEAVVsyncObserver@2@@Z
-?NotifyVsync@RefreshTimerVsyncDispatcher@mozilla@@QEAAXAEBUVsyncEvent@2@@Z
-?NotifyRefreshTimerVsyncStatus@Display@VsyncSource@gfx@mozilla@@QEAAX_N@Z
+?AddChildRefreshTimer@VsyncDispatcher@mozilla@@QEAAXPEAVVsyncObserver@2@@Z
+?NotifyVsync@VsyncDispatcher@mozilla@@QEAAXAEBUVsyncEvent@2@@Z
+?NotifyVsyncDispatcherVsyncStatus@Display@VsyncSource@gfx@mozilla@@QEAAX_N@Z
 ?GetVsyncRate@D3DVsyncDisplay@D3DVsyncSource@@UEAA?AV?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@XZ
 ?PostTask@MessageLoop@@QEAAXU?$already_AddRefed@VnsIRunnable@@@@@Z
 ??$_Insert_nohint@AEAU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAU?$_Tree_node@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAX@2@@?$_Tree@V?$_Tmap_traits@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@@2@$0A@@std@@@std@@IEAA?AU?$pair@V?$_Tree_iterator@V?$_Tree_val@U?$_Tree_simple_types@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@@std@@@std@@@std@@_N@1@_NAEAU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@PEAU?$_Tree_node@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAX@1@@Z
@@ -6973,7 +6973,7 @@ nsEscape
 ?GetPromiseState@JS@@YA?AW4PromiseState@1@V?$Handle@PEAVJSObject@@@1@@Z
 ?DoomAlreadyRemoved@CacheEntry@net@mozilla@@QEAAXXZ
 ?Disconnect@nsRefreshDriver@@QEAAXXZ
-?RemoveChildRefreshTimer@RefreshTimerVsyncDispatcher@mozilla@@QEAAXPEAVVsyncObserver@2@@Z
+?RemoveChildRefreshTimer@VsyncDispatcher@mozilla@@QEAAXPEAVVsyncObserver@2@@Z
 ?DisableVsync@D3DVsyncDisplay@D3DVsyncSource@@UEAAXXZ
 ?CallTypeSniffers@HttpBaseChannel@net@mozilla@@KAXPEAXPEBEI@Z
 ?NS_SniffContent@@YAXPEBDPEAVnsIRequest@@PEBEIAEAV?$nsTSubstring@D@@@Z

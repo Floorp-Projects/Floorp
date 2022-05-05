@@ -555,7 +555,7 @@ void BrowserParent::SetOwnerElement(Element* aElement) {
     mBrowsingContext->SetEmbedderElement(mFrameElement);
   }
 
-  UpdateVsyncParentVsyncSource();
+  UpdateVsyncParentVsyncDispatcher();
 
   VisitChildren([aElement](BrowserBridgeParent* aBrowser) {
     if (auto* browserParent = aBrowser->GetBrowserParent()) {
@@ -616,6 +616,9 @@ void BrowserParent::DestroyInternal() {
 
 #ifdef ACCESSIBILITY
   if (a11y::DocAccessibleParent* tabDoc = GetTopLevelDocAccessible()) {
+#  if defined(ANDROID)
+    MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+#  endif
     tabDoc->Destroy();
   }
 #endif
@@ -1211,6 +1214,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc,
     const uint64_t& aParentID, const uint32_t& aMsaaID,
     const IAccessibleHolder& aDocCOMProxy) {
+#  if defined(ANDROID)
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+#  endif
   auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
 
   // If this tab is already shutting down just mark the new actor as shutdown
@@ -1428,7 +1434,7 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
 PVsyncParent* BrowserParent::AllocPVsyncParent() {
   MOZ_ASSERT(!mVsyncParent);
   mVsyncParent = new VsyncParent();
-  UpdateVsyncParentVsyncSource();
+  UpdateVsyncParentVsyncDispatcher();
   return mVsyncParent.get();
 }
 
@@ -1438,13 +1444,16 @@ bool BrowserParent::DeallocPVsyncParent(PVsyncParent* aActor) {
   return true;
 }
 
-void BrowserParent::UpdateVsyncParentVsyncSource() {
+void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
   if (!mVsyncParent) {
     return;
   }
 
   if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-    mVsyncParent->UpdateVsyncSource(widget->GetVsyncSource());
+    if (RefPtr<VsyncDispatcher> vsyncDispatcher =
+            widget->GetVsyncDispatcher()) {
+      mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
+    }
   }
 }
 

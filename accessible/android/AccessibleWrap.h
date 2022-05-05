@@ -9,7 +9,6 @@
 #include "LocalAccessible.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/java/GeckoBundleWrappers.h"
-#include "mozilla/java/SessionAccessibilityWrappers.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {

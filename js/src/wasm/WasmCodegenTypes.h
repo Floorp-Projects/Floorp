@@ -28,8 +28,10 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmSerialize.h"
 #include "wasm/WasmTlsData.h"
 #include "wasm/WasmTypeDef.h"
+#include "wasm/WasmUtility.h"
 
 namespace js {
 
@@ -121,6 +123,8 @@ class BytecodeOffset {
   static const uint32_t INVALID = -1;
   uint32_t offset_;
 
+  WASM_CHECK_CACHEABLE_POD(offset_);
+
  public:
   BytecodeOffset() : offset_(INVALID) {}
   explicit BytecodeOffset(uint32_t offset) : offset_(offset) {}
@@ -132,6 +136,8 @@ class BytecodeOffset {
   }
 };
 
+WASM_DECLARE_CACHEABLE_POD(BytecodeOffset);
+
 // A TrapSite (in the TrapSiteVector for a given Trap code) represents a wasm
 // instruction at a given bytecode offset that can fault at the given pc offset.
 // When such a fault occurs, a signal/exception handler looks up the TrapSite to
@@ -141,6 +147,8 @@ struct TrapSite {
   uint32_t pcOffset;
   BytecodeOffset bytecode;
 
+  WASM_CHECK_CACHEABLE_POD(pcOffset, bytecode);
+
   TrapSite() : pcOffset(-1), bytecode() {}
   TrapSite(uint32_t pcOffset, BytecodeOffset bytecode)
       : pcOffset(pcOffset), bytecode(bytecode) {}
@@ -148,6 +156,7 @@ struct TrapSite {
   void offsetBy(uint32_t offset) { pcOffset += offset; }
 };
 
+WASM_DECLARE_CACHEABLE_POD(TrapSite);
 WASM_DECLARE_POD_VECTOR(TrapSite, TrapSiteVector)
 
 struct TrapSiteVectorArray
@@ -157,7 +166,7 @@ struct TrapSiteVectorArray
   void swap(TrapSiteVectorArray& rhs);
   void shrinkStorageToFit();
 
-  WASM_DECLARE_SERIALIZABLE(TrapSiteVectorArray)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // On trap, the bytecode offset to be reported in callstacks is saved.
@@ -188,7 +197,11 @@ struct Offsets {
   // into a CodeRange.
   uint32_t begin;
   uint32_t end;
+
+  WASM_CHECK_CACHEABLE_POD(begin, end);
 };
+
+WASM_DECLARE_CACHEABLE_POD(Offsets);
 
 struct CallableOffsets : Offsets {
   MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0) : Offsets(), ret(ret) {}
@@ -196,7 +209,11 @@ struct CallableOffsets : Offsets {
   // The offset of the return instruction precedes 'end' by a variable number
   // of instructions due to out-of-line codegen.
   uint32_t ret;
+
+  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(Offsets, ret);
 };
+
+WASM_DECLARE_CACHEABLE_POD(CallableOffsets);
 
 struct JitExitOffsets : CallableOffsets {
   MOZ_IMPLICIT JitExitOffsets()
@@ -207,7 +224,12 @@ struct JitExitOffsets : CallableOffsets {
   // untrusted FP zone.
   uint32_t untrustedFPStart;
   uint32_t untrustedFPEnd;
+
+  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallableOffsets, untrustedFPStart,
+                                       untrustedFPEnd);
 };
+
+WASM_DECLARE_CACHEABLE_POD(JitExitOffsets);
 
 struct FuncOffsets : CallableOffsets {
   MOZ_IMPLICIT FuncOffsets()
@@ -225,7 +247,12 @@ struct FuncOffsets : CallableOffsets {
   // the jump in the Tier-1 function, or the point following the standard
   // prologue within a Tier-2 function.
   uint32_t tierEntry;
+
+  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallableOffsets, uncheckedCallEntry,
+                                       tierEntry);
 };
+
+WASM_DECLARE_CACHEABLE_POD(FuncOffsets);
 
 using FuncOffsetsVector = Vector<FuncOffsets, 0, SystemAllocPolicy>;
 
@@ -271,6 +298,13 @@ class CodeRange {
     Trap trap_;
   } u;
   Kind kind_ : 8;
+
+  WASM_CHECK_CACHEABLE_POD(begin_, ret_, end_, u.funcIndex_,
+                           u.func.lineOrBytecode_,
+                           u.func.beginToUncheckedCallEntry_,
+                           u.func.beginToTierEntry_,
+                           u.jitExit.beginToUntrustedFPStart_,
+                           u.jitExit.beginToUntrustedFPEnd_, u.trap_, kind_);
 
  public:
   CodeRange() = default;
@@ -388,6 +422,7 @@ class CodeRange {
   };
 };
 
+WASM_DECLARE_CACHEABLE_POD(CodeRange);
 WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
 
 extern const CodeRange* LookupInSorted(const CodeRangeVector& codeRanges,
@@ -403,6 +438,8 @@ class CallSiteDesc {
   static constexpr size_t LINE_OR_BYTECODE_BITS_SIZE = 29;
   uint32_t lineOrBytecode_ : LINE_OR_BYTECODE_BITS_SIZE;
   uint32_t kind_ : 3;
+
+  WASM_CHECK_CACHEABLE_POD(lineOrBytecode_, kind_);
 
  public:
   static constexpr uint32_t MAX_LINE_OR_BYTECODE_VALUE =
@@ -436,8 +473,12 @@ class CallSiteDesc {
   }
 };
 
+WASM_DECLARE_CACHEABLE_POD(CallSiteDesc);
+
 class CallSite : public CallSiteDesc {
   uint32_t returnAddressOffset_;
+
+  WASM_CHECK_CACHEABLE_POD_WITH_PARENT(CallSiteDesc, returnAddressOffset_);
 
  public:
   CallSite() : returnAddressOffset_(0) {}
@@ -449,6 +490,7 @@ class CallSite : public CallSiteDesc {
   uint32_t returnAddressOffset() const { return returnAddressOffset_; }
 };
 
+WASM_DECLARE_CACHEABLE_POD(CallSite);
 WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
 
 // A CallSiteTarget describes the callee of a CallSite, either a function or a
@@ -458,8 +500,11 @@ WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
 
 class CallSiteTarget {
   uint32_t packed_;
+
+  WASM_CHECK_CACHEABLE_POD(packed_);
 #ifdef DEBUG
   enum Kind { None, FuncIndex, TrapExit } kind_;
+  WASM_CHECK_CACHEABLE_POD(kind_);
 #endif
 
  public:
@@ -502,6 +547,8 @@ class CallSiteTarget {
   }
 };
 
+WASM_DECLARE_CACHEABLE_POD(CallSiteTarget);
+
 using CallSiteTargetVector = Vector<CallSiteTarget, 0, SystemAllocPolicy>;
 
 // WasmTryNotes are stored in a vector that acts as an exception table for
@@ -517,6 +564,8 @@ struct WasmTryNote {
   uint32_t entryPoint;   // The offset of the landing pad.
   uint32_t framePushed;  // Track offset from frame of stack pointer.
 
+  WASM_CHECK_CACHEABLE_POD(begin, end, entryPoint, framePushed);
+
   void offsetBy(uint32_t offset) {
     begin += offset;
     end += offset;
@@ -531,6 +580,7 @@ struct WasmTryNote {
   }
 };
 
+WASM_DECLARE_CACHEABLE_POD(WasmTryNote);
 WASM_DECLARE_POD_VECTOR(WasmTryNote, WasmTryNoteVector)
 
 // CalleeDesc describes how to compile one of the variety of asm.js/wasm calls.
@@ -579,6 +629,10 @@ class CalleeDesc {
     SymbolicAddress builtin_;
   } u;
 
+  WASM_CHECK_CACHEABLE_POD(which_, u.funcIndex_, u.import.globalDataOffset_,
+                           u.table.globalDataOffset_, u.table.minLength_,
+                           u.table.maxLength_, u.table.funcTypeId_, u.builtin_);
+
  public:
   CalleeDesc() = default;
   static CalleeDesc function(uint32_t funcIndex);
@@ -603,8 +657,7 @@ class CalleeDesc {
   }
   uint32_t tableFunctionBaseGlobalDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.globalDataOffset_ +
-           offsetof(TableInstanceData, elements);
+    return u.table.globalDataOffset_ + offsetof(TableInstanceData, elements);
   }
   TypeIdDesc wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);
@@ -623,6 +676,8 @@ class CalleeDesc {
     return u.builtin_;
   }
 };
+
+WASM_DECLARE_CACHEABLE_POD(CalleeDesc);
 
 }  // namespace wasm
 }  // namespace js
