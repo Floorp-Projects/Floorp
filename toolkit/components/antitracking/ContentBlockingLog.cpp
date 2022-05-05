@@ -22,6 +22,8 @@
 
 namespace mozilla {
 
+using ipc::AutoIPCStream;
+
 typedef Telemetry::OriginMetricID OriginMetricID;
 
 // sync with TelemetryOriginData.inc
