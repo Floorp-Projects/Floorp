@@ -41,9 +41,9 @@ namespace {
 
 // Encoder configuration parameters
 constexpr int kQpMin = 10;
-constexpr int kUsageProfile = 1;     // 0 = good quality; 1 = real-time.
-constexpr int kMinQindex = 58;       // Min qindex threshold for QP scaling.
-constexpr int kMaxQindex = 180;      // Max qindex threshold for QP scaling.
+constexpr int kUsageProfile = 1;  // 0 = good quality; 1 = real-time.
+constexpr int kMinQindex = 58;    // Min qindex threshold for QP scaling.
+constexpr int kMaxQindex = 180;   // Max qindex threshold for QP scaling.
 constexpr int kBitDepth = 8;
 constexpr int kLagInFrames = 0;  // No look ahead.
 constexpr int kRtpTicksPerSecond = 90000;
@@ -62,6 +62,14 @@ int GetCpuSpeed(int width, int height, int number_of_cores) {
     return 8;
   else
     return 7;
+}
+
+aom_superblock_size_t GetSuperblockSize(int width, int height, int threads) {
+  int resolution = width * height;
+  if (threads >= 4 && resolution >= 960 * 540 && resolution < 1920 * 1080)
+    return AOM_SUPERBLOCK_SIZE_64X64;
+  else
+    return AOM_SUPERBLOCK_SIZE_DYNAMIC;
 }
 
 class LibaomAv1Encoder final : public VideoEncoder {
@@ -350,6 +358,15 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
                         << " on control AV1E_SET_ENABLE_REF_FRAME_MVS.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  ret =
+      aom_codec_control(&ctx_, AV1E_SET_SUPERBLOCK_SIZE,
+                        GetSuperblockSize(cfg_.g_w, cfg_.g_h, cfg_.g_threads));
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_SUPERBLOCK_SIZE.";
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
