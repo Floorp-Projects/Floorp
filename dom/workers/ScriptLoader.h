@@ -37,6 +37,116 @@ enum WorkerScriptType { WorkerScript, DebuggerScript };
 
 namespace workerinternals {
 
+namespace loader {
+class ScriptLoaderRunnable;
+class ScriptExecutorRunnable;
+class CachePromiseHandler;
+class CacheLoadHandler;
+class CacheCreator;
+class NetworkLoadHandler;
+
+class WorkerScriptLoader final : public nsINamed {
+  friend class ScriptLoaderRunnable;
+  friend class ScriptExecutorRunnable;
+  friend class CachePromiseHandler;
+  friend class CacheLoadHandler;
+  friend class NetworkLoadHandler;
+
+  WorkerPrivate* const mWorkerPrivate;
+  UniquePtr<SerializedStackHolder> mOriginStack;
+  nsString mOriginStackJSON;
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+  nsTArrayView<ScriptLoadInfo> mLoadInfos;
+  RefPtr<CacheCreator> mCacheCreator;
+  Maybe<ClientInfo> mClientInfo;
+  Maybe<ServiceWorkerDescriptor> mController;
+  const bool mIsMainScript;
+  WorkerScriptType mWorkerScriptType;
+  bool mCanceledMainThread;
+  ErrorResult& mRv;
+  bool mExecutionAborted = false;
+  bool mMutedErrorFlag = false;
+
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
+                     UniquePtr<SerializedStackHolder> aOriginStack,
+                     nsIEventTarget* aSyncLoopTarget,
+                     nsTArray<ScriptLoadInfo> aLoadInfos,
+                     const Maybe<ClientInfo>& aClientInfo,
+                     const Maybe<ServiceWorkerDescriptor>& aController,
+                     bool aIsMainScript, WorkerScriptType aWorkerScriptType,
+                     ErrorResult& aRv);
+
+  void CancelMainThreadWithBindingAborted() {
+    CancelMainThread(NS_BINDING_ABORTED);
+  }
+
+  bool DispatchLoadScripts();
+
+ private:
+  ~WorkerScriptLoader() = default;
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName.AssignLiteral("WorkerScriptLoader");
+    return NS_OK;
+  }
+
+  nsIURI* GetBaseURI();
+
+  void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv);
+
+  void MaybeExecuteFinishedScripts(const ScriptLoadInfo& aLoadInfo);
+
+  bool StoreCSP();
+
+  bool ProcessPendingRequests(JSContext* aCx,
+                              const Span<ScriptLoadInfo> aLoadInfosToExecute);
+
+  nsresult OnStreamComplete(ScriptLoadInfo& aLoadInfo, nsresult aStatus);
+
+  // Are we loading the primary script, which is not a Debugger Script?
+  bool IsMainWorkerScript() const {
+    return mIsMainScript && mWorkerScriptType == WorkerScript;
+  }
+
+  // Are we loading the primary script, regardless of the script type?
+  bool IsMainScript() const { return mIsMainScript; }
+
+  bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
+
+  void SetController(const Maybe<ServiceWorkerDescriptor>& aDescriptor) {
+    mController = aDescriptor;
+  }
+
+  Maybe<ServiceWorkerDescriptor>& GetController() { return mController; }
+
+  CacheCreator* GetCacheCreator() { return mCacheCreator; }
+
+  bool IsCancelled() { return mCanceledMainThread; }
+
+  void CancelMainThread(nsresult aCancelResult);
+
+  void DeleteCache();
+
+  nsresult LoadScripts();
+
+  nsresult LoadScript(ScriptLoadInfo& aLoadInfo);
+
+  void DispatchProcessPendingRequests();
+
+  bool EvaluateScript(JSContext* aCx, ScriptLoadInfo& aLoadInfo);
+
+  void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                            bool aResult, bool aMutedError);
+
+  void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
+};
+
+}  // namespace loader
+
 nsresult ChannelFromScriptURLMainThread(
     nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
     nsIURI* aScriptURL, const Maybe<ClientInfo>& aClientInfo,
