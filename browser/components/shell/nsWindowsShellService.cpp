@@ -967,7 +967,7 @@ static nsresult GetShortcutPath(int aCSIDL, bool aPrivateBrowsing,
 //   NS_ERROR_FILE_ALREADY_EXISTS if the shortcut exists but doesn't match the
 //                                current app
 //   NS_OK if the shortcut matches
-static nsresult GetMatchingShortcut(int aCSIDL, const nsAutoString& aAUMID,
+static nsresult GetMatchingShortcut(int aCSIDL, const nsAString& aAUMID,
                                     const wchar_t aExePath[MAXPATHLEN],
                                     bool aPrivateBrowsing,
                                     /* out */ nsAutoString& aShortcutPath) {
@@ -1250,17 +1250,11 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
 }
 
 static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
-                                           bool aPrivateBrowsing) {
-  if (IsWin10OrLater() && !IsWin10Sep2018UpdateOrLater()) {
-    // First available on 1809
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsAutoString aumid;
-  if (NS_WARN_IF(!mozilla::widget::WinTaskbar::GenerateAppUserModelID(
-          aumid, aPrivateBrowsing))) {
-    return NS_ERROR_FAILURE;
-  }
+                                           bool aPrivateBrowsing,
+                                           const nsAString& aAppUserModelId) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      !NS_IsMainThread(),
+      "PinCurrentAppToTaskbarImpl should be called off main thread only");
 
   wchar_t exePath[MAXPATHLEN] = {};
   if (NS_WARN_IF(NS_FAILED(BinaryPath::GetLong(exePath)))) {
@@ -1276,8 +1270,8 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     // GetMatchingShortcut may fail when the exe path doesn't match, even
     // if it refers to the same file. This should be rare, and the worst
     // outcome would be failure to pin, so the risk is acceptable.
-    nsresult rv = GetMatchingShortcut(shortcutCSIDLs[i], aumid, exePath,
-                                      aPrivateBrowsing, shortcutPath);
+    nsresult rv = GetMatchingShortcut(shortcutCSIDLs[i], aAppUserModelId,
+                                      exePath, aPrivateBrowsing, shortcutPath);
     if (NS_SUCCEEDED(rv)) {
       break;
     } else {
@@ -1333,8 +1327,9 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
     // needs an index.
     iconIndex--;
 
-    rv = CreateShortcutImpl(exeFile, arguments, desc, exeFile, iconIndex, aumid,
-                            FOLDERID_StartMenu, linkName, shortcutPath);
+    rv = CreateShortcutImpl(exeFile, arguments, desc, exeFile, iconIndex,
+                            aAppUserModelId, FOLDERID_StartMenu, linkName,
+                            shortcutPath);
     if (!NS_SUCCEEDED(rv)) {
       return NS_ERROR_FILE_NOT_FOUND;
     }
@@ -1347,15 +1342,81 @@ static nsresult PinCurrentAppToTaskbarImpl(bool aCheckOnly,
   }
 }
 
-NS_IMETHODIMP
-nsWindowsShellService::PinCurrentAppToTaskbar(bool aPrivateBrowsing = false) {
-  return PinCurrentAppToTaskbarImpl(/* aCheckOnly */ false, aPrivateBrowsing);
+static nsresult PinCurrentAppToTaskbarAsyncImpl(bool aCheckOnly,
+                                                bool aPrivateBrowsing,
+                                                JSContext* aCx,
+                                                dom::Promise** aPromise) {
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  // First available on 1809
+  if (IsWin10OrLater() && !IsWin10Sep2018UpdateOrLater()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  ErrorResult rv;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
+
+  if (MOZ_UNLIKELY(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  nsAutoString aumid;
+  if (NS_WARN_IF(!mozilla::widget::WinTaskbar::GenerateAppUserModelID(
+          aumid, aPrivateBrowsing))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto promiseHolder = MakeRefPtr<nsMainThreadPtrHolder<dom::Promise>>(
+      "CheckPinCurrentAppToTaskbarAsync promise", promise);
+
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "CheckPinCurrentAppToTaskbarAsync",
+          [aCheckOnly, aPrivateBrowsing, aumid = nsString{aumid},
+           promiseHolder = std::move(promiseHolder)] {
+            nsresult rv = NS_ERROR_FAILURE;
+            HRESULT hr = CoInitialize(nullptr);
+
+            if (SUCCEEDED(hr)) {
+              rv = PinCurrentAppToTaskbarImpl(aCheckOnly, aPrivateBrowsing,
+                                              aumid);
+              CoUninitialize();
+            }
+
+            NS_DispatchToMainThread(NS_NewRunnableFunction(
+                "CheckPinCurrentAppToTaskbarAsync callback",
+                [rv, promiseHolder = std::move(promiseHolder)] {
+                  dom::Promise* promise = promiseHolder.get()->get();
+
+                  if (NS_SUCCEEDED(rv)) {
+                    promise->MaybeResolveWithUndefined();
+                  } else {
+                    promise->MaybeReject(rv);
+                  }
+                }));
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  promise.forget(aPromise);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::CheckPinCurrentAppToTaskbar(
-    bool aPrivateBrowsing = false) {
-  return PinCurrentAppToTaskbarImpl(/* aCheckOnly */ true, aPrivateBrowsing);
+nsWindowsShellService::PinCurrentAppToTaskbarAsync(bool aPrivateBrowsing,
+                                                   JSContext* aCx,
+                                                   dom::Promise** aPromise) {
+  return PinCurrentAppToTaskbarAsyncImpl(/* aCheckOnly */ false,
+                                         aPrivateBrowsing, aCx, aPromise);
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::CheckPinCurrentAppToTaskbarAsync(
+    bool aPrivateBrowsing, JSContext* aCx, dom::Promise** aPromise) {
+  return PinCurrentAppToTaskbarAsyncImpl(/* aCheckOnly = */ true,
+                                         aPrivateBrowsing, aCx, aPromise);
 }
 
 static bool IsCurrentAppPinnedToTaskbarSync(const nsAutoString& aumid) {
