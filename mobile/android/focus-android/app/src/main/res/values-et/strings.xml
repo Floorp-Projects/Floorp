@@ -277,6 +277,183 @@
 
     <string name="preference_category_privacy">Privaatsus</string>
 
+    <string name="preference_privacy_block_ads">Jälitajad blokitakse</string>
+
+    <string name="preference_privacy_block_ads_summary">Mõned reklaamid jälgivad saidi külastusi isegi siis, kui sa reklaamil ei klõpsa</string>
+    <string name="preference_privacy_block_analytics">Analüütilised jälitajad blokitakse</string>
+    <string name="preference_privacy_block_analytics_summary">Kasutatakse veebis tehtavate tegevuste analüüsimiseks ja mõõtmiseks</string>
+    <string name="preference_privacy_block_social">Sotsiaalsed jälitajad blokitakse</string>
+    <string name="preference_privacy_block_social_summary">Lisatud saitidele, et jälitada sinu külastusi ja kuvada funktsioone nagu jagamisnupud</string>
+    <string name="preference_privacy_block_content">Blokitakse muud jälitajad</string>
+    <string name="preference_privacy_block_content_summary2">Lubamine võib põhjustada mõne lehe ootamatu käitumise</string>
+    <string name="preference_privacy_category_cookies">Küpsised blokitakse</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Tänan, ei soovi</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokitakse ainult kolmanda osapoole jälitavad küpsised</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokitakse ainult kolmanda osapoole küpsised</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blokitakse saidiülesed küpsised</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Jah, palun</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Rakenduse lahtilukustamiseks kasutatakse sõrmejälge</string>
+
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">Sinu sõrmejälg saab %1$se lahti lukustada, kui mingi URl on juba äpis avatud.
+    Salajasus lülitatakse sisse.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Salajasus</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Äppide vahetajas varjatakse veebilehed ja ekraanipiltide tegemine blokitakse.</string>
+
+    <string name="preference_category_security">Turvalisus</string>
+
+    <string name="preference_category_performance">Jõudlus</string>
+    <string name="preference_performance_block_webfonts">Veebifondid blokitakse</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Võib põhjustada ikoonide või piltide puudumist</string>
+
+    <string name="preference_performance_block_javascript">JavaScript blokitakse</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Lehed võivad laadida kiiremini, kuid võivad käituda ootamatult</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">%1$s määratakse vaikebrauseriks</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Saadetakse kasutusandmeid</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Rohkem teavet</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla püüab koguda ainult seda, mida vajame, et teha %1$s kõigi jaoks paremaks.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Privaatsusreeglid</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">%1$sest</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Paigaldatud otsingumootorid</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Otsingumootori määramine</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Lähtesta vaikeotsingumootorid</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Lisa veel üks otsingumootor</string>
+    <string name="preference_search_remove_title">Otsingumootorite eemaldamine</string>
+    <string name="preference_search_remove">Eemalda</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Lisa veel üks otsingumootor</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Vali oma eelistatud otsingumootor:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">Kuvatakse avakuva näpunäiteid</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Otsingumootori lisamine</string>
+
+    <string name="search_add_manually_name_hint">Otsingumootori nimi</string>
+    <string name="search_add_manually_string">Kasutatav otsingustring</string>
+    <string name="search_add_manually_save">Salvesta</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Näide: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Uus otsingumootor lisatud.</string>
+
+    <string name="search_add_error_empty_name">Sisesta otsingumootori nimi</string>
+    <string name="search_add_error_duplicate_name">Paigaldatud otsingumootor juba kasutab sellist nime.</string>
+
+    <string name="search_add_error_empty_search">Sisesta otsingustring</string>
+
+    <string name="search_add_error_format">Kontrolli, et otsingustring kattub näidises toodud formaadiga</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Tühjenda sisend</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Tühista</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Kustuta lehitsemise ajalugu</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Avatud kaarte: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Turvaline ühendus</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Laadimine</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Veebisait laaditud</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Rohkem sätteid</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Rohkemate sätete nupp</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Liigu edasi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Laadi veebileht uuesti</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Liigu tagasi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Peata veebilehe laadimine</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Tagasi eelmise äpi juurde</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Blokitud jälitajate arv</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Bloki jälitajaid</string>
+
+    <string name="your_rights">Sinu õigused</string>
+
+    <string name="external_app_prompt_title">Ava link teises äpis</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Selle lingi avamiseks äpis %2$s võid lahkuda %1$sest.</string>
+
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->
