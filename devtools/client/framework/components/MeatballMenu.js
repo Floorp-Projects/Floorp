@@ -83,7 +83,7 @@ class MeatballMenu extends PureComponent {
       toggleNoAutohide: PropTypes.func,
 
       // Manage the pseudo-localization for the Firefox UI.
-      // https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#pseudolocalization
+      // https://firefox-source-docs.mozilla.org/l10n/fluent/tutorial.html#manually-testing-ui-with-pseudolocalization
       disablePseudoLocale: PropTypes.func,
       enableAccentedPseudoLocale: PropTypes.func,
       enableBidiPseudoLocale: PropTypes.func,
