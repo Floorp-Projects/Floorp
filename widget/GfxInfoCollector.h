@@ -22,7 +22,7 @@ class MOZ_STACK_CLASS InfoObject {
 
  public:
   void DefineProperty(const char* name, int value);
-  void DefineProperty(const char* name, nsAString& value);
+  void DefineProperty(const char* name, const nsAString& value);
   void DefineProperty(const char* name, const char* value);
 
  private:
