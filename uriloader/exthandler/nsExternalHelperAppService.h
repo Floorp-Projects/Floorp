@@ -199,32 +199,6 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
    */
   void ExpungeTemporaryPrivateFiles();
 
-  bool GetFileNameFromChannel(nsIChannel* aChannel, nsAString& aFileName,
-                              nsIURI** aURI);
-
-  // Internal version of the method from nsIMIMEService.
-  already_AddRefed<nsIMIMEInfo> ValidateFileNameForSaving(
-      nsAString& aFileName, const nsACString& aMimeType, nsIURI* aURI,
-      nsIURI* aOriginalURI, uint32_t aFlags, bool aAllowURLExtension);
-
-  void SanitizeFileName(nsAString& aFileName, const nsACString& aExtension,
-                        uint32_t aFlags);
-
-  /**
-   * Helper routine that checks how we should modify an extension
-   * for this file.
-   */
-  enum ModifyExtensionType {
-    // Replace an invalid extension with the preferred one.
-    ModifyExtension_Replace = 0,
-    // Append the preferred extension after any existing one.
-    ModifyExtension_Append = 1,
-    // Don't modify the extension.
-    ModifyExtension_Ignore = 2
-  };
-  ModifyExtensionType ShouldModifyExtension(nsIMIMEInfo* aMimeInfo,
-                                            const nsCString& aFileExt);
-
   /**
    * Array for the files that should be deleted
    */
@@ -277,15 +251,15 @@ class nsExternalAppHandler final : public nsIStreamListener,
    *                        in which case dialogs will be parented to
    *                        aContentContext.
    * @param mExtProtSvc     nsExternalHelperAppService on creation
-   * @param aSuggestedFileName The filename to use
+   * @param aFileName       The filename to use
    * @param aReason         A constant from nsIHelperAppLauncherDialog
    * indicating why the request is handled by a helper app.
    */
-  nsExternalAppHandler(nsIMIMEInfo* aMIMEInfo, const nsAString& aFileExtension,
+  nsExternalAppHandler(nsIMIMEInfo* aMIMEInfo, const nsACString& aFileExtension,
                        mozilla::dom::BrowsingContext* aBrowsingContext,
                        nsIInterfaceRequestor* aWindowContext,
                        nsExternalHelperAppService* aExtProtSvc,
-                       const nsAString& aSuggestedFileName, uint32_t aReason,
+                       const nsAString& aFilename, uint32_t aReason,
                        bool aForceSave);
 
   /**
@@ -310,7 +284,7 @@ class nsExternalAppHandler final : public nsIStreamListener,
 
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl;
-  nsString mFileExtension;
+  nsString mTempFileExtension;
   nsString mTempLeafName;
 
   /**
@@ -500,13 +474,19 @@ class nsExternalAppHandler final : public nsIStreamListener,
   bool GetNeverAskFlagFromPref(const char* prefName, const char* aContentType);
 
   /**
+   * Helper routine that checks whether we should enforce an extension
+   * for this file.
+   */
+  bool ShouldForceExtension(const nsString& aFileExt);
+
+  /**
    * Helper routine to ensure that mSuggestedFileName ends in the correct
    * extension, in case the original extension contains invalid characters
    * or if this download is for a mimetype where we enforce using a specific
    * extension (image/, video/, and audio/ based mimetypes, and a few specific
    * document types).
    *
-   * It also ensure that mFileExtension only contains an extension
+   * It also ensure that mTempFileExtension only contains an extension
    * when it is different from mSuggestedFileName's extension.
    */
   void EnsureCorrectExtension(const nsString& aFileExt);

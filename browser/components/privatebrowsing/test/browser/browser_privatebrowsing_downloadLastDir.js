@@ -100,7 +100,7 @@ function test() {
       aCallback();
     };
 
-    launcherDialog.promptForSaveToFileAsync(launcher, aWin, "", "", false);
+    launcherDialog.promptForSaveToFileAsync(launcher, aWin, null, null, null);
   }
 
   testOnWindow(false, function(win, downloadDir) {
