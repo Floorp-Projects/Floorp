@@ -89,7 +89,7 @@ void CompositorVsyncDispatcher::Shutdown() {
 }
 
 VsyncDispatcher::VsyncDispatcher(gfx::VsyncSource* aVsyncSource)
-    : mVsyncSource(aVsyncSource), mState("VsyncDispatcher::mState") {
+    : mState(State(aVsyncSource), "VsyncDispatcher::mState") {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 }
@@ -99,9 +99,29 @@ VsyncDispatcher::~VsyncDispatcher() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-void VsyncDispatcher::MoveToSource(gfx::VsyncSource* aVsyncSource) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mVsyncSource = aVsyncSource;
+void VsyncDispatcher::SetVsyncSource(gfx::VsyncSource* aVsyncSource) {
+  MOZ_RELEASE_ASSERT(aVsyncSource);
+
+  auto state = mState.Lock();
+  if (aVsyncSource == state->mCurrentVsyncSource) {
+    return;
+  }
+
+  if (state->mIsObservingVsync) {
+    state->mCurrentVsyncSource->RemoveVsyncDispatcher(this);
+    aVsyncSource->AddVsyncDispatcher(this);
+  }
+  state->mCurrentVsyncSource = aVsyncSource;
+}
+
+RefPtr<gfx::VsyncSource> VsyncDispatcher::GetCurrentVsyncSource() {
+  auto state = mState.Lock();
+  return state->mCurrentVsyncSource;
+}
+
+TimeDuration VsyncDispatcher::GetVsyncRate() {
+  auto state = mState.Lock();
+  return state->mCurrentVsyncSource->GetVsyncRate();
 }
 
 void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
@@ -195,19 +215,26 @@ void VsyncDispatcher::RemoveMainThreadObserver(VsyncObserver* aObserver) {
 }
 
 void VsyncDispatcher::UpdateVsyncStatus() {
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(
-        NewRunnableMethod("VsyncDispatcher::UpdateVsyncStatus", this,
-                          &VsyncDispatcher::UpdateVsyncStatus));
-    return;
+  bool wasObservingVsync = false;
+  bool needVsync = false;
+  RefPtr<VsyncSource> vsyncSource;
+
+  {
+    auto state = mState.Lock();
+    wasObservingVsync = state->mIsObservingVsync;
+    needVsync =
+        !state->mObservers.IsEmpty() || !state->mMainThreadObservers.IsEmpty();
+    state->mIsObservingVsync = needVsync;
+    vsyncSource = state->mCurrentVsyncSource;
   }
 
-  mVsyncSource->NotifyVsyncDispatcherVsyncStatus(NeedsVsync());
-}
-
-bool VsyncDispatcher::NeedsVsync() {
-  auto state = mState.Lock();
-  return !state->mObservers.IsEmpty() || !state->mMainThreadObservers.IsEmpty();
+  // Call Add/RemoveVsyncDispatcher outside the lock, because it can re-enter
+  // into VsyncDispatcher::NotifyVsync.
+  if (needVsync && !wasObservingVsync) {
+    vsyncSource->AddVsyncDispatcher(this);
+  } else if (!needVsync && wasObservingVsync) {
+    vsyncSource->RemoveVsyncDispatcher(this);
+  }
 }
 
 }  // namespace mozilla
