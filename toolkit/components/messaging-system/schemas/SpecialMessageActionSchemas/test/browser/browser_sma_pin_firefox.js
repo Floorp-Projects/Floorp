@@ -9,7 +9,7 @@ const isMac = AppConstants.platform == "macosx";
 add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
   const sandbox = sinon.createSandbox();
   let shell = {
-    checkPinCurrentAppToTaskbar() {},
+    async checkPinCurrentAppToTaskbarAsync() {},
     QueryInterface: () => shell,
     get macDockSupport() {
       return this;
@@ -20,7 +20,7 @@ add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
 
     ensureAppIsPinnedToDock: sandbox.stub(),
     isCurrentAppPinnedToTaskbarAsync: sandbox.stub(),
-    pinCurrentAppToTaskbar: sandbox.stub(),
+    pinCurrentAppToTaskbarAsync: sandbox.stub().resolves(undefined),
     isAppInDock: false,
   };
 
@@ -46,9 +46,9 @@ add_task(async function test_PIN_FIREFOX_TO_TASKBAR() {
 
   function check(count, message) {
     Assert.equal(
-      shell.pinCurrentAppToTaskbar.callCount,
+      shell.pinCurrentAppToTaskbarAsync.callCount,
       count * isWin,
-      `pinCurrentAppToTaskbar was ${message} by the action for windows`
+      `pinCurrentAppToTaskbarAsync was ${message} by the action for windows`
     );
     Assert.equal(
       shell.ensureAppIsPinnedToDock.callCount,

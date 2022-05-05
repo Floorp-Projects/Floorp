@@ -412,9 +412,9 @@ let ShellServiceInternal = {
     // Currently this only works on certain Windows versions.
     try {
       // First check if we can even pin the app where an exception means no.
-      this.shellService
+      await this.shellService
         .QueryInterface(Ci.nsIWindowsShellService)
-        .checkPinCurrentAppToTaskbar(privateBrowsing);
+        .checkPinCurrentAppToTaskbarAsync(privateBrowsing);
       let winTaskbar = Cc["@mozilla.org/windows-taskbar;1"].getService(
         Ci.nsIWinTaskbar
       );
@@ -445,7 +445,7 @@ let ShellServiceInternal = {
     if (await this.doesAppNeedPin(privateBrowsing)) {
       try {
         if (AppConstants.platform == "win") {
-          this.shellService.pinCurrentAppToTaskbar(privateBrowsing);
+          await this.shellService.pinCurrentAppToTaskbarAsync(privateBrowsing);
         } else if (AppConstants.platform == "macosx") {
           this.macDockSupport.ensureAppIsPinnedToDock();
         }
