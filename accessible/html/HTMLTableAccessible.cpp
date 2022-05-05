@@ -374,8 +374,8 @@ bool HTMLTableAccessible::InsertChildAt(uint32_t aIndex,
   // caption only, because nsAccessibilityService ensures we don't create
   // accessibles for the other captions, since only the first is actually
   // visible.
-  return LocalAccessible::InsertChildAt(aChild->IsHTMLCaption() ? 0 : aIndex,
-                                        aChild);
+  return HyperTextAccessible::InsertChildAt(
+      aChild->IsHTMLCaption() ? 0 : aIndex, aChild);
 }
 
 role HTMLTableAccessible::NativeRole() const {
