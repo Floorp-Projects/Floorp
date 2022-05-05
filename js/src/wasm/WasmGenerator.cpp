@@ -1230,6 +1230,31 @@ SharedModule ModuleGenerator::finishModule(
     return nullptr;
   }
 
+  if (!isAsmJS() && compileArgs_->features.testSerialization) {
+    MOZ_RELEASE_ASSERT(mode() == CompileMode::Once &&
+                       tier() == Tier::Serialized);
+
+    Bytes serializedBytes;
+    if (!module->serialize(*linkData_, &serializedBytes)) {
+      return nullptr;
+    }
+
+    MutableModule deserializedModule =
+        Module::deserialize(serializedBytes.begin(), serializedBytes.length());
+    if (!deserializedModule) {
+      return nullptr;
+    }
+    module = deserializedModule;
+
+    // Perform storeOptimizedEncoding here instead of below so we don't have to
+    // re-serialize the module.
+    if (maybeTier2Listener) {
+      maybeTier2Listener->storeOptimizedEncoding(serializedBytes.begin(),
+                                                 serializedBytes.length());
+      maybeTier2Listener = nullptr;
+    }
+  }
+
   if (mode() == CompileMode::Tier1) {
     module->startTier2(*compileArgs_, bytecode, maybeTier2Listener);
   } else if (tier() == Tier::Serialized && maybeTier2Listener) {

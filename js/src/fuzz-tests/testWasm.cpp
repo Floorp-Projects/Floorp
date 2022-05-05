@@ -109,11 +109,18 @@ static bool assignImportKind(const Import& import, HandleObject obj,
   return true;
 }
 
+static bool FuzzerBuildId(JS::BuildIdCharVector* buildId) {
+  const char buildid[] = "testWasmFuzz";
+  return buildId->append(buildid, sizeof(buildid));
+}
+
 static int testWasmFuzz(const uint8_t* buf, size_t size) {
   auto gcGuard = mozilla::MakeScopeExit([&] {
     JS::PrepareForFullGC(gCx);
     JS::NonIncrementalGC(gCx, JS::GCOptions::Normal, JS::GCReason::API);
   });
+
+  JS::SetProcessBuildIdOp(FuzzerBuildId);
 
   const size_t MINIMUM_MODULE_SIZE = 8;
 
