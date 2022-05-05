@@ -561,6 +561,18 @@ TEST_F(CallPerfTest, ReceivesCpuOveruseAndUnderuse) {
     // TODO(sprang): Add integration test for maintain-framerate mode?
     void OnSinkWantsChanged(rtc::VideoSinkInterface<VideoFrame>* sink,
                             const rtc::VideoSinkWants& wants) override {
+      // The sink wants can change either because an adaptation happened (i.e.
+      // the pixels or frame rate changed) or for other reasons, such as encoded
+      // resolutions being communicated (happens whenever we capture a new frame
+      // size). In this test, we only care about adaptations.
+      bool did_adapt =
+          last_wants_.max_pixel_count != wants.max_pixel_count ||
+          last_wants_.target_pixel_count != wants.target_pixel_count ||
+          last_wants_.max_framerate_fps != wants.max_framerate_fps;
+      last_wants_ = wants;
+      if (!did_adapt) {
+        return;
+      }
       // At kStart expect CPU overuse. Then expect CPU underuse when the encoder
       // delay has been decreased.
       switch (test_phase_) {
@@ -625,6 +637,9 @@ TEST_F(CallPerfTest, ReceivesCpuOveruseAndUnderuse) {
       kAdaptedDown,
       kAdaptedUp
     } test_phase_;
+
+   private:
+    rtc::VideoSinkWants last_wants_;
   } test;
 
   RunBaseTest(&test);

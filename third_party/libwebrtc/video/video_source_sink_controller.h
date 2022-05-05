@@ -12,6 +12,7 @@
 #define VIDEO_VIDEO_SOURCE_SINK_CONTROLLER_H_
 
 #include <string>
+#include <vector>
 
 #include "absl/types/optional.h"
 #include "api/sequence_checker.h"
@@ -46,6 +47,7 @@ class VideoSourceSinkController {
   absl::optional<double> frame_rate_upper_limit() const;
   bool rotation_applied() const;
   int resolution_alignment() const;
+  const std::vector<rtc::VideoSinkWants::FrameSize>& resolutions() const;
 
   // Updates the settings stored internally. In order for these settings to be
   // applied to the sink, PushSourceSinkSettings() must subsequently be called.
@@ -55,6 +57,7 @@ class VideoSourceSinkController {
   void SetFrameRateUpperLimit(absl::optional<double> frame_rate_upper_limit);
   void SetRotationApplied(bool rotation_applied);
   void SetResolutionAlignment(int resolution_alignment);
+  void SetResolutions(std::vector<rtc::VideoSinkWants::FrameSize> resolutions);
 
  private:
   rtc::VideoSinkWants CurrentSettingsToSinkWants() const
@@ -79,6 +82,8 @@ class VideoSourceSinkController {
       RTC_GUARDED_BY(&sequence_checker_);
   bool rotation_applied_ RTC_GUARDED_BY(&sequence_checker_) = false;
   int resolution_alignment_ RTC_GUARDED_BY(&sequence_checker_) = 1;
+  std::vector<rtc::VideoSinkWants::FrameSize> resolutions_
+      RTC_GUARDED_BY(&sequence_checker_);
 };
 
 }  // namespace webrtc
