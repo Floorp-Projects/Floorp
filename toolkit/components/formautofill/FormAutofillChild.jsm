@@ -139,7 +139,7 @@ class FormAutofillChild extends JSWindowActorChild {
     FormAutofillContent.updateActiveInput();
 
     let element = evt.target;
-    if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
+    if (!FormAutofillUtils.isCreditCardOrAddressFieldType(element)) {
       return;
     }
     this._nextHandleElement = element;

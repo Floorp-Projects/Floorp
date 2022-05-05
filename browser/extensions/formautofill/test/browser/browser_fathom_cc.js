@@ -74,7 +74,7 @@ async function run_test(path, dirs) {
             obj.eligibleElementSelector
           );
           for (let i = 0; i < nodeList.length; i++) {
-            if (FormAutofillUtils.isFieldEligibleForAutofill(nodeList[i])) {
+            if (FormAutofillUtils.isCreditCardOrAddressFieldType(nodeList[i])) {
               eligibleFields.push(nodeList[i]);
             }
           }
