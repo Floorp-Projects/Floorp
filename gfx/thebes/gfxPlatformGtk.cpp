@@ -852,7 +852,8 @@ class GtkVsyncSource final : public VsyncSource {
   bool mVsyncEnabled;
 };
 
-class XrandrSoftwareVsyncSource final : public SoftwareVsyncSource {
+class XrandrSoftwareVsyncSource final
+    : public mozilla::gfx::SoftwareVsyncSource {
  public:
   XrandrSoftwareVsyncSource() {
     MOZ_ASSERT(NS_IsMainThread());
