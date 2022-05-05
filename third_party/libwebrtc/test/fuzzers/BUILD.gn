@@ -18,11 +18,12 @@ rtc_library("webrtc_fuzzer_main") {
   ]
 
   # When WebRTC fuzzer tests are built on Chromium bots they need to link
-  # with Chromium's implementation of metrics and field trial.
+  # with Chromium's implementation of metrics, field trial, and system time.
   if (build_with_chromium) {
     deps += [
       "../../../webrtc_overrides:field_trial",
       "../../../webrtc_overrides:metrics",
+      "../../../webrtc_overrides:system_time",
     ]
   }
 }
