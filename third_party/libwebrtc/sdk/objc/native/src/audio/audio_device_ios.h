@@ -192,6 +192,10 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
 
   // Configures the audio session for WebRTC.
   bool ConfigureAudioSession();
+
+  // Like above, but requires caller to already hold session lock.
+  bool ConfigureAudioSessionLocked();
+
   // Unconfigures the audio session.
   void UnconfigureAudioSession();
 
