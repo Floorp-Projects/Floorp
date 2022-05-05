@@ -445,9 +445,9 @@ wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
 // Before storing a GC pointer value in memory, skip to `skipBarrier` if the
 // prebarrier is not needed.  Will clobber `scratch`.
 //
-// It is OK for `tls` and `scratch` to be the same register.
+// It is OK for `instance` and `scratch` to be the same register.
 
-void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register tls,
+void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
                              Register scratch, Register valueAddr,
                              Label* skipBarrier);
 
@@ -457,9 +457,9 @@ void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register tls,
 // as SP.  `PreBarrierReg` is preserved by the barrier function.  Will clobber
 // `scratch`.
 //
-// It is OK for `tls` and `scratch` to be the same register.
+// It is OK for `instance` and `scratch` to be the same register.
 
-void EmitWasmPreBarrierCall(jit::MacroAssembler& masm, Register tls,
+void EmitWasmPreBarrierCall(jit::MacroAssembler& masm, Register instance,
                             Register scratch, Register valueAddr);
 
 // After storing a GC pointer value in memory, skip to `skipBarrier` if a

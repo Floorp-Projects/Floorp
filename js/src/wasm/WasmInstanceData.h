@@ -78,8 +78,7 @@ struct TableInstanceData {
 };
 
 // Table element for TableRepr::Func which carries both the code pointer and
-// a tls pointer (and thus anything reachable through the tls, including the
-// instance).
+// a instance pointer (and thus anything reachable through the instance).
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system

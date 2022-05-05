@@ -133,7 +133,7 @@ void Table::trace(JSTracer* trc) {
   }
 }
 
-uint8_t* Table::tlsElements() const {
+uint8_t* Table::instanceElements() const {
   if (repr() == TableRepr::Ref) {
     return (uint8_t*)objects_.begin();
   }

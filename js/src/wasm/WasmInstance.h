@@ -189,7 +189,7 @@ class alignas(16) Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
   TableInstanceData& tableInstanceData(const TableDesc& td) const;
-  GCPtrWasmTagObject& tagTls(const TagDesc& td) const;
+  GCPtrWasmTagObject& tagInstanceData(const TagDesc& td) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
