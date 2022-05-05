@@ -855,10 +855,8 @@ class GtkVsyncSource final : public VsyncSource {
 class XrandrSoftwareVsyncSource final
     : public mozilla::gfx::SoftwareVsyncSource {
  public:
-  XrandrSoftwareVsyncSource() {
+  XrandrSoftwareVsyncSource() : SoftwareVsyncSource(ComputeVsyncRate()) {
     MOZ_ASSERT(NS_IsMainThread());
-
-    UpdateVsyncRate();
 
     GdkScreen* defaultScreen = gdk_screen_get_default();
     g_signal_connect(defaultScreen, "monitors-changed",
@@ -869,7 +867,7 @@ class XrandrSoftwareVsyncSource final
   // Request the current refresh rate via xrandr. It is hard to find the
   // "correct" one, thus choose the highest one, assuming this will usually
   // give the best user experience.
-  void UpdateVsyncRate() {
+  static mozilla::TimeDuration ComputeVsyncRate() {
     struct _XDisplay* dpy = gdk_x11_get_default_xdisplay();
 
     // Use the default software refresh rate as lower bound. Allowing lower
@@ -918,13 +916,13 @@ class XrandrSoftwareVsyncSource final
     }
 
     const double rate = 1000.0 / highestRefreshRate;
-    mVsyncRate = mozilla::TimeDuration::FromMilliseconds(rate);
+    return mozilla::TimeDuration::FromMilliseconds(rate);
   }
 
   static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
     XrandrSoftwareVsyncSource* self =
         static_cast<XrandrSoftwareVsyncSource*>(aClosure);
-    self->UpdateVsyncRate();
+    self->SetVsyncRate(ComputeVsyncRate());
   }
 
   // from xrandr.c
