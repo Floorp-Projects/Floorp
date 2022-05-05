@@ -39,7 +39,11 @@ rtc_library("primitives") {
     "../../api:scoped_refptr",
     "../../rtc_base:checks",
     "../../rtc_base/system:rtc_export",
-    "//third_party/libyuv",
+    #"//third_party/libyuv",
+  ]
+  include_dirs = [
+    "/media/libyuv",
+    "/media/libyuv/libyuv/include",
   ]
 
   if (!build_with_mozilla) {
