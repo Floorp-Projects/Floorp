@@ -139,7 +139,7 @@ const void** Instance::addressOfTypeId(const TypeIdDesc& typeId) const {
 }
 
 FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
-  return *(FuncImportInstanceData*)(globalData() + fi.tlsDataOffset());
+  return *(FuncImportInstanceData*)(globalData() + fi.instanceOffset());
 }
 
 TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {

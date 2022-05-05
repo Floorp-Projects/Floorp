@@ -316,11 +316,11 @@ using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 class FuncImport {
  public:
   struct CacheablePod {
-    uint32_t tlsDataOffset_;
+    uint32_t instanceOffset_;
     uint32_t interpExitCodeOffset_;  // Machine code offset
     uint32_t jitExitCodeOffset_;     // Machine code offset
 
-    WASM_CHECK_CACHEABLE_POD(tlsDataOffset_, interpExitCodeOffset_,
+    WASM_CHECK_CACHEABLE_POD(instanceOffset_, interpExitCodeOffset_,
                              jitExitCodeOffset_);
   };
 
@@ -331,9 +331,9 @@ class FuncImport {
  public:
   FuncImport() { memset(&pod, 0, sizeof(CacheablePod)); }
 
-  FuncImport(FuncType&& funcType, uint32_t tlsDataOffset)
+  FuncImport(FuncType&& funcType, uint32_t instanceOffset)
       : funcType_(std::move(funcType)) {
-    pod.tlsDataOffset_ = tlsDataOffset;
+    pod.instanceOffset_ = instanceOffset;
     pod.interpExitCodeOffset_ = 0;
     pod.jitExitCodeOffset_ = 0;
   }
@@ -348,7 +348,7 @@ class FuncImport {
   }
 
   const FuncType& funcType() const { return funcType_; }
-  uint32_t tlsDataOffset() const { return pod.tlsDataOffset_; }
+  uint32_t instanceOffset() const { return pod.instanceOffset_; }
   uint32_t interpExitCodeOffset() const { return pod.interpExitCodeOffset_; }
   uint32_t jitExitCodeOffset() const { return pod.jitExitCodeOffset_; }
 
