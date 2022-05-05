@@ -1,5 +1,4 @@
 emulator
-emulator
 platform-tools
 build-tools;31.0.0
 platforms;android-31
