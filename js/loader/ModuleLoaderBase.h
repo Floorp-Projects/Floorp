@@ -151,6 +151,11 @@ class ModuleLoaderBase : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
+  // https://wicg.github.io/import-maps/#document-acquiring-import-maps
+  //
+  // Each Document has an acquiring import maps boolean. It is initially true.
+  bool mAcquiringImportMaps = true;
+
  protected:
   RefPtr<ScriptLoaderInterface> mLoader;
 
@@ -241,6 +246,14 @@ class ModuleLoaderBase : public nsISupports {
 
   // Implements https://wicg.github.io/import-maps/#register-an-import-map
   void RegisterImportMap(mozilla::UniquePtr<ImportMap> aImportMap);
+
+  /**
+   * Getter and Setter for mAcquiringImportMaps.
+   */
+  bool GetAcquiringImportMaps() const { return mAcquiringImportMaps; }
+  void SetAcquiringImportMaps(bool acquiring) {
+    mAcquiringImportMaps = acquiring;
+  }
 
   // Internal methods.
 

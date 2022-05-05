@@ -949,6 +949,15 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
 
     LOG(("ScriptLoadRequest (%p): Using preload request", request.get()));
 
+    // https://wicg.github.io/import-maps/#document-acquiring-import-maps
+    // If this preload request is for a module load, set acquiring import maps
+    // to false.
+    if (request->IsModuleRequest()) {
+      LOG(("ScriptLoadRequest (%p): Set acquiring import maps to false",
+           request.get()));
+      mModuleLoader->SetAcquiringImportMaps(false);
+    }
+
     // It's possible these attributes changed since we started the preload so
     // update them here.
     request->GetScriptLoadContext()->SetScriptMode(
@@ -1168,6 +1177,23 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
   }
 
   if (request->IsImportMapRequest()) {
+    // https://wicg.github.io/import-maps/#integration-prepare-a-script
+    // If the script's type is "importmap":
+    //
+    // Step 1: If the element's node document's acquiring import maps is false,
+    // then queue a task to fire an event named error at the element, and
+    // return.
+    if (!mModuleLoader->GetAcquiringImportMaps()) {
+      NS_WARNING("ScriptLoader: acquiring import maps is false.");
+      NS_DispatchToCurrentThread(
+          NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
+                            &nsIScriptElement::FireErrorEvent));
+      return false;
+    }
+
+    // Step 2: Set the element's node document's acquiring import maps to false.
+    mModuleLoader->SetAcquiringImportMaps(false);
+
     UniquePtr<ImportMap> importMap = mModuleLoader->ParseImportMap(request);
 
     // https://wicg.github.io/import-maps/#register-an-import-map
