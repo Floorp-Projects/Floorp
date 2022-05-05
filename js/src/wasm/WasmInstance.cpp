@@ -146,7 +146,7 @@ TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
   return *(TableInstanceData*)(globalData() + td.globalDataOffset);
 }
 
-GCPtrWasmTagObject& Instance::tagTls(const TagDesc& td) const {
+GCPtrWasmTagObject& Instance::tagInstanceData(const TagDesc& td) const {
   return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
 }
 
@@ -1398,7 +1398,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
-  // Initialize function imports in the tls data
+  // Initialize function imports in the instance data
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
@@ -1427,20 +1427,20 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     }
   }
 
-  // Initialize tables in the tls data
+  // Initialize tables in the instance data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
     TableInstanceData& table = tableInstanceData(td);
     table.length = tables_[i]->length();
-    table.elements = tables_[i]->tlsElements();
+    table.elements = tables_[i]->instanceElements();
   }
 
-  // Initialize tags in the tls data
+  // Initialize tags in the instance data
   for (size_t i = 0; i < metadata().tags.length(); i++) {
     const TagDesc& td = metadata().tags[i];
     MOZ_ASSERT(td.globalDataOffset != UINT32_MAX);
     MOZ_ASSERT(tagObjs[i] != nullptr);
-    tagTls(td) = tagObjs[i];
+    tagInstanceData(td) = tagObjs[i];
   }
   pendingException_ = nullptr;
   pendingExceptionTag_ = nullptr;
@@ -1525,7 +1525,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     }
   }
 
-  // Initialize globals in the tls data.
+  // Initialize globals in the instance data.
   //
   // This must be performed after we have initialized runtime types as a global
   // initializer may reference them.
@@ -1680,7 +1680,7 @@ void Instance::tracePrivate(JSTracer* trc) {
   TraceEdge(trc, &object_, "wasm instance object");
 
   // OK to just do one tier here; though the tiers have different funcImports
-  // tables, they share the tls object.
+  // tables, they share the instance object.
   for (const FuncImport& fi : metadata(code().stableTier()).funcImports) {
     TraceNullableEdge(trc, &funcImportInstanceData(fi).fun, "wasm import");
   }
@@ -1700,7 +1700,7 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 
   for (const TagDesc& tag : code().metadata().tags) {
-    TraceNullableEdge(trc, &tagTls(tag), "wasm tag");
+    TraceNullableEdge(trc, &tagInstanceData(tag), "wasm tag");
   }
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
@@ -2329,7 +2329,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
     if (tables_[i] == theTable) {
       TableInstanceData& table = tableInstanceData(metadata().tables[i]);
       table.length = tables_[i]->length();
-      table.elements = tables_[i]->tlsElements();
+      table.elements = tables_[i]->instanceElements();
     }
   }
 }
