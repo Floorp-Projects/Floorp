@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_tls_data_h
-#define wasm_tls_data_h
+#ifndef wasm_instance_data_h
+#define wasm_instance_data_h
 
 #include <stdint.h>
 
@@ -97,4 +97,4 @@ struct FunctionTableElem {
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_tls_data_h
+#endif  // wasm_instance_data_h

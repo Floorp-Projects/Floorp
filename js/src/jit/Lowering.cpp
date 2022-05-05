@@ -23,8 +23,8 @@
 #include "js/experimental/JitInfo.h"  // JSJitInfo
 #include "util/Memory.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmJS.h"  // for wasm::ReportSimdAnalysis
-#include "wasm/WasmTlsData.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/BytecodeUtil-inl.h"
