@@ -67,8 +67,20 @@ add_setup(async function() {
   mimeInfo.alwaysAskBeforeHandling = true;
   HandlerService.store(mimeInfo);
 
+  // On Mac, .bin is application/macbinary
+  let mimeInfoMac;
+  if (AppConstants.platform == "macosx") {
+    mimeInfoMac = MIMEService.getFromTypeAndExtension(
+      "application/macbinary",
+      "bin"
+    );
+    mimeInfoMac.alwaysAskBeforeHandling = true;
+    HandlerService.store(mimeInfoMac);
+  }
+
   registerCleanupFunction(() => {
     HandlerService.remove(mimeInfo);
+    HandlerService.remove(mimeInfoMac);
   });
 });
 
