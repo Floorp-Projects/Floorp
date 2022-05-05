@@ -167,6 +167,34 @@ TaskQueueBase* GetCurrentTaskQueueOrThread() {
   return current;
 }
 
+// Called from the destructor of Call to report the collected send histograms.
+void UpdateSendHistograms(Timestamp now,
+                          Timestamp first_sent_packet,
+                          AvgCounter& estimated_send_bitrate_kbps_counter,
+                          AvgCounter& pacer_bitrate_kbps_counter) {
+  TimeDelta elapsed = now - first_sent_packet;
+  if (elapsed.seconds() < metrics::kMinRunTimeInSeconds)
+    return;
+
+  const int kMinRequiredPeriodicSamples = 5;
+  AggregatedStats send_bitrate_stats =
+      estimated_send_bitrate_kbps_counter.ProcessAndGetStats();
+  if (send_bitrate_stats.num_samples > kMinRequiredPeriodicSamples) {
+    RTC_HISTOGRAM_COUNTS_100000("WebRTC.Call.EstimatedSendBitrateInKbps",
+                                send_bitrate_stats.average);
+    RTC_LOG(LS_INFO) << "WebRTC.Call.EstimatedSendBitrateInKbps, "
+                     << send_bitrate_stats.ToString();
+  }
+  AggregatedStats pacer_bitrate_stats =
+      pacer_bitrate_kbps_counter.ProcessAndGetStats();
+  if (pacer_bitrate_stats.num_samples > kMinRequiredPeriodicSamples) {
+    RTC_HISTOGRAM_COUNTS_100000("WebRTC.Call.PacerBitrateInKbps",
+                                pacer_bitrate_stats.average);
+    RTC_LOG(LS_INFO) << "WebRTC.Call.PacerBitrateInKbps, "
+                     << pacer_bitrate_stats.ToString();
+  }
+}
+
 }  // namespace
 
 namespace internal {
@@ -308,10 +336,7 @@ class Call final : public webrtc::Call,
                                  MediaType media_type)
       RTC_SHARED_LOCKS_REQUIRED(worker_thread_);
 
-  void UpdateSendHistograms(Timestamp first_sent_packet)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(worker_thread_);
   void UpdateReceiveHistograms();
-  void UpdateHistograms();
   void UpdateAggregateNetworkState();
 
   // Ensure that necessary process threads are started, and any required
@@ -656,17 +681,23 @@ Call::~Call() {
   module_process_thread_->process_thread()->DeRegisterModule(&receive_side_cc_);
   call_stats_->DeregisterStatsObserver(&receive_side_cc_);
 
-  absl::optional<Timestamp> first_sent_packet_ms =
+  absl::optional<Timestamp> first_sent_packet_time =
       transport_send_->GetFirstPacketTime();
+
+  Timestamp now = clock_->CurrentTime();
 
   // Only update histograms after process threads have been shut down, so that
   // they won't try to concurrently update stats.
-  if (first_sent_packet_ms) {
-    UpdateSendHistograms(*first_sent_packet_ms);
+  if (first_sent_packet_time) {
+    UpdateSendHistograms(now, *first_sent_packet_time,
+                         estimated_send_bitrate_kbps_counter_,
+                         pacer_bitrate_kbps_counter_);
   }
 
   UpdateReceiveHistograms();
-  UpdateHistograms();
+
+  RTC_HISTOGRAM_COUNTS_100000("WebRTC.Call.LifetimeInSeconds",
+                              (now.ms() - start_ms_) / 1000);
 }
 
 void Call::EnsureStarted() {
@@ -688,37 +719,6 @@ void Call::EnsureStarted() {
 void Call::SetClientBitratePreferences(const BitrateSettings& preferences) {
   RTC_DCHECK_RUN_ON(worker_thread_);
   GetTransportControllerSend()->SetClientBitratePreferences(preferences);
-}
-
-void Call::UpdateHistograms() {
-  RTC_HISTOGRAM_COUNTS_100000(
-      "WebRTC.Call.LifetimeInSeconds",
-      (clock_->TimeInMilliseconds() - start_ms_) / 1000);
-}
-
-// Called from the dtor.
-void Call::UpdateSendHistograms(Timestamp first_sent_packet) {
-  int64_t elapsed_sec =
-      (clock_->TimeInMilliseconds() - first_sent_packet.ms()) / 1000;
-  if (elapsed_sec < metrics::kMinRunTimeInSeconds)
-    return;
-  const int kMinRequiredPeriodicSamples = 5;
-  AggregatedStats send_bitrate_stats =
-      estimated_send_bitrate_kbps_counter_.ProcessAndGetStats();
-  if (send_bitrate_stats.num_samples > kMinRequiredPeriodicSamples) {
-    RTC_HISTOGRAM_COUNTS_100000("WebRTC.Call.EstimatedSendBitrateInKbps",
-                                send_bitrate_stats.average);
-    RTC_LOG(LS_INFO) << "WebRTC.Call.EstimatedSendBitrateInKbps, "
-                     << send_bitrate_stats.ToString();
-  }
-  AggregatedStats pacer_bitrate_stats =
-      pacer_bitrate_kbps_counter_.ProcessAndGetStats();
-  if (pacer_bitrate_stats.num_samples > kMinRequiredPeriodicSamples) {
-    RTC_HISTOGRAM_COUNTS_100000("WebRTC.Call.PacerBitrateInKbps",
-                                pacer_bitrate_stats.average);
-    RTC_LOG(LS_INFO) << "WebRTC.Call.PacerBitrateInKbps, "
-                     << pacer_bitrate_stats.ToString();
-  }
 }
 
 void Call::UpdateReceiveHistograms() {
