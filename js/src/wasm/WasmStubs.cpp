@@ -2923,7 +2923,7 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   // The case where a Wasm catch handler was found while unwinding the stack.
   masm.bind(&resumeCatch);
-  masm.loadPtr(Address(ReturnReg, ResumeFromException::offsetOfTlsData()),
+  masm.loadPtr(Address(ReturnReg, ResumeFromException::offsetOfInstance()),
                InstanceReg);
   masm.loadWasmPinnedRegsFromInstance();
   masm.switchToWasmInstanceRealm(scratch1, scratch2);

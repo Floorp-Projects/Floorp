@@ -760,7 +760,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           MoveOp::Type result = MoveOp::GENERAL);
 
   CodeOffset callWithABI(wasm::BytecodeOffset offset, wasm::SymbolicAddress fun,
-                         mozilla::Maybe<int32_t> tlsOffset,
+                         mozilla::Maybe<int32_t> instanceOffset,
                          MoveOp::Type result = MoveOp::GENERAL);
   void callDebugWithABI(wasm::SymbolicAddress fun,
                         MoveOp::Type result = MoveOp::GENERAL);
@@ -3512,7 +3512,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Load all pinned regs via InstanceReg.  If the trapOffset is something,
   // give the first load a trap descriptor with type IndirectCallToNull, so that
-  // a null Tls will cause a trap.
+  // a null instance will cause a trap.
   void loadWasmPinnedRegsFromInstance(
       mozilla::Maybe<wasm::BytecodeOffset> trapOffset = mozilla::Nothing());
 
@@ -3689,8 +3689,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest);
 
-  // This function takes care of loading the callee's TLS and pinned regs but
-  // it is the caller's responsibility to save/restore TLS or pinned regs.
+  // This function takes care of loading the callee's instance and pinned regs
+  // but it is the caller's responsibility to save/restore instance or pinned
+  // regs.
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
                             const wasm::CalleeDesc& callee);
 
@@ -3719,8 +3720,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              const wasm::CalleeDesc& callee);
 
   // This function takes care of loading the pointer to the current instance
-  // as the implicit first argument. It preserves TLS and pinned registers.
-  // (TLS & pinned regs are non-volatile registers in the system ABI).
+  // as the implicit first argument. It preserves instance and pinned registers.
+  // (instance & pinned regs are non-volatile registers in the system ABI).
   CodeOffset wasmCallBuiltinInstanceMethod(const wasm::CallSiteDesc& desc,
                                            const ABIArg& instanceArg,
                                            wasm::SymbolicAddress builtin,
