@@ -300,6 +300,7 @@ INSTANTIATE_TEST_SUITE_P(
            SvcTestParam{"L3T1", /*num_temporal_units=*/3},
            SvcTestParam{"L3T3", /*num_temporal_units=*/8},
            SvcTestParam{"S2T1", /*num_temporal_units=*/3},
+           SvcTestParam{"S3T3", /*num_temporal_units=*/8},
            SvcTestParam{"L2T2", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY", /*num_temporal_units=*/4},
            SvcTestParam{"L2T2_KEY_SHIFT", /*num_temporal_units=*/4},

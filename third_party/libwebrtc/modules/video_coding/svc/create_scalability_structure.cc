@@ -15,7 +15,7 @@
 #include "modules/video_coding/svc/scalability_structure_full_svc.h"
 #include "modules/video_coding/svc/scalability_structure_key_svc.h"
 #include "modules/video_coding/svc/scalability_structure_l2t2_key_shift.h"
-#include "modules/video_coding/svc/scalability_structure_s2t1.h"
+#include "modules/video_coding/svc/scalability_structure_simulcast.h"
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/checks.h"
@@ -58,6 +58,7 @@ constexpr NamedStructureFactory kFactories[] = {
     {"L3T3", Create<ScalabilityStructureL3T3>},
     {"L3T3_KEY", Create<ScalabilityStructureL3T3Key>},
     {"S2T1", Create<ScalabilityStructureS2T1>},
+    {"S3T3", Create<ScalabilityStructureS3T3>},
 };
 
 }  // namespace

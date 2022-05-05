@@ -36,8 +36,8 @@ rtc_source_set("scalability_structures") {
     "scalability_structure_key_svc.h",
     "scalability_structure_l2t2_key_shift.cc",
     "scalability_structure_l2t2_key_shift.h",
-    "scalability_structure_s2t1.cc",
-    "scalability_structure_s2t1.h",
+    "scalability_structure_simulcast.cc",
+    "scalability_structure_simulcast.h",
   ]
   deps = [
     ":scalable_video_controller",
