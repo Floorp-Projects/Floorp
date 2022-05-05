@@ -23,6 +23,14 @@ class WorkerPrivate;
 namespace workerinternals {
 namespace loader {
 
+/* ScriptResponseHeaderProcessor
+ *
+ * This class handles Policy headers. It can be used as a RequestObserver in a
+ * Tee, as it is for NetworkLoadHandler in WorkerScriptLoader, or the static
+ * method can be called directly, as it is in CacheLoadHandler.
+ *
+ */
+
 class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
  public:
   NS_DECL_ISUPPORTS
