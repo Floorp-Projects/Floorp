@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"

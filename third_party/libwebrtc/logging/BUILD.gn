@@ -344,7 +344,6 @@ if (rtc_enable_protobuf) {
       "../modules/rtp_rtcp",
       "../modules/rtp_rtcp:rtp_rtcp_format",
       "../rtc_base:checks",
-      "../rtc_base:deprecation",
       "../rtc_base:ignore_wundef",
       "../rtc_base:protobuf_utils",
       "../rtc_base:rtc_base_approved",

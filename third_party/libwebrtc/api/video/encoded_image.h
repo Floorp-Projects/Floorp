@@ -16,6 +16,7 @@
 #include <map>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/rtp_packet_infos.h"
 #include "api/scoped_refptr.h"
@@ -26,7 +27,6 @@
 #include "api/video/video_rotation.h"
 #include "api/video/video_timing.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -73,7 +73,8 @@ class RTC_EXPORT EncodedImage {
   EncodedImage();
   EncodedImage(EncodedImage&&);
   EncodedImage(const EncodedImage&);
-  RTC_DEPRECATED EncodedImage(uint8_t* buffer, size_t length, size_t capacity);
+  ABSL_DEPRECATED("")
+  EncodedImage(uint8_t* buffer, size_t length, size_t capacity);
 
   ~EncodedImage();
 

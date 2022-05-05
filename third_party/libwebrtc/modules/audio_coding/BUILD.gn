@@ -17,7 +17,6 @@ visibility = [ ":*" ]
 rtc_source_set("audio_coding_module_typedefs") {
   visibility += [ "*" ]
   sources = [ "include/audio_coding_module_typedefs.h" ]
-  deps = [ "../../rtc_base:deprecation" ]
 }
 
 rtc_library("audio_coding") {
@@ -52,7 +51,6 @@ rtc_library("audio_coding") {
     "../../common_audio:common_audio_c",
     "../../rtc_base:audio_format_to_string",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/synchronization:mutex",
     "../../system_wrappers",

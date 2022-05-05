@@ -154,7 +154,6 @@ rtc_library("encoded_image") {
     "..:rtp_packet_info",
     "..:scoped_refptr",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:rtc_export",
   ]

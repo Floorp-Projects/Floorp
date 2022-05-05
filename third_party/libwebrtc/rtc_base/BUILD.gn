@@ -307,10 +307,6 @@ rtc_library("logging") {
       frameworks = [ "Foundation.framework" ]
     }
 
-    # logging.h needs the deprecation header while downstream projects are
-    # removing code that depends on logging implementation details.
-    deps += [ ":deprecation" ]
-
     if (is_android) {
       libs += [ "log" ]
     }
@@ -459,10 +455,6 @@ rtc_library("audio_format_to_string") {
 
 rtc_source_set("type_traits") {
   sources = [ "type_traits.h" ]
-}
-
-rtc_source_set("deprecation") {
-  sources = [ "deprecation.h" ]
 }
 
 rtc_library("rtc_task_queue") {
@@ -915,7 +907,6 @@ rtc_library("rtc_base") {
     ":async_resolver_interface",
     ":async_socket",
     ":checks",
-    ":deprecation",
     ":ip_address",
     ":network_constants",
     ":null_socket_server",

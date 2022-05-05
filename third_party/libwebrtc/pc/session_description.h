@@ -37,7 +37,6 @@
 #include "pc/media_protocol_names.h"
 #include "pc/simulcast_description.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
 
