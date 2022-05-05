@@ -173,7 +173,7 @@ class FuncType {
   }
 #endif
 
-  WASM_DECLARE_SERIALIZABLE(FuncType)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 struct FuncTypeHashPolicy {
@@ -234,7 +234,7 @@ class StructType {
   }
   [[nodiscard]] bool computeLayout();
 
-  WASM_DECLARE_SERIALIZABLE(StructType)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using StructTypeVector = Vector<StructType, 0, SystemAllocPolicy>;
@@ -284,7 +284,7 @@ class ArrayType {
 
   bool isDefaultable() const { return elementType_.isDefaultable(); }
 
-  WASM_DECLARE_SERIALIZABLE(ArrayType)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
@@ -447,7 +447,7 @@ class TypeDef {
     }
   }
 
-  WASM_DECLARE_SERIALIZABLE(TypeDef)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using TypeDefVector = Vector<TypeDef, 0, SystemAllocPolicy>;
@@ -863,7 +863,7 @@ struct TypeDefWithId : public TypeDef {
   TypeDefWithId(TypeDef&& typeDef, TypeIdDesc id)
       : TypeDef(std::move(typeDef)), id(id) {}
 
-  WASM_DECLARE_SERIALIZABLE(TypeDefWithId)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using TypeDefWithIdVector = Vector<TypeDefWithId, 0, SystemAllocPolicy>;

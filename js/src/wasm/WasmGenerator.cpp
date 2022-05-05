@@ -1233,7 +1233,10 @@ SharedModule ModuleGenerator::finishModule(
   if (mode() == CompileMode::Tier1) {
     module->startTier2(*compileArgs_, bytecode, maybeTier2Listener);
   } else if (tier() == Tier::Serialized && maybeTier2Listener) {
-    module->serialize(*linkData_, *maybeTier2Listener);
+    Bytes bytes;
+    if (module->serialize(*linkData_, &bytes)) {
+      maybeTier2Listener->storeOptimizedEncoding(bytes.begin(), bytes.length());
+    }
   }
 
   return module;
