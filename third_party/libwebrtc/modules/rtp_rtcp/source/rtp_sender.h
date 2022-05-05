@@ -26,6 +26,7 @@
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/include/rtp_packet_sender.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/rtp_rtcp/source/packet_sequencer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_history.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_config.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
@@ -149,8 +150,6 @@ class RTPSender {
       RTC_LOCKS_EXCLUDED(send_mutex_);
   // Expected header overhead per media packet.
   size_t ExpectedPerPacketOverhead() const RTC_LOCKS_EXCLUDED(send_mutex_);
-  uint16_t AllocateSequenceNumber(uint16_t packets_to_send)
-      RTC_LOCKS_EXCLUDED(send_mutex_);
   // Including RTP headers.
   size_t MaxRtpPacketSize() const RTC_LOCKS_EXCLUDED(send_mutex_);
 
@@ -175,8 +174,6 @@ class RTPSender {
   void SetRtxRtpState(const RtpState& rtp_state)
       RTC_LOCKS_EXCLUDED(send_mutex_);
   RtpState GetRtxRtpState() const RTC_LOCKS_EXCLUDED(send_mutex_);
-
-  int64_t LastTimestampTimeMs() const RTC_LOCKS_EXCLUDED(send_mutex_);
 
  private:
   std::unique_ptr<RtpPacketToSend> BuildRtxPacket(
@@ -209,17 +206,13 @@ class RTPSender {
   bool sending_media_ RTC_GUARDED_BY(send_mutex_);
   size_t max_packet_size_;
 
-  int8_t last_payload_type_ RTC_GUARDED_BY(send_mutex_);
-
   RtpHeaderExtensionMap rtp_header_extension_map_ RTC_GUARDED_BY(send_mutex_);
   size_t max_media_packet_header_ RTC_GUARDED_BY(send_mutex_);
   size_t max_padding_fec_packet_header_ RTC_GUARDED_BY(send_mutex_);
 
   // RTP variables
   uint32_t timestamp_offset_ RTC_GUARDED_BY(send_mutex_);
-  bool sequence_number_forced_ RTC_GUARDED_BY(send_mutex_);
-  uint16_t sequence_number_ RTC_GUARDED_BY(send_mutex_);
-  uint16_t sequence_number_rtx_ RTC_GUARDED_BY(send_mutex_);
+  PacketSequencer sequencer_ RTC_GUARDED_BY(send_mutex_);
   // RID value to send in the RID or RepairedRID header extension.
   std::string rid_ RTC_GUARDED_BY(send_mutex_);
   // MID value to send in the MID header extension.
@@ -230,10 +223,6 @@ class RTPSender {
   // when to stop sending the MID and RID header extensions.
   bool ssrc_has_acked_ RTC_GUARDED_BY(send_mutex_);
   bool rtx_ssrc_has_acked_ RTC_GUARDED_BY(send_mutex_);
-  uint32_t last_rtp_timestamp_ RTC_GUARDED_BY(send_mutex_);
-  int64_t capture_time_ms_ RTC_GUARDED_BY(send_mutex_);
-  int64_t last_timestamp_time_ms_ RTC_GUARDED_BY(send_mutex_);
-  bool last_packet_marker_bit_ RTC_GUARDED_BY(send_mutex_);
   std::vector<uint32_t> csrcs_ RTC_GUARDED_BY(send_mutex_);
   int rtx_ RTC_GUARDED_BY(send_mutex_);
   // Mapping rtx_payload_type_map_[associated] = rtx.
