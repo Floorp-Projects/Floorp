@@ -591,9 +591,7 @@ class AssemblerShared {
   wasm::CallSiteTargetVector callSiteTargets_;
   wasm::TrapSiteVectorArray trapSites_;
   wasm::SymbolicAccessVector symbolicAccesses_;
-#ifdef ENABLE_WASM_EXCEPTIONS
   wasm::WasmTryNoteVector tryNotes_;
-#endif
 #ifdef DEBUG
   // To facilitate figuring out which part of SM created each instruction as
   // shown by IONFLAGS=codegen, this maintains a stack of (notionally)
@@ -662,7 +660,6 @@ class AssemblerShared {
   }
   // This one returns an index as the try note so that it can be looked up
   // later to add the end point and stack position of the try block.
-#ifdef ENABLE_WASM_EXCEPTIONS
   [[nodiscard]] bool append(wasm::WasmTryNote tryNote, size_t* tryNoteIndex) {
     if (!tryNotes_.append(tryNote)) {
       enoughMemory_ = false;
@@ -671,15 +668,12 @@ class AssemblerShared {
     *tryNoteIndex = tryNotes_.length() - 1;
     return true;
   }
-#endif
 
   wasm::CallSiteVector& callSites() { return callSites_; }
   wasm::CallSiteTargetVector& callSiteTargets() { return callSiteTargets_; }
   wasm::TrapSiteVectorArray& trapSites() { return trapSites_; }
   wasm::SymbolicAccessVector& symbolicAccesses() { return symbolicAccesses_; }
-#ifdef ENABLE_WASM_EXCEPTIONS
   wasm::WasmTryNoteVector& tryNotes() { return tryNotes_; }
-#endif
 };
 
 // AutoCreatedBy pushes and later pops a who-created-these-insns? tag into the

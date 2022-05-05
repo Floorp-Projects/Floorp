@@ -824,12 +824,10 @@ struct BaseCompiler final {
   void popBlockResults(ResultType type, StackHeight stackBase,
                        ContinuationKind kind);
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   // This function is similar to popBlockResults, but additionally handles the
   // implicit exception pointer that is pushed to the value stack on entry to
   // a catch handler by dropping it appropriately.
   void popCatchResults(ResultType type, StackHeight stackBase);
-#endif
 
   Stk captureStackResult(const ABIResult& result, StackHeight resultsBase,
                          uint32_t stackResultBytes);
@@ -1244,7 +1242,6 @@ struct BaseCompiler final {
   // Generate a trap instruction for the current bytecodeOffset.
   inline void trap(Trap t) const;
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
   // at the end of a series of catch blocks (if none matched the exception).
   [[nodiscard]] bool throwFrom(RegRef exn, uint32_t lineOrBytecode);
@@ -1254,7 +1251,6 @@ struct BaseCompiler final {
 
   // Load the pending exception state from the Instance and then reset it.
   void consumePendingException(RegRef* exnDst, RegRef* tagDst);
-#endif
 
   ////////////////////////////////////////////////////////////
   //
@@ -1338,7 +1334,6 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitLoop();
   [[nodiscard]] bool emitIf();
   [[nodiscard]] bool emitElse();
-#ifdef ENABLE_WASM_EXCEPTIONS
   // Used for common setup for catch and catch_all.
   void emitCatchSetup(LabelKind kind, Control& tryCatch,
                       const ResultType& resultType);
@@ -1352,7 +1347,6 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitDelegate();
   [[nodiscard]] bool emitThrow();
   [[nodiscard]] bool emitRethrow();
-#endif
   [[nodiscard]] bool emitEnd();
   [[nodiscard]] bool emitBr();
   [[nodiscard]] bool emitBrIf();
@@ -1399,9 +1393,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool endBlock(ResultType type);
   [[nodiscard]] bool endIfThen(ResultType type);
   [[nodiscard]] bool endIfThenElse(ResultType type);
-#ifdef ENABLE_WASM_EXCEPTIONS
   [[nodiscard]] bool endTryCatch(ResultType type);
-#endif
 
   void doReturn(ContinuationKind kind);
   void pushReturnValueOfCall(const FunctionCall& call, MIRType type);

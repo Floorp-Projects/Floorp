@@ -410,9 +410,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   RenumberVector typesRenumbering;
   GlobalDescVector globals;
   TableDescVector tables;
-#ifdef ENABLE_WASM_EXCEPTIONS
   TagDescVector tags;
-#endif
   CacheableChars filename;
   CacheableChars sourceMapURL;
 
@@ -499,9 +497,7 @@ struct MetadataTier {
   FuncImportVector funcImports;
   FuncExportVector funcExports;
   StackMaps stackMaps;
-#ifdef ENABLE_WASM_EXCEPTIONS
   WasmTryNoteVector tryNotes;
-#endif
 
   // Debug information, not serialized.
   uint32_t debugTrapOffset;
@@ -671,9 +667,7 @@ class CodeTier {
   }
 
   const CodeRange* lookupRange(const void* pc) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(const void* pc) const;
-#endif
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
@@ -856,9 +850,7 @@ class Code : public ShareableBase<Code> {
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
   const StackMap* lookupStackMap(uint8_t* nextPC) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;
-#endif
   bool containsCodePC(const void* pc) const;
   bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 

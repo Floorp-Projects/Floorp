@@ -1973,11 +1973,9 @@ class FunctionCompiler {
                      const ArgTypeVector& argTypes,
                      MDefinition* index = nullptr) {
     MWasmCallTryDesc tryDesc;
-#ifdef ENABLE_WASM_EXCEPTIONS
     if (!beginTryCall(&tryDesc)) {
       return false;
     }
-#endif
 
     MInstruction* ins;
     if (tryDesc.inTry) {
@@ -1994,11 +1992,9 @@ class FunctionCompiler {
     }
     curBlock_->add(ins);
 
-#ifdef ENABLE_WASM_EXCEPTIONS
     if (!finishTryCall(&tryDesc)) {
       return false;
     }
-#endif
     return true;
   }
 
@@ -2420,7 +2416,6 @@ class FunctionCompiler {
     // Pending jumps to an enclosing try-catch may reference the recycled phis.
     // We have to search above all enclosing try blocks, as a delegate may move
     // patches around.
-#ifdef ENABLE_WASM_EXCEPTIONS
     for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
       LabelKind kind = iter().controlKind(depth);
       if (kind != LabelKind::Try && kind != LabelKind::Body) {
@@ -2434,7 +2429,6 @@ class FunctionCompiler {
         }
       }
     }
-#endif
 
     // Discard redundant phis and add to the free list.
     for (MPhiIterator phi = loopEntry->phisBegin();
@@ -2643,7 +2637,6 @@ class FunctionCompiler {
 
   /********************************************************** Exceptions ***/
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   bool inTryBlock(uint32_t* relativeDepth) {
     return iter().controlFindInnermost(LabelKind::Try, relativeDepth);
   }
@@ -3218,7 +3211,6 @@ class FunctionCompiler {
                tag->type() == MIRType::RefOrNull);
     return throwFrom(exception, tag);
   }
-#endif
 
   /************************************************************ DECODING ***/
 
@@ -3486,11 +3478,9 @@ static bool EmitEnd(FunctionCompiler& f) {
   DefVector postJoinDefs;
   switch (kind) {
     case LabelKind::Body:
-#ifdef ENABLE_WASM_EXCEPTIONS
       if (!f.emitBodyDelegateThrowPad(control)) {
         return false;
       }
-#endif
       if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
@@ -3535,7 +3525,6 @@ static bool EmitEnd(FunctionCompiler& f) {
       }
       f.iter().popEnd();
       break;
-#ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
@@ -3544,7 +3533,6 @@ static bool EmitEnd(FunctionCompiler& f) {
       }
       f.iter().popEnd();
       break;
-#endif
   }
 
   MOZ_ASSERT_IF(!f.inDeadCode(), postJoinDefs.length() == type.length());
@@ -3623,7 +3611,6 @@ static bool EmitUnreachable(FunctionCompiler& f) {
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 static bool EmitTry(FunctionCompiler& f) {
   ResultType params;
   if (!f.iter().readTry(&params)) {
@@ -3733,7 +3720,6 @@ static bool EmitRethrow(FunctionCompiler& f) {
 
   return f.emitRethrow(relativeDepth);
 }
-#endif
 
 static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
                          const DefVector& args, CallCompileState* call) {
@@ -5719,7 +5705,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitIf(f));
       case uint16_t(Op::Else):
         CHECK(EmitElse(f));
-#ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!f.moduleEnv().exceptionsEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
@@ -5753,7 +5738,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitRethrow(f));
-#endif
       case uint16_t(Op::Br):
         CHECK(EmitBr(f));
       case uint16_t(Op::BrIf):
