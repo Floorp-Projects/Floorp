@@ -18,26 +18,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +36,7 @@ import mozilla.components.feature.syncedtabs.view.SyncedTabsView
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.SecondaryText
+import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.ext.dashedBorder
 import org.mozilla.fenix.compose.list.ExpandableListHeader
 import org.mozilla.fenix.compose.list.FaviconListItem
@@ -220,47 +211,13 @@ fun SyncedTabsErrorItem(
             errorButton?.let {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                SyncedTabsErrorButton(buttonText = it.buttonText, onClick = it.onClick)
+                PrimaryButton(
+                    text = it.buttonText,
+                    icon = painterResource(R.drawable.ic_sign_in),
+                    onClick = it.onClick,
+                )
             }
         }
-    }
-}
-
-/**
- * Error button UI within SyncedTabsErrorItem
- *
- * @param buttonText The error button's text and accessibility hint.
- * @param onClick The lambda called when the button is clicked.
- */
-@Composable
-fun SyncedTabsErrorButton(
-    buttonText: String,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .clip(RoundedCornerShape(size = 4.dp))
-            .fillMaxWidth(),
-        elevation = ButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 0.dp),
-        colors = ButtonDefaults.outlinedButtonColors(backgroundColor = FirefoxTheme.colors.actionPrimary),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_sign_in),
-            contentDescription = null,
-            tint = FirefoxTheme.colors.textOnColorPrimary,
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = buttonText,
-            modifier = Modifier.align(Alignment.CenterVertically),
-            color = FirefoxTheme.colors.textOnColorPrimary,
-            fontSize = 14.sp,
-            fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
-            maxLines = 2
-        )
     }
 }
 
