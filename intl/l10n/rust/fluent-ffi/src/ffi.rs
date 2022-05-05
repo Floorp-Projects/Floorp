@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::builtins::FluentDateTimeOptionsRaw;
+use crate::builtins::FluentDateTimeOptions;
 use fluent::types::FluentNumberCurrencyDisplayStyle;
 use fluent::types::FluentNumberOptions;
 use fluent::types::FluentNumberStyle;
@@ -143,7 +143,7 @@ extern "C" {
 
     pub fn FluentBuiltInDateTimeFormatterCreate(
         locale: &nsCString,
-        options: &FluentDateTimeOptionsRaw,
+        options: FluentDateTimeOptions,
     ) -> *mut RawDateTimeFormatter;
     pub fn FluentBuiltInDateTimeFormatterFormat(
         formatter: *const RawDateTimeFormatter,
