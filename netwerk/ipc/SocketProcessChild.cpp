@@ -503,14 +503,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
   return IPC_OK();
 }
 
-already_AddRefed<PRemoteLazyInputStreamChild>
-SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                                     const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
-  return actor.forget();
-}
-
 namespace {
 
 class DataResolverBase {

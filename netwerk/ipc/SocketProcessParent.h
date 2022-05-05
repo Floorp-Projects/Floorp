@@ -104,9 +104,6 @@ class SocketProcessParent final
       nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
       nsCString&& aRequestString, CachePushCheckResolver&& aResolver);
 
-  already_AddRefed<PRemoteLazyInputStreamParent>
-  AllocPRemoteLazyInputStreamParent(const nsID& aID, const uint64_t& aSize);
-
   mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
 
   mozilla::ipc::IPCResult RecvExcludeHttp2OrHttp3(
