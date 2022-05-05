@@ -46,8 +46,7 @@ class DtlsSrtpTransport : public SrtpTransport {
   void UpdateRecvEncryptedHeaderExtensionIds(
       const std::vector<int>& recv_extension_ids);
 
-  sigslot::signal<DtlsSrtpTransport*, bool> SignalDtlsSrtpSetupFailure;
-  sigslot::signal<> SignalDtlsStateChange;
+  void SetOnDtlsStateChange(std::function<void(void)> callback);
 
   RTCError SetSrtpSendKey(const cricket::CryptoParams& params) override {
     return RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
@@ -97,6 +96,7 @@ class DtlsSrtpTransport : public SrtpTransport {
   absl::optional<std::vector<int>> recv_extension_ids_;
 
   bool active_reset_srtp_params_ = false;
+  std::function<void(void)> on_dtls_state_change_;
 };
 
 }  // namespace webrtc
