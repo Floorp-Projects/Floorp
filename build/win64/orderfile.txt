@@ -4001,7 +4001,7 @@ ZN5style7stylist7Stylist17append_stylesheet17he70cadcba5340a98E
 ?GetRootPresContext@nsPresContext@@QEBAPEAVnsRootPresContext@@XZ
 ?AddChildRefreshTimer@VsyncDispatcher@mozilla@@QEAAXPEAVVsyncObserver@2@@Z
 ?NotifyVsync@VsyncDispatcher@mozilla@@QEAAXAEBUVsyncEvent@2@@Z
-?NotifyRefreshTimerVsyncStatus@Display@VsyncSource@gfx@mozilla@@QEAAX_N@Z
+?NotifyVsyncDispatcherVsyncStatus@Display@VsyncSource@gfx@mozilla@@QEAAX_N@Z
 ?GetVsyncRate@D3DVsyncDisplay@D3DVsyncSource@@UEAA?AV?$BaseTimeDuration@VTimeDurationValueCalculator@mozilla@@@mozilla@@XZ
 ?PostTask@MessageLoop@@QEAAXU?$already_AddRefed@VnsIRunnable@@@@@Z
 ??$_Insert_nohint@AEAU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAU?$_Tree_node@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAX@2@@?$_Tree@V?$_Tmap_traits@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$less@H@2@V?$allocator@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@@2@$0A@@std@@@std@@IEAA?AU?$pair@V?$_Tree_iterator@V?$_Tree_val@U?$_Tree_simple_types@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@@std@@@std@@@std@@_N@1@_NAEAU?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@PEAU?$_Tree_node@U?$pair@$$CBHV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@std@@PEAX@1@@Z
