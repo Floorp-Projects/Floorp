@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <script>
 window.onload = function(){
-  if (typeof Object.getOwnPropertyDescriptor(window.Animation.prototype,
-      'timeline').set == 'undefined') {
-    document.documentElement.classList.remove("reftest-wait");
-    return;
-  }
-
   let body = document.getElementsByTagName("body")[0];
   let target = document.createElement("div");
   let anim1 = new Animation();

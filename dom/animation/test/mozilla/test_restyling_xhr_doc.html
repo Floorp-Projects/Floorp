@@ -66,28 +66,23 @@ function getXHRDoc(t) {
   });
 }
 
-const { AppConstants } = SpecialPowers.ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-if (AppConstants.NIGHTLY_BUILD) {
-  promise_test(t => {
-    let anim;
-    return getXHRDoc(t).then(xhrdoc => {
-      const div = xhrdoc.getElementById('test');
-      anim = div.animate({ opacity: [ 0, 1 ] }, 1000);
-      // Give the animation an active timeline and kick-start it.
-      anim.timeline = document.timeline;
-      anim.startTime = document.timeline.currentTime;
-      assert_equals(anim.playState, 'running',
-                    'The animation should be running');
-      // Gecko currently skips applying animation styles to elements in documents
-      // without browsing contexts.
-      assert_not_equals(getComputedStyle(div).opacity, '0',
-                        'Style should NOT be updated');
-    });
-  }, 'Forcing an animation targetting an element in a document without a'
-      + ' browsing context to play does not cause style to update');
-}
+promise_test(t => {
+  let anim;
+  return getXHRDoc(t).then(xhrdoc => {
+    const div = xhrdoc.getElementById('test');
+    anim = div.animate({ opacity: [ 0, 1 ] }, 1000);
+    // Give the animation an active timeline and kick-start it.
+    anim.timeline = document.timeline;
+    anim.startTime = document.timeline.currentTime;
+    assert_equals(anim.playState, 'running',
+                  'The animation should be running');
+    // Gecko currently skips applying animation styles to elements in documents
+    // without browsing contexts.
+    assert_not_equals(getComputedStyle(div).opacity, '0',
+                      'Style should NOT be updated');
+  });
+}, 'Forcing an animation targetting an element in a document without a'
+    + ' browsing context to play does not cause style to update');
 
 promise_test(t => {
   let anim;
