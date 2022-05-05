@@ -45,7 +45,6 @@ specific_include_rules = {
     "+rtc_base/system/rtc_export.h",
     "+rtc_base/system/rtc_export_template.h",
     "+rtc_base/units/unit_base.h",
-    "+rtc_base/deprecation.h",
   ],
 
   "array_view\.h": [

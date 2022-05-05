@@ -20,7 +20,6 @@
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
-#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 

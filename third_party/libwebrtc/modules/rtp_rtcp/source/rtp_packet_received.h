@@ -19,7 +19,6 @@
 #include "api/rtp_headers.h"
 #include "api/scoped_refptr.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
-#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 // Class to hold rtp packet with metadata for receiver side.

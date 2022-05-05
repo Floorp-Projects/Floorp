@@ -13,9 +13,9 @@
 
 #include <memory>
 
+#include "absl/base/attributes.h"
 #include "modules/include/module.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
-#include "rtc_base/deprecation.h"
 
 namespace webrtc {
 
@@ -23,8 +23,8 @@ namespace webrtc {
 class RtpRtcp : public Module, public RtpRtcpInterface {
  public:
   // Instantiates a deprecated version of the RtpRtcp module.
-  static std::unique_ptr<RtpRtcp> RTC_DEPRECATED
-  Create(const Configuration& configuration) {
+  static std::unique_ptr<RtpRtcp> ABSL_DEPRECATED("")
+      Create(const Configuration& configuration) {
     return DEPRECATED_Create(configuration);
   }
 

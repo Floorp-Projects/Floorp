@@ -51,7 +51,6 @@ rtc_source_set("audio_device_api") {
     "../../api:scoped_refptr",
     "../../api/task_queue",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:stringutils",
   ]
@@ -171,7 +170,6 @@ rtc_library("audio_device_impl") {
     "../../common_audio:common_audio_c",
     "../../rtc_base",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base:rtc_task_queue",
     "../../rtc_base/synchronization:mutex",
@@ -183,6 +181,7 @@ rtc_library("audio_device_impl") {
     "../../system_wrappers:metrics",
     "../utility",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
   if (rtc_include_internal_audio_device && is_ios) {
     deps += [ "../../sdk:audio_device" ]
   }

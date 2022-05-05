@@ -19,6 +19,7 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
@@ -296,7 +297,7 @@ class ParsedRtcEventLog {
       return error_ + " failed at " + file_ + " line " + std::to_string(line_);
     }
 
-    RTC_DEPRECATED operator bool() const { return ok(); }
+    ABSL_DEPRECATED("Use ok() instead") operator bool() const { return ok(); }
 
    private:
     ParseStatus() : error_(), file_(), line_(0) {}

@@ -365,7 +365,6 @@ if (!build_with_chromium) {
         ":chart_proto",
         "../api:function_view",
         "../api:network_state_predictor_api",
-        "../rtc_base:deprecation",
         "../rtc_base:ignore_wundef",
 
         # TODO(kwiberg): Remove this dependency.
@@ -396,6 +395,7 @@ if (!build_with_chromium) {
       ]
       absl_deps = [
         "//third_party/abseil-cpp/absl/algorithm:container",
+        "//third_party/abseil-cpp/absl/base:core_headers",
         "//third_party/abseil-cpp/absl/strings",
         "//third_party/abseil-cpp/absl/types:optional",
       ]

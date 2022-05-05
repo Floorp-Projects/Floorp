@@ -207,7 +207,6 @@ rtc_library("libjingle_peerconnection_api") {
     "../modules/audio_processing:audio_processing_statistics",
     "../rtc_base",
     "../rtc_base:checks",
-    "../rtc_base:deprecation",
     "../rtc_base:ip_address",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:socket_address",

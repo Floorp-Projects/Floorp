@@ -43,7 +43,6 @@ rtc_library("api") {
     "../../api/audio:aec3_config",
     "../../api/audio:audio_frame_api",
     "../../api/audio:echo_control",
-    "../../rtc_base:deprecation",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:file_wrapper",
@@ -119,8 +118,8 @@ rtc_source_set("aec_dump_interface") {
   deps = [
     ":api",
     ":audio_frame_view",
-    "../../rtc_base:deprecation",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/base:core_headers" ]
 }
 
 rtc_library("audio_processing") {
@@ -177,7 +176,6 @@ rtc_library("audio_processing") {
     "../../common_audio:common_audio_c",
     "../../common_audio/third_party/ooura:fft_size_256",
     "../../rtc_base:checks",
-    "../../rtc_base:deprecation",
     "../../rtc_base:gtest_prod",
     "../../rtc_base:ignore_wundef",
     "../../rtc_base:refcount",

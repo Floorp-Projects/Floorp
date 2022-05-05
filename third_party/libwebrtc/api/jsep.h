@@ -28,7 +28,6 @@
 
 #include "absl/types/optional.h"
 #include "api/rtc_error.h"
-#include "rtc_base/deprecation.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/system/rtc_export.h"
 

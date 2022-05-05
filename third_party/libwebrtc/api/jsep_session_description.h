@@ -23,7 +23,6 @@
 #include "api/jsep.h"
 #include "api/jsep_ice_candidate.h"
 #include "rtc_base/constructor_magic.h"
-#include "rtc_base/deprecation.h"
 
 namespace cricket {
 class SessionDescription;
