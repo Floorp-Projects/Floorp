@@ -79,7 +79,7 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   if (finished) {
     mApzc.mX.SetVelocity(0);
     mApzc.mY.SetVelocity(0);
-  } else if (!IsZero(displacement / zoom)) {
+  } else if (!IsZero(displacement)) {
     // Convert velocity from AppUnits/Seconds to ParentLayerCoords/Milliseconds
     nsSize velocity = mAnimationPhysics->VelocityAt(now);
     ParentLayerPoint velocityPL =
@@ -99,7 +99,7 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // then end the animation early. Note that the initial displacement could be 0
   // if the compositor ran very quickly (<1ms) after the animation was created.
   // When that happens we want to make sure the animation continues.
-  if (!IsZero(displacement / zoom) && IsZero(adjustedOffset / zoom)) {
+  if (!IsZero(displacement) && IsZero(adjustedOffset)) {
     // Nothing more to do - end the animation.
     return false;
   }
