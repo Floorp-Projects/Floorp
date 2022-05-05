@@ -15,6 +15,10 @@ namespace JS::loader {
 
 enum class ResolveError : uint8_t {
   ModuleResolveFailure,
+  BlockedByNullEntry,
+  BlockedByAfterPrefix,
+  BlockedByBacktrackingPrefix,
+  InvalidBareSpecifier
 };
 
 struct ResolveErrorInfo {
@@ -22,6 +26,14 @@ struct ResolveErrorInfo {
     switch (aError) {
       case ResolveError::ModuleResolveFailure:
         return "ModuleResolveFailure";
+      case ResolveError::BlockedByNullEntry:
+        return "ImportMapResolutionBlockedByNullEntry";
+      case ResolveError::BlockedByAfterPrefix:
+        return "ImportMapResolutionBlockedByAfterPrefix";
+      case ResolveError::BlockedByBacktrackingPrefix:
+        return "ImportMapResolutionBlockedByBacktrackingPrefix";
+      case ResolveError::InvalidBareSpecifier:
+        return "ImportMapResolveInvalidBareSpecifier";
       default:
         MOZ_CRASH("Unexpected ResolveError value");
     }
