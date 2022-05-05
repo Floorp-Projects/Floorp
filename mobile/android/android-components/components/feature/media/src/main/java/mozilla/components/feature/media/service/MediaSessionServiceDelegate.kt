@@ -135,18 +135,18 @@ internal class MediaSessionServiceDelegate(
 
         when (state.mediaSessionState?.playbackState) {
             MediaSession.PlaybackState.PLAYING -> {
-                registerBecomingNoisyListener(state)
+                registerBecomingNoisyListenerIfNeeded(state)
                 audioFocus.request(state.id)
                 emitStatePlayFact()
                 startForegroundNotificationIfNeeded()
             }
             MediaSession.PlaybackState.PAUSED -> {
-                unregisterBecomingNoisyListener()
+                unregisterBecomingNoisyListenerIfNeeded()
                 emitStatePauseFact()
                 stopForeground()
             }
             else -> {
-                unregisterBecomingNoisyListener()
+                unregisterBecomingNoisyListenerIfNeeded()
                 emitStateStopFact()
                 stopForeground()
             }
@@ -193,12 +193,16 @@ internal class MediaSessionServiceDelegate(
         isForegroundService = false
     }
 
-    private fun registerBecomingNoisyListener(state: SessionState) {
+    private fun registerBecomingNoisyListenerIfNeeded(state: SessionState) {
+        if (noisyAudioStreamReceiver != null) {
+            return
+        }
+
         noisyAudioStreamReceiver = BecomingNoisyReceiver(state.mediaSessionState?.controller)
         context.registerReceiver(noisyAudioStreamReceiver, intentFilter)
     }
 
-    private fun unregisterBecomingNoisyListener() {
+    private fun unregisterBecomingNoisyListenerIfNeeded() {
         noisyAudioStreamReceiver?.let {
             context.unregisterReceiver(noisyAudioStreamReceiver)
             noisyAudioStreamReceiver = null
