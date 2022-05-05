@@ -30,7 +30,7 @@ void VsyncParent::UpdateVsyncSource(
   if (mObservingVsync && mVsyncDispatcher) {
     mVsyncDispatcher->RemoveVsyncObserver(this);
   }
-  mVsyncDispatcher = mVsyncSource->GetRefreshTimerVsyncDispatcher();
+  mVsyncDispatcher = mVsyncSource->GetVsyncDispatcher();
   if (mObservingVsync) {
     mVsyncDispatcher->AddVsyncObserver(this);
   }

@@ -22,13 +22,13 @@ VsyncSource::VsyncSource()
       mRefreshTimerNeedsVsync(false),
       mHasGenericObservers(false) {
   MOZ_ASSERT(NS_IsMainThread());
-  mRefreshTimerVsyncDispatcher = new RefreshTimerVsyncDispatcher(this);
+  mVsyncDispatcher = new VsyncDispatcher(this);
 }
 
 VsyncSource::~VsyncSource() {
   MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mDispatcherLock);
-  mRefreshTimerVsyncDispatcher = nullptr;
+  mVsyncDispatcher = nullptr;
   MOZ_ASSERT(mRegisteredCompositorVsyncDispatchers.Length() == 0);
   MOZ_ASSERT(mEnabledCompositorVsyncDispatchers.Length() == 0);
 }
@@ -38,11 +38,11 @@ void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
   // Called on the vsync thread
   MutexAutoLock lock(mDispatcherLock);
 
-  // mRefreshTimerVsyncDispatcher might be null here if MoveListenersToNewSource
+  // mVsyncDispatcher might be null here if MoveListenersToNewSource
   // was called concurrently with this function and won the race to acquire
   // mDispatcherLock. In this case the new VsyncSource that is replacing this
   // one will handle notifications from now on, so we can abort.
-  if (!mRefreshTimerVsyncDispatcher) {
+  if (!mVsyncDispatcher) {
     return;
   }
 
@@ -60,7 +60,7 @@ void VsyncSource::NotifyVsync(const TimeStamp& aVsyncTimestamp,
     mEnabledCompositorVsyncDispatchers[i]->NotifyVsync(event);
   }
 
-  mRefreshTimerVsyncDispatcher->NotifyVsync(event);
+  mVsyncDispatcher->NotifyVsync(event);
 
   if (dispatchToMainThread) {
     mLastVsyncIdSentToMainThread = mVsyncId;
@@ -172,9 +172,9 @@ void VsyncSource::MoveListenersToNewSource(
         aNewSource);
   }
 
-  aNewSource->mRefreshTimerVsyncDispatcher = mRefreshTimerVsyncDispatcher;
-  mRefreshTimerVsyncDispatcher->MoveToSource(aNewSource);
-  mRefreshTimerVsyncDispatcher = nullptr;
+  aNewSource->mVsyncDispatcher = mVsyncDispatcher;
+  mVsyncDispatcher->MoveToSource(aNewSource);
+  mVsyncDispatcher = nullptr;
 }
 
 void VsyncSource::NotifyRefreshTimerVsyncStatus(bool aEnable) {
@@ -209,9 +209,8 @@ void VsyncSource::UpdateVsyncStatus() {
   }
 }
 
-RefPtr<RefreshTimerVsyncDispatcher>
-VsyncSource::GetRefreshTimerVsyncDispatcher() {
-  return mRefreshTimerVsyncDispatcher;
+RefPtr<VsyncDispatcher> VsyncSource::GetVsyncDispatcher() {
+  return mVsyncDispatcher;
 }
 
 // static
