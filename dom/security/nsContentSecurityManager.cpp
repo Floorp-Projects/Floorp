@@ -801,6 +801,22 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
 
   // we only log http channels, unless loglevel is 5.
   if (httpChannel || MOZ_LOG_TEST(sCSMLog, LogLevel::Verbose)) {
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("doContentSecurityCheck:\n"));
+
+    nsAutoCString remoteType;
+    if (XRE_IsParentProcess()) {
+      nsCOMPtr<nsIParentChannel> parentChannel;
+      NS_QueryNotificationCallbacks(aChannel, parentChannel);
+      if (parentChannel) {
+        parentChannel->GetRemoteType(remoteType);
+      }
+    } else {
+      remoteType.Assign(
+          mozilla::dom::ContentChild::GetSingleton()->GetRemoteType());
+    }
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("  processType: \"%s\"\n", remoteType.get()));
+
     nsCOMPtr<nsIURI> channelURI;
     nsAutoCString channelSpec;
     nsAutoCString channelMethod;
@@ -808,9 +824,6 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     if (channelURI) {
       channelURI->GetSpec(channelSpec);
     }
-
-    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("doContentSecurityCheck:\n"));
-
     MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  channelURI: \"%s\"\n", channelSpec.get()));
 
