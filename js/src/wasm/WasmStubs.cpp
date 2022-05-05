@@ -911,10 +911,10 @@ static void GenerateJitEntryLoadInstance(MacroAssembler& masm,
   masm.loadFunctionFromCalleeToken(Address(masm.getStackPointer(), offset),
                                    ScratchIonEntry);
 
-  // ScratchIonEntry := callee->getExtendedSlot(WASM_TLSDATA_SLOT)->toPrivate()
+  // ScratchIonEntry := callee->getExtendedSlot(WASM_INSTANCE_SLOT)->toPrivate()
   //                 => Instance*
   offset = FunctionExtended::offsetOfExtendedSlot(
-      FunctionExtended::WASM_TLSDATA_SLOT);
+      FunctionExtended::WASM_INSTANCE_SLOT);
   masm.loadPrivate(Address(ScratchIonEntry, offset), InstanceReg);
 }
 

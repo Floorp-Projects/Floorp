@@ -811,11 +811,11 @@ class FunctionExtended : public JSFunction {
 
   // Exported asm.js/wasm functions store their WasmInstanceObject in the
   // first slot.
-  static const uint32_t WASM_INSTANCE_SLOT = 0;
+  static const uint32_t WASM_INSTANCE_OBJ_SLOT = 0;
 
   // wasm/asm.js exported functions store the wasm::Instance pointer of their
   // instance.
-  static const uint32_t WASM_TLSDATA_SLOT = 1;
+  static const uint32_t WASM_INSTANCE_SLOT = 1;
 
   // asm.js module functions store their WasmModuleObject in the first slot.
   static const uint32_t ASMJS_MODULE_SLOT = 0;

@@ -2486,12 +2486,11 @@ bool WasmInstanceObject::getExportedFunction(
     }
   }
 
-  fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
+  fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_OBJ_SLOT,
                        ObjectValue(*instanceObj));
 
-  void* tlsData = &instanceObj->instance();
-  fun->setExtendedSlot(FunctionExtended::WASM_TLSDATA_SLOT,
-                       PrivateValue(tlsData));
+  fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT,
+                       PrivateValue((void*)&instance));
 
   if (!instanceObj->exports().putNew(funcIndex, fun)) {
     ReportOutOfMemory(cx);
@@ -2569,7 +2568,8 @@ Instance& wasm::ExportedFunctionToInstance(JSFunction* fun) {
 WasmInstanceObject* wasm::ExportedFunctionToInstanceObject(JSFunction* fun) {
   MOZ_ASSERT(fun->kind() == FunctionFlags::Wasm ||
              fun->kind() == FunctionFlags::AsmJS);
-  const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
+  const Value& v =
+      fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_OBJ_SLOT);
   return &v.toObject().as<WasmInstanceObject>();
 }
 
