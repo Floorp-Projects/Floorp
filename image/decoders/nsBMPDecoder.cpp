@@ -570,7 +570,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadInfoHeaderRest(
         break;
       case InfoColorSpace::LINKED:
       case InfoColorSpace::SRGB:
-      case InfoColorSpace::WINDOWS:
+      case InfoColorSpace::WIN:
       default:
         // Nothing to be done at this time.
         break;
@@ -731,7 +731,7 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
         PrepareCalibratedColorProfile();
         break;
       case InfoColorSpace::SRGB:
-      case InfoColorSpace::WINDOWS:
+      case InfoColorSpace::WIN:
         MOZ_LOG(sBMPLog, LogLevel::Debug, ("using sRGB color profile\n"));
         if (mColors) {
           // We will transform the color table instead of the output pixels.
