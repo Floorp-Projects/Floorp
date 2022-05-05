@@ -2265,18 +2265,6 @@ bool AsyncPanZoomController::IsContentOfHonouredTargetRightToLeft(
   return Metrics().IsHorizontalContentRightToLeft();
 }
 
-bool AsyncPanZoomController::IsZero(const ParentLayerPoint& aPoint) const {
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-
-  const auto zoom = Metrics().GetZoom();
-
-  if (zoom == CSSToParentLayerScale(0)) {
-    return true;
-  }
-
-  return layers::IsZero(aPoint / zoom);
-}
-
 bool AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const {
   bool result = mInputQueue->AllowScrollHandoff();
   if (!StaticPrefs::apz_allow_immediate_handoff()) {
