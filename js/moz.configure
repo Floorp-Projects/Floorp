@@ -833,6 +833,28 @@ def wasm_simd(value, jit_enabled, simulator, cranelift_enabled, target):
 set_config("ENABLE_WASM_SIMD", wasm_simd)
 set_define("ENABLE_WASM_SIMD", wasm_simd)
 
+# Whether to check for field changes in WebAssembly serialization
+#
+# See the comment for 'WASM_VERIFY_SERIALIZATION_FOR_SIZE' in WasmSerialize.cpp
+# for more background.
+# =====================================================================
+
+
+@depends(target, c_compiler, moz_debug)
+def wasm_verify_serialization_for_size(target, c_compiler, debug):
+    if (
+        debug == True
+        and target.kernel == "Linux"
+        and target.cpu == "x86_64"
+        and c_compiler.type == "clang"
+    ):
+        return True
+    return
+
+
+set_define(
+    "ENABLE_WASM_VERIFY_SERIALIZATION_FOR_SIZE", wasm_verify_serialization_for_size
+)
 
 # Support for Intel AVX instruction.
 #
