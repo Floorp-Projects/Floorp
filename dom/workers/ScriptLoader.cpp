@@ -810,9 +810,13 @@ class WorkerScriptLoader final : public nsINamed {
     return NS_OK;
   }
 
+  // Are we loading the primary script, which is not a Debugger Script?
   bool IsMainWorkerScript() const {
     return mIsMainScript && mWorkerScriptType == WorkerScript;
   }
+
+  // Are we loading the primary script, regardless of the script type?
+  bool IsMainScript() const { return mIsMainScript; }
 
   bool IsDebuggerScript() const { return mWorkerScriptType == DebuggerScript; }
 
@@ -1616,7 +1620,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   // Note that importScripts() can redirect.  In theory the main
   // script could also encounter an internal redirect, but currently
   // the assert does not allow that.
-  MOZ_ASSERT_IF(mLoader->mIsMainScript, channel == mLoadInfo.mChannel);
+  MOZ_ASSERT_IF(mLoader->IsMainScript(), channel == mLoadInfo.mChannel);
   mLoadInfo.mChannel = channel;
 
   // We synthesize the result code, but its never exposed to content.
@@ -2009,7 +2013,7 @@ void CacheLoadHandler::ResolvedCallback(JSContext* aCx,
       NS_GetCrossOriginEmbedderPolicyFromHeader(coepHeader);
 
   rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
-      mLoader->mWorkerPrivate, coep, mLoader->mIsMainScript);
+      mLoader->mWorkerPrivate, coep, mLoader->IsMainScript());
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Fail(rv);
