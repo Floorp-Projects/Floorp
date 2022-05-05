@@ -1320,12 +1320,6 @@
   mirror: always
   rust: true
 
-- name: browser.proton.places-tooltip.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled
   type: bool
