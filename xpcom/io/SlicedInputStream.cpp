@@ -441,21 +441,44 @@ void SlicedInputStream::SerializedComplexity(uint32_t aMaxSize,
   }
 }
 
-void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
-                                  uint32_t aMaxSize, uint32_t* aSizeUsed) {
+void SlicedInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+void SlicedInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+template <typename M>
+void SlicedInputStream::SerializeInternal(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(mInputStream);
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
 
   uint32_t sizeUsed = 0, pipes = 0, transferables = 0;
   SerializedComplexity(aMaxSize, &sizeUsed, &pipes, &transferables);
   if (pipes > 0 && transferables == 0) {
-    InputStreamHelper::SerializeInputStreamAsPipe(mInputStream, aParams);
+    InputStreamHelper::SerializeInputStreamAsPipe(mInputStream, aParams,
+                                                  aDelayedStart, aManager);
     return;
   }
 
   SlicedInputStreamParams params;
   InputStreamHelper::SerializeInputStream(mInputStream, params.stream(),
-                                          aMaxSize, aSizeUsed);
+                                          aFileDescriptors, aDelayedStart,
+                                          aMaxSize, aSizeUsed, aManager);
   params.start() = mStart;
   params.length() = mLength;
   params.curPos() = mCurPos;
@@ -465,7 +488,8 @@ void SlicedInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
 }
 
 bool SlicedInputStream::Deserialize(
-    const mozilla::ipc::InputStreamParams& aParams) {
+    const mozilla::ipc::InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   MOZ_ASSERT(!mInputStream);
   MOZ_ASSERT(!mWeakIPCSerializableInputStream);
 
@@ -476,8 +500,8 @@ bool SlicedInputStream::Deserialize(
 
   const SlicedInputStreamParams& params = aParams.get_SlicedInputStreamParams();
 
-  nsCOMPtr<nsIInputStream> stream =
-      InputStreamHelper::DeserializeInputStream(params.stream());
+  nsCOMPtr<nsIInputStream> stream = InputStreamHelper::DeserializeInputStream(
+      params.stream(), aFileDescriptors);
   if (!stream) {
     NS_WARNING("Deserialize failed!");
     return false;

@@ -377,6 +377,10 @@ class nsStorageInputStream final : public nsIInputStream,
   uint32_t SegOffset(uint32_t aPosition) {
     return aPosition & (mSegmentSize - 1);
   }
+
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
+                         uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager);
 };
 
 NS_IMPL_ISUPPORTS(nsStorageInputStream, nsIInputStream, nsISeekableStream,
@@ -585,8 +589,25 @@ void nsStorageInputStream::SerializedComplexity(uint32_t aMaxSize,
   }
 }
 
-void nsStorageInputStream::Serialize(InputStreamParams& aParams,
-                                     uint32_t aMaxSize, uint32_t* aSizeUsed) {
+void nsStorageInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray&, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
+}
+
+void nsStorageInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray&, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
+}
+
+template <typename M>
+void nsStorageInputStream::SerializeInternal(InputStreamParams& aParams,
+                                             bool aDelayedStart,
+                                             uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -595,7 +616,8 @@ void nsStorageInputStream::Serialize(InputStreamParams& aParams,
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (remaining >= aMaxSize) {
-    mozilla::ipc::InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
+    mozilla::ipc::InputStreamHelper::SerializeInputStreamAsPipe(
+        this, aParams, aDelayedStart, aManager);
     return;
   }
 
@@ -627,7 +649,8 @@ void nsStorageInputStream::Serialize(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsStorageInputStream::Deserialize(const InputStreamParams& aParams) {
+bool nsStorageInputStream::Deserialize(const InputStreamParams& aParams,
+                                       const FileDescriptorArray&) {
   MOZ_ASSERT_UNREACHABLE(
       "We should never attempt to deserialize a storage "
       "input stream.");

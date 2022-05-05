@@ -29,7 +29,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
-#include "nsIPipe.h"
 #include "nsWrapperCacheInlines.h"
 #include "HttpConnectionUDP.h"
 #include "mozilla/StaticPrefs_network.h"
