@@ -4,6 +4,9 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
@@ -32,6 +35,19 @@ ChromeUtils.defineModuleGetter(
   "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "pktApi",
+  "chrome://pocket/content/pktApi.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
 
 const LINK_BLOCKED_EVENT = "newtab-linkBlocked";
 const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for places links changed events
@@ -312,6 +328,34 @@ class PlacesFeed {
   }
 
   async saveToPocket(site, browser) {
+    const sendToPocket = NimbusFeatures.pocketNewtab.getVariable(
+      "sendToPocket"
+    );
+    // An experiment to send the user directly to Pocket's signup page.
+    if (sendToPocket && !pktApi.isUserLoggedIn()) {
+      const pocketNewtabExperiment = ExperimentAPI.getExperiment({
+        featureId: "pocketNewtab",
+      });
+      const pocketSiteHost = Services.prefs.getStringPref(
+        "extensions.pocket.site"
+      ); // getpocket.com
+      let utmSource = "firefox_newtab_save_button";
+      // We want to know if the user is in a Pocket newtab related experiment.
+      let utmCampaign = pocketNewtabExperiment?.slug;
+      let utmContent = pocketNewtabExperiment?.branch?.slug;
+
+      const url = new URL(`https://${pocketSiteHost}/ff_signup`);
+      url.searchParams.append("utmSource", utmSource);
+      if (utmCampaign && utmContent) {
+        url.searchParams.append("utmCampaign", utmCampaign);
+        url.searchParams.append("utmContent", utmContent);
+      }
+
+      const win = browser.ownerGlobal;
+      win.openTrustedLinkIn(url.href, "tab");
+      return;
+    }
+
     const { url, title } = site;
     try {
       let data = await NewTabUtils.activityStreamLinks.addPocketEntry(

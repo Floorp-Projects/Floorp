@@ -565,25 +565,11 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
     return;
   }
 
-  {
-    nsTArray<nsCString> tags;
-    tags.AppendElement("h264"_ns);
-
-    bool has_h264 = false;
-    if (mScannedPluginOnDisk) {
-      nsresult rv;
-      rv = HasPluginForAPI(nsLiteralCString(GMP_API_VIDEO_ENCODER), &tags,
-                           &has_h264);
-      has_h264 = NS_SUCCEEDED(rv) && has_h264;
-    }
-    Telemetry::Accumulate(Telemetry::MEDIA_GMP_UPDATE_CONTENT_PROCESS_HAS_H264,
-                          has_h264);
-  }
-
   typedef mozilla::dom::GMPCapabilityData GMPCapabilityData;
   typedef mozilla::dom::GMPAPITags GMPAPITags;
   typedef mozilla::dom::ContentParent ContentParent;
 
+  bool has_h264 = false;
   nsTArray<GMPCapabilityData> caps;
   {
     MutexAutoLock lock(mMutex);
@@ -607,10 +593,17 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities(
       x.version() = gmp->GetVersion();
       for (const GMPCapability& tag : gmp->GetCapabilities()) {
         x.capabilities().AppendElement(GMPAPITags(tag.mAPIName, tag.mAPITags));
+        if (tag.mAPIName == nsLiteralCString(GMP_API_VIDEO_ENCODER) &&
+            tag.mAPITags.Contains("h264"_ns)) {
+          has_h264 = true;
+        }
       }
       caps.AppendElement(std::move(x));
     }
   }
+
+  Telemetry::Accumulate(Telemetry::MEDIA_GMP_UPDATE_CONTENT_PROCESS_HAS_H264,
+                        has_h264);
 
   if (aContentProcess) {
     Unused << aContentProcess->SendGMPsChanged(caps);

@@ -113,3 +113,25 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+  shutdown_registration_failures:
+    type: counter
+    description: |
+      The number of times we tried to register shutdown flush routines for
+      content child processes, and failed (probably because there was no main
+      thread).
+      As a result there may be data loss from content child processes.
+      Large or rising number of clients experiencing this indicates we should
+      perhaps refactor content child shutdown in FOG to try harder to register
+      flush operations.
+      Will likely be obsoleted by bug 1641989.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766977
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1766977
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never

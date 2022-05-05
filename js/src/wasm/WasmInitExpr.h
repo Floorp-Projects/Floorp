@@ -90,7 +90,8 @@ class InitExpr {
   // Allow explicit cloning
   [[nodiscard]] bool clone(const InitExpr& src);
 
-  WASM_DECLARE_SERIALIZABLE(InitExpr)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(InitExpr);
 };
 
 }  // namespace wasm

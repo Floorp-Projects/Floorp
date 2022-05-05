@@ -6,6 +6,7 @@
 #include "SessionAccessibility.h"
 #include "LocalAccessible-inl.h"
 #include "AndroidUiThread.h"
+#include "AndroidBridge.h"
 #include "DocAccessibleParent.h"
 #include "IDSet.h"
 #include "nsThreadUtils.h"
@@ -45,6 +46,8 @@
 #endif
 
 #define FORWARD_ACTION_TO_ACCESSIBLE(funcname, ...)                        \
+  MOZ_ASSERT(NS_IsMainThread());                                           \
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());        \
   if (Accessible* acc = GetAccessibleByID(aID)) {                          \
     if (acc->IsRemote()) {                                                 \
       acc->AsRemote()->funcname(__VA_ARGS__);                              \
@@ -54,6 +57,8 @@
   }
 
 #define FORWARD_EXT_ACTION_TO_ACCESSIBLE(funcname, ...)                     \
+  MOZ_ASSERT(NS_IsMainThread());                                            \
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());         \
   if (Accessible* acc = GetAccessibleByID(aID)) {                           \
     if (RemoteAccessible* remote = acc->AsRemote()) {                       \
       Unused << remote->Document()->GetPlatformExtension()->Send##funcname( \
@@ -114,18 +119,51 @@ bool SessionAccessibility::IsCacheEnabled() {
   return StaticPrefs::accessibility_cache_enabled_AtStartup();
 }
 
-mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
+void SessionAccessibility::GetNodeInfo(int32_t aID,
+                                       mozilla::jni::Object::Param aNodeInfo) {
+  MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+  ReleasableMonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   java::GeckoBundle::GlobalRef ret = nullptr;
   RefPtr<SessionAccessibility> self(this);
-  nsAppShell::SyncRunEvent([this, self, aID, &ret] {
-    if (Accessible* acc = GetAccessibleByID(aID)) {
-      ret = ToBundle(acc);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (acc->IsLocal() || !IsCacheEnabled()) {
+      mal.Unlock();
+      nsAppShell::SyncRunEvent(
+          [this, self, aID, aNodeInfo = jni::Object::GlobalRef(aNodeInfo)] {
+            if (Accessible* acc = GetAccessibleByID(aID)) {
+              PopulateNodeInfo(acc, aNodeInfo);
+            } else {
+              AALOG("oops, nothing for %d", aID);
+            }
+          });
     } else {
-      AALOG("oops, nothing for %d", aID);
+      PopulateNodeInfo(acc, aNodeInfo);
     }
-  });
+  } else {
+    AALOG("oops, nothing for %d", aID);
+  }
+}
 
-  return mozilla::jni::Object::Ref::From(ret);
+int SessionAccessibility::GetNodeClassName(int32_t aID) {
+  MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
+  ReleasableMonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+  int32_t classNameEnum = java::SessionAccessibility::CLASSNAME_VIEW;
+  RefPtr<SessionAccessibility> self(this);
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (acc->IsLocal()) {
+      mal.Unlock();
+      nsAppShell::SyncRunEvent([this, self, aID, &classNameEnum] {
+        if (Accessible* acc = GetAccessibleByID(aID)) {
+          classNameEnum = AccessibleWrap::AndroidClass(acc);
+        }
+      });
+    } else {
+      classNameEnum = AccessibleWrap::AndroidClass(acc);
+    }
+  }
+
+  return classNameEnum;
 }
 
 void SessionAccessibility::SetText(int32_t aID, jni::String::Param aText) {
@@ -144,25 +182,33 @@ void SessionAccessibility::Click(int32_t aID) {
 
 bool SessionAccessibility::CachedPivot(int32_t aID, int32_t aGranularity,
                                        bool aForward, bool aInclusive) {
+  MOZ_ASSERT(IsCacheEnabled(), "Cache is enabled");
+  MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+  MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
   RefPtr<SessionAccessibility> self(this);
-  bool ret = false;
-  nsAppShell::SyncRunEvent(
-      [this, self, aID, aGranularity, aForward, aInclusive, &ret] {
-        if (Accessible* acc = GetAccessibleByID(aID)) {
-          Accessible* result =
-              AccessibleWrap::DoPivot(acc, aGranularity, aForward, aInclusive);
-          if (result) {
-            ret = true;
-            int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(result);
-            nsAppShell::PostEvent([this, self, virtualViewID] {
-              if (Accessible* acc = GetAccessibleByID(virtualViewID)) {
-                SendAccessibilityFocusedEvent(acc);
-              }
-            });
-          }
+  if (Accessible* acc = GetAccessibleByID(aID)) {
+    if (acc->IsLocal()) {
+      nsAppShell::PostEvent(
+          [this, self, aID, aGranularity, aForward, aInclusive] {
+            Pivot(aID, aGranularity, aForward, aInclusive);
+          });
+      return true;
+    }
+    Accessible* result =
+        AccessibleWrap::DoPivot(acc, aGranularity, aForward, aInclusive);
+    if (result) {
+      int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(result);
+      nsAppShell::PostEvent([this, self, virtualViewID] {
+        MonitorAutoLock mal(nsAccessibilityService::GetAndroidMonitor());
+        if (Accessible* acc = GetAccessibleByID(virtualViewID)) {
+          SendAccessibilityFocusedEvent(acc);
         }
       });
-  return ret;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
@@ -214,6 +260,7 @@ void SessionAccessibility::Paste(int32_t aID) {
 
 RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {
+  MOZ_ASSERT(NS_IsMainThread());
   PresShell* presShell = nullptr;
   if (LocalAccessible* localAcc = aAccessible->AsLocal()) {
     DocAccessible* doc = localAcc->Document();
@@ -261,6 +308,7 @@ RefPtr<SessionAccessibility> SessionAccessibility::GetInstanceFor(
 
 void SessionAccessibility::SendAccessibilityFocusedEvent(
     Accessible* aAccessible) {
+  MOZ_ASSERT(NS_IsMainThread());
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED,
       AccessibleWrap::GetVirtualViewID(aAccessible),
@@ -269,6 +317,7 @@ void SessionAccessibility::SendAccessibilityFocusedEvent(
 }
 
 void SessionAccessibility::SendHoverEnterEvent(Accessible* aAccessible) {
+  MOZ_ASSERT(NS_IsMainThread());
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_HOVER_ENTER,
       AccessibleWrap::GetVirtualViewID(aAccessible),
@@ -276,6 +325,7 @@ void SessionAccessibility::SendHoverEnterEvent(Accessible* aAccessible) {
 }
 
 void SessionAccessibility::SendFocusEvent(Accessible* aAccessible) {
+  MOZ_ASSERT(NS_IsMainThread());
   // Suppress focus events from about:blank pages.
   // This is important for tests.
   if (aAccessible->IsDoc() && aAccessible->ChildCount() == 0) {
@@ -293,6 +343,7 @@ void SessionAccessibility::SendScrollingEvent(Accessible* aAccessible,
                                               int32_t aScrollY,
                                               int32_t aMaxScrollX,
                                               int32_t aMaxScrollY) {
+  MOZ_ASSERT(NS_IsMainThread());
   int32_t virtualViewId = AccessibleWrap::GetVirtualViewID(aAccessible);
 
   if (virtualViewId != kNoID) {
@@ -323,6 +374,7 @@ void SessionAccessibility::SendWindowContentChangedEvent() {
 
 void SessionAccessibility::SendWindowStateChangedEvent(
     Accessible* aAccessible) {
+  MOZ_ASSERT(NS_IsMainThread());
   // Suppress window state changed events from about:blank pages.
   // This is important for tests.
   if (aAccessible->IsDoc() && aAccessible->ChildCount() == 0) {
@@ -337,6 +389,7 @@ void SessionAccessibility::SendWindowStateChangedEvent(
 
 void SessionAccessibility::SendTextSelectionChangedEvent(
     Accessible* aAccessible, int32_t aCaretOffset) {
+  MOZ_ASSERT(NS_IsMainThread());
   int32_t fromIndex = aCaretOffset;
   int32_t startSel = -1;
   int32_t endSel = -1;
@@ -372,6 +425,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
                                                 int32_t aStart, uint32_t aLen,
                                                 bool aIsInsert,
                                                 bool aFromUser) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!aFromUser) {
     // Only dispatch text change events from users, for now.
     return;
@@ -414,6 +468,7 @@ void SessionAccessibility::SendTextChangedEvent(Accessible* aAccessible,
 void SessionAccessibility::SendTextTraversedEvent(Accessible* aAccessible,
                                                   int32_t aStartOffset,
                                                   int32_t aEndOffset) {
+  MOZ_ASSERT(NS_IsMainThread());
   nsAutoString text;
   if (aAccessible->IsHyperText()) {
     aAccessible->AsHyperTextBase()->TextSubstring(0, -1, text);
@@ -456,6 +511,7 @@ void SessionAccessibility::SendClickedEvent(Accessible* aAccessible,
 
 void SessionAccessibility::SendSelectedEvent(Accessible* aAccessible,
                                              bool aSelected) {
+  MOZ_ASSERT(NS_IsMainThread());
   GECKOBUNDLE_START(eventInfo);
   // Boolean::FALSE/TRUE gets clobbered by a macro, so ugh.
   GECKOBUNDLE_PUT(eventInfo, "selected",
@@ -471,6 +527,7 @@ void SessionAccessibility::SendSelectedEvent(Accessible* aAccessible,
 void SessionAccessibility::SendAnnouncementEvent(Accessible* aAccessible,
                                                  const nsString& aAnnouncement,
                                                  uint16_t aPriority) {
+  MOZ_ASSERT(NS_IsMainThread());
   GECKOBUNDLE_START(eventInfo);
   GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(aAnnouncement));
   GECKOBUNDLE_FINISH(eventInfo);
@@ -611,6 +668,7 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
     const nsString& aDOMNodeID, const nsString& aDescription,
     const double& aCurVal, const double& aMinVal, const double& aMaxVal,
     const double& aStep, AccAttributes* aAttributes) {
+  MOZ_ASSERT(NS_IsMainThread());
   int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
   GECKOBUNDLE_START(nodeInfo);
   GECKOBUNDLE_PUT(nodeInfo, "id", java::sdk::Integer::ValueOf(virtualViewID));
@@ -785,12 +843,149 @@ mozilla::java::GeckoBundle::LocalRef SessionAccessibility::ToBundle(
   return nodeInfo;
 }
 
+void SessionAccessibility::PopulateNodeInfo(
+    Accessible* aAccessible, mozilla::jni::Object::Param aNodeInfo) {
+  nsAutoString name;
+  aAccessible->Name(name);
+  nsAutoString textValue;
+  aAccessible->Value(textValue);
+  nsAutoString nodeID;
+  aAccessible->DOMNodeID(nodeID);
+  nsAutoString accDesc;
+  aAccessible->Description(accDesc);
+  uint64_t state = aAccessible->State();
+  LayoutDeviceIntRect bounds = aAccessible->Bounds();
+  uint8_t actionCount = aAccessible->ActionCount();
+  int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
+  Accessible* parent = virtualViewID != kNoID ? aAccessible->Parent() : nullptr;
+  int32_t parentID = parent ? AccessibleWrap::GetVirtualViewID(parent) : 0;
+  role role = aAccessible->Role();
+  if (role == roles::LINK && !(state & states::LINKED)) {
+    // A link without the linked state (<a> with no href) shouldn't be presented
+    // as a link.
+    role = roles::TEXT;
+  }
+
+  uint32_t flags = AccessibleWrap::GetFlags(role, state, actionCount);
+  int32_t className = AccessibleWrap::AndroidClass(aAccessible);
+
+  nsAutoString hint;
+  nsAutoString text;
+  nsAutoString description;
+  if (state & states::EDITABLE) {
+    // An editable field's name is populated in the hint.
+    hint.Assign(name);
+    text.Assign(textValue);
+  } else {
+    if (role == roles::LINK || role == roles::HEADING) {
+      description.Assign(name);
+    } else {
+      text.Assign(name);
+    }
+  }
+
+  if (!accDesc.IsEmpty()) {
+    if (!hint.IsEmpty()) {
+      // If this is an editable, the description is concatenated with a
+      // whitespace directly after the name.
+      hint.AppendLiteral(" ");
+    }
+    hint.Append(accDesc);
+  }
+
+  if ((state & states::REQUIRED) != 0) {
+    nsAutoString requiredString;
+    if (LocalizeString("stateRequired", requiredString)) {
+      if (!hint.IsEmpty()) {
+        // If the hint is non-empty, concatenate with a comma for a brief pause.
+        hint.AppendLiteral(", ");
+      }
+      hint.Append(requiredString);
+    }
+  }
+
+  RefPtr<AccAttributes> attributes = aAccessible->Attributes();
+
+  nsAutoString geckoRole;
+  nsAutoString roleDescription;
+  if (virtualViewID != kNoID) {
+    AccessibleWrap::GetRoleDescription(role, attributes, geckoRole,
+                                       roleDescription);
+  }
+
+  int32_t inputType = 0;
+  if (attributes) {
+    nsString inputTypeAttr;
+    attributes->GetAttribute(nsGkAtoms::textInputType, inputTypeAttr);
+    inputType = AccessibleWrap::GetInputType(inputTypeAttr);
+  }
+
+  auto childCount = aAccessible->ChildCount();
+  nsTArray<int32_t> children(childCount);
+  if (!nsAccUtils::MustPrune(aAccessible)) {
+    for (uint32_t i = 0; i < childCount; i++) {
+      auto child = aAccessible->ChildAt(i);
+      children.AppendElement(AccessibleWrap::GetVirtualViewID(child));
+    }
+  }
+
+  const int32_t boundsArray[4] = {bounds.x, bounds.y, bounds.x + bounds.width,
+                                  bounds.y + bounds.height};
+
+  mSessionAccessibility->PopulateNodeInfo(
+      aNodeInfo, virtualViewID, parentID, jni::IntArray::From(children), flags,
+      className, jni::IntArray::New(boundsArray, 4), jni::StringParam(text),
+      jni::StringParam(description), jni::StringParam(hint),
+      jni::StringParam(geckoRole), jni::StringParam(roleDescription),
+      jni::StringParam(nodeID), inputType);
+
+  if (aAccessible->HasNumericValue()) {
+    double curValue = aAccessible->CurValue();
+    double minValue = aAccessible->MinValue();
+    double maxValue = aAccessible->MaxValue();
+    double step = aAccessible->Step();
+
+    int32_t rangeType = 0;  // integer
+    if (maxValue == 1 && minValue == 0) {
+      rangeType = 2;  // percent
+    } else if (std::round(step) != step) {
+      rangeType = 1;  // float;
+    }
+
+    mSessionAccessibility->PopulateNodeRangeInfo(
+        aNodeInfo, rangeType, static_cast<float>(minValue),
+        static_cast<float>(maxValue), static_cast<float>(curValue));
+  }
+
+  if (attributes) {
+    Maybe<int32_t> rowIndex =
+        attributes->GetAttribute<int32_t>(nsGkAtoms::posinset);
+    if (rowIndex) {
+      mSessionAccessibility->PopulateNodeCollectionItemInfo(aNodeInfo,
+                                                            *rowIndex, 1, 0, 1);
+    }
+
+    Maybe<int32_t> rowCount =
+        attributes->GetAttribute<int32_t>(nsGkAtoms::child_item_count);
+    if (rowCount) {
+      int32_t selectionMode = 0;
+      if (aAccessible->IsSelect()) {
+        selectionMode = (state & states::MULTISELECTABLE) ? 2 : 1;
+      }
+      mSessionAccessibility->PopulateNodeCollectionInfo(
+          aNodeInfo, *rowCount, 1, selectionMode,
+          attributes->HasAttribute(nsGkAtoms::tree));
+    }
+  }
+}
+
 void SessionAccessibility::RegisterAccessible(Accessible* aAccessible) {
   if (IPCAccessibilityActive()) {
     // Don't register accessible in content process.
     return;
   }
 
+  nsAccessibilityService::GetAndroidMonitor().AssertCurrentThreadOwns();
   RefPtr<SessionAccessibility> sessionAcc = GetInstanceFor(aAccessible);
   if (!sessionAcc) {
     return;
@@ -827,6 +1022,7 @@ void SessionAccessibility::UnregisterAccessible(Accessible* aAccessible) {
     return;
   }
 
+  nsAccessibilityService::GetAndroidMonitor().AssertCurrentThreadOwns();
   int32_t virtualViewID = AccessibleWrap::GetVirtualViewID(aAccessible);
   if (virtualViewID == kUnsetID) {
     return;

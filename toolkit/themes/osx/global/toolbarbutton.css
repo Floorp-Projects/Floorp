@@ -17,7 +17,7 @@ toolbarbutton {
   vertical-align: middle;
 }
 
-toolbarbutton[disabled="true"] {
+toolbarbutton:where([disabled="true"]) {
   color: -moz-mac-disabledtoolbartext;
 }
 

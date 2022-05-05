@@ -40,6 +40,7 @@
 #endif
 
 #ifdef XP_MACOSX
+#  include "emmintrin.h"
 #  include <spawn.h>
 #  include <CoreFoundation/CoreFoundation.h>
 #  include <CoreGraphics/CoreGraphics.h>

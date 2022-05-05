@@ -126,6 +126,8 @@ bool WasmCompilerForAsmJSAvailable(JSContext* cx);
 // otherwise true, with the result in `*isDisabled` and optionally the reason in
 // `*reason`.
 
+bool BaselineDisabledByFeatures(JSContext* cx, bool* isDisabled,
+                                JSStringBuilder* reason = nullptr);
 bool IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
                            JSStringBuilder* reason = nullptr);
 bool CraneliftDisabledByFeatures(JSContext* cx, bool* isDisabled,

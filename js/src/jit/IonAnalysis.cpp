@@ -1571,8 +1571,13 @@ bool TypeAnalyzer::propagateSpecialization(MPhi* phi) {
     if (use->type() == MIRType::None) {
       // We tried to specialize this phi, but were unable to guess its
       // type. Now that we know the type of one of its operands, we can
-      // specialize it.
-      if (!respecialize(use, phi->type())) {
+      // specialize it. If it can't be specialized as float32, specialize
+      // as double.
+      MIRType type = phi->type();
+      if (type == MIRType::Float32 && !use->canProduceFloat32()) {
+        type = MIRType::Double;
+      }
+      if (!respecialize(use, type)) {
         return false;
       }
       continue;
