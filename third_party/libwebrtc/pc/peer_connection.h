@@ -707,6 +707,10 @@ class PeerConnection : public PeerConnectionInternal,
   std::unique_ptr<RtpTransmissionManager> rtp_manager_;
 
   rtc::WeakPtrFactory<PeerConnection> weak_factory_;
+
+  // Did the connectionState ever change to `connected`?
+  // Used to gather metrics only the first such state change.
+  bool was_ever_connected_ RTC_GUARDED_BY(signaling_thread()) = false;
 };
 
 }  // namespace webrtc
