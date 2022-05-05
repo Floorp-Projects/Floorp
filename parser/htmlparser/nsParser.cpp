@@ -748,7 +748,10 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         // (and cache any data coming in) until the parser is re-enabled.
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
           mSink->WillInterrupt();
-          BlockParser();
+          if (!mBlocked) {
+            // If we were blocked by a recursive invocation, don't re-block.
+            BlockParser();
+          }
           return NS_OK;
         }
         if (NS_ERROR_HTMLPARSER_STOPPARSING == result) {
