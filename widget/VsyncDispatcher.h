@@ -95,6 +95,8 @@ class VsyncDispatcher final {
 
   void MoveToSource(gfx::VsyncSource* aVsyncSource);
 
+  TimeDuration GetVsyncRate() { return mVsyncSource->GetVsyncRate(); }
+
   // Add a vsync observer to this dispatcher. This is a no-op if the observer is
   // already registered. Can be called from any thread.
   void AddVsyncObserver(VsyncObserver* aVsyncObserver);
