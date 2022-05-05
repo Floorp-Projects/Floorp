@@ -89,23 +89,6 @@ TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
   ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
-TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
-{
-  UniquePtr<DateTimePatternGenerator> gen = nullptr;
-  auto dateTimePatternGenerator =
-      DateTimePatternGenerator::TryCreate("en").unwrap();
-
-  UniquePtr<DateTimeFormat> dtFormat =
-      DateTimeFormat::TryCreateFromSkeleton(
-          MakeStringSpan("en-US"), MakeStringSpan("yMdhhmmss"),
-          dateTimePatternGenerator.get(), Some(MakeStringSpan("GMT+3")))
-          .unwrap();
-  TestBuffer<char> buffer;
-  dtFormat->TryFormat(DATE, buffer).unwrap();
-
-  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 08:07:30 PM"));
-}
-
 TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
 {
   UniquePtr<DateTimePatternGenerator> gen = nullptr;
