@@ -820,7 +820,8 @@ nsMultiplexInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
       return mStatus;
     }
 
-    if (mAsyncWaitCallback && aCallback) {
+    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
+                   mAsyncWaitCallback != aCallback)) {
       return NS_ERROR_FAILURE;
     }
 
