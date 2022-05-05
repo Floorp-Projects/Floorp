@@ -2216,7 +2216,7 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple(32000, 44100, 16000, 44100, 19, 15),
                       std::make_tuple(32000, 32000, 48000, 32000, 40, 35),
                       std::make_tuple(32000, 32000, 32000, 32000, 0, 0),
-                      std::make_tuple(32000, 32000, 16000, 32000, 40, 20),
+                      std::make_tuple(32000, 32000, 16000, 32000, 39, 20),
                       std::make_tuple(32000, 16000, 48000, 16000, 25, 20),
                       std::make_tuple(32000, 16000, 32000, 16000, 25, 20),
                       std::make_tuple(32000, 16000, 16000, 16000, 25, 0),
@@ -2231,7 +2231,7 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple(16000, 32000, 32000, 32000, 25, 0),
                       std::make_tuple(16000, 32000, 16000, 32000, 25, 20),
                       std::make_tuple(16000, 16000, 48000, 16000, 39, 20),
-                      std::make_tuple(16000, 16000, 32000, 16000, 40, 20),
+                      std::make_tuple(16000, 16000, 32000, 16000, 39, 20),
                       std::make_tuple(16000, 16000, 16000, 16000, 0, 0)));
 
 #elif defined(WEBRTC_AUDIOPROC_FIXED_PROFILE)

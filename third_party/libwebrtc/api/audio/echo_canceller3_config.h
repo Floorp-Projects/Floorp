@@ -90,6 +90,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     bool conservative_initial_phase = false;
     bool enable_coarse_filter_output_usage = true;
     bool use_linear_filter = true;
+    bool high_pass_filter_echo_reference = false;
     bool export_linear_aec_output = false;
   } filter;
 

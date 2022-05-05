@@ -251,6 +251,10 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
     adjusted_cfg.filter.initial_state_seconds = 2.0f;
   }
 
+  if (field_trial::IsEnabled("WebRTC-Aec3HighPassFilterEchoReference")) {
+    adjusted_cfg.filter.high_pass_filter_echo_reference = true;
+  }
+
   if (field_trial::IsEnabled("WebRTC-Aec3EchoSaturationDetectionKillSwitch")) {
     adjusted_cfg.ep_strength.echo_can_saturate = false;
   }
@@ -574,6 +578,7 @@ EchoCanceller3Config AdjustConfig(const EchoCanceller3Config& config) {
 class EchoCanceller3::RenderWriter {
  public:
   RenderWriter(ApmDataDumper* data_dumper,
+               const EchoCanceller3Config& config,
                SwapQueue<std::vector<std::vector<std::vector<float>>>,
                          Aec3RenderQueueItemVerifier>* render_transfer_queue,
                size_t num_bands,
@@ -590,7 +595,7 @@ class EchoCanceller3::RenderWriter {
   ApmDataDumper* data_dumper_;
   const size_t num_bands_;
   const size_t num_channels_;
-  HighPassFilter high_pass_filter_;
+  std::unique_ptr<HighPassFilter> high_pass_filter_;
   std::vector<std::vector<std::vector<float>>> render_queue_input_frame_;
   SwapQueue<std::vector<std::vector<std::vector<float>>>,
             Aec3RenderQueueItemVerifier>* render_transfer_queue_;
@@ -598,6 +603,7 @@ class EchoCanceller3::RenderWriter {
 
 EchoCanceller3::RenderWriter::RenderWriter(
     ApmDataDumper* data_dumper,
+    const EchoCanceller3Config& config,
     SwapQueue<std::vector<std::vector<std::vector<float>>>,
               Aec3RenderQueueItemVerifier>* render_transfer_queue,
     size_t num_bands,
@@ -605,7 +611,6 @@ EchoCanceller3::RenderWriter::RenderWriter(
     : data_dumper_(data_dumper),
       num_bands_(num_bands),
       num_channels_(num_channels),
-      high_pass_filter_(16000, num_channels),
       render_queue_input_frame_(
           num_bands_,
           std::vector<std::vector<float>>(
@@ -613,6 +618,9 @@ EchoCanceller3::RenderWriter::RenderWriter(
               std::vector<float>(AudioBuffer::kSplitBandSize, 0.f))),
       render_transfer_queue_(render_transfer_queue) {
   RTC_DCHECK(data_dumper);
+  if (config.filter.high_pass_filter_echo_reference) {
+    high_pass_filter_ = std::make_unique<HighPassFilter>(16000, num_channels);
+  }
 }
 
 EchoCanceller3::RenderWriter::~RenderWriter() = default;
@@ -631,7 +639,9 @@ void EchoCanceller3::RenderWriter::Insert(const AudioBuffer& input) {
 
   CopyBufferIntoFrame(input, num_bands_, num_channels_,
                       &render_queue_input_frame_);
-  high_pass_filter_.Process(&render_queue_input_frame_[0]);
+  if (high_pass_filter_) {
+    high_pass_filter_->Process(&render_queue_input_frame_[0]);
+  }
 
   static_cast<void>(render_transfer_queue_->Insert(&render_queue_input_frame_));
 }
@@ -704,7 +714,7 @@ EchoCanceller3::EchoCanceller3(const EchoCanceller3Config& config,
         config_.delay.fixed_capture_delay_samples));
   }
 
-  render_writer_.reset(new RenderWriter(data_dumper_.get(),
+  render_writer_.reset(new RenderWriter(data_dumper_.get(), config_,
                                         &render_transfer_queue_, num_bands_,
                                         num_render_channels_));
 
