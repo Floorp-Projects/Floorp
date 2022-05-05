@@ -64,9 +64,6 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ఫరవాలేదు వద్దు</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">లంకెలను Firefox స్వయంచాలకంగా అనువర్తనాలలో తెరిచేలా మీరు అమర్చుకోవచ్చు.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">అమరికలకు వెళ్లు</string>
     <!-- Text for the negative action button -->
@@ -210,8 +207,6 @@
     <string name="search_settings_menu_item">వెతుకుడు అమరికలు</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefoxలో కొత్తవి ఏమిటి</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$sలో కొత్తవి ఏమిటి</string>
     <!-- Onboarding home screen dialog description text. -->
@@ -220,8 +215,8 @@
     <string name="onboarding_home_screen_section_useful_history_title_2">ఇటీవలి వెతుకులాటలు</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">ఒక కొత్త Firefox ట్యాబును తెరువండి</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">కొత్త %1$s ట్యాబును తెరువు</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">వెతకండి</string>
     <!-- Text preview for larger sized widgets -->
@@ -1366,6 +1361,8 @@
     <string name="preferences_credit_cards_add_credit_card">క్రెడిట్ కార్డును చేర్చు</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">భద్రపరచిన కార్డుల నిర్వహణ</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">చిరునామాను చేర్చు</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">కార్డును చేర్చు</string>
     <!-- Title of the "Edit card" screen -->
@@ -1374,12 +1371,18 @@
     <string name="credit_cards_card_number">కార్డు నెంబరు</string>
     <!-- The header for the expiration date of a credit card -->
     <string name="credit_cards_expiration_date">కాలంచెల్లు తేదీ</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">కాలంచెల్లు తేదీ నెల</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">కాలంచెల్లు తేదీ సంవత్సరం</string>
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">కార్డు మీద పేరు</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">కార్డును తొలగించు</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">కార్డును తొలగించు</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">మీరు ఈ క్రెడిట్ కార్డును నిజంగానే తొలగించాలనుకుంటున్నారా?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">తొలగించు</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1391,9 +1394,15 @@
     <!-- Title of the "Saved cards" screen -->
     <string name="credit_cards_saved_cards">భద్రపరచిన కార్డులు</string>
 
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">దయచేసి సరైన క్రెడిట్ కార్డు నెంబరు ఇవ్వండి</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">దయచేసి ఈ ఖాళీని పూరించండి</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_later">తర్వాత</string>
 
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">చిరునామాను చేర్చు</string>
     <!-- The header for the full name of an address -->
     <string name="addresses_full_name">పూర్తి పేరు</string>
     <!-- The header for the street address of an address -->
@@ -1575,10 +1584,11 @@
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">అమరికలు</string>
 
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">పంపించు</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">మూసివేయి</string>
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">అచేతన ట్యాబులు</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">అచేతన ట్యాబులన్నిటినీ మూసివేయి</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">తొలగించు</string>
