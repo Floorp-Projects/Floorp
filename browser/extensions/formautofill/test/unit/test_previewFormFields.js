@@ -66,6 +66,28 @@ const TESTCASES = [
     },
   },
   {
+    description: "Preview form with a disabled input and non-disabled inputs",
+    document: `<form>
+    <input id="given-name" autocomplete="given-name">
+    <input id="family-name" autocomplete="family-name">
+    <input id="street-addr" autocomplete="street-address">
+    <input id="country" autocomplete="country" disabled value="US">
+   </form>`,
+    focusedInputId: "given-name",
+    profileData: {
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "100 Main Street",
+      country: "CA",
+    },
+    expectedResultState: {
+      "given-name": PREVIEW,
+      "family-name": PREVIEW,
+      "street-address": PREVIEW,
+      country: undefined,
+    },
+  },
+  {
     description:
       "Preview form with autocomplete select elements and matching option values",
     document: `<form>
