@@ -251,8 +251,7 @@ PartiallySeekableInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
   {
     MutexAutoLock lock(mMutex);
-    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
-                   mAsyncWaitCallback != aCallback)) {
+    if (mAsyncWaitCallback && aCallback) {
       return NS_ERROR_FAILURE;
     }
 
@@ -290,13 +289,6 @@ PartiallySeekableInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 }
 
 // nsIIPCSerializableInputStream
-
-void PartiallySeekableInputStream::SerializedComplexity(
-    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
-    uint32_t* aTransferables) {
-  mozilla::ipc::InputStreamHelper::SerializedComplexity(
-      mInputStream, aMaxSize, aSizeUsed, aPipes, aTransferables);
-}
 
 void PartiallySeekableInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
