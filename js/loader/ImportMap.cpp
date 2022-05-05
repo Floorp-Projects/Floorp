@@ -9,7 +9,8 @@
 #include "js/Array.h"                 // IsArrayObject
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/JSON.h"                  // JS_ParseJSON
-#include "ModuleLoaderBase.h"         // ScriptLoaderInterface
+#include "LoadedScript.h"
+#include "ModuleLoaderBase.h"  // ScriptLoaderInterface
 #include "nsContentUtils.h"
 #include "nsIScriptElement.h"
 #include "nsIScriptError.h"
@@ -18,9 +19,11 @@
 #include "ScriptLoadRequest.h"
 
 using JS::SourceText;
+using mozilla::Err;
 using mozilla::LazyLogModule;
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
+using mozilla::WrapNotNull;
 
 namespace JS::loader {
 
@@ -434,6 +437,225 @@ UniquePtr<ImportMap> ImportMap::ParseString(
   // sortedAndNormalizedScopes.
   return MakeUnique<ImportMap>(std::move(sortedAndNormalizedImports),
                                std::move(sortedAndNormalizedScopes));
+}
+
+// https://url.spec.whatwg.org/#is-special
+static bool IsSpecialScheme(nsIURI* aURI) {
+  nsAutoCString scheme;
+  aURI->GetScheme(scheme);
+  return scheme.EqualsLiteral("ftp") || scheme.EqualsLiteral("file") ||
+         scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https") ||
+         scheme.EqualsLiteral("ws") || scheme.EqualsLiteral("wss");
+}
+
+// https://wicg.github.io/import-maps/#resolve-an-imports-match
+static mozilla::Result<nsCOMPtr<nsIURI>, ResolveError> ResolveImportsMatch(
+    nsString& aNormalizedSpecifier, nsIURI* aAsURL,
+    const SpecifierMap* aSpecifierMap) {
+  // Step 1. For each specifierKey → resolutionResult of specifierMap,
+  for (auto&& [specifierKey, resolutionResult] : *aSpecifierMap) {
+    nsAutoString specifier{aNormalizedSpecifier};
+    nsCString asURL = aAsURL ? aAsURL->GetSpecOrDefault() : EmptyCString();
+
+    // Step 1.1. If specifierKey is normalizedSpecifier, then:
+    if (specifierKey.Equals(aNormalizedSpecifier)) {
+      // Step 1.1.1. If resolutionResult is null, then throw a TypeError
+      // indicating that resolution of specifierKey was blocked by a null entry.
+      // This will terminate the entire resolve a module specifier algorithm,
+      // without any further fallbacks.
+      if (!resolutionResult) {
+        LOG(
+            ("ImportMap::ResolveImportsMatch normalizedSpecifier: %s, "
+             "specifierKey: %s, but resolution is null.",
+             NS_ConvertUTF16toUTF8(aNormalizedSpecifier).get(),
+             NS_ConvertUTF16toUTF8(specifierKey).get()));
+        return Err(ResolveError::BlockedByNullEntry);
+      }
+
+      // Step 1.1.2. Assert: resolutionResult is a URL.
+      MOZ_ASSERT(resolutionResult);
+
+      // Step 1.1.3. Return resolutionResult.
+      return resolutionResult;
+    }
+
+    // Step 1.2. If all of the following are true:
+    // specifierKey ends with U+002F (/),
+    // normalizedSpecifier starts with specifierKey, and
+    // either asURL is null, or asURL is special
+    if (StringEndsWith(specifierKey, u"/"_ns) &&
+        StringBeginsWith(aNormalizedSpecifier, specifierKey) &&
+        (!aAsURL || IsSpecialScheme(aAsURL))) {
+      // Step 1.2.1. If resolutionResult is null, then throw a TypeError
+      // indicating that resolution of specifierKey was blocked by a null entry.
+      // This will terminate the entire resolve a module specifier algorithm,
+      // without any further fallbacks.
+      if (!resolutionResult) {
+        LOG(
+            ("ImportMap::ResolveImportsMatch normalizedSpecifier: %s, "
+             "specifierKey: %s, but resolution is null.",
+             NS_ConvertUTF16toUTF8(aNormalizedSpecifier).get(),
+             NS_ConvertUTF16toUTF8(specifierKey).get()));
+        return Err(ResolveError::BlockedByNullEntry);
+      }
+
+      // Step 1.2.2. Assert: resolutionResult is a URL.
+      MOZ_ASSERT(resolutionResult);
+
+      // Step 1.2.3. Let afterPrefix be the portion of normalizedSpecifier after
+      // the initial specifierKey prefix.
+      nsAutoString afterPrefix(
+          Substring(aNormalizedSpecifier, specifierKey.Length()));
+
+      // Step 1.2.4. Assert: resolutionResult, serialized, ends with "/", as
+      // enforced during parsing.
+      MOZ_ASSERT(StringEndsWith(resolutionResult->GetSpecOrDefault(), "/"_ns));
+
+      // Step 1.2.5. Let url be the result of parsing afterPrefix relative to
+      // the base URL resolutionResult.
+      nsCOMPtr<nsIURI> url;
+      nsresult rv = NS_NewURI(getter_AddRefs(url), afterPrefix, nullptr,
+                              resolutionResult);
+
+      // Step 1.2.6. If url is failure, then throw a TypeError indicating that
+      // resolution of normalizedSpecifier was blocked since the afterPrefix
+      // portion could not be URL-parsed relative to the resolutionResult mapped
+      // to by the specifierKey prefix.
+      //
+      // This will terminate the entire resolve a module specifier algorithm,
+      // without any further fallbacks.
+      if (NS_FAILED(rv)) {
+        LOG(
+            ("ImportMap::ResolveImportsMatch normalizedSpecifier: %s, "
+             "specifierKey: %s, resolutionResult: %s, afterPrefix: %s, "
+             "but URL is not parsable.",
+             NS_ConvertUTF16toUTF8(aNormalizedSpecifier).get(),
+             NS_ConvertUTF16toUTF8(specifierKey).get(),
+             resolutionResult->GetSpecOrDefault().get(),
+             NS_ConvertUTF16toUTF8(afterPrefix).get()));
+        return Err(ResolveError::BlockedByAfterPrefix);
+      }
+
+      // Step 1.2.7. Assert: url is a URL.
+      MOZ_ASSERT(url);
+
+      // Step 1.2.8. If the serialization of url does not start with the
+      // serialization of resolutionResult, then throw a TypeError indicating
+      // that resolution of normalizedSpecifier was blocked due to it
+      // backtracking above its prefix specifierKey.
+      //
+      // This will terminate the entire resolve a module specifier algorithm,
+      // without any further fallbacks.
+      if (!StringBeginsWith(url->GetSpecOrDefault(),
+                            resolutionResult->GetSpecOrDefault())) {
+        LOG(
+            ("ImportMap::ResolveImportsMatch normalizedSpecifier: %s, "
+             "specifierKey: %s, "
+             "url %s does not start with resolutionResult %s.",
+             NS_ConvertUTF16toUTF8(aNormalizedSpecifier).get(),
+             NS_ConvertUTF16toUTF8(specifierKey).get(),
+             url->GetSpecOrDefault().get(),
+             resolutionResult->GetSpecOrDefault().get()));
+        return Err(ResolveError::BlockedByBacktrackingPrefix);
+      }
+
+      // Step 1.2.9. Return url.
+      return std::move(url);
+    }
+  }
+
+  // Step 2. Return null.
+  return nsCOMPtr<nsIURI>(nullptr);
+}
+
+// https://wicg.github.io/import-maps/#resolve-a-module-specifier
+// static
+ResolveResult ImportMap::ResolveModuleSpecifier(ImportMap* aImportMap,
+                                                ScriptLoaderInterface* aLoader,
+                                                LoadedScript* aScript,
+                                                const nsAString& aSpecifier) {
+  LOG(("ImportMap::ResolveModuleSpecifier specifier: %s",
+       NS_ConvertUTF16toUTF8(aSpecifier).get()));
+  nsCOMPtr<nsIURI> baseURL;
+  if (aScript) {
+    baseURL = aScript->BaseURL();
+  } else {
+    baseURL = aLoader->GetBaseURI();
+  }
+
+  // Step 6. Let asURL be the result of parsing a URL-like import specifier
+  // given specifier and baseURL.
+  //
+  // Impl note: Step 5 is done below if aImportMap exists.
+  nsCOMPtr<nsIURI> asURL = ParseURLLikeImportSpecifier(aSpecifier, baseURL);
+
+  if (aImportMap) {
+    // Step 5. Let baseURLString be baseURL, serialized.
+    nsCString baseURLString = baseURL->GetSpecOrDefault();
+
+    // Step 7. Let normalizedSpecifier be the serialization of asURL, if asURL
+    // is non-null; otherwise, specifier.
+    nsAutoString normalizedSpecifier =
+        asURL ? NS_ConvertUTF8toUTF16(asURL->GetSpecOrDefault())
+              : nsAutoString{aSpecifier};
+
+    // Step 8. For each scopePrefix → scopeImports of importMap’s scopes,
+    for (auto&& [scopePrefix, scopeImports] : *aImportMap->mScopes) {
+      // Step 8.1. If scopePrefix is baseURLString, or if scopePrefix ends with
+      // U+002F (/) and baseURLString starts with scopePrefix, then:
+      if (scopePrefix.Equals(baseURLString) ||
+          (StringEndsWith(scopePrefix, "/"_ns) &&
+           StringBeginsWith(baseURLString, scopePrefix))) {
+        // Step 8.1.1. Let scopeImportsMatch be the result of resolving an
+        // imports match given normalizedSpecifier, asURL, and scopeImports.
+        auto result =
+            ResolveImportsMatch(normalizedSpecifier, asURL, scopeImports.get());
+        if (result.isErr()) {
+          return result.propagateErr();
+        }
+
+        nsCOMPtr<nsIURI> scopeImportsMatch = result.unwrap();
+        // Step 8.1.2. If scopeImportsMatch is not null, then return
+        // scopeImportsMatch.
+        if (scopeImportsMatch) {
+          LOG((
+              "ImportMap::ResolveModuleSpecifier returns scopeImportsMatch: %s",
+              scopeImportsMatch->GetSpecOrDefault().get()));
+          return WrapNotNull(scopeImportsMatch);
+        }
+      }
+    }
+
+    // Step 9. Let topLevelImportsMatch be the result of resolving an imports
+    // match given normalizedSpecifier, asURL, and importMap’s imports.
+    auto result = ResolveImportsMatch(normalizedSpecifier, asURL,
+                                      aImportMap->mImports.get());
+    if (result.isErr()) {
+      return result.propagateErr();
+    }
+    nsCOMPtr<nsIURI> topLevelImportsMatch = result.unwrap();
+
+    // Step 10. If topLevelImportsMatch is not null, then return
+    // topLevelImportsMatch.
+    if (topLevelImportsMatch) {
+      LOG(("ImportMap::ResolveModuleSpecifier returns topLevelImportsMatch: %s",
+           topLevelImportsMatch->GetSpecOrDefault().get()));
+      return WrapNotNull(topLevelImportsMatch);
+    }
+  }
+
+  // Step 11. At this point, the specifier was able to be turned in to a URL,
+  // but it wasn’t remapped to anything by importMap. If asURL is not null, then
+  // return asURL.
+  if (asURL) {
+    LOG(("ImportMap::ResolveModuleSpecifier returns asURL: %s",
+         asURL->GetSpecOrDefault().get()));
+    return WrapNotNull(asURL);
+  }
+
+  // Step 12. Throw a TypeError indicating that specifier was a bare specifier,
+  // but was not remapped to anything by importMap.
+  return Err(ResolveError::InvalidBareSpecifier);
 }
 
 #undef LOG
