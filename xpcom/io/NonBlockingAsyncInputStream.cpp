@@ -322,6 +322,13 @@ NonBlockingAsyncInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
 // nsIIPCSerializableInputStream
 
+void NonBlockingAsyncInputStream::SerializedComplexity(
+    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
+    uint32_t* aTransferables) {
+  InputStreamHelper::SerializedComplexity(mInputStream, aMaxSize, aSizeUsed,
+                                          aPipes, aTransferables);
+}
+
 void NonBlockingAsyncInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
