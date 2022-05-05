@@ -1276,11 +1276,9 @@ nsMultiplexInputStream::Length(int64_t* aLength) {
 }
 
 class nsMultiplexInputStream::AsyncWaitLengthHelper final
-    : public nsIInputStreamLengthCallback
-
-{
+    : public nsIInputStreamLengthCallback {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   AsyncWaitLengthHelper()
       : mStreamNotified(false), mLength(0), mNegativeSize(false) {}
