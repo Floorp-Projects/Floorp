@@ -191,6 +191,26 @@ nsresult nsLocalFile::RevealFile(const nsString& aResolvedPath) {
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+// static
+void nsLocalFile::CheckForReservedFileName(nsString& aFileName) {
+  static const char* forbiddenNames[] = {
+      "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7",  "COM8",
+      "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",  "LPT7",
+      "LPT8", "LPT9", "CON",  "PRN",  "AUX",  "NUL",  "CLOCK$"};
+
+  uint32_t nameLen;
+  for (size_t n = 0; n < ArrayLength(forbiddenNames); ++n) {
+    nameLen = (uint32_t)strlen(forbiddenNames[n]);
+    if (aFileName.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
+      // invalid name is either the entire string, or a prefix with a period
+      if (aFileName.Length() == nameLen ||
+          aFileName.CharAt(nameLen) == char16_t('.')) {
+        aFileName.Truncate();
+      }
+    }
+  }
+}
+
 class nsDriveEnumerator : public nsSimpleEnumerator,
                           public nsIDirectoryEnumerator {
  public:
