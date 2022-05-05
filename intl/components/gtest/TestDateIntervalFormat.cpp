@@ -58,8 +58,7 @@ TEST(IntlDateIntervalFormat, TryFormatCalendar)
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
           MakeStringSpan("en-US"), MakeStringSpan(u"yMMddHHmm"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan(u"GMT")))
+          dateTimePatternGenerator.get(), Some(MakeStringSpan(u"GMT")))
           .unwrap();
 
   UniquePtr<DateIntervalFormat> dif =
