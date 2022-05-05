@@ -2161,6 +2161,22 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   }
   int32_t runCount = result.unwrap();
 
+  for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
+    aPosResolve[nPosResolve].visualIndex = kNotFound;
+    aPosResolve[nPosResolve].visualLeftTwips = kNotFound;
+    aPosResolve[nPosResolve].visualWidth = kNotFound;
+  }
+
+  // For single-char string, use a simplified path as it cannot have multiple
+  // direction or bidi-class runs.
+  if (runCount == 1 &&
+      (aLength == 1 ||
+       (aLength == 2 && NS_IS_SURROGATE_PAIR(aText[0], aText[1])))) {
+    ProcessOneChar(aText, aLength, aBaseLevel, aPresContext, aprocessor, aMode,
+                   aPosResolve, aPosResolveCount, aWidth, aBidiEngine);
+    return NS_OK;
+  }
+
   nscoord xOffset = 0;
   nscoord width, xEndRun = 0;
   nscoord totalWidth = 0;
@@ -2168,12 +2184,6 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   uint32_t visualStart = 0;
   intl::BidiClass bidiClass;
   intl::BidiClass prevClass = intl::BidiClass::LeftToRight;
-
-  for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
-    aPosResolve[nPosResolve].visualIndex = kNotFound;
-    aPosResolve[nPosResolve].visualLeftTwips = kNotFound;
-    aPosResolve[nPosResolve].visualWidth = kNotFound;
-  }
 
   for (i = 0; i < runCount; i++) {
     mozilla::intl::BidiDirection dir =
@@ -2216,8 +2226,6 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
 
       nsAutoString runVisualText;
       runVisualText.Assign(text + start, subRunLength);
-      if (int32_t(runVisualText.Length()) < subRunLength)
-        return NS_ERROR_OUT_OF_MEMORY;
       if (aPresContext) {
         FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
                           subRunLength, bidiClass);
@@ -2345,6 +2353,61 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
     *aWidth = totalWidth;
   }
   return NS_OK;
+}
+
+void nsBidiPresUtils::ProcessOneChar(const char16_t* aText, size_t aLength,
+                                     BidiEmbeddingLevel aBaseLevel,
+                                     nsPresContext* aPresContext,
+                                     BidiProcessor& aprocessor, Mode aMode,
+                                     nsBidiPositionResolve* aPosResolve,
+                                     int32_t aPosResolveCount, nscoord* aWidth,
+                                     mozilla::intl::Bidi* aBidiEngine) {
+  nscoord width;
+  int32_t start = 0, limit;
+  intl::BidiClass bidiClass;
+  intl::BidiClass prevClass = intl::BidiClass::LeftToRight;
+
+  BidiEmbeddingLevel level;
+  aBidiEngine->GetLogicalRun(0, &limit, &level);
+  MOZ_ASSERT(limit == int32_t(aLength), "cannot have multiple bidi runs");
+
+  int32_t subRunLength = aLength;
+  int32_t subRunCount = 1;
+  CalculateBidiClass(aBidiEngine, aText, start, aLength, limit, subRunLength,
+                     subRunCount, bidiClass, prevClass);
+  MOZ_ASSERT(subRunCount == 1, "cannot split single-character run");
+
+  nsAutoString runVisualText;
+  runVisualText.Assign(aText, aLength);
+  if (aPresContext) {
+    FormatUnicodeText(aPresContext, runVisualText.BeginWriting(), subRunLength,
+                      bidiClass);
+  }
+
+  mozilla::intl::BidiDirection dir = level.Direction();
+  aprocessor.SetText(runVisualText.get(), aLength, dir);
+  width = aprocessor.GetWidth();
+
+  if (aMode == MODE_DRAW) {
+    aprocessor.DrawText(0, width);
+  }
+
+  for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
+    nsBidiPositionResolve* posResolve = &aPosResolve[nPosResolve];
+    if (posResolve->visualLeftTwips != kNotFound) {
+      continue;
+    }
+    if (0 <= posResolve->logicalIndex &&
+        subRunLength > posResolve->logicalIndex) {
+      posResolve->visualIndex = 0;
+      posResolve->visualLeftTwips = 0;
+      posResolve->visualWidth = width;
+    }
+  }
+
+  if (aWidth) {
+    *aWidth = width;
+  }
 }
 
 class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
