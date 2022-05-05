@@ -826,6 +826,10 @@ class WorkerScriptLoader final : public nsINamed {
 
   Maybe<ServiceWorkerDescriptor>& GetController() { return mController; }
 
+  CacheCreator* GetCacheCreator() { return mCacheCreator; }
+
+  bool IsCancelled() { return mCanceledMainThread; }
+
   void CancelMainThread(nsresult aCancelResult) {
     AssertIsOnMainThread();
 
@@ -1592,7 +1596,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
 
   // If one load info cancels or hits an error, it can race with the start
   // callback coming from another load info.
-  if (mLoader->mCanceledMainThread || !mLoader->mCacheCreator) {
+  if (mLoader->IsCancelled() || !mLoader->GetCacheCreator()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1658,7 +1662,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   ir->Headers()->FillResponseHeaders(mLoadInfo.mChannel);
 
   RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
-      mLoader->mCacheCreator->Global(), std::move(ir), nullptr);
+      mLoader->GetCacheCreator()->Global(), std::move(ir), nullptr);
 
   mozilla::dom::RequestOrUSVString request;
 
@@ -1671,7 +1675,7 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
   jsapi.Init();
 
   ErrorResult error;
-  RefPtr<Promise> cachePromise = mLoader->mCacheCreator->Cache_()->Put(
+  RefPtr<Promise> cachePromise = mLoader->GetCacheCreator()->Cache_()->Put(
       jsapi.cx(), request, *response, error);
   error.WouldReportJSException();
   if (NS_WARN_IF(error.Failed())) {
