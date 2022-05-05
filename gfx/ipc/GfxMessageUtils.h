@@ -12,6 +12,7 @@
 #include "RegionBuilder.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "gfxFeature.h"
+#include "gfxFontUtils.h"
 #include "gfxFallback.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
@@ -23,6 +24,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/ScaleFactor.h"
 #include "mozilla/gfx/ScaleFactors2D.h"
+#include "SharedFontList.h"
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "mozilla/Array.h"
@@ -1136,7 +1138,54 @@ struct ParamTraits<mozilla::SideBits>
     : public BitFlagsEnumSerializer<mozilla::SideBits,
                                     mozilla::SideBits::eAll> {};
 
-} /* namespace IPC */
+template <>
+struct ParamTraits<gfxSparseBitSet> {
+  typedef gfxSparseBitSet paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mBlockIndex);
+    WriteParam(aWriter, aParam.mBlocks);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mBlockIndex) &&
+           ReadParam(aReader, &aResult->mBlocks);
+  }
+};
+
+template <>
+struct ParamTraits<gfxSparseBitSet::Block> {
+  typedef gfxSparseBitSet::Block paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    aWriter->WriteBytes(&aParam, sizeof(aParam));
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return aReader->ReadBytesInto(aResult, sizeof(*aResult));
+  }
+};
+
+// The actual FontVisibility enum is defined in gfxTypes.h
+template <>
+struct ParamTraits<FontVisibility>
+    : public ContiguousEnumSerializer<FontVisibility, FontVisibility::Unknown,
+                                      FontVisibility::Count> {};
+
+template <>
+struct ParamTraits<mozilla::fontlist::Pointer> {
+  typedef mozilla::fontlist::Pointer paramType;
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    uint32_t v = aParam.mBlockAndOffset;
+    WriteParam(aWriter, v);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    uint32_t v;
+    if (ReadParam(aReader, &v)) {
+      aResult->mBlockAndOffset.store(v);
+      return true;
+    }
+    return false;
+  }
+};
+
+}  // namespace IPC
 
 namespace mozilla {
 namespace ipc {

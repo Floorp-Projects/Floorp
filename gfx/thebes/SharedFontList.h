@@ -378,29 +378,6 @@ struct LocalFaceRec {
 }  // namespace fontlist
 }  // namespace mozilla
 
-#include "ipc/IPCMessageUtils.h"
-
-namespace IPC {
-
-template <>
-struct ParamTraits<mozilla::fontlist::Pointer> {
-  typedef mozilla::fontlist::Pointer paramType;
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    uint32_t v = aParam.mBlockAndOffset;
-    WriteParam(aWriter, v);
-  }
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    uint32_t v;
-    if (ReadParam(aReader, &v)) {
-      aResult->mBlockAndOffset.store(v);
-      return true;
-    }
-    return false;
-  }
-};
-
-}  // namespace IPC
-
 #undef ERROR  // This is defined via Windows.h, but conflicts with some bindings
               // code when this gets included in the same compilation unit.
 
