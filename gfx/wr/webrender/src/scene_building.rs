@@ -2225,21 +2225,7 @@ impl<'a> SceneBuilder<'a> {
             return;
         }
 
-        let mut stacking_context = self.sc_stack.pop().unwrap();
-
-        // If this stacking context has requested that clip masks get applied
-        // to individual child elements, remove the blit reason. Since the picture
-        // will still exist as a pass-through with a clip-chain, that clip
-        // will be applied implicitly to the primitive inside the stacking
-        // context. It's required for correctness for backdrop-filters
-        // that have a clip-mask applied to them. In this case, Gecko supplies
-        // a surrounding stacking context with clip-mask, which WR thinks is
-        // the backdrop root without this optimization. In future, we should
-        // change the way Geck supplies clip-masks on primitives so that this
-        // isn't necessary.
-        if stacking_context.flags.contains(StackingContextFlags::APPLY_CLIPS_TO_ITEMS) {
-            stacking_context.blit_reason = BlitReason::empty();
-        }
+        let stacking_context = self.sc_stack.pop().unwrap();
 
         // If the stacking context is a blend container, and if we're at the top level
         // of the stacking context tree, we can make this blend container into a tile
