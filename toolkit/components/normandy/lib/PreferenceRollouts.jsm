@@ -140,6 +140,8 @@ var PreferenceRollouts = {
     "bug-1732206-rollout-fission-release-rollout-release-94-95",
     "bug-1745237-rollout-fission-beta-96-97-rollout-beta-96-97",
     "bug-1750601-rollout-doh-steering-in-canada-staggered-starting-for-release-97-98",
+    "bug-1758988-rollout-doh-enablment-to-new-countries-staggered-st-release-98-100",
+    "bug-1758818-rollout-enabling-doh-in-new-countries-staggered-sta-release-98-100",
   ]),
 
   /**

@@ -133,8 +133,8 @@ bool nsDragService::CreateDragImage(nsINode* aDOMNode,
     psdi->sizeDragImage.cx = bmWidth;
     psdi->sizeDragImage.cy = bmHeight;
 
-    LayoutDeviceIntPoint screenPoint =
-        ConvertToUnscaledDevPixels(pc, mScreenPosition);
+    const auto screenPoint =
+        LayoutDeviceIntPoint::Round(mScreenPosition * pc->CSSToDevPixelScale());
     psdi->ptOffset.x = screenPoint.x - dragRect.X();
     psdi->ptOffset.y = screenPoint.y - dragRect.Y();
 

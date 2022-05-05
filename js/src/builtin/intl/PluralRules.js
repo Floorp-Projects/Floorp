@@ -229,12 +229,18 @@ function Intl_PluralRules_selectRange(start, end) {
     }
 
     // Step 3.
-    var x = ToNumber(start);
+    if (start === undefined || end === undefined) {
+        ThrowTypeError(JSMSG_UNDEFINED_NUMBER, start === undefined ? "start" : "end",
+                       "PluralRules", "selectRange");
+    }
 
     // Step 4.
-    var y = ToNumber(end);
+    var x = ToNumber(start);
 
     // Step 5.
+    var y = ToNumber(end);
+
+    // Step 6.
     return intl_SelectPluralRuleRange(pluralRules, x, y);
 }
 

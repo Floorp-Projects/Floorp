@@ -14,21 +14,33 @@
 
 namespace mozilla::a11y {
 
-int32_t HyperTextAccessibleBase::GetChildIndexAtOffset(uint32_t aOffset) const {
+void HyperTextAccessibleBase::BuildCachedHyperTextOffsets(
+    nsTArray<int32_t>& aOffsets) const {
   const Accessible* thisAcc = Acc();
   uint32_t childCount = thisAcc->ChildCount();
-  uint32_t lastTextOffset = 0;
-  for (uint32_t childIndex = 0; childIndex < childCount; ++childIndex) {
-    Accessible* child = thisAcc->ChildAt(childIndex);
-    lastTextOffset += nsAccUtils::TextLength(child);
-    if (aOffset < lastTextOffset) {
-      return childIndex;
-    }
+  int32_t lastTextOffset = 0;
+  while (aOffsets.Length() < childCount) {
+    Accessible* child = thisAcc->ChildAt(aOffsets.Length());
+    lastTextOffset += static_cast<int32_t>(nsAccUtils::TextLength(child));
+    aOffsets.AppendElement(lastTextOffset);
   }
-  if (aOffset == lastTextOffset) {
-    return childCount - 1;
+}
+
+int32_t HyperTextAccessibleBase::GetChildIndexAtOffset(uint32_t aOffset) const {
+  const auto& offsets = GetCachedHyperTextOffsets();
+  auto childCount = offsets.Length();
+  size_t index;
+  if (BinarySearch(offsets, 0, childCount, static_cast<int32_t>(aOffset),
+                   &index)) {
+    // aOffset is the exclusive end of a child, so return the child before it.
+    return static_cast<int32_t>(index < childCount - 1 ? index + 1 : index);
   }
-  return -1;
+  if (index == childCount) {
+    // aOffset is past the end of the text.
+    return -1;
+  }
+  // index points at the exclusive end after aOffset.
+  return static_cast<int32_t>(index);
 }
 
 Accessible* HyperTextAccessibleBase::GetChildAtOffset(uint32_t aOffset) const {
@@ -36,8 +48,8 @@ Accessible* HyperTextAccessibleBase::GetChildAtOffset(uint32_t aOffset) const {
   return thisAcc->ChildAt(GetChildIndexAtOffset(aOffset));
 }
 
-int32_t HyperTextAccessibleBase::GetChildOffset(const Accessible* aChild,
-                                                bool aInvalidateAfter) const {
+int32_t HyperTextAccessibleBase::GetChildOffset(
+    const Accessible* aChild) const {
   const Accessible* thisAcc = Acc();
   if (aChild->Parent() != thisAcc) {
     return -1;
@@ -46,26 +58,16 @@ int32_t HyperTextAccessibleBase::GetChildOffset(const Accessible* aChild,
   if (index == -1) {
     return -1;
   }
-  return GetChildOffset(index, aInvalidateAfter);
+  return GetChildOffset(index);
 }
 
-int32_t HyperTextAccessibleBase::GetChildOffset(uint32_t aChildIndex,
-                                                bool aInvalidateAfter) const {
+int32_t HyperTextAccessibleBase::GetChildOffset(uint32_t aChildIndex) const {
   if (aChildIndex == 0) {
     return 0;
   }
-  const Accessible* thisAcc = Acc();
-  MOZ_ASSERT(aChildIndex <= thisAcc->ChildCount());
-  uint32_t lastTextOffset = 0;
-  for (uint32_t childIndex = 0; childIndex <= aChildIndex; ++childIndex) {
-    if (childIndex == aChildIndex) {
-      return lastTextOffset;
-    }
-    Accessible* child = thisAcc->ChildAt(childIndex);
-    lastTextOffset += nsAccUtils::TextLength(child);
-  }
-  MOZ_ASSERT_UNREACHABLE();
-  return lastTextOffset;
+  MOZ_ASSERT(aChildIndex <= Acc()->ChildCount());
+  const auto& offsets = GetCachedHyperTextOffsets();
+  return offsets[aChildIndex - 1];
 }
 
 uint32_t HyperTextAccessibleBase::CharacterCount() const {

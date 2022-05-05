@@ -13,6 +13,7 @@
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
 #include "QuotaObject.h"
+#include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
 
 // Global includes
@@ -3979,6 +3980,8 @@ void QuotaManager::Shutdown() {
   };
 
   // Body of the function
+  ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContext,
+                           "dom::quota::QuotaManager::Shutdown"_ns};
 
   flagShutdownStarted();
 

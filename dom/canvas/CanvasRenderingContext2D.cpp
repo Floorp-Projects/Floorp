@@ -3676,7 +3676,7 @@ bool CanvasRenderingContext2D::GetHitRegionRect(Element* aElement,
 /**
  * Used for nsBidiPresUtils::ProcessText
  */
-struct MOZ_STACK_CLASS CanvasBidiProcessor
+struct MOZ_STACK_CLASS CanvasBidiProcessor final
     : public nsBidiPresUtils::BidiProcessor {
   using Style = CanvasRenderingContext2D::Style;
 
@@ -3687,7 +3687,9 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
         mAppUnitsPerDevPixel(0),
         mOp(CanvasRenderingContext2D::TextDrawOperation::FILL),
         mTextRunFlags(),
-        mDoMeasureBoundingBox(false) {
+        mSetTextCount(0),
+        mDoMeasureBoundingBox(false),
+        mIgnoreSetText(false) {
     if (StaticPrefs::gfx_missing_fonts_notify()) {
       mMissingFonts = MakeUnique<gfxMissingFontRecorder>();
     }
@@ -3702,8 +3704,15 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
 
   using ContextState = CanvasRenderingContext2D::ContextState;
 
-  virtual void SetText(const char16_t* aText, int32_t aLength,
-                       intl::BidiDirection aDirection) override {
+  void SetText(const char16_t* aText, int32_t aLength,
+               intl::BidiDirection aDirection) override {
+    if (mIgnoreSetText) {
+      // We've been told to ignore SetText because the processor is only ever
+      // handling a single, fixed string.
+      MOZ_ASSERT(mTextRun && mTextRun->GetLength() == uint32_t(aLength));
+      return;
+    }
+    mSetTextCount++;
     auto* pfl = gfxPlatformFontList::PlatformFontList();
     pfl->Lock();
     mFontgrp->CheckForUpdatedPlatformList();
@@ -3722,7 +3731,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     pfl->Unlock();
   }
 
-  virtual nscoord GetWidth() override {
+  nscoord GetWidth() override {
     gfxTextRun::Metrics textRunMetrics = mTextRun->MeasureText(
         mDoMeasureBoundingBox ? gfxFont::TIGHT_INK_EXTENTS
                               : gfxFont::LOOSE_INK_EXTENTS,
@@ -3798,7 +3807,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
     return pattern.forget();
   }
 
-  virtual void DrawText(nscoord aXOffset, nscoord aWidth) override {
+  void DrawText(nscoord aXOffset, nscoord aWidth) override {
     gfx::Point point = mPt;
     bool rtl = mTextRun->IsRightToLeft();
     bool verticalRun = mTextRun->IsVertical();
@@ -3936,8 +3945,14 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
   // flags to use when creating textrun, based on CSS style
   gfx::ShapedTextFlags mTextRunFlags;
 
+  // Count of how many times SetText has been called on this processor.
+  uint32_t mSetTextCount;
+
   // true iff the bounding box should be measured
   bool mDoMeasureBoundingBox;
+
+  // true if future SetText calls should be ignored
+  bool mIgnoreSetText;
 };
 
 TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
@@ -4072,6 +4087,12 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
 
   nscoord totalWidthCoord;
 
+  processor.mFontgrp
+      ->UpdateUserFonts();  // ensure user font generation is current
+  const gfxFont::Metrics& fontMetrics =
+      processor.mFontgrp->GetFirstValidFont()->GetMetrics(
+          nsFontMetrics::eHorizontal);
+
   // calls bidi algo twice since it needs the full text width and the
   // bounding boxes before rendering anything
   aError = nsBidiPresUtils::ProcessText(
@@ -4081,6 +4102,13 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
       &totalWidthCoord, &mBidiEngine);
   if (aError.Failed()) {
     return nullptr;
+  }
+
+  // If ProcessText only called SetText once, we're dealing with a single run,
+  // and so we don't need to repeat SetText and textRun construction at drawing
+  // time below; we can just re-use the existing textRun.
+  if (processor.mSetTextCount == 1) {
+    processor.mIgnoreSetText = true;
   }
 
   float totalWidth = float(totalWidthCoord) / processor.mAppUnitsPerDevPixel;
@@ -4102,12 +4130,6 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   processor.mPt.x -= offsetX;
 
   // offset pt.y (or pt.x, for vertical text) based on text baseline
-  processor.mFontgrp
-      ->UpdateUserFonts();  // ensure user font generation is current
-  const gfxFont::Metrics& fontMetrics =
-      processor.mFontgrp->GetFirstValidFont()->GetMetrics(
-          nsFontMetrics::eHorizontal);
-
   gfxFloat baselineAnchor;
 
   switch (state.textBaseline) {

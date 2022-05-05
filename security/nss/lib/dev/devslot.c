@@ -172,10 +172,7 @@ nssSlot_IsTokenPresent(
         goto done;
     }
 
-    nssSlot_EnterMonitor(slot);
-    ckrv = CKAPI(epv)->C_GetSlotInfo(slot->slotID, &slotInfo);
-    nssSlot_ExitMonitor(slot);
-    if (ckrv != CKR_OK) {
+    if (PK11_GetSlotInfo(slot->pk11slot, &slotInfo) != SECSuccess) {
         nssToken->base.name[0] = 0; /* XXX */
         isPresent = PR_FALSE;
         goto done;
