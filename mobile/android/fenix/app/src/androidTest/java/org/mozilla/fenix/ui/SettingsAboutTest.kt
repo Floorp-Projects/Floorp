@@ -10,6 +10,7 @@ import androidx.test.uiautomator.UiSelector
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Rule
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.After
 import org.junit.Test
 import org.mozilla.fenix.ext.settings
@@ -74,6 +75,7 @@ class SettingsAboutTest {
         }
     }
 
+    @Ignore("Intermittent failures, see: https://github.com/mozilla-mobile/fenix/issues/20754")
     @Test
     fun verifyAboutFirefoxPreview() {
         val settings = activityIntentTestRule.activity.settings()
