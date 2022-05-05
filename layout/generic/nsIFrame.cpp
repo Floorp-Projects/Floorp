@@ -3601,8 +3601,10 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   if (usingBackdropFilter) {
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-    resultList.AppendNewToTop<nsDisplayBackdropFilters>(aBuilder, this,
-                                                        &resultList);
+    nsRect backdropRect =
+        GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
+    resultList.AppendNewToTop<nsDisplayBackdropFilters>(
+        aBuilder, this, &resultList, backdropRect);
     ct.TrackContainer(resultList.GetTop());
   }
 
@@ -3644,7 +3646,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
-          aBuilder, this, &resultList, maskASR, usingBackdropFilter);
+          aBuilder, this, &resultList, maskASR);
       ct.TrackContainer(resultList.GetTop());
     }
 
