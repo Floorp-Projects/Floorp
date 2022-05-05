@@ -958,7 +958,7 @@ gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
   if (IsHeadless() || IsWaylandDisplay()) {
     // On Wayland we can not create a global hardware based vsync source, thus
     // use a software based one here. We create window specific ones later.
-    return CreateSoftwareVsyncSource();
+    return GetSoftwareVsyncSource();
   }
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
@@ -983,7 +983,7 @@ gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
     RefPtr<GtkVsyncSource> vsyncSource = new GtkVsyncSource();
     if (!vsyncSource->Setup()) {
       NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
-      return CreateSoftwareVsyncSource();
+      return GetSoftwareVsyncSource();
     }
     return vsyncSource.forget();
   }

@@ -1794,7 +1794,7 @@ gfxWindowsPlatform::CreateGlobalHardwareVsyncSource() {
 
   if (!DwmCompositionEnabled()) {
     NS_WARNING("DWM not enabled, falling back to software vsync");
-    return CreateSoftwareVsyncSource();
+    return GetSoftwareVsyncSource();
   }
 
   RefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();

@@ -167,8 +167,6 @@ using namespace mozilla::gfx;
 gfxPlatform* gPlatform = nullptr;
 static bool gEverInitialized = false;
 
-static int32_t gLastUsedFrameRate = -1;
-
 const ContentDeviceData* gContentDeviceInitData = nullptr;
 
 Atomic<bool, MemoryOrdering::ReleaseAcquire> gfxPlatform::gCMSInitialized;
@@ -781,16 +779,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 #undef REPORT_INTERNER
 #undef REPORT_DATA_STORE
 
-static void FrameRatePrefChanged(const char* aPref, void*) {
-  int32_t newRate = gfxPlatform::ForceSoftwareVsync()
-                        ? gfxPlatform::GetSoftwareVsyncRate()
-                        : -1;
-  if (newRate != gLastUsedFrameRate) {
-    gLastUsedFrameRate = newRate;
-    gfxPlatform::ReInitFrameRate();
-  }
-}
-
 void gfxPlatform::Init() {
   MOZ_RELEASE_ASSERT(!XRE_IsGPUProcess(), "GFX: Not allowed in GPU process.");
   MOZ_RELEASE_ASSERT(!XRE_IsRDDProcess(), "GFX: Not allowed in RDD process.");
@@ -940,14 +928,19 @@ void gfxPlatform::Init() {
     nsAutoCString allowlist;
     Preferences::GetCString("gfx.offscreencanvas.domain-allowlist", allowlist);
     gfxVars::SetOffscreenCanvasDomainAllowlist(allowlist);
-  }
 
-  gLastUsedFrameRate = ForceSoftwareVsync() ? GetSoftwareVsyncRate() : -1;
-  Preferences::RegisterCallback(
-      FrameRatePrefChanged,
-      nsDependentCString(StaticPrefs::GetPrefName_layout_frame_rate()));
-  // Set up the vsync source for the parent process.
-  ReInitFrameRate();
+    // Create the global vsync source and dispatcher.
+    RefPtr<VsyncSource> vsyncSource =
+        gfxPlatform::ForceSoftwareVsync()
+            ? gPlatform->GetSoftwareVsyncSource()
+            : gPlatform->GetGlobalHardwareVsyncSource();
+    gPlatform->mVsyncDispatcher = new VsyncDispatcher(vsyncSource);
+
+    // Listen for layout.frame_rate pref changes.
+    Preferences::RegisterCallback(
+        gfxPlatform::ReInitFrameRate,
+        nsDependentCString(StaticPrefs::GetPrefName_layout_frame_rate()));
+  }
 
   // Create the sRGB to output display profile transforms. They can be accessed
   // off the main thread so we want to avoid a race condition.
@@ -1239,10 +1232,18 @@ void gfxPlatform::Shutdown() {
   }
 
   if (XRE_IsParentProcess()) {
-    gPlatform->mVsyncSource->Shutdown();
+    if (gPlatform->mGlobalHardwareVsyncSource) {
+      gPlatform->mGlobalHardwareVsyncSource->Shutdown();
+    }
+    if (gPlatform->mSoftwareVsyncSource &&
+        gPlatform->mSoftwareVsyncSource !=
+            gPlatform->mGlobalHardwareVsyncSource) {
+      gPlatform->mSoftwareVsyncSource->Shutdown();
+    }
   }
 
-  gPlatform->mVsyncSource = nullptr;
+  gPlatform->mGlobalHardwareVsyncSource = nullptr;
+  gPlatform->mSoftwareVsyncSource = nullptr;
   gPlatform->mVsyncDispatcher = nullptr;
 
   // Shut down the default GL context provider.
@@ -2988,6 +2989,14 @@ RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
   return mVsyncDispatcher;
 }
 
+already_AddRefed<mozilla::gfx::VsyncSource>
+gfxPlatform::GetGlobalHardwareVsyncSource() {
+  if (!mGlobalHardwareVsyncSource) {
+    mGlobalHardwareVsyncSource = CreateGlobalHardwareVsyncSource();
+  }
+  return do_AddRef(mGlobalHardwareVsyncSource);
+}
+
 /***
  * The preference "layout.frame_rate" has 3 meanings depending on the value:
  *
@@ -2997,12 +3006,13 @@ RefPtr<mozilla::VsyncDispatcher> gfxPlatform::GetGlobalVsyncDispatcher() {
  *  X = Software vsync at a rate of X times per second.
  */
 already_AddRefed<mozilla::gfx::VsyncSource>
-gfxPlatform::CreateSoftwareVsyncSource() {
-  double rateInMS = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
-  RefPtr<mozilla::gfx::VsyncSource> softwareVsync =
-      new mozilla::gfx::SoftwareVsyncSource(
-          TimeDuration::FromMilliseconds(rateInMS));
-  return softwareVsync.forget();
+gfxPlatform::GetSoftwareVsyncSource() {
+  if (!mSoftwareVsyncSource) {
+    double rateInMS = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
+    mSoftwareVsyncSource = new mozilla::gfx::SoftwareVsyncSource(
+        TimeDuration::FromMilliseconds(rateInMS));
+  }
+  return do_AddRef(mSoftwareVsyncSource);
 }
 
 /* static */
@@ -3033,31 +3043,23 @@ int gfxPlatform::GetSoftwareVsyncRate() {
 int gfxPlatform::GetDefaultFrameRate() { return 60; }
 
 /* static */
-void gfxPlatform::ReInitFrameRate() {
-  if (XRE_IsParentProcess()) {
-    RefPtr<VsyncSource> oldSource = gPlatform->mVsyncSource;
+void gfxPlatform::ReInitFrameRate(const char* aPrefIgnored,
+                                  void* aDataIgnored) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
-    // Start a new one:
-    if (gfxPlatform::ForceSoftwareVsync()) {
-      gPlatform->mVsyncSource = gPlatform->CreateSoftwareVsyncSource();
-    } else {
-      gPlatform->mVsyncSource = gPlatform->CreateGlobalHardwareVsyncSource();
-    }
-
-    if (gPlatform->mVsyncDispatcher) {
-      // Swap out the dispatcher's underlying source.
-      gPlatform->mVsyncDispatcher->SetVsyncSource(gPlatform->mVsyncSource);
-    } else {
-      // Initial assignment of the vsync dispatcher.
-      gPlatform->mVsyncDispatcher =
-          new VsyncDispatcher(gPlatform->mVsyncSource);
-    }
-
-    // Shut down the old vsync source.
-    if (oldSource) {
-      oldSource->Shutdown();
-    }
+  if (gPlatform->mSoftwareVsyncSource) {
+    // Update the rate of the existing software vsync source.
+    double rateInMS = 1000.0 / (double)gfxPlatform::GetSoftwareVsyncRate();
+    gPlatform->mSoftwareVsyncSource->SetVsyncRate(
+        TimeDuration::FromMilliseconds(rateInMS));
   }
+
+  // Swap out the dispatcher's underlying source.
+  RefPtr<VsyncSource> vsyncSource =
+      gfxPlatform::ForceSoftwareVsync()
+          ? gPlatform->GetSoftwareVsyncSource()
+          : gPlatform->GetGlobalHardwareVsyncSource();
+  gPlatform->mVsyncDispatcher->SetVsyncSource(vsyncSource);
 }
 
 const char* gfxPlatform::GetAzureCanvasBackend() const {
