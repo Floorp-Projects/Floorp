@@ -853,7 +853,7 @@ class BrowserParent final : public PBrowserParent,
   void SendRealTouchMoveEvent(WidgetTouchEvent& aEvent, APZData& aAPZData,
                               uint32_t aConsecutiveTouchMoveCount);
 
-  void UpdateVsyncParentVsyncSource();
+  void UpdateVsyncParentVsyncDispatcher();
 
  public:
   // Unsets sTopLevelWebFocus regardless of its current value.
