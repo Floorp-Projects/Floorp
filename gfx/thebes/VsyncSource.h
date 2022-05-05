@@ -15,7 +15,7 @@
 #include "mozilla/layers/LayersTypes.h"
 
 namespace mozilla {
-class RefreshTimerVsyncDispatcher;
+class VsyncDispatcher;
 class CompositorVsyncDispatcher;
 class VsyncObserver;
 struct VsyncEvent;
@@ -30,7 +30,7 @@ namespace gfx {
 class VsyncSource {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncSource)
 
-  typedef mozilla::RefreshTimerVsyncDispatcher RefreshTimerVsyncDispatcher;
+  typedef mozilla::VsyncDispatcher VsyncDispatcher;
   typedef mozilla::CompositorVsyncDispatcher CompositorVsyncDispatcher;
 
  public:
@@ -83,7 +83,7 @@ class VsyncSource {
 
   void MoveListenersToNewSource(const RefPtr<VsyncSource>& aNewSource);
 
-  RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
+  RefPtr<VsyncDispatcher> GetVsyncDispatcher();
 
   // Returns the rate of the fastest enabled VsyncSource or Nothing().
   static Maybe<TimeDuration> GetFastestVsyncRate();
@@ -100,7 +100,7 @@ class VsyncSource {
       mEnabledCompositorVsyncDispatchers;
   nsTArray<RefPtr<CompositorVsyncDispatcher>>
       mRegisteredCompositorVsyncDispatchers;
-  RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
+  RefPtr<VsyncDispatcher> mVsyncDispatcher;
   nsTArray<RefPtr<VsyncObserver>>
       mGenericObservers;  // can only be touched from the main thread
   VsyncId mVsyncId;
