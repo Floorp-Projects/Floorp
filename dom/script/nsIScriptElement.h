@@ -7,7 +7,6 @@
 #ifndef nsIScriptElement_h___
 #define nsIScriptElement_h___
 
-#include "js/loader/ScriptKind.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CORSMode.h"
@@ -56,10 +55,10 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
         mForceAsync(aFromParser == mozilla::dom::NOT_FROM_PARSER ||
                     aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT),
         mFrozen(false),
+        mIsModule(false),
         mDefer(false),
         mAsync(false),
         mExternal(false),
-        mKind(JS::loader::ScriptKind::eClassic),
         mParserCreated(aFromParser == mozilla::dom::FROM_PARSER_FRAGMENT
                            ? mozilla::dom::NOT_FROM_PARSER
                            : aFromParser),
@@ -99,7 +98,6 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    * Freezes the return values of the following methods so that subsequent
    * modifications to the attributes don't change execution behavior:
    *  - GetScriptIsModule()
-   *  - GetScriptIsImportMap()
    *  - GetScriptDeferred()
    *  - GetScriptAsync()
    *  - GetScriptURI()
@@ -112,15 +110,7 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    */
   bool GetScriptIsModule() {
     MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
-    return mKind == JS::loader::ScriptKind::eModule;
-  }
-
-  /**
-   * Is the script an import map. Currently only supported by HTML scripts.
-   */
-  bool GetScriptIsImportMap() {
-    MOZ_ASSERT(mFrozen, "Not ready for this call yet!");
-    return mKind == JS::loader::ScriptKind::eImportMap;
+    return mIsModule;
   }
 
   /**
@@ -176,10 +166,10 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
 
     // Reset state set by FreezeExecutionAttrs().
     mFrozen = false;
+    mIsModule = false;
     mExternal = false;
     mAsync = false;
     mDefer = false;
-    mKind = JS::loader::ScriptKind::eClassic;
   }
 
   void SetCreatorParser(nsIParser* aParser);
@@ -307,6 +297,11 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
   bool mFrozen;
 
   /**
+   * The effective moduleness.
+   */
+  bool mIsModule;
+
+  /**
    * The effective deferredness.
    */
   bool mDefer;
@@ -321,11 +316,6 @@ class nsIScriptElement : public nsIScriptLoaderObserver {
    * if the src attribute contained an invalid URL string.
    */
   bool mExternal;
-
-  /**
-   * The effective script kind.
-   */
-  JS::loader::ScriptKind mKind;
 
   /**
    * Whether this element was parser-created.
