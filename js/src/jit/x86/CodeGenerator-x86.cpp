@@ -20,7 +20,7 @@
 #include "vm/Shape.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
-#include "wasm/WasmTlsData.h"
+#include "wasm/WasmInstanceData.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/CodeGenerator-shared-inl.h"

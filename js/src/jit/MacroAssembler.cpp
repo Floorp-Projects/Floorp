@@ -37,8 +37,8 @@
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
-#include "wasm/WasmTlsData.h"
 #include "wasm/WasmValidate.h"
 
 #include "jit/TemplateObject-inl.h"
