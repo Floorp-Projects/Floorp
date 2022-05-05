@@ -344,6 +344,8 @@ function rimul_object(i) {
 
 var uceFault_div_number = eval(`(${uceFault})`.replace('uceFault', 'uceFault_div_number'));
 function rdiv_number(i) {
+    i = i | 0;
+    if (i < 1) { return i; }
     var x = 1 / i;
     if (uceFault_div_number(i) || uceFault_div_number(i))
         assertEq(x, 0.010101010101010102  /* = 1 / 99 */);
