@@ -1736,9 +1736,14 @@ BrowserGlue.prototype = {
   _setDefaultCookieBehavior() {
     let defaultPrefs = Services.prefs.getDefaultBranch("");
 
+    let hasCookieBehaviorPolicy = () =>
+      Services.policies.status == Services.policies.ACTIVE &&
+      Services.policies.getActivePolicies()?.Cookies?.Behavior;
+
     // For phase 2 we enable dFPI / TCP for all clients which are part of the
     // rollout.
-    if (NimbusFeatures.tcpByDefault.isEnabled()) {
+    // Avoid overwriting cookie behavior set by enterprise policy.
+    if (NimbusFeatures.tcpByDefault.isEnabled() && !hasCookieBehaviorPolicy()) {
       Services.telemetry.scalarSet(
         "privacy.dfpi_rollout_tcpByDefault_feature",
         true
