@@ -73,7 +73,7 @@ class VsyncTester : public ::testing::Test {
  protected:
   explicit VsyncTester() {
     gfxPlatform::GetPlatform();
-    mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
+    mVsyncSource = gfxPlatform::GetPlatform()->GetGlobalVsync();
     MOZ_RELEASE_ASSERT(mVsyncSource, "GFX: Vsync source not found.");
   }
 
