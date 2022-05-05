@@ -554,7 +554,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         rfe->kind = ExceptionResumeKind::WasmCatch;
         rfe->framePointer = (uint8_t*)iter.frame();
-        rfe->tlsData = iter.instance();
+        rfe->instance = iter.instance();
 
         rfe->stackPointer =
             (uint8_t*)(rfe->framePointer - tryNote->framePushed);
@@ -773,11 +773,11 @@ static void* BoxValue_Anyref(Value* rawVal) {
   return result.get().forCompiledCode();
 }
 
-static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* tlsData,
+static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
                                       Value* argv) {
   JSContext* cx = TlsContext.get();  // Cold code
 
-  const Code& code = tlsData->code();
+  const Code& code = instance->code();
   const FuncExport& fe =
       code.metadata(code.stableTier()).funcExports[funcExportIndex];
 

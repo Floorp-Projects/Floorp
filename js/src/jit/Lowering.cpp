@@ -2111,7 +2111,7 @@ void LIRGenerator::visitWasmBuiltinModD(MWasmBuiltinModD* ins) {
   MOZ_ASSERT(gen->compilingWasm());
   LWasmBuiltinModD* lir = new (alloc()) LWasmBuiltinModD(
       useRegisterAtStart(ins->lhs()), useRegisterAtStart(ins->rhs()),
-      useFixedAtStart(ins->tls(), InstanceReg));
+      useFixedAtStart(ins->instance(), InstanceReg));
   defineReturn(lir, ins);
 }
 
@@ -3128,7 +3128,7 @@ void LIRGenerator::visitInterruptCheck(MInterruptCheck* ins) {
 
 void LIRGenerator::visitWasmInterruptCheck(MWasmInterruptCheck* ins) {
   auto* lir =
-      new (alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->tlsPtr()));
+      new (alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->instance()));
   add(lir, ins);
   assignWasmSafepoint(lir);
 }
@@ -5053,41 +5053,42 @@ void LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins) {
   }
 }
 
-void LIRGenerator::visitWasmLoadTls(MWasmLoadTls* ins) {
+void LIRGenerator::visitWasmLoadInstance(MWasmLoadInstance* ins) {
   if (ins->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
 #else
-    // Avoid reusing tlsPtr for a 64-bit output pair as the load clobbers the
+    // Avoid reusing instance for a 64-bit output pair as the load clobbers the
     // first half of that pair before loading the second half.
-    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+    LAllocation instance = useRegister(ins->instance());
 #endif
-    auto* lir = new (alloc()) LWasmLoadTls64(tlsPtr);
+    auto* lir = new (alloc()) LWasmLoadInstance64(instance);
     defineInt64(lir, ins);
   } else {
-    auto* lir = new (alloc()) LWasmLoadTls(useRegisterAtStart(ins->tlsPtr()));
+    auto* lir =
+        new (alloc()) LWasmLoadInstance(useRegisterAtStart(ins->instance()));
     define(lir, ins);
   }
 }
 
-void LIRGenerator::visitWasmStoreTls(MWasmStoreTls* ins) {
+void LIRGenerator::visitWasmStoreInstance(MWasmStoreInstance* ins) {
   MDefinition* value = ins->value();
   if (value->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
     LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
 #else
-    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+    LAllocation instance = useRegister(ins->instance());
     LInt64Allocation valueAlloc = useInt64Register(value);
 #endif
-    add(new (alloc()) LWasmStoreSlotI64(valueAlloc, tlsPtr, ins->offset()),
+    add(new (alloc()) LWasmStoreSlotI64(valueAlloc, instance, ins->offset()),
         ins);
   } else {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
     LAllocation valueAlloc = useRegisterAtStart(value);
     add(new (alloc())
-            LWasmStoreSlot(valueAlloc, tlsPtr, ins->offset(), value->type()),
+            LWasmStoreSlot(valueAlloc, instance, ins->offset(), value->type()),
         ins);
   }
 }
@@ -5142,16 +5143,16 @@ void LIRGenerator::visitWasmLoadGlobalVar(MWasmLoadGlobalVar* ins) {
   size_t offs = wasm::Instance::offsetOfGlobalArea() + ins->globalDataOffset();
   if (ins->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
 #else
-    // Avoid reusing tlsPtr for the output pair as the load clobbers the first
+    // Avoid reusing instance for the output pair as the load clobbers the first
     // half of that pair before loading the second half.
-    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+    LAllocation instance = useRegister(ins->instance());
 #endif
-    defineInt64(new (alloc()) LWasmLoadSlotI64(tlsPtr, offs), ins);
+    defineInt64(new (alloc()) LWasmLoadSlotI64(instance, offs), ins);
   } else {
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
-    define(new (alloc()) LWasmLoadSlot(tlsPtr, offs, ins->type()), ins);
+    LAllocation instance = useRegisterAtStart(ins->instance());
+    define(new (alloc()) LWasmLoadSlot(instance, offs, ins->type()), ins);
   }
 }
 
@@ -5182,18 +5183,18 @@ void LIRGenerator::visitWasmStoreGlobalVar(MWasmStoreGlobalVar* ins) {
   size_t offs = wasm::Instance::offsetOfGlobalArea() + ins->globalDataOffset();
   if (value->type() == MIRType::Int64) {
 #ifdef JS_PUNBOX64
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
     LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
 #else
-    LAllocation tlsPtr = useRegister(ins->tlsPtr());
+    LAllocation instance = useRegister(ins->instance());
     LInt64Allocation valueAlloc = useInt64Register(value);
 #endif
-    add(new (alloc()) LWasmStoreSlotI64(valueAlloc, tlsPtr, offs), ins);
+    add(new (alloc()) LWasmStoreSlotI64(valueAlloc, instance, offs), ins);
   } else {
     MOZ_ASSERT(value->type() != MIRType::RefOrNull);
-    LAllocation tlsPtr = useRegisterAtStart(ins->tlsPtr());
+    LAllocation instance = useRegisterAtStart(ins->instance());
     LAllocation valueAlloc = useRegisterAtStart(value);
-    add(new (alloc()) LWasmStoreSlot(valueAlloc, tlsPtr, offs, value->type()),
+    add(new (alloc()) LWasmStoreSlot(valueAlloc, instance, offs, value->type()),
         ins);
   }
 }
@@ -5246,10 +5247,10 @@ void LIRGenerator::visitWasmDerivedIndexPointer(MWasmDerivedIndexPointer* ins) {
 }
 
 void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
-  LAllocation tls = useRegister(ins->tls());
+  LAllocation instance = useRegister(ins->instance());
   LAllocation valueAddr = useFixed(ins->valueAddr(), PreBarrierReg);
   LAllocation value = useRegister(ins->value());
-  add(new (alloc()) LWasmStoreRef(tls, valueAddr, value, temp()), ins);
+  add(new (alloc()) LWasmStoreRef(instance, valueAddr, value, temp()), ins);
 }
 
 void LIRGenerator::visitWasmParameter(MWasmParameter* ins) {
@@ -5303,11 +5304,11 @@ void LIRGenerator::visitWasmParameter(MWasmParameter* ins) {
 
 void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
   MDefinition* rval = ins->getOperand(0);
-  MDefinition* tlsParam = ins->getOperand(1);
+  MDefinition* instance = ins->getOperand(1);
 
   if (rval->type() == MIRType::Int64) {
     add(new (alloc()) LWasmReturnI64(useInt64Fixed(rval, ReturnReg64),
-                                     useFixed(tlsParam, InstanceReg)));
+                                     useFixed(instance, InstanceReg)));
     return;
   }
 
@@ -5328,14 +5329,14 @@ void LIRGenerator::visitWasmReturn(MWasmReturn* ins) {
   }
 
   LWasmReturn* lir =
-      new (alloc()) LWasmReturn(useFixed(tlsParam, InstanceReg), returnReg);
+      new (alloc()) LWasmReturn(useFixed(instance, InstanceReg), returnReg);
   add(lir);
 }
 
 void LIRGenerator::visitWasmReturnVoid(MWasmReturnVoid* ins) {
-  MDefinition* tlsParam = ins->getOperand(0);
+  MDefinition* instance = ins->getOperand(0);
   LWasmReturnVoid* lir =
-      new (alloc()) LWasmReturnVoid(useFixed(tlsParam, InstanceReg));
+      new (alloc()) LWasmReturnVoid(useFixed(instance, InstanceReg));
   add(lir);
 }
 
@@ -6646,10 +6647,10 @@ void LIRGenerator::visitWasmStoreObjectDataField(
 
 void LIRGenerator::visitWasmStoreObjectDataRefField(
     MWasmStoreObjectDataRefField* ins) {
-  LAllocation tls = useRegister(ins->tls());
+  LAllocation instance = useRegister(ins->instance());
   LAllocation valueAddr = useFixed(ins->valueAddr(), PreBarrierReg);
   LAllocation value = useRegister(ins->value());
-  add(new (alloc()) LWasmStoreRef(tls, valueAddr, value, temp()), ins);
+  add(new (alloc()) LWasmStoreRef(instance, valueAddr, value, temp()), ins);
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->obj())), ins);
 }
 
