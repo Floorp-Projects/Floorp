@@ -39,3 +39,34 @@ add_task(async function test_default_promo() {
   await BrowserTestUtils.closeWindow(win3);
   await BrowserTestUtils.closeWindow(win4);
 });
+
+add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
+  ASRouter.resetMessageState();
+
+  const { win, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [], async function() {
+    const promoContainer = content.document.querySelector(".promo"); // container which is present if promo message is not blocked
+    ok(promoContainer, "Focus promo is shown in a new tab");
+    content.document.getElementById("dismiss-btn").click();
+    await ContentTaskUtils.waitForCondition(() => {
+      return !content.document.querySelector(".promo");
+    }, "The promo container is removed.");
+  });
+
+  win.BrowserOpenTab();
+  await BrowserTestUtils.switchTab(win.gBrowser, win.gBrowser.tabs[1]);
+  await SimpleTest.promiseFocus(win.gBrowser.selectedBrowser);
+  const tab2 = win.gBrowser.selectedBrowser;
+
+  await SpecialPowers.spawn(tab2, [], async function() {
+    const promoContainer = content.document.querySelector(".promo"); // container which is not present if promo message is blocked
+    ok(
+      !promoContainer,
+      "Focus promo is not shown in a new tab after being dismissed in another tab"
+    );
+  });
+
+  await ASRouter.unblockAll();
+  await BrowserTestUtils.closeWindow(win);
+});

@@ -129,6 +129,7 @@ let RemotePageAccessManager = {
         "SearchHandoff",
       ],
       RPMSendQuery: [
+        "IsPromoBlocked",
         "ShouldShowSearch",
         "ShouldShowSearchBanner",
         "ShouldShowPromo",
