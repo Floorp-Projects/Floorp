@@ -10,6 +10,7 @@ EXPORTS.js.loader += [
     "LoadedScript.h",
     "ModuleLoaderBase.h",
     "ModuleLoadRequest.h",
+    "ResolveResult.h",
     "ScriptKind.h",
     "ScriptLoadRequest.h",
 ]
