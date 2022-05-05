@@ -116,9 +116,7 @@ class Module : public JS::WasmModule {
                             const JSFunctionVector& funcImports) const;
   bool instantiateMemory(JSContext* cx,
                          MutableHandleWasmMemoryObject memory) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
   bool instantiateTags(JSContext* cx, WasmTagObjectVector& tagObjs) const;
-#endif
   bool instantiateImportedTable(JSContext* cx, const TableDesc& td,
                                 Handle<WasmTableObject*> table,
                                 WasmTableObjectVector* tableObjs,

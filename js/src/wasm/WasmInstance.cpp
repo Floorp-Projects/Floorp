@@ -146,11 +146,9 @@ TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
   return *(TableInstanceData*)(globalData() + td.globalDataOffset);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 GCPtrWasmTagObject& Instance::tagTls(const TagDesc& td) const {
   return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
 }
-#endif
 
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
@@ -1206,7 +1204,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return TypedObject::createArray(cx, rttValue, length);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
@@ -1230,7 +1227,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // and use that to trigger the stack walking for this exception.
   return -1;
 }
-#endif
 
 /* static */ int32_t Instance::refTest(Instance* instance, void* refPtr,
                                        void* rttPtr) {
@@ -1419,7 +1415,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     table.elements = tables_[i]->tlsElements();
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   // Initialize tags in the tls data
   for (size_t i = 0; i < metadata().tags.length(); i++) {
     const TagDesc& td = metadata().tags[i];
@@ -1429,7 +1424,6 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   }
   pendingException_ = nullptr;
   pendingExceptionTag_ = nullptr;
-#endif
 
   // Add debug filtering table.
   if (metadata().debugEnabled) {
@@ -1607,9 +1601,7 @@ Instance::~Instance() {
   }
 
   // Any pending exceptions should have been consumed.
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 }
 
 void Instance::setInterrupt() {
@@ -1687,11 +1679,9 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   for (const TagDesc& tag : code().metadata().tags) {
     TraceNullableEdge(trc, &tagTls(tag), "wasm tag");
   }
-#endif
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
 #ifdef ENABLE_WASM_GC
@@ -1706,10 +1696,8 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 #endif
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   TraceNullableEdge(trc, &pendingException_, "wasm pending exception value");
   TraceNullableEdge(trc, &pendingExceptionTag_, "wasm pending exception tag");
-#endif
 
   if (maybeDebug_) {
     maybeDebug_->trace(trc);
@@ -2179,9 +2167,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   DebugCodegen(DebugChannel::Function, "]\n");
 
   // Ensure pending exception is cleared before and after (below) call.
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 
   {
     JitActivation activation(cx);
@@ -2193,9 +2179,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
     }
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 
   if (isAsmJS() && args.isConstructing()) {
     // By spec, when a JS function is called as a constructor and this
@@ -2224,7 +2208,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 static JSObject* GetExceptionTag(JSObject* exn) {
   return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
                                         : nullptr;
@@ -2234,7 +2217,6 @@ void Instance::setPendingException(HandleAnyRef exn) {
   pendingException_ = exn.get().asJSObject();
   pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
 }
-#endif
 
 bool Instance::constantRefFunc(uint32_t funcIndex,
                                MutableHandleFuncRef result) {
