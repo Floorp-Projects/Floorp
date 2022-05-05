@@ -836,7 +836,7 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsUndefined(inbound_stream.frame_bit_depth);
     if (inbound_stream.media_type.is_defined() &&
         *inbound_stream.media_type == "video") {
-      verifier.TestMemberIsUndefined(inbound_stream.jitter);
+      verifier.TestMemberIsNonNegative<double>(inbound_stream.jitter);
       verifier.TestMemberIsUndefined(inbound_stream.jitter_buffer_delay);
       verifier.TestMemberIsUndefined(
           inbound_stream.jitter_buffer_emitted_count);
