@@ -181,7 +181,6 @@ class ScriptLoadRequest
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
   bool IsModuleRequest() const { return mKind == ScriptKind::eModule; }
-  bool IsImportMapRequest() const { return mKind == ScriptKind::eImportMap; }
 
   ModuleLoadRequest* AsModuleRequest();
   const ModuleLoadRequest* AsModuleRequest() const;
