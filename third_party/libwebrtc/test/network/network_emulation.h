@@ -30,6 +30,7 @@
 #include "rtc_base/network.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
@@ -532,6 +533,11 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
   absl::optional<uint16_t> BindReceiver(
       uint16_t desired_port,
       EmulatedNetworkReceiverInterface* receiver) override;
+  // Binds a receiver, and automatically removes the binding after first call to
+  // OnPacketReceived.
+  absl::optional<uint16_t> BindOneShotReceiver(
+      uint16_t desired_port,
+      EmulatedNetworkReceiverInterface* receiver);
   void UnbindReceiver(uint16_t port) override;
   void BindDefaultReceiver(EmulatedNetworkReceiverInterface* receiver) override;
   void UnbindDefaultReceiver() override;
@@ -550,10 +556,20 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
   std::unique_ptr<EmulatedNetworkStats> stats() const;
 
  private:
+  struct ReceiverBinding {
+    EmulatedNetworkReceiverInterface* receiver;
+    bool is_one_shot;
+  };
+
+  absl::optional<uint16_t> BindReceiverInternal(
+      uint16_t desired_port,
+      EmulatedNetworkReceiverInterface* receiver,
+      bool is_one_shot);
+
   static constexpr uint16_t kFirstEphemeralPort = 49152;
   uint16_t NextPort() RTC_EXCLUSIVE_LOCKS_REQUIRED(receiver_lock_);
 
-  rtc::RecursiveCriticalSection receiver_lock_;
+  Mutex receiver_lock_;
   SequenceChecker enabled_state_checker_;
 
   const Options options_;
@@ -566,7 +582,7 @@ class EmulatedEndpointImpl : public EmulatedEndpoint {
   uint16_t next_port_ RTC_GUARDED_BY(receiver_lock_);
   absl::optional<EmulatedNetworkReceiverInterface*> default_receiver_
       RTC_GUARDED_BY(receiver_lock_);
-  std::map<uint16_t, EmulatedNetworkReceiverInterface*> port_to_receiver_
+  std::map<uint16_t, ReceiverBinding> port_to_receiver_
       RTC_GUARDED_BY(receiver_lock_);
 
   EmulatedNetworkStatsBuilder stats_builder_ RTC_GUARDED_BY(task_queue_);

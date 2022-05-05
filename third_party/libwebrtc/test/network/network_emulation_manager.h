@@ -50,7 +50,7 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
 
   SimulatedNetworkNode::Builder NodeBuilder() override;
 
-  EmulatedEndpoint* CreateEndpoint(EmulatedEndpointConfig config) override;
+  EmulatedEndpointImpl* CreateEndpoint(EmulatedEndpointConfig config) override;
   void EnableEndpoint(EmulatedEndpoint* endpoint) override;
   void DisableEndpoint(EmulatedEndpoint* endpoint) override;
 

@@ -28,7 +28,7 @@ class CrossTrafficRouteImpl final : public CrossTrafficRoute {
  public:
   CrossTrafficRouteImpl(Clock* clock,
                         EmulatedNetworkReceiverInterface* receiver,
-                        EmulatedEndpoint* endpoint);
+                        EmulatedEndpointImpl* endpoint);
   ~CrossTrafficRouteImpl();
 
   // Triggers sending of dummy packets with size |packet_size| bytes.
@@ -44,7 +44,7 @@ class CrossTrafficRouteImpl final : public CrossTrafficRoute {
 
   Clock* const clock_;
   EmulatedNetworkReceiverInterface* const receiver_;
-  EmulatedEndpoint* const endpoint_;
+  EmulatedEndpointImpl* const endpoint_;
 
   uint16_t null_receiver_port_;
   std::unique_ptr<EmulatedNetworkReceiverInterface> null_receiver_;

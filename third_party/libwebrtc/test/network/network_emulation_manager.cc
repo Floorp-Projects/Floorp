@@ -87,7 +87,7 @@ NetworkEmulationManagerImpl::NodeBuilder() {
   return SimulatedNetworkNode::Builder(this);
 }
 
-EmulatedEndpoint* NetworkEmulationManagerImpl::CreateEndpoint(
+EmulatedEndpointImpl* NetworkEmulationManagerImpl::CreateEndpoint(
     EmulatedEndpointConfig config) {
   absl::optional<rtc::IPAddress> ip = config.ip;
   if (!ip) {
@@ -109,7 +109,7 @@ EmulatedEndpoint* NetworkEmulationManagerImpl::CreateEndpoint(
   auto node = std::make_unique<EmulatedEndpointImpl>(
       EmulatedEndpointImpl::Options(next_node_id_++, *ip, config),
       config.start_as_enabled, &task_queue_, clock_);
-  EmulatedEndpoint* out = node.get();
+  EmulatedEndpointImpl* out = node.get();
   endpoints_.push_back(std::move(node));
   return out;
 }
@@ -226,7 +226,7 @@ TcpMessageRoute* NetworkEmulationManagerImpl::CreateTcpRoute(
 CrossTrafficRoute* NetworkEmulationManagerImpl::CreateCrossTrafficRoute(
     const std::vector<EmulatedNetworkNode*>& via_nodes) {
   RTC_CHECK(!via_nodes.empty());
-  EmulatedEndpoint* endpoint = CreateEndpoint(EmulatedEndpointConfig());
+  EmulatedEndpointImpl* endpoint = CreateEndpoint(EmulatedEndpointConfig());
 
   // Setup a route via specified nodes.
   EmulatedNetworkNode* cur_node = via_nodes[0];

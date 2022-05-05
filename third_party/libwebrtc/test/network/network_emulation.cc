@@ -513,7 +513,20 @@ void EmulatedEndpointImpl::SendPacket(const rtc::SocketAddress& from,
 absl::optional<uint16_t> EmulatedEndpointImpl::BindReceiver(
     uint16_t desired_port,
     EmulatedNetworkReceiverInterface* receiver) {
-  rtc::CritScope crit(&receiver_lock_);
+  return BindReceiverInternal(desired_port, receiver, /*is_one_shot=*/false);
+}
+
+absl::optional<uint16_t> EmulatedEndpointImpl::BindOneShotReceiver(
+    uint16_t desired_port,
+    EmulatedNetworkReceiverInterface* receiver) {
+  return BindReceiverInternal(desired_port, receiver, /*is_one_shot=*/true);
+}
+
+absl::optional<uint16_t> EmulatedEndpointImpl::BindReceiverInternal(
+    uint16_t desired_port,
+    EmulatedNetworkReceiverInterface* receiver,
+    bool is_one_shot) {
+  MutexLock lock(&receiver_lock_);
   uint16_t port = desired_port;
   if (port == 0) {
     // Because client can specify its own port, next_port_ can be already in
@@ -530,7 +543,8 @@ absl::optional<uint16_t> EmulatedEndpointImpl::BindReceiver(
   }
   RTC_CHECK(port != 0) << "Can't find free port for receiver in endpoint "
                        << options_.log_name << "; id=" << options_.id;
-  bool result = port_to_receiver_.insert({port, receiver}).second;
+  bool result =
+      port_to_receiver_.insert({port, {receiver, is_one_shot}}).second;
   if (!result) {
     RTC_LOG(INFO) << "Can't bind receiver to used port " << desired_port
                   << " in endpoint " << options_.log_name
@@ -553,7 +567,7 @@ uint16_t EmulatedEndpointImpl::NextPort() {
 }
 
 void EmulatedEndpointImpl::UnbindReceiver(uint16_t port) {
-  rtc::CritScope crit(&receiver_lock_);
+  MutexLock lock(&receiver_lock_);
   RTC_LOG(INFO) << "Receiver is removed on port " << port << " from endpoint "
                 << options_.log_name << "; id=" << options_.id;
   port_to_receiver_.erase(port);
@@ -561,7 +575,7 @@ void EmulatedEndpointImpl::UnbindReceiver(uint16_t port) {
 
 void EmulatedEndpointImpl::BindDefaultReceiver(
     EmulatedNetworkReceiverInterface* receiver) {
-  rtc::CritScope crit(&receiver_lock_);
+  MutexLock lock(&receiver_lock_);
   RTC_CHECK(!default_receiver_.has_value())
       << "Endpoint " << options_.log_name << "; id=" << options_.id
       << " already has default receiver";
@@ -571,7 +585,7 @@ void EmulatedEndpointImpl::BindDefaultReceiver(
 }
 
 void EmulatedEndpointImpl::UnbindDefaultReceiver() {
-  rtc::CritScope crit(&receiver_lock_);
+  MutexLock lock(&receiver_lock_);
   RTC_LOG(INFO) << "Default receiver is removed from endpoint "
                 << options_.log_name << "; id=" << options_.id;
   default_receiver_ = absl::nullopt;
@@ -589,7 +603,7 @@ void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
         << packet.to.ipaddr().ToString()
         << "; Receiver options_.ip=" << options_.ip.ToString();
   }
-  rtc::CritScope crit(&receiver_lock_);
+  MutexLock lock(&receiver_lock_);
   stats_builder_.OnPacketReceived(clock_->CurrentTime(), packet.from.ipaddr(),
                                   DataSize::Bytes(packet.ip_packet_size()),
                                   options_.stats_gathering_mode);
@@ -610,10 +624,14 @@ void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
                                    options_.stats_gathering_mode);
     return;
   }
-  // Endpoint assumes frequent calls to bind and unbind methods, so it holds
-  // lock during packet processing to ensure that receiver won't be deleted
-  // before call to OnPacketReceived.
-  it->second->OnPacketReceived(std::move(packet));
+  // Endpoint holds lock during packet processing to ensure that a call to
+  // UnbindReceiver followed by a delete of the receiver cannot race with this
+  // call to OnPacketReceived.
+  it->second.receiver->OnPacketReceived(std::move(packet));
+
+  if (it->second.is_one_shot) {
+    port_to_receiver_.erase(it);
+  }
 }
 
 void EmulatedEndpointImpl::Enable() {
