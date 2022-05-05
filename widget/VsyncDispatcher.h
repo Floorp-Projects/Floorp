@@ -105,16 +105,36 @@ class VsyncDispatcher final {
   // observer is not registered. Can be called from any thread.
   void RemoveVsyncObserver(VsyncObserver* aVsyncObserver);
 
+  // Add and remove an observer for vsync which can only be notified on the
+  // main thread. Note that keeping an observer registered means vsync will keep
+  // firing, which may impact power usage. So this is intended only for "short
+  // term" vsync observers.
+  // These methods must be called on the parent process main thread, and the
+  // observer will likewise be notified on the parent process main thread.
+  void AddMainThreadObserver(VsyncObserver* aObserver);
+  void RemoveMainThreadObserver(VsyncObserver* aObserver);
+
  private:
   virtual ~VsyncDispatcher();
   void UpdateVsyncStatus();
   bool NeedsVsync();
 
+  // Can only be called on the main thread.
+  void NotifyMainThreadObservers(VsyncEvent aEvent);
+
   // We need to hold a weak ref to the vsync source we belong to in order to
   // notify it of our vsync requirement. The vsync source holds a RefPtr to us,
   // so we can't hold a RefPtr back without causing a cyclic dependency.
   gfx::VsyncSource* mVsyncSource;
-  DataMutex<nsTArray<RefPtr<VsyncObserver>>> mVsyncObservers;
+
+  struct State {
+    nsTArray<RefPtr<VsyncObserver>> mObservers;
+    nsTArray<RefPtr<VsyncObserver>> mMainThreadObservers;
+    VsyncId mLastVsyncIdSentToMainThread;
+    VsyncId mLastMainThreadProcessedVsyncId;
+  };
+
+  DataMutex<State> mState;
 };
 
 }  // namespace mozilla
