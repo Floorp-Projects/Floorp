@@ -62,13 +62,14 @@ int GetIncreasedMaxPixelsWanted(int target_pixels) {
 }
 
 bool CanDecreaseResolutionTo(int target_pixels,
+                             int target_pixels_min,
                              const VideoStreamInputState& input_state,
                              const VideoSourceRestrictions& restrictions) {
   int max_pixels_per_frame =
       rtc::dchecked_cast<int>(restrictions.max_pixels_per_frame().value_or(
           std::numeric_limits<int>::max()));
   return target_pixels < max_pixels_per_frame &&
-         target_pixels >= input_state.min_pixels_per_frame();
+         target_pixels_min >= input_state.min_pixels_per_frame();
 }
 
 bool CanIncreaseResolutionTo(int target_pixels,
@@ -96,6 +97,11 @@ bool CanIncreaseFrameRateTo(int max_frame_rate,
 }
 
 bool MinPixelLimitReached(const VideoStreamInputState& input_state) {
+  if (input_state.single_active_stream_pixels().has_value()) {
+    return GetLowerResolutionThan(
+               input_state.single_active_stream_pixels().value()) <
+           input_state.min_pixels_per_frame();
+  }
   return input_state.frame_size_pixels().has_value() &&
          GetLowerResolutionThan(input_state.frame_size_pixels().value()) <
              input_state.min_pixels_per_frame();
@@ -470,7 +476,11 @@ VideoStreamAdapter::RestrictionsOrState VideoStreamAdapter::DecreaseResolution(
     const RestrictionsWithCounters& current_restrictions) {
   int target_pixels =
       GetLowerResolutionThan(input_state.frame_size_pixels().value());
-  if (!CanDecreaseResolutionTo(target_pixels, input_state,
+  // Use single active stream if set, this stream could be lower than the input.
+  int target_pixels_min =
+      GetLowerResolutionThan(input_state.single_active_stream_pixels().value_or(
+          input_state.frame_size_pixels().value()));
+  if (!CanDecreaseResolutionTo(target_pixels, target_pixels_min, input_state,
                                current_restrictions.restrictions)) {
     return Adaptation::Status::kLimitReached;
   }
@@ -692,5 +702,28 @@ VideoStreamAdapter::AwaitingFrameSizeChange::AwaitingFrameSizeChange(
     int frame_size_pixels)
     : pixels_increased(pixels_increased),
       frame_size_pixels(frame_size_pixels) {}
+
+absl::optional<uint32_t> VideoStreamAdapter::GetSingleActiveLayerPixels(
+    const VideoCodec& codec) {
+  int num_active = 0;
+  absl::optional<uint32_t> pixels;
+  if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
+    for (int i = 0; i < codec.VP9().numberOfSpatialLayers; ++i) {
+      if (codec.spatialLayers[i].active) {
+        ++num_active;
+        pixels = codec.spatialLayers[i].width * codec.spatialLayers[i].height;
+      }
+    }
+  } else {
+    for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+      if (codec.simulcastStream[i].active) {
+        ++num_active;
+        pixels =
+            codec.simulcastStream[i].width * codec.simulcastStream[i].height;
+      }
+    }
+  }
+  return (num_active > 1) ? absl::nullopt : pixels;
+}
 
 }  // namespace webrtc

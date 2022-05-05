@@ -163,6 +163,9 @@ class VideoStreamAdapter {
     VideoAdaptationCounters counters;
   };
 
+  static absl::optional<uint32_t> GetSingleActiveLayerPixels(
+      const VideoCodec& codec);
+
  private:
   void BroadcastVideoRestrictionsUpdate(
       const VideoStreamInputState& input_state,

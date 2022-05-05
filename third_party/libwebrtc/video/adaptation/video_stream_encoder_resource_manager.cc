@@ -173,7 +173,8 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
                             "stream parameters";
         initial_framedrop_ = 0;
         if (single_active_stream_pixels_ &&
-            GetSingleActiveLayerPixels(codec) > *single_active_stream_pixels_) {
+            VideoStreamAdapter::GetSingleActiveLayerPixels(codec) >
+                *single_active_stream_pixels_) {
           // Resolution increased.
           use_bandwidth_allocation_ = true;
         }
@@ -183,7 +184,8 @@ class VideoStreamEncoderResourceManager::InitialFrameDropper {
     last_active_flags_ = active_flags;
     last_input_width_ = codec.width;
     last_input_height_ = codec.height;
-    single_active_stream_pixels_ = GetSingleActiveLayerPixels(codec);
+    single_active_stream_pixels_ =
+        VideoStreamAdapter::GetSingleActiveLayerPixels(codec);
   }
 
   void OnFrameDroppedDueToSize() { ++initial_framedrop_; }
@@ -710,32 +712,6 @@ void VideoStreamEncoderResourceManager::OnQualityRampUp() {
   RTC_DCHECK_RUN_ON(encoder_queue_);
   stream_adapter_->ClearRestrictions();
   quality_rampup_experiment_.reset();
-}
-
-absl::optional<uint32_t>
-VideoStreamEncoderResourceManager::GetSingleActiveLayerPixels(
-    const VideoCodec& codec) {
-  int num_active = 0;
-  absl::optional<uint32_t> pixels;
-  if (codec.codecType == VideoCodecType::kVideoCodecVP9) {
-    for (int i = 0; i < codec.VP9().numberOfSpatialLayers; ++i) {
-      if (codec.spatialLayers[i].active) {
-        ++num_active;
-        pixels = codec.spatialLayers[i].width * codec.spatialLayers[i].height;
-      }
-    }
-  } else {
-    for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
-      if (codec.simulcastStream[i].active) {
-        ++num_active;
-        pixels =
-            codec.simulcastStream[i].width * codec.simulcastStream[i].height;
-      }
-    }
-  }
-  if (num_active > 1)
-    return absl::nullopt;
-  return pixels;
 }
 
 bool VideoStreamEncoderResourceManager::IsSimulcast(
