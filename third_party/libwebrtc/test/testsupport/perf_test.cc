@@ -42,6 +42,19 @@ std::string UnitWithDirection(
   }
 }
 
+std::vector<SamplesStatsCounter::StatsSample> GetSortedSamples(
+    const SamplesStatsCounter& counter) {
+  rtc::ArrayView<const SamplesStatsCounter::StatsSample> view =
+      counter.GetTimedSamples();
+  std::vector<SamplesStatsCounter::StatsSample> out(view.begin(), view.end());
+  std::sort(out.begin(), out.end(),
+            [](const SamplesStatsCounter::StatsSample& a,
+               const SamplesStatsCounter::StatsSample& b) {
+              return a.time < b.time;
+            });
+  return out;
+}
+
 template <typename Container>
 void OutputListToStream(std::ostream* ostream, const Container& values) {
   const char* sep = "";
@@ -278,8 +291,19 @@ void PrintResult(absl::string_view measurement,
 
   double mean = counter.IsEmpty() ? 0 : counter.GetAverage();
   double error = counter.IsEmpty() ? 0 : counter.GetStandardDeviation();
-  PrintResultMeanAndError(measurement, modifier, trace, mean, error, units,
-                          important, improve_direction);
+
+  std::vector<SamplesStatsCounter::StatsSample> timed_samples =
+      GetSortedSamples(counter);
+  std::vector<double> samples(timed_samples.size());
+  for (size_t i = 0; i < timed_samples.size(); ++i) {
+    samples[i] = timed_samples[i].value;
+  }
+
+  GetPerfWriter().LogResultList(graph_name.str(), trace, samples, units,
+                                important, improve_direction);
+  GetResultsLinePrinter().PrintResultMeanAndError(graph_name.str(), trace, mean,
+                                                  error, units, important,
+                                                  improve_direction);
 }
 
 void PrintResultMeanAndError(absl::string_view measurement,
