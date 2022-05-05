@@ -3309,6 +3309,10 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
   nsAutoCString extension;
   nsCOMPtr<nsIMIMEInfo> mimeInfo;
 
+  bool isBinaryType = aMimeType.EqualsLiteral(APPLICATION_OCTET_STREAM) ||
+                      aMimeType.EqualsLiteral(BINARY_OCTET_STREAM) ||
+                      aMimeType.EqualsLiteral("application/x-msdownload");
+
   // We get the mime service here even though we're the default implementation
   // of it, so it's possible to override only the mime service and not need to
   // reimplement the whole external helper app service itself.
@@ -3327,8 +3331,10 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
           }
         }
 
-        // Only get the extension from the URL if allowed.
-        if (aAllowURLExtension) {
+        // Only get the extension from the URL if allowed, or if this
+        // is a binary type in which case the type might not be valid
+        // anyway.
+        if (aAllowURLExtension || isBinaryType) {
           url->GetFileExtension(extension);
         }
       }
@@ -3364,10 +3370,8 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
       // The special case for application/ogg is because that type could
       // actually be used for a video which can better be determined by the
       // extension. This is tested by browser_save_video.js.
-      bool useExtension = aMimeType.EqualsLiteral(APPLICATION_OCTET_STREAM) ||
-                          aMimeType.EqualsLiteral(BINARY_OCTET_STREAM) ||
-                          aMimeType.EqualsLiteral("application/x-msdownload") ||
-                          aMimeType.EqualsLiteral(APPLICATION_OGG);
+      bool useExtension =
+          isBinaryType || aMimeType.EqualsLiteral(APPLICATION_OGG);
       mimeService->GetFromTypeAndExtension(
           aMimeType, useExtension ? extension : EmptyCString(),
           getter_AddRefs(mimeInfo));
@@ -3393,42 +3397,49 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
     if (extension.IsEmpty() ||
         NS_FAILED(mimeInfo->ExtensionExists(extension, &isValidExtension)) ||
         !isValidExtension) {
-      nsAutoCString originalExtension(extension);
-      // If an original url was supplied, see if it has a valid extension.
-      bool useOldExtension = false;
-      if (aOriginalURI) {
-        nsCOMPtr<nsIURL> originalURL(do_QueryInterface(aOriginalURI));
-        if (originalURL) {
-          originalURL->GetFileExtension(extension);
-          if (!extension.IsEmpty()) {
-            mimeInfo->ExtensionExists(extension, &useOldExtension);
+      // Skip these checks for text and binary, so we don't append the unneeded
+      // .txt or other extension.
+      if (aMimeType.EqualsLiteral(TEXT_PLAIN) || isBinaryType) {
+        extension.Truncate();
+      } else {
+        nsAutoCString originalExtension(extension);
+        // If an original url was supplied, see if it has a valid extension.
+        bool useOldExtension = false;
+        if (aOriginalURI) {
+          nsCOMPtr<nsIURL> originalURL(do_QueryInterface(aOriginalURI));
+          if (originalURL) {
+            originalURL->GetFileExtension(extension);
+            if (!extension.IsEmpty()) {
+              mimeInfo->ExtensionExists(extension, &useOldExtension);
+            }
           }
         }
-      }
 
-      if (!useOldExtension) {
-        // If the filename doesn't have a valid extension, or we don't know the
-        // extension, try to use the primary extension for the type. If we don't
-        // know the primary extension for the type, just continue with the
-        // existing extension, or leave the filename with no extension.
-        mimeInfo->GetPrimaryExtension(extension);
-      }
-
-      ModifyExtensionType modify =
-          ShouldModifyExtension(mimeInfo, originalExtension);
-      if (modify == ModifyExtension_Replace) {
-        int32_t dotidx = fileName.RFind(".");
-        if (dotidx != -1) {
-          // Remove the existing extension and replace it.
-          fileName.Truncate(dotidx);
+        if (!useOldExtension) {
+          // If the filename doesn't have a valid extension, or we don't know
+          // the extension, try to use the primary extension for the type. If we
+          // don't know the primary extension for the type, just continue with
+          // the existing extension, or leave the filename with no extension.
+          mimeInfo->GetPrimaryExtension(extension);
         }
-      }
 
-      // Otherwise, just append the proper extension to the end of the
-      // filename, adding to the invalid extension that might already be there.
-      if (modify != ModifyExtension_Ignore && !extension.IsEmpty()) {
-        fileName.AppendLiteral(".");
-        fileName.Append(NS_ConvertUTF8toUTF16(extension));
+        ModifyExtensionType modify =
+            ShouldModifyExtension(mimeInfo, originalExtension);
+        if (modify == ModifyExtension_Replace) {
+          int32_t dotidx = fileName.RFind(".");
+          if (dotidx != -1) {
+            // Remove the existing extension and replace it.
+            fileName.Truncate(dotidx);
+          }
+        }
+
+        // Otherwise, just append the proper extension to the end of the
+        // filename, adding to the invalid extension that might already be
+        // there.
+        if (modify != ModifyExtension_Ignore && !extension.IsEmpty()) {
+          fileName.AppendLiteral(".");
+          fileName.Append(NS_ConvertUTF8toUTF16(extension));
+        }
       }
     }
   }
