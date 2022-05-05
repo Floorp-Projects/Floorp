@@ -51,6 +51,8 @@
 #include "nsOSHelperAppService.h"
 #include "nsOSHelperAppServiceChild.h"
 #include "nsContentSecurityUtils.h"
+#include "nsUTF8Utils.h"
+#include "nsUnicodeProperties.h"
 
 // used to access our datastore of user-configured helper applications
 #include "nsIHandlerService.h"
@@ -3443,58 +3445,166 @@ void nsExternalHelperAppService::SanitizeFileName(nsAString& aFileName,
                                                   uint32_t aFlags) {
   nsAutoString fileName(aFileName);
 
+  // Replace characters
   fileName.ReplaceChar(KNOWN_PATH_SEPARATORS, '_');
   fileName.ReplaceChar(FILE_ILLEGAL_CHARACTERS, ' ');
   fileName.StripChar(char16_t(0));
 
-  // Remove unsafe bidi characters which might have spoofing implications (bug
-  // 511521).
-  const char16_t unsafeBidiCharacters[] = {
-      char16_t(0x061c),  // Arabic Letter Mark
-      char16_t(0x200e),  // Left-to-Right Mark
-      char16_t(0x200f),  // Right-to-Left Mark
-      char16_t(0x202a),  // Left-to-Right Embedding
-      char16_t(0x202b),  // Right-to-Left Embedding
-      char16_t(0x202c),  // Pop Directional Formatting
-      char16_t(0x202d),  // Left-to-Right Override
-      char16_t(0x202e),  // Right-to-Left Override
-      char16_t(0x2066),  // Left-to-Right Isolate
-      char16_t(0x2067),  // Right-to-Left Isolate
-      char16_t(0x2068),  // First Strong Isolate
-      char16_t(0x2069),  // Pop Directional Isolate
-      char16_t(0)};
-  fileName.ReplaceChar(unsafeBidiCharacters, '_');
+  const char16_t *startStr, *endStr;
+  fileName.BeginReading(startStr);
+  fileName.EndReading(endStr);
 
-  // Trim whitespace, periods and vowel separators from the beginning and
-  // end of the filename. Periods are removed to avoid creating hidden files.
-  fileName.Trim(" .\f\n\r\t\v", true, true);
+  // True if multiple consecutive whitespace characters should
+  // be replaced by single space ' '.
+  bool collapseWhitespace = !(aFlags & VALIDATE_DONT_COLLAPSE_WHITESPACE);
 
-  // Collapse duplicate whitespace.
-  if (!(aFlags & VALIDATE_DONT_COLLAPSE_WHITESPACE)) {
-    fileName.CompressWhitespace();
+  // The maximum filename length differs based on the platform:
+  //  Windows (FAT/NTFS) stores filenames as a maximum of 255 UTF-16 code units.
+  //  Mac (APFS) stores filenames with a maximum 255 of UTF-8 code units.
+  //  Linux (ext3/ext4...) stores filenames with a maximum 255 bytes.
+  // So here we just use the maximum of 255 bytes.
+  uint32_t maxBytes = 0;  // 0 means don't truncate at a maximum size.
+  if (!(aFlags & VALIDATE_DONT_TRUNCATE)) {
+    maxBytes = 255 - aExtension.Length() - 1;
+  }
+
+  // True if the last character added was whitespace.
+  bool lastWasWhitespace = false;
+
+  // True if the filename is too long and must be truncated.
+  bool longFileName = false;
+
+  // Length of the filename that fits into the maximum size excluding the
+  // extension and period.
+  int32_t longFileNameEnd = -1;
+
+  // Index of the last character added that was not a character that can be
+  // trimmed off of the end of the string. Trimmable characters are whitespace,
+  // periods and the vowel separator u'\u180e'. If all the characters after this
+  // point are trimmable characters, truncate the string to this point after
+  // iterating over the filename.
+  int32_t lastNonTrimmable = -1;
+
+  // The number of bytes that the string would occupy if encoded in UTF-8.
+  uint32_t bytesLength = 0;
+
+  // This algorithm iterates over each character in the string and appends it
+  // or a replacement character if needed to outFileName.
+  nsAutoString outFileName;
+  while (startStr < endStr) {
+    bool err = false;
+    char32_t nextChar = UTF16CharEnumerator::NextChar(&startStr, endStr, &err);
+    if (err) {
+      break;
+    }
+
+    if (nextChar == char16_t(0)) {
+      continue;
+    }
+
+    auto unicodeCategory = unicode::GetGeneralCategory(nextChar);
+    if (unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_CONTROL ||
+        unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_LINE_SEPARATOR ||
+        unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_PARAGRAPH_SEPARATOR) {
+      // Skip over any control characters and separators.
+      continue;
+    }
+
+    if (maxBytes) {
+      // UTF16CharEnumerator already converts surrogate pairs, so we can use
+      // a simple computation of byte length here.
+      bytesLength += nextChar < 0x80      ? 1
+                     : nextChar < 0x800   ? 2
+                     : nextChar < 0x10000 ? 3
+                                          : 4;
+      if (bytesLength > maxBytes) {
+        if (longFileNameEnd == -1) {
+          longFileNameEnd = int32_t(outFileName.Length());
+        }
+        if (bytesLength > 255) {
+          longFileName = true;
+          break;
+        }
+      }
+    }
+
+    if (unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR ||
+        nextChar == u'\ufeff') {
+      // Trim out any whitespace characters at the beginning of the filename,
+      // and only add whitespace in the middle of the filename if the last
+      // character was not whitespace or if we are not collapsing whitespace.
+      if (!outFileName.IsEmpty() &&
+          (!lastWasWhitespace || !collapseWhitespace)) {
+        // Allow the ideographic space if it is present, otherwise replace with
+        // ' '.
+        if (nextChar != u'\u3000') {
+          nextChar = ' ';
+        }
+        lastWasWhitespace = true;
+      } else {
+        lastWasWhitespace = true;
+        continue;
+      }
+    } else {
+      lastWasWhitespace = false;
+      if (nextChar == '.' || nextChar == u'\u180e') {
+        // Don't add any periods or vowel separators at the beginning of the
+        // string. Note also that lastNonTrimmable is not adjusted in this
+        // case, because periods and vowel separators are included in the
+        // set of characters to trim at the end of the filename.
+        if (outFileName.IsEmpty()) {
+          continue;
+        }
+      } else {
+        if (unicodeCategory == HB_UNICODE_GENERAL_CATEGORY_FORMAT) {
+          // Replace formatting characters with an underscore.
+          nextChar = '_';
+        }
+
+        lastNonTrimmable = int32_t(outFileName.Length()) + 1;
+      }
+    }
+
+    AppendUCS4ToUTF16(nextChar, outFileName);
+  }
+
+  // There are two ways in which the filename should be truncated:
+  //   - If the filename was too long, truncate the name at the length
+  //     of the filename minus the space needed for the extension and period.
+  //     This position is indicated by longFileNameEnd.
+  //   - lastNonTrimmable will indicate the last character that was not
+  //     whitespace, a period, or a vowel separator at the end of the
+  //     the string, so the string should be truncated there as well.
+  // If both apply, use the earliest position.
+  if (lastNonTrimmable >= 0) {
+    outFileName.Truncate(longFileName
+                             ? std::min(longFileNameEnd, lastNonTrimmable)
+                             : lastNonTrimmable);
   }
 
   // If the filename is too long, truncate it, but preserve the desired
   // extension.
-  if (!(aFlags & VALIDATE_DONT_TRUNCATE) &&
-      fileName.Length() > kDefaultMaxFileNameLength) {
+  if (!maxBytes && !(aFlags & VALIDATE_DONT_TRUNCATE) &&
+      outFileName.Length() > kDefaultMaxFileNameLength) {
     // This is extremely unlikely, but if the extension is larger than the
     // maximum size, just get rid of it.
     if (aExtension.Length() >= kDefaultMaxFileNameLength) {
-      fileName.Truncate(kDefaultMaxFileNameLength - 1);
+      outFileName.Truncate(kDefaultMaxFileNameLength - 1);
     } else {
-      fileName.Truncate(kDefaultMaxFileNameLength - aExtension.Length() - 1);
-      if (!fileName.IsEmpty()) {
-        if (fileName.Last() != '.') {
-          fileName.AppendLiteral(".");
-        }
-
-        fileName.Append(NS_ConvertUTF8toUTF16(aExtension));
-      }
+      outFileName.Truncate(kDefaultMaxFileNameLength - aExtension.Length() - 1);
+      longFileName = true;
     }
   }
 
-  aFileName = fileName;
+  if (longFileName && !outFileName.IsEmpty()) {
+    if (outFileName.Last() != '.') {
+      outFileName.AppendLiteral(".");
+    }
+
+    outFileName.Append(NS_ConvertUTF8toUTF16(aExtension));
+  }
+
+  aFileName = outFileName;
 }
 
 nsExternalHelperAppService::ModifyExtensionType
