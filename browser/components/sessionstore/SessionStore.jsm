@@ -2595,6 +2595,17 @@ var SessionStoreInternal = {
 
     let cacheState = TabStateCache.get(browser.permanentKey);
 
+    // If the cacheState only includes the isPrivate property, then we should
+    // be storing the userTypedValue in the state cache as if there was no
+    // cacheState yet (otherwise private tabs discarded earlier in their creation
+    // may intermittently be restored as about:blank if the SessionStore's TabListener
+    // that stores the isPrivate tabState property got called before this method).
+    let hasNoCacheState = !cacheState;
+    let cacheStateKeys = hasNoCacheState ? [] : Object.keys(cacheState);
+    if (cacheStateKeys.length === 1 && cacheStateKeys.includes("isPrivate")) {
+      hasNoCacheState = true;
+    }
+
     // Cache the browser userTypedValue either if there is no cache state
     // at all (e.g. if it was already discarded before we got to cache its state)
     // or it may have been created but not including a userTypedValue (e.g.
@@ -2612,7 +2623,7 @@ var SessionStoreInternal = {
     //   see Bug 1724205).
     let shouldUpdateCacheState =
       userTypedValue &&
-      (!cacheState || (hasStartedLoad && !cacheState.userTypedValue));
+      (hasNoCacheState || (hasStartedLoad && !cacheState.userTypedValue));
 
     if (shouldUpdateCacheState) {
       // Discard was likely called before state can be cached.  Update
