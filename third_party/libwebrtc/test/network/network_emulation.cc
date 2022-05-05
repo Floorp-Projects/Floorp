@@ -447,7 +447,7 @@ EmulatedEndpointImpl::Options::Options(uint64_t id,
       allow_send_packet_with_different_source_ip(
           config.allow_send_packet_with_different_source_ip),
       allow_receive_packets_with_different_dest_ip(
-          config.allow_send_packet_with_different_source_ip),
+          config.allow_receive_packets_with_different_dest_ip),
       log_name(ip.ToString() + " (" + config.name.value_or("") + ")") {}
 
 EmulatedEndpointImpl::EmulatedEndpointImpl(const Options& options,
@@ -583,7 +583,7 @@ rtc::IPAddress EmulatedEndpointImpl::GetPeerLocalAddress() const {
 
 void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
   RTC_DCHECK_RUN_ON(task_queue_);
-  if (options_.allow_receive_packets_with_different_dest_ip) {
+  if (!options_.allow_receive_packets_with_different_dest_ip) {
     RTC_CHECK(packet.to.ipaddr() == options_.ip)
         << "Routing error: wrong destination endpoint. Packet.to.ipaddr()=: "
         << packet.to.ipaddr().ToString()
