@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_scriptloader_h__
 #define mozilla_dom_workers_scriptloader_h__
 
+#include "mozilla/dom/ScriptLoadInfo.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
