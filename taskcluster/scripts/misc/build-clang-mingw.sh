@@ -209,7 +209,7 @@ build_libcxx() {
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$TOOLCHAIN_DIR/build/libcxx/include/c++/v1 -DPSAPI_VERSION=2" \
       -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
-      $MOZ_FETCHES_DIR/libunwind
+      $TOOLCHAIN_DIR/libunwind
   make $make_flags
   make $make_flags install
   popd

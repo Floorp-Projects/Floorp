@@ -47,7 +47,6 @@ linux64-clang-14-mingw-x86:
         fetch:
             - clang-14
             - mingw-w64
-            - libunwind
             - llvm-mingw
             - gcc-9.4.0
         toolchain:
@@ -69,7 +68,6 @@ linux64-clang-14-mingw-x64:
         fetch:
             - clang-14
             - mingw-w64
-            - libunwind
             - llvm-mingw
             - gcc-9.4.0
         toolchain:
