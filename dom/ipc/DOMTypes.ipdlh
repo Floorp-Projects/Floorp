@@ -17,7 +17,6 @@ include "mozilla/net/ClassOfService.h";
 
 include IPCBlob;
 include IPCStream;
-include protocol PRemoteLazyInputStream;
 include ProtocolTypes;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
@@ -52,6 +51,7 @@ using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingCont
 [RefCounted] using class nsIVariant from "nsIVariant.h";
 using mozilla::TimeStamp from "mozilla/TimeStamp.h";
 [RefCounted] using class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+[RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 
 namespace mozilla {
 namespace dom {
@@ -345,7 +345,8 @@ struct ReplacementChannelConfigInit
   nsCString? method;
   nsIReferrerInfo referrerInfo;
   TimedChannelInfo? timedChannelInfo;
-  nullable PRemoteLazyInputStream uploadStream;
+  RemoteLazyInputStream uploadStream;
+  uint64_t uploadStreamLength;
   bool uploadStreamHasHeaders;
   nsCString? contentType;
   nsCString? contentLength;
