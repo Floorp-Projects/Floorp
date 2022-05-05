@@ -259,16 +259,6 @@ void Module::testingBlockOnTier2Complete() const {
   }
 }
 
-bool Module::serialize(const LinkData& linkData, Bytes* bytes) const {
-  MOZ_CRASH("NYI");
-  return false;
-}
-
-/* static */
-MutableModule Module::deserialize(const uint8_t* begin, size_t size) {
-  MOZ_CRASH("NYI");
-}
-
 /* virtual */
 JSObject* Module::createObject(JSContext* cx) const {
   if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_WebAssembly)) {
@@ -331,11 +321,6 @@ void Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
            SizeOfVectorExcludingThis(dataSegments_, mallocSizeOf) +
            SizeOfVectorExcludingThis(elemSegments_, mallocSizeOf) +
            SizeOfVectorExcludingThis(customSections_, mallocSizeOf);
-}
-
-void Module::initGCMallocBytesExcludingCode() {
-  MOZ_CRASH("NYI");
-  gcMallocBytesExcludingCode_ = sizeof(*this);
 }
 
 // Extracting machine code as JS object. The result has the "code" property, as

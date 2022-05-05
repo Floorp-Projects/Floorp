@@ -19,14 +19,158 @@
 #ifndef wasm_serialize_h
 #define wasm_serialize_h
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 
 #include <cstdint>
+#include <cstring>
 #include <type_traits>
 
 namespace js {
 namespace wasm {
+
+// [SMDOC] "Module serialization"
+//
+// A wasm::Module may be serialized to a binary format that allows for quick
+// reloads of a previous compiled wasm binary.
+//
+// The binary format is optimized for encoding/decoding speed, not size. There
+// is no formal specification, and no backwards/forwards compatibility
+// guarantees. The prelude of the encoding contains a 'build ID' which must be
+// used when reading from a cache entry to determine if it is valid.
+//
+// Module serialization and deserialization are performed using templated
+// functions that allow for (imperfect) abstraction over whether we are decoding
+// or encoding the module. It can be viewed as a specialization of the visitor
+// pattern.
+//
+// Each module data structure is visited by a function parameterized by the
+// "mode", which may be either:
+//  1. MODE_SIZE - We are computing the final encoding size, before encoding it
+//  2. MODE_ENCODE - We are actually encoding the module to bytes
+//  3. MODE_DECODE - We are decoding the module from bytes
+//
+// These functions are called "coding" functions, as they are generic to whether
+// we are "encoding" or "decoding". The verb tense "code" is used for the
+// prefix.
+//
+// Each coding function takes the item being visited, along with a "Coder"
+// which contains the state needed for each mode. This is either a buffer span
+// or an accumulated length. The coding function either manipulates the Coder
+// directly or delegates to its field's coding functions.
+//
+// Leaf data types are usually just copied directly to and from memory using a
+// generic "CodePod" function. See the "cacheable POD" documentation in this
+// file for more information.
+//
+// Non-leaf data types need an explicit coding function. This function can
+// usually be completely generic to decoding/encoding, and delegate to the
+// coding functions for each field. Separate decoding/encoding functions may
+// be needed when decoding requires initialization logic, such as constructors.
+// In this case, it is critical that both functions agree on the fields to be
+// coded, and the order they are coded in.
+//
+// Coding functions are defined as free functions in "WasmSerialize.cpp". When
+// they require access to protected state in a type, they may use the
+// WASM_DECLARE_FRIEND_SERIALIZE macro.
+
+// Signal an out of memory condition
+struct OutOfMemory {};
+
+// The result of serialization, either OK or OOM
+typedef mozilla::Result<mozilla::Ok, OutOfMemory> CoderResult;
+
+// CoderMode parameterizes the coding functions
+enum CoderMode {
+  // We are computing the final size of the encoded buffer. This is a discrete
+  // pass that runs before encoding.
+  MODE_SIZE,
+  // We are encoding the module to bytes.
+  MODE_ENCODE,
+  // We are decoding the module from bytes.
+  MODE_DECODE,
+};
+
+// Coding functions take a different argument depending on which CoderMode
+// they are invoked with:
+//   * MODE_SIZE - const T*
+//   * MODE_ENCODE - const T*
+//   * MODE_DECODE - T*
+//
+// The CoderArg<mode, T> type alias is used to acquire the proper type for
+// coding function arguments.
+template <CoderMode mode, typename V>
+struct CoderArgT;
+
+template <typename V>
+struct CoderArgT<MODE_SIZE, V> {
+  using T = const V*;
+};
+
+template <typename V>
+struct CoderArgT<MODE_DECODE, V> {
+  using T = V*;
+};
+
+template <typename V>
+struct CoderArgT<MODE_ENCODE, V> {
+  using T = const V*;
+};
+
+template <CoderMode mode, typename T>
+using CoderArg = typename CoderArgT<mode, T>::T;
+
+// Coder is the state provided to all coding functions during module traversal.
+template <CoderMode mode>
+struct Coder;
+
+// A Coder<MODE_SIZE> computes the total encoded size of a module
+template <>
+struct Coder<MODE_SIZE> {
+  Coder() : size_(0) {}
+
+  mozilla::CheckedInt<size_t> size_;
+
+  // This function shares a signature with MODE_ENCODE to allow functions to be
+  // generic across MODE_SIZE/MODE_ENCODE, even though the src pointer is not
+  // needed for MODE_SIZE.
+  CoderResult writeBytes(const void* unusedSrc, size_t length);
+};
+
+// A Coder<MODE_ENCODE> holds the buffer being written to
+template <>
+struct Coder<MODE_ENCODE> {
+  Coder(uint8_t* start, size_t length) : buffer_(start), end_(start + length) {}
+
+  uint8_t* buffer_;
+  const uint8_t* end_;
+
+  CoderResult writeBytes(const void* src, size_t length);
+};
+
+// A Coder<MODE_DECODE> holds the buffer being read from
+template <>
+struct Coder<MODE_DECODE> {
+  Coder(const uint8_t* start, size_t length)
+      : buffer_(start), end_(start + length) {}
+
+  const uint8_t* buffer_;
+  const uint8_t* end_;
+
+  CoderResult readBytes(void* dest, size_t length);
+};
+
+// Macros to help types declare friendship with a coding function
+
+#define WASM_DECLARE_FRIEND_SERIALIZE(TYPE) \
+  template <CoderMode mode>                 \
+  friend CoderResult Code##TYPE(Coder<mode>&, CoderArg<mode, TYPE>);
+
+#define WASM_DECLARE_FRIEND_SERIALIZE_ARGS(TYPE, ARGS...) \
+  template <CoderMode mode>                               \
+  friend CoderResult Code##TYPE(Coder<mode>&, CoderArg<mode, TYPE>, ARGS);
 
 // [SMDOC] "Cacheable POD"
 //

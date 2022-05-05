@@ -153,8 +153,6 @@ class LazyStubSegment;
 
 class CodeSegment {
  protected:
-  static UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
-
   enum class Kind { LazyStubs, Module };
 
   CodeSegment(UniqueCodeBytes bytes, uint32_t length, Kind kind)
@@ -240,7 +238,13 @@ class ModuleSegment : public CodeSegment {
 
   void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
+
+  WASM_DECLARE_FRIEND_SERIALIZE(ModuleSegment);
 };
+
+extern UniqueCodeBytes AllocateCodeBytes(uint32_t codeLength);
+extern bool StaticallyLink(const ModuleSegment& ms, const LinkData& linkData);
+extern void StaticallyUnlink(uint8_t* base, const LinkData& linkData);
 
 // A FuncExport represents a single function definition inside a wasm Module
 // that has been exported one or more times. A FuncExport represents an
@@ -296,6 +300,7 @@ class FuncExport {
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(FuncExport);
 };
 
 WASM_DECLARE_CACHEABLE_POD(FuncExport::CacheablePod);
@@ -355,6 +360,7 @@ class FuncImport {
   bool canHaveJitExit() const { return funcType_.canHaveJitExit(); }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(FuncImport);
 };
 
 WASM_DECLARE_CACHEABLE_POD(FuncImport::CacheablePod)
@@ -474,13 +480,15 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  WASM_DECLARE_FRIEND_SERIALIZE(Metadata);
 };
 
 using MutableMetadata = RefPtr<Metadata>;
 using SharedMetadata = RefPtr<const Metadata>;
 
 struct MetadataTier {
-  explicit MetadataTier(Tier tier) : tier(tier), debugTrapOffset(0) {}
+  explicit MetadataTier(Tier tier = Tier::Serialized)
+      : tier(tier), debugTrapOffset(0) {}
 
   const Tier tier;
 
@@ -669,6 +677,8 @@ class CodeTier {
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
+
+  WASM_DECLARE_FRIEND_SERIALIZE_ARGS(CodeTier, const wasm::LinkData& data);
 };
 
 // Jump tables that implement function tiering and fast js-to-wasm calls.
@@ -869,6 +879,8 @@ class Code : public ShareableBase<Code> {
                               Metadata::SeenSet* seenMetadata,
                               Code::SeenSet* seenCode, size_t* code,
                               size_t* data) const;
+
+  WASM_DECLARE_FRIEND_SERIALIZE_ARGS(SharedCode, const wasm::LinkData& data);
 };
 
 void PatchDebugSymbolicAccesses(uint8_t* codeBase, jit::MacroAssembler& masm);
