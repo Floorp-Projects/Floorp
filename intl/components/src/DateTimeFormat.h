@@ -36,8 +36,7 @@ class Calendar;
  * of the DateTimeFormat operation. DateTimeFormat::TryFormat should be
  * relatively inexpensive after the initial construction.
  *
- * This class supports creating from Styles (a fixed set of options), from
- * Skeletons (a list of fields and field widths to include), and from a
+ * This class supports creating from Styles (a fixed set of options) and from a
  * components bag (a list of components and their lengths).
  *
  * This API serves to back the ECMA-402 Intl.DateTimeFormat API.
@@ -252,6 +251,7 @@ class DateTimeFormat final {
       DateTimePatternGenerator* aDateTimePatternGenerator,
       Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
 
+ private:
   /**
    * Create a DateTimeFormat from a UTF-16 skeleton.
    *
@@ -264,15 +264,6 @@ class DateTimeFormat final {
    * time zone. This is a string that takes the form "GMT±hh:mm", or
    * an IANA time zone identifier, e.g. "America/Chicago".
    */
-  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
-      Span<const char> aLocale, Span<const char16_t> aSkeleton,
-      DateTimePatternGenerator* aDateTimePatternGenerator,
-      Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{}) {
-    return TryCreateFromSkeleton(aLocale, aSkeleton, aDateTimePatternGenerator,
-                                 Nothing{}, aTimeZoneOverride);
-  }
-
- private:
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char16_t> aSkeleton,
       DateTimePatternGenerator* aDateTimePatternGenerator,
