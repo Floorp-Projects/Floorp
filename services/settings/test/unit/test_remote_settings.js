@@ -24,12 +24,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 
 const IS_ANDROID = AppConstants.platform == "android";
 
-const BinaryInputStream = CC(
-  "@mozilla.org/binaryinputstream;1",
-  "nsIBinaryInputStream",
-  "setInputStream"
-);
-
 const TELEMETRY_COMPONENT = "remotesettings";
 const TELEMETRY_EVENTS_FILTERS = {
   category: "uptake.remotecontent.result",
@@ -1077,6 +1071,35 @@ add_task(
     equal(mainBucket, "main-preview");
   }
 );
+add_task(clear_state);
+
+add_task(async function test_sync_event_is_not_sent_from_get_when_no_dump() {
+  let called = false;
+  client.on("sync", e => {
+    called = true;
+  });
+
+  await client.get();
+
+  Assert.ok(!called, "sync event is not sent from .get()");
+});
+add_task(clear_state);
+
+add_task(async function test_get_can_be_called_from_sync_event_callback() {
+  let fromGet;
+  let fromEvent;
+
+  client.on("sync", async ({ data: { current } }) => {
+    // Before fixing Bug 1761953 this would result in a deadlock.
+    fromGet = await client.get();
+    fromEvent = current;
+  });
+
+  await client.maybeSync(2000);
+
+  Assert.ok(fromGet, "sync callback was called");
+  Assert.deepEqual(fromGet, fromEvent, ".get() gives current records list");
+});
 add_task(clear_state);
 
 function handleResponse(request, response) {

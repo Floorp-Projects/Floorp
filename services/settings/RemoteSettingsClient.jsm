@@ -376,10 +376,12 @@ class RemoteSettingsClient extends EventEmitter {
               : -1;
             if (importedFromDump < 0) {
               // There is no JSON dump to load, force a synchronization from the server.
+              // We don't want the "sync" event to be sent, since some consumers use `.get()`
+              // in "sync" callbacks. See Bug 1761953
               console.debug(
                 `${this.identifier} Local DB is empty, pull data from server`
               );
-              await this.sync({ loadDump: false });
+              await this.sync({ loadDump: false, sendEvents: false });
             }
             // Return `true` to indicate we don't need to `verifySignature`,
             // since a trusted dump was loaded or a signature verification
@@ -480,7 +482,9 @@ class RemoteSettingsClient extends EventEmitter {
       let metadata = await this.db.getMetadata();
       if (syncIfEmpty && ObjectUtils.isEmpty(metadata)) {
         // No sync occured yet, may have records from dump but no metadata.
-        await this.sync({ loadDump: false });
+        // We don't want the "sync" event to be sent, since some consumers use `.get()`
+        // in "sync" callbacks. See Bug 1761953
+        await this.sync({ loadDump: false, sendEvents: false });
         metadata = await this.db.getMetadata();
       }
       // Will throw MissingSignatureError if no metadata and `syncIfEmpty` is false.
@@ -525,18 +529,23 @@ class RemoteSettingsClient extends EventEmitter {
   /**
    * Synchronize the local database with the remote server, **only if necessary**.
    *
-   * @param {int}    expectedTimestamp the lastModified date (on the server) for the remote collection.
-   *                                   This will be compared to the local timestamp, and will be used for
-   *                                   cache busting if local data is out of date.
-   * @param {Object} options           additional advanced options.
-   * @param {bool}   options.loadDump  load initial dump from disk on first sync (default: true, unless
-   *                                   `services.settings.load_dump` says otherwise).
-   * @param {string} options.trigger   label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
-   * @return {Promise}                 which rejects on sync or process failure.
+   * @param {int}    expectedTimestamp  the lastModified date (on the server) for the remote collection.
+   *                                    This will be compared to the local timestamp, and will be used for
+   *                                    cache busting if local data is out of date.
+   * @param {Object} options            additional advanced options.
+   * @param {bool}   options.loadDump   load initial dump from disk on first sync (default: true, unless
+   *                                    `services.settings.load_dump` says otherwise).
+   * @param {bool}   options.sendEvents send `"sync"` events (default: `true`)
+   * @param {string} options.trigger    label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
+   * @return {Promise}                  which rejects on sync or process failure.
    */
   async maybeSync(expectedTimestamp, options = {}) {
     // Should the clients try to load JSON dump? (mainly disabled in tests)
-    const { loadDump = gLoadDump, trigger = "manual" } = options;
+    const {
+      loadDump = gLoadDump,
+      trigger = "manual",
+      sendEvents = true,
+    } = options;
 
     // Make sure we don't run several synchronizations in parallel, mainly
     // in order to avoid race conditions in "sync" events listeners.
@@ -654,7 +663,7 @@ class RemoteSettingsClient extends EventEmitter {
               "duration"
             );
           }
-          if (this.hasListeners("sync")) {
+          if (sendEvents && this.hasListeners("sync")) {
             // If we have listeners for the "sync" event, then compute the lists of changes.
             // The records imported from the dump should be considered as "created" for the
             // listeners.
@@ -712,20 +721,22 @@ class RemoteSettingsClient extends EventEmitter {
           throw e;
         }
       }
-      // Filter the synchronization results using `filterFunc` (ie. JEXL).
-      const filteredSyncResult = await this._filterSyncResult(syncResult);
-      // If every changed entry is filtered, we don't even fire the event.
-      if (filteredSyncResult) {
-        try {
-          await this.emit("sync", { data: filteredSyncResult });
-        } catch (e) {
-          reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
-          throw e;
+      if (sendEvents) {
+        // Filter the synchronization results using `filterFunc` (ie. JEXL).
+        const filteredSyncResult = await this._filterSyncResult(syncResult);
+        // If every changed entry is filtered, we don't even fire the event.
+        if (filteredSyncResult) {
+          try {
+            await this.emit("sync", { data: filteredSyncResult });
+          } catch (e) {
+            reportStatus = UptakeTelemetry.STATUS.APPLY_ERROR;
+            throw e;
+          }
+        } else {
+          console.info(
+            `All changes are filtered by JEXL expressions for ${this.identifier}`
+          );
         }
-      } else {
-        console.info(
-          `All changes are filtered by JEXL expressions for ${this.identifier}`
-        );
       }
     } catch (e) {
       thrownError = e;
