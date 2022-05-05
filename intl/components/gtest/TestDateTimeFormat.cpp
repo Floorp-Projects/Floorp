@@ -98,8 +98,7 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
           MakeStringSpan("en-US"), MakeStringSpan("yMdhhmmss"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan("GMT+3")))
+          dateTimePatternGenerator.get(), Some(MakeStringSpan("GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
@@ -116,8 +115,7 @@ TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
           MakeStringSpan("en-US"), MakeStringSpan(u"yMdhhmmss"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan(u"GMT+3")))
+          dateTimePatternGenerator.get(), Some(MakeStringSpan(u"GMT+3")))
           .unwrap();
   TestBuffer<char> buffer;
   dtFormat->TryFormat(DATE, buffer).unwrap();
@@ -546,8 +544,7 @@ TEST(IntlDateTimeFormat, TryFormatToParts)
   UniquePtr<DateTimeFormat> dtFormat =
       DateTimeFormat::TryCreateFromSkeleton(
           MakeStringSpan("en-US"), MakeStringSpan(u"yMMddHHmm"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan(u"GMT")))
+          dateTimePatternGenerator.get(), Some(MakeStringSpan(u"GMT")))
           .unwrap();
 
   TestBuffer<char16_t> buffer;
