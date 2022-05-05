@@ -579,12 +579,23 @@ nsresult ModuleLoaderBase::HandleResolveFailure(
 
 ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
     LoadedScript* aScript, const nsAString& aSpecifier) {
+  bool importMapsEnabled = Preferences::GetBool("dom.importMaps.enabled");
+  // If import map is enabled, forward to the updated 'Resolve a module
+  // specifier' algorithm defined in Import maps spec.
+  //
+  // Once import map is enabled by default,
+  // ModuleLoaderBase::ResolveModuleSpecifier should be replaced by
+  // ImportMap::ResolveModuleSpecifier.
+  if (importMapsEnabled) {
+    return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
+                                             aSpecifier);
+  }
+
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
   //  - a valid relative URL that starts with "/", "./" or "../"
   //
-  // Bareword module specifiers are currently disallowed as these may be given
-  // special meanings in the future.
+  // Bareword module specifiers are handled in Import maps.
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpecifier);
