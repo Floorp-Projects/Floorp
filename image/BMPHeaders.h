@@ -34,7 +34,7 @@ struct InfoHeaderLength {
 enum class InfoColorSpace : uint32_t {
   CALIBRATED_RGB = 0x00000000,
   SRGB = 0x73524742,
-  WINDOWS = 0x57696E20,
+  WIN = 0x57696E20,
   LINKED = 0x4C494E4B,
   EMBEDDED = 0x4D424544,
 };
