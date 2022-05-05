@@ -291,6 +291,12 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   // HyperTextAccessibleBase
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
+  virtual void InvalidateCachedHyperTextOffsets() override {
+    if (mCachedFields) {
+      mCachedFields->Remove(nsGkAtoms::offset);
+    }
+  }
+
  protected:
   RemoteAccessibleBase(uint64_t aID, Derived* aParent,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,
@@ -330,6 +336,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual bool HasPrimaryAction() const override;
 
   nsAtom* GetPrimaryAction() const;
+
+  virtual const nsTArray<int32_t>& GetCachedHyperTextOffsets() const override;
 
  private:
   uintptr_t mParent;
