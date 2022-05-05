@@ -100,11 +100,6 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
    */
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override {
-    CSSToParentLayerScale zoom(aFrameMetrics.GetZoom());
-    if (zoom == CSSToParentLayerScale(0)) {
-      return false;
-    }
-
     ParentLayerPoint velocity;
     ParentLayerPoint offset;
     FlingPhysics::Sample(aDelta, &velocity, &offset);
@@ -112,7 +107,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     mApzc.SetVelocityVector(velocity);
 
     // If we shouldn't continue the fling, let's just stop and repaint.
-    if (IsZero(velocity / zoom)) {
+    if (IsZero(velocity)) {
       FLING_LOG("%p ending fling animation. overscrolled=%d\n", &mApzc,
                 mApzc.IsOverscrolled());
       // This APZC or an APZC further down the handoff chain may be be
@@ -142,7 +137,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
     }
 
     // The fling may have caused us to reach the end of our scroll range.
-    if (!IsZero(overscroll / zoom)) {
+    if (!IsZero(overscroll)) {
       // Hand off the fling to the next APZC in the overscroll handoff chain.
 
       // We may have reached the end of the scroll range along one axis but
@@ -181,7 +176,7 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
       // as well. (This fling and the handed-off fling will run concurrently.)
       // Note that AdjustDisplacement() will have zeroed out the velocity
       // along the axes where we're overscrolled.
-      return !IsZero(mApzc.GetVelocityVector() / zoom);
+      return !IsZero(mApzc.GetVelocityVector());
     }
 
     return true;
