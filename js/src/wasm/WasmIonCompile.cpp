@@ -5207,7 +5207,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableGetFunc;
+  const SymbolicAddressSignature& callee = SASigTableGet;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5310,7 +5310,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return f.tableSetAnyRef(table, index, value, bytecodeOffset);
   }
 
-  const SymbolicAddressSignature& callee = SASigTableSetFunc;
+  const SymbolicAddressSignature& callee = SASigTableSet;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
