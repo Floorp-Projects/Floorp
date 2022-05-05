@@ -1742,3 +1742,18 @@ privacy_settings:
           A string containing the new block cookies option the user has chosen:
           yes, third_party_only, third_party_tracker, cross_site, no
         type: string
+nimbus_experiments:
+  nimbus_initial_fetch:
+    type: timespan
+    description: >
+      Measures the time spent to download the nimbus experiments
+    time_unit: millisecond
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/6847
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/6972
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 112
+    data_sensitivity:
+      - technical

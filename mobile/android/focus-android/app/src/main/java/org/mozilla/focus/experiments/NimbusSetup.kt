@@ -12,8 +12,10 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.focus.BuildConfig
+import org.mozilla.focus.GleanMetrics.NimbusExperiments
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -82,7 +84,16 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             }
 
             applyPendingExperiments()
+            NimbusExperiments.nimbusInitialFetch.start()
             fetchExperiments()
+
+            register(object : NimbusInterface.Observer {
+                override fun onExperimentsFetched() {
+                    NimbusExperiments.nimbusInitialFetch.stop()
+                    // Remove lingering observer when we're done fetching experiments on startup.
+                    unregister(this)
+                }
+            })
         }
     } catch (e: Throwable) {
         // Something went wrong. We'd like not to, but stability of the app is more important than
