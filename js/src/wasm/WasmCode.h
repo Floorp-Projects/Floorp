@@ -107,13 +107,13 @@ struct LinkData : LinkDataCacheablePod {
 
   struct SymbolicLinkArray
       : EnumeratedArray<SymbolicAddress, SymbolicAddress::Limit, Uint32Vector> {
-    WASM_DECLARE_SERIALIZABLE(SymbolicLinkArray)
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   };
 
   InternalLinkVector internalLinks;
   SymbolicLinkArray symbolicLinks;
 
-  WASM_DECLARE_SERIALIZABLE(LinkData)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using UniqueLinkData = UniquePtr<LinkData>;
@@ -226,14 +226,6 @@ class ModuleSegment : public CodeSegment {
 
   uint8_t* trapCode() const { return trapCode_; }
 
-  // Structured clone support:
-
-  size_t serializedSize() const;
-  uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
-  static const uint8_t* deserialize(const uint8_t* cursor,
-                                    const LinkData& linkData,
-                                    UniqueModuleSegment* segment);
-
   const CodeRange* lookupRange(const void* pc) const;
 
   void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code,
@@ -286,7 +278,7 @@ class FuncExport {
     return funcType_.clone(src.funcType_);
   }
 
-  WASM_DECLARE_SERIALIZABLE(FuncExport)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
@@ -336,7 +328,7 @@ class FuncImport {
 
   bool canHaveJitExit() const { return funcType_.canHaveJitExit(); }
 
-  WASM_DECLARE_SERIALIZABLE(FuncImport)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
@@ -447,7 +439,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
     return getFuncName(NameContext::BeforeLocation, funcIndex, name);
   }
 
-  WASM_DECLARE_SERIALIZABLE(Metadata);
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using MutableMetadata = RefPtr<Metadata>;
@@ -483,7 +475,7 @@ struct MetadataTier {
 
   bool clone(const MetadataTier& src);
 
-  WASM_DECLARE_SERIALIZABLE(MetadataTier);
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using UniqueMetadataTier = UniquePtr<MetadataTier>;
@@ -641,11 +633,6 @@ class CodeTier {
   const WasmTryNote* lookupWasmTryNote(const void* pc) const;
 #endif
 
-  size_t serializedSize() const;
-  uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
-  static const uint8_t* deserialize(const uint8_t* cursor,
-                                    const LinkData& linkData,
-                                    UniqueCodeTier* codeTier);
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
 };
@@ -848,16 +835,6 @@ class Code : public ShareableBase<Code> {
                               Metadata::SeenSet* seenMetadata,
                               Code::SeenSet* seenCode, size_t* code,
                               size_t* data) const;
-
-  // A Code object is serialized as the length and bytes of the machine code
-  // after statically unlinking it; the Code is then later recreated from the
-  // machine code and other parts.
-
-  size_t serializedSize() const;
-  uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
-  static const uint8_t* deserialize(const uint8_t* cursor,
-                                    const LinkData& linkData,
-                                    Metadata& metadata, SharedCode* out);
 };
 
 void PatchDebugSymbolicAccesses(uint8_t* codeBase, jit::MacroAssembler& masm);

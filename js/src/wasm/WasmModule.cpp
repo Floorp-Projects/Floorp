@@ -242,7 +242,10 @@ bool Module::finishTier2(const LinkData& linkData2,
   // after tier-2 has been fully cached.
 
   if (tier2Listener_) {
-    serialize(linkData2, *tier2Listener_);
+    Bytes bytes;
+    if (serialize(linkData2, &bytes)) {
+      tier2Listener_->storeOptimizedEncoding(bytes.begin(), bytes.length());
+    }
     tier2Listener_ = nullptr;
   }
   testingTier2Active_ = false;
@@ -256,140 +259,14 @@ void Module::testingBlockOnTier2Complete() const {
   }
 }
 
-/* virtual */
-size_t Module::serializedSize(const LinkData& linkData) const {
-  JS::BuildIdCharVector buildId;
-  {
-    AutoEnterOOMUnsafeRegion oom;
-    if (!GetOptimizedEncodingBuildId(&buildId)) {
-      oom.crash("getting build id");
-    }
-  }
-
-  return SerializedPodVectorSize(buildId) + linkData.serializedSize() +
-         SerializedVectorSize(imports_) + SerializedVectorSize(exports_) +
-         SerializedVectorSize(dataSegments_) +
-         SerializedVectorSize(elemSegments_) +
-         SerializedVectorSize(customSections_) + code_->serializedSize();
-}
-
-/* virtual */
-void Module::serialize(const LinkData& linkData, uint8_t* begin,
-                       size_t size) const {
-  MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
-  MOZ_RELEASE_ASSERT(code_->hasTier(Tier::Serialized));
-
-  JS::BuildIdCharVector buildId;
-  {
-    AutoEnterOOMUnsafeRegion oom;
-    if (!GetOptimizedEncodingBuildId(&buildId)) {
-      oom.crash("getting build id");
-    }
-  }
-
-  uint8_t* cursor = begin;
-  cursor = SerializePodVector(cursor, buildId);
-  cursor = linkData.serialize(cursor);
-  cursor = SerializeVector(cursor, imports_);
-  cursor = SerializeVector(cursor, exports_);
-  cursor = SerializeVector(cursor, dataSegments_);
-  cursor = SerializeVector(cursor, elemSegments_);
-  cursor = SerializeVector(cursor, customSections_);
-  cursor = code_->serialize(cursor, linkData);
-  MOZ_RELEASE_ASSERT(cursor == begin + size);
+bool Module::serialize(const LinkData& linkData, Bytes* bytes) const {
+  MOZ_CRASH("NYI");
+  return false;
 }
 
 /* static */
 MutableModule Module::deserialize(const uint8_t* begin, size_t size) {
-  MutableMetadata metadata = js_new<Metadata>();
-  if (!metadata) {
-    return nullptr;
-  }
-
-  const uint8_t* cursor = begin;
-
-  JS::BuildIdCharVector currentBuildId;
-  if (!GetOptimizedEncodingBuildId(&currentBuildId)) {
-    return nullptr;
-  }
-
-  JS::BuildIdCharVector deserializedBuildId;
-  cursor = DeserializePodVector(cursor, &deserializedBuildId);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  MOZ_RELEASE_ASSERT(EqualContainers(currentBuildId, deserializedBuildId));
-
-  LinkData linkData(Tier::Serialized);
-  cursor = linkData.deserialize(cursor);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  ImportVector imports;
-  cursor = DeserializeVector(cursor, &imports);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  ExportVector exports;
-  cursor = DeserializeVector(cursor, &exports);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  DataSegmentVector dataSegments;
-  cursor = DeserializeVector(cursor, &dataSegments);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  ElemSegmentVector elemSegments;
-  cursor = DeserializeVector(cursor, &elemSegments);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  CustomSectionVector customSections;
-  cursor = DeserializeVector(cursor, &customSections);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  SharedCode code;
-  cursor = Code::deserialize(cursor, linkData, *metadata, &code);
-  if (!cursor) {
-    return nullptr;
-  }
-
-  MOZ_RELEASE_ASSERT(cursor == begin + size);
-  MOZ_RELEASE_ASSERT(!code->metadata().isAsmJS());
-
-  if (metadata->nameCustomSectionIndex) {
-    metadata->namePayload =
-        customSections[*metadata->nameCustomSectionIndex].payload;
-  } else {
-    MOZ_RELEASE_ASSERT(!metadata->moduleName);
-    MOZ_RELEASE_ASSERT(metadata->funcNames.empty());
-  }
-
-  return js_new<Module>(*code, std::move(imports), std::move(exports),
-                        std::move(dataSegments), std::move(elemSegments),
-                        std::move(customSections), nullptr,
-                        /* loggingDeserialized = */ true);
-}
-
-void Module::serialize(const LinkData& linkData,
-                       JS::OptimizedEncodingListener& listener) const {
-  Bytes bytes;
-  if (!bytes.resizeUninitialized(serializedSize(linkData))) {
-    return;
-  }
-
-  serialize(linkData, bytes.begin(), bytes.length());
-
-  listener.storeOptimizedEncoding(bytes.begin(), bytes.length());
+  MOZ_CRASH("NYI");
 }
 
 /* virtual */
@@ -457,13 +334,8 @@ void Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 }
 
 void Module::initGCMallocBytesExcludingCode() {
-  // The size doesn't have to be exact so use the serialization framework to
-  // calculate a value.
-  gcMallocBytesExcludingCode_ = sizeof(*this) + SerializedVectorSize(imports_) +
-                                SerializedVectorSize(exports_) +
-                                SerializedVectorSize(dataSegments_) +
-                                SerializedVectorSize(elemSegments_) +
-                                SerializedVectorSize(customSections_);
+  MOZ_CRASH("NYI");
+  gcMallocBytesExcludingCode_ = sizeof(*this);
 }
 
 // Extracting machine code as JS object. The result has the "code" property, as
