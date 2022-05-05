@@ -1018,8 +1018,12 @@ pref("dom.forms.datetime.timepicker", false);
 // Enable search in <select> dropdowns (more than 40 options)
 pref("dom.forms.selectSearch", false);
 // Allow for webpages to provide custom styling for <select>
-// popups. Disabled on GTK due to bug 1338283.
-#ifdef MOZ_WIDGET_GTK
+// popups.
+//
+// Disabled on GTK (originally due to bug 1338283, but not enabled since, and
+// native appearance might be preferred).
+// Disabled on macOS because native appearance is preferred, see bug 1703866.
+#if defined(MOZ_WIDGET_GTK) || defined(XP_MACOSX)
   pref("dom.forms.select.customstyling", false);
 #else
   pref("dom.forms.select.customstyling", true);
