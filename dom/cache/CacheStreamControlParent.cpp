@@ -18,7 +18,6 @@
 
 namespace mozilla::dom::cache {
 
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
 
 // declared in ActorUtils.h
@@ -44,18 +43,14 @@ void CacheStreamControlParent::SerializeControl(
   aReadStreamOut->controlParent() = this;
 }
 
-void CacheStreamControlParent::SerializeStream(
-    CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList) {
+void CacheStreamControlParent::SerializeStream(CacheReadStream* aReadStreamOut,
+                                               nsIInputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
 
-  UniquePtr<AutoIPCStream> autoStream(
-      new AutoIPCStream(aReadStreamOut->stream()));
-  DebugOnly<bool> ok = autoStream->Serialize(aStream, Manager());
+  DebugOnly<bool> ok = mozilla::ipc::SerializeIPCStream(
+      do_AddRef(aStream), aReadStreamOut->stream(), /* aAllowLazy */ false);
   MOZ_ASSERT(ok);
-
-  aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
 void CacheStreamControlParent::OpenStream(const nsID& aId,
@@ -120,9 +115,11 @@ mozilla::ipc::IPCResult CacheStreamControlParent::RecvOpenStream(
 
   OpenStream(aStreamId, [aResolver, self = RefPtr{this}](
                             nsCOMPtr<nsIInputStream>&& aStream) {
-    AutoIPCStream autoStream;
-    if (self->CanSend() && autoStream.Serialize(aStream, self->Manager())) {
-      aResolver(autoStream.TakeOptionalValue());
+    Maybe<IPCStream> stream;
+    if (self->CanSend() &&
+        mozilla::ipc::SerializeIPCStream(aStream.forget(), stream,
+                                         /* aAllowLazy */ false)) {
+      aResolver(stream);
     } else {
       aResolver(Nothing());
     }
