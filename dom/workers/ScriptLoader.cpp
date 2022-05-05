@@ -79,6 +79,7 @@
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/dom/workerinternals/ScriptResponseHeaderProcessor.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_browser.h"
@@ -486,82 +487,6 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
 
 NS_IMPL_ISUPPORTS(NetworkLoadHandler, nsIStreamLoaderObserver,
                   nsIRequestObserver)
-
-class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
- public:
-  NS_DECL_ISUPPORTS
-
-  ScriptResponseHeaderProcessor(WorkerPrivate* aWorkerPrivate,
-                                bool aIsMainScript)
-      : mWorkerPrivate(aWorkerPrivate), mIsMainScript(aIsMainScript) {
-    AssertIsOnMainThread();
-  }
-
-  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
-    if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-      return NS_OK;
-    }
-
-    nsresult rv = ProcessCrossOriginEmbedderPolicyHeader(aRequest);
-
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRequest->Cancel(rv);
-    }
-
-    return rv;
-  }
-
-  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
-                           nsresult aStatusCode) override {
-    return NS_OK;
-  }
-
-  static nsresult ProcessCrossOriginEmbedderPolicyHeader(
-      WorkerPrivate* aWorkerPrivate,
-      nsILoadInfo::CrossOriginEmbedderPolicy aPolicy, bool aIsMainScript) {
-    MOZ_ASSERT(aWorkerPrivate);
-
-    if (aIsMainScript) {
-      MOZ_TRY(aWorkerPrivate->SetEmbedderPolicy(aPolicy));
-    } else {
-      // NOTE: Spec doesn't mention non-main scripts must match COEP header with
-      // the main script, but it must pass CORP checking.
-      // see: wpt window-simple-success.https.html, the worker import script
-      // test-incrementer.js without coep header.
-      Unused << NS_WARN_IF(!aWorkerPrivate->MatchEmbedderPolicy(aPolicy));
-    }
-
-    return NS_OK;
-  }
-
- private:
-  ~ScriptResponseHeaderProcessor() = default;
-
-  nsresult ProcessCrossOriginEmbedderPolicyHeader(nsIRequest* aRequest) {
-    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aRequest);
-
-    // NOTE: the spec doesn't say what to do with non-HTTP workers.
-    // See: https://github.com/whatwg/html/issues/4916
-    if (!httpChannel) {
-      if (mIsMainScript) {
-        mWorkerPrivate->InheritOwnerEmbedderPolicyOrNull(aRequest);
-      }
-
-      return NS_OK;
-    }
-
-    nsILoadInfo::CrossOriginEmbedderPolicy coep;
-    MOZ_TRY(httpChannel->GetResponseEmbedderPolicy(&coep));
-
-    return ProcessCrossOriginEmbedderPolicyHeader(mWorkerPrivate, coep,
-                                                  mIsMainScript);
-  }
-
-  WorkerPrivate* const mWorkerPrivate;
-  const bool mIsMainScript;
-};
-
-NS_IMPL_ISUPPORTS(ScriptResponseHeaderProcessor, nsIRequestObserver);
 
 template <typename Unit>
 static bool EvaluateSourceBuffer(JSContext* aCx,
