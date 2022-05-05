@@ -295,11 +295,7 @@ void PacingController::EnqueuePacketInternal(
     int priority) {
   prober_.OnIncomingPacket(DataSize::Bytes(packet->payload_size()));
 
-  // TODO(sprang): Make sure tests respect this, replace with DCHECK.
   Timestamp now = CurrentTime();
-  if (packet->capture_time_ms() <= 0) {
-    packet->set_capture_time_ms(now.ms());
-  }
 
   if (mode_ == ProcessMode::kDynamic && packet_queue_.Empty() &&
       NextSendTime() <= now) {
