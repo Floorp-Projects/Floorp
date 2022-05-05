@@ -47,7 +47,7 @@ class RemoteDecoderManagerChild final
                        const SupportDecoderParams& aParams,
                        DecoderDoctorDiagnostics* aDiagnostics);
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateAudioDecoder(
-      const CreateDecoderParams& aParams);
+      const CreateDecoderParams& aParams, RemoteDecodeIn aLocation);
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> CreateVideoDecoder(
       const CreateDecoderParams& aParams, RemoteDecodeIn aLocation);
 
@@ -108,7 +108,7 @@ class RemoteDecoderManagerChild final
   explicit RemoteDecoderManagerChild(RemoteDecodeIn aLocation);
   ~RemoteDecoderManagerChild() = default;
   static RefPtr<PlatformDecoderModule::CreateDecoderPromise> Construct(
-      RefPtr<RemoteDecoderChild>&& aChild);
+      RefPtr<RemoteDecoderChild>&& aChild, RemoteDecodeIn aLocation);
 
   static void OpenForRDDProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
