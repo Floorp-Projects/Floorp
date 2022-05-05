@@ -74,7 +74,6 @@ using mozilla::loader::PScriptCacheParent;
 
 namespace ipc {
 class CrashReporterHost;
-class PFileDescriptorSetParent;
 class TestShellParent;
 #ifdef FUZZING
 class ProtocolFuzzerHelper;
@@ -123,7 +122,6 @@ class ContentParent final
       public mozilla::ipc::ParentToChildStreamActorManager,
       public ProcessActor {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
-  typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
   typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -675,9 +673,6 @@ class ContentParent final
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
-  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
   mozilla::ipc::IPCResult RecvBlobURLDataRequest(
       const nsCString& aBlobURL, nsIPrincipal* pTriggeringPrincipal,
       nsIPrincipal* pLoadingPrincipal,
@@ -1145,11 +1140,6 @@ class ContentParent final
       CreateAudioIPCConnectionResolver&& aResolver);
 
   already_AddRefed<extensions::PExtensionsParent> AllocPExtensionsParent();
-
-  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const mozilla::ipc::FileDescriptor&);
-
-  bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*);
 
 #ifdef MOZ_WEBRTC
   PWebrtcGlobalParent* AllocPWebrtcGlobalParent();
