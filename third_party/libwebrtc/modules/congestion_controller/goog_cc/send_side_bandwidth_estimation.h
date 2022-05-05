@@ -131,8 +131,6 @@ class SendSideBandwidthEstimation {
   // min bitrate used during last kBweIncreaseIntervalMs.
   void UpdateMinHistory(Timestamp at_time);
 
-  DataRate MaybeRampupOrBackoff(DataRate new_bitrate, Timestamp at_time);
-
   // Gets the upper limit for the target bitrate. This is the minimum of the
   // delay based limit, the receiver limit and the loss based controller limit.
   DataRate GetUpperLimit() const;
