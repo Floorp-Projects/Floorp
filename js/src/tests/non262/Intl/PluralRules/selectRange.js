@@ -36,9 +36,9 @@
     }
 
     for (let c of weirdCases) {
-      assertEq(pr.selectRange(c, 0), "other");
-      assertEq(pr.selectRange(0, c), "other");
-      assertEq(pr.selectRange(c, c), "other");
+      assertThrowsInstanceOf(() => pr.selectRange(c, 0), RangeError);
+      assertThrowsInstanceOf(() => pr.selectRange(0, c), RangeError);
+      assertThrowsInstanceOf(() => pr.selectRange(c, c), RangeError);
     }
   }
 }
