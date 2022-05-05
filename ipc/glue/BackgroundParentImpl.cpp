@@ -7,7 +7,6 @@
 #include "BackgroundParentImpl.h"
 
 #include "BroadcastChannelParent.h"
-#include "FileDescriptorSetParent.h"
 #ifdef MOZ_WEBRTC
 #  include "CamerasParent.h"
 #endif
@@ -667,24 +666,6 @@ BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
   RefPtr<RemoteLazyInputStreamParent> actor =
       RemoteLazyInputStreamParent::Create(aID, aSize, this);
   return actor.forget();
-}
-
-PFileDescriptorSetParent* BackgroundParentImpl::AllocPFileDescriptorSetParent(
-    const FileDescriptor& aFileDescriptor) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  return new FileDescriptorSetParent(aFileDescriptor);
-}
-
-bool BackgroundParentImpl::DeallocPFileDescriptorSetParent(
-    PFileDescriptorSetParent* aActor) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<FileDescriptorSetParent*>(aActor);
-  return true;
 }
 
 already_AddRefed<BackgroundParentImpl::PVsyncParent>
@@ -1470,12 +1451,6 @@ BackgroundParentImpl::AllocPLockManagerParent(
     const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
   return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
                                                                aClientId);
-}
-
-PFileDescriptorSetParent*
-BackgroundParentImpl::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  return PBackgroundParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
 already_AddRefed<mozilla::net::PWebSocketConnectionParent>
