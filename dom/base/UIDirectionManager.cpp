@@ -14,16 +14,22 @@
 
 namespace mozilla::dom {
 
+NS_IMPL_ISUPPORTS(UIDirectionManager, nsIObserver)
+
 /* static */
-void OnPrefChange(const char* aPrefName, void*) {
+NS_IMETHODIMP
+UIDirectionManager::Observe(nsISupports* aSubject, const char* aTopic,
+                            const char16_t* aData) {
+  NS_ENSURE_FALSE(strcmp(aTopic, "intl:app-locales-changed"), NS_ERROR_FAILURE);
+
   // Iterate over all of the windows and notify them of the direction change.
   nsCOMPtr<nsIWindowMediator> windowMediator =
       do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(windowMediator);
+  NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
   windowMediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
-  NS_ENSURE_TRUE_VOID(windowEnumerator);
+  NS_ENSURE_TRUE(windowEnumerator, NS_ERROR_FAILURE);
 
   for (auto& elements : SimpleEnumerator<nsISupports>(windowEnumerator)) {
     nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryInterface(elements);
@@ -44,18 +50,43 @@ void OnPrefChange(const char* aPrefName, void*) {
       }
     });
   }
+  return NS_OK;
 }
 
 /* static */
 void UIDirectionManager::Initialize() {
-  DebugOnly<nsresult> rv =
-      Preferences::RegisterCallback(OnPrefChange, "intl.l10n.pseudo");
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"intl.l10n.pseudo\"");
+  MOZ_ASSERT(!gUIDirectionManager);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<UIDirectionManager> observer = new UIDirectionManager();
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+  obs->AddObserver(observer, "intl:app-locales-changed", false);
+
+  gUIDirectionManager = observer;
 }
 
 /* static */
 void UIDirectionManager::Shutdown() {
-  Preferences::UnregisterCallback(OnPrefChange, "intl.l10n.pseudo");
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gUIDirectionManager) {
+    return;
+  }
+  RefPtr<UIDirectionManager> observer = gUIDirectionManager;
+  gUIDirectionManager = nullptr;
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    return;
+  }
+
+  obs->RemoveObserver(observer, "intl:app-locales-changed");
 }
+
+mozilla::StaticRefPtr<UIDirectionManager>
+    UIDirectionManager::gUIDirectionManager;
 
 }  // namespace mozilla::dom
