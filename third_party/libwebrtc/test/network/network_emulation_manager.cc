@@ -107,8 +107,8 @@ EmulatedEndpoint* NetworkEmulationManagerImpl::CreateEndpoint(
   bool res = used_ip_addresses_.insert(*ip).second;
   RTC_CHECK(res) << "IP=" << ip->ToString() << " already in use";
   auto node = std::make_unique<EmulatedEndpointImpl>(
-      next_node_id_++, config.name, *ip, config.stats_gathering_mode,
-      config.start_as_enabled, config.type, &task_queue_, clock_);
+      EmulatedEndpointImpl::Options(next_node_id_++, *ip, config),
+      config.start_as_enabled, &task_queue_, clock_);
   EmulatedEndpoint* out = node.get();
   endpoints_.push_back(std::move(node));
   return out;
@@ -148,7 +148,7 @@ EmulatedRoute* NetworkEmulationManagerImpl::CreateRoute(
 
   std::unique_ptr<EmulatedRoute> route = std::make_unique<EmulatedRoute>(
       static_cast<EmulatedEndpointImpl*>(from), std::move(via_nodes),
-      static_cast<EmulatedEndpointImpl*>(to));
+      static_cast<EmulatedEndpointImpl*>(to), /*is_default=*/false);
   EmulatedRoute* out = route.get();
   routes_.push_back(std::move(route));
   return out;
@@ -161,16 +161,50 @@ EmulatedRoute* NetworkEmulationManagerImpl::CreateRoute(
   return CreateRoute(from, via_nodes, to);
 }
 
+EmulatedRoute* NetworkEmulationManagerImpl::CreateDefaultRoute(
+    EmulatedEndpoint* from,
+    const std::vector<EmulatedNetworkNode*>& via_nodes,
+    EmulatedEndpoint* to) {
+  // Because endpoint has no send node by default at least one should be
+  // provided here.
+  RTC_CHECK(!via_nodes.empty());
+
+  static_cast<EmulatedEndpointImpl*>(from)->router()->SetDefaultReceiver(
+      via_nodes[0]);
+  EmulatedNetworkNode* cur_node = via_nodes[0];
+  for (size_t i = 1; i < via_nodes.size(); ++i) {
+    cur_node->router()->SetDefaultReceiver(via_nodes[i]);
+    cur_node = via_nodes[i];
+  }
+  cur_node->router()->SetDefaultReceiver(to);
+
+  std::unique_ptr<EmulatedRoute> route = std::make_unique<EmulatedRoute>(
+      static_cast<EmulatedEndpointImpl*>(from), std::move(via_nodes),
+      static_cast<EmulatedEndpointImpl*>(to), /*is_default=*/true);
+  EmulatedRoute* out = route.get();
+  routes_.push_back(std::move(route));
+  return out;
+}
+
 void NetworkEmulationManagerImpl::ClearRoute(EmulatedRoute* route) {
   RTC_CHECK(route->active) << "Route already cleared";
   task_queue_.SendTask(
       [route]() {
         // Remove receiver from intermediate nodes.
         for (auto* node : route->via_nodes) {
-          node->router()->RemoveReceiver(route->to->GetPeerLocalAddress());
+          if (route->is_default) {
+            node->router()->RemoveDefaultReceiver();
+          } else {
+            node->router()->RemoveReceiver(route->to->GetPeerLocalAddress());
+          }
         }
         // Remove destination endpoint from source endpoint's router.
-        route->from->router()->RemoveReceiver(route->to->GetPeerLocalAddress());
+        if (route->is_default) {
+          route->from->router()->RemoveDefaultReceiver();
+        } else {
+          route->from->router()->RemoveReceiver(
+              route->to->GetPeerLocalAddress());
+        }
 
         route->active = false;
       },

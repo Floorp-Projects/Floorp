@@ -68,6 +68,14 @@ struct EmulatedEndpointConfig {
   // Network type which will be used to represent endpoint to WebRTC.
   rtc::AdapterType type = rtc::AdapterType::ADAPTER_TYPE_UNKNOWN;
   StatsGatheringMode stats_gathering_mode = StatsGatheringMode::kDefault;
+  // Allow endpoint to send packets specifying source IP address different to
+  // the current endpoint IP address. If false endpoint will crash if attempt
+  // to send such packet will be done.
+  bool allow_send_packet_with_different_source_ip = false;
+  // Allow endpoint to receive packet with destination IP address different to
+  // the current endpoint IP address. If false endpoint will crash if such
+  // packet will arrive.
+  bool allow_receive_packets_with_different_dest_ip = false;
 };
 
 struct EmulatedTURNServerConfig {
@@ -225,6 +233,35 @@ class NetworkEmulationManager {
   // calls as a transport route for message or cross traffic.
   virtual EmulatedRoute* CreateRoute(
       const std::vector<EmulatedNetworkNode*>& via_nodes) = 0;
+
+  // Creates a default route between endpoints going through specified network
+  // nodes. Default route is used for packet when there is no known route for
+  // packet's destination IP.
+  //
+  // This route is single direction only and describe how traffic that was
+  // sent by network interface |from| have to be delivered in case if routing
+  // was unspecified. Return object can be used to remove created route. The
+  // route must contains at least one network node inside it.
+  //
+  // Assume that E{0-9} are endpoints and N{0-9} are network nodes, then
+  // creation of the route have to follow these rules:
+  //   1. A route consists of a source endpoint, an ordered list of one or
+  //      more network nodes, and a destination endpoint.
+  //   2. If (E1, ..., E2) is a route, then E1 != E2.
+  //      In other words, the source and the destination may not be the same.
+  //   3. Given two simultaneously existing routes (E1, ..., E2) and
+  //      (E3, ..., E4), either E1 != E3 or E2 != E4.
+  //      In other words, there may be at most one route from any given source
+  //      endpoint to any given destination endpoint.
+  //   4. Given two simultaneously existing routes (E1, ..., N1, ..., E2)
+  //      and (E3, ..., N2, ..., E4), either N1 != N2 or E2 != E4.
+  //      In other words, a network node may not belong to two routes that lead
+  //      to the same destination endpoint.
+  //   5. Any node N can belong to only one default route.
+  virtual EmulatedRoute* CreateDefaultRoute(
+      EmulatedEndpoint* from,
+      const std::vector<EmulatedNetworkNode*>& via_nodes,
+      EmulatedEndpoint* to) = 0;
 
   // Removes route previously created by CreateRoute(...).
   // Caller mustn't call this function with route, that have been already

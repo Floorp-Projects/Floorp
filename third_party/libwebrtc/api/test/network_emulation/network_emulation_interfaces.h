@@ -225,7 +225,16 @@ class EmulatedEndpoint : public EmulatedNetworkReceiverInterface {
   virtual absl::optional<uint16_t> BindReceiver(
       uint16_t desired_port,
       EmulatedNetworkReceiverInterface* receiver) = 0;
+  // Unbinds receiver from the specified port. Do nothing if no receiver was
+  // binded before.
   virtual void UnbindReceiver(uint16_t port) = 0;
+  // Binds receiver that will accept all packets which arrived on any port
+  // for which there are no binded receiver.
+  virtual void BindDefaultReceiver(
+      EmulatedNetworkReceiverInterface* receiver) = 0;
+  // Unbinds default receiver. Do nothing if no default receiver was binded
+  // before.
+  virtual void UnbindDefaultReceiver() = 0;
   virtual rtc::IPAddress GetPeerLocalAddress() const = 0;
 
  private:
