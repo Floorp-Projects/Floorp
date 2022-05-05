@@ -17,6 +17,28 @@ namespace workerinternals::loader {
 
 class WorkerScriptLoader;
 
+/*
+ * [DOMDOC] NetworkLoadHandler for Workers
+ *
+ * A LoadHandler is a ScriptLoader helper class that reacts to an
+ * nsIStreamLoader's events for
+ * loading JS scripts. It is primarily responsible for decoding the stream into
+ * UTF8 or UTF16. Additionally, it takes care of any work that needs to follow
+ * the completion of a stream. Every LoadHandler also manages additional tasks
+ * for the type of load that it is doing.
+ *
+ * As part of worker loading we have an number of tasks that we need to take
+ * care of after a successfully completed stream, including setting a final URI
+ * on the WorkerPrivate if we have loaded a main script, or handling CSP issues.
+ * These are handled in DataReceivedFromNetwork, and implement roughly the same
+ * set of tasks as you will find in the CacheLoadhandler, which has a companion
+ * method DataReceivedFromcache.
+ *
+ * In the worker context, the LoadHandler is run on the main thread, and all
+ * work in this file ultimately is done by the main thread, including decoding.
+ *
+ */
+
 class NetworkLoadHandler final : public nsIStreamLoaderObserver,
                                  public nsIRequestObserver {
  public:

@@ -34,6 +34,44 @@ namespace dom {
 
 namespace workerinternals::loader {
 
+/*
+ * [DOMDOC] CacheLoadHandler for Workers
+ *
+ * A LoadHandler is a ScriptLoader helper class that reacts to an
+ * nsIStreamLoader's events for loading JS scripts. It is primarily responsible
+ * for decoding the stream into UTF8 or UTF16. Additionally, it takes care of
+ * any work that needs to follow the completion of a stream. Every LoadHandler
+ * also manages additional tasks for the type of load that it is doing.
+ *
+ * CacheLoadHandler is a specialized LoadHandler used by ServiceWorkers to
+ * implement the installation model used by ServiceWorkers to support running
+ * offline. When a ServiceWorker is installed, its main script is evaluated and
+ * all script resources that are loaded are saved. The spec does not specify the
+ * storage mechanism for this, but we chose to reuse the Cache API[1] mechanism
+ * that we expose to content to also store the script and its dependencies. We
+ * store the script resources in a special chrome namespace CacheStorage that is
+ * not visible to content. Each distinct ServiceWorker installation gets its own
+ * Cache keyed by a randomly-generated UUID.
+ *
+ * In terms of specification, this class implements step 4 of
+ * https://w3c.github.io/ServiceWorker/#importscripts
+ *
+ * Relationship to NetworkLoadHandler
+ *
+ * During ServiceWorker installation, the CacheLoadHandler falls back on the
+ * NetworkLoadHandler by calling `mLoader->LoadScript(...)`. If a script has not
+ * been seen before, then we will fall back on loading from the network.
+ * However, if the ServiceWorker is already installed, an error will be
+ * generated and the ServiceWorker will fail to load, per spec.
+ *
+ * CacheLoadHandler does not persist some pieces of information, such as the
+ * sourceMapUrl. Also, the DOM Cache API storage does not yet support alternate
+ * data streams for JS Bytecode or WASM caching; this is tracked by Bug 1336199.
+ *
+ * [1]: https://developer.mozilla.org/en-US/docs/Web/API/caches
+ *
+ */
+
 class CacheLoadHandler final : public PromiseNativeHandler,
                                public nsIStreamLoaderObserver {
  public:
@@ -79,6 +117,16 @@ class CacheLoadHandler final : public PromiseNativeHandler,
   nsCString mReferrerPolicyHeaderValue;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 };
+
+/*
+ * CacheCreator
+ *
+ * The CacheCreator is responsible for maintaining a CacheStorage for the
+ * purposes of caching ServiceWorkers (see comment on CacheLoadHandler). In
+ * addition, it tracks all CacheLoadHandlers and is used for cleanup once
+ * loading has finished.
+ *
+ */
 
 class CacheCreator final : public PromiseNativeHandler {
  public:
@@ -131,6 +179,16 @@ class CacheCreator final : public PromiseNativeHandler {
   OriginAttributes mOriginAttributes;
 };
 
+/*
+ * CachePromiseHandler
+ *
+ * This promise handler is used to track if a ServiceWorker has been written to
+ * Cache. It is responsible for tracking the state of the ServiceWorker being
+ * cached. It also handles cancelling caching of a ServiceWorker if loading is
+ * interrupted. It is initialized by the NetworkLoadHandler as part of the first
+ * load of a ServiceWorker.
+ *
+ */
 class CachePromiseHandler final : public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS
