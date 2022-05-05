@@ -159,12 +159,10 @@ class HyperTextAccessible : public AccessibleWrap,
 
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
+  virtual void InvalidateCachedHyperTextOffsets() override { mOffsets.Clear(); }
+
   // HyperTextAccessibleBase provides an overload which takes an Accessible.
   using HyperTextAccessibleBase::GetChildOffset;
-  virtual int32_t GetChildOffset(uint32_t aChildIndex,
-                                 bool aInvalidateAfter = false) const override;
-
-  virtual int32_t GetChildIndexAtOffset(uint32_t aOffset) const override;
 
   virtual LocalAccessible* GetChildAtOffset(uint32_t aOffset) const override {
     return LocalChildAt(GetChildIndexAtOffset(aOffset));
@@ -433,11 +431,18 @@ class HyperTextAccessible : public AccessibleWrap,
   // HyperTextAccessibleBase
   virtual const Accessible* Acc() const override { return this; }
 
+  virtual const nsTArray<int32_t>& GetCachedHyperTextOffsets() const override {
+    if (mOffsets.IsEmpty()) {
+      BuildCachedHyperTextOffsets(mOffsets);
+    }
+    return mOffsets;
+  }
+
  private:
   /**
    * End text offsets array.
    */
-  mutable nsTArray<uint32_t> mOffsets;
+  mutable nsTArray<int32_t> mOffsets;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
