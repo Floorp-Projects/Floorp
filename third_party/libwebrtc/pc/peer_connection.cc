@@ -1797,9 +1797,11 @@ void PeerConnection::SetConnectionState(
   connection_state_ = new_state;
   Observer()->OnConnectionChange(new_state);
 
-  // The connection state change to connected usually happens once per
-  // connection which makes it a good point to report metrics.
-  if (new_state == PeerConnectionState::kConnected) {
+  if (new_state == PeerConnectionState::kConnected && !was_ever_connected_) {
+    was_ever_connected_ = true;
+
+    // The first connection state change to connected happens once per
+    // connection which makes it a good point to report metrics.
     // Record bundle-policy from configuration. Done here from
     // connectionStateChange to limit to actually established connections.
     BundlePolicyUsage policy = kBundlePolicyUsageMax;
