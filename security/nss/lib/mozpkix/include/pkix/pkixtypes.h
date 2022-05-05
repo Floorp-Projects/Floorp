@@ -403,12 +403,11 @@ class NameMatchingPolicy {
 };
 
 class StrictNameMatchingPolicy : public NameMatchingPolicy {
-  public:
-    virtual Result FallBackToCommonName(
-        Time notBefore,
-        /*out*/ FallBackToSearchWithinSubject& fallBacktoCommonName) override;
+ public:
+  virtual Result FallBackToCommonName(
+      Time notBefore,
+      /*out*/ FallBackToSearchWithinSubject& fallBacktoCommonName) override;
 };
-
 }
 }  // namespace mozilla::pkix
 

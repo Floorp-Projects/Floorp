@@ -61,8 +61,8 @@ TEST(MediaDataDecoder, H264)
   }
 }
 
-// Decoding AV1 via. ffvpx/ffmpeg is supported on Linux/Wayland only.
-#if defined(MOZ_AV1) && defined(MOZ_WAYLAND)
+// Decoding AV1 via. ffvpx is supported on Linux/Wayland only.
+#if defined(MOZ_AV1) && defined(MOZ_WAYLAND) && defined(MOZ_FFVPX)
 TEST(MediaDataDecoder, AV1)
 {
   if (!DecoderTraits::IsMP4SupportedType(

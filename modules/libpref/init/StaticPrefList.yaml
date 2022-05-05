@@ -8368,6 +8368,12 @@
   value: false
   mirror: always
 
+# Whether to draw images in CSS backgrounds if we only have a partial frame.
+- name: layout.display_partial_background_images
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "mathml."
 #---------------------------------------------------------------------------

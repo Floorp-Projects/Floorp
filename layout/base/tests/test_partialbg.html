@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1231622
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1231622: Draw partial frames of downloading css background images</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="SimpleTest.waitForFocus(runTest)">
+
+<style>
+div {
+  width: 200px;
+  height: 200px;
+  background-size: 200px 200px; background-image: url(sendimagenevercomplete.sjs)
+}
+</style>
+<script>
+/* sendimagenevercomplete.sjs sends us a partial png file and keeps the
+ * connection open but sends no more data. This is enough data to draw at last
+ * a partial frame. We do this so that we can distinguish from drawing a
+ * partial frame after we've been told all data has arrived (what we do even
+ * without the pref layout.display_partial_background_images turned on), from
+ * drawing a partial frame while data is still arriving (what we want to do).
+ */
+
+SimpleTest.waitForExplicitFinish();
+const gUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function checkPixel(r, x, y, red, green, blue, alpha) {
+  let canvas = snapshotRect(window, r);
+  let context = canvas.getContext('2d');
+
+  let image = context.getImageData(x, y, 1, 1);
+  if (image.data[0] == red &&
+      image.data[1] == green &&
+      image.data[2] == blue &&
+      image.data[3] == alpha) {
+    return true;
+  }
+  return false;
+}
+
+async function runTest() {
+  await SpecialPowers.pushPrefEnv({'set': [['layout.display_partial_background_images', true]]});
+
+  let theDiv = document.createElement("div");
+  document.body.appendChild(theDiv);
+
+  let r = theDiv.getBoundingClientRect();
+
+  // Give that some time to partially load.
+  for (let i = 0; i < 10; i++) {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  let correct = false;
+  while (!correct) {
+    // Check the middle pixel part way down the partial frame.
+    correct = checkPixel(r, 100, 25, 0, 0, 255, 255);
+
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  ok(correct, "correct pixel value");
+
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
