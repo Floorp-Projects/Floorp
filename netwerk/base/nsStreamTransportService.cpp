@@ -207,8 +207,7 @@ nsInputStreamTransport::AsyncWait(nsIInputStreamCallback* aCallback,
   {
     MutexAutoLock lock(mMutex);
 
-    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
-                   mAsyncWaitCallback != aCallback)) {
+    if (mAsyncWaitCallback && aCallback) {
       return NS_ERROR_FAILURE;
     }
 
