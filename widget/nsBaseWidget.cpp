@@ -234,9 +234,6 @@ void WidgetShutdownObserver::Unregister() {
 }
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
-#define L10N_PSEUDO_PREF "intl.l10n.pseudo"
-
-static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
 
 NS_IMPL_ISUPPORTS(LocalesChangedObserver, nsIObserver)
 
@@ -260,13 +257,6 @@ LocalesChangedObserver::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, INTL_APP_LOCALES_CHANGED)) {
     RefPtr<nsBaseWidget> widget(mWidget);
     widget->LocalesChanged();
-  } else {
-    MOZ_ASSERT(!strcmp("nsPref:changed", aTopic));
-    nsDependentString pref(aData);
-    if (pref.EqualsLiteral(L10N_PSEUDO_PREF)) {
-      RefPtr<nsBaseWidget> widget(mWidget);
-      widget->LocalesChanged();
-    }
   }
   return NS_OK;
 }
@@ -275,10 +265,6 @@ void LocalesChangedObserver::Register() {
   if (mRegistered) {
     return;
   }
-
-  DebugOnly<nsresult> rv =
-      Preferences::AddStrongObservers(this, kObservedPrefs);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -301,7 +287,6 @@ void LocalesChangedObserver::Unregister() {
   if (obs) {
     obs->RemoveObserver(this, INTL_APP_LOCALES_CHANGED);
   }
-  Preferences::RemoveObservers(this, kObservedPrefs);
 
   mWidget = nullptr;
   mRegistered = false;
