@@ -294,11 +294,13 @@ nsUnknownContentTypeDialog.prototype = {
           let defaultFolder = new FileUtils.File(preferredDir);
 
           try {
-            result = this.validateLeafName(
-              defaultFolder,
-              aDefaultFileName,
-              aSuggestedFileExtension
-            );
+            if (aDefaultFileName) {
+              result = this.validateLeafName(
+                defaultFolder,
+                aDefaultFileName,
+                aSuggestedFileExtension
+              );
+            }
           } catch (ex) {
             // When the default download directory is write-protected,
             // prompt the user for a different target file.
