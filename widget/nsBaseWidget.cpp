@@ -585,6 +585,10 @@ nsIntSize nsIWidget::CustomCursorSize(const Cursor& aCursor) {
   return {width, height};
 }
 
+RefPtr<mozilla::VsyncDispatcher> nsIWidget::GetVsyncDispatcher() {
+  return nullptr;
+}
+
 //-------------------------------------------------------------------------
 //
 // Add a child to the list of children
