@@ -533,17 +533,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-/* Temporary pref while the dust settles around the updated tooltip design
-   for tabs and bookmarks toolbar. This is a bit of an orphan from the
-   proton project. We should figure out what happens with this in
-   bug 1746909. */
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonPlacesTooltip",
-  "browser.proton.places-tooltip.enabled",
-  false
-);
-
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",

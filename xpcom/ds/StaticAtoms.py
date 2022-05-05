@@ -2250,7 +2250,6 @@ STATIC_ATOMS = [
     Atom("_moz_gtk_csd_menu_radius", "-moz-gtk-csd-menu-radius"),
     Atom("_moz_content_prefers_color_scheme", "-moz-content-prefers-color-scheme"),
     Atom("_moz_content_preferred_color_scheme", "-moz-content-preferred-color-scheme"),
-    Atom("_moz_proton_places_tooltip", "-moz-proton-places-tooltip"),
     Atom("_moz_system_dark_theme", "-moz-system-dark-theme"),
     # application commands
     Atom("Back", "Back"),
