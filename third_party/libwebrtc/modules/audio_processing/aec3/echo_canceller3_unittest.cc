@@ -252,8 +252,6 @@ class EchoCanceller3Tester {
         capture_output.push_back(capture_buffer_.split_bands(0)[0][k]);
       }
     }
-    HighPassFilter hp_filter(16000, 1);
-    hp_filter.Process(&render_input);
 
     EXPECT_TRUE(
         VerifyOutputFrameBitexactness(render_input[0], capture_output, -64));
@@ -545,8 +543,6 @@ class EchoCanceller3Tester {
         capture_output.push_back(capture_buffer_.split_bands(0)[0][k]);
       }
     }
-    HighPassFilter hp_filter(16000, 1);
-    hp_filter.Process(&render_input);
 
     EXPECT_TRUE(
         VerifyOutputFrameBitexactness(render_input[0], capture_output, -64));
