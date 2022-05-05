@@ -61,6 +61,11 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
   EmulatedRoute* CreateRoute(
       const std::vector<EmulatedNetworkNode*>& via_nodes) override;
 
+  EmulatedRoute* CreateDefaultRoute(
+      EmulatedEndpoint* from,
+      const std::vector<EmulatedNetworkNode*>& via_nodes,
+      EmulatedEndpoint* to) override;
+
   void ClearRoute(EmulatedRoute* route) override;
 
   TcpMessageRoute* CreateTcpRoute(EmulatedRoute* send_route,

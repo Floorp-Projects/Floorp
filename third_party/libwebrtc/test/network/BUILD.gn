@@ -46,6 +46,7 @@ rtc_library("emulated_network") {
     "../../api:simulated_network_api",
     "../../api:time_controller",
     "../../api/numerics",
+    "../../api/test/network_emulation",
     "../../api/transport:stun_types",
     "../../api/units:data_rate",
     "../../api/units:data_size",

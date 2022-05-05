@@ -587,6 +587,51 @@ TEST(NetworkEmulationManagerTest, EndpointLoopback) {
   network_manager.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
 }
 
+TEST(NetworkEmulationManagerTest, EndpointCanSendWithDifferentSourceIp) {
+  constexpr uint32_t kEndpointIp = 0xC0A80011;  // 192.168.0.17
+  constexpr uint32_t kSourceIp = 0xC0A80012;    // 192.168.0.18
+  NetworkEmulationManagerImpl network_manager(TimeMode::kSimulated);
+  EmulatedEndpointConfig endpoint_config;
+  endpoint_config.ip = rtc::IPAddress(kEndpointIp);
+  endpoint_config.allow_send_packet_with_different_source_ip = true;
+  auto endpoint = network_manager.CreateEndpoint(endpoint_config);
+
+  MockReceiver receiver;
+  EXPECT_CALL(receiver, OnPacketReceived(::testing::_)).Times(1);
+  ASSERT_EQ(endpoint->BindReceiver(80, &receiver), 80);
+
+  endpoint->SendPacket(rtc::SocketAddress(kSourceIp, 80),
+                       rtc::SocketAddress(endpoint->GetPeerLocalAddress(), 80),
+                       "Hello");
+  network_manager.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
+}
+
+TEST(NetworkEmulationManagerTest,
+     EndpointCanReceiveWithDifferentDestIpThroughDefaultRoute) {
+  constexpr uint32_t kDestEndpointIp = 0xC0A80011;  // 192.168.0.17
+  constexpr uint32_t kDestIp = 0xC0A80012;          // 192.168.0.18
+  NetworkEmulationManagerImpl network_manager(TimeMode::kSimulated);
+  auto sender_endpoint =
+      network_manager.CreateEndpoint(EmulatedEndpointConfig());
+  EmulatedEndpointConfig endpoint_config;
+  endpoint_config.ip = rtc::IPAddress(kDestEndpointIp);
+  endpoint_config.allow_receive_packets_with_different_dest_ip = true;
+  auto receiver_endpoint = network_manager.CreateEndpoint(endpoint_config);
+
+  MockReceiver receiver;
+  EXPECT_CALL(receiver, OnPacketReceived(::testing::_)).Times(1);
+  ASSERT_EQ(receiver_endpoint->BindReceiver(80, &receiver), 80);
+
+  network_manager.CreateDefaultRoute(
+      sender_endpoint, {network_manager.NodeBuilder().Build().node},
+      receiver_endpoint);
+
+  sender_endpoint->SendPacket(
+      rtc::SocketAddress(sender_endpoint->GetPeerLocalAddress(), 80),
+      rtc::SocketAddress(kDestIp, 80), "Hello");
+  network_manager.time_controller()->AdvanceTime(TimeDelta::Seconds(1));
+}
+
 TEST(NetworkEmulationManagerTURNTest, GetIceServerConfig) {
   NetworkEmulationManagerImpl network_manager(TimeMode::kRealTime);
   auto turn = network_manager.CreateTURNServer(EmulatedTURNServerConfig());

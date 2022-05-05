@@ -13,9 +13,11 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <utility>
 
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
+#include "api/test/network_emulation/network_emulation_interfaces.h"
 #include "api/units/data_size.h"
 #include "rtc_base/logging.h"
 
@@ -346,6 +348,9 @@ void NetworkRouterNode::OnPacketReceived(EmulatedIpPacket packet) {
   }
   auto receiver_it = routing_.find(packet.to.ipaddr());
   if (receiver_it == routing_.end()) {
+    if (default_receiver_.has_value()) {
+      (*default_receiver_)->OnPacketReceived(std::move(packet));
+    }
     return;
   }
   RTC_CHECK(receiver_it != routing_.end());
@@ -368,6 +373,23 @@ void NetworkRouterNode::SetReceiver(
 void NetworkRouterNode::RemoveReceiver(const rtc::IPAddress& dest_ip) {
   RTC_DCHECK_RUN_ON(task_queue_);
   routing_.erase(dest_ip);
+}
+
+void NetworkRouterNode::SetDefaultReceiver(
+    EmulatedNetworkReceiverInterface* receiver) {
+  task_queue_->PostTask([=] {
+    RTC_DCHECK_RUN_ON(task_queue_);
+    if (default_receiver_.has_value()) {
+      RTC_CHECK_EQ(*default_receiver_, receiver)
+          << "Router already default receiver";
+    }
+    default_receiver_ = receiver;
+  });
+}
+
+void NetworkRouterNode::RemoveDefaultReceiver() {
+  RTC_DCHECK_RUN_ON(task_queue_);
+  default_receiver_ = absl::nullopt;
 }
 
 void NetworkRouterNode::SetWatcher(
@@ -415,64 +437,72 @@ void EmulatedNetworkNode::ClearRoute(const rtc::IPAddress& receiver_ip,
 
 EmulatedNetworkNode::~EmulatedNetworkNode() = default;
 
-EmulatedEndpointImpl::EmulatedEndpointImpl(
-    uint64_t id,
-    absl::optional<std::string> name,
-    const rtc::IPAddress& ip,
-    EmulatedEndpointConfig::StatsGatheringMode stats_gathering_mode,
-    bool is_enabled,
-    rtc::AdapterType type,
-    rtc::TaskQueue* task_queue,
-    Clock* clock)
-    : id_(id),
-      log_name_(ip.ToString() + " (" + name.value_or("") + ")"),
-      peer_local_addr_(ip),
-      stats_gathering_mode_(stats_gathering_mode),
+EmulatedEndpointImpl::Options::Options(uint64_t id,
+                                       const rtc::IPAddress& ip,
+                                       const EmulatedEndpointConfig& config)
+    : id(id),
+      ip(ip),
+      stats_gathering_mode(config.stats_gathering_mode),
+      type(config.type),
+      allow_send_packet_with_different_source_ip(
+          config.allow_send_packet_with_different_source_ip),
+      allow_receive_packets_with_different_dest_ip(
+          config.allow_send_packet_with_different_source_ip),
+      log_name(ip.ToString() + " (" + config.name.value_or("") + ")") {}
+
+EmulatedEndpointImpl::EmulatedEndpointImpl(const Options& options,
+                                           bool is_enabled,
+                                           rtc::TaskQueue* task_queue,
+                                           Clock* clock)
+    : options_(options),
       is_enabled_(is_enabled),
-      type_(type),
       clock_(clock),
       task_queue_(task_queue),
       router_(task_queue_),
       next_port_(kFirstEphemeralPort),
-      stats_builder_(peer_local_addr_) {
+      stats_builder_(options_.ip) {
   constexpr int kIPv4NetworkPrefixLength = 24;
   constexpr int kIPv6NetworkPrefixLength = 64;
 
   int prefix_length = 0;
-  if (ip.family() == AF_INET) {
+  if (options_.ip.family() == AF_INET) {
     prefix_length = kIPv4NetworkPrefixLength;
-  } else if (ip.family() == AF_INET6) {
+  } else if (options_.ip.family() == AF_INET6) {
     prefix_length = kIPv6NetworkPrefixLength;
   }
-  rtc::IPAddress prefix = TruncateIP(ip, prefix_length);
+  rtc::IPAddress prefix = TruncateIP(options_.ip, prefix_length);
   network_ = std::make_unique<rtc::Network>(
-      ip.ToString(), "Endpoint id=" + std::to_string(id_), prefix,
-      prefix_length, type_);
-  network_->AddIP(ip);
+      options_.ip.ToString(), "Endpoint id=" + std::to_string(options_.id),
+      prefix, prefix_length, options_.type);
+  network_->AddIP(options_.ip);
 
   enabled_state_checker_.Detach();
-  RTC_LOG(INFO) << "Created emulated endpoint " << log_name_ << "; id=" << id_;
+  RTC_LOG(INFO) << "Created emulated endpoint " << options_.log_name
+                << "; id=" << options_.id;
 }
 EmulatedEndpointImpl::~EmulatedEndpointImpl() = default;
 
 uint64_t EmulatedEndpointImpl::GetId() const {
-  return id_;
+  return options_.id;
 }
 
 void EmulatedEndpointImpl::SendPacket(const rtc::SocketAddress& from,
                                       const rtc::SocketAddress& to,
                                       rtc::CopyOnWriteBuffer packet_data,
                                       uint16_t application_overhead) {
-  RTC_CHECK(from.ipaddr() == peer_local_addr_);
+  if (!options_.allow_send_packet_with_different_source_ip) {
+    RTC_CHECK(from.ipaddr() == options_.ip);
+  }
   EmulatedIpPacket packet(from, to, std::move(packet_data),
                           clock_->CurrentTime(), application_overhead);
   task_queue_->PostTask([this, packet = std::move(packet)]() mutable {
     RTC_DCHECK_RUN_ON(task_queue_);
-    stats_builder_.OnPacketSent(
-        packet.arrival_time, clock_->CurrentTime(), packet.to.ipaddr(),
-        DataSize::Bytes(packet.ip_packet_size()), stats_gathering_mode_);
+    stats_builder_.OnPacketSent(packet.arrival_time, clock_->CurrentTime(),
+                                packet.to.ipaddr(),
+                                DataSize::Bytes(packet.ip_packet_size()),
+                                options_.stats_gathering_mode);
 
-    if (packet.to.ipaddr() == peer_local_addr_) {
+    if (packet.to.ipaddr() == options_.ip) {
       OnPacketReceived(std::move(packet));
     } else {
       router_.OnPacketReceived(std::move(packet));
@@ -499,15 +529,16 @@ absl::optional<uint16_t> EmulatedEndpointImpl::BindReceiver(
     }
   }
   RTC_CHECK(port != 0) << "Can't find free port for receiver in endpoint "
-                       << log_name_ << "; id=" << id_;
+                       << options_.log_name << "; id=" << options_.id;
   bool result = port_to_receiver_.insert({port, receiver}).second;
   if (!result) {
     RTC_LOG(INFO) << "Can't bind receiver to used port " << desired_port
-                  << " in endpoint " << log_name_ << "; id=" << id_;
+                  << " in endpoint " << options_.log_name
+                  << "; id=" << options_.id;
     return absl::nullopt;
   }
-  RTC_LOG(INFO) << "New receiver is binded to endpoint " << log_name_
-                << "; id=" << id_ << " on port " << port;
+  RTC_LOG(INFO) << "New receiver is binded to endpoint " << options_.log_name
+                << "; id=" << options_.id << " on port " << port;
   return port;
 }
 
@@ -523,33 +554,60 @@ uint16_t EmulatedEndpointImpl::NextPort() {
 
 void EmulatedEndpointImpl::UnbindReceiver(uint16_t port) {
   rtc::CritScope crit(&receiver_lock_);
+  RTC_LOG(INFO) << "Receiver is removed on port " << port << " from endpoint "
+                << options_.log_name << "; id=" << options_.id;
   port_to_receiver_.erase(port);
 }
 
+void EmulatedEndpointImpl::BindDefaultReceiver(
+    EmulatedNetworkReceiverInterface* receiver) {
+  rtc::CritScope crit(&receiver_lock_);
+  RTC_CHECK(!default_receiver_.has_value())
+      << "Endpoint " << options_.log_name << "; id=" << options_.id
+      << " already has default receiver";
+  RTC_LOG(INFO) << "Default receiver is binded to endpoint "
+                << options_.log_name << "; id=" << options_.id;
+  default_receiver_ = receiver;
+}
+
+void EmulatedEndpointImpl::UnbindDefaultReceiver() {
+  rtc::CritScope crit(&receiver_lock_);
+  RTC_LOG(INFO) << "Default receiver is removed from endpoint "
+                << options_.log_name << "; id=" << options_.id;
+  default_receiver_ = absl::nullopt;
+}
+
 rtc::IPAddress EmulatedEndpointImpl::GetPeerLocalAddress() const {
-  return peer_local_addr_;
+  return options_.ip;
 }
 
 void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
   RTC_DCHECK_RUN_ON(task_queue_);
-  RTC_CHECK(packet.to.ipaddr() == peer_local_addr_)
-      << "Routing error: wrong destination endpoint. Packet.to.ipaddr()=: "
-      << packet.to.ipaddr().ToString()
-      << "; Receiver peer_local_addr_=" << peer_local_addr_.ToString();
+  if (options_.allow_receive_packets_with_different_dest_ip) {
+    RTC_CHECK(packet.to.ipaddr() == options_.ip)
+        << "Routing error: wrong destination endpoint. Packet.to.ipaddr()=: "
+        << packet.to.ipaddr().ToString()
+        << "; Receiver options_.ip=" << options_.ip.ToString();
+  }
   rtc::CritScope crit(&receiver_lock_);
   stats_builder_.OnPacketReceived(clock_->CurrentTime(), packet.from.ipaddr(),
                                   DataSize::Bytes(packet.ip_packet_size()),
-                                  stats_gathering_mode_);
+                                  options_.stats_gathering_mode);
   auto it = port_to_receiver_.find(packet.to.port());
   if (it == port_to_receiver_.end()) {
+    if (default_receiver_.has_value()) {
+      (*default_receiver_)->OnPacketReceived(std::move(packet));
+      return;
+    }
     // It can happen, that remote peer closed connection, but there still some
     // packets, that are going to it. It can happen during peer connection close
     // process: one peer closed connection, second still sending data.
-    RTC_LOG(INFO) << "Drop packet: no receiver registered in " << log_name_
-                  << "; id=" << id_ << " on port " << packet.to.port();
+    RTC_LOG(INFO) << "Drop packet: no receiver registered in "
+                  << options_.log_name << "; id=" << options_.id << " on port "
+                  << packet.to.port();
     stats_builder_.OnPacketDropped(packet.from.ipaddr(),
                                    DataSize::Bytes(packet.ip_packet_size()),
-                                   stats_gathering_mode_);
+                                   options_.stats_gathering_mode);
     return;
   }
   // Endpoint assumes frequent calls to bind and unbind methods, so it holds
