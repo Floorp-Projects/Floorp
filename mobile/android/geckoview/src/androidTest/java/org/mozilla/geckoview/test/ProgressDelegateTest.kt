@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate
+import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 
 @RunWith(AndroidJUnit4::class)
@@ -31,7 +32,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate,
                 NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<ContentPermission>) {
                 assertThat("LocationChange is called", url, endsWith(path))
             }
             @AssertCalled
@@ -360,7 +361,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
         session.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?,
+                                          perms : MutableList<ContentPermission>) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
         })
@@ -378,7 +380,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         session.goBack()
 
         session.waitUntilCalled(object: NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<ContentPermission>) {
                 assertThat("History should be preserved", url, equalTo(helloUri))
             }
         })
@@ -399,7 +401,7 @@ class ProgressDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<ContentPermission>) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
         })
