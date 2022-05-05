@@ -293,20 +293,6 @@ TEST_F(RtcpSenderTest, SendSdes) {
   EXPECT_EQ("alice@host", parser()->sdes()->chunks()[0].cname);
 }
 
-TEST_F(RtcpSenderTest, SendSdesWithMaxChunks) {
-  auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  rtcp_sender->SetRTCPStatus(RtcpMode::kReducedSize);
-  EXPECT_EQ(0, rtcp_sender->SetCNAME("alice@host"));
-  const char cname[] = "smith@host";
-  for (size_t i = 0; i < 30; ++i) {
-    const uint32_t csrc = 0x1234 + i;
-    EXPECT_EQ(0, rtcp_sender->AddMixedCNAME(csrc, cname));
-  }
-  EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpSdes));
-  EXPECT_EQ(1, parser()->sdes()->num_packets());
-  EXPECT_EQ(31U, parser()->sdes()->chunks().size());
-}
-
 TEST_F(RtcpSenderTest, SdesIncludedInCompoundPacket) {
   auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
   rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
@@ -585,25 +571,6 @@ TEST_F(RtcpSenderTest, SendTmmbr) {
   EXPECT_EQ(1U, parser()->tmmbr()->requests().size());
   EXPECT_EQ(kBitrateBps, parser()->tmmbr()->requests()[0].bitrate_bps());
   // TODO(asapersson): tmmbr_item()->Overhead() looks broken, always zero.
-}
-
-TEST_F(RtcpSenderTest, TmmbrIncludedInCompoundPacketIfEnabled) {
-  const unsigned int kBitrateBps = 312000;
-  auto rtcp_sender = CreateRtcpSender(GetDefaultConfig());
-  rtcp_sender->SetRTCPStatus(RtcpMode::kCompound);
-  EXPECT_FALSE(rtcp_sender->TMMBR());
-  rtcp_sender->SetTMMBRStatus(true);
-  EXPECT_TRUE(rtcp_sender->TMMBR());
-  rtcp_sender->SetTargetBitrate(kBitrateBps);
-  EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpReport));
-  EXPECT_EQ(1, parser()->tmmbr()->num_packets());
-  EXPECT_EQ(1U, parser()->tmmbr()->requests().size());
-  // TMMBR should be included in each compound packet.
-  EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpReport));
-  EXPECT_EQ(2, parser()->tmmbr()->num_packets());
-
-  rtcp_sender->SetTMMBRStatus(false);
-  EXPECT_FALSE(rtcp_sender->TMMBR());
 }
 
 TEST_F(RtcpSenderTest, SendTmmbn) {

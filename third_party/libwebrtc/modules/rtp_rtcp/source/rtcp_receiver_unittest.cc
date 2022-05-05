@@ -645,33 +645,6 @@ TEST(RtcpReceiverTest, InjectSdesWithOneChunk) {
 
   EXPECT_CALL(callback, OnCname(kSenderSsrc, StrEq(kCname)));
   receiver.IncomingPacket(sdes.Build());
-
-  char cName[RTCP_CNAME_SIZE];
-  EXPECT_EQ(0, receiver.CNAME(kSenderSsrc, cName));
-  EXPECT_EQ(0, strncmp(cName, kCname, RTCP_CNAME_SIZE));
-}
-
-TEST(RtcpReceiverTest, InjectByePacket_RemovesCname) {
-  ReceiverMocks mocks;
-  RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
-  receiver.SetRemoteSSRC(kSenderSsrc);
-
-  const char kCname[] = "alice@host";
-  rtcp::Sdes sdes;
-  sdes.AddCName(kSenderSsrc, kCname);
-
-  receiver.IncomingPacket(sdes.Build());
-
-  char cName[RTCP_CNAME_SIZE];
-  EXPECT_EQ(0, receiver.CNAME(kSenderSsrc, cName));
-
-  // Verify that BYE removes the CNAME.
-  rtcp::Bye bye;
-  bye.SetSenderSsrc(kSenderSsrc);
-
-  receiver.IncomingPacket(bye.Build());
-
-  EXPECT_EQ(-1, receiver.CNAME(kSenderSsrc, cName));
 }
 
 TEST(RtcpReceiverTest, InjectByePacket_RemovesReportBlocks) {

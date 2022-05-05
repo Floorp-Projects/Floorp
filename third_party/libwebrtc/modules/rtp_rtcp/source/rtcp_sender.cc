@@ -274,15 +274,6 @@ bool RTCPSender::TMMBR() const {
   return IsFlagPresent(RTCPPacketType::kRtcpTmmbr);
 }
 
-void RTCPSender::SetTMMBRStatus(bool enable) {
-  MutexLock lock(&mutex_rtcp_sender_);
-  if (enable) {
-    SetFlag(RTCPPacketType::kRtcpTmmbr, false);
-  } else {
-    ConsumeFlag(RTCPPacketType::kRtcpTmmbr, true);
-  }
-}
-
 void RTCPSender::SetMaxRtpPacketSize(size_t max_packet_size) {
   MutexLock lock(&mutex_rtcp_sender_);
   max_packet_size_ = max_packet_size;
@@ -328,31 +319,6 @@ int32_t RTCPSender::SetCNAME(const char* c_name) {
   RTC_DCHECK_LT(strlen(c_name), RTCP_CNAME_SIZE);
   MutexLock lock(&mutex_rtcp_sender_);
   cname_ = c_name;
-  return 0;
-}
-
-int32_t RTCPSender::AddMixedCNAME(uint32_t SSRC, const char* c_name) {
-  RTC_DCHECK(c_name);
-  RTC_DCHECK_LT(strlen(c_name), RTCP_CNAME_SIZE);
-  MutexLock lock(&mutex_rtcp_sender_);
-  // One spot is reserved for ssrc_/cname_.
-  // TODO(danilchap): Add support for more than 30 contributes by sending
-  // several sdes packets.
-  if (csrc_cnames_.size() >= rtcp::Sdes::kMaxNumberOfChunks - 1)
-    return -1;
-
-  csrc_cnames_[SSRC] = c_name;
-  return 0;
-}
-
-int32_t RTCPSender::RemoveMixedCNAME(uint32_t SSRC) {
-  MutexLock lock(&mutex_rtcp_sender_);
-  auto it = csrc_cnames_.find(SSRC);
-
-  if (it == csrc_cnames_.end())
-    return -1;
-
-  csrc_cnames_.erase(it);
   return 0;
 }
 
@@ -466,10 +432,6 @@ void RTCPSender::BuildSDES(const RtcpContext& ctx, PacketSender& sender) {
 
   rtcp::Sdes sdes;
   sdes.AddCName(ssrc_, cname_);
-
-  for (const auto& it : csrc_cnames_)
-    RTC_CHECK(sdes.AddCName(it.first, it.second));
-
   sender.AppendPacket(sdes);
 }
 

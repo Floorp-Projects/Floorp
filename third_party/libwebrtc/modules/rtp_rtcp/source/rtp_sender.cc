@@ -232,15 +232,6 @@ void RTPSender::SetExtmapAllowMixed(bool extmap_allow_mixed) {
   rtp_header_extension_map_.SetExtmapAllowMixed(extmap_allow_mixed);
 }
 
-int32_t RTPSender::RegisterRtpHeaderExtension(RTPExtensionType type,
-                                              uint8_t id) {
-  MutexLock lock(&send_mutex_);
-  bool registered = rtp_header_extension_map_.RegisterByType(id, type);
-  supports_bwe_extension_ = HasBweExtension(rtp_header_extension_map_);
-  UpdateHeaderSizes();
-  return registered ? 0 : -1;
-}
-
 bool RTPSender::RegisterRtpHeaderExtension(absl::string_view uri, int id) {
   MutexLock lock(&send_mutex_);
   bool registered = rtp_header_extension_map_.RegisterByUri(id, uri);

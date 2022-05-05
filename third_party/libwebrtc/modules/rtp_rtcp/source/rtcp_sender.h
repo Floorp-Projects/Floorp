@@ -100,12 +100,6 @@ class RTCPSender final {
 
   int32_t SetCNAME(const char* cName) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
-  int32_t AddMixedCNAME(uint32_t SSRC, const char* c_name)
-      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-
-  int32_t RemoveMixedCNAME(uint32_t SSRC)
-      RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-
   bool TimeToSendRTCPReport(bool sendKeyframeBeforeRTP = false) const
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
@@ -128,8 +122,6 @@ class RTCPSender final {
   void UnsetRemb() RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
   bool TMMBR() const RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-
-  void SetTMMBRStatus(bool enable) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
   void SetMaxRtpPacketSize(size_t max_packet_size)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
@@ -218,8 +210,6 @@ class RTCPSender final {
   std::string cname_ RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   ReceiveStatisticsProvider* receive_statistics_
-      RTC_GUARDED_BY(mutex_rtcp_sender_);
-  std::map<uint32_t, std::string> csrc_cnames_
       RTC_GUARDED_BY(mutex_rtcp_sender_);
 
   // send CSRCs
