@@ -1688,7 +1688,7 @@ void MediaFormatReader::NotifyNewOutput(
       decoder.mOutput.AppendElement(sample);
       decoder.mNumSamplesOutput++;
       decoder.mNumOfConsecutiveDecodingError = 0;
-      decoder.mNumOfConsecutiveRDDCrashes = 0;
+      decoder.mNumOfConsecutiveRDDOrGPUCrashes = 0;
     }
   LOG("Done processing new %s samples", TrackTypeToStr(aTrack));
 
@@ -2379,9 +2379,13 @@ void MediaFormatReader::Update(TrackType aTrack) {
         decoder.mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER ||
         firstFrameDecodingFailedWithHardware;
     // Limit number of RDD process restarts after crash
-    if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR &&
-        decoder.mNumOfConsecutiveRDDCrashes++ <
-            decoder.mMaxConsecutiveRDDCrashes) {
+    // Restart Utility without any limit after crash
+    if ((decoder.mError.ref() ==
+             NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR &&
+         decoder.mNumOfConsecutiveRDDOrGPUCrashes++ <
+             decoder.mMaxConsecutiveRDDOrGPUCrashes) ||
+        (decoder.mError.ref() ==
+         NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR)) {
       needsNewDecoder = true;
     }
 #ifdef XP_LINUX
@@ -2395,15 +2399,19 @@ void MediaFormatReader::Update(TrackType aTrack) {
       decoder.mHardwareDecodingDisabled = true;
     }
     // RDD process crashed on Linux, give it another try without HW decoder.
-    if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR) {
+    if (decoder.mError.ref() ==
+        NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR) {
       LOG("Error: %s remote decoder crashed, disable HW acceleration",
           TrackTypeToStr(aTrack));
       decoder.mHardwareDecodingDisabled = true;
     }
 #endif
-    // We don't want to expose NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR
-    // so switch to NS_ERROR_DOM_MEDIA_DECODE_ERR.
-    if (decoder.mError.ref() == NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR) {
+    // We don't want to expose crash error so switch to
+    // NS_ERROR_DOM_MEDIA_DECODE_ERR.
+    if (decoder.mError.ref() ==
+            NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR ||
+        decoder.mError.ref() ==
+            NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR) {
       decoder.mError = Some(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                                         RESULT_DETAIL("Unable to decode")));
     }
@@ -2420,7 +2428,7 @@ void MediaFormatReader::Update(TrackType aTrack) {
 
     LOG("%s decoded error count %d RDD crashes count %d",
         TrackTypeToStr(aTrack), decoder.mNumOfConsecutiveDecodingError,
-        decoder.mNumOfConsecutiveRDDCrashes);
+        decoder.mNumOfConsecutiveRDDOrGPUCrashes);
 
     if (needsNewDecoder) {
       LOG("Error: %s needs a new decoder", TrackTypeToStr(aTrack));
