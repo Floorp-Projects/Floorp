@@ -57,6 +57,13 @@ void FuzzingFunctions::MemoryPressure(const GlobalObject&) {
 }
 
 /* static */
+void FuzzingFunctions::SignalIPCReady(const GlobalObject&) {
+#ifdef FUZZING_SNAPSHOT
+  ContentChild::GetSingleton()->SendSignalFuzzingReady();
+#endif
+}
+
+/* static */
 void FuzzingFunctions::EnableAccessibility(const GlobalObject&,
                                            ErrorResult& aRv) {
   RefPtr<nsIAccessibilityService> a11y;

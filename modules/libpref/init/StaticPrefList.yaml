@@ -4884,7 +4884,11 @@
 #ifdef FUZZING
 -   name: fuzzing.enabled
     type: bool
+#ifdef FUZZING_SNAPSHOT
+    value: true
+#else
     value: false
+#endif
     mirror: always
 
 -   name: fuzzing.necko.enabled

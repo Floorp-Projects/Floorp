@@ -42,6 +42,9 @@ struct PortStatus {
   size_t queued_message_count;
   size_t queued_num_bytes;
   size_t unacknowledged_message_count;
+#ifdef FUZZING_SNAPSHOT
+  NodeName peer_node_name;
+#endif
 };
 
 class MessageFilter;
