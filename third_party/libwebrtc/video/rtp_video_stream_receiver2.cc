@@ -928,7 +928,8 @@ void RtpVideoStreamReceiver2::UpdateRtt(int64_t max_rtt_ms) {
 }
 
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
-  return packet_buffer_.LastReceivedPacketMs();
+  RTC_DCHECK_RUN_ON(&worker_task_checker_);
+  return last_received_rtp_system_time_ms_;
 }
 
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
