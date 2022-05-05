@@ -53,15 +53,18 @@
 // "stripIfInteger" with rounding increment.
 {
   let nf1 = new Intl.NumberFormat("en", {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     roundingIncrement: 5,
   });
   let nf2 = new Intl.NumberFormat("en", {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     roundingIncrement: 5,
     trailingZeroDisplay: "auto",
   });
   let nf3 = new Intl.NumberFormat("en", {
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
     roundingIncrement: 5,
     trailingZeroDisplay: "stripIfInteger",
@@ -71,7 +74,7 @@
   assertEq(nf2.resolvedOptions().trailingZeroDisplay, "auto");
   assertEq(nf3.resolvedOptions().trailingZeroDisplay, "stripIfInteger");
 
-  // NB: Tests 1.975 twice b/c of <https://unicode-org.atlassian.net/browse/ICU-xxx>.
+  // NB: Tests 1.975 twice b/c of <https://unicode-org.atlassian.net/browse/ICU-21674>.
 
   assertEq(nf1.format(1.975), "2.00");
   assertEq(nf1.format(1.97), "1.95");

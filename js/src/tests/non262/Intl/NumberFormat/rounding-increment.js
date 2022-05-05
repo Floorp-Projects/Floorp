@@ -57,28 +57,45 @@
   assertEq(nf3.format(123), "120");
 }
 
-// The default |maximumFractionDigits| value can lead to surprising results
-// when |roundingIncrement| is used.
+// |minimumFractionDigits| must be equal to |maximumFractionDigits| when
+// |roundingIncrement| is used.
+//
+// |minimumFractionDigits| defaults to zero.
 {
   let nf = new Intl.NumberFormat("en", {
     roundingIncrement: 10,
+    // minimumFractionDigits: 0, (default)
+    maximumFractionDigits: 0,
   });
 
   let resolved = nf.resolvedOptions();
   assertEq(resolved.minimumFractionDigits, 0);
-  assertEq(resolved.maximumFractionDigits, 3);
+  assertEq(resolved.maximumFractionDigits, 0);
   assertEq(resolved.roundingIncrement, 10);
 
-  // |roundingIncrement| is relative to |maximumFractionDigits|, so when
-  // |maximumFractionDigits| is unchanged, the rounding is applied to the
-  // default maximum fraction digits value.
-  assertEq(nf.format(123), "123.000");
-  assertEq(nf.format(123.456), "123.460");
+  assertEq(nf.format(123), "120");
+  assertEq(nf.format(123.456), "120");
+}
+
+// |maximumFractionDigits| defaults to three. And because |0 !== 3|, a
+// RangeError is thrown.
+{
+  let options = {
+    roundingIncrement: 10,
+    // minimumFractionDigits: 0, (default)
+    // maximumFractionDigits: 3, (default)
+  };
+  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", options), RangeError);
 }
 
 // Invalid values.
 for (let roundingIncrement of [-1, 0, Infinity, NaN]){
-  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", {roundingIncrement}), RangeError);
+  let options = {
+    roundingIncrement,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  };
+  assertThrowsInstanceOf(() => new Intl.NumberFormat("en", options), RangeError);
 }
 
 if (typeof reportCompare === "function")

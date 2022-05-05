@@ -1315,13 +1315,13 @@ static bool ValidateNumberRange(JSContext* cx, MutableHandleValue start,
   if (isNaN(start)) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NAN_NUMBER_RANGE, "start",
-        formatToParts ? "formatRangeToParts" : "formatRange");
+        "NumberFormat", formatToParts ? "formatRangeToParts" : "formatRange");
     return false;
   }
   if (isNaN(end)) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_NAN_NUMBER_RANGE, "end",
-        formatToParts ? "formatRangeToParts" : "formatRange");
+        "NumberFormat", formatToParts ? "formatRangeToParts" : "formatRange");
     return false;
   }
 

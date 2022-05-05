@@ -612,12 +612,14 @@ MSG_DEF(JSMSG_INVALID_DATETIME_STYLE,  2, JSEXN_TYPEERR, "can't set option {0} i
 MSG_DEF(JSMSG_UNDEFINED_CURRENCY,      0, JSEXN_TYPEERR, "undefined currency in NumberFormat() with currency style")
 MSG_DEF(JSMSG_UNDEFINED_UNIT,          0, JSEXN_TYPEERR, "undefined unit in NumberFormat() with unit style")
 MSG_DEF(JSMSG_UNDEFINED_DATE,          2, JSEXN_TYPEERR, "undefined {0}-date in DateTimeFormat.{1}()")
-MSG_DEF(JSMSG_UNDEFINED_NUMBER,        2, JSEXN_TYPEERR, "undefined {0} number in NumberFormat.{1}()")
+MSG_DEF(JSMSG_UNDEFINED_NUMBER,        3, JSEXN_TYPEERR, "undefined {0} number in {1}.{2}()")
 MSG_DEF(JSMSG_UNDEFINED_TYPE,          0, JSEXN_TYPEERR, "missing \"type\" option in DisplayNames()")
 MSG_DEF(JSMSG_START_AFTER_END_DATE,    1, JSEXN_RANGEERR, "start-date after end-date in DateTimeFormat.{0}()")
 MSG_DEF(JSMSG_START_AFTER_END_NUMBER,  2, JSEXN_RANGEERR, "start number after end number in {0}.{1}()")
 MSG_DEF(JSMSG_EXPONENT_TOO_LARGE,      0, JSEXN_RANGEERR, "exponent is too large")
-MSG_DEF(JSMSG_NAN_NUMBER_RANGE,        2, JSEXN_RANGEERR, "range can't {0} with NaN in NumberFormat.{1}()")
+MSG_DEF(JSMSG_NAN_NUMBER_RANGE,        3, JSEXN_RANGEERR, "range can't {0} with NaN in {1}.{2}()")
+MSG_DEF(JSMSG_INVALID_NUMBER_OPTION,   2, JSEXN_TYPEERR, "can't set option {0} when {1} is used")
+MSG_DEF(JSMSG_UNEQUAL_FRACTION_DIGITS, 0, JSEXN_RANGEERR, "fraction digits must be the same when roundingIncrement is used")
 
 // RegExp
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         0, JSEXN_SYNTAXERR, "invalid range in character class")
