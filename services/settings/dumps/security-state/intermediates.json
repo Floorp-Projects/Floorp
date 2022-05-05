@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1651718923725,
+      "derHash": "kqX1Fa0106J8SQ7bE13nBEseOZ1gisGr6IP8gvtLFr4=",
+      "subject": "CN=RapidSSL Global TLS RSA4096 SHA256 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFwxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE0MDIGA1UEAxMrUmFwaWRTU0wgR2xvYmFsIFRMUyBSU0E0MDk2IFNIQTI1NiAyMDIyIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "92ad0528387f762c0d47a1b2aef3a70165915785e79a7440136f35f50719e121",
+        "size": 2068,
+        "filename": "lPraBjD-VHks5_sVEDOczhg00z9TGoGMAjndDyYGUNU=.pem",
+        "location": "security-state-staging/intermediates/9feab4a5-669f-46c9-9f31-2d561a1fc8de.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "lPraBjD+VHks5/sVEDOczhg00z9TGoGMAjndDyYGUNU=",
+      "crlite_enrolled": false,
+      "id": "5fb2df13-ba06-48c8-b568-679d6edd2144",
+      "last_modified": 1651719452752
+    },
+    {
+      "schema": 1651718922829,
+      "derHash": "p5cQigWtkyhYX8DLhC+9gk+sZRC41+tP9HmR7uWKqSQ=",
+      "subject": "CN=GeoTrust Global TLS RSA4096 SHA256 2022 CA1,O=DigiCert\\, Inc.,C=US",
+      "subjectDN": "MFwxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5EaWdpQ2VydCwgSW5jLjE0MDIGA1UEAxMrR2VvVHJ1c3QgR2xvYmFsIFRMUyBSU0E0MDk2IFNIQTI1NiAyMDIyIENBMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7debe4651a89d772bd8a304272699c20eda3b8d40eee9e84a3ccd55f8c63f444",
+        "size": 2068,
+        "filename": "aZeR2aS2g2bguhPzWzTQqUq9OCf4tXk7VWrF6R_zJkM=.pem",
+        "location": "security-state-staging/intermediates/d15529f9-49a2-467b-aaff-3eba01eb9996.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aZeR2aS2g2bguhPzWzTQqUq9OCf4tXk7VWrF6R/zJkM=",
+      "crlite_enrolled": false,
+      "id": "93e60034-59ff-49c4-a646-358a9907c217",
+      "last_modified": 1651719452744
+    },
+    {
       "schema": 1651352246545,
       "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
       "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
