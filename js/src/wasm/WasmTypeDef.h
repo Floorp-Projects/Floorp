@@ -192,7 +192,11 @@ struct StructField {
   FieldType type;
   uint32_t offset;
   bool isMutable;
+
+  WASM_CHECK_CACHEABLE_POD(type, offset, isMutable);
 };
+
+WASM_DECLARE_CACHEABLE_POD(StructField);
 
 using StructFieldVector = Vector<StructField, 0, SystemAllocPolicy>;
 
@@ -262,6 +266,8 @@ class ArrayType {
   FieldType elementType_;  // field type
   bool isMutable_;         // mutability
 
+  WASM_CHECK_CACHEABLE_POD(elementType_, isMutable_);
+
  public:
   ArrayType(FieldType elementType, bool isMutable)
       : elementType_(elementType), isMutable_(isMutable) {}
@@ -286,6 +292,8 @@ class ArrayType {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
+
+WASM_DECLARE_CACHEABLE_POD(ArrayType);
 
 using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
 using ArrayTypePtrVector = Vector<const ArrayType*, 0, SystemAllocPolicy>;
@@ -826,6 +834,8 @@ class TypeIdDesc {
   TypeIdDescKind kind_;
   size_t bits_;
 
+  WASM_CHECK_CACHEABLE_POD(kind_, bits_);
+
   TypeIdDesc(TypeIdDescKind kind, size_t bits) : kind_(kind), bits_(bits) {}
 
  public:
@@ -847,6 +857,8 @@ class TypeIdDesc {
     return bits_;
   }
 };
+
+WASM_DECLARE_CACHEABLE_POD(TypeIdDesc);
 
 using TypeIdDescVector = Vector<TypeIdDesc, 0, SystemAllocPolicy>;
 
