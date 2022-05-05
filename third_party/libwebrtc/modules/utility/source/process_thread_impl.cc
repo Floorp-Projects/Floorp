@@ -69,7 +69,8 @@ void ProcessThreadImpl::Delete() {
   delete this;
 }
 
-void ProcessThreadImpl::Start() {
+// Doesn't need locking, because the contending thread isn't running.
+void ProcessThreadImpl::Start() RTC_NO_THREAD_SAFETY_ANALYSIS {
   RTC_DCHECK(thread_checker_.IsCurrent());
   RTC_DCHECK(!thread_.get());
   if (thread_.get())
@@ -91,6 +92,7 @@ void ProcessThreadImpl::Stop() {
     return;
 
   {
+    // Need to take lock, for synchronization with `thread_`.
     rtc::CritScope lock(&lock_);
     stop_ = true;
   }
@@ -98,9 +100,17 @@ void ProcessThreadImpl::Stop() {
   wake_up_.Set();
 
   thread_->Stop();
+  thread_.reset();
+
+  StopNoLocks();
+}
+
+// No locking needed, since this is called after the contending thread is
+// stopped.
+void ProcessThreadImpl::StopNoLocks() RTC_NO_THREAD_SAFETY_ANALYSIS {
+  RTC_DCHECK(!thread_);
   stop_ = false;
 
-  thread_.reset();
   for (ModuleCallback& m : modules_)
     m.module->ProcessThreadAttached(nullptr);
 }

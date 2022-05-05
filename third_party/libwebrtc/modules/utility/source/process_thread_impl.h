@@ -85,25 +85,29 @@ class ProcessThreadImpl : public ProcessThread {
   typedef std::list<ModuleCallback> ModuleList;
 
   void Delete() override;
+  // The part of Stop processing that doesn't need any locking.
+  void StopNoLocks();
 
-  // Warning: For some reason, if |lock_| comes immediately before |modules_|
-  // with the current class layout, we will  start to have mysterious crashes
-  // on Mac 10.9 debug.  I (Tommi) suspect we're hitting some obscure alignemnt
-  // issues, but I haven't figured out what they are, if there are alignment
-  // requirements for mutexes on Mac or if there's something else to it.
-  // So be careful with changing the layout.
-  rtc::RecursiveCriticalSection
-      lock_;  // Used to guard modules_, tasks_ and stop_.
+  // Members protected by this mutex are accessed on the constructor thread and
+  // on the spawned process thread, and locking is needed only while the process
+  // thread is running.
+  rtc::RecursiveCriticalSection lock_;
 
   SequenceChecker thread_checker_;
   rtc::Event wake_up_;
   // TODO(pbos): Remove unique_ptr and stop recreating the thread.
   std::unique_ptr<rtc::PlatformThread> thread_;
 
-  ModuleList modules_;
+  ModuleList modules_ RTC_GUARDED_BY(lock_);
   std::queue<QueuedTask*> queue_;
   std::priority_queue<DelayedTask> delayed_tasks_ RTC_GUARDED_BY(lock_);
-  bool stop_;
+  // The `stop_` flag is modified only by the construction thread, protected by
+  // `thread_checker_`. It is read also by the spawned `thread_`. The latter
+  // thread must take `lock_` before access, and for thread safety, the
+  // constructor thread needs to take `lock_` when it modifies `stop_` and
+  // `thread_` is running. Annotations like RTC_GUARDED_BY doesn't support this
+  // usage pattern.
+  bool stop_ RTC_GUARDED_BY(lock_);
   const char* thread_name_;
 };
 
