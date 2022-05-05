@@ -136,6 +136,12 @@ rtc_executable("frame_analyzer") {
     "//third_party/abseil-cpp/absl/flags:parse",
     "//third_party/abseil-cpp/absl/strings",
   ]
+
+  if (build_with_chromium) {
+    # When building from Chromium, WebRTC's metrics and field trial
+    # implementations need to be replaced by the Chromium ones.
+    deps += [ "//third_party/webrtc_overrides:webrtc_component" ]
+  }
 }
 
 # TODO(bugs.webrtc.org/11474): Enable this on win if needed. For now it
