@@ -85,18 +85,8 @@ class WorkerScriptLoader final : public nsINamed {
 
   bool DispatchLoadScripts();
 
- private:
-  ~WorkerScriptLoader() = default;
-
-  NS_IMETHOD
-  GetName(nsACString& aName) override {
-    aName.AssignLiteral("WorkerScriptLoader");
-    return NS_OK;
-  }
-
+ protected:
   nsIURI* GetBaseURI();
-
-  void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv);
 
   void MaybeExecuteFinishedScripts(const ScriptLoadInfo& aLoadInfo);
 
@@ -135,12 +125,23 @@ class WorkerScriptLoader final : public nsINamed {
 
   nsresult LoadScript(ScriptLoadInfo& aLoadInfo);
 
+  void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                            bool aResult, bool aMutedError);
+
+ private:
+  ~WorkerScriptLoader() = default;
+
+  NS_IMETHOD
+  GetName(nsACString& aName) override {
+    aName.AssignLiteral("WorkerScriptLoader");
+    return NS_OK;
+  }
+
+  void LoadingFinished(ScriptLoadInfo& aLoadInfo, nsresult aRv);
+
   void DispatchProcessPendingRequests();
 
   bool EvaluateScript(JSContext* aCx, ScriptLoadInfo& aLoadInfo);
-
-  void ShutdownScriptLoader(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                            bool aResult, bool aMutedError);
 
   void LogExceptionToConsole(JSContext* aCx, WorkerPrivate* aWorkerPrivate);
 };
