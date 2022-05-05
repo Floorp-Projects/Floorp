@@ -94,6 +94,14 @@ class ScalabilityStructureL2T2Key : public ScalabilityStructureKeySvc {
   FrameDependencyStructure DependencyStructure() const override;
 };
 
+class ScalabilityStructureL2T3Key : public ScalabilityStructureKeySvc {
+ public:
+  ScalabilityStructureL2T3Key() : ScalabilityStructureKeySvc(2, 3) {}
+  ~ScalabilityStructureL2T3Key() override;
+
+  FrameDependencyStructure DependencyStructure() const override;
+};
+
 class ScalabilityStructureL3T3Key : public ScalabilityStructureKeySvc {
  public:
   ScalabilityStructureL3T3Key() : ScalabilityStructureKeySvc(3, 3) {}
