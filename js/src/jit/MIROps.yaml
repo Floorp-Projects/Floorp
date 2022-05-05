@@ -2564,10 +2564,10 @@
 - name: WasmBinaryBitwise
   gen_boilerplate: false
 
-- name: WasmLoadTls
+- name: WasmLoadInstance
   gen_boilerplate: false
 
-- name: WasmStoreTls
+- name: WasmStoreInstance
   gen_boilerplate: false
 
 - name: WasmHeapBase

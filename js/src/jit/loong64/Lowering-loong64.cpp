@@ -465,14 +465,14 @@ void LIRGeneratorLOONG64::lowerWasmBuiltinTruncateToInt32(
 
   if (opd->type() == MIRType::Double) {
     define(new (alloc()) LWasmBuiltinTruncateDToInt32(
-               useRegister(opd), useFixed(ins->tls(), InstanceReg),
+               useRegister(opd), useFixed(ins->instance(), InstanceReg),
                LDefinition::BogusTemp()),
            ins);
     return;
   }
 
   define(new (alloc()) LWasmBuiltinTruncateFToInt32(
-             useRegister(opd), useFixed(ins->tls(), InstanceReg),
+             useRegister(opd), useFixed(ins->instance(), InstanceReg),
              LDefinition::BogusTemp()),
          ins);
 }

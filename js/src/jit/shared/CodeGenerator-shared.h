@@ -271,7 +271,7 @@ class CodeGeneratorShared : public LElementVisitor {
   OutOfLineCode* oolTruncateDouble(
       FloatRegister src, Register dest, MInstruction* mir,
       wasm::BytecodeOffset callOffset = wasm::BytecodeOffset(),
-      bool preserveTls = false);
+      bool preserveInstance = false);
   void emitTruncateDouble(FloatRegister src, Register dest, MInstruction* mir);
   void emitTruncateFloat32(FloatRegister src, Register dest, MInstruction* mir);
 
