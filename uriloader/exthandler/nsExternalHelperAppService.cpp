@@ -515,8 +515,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] = {
     {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
      "xlsx", "Microsoft Excel (Open XML)"},
 
-    // Note: if you add new image types, please also update the list in
-    // contentAreaUtils.js to match.
     {IMAGE_ART, "art", "ART Image"},
     {IMAGE_BMP, "bmp", "BMP Image"},
     {IMAGE_GIF, "gif", "GIF Image"},
