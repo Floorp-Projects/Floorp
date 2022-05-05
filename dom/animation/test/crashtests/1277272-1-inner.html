@@ -7,10 +7,7 @@ function start() {
 
   setTimeout(function() { animation.play(); }, 4);
   setTimeout(function() {
-    if (typeof Object.getOwnPropertyDescriptor(window.Animation.prototype,
-        'timeline').set !== 'undefined') {
-      animation.timeline = undefined;
-    }
+    animation.timeline = undefined;
 
     SpecialPowers.Cu.forceGC();
     window.top.continueTest();
