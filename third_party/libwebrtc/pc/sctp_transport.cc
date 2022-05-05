@@ -94,8 +94,12 @@ void SctpTransport::SetDtlsTransport(
   if (internal_sctp_transport_) {
     if (transport) {
       internal_sctp_transport_->SetDtlsTransport(transport->internal());
-      transport->internal()->SignalDtlsState.connect(
-          this, &SctpTransport::OnDtlsStateChange);
+
+      transport->internal()->SubscribeDtlsState(
+          [this](cricket::DtlsTransportInternal* transport,
+                 cricket::DtlsTransportState state) {
+            OnDtlsStateChange(transport, state);
+          });
       if (info_.state() == SctpTransportState::kNew) {
         next_state = SctpTransportState::kConnecting;
       }
