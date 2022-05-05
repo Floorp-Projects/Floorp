@@ -27,6 +27,7 @@
 #include "util/Memory.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmFrame.h"
+#include "wasm/WasmSerialize.h"
 
 namespace js {
 
@@ -75,7 +76,9 @@ struct StackMapHeader {
   // gets a stackmap.
   uint32_t hasDebugFrameWithLiveRefs : 1;
 
- private:
+  WASM_CHECK_CACHEABLE_POD(numMappedWords, numExitStubWords, frameOffsetFromTop,
+                           hasDebugFrameWithLiveRefs);
+
   static constexpr uint32_t maxMappedWords = (1 << MappedWordsBits) - 1;
   static constexpr uint32_t maxExitStubWords = (1 << ExitStubWordsBits) - 1;
   static constexpr uint32_t maxFrameOffsetFromTop = (1 << FrameOffsetBits) - 1;
@@ -92,6 +95,8 @@ struct StackMapHeader {
                     (MaxParams * MaxParamSize / sizeof(void*)) + 16,
                 "limited size of the offset field");
 };
+
+WASM_DECLARE_CACHEABLE_POD(StackMapHeader);
 
 // This is the expected size for the header
 static_assert(sizeof(StackMapHeader) == 8,

@@ -94,11 +94,17 @@ using ImportVector = Vector<Import, 0, SystemAllocPolicy>;
 // immutably by Module.
 
 class Export {
-  CacheableChars fieldName_;
+ public:
   struct CacheablePod {
     DefinitionKind kind_;
     uint32_t index_;
-  } pod;
+
+    WASM_CHECK_CACHEABLE_POD(kind_, index_);
+  };
+
+ private:
+  CacheableChars fieldName_;
+  CacheablePod pod;
 
  public:
   Export() = default;
@@ -117,6 +123,8 @@ class Export {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
+
+WASM_DECLARE_CACHEABLE_POD(Export::CacheablePod);
 
 using ExportVector = Vector<Export, 0, SystemAllocPolicy>;
 
@@ -449,8 +457,12 @@ struct Name {
   uint32_t offsetInNamePayload;
   uint32_t length;
 
+  WASM_CHECK_CACHEABLE_POD(offsetInNamePayload, length);
+
   Name() : offsetInNamePayload(UINT32_MAX), length(0) {}
 };
+
+WASM_DECLARE_CACHEABLE_POD(Name);
 
 using NameVector = Vector<Name, 0, SystemAllocPolicy>;
 
@@ -477,6 +489,8 @@ struct Limits {
   // memories.
   Shareable shared;
 
+  WASM_CHECK_CACHEABLE_POD(indexType, initial, maximum, shared);
+
   Limits() = default;
   explicit Limits(uint64_t initial, const Maybe<uint64_t>& maximum = Nothing(),
                   Shareable shared = Shareable::False)
@@ -486,10 +500,14 @@ struct Limits {
         shared(shared) {}
 };
 
+WASM_DECLARE_CACHEABLE_POD(Limits);
+
 // MemoryDesc describes a memory.
 
 struct MemoryDesc {
   Limits limits;
+
+  WASM_CHECK_CACHEABLE_POD(limits);
 
   bool isShared() const { return limits.shared == Shareable::True; }
 
@@ -530,6 +548,8 @@ struct MemoryDesc {
   explicit MemoryDesc(Limits limits) : limits(limits) {}
 };
 
+WASM_DECLARE_CACHEABLE_POD(MemoryDesc);
+
 // We don't need to worry about overflow with a Memory32 field when
 // using a uint64_t.
 static_assert(MaxMemory32LimitField <= UINT64_MAX / PageSize);
@@ -552,6 +572,9 @@ struct TableDesc {
   uint32_t initialLength;
   Maybe<uint32_t> maximumLength;
 
+  WASM_CHECK_CACHEABLE_POD(elemType, isImportedOrExported, isAsmJS,
+                           globalDataOffset, initialLength, maximumLength);
+
   TableDesc() = default;
   TableDesc(RefType elemType, uint32_t initialLength,
             Maybe<uint32_t> maximumLength, bool isAsmJS,
@@ -563,6 +586,8 @@ struct TableDesc {
         initialLength(initialLength),
         maximumLength(maximumLength) {}
 };
+
+WASM_DECLARE_CACHEABLE_POD(TableDesc);
 
 using TableDescVector = Vector<TableDesc, 0, SystemAllocPolicy>;
 

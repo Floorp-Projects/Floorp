@@ -85,12 +85,14 @@ struct Metadata;
 struct LinkDataCacheablePod {
   uint32_t trapOffset = 0;
 
+  WASM_CHECK_CACHEABLE_POD(trapOffset);
+
   LinkDataCacheablePod() = default;
 };
 
-struct LinkData : LinkDataCacheablePod {
-  const Tier tier;
+WASM_DECLARE_CACHEABLE_POD(LinkDataCacheablePod);
 
+struct LinkData : LinkDataCacheablePod {
   explicit LinkData(Tier tier) : tier(tier) {}
 
   LinkDataCacheablePod& pod() { return *this; }
@@ -102,6 +104,11 @@ struct LinkData : LinkDataCacheablePod {
 #ifdef JS_CODELABEL_LINKMODE
     uint32_t mode;
 #endif
+
+    WASM_CHECK_CACHEABLE_POD(patchAtOffset, targetOffset);
+#ifdef JS_CODELABEL_LINKMODE
+    WASM_CHECK_CACHEABLE_POD(mode)
+#endif
   };
   using InternalLinkVector = Vector<InternalLink, 0, SystemAllocPolicy>;
 
@@ -110,11 +117,14 @@ struct LinkData : LinkDataCacheablePod {
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
   };
 
+  const Tier tier;
   InternalLinkVector internalLinks;
   SymbolicLinkArray symbolicLinks;
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
+
+WASM_DECLARE_CACHEABLE_POD(LinkData::InternalLink);
 
 using UniqueLinkData = UniquePtr<LinkData>;
 
@@ -240,12 +250,19 @@ class ModuleSegment : public CodeSegment {
 // function definition index.
 
 class FuncExport {
-  FuncType funcType_;
-  MOZ_INIT_OUTSIDE_CTOR struct CacheablePod {
+ public:
+  struct CacheablePod {
     uint32_t funcIndex_;
     uint32_t eagerInterpEntryOffset_;  // Machine code offset
     bool hasEagerStubs_;
-  } pod;
+
+    WASM_CHECK_CACHEABLE_POD(funcIndex_, eagerInterpEntryOffset_,
+                             hasEagerStubs_);
+  };
+
+ private:
+  FuncType funcType_;
+  MOZ_INIT_OUTSIDE_CTOR CacheablePod pod;
 
  public:
   FuncExport() = default;
@@ -281,6 +298,8 @@ class FuncExport {
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
+WASM_DECLARE_CACHEABLE_POD(FuncExport::CacheablePod);
+
 using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 
 // An FuncImport contains the runtime metadata needed to implement a call to an
@@ -290,12 +309,19 @@ using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 // dynamically patched at runtime.
 
 class FuncImport {
-  FuncType funcType_;
+ public:
   struct CacheablePod {
     uint32_t tlsDataOffset_;
     uint32_t interpExitCodeOffset_;  // Machine code offset
     uint32_t jitExitCodeOffset_;     // Machine code offset
-  } pod;
+
+    WASM_CHECK_CACHEABLE_POD(tlsDataOffset_, interpExitCodeOffset_,
+                             jitExitCodeOffset_);
+  };
+
+ private:
+  FuncType funcType_;
+  CacheablePod pod;
 
  public:
   FuncImport() { memset(&pod, 0, sizeof(CacheablePod)); }
@@ -331,6 +357,8 @@ class FuncImport {
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
+WASM_DECLARE_CACHEABLE_POD(FuncImport::CacheablePod)
+
 using FuncImportVector = Vector<FuncImport, 0, SystemAllocPolicy>;
 
 // Metadata holds all the data that is needed to describe compiled wasm code
@@ -354,12 +382,18 @@ struct MetadataCacheablePod {
   bool filenameIsURL;
   bool omitsBoundsChecks;
 
+  WASM_CHECK_CACHEABLE_POD(kind, memory, globalDataLength, startFuncIndex,
+                           nameCustomSectionIndex, filenameIsURL,
+                           omitsBoundsChecks)
+
   explicit MetadataCacheablePod(ModuleKind kind)
       : kind(kind),
         globalDataLength(0),
         filenameIsURL(false),
         omitsBoundsChecks(false) {}
 };
+
+WASM_DECLARE_CACHEABLE_POD(MetadataCacheablePod)
 
 typedef uint8_t ModuleHash[8];
 using FuncArgTypesVector = Vector<ValTypeVector, 0, SystemAllocPolicy>;
