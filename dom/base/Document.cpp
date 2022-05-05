@@ -17539,11 +17539,6 @@ bool Document::ModuleScriptsEnabled() {
          StaticPrefs::dom_moduleScripts_enabled();
 }
 
-bool Document::ImportMapsEnabled() {
-  return nsContentUtils::IsChromeDoc(this) ||
-         StaticPrefs::dom_importMaps_enabled();
-}
-
 void Document::ReportShadowDOMUsage() {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (NS_WARN_IF(!inner)) {
