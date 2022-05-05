@@ -149,11 +149,7 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
-#include "mozilla/ipc/IPCStreamDestination.h"
-#include "mozilla/ipc/IPCStreamSource.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/ipc/PChildToParentStreamParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -4337,27 +4333,6 @@ mozilla::ipc::IPCResult ContentParent::RecvInitStreamFilter(
   return IPC_OK();
 }
 
-PChildToParentStreamParent* ContentParent::AllocPChildToParentStreamParent() {
-  return mozilla::ipc::AllocPChildToParentStreamParent();
-}
-
-bool ContentParent::DeallocPChildToParentStreamParent(
-    PChildToParentStreamParent* aActor) {
-  delete aActor;
-  return true;
-}
-
-PParentToChildStreamParent* ContentParent::AllocPParentToChildStreamParent() {
-  MOZ_CRASH(
-      "PParentToChildStreamParent actors should be manually constructed!");
-}
-
-bool ContentParent::DeallocPParentToChildStreamParent(
-    PParentToChildStreamParent* aActor) {
-  delete aActor;
-  return true;
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvAddSecurityState(
     const MaybeDiscarded<WindowContext>& aContext, uint32_t aStateFlags) {
   if (aContext.IsNullOrDiscarded()) {
@@ -7267,12 +7242,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
   mBrowsingContextFieldEpoch = aEpoch;
 
   return aTransaction.CommitFromIPC(aContext, this);
-}
-
-PParentToChildStreamParent* ContentParent::SendPParentToChildStreamConstructor(
-    PParentToChildStreamParent* aActor) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PContentParent::SendPParentToChildStreamConstructor(aActor);
 }
 
 PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
