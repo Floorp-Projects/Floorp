@@ -17,6 +17,52 @@ static inline bool EqualContainers(const Container1& lhs,
   return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
 }
 
+// To call Vector::shrinkStorageToFit , a type must specialize mozilla::IsPod
+// which is pretty verbose to do within js::wasm, so factor that process out
+// into a macro.
+
+#define WASM_DECLARE_POD_VECTOR(Type, VectorName)   \
+  }                                                 \
+  }                                                 \
+  namespace mozilla {                               \
+  template <>                                       \
+  struct IsPod<js::wasm::Type> : std::true_type {}; \
+  }                                                 \
+  namespace js {                                    \
+  namespace wasm {                                  \
+  typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
+
+using mozilla::MallocSizeOf;
+
+template <class T>
+static inline size_t SizeOfVectorElementExcludingThis(
+    const T& elem, MallocSizeOf mallocSizeOf) {
+  return elem.sizeOfExcludingThis(mallocSizeOf);
+}
+
+template <class T>
+static inline size_t SizeOfVectorElementExcludingThis(
+    const RefPtr<T>& elem, MallocSizeOf mallocSizeOf) {
+  return elem->sizeOfExcludingThis(mallocSizeOf);
+}
+
+template <class T, size_t N>
+static inline size_t SizeOfVectorExcludingThis(
+    const mozilla::Vector<T, N, SystemAllocPolicy>& vec,
+    MallocSizeOf mallocSizeOf) {
+  size_t size = vec.sizeOfExcludingThis(mallocSizeOf);
+  for (const T& t : vec) {
+    size += SizeOfVectorElementExcludingThis(t, mallocSizeOf);
+  }
+  return size;
+}
+
+template <class T>
+static inline size_t SizeOfMaybeExcludingThis(const mozilla::Maybe<T>& maybe,
+                                              MallocSizeOf mallocSizeOf) {
+  return maybe ? maybe->sizeOfExcludingThis(mallocSizeOf) : 0;
+}
+
 }  // namespace wasm
 }  // namespace js
 

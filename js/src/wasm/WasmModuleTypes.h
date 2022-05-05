@@ -57,7 +57,7 @@ struct CacheableChars : UniqueChars {
   explicit CacheableChars(char* ptr) : UniqueChars(ptr) {}
   MOZ_IMPLICIT CacheableChars(UniqueChars&& rhs)
       : UniqueChars(std::move(rhs)) {}
-  WASM_DECLARE_SERIALIZABLE(CacheableChars)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using CacheableCharsVector = Vector<CacheableChars, 0, SystemAllocPolicy>;
@@ -77,7 +77,7 @@ struct Import {
   Import(UniqueChars&& module, UniqueChars&& field, DefinitionKind kind)
       : module(std::move(module)), field(std::move(field)), kind(kind) {}
 
-  WASM_DECLARE_SERIALIZABLE(Import)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using ImportVector = Vector<Import, 0, SystemAllocPolicy>;
@@ -115,7 +115,7 @@ class Export {
   uint32_t globalIndex() const;
   uint32_t tableIndex() const;
 
-  WASM_DECLARE_SERIALIZABLE(Export)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using ExportVector = Vector<Export, 0, SystemAllocPolicy>;
@@ -273,7 +273,7 @@ class GlobalDesc {
 
   ValType type() const { return initial_.type(); }
 
-  WASM_DECLARE_SERIALIZABLE(GlobalDesc)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
@@ -308,11 +308,11 @@ struct TagType : AtomicRefCounted<TagType> {
     return true;
   }
 
-  WASM_DECLARE_SERIALIZABLE(TagType)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using MutableTagType = RefPtr<TagType>;
-using SharedTagType = SerializableRefPtr<const TagType>;
+using SharedTagType = RefPtr<const TagType>;
 
 #ifdef ENABLE_WASM_EXCEPTIONS
 struct TagDesc {
@@ -328,7 +328,7 @@ struct TagDesc {
         globalDataOffset(UINT32_MAX),
         isExport(isExport) {}
 
-  WASM_DECLARE_SERIALIZABLE(TagDesc)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
@@ -358,7 +358,7 @@ struct ElemSegment : AtomicRefCounted<ElemSegment> {
 
   size_t length() const { return elemFuncIndices.length(); }
 
-  WASM_DECLARE_SERIALIZABLE(ElemSegment)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // NullFuncIndex represents the case when an element segment (of type funcref)
@@ -367,7 +367,7 @@ constexpr uint32_t NullFuncIndex = UINT32_MAX;
 static_assert(NullFuncIndex > MaxFuncs, "Invariant");
 
 using MutableElemSegment = RefPtr<ElemSegment>;
-using SharedElemSegment = SerializableRefPtr<const ElemSegment>;
+using SharedElemSegment = RefPtr<const ElemSegment>;
 using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
 
 // DataSegmentEnv holds the initial results of decoding a data segment from the
@@ -410,11 +410,11 @@ struct DataSegment : AtomicRefCounted<DataSegment> {
     return bytes.append(bytecode.begin() + src.bytecodeOffset, src.length);
   }
 
-  WASM_DECLARE_SERIALIZABLE(DataSegment)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using MutableDataSegment = RefPtr<DataSegment>;
-using SharedDataSegment = SerializableRefPtr<const DataSegment>;
+using SharedDataSegment = RefPtr<const DataSegment>;
 using DataSegmentVector = Vector<SharedDataSegment, 0, SystemAllocPolicy>;
 
 // The CustomSection(Env) structs are like DataSegment(Env): CustomSectionEnv is
@@ -434,7 +434,7 @@ struct CustomSection {
   Bytes name;
   SharedBytes payload;
 
-  WASM_DECLARE_SERIALIZABLE(CustomSection)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 using CustomSectionVector = Vector<CustomSection, 0, SystemAllocPolicy>;

@@ -30,6 +30,7 @@
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmTlsData.h"
 #include "wasm/WasmTypeDef.h"
+#include "wasm/WasmUtility.h"
 
 namespace js {
 
@@ -157,7 +158,7 @@ struct TrapSiteVectorArray
   void swap(TrapSiteVectorArray& rhs);
   void shrinkStorageToFit();
 
-  WASM_DECLARE_SERIALIZABLE(TrapSiteVectorArray)
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 // On trap, the bytecode offset to be reported in callstacks is saved.
@@ -603,8 +604,7 @@ class CalleeDesc {
   }
   uint32_t tableFunctionBaseGlobalDataOffset() const {
     MOZ_ASSERT(isTable());
-    return u.table.globalDataOffset_ +
-           offsetof(TableInstanceData, elements);
+    return u.table.globalDataOffset_ + offsetof(TableInstanceData, elements);
   }
   TypeIdDesc wasmTableSigId() const {
     MOZ_ASSERT(which_ == WasmTable);

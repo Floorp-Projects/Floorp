@@ -186,10 +186,7 @@ class Module : public JS::WasmModule {
 
   // Code caching support.
 
-  size_t serializedSize(const LinkData& linkData) const;
-  void serialize(const LinkData& linkData, uint8_t* begin, size_t size) const;
-  void serialize(const LinkData& linkData,
-                 JS::OptimizedEncodingListener& listener) const;
+  [[nodiscard]] bool serialize(const LinkData& linkData, Bytes* bytes) const;
   static RefPtr<Module> deserialize(const uint8_t* begin, size_t size);
   bool loggingDeserialized() const { return loggingDeserialized_; }
 
