@@ -262,28 +262,28 @@ SharedCompileArgs CompileArgs::buildAndReport(JSContext* cx,
  *   To do better, we need OSR.
  *
  * - Wasm Table entries are never patched during tier-up.  A Table of funcref
- *   holds not a JSFunction pointer, but a (code*,Tls*) pair of pointers.  When
- *   a table.set operation is performed, the JSFunction value is decomposed and
- *   its code and Tls pointers are stored in the table; subsequently, when a
- *   table.get operation is performed, the JSFunction value is reconstituted
- *   from its code pointer using fairly elaborate machinery.  (The mechanics are
- *   the same also for the reflected JS operations on a WebAssembly.Table.  For
- *   everything, see WasmTable.{cpp,h}.)  The code pointer in the Table will
- *   always be the code pointer belonging to the best tier that was active at
- *   the time when that function was stored in that Table slot; in many cases,
- *   it will be tier-1 code.  As a consequence, a call through a table will
- *   first enter tier-1 code and then jump to tier-2 code.
+ *   holds not a JSFunction pointer, but a (code*,instance*) pair of pointers.
+ * When a table.set operation is performed, the JSFunction value is decomposed
+ * and its code and instance pointers are stored in the table; subsequently,
+ * when a table.get operation is performed, the JSFunction value is
+ * reconstituted from its code pointer using fairly elaborate machinery.  (The
+ * mechanics are the same also for the reflected JS operations on a
+ * WebAssembly.Table.  For everything, see WasmTable.{cpp,h}.)  The code pointer
+ * in the Table will always be the code pointer belonging to the best tier that
+ * was active at the time when that function was stored in that Table slot; in
+ * many cases, it will be tier-1 code.  As a consequence, a call through a table
+ * will first enter tier-1 code and then jump to tier-2 code.
  *
  *   To do better, we must update all the tables in the system when an instance
  *   tiers up.  This is expected to be very hard.
  *
  * - Imported Wasm functions are never patched during tier-up.  Imports are held
- *   in FuncImportInstanceData values in the instance's Tls, and for a wasm
+ *   in FuncImportInstanceData values in the instance, and for a wasm
  *   callee, what's stored is the raw code pointer into the best tier of the
  *   callee that was active at the time the import was resolved.  That could be
  *   baseline code, and if it is, the situation is as for Table entries: a call
- * to an import will always go via that import's tier-1 code, which will tier up
- *   with an indirect jump.
+ *   to an import will always go via that import's tier-1 code, which will tier
+ * up with an indirect jump.
  *
  *   To do better, we must update all the import tables in the system that
  *   import functions from instances whose modules have tiered up.  This is

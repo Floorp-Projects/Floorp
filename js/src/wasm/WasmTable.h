@@ -29,8 +29,8 @@ namespace wasm {
 // stateful objects exposed to WebAssembly. asm.js also uses Tables to represent
 // its homogeneous function-pointer tables.
 //
-// A table of FuncRef holds FunctionTableElems, which are (code*,tls*) pairs,
-// where the tls must be traced.
+// A table of FuncRef holds FunctionTableElems, which are (code*,instance*)
+// pairs, where the instance must be traced.
 //
 // A table of AnyRef holds JSObject pointers, which must be traced.
 
@@ -83,8 +83,8 @@ class Table : public ShareableBase<Table> {
   uint32_t length() const { return length_; }
   Maybe<uint32_t> maximum() const { return maximum_; }
 
-  // Raw pointer to the table for use in TableTls.
-  uint8_t* tlsElements() const;
+  // Raw pointer to the table for use in TableInstanceData.
+  uint8_t* instanceElements() const;
 
   // set/get/fillFuncRef is allowed only on table-of-funcref.
   // get/fillAnyRef is allowed only on table-of-anyref.
