@@ -129,6 +129,10 @@ class nsStringInputStream final : public nsIStringInputStream,
  private:
   ~nsStringInputStream() = default;
 
+  template <typename M>
+  void SerializeInternal(InputStreamParams& aParams, bool aDelayedStart,
+                         uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager);
+
   size_t Length() const { return mSource ? mSource->Data().Length() : 0; }
 
   size_t LengthRemaining() const { return Length() - mOffset; }
@@ -459,8 +463,25 @@ void nsStringInputStream::SerializedComplexity(uint32_t aMaxSize,
   }
 }
 
-void nsStringInputStream::Serialize(InputStreamParams& aParams,
-                                    uint32_t aMaxSize, uint32_t* aSizeUsed) {
+void nsStringInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& /* aFDs */,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
+}
+
+void nsStringInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& /* aFDs */,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aDelayedStart, aMaxSize, aSizeUsed, aManager);
+}
+
+template <typename M>
+void nsStringInputStream::SerializeInternal(InputStreamParams& aParams,
+                                            bool aDelayedStart,
+                                            uint32_t aMaxSize,
+                                            uint32_t* aSizeUsed, M* aManager) {
   ReentrantMonitorAutoEnter lock(mMon);
 
   MOZ_DIAGNOSTIC_ASSERT(!Closed(), "cannot send a closed stream!");
@@ -477,7 +498,8 @@ void nsStringInputStream::Serialize(InputStreamParams& aParams,
       mSource = source;
     }
 
-    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
+                                                  aManager);
     return;
   }
 
@@ -488,7 +510,8 @@ void nsStringInputStream::Serialize(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsStringInputStream::Deserialize(const InputStreamParams& aParams) {
+bool nsStringInputStream::Deserialize(const InputStreamParams& aParams,
+                                      const FileDescriptorArray& /* aFDs */) {
   if (aParams.type() != InputStreamParams::TStringInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;

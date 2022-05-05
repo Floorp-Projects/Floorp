@@ -660,21 +660,16 @@ void nsHttpTransaction::OnTransportStatus(nsITransport* transport,
       return;
     }
 
-    nsCOMPtr<nsITellableStream> tellable = do_QueryInterface(mRequestStream);
-    if (!tellable) {
+    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
+    if (!seekable) {
       LOG1(
           ("nsHttpTransaction::OnTransportStatus %p "
-           "SENDING_TO without tellable request stream\n",
+           "SENDING_TO without seekable request stream\n",
            this));
-      MOZ_ASSERT(
-          !mRequestStream,
-          "mRequestStream should be tellable as it was wrapped in "
-          "nsBufferedInputStream, which provides the tellable interface even "
-          "when wrapping non-tellable streams.");
       progress = 0;
     } else {
       int64_t prog = 0;
-      tellable->Tell(&prog);
+      seekable->Tell(&prog);
       progress = prog;
     }
 

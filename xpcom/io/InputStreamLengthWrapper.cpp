@@ -255,14 +255,35 @@ void InputStreamLengthWrapper::SerializedComplexity(uint32_t aMaxSize,
 }
 
 void InputStreamLengthWrapper::Serialize(
-    mozilla::ipc::InputStreamParams& aParams, uint32_t aMaxSize,
-    uint32_t* aSizeUsed) {
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+void InputStreamLengthWrapper::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+template <typename M>
+void InputStreamLengthWrapper::SerializeInternal(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(mInputStream);
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
 
   InputStreamLengthWrapperParams params;
   InputStreamHelper::SerializeInputStream(mInputStream, params.stream(),
-                                          aMaxSize, aSizeUsed);
+                                          aFileDescriptors, aDelayedStart,
+                                          aMaxSize, aSizeUsed, aManager);
   params.length() = mLength;
   params.consumed() = mConsumed;
 
@@ -270,7 +291,8 @@ void InputStreamLengthWrapper::Serialize(
 }
 
 bool InputStreamLengthWrapper::Deserialize(
-    const mozilla::ipc::InputStreamParams& aParams) {
+    const mozilla::ipc::InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   MOZ_ASSERT(!mInputStream);
   MOZ_ASSERT(!mWeakIPCSerializableInputStream);
 
@@ -282,8 +304,8 @@ bool InputStreamLengthWrapper::Deserialize(
   const InputStreamLengthWrapperParams& params =
       aParams.get_InputStreamLengthWrapperParams();
 
-  nsCOMPtr<nsIInputStream> stream =
-      InputStreamHelper::DeserializeInputStream(params.stream());
+  nsCOMPtr<nsIInputStream> stream = InputStreamHelper::DeserializeInputStream(
+      params.stream(), aFileDescriptors);
   if (!stream) {
     NS_WARNING("Deserialize failed!");
     return false;
