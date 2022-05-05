@@ -267,8 +267,10 @@ class DateTimeFormat final {
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char16_t> aSkeleton,
       DateTimePatternGenerator* aDateTimePatternGenerator,
-      Maybe<DateTimeFormat::HourCycle> aHourCycle = Nothing{},
-      Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{});
+      Maybe<Span<const char16_t>> aTimeZoneOverride = Nothing{}) {
+    return TryCreateFromSkeleton(aLocale, aSkeleton, aDateTimePatternGenerator,
+                                 Nothing{}, aTimeZoneOverride);
+  }
 
   /**
    * Create a DateTimeFormat from a UTF-8 skeleton.
@@ -278,9 +280,16 @@ class DateTimeFormat final {
   static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
       Span<const char> aLocale, Span<const char> aSkeleton,
       DateTimePatternGenerator* aDateTimePatternGenerator,
-      Maybe<DateTimeFormat::HourCycle> aHourCycle = Nothing{},
       Maybe<Span<const char>> aTimeZoneOverride = Nothing{});
 
+ private:
+  static Result<UniquePtr<DateTimeFormat>, ICUError> TryCreateFromSkeleton(
+      Span<const char> aLocale, Span<const char16_t> aSkeleton,
+      DateTimePatternGenerator* aDateTimePatternGenerator,
+      Maybe<DateTimeFormat::HourCycle> aHourCycle,
+      Maybe<Span<const char16_t>> aTimeZoneOverride);
+
+ public:
   /**
    * Create a DateTimeFormat from a ComponentsBag.
    *
