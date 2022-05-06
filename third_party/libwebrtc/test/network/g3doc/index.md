@@ -1,9 +1,6 @@
 # Network Emulation Framework
 
-<!--*
-# Document freshness: For more information, see go/fresh-source.
-freshness: { owner: 'titovartem' reviewed: '2021-01-07' }
-*-->
+<?% config.freshness.reviewed = '2021-03-01' %?>
 
 [TOC]
 
