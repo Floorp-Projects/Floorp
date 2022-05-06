@@ -312,7 +312,11 @@ class gfxTextRun : public gfxShapedText {
                        aDrawTargetForTightBoundingBox, aProvider);
   }
 
-  void GetLineHeightMetrics(gfxFloat& aAscent, gfxFloat& aDescent) const;
+  void GetLineHeightMetrics(Range aRange, gfxFloat& aAscent,
+                            gfxFloat& aDescent) const;
+  void GetLineHeightMetrics(gfxFloat& aAscent, gfxFloat& aDescent) const {
+    GetLineHeightMetrics(Range(this), aAscent, aDescent);
+  }
 
   /**
    * Computes just the advance width for a substring.
