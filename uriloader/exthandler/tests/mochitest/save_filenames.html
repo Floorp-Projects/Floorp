@@ -1,0 +1,296 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+</head>
+<body>
+<style>
+  img { padding: 10px; border: 1px solid red; }
+  a { padding-left: 10px; }
+</style>
+
+<span id="items">
+
+<!-- simple filename -->
+<img id="i0" src="http://localhost:8000/basic.png"
+     data-noattach="true" data-filename="basic.png">
+
+<!-- simple filename with content disposition -->
+<img id="i1" src="http://localhost:8000/save_filename.sjs?type=png&filename=simple.png" data-filename="simple.png">
+
+<!-- invalid characters in the filename -->
+<img id="i2" src="http://localhost:8000/save_filename.sjs?type=png&filename=invalidfilename/a:b*c%63d.png" data-filename="invalidfilename_a b ccd.png">
+
+<!-- invalid extension for a png image -->
+<img id="i3" src="http://localhost:8000/save_filename.sjs?type=png&filename=invalidextension.pang" data-filename="invalidextension.png">
+
+<!-- jpeg extension for a png image -->
+<img id="i4" src="http://localhost:8000/save_filename.sjs?type=png&filename=reallyapng.jpeg" data-filename="reallyapng.png">
+
+<!-- txt extension for a png image -->
+<img id="i5" src="http://localhost:8000/save_filename.sjs?type=png&filename=nottext.txt" data-filename="nottext.png">
+
+<!-- no extension for a png image -->
+<img id="i6" src="http://localhost:8000/save_filename.sjs?type=png&filename=noext" data-filename="noext.png">
+
+<!-- empty extension for a png image -->
+<img id="i7" src="http://localhost:8000/save_filename.sjs?type=png&filename=noextdot." data-filename="noextdot.png">
+
+<!-- long filename -->
+<img id="i8" src="http://localhost:8000/save_filename.sjs?type=png&filename=averylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilename.png"
+     data-filename="averylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfi.png">
+
+<!-- long filename with invalid extension -->
+<img id="i9" src="http://localhost:8000/save_filename.sjs?type=png&filename=bverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilename.exe"
+     data-filename="bverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfi.png">
+
+<!-- long filename with invalid extension -->
+<img id="i10" src="http://localhost:8000/save_filename.sjs?type=png&filename=cverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilename.exe.jpg"
+     data-filename="cverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfilenameverylongfi.png">
+
+<!-- jpeg with jpg extension -->
+<img id="i11" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=thejpg.jpg" data-filename="thejpg.jpg">
+
+<!-- jpeg with jpeg extension -->
+<img id="i12" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=thejpg.jpeg" data-filename="thejpg.jpeg">
+
+<!-- jpeg with invalid extension -->
+<img id="i13" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=morejpg.exe" data-filename="morejpg.jpg" data-filename-platformlinux="morejpg.jpeg">
+
+<!-- jpeg with multiple extensions -->
+<img id="i14" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=anotherjpg.jpg.exe" data-filename="anotherjpg.jpg.jpg" data-filename-platformlinux="anotherjpg.jpg.jpeg">
+
+<!-- jpeg with no filename portion -->
+<img id="i15" src="http://localhost:8000/save_filename.sjs?type=jpeg&filename=.jpg" data-filename="index.jpg">
+
+<!-- png with no filename portion and invalid extension -->
+<img id="i16" src="http://localhost:8000/save_filename.sjs?type=png&filename=.exe" data-filename="index.png">
+
+<!-- png with escaped characters -->
+<img id="i17" src="http://localhost:8000/save_filename.sjs?type=png&filename=first%20file.png" data-filename="first file.png">
+
+<!-- png with more escaped characters -->
+<img id="i18" src="http://localhost:8000/save_filename.sjs?type=png&filename=second%32file%2Eexe" data-filename="second2file.png">
+
+<!-- unknown type with png extension -->
+<img id="i19" src="http://localhost:8000/save_filename.sjs?type=gook&filename=gook1.png"
+     data-nodrag="true" data-unknown="typeonly" data-filename="gook1.png">
+
+<!-- unknown type with exe extension -->
+<img id="i20" src="http://localhost:8000/save_filename.sjs?type=gook&filename=gook2.exe"
+     data-nodrag="true" data-unknown="typeonly" data-filename="gook2.exe">
+
+<!-- unknown type with no extension -->
+<img id="i21" src="http://localhost:8000/save_filename.sjs?type=gook&filename=gook3"
+     data-nodrag="true" data-unknown="typeonly" data-filename="gook3">
+
+<!-- simple script -->
+<script id="i22" src="http://localhost:8000/save_filename.sjs?type=js&filename=script1.js" data-filename="script1.js"></script>
+
+<!-- script with invalid extension. Windows doesn't have an association for application/x-javascript
+     so doesn't handle it. -->
+<script id="i23" src="http://localhost:8000/save_filename.sjs?type=js&filename=script2.exe"
+        data-filename="script2.exe.js"></script>
+
+<!-- script with escaped characters -->
+<script id="i24" src="http://localhost:8000/save_filename.sjs?type=js&filename=script%20%33.exe"
+        data-filename="script 3.exe.js"></script>
+
+<!-- script with long filename -->
+<script id="i25" src="http://localhost:8000/save_filename.sjs?type=js&filename=script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789.js"
+        data-filename="script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456789script123456.js"></script>
+
+<!-- binary with exe extension -->
+<object id="i26" data="http://localhost:8000/save_filename.sjs?type=binary&filename=download1.exe"
+        data-unknown="true" data-filename="download1.exe"></object>
+
+<!-- binary with invalid extension -->
+<object id="i27" data="http://localhost:8000/save_filename.sjs?type=binary&filename=download2.png"
+        data-unknown="true" data-filename="download2.png"></object>
+
+<!-- binary with no extension -->
+<object id="i28" data="http://localhost:8000/save_filename.sjs?type=binary&filename=downloadnoext"
+        data-unknown="true" data-filename="downloadnoext"></object>
+
+<!-- binary with no other invalid characters -->
+<object id="i29" data="http://localhost:8000/save_filename.sjs?type=binary&filename=binary^%31%20exe.exe"
+        data-unknown="true" data-filename="binary^1 exe.exe"></object>
+
+<!-- unknown image type with no extension, but ending in png -->
+<img id="i30" src="http://localhost:8000/save_filename.sjs?type=otherimage&filename=specialpng"
+     data-unknown="typeonly" data-nodrag="true" data-filename="specialpng">
+
+<!-- unknown image type with no extension, but ending in many dots -->
+<img id="i31" src="http://localhost:8000/save_filename.sjs?type=otherimage&filename=extrapng..."
+     data-unknown="typeonly" data-nodrag="true" data-filename="extrapng">
+
+<!-- image type with no content-disposition filename specified -->
+<img id="i32" src="http://localhost:8000/save_filename.sjs?type=png" data-filename="save_filename.png">
+
+<!-- binary with no content-disposition filename specified -->
+<object id="i33" data="http://localhost:8000/save_filename.sjs?type=binary"
+        data-unknown="true" data-filename="save_filename.sjs"></object>
+
+<!-- image where url has png extension -->
+<img id="i34" src="http://localhost:8000/getdata.png?type=png&filename=override.png" data-filename="override.png">
+
+<!-- image where url has png extension but content disposition has incorrect extension -->
+<img id="i35" src="http://localhost:8000/getdata.png?type=png&filename=flower.jpeg" data-filename="flower.png">
+
+<!-- image where url has png extension but content disposition does not -->
+<img id="i36" src="http://localhost:8000/getdata.png?type=png&filename=ruby" data-filename="ruby.png">
+
+<!-- image where url has png extension but content disposition has invalid characters -->
+<img id="i37" src="http://localhost:8000/getdata.png?type=png&filename=sapphire/data" data-filename="sapphire_data.png">
+
+<!-- image where neither content disposition or url have an extension -->
+<img id="i38" src="http://localhost:8000/base?type=png&filename=emerald" data-filename="emerald.png">
+
+<!-- image where filename is not specified -->
+<img id="i39" src="http://localhost:8000/base?type=png" data-filename="base.png">
+
+<!-- simple script where url filename has no extension -->
+<script id="i40" src="http://localhost:8000/base?type=js&filename=script4.js" data-filename="script4.js"></script>
+
+<!-- script where url filename has no extension and invalid extension in content disposition filename -->
+<script id="i41" src="http://localhost:8000/base?type=js&filename=script5.exe"
+        data-filename="script5.exe.js"></script>
+
+<!-- script where url filename has no extension and escaped characters in content disposition filename-->
+<script id="i42" src="http://localhost:8000/base?type=js&filename=script%20%36.exe"
+        data-filename="script 6.exe.js"></script>
+
+<!-- text where filename is present -->
+<img id="i43" src="http://localhost:8000/getdata.png?type=text&filename=readme.txt"
+     data-nodrag="true" data-filename="readme.txt">
+
+<!-- text where filename is present with a different extension -->
+<img id="i44" src="http://localhost:8000/getdata.png?type=text&filename=main.cpp"
+     data-nodrag="true" data-filename="main.cpp">
+
+<!-- text where extension is not present -->
+<img id="i45" src="http://localhost:8000/getdata.png?type=text&filename=readme"
+     data-nodrag="true" data-filename="readme">
+
+<!-- text where extension is not present and url does not have extension -->
+<img id="i46" src="http://localhost:8000/base?type=text&filename=info"
+     data-nodrag="true" data-filename="info">
+
+<!-- text where filename is not present -->
+<img id="i47" src="http://localhost:8000/basetext?type=text"
+     data-nodrag="true" data-filename="basetext">
+
+<!-- text where url has extension -->
+<img id="i48" src="http://localhost:8000/text2.txt?type=text"
+     data-nodrag="true" data-filename="text2.txt">
+
+<!-- text where url has extension -->
+<img id="i49" src="http://localhost:8000/text3.gonk?type=text"
+     data-nodrag="true" data-filename="text3.gonk">
+
+<!-- text with long filename -->
+<img id="i50" src="http://localhost:8000/text3.gonk?type=text&filename=text0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789text0123456789zztext0123456789zztext0123456789zztext01234567.exe.txt" data-nodrag="true" data-filename="text0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456789zztext0123456.txt">
+
+<!-- webp image -->
+<img id="i51" src="http://localhost:8000/save_filename.sjs?type=webp&filename=webpimage.webp"
+     data-filename="webpimage.webp">
+
+<!-- webp image with jpg extension -->
+<img id="i52" src="http://localhost:8000/save_filename.sjs?type=webp&filename=realwebpimage.jpg"
+     data-filename="realwebpimage.webp">
+
+<!-- no content type specified -->
+<img id="i53" src="http://localhost:8000/save_filename.sjs?&filename=notype.png"
+     data-nodrag="true" data-filename="notype.png">
+
+<!-- no content type specified. Note that on Windows, .txt is
+     appended when saving as an attachment. This is special-cased
+     in browser_save_filenames.js. -->
+<img id="i54" src="http://localhost:8000/save_filename.sjs?&filename=notypebin.exe"
+     data-nodrag="true" data-filename="notypebin.exe">
+
+<!-- extension contains invalid characters -->
+<img id="i55" src="http://localhost:8000/save_filename.sjs?type=png&filename=extinvalid.a?*"
+     data-filename="extinvalid.png">
+
+<!-- filename with redirect and content disposition -->
+<img id="i56" src="http://localhost:8000/redir?type=png&filename=red.png" data-filename="red.png">
+
+<!-- filename with redirect and different type -->
+<img id="i57" src="http://localhost:8000/redir?type=jpeg&filename=green.png"
+     data-filename="green.jpg" data-filename-platformlinux="green.jpeg">
+
+<!-- filename with redirect and binary type -->
+<object id="i58" data="http://localhost:8000/redir?type=binary&filename=blue.png"
+        data-unknown="true" data-filename="blue.png"></object>
+
+<!-- filename in url with incorrect extension -->
+<img id="i59" src="http://localhost:8000/aquamarine.jpeg"
+     data-noattach="true" data-filename="aquamarine.png">
+
+<!-- filename in url with exe extension, but returns a png image -->
+<img id="i60" src="http://localhost:8000/lazuli.exe"
+     data-noattach="true" data-filename="lazuli.png">
+
+<!-- filename with leading, trailing and duplicate spaces -->
+<img id="i61" src="http://localhost:8000/save_filename.sjs?type=png&filename=  with  spaces.png  "
+     data-filename="with spaces.png">
+
+<!-- filename with leading and trailing periods -->
+<img id="i62" src="http://localhost:8000/save_filename.sjs?type=png&filename=..with..dots..png.."
+     data-filename="with..dots..png">
+
+<!-- filename with non-ascii character -->
+<img id="i63" src="http://localhost:8000/base?type=png&filename=s%C3%B6meescapes.%C3%B7ng" data-filename="sömeescapes.png">
+
+<!-- filename with content disposition name assigned. The name is only used
+     when selecting to manually save, otherwise it is ignored.  -->
+<img id="i64" src="http://localhost:8000/save_thename.sjs?type=png&dispname=withname"
+     data-filename="save_thename.png">
+
+<!-- reserved filename on Windows -->
+<img id="i65" src="http://localhost:8000/save_filename.sjs?type=text&filename=com1"
+     data-nodrag="true" data-filename="com1" data-filename-platformwin="index">
+
+<!-- reserved filename with extension on Windows -->
+<img id="i66" src="http://localhost:8000/save_filename.sjs?type=text&filename=com2.any"
+     data-nodrag="true" data-filename="com2.any" data-filename-platformwin="index">
+
+</span>
+
+<!-- This set is used to test the filename specified by the download attribute is validated correctly. -->
+<span id="downloads">
+  <a id="download0" href="http://localhost:8000/base" download="pearl.png" data-filename="pearl.png">Link</a>
+  <a id="download1" href="http://localhost:8000/save_filename.sjs?type=png" download="opal.jpeg" data-filename="opal.png">Link</a>
+  <a id="download2" href="http://localhost:8000/save_filename.sjs?type=jpeg"
+     download="amethyst.png" data-filename="amethyst.jpg"
+     data-filename-platformlinux="amethyst.jpeg">Link</a>
+  <a id="download3" href="http://localhost:8000/save_filename.sjs?type=text"
+     download="onyx.png" data-filename="onyx.png">Link</a>
+  <!-- The content-disposition overrides the download attribute. -->
+  <a id="download4" href="http://localhost:8000/save_filename.sjs?type=png&filename=fakename.jpeg" download="topaz.jpeg" data-filename="fakename.png">Link</a>
+  <a id="download5" href="http://localhost:8000/save_filename.sjs?type=png"
+     download="amber?.png" data-filename="amber .png">Link</a>
+  <a id="download6" href="http://localhost:8000/save_filename.sjs?type=jpeg"
+     download="jade.:*jpeg" data-filename="jade.jpg"
+     data-filename-platformlinux="jade.jpeg">Link</a>>
+  <a id="download7" href="http://localhost:8000/save_filename.sjs?type=png"
+     download="thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename.png"
+     data-filename="thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisaverylongfilename-thisisavery.png">Link</a>
+  <a id="download8" href="http://localhost:8000/base"
+      download="&Tab;&NewLine;&nbsp;&#11&#x180e;&#x180e;&#12   spa   ced.png &Tab;&NewLine;&nbsp;&#x180e;&#x180e;&#11&#12 "
+      data-filename="spa ced.png">Link</a>
+</span>
+
+<span id="links">
+  <a id="link0" href="http://localhost:8000/save_filename.sjs?type=png&filename=one.png" data-filename="one.png">One</a>
+  <a id="link1" href="http://localhost:8000/save_filename.sjs?type=png&filename=two.jpeg" data-filename="two.png">Two</a>
+  <a id="link2" href="http://localhost:8000/save_filename.sjs?type=png&filename=three.con" data-filename="three.png">Three</a>
+  <a id="link3" href="http://localhost:8000/save_filename.sjs?type=png&dispname=four" data-filename="four.png">Four</a>
+</span>
+
+<!-- The content-disposition attachment generates links from the images/objects/scripts above
+     and inserts them here. -->
+<p id="attachment-links">
+</p>
+
+</body></html>
