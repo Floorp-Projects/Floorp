@@ -114,7 +114,7 @@ TemporaryFileBlobImpl::~TemporaryFileBlobImpl() {
 
 already_AddRefed<BlobImpl> TemporaryFileBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   MOZ_CRASH("This BlobImpl is not meant to be sliced!");
   return nullptr;
 }
