@@ -1115,6 +1115,10 @@ class BaseAssemblerX64 : public BaseAssembler {
     return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
                                X86Encoding::ConditionCmp_LE, src, dst);
   }
+  [[nodiscard]] JmpSrc vcmpgeps_ripr(XMMRegisterID src, XMMRegisterID dst) {
+    return twoByteRipOpImmSimd("vcmpps", VEX_PS, OP2_CMPPS_VpsWps,
+                               X86Encoding::ConditionCmp_GE, src, dst);
+  }
   [[nodiscard]] JmpSrc vcmpeqpd_ripr(XMMRegisterID src, XMMRegisterID dst) {
     return twoByteRipOpImmSimd("vcmppd", VEX_PD, OP2_CMPPD_VpdWpd,
                                X86Encoding::ConditionCmp_EQ, src, dst);

@@ -278,6 +278,8 @@ enum ConditionCmp {
   ConditionCmp_NLT = 0x5,
   ConditionCmp_NLE = 0x6,
   ConditionCmp_ORD = 0x7,
+  ConditionCmp_AVX_Enabled = 0x8,
+  ConditionCmp_GE = 0xD,
 };
 
 // Rounding modes for ROUNDSS / ROUNDSD.
