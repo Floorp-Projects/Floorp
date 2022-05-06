@@ -79,6 +79,13 @@ interface nsIGfxInfo : nsISupports
   readonly attribute ACString drmRenderDevice;
 
   /**
+   * Information about display devices
+   */
+  readonly attribute Array<AString> displayInfo;
+  readonly attribute Array<unsigned long> displayWidth;
+  readonly attribute Array<unsigned long> displayHeight;
+
+  /**
    * Returns an array of objects describing each monitor. Guaranteed properties
    * are "screenWidth" and "screenHeight". This is only implemented on Desktop.
    *
@@ -88,6 +95,8 @@ interface nsIGfxInfo : nsISupports
    */
   [implicit_jscontext]
   jsval getMonitors();
+
+  void refreshMonitors();
 
   Array<ACString> getFailures(out Array<long> indices);
 
@@ -225,7 +234,7 @@ interface nsIGfxInfo : nsISupports
   /**
    * Maximum refresh rate among detected monitors. -1 if unknown. aMixed is set
    * to true if we know there are multiple displays and they have different
-   * refresh rates, else false. The returned value is in Hz.
+   * refresh rates, else false.
    */
   [noscript, notxpcom] long GetMaxRefreshRate(out boolean aMixed);
 
