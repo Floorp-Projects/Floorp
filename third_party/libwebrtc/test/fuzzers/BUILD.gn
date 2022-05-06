@@ -406,6 +406,23 @@ webrtc_fuzzer_test("sdp_parser_fuzzer") {
   seed_corpus = "corpora/sdp-corpus"
 }
 
+if (!build_with_chromium) {
+  # This target depends on test infrastructure that can't be built
+  # with Chromium at the moment.
+  # TODO(bugs.chromium.org/12534): Make this fuzzer build in Chromium.
+
+  webrtc_fuzzer_test("sdp_integration_fuzzer") {
+    sources = [ "sdp_integration_fuzzer.cc" ]
+    deps = [
+      "../../api:libjingle_peerconnection_api",
+      "../../pc:integration_test_helpers",
+      "../../pc:libjingle_peerconnection",
+      "../../test:test_support",
+    ]
+    seed_corpus = "corpora/sdp-corpus"
+  }
+}
+
 webrtc_fuzzer_test("stun_parser_fuzzer") {
   sources = [ "stun_parser_fuzzer.cc" ]
   deps = [
