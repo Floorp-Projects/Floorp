@@ -1311,25 +1311,29 @@ void MacroAssemblerX86Shared::truncSatFloat32x4ToInt32x4(FloatRegister src,
   // become 0.
 
   // Convert NaN to 0 by masking away values that compare unordered to itself.
-  vmovaps(src, scratch);
-  vcmpeqps(Operand(scratch), scratch, scratch);
-  src = asMasm().moveSimd128FloatIfNotAVX(src, dest);
-  vpand(Operand(scratch), src, dest);
+  if (HasAVX()) {
+    vcmpeqps(Operand(src), src, scratch);
+    vpand(Operand(scratch), src, dest);
+  } else {
+    vmovaps(src, scratch);
+    vcmpeqps(Operand(scratch), scratch, scratch);
+    moveSimd128Float(src, dest);
+    vpand(Operand(scratch), dest, dest);
+  }
 
-  // Compute the complement of each non-NaN lane's sign bit, we'll need this to
-  // correct the result of cvttps2dq.  All other output bits are garbage.
-  vpxor(Operand(dest), scratch, scratch);
+  // Make lanes in scratch == 0xFFFFFFFFh, if dest overflows during cvttps2dq,
+  // otherwise 0.
+  static const SimdConstant minOverflowedInt =
+      SimdConstant::SplatX4(2147483648.f);
+  if (HasAVX()) {
+    asMasm().vcmpgepsSimd128(minOverflowedInt, dest, scratch);
+  } else {
+    asMasm().loadConstantSimd128Float(minOverflowedInt, scratch);
+    vcmpleps(Operand(dest), scratch, scratch);
+  }
 
   // Convert.  This will make the output 80000000h if the input is out of range.
   vcvttps2dq(dest, dest);
-
-  // Preserve the computed complemented sign bit if the output was 80000000h.
-  // The sign bit will be 1 precisely for nonnegative values that overflowed.
-  vpand(Operand(dest), scratch, scratch);
-
-  // Create a mask with that sign bit.  Now a lane is either FFFFFFFFh if there
-  // was a positive overflow, otherwise zero.
-  vpsrad(Imm32(31), scratch, scratch);
 
   // Convert overflow lanes to 0x7FFFFFFF.
   vpxor(Operand(scratch), dest, dest);
