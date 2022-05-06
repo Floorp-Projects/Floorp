@@ -55,7 +55,12 @@ class ReceiveStatistics : public ReceiveStatisticsProvider,
  public:
   ~ReceiveStatistics() override = default;
 
+  // Returns a thread-safe instance of ReceiveStatistics.
+  // https://chromium.googlesource.com/chromium/src/+/lkgr/docs/threading_and_tasks.md#threading-lexicon
   static std::unique_ptr<ReceiveStatistics> Create(Clock* clock);
+  // Returns a thread-compatible instance of ReceiveStatistics.
+  static std::unique_ptr<ReceiveStatistics> CreateThreadCompatible(
+      Clock* clock);
 
   // Returns a pointer to the statistician of an ssrc.
   virtual StreamStatistician* GetStatistician(uint32_t ssrc) const = 0;
