@@ -2,6 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:-moz-native-anonymous #screenshots-component {
+  width: 100%;
+  height: 100%;
+  overflow: clip;
+  user-select: none;
+  position: fixed;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/**
+ * Overlay content is position: fixed as we need to allow for the possiblily
+ * of the document scrolling or changing size while the overlay is visible
+ */
 :-moz-native-anonymous #screenshots-overlay-container {
   /*
   Content CSS applying to the html element can impact the overlay.
@@ -14,17 +28,11 @@
   color: initial;
   direction: initial;
   writing-mode: initial;
-}
-
-/**
- * Overlay content is position: fixed as we need to allow for the possiblily
- * of the document scrolling or changing size while the overlay is visible
- */
-:-moz-native-anonymous #screenshots-overlay-container {
+  z-index: 1;
   position: fixed;
   top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
   pointer-events: auto;
   cursor: crosshair;
@@ -46,11 +54,81 @@
   border-radius: 3px;
   border: 1px #9b9b9b solid;
   color: #fff;
-  cursor: pointer;
   font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 16px;
   margin-top: 40px;
   padding: 10px 25px;
+}
+
+:-moz-native-anonymous .screenshots-button {
+  cursor: pointer;
+  appearance: none;
+  pointer-events: auto;
+  background-color: #f9f9fa;
+  color: #38383d;
+  border: 0;
+  border-radius: 3px;
+  font-size: 16px;
+  font-weight: 400;
+  height: 40px;
+  min-width: 40px;
+  outline: none;
+  padding: 0 10px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
+  user-select: none;
+  white-space: nowrap;
+  margin: 0 5px;
+  box-shadow: 0 0 0 1px rgba(12, 12, 13, 0.1), 0 2px 8px rgba(12, 12, 13, 0.1);
+}
+
+:-moz-native-anonymous .screenshots-button:hover {
+  background-color: #ededf0;
+}
+
+:-moz-native-anonymous #buttons {
+  position: absolute;
+  margin: 10px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6;
+}
+
+:-moz-native-anonymous #cancel {
+  width: 40px;
+}
+
+:-moz-native-anonymous #cancel > img {
+  color: #38383d;
+  content: url('chrome://browser/content/screenshots/cancel.svg');
+  width: 20px;
+  height: 20px;
+  padding: 10px 0;
+}
+
+:-moz-native-anonymous #copy > img {
+  color: #38383d;
+  content: url('chrome://browser/content/screenshots/copy.svg');
+  width: 16px;
+  height: 16px;
+}
+
+:-moz-native-anonymous #download {
+  background-color: #0a84ff;
+  color: #fff;
+}
+
+:-moz-native-anonymous #download:hover {
+  background-color: #0072e5;
+}
+
+:-moz-native-anonymous #download > img {
+  content: url('chrome://browser/content/screenshots/download-white.svg');
+  width: 16px;
+  height: 16px;
 }
 
 :-moz-native-anonymous .fixed-container {
@@ -122,5 +200,140 @@
   text-align: center;
   padding-top: 20px;
   width: 400px;
-  user-select: none;
+}
+
+:-moz-native-anonymous .bghighlight {
+  background-color: rgba(0, 0, 0, 0.7);
+  position: absolute;
+}
+
+:-moz-native-anonymous .highlight {
+  border-radius: 1px;
+  border: 2px dashed rgba(255, 255, 255, 0.8);
+  box-sizing: border-box;
+  cursor: move;
+  position: absolute;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+:-moz-native-anonymous .mover-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+:-moz-native-anonymous .mover-target.direction-topLeft {
+  cursor: nwse-resize;
+  height: 60px;
+  left: -30px;
+  top: -30px;
+  width: 60px;
+}
+
+:-moz-native-anonymous .mover-target.direction-top {
+  cursor: ns-resize;
+  height: 60px;
+  inset-inline-start: 0;
+  top: -30px;
+  width: 100%;
+  z-index: 4;
+}
+
+:-moz-native-anonymous .mover-target.direction-topRight {
+  cursor: nesw-resize;
+  height: 60px;
+  right: -30px;
+  top: -30px;
+  width: 60px;
+}
+
+:-moz-native-anonymous .mover-target.direction-left {
+  cursor: ew-resize;
+  height: 100%;
+  left: -30px;
+  top: 0;
+  width: 60px;
+  z-index: 4;
+}
+
+:-moz-native-anonymous .mover-target.direction-right {
+  cursor: ew-resize;
+  height: 100%;
+  right: -30px;
+  top: 0;
+  width: 60px;
+  z-index: 4;
+}
+
+:-moz-native-anonymous .mover-target.direction-bottomLeft {
+  bottom: -30px;
+  cursor: nesw-resize;
+  height: 60px;
+  left: -30px;
+  width: 60px;
+}
+
+:-moz-native-anonymous .mover-target.direction-bottom {
+  bottom: -30px;
+  cursor: ns-resize;
+  height: 60px;
+  inset-inline-start: 0;
+  width: 100%;
+  z-index: 4;
+}
+
+:-moz-native-anonymous .mover-target.direction-bottomRight {
+  bottom: -30px;
+  cursor: nwse-resize;
+  height: 60px;
+  right: -30px;
+  width: 60px;
+}
+
+:-moz-native-anonymous .mover-target:hover .mover {
+  transform: scale(1.05);
+}
+
+:-moz-native-anonymous .mover {
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  height: 16px;
+  opacity: 1;
+  position: relative;
+  transition: transform 125ms cubic-bezier(0.07, 0.95, 0, 1);
+  width: 16px;
+}
+
+:-moz-native-anonymous .small-selection .mover {
+  height: 10px;
+  width: 10px;
+}
+
+:-moz-native-anonymous .direction-topLeft .mover,
+:-moz-native-anonymous .direction-left .mover,
+:-moz-native-anonymous .direction-bottomLeft .mover {
+  left: -1px;
+}
+
+:-moz-native-anonymous .direction-topLeft .mover,
+:-moz-native-anonymous .direction-top .mover,
+:-moz-native-anonymous .direction-topRight .mover {
+  top: -1px;
+}
+
+:-moz-native-anonymous .direction-topRight .mover,
+:-moz-native-anonymous .direction-right .mover,
+:-moz-native-anonymous .direction-bottomRight .mover {
+  right: -1px;
+}
+
+:-moz-native-anonymous .direction-bottomRight .mover,
+:-moz-native-anonymous .direction-bottom .mover,
+:-moz-native-anonymous .direction-bottomLeft .mover {
+  bottom: -1px;
 }
