@@ -8,6 +8,8 @@ To find out the current release and schedule, refer to the
 [chromium dashboard](https://chromiumdash.appspot.com/schedule)
 
 ## List of releases
+  * [M89 Release Notes](https://groups.google.com/g/discuss-webrtc/c/Zrsn2hi8FV0/m/KIbn0EZPBQAJ)
+  * [M88 Release Notes](https://groups.google.com/g/discuss-webrtc/c/A0FjOcTW2c0/m/UAv-veyPCAAJ)
   * [M87 Release Notes](https://groups.google.com/g/discuss-webrtc/c/6VmKkCjRK0k/m/YyOTQyQ5AAAJ)
   * [M86 Release Notes](https://groups.google.com/g/discuss-webrtc/c/pKCOpi9Llyc/m/QhZjyE02BgAJ)
   * [M85 Release Notes](https://groups.google.com/d/msg/discuss-webrtc/Qq3nsR2w2HU/7WGLPscPBwAJ)
