@@ -5187,7 +5187,7 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   RefPtr<BrowsingContext> sourceBC = docToPrint->GetBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(sourceBC);
   if (!sourceBC) {
-    aError.ThrowNotSupportedError("No browsing context");
+    aError.ThrowNotSupportedError("No browsing context for source document");
     return nullptr;
   }
 
