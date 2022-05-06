@@ -32,8 +32,9 @@ class ScalabilityStructureKeySvc : public ScalableVideoController {
   void OnRatesUpdated(const VideoBitrateAllocation& bitrates) override;
 
  private:
-  enum FramePattern {
+  enum FramePattern : int {
     kNone,
+    kKey,
     kDeltaT0,
     kDeltaT2A,
     kDeltaT1,
@@ -53,10 +54,16 @@ class ScalabilityStructureKeySvc : public ScalableVideoController {
     active_decode_targets_.set(sid * num_temporal_layers_ + tid, value);
   }
   bool TemporalLayerIsActive(int tid) const;
+  static DecodeTargetIndication Dti(int sid,
+                                    int tid,
+                                    const LayerFrameConfig& config);
+
   std::vector<LayerFrameConfig> KeyframeConfig();
   std::vector<LayerFrameConfig> T0Config();
   std::vector<LayerFrameConfig> T1Config();
-  std::vector<LayerFrameConfig> T2Config();
+  std::vector<LayerFrameConfig> T2Config(FramePattern pattern);
+
+  FramePattern NextPattern(FramePattern last_pattern) const;
 
   const int num_spatial_layers_;
   const int num_temporal_layers_;

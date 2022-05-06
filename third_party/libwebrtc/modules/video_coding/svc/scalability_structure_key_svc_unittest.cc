@@ -62,14 +62,108 @@ TEST(ScalabilityStructureL3T3KeyTest,
   // Simulate T1 frame dropped by the encoder,
   // i.e. retrieve config, but skip calling OnEncodeDone.
   structure.NextFrameConfig(/*restart=*/false);
-  // one more temporal units (T2)
+  // one more temporal unit.
   wrapper.GenerateFrames(/*num_temporal_units=*/1, frames);
 
-  ASSERT_THAT(frames, SizeIs(9));
+  EXPECT_THAT(frames, SizeIs(9));
+  EXPECT_TRUE(wrapper.FrameReferencesAreValid(frames));
+}
+
+TEST(ScalabilityStructureL3T3KeyTest,
+     SkippingFrameReusePreviousFrameConfiguration) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3Key structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  // 1st 2 temporal units (T0 and T2)
+  wrapper.GenerateFrames(/*num_temporal_units=*/2, frames);
+  ASSERT_THAT(frames, SizeIs(6));
+  ASSERT_EQ(frames[0].temporal_id, 0);
+  ASSERT_EQ(frames[3].temporal_id, 2);
+
+  // Simulate a frame dropped by the encoder,
+  // i.e. retrieve config, but skip calling OnEncodeDone.
+  structure.NextFrameConfig(/*restart=*/false);
+  // two more temporal unit, expect temporal pattern continues
+  wrapper.GenerateFrames(/*num_temporal_units=*/2, frames);
+  ASSERT_THAT(frames, SizeIs(12));
+  // Expect temporal pattern continues as if there were no dropped frames.
+  EXPECT_EQ(frames[6].temporal_id, 1);
+  EXPECT_EQ(frames[9].temporal_id, 2);
+}
+
+TEST(ScalabilityStructureL3T3KeyTest, SkippingKeyFrameTriggersNewKeyFrame) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3Key structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  // Ask for a key frame config, but do not return any frames
+  structure.NextFrameConfig(/*restart=*/false);
+
+  // Ask for more frames, expect they start with a key frame.
+  wrapper.GenerateFrames(/*num_temporal_units=*/2, frames);
+  ASSERT_THAT(frames, SizeIs(6));
+  ASSERT_EQ(frames[0].temporal_id, 0);
+  ASSERT_EQ(frames[3].temporal_id, 2);
+  EXPECT_TRUE(wrapper.FrameReferencesAreValid(frames));
+}
+
+TEST(ScalabilityStructureL3T3KeyTest,
+     SkippingT2FrameAndDisablingT2LayerProduceT1AsNextFrame) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3Key structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  wrapper.GenerateFrames(/*num_temporal_units=*/1, frames);
+  // Ask for next (T2) frame config, but do not return any frames
+  auto config = structure.NextFrameConfig(/*restart=*/false);
+  ASSERT_THAT(config, Not(IsEmpty()));
+  ASSERT_EQ(config.front().TemporalId(), 2);
+
+  // Disable T2 layer,
+  structure.OnRatesUpdated(EnableTemporalLayers(/*s0=*/2, /*s1=*/2, /*s2=*/2));
+  // Expect instead of reusing unused config, T1 config is generated.
+  config = structure.NextFrameConfig(/*restart=*/false);
+  ASSERT_THAT(config, Not(IsEmpty()));
+  EXPECT_EQ(config.front().TemporalId(), 1);
+}
+
+TEST(ScalabilityStructureL3T3KeyTest, EnableT2LayerWhileProducingT1Frame) {
+  std::vector<GenericFrameInfo> frames;
+  ScalabilityStructureL3T3Key structure;
+  ScalabilityStructureWrapper wrapper(structure);
+
+  // Disable T2 layer,
+  structure.OnRatesUpdated(EnableTemporalLayers(/*s0=*/2, /*s1=*/2, /*s2=*/2));
+
+  // Generate the key frame.
+  wrapper.GenerateFrames(/*num_temporal_units=*/1, frames);
+  ASSERT_THAT(frames, SizeIs(3));
   EXPECT_EQ(frames[0].temporal_id, 0);
-  EXPECT_EQ(frames[3].temporal_id, 2);
-  // T1 frames were dropped by the encoder.
+
+  // Ask for next (T1) frame config, but do not return any frames yet.
+  auto config = structure.NextFrameConfig(/*restart=*/false);
+  ASSERT_THAT(config, Not(IsEmpty()));
+  ASSERT_EQ(config.front().TemporalId(), 1);
+
+  // Reenable T2 layer.
+  structure.OnRatesUpdated(EnableTemporalLayers(/*s0=*/3, /*s1=*/3, /*s2=*/3));
+
+  // Finish encoding previously requested config.
+  for (auto layer_config : config) {
+    GenericFrameInfo info = structure.OnEncodeDone(layer_config);
+    EXPECT_EQ(info.temporal_id, 1);
+    frames.push_back(info);
+  }
+  ASSERT_THAT(frames, SizeIs(6));
+
+  // Generate more frames, expect T2 pattern resumes.
+  wrapper.GenerateFrames(/*num_temporal_units=*/4, frames);
+  ASSERT_THAT(frames, SizeIs(18));
   EXPECT_EQ(frames[6].temporal_id, 2);
+  EXPECT_EQ(frames[9].temporal_id, 0);
+  EXPECT_EQ(frames[12].temporal_id, 2);
+  EXPECT_EQ(frames[15].temporal_id, 1);
 
   EXPECT_TRUE(wrapper.FrameReferencesAreValid(frames));
 }
