@@ -156,7 +156,7 @@ const tabsSetupFlowManager = new (class {
 
   async openFxASignup() {
     const url = await this.fxAccounts.constructor.config.promiseConnectAccountURI(
-      "myfirefox"
+      "firefoxview"
     );
     switchToTabHavingURI(url, true);
   }
