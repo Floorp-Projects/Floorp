@@ -686,15 +686,8 @@ void LibaomAv1Encoder::SetRates(const RateControlParameters& parameters) {
     return;
   }
 
-  // Check input target bit rate value.
-  uint32_t rc_target_bitrate_kbps = parameters.bitrate.get_sum_kbps();
-  if (encoder_settings_.maxBitrate > 0)
-    RTC_DCHECK_LE(rc_target_bitrate_kbps, encoder_settings_.maxBitrate);
-  RTC_DCHECK_GE(rc_target_bitrate_kbps, encoder_settings_.minBitrate);
-
   svc_controller_->OnRatesUpdated(parameters.bitrate);
-  // Set target bit rate.
-  cfg_.rc_target_bitrate = rc_target_bitrate_kbps;
+  cfg_.rc_target_bitrate = parameters.bitrate.get_sum_kbps();
 
   if (SvcEnabled()) {
     for (int sid = 0; sid < svc_params_->number_spatial_layers; ++sid) {
