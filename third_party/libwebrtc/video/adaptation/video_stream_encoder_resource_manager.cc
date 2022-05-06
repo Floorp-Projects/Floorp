@@ -720,16 +720,20 @@ bool VideoStreamEncoderResourceManager::IsSimulcast(
     const VideoEncoderConfig& encoder_config) {
   const std::vector<VideoStream>& simulcast_layers =
       encoder_config.simulcast_layers;
+  if (simulcast_layers.size() <= 1) {
+    return false;
+  }
 
-  bool is_simulcast = simulcast_layers.size() > 1;
-  bool is_lowest_layer_active = simulcast_layers[0].active;
+  if (simulcast_layers[0].active) {
+    // We can't distinguish between simulcast and singlecast when only the
+    // lowest spatial layer is active. Treat this case as simulcast.
+    return true;
+  }
+
   int num_active_layers =
       std::count_if(simulcast_layers.begin(), simulcast_layers.end(),
                     [](const VideoStream& layer) { return layer.active; });
-
-  // We can't distinguish between simulcast and singlecast when only the
-  // lowest spatial layer is active. Treat this case as simulcast.
-  return is_simulcast && (num_active_layers > 1 || is_lowest_layer_active);
+  return num_active_layers > 1;
 }
 
 }  // namespace webrtc
