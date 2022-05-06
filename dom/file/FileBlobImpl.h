@@ -85,7 +85,7 @@ class FileBlobImpl : public BlobImpl {
   void CreateInputStream(nsIInputStream** aStream,
                          ErrorResult& aRv) const override;
 
-  int64_t GetFileId() override { return mFileId; }
+  int64_t GetFileId() const override { return mFileId; }
 
   void SetLazyData(const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLength, int64_t aLastModifiedDate) override {

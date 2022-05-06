@@ -42,7 +42,7 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
   bool IsMemoryFile() const override { return true; }
 
-  int64_t GetFileId() override { return mFileId; }
+  int64_t GetFileId() const override { return mFileId; }
 
   void SetFileId(int64_t aFileId) { mFileId = aFileId; }
 

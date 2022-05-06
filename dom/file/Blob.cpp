@@ -241,7 +241,7 @@ already_AddRefed<Blob> Blob::Constructor(
   return blob.forget();
 }
 
-int64_t Blob::GetFileId() { return mImpl->GetFileId(); }
+int64_t Blob::GetFileId() const { return mImpl->GetFileId(); }
 
 bool Blob::IsMemoryFile() const { return mImpl->IsMemoryFile(); }
 
