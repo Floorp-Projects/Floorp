@@ -53,6 +53,13 @@ const getCCExpYearFormatted = () => {
   return DEFAULT_CREDITCARD_RECORD["cc-exp-year"].toString().substring(2);
 };
 
+// Bug 1767130: If a form has separate inputs for expiry month and year,
+// we will always transform month into MM
+const DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY = {
+  ...DEFAULT_CREDITCARD_RECORD,
+  "cc-exp-month-formatted": getCCExpMonthFormatted(),
+};
+
 const TESTCASES = [
   {
     description: "Address form with street-address",
@@ -623,6 +630,17 @@ const TESTCASES = [
   },
   {
     description:
+      "Credit card form with separate fields for expiration month and year",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp-month">
+                <input autocomplete="cc-exp-year">
+              </form`,
+    profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
+    expectedResult: [{ ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY }],
+  },
+  {
+    description:
       "Credit Card form with matching options of cc-exp-year and cc-exp-month",
     document: `<form>
                <input autocomplete="cc-number">
@@ -1094,7 +1112,7 @@ const TESTCASES = [
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
     expectedResult: [
       {
-        ...DEFAULT_CREDITCARD_RECORD,
+        ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY,
         "cc-exp-year-formatted": getCCExpYearFormatted(),
       },
     ],
@@ -1109,7 +1127,7 @@ const TESTCASES = [
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
     expectedResult: [
       {
-        ...DEFAULT_CREDITCARD_RECORD,
+        ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY,
         "cc-exp-year": 25,
       },
     ],
@@ -1122,7 +1140,7 @@ const TESTCASES = [
                  <input autocomplete="cc-exp-year" maxlength="4">
                </form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY],
   },
   // Bug 1687679: The default value of an expiration month, when filled in an input element,
   // is a two character length string. Because of this, testing a maxlength of 1 is invalid.
@@ -1136,7 +1154,7 @@ const TESTCASES = [
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
     expectedResult: [
       {
-        ...DEFAULT_CREDITCARD_RECORD,
+        ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY,
         "cc-exp-year": 5,
         "cc-exp-month": 1,
       },
@@ -1166,7 +1184,7 @@ const TESTCASES = [
                  <input autocomplete="cc-exp-year" maxlength="-2">
                </form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY],
   },
   {
     description: "Test maxlength=10 on numeric fields.",
@@ -1176,7 +1194,7 @@ const TESTCASES = [
                  <input autocomplete="cc-exp-year" maxlength="10">
                </form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY],
   },
   {
     description: "Test (special case) maxlength=5 on cc-exp field.",
@@ -1208,6 +1226,7 @@ for (let testcase of TESTCASES) {
 
     handler.collectFormFields();
     handler.focusedInput = form.elements[0];
+
     let adaptedRecords = handler.activeSection.getAdaptedProfiles(
       testcase.profileData
     );
