@@ -165,18 +165,31 @@ function MergeSortTypedArray(array, len, comparefn) {
     assert(IsPossiblyWrappedTypedArray(array),
            "MergeSortTypedArray works only with typed arrays.");
 
-    // Insertion sort for small arrays, where "small" is defined by performance
-    // testing.
-    if (len < 8) {
-        InsertionSort(array, 0, len - 1, comparefn);
-        return array;
-    }
-
     // Use the same TypedArray kind for the buffer.
     var C = ConstructorForTypedArray(array);
 
+    var lBuffer = new C(len);
+
+    // Copy all elements into a temporary buffer, so that any modifications
+    // when calling |comparefn| are ignored.
+    for (var i = 0; i < len; i++) {
+        lBuffer[i] = array[i];
+    }
+
+    // Insertion sort for small arrays, where "small" is defined by performance
+    // testing.
+    if (len < 8) {
+        InsertionSort(lBuffer, 0, len - 1, comparefn);
+
+        // Move the sorted elements into the array.
+        for (var i = 0; i < len; i++) {
+            array[i] = lBuffer[i];
+        }
+
+        return array;
+    }
+
     // We do all of our allocating up front.
-    var lBuffer = array;
     var rBuffer = new C(len);
 
     // Use insertion sort for the initial ranges.
@@ -204,10 +217,8 @@ function MergeSortTypedArray(array, len, comparefn) {
     }
 
     // Move the sorted elements into the array.
-    if (lBuffer !== array) {
-        for (var i = 0; i < len; i++) {
-            array[i] = lBuffer[i];
-        }
+    for (var i = 0; i < len; i++) {
+        array[i] = lBuffer[i];
     }
 
     return array;
