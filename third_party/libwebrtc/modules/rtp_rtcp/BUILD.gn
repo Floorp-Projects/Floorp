@@ -338,6 +338,7 @@ rtc_source_set("rtp_rtcp_legacy") {
     "../../rtc_base:gtest_prod",
     "../../rtc_base:rtc_base_approved",
     "../../rtc_base/synchronization:mutex",
+    "../../system_wrappers",
     "../remote_bitrate_estimator",
   ]
   absl_deps = [

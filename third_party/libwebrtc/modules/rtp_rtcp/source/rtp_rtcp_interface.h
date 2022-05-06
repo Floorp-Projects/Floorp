@@ -28,6 +28,7 @@
 #include "modules/rtp_rtcp/source/rtp_sequence_number_map.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
 #include "rtc_base/constructor_magic.h"
+#include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
 
