@@ -17,7 +17,7 @@ caches
       "add() should throw TypeError for invalid scheme"
     );
     return cache.addAll([
-      "http://example.com/valid" + context,
+      "https://example.com/valid" + context,
       "ftp://example.com/invalid" + context,
     ]);
   })

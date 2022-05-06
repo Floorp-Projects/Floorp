@@ -1,7 +1,7 @@
 /* global context testDone:true */
 
 var c = null;
-var request = "http://example.com/hmm?q=foobar" + context;
+var request = "https://example.com/hmm?q=foobar" + context;
 var response = new Response("This is some Response!");
 var name = "snafu" + context;
 var foobar = "foobar" + context;
@@ -146,7 +146,7 @@ caches
   })
   .then(function(storageMatchResponse) {
     ok(storageMatchResponse, "storage match with cacheName should succeed");
-    var request2 = new Request("http://example.com/hmm?q=snafu" + context);
+    var request2 = new Request("https://example.com/hmm?q=snafu" + context);
     return c.match(request2, { ignoreSearch: true });
   })
   .then(function(match2Response) {
