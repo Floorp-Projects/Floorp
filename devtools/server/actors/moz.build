@@ -49,7 +49,6 @@ DevToolsModules(
     "pause-scoped.js",
     "perf.js",
     "performance-recording.js",
-    "performance.js",
     "preference.js",
     "process.js",
     "reflow.js",
