@@ -35,6 +35,13 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual uint32_t CharacterCount() const override;
 
+  LayoutDeviceIntRect TextBounds(
+      int32_t aStartOffset, int32_t aEndOffset,
+      uint32_t aCoordType =
+          nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE) override;
+
+  LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) override;
+
   virtual already_AddRefed<AccAttributes> TextAttributes(
       bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
       int32_t* aEndOffset) override;
