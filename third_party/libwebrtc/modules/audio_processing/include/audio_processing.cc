@@ -106,6 +106,19 @@ bool Agc2Config::operator==(const Agc2Config& rhs) const {
              adaptive_rhs.max_output_noise_level_dbfs;
 }
 
+bool AudioProcessing::Config::CaptureLevelAdjustment::operator==(
+    const AudioProcessing::Config::CaptureLevelAdjustment& rhs) const {
+  return enabled == rhs.enabled && pre_gain_factor == rhs.pre_gain_factor &&
+         post_gain_factor && rhs.post_gain_factor &&
+         analog_mic_gain_emulation == rhs.analog_mic_gain_emulation;
+}
+
+bool AudioProcessing::Config::CaptureLevelAdjustment::AnalogMicGainEmulation::
+operator==(const AudioProcessing::Config::CaptureLevelAdjustment::
+               AnalogMicGainEmulation& rhs) const {
+  return enabled == rhs.enabled && initial_level == rhs.initial_level;
+}
+
 std::string AudioProcessing::Config::ToString() const {
   char buf[2048];
   rtc::SimpleStringBuilder builder(buf);
@@ -118,7 +131,15 @@ std::string AudioProcessing::Config::ToString() const {
       << ", multi_channel_capture: " << pipeline.multi_channel_capture
       << " }, pre_amplifier: { enabled: " << pre_amplifier.enabled
       << ", fixed_gain_factor: " << pre_amplifier.fixed_gain_factor
-      << " }, high_pass_filter: { enabled: " << high_pass_filter.enabled
+      << " },capture_level_adjustment: { enabled: "
+      << capture_level_adjustment.enabled
+      << ", pre_gain_factor: " << capture_level_adjustment.pre_gain_factor
+      << ", post_gain_factor: " << capture_level_adjustment.post_gain_factor
+      << ", analog_mic_gain_emulation: { enabled: "
+      << capture_level_adjustment.analog_mic_gain_emulation.enabled
+      << ", initial_level: "
+      << capture_level_adjustment.analog_mic_gain_emulation.initial_level
+      << " }}, high_pass_filter: { enabled: " << high_pass_filter.enabled
       << " }, echo_canceller: { enabled: " << echo_canceller.enabled
       << ", mobile_mode: " << echo_canceller.mobile_mode
       << ", enforce_high_pass_filtering: "

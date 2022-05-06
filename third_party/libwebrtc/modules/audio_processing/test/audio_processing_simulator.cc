@@ -499,6 +499,34 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
     }
   }
 
+  if (settings_.use_analog_mic_gain_emulation) {
+    if (*settings_.use_analog_mic_gain_emulation) {
+      apm_config.capture_level_adjustment.enabled = true;
+      apm_config.capture_level_adjustment.analog_mic_gain_emulation.enabled =
+          true;
+    } else {
+      apm_config.capture_level_adjustment.analog_mic_gain_emulation.enabled =
+          false;
+    }
+  }
+  if (settings_.analog_mic_gain_emulation_initial_level) {
+    apm_config.capture_level_adjustment.analog_mic_gain_emulation
+        .initial_level = *settings_.analog_mic_gain_emulation_initial_level;
+  }
+
+  if (settings_.use_capture_level_adjustment) {
+    apm_config.capture_level_adjustment.enabled =
+        *settings_.use_capture_level_adjustment;
+  }
+  if (settings_.pre_gain_factor) {
+    apm_config.capture_level_adjustment.pre_gain_factor =
+        *settings_.pre_gain_factor;
+  }
+  if (settings_.post_gain_factor) {
+    apm_config.capture_level_adjustment.post_gain_factor =
+        *settings_.post_gain_factor;
+  }
+
   const bool use_aec = settings_.use_aec && *settings_.use_aec;
   const bool use_aecm = settings_.use_aecm && *settings_.use_aecm;
   if (use_aec || use_aecm) {

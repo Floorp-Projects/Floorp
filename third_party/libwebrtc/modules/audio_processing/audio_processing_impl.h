@@ -23,6 +23,7 @@
 #include "modules/audio_processing/agc/agc_manager_direct.h"
 #include "modules/audio_processing/agc/gain_control.h"
 #include "modules/audio_processing/audio_buffer.h"
+#include "modules/audio_processing/capture_levels_adjuster/capture_levels_adjuster.h"
 #include "modules/audio_processing/echo_control_mobile_impl.h"
 #include "modules/audio_processing/gain_control_impl.h"
 #include "modules/audio_processing/gain_controller2.h"
@@ -202,7 +203,7 @@ class AudioProcessingImpl : public AudioProcessing {
                 bool noise_suppressor_enabled,
                 bool adaptive_gain_controller_enabled,
                 bool gain_controller2_enabled,
-                bool pre_amplifier_enabled,
+                bool gain_adjustment_enabled,
                 bool echo_controller_enabled,
                 bool voice_detector_enabled,
                 bool transient_suppressor_enabled);
@@ -226,7 +227,7 @@ class AudioProcessingImpl : public AudioProcessing {
     bool noise_suppressor_enabled_ = false;
     bool adaptive_gain_controller_enabled_ = false;
     bool gain_controller2_enabled_ = false;
-    bool pre_amplifier_enabled_ = false;
+    bool gain_adjustment_enabled_ = false;
     bool echo_controller_enabled_ = false;
     bool voice_detector_enabled_ = false;
     bool transient_suppressor_enabled_ = false;
@@ -270,7 +271,8 @@ class AudioProcessingImpl : public AudioProcessing {
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeGainController2() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeNoiseSuppressor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
-  void InitializePreAmplifier() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+  void InitializeCaptureLevelsAdjuster()
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializePostProcessor() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
   void InitializeAnalyzer() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
 
@@ -392,10 +394,10 @@ class AudioProcessingImpl : public AudioProcessing {
     std::unique_ptr<TransientSuppressor> transient_suppressor;
     std::unique_ptr<CustomProcessing> capture_post_processor;
     std::unique_ptr<CustomProcessing> render_pre_processor;
-    std::unique_ptr<GainApplier> pre_amplifier;
     std::unique_ptr<CustomAudioAnalyzer> capture_analyzer;
     std::unique_ptr<LevelEstimator> output_level_estimator;
     std::unique_ptr<VoiceDetection> voice_detector;
+    std::unique_ptr<CaptureLevelsAdjuster> capture_levels_adjuster;
   } submodules_;
 
   // State that is written to while holding both the render and capture locks
@@ -445,7 +447,7 @@ class AudioProcessingImpl : public AudioProcessing {
     int split_rate;
     bool echo_path_gain_change;
     int prev_analog_mic_level;
-    float prev_pre_amp_gain;
+    float prev_pre_adjustment_gain;
     int playout_volume;
     int prev_playout_volume;
     AudioProcessingStats stats;
