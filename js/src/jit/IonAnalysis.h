@@ -53,6 +53,9 @@ void UnmarkLoopBlocks(MIRGraph& graph, MBasicBlock* header);
 
 [[nodiscard]] bool MakeLoopsContiguous(MIRGraph& graph);
 
+[[nodiscard]] bool EliminateTriviallyDeadResumePointOperands(MIRGenerator* mir,
+                                                             MIRGraph& graph);
+
 [[nodiscard]] bool EliminateDeadResumePointOperands(MIRGenerator* mir,
                                                     MIRGraph& graph);
 

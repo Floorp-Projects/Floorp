@@ -1259,6 +1259,27 @@ static void EliminateTriviallyDeadResumePointOperands(MIRGraph& graph,
 }
 
 // Operands to a resume point which are dead at the point of the resume can be
+// replaced with a magic value. This pass only replaces resume points which are
+// trivially dead.
+//
+// This is intended to ensure that extra resume points within a basic block
+// will not artificially extend the lifetimes of any SSA values. This could
+// otherwise occur if the new resume point captured a value which is created
+// between the old and new resume point and is dead at the new resume point.
+bool jit::EliminateTriviallyDeadResumePointOperands(MIRGenerator* mir,
+                                                    MIRGraph& graph) {
+  for (auto* block : graph) {
+    if (MResumePoint* rp = block->entryResumePoint()) {
+      if (!graph.alloc().ensureBallast()) {
+        return false;
+      }
+      ::EliminateTriviallyDeadResumePointOperands(graph, rp);
+    }
+  }
+  return true;
+}
+
+// Operands to a resume point which are dead at the point of the resume can be
 // replaced with a magic value. This analysis supports limited detection of
 // dead operands, pruning those which are defined in the resume point's basic
 // block and have no uses outside the block or at points later than the resume
@@ -1286,7 +1307,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       if (!graph.alloc().ensureBallast()) {
         return false;
       }
-      EliminateTriviallyDeadResumePointOperands(graph, rp);
+      ::EliminateTriviallyDeadResumePointOperands(graph, rp);
     }
 
     // The logic below can get confused on infinite loops.
@@ -1300,7 +1321,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
         if (!graph.alloc().ensureBallast()) {
           return false;
         }
-        EliminateTriviallyDeadResumePointOperands(graph, rp);
+        ::EliminateTriviallyDeadResumePointOperands(graph, rp);
       }
 
       // No benefit to replacing constant operands with other constants.
