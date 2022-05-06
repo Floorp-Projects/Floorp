@@ -2628,8 +2628,13 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
     auto* lir = new (alloc()) LInt32ToIntPtr(useAnyAtStart(input));
     define(lir, ins);
   } else {
+#  ifdef DEBUG
     auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
     defineReuseInput(lir, ins, 0);
+#  else
+    // In non-debug mode this is a no-op.
+    redefine(ins, input);
+#  endif
   }
 #else
   // On 32-bit platforms this is a no-op.

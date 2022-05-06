@@ -1245,6 +1245,8 @@ void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
     masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(INT32_MAX), &ok);
     masm.assumeUnreachable("LInt32ToIntPtr: unexpected range for value");
     masm.bind(&ok);
+#  else
+    MOZ_CRASH("Not used in non-debug mode");
 #  endif
     return;
   }
