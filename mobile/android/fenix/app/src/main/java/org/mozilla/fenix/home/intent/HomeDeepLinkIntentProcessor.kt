@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.provider.Settings
-import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.log.logger.Logger
@@ -20,7 +19,7 @@ import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.alreadyOnDestination
-import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 
 /**
  * Deep links in the form of `fenix://host` open different parts of the app.
@@ -80,27 +79,10 @@ class HomeDeepLinkIntentProcessor(
                 activity.browsingModeManager.mode = BrowsingMode.Private
             }
             "make_default_browser" -> {
-                if (SDK_INT >= Build.VERSION_CODES.N) {
-                    val settingsIntent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
-                    settingsIntent.putExtra(SETTINGS_SELECT_OPTION_KEY, DEFAULT_BROWSER_APP_OPTION)
-                    settingsIntent.putExtra(
-                        SETTINGS_SHOW_FRAGMENT_ARGS,
-                        bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION)
-                    )
-                    activity.startActivity(
-                        settingsIntent
-                    )
-                } else {
-                    activity.openToBrowserAndLoad(
-                        searchTermOrURL = SupportUtils.getSumoURLForTopic(
-                            activity,
-                            SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
-                        ),
-                        newTab = true,
-                        from = BrowserDirection.FromGlobal,
-                        flags = EngineSession.LoadUrlFlags.external()
-                    )
-                }
+                activity.openSetDefaultBrowserOption(
+                    from = BrowserDirection.FromGlobal,
+                    flags = EngineSession.LoadUrlFlags.external()
+                )
             }
             "open" -> {
                 val url = deepLink.getQueryParameter("url")
@@ -140,10 +122,4 @@ class HomeDeepLinkIntentProcessor(
                 }
             }
         }
-
-    companion object {
-        private const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
-        private const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
-        private const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
-    }
 }

@@ -15,6 +15,7 @@ import android.provider.Settings
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
+import mozilla.components.concept.engine.EngineSession
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -64,8 +65,15 @@ fun Activity.breadcrumb(
 
 /**
  * Opens Android's Manage Default Apps Settings if possible.
+ * Otherwise navigates to the Sumo article indicating why it couldn't open it.
+ *
+ * @param from fallback direction in case, couldn't open the setting.
+ * @param flags fallback flags for when opening the Sumo article page.
  */
-fun Activity.openSetDefaultBrowserOption() {
+fun Activity.openSetDefaultBrowserOption(
+    from: BrowserDirection = BrowserDirection.FromSettings,
+    flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+) {
     when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
             getSystemService(RoleManager::class.java).also {
@@ -92,7 +100,8 @@ fun Activity.openSetDefaultBrowserOption() {
                     SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
                 ),
                 newTab = true,
-                from = BrowserDirection.FromSettings
+                from = from,
+                flags = flags
             )
         }
     }
