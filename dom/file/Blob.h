@@ -79,7 +79,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
                                      const nsAString& aContentType,
                                      ErrorResult& aRv);
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv);
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) const;
 
   int64_t GetFileId();
 
@@ -120,9 +120,10 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset) const;
 
-  already_AddRefed<ReadableStream> Stream(JSContext* aCx, ErrorResult& aRv);
-  already_AddRefed<Promise> Text(ErrorResult& aRv);
-  already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv);
+  already_AddRefed<ReadableStream> Stream(JSContext* aCx,
+                                          ErrorResult& aRv) const;
+  already_AddRefed<Promise> Text(ErrorResult& aRv) const;
+  already_AddRefed<Promise> ArrayBuffer(ErrorResult& aRv) const;
 
  protected:
   // File constructor should never be used directly. Use Blob::Create instead.
@@ -132,7 +133,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
   virtual bool HasFileInterface() const { return false; }
 
   already_AddRefed<Promise> ConsumeBody(BodyConsumer::ConsumeType aConsumeType,
-                                        ErrorResult& aRv);
+                                        ErrorResult& aRv) const;
 
   // The member is the real backend implementation of this File/Blob.
   // It's thread-safe and not CC-able and it's the only element that is moved

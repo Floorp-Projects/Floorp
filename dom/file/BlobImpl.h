@@ -83,7 +83,7 @@ class BlobImpl : public nsISupports {
   virtual const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const = 0;
 
   virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) = 0;
+                                 ErrorResult& aRv) const = 0;
 
   virtual int64_t GetFileId() = 0;
 

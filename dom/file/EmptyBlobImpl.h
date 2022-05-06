@@ -19,7 +19,8 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   explicit EmptyBlobImpl(const nsAString& aContentType)
       : BaseBlobImpl(aContentType, 0 /* aLength */) {}
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,

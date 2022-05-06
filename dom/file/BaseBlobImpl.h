@@ -92,7 +92,8 @@ class BaseBlobImpl : public BlobImpl {
     return nullptr;
   }
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override {
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 

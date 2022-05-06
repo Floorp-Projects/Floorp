@@ -34,7 +34,7 @@ already_AddRefed<BlobImpl> StringBlobImpl::CreateSlice(
 }
 
 void StringBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                       ErrorResult& aRv) {
+                                       ErrorResult& aRv) const {
   aRv = NS_NewCStringInputStream(aStream, mData);
 }
 

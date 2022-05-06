@@ -19,14 +19,15 @@ namespace mozilla::dom {
 // IPCBlobUtils.
 class TemporaryFileBlobImpl final : public FileBlobImpl {
 #ifdef DEBUG
-  bool mInputStreamCreated;
+  mutable bool mInputStreamCreated;
 #endif
 
  public:
   explicit TemporaryFileBlobImpl(nsIFile* aFile, const nsAString& aContentType);
 
   // Overrides
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
     aBlobImplType = u"TemporaryFileBlobImpl"_ns;
