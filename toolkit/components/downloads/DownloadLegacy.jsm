@@ -273,7 +273,8 @@ DownloadLegacyTransfer.prototype = {
     aCancelable,
     aIsPrivate,
     aDownloadClassification,
-    aReferrerInfo
+    aReferrerInfo,
+    aOpenDownloadsListOnStart
   ) {
     return this._nsITransferInitInternal(
       aSource,
@@ -285,7 +286,8 @@ DownloadLegacyTransfer.prototype = {
       aCancelable,
       aIsPrivate,
       aDownloadClassification,
-      aReferrerInfo
+      aReferrerInfo,
+      aOpenDownloadsListOnStart
     );
   },
 
@@ -301,6 +303,7 @@ DownloadLegacyTransfer.prototype = {
     aIsPrivate,
     aDownloadClassification,
     aReferrerInfo,
+    aOpenDownloadsListOnStart,
     aBrowsingContext,
     aHandleInternally
   ) {
@@ -323,6 +326,7 @@ DownloadLegacyTransfer.prototype = {
       aIsPrivate,
       aDownloadClassification,
       aReferrerInfo,
+      aOpenDownloadsListOnStart,
       userContextId,
       browsingContextId,
       aHandleInternally
@@ -340,6 +344,7 @@ DownloadLegacyTransfer.prototype = {
     isPrivate,
     aDownloadClassification,
     referrerInfo,
+    openDownloadsListOnStart = true,
     userContextId = 0,
     browsingContextId = 0,
     handleInternally = false
@@ -382,6 +387,7 @@ DownloadLegacyTransfer.prototype = {
       contentType,
       launcherPath,
       handleInternally,
+      openDownloadsListOnStart,
     };
 
     // In case the Download was classified as insecure/dangerous

@@ -407,7 +407,8 @@ nsUnknownContentTypeDialog.prototype = {
               }
             }
           }
-          aLauncher.saveDestinationAvailable(result);
+          // Don't pop up the downloads panel redundantly.
+          aLauncher.saveDestinationAvailable(result, true);
         });
       });
     })().catch(Cu.reportError);
