@@ -52,7 +52,7 @@ already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
 }
 
 void MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                          ErrorResult& aRv) {
+                                          ErrorResult& aRv) const {
   *aStream = nullptr;
 
   uint32_t length = mBlobImpls.Length();

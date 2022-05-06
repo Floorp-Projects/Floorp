@@ -263,7 +263,7 @@ const uint32_t sFileStreamFlags =
     nsIFileInputStream::DEFER_OPEN | nsIFileInputStream::SHARE_DELETE;
 
 void FileBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                     ErrorResult& aRv) {
+                                     ErrorResult& aRv) const {
   nsCOMPtr<nsIInputStream> stream;
   aRv = NS_NewLocalFileInputStream(getter_AddRefs(stream), mFile, -1, -1,
                                    sFileStreamFlags);

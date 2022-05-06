@@ -33,7 +33,8 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
       const nsAString& aContentType, int64_t aLastModifiedDate,
       uint64_t aLength, const nsAString& aBlobImplType);
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,

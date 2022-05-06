@@ -55,7 +55,7 @@ already_AddRefed<BlobImpl> MemoryBlobImpl::CreateSlice(
 }
 
 void MemoryBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                       ErrorResult& aRv) {
+                                       ErrorResult& aRv) const {
   if (mLength >= INT32_MAX) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

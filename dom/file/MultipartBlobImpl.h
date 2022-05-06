@@ -60,7 +60,8 @@ class MultipartBlobImpl final : public BaseBlobImpl {
 
   uint64_t GetSize(ErrorResult& aRv) override { return mLength; }
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const override {
     return mBlobImpls.Length() ? &mBlobImpls : nullptr;

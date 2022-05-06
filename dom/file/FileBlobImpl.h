@@ -82,7 +82,8 @@ class FileBlobImpl : public BlobImpl {
     return nullptr;
   }
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   int64_t GetFileId() override { return mFileId; }
 
