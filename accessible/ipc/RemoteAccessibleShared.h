@@ -91,13 +91,6 @@ virtual void TextBeforeOffset(int32_t aOffset,
 
 char16_t CharAt(int32_t aOffset);
 
-LayoutDeviceIntRect TextBounds(
-    int32_t aStartOffset, int32_t aEndOffset,
-    uint32_t aCoordType =
-        nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
-
-LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
-
 int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
 bool SetSelectionBoundsAt(int32_t aSelectionNum, int32_t aStartOffset,
