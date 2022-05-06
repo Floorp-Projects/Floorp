@@ -269,7 +269,8 @@ declare_args() {
     rtc_enable_avx2 = false
   }
 
-  # Include tests in standalone checkout.
+  # Set this to true to build the unit tests.
+  # Disabled when building with Chromium or Mozilla.
   rtc_include_tests = !build_with_chromium && !build_with_mozilla
 
   # Set this to false to skip building code that also requires X11 extensions
