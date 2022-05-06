@@ -1180,7 +1180,7 @@ static bool MaybeFoldConditionBlock(MIRGraph& graph,
 }
 
 bool jit::FoldTests(MIRGraph& graph) {
-  for (MBasicBlockIterator block(graph.begin()); block != graph.end();
+  for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
        block++) {
     if (!MaybeFoldConditionBlock(graph, *block)) {
       return false;
