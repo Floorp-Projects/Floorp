@@ -422,6 +422,11 @@ void MacroAssemblerX86::vcmplepsSimd128(const SimdConstant& v,
   vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpleps_mr);
 }
 
+void MacroAssemblerX86::vcmpgepsSimd128(const SimdConstant& v,
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpgeps_mr);
+}
+
 void MacroAssemblerX86::vcmpeqpdSimd128(const SimdConstant& v,
                                         FloatRegister lhs, FloatRegister dest) {
   vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpeqpd_mr);

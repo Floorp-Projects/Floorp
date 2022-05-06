@@ -24,6 +24,7 @@ const ROLLOUT_PREF_PHASE1 =
 const ROLLOUT_PREF_PHASE1_PREFERENCES =
   "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard";
 const COOKIE_BEHAVIOR_PREF = "network.cookie.cookieBehavior";
+const CB_CATEGORY_PREF = "browser.contentblocking.category";
 
 const defaultPrefs = Services.prefs.getDefaultBranch("");
 const previousDefaultCB = defaultPrefs.getIntPref(COOKIE_BEHAVIOR_PREF);
@@ -37,6 +38,7 @@ function cleanup() {
 
   Services.prefs.clearUserPref(ROLLOUT_PREF_PHASE1);
   Services.prefs.clearUserPref(ROLLOUT_PREF_PHASE1_PREFERENCES);
+  Services.prefs.clearUserPref(CB_CATEGORY_PREF);
 
   // Reset the rollout scalar back to 2 = unset. We have to simulate this on
   // test cleanup, because BrowserGlue only sets this once initially.
@@ -499,6 +501,7 @@ add_task(async function test_phase2_enterprise_policy_with_cookie_behavior() {
   );
 
   await doEnrollmentCleanup();
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
   cleanup();
 });
 
@@ -563,6 +566,7 @@ add_task(
     );
 
     await doEnrollmentCleanup();
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
     cleanup();
   }
 );

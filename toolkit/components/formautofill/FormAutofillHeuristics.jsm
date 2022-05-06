@@ -1038,7 +1038,7 @@ this.FormAutofillHeuristics = {
    */
   getFormInfo(form, allowDuplicates = false) {
     const eligibleFields = Array.from(form.elements).filter(elem =>
-      FormAutofillUtils.isFieldEligibleForAutofill(elem)
+      FormAutofillUtils.isCreditCardOrAddressFieldType(elem)
     );
 
     if (eligibleFields.length <= 0) {

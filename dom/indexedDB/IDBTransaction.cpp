@@ -530,7 +530,7 @@ void IDBTransaction::DeleteObjectStore(const int64_t aObjectStoreId) {
 }
 
 void IDBTransaction::RenameObjectStore(const int64_t aObjectStoreId,
-                                       const nsAString& aName) {
+                                       const nsAString& aName) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(Mode::VersionChange == mMode);
@@ -542,8 +542,9 @@ void IDBTransaction::RenameObjectStore(const int64_t aObjectStoreId,
           aObjectStoreId, nsString(aName)));
 }
 
-void IDBTransaction::CreateIndex(IDBObjectStore* const aObjectStore,
-                                 const indexedDB::IndexMetadata& aMetadata) {
+void IDBTransaction::CreateIndex(
+    IDBObjectStore* const aObjectStore,
+    const indexedDB::IndexMetadata& aMetadata) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObjectStore);
   MOZ_ASSERT(aMetadata.id());
@@ -557,7 +558,7 @@ void IDBTransaction::CreateIndex(IDBObjectStore* const aObjectStore,
 }
 
 void IDBTransaction::DeleteIndex(IDBObjectStore* const aObjectStore,
-                                 const int64_t aIndexId) {
+                                 const int64_t aIndexId) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObjectStore);
   MOZ_ASSERT(aIndexId);
@@ -572,7 +573,7 @@ void IDBTransaction::DeleteIndex(IDBObjectStore* const aObjectStore,
 
 void IDBTransaction::RenameIndex(IDBObjectStore* const aObjectStore,
                                  const int64_t aIndexId,
-                                 const nsAString& aName) {
+                                 const nsAString& aName) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aObjectStore);
   MOZ_ASSERT(aIndexId);

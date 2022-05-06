@@ -121,7 +121,6 @@ class MockGfxInfo final : public nsIGfxInfo {
                          JS::MutableHandleValue _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  NS_IMETHOD RefreshMonitors(void) override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,
                          nsTArray<nsCString>& failures) override {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -227,15 +226,6 @@ class MockGfxInfo final : public nsIGfxInfo {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD GetIsGPU2Active(bool* aIsGPU2Active) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) override {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  NS_IMETHOD GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD GetDrmRenderDevice(nsACString& aDrmRenderDevice) override {

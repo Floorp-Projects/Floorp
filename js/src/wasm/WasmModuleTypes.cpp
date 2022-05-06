@@ -51,12 +51,10 @@ uint32_t Export::globalIndex() const {
   return pod.index_;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 uint32_t Export::tagIndex() const {
   MOZ_ASSERT(pod.kind_ == DefinitionKind::Tag);
   return pod.index_;
 }
-#endif
 
 uint32_t Export::tableIndex() const {
   MOZ_ASSERT(pod.kind_ == DefinitionKind::Table);
@@ -102,13 +100,9 @@ size_t TagType::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          argOffsets_.sizeOfExcludingThis(mallocSizeOf);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
-
 size_t TagDesc::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return type->sizeOfExcludingThis(mallocSizeOf);
 }
-
-#endif  // ENABLE_WASM_EXCEPTIONS
 
 size_t ElemSegment::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return SizeOfMaybeExcludingThis(offsetIfActive, mallocSizeOf) +

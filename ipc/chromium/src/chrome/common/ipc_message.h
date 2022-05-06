@@ -24,6 +24,13 @@
 #endif
 
 namespace mozilla {
+
+#ifdef FUZZING_SNAPSHOT
+namespace fuzzing {
+class IPCFuzzController;
+}
+#endif
+
 namespace ipc {
 class MiniTransceiver;
 }
@@ -92,6 +99,10 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   class HeaderFlags {
     friend class Message;
+#ifdef FUZZING_SNAPSHOT
+    // IPCFuzzController calls various private API functions on the header.
+    friend class mozilla::fuzzing::IPCFuzzController;
+#endif
 
     enum {
       NESTED_MASK = 0x0003,
@@ -144,6 +155,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     bool IsRelay() const { return (mFlags & RELAY_BIT) != 0; }
 
    private:
+    void SetConstructor() { mFlags |= CONSTRUCTOR_BIT; }
     void SetSync() { mFlags |= SYNC_BIT; }
     void SetReply() { mFlags |= REPLY_BIT; }
     void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
@@ -337,6 +349,11 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 #endif
   }
 
+#ifdef FUZZING_SNAPSHOT
+  bool IsFuzzMsg() { return isFuzzMsg; }
+  void SetFuzzMsg() { isFuzzMsg = true; }
+#endif
+
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
@@ -345,7 +362,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 #endif
   friend class mozilla::ipc::MiniTransceiver;
 
-#if !defined(OS_MACOSX)
+#if !defined(OS_MACOSX) && !defined(FUZZING_SNAPSHOT)
  protected:
 #endif
 
@@ -388,6 +405,10 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // Mutable, as this array can be mutated during `ConsumeMachSendRight` when
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
+#endif
+
+#ifdef FUZZING_SNAPSHOT
+  bool isFuzzMsg = false;
 #endif
 };
 

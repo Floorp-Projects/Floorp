@@ -117,6 +117,12 @@ struct BaseScaleFactors2D {
                                              yScale * aOther.yScale);
   }
 
+  BaseScaleFactors2D<src, src, T> operator*(
+      const BaseScaleFactors2D<dst, src, T>& aOther) const {
+    return BaseScaleFactors2D<src, src, T>(xScale * aOther.xScale,
+                                           yScale * aOther.yScale);
+  }
+
   template <class other>
   BaseScaleFactors2D<src, other, T> operator*(
       const ScaleFactor<dst, other>& aOther) const {
@@ -127,6 +133,11 @@ struct BaseScaleFactors2D {
   BaseScaleFactors2D<other, dst, T> operator*(
       const ScaleFactor<other, src>& aOther) const {
     return *this * BaseScaleFactors2D<other, src, T>(aOther);
+  }
+
+  BaseScaleFactors2D<src, src, T> operator*(
+      const ScaleFactor<dst, src>& aOther) const {
+    return *this * BaseScaleFactors2D<dst, src, T>(aOther);
   }
 
   template <class other>
@@ -151,13 +162,6 @@ struct BaseScaleFactors2D {
   friend BaseScaleFactors2D<other, src, T> operator/(
       const ScaleFactor<other, dst>& aA, const BaseScaleFactors2D& aB) {
     return BaseScaleFactors2D<other, src, T>(aA) / aB;
-  }
-
-  // Divide two scales of the same units, yielding a scale with no units,
-  // represented as a gfxSize. This can mean e.g. the change in a particular
-  // scale from one frame to the next.
-  gfxSize operator/(const BaseScaleFactors2D& aOther) const {
-    return gfxSize(xScale / aOther.xScale, yScale / aOther.yScale);
   }
 };
 

@@ -55,10 +55,17 @@ TEST(IntlDateIntervalFormat, TryFormatCalendar)
   auto dateTimePatternGenerator =
       DateTimePatternGenerator::TryCreate("en").unwrap();
 
+  DateTimeFormat::ComponentsBag components;
+  components.year = Some(DateTimeFormat::Numeric::Numeric);
+  components.month = Some(DateTimeFormat::Month::TwoDigit);
+  components.day = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.hour = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.hour12 = Some(false);
+
   UniquePtr<DateTimeFormat> dtFormat =
-      DateTimeFormat::TryCreateFromSkeleton(
-          MakeStringSpan("en-US"), MakeStringSpan(u"yMMddHHmm"),
-          dateTimePatternGenerator.get(), Nothing(),
+      DateTimeFormat::TryCreateFromComponents(
+          MakeStringSpan("en-US"), components, dateTimePatternGenerator.get(),
           Some(MakeStringSpan(u"GMT")))
           .unwrap();
 

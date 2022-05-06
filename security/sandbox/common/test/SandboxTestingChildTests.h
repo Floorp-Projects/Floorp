@@ -40,7 +40,10 @@
 #endif
 
 #ifdef XP_MACOSX
-#  include "emmintrin.h"
+#  if defined(__SSE2__) || defined(_M_X64) || \
+      (defined(_M_IX86_FP) && _M_IX86_FP >= 2)
+#    include "emmintrin.h"
+#  endif
 #  include <spawn.h>
 #  include <CoreFoundation/CoreFoundation.h>
 #  include <CoreGraphics/CoreGraphics.h>

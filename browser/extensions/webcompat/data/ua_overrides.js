@@ -714,6 +714,7 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1743429",
     config: {
       matches: [
+        "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.edf.com/*", // Bug 1764786
         "*://*.wordpress.org/*", // Bug 1743431
         "*://bethesda.net/*", // #94607
@@ -814,7 +815,6 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://survey.sogosurvey.com/*", // Bug 1765925
         "*://www.sussexlive.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.tm-awx.com/*", // Bug 1762928 (Reach Plc)
-        "*://www.twitch.tv/*", // Bug 1764591
         "*://www.walesonline.co.uk/*", // Bug 1762928 (Reach Plc)
         "*://www.wharf.co.uk/*", // Bug 1762928 (Reach Plc)
       ],

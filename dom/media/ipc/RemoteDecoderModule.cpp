@@ -73,9 +73,9 @@ RemoteDecoderModule::AsyncCreateDecoder(const CreateDecoderParams& aParams) {
         IsDefaultPlaybackDeviceMono()) {
       CreateDecoderParams params = aParams;
       params.mOptions += CreateDecoderParams::Option::DefaultPlaybackDeviceMono;
-      return RemoteDecoderManagerChild::CreateAudioDecoder(params);
+      return RemoteDecoderManagerChild::CreateAudioDecoder(params, mLocation);
     }
-    return RemoteDecoderManagerChild::CreateAudioDecoder(aParams);
+    return RemoteDecoderManagerChild::CreateAudioDecoder(aParams, mLocation);
   }
   return RemoteDecoderManagerChild::CreateVideoDecoder(aParams, mLocation);
 }

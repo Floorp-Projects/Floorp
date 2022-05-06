@@ -250,15 +250,15 @@ class IDBTransaction final
 
   void DeleteObjectStore(int64_t aObjectStoreId);
 
-  void RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName);
+  void RenameObjectStore(int64_t aObjectStoreId, const nsAString& aName) const;
 
   void CreateIndex(IDBObjectStore* aObjectStore,
-                   const indexedDB::IndexMetadata& aMetadata);
+                   const indexedDB::IndexMetadata& aMetadata) const;
 
-  void DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId);
+  void DeleteIndex(IDBObjectStore* aObjectStore, int64_t aIndexId) const;
 
   void RenameIndex(IDBObjectStore* aObjectStore, int64_t aIndexId,
-                   const nsAString& aName);
+                   const nsAString& aName) const;
 
   void Abort(IDBRequest* aRequest);
 

@@ -23,8 +23,8 @@
 #include "wasm/WasmConstants.h"       // js::wasm::Trap
 #include "wasm/WasmFrameIter.h"  // js::wasm::{RegisterState,StartUnwinding,UnwindState}
 #include "wasm/WasmInstance.h"  // js::wasm::Instance
-#include "wasm/WasmProcess.h"   // js::wasm::LookupCode
-#include "wasm/WasmTlsData.h"   // js::wasm::Instance
+#include "wasm/WasmInstanceData.h"
+#include "wasm/WasmProcess.h"  // js::wasm::LookupCode
 
 #include "vm/Realm-inl.h"  // js::~AutoRealm
 

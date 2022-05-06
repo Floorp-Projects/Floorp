@@ -57,6 +57,10 @@ class MessageLink {
 
   virtual bool IsClosed() const = 0;
 
+#ifdef FUZZING_SNAPSHOT
+  virtual Maybe<mojo::core::ports::PortName> GetPortName() { return Nothing(); }
+#endif
+
  protected:
   MessageChannel* mChan;
 };
@@ -75,6 +79,12 @@ class PortLink final : public MessageLink {
   void SendClose() override;
 
   bool IsClosed() const override;
+
+#ifdef FUZZING_SNAPSHOT
+  Maybe<mojo::core::ports::PortName> GetPortName() override {
+    return Some(mPort.name());
+  }
+#endif
 
  private:
   class PortObserverThunk;

@@ -28,8 +28,8 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenConstants.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmSerialize.h"
-#include "wasm/WasmTlsData.h"
 #include "wasm/WasmTypeDef.h"
 #include "wasm/WasmUtility.h"
 

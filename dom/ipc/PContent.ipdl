@@ -1931,6 +1931,13 @@ parent:
     // format.  Not supported (or needed) on all platforms; see the
     // implementation in ContentParent::RecvGetSystemIcon for details.
     async GetSystemIcon(nsIURI aURI) returns (nsresult aResult, ByteBuf? aData);
+
+#ifdef FUZZING_SNAPSHOT
+    // Used by the child process to signal that it is ready to start fuzzing.
+    // This can in particular be used to wait for a particular event in a
+    // test document before taking the snapshot and starting e.g. IPC fuzzing.
+    async SignalFuzzingReady();
+#endif
 };
 
 }

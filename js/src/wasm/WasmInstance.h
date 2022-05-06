@@ -86,7 +86,6 @@ class alignas(16) Instance {
   // The containing JSContext.
   JSContext* cx_;
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   // The pending exception that was found during stack unwinding after a throw.
   //
   //   - Only non-null while unwinding the control stack from a wasm-exit stub.
@@ -97,7 +96,6 @@ class alignas(16) Instance {
   GCPtrObject pendingException_;
   // The tag object of the pending exception.
   GCPtrObject pendingExceptionTag_;
-#endif
 
   // Usually equal to cx->stackLimitForJitCode(JS::StackForUntrustedScript),
   // but can be racily set to trigger immediate trap as an opportunity to
@@ -191,9 +189,7 @@ class alignas(16) Instance {
   const void** addressOfTypeId(const TypeIdDesc& typeId) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
   TableInstanceData& tableInstanceData(const TableDesc& td) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
-  GCPtrWasmTagObject& tagTls(const TagDesc& td) const;
-#endif
+  GCPtrWasmTagObject& tagInstanceData(const TagDesc& td) const;
 
   // Only WasmInstanceObject can call the private trace function.
   friend class js::WasmInstanceObject;
@@ -249,14 +245,12 @@ class alignas(16) Instance {
   static constexpr size_t offsetOfValueBoxClass() {
     return offsetof(Instance, valueBoxClass_);
   }
-#ifdef ENABLE_WASM_EXCEPTIONS
   static constexpr size_t offsetOfPendingException() {
     return offsetof(Instance, pendingException_);
   }
   static constexpr size_t offsetOfPendingExceptionTag() {
     return offsetof(Instance, pendingExceptionTag_);
   }
-#endif  // ENABLE_WASM_EXCEPTIONS
   static constexpr size_t offsetOfStackLimit() {
     return offsetof(Instance, stackLimit_);
   }
@@ -339,9 +333,7 @@ class alignas(16) Instance {
 
   // Exception handling support
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   void setPendingException(HandleAnyRef exn);
-#endif
 
   // Constant expression support
 
@@ -429,12 +421,13 @@ class alignas(16) Instance {
                            uint32_t dstTableIndex, uint32_t srcTableIndex);
   static int32_t tableFill(Instance* instance, uint32_t start, void* value,
                            uint32_t len, uint32_t tableIndex);
-  static void* tableGetFunc(Instance* instance, uint32_t index,
-                            uint32_t tableIndex);
+  static void* tableGet(Instance* instance, uint32_t index,
+                        uint32_t tableIndex);
   static uint32_t tableGrow(Instance* instance, void* initValue, uint32_t delta,
                             uint32_t tableIndex);
-  static int32_t tableSetFunc(Instance* instance, uint32_t index, void* value,
-                              uint32_t tableIndex);
+  static int32_t tableSet(Instance* instance, uint32_t index, void* value,
+                          uint32_t tableIndex);
+  static uint32_t tableSize(Instance* instance, uint32_t tableIndex);
   static int32_t tableInit(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len, uint32_t segIndex,
                            uint32_t tableIndex);
@@ -458,10 +451,8 @@ class alignas(16) Instance {
                                  JSObject* prev);
   static void postBarrierFiltering(Instance* instance, gc::Cell** location);
   static void* structNew(Instance* instance, void* structDescr);
-#ifdef ENABLE_WASM_EXCEPTIONS
   static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
-#endif
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
   static void* rttSub(Instance* instance, void* rttParentPtr,

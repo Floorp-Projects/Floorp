@@ -62,6 +62,10 @@ Message::Message(Message&& other)
       ,
       attached_send_rights_(std::move(other.attached_send_rights_))
 #endif
+#ifdef FUZZING_SNAPSHOT
+      ,
+      isFuzzMsg(other.isFuzzMsg)
+#endif
 {
   MOZ_COUNT_CTOR(IPC::Message);
 }
@@ -86,6 +90,10 @@ Message& Message::operator=(Message&& other) {
   attached_ports_ = std::move(other.attached_ports_);
 #if defined(OS_MACOSX)
   attached_send_rights_ = std::move(other.attached_send_rights_);
+#endif
+
+#ifdef FUZZING_SNAPSHOT
+  isFuzzMsg = std::move(other.isFuzzMsg);
 #endif
   return *this;
 }

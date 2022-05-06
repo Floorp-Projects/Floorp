@@ -1239,7 +1239,8 @@ bool BackgroundFactoryChild::DeallocPBackgroundIDBFactoryRequestChild(
 
 PBackgroundIDBDatabaseChild*
 BackgroundFactoryChild::AllocPBackgroundIDBDatabaseChild(
-    const DatabaseSpec& aSpec, PBackgroundIDBFactoryRequestChild* aRequest) {
+    const DatabaseSpec& aSpec,
+    PBackgroundIDBFactoryRequestChild* aRequest) const {
   AssertIsOnOwningThread();
 
   auto* const request = static_cast<BackgroundFactoryRequestChild*>(aRequest);
@@ -1651,7 +1652,7 @@ BackgroundDatabaseChild::AllocPBackgroundIDBDatabaseFileChild(
 }
 
 bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseFileChild(
-    PBackgroundIDBDatabaseFileChild* aActor) {
+    PBackgroundIDBDatabaseFileChild* aActor) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 
@@ -1752,7 +1753,7 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
 PBackgroundMutableFileChild*
 BackgroundDatabaseChild::AllocPBackgroundMutableFileChild(
-    const nsString& aName, const nsString& aType) {
+    const nsString& aName, const nsString& aType) const {
   AssertIsOnOwningThread();
 
   return new BackgroundMutableFileChild(aName, aType);
@@ -2265,7 +2266,7 @@ BackgroundMutableFileChild::AllocPBackgroundFileHandleChild(
 }
 
 bool BackgroundMutableFileChild::DeallocPBackgroundFileHandleChild(
-    PBackgroundFileHandleChild* aActor) {
+    PBackgroundFileHandleChild* aActor) const {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
 

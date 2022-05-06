@@ -5561,7 +5561,6 @@
           .replace("#1", pluralCount);
       };
 
-      let alignToTab = true;
       let label;
       const selectedTabs = this.selectedTabs;
       const contextTabInSelection = selectedTabs.includes(tab);
@@ -5569,7 +5568,6 @@
         ? selectedTabs.length
         : 1;
       if (tab.mOverCloseButton) {
-        alignToTab = false;
         label = tab.selected
           ? stringWithShortcut(
               "tabs.closeTabs.tooltip",
@@ -5605,30 +5603,11 @@
             gTabBrowserBundle.GetStringFromName(stringID)
           ).replace("#1", affectedTabsLength);
         }
-        alignToTab = false;
       } else {
         label = this.getTabTooltip(tab);
       }
 
-      if (!gProtonPlacesTooltip) {
-        event.target.setAttribute("label", label);
-        return;
-      }
-
-      if (alignToTab) {
-        event.target.setAttribute("position", "after_start");
-        event.target.moveToAnchor(tab, "after_start");
-      }
-
-      let title = event.target.querySelector(".places-tooltip-title");
-      title.textContent = label;
-      let url = event.target.querySelector(".places-tooltip-uri");
-      url.value = tab.linkedBrowser?.currentURI?.spec.replace(
-        /^https:\/\//,
-        ""
-      );
-      let icon = event.target.querySelector("#places-tooltip-insecure-icon");
-      icon.hidden = !url.value.startsWith("http://");
+      event.target.setAttribute("label", label);
     },
 
     handleEvent(aEvent) {

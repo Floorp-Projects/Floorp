@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_tls_data_h
-#define wasm_tls_data_h
+#ifndef wasm_instance_data_h
+#define wasm_instance_data_h
 
 #include <stdint.h>
 
@@ -78,8 +78,7 @@ struct TableInstanceData {
 };
 
 // Table element for TableRepr::Func which carries both the code pointer and
-// a tls pointer (and thus anything reachable through the tls, including the
-// instance).
+// a instance pointer (and thus anything reachable through the instance).
 
 struct FunctionTableElem {
   // The code to call when calling this element. The table ABI is the system
@@ -97,4 +96,4 @@ struct FunctionTableElem {
 }  // namespace wasm
 }  // namespace js
 
-#endif  // wasm_tls_data_h
+#endif  // wasm_instance_data_h

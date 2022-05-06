@@ -596,42 +596,6 @@ DateTimeFormat::TryCreateFromSkeleton(
   return dateTimeFormat;
 }
 
-/* static */
-Result<UniquePtr<DateTimeFormat>, ICUError>
-DateTimeFormat::TryCreateFromSkeleton(
-    Span<const char> aLocale, Span<const char> aSkeleton,
-    DateTimePatternGenerator* aDateTimePatternGenerator,
-    Maybe<DateTimeFormat::HourCycle> aHourCycle,
-    Maybe<Span<const char>> aTimeZoneOverride) {
-  // Convert the skeleton to UTF-16.
-  DateTimeFormat::SkeletonVector skeletonUtf16Buffer;
-
-  if (!FillUTF16Vector(aSkeleton, skeletonUtf16Buffer)) {
-    return Err(ICUError::OutOfMemory);
-  }
-
-  // Convert the timezone to UTF-16 if it exists.
-  DateTimeFormat::PatternVector tzUtf16Vec;
-  Maybe<Span<const char16_t>> timeZone = Nothing{};
-  if (aTimeZoneOverride) {
-    if (!FillUTF16Vector(*aTimeZoneOverride, tzUtf16Vec)) {
-      return Err(ICUError::OutOfMemory);
-    };
-    timeZone =
-        Some(Span<const char16_t>(tzUtf16Vec.begin(), tzUtf16Vec.length()));
-  }
-
-  auto result = DateTimeFormat::TryCreateFromSkeleton(
-      aLocale, skeletonUtf16Buffer, aDateTimePatternGenerator, aHourCycle,
-      timeZone);
-  if (result.isErr()) {
-    return result;
-  }
-  auto dateTimeFormat = result.unwrap();
-  MOZ_TRY(dateTimeFormat->CacheSkeleton(skeletonUtf16Buffer));
-  return dateTimeFormat;
-}
-
 ICUResult DateTimeFormat::CacheSkeleton(Span<const char16_t> aSkeleton) {
   if (mOriginalSkeleton.append(aSkeleton.Elements(), aSkeleton.Length())) {
     return Ok();

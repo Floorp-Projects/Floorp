@@ -602,8 +602,8 @@ always better to scan for a variable:
   bidirectionality marks into the result string or adapt the output in other ways.
 
 
-Pseudolocalization
-==================
+Manually Testing UI with Pseudolocalization
+===========================================
 
 When working with a Fluent-backed UI, the developer gets a new tool to test their UI
 against several classes of problems.
@@ -632,21 +632,25 @@ The three classes of potential problems that this can help with are:
    For many developers, testing the UI in right-to-left mode is hard.
    Pseudolocalization shows how a right-to-left locale will look like.
 
-To turn on pseudolocalization, add a new string pref :js:`intl.l10n.pseudo` and
-select the strategy to be used:
+To turn on pseudolocalization, open the :doc:`Browser Toolbox <../../devtools-user/browser_toolbox/index>`,
+click the three dot menu in the top right corner, and choose one of the following:
 
- - :js:`accented` - [Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ]
+ - **Enable “accented” locale** - [Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ]
 
    This strategy replaces all Latin characters with their accented equivalents,
    and duplicates some vowels to create roughly 30% longer strings. Strings are
    wrapped in markers (square brackets), which help with detecting truncation.
 
+   This option sets the :js:`intl.l10n.pseudo` pref to :js:`accented`.
 
- - :js:`bidi` - ɥsıʅƃuƎ ıpıԐ
+
+ - **Enable bidi locale** - ɥsıʅƃuƎ ıpıԐ
 
    This strategy replaces all Latin characters with their 180 degree rotated versions
    and enforces right to left text flow using Unicode UAX#9 `Explicit Directional Embeddings`__.
    In this mode, the UI directionality will also be set to right-to-left.
+
+   This option sets the :js:`intl.l10n.pseudo` pref to :js:`bidi`.
 
 __ https://www.unicode.org/reports/tr9/#Explicit_Directional_Embeddings
 

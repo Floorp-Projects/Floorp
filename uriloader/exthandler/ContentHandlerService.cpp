@@ -32,6 +32,7 @@ nsresult ContentHandlerService::Init() {
   mHandlerServiceChild = new HandlerServiceChild();
   if (!cpc->SendPHandlerServiceConstructor(mHandlerServiceChild)) {
     mHandlerServiceChild = nullptr;
+    return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
 }

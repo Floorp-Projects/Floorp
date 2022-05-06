@@ -24,12 +24,7 @@ interface Animation : EventTarget {
   [Func="Document::IsWebAnimationsEnabled", Pure]
   attribute AnimationEffect? effect;
   [Func="Document::AreWebAnimationsTimelinesEnabled"]
-#ifdef NIGHTLY_BUILD
-  // Animation.timeline setter is supported only on Nightly.
   attribute AnimationTimeline? timeline;
-#else
-  readonly attribute AnimationTimeline? timeline;
-#endif
 
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
