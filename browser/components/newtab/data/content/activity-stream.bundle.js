@@ -13937,21 +13937,10 @@ class ContentSection extends (external_React_default()).PureComponent {
   }
 
 }
-;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/ColorwayCloset/ColorwayCloset.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const ColorwayCloset = ({
-  dispatch
-}) => /*#__PURE__*/external_React_default().createElement("div", {
-  id: "colorway-closet"
-}, "Colorway Closet Placeholder");
 ;// CONCATENATED MODULE: ./content-src/components/CustomizeMenu/CustomizeMenu.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -14003,9 +13992,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       className: "close-button",
       "data-l10n-id": "newtab-custom-close-button",
       ref: c => this.closeButton = c
-    }), this.props.showColorwayCloset ? /*#__PURE__*/external_React_default().createElement(ColorwayCloset, {
-      dispatch: this.props.dispatch
-    }) : /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null), /*#__PURE__*/external_React_default().createElement(BackgroundsSection, null), /*#__PURE__*/external_React_default().createElement(ContentSection, {
+    }), /*#__PURE__*/external_React_default().createElement(BackgroundsSection, null), /*#__PURE__*/external_React_default().createElement(ContentSection, {
       openPreferences: this.props.openPreferences,
       setPref: this.props.setPref,
       enabledSections: this.props.enabledSections,
@@ -14418,7 +14405,6 @@ class BaseContent extends (external_React_default()).PureComponent {
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const showCustomizationMenu = this.state.customizeMenuVisible;
-    const showColorwayCloset = prefs["colorway-closet.enabled"];
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -14441,8 +14427,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       enabledSections: enabledSections,
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
-      showing: showCustomizationMenu,
-      showColorwayCloset: showColorwayCloset
+      showing: showCustomizationMenu
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: outerClassName,
       onClick: this.closeCustomizationMenu
