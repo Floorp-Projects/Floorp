@@ -502,8 +502,10 @@ TEST_P(DataChannelIntegrationTest, EndToEndCallWithSctpDataChannelHarmfulMtu) {
     const std::string data(message_size, 'a');
     caller()->data_channel()->Send(DataBuffer(data));
     // Wait a very short time for the message to be delivered.
+    // Note: Waiting only 10 ms is too short for Windows bots; they will
+    // flakily fail at a random frame.
     WAIT(callee()->data_observer()->received_message_count() > message_count,
-         10);
+         100);
     if (callee()->data_observer()->received_message_count() == message_count) {
       ASSERT_EQ(kMessageSizeThatIsNotDelivered, message_size);
       failure_seen = true;
