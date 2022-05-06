@@ -352,7 +352,9 @@ absl::optional<Syncable::Info> RtpVideoStreamReceiver2::GetSyncInfo() const {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   Syncable::Info info;
   if (rtp_rtcp_->RemoteNTP(&info.capture_time_ntp_secs,
-                           &info.capture_time_ntp_frac, nullptr, nullptr,
+                           &info.capture_time_ntp_frac,
+                           /*rtcp_arrival_time_secs=*/nullptr,
+                           /*rtcp_arrival_time_frac=*/nullptr,
                            &info.capture_time_source_clock) != 0) {
     return absl::nullopt;
   }
