@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+			.site-header {
+				position: relative;
+				z-index: 7;
+			}
+			.dropnav {
+				visibility: hidden;
+			}
+			.dropnav:after {
+				-webkit-backdrop-filter:blur(5px);
+				backdrop-filter:blur(5px);
+				content:"";
+				height:calc(100vh - 70px);
+				position:fixed;
+				width:100%;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="dropnav">
+				<span>App</span>
+			</div>
+		</header>
+		<div style="position: relative; top: 100px; left: 100px; width: 200px; height: 200px; background: blue;"></div>
+	</body>
+</html>
