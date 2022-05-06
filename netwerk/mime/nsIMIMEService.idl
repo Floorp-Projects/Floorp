@@ -168,6 +168,8 @@ interface nsIMIMEService : nsISupports {
      *    character, either ' ' or an ideographic space 0x3000 if present.
      *  - Unless VALIDATE_DONT_TRUNCATE is specified, the filename is truncated
      *    to a maximum length, preserving the extension if possible.
+     *  - Some filenames are invalid on certain platforms. These are replaced if
+     *    possible.
      *
      * If the VALIDATE_NO_DEFAULT_FILENAME flag is not specified, and after the
      * rules above are applied, the resulting filename is empty, a default
