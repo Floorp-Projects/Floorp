@@ -89,7 +89,7 @@ TEST(VideoCodecTestLibaom, HdAV1) {
   std::vector<RateControlThresholds> rc_thresholds = {
       {13, 3, 0, 1, 0.3, 0.1, 0, 1}};
 
-  std::vector<QualityThresholds> quality_thresholds = {{36, 32, 0.93, 0.87}};
+  std::vector<QualityThresholds> quality_thresholds = {{36, 31.9, 0.93, 0.87}};
 
   fixture->RunTest(rate_profiles, &rc_thresholds, &quality_thresholds, nullptr);
 }

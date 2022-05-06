@@ -382,6 +382,34 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_CFL_INTRA, 0);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_ENABLE_CFL_INTRA.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_SMOOTH_INTRA, 0);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_ENABLE_SMOOTH_INTRA.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_ANGLE_DELTA, 0);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_ENABLE_ANGLE_DELTA.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  ret = aom_codec_control(&ctx_, AV1E_SET_ENABLE_FILTER_INTRA, 0);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
+                        << " on control AV1E_SET_ENABLE_FILTER_INTRA.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
