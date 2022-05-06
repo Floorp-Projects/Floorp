@@ -114,10 +114,6 @@ var connect = async function() {
 function setPrefDefaults() {
   Services.prefs.setBoolPref("devtools.inspector.showUserAgentStyles", true);
   Services.prefs.setBoolPref(
-    "devtools.performance.ui.show-platform-data",
-    true
-  );
-  Services.prefs.setBoolPref(
     "devtools.inspector.showAllAnonymousContent",
     true
   );
