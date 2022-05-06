@@ -1452,4 +1452,24 @@ TEST_P(PeerConnectionIceTest, CloseDoesNotTransitionGatheringStateToComplete) {
             pc->pc()->ice_gathering_state());
 }
 
+TEST_P(PeerConnectionIceTest, PrefersMidOverMLineIndex) {
+  const SocketAddress kCalleeAddress("1.1.1.1", 1111);
+
+  auto caller = CreatePeerConnectionWithAudioVideo();
+  auto callee = CreatePeerConnectionWithAudioVideo();
+
+  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
+  ASSERT_TRUE(
+      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
+
+  // |candidate.transport_name()| is empty.
+  cricket::Candidate candidate = CreateLocalUdpCandidate(kCalleeAddress);
+  auto* audio_content = cricket::GetFirstAudioContent(
+      caller->pc()->local_description()->description());
+  std::unique_ptr<IceCandidateInterface> ice_candidate =
+      CreateIceCandidate(audio_content->name, 65535, candidate);
+  EXPECT_TRUE(caller->pc()->AddIceCandidate(ice_candidate.get()));
+  EXPECT_TRUE(caller->pc()->RemoveIceCandidates({candidate}));
+}
+
 }  // namespace webrtc

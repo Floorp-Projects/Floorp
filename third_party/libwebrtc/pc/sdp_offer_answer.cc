@@ -4532,20 +4532,7 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
 RTCErrorOr<const cricket::ContentInfo*> SdpOfferAnswerHandler::FindContentInfo(
     const SessionDescriptionInterface* description,
     const IceCandidateInterface* candidate) {
-  if (candidate->sdp_mline_index() >= 0) {
-    size_t mediacontent_index =
-        static_cast<size_t>(candidate->sdp_mline_index());
-    size_t content_size = description->description()->contents().size();
-    if (mediacontent_index < content_size) {
-      return &description->description()->contents()[mediacontent_index];
-    } else {
-      return RTCError(RTCErrorType::INVALID_RANGE,
-                      "Media line index (" +
-                          rtc::ToString(candidate->sdp_mline_index()) +
-                          ") out of range (number of mlines: " +
-                          rtc::ToString(content_size) + ").");
-    }
-  } else if (!candidate->sdp_mid().empty()) {
+  if (!candidate->sdp_mid().empty()) {
     auto& contents = description->description()->contents();
     auto it = absl::c_find_if(
         contents, [candidate](const cricket::ContentInfo& content_info) {
@@ -4558,6 +4545,19 @@ RTCErrorOr<const cricket::ContentInfo*> SdpOfferAnswerHandler::FindContentInfo(
               " specified but no media section with that mid found.");
     } else {
       return &*it;
+    }
+  } else if (candidate->sdp_mline_index() >= 0) {
+    size_t mediacontent_index =
+        static_cast<size_t>(candidate->sdp_mline_index());
+    size_t content_size = description->description()->contents().size();
+    if (mediacontent_index < content_size) {
+      return &description->description()->contents()[mediacontent_index];
+    } else {
+      return RTCError(RTCErrorType::INVALID_RANGE,
+                      "Media line index (" +
+                          rtc::ToString(candidate->sdp_mline_index()) +
+                          ") out of range (number of mlines: " +
+                          rtc::ToString(content_size) + ").");
     }
   }
 
