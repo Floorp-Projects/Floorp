@@ -436,6 +436,8 @@ AndroidNetworkMonitor::FindNetworkHandleFromIfname(
   if (bind_using_ifname_) {
     for (auto const& iter : network_info_by_handle_) {
       if (if_name.find(iter.second.interface_name) != std::string::npos) {
+        // Use partial match so that e.g if_name="v4-wlan0" is matched
+        // agains iter.first="wlan0"
         return absl::make_optional(iter.first);
       }
     }
@@ -490,6 +492,8 @@ rtc::AdapterType AndroidNetworkMonitor::GetAdapterType(
 
   if (type == rtc::ADAPTER_TYPE_UNKNOWN && bind_using_ifname_) {
     for (auto const& iter : adapter_type_by_name_) {
+      // Use partial match so that e.g if_name="v4-wlan0" is matched
+      // agains iter.first="wlan0"
       if (if_name.find(iter.first) != std::string::npos) {
         type = iter.second;
         break;
@@ -511,7 +515,9 @@ rtc::AdapterType AndroidNetworkMonitor::GetVpnUnderlyingAdapterType(
                               ? rtc::ADAPTER_TYPE_UNKNOWN
                               : iter->second;
   if (type == rtc::ADAPTER_TYPE_UNKNOWN && bind_using_ifname_) {
-    for (auto const& iter : adapter_type_by_name_) {
+    // Use partial match so that e.g if_name="v4-wlan0" is matched
+    // agains iter.first="wlan0"
+    for (auto const& iter : vpn_underlying_adapter_type_by_name_) {
       if (if_name.find(iter.first) != std::string::npos) {
         type = iter.second;
         break;

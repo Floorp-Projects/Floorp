@@ -149,5 +149,19 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIfName) {
   EXPECT_EQ(ipv6_handle, *network_handle2);
 }
 
+TEST_F(AndroidNetworkMonitorTest, TestUnderlyingVpnType) {
+  ScopedFieldTrials field_trials("WebRTC-BindUsingInterfaceName/Enabled/");
+  jni::NetworkHandle ipv4_handle = 100;
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
+  net_info.type = jni::NETWORK_VPN;
+  net_info.underlying_type_for_vpn = jni::NETWORK_WIFI;
+  network_monitor_->SetNetworkInfos({net_info});
+
+  EXPECT_EQ(rtc::ADAPTER_TYPE_WIFI,
+            network_monitor_->GetVpnUnderlyingAdapterType("v4-wlan0"));
+}
+
 }  // namespace test
 }  // namespace webrtc
