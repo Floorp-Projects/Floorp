@@ -475,14 +475,15 @@ class RefTest(object):
         elif manifests:
             prefs["reftest.manifests"] = json.dumps(manifests)
 
-        # Unconditionally update the e10s pref, default True
-        prefs["browser.tabs.remote.autostart"] = True
-        if not options.e10s:
+        # Unconditionally update the e10s pref.
+        if options.e10s:
+            prefs["browser.tabs.remote.autostart"] = True
+        else:
             prefs["browser.tabs.remote.autostart"] = False
 
-        # default fission to True
-        prefs["fission.autostart"] = True
-        if options.disableFission:
+        if options.fission:
+            prefs["fission.autostart"] = True
+        else:
             prefs["fission.autostart"] = False
 
         if not self.run_by_manifest:

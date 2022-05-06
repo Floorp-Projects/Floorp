@@ -58,15 +58,6 @@ firefox_ui_tests_config_options = (
             },
         ],
         [
-            ["--disable-fission"],
-            {
-                "dest": "disable_fission",
-                "action": "store_true",
-                "default": False,
-                "help": "Disable fission mode when running tests.",
-            },
-        ],
-        [
             ["--setpref"],
             {
                 "dest": "extra_prefs",
@@ -236,9 +227,6 @@ class FirefoxUIFunctionalTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
 
         if not self.config.get("e10s"):
             cmd.append("--disable-e10s")
-
-        if self.config.get("disable_fission"):
-            cmd.append("--disable-fission")
 
         cmd.extend(["--setpref={}".format(p) for p in self.config.get("extra_prefs")])
 

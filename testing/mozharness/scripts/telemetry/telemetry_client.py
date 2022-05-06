@@ -57,15 +57,6 @@ telemetry_tests_config_options = (
             },
         ],
         [
-            ["--disable-fission"],
-            {
-                "dest": "disable_fission",
-                "action": "store_true",
-                "default": False,
-                "help": "Disable fission mode when running tests.",
-            },
-        ],
-        [
             ["--setpref"],
             {
                 "dest": "extra_prefs",
@@ -128,7 +119,6 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         self.installer_url = self.config.get("installer_url")
         self.test_packages_url = self.config.get("test_packages_url")
         self.test_url = self.config.get("test_url")
-        self.disable_fission = self.config.get("disable_fission")
 
         if not self.test_url and not self.test_packages_url:
             self.fatal("You must use --test-url, or --test-packages-url")
@@ -206,8 +196,6 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         if self.symbols_path:
             cmd.extend(["--symbols-path", self.symbols_path])
 
-        if self.disable_fission:
-            cmd.append("--disable-fission")
         cmd.extend(["--setpref={}".format(p) for p in self.config["extra_prefs"]])
 
         if not self.config["e10s"]:
