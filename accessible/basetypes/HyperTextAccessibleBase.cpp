@@ -9,7 +9,6 @@
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
-#include "mozilla/a11y/RemoteAccessible.h"
 #include "TextLeafRange.h"
 #include "TextRange.h"
 
@@ -165,82 +164,6 @@ bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
     *aEndOffset = aOffset + aChar.Length();
   }
   return true;
-}
-
-LayoutDeviceIntRect HyperTextAccessibleBase::CharBounds(int32_t aOffset,
-                                                        uint32_t aCoordType) {
-  TextLeafPoint point = ToTextLeafPoint(aOffset, false);
-  if (!point.mAcc || !point.mAcc->IsRemote() ||
-      !point.mAcc->AsRemote()->mCachedFields) {
-    return LayoutDeviceIntRect();
-  }
-
-  LayoutDeviceIntRect bounds = point.CharBounds();
-  nsAccUtils::ConvertScreenCoordsTo(&bounds.x, &bounds.y, aCoordType, Acc());
-  return bounds;
-}
-
-LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
-                                                        int32_t aEndOffset,
-                                                        uint32_t aCoordType) {
-  if (CharacterCount() == 0 ||
-      (aEndOffset > -1 && aStartOffset >= aEndOffset)) {
-    return LayoutDeviceIntRect();
-  }
-
-  LayoutDeviceIntRect result = CharBounds(aStartOffset, aCoordType);
-  int32_t indexOfLastChar =
-      static_cast<int32_t>(ConvertMagicOffset(aEndOffset)) - 1;
-  if (aStartOffset == indexOfLastChar) {
-    // HyperTextAccessibleBase::CharBounds() above already
-    // does coord-type conversion, so simply return `result` here.
-    return result;
-  }
-
-  // Here's where things get complicated. We can't simply query the first
-  // and last character, and union their bounds. They might reside on different
-  // lines, and a simple union may yield an incorrect width. We
-  // should use the length of the longest spanned line for our width.
-  // TODO: This functionality should probably live in TextLeafRange
-
-  TextLeafPoint currPoint = ToTextLeafPoint(aStartOffset, false);
-  TextLeafPoint endPoint = ToTextLeafPoint(indexOfLastChar, false);
-
-  bool locatedFinalLine = false;
-  // Note: we have to reset `result` here because the initialisation
-  // above potentially performed a coord-type conversion, and the rest of
-  // this function expects to work in screen coords.
-  result = currPoint.CharBounds();
-
-  // Union the first and last chars of each line to create a line rect. Then,
-  // union the lines together.
-  while (!locatedFinalLine) {
-    // Fetch the last point in the current line by getting the
-    // start of the next line and going back one char. We don't
-    // use BOUNDARY_LINE_END here because it is equivalent to LINE_START when
-    // the line doesn't end with a line feed character.
-    TextLeafPoint lineStartPoint =
-        currPoint.FindBoundary(nsIAccessibleText::BOUNDARY_LINE_START, eDirNext,
-                               /* aIncludeOrigin */ false);
-    TextLeafPoint lastPointInLine = lineStartPoint.FindBoundary(
-        nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
-        /* aIncludeOrigin */ false);
-    if (endPoint <= lastPointInLine) {
-      lastPointInLine = endPoint;
-      locatedFinalLine = true;
-    }
-
-    LayoutDeviceIntRect currLine = currPoint.CharBounds();
-    currLine.UnionRect(currLine, lastPointInLine.CharBounds());
-    result.UnionRect(result, currLine);
-
-    currPoint = lineStartPoint;
-  }
-
-  // Calls to TextLeafPoint::CharBounds() will construct screen coordinates.
-  // Perform any additional conversions here.
-  nsAccUtils::ConvertScreenCoordsTo(&result.x, &result.y, aCoordType, Acc());
-  return result;
 }
 
 TextLeafPoint HyperTextAccessibleBase::ToTextLeafPoint(int32_t aOffset,
