@@ -1567,7 +1567,6 @@ const nsIFrame::ChildListID nsIFrame::kOverflowList;
 const nsIFrame::ChildListID nsIFrame::kOverflowOutOfFlowList;
 const nsIFrame::ChildListID nsIFrame::kPopupList;
 const nsIFrame::ChildListID nsIFrame::kPushedFloatsList;
-const nsIFrame::ChildListID nsIFrame::kSelectPopupList;
 const nsIFrame::ChildListID nsIFrame::kNoReflowPrincipalList;
 #endif
 
@@ -9670,9 +9669,8 @@ static nsRect ComputeOutlineInnerRect(
   // Iterate over all children except pop-up, absolutely-positioned,
   // float, and overflow ones.
   const nsIFrame::ChildListIDs skip = {
-      nsIFrame::kPopupList,    nsIFrame::kSelectPopupList,
-      nsIFrame::kAbsoluteList, nsIFrame::kFixedList,
-      nsIFrame::kFloatList,    nsIFrame::kOverflowList};
+      nsIFrame::kPopupList, nsIFrame::kAbsoluteList, nsIFrame::kFixedList,
+      nsIFrame::kFloatList, nsIFrame::kOverflowList};
   for (const auto& [list, listID] : aFrame->ChildLists()) {
     if (skip.contains(listID)) {
       continue;

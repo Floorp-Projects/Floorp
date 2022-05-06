@@ -1213,9 +1213,8 @@ static void GetScrollableOverflowForPerspective(
     nsIFrame* aScrolledFrame, nsIFrame* aCurrentFrame, const nsRect aScrollPort,
     nsPoint aOffset, nsRect& aScrolledFrameOverflowArea) {
   // Iterate over all children except pop-ups.
-  FrameChildListIDs skip = {nsIFrame::kSelectPopupList, nsIFrame::kPopupList};
   for (const auto& [list, listID] : aCurrentFrame->ChildLists()) {
-    if (skip.contains(listID)) {
+    if (listID == nsIFrame::kPopupList) {
       continue;
     }
 
