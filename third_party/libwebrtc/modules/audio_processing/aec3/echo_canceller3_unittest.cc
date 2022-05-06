@@ -131,6 +131,8 @@ class CaptureTransportVerificationProcessor : public BlockProcessor {
   void GetMetrics(EchoControl::Metrics* metrics) const override {}
 
   void SetAudioBufferDelay(int delay_ms) override {}
+
+  void SetCaptureOutputUsage(bool capture_output_used) {}
 };
 
 // Class for testing that the render data is properly received by the block
@@ -168,6 +170,8 @@ class RenderTransportVerificationProcessor : public BlockProcessor {
   void GetMetrics(EchoControl::Metrics* metrics) const override {}
 
   void SetAudioBufferDelay(int delay_ms) override {}
+
+  void SetCaptureOutputUsage(bool capture_output_used) {}
 
  private:
   std::deque<std::vector<std::vector<std::vector<float>>>>
