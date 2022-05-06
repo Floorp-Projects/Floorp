@@ -18,7 +18,6 @@ DIRS += [
     "loader",
     "locales",
     "node-properties",
-    "performance",
     "performance-new",
     "platform",
     "protocol",
