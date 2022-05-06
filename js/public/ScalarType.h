@@ -22,7 +22,7 @@ namespace Scalar {
 //
 //  * the TYPEDARRAY_KIND constants
 //  * the SCTAG_TYPED_ARRAY constants
-//  * JS_FOR_EACH_TYPEDARRAY
+//  * JS_FOR_EACH_TYPED_ARRAY
 //  * JS_FOR_PROTOTYPES_
 //  * JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE
 //  * JIT compilation
