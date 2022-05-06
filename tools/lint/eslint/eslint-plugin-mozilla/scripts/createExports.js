@@ -27,18 +27,6 @@ const rulesFile = path.join(
   "saved-rules-data.json"
 );
 
-console.log("Copying modules.json");
-
-const modulesFile = path.join(eslintDir, "modules.json");
-const shipModulesFile = path.join(
-  eslintDir,
-  "eslint-plugin-mozilla",
-  "lib",
-  "modules.json"
-);
-
-fs.writeFileSync(shipModulesFile, fs.readFileSync(modulesFile));
-
 console.log("Copying services.json");
 
 const env = helpers.getBuildEnvironment();
