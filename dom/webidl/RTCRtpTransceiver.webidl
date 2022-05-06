@@ -22,6 +22,7 @@ dictionary RTCRtpTransceiverInit {
 };
 
 [Pref="media.peerconnection.enabled",
+ JSImplementation="@mozilla.org/dom/rtptransceiver;1",
  Exposed=Window]
 interface RTCRtpTransceiver {
     readonly attribute DOMString?                  mid;
@@ -30,11 +31,9 @@ interface RTCRtpTransceiver {
     [SameObject]
     readonly attribute RTCRtpReceiver              receiver;
     readonly attribute boolean                     stopped;
-    [SetterThrows]
              attribute RTCRtpTransceiverDirection  direction;
     readonly attribute RTCRtpTransceiverDirection? currentDirection;
 
-    [Throws]
     void stop();
     // TODO: bug 1396922
     // void setCodecPreferences(sequence<RTCRtpCodecCapability> codecs);
@@ -42,11 +41,25 @@ interface RTCRtpTransceiver {
     [ChromeOnly]
     void setAddTrackMagic();
     [ChromeOnly]
+    readonly attribute boolean addTrackMagic;
+    [ChromeOnly]
+    attribute boolean shouldRemove;
+    [ChromeOnly]
+    void setCurrentDirection(RTCRtpTransceiverDirection direction);
+    [ChromeOnly]
     void setDirectionInternal(RTCRtpTransceiverDirection direction);
+    [ChromeOnly]
+    void setMid(DOMString mid);
+    [ChromeOnly]
+    void unsetMid();
+    [ChromeOnly]
+    void setStopped();
 
     [ChromeOnly]
     DOMString getKind();
     [ChromeOnly]
     boolean hasBeenUsedToSend();
+    [ChromeOnly]
+    void sync();
 };
 
