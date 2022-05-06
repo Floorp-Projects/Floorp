@@ -54,7 +54,7 @@ add_setup(async function() {
 
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:myfirefox"
+    "about:firefoxview"
   );
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
