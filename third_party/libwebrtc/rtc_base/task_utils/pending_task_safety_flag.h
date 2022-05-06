@@ -62,6 +62,7 @@ class PendingTaskSafetyFlag : public rtc::RefCountInterface {
   ~PendingTaskSafetyFlag() = default;
 
   void SetNotAlive();
+  void SetAlive();
   bool alive() const;
 
  protected:
