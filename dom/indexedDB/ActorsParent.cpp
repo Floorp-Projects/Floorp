@@ -5567,7 +5567,7 @@ class EncryptedFileBlobImpl final : public FileBlobImpl {
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override {
+                                         ErrorResult& aRv) const override {
     MOZ_CRASH("Not implemented because this should be unreachable.");
   }
 

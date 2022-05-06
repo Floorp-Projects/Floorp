@@ -123,7 +123,7 @@ class FileBlobImpl : public BlobImpl {
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   class GetTypeRunnable;
   void GetTypeInternal(nsAString& aType, const MutexAutoLock& aProofOfLock);

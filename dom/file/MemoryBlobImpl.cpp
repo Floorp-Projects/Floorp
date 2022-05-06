@@ -48,7 +48,7 @@ nsresult MemoryBlobImpl::DataOwnerAdapter::Create(DataOwner* aDataOwner,
 
 already_AddRefed<BlobImpl> MemoryBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   RefPtr<BlobImpl> impl =
       new MemoryBlobImpl(this, aStart, aLength, aContentType);
   return impl.forget();

@@ -77,7 +77,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
 
   already_AddRefed<Blob> CreateSlice(uint64_t aStart, uint64_t aLength,
                                      const nsAString& aContentType,
-                                     ErrorResult& aRv);
+                                     ErrorResult& aRv) const;
 
   void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) const;
 
