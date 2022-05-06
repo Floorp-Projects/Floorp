@@ -313,9 +313,6 @@ const windowGlobalTargetPrototype = {
     // Used by the ParentProcessTargetActor to list all frames in the Browser Toolbox
     this.watchNewDocShells = false;
 
-    // Flag which should be updated by the toolbox startup.
-    this._isNewPerfPanelEnabled = false;
-
     this._workerDescriptorActorList = null;
     this._workerDescriptorActorPool = null;
     this._onWorkerDescriptorActorListChanged = this._onWorkerDescriptorActorListChanged.bind(
@@ -906,20 +903,16 @@ const windowGlobalTargetPrototype = {
     // in the same process as this target. We should filter irrelevant events,
     // but console-api-profiler currently doesn't emit any information to identify
     // the origin of the event. See Bug 1731033.
-    if (this._isNewPerfPanelEnabled) {
-      // When the _isNewPerfPanelEnabled flag was set, this browsing target is
-      // used by a toolbox using the new performance panel, which is not
-      // compatible with console.profile().
-      const warningFlag = 1;
-      this.logInPage({
-        text:
-          "console.profile is not compatible with the new Performance recorder. " +
-          "The new Performance recorder can be disabled in the advanced section of the Settings panel. " +
-          "See https://bugzilla.mozilla.org/show_bug.cgi?id=1730896",
-        category: "console.profile unavailable",
-        flags: warningFlag,
-      });
-    }
+
+    // The new performance panel is not compatible with console.profile().
+    const warningFlag = 1;
+    this.logInPage({
+      text:
+        "console.profile is not compatible with the new Performance recorder. " +
+        "See https://bugzilla.mozilla.org/show_bug.cgi?id=1730896",
+      category: "console.profile unavailable",
+      flags: warningFlag,
+    });
   },
 
   observe(subject, topic, data) {
@@ -1313,10 +1306,6 @@ const windowGlobalTargetPrototype = {
       } else {
         this.touchSimulator.stop();
       }
-    }
-
-    if (typeof options.isNewPerfPanelEnabled == "boolean") {
-      this._isNewPerfPanelEnabled = options.isNewPerfPanelEnabled;
     }
 
     if (!this.isTopLevelTarget) {
