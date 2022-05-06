@@ -726,7 +726,6 @@ Toolbox.prototype = {
       if (targetFront.isDestroyed()) {
         return;
       }
-      await this.initPerformance();
     }
 
     if (targetFront.targetForm.ignoreSubFrames) {
@@ -1022,17 +1021,6 @@ Toolbox.prototype = {
         await this.commands.targetConfigurationCommand.updateConfiguration({
           restoreFocus: true,
         });
-      }
-
-      // Lazily connect to the profiler here and don't wait for it to complete,
-      // used to intercept console.profile calls before the performance tools are open.
-      const performanceFrontConnection = this.initPerformance();
-
-      // If in testing environment, wait for performance connection to finish,
-      // so we don't have to explicitly wait for this in tests; ideally, all tests
-      // will handle this on their own, but each have their own tear down function.
-      if (flags.testing) {
-        await performanceFrontConnection;
       }
 
       await this.initHarAutomation();
@@ -2224,10 +2212,7 @@ Toolbox.prototype = {
    */
   _applyNewPerfPanelEnabled: function() {
     this.commands.targetConfigurationCommand.updateConfiguration({
-      isNewPerfPanelEnabled: Services.prefs.getBoolPref(
-        "devtools.performance.new-panel-enabled",
-        false
-      ),
+      isNewPerfPanelEnabled: true,
     });
   },
 
@@ -4186,33 +4171,6 @@ Toolbox.prototype = {
    */
   getTextBoxContextMenu: function() {
     return this.topDoc.getElementById("toolbox-menu");
-  },
-
-  /**
-   * Connects to the Gecko Profiler when the developer tools are open. This is
-   * necessary because of the WebConsole's `profile` and `profileEnd` methods.
-   */
-  async initPerformance() {
-    // If:
-    // - target does not have performance actor (addons)
-    // - or client uses the new performance panel (incompatible with console.profile())
-    // do not even register the shared performance connection.
-    const isNewPerfPanel = Services.prefs.getBoolPref(
-      "devtools.performance.new-panel-enabled",
-      false
-    );
-    if (isNewPerfPanel || !this.target.hasActor("performance")) {
-      return;
-    }
-    if (this.target.isDestroyed()) {
-      return;
-    }
-    const performanceFront = await this.target.getFront("performance");
-    performanceFront.once("console-profile-start", () =>
-      this._onPerformanceFrontEvent(performanceFront)
-    );
-
-    return performanceFront;
   },
 
   /**
