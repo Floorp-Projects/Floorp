@@ -77,20 +77,21 @@ class PeerConnectionDelegateAdapter : public PeerConnectionObserver {
 /** Initialize an RTCPeerConnection with a configuration, constraints, and
  *  delegate.
  */
-- (instancetype)initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
-                  configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
-                    constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-                       delegate:(nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate;
+- (nullable instancetype)initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+                           configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
+                             constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+                                delegate:
+                                    (nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate;
 
 /** Initialize an RTCPeerConnection with a configuration, constraints,
  *  delegate and PeerConnectionDependencies.
  */
-- (instancetype)initWithDependencies:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
-                       configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
-                         constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-                        dependencies:
-                            (std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies
-                            delegate:(nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate
+- (nullable instancetype)
+    initWithDependencies:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+           configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
+             constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+            dependencies:(std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies
+                delegate:(nullable id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate
     NS_DESIGNATED_INITIALIZER;
 
 + (webrtc::PeerConnectionInterface::SignalingState)nativeSignalingStateForState:
