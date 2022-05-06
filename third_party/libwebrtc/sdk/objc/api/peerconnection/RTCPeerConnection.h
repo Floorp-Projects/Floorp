@@ -81,6 +81,12 @@ typedef NS_ENUM(NSInteger, RTCStatsOutputLevel) {
   RTCStatsOutputLevelDebug,
 };
 
+typedef void (^RTCCreateSessionDescriptionCompletionHandler)(RTC_OBJC_TYPE(RTCSessionDescription) *
+                                                                 _Nullable sdp,
+                                                             NSError *_Nullable error);
+
+typedef void (^RTCSetSessionDescriptionCompletionHandler)(NSError *_Nullable error);
+
 @class RTC_OBJC_TYPE(RTCPeerConnection);
 
 RTC_OBJC_EXPORT
@@ -293,27 +299,24 @@ RTC_OBJC_EXPORT
 
 /** Generate an SDP offer. */
 - (void)offerForConstraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-          completionHandler:(nullable void (^)(RTC_OBJC_TYPE(RTCSessionDescription) * _Nullable sdp,
-                                               NSError *_Nullable error))completionHandler;
+          completionHandler:(RTCCreateSessionDescriptionCompletionHandler)completionHandler;
 
 /** Generate an SDP answer. */
 - (void)answerForConstraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-           completionHandler:
-               (nullable void (^)(RTC_OBJC_TYPE(RTCSessionDescription) * _Nullable sdp,
-                                  NSError *_Nullable error))completionHandler;
+           completionHandler:(RTCCreateSessionDescriptionCompletionHandler)completionHandler;
 
 /** Apply the supplied RTCSessionDescription as the local description. */
 - (void)setLocalDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
-          completionHandler:(nullable void (^)(NSError *_Nullable error))completionHandler;
+          completionHandler:(RTCSetSessionDescriptionCompletionHandler)completionHandler;
 
 /** Creates an offer or answer (depending on current signaling state) and sets
  * it as the local session description. */
 - (void)setLocalDescriptionWithCompletionHandler:
-    (nullable void (^)(NSError *_Nullable error))completionHandler;
+    (RTCSetSessionDescriptionCompletionHandler)completionHandler;
 
 /** Apply the supplied RTCSessionDescription as the remote description. */
 - (void)setRemoteDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
-           completionHandler:(nullable void (^)(NSError *_Nullable error))completionHandler;
+           completionHandler:(RTCSetSessionDescriptionCompletionHandler)completionHandler;
 
 /** Limits the bandwidth allocated for all RTP streams sent by this
  *  PeerConnection. Nil parameters will be unchanged. Setting
