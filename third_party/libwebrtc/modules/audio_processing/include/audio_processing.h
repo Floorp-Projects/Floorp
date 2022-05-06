@@ -430,8 +430,9 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       return {Type::kCustomRenderProcessingRuntimeSetting, payload};
     }
 
-    static RuntimeSetting CreateCaptureOutputUsedSetting(bool payload) {
-      return {Type::kCaptureOutputUsed, payload};
+    static RuntimeSetting CreateCaptureOutputUsedSetting(
+        bool capture_output_used) {
+      return {Type::kCaptureOutputUsed, capture_output_used};
     }
 
     Type type() const { return type_; }
