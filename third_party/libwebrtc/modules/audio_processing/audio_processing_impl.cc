@@ -679,6 +679,10 @@ void AudioProcessingImpl::HandleCaptureOutputUsedSetting(
     submodules_.echo_controller->SetCaptureOutputUsage(
         capture_.capture_output_used);
   }
+  if (submodules_.noise_suppressor) {
+    submodules_.noise_suppressor->SetCaptureOutputUsage(
+        capture_.capture_output_used);
+  }
 }
 
 void AudioProcessingImpl::SetRuntimeSetting(RuntimeSetting setting) {
