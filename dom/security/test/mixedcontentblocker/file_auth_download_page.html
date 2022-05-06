@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test mixed content download with auth header by https-first</title>
+  </head>
+  <body>
+    hi
+
+    <script>
+      const host = window.location.host;
+      const path = location.pathname.replace("file_auth_download_page.html","file_auth_download_server.sjs");
+
+      const insecureLink = document.createElement("a");
+      insecureLink.href = `http://${host}${path}?user=user&pass=pass`;
+      insecureLink.download = "true";
+      insecureLink.id = "insecure";
+      insecureLink.textContent = "Not secure Link";
+
+      document.body.append(insecureLink);
+  </script>
+  </body>
+</html>
