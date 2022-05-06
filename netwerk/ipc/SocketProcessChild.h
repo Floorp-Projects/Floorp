@@ -25,7 +25,9 @@ class BackgroundDataBridgeParent;
 
 // The IPC actor implements PSocketProcessChild in child process.
 // This is allocated and kept alive by SocketProcessImpl.
-class SocketProcessChild final : public PSocketProcessChild {
+class SocketProcessChild final
+    : public PSocketProcessChild,
+      public mozilla::ipc::ChildToParentStreamActorManager {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SocketProcessChild)
 
@@ -66,9 +68,22 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   already_AddRefed<PHttpTransactionChild> AllocPHttpTransactionChild();
 
+  PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
+      const FileDescriptor& fd);
+  bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor);
+
+  PChildToParentStreamChild* AllocPChildToParentStreamChild();
+  bool DeallocPChildToParentStreamChild(PChildToParentStreamChild* aActor);
+  PParentToChildStreamChild* AllocPParentToChildStreamChild();
+  bool DeallocPParentToChildStreamChild(PParentToChildStreamChild* aActor);
+
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
 
+  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
+      PChildToParentStreamChild* aActor) override;
+  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
+      const FileDescriptor& aFD) override;
   already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild(
       const HttpHandlerInitArgs& aArgs);
   mozilla::ipc::IPCResult RecvUpdateDeviceModelId(const nsCString& aModelId);
@@ -121,6 +136,9 @@ class SocketProcessChild final : public PSocketProcessChild {
 
   mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
                                              const nsString& aData);
+
+  virtual already_AddRefed<PRemoteLazyInputStreamChild>
+  AllocPRemoteLazyInputStreamChild(const nsID& aID, const uint64_t& aSize);
 
   mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
   mozilla::ipc::IPCResult RecvGetDNSCacheEntries(

@@ -4,7 +4,6 @@
 
 #include "mozilla/SpinEventLoopUntil.h"
 #include "nsIOService.h"
-#include "nsIPipe.h"
 #include "nsSyncStreamListener.h"
 #include "nsThreadUtils.h"
 #include <algorithm>

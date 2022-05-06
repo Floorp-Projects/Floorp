@@ -71,9 +71,8 @@ class SessionHistoryInfo {
     mResultPrincipalURI = aResultPrincipalURI;
   }
 
-  bool HasPostData() const { return mPostData; }
-  already_AddRefed<nsIInputStream> GetPostData() const;
-  void SetPostData(nsIInputStream* aPostData);
+  nsIInputStream* GetPostData() const { return mPostData; }
+  void SetPostData(nsIInputStream* aPostData) { mPostData = aPostData; }
 
   void GetScrollPosition(int32_t* aScrollPositionX, int32_t* aScrollPositionY) {
     *aScrollPositionX = mScrollPositionX;

@@ -322,23 +322,38 @@ NonBlockingAsyncInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
 // nsIIPCSerializableInputStream
 
-void NonBlockingAsyncInputStream::SerializedComplexity(
-    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
-    uint32_t* aTransferables) {
-  InputStreamHelper::SerializedComplexity(mInputStream, aMaxSize, aSizeUsed,
-                                          aPipes, aTransferables);
+void NonBlockingAsyncInputStream::Serialize(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
 void NonBlockingAsyncInputStream::Serialize(
-    mozilla::ipc::InputStreamParams& aParams, uint32_t aMaxSize,
-    uint32_t* aSizeUsed) {
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+template <typename M>
+void NonBlockingAsyncInputStream::SerializeInternal(
+    mozilla::ipc::InputStreamParams& aParams,
+    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+    uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(mWeakIPCSerializableInputStream);
-  InputStreamHelper::SerializeInputStream(mInputStream, aParams, aMaxSize,
-                                          aSizeUsed);
+  InputStreamHelper::SerializeInputStream(mInputStream, aParams,
+                                          aFileDescriptors, aDelayedStart,
+                                          aMaxSize, aSizeUsed, aManager);
 }
 
 bool NonBlockingAsyncInputStream::Deserialize(
-    const mozilla::ipc::InputStreamParams& aParams) {
+    const mozilla::ipc::InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   MOZ_CRASH("NonBlockingAsyncInputStream cannot be deserialized!");
   return true;
 }

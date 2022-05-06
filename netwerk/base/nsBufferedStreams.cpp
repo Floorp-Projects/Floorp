@@ -50,14 +50,7 @@ using mozilla::Some;
 
 nsBufferedStream::~nsBufferedStream() { Close(); }
 
-NS_IMPL_ADDREF(nsBufferedStream)
-NS_IMPL_RELEASE(nsBufferedStream)
-
-NS_INTERFACE_MAP_BEGIN(nsBufferedStream)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsITellableStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, mSeekable)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(nsBufferedStream, nsITellableStream, nsISeekableStream)
 
 nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
   NS_ASSERTION(aStream, "need to supply a stream");
@@ -66,8 +59,6 @@ nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
   mBufferSize = bufferSize;
   mBufferStartOffset = 0;
   mCursor = 0;
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mStream);
-  mSeekable = seekable;
   mBuffer = new (mozilla::fallible) char[bufferSize];
   if (mBuffer == nullptr) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -586,21 +577,26 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports** aStream) {
   return NS_OK;
 }
 
-void nsBufferedInputStream::SerializedComplexity(uint32_t aMaxSize,
-                                                 uint32_t* aSizeUsed,
-                                                 uint32_t* aPipes,
-                                                 uint32_t* aTransferables) {
-  if (mStream) {
-    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mStream);
-    MOZ_ASSERT(stream);
-
-    InputStreamHelper::SerializedComplexity(stream, aMaxSize, aSizeUsed, aPipes,
-                                            aTransferables);
-  }
+void nsBufferedInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
 }
 
-void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
-                                      uint32_t aMaxSize, uint32_t* aSizeUsed) {
+void nsBufferedInputStream::Serialize(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
+    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
+                    aSizeUsed, aManager);
+}
+
+template <typename M>
+void nsBufferedInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
+    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -611,8 +607,9 @@ void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
     MOZ_ASSERT(stream);
 
     InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(stream, wrappedParams, aMaxSize,
-                                            aSizeUsed);
+    InputStreamHelper::SerializeInputStream(stream, wrappedParams,
+                                            aFileDescriptors, aDelayedStart,
+                                            aMaxSize, aSizeUsed, aManager);
 
     params.optionalStream().emplace(wrappedParams);
   }
@@ -622,7 +619,9 @@ void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
   aParams = params;
 }
 
-bool nsBufferedInputStream::Deserialize(const InputStreamParams& aParams) {
+bool nsBufferedInputStream::Deserialize(
+    const InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   if (aParams.type() != InputStreamParams::TBufferedInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -634,7 +633,8 @@ bool nsBufferedInputStream::Deserialize(const InputStreamParams& aParams) {
 
   nsCOMPtr<nsIInputStream> stream;
   if (wrappedParams.isSome()) {
-    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref());
+    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
+                                                       aFileDescriptors);
     if (!stream) {
       NS_WARNING("Failed to deserialize wrapped stream!");
       return false;
@@ -676,8 +676,7 @@ nsBufferedInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
   {
     MutexAutoLock lock(mMutex);
 
-    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
-                   mAsyncWaitCallback != aCallback)) {
+    if (mAsyncWaitCallback && aCallback) {
       return NS_ERROR_FAILURE;
     }
 

@@ -21,6 +21,7 @@ namespace mozilla {
 
 namespace ipc {
 class PBackgroundChild;
+class AutoIPCStream;
 }  // namespace ipc
 
 namespace dom {
@@ -72,15 +73,19 @@ class TypeUtils {
       JSContext* aCx, const OwningRequestOrUSVString& aIn,
       BodyAction aBodyAction, ErrorResult& aRv);
 
-  void ToCacheRequest(CacheRequest& aOut, const InternalRequest& aIn,
-                      BodyAction aBodyAction, SchemeAction aSchemeAction,
-                      ErrorResult& aRv);
+  void ToCacheRequest(
+      CacheRequest& aOut, const InternalRequest& aIn, BodyAction aBodyAction,
+      SchemeAction aSchemeAction,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+      ErrorResult& aRv);
 
   void ToCacheResponseWithoutBody(CacheResponse& aOut, InternalResponse& aIn,
                                   ErrorResult& aRv);
 
-  void ToCacheResponse(JSContext* aCx, CacheResponse& aOut, Response& aIn,
-                       ErrorResult& aRv);
+  void ToCacheResponse(
+      JSContext* aCx, CacheResponse& aOut, Response& aIn,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+      ErrorResult& aRv);
 
   void ToCacheQueryParams(CacheQueryParams& aOut, const CacheQueryOptions& aIn);
 
@@ -123,9 +128,10 @@ class TypeUtils {
   SafeRefPtr<InternalRequest> ToInternalRequest(const nsAString& aIn,
                                                 ErrorResult& aRv);
 
-  void SerializeCacheStream(nsIInputStream* aStream,
-                            Maybe<CacheReadStream>* aStreamOut,
-                            ErrorResult& aRv);
+  void SerializeCacheStream(
+      nsIInputStream* aStream, Maybe<CacheReadStream>* aStreamOut,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+      ErrorResult& aRv);
 
   void SerializeSendStream(nsIInputStream* aStream,
                            CacheReadStream& aReadStreamOut, ErrorResult& aRv);
