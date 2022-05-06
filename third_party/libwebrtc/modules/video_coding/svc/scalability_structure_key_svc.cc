@@ -22,28 +22,6 @@
 #include "rtc_base/logging.h"
 
 namespace webrtc {
-namespace {
-// Values to use as LayerFrameConfig::Id
-enum : int { kKey, kDelta };
-
-DecodeTargetIndication
-Dti(int sid, int tid, const ScalableVideoController::LayerFrameConfig& config) {
-  if (config.IsKeyframe() || config.Id() == kKey) {
-    RTC_DCHECK_EQ(config.TemporalId(), 0);
-    return sid < config.SpatialId() ? DecodeTargetIndication::kNotPresent
-                                    : DecodeTargetIndication::kSwitch;
-  }
-
-  if (sid != config.SpatialId() || tid < config.TemporalId()) {
-    return DecodeTargetIndication::kNotPresent;
-  }
-  if (tid == config.TemporalId() && tid > 0) {
-    return DecodeTargetIndication::kDiscardable;
-  }
-  return DecodeTargetIndication::kSwitch;
-}
-
-}  // namespace
 
 constexpr int ScalabilityStructureKeySvc::kMaxNumSpatialLayers;
 constexpr int ScalabilityStructureKeySvc::kMaxNumTemporalLayers;
@@ -88,6 +66,25 @@ bool ScalabilityStructureKeySvc::TemporalLayerIsActive(int tid) const {
   return false;
 }
 
+DecodeTargetIndication ScalabilityStructureKeySvc::Dti(
+    int sid,
+    int tid,
+    const LayerFrameConfig& config) {
+  if (config.IsKeyframe() || config.Id() == kKey) {
+    RTC_DCHECK_EQ(config.TemporalId(), 0);
+    return sid < config.SpatialId() ? DecodeTargetIndication::kNotPresent
+                                    : DecodeTargetIndication::kSwitch;
+  }
+
+  if (sid != config.SpatialId() || tid < config.TemporalId()) {
+    return DecodeTargetIndication::kNotPresent;
+  }
+  if (tid == config.TemporalId() && tid > 0) {
+    return DecodeTargetIndication::kDiscardable;
+  }
+  return DecodeTargetIndication::kSwitch;
+}
+
 std::vector<ScalableVideoController::LayerFrameConfig>
 ScalabilityStructureKeySvc::KeyframeConfig() {
   std::vector<LayerFrameConfig> configs;
@@ -129,7 +126,7 @@ ScalabilityStructureKeySvc::T0Config() {
       continue;
     }
     configs.emplace_back();
-    configs.back().Id(kDelta).S(sid).T(0).ReferenceAndUpdate(
+    configs.back().Id(kDeltaT0).S(sid).T(0).ReferenceAndUpdate(
         BufferIndex(sid, /*tid=*/0));
   }
   return configs;
@@ -145,7 +142,7 @@ ScalabilityStructureKeySvc::T1Config() {
     }
     configs.emplace_back();
     ScalableVideoController::LayerFrameConfig& config = configs.back();
-    config.Id(kDelta).S(sid).T(1).Reference(BufferIndex(sid, /*tid=*/0));
+    config.Id(kDeltaT1).S(sid).T(1).Reference(BufferIndex(sid, /*tid=*/0));
     if (num_temporal_layers_ > 2) {
       config.Update(BufferIndex(sid, /*tid=*/1));
     }
@@ -154,7 +151,7 @@ ScalabilityStructureKeySvc::T1Config() {
 }
 
 std::vector<ScalableVideoController::LayerFrameConfig>
-ScalabilityStructureKeySvc::T2Config() {
+ScalabilityStructureKeySvc::T2Config(FramePattern pattern) {
   std::vector<LayerFrameConfig> configs;
   configs.reserve(num_spatial_layers_);
   for (int sid = 0; sid < num_spatial_layers_; ++sid) {
@@ -163,7 +160,7 @@ ScalabilityStructureKeySvc::T2Config() {
     }
     configs.emplace_back();
     ScalableVideoController::LayerFrameConfig& config = configs.back();
-    config.Id(kDelta).S(sid).T(2);
+    config.Id(pattern).S(sid).T(2);
     if (can_reference_t1_frame_for_spatial_id_[sid]) {
       config.Reference(BufferIndex(sid, /*tid=*/1));
     } else {
@@ -171,6 +168,37 @@ ScalabilityStructureKeySvc::T2Config() {
     }
   }
   return configs;
+}
+
+ScalabilityStructureKeySvc::FramePattern
+ScalabilityStructureKeySvc::NextPattern(FramePattern last_pattern) const {
+  switch (last_pattern) {
+    case kNone:
+      return kKey;
+    case kDeltaT2B:
+      return kDeltaT0;
+    case kDeltaT2A:
+      if (TemporalLayerIsActive(1)) {
+        return kDeltaT1;
+      }
+      return kDeltaT0;
+    case kDeltaT1:
+      if (TemporalLayerIsActive(2)) {
+        return kDeltaT2B;
+      }
+      return kDeltaT0;
+    case kDeltaT0:
+    case kKey:
+      if (TemporalLayerIsActive(2)) {
+        return kDeltaT2A;
+      }
+      if (TemporalLayerIsActive(1)) {
+        return kDeltaT1;
+      }
+      return kDeltaT0;
+  }
+  RTC_NOTREACHED();
+  return kNone;
 }
 
 std::vector<ScalableVideoController::LayerFrameConfig>
@@ -184,37 +212,19 @@ ScalabilityStructureKeySvc::NextFrameConfig(bool restart) {
     last_pattern_ = kNone;
   }
 
-  switch (last_pattern_) {
-    case kNone:
-      last_pattern_ = kDeltaT0;
+  FramePattern current_pattern = NextPattern(last_pattern_);
+  switch (current_pattern) {
+    case kKey:
       return KeyframeConfig();
-    case kDeltaT2B:
-      last_pattern_ = kDeltaT0;
-      return T0Config();
-    case kDeltaT2A:
-      if (TemporalLayerIsActive(1)) {
-        last_pattern_ = kDeltaT1;
-        return T1Config();
-      }
-      last_pattern_ = kDeltaT0;
+    case kDeltaT0:
       return T0Config();
     case kDeltaT1:
-      if (TemporalLayerIsActive(2)) {
-        last_pattern_ = kDeltaT2B;
-        return T2Config();
-      }
-      last_pattern_ = kDeltaT0;
-      return T0Config();
-    case kDeltaT0:
-      if (TemporalLayerIsActive(2)) {
-        last_pattern_ = kDeltaT2A;
-        return T2Config();
-      } else if (TemporalLayerIsActive(1)) {
-        last_pattern_ = kDeltaT1;
-        return T1Config();
-      }
-      last_pattern_ = kDeltaT0;
-      return T0Config();
+      return T1Config();
+    case kDeltaT2A:
+    case kDeltaT2B:
+      return T2Config(current_pattern);
+    case kNone:
+      break;
   }
   RTC_NOTREACHED();
   return {};
@@ -222,6 +232,11 @@ ScalabilityStructureKeySvc::NextFrameConfig(bool restart) {
 
 GenericFrameInfo ScalabilityStructureKeySvc::OnEncodeDone(
     const LayerFrameConfig& config) {
+  // When encoder drops all frames for a temporal unit, it is better to reuse
+  // old temporal pattern rather than switch to next one, thus switch to next
+  // pattern defered here from the `NextFrameConfig`.
+  // In particular creating VP9 references rely on this behavior.
+  last_pattern_ = static_cast<FramePattern>(config.Id());
   if (config.TemporalId() == 1) {
     can_reference_t1_frame_for_spatial_id_.set(config.SpatialId());
   }
