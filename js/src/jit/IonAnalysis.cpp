@@ -592,22 +592,53 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
     }
   }
 
-  MInstruction* ins = *testBlock->begin();
-  if (!ins->isTest()) {
+  auto iter = testBlock->rbegin();
+  if (!iter->isTest()) {
     return false;
   }
-  MTest* test = ins->toTest();
-  if (!test->input()->isPhi()) {
+  MTest* test = iter->toTest();
+
+  // Unwrap boolean conversion performed through the '!!' idiom.
+  MInstruction* testOrNot = test;
+  bool hasOddNumberOfNots = false;
+  while (++iter != testBlock->rend()) {
+    if (iter->isNot()) {
+      // The MNot must only be used by |testOrNot|.
+      auto* notIns = iter->toNot();
+      if (testOrNot->getOperand(0) != notIns) {
+        return false;
+      }
+      if (!notIns->hasOneUse()) {
+        return false;
+      }
+
+      testOrNot = notIns;
+      hasOddNumberOfNots = !hasOddNumberOfNots;
+    } else {
+      // Fail if there are any other instructions than MNot.
+      return false;
+    }
+  }
+
+  // There's an odd number of MNot, so this can't be the '!!' idiom.
+  if (hasOddNumberOfNots) {
     return false;
   }
-  MPhi* phi = test->input()->toPhi();
+
+  MOZ_ASSERT(testOrNot->isTest() || testOrNot->isNot());
+
+  MDefinition* testInput = testOrNot->getOperand(0);
+  if (!testInput->isPhi()) {
+    return false;
+  }
+  MPhi* phi = testInput->toPhi();
   if (phi->block() != phiBlock) {
     return false;
   }
 
   for (MUseIterator iter = phi->usesBegin(); iter != phi->usesEnd(); ++iter) {
     MUse* use = *iter;
-    if (use->consumer() == test) {
+    if (use->consumer() == testOrNot) {
       continue;
     }
     if (use->consumer()->isResumePoint()) {
