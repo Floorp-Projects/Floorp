@@ -6,19 +6,7 @@
 // Tests that the devtools/shared/worker communicates properly
 // as both CommonJS module and as a JSM.
 
-const WORKER_URL = "resource://devtools/client/shared/widgets/GraphsWorker.js";
-
 const BUFFER_SIZE = 8;
-const count = 100000;
-const WORKER_DATA = (function() {
-  const timestamps = [];
-  for (let i = 0; i < count; i++) {
-    timestamps.push(i);
-  }
-  return timestamps;
-})();
-const INTERVAL = 100;
-const DURATION = 1000;
 
 registerCleanupFunction(function() {
   Services.prefs.clearUserPref("security.allow_parent_unrestricted_js_loads");
@@ -41,17 +29,50 @@ async function testWorker(context, workerFactory) {
     true
   );
   const { DevToolsWorker, workerify } = workerFactory();
+
+  const blob = new Blob(
+    [
+      `
+importScripts("resource://gre/modules/workers/require.js");
+const { createTask } = require("resource://devtools/shared/worker/helper.js");
+
+createTask(self, "groupByField", function({
+  items,
+  groupField
+}) {
+  const groups = {};
+  for (const item of items) {
+    if (!groups[item[groupField]]) {
+      groups[item[groupField]] = [];
+    }
+    groups[item[groupField]].push(item);
+  }
+  return { groups };
+});
+    `,
+    ],
+    { type: "application/javascript" }
+  );
+
+  const WORKER_URL = URL.createObjectURL(blob);
   const worker = new DevToolsWorker(WORKER_URL);
-  const results = await worker.performTask("plotTimestampsGraph", {
-    timestamps: WORKER_DATA,
-    interval: INTERVAL,
-    duration: DURATION,
+
+  const results = await worker.performTask("groupByField", {
+    items: [
+      { name: "Paris", country: "France" },
+      { name: "Lagos", country: "Nigeria" },
+      { name: "Lyon", country: "France" },
+    ],
+    groupField: "country",
   });
 
-  ok(
-    results.plottedData.length,
-    `worker should have returned an object with array properties in ${context}`
+  is(
+    Object.keys(results.groups).join(","),
+    "France,Nigeria",
+    `worker should have returned the expected result in ${context}`
   );
+
+  URL.revokeObjectURL(WORKER_URL);
 
   const fn = workerify(x => x * x);
   is(await fn(5), 25, `workerify works in ${context}`);
