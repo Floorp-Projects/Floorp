@@ -199,11 +199,6 @@ const ActorRegistry = {
       constructor: "MemoryActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/framerate", {
-      prefix: "framerate",
-      constructor: "FramerateActor",
-      type: { target: true },
-    });
     this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
