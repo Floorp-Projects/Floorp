@@ -28,17 +28,23 @@ namespace {
 
 class VideoWriter final : public rtc::VideoSinkInterface<VideoFrame> {
  public:
-  VideoWriter(test::VideoFrameWriter* video_writer)
-      : video_writer_(video_writer) {}
+  VideoWriter(test::VideoFrameWriter* video_writer, int sampling_modulo)
+      : video_writer_(video_writer), sampling_modulo_(sampling_modulo) {}
   ~VideoWriter() override = default;
 
   void OnFrame(const VideoFrame& frame) override {
+    if (frames_counter_++ % sampling_modulo_ != 0) {
+      return;
+    }
     bool result = video_writer_->WriteFrame(frame);
     RTC_CHECK(result) << "Failed to write frame";
   }
 
  private:
-  test::VideoFrameWriter* video_writer_;
+  test::VideoFrameWriter* const video_writer_;
+  const int sampling_modulo_;
+
+  int64_t frames_counter_ = 0;
 };
 
 class AnalyzingFramePreprocessor
@@ -122,7 +128,8 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
   test::VideoFrameWriter* writer =
       MaybeCreateVideoWriter(config.input_dump_file_name, config);
   if (writer) {
-    sinks.push_back(std::make_unique<VideoWriter>(writer));
+    sinks.push_back(std::make_unique<VideoWriter>(
+        writer, config.input_dump_sampling_modulo));
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
@@ -225,7 +232,8 @@ VideoQualityAnalyzerInjectionHelper::PopulateSinks(
   test::VideoFrameWriter* writer =
       MaybeCreateVideoWriter(config.output_dump_file_name, config);
   if (writer) {
-    sinks.push_back(std::make_unique<VideoWriter>(writer));
+    sinks.push_back(std::make_unique<VideoWriter>(
+        writer, config.output_dump_sampling_modulo));
   }
   if (config.show_on_screen) {
     sinks.push_back(absl::WrapUnique(
