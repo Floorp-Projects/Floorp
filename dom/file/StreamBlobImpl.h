@@ -12,8 +12,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsICloneableInputStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
@@ -90,7 +89,6 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   int64_t mFileId;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_StreamBlobImpl_h

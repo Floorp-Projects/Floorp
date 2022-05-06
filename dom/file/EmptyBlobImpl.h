@@ -9,8 +9,7 @@
 
 #include "BaseBlobImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EmptyBlobImpl final : public BaseBlobImpl {
  public:
@@ -36,7 +35,6 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   ~EmptyBlobImpl() override = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_EmptyBlobImpl_h

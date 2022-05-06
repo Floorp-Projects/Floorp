@@ -15,8 +15,7 @@
 
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileBlobImpl : public BlobImpl {
  public:
@@ -153,7 +152,6 @@ class FileBlobImpl : public BlobImpl {
   bool mWholeFile;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileBlobImpl_h
