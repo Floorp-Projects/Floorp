@@ -38,7 +38,6 @@ DevToolsModules(
     "page-style.js",
     "perf.js",
     "performance-recording.js",
-    "performance.js",
     "preference.js",
     "private-properties-iterator.js",
     "property-iterator.js",
