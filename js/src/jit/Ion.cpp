@@ -1172,6 +1172,9 @@ bool OptimizeMIR(MIRGenerator* mir) {
         return false;
       }
 
+      gs.spewPass("Eliminate dead resume point operands");
+      AssertExtendedGraphCoherency(graph);
+
       if (mir->shouldCancel("Eliminate dead resume point operands")) {
         return false;
       }
