@@ -89,7 +89,7 @@ class RemoteLazyInputStreamParent final : public PRemoteLazyInputStreamParent {
   RemoteLazyInputStreamParent(const nsID& aID, uint64_t aSize,
                               mozilla::net::SocketProcessParent* aManager);
 
-  ~RemoteLazyInputStreamParent() = default;
+  ~RemoteLazyInputStreamParent() override = default;
 
   const nsID mID;
   const uint64_t mSize;

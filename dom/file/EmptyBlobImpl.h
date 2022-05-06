@@ -33,7 +33,7 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   }
 
  private:
-  ~EmptyBlobImpl() = default;
+  ~EmptyBlobImpl() override = default;
 };
 
 }  // namespace dom

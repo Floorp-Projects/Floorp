@@ -67,8 +67,8 @@ class FileReader final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
                                                          DOMEventTargetHelper)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   static already_AddRefed<FileReader> Constructor(const GlobalObject& aGlobal);
@@ -121,7 +121,7 @@ class FileReader final : public DOMEventTargetHelper,
   void InitialAsyncWait();
 
  private:
-  virtual ~FileReader();
+  ~FileReader() override;
 
   // This must be in sync with dom/webidl/FileReader.webidl
   enum eReadyState { EMPTY = 0, LOADING = 1, DONE = 2 };

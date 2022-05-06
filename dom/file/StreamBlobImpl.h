@@ -77,7 +77,7 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
                  int64_t aLastModifiedDate, uint64_t aLength,
                  const nsAString& aBlobImplType);
 
-  ~StreamBlobImpl();
+  ~StreamBlobImpl() override;
 
   void MaybeRegisterMemoryReporter();
 

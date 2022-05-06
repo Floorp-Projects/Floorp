@@ -51,17 +51,15 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
   NS_DECL_NSISERIALIZABLE
 
   // Override CloneInternal() and EqualsInternal()
-  virtual nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
-                                 const nsACString& newRef,
-                                 nsIURI** aClone) override;
-  virtual nsresult EqualsInternal(nsIURI* aOther,
-                                  RefHandlingEnum aRefHandlingMode,
-                                  bool* aResult) override;
+  nsresult CloneInternal(RefHandlingEnum aRefHandlingMode,
+                         const nsACString& newRef, nsIURI** aClone) override;
+  nsresult EqualsInternal(nsIURI* aOther, RefHandlingEnum aRefHandlingMode,
+                          bool* aResult) override;
   NS_IMETHOD_(void) Serialize(mozilla::ipc::URIParams& aParams) override;
 
   // Override StartClone to hand back a BlobURL
-  virtual mozilla::net::nsSimpleURI* StartClone(
-      RefHandlingEnum refHandlingMode, const nsACString& newRef) override {
+  mozilla::net::nsSimpleURI* StartClone(RefHandlingEnum refHandlingMode,
+                                        const nsACString& newRef) override {
     BlobURL* url = new BlobURL();
     SetRefOnClone(url, refHandlingMode, newRef);
     return url;
@@ -72,7 +70,7 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
   NS_IMETHOD Mutate(nsIURIMutator** _retval) override;
 
  private:
-  virtual ~BlobURL() = default;
+  ~BlobURL() override = default;
 
   nsresult SetScheme(const nsACString& aProtocol) override;
   bool Deserialize(const mozilla::ipc::URIParams&);

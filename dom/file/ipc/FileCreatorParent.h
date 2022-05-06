@@ -28,7 +28,7 @@ class FileCreatorParent final : public mozilla::dom::PFileCreatorParent {
       const bool& aIsFromNsIFile);
 
  private:
-  ~FileCreatorParent();
+  ~FileCreatorParent() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

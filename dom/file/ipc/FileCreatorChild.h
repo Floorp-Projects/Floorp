@@ -17,7 +17,7 @@ class FileCreatorChild final : public mozilla::dom::PFileCreatorChild {
 
  public:
   FileCreatorChild();
-  ~FileCreatorChild();
+  ~FileCreatorChild() override;
 
   void SetPromise(Promise* aPromise);
 

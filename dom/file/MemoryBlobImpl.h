@@ -123,7 +123,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     size_t SizeOfExcludingThisEvenIfShared(MallocSizeOf) override { return 0; }
 
    private:
-    ~DataOwnerAdapter() = default;
+    ~DataOwnerAdapter() override = default;
 
     DataOwnerAdapter(DataOwner* aDataOwner, Span<const char> aData)
         : mDataOwner(aDataOwner), mData(aData) {}
@@ -149,7 +149,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  ~MemoryBlobImpl() = default;
+  ~MemoryBlobImpl() override = default;
 
   // Used when backed by a memory store
   RefPtr<DataOwner> mDataOwner;
