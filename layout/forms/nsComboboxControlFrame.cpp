@@ -696,13 +696,6 @@ nsresult nsComboboxControlFrame::CreateAnonymousContent(
     // Set tabindex="-1" so that the button is not tabbable
     mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, u"-1"_ns,
                             false);
-
-    WritingMode wm = GetWritingMode();
-    if (wm.IsVertical()) {
-      mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orientation,
-                              wm.IsVerticalRL() ? u"left"_ns : u"right"_ns,
-                              false);
-    }
     aElements.AppendElement(mButtonContent);
   }
 
