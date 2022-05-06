@@ -834,7 +834,10 @@ if (rtc_include_tests) {
       "../../test:video_test_common",
       "../../test:video_test_support",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings:strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("videocodec_test_stats_impl") {
