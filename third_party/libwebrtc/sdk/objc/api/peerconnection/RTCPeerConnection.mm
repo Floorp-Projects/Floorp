@@ -29,11 +29,57 @@
 
 #include "api/jsep_ice_candidate.h"
 #include "api/rtc_event_log_output_file.h"
+#include "api/set_local_description_observer_interface.h"
+#include "api/set_remote_description_observer_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/numerics/safe_conversions.h"
 
 NSString *const kRTCPeerConnectionErrorDomain = @"org.webrtc.RTC_OBJC_TYPE(RTCPeerConnection)";
 int const kRTCPeerConnnectionSessionDescriptionError = -1;
+
+typedef void (^RTCSetSessionDescriptionCompletionHandler)(NSError *_Nullable error);
+
+namespace {
+
+class SetSessionDescriptionObserver : public webrtc::SetLocalDescriptionObserverInterface,
+                                      public webrtc::SetRemoteDescriptionObserverInterface {
+ public:
+  SetSessionDescriptionObserver(
+      RTCSetSessionDescriptionCompletionHandler _Nullable completionHandler) {
+    completion_handler_ = completionHandler;
+  }
+
+  virtual void OnSetLocalDescriptionComplete(webrtc::RTCError error) override {
+    if (completion_handler_ != nil) {
+      OnCompelete(error);
+    }
+  }
+
+  virtual void OnSetRemoteDescriptionComplete(webrtc::RTCError error) override {
+    if (completion_handler_ != nil) {
+      OnCompelete(error);
+    }
+  }
+
+ private:
+  void OnCompelete(webrtc::RTCError error) {
+    RTC_DCHECK(completion_handler_);
+    if (error.ok()) {
+      completion_handler_(nil);
+    } else {
+      // TODO(hta): Add handling of error.type()
+      NSString *str = [NSString stringForStdString:error.message()];
+      NSError *err = [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
+                                         code:kRTCPeerConnnectionSessionDescriptionError
+                                     userInfo:@{NSLocalizedDescriptionKey : str}];
+      completion_handler_(err);
+    }
+    completion_handler_ = nil;
+  }
+  RTCSetSessionDescriptionCompletionHandler completion_handler_;
+};
+
+}  // anonymous namespace
 
 namespace webrtc {
 
@@ -72,38 +118,6 @@ class CreateSessionDescriptionObserverAdapter
  private:
   void (^completion_handler_)(RTC_OBJC_TYPE(RTCSessionDescription) * sessionDescription,
                               NSError *error);
-};
-
-class SetSessionDescriptionObserverAdapter :
-    public SetSessionDescriptionObserver {
- public:
-  SetSessionDescriptionObserverAdapter(void (^completionHandler)
-      (NSError *error)) {
-    completion_handler_ = completionHandler;
-  }
-
-  ~SetSessionDescriptionObserverAdapter() override { completion_handler_ = nil; }
-
-  void OnSuccess() override {
-    RTC_DCHECK(completion_handler_);
-    completion_handler_(nil);
-    completion_handler_ = nil;
-  }
-
-  void OnFailure(RTCError error) override {
-    RTC_DCHECK(completion_handler_);
-    // TODO(hta): Add handling of error.type()
-    NSString *str = [NSString stringForStdString:error.message()];
-    NSError* err =
-        [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
-                            code:kRTCPeerConnnectionSessionDescriptionError
-                        userInfo:@{ NSLocalizedDescriptionKey : str }];
-    completion_handler_(err);
-    completion_handler_ = nil;
-  }
-
- private:
-  void (^completion_handler_)(NSError *error);
 };
 
 PeerConnectionDelegateAdapter::PeerConnectionDelegateAdapter(RTC_OBJC_TYPE(RTCPeerConnection) *
@@ -548,19 +562,24 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
 }
 
 - (void)setLocalDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
-          completionHandler:(void (^)(NSError *error))completionHandler {
-  rtc::scoped_refptr<webrtc::SetSessionDescriptionObserverAdapter> observer(
-      new rtc::RefCountedObject<webrtc::SetSessionDescriptionObserverAdapter>(
-          completionHandler));
-  _peerConnection->SetLocalDescription(observer, sdp.nativeDescription);
+          completionHandler:(nullable void (^)(NSError *error))completionHandler {
+  rtc::scoped_refptr<webrtc::SetLocalDescriptionObserverInterface> observer(
+      new rtc::RefCountedObject<::SetSessionDescriptionObserver>(completionHandler));
+  _peerConnection->SetLocalDescription(sdp.nativeDescription->Clone(), observer);
+}
+
+- (void)setLocalDescriptionWithCompletionHandler:
+    (nullable void (^)(NSError *error))completionHandler {
+  rtc::scoped_refptr<webrtc::SetLocalDescriptionObserverInterface> observer(
+      new rtc::RefCountedObject<::SetSessionDescriptionObserver>(completionHandler));
+  _peerConnection->SetLocalDescription(observer);
 }
 
 - (void)setRemoteDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
-           completionHandler:(void (^)(NSError *error))completionHandler {
-  rtc::scoped_refptr<webrtc::SetSessionDescriptionObserverAdapter> observer(
-      new rtc::RefCountedObject<webrtc::SetSessionDescriptionObserverAdapter>(
-          completionHandler));
-  _peerConnection->SetRemoteDescription(observer, sdp.nativeDescription);
+           completionHandler:(nullable void (^)(NSError *error))completionHandler {
+  rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface> observer(
+      new rtc::RefCountedObject<::SetSessionDescriptionObserver>(completionHandler));
+  _peerConnection->SetRemoteDescription(sdp.nativeDescription->Clone(), observer);
 }
 
 - (BOOL)setBweMinBitrateBps:(nullable NSNumber *)minBitrateBps

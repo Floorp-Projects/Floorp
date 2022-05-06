@@ -300,6 +300,11 @@ RTC_OBJC_EXPORT
 - (void)setLocalDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
           completionHandler:(nullable void (^)(NSError *_Nullable error))completionHandler;
 
+/** Creates an offer or answer (depending on current signaling state) and sets
+ * it as the local session description. */
+- (void)setLocalDescriptionWithCompletionHandler:
+    (nullable void (^)(NSError *_Nullable error))completionHandler;
+
 /** Apply the supplied RTCSessionDescription as the remote description. */
 - (void)setRemoteDescription:(RTC_OBJC_TYPE(RTCSessionDescription) *)sdp
            completionHandler:(nullable void (^)(NSError *_Nullable error))completionHandler;
