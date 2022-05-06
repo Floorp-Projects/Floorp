@@ -36,7 +36,6 @@ DevToolsModules(
     "keycodes.js",
     "link.js",
     "node-attribute-parser.js",
-    "options-view.js",
     "output-parser.js",
     "prefs.js",
     "react-utils.js",
