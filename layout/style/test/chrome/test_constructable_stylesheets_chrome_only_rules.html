@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for chrome-only rules in constructable stylesheets</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  add_task(async function chrome_rules_constructable_stylesheets() {
+    let sheet = new CSSStyleSheet();
+    sheet.replaceSync(".foo { -moz-default-appearance: none }");
+    is(sheet.cssRules[0].style.length, 1, "Should parse chrome-only property in chrome document");
+  });
+</script>
