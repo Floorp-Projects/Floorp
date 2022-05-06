@@ -609,9 +609,6 @@ skip script test262/built-ins/RegExp/named-groups/non-unicode-property-names-val
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1761989
 skip script test262/built-ins/TypedArrayConstructors/ctors/no-species.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1763606
-skip script test262/built-ins/TypedArray/prototype/sort/sort-tonumber.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
