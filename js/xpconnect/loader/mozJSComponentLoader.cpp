@@ -564,45 +564,43 @@ mozJSComponentLoader::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
-                                              const nsACString& aLocation,
-                                              MutableHandleObject aGlobal) {
+JSObject* mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
+                                              const nsACString& aLocation) {
   auto backstagePass = MakeRefPtr<BackstagePass>();
   RealmOptions options;
 
   options.creationOptions().setNewCompartmentInSystemZone();
   xpc::SetPrefableRealmOptions(options);
 
-  // Defer firing OnNewGlobalObject until after the __URI__ property has
-  // been defined so the JS debugger can tell what module the global is
-  // for
+  // Defer firing OnNewGlobalObject until after the __URI__ property has been
+  // defined so the JS debugger can tell what module the global is for.
   RootedObject global(aCx);
   nsresult rv = xpc::InitClassesWithNewWrappedGlobal(
       aCx, static_cast<nsIGlobalObject*>(backstagePass),
       nsContentUtils::GetSystemPrincipal(), xpc::DONT_FIRE_ONNEWGLOBALHOOK,
       options, &global);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
-  NS_ENSURE_TRUE_VOID(global);
+  if (NS_FAILED(rv) || !global) {
+    return nullptr;
+  }
 
   backstagePass->SetGlobalObject(global);
 
   JSAutoRealm ar(aCx, global);
   if (!JS_DefineFunctions(aCx, global, gGlobalFun)) {
-    return;
+    return nullptr;
   }
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information
   xpc::SetLocationForGlobal(global, aLocation);
 
-  aGlobal.set(global);
+  return global;
 }
 
 JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
   if (!mLoaderGlobal) {
     JS::RootedObject globalObj(aCx);
-    CreateLoaderGlobal(aCx, "shared JSM global"_ns, &globalObj);
+    globalObj = CreateLoaderGlobal(aCx, "shared JSM global"_ns);
 
     // If we fail to create a module global this early, we're not going to
     // get very far, so just bail out now.
