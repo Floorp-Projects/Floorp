@@ -18,12 +18,25 @@ namespace layers {
 
 using namespace gfx;
 
+/* static */
+RefPtr<IMFSampleWrapper> IMFSampleWrapper::Create(IMFSample* aVideoSample) {
+  RefPtr<IMFSampleWrapper> wrapper = new IMFSampleWrapper(aVideoSample);
+  return wrapper;
+}
+
+IMFSampleWrapper::IMFSampleWrapper(IMFSample* aVideoSample)
+    : mVideoSample(aVideoSample) {}
+
+IMFSampleWrapper::~IMFSampleWrapper() {}
+
+void IMFSampleWrapper::ClearVideoSample() { mVideoSample = nullptr; }
+
 D3D11TextureIMFSampleImage::D3D11TextureIMFSampleImage(
     IMFSample* aVideoSample, ID3D11Texture2D* aTexture, uint32_t aArrayIndex,
     const gfx::IntSize& aSize, const gfx::IntRect& aRect,
     gfx::YUVColorSpace aColorSpace, gfx::ColorRange aColorRange)
     : Image(nullptr, ImageFormat::D3D11_TEXTURE_IMF_SAMPLE),
-      mVideoSample(aVideoSample),
+      mVideoSample(IMFSampleWrapper::Create(aVideoSample)),
       mTexture(aTexture),
       mArrayIndex(aArrayIndex),
       mSize(aSize),
@@ -63,6 +76,10 @@ D3D11TextureIMFSampleImage::GetAsSourceSurface() {
 
 ID3D11Texture2D* D3D11TextureIMFSampleImage::GetTexture() const {
   return mTexture;
+}
+
+RefPtr<IMFSampleWrapper> D3D11TextureIMFSampleImage::GetIMFSampleWrapper() {
+  return mVideoSample;
 }
 
 }  // namespace layers
