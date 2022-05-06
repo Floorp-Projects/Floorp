@@ -124,6 +124,8 @@ struct SimulationSettings {
   absl::optional<bool> multi_channel_render;
   absl::optional<bool> multi_channel_capture;
   absl::optional<int> simulated_mic_kind;
+  absl::optional<int> frame_for_sending_capture_output_used_false;
+  absl::optional<int> frame_for_sending_capture_output_used_true;
   bool report_performance = false;
   absl::optional<std::string> performance_report_output_filename;
   bool report_bitexactness = false;
