@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.jsm",
 });
 
@@ -135,7 +136,7 @@ var TabManager = {
    *     The window where the new tab will open. Defaults to Services.wm.getMostRecentWindow
    *     if no window is provided.
    */
-  addTab(options = {}) {
+  async addTab(options = {}) {
     const {
       focus = false,
       userContextId,
@@ -149,7 +150,7 @@ var TabManager = {
     });
 
     if (focus) {
-      this.selectTab(tab);
+      await this.selectTab(tab);
     }
 
     return tab;
@@ -263,19 +264,50 @@ var TabManager = {
     return count;
   },
 
+  /**
+   * Remove the given tab.
+   *
+   * @param {Tab} tab
+   *     Tab to remove.
+   */
   removeTab(tab) {
-    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    const ownerWindow = this._getWindowForTab(tab);
+    const tabBrowser = this.getTabBrowser(ownerWindow);
     tabBrowser.removeTab(tab);
   },
 
+  /**
+   * Select the given tab.
+   *
+   * @param {Tab} tab
+   *     Tab to select.
+   *
+   * @returns {Promise}
+   *     Promise that resolves when the given tab has been selected.
+   */
   selectTab(tab) {
-    const tabBrowser = this.getTabBrowser(tab.ownerGlobal);
+    const ownerWindow = this._getWindowForTab(tab);
+    const tabBrowser = this.getTabBrowser(ownerWindow);
+
+    if (tab === tabBrowser.selectedTab) {
+      return Promise.resolve();
+    }
+
+    const selected = new EventPromise(ownerWindow, "TabSelect");
     tabBrowser.selectedTab = tab;
+    return selected;
   },
 
   supportsTabs() {
     // TODO: Only Firefox supports adding tabs at the moment.
     // Geckoview support should be added via Bug 1506782.
     return AppInfo.name === "Firefox";
+  },
+
+  _getWindowForTab(tab) {
+    // `.linkedBrowser.ownerGlobal` works both with Firefox Desktop and Mobile.
+    // Other accessors (eg `.ownerGlobal` or `.browser.ownerGlobal`) fail on one
+    // of the platforms.
+    return tab.linkedBrowser.ownerGlobal;
   },
 };

@@ -85,11 +85,12 @@ class Target extends Domain {
 
   async createTarget(options = {}) {
     const { browserContextId } = options;
-    const { targetList } = this.session.target;
+    const { targetList, window } = this.session.target;
     const onTarget = targetList.once("target-created");
-    const tab = TabManager.addTab({
+    const tab = await TabManager.addTab({
       focus: true,
       userContextId: browserContextId,
+      window,
     });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
@@ -123,7 +124,7 @@ class Target extends Domain {
 
     // Focus the window, and select the corresponding tab
     await windowManager.focusWindow(window);
-    TabManager.selectTab(target.tab);
+    await TabManager.selectTab(target.tab);
   }
 
   attachToTarget(options = {}) {
