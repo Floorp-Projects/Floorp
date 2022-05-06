@@ -126,6 +126,7 @@ class SendStatisticsProxyTest : public ::testing::Test {
   }
 
   void ExpectEqual(VideoSendStream::Stats one, VideoSendStream::Stats other) {
+    EXPECT_EQ(one.frames, other.frames);
     EXPECT_EQ(one.input_frame_rate, other.input_frame_rate);
     EXPECT_EQ(one.encode_frame_rate, other.encode_frame_rate);
     EXPECT_EQ(one.media_bitrate_bps, other.media_bitrate_bps);
