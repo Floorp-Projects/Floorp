@@ -51,7 +51,7 @@
 #include "MediaTransportHandler.h"
 #include "nsIHttpChannelInternal.h"
 #include "RTCDtlsTransport.h"
-#include "TransceiverImpl.h"
+#include "RTCRtpTransceiver.h"
 
 namespace test {
 #ifdef USE_FAKE_PCOBSERVER
@@ -276,9 +276,9 @@ class PeerConnectionImpl final
 
   void CloseStreams(ErrorResult& rv) { rv = CloseStreams(); }
 
-  already_AddRefed<TransceiverImpl> CreateTransceiverImpl(
-      const nsAString& aKind, dom::MediaStreamTrack* aSendTrack,
-      ErrorResult& rv);
+  already_AddRefed<dom::RTCRtpTransceiver> AddTransceiver(
+      const dom::RTCRtpTransceiverInit& aInit, const nsAString& aKind,
+      dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
 
   bool CheckNegotiationNeeded();
   bool CreatedSender(const dom::RTCRtpSender& aSender) const;
@@ -450,6 +450,11 @@ class PeerConnectionImpl final
 
   void UpdateNegotiationNeeded();
 
+  void GetTransceivers(
+      nsTArray<RefPtr<dom::RTCRtpTransceiver>>& aTransceiversOut) {
+    aTransceiversOut = mTransceivers.Clone();
+  }
+
   // Gets the RTC Signaling State of the JSEP session
   dom::RTCSignalingState GetSignalingState() const;
 
@@ -536,9 +541,6 @@ class PeerConnectionImpl final
                                     bool* client) const;
 
   nsresult AddRtpTransceiverToJsepSession(RefPtr<JsepTransceiver>& transceiver);
-  already_AddRefed<TransceiverImpl> CreateTransceiverImpl(
-      JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
-      ErrorResult& aRv);
 
   void RecordIceRestartStatistics(JsepSdpType type);
 
@@ -722,11 +724,10 @@ class PeerConnectionImpl final
   // any time, not just when an offer/answer exchange completes.
   nsresult UpdateMediaPipelines();
 
-  nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
-                          dom::MediaStreamTrack* aSendTrack,
-                          SharedWebrtcState* aSharedWebrtcState,
-                          RTCStatsIdGenerator* aIdGenerator,
-                          RefPtr<TransceiverImpl>* aTransceiverImpl);
+  already_AddRefed<dom::RTCRtpTransceiver> CreateTransceiver(
+      JsepTransceiver* aJsepTransceiver,
+      const dom::RTCRtpTransceiverInit& aInit,
+      dom::MediaStreamTrack* aSendTrack, ErrorResult& aRv);
 
   std::string GetTransportIdMatchingSendTrack(
       const dom::MediaStreamTrack& aTrack) const;
@@ -749,7 +750,7 @@ class PeerConnectionImpl final
   bool mNegotiationNeeded = false;
   std::set<std::pair<std::string, std::string>> mLocalIceCredentialsToReplace;
 
-  nsTArray<RefPtr<TransceiverImpl>> mTransceivers;
+  nsTArray<RefPtr<dom::RTCRtpTransceiver>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
 
