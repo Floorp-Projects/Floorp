@@ -555,6 +555,8 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final : public RTCStats {
   RTCStatsMember<std::string> local_id;
   RTCStatsMember<double> round_trip_time;
   RTCStatsMember<double> fraction_lost;
+  RTCStatsMember<double> total_round_trip_time;
+  RTCStatsMember<int32_t> round_trip_time_measurements;
 };
 
 // https://w3c.github.io/webrtc-stats/#dom-rtcmediasourcestats

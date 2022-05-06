@@ -1022,6 +1022,10 @@ class RTCStatsReportVerifier {
                                      RTCOutboundRTPStreamStats::kType);
     verifier.TestMemberIsNonNegative<double>(
         remote_inbound_stream.round_trip_time);
+    verifier.TestMemberIsNonNegative<double>(
+        remote_inbound_stream.total_round_trip_time);
+    verifier.TestMemberIsNonNegative<int32_t>(
+        remote_inbound_stream.round_trip_time_measurements);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
 
