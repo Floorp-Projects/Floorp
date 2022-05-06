@@ -1562,6 +1562,8 @@ if (is_ios || is_mac) {
           "../api:sequence_checker",
           "../rtc_base",
           "../rtc_base:threading",
+          "../rtc_base/task_utils:pending_task_safety_flag",
+          "../rtc_base/task_utils:to_queued_task",
         ]
       }
     }

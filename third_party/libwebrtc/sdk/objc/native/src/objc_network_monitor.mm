@@ -10,6 +10,8 @@
 
 #include "sdk/objc/native/src/objc_network_monitor.h"
 
+#include "rtc_base/task_utils/to_queued_task.h"
+
 #include <algorithm>
 
 #include "rtc_base/logging.h"
@@ -18,6 +20,10 @@ namespace webrtc {
 
 rtc::NetworkMonitorInterface* ObjCNetworkMonitorFactory::CreateNetworkMonitor() {
   return new ObjCNetworkMonitor();
+}
+
+ObjCNetworkMonitor::ObjCNetworkMonitor() {
+  safety_flag_ = PendingTaskSafetyFlag::Create();
 }
 
 ObjCNetworkMonitor::~ObjCNetworkMonitor() {
@@ -30,6 +36,7 @@ void ObjCNetworkMonitor::Start() {
   }
   thread_ = rtc::Thread::Current();
   RTC_DCHECK_RUN_ON(thread_);
+  safety_flag_->SetAlive();
   network_monitor_ = [[RTCNetworkMonitor alloc] initWithObserver:this];
   if (network_monitor_ == nil) {
     RTC_LOG(LS_WARNING) << "Failed to create RTCNetworkMonitor; not available on this OS?";
@@ -42,6 +49,7 @@ void ObjCNetworkMonitor::Stop() {
   if (!started_) {
     return;
   }
+  safety_flag_->SetNotAlive();
   network_monitor_ = nil;
   started_ = false;
 }
@@ -76,11 +84,11 @@ bool ObjCNetworkMonitor::IsAdapterAvailable(const std::string& interface_name) {
 void ObjCNetworkMonitor::OnPathUpdate(
     std::map<std::string, rtc::AdapterType> adapter_type_by_name) {
   RTC_DCHECK(network_monitor_ != nil);
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_, [this, adapter_type_by_name] {
+  thread_->PostTask(ToQueuedTask(safety_flag_, [this, adapter_type_by_name] {
     RTC_DCHECK_RUN_ON(thread_);
     adapter_type_by_name_ = adapter_type_by_name;
     SignalNetworksChanged();
-  });
+  }));
 }
 
 }  // namespace webrtc

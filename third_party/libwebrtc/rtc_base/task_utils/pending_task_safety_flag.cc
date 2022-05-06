@@ -24,6 +24,11 @@ void PendingTaskSafetyFlag::SetNotAlive() {
   alive_ = false;
 }
 
+void PendingTaskSafetyFlag::SetAlive() {
+  RTC_DCHECK_RUN_ON(&main_sequence_);
+  alive_ = true;
+}
+
 bool PendingTaskSafetyFlag::alive() const {
   RTC_DCHECK_RUN_ON(&main_sequence_);
   return alive_;
