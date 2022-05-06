@@ -88,13 +88,10 @@ xpcshell:
             default: 5400
     allow-software-gl-layers: false
     tier:
-        by-variant:
-            fission: 2
-            default:
-                by-test-platform:
-                    windows10-64-2004-asan.*: 3
-                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
-                    default: default
+        by-test-platform:
+            windows10-64-2004-asan.*: 3
+            android-em-7.0-x86_64-qr/debug-isolated-process: 3
+            default: default
     mozharness:
         extra-options:
             by-test-platform:
@@ -135,7 +132,6 @@ xpcshell-failures:
     treeherder-symbol: X-f(X)
     run-on-projects:
         by-variant:
-            fission: []
             default: ["mozilla-central"]
     chunks: 2
     max-run-time: 2700

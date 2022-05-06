@@ -7,6 +7,7 @@
         mozharness:
             extra-options:
                 - "--disable-e10s"
+                - "--disable-fission"
 
 headless:
     description: "{description} without a window"
@@ -60,6 +61,18 @@ geckoview-e10s-single:
         mozharness:
             extra-options:
                 - "--setpref=dom.ipc.processCount=1"
+                - "--disable-fission"
+
+geckoview-no-fission:
+    description: "{description} without fission enabled"
+    component: "Core::DOM: Content Processes"
+    when:
+        <<: *gv_e10s_filter
+    suffix: "nofis"
+    merge:
+        mozharness:
+            extra-options:
+                - "--disable-fission"
 
 geckoview-fission:
     description: "{description} with fission enabled"
@@ -67,19 +80,11 @@ geckoview-fission:
     when:
         <<: *gv_e10s_filter
     suffix: "fis"
-    merge:
-        mozharness:
-            extra-options:
-                - "--enable-fission"
 
 fission:
     description: "{description} with fission enabled"
     component: "Testing::General"
     suffix: "fis"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=fission.autostart=true"
 
 no-fission:
     description: "{description} without fission enabled"
@@ -88,7 +93,7 @@ no-fission:
     merge:
         mozharness:
             extra-options:
-                - "--setpref=fission.autostart=false"
+                - "--disable-fission"
 
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
@@ -99,7 +104,6 @@ fission-xorigin:
     merge:
         mozharness:
             extra-options:
-                - "--setpref=fission.autostart=true"
                 - "--enable-xorigin-tests"
 
 socketprocess:
