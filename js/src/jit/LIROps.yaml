@@ -2077,6 +2077,13 @@
   call_instruction: true
   mir_op: true
 
+- name: NewVarEnvironmentObject
+  result_type: WordSized
+  operands:
+    enclosing: WordSized
+  call_instruction: true
+  mir_op: true
+
 - name: CallSetElement
   operands:
     object: WordSized

@@ -3972,6 +3972,15 @@ void CodeGenerator::visitNewClassBodyEnvironmentObject(
   callVM<Fn, ClassBodyLexicalEnvironmentObject::create>(lir);
 }
 
+void CodeGenerator::visitNewVarEnvironmentObject(
+    LNewVarEnvironmentObject* lir) {
+  pushArg(ToRegister(lir->enclosing()));
+  pushArg(ImmGCPtr(lir->mir()->scope()));
+
+  using Fn = VarEnvironmentObject* (*)(JSContext*, HandleScope, HandleObject);
+  callVM<Fn, VarEnvironmentObject::create>(lir);
+}
+
 void CodeGenerator::visitCopyLexicalEnvironmentObject(
     LCopyLexicalEnvironmentObject* lir) {
   pushArg(Imm32(lir->mir()->copySlots()));
