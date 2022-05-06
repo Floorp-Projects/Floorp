@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
 #include "rtc_base/thread.h"
@@ -117,7 +116,7 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface,
   const int android_sdk_int_;
   ScopedJavaGlobalRef<jobject> j_application_context_;
   ScopedJavaGlobalRef<jobject> j_network_monitor_;
-  rtc::Thread* network_thread_;
+  rtc::Thread* const network_thread_;
   bool started_ RTC_GUARDED_BY(network_thread_) = false;
   std::map<std::string, rtc::AdapterType> adapter_type_by_name_
       RTC_GUARDED_BY(network_thread_);
@@ -132,7 +131,6 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface,
   bool find_network_handle_without_ipv6_temporary_part_
       RTC_GUARDED_BY(network_thread_) = false;
   bool surface_cellular_types_ RTC_GUARDED_BY(network_thread_) = false;
-  rtc::AsyncInvoker invoker_;
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
