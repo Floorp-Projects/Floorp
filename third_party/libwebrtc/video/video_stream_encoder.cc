@@ -633,10 +633,8 @@ VideoStreamEncoder::VideoStreamEncoder(
       next_frame_types_(1, VideoFrameType::kVideoFrameDelta),
       frame_encode_metadata_writer_(this),
       experiment_groups_(GetExperimentGroups()),
-      encoder_switch_experiment_(ParseEncoderSwitchFieldTrial()),
       automatic_animation_detection_experiment_(
           ParseAutomatincAnimationDetectionFieldTrial()),
-      encoder_switch_requested_(false),
       input_state_provider_(encoder_stats_observer),
       video_stream_adapter_(
           std::make_unique<VideoStreamAdapter>(&input_state_provider_,
@@ -846,19 +844,6 @@ void VideoStreamEncoder::ConfigureEncoder(VideoEncoderConfig config,
 void VideoStreamEncoder::ReconfigureEncoder() {
   // Running on the encoder queue.
   RTC_DCHECK(pending_encoder_reconfiguration_);
-
-  if (!encoder_selector_ &&
-      encoder_switch_experiment_.IsPixelCountBelowThreshold(
-          last_frame_info_->width * last_frame_info_->height) &&
-      !encoder_switch_requested_ && settings_.encoder_switch_request_callback) {
-    EncoderSwitchRequestCallback::Config conf;
-    conf.codec_name = encoder_switch_experiment_.to_codec;
-    conf.param = encoder_switch_experiment_.to_param;
-    conf.value = encoder_switch_experiment_.to_value;
-    QueueRequestEncoderSwitch(conf);
-
-    encoder_switch_requested_ = true;
-  }
 
   bool encoder_reset_required = false;
   if (pending_encoder_creation_) {
@@ -1100,8 +1085,6 @@ void VideoStreamEncoder::ReconfigureEncoder() {
         send_codec_, codec, was_encode_called_since_last_initialization_);
   }
   send_codec_ = codec;
-
-  encoder_switch_experiment_.SetCodec(send_codec_.codecType);
 
   // Keep the same encoder, as long as the video_format is unchanged.
   // Encoder creation block is split in two since EncoderInfo needed to start
@@ -2045,22 +2028,10 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   const bool video_is_suspended = target_bitrate == DataRate::Zero();
   const bool video_suspension_changed = video_is_suspended != EncoderPaused();
 
-  if (!video_is_suspended && settings_.encoder_switch_request_callback) {
-    if (encoder_selector_) {
-      if (auto encoder =
-              encoder_selector_->OnAvailableBitrate(link_allocation)) {
-        QueueRequestEncoderSwitch(*encoder);
-      }
-    } else if (encoder_switch_experiment_.IsBitrateBelowThreshold(
-                   target_bitrate) &&
-               !encoder_switch_requested_) {
-      EncoderSwitchRequestCallback::Config conf;
-      conf.codec_name = encoder_switch_experiment_.to_codec;
-      conf.param = encoder_switch_experiment_.to_param;
-      conf.value = encoder_switch_experiment_.to_value;
-      QueueRequestEncoderSwitch(conf);
-
-      encoder_switch_requested_ = true;
+  if (!video_is_suspended && settings_.encoder_switch_request_callback &&
+      encoder_selector_) {
+    if (auto encoder = encoder_selector_->OnAvailableBitrate(link_allocation)) {
+      QueueRequestEncoderSwitch(*encoder);
     }
   }
 
@@ -2227,113 +2198,6 @@ void VideoStreamEncoder::ReleaseEncoder() {
   encoder_->Release();
   encoder_initialized_ = false;
   TRACE_EVENT0("webrtc", "VCMGenericEncoder::Release");
-}
-
-bool VideoStreamEncoder::EncoderSwitchExperiment::IsBitrateBelowThreshold(
-    const DataRate& target_bitrate) {
-  DataRate rate = DataRate::KilobitsPerSec(
-      bitrate_filter.Apply(1.0, target_bitrate.kbps()));
-  return current_thresholds.bitrate && rate < *current_thresholds.bitrate;
-}
-
-bool VideoStreamEncoder::EncoderSwitchExperiment::IsPixelCountBelowThreshold(
-    int pixel_count) const {
-  return current_thresholds.pixel_count &&
-         pixel_count < *current_thresholds.pixel_count;
-}
-
-void VideoStreamEncoder::EncoderSwitchExperiment::SetCodec(
-    VideoCodecType codec) {
-  auto it = codec_thresholds.find(codec);
-  if (it == codec_thresholds.end()) {
-    current_thresholds = {};
-  } else {
-    current_thresholds = it->second;
-  }
-}
-
-VideoStreamEncoder::EncoderSwitchExperiment
-VideoStreamEncoder::ParseEncoderSwitchFieldTrial() const {
-  EncoderSwitchExperiment result;
-
-  // Each "codec threshold" have the format
-  // "<codec name>;<bitrate kbps>;<pixel count>", and are separated by the "|"
-  // character.
-  webrtc::FieldTrialOptional<std::string> codec_thresholds_string{
-      "codec_thresholds"};
-  webrtc::FieldTrialOptional<std::string> to_codec{"to_codec"};
-  webrtc::FieldTrialOptional<std::string> to_param{"to_param"};
-  webrtc::FieldTrialOptional<std::string> to_value{"to_value"};
-  webrtc::FieldTrialOptional<double> window{"window"};
-
-  webrtc::ParseFieldTrial(
-      {&codec_thresholds_string, &to_codec, &to_param, &to_value, &window},
-      webrtc::field_trial::FindFullName(
-          "WebRTC-NetworkCondition-EncoderSwitch"));
-
-  if (!codec_thresholds_string || !to_codec || !window) {
-    return {};
-  }
-
-  result.bitrate_filter.Reset(1.0 - 1.0 / *window);
-  result.to_codec = *to_codec;
-  result.to_param = to_param.GetOptional();
-  result.to_value = to_value.GetOptional();
-
-  std::vector<std::string> codecs_thresholds;
-  if (rtc::split(*codec_thresholds_string, '|', &codecs_thresholds) == 0) {
-    return {};
-  }
-
-  for (const std::string& codec_threshold : codecs_thresholds) {
-    std::vector<std::string> thresholds_split;
-    if (rtc::split(codec_threshold, ';', &thresholds_split) != 3) {
-      return {};
-    }
-
-    VideoCodecType codec = PayloadStringToCodecType(thresholds_split[0]);
-    int bitrate_kbps;
-    rtc::FromString(thresholds_split[1], &bitrate_kbps);
-    int pixel_count;
-    rtc::FromString(thresholds_split[2], &pixel_count);
-
-    if (bitrate_kbps > 0) {
-      result.codec_thresholds[codec].bitrate =
-          DataRate::KilobitsPerSec(bitrate_kbps);
-    }
-
-    if (pixel_count > 0) {
-      result.codec_thresholds[codec].pixel_count = pixel_count;
-    }
-
-    if (!result.codec_thresholds[codec].bitrate &&
-        !result.codec_thresholds[codec].pixel_count) {
-      return {};
-    }
-  }
-
-  rtc::StringBuilder ss;
-  ss << "Successfully parsed WebRTC-NetworkCondition-EncoderSwitch field "
-        "trial."
-        " to_codec:"
-     << result.to_codec << " to_param:" << result.to_param.value_or("<none>")
-     << " to_value:" << result.to_value.value_or("<none>")
-     << " codec_thresholds:";
-
-  for (auto kv : result.codec_thresholds) {
-    std::string codec_name = CodecTypeToPayloadString(kv.first);
-    std::string bitrate = kv.second.bitrate
-                              ? std::to_string(kv.second.bitrate->kbps())
-                              : "<none>";
-    std::string pixels = kv.second.pixel_count
-                             ? std::to_string(*kv.second.pixel_count)
-                             : "<none>";
-    ss << " (" << codec_name << ":" << bitrate << ":" << pixels << ")";
-  }
-
-  RTC_LOG(LS_INFO) << ss.str();
-
-  return result;
 }
 
 VideoStreamEncoder::AutomaticAnimationDetectionExperiment
