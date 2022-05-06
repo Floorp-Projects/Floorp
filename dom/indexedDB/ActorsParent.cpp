@@ -5547,7 +5547,7 @@ class EncryptedFileBlobImpl final : public FileBlobImpl {
   }
 
   void CreateInputStream(nsIInputStream** aInputStream,
-                         ErrorResult& aRv) override {
+                         ErrorResult& aRv) const override {
     nsCOMPtr<nsIInputStream> baseInputStream;
     FileBlobImpl::CreateInputStream(getter_AddRefs(baseInputStream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {

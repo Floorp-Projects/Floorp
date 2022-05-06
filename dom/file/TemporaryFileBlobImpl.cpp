@@ -120,7 +120,7 @@ already_AddRefed<BlobImpl> TemporaryFileBlobImpl::CreateSlice(
 }
 
 void TemporaryFileBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                              ErrorResult& aRv) {
+                                              ErrorResult& aRv) const {
 #ifdef DEBUG
   MOZ_ASSERT(!mInputStreamCreated);
   // CreateInputStream can be called only once.

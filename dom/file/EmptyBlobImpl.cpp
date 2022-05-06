@@ -18,7 +18,7 @@ already_AddRefed<BlobImpl> EmptyBlobImpl::CreateSlice(
 }
 
 void EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                      ErrorResult& aRv) {
+                                      ErrorResult& aRv) const {
   if (NS_WARN_IF(!aStream)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

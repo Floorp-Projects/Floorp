@@ -22,7 +22,8 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   static already_AddRefed<StringBlobImpl> Create(const nsACString& aData,
                                                  const nsAString& aContentType);
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
