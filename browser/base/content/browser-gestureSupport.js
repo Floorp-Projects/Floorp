@@ -677,24 +677,14 @@ var gHistorySwipeAnimation = {
    *        Whether we're dealing with a vertical swipe or not.
    */
   startAnimation: function HSA_startAnimation() {
-    // If the animation is running but we are in the process of stopping it
-    // then we want to reset and restart the animation.
-    if (this.isAnimationRunning() && !this._isStoppingAnimation) {
-      return;
-    }
-
-    let createBoxes = true;
-    if (this._isStoppingAnimation) {
-      // Boxes already exist, just need to reset them. Reset the transition that was in the process of stopping.
-      this._prevBox.style.transition = "";
-      this._nextBox.style.transition = "";
-      createBoxes = false;
-    }
-
+    // old boxes can still be around (if completing fade out for example), we
+    // always want to remove them and recreate them because they can be
+    // attached to an old browser stack that's no longer in use.
+    this._removeBoxes();
     this._isStoppingAnimation = false;
     this._canGoBack = this.canGoBack();
     this._canGoForward = this.canGoForward();
-    if (createBoxes && this.active) {
+    if (this.active) {
       this._addBoxes();
     }
     this.updateAnimation(0);
@@ -704,7 +694,7 @@ var gHistorySwipeAnimation = {
    * Stops the swipe animation.
    */
   stopAnimation: function HSA_stopAnimation() {
-    if (!this.isAnimationRunning()) {
+    if (!this.isAnimationRunning() || this._isStoppingAnimation) {
       return;
     }
 
