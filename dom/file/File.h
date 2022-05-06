@@ -11,8 +11,7 @@
 
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct ChromeFilePropertyBag;
 struct FilePropertyBag;
@@ -99,7 +98,6 @@ class File final : public Blob {
   ~File() override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_File_h

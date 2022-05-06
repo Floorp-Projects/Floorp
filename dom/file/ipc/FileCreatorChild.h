@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PFileCreatorChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileCreatorChild final : public mozilla::dom::PFileCreatorChild {
   friend class mozilla::dom::PFileCreatorChild;
@@ -29,7 +28,6 @@ class FileCreatorChild final : public mozilla::dom::PFileCreatorChild {
   RefPtr<Promise> mPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileCreatorChild_h
