@@ -25,10 +25,10 @@ function removeMouseEventListeners(aTarget) {
   aTarget.removeEventListener("mouseleave", recordEvent, true);
 }
 
-function longPressLink() {
+async function longPressLink() {
   let target = document.getElementById("b");
   addMouseEventListeners(target);
-  synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+  await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
     dump("Finished synthesizing touch-start, waiting for events...\n");
   });
 }
@@ -45,7 +45,9 @@ function recordEvent(e) {
       case 0: is(e.type, "touchstart", "Got a touchstart"); break;
       case 1:
         is(e.type, "mouselongtap", "Got a mouselongtap");
-        synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+        setTimeout(async () => {
+          await synthesizeNativeTouch(document.getElementById("b"), 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+        }, 0);
         break;
       case 2: is(e.type, "touchend", "Got a touchend"); break;
       case 3: is(e.type, "mouseover", "Got a mouseover"); break;
@@ -81,13 +83,15 @@ function recordEvent(e) {
 
     if (eventsFired == 6) {
       removeMouseEventListeners(target);
-      synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
-        dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
-        promiseOnlyApzControllerFlushed().then(function() {
-          dump("Done APZ flush, ending test...\n");
-          subtestDone();
+      setTimeout(async () => {
+        await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+          dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
+          promiseOnlyApzControllerFlushed().then(function() {
+            dump("Done APZ flush, ending test...\n");
+            subtestDone();
+          });
         });
-      });
+      }, 0)
     }
   } else {
     // On Android we get a contextmenu event once the long-tap has been
@@ -103,15 +107,19 @@ function recordEvent(e) {
         // Do preventDefault() in this content, thus we will not get any
         // touchcancel event.
         e.preventDefault();
-        synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
-          dump("Finished synthesizing touch-end, waiting for a touchend event...\n");
-        });
+        setTimeout(async () => {
+          await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+            dump("Finished synthesizing touch-end, waiting for a touchend event...\n");
+          });
+        }, 0);
         break;
       case 5: is(e.type, "touchend", "Got a touchend");
         // Send another long press.
-        synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
-          dump("Finished synthesizing touch-start, waiting for events...\n");
-        });
+        setTimeout(async () => {
+          await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, function() {
+            dump("Finished synthesizing touch-start, waiting for events...\n");
+          });
+        }, 0);
         break;
       case 6: is(e.type, "touchstart", "Got another touchstart"); break;
       // NOTE: In this another event case, we don't get mouseover or moveenter
@@ -128,13 +136,15 @@ function recordEvent(e) {
 
     if (eventsFired == 10) {
       removeMouseEventListeners(target);
-      synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
-        dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
-        promiseOnlyApzControllerFlushed().then(function() {
-          dump("Done APZ flush, ending test...\n");
-          subtestDone();
+      setTimeout(async () => {
+        await synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
+          dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
+          promiseOnlyApzControllerFlushed().then(function() {
+            dump("Done APZ flush, ending test...\n");
+            subtestDone();
+          });
         });
-      });
+      }, 0);
     }
   }
 }

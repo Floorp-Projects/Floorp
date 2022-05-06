@@ -70,7 +70,7 @@ async function test() {
     return result;
   });
 
-  synthesizeNativeTap(document.documentElement, 200, 200, function() {
+  await synthesizeNativeTap(document.documentElement, 200, 200, function() {
     dump("Finished synthesizing click, waiting for OOPIF message...\n");
   });
   let iframeResponse = await iframePromise;

@@ -23,7 +23,7 @@ async function test() {
 
   // Send a wheel event on the iframe.
   const iframe = document.querySelector("iframe");
-  synthesizeNativeWheel(iframe, 50, 50, 0, -50);
+  await synthesizeNativeWheel(iframe, 50, 50, 0, -50);
   await scrollEventPromise;
 
   // The wheel event should be handoff-ed to the parent scroll container.
@@ -36,7 +36,7 @@ async function test() {
   await promiseFrame();
   scrollEventPromise = waitForScrollEvent(window);
   // Send a wheel event on the iframe again.
-  synthesizeNativeWheel(iframe, 50, 50, 0, -50);
+  await synthesizeNativeWheel(iframe, 50, 50, 0, -50);
   await scrollEventPromise;
 
   // Now it should be handoff-ed to the root scroller.
