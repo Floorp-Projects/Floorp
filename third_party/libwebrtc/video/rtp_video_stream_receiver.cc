@@ -508,8 +508,7 @@ void RtpVideoStreamReceiver::OnReceivedPayloadData(
     const RTPVideoHeader& video) {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
   auto packet = std::make_unique<video_coding::PacketBuffer::Packet>(
-      rtp_packet, video, ntp_estimator_.Estimate(rtp_packet.Timestamp()),
-      clock_->TimeInMilliseconds());
+      rtp_packet, video, clock_->TimeInMilliseconds());
 
   // Try to extrapolate absolute capture time if it is missing.
   packet->packet_info.set_absolute_capture_time(
@@ -798,22 +797,22 @@ void RtpVideoStreamReceiver::OnInsertedPacket(
 
       const video_coding::PacketBuffer::Packet& last_packet = *packet;
       OnAssembledFrame(std::make_unique<video_coding::RtpFrameObject>(
-          first_packet->seq_num,                    //
-          last_packet.seq_num,                      //
-          last_packet.marker_bit,                   //
-          max_nack_count,                           //
-          min_recv_time,                            //
-          max_recv_time,                            //
-          first_packet->timestamp,                  //
-          first_packet->ntp_time_ms,                //
-          last_packet.video_header.video_timing,    //
-          first_packet->payload_type,               //
-          first_packet->codec(),                    //
-          last_packet.video_header.rotation,        //
-          last_packet.video_header.content_type,    //
-          first_packet->video_header,               //
-          last_packet.video_header.color_space,     //
-          RtpPacketInfos(std::move(packet_infos)),  //
+          first_packet->seq_num,                             //
+          last_packet.seq_num,                               //
+          last_packet.marker_bit,                            //
+          max_nack_count,                                    //
+          min_recv_time,                                     //
+          max_recv_time,                                     //
+          first_packet->timestamp,                           //
+          ntp_estimator_.Estimate(first_packet->timestamp),  //
+          last_packet.video_header.video_timing,             //
+          first_packet->payload_type,                        //
+          first_packet->codec(),                             //
+          last_packet.video_header.rotation,                 //
+          last_packet.video_header.content_type,             //
+          first_packet->video_header,                        //
+          last_packet.video_header.color_space,              //
+          RtpPacketInfos(std::move(packet_infos)),           //
           std::move(bitstream)));
     }
   }
