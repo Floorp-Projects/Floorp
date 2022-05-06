@@ -1551,7 +1551,9 @@ TEST_F(AcmSenderBitExactnessNewApi, DISABLED_OpusManyChannels) {
       50, test::AcmReceiveTestOldApi::kQuadOutput, decoder_factory);
 }
 
-TEST_F(AcmSenderBitExactnessNewApi, OpusFromFormat_stereo_20ms_voip) {
+// TODO(http://bugs.webrtc.org/12518): Enable the test after Opus has been
+// updated.
+TEST_F(AcmSenderBitExactnessNewApi, DISABLED_OpusFromFormat_stereo_20ms_voip) {
   auto config = AudioEncoderOpus::SdpToConfig(
       SdpAudioFormat("opus", 48000, 2, {{"stereo", "1"}}));
   // If not set, default will be kAudio in case of stereo.

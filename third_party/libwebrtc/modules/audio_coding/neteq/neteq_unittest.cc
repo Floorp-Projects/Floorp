@@ -127,13 +127,9 @@ TEST_F(NetEqDecodingTest, MAYBE_TestOpusBitExactness) {
                    absl::GetFlag(FLAGS_gen_ref));
 }
 
-#if !defined(WEBRTC_IOS) && defined(WEBRTC_NETEQ_UNITTEST_BITEXACT) && \
-    defined(WEBRTC_CODEC_OPUS)
-#define MAYBE_TestOpusDtxBitExactness TestOpusDtxBitExactness
-#else
-#define MAYBE_TestOpusDtxBitExactness DISABLED_TestOpusDtxBitExactness
-#endif
-TEST_F(NetEqDecodingTest, MAYBE_TestOpusDtxBitExactness) {
+// TODO(http://bugs.webrtc.org/12518): Enable the test after Opus has been
+// updated.
+TEST_F(NetEqDecodingTest, DISABLED_TestOpusDtxBitExactness) {
   const std::string input_rtp_file =
       webrtc::test::ResourcePath("audio_coding/neteq_opus_dtx", "rtp");
 
