@@ -564,43 +564,45 @@ mozJSComponentLoader::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-JSObject* mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
-                                              const nsACString& aLocation) {
+void mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
+                                              const nsACString& aLocation,
+                                              MutableHandleObject aGlobal) {
   auto backstagePass = MakeRefPtr<BackstagePass>();
   RealmOptions options;
 
   options.creationOptions().setNewCompartmentInSystemZone();
   xpc::SetPrefableRealmOptions(options);
 
-  // Defer firing OnNewGlobalObject until after the __URI__ property has been
-  // defined so the JS debugger can tell what module the global is for.
+  // Defer firing OnNewGlobalObject until after the __URI__ property has
+  // been defined so the JS debugger can tell what module the global is
+  // for
   RootedObject global(aCx);
   nsresult rv = xpc::InitClassesWithNewWrappedGlobal(
       aCx, static_cast<nsIGlobalObject*>(backstagePass),
       nsContentUtils::GetSystemPrincipal(), xpc::DONT_FIRE_ONNEWGLOBALHOOK,
       options, &global);
-  if (NS_FAILED(rv) || !global) {
-    return nullptr;
-  }
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  NS_ENSURE_TRUE_VOID(global);
 
   backstagePass->SetGlobalObject(global);
 
   JSAutoRealm ar(aCx, global);
   if (!JS_DefineFunctions(aCx, global, gGlobalFun)) {
-    return nullptr;
+    return;
   }
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information
   xpc::SetLocationForGlobal(global, aLocation);
 
-  return global;
+  aGlobal.set(global);
 }
 
 JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
   if (!mLoaderGlobal) {
     JS::RootedObject globalObj(aCx);
-    globalObj = CreateLoaderGlobal(aCx, "shared JSM global"_ns);
+    CreateLoaderGlobal(aCx, "shared JSM global"_ns, &globalObj);
 
     // If we fail to create a module global this early, we're not going to
     // get very far, so just bail out now.
@@ -616,76 +618,59 @@ JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
   return mLoaderGlobal;
 }
 
-/* static */
-nsresult mozJSComponentLoader::GetSourceFile(nsIURI* aResolvedURI,
-                                             nsIFile** aSourceFileOut) {
-  // Get the JAR if there is one.
-  nsCOMPtr<nsIJARURI> jarURI;
-  nsresult rv = NS_OK;
-  jarURI = do_QueryInterface(aResolvedURI, &rv);
-  nsCOMPtr<nsIFileURL> baseFileURL;
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIURI> baseURI;
-    while (jarURI) {
-      jarURI->GetJARFile(getter_AddRefs(baseURI));
-      jarURI = do_QueryInterface(baseURI, &rv);
-    }
-    baseFileURL = do_QueryInterface(baseURI, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    baseFileURL = do_QueryInterface(aResolvedURI, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return baseFileURL->GetFile(aSourceFileOut);
-}
-
-/* static */
-bool mozJSComponentLoader::LocationIsRealFile(nsIURI* aURI) {
-  // We need to be extra careful checking for URIs pointing to files.
-  // EnsureFile may not always get called, especially on resource URIs so we
-  // need to call GetFile to make sure this is a valid file.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-  nsCOMPtr<nsIFile> testFile;
-  if (NS_SUCCEEDED(rv)) {
-    fileURL->GetFile(getter_AddRefs(testFile));
-  }
-
-  return bool(testFile);
-}
-
 JSObject* mozJSComponentLoader::PrepareObjectForLocation(
-    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool aRealFile) {
+    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool* aRealFile) {
+  nsAutoCString nativePath;
+  NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
+
   RootedObject globalObj(aCx, GetSharedGlobal(aCx));
-  NS_ENSURE_TRUE(globalObj, nullptr);
-  JSAutoRealm ar(aCx, globalObj);
 
   // |thisObj| is the object we set properties on for a particular .jsm.
-  RootedObject thisObj(aCx, JS::NewJSMEnvironment(aCx));
+  RootedObject thisObj(aCx, globalObj);
   NS_ENSURE_TRUE(thisObj, nullptr);
 
-  if (aRealFile) {
-    if (XRE_IsParentProcess()) {
-      RootedObject locationObj(aCx);
+  JSAutoRealm ar(aCx, thisObj);
 
-      nsresult rv = nsXPConnect::XPConnect()->WrapNative(
-          aCx, thisObj, aComponentFile, NS_GET_IID(nsIFile),
-          locationObj.address());
-      NS_ENSURE_SUCCESS(rv, nullptr);
-      NS_ENSURE_TRUE(locationObj, nullptr);
+  thisObj = JS::NewJSMEnvironment(aCx);
+  NS_ENSURE_TRUE(thisObj, nullptr);
 
-      if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
-        return nullptr;
+  *aRealFile = false;
+
+  // need to be extra careful checking for URIs pointing to files
+  // EnsureFile may not always get called, especially on resource URIs
+  // so we need to call GetFile to make sure this is a valid file
+  {
+    // Create an extra scope so that ~nsCOMPtr will run before the returned
+    // JSObject* is placed on the stack, since otherwise a GC in the destructor
+    // would invalidate the return value.
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+    nsCOMPtr<nsIFile> testFile;
+    if (NS_SUCCEEDED(rv)) {
+      fileURL->GetFile(getter_AddRefs(testFile));
+    }
+
+    if (testFile) {
+      *aRealFile = true;
+
+      if (XRE_IsParentProcess()) {
+        RootedObject locationObj(aCx);
+
+        rv = nsXPConnect::XPConnect()->WrapNative(aCx, thisObj, aComponentFile,
+                                                  NS_GET_IID(nsIFile),
+                                                  locationObj.address());
+        NS_ENSURE_SUCCESS(rv, nullptr);
+        NS_ENSURE_TRUE(locationObj, nullptr);
+
+        if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
+          return nullptr;
+        }
       }
     }
   }
 
   // Expose the URI from which the script was imported through a special
   // variable that we insert into the JSM.
-  nsAutoCString nativePath;
-  NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
-
   RootedString exposedUri(
       aCx, JS_NewStringCopyN(aCx, nativePath.get(), nativePath.Length()));
   NS_ENSURE_TRUE(exposedUri, nullptr);
@@ -739,22 +724,118 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
+  bool realFile = false;
   nsresult rv = aInfo.EnsureURI();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  bool realFile = LocationIsRealFile(aInfo.URI());
-
   RootedObject obj(
-      cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(), realFile));
+      cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(), &realFile));
   NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
   MOZ_ASSERT(!JS_IsGlobalObject(obj));
 
   JSAutoRealm ar(cx, obj);
 
-  RootedScript script(cx);
-  rv = GetScriptForLocation(cx, aInfo, aComponentFile, realFile, &script,
-                            aLocation);
-  if (NS_FAILED(rv)) {
+  nsAutoCString nativePath;
+  rv = aInfo.URI()->GetSpec(nativePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Before compiling the script, first check to see if we have it in
+  // the preloader cache or the startupcache.  Note: as a rule, preloader cache
+  // errors and startupcache errors are not fatal to loading the script, since
+  // we can always slow-load.
+
+  bool storeIntoStartupCache = false;
+  StartupCache* cache = StartupCache::GetSingleton();
+
+  aInfo.EnsureResolvedURI();
+
+  nsAutoCString cachePath;
+  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
+                  aInfo.ResolvedURI(), cachePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::DecodeOptions decodeOptions;
+  ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
+
+  RefPtr<JS::Stencil> stencil =
+      ScriptPreloader::GetSingleton().GetCachedStencil(cx, decodeOptions,
+                                                       cachePath);
+
+  if (!stencil && cache) {
+    ReadCachedStencil(cache, cachePath, cx, decodeOptions,
+                      getter_AddRefs(stencil));
+    if (!stencil) {
+      JS_ClearPendingException(cx);
+
+      storeIntoStartupCache = true;
+    }
+  }
+
+  if (stencil) {
+    LOG(("Successfully loaded %s from cache\n", nativePath.get()));
+  } else {
+    // The script wasn't in the cache , so compile it now.
+    LOG(("Slow loading %s\n", nativePath.get()));
+
+    CompileOptions options(cx);
+    ScriptPreloader::FillCompileOptionsForCachedStencil(options);
+    options.setFileAndLine(nativePath.get(), 1);
+    options.setForceStrictMode();
+    options.setNonSyntacticScope(true);
+
+    // If we can no longer write to caches, we should stop using lazy sources
+    // and instead let normal syntax parsing occur. This can occur in content
+    // processes after the ScriptPreloader is flushed where we can read but no
+    // longer write.
+    if (!storeIntoStartupCache && !ScriptPreloader::GetSingleton().Active()) {
+      options.setSourceIsLazy(false);
+    }
+
+    if (realFile) {
+      AutoMemMap map;
+      MOZ_TRY(map.init(aComponentFile));
+
+      // Note: exceptions will get handled further down;
+      // don't early return for them here.
+      auto buf = map.get<char>();
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      if (srcBuf.init(cx, buf.get(), map.size(),
+                      JS::SourceOwnership::Borrowed)) {
+        stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
+      }
+    } else {
+      nsCString str;
+      MOZ_TRY_VAR(str, ReadScript(aInfo));
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      if (srcBuf.init(cx, str.get(), str.Length(),
+                      JS::SourceOwnership::Borrowed)) {
+        stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
+      }
+    }
+
+#ifdef DEBUG
+    // The above shouldn't touch any options for instantiation.
+    JS::InstantiateOptions instantiateOptions(options);
+    instantiateOptions.assertDefault();
+#endif
+
+    if (!stencil) {
+      // Propagate the exception, if one exists. Also, don't leave the stale
+      // exception on this context.
+      if (aPropagateExceptions && jsapi.HasException()) {
+        if (!jsapi.StealException(aException)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  JS::InstantiateOptions instantiateOptions;
+  RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
+  if (!script) {
     // Propagate the exception, if one exists. Also, don't leave the stale
     // exception on this context.
     if (aPropagateExceptions && jsapi.HasException()) {
@@ -762,8 +843,28 @@ nsresult mozJSComponentLoader::ObjectForLocation(
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
+    return NS_ERROR_FAILURE;
+  }
 
-    return rv;
+  // ScriptPreloader::NoteScript needs to be called unconditionally, to
+  // reflect the usage into the next session's cache.
+  ScriptPreloader::GetSingleton().NoteStencil(nativePath, cachePath, stencil);
+
+  // Write to startup cache only when we didn't have any cache for the script
+  // and compiled it.
+  if (storeIntoStartupCache) {
+    MOZ_ASSERT(stencil);
+
+    // We successfully compiled the script, so cache it.
+    rv = WriteCachedStencil(cache, cachePath, cx, stencil);
+
+    // Don't treat failure to write as fatal, since we might be working
+    // with a read-only cache.
+    if (NS_SUCCEEDED(rv)) {
+      LOG(("Successfully wrote to cache\n"));
+    } else {
+      LOG(("Failed to write to cache\n"));
+    }
   }
 
   // Assign aObject here so that it's available to recursive imports.
@@ -801,137 +902,11 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     }
   }
 
-  return rv;
-}
-
-/* static */
-nsresult mozJSComponentLoader::GetScriptForLocation(
-    JSContext* aCx, ComponentLoaderInfo& aInfo, nsIFile* aComponentFile,
-    bool aUseMemMap, MutableHandleScript aScriptOut, char** aLocationOut) {
-  aScriptOut.set(nullptr);
-
-  nsAutoCString nativePath;
-  nsresult rv = aInfo.URI()->GetSpec(nativePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Before compiling the script, first check to see if we have it in
-  // the preloader cache or the startupcache.  Note: as a rule, preloader cache
-  // errors and startupcache errors are not fatal to loading the script, since
-  // we can always slow-load.
-
-  bool storeIntoStartupCache = false;
-  StartupCache* cache = StartupCache::GetSingleton();
-
-  aInfo.EnsureResolvedURI();
-
-  nsAutoCString cachePath;
-  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
-                  aInfo.ResolvedURI(), cachePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::DecodeOptions decodeOptions;
-  ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
-
-  RefPtr<JS::Stencil> stencil =
-      ScriptPreloader::GetSingleton().GetCachedStencil(aCx, decodeOptions,
-                                                       cachePath);
-
-  if (!stencil && cache) {
-    ReadCachedStencil(cache, cachePath, aCx, decodeOptions,
-                      getter_AddRefs(stencil));
-    if (!stencil) {
-      JS_ClearPendingException(aCx);
-
-      storeIntoStartupCache = true;
-    }
-  }
-
-  if (stencil) {
-    LOG(("Successfully loaded %s from cache\n", nativePath.get()));
-  } else {
-    // The script wasn't in the cache , so compile it now.
-    LOG(("Slow loading %s\n", nativePath.get()));
-
-    CompileOptions options(aCx);
-    ScriptPreloader::FillCompileOptionsForCachedStencil(options);
-    options.setFileAndLine(nativePath.get(), 1);
-    options.setForceStrictMode();
-    options.setNonSyntacticScope(true);
-
-    // If we can no longer write to caches, we should stop using lazy sources
-    // and instead let normal syntax parsing occur. This can occur in content
-    // processes after the ScriptPreloader is flushed where we can read but no
-    // longer write.
-    if (!storeIntoStartupCache && !ScriptPreloader::GetSingleton().Active()) {
-      options.setSourceIsLazy(false);
-    }
-
-    if (aUseMemMap) {
-      AutoMemMap map;
-      MOZ_TRY(map.init(aComponentFile));
-
-      // Note: exceptions will get handled further down;
-      // don't early return for them here.
-      auto buf = map.get<char>();
-
-      JS::SourceText<mozilla::Utf8Unit> srcBuf;
-      if (srcBuf.init(aCx, buf.get(), map.size(),
-                      JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
-      }
-    } else {
-      nsCString str;
-      MOZ_TRY_VAR(str, ReadScript(aInfo));
-
-      JS::SourceText<mozilla::Utf8Unit> srcBuf;
-      if (srcBuf.init(aCx, str.get(), str.Length(),
-                      JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
-      }
-    }
-
-#ifdef DEBUG
-    // The above shouldn't touch any options for instantiation.
-    JS::InstantiateOptions instantiateOptions(options);
-    instantiateOptions.assertDefault();
-#endif
-
-    if (!stencil) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  JS::InstantiateOptions instantiateOptions;
-  aScriptOut.set(
-      JS::InstantiateGlobalStencil(aCx, instantiateOptions, stencil));
-  if (!aScriptOut) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // ScriptPreloader::NoteScript needs to be called unconditionally, to
-  // reflect the usage into the next session's cache.
-  ScriptPreloader::GetSingleton().NoteStencil(nativePath, cachePath, stencil);
-
-  // Write to startup cache only when we didn't have any cache for the script
-  // and compiled it.
-  if (storeIntoStartupCache) {
-    MOZ_ASSERT(stencil);
-
-    // We successfully compiled the script, so cache it.
-    rv = WriteCachedStencil(cache, cachePath, aCx, stencil);
-
-    // Don't treat failure to write as fatal, since we might be working
-    // with a read-only cache.
-    if (NS_SUCCEEDED(rv)) {
-      LOG(("Successfully wrote to cache\n"));
-    } else {
-      LOG(("Failed to write to cache\n"));
-    }
-  }
-
-  /* Owned by ModuleEntry. Freed when we remove from the table. */
-  *aLocationOut = ToNewCString(nativePath, mozilla::fallible);
-  if (!*aLocationOut) {
+  /* Freed when we remove from the table. */
+  *aLocation = ToNewCString(nativePath, mozilla::fallible);
+  if (!*aLocation) {
+    aObject.set(nullptr);
+    aTableScript.set(nullptr);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1249,11 +1224,6 @@ nsresult mozJSComponentLoader::ExtractExports(
   return NS_OK;
 }
 
-/* static */
-bool mozJSComponentLoader::IsTrustedScheme(nsIURI* aURI) {
-  return aURI->SchemeIs("resource") || aURI->SchemeIs("chrome");
-}
-
 nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       const nsACString& aLocation,
                                       JS::MutableHandleObject aModuleGlobal,
@@ -1286,12 +1256,30 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
     MOZ_TRY(info.EnsureResolvedURI());
 
     // Reject imports from untrusted sources.
-    if (!IsTrustedScheme(info.URI())) {
+    if ((!info.URI()->SchemeIs("resource")) &&
+        (!info.URI()->SchemeIs("chrome"))) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
+    // get the JAR if there is one
+    nsCOMPtr<nsIJARURI> jarURI;
+    jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
+    nsCOMPtr<nsIFileURL> baseFileURL;
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIURI> baseURI;
+      while (jarURI) {
+        jarURI->GetJARFile(getter_AddRefs(baseURI));
+        jarURI = do_QueryInterface(baseURI, &rv);
+      }
+      baseFileURL = do_QueryInterface(baseURI, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     nsCOMPtr<nsIFile> sourceFile;
-    rv = GetSourceFile(info.ResolvedURI(), getter_AddRefs(sourceFile));
+    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = info.ResolvedURI()->GetSpec(newEntry->resolvedURL);
