@@ -40,6 +40,8 @@ class DataChannelIntegrationTest
       : PeerConnectionIntegrationBaseTest(GetParam()) {}
 };
 
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(DataChannelIntegrationTest);
+
 // Fake clock must be set before threads are started to prevent race on
 // Set/GetClockForTesting().
 // To achieve that, multiple inheritance is used as a mixin pattern
@@ -70,6 +72,9 @@ class DataChannelIntegrationTestPlanB
   DataChannelIntegrationTestPlanB()
       : PeerConnectionIntegrationBaseTest(SdpSemantics::kPlanB) {}
 };
+
+GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(
+    DataChannelIntegrationTestWithFakeClock);
 
 class DataChannelIntegrationTestUnifiedPlan
     : public PeerConnectionIntegrationBaseTest {
