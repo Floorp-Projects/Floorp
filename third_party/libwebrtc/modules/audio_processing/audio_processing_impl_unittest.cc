@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "api/scoped_refptr.h"
+#include "modules/audio_processing/common.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/audio_processing/optionally_built_submodule_creators.h"
 #include "modules/audio_processing/test/audio_processing_builder_for_testing.h"
@@ -200,6 +201,88 @@ TEST(AudioProcessingImplTest, UpdateCapturePreGainRuntimeSetting) {
   }
   EXPECT_EQ(frame[100], kGainFactor * kAudioLevel)
       << "Frame should be amplified.";
+}
+
+TEST(AudioProcessingImplTest, EchoControllerObservesSetCaptureUsageChange) {
+  // Tests that the echo controller observes that the capture usage has been
+  // updated.
+  auto echo_control_factory = std::make_unique<MockEchoControlFactory>();
+  const MockEchoControlFactory* echo_control_factory_ptr =
+      echo_control_factory.get();
+
+  std::unique_ptr<AudioProcessing> apm(
+      AudioProcessingBuilderForTesting()
+          .SetEchoControlFactory(std::move(echo_control_factory))
+          .Create());
+
+  constexpr int16_t kAudioLevel = 10000;
+  constexpr int kSampleRateHz = 48000;
+  constexpr int kNumChannels = 2;
+  std::array<int16_t, kNumChannels * kSampleRateHz / 100> frame;
+  StreamConfig config(kSampleRateHz, kNumChannels, /*has_keyboard=*/false);
+  frame.fill(kAudioLevel);
+
+  MockEchoControl* echo_control_mock = echo_control_factory_ptr->GetNext();
+
+  // Ensure that SetCaptureOutputUsage is not called when no runtime settings
+  // are passed.
+  EXPECT_CALL(*echo_control_mock, SetCaptureOutputUsage(testing::_)).Times(0);
+  apm->ProcessStream(frame.data(), config, config, frame.data());
+
+  // Ensure that SetCaptureOutputUsage is called with the right information when
+  // a runtime setting is passed.
+  EXPECT_CALL(*echo_control_mock,
+              SetCaptureOutputUsage(/*capture_output_used=*/false))
+      .Times(1);
+  EXPECT_TRUE(apm->PostRuntimeSetting(
+      AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+          /*capture_output_used=*/false)));
+  apm->ProcessStream(frame.data(), config, config, frame.data());
+
+  EXPECT_CALL(*echo_control_mock,
+              SetCaptureOutputUsage(/*capture_output_used=*/true))
+      .Times(1);
+  EXPECT_TRUE(apm->PostRuntimeSetting(
+      AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+          /*capture_output_used=*/true)));
+  apm->ProcessStream(frame.data(), config, config, frame.data());
+
+  // The number of positions to place items in the queue is equal to the queue
+  // size minus 1.
+  constexpr int kNumSlotsInQueue = RuntimeSettingQueueSize();
+
+  // Ensure that SetCaptureOutputUsage is called with the right information when
+  // many runtime settings are passed.
+  for (int k = 0; k < kNumSlotsInQueue - 1; ++k) {
+    EXPECT_TRUE(apm->PostRuntimeSetting(
+        AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+            /*capture_output_used=*/false)));
+  }
+  EXPECT_CALL(*echo_control_mock,
+              SetCaptureOutputUsage(/*capture_output_used=*/false))
+      .Times(kNumSlotsInQueue - 1);
+  apm->ProcessStream(frame.data(), config, config, frame.data());
+
+  // Ensure that SetCaptureOutputUsage is properly called with the fallback
+  // value when the runtime settings queue becomes full.
+  for (int k = 0; k < kNumSlotsInQueue; ++k) {
+    EXPECT_TRUE(apm->PostRuntimeSetting(
+        AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+            /*capture_output_used=*/false)));
+  }
+  EXPECT_FALSE(apm->PostRuntimeSetting(
+      AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+          /*capture_output_used=*/false)));
+  EXPECT_FALSE(apm->PostRuntimeSetting(
+      AudioProcessing::RuntimeSetting::CreateCaptureOutputUsedSetting(
+          /*capture_output_used=*/false)));
+  EXPECT_CALL(*echo_control_mock,
+              SetCaptureOutputUsage(/*capture_output_used=*/false))
+      .Times(kNumSlotsInQueue);
+  EXPECT_CALL(*echo_control_mock,
+              SetCaptureOutputUsage(/*capture_output_used=*/true))
+      .Times(1);
+  apm->ProcessStream(frame.data(), config, config, frame.data());
 }
 
 TEST(AudioProcessingImplTest,

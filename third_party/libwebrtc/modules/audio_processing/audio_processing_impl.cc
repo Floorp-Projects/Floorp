@@ -49,8 +49,6 @@
 
 namespace webrtc {
 
-constexpr int kRuntimeSettingQueueSize = 100;
-
 namespace {
 
 static bool LayoutHasKeyboard(AudioProcessing::ChannelLayout layout) {
@@ -253,8 +251,8 @@ AudioProcessingImpl::AudioProcessingImpl(
           new ApmDataDumper(rtc::AtomicOps::Increment(&instance_count_))),
       use_setup_specific_default_aec3_config_(
           UseSetupSpecificDefaultAec3Congfig()),
-      capture_runtime_settings_(kRuntimeSettingQueueSize),
-      render_runtime_settings_(kRuntimeSettingQueueSize),
+      capture_runtime_settings_(RuntimeSettingQueueSize()),
+      render_runtime_settings_(RuntimeSettingQueueSize()),
       capture_runtime_settings_enqueuer_(&capture_runtime_settings_),
       render_runtime_settings_enqueuer_(&render_runtime_settings_),
       echo_control_factory_(std::move(echo_control_factory)),
@@ -674,6 +672,10 @@ void AudioProcessingImpl::HandleCaptureOutputUsedSetting(
     submodules_.agc_manager->HandleCaptureOutputUsedChange(
         capture_.capture_output_used);
   }
+  if (submodules_.echo_controller) {
+    submodules_.echo_controller->SetCaptureOutputUsage(
+        capture_.capture_output_used);
+  }
 }
 
 void AudioProcessingImpl::SetRuntimeSetting(RuntimeSetting setting) {
@@ -720,19 +722,13 @@ AudioProcessingImpl::RuntimeSettingEnqueuer::~RuntimeSettingEnqueuer() =
 
 bool AudioProcessingImpl::RuntimeSettingEnqueuer::Enqueue(
     RuntimeSetting setting) {
-  int remaining_attempts = 10;
-  while (!runtime_settings_.Insert(&setting) && remaining_attempts-- > 0) {
-    RuntimeSetting setting_to_discard;
-    if (runtime_settings_.Remove(&setting_to_discard)) {
-      RTC_LOG(LS_ERROR)
-          << "The runtime settings queue is full. Oldest setting discarded.";
-    }
-  }
-  if (remaining_attempts == 0) {
+  const bool successful_insert = runtime_settings_.Insert(&setting);
+
+  if (!successful_insert) {
     RTC_HISTOGRAM_BOOLEAN("WebRTC.Audio.ApmRuntimeSettingCannotEnqueue", 1);
     RTC_LOG(LS_ERROR) << "Cannot enqueue a new runtime setting.";
   }
-  return remaining_attempts == 0;
+  return successful_insert;
 }
 
 int AudioProcessingImpl::MaybeInitializeCapture(
@@ -806,6 +802,7 @@ int AudioProcessingImpl::ProcessStream(const float* const* src,
 
 void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
   RuntimeSetting setting;
+  int num_settings_processed = 0;
   while (capture_runtime_settings_.Remove(&setting)) {
     if (aec_dump_) {
       aec_dump_->WriteRuntimeSetting(setting);
@@ -864,6 +861,23 @@ void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
         HandleCaptureOutputUsedSetting(value);
         break;
     }
+    ++num_settings_processed;
+  }
+
+  if (num_settings_processed >= RuntimeSettingQueueSize()) {
+    // Handle overrun of the runtime settings queue, which likely will has
+    // caused settings to be discarded.
+    HandleOverrunInCaptureRuntimeSettingsQueue();
+  }
+}
+
+void AudioProcessingImpl::HandleOverrunInCaptureRuntimeSettingsQueue() {
+  // Fall back to a safe state for the case when a setting for capture output
+  // usage setting has been missed.
+  capture_.capture_output_used = true;
+  if (submodules_.echo_controller) {
+    submodules_.echo_controller->SetCaptureOutputUsage(
+        capture_.capture_output_used);
   }
 }
 

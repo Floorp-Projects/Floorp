@@ -833,6 +833,11 @@ void EchoCanceller3::SetAudioBufferDelay(int delay_ms) {
   block_processor_->SetAudioBufferDelay(delay_ms);
 }
 
+void EchoCanceller3::SetCaptureOutputUsage(bool capture_output_used) {
+  // TODO(b/177830919): Add functionality for reducing the complexity when the
+  // echo canceller output is not used.
+}
+
 bool EchoCanceller3::ActiveProcessing() const {
   return true;
 }

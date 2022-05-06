@@ -342,6 +342,12 @@ class AudioProcessingImpl : public AudioProcessing {
   void RecordAudioProcessingState()
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
 
+  // Ensures that overruns in the capture runtime settings queue is properly
+  // handled by the code, providing safe-fallbacks to mitigate the implications
+  // of any settings being missed.
+  void HandleOverrunInCaptureRuntimeSettingsQueue()
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_capture_);
+
   // AecDump instance used for optionally logging APM config, input
   // and output to file in the AEC-dump format defined in debug.proto.
   std::unique_ptr<AecDump> aec_dump_;
