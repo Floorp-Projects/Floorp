@@ -229,8 +229,7 @@ AndroidNetworkMonitor::AndroidNetworkMonitor(
     : android_sdk_int_(Java_NetworkMonitor_androidSdkInt(env)),
       j_application_context_(env, j_application_context),
       j_network_monitor_(env, Java_NetworkMonitor_getInstance(env)),
-      network_thread_(rtc::Thread::Current()),
-      safety_flag_(PendingTaskSafetyFlag::Create()) {}
+      network_thread_(rtc::Thread::Current()) {}
 
 AndroidNetworkMonitor::~AndroidNetworkMonitor() {
   RTC_DCHECK(!started_);
@@ -250,8 +249,10 @@ void AndroidNetworkMonitor::Start() {
   bind_using_ifname_ =
       webrtc::field_trial::IsEnabled("WebRTC-BindUsingInterfaceName");
 
-  // Needed for restart after Stop().
-  safety_flag_->SetAlive();
+  // This pointer is also accessed by the methods called from java threads.
+  // Assigning it here is safe, because the java monitor is in a stopped state,
+  // and will not make any callbacks.
+  safety_flag_ = PendingTaskSafetyFlag::Create();
 
   JNIEnv* env = AttachCurrentThreadIfNeeded();
   Java_NetworkMonitor_startMonitoring(
