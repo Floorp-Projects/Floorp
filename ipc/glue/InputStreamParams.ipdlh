@@ -4,9 +4,12 @@
 
 include ProtocolTypes;
 
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PRemoteLazyInputStream;
+
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 [RefCounted] using class DataPipeReceiver from "mozilla/ipc/DataPipe.h";
-[RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 
 namespace mozilla {
 namespace ipc {
@@ -24,7 +27,7 @@ struct StringInputStreamParams
 
 struct FileInputStreamParams
 {
-  FileDescriptor fileDescriptor;
+  uint32_t fileDescriptorIndex;
   int32_t behaviorFlags;
   int32_t ioFlags;
 };
@@ -46,9 +49,36 @@ struct SlicedInputStreamParams
   bool closed;
 };
 
-struct RemoteLazyInputStreamParams
+struct RemoteLazyInputStreamRef
 {
-  RemoteLazyInputStream stream;
+  nsID id;
+  uint64_t start;
+  uint64_t length;
+};
+
+union RemoteLazyInputStreamParams
+{
+  RemoteLazyInputStreamRef;
+  PRemoteLazyInputStream;
+};
+
+union IPCRemoteStreamType
+{
+  PChildToParentStream;
+  PParentToChildStream;
+};
+
+struct IPCRemoteStreamParams
+{
+  // If this is true, the stream will send data only when the first operation
+  // is done on the destination side. The benefit of this is that we do not
+  // send data if not needed. On the other hand, it could have a performance
+  // issue.
+  bool delayedStart;
+
+  IPCRemoteStreamType stream;
+
+  int64_t length;
 };
 
 struct DataPipeReceiverStreamParams
@@ -66,6 +96,7 @@ union InputStreamParams
   SlicedInputStreamParams;
   RemoteLazyInputStreamParams;
   InputStreamLengthWrapperParams;
+  IPCRemoteStreamParams;
   EncryptedFileInputStreamParams;
   DataPipeReceiverStreamParams;
 };
