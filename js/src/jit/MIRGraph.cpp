@@ -190,6 +190,9 @@ MBasicBlock* MBasicBlock::NewSplitEdge(MIRGraph& graph, MBasicBlock* pred,
     if (!split) {
       return nullptr;
     }
+
+    // Insert the split edge block in-between.
+    split->end(MGoto::New(graph.alloc(), succ));
   } else {
     // The predecessor has a PC, this is a Warp compilation.
     MResumePoint* succEntry = succ->entryResumePoint();
@@ -225,6 +228,9 @@ MBasicBlock* MBasicBlock::NewSplitEdge(MIRGraph& graph, MBasicBlock* pred,
     }
     split->entryResumePoint_ = splitEntry;
 
+    // Insert the split edge block in-between.
+    split->end(MGoto::New(graph.alloc(), succ));
+
     // The target entry resume point might have phi operands, keep the
     // operands of the phi coming from our edge.
     size_t succEdgeIdx = succ->indexForPredecessor(pred);
@@ -233,9 +239,16 @@ MBasicBlock* MBasicBlock::NewSplitEdge(MIRGraph& graph, MBasicBlock* pred,
       MDefinition* def = succEntry->getOperand(i);
       // This early in the pipeline, we have no recover instructions in
       // any entry resume point.
-      MOZ_ASSERT_IF(def->block() == succ, def->isPhi());
       if (def->block() == succ) {
-        def = def->toPhi()->getOperand(succEdgeIdx);
+        if (def->isPhi()) {
+          def = def->toPhi()->getOperand(succEdgeIdx);
+        } else {
+          // The phi-operand may already have been optimized out.
+          MOZ_ASSERT(def->isConstant());
+          MOZ_ASSERT(def->type() == MIRType::MagicOptimizedOut);
+
+          def = split->optimizedOutConstant(graph.alloc());
+        }
       }
 
       splitEntry->initOperand(i, def);
@@ -249,9 +262,6 @@ MBasicBlock* MBasicBlock::NewSplitEdge(MIRGraph& graph, MBasicBlock* pred,
   }
 
   split->setLoopDepth(succ->loopDepth());
-
-  // Insert the split edge block in-between.
-  split->end(MGoto::New(graph.alloc(), succ));
 
   graph.insertBlockAfter(pred, split);
 
