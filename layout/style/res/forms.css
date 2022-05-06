@@ -268,23 +268,23 @@ select:-moz-select-list-box {
 select > button {
   inline-size: 12px;
   white-space: nowrap;
-  position: static !important;
-  background-image: url("arrow.gif") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
+  position: static;
+  background-image: url("arrow.gif");
+  background-repeat: no-repeat;
+  background-position: center;
   appearance: auto;
   -moz-default-appearance: -moz-menulist-arrow-button;
 
   /* Make sure to size correctly if the combobox has a non-auto height. */
-  block-size: 100% !important;
-  box-sizing: border-box !important;
+  block-size: 100%;
+  box-sizing: border-box;
 
   /*
     Make sure to align properly with the display frame.  Note that we
     want the baseline of the combobox to match the baseline of the
     display frame, so the dropmarker is what gets the vertical-align.
   */
-  vertical-align: top !important;
+  vertical-align: top;
 }
 
 select > button:active {
