@@ -290,8 +290,6 @@ browser.Context = class {
    *     If tab handling for the current application isn't supported.
    */
   async switchToTab(index, window = undefined, focus = true) {
-    let currentTab = this.tabBrowser.selectedTab;
-
     if (window) {
       this.window = window;
       this.tabBrowser = TabManager.getTabBrowser(this.window);
@@ -307,10 +305,8 @@ browser.Context = class {
       this.tab = this.tabBrowser.tabs[index];
     }
 
-    if (focus && this.tab != currentTab) {
-      const tabSelected = new EventPromise(this.window, "TabSelect");
-      this.tabBrowser.selectedTab = this.tab;
-      await tabSelected;
+    if (focus) {
+      await TabManager.selectTab(this.tab);
     }
 
     // TODO(ato): Currently tied to curBrowser, but should be moved to
