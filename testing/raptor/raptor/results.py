@@ -621,6 +621,9 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                                 # Bug 1665750 - Determine if we should display progress
                                 continue
 
+                            if metric not in measure:
+                                continue
+
                             val = cycle[metric]
                             if not accept_zero_vismet:
                                 if val == 0:
