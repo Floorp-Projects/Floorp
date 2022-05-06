@@ -16,6 +16,7 @@ const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
+const PC_TRANSCEIVER_CONTRACT = "@mozilla.org/dom/rtptransceiver;1";
 const PC_COREQUEST_CONTRACT = "@mozilla.org/dom/createofferrequest;1";
 
 const PC_CID = Components.ID("{bdc2e533-b308-4708-ac8e-a8bfade6d851}");
@@ -24,6 +25,9 @@ const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
+const PC_TRANSCEIVER_CID = Components.ID(
+  "{09475754-103a-41f5-a2d0-e1f27eb0b537}"
+);
 const PC_COREQUEST_CID = Components.ID(
   "{74b2122d-65a8-4824-aa9e-3d664cb75dc2}"
 );
@@ -357,6 +361,8 @@ class PeerConnectionTelemetry {
 
 class RTCPeerConnection {
   constructor() {
+    this._transceivers = [];
+
     this._pc = null;
     this._closed = false;
 
@@ -915,7 +921,7 @@ class RTCPeerConnection {
   // Ensures that we have at least one transceiver of |kind| that is
   // configured to receive. It will create one if necessary.
   _ensureOfferToReceive(kind) {
-    let hasRecv = this.getTransceivers().some(
+    let hasRecv = this._transceivers.some(
       transceiver =>
         transceiver.getKind() == kind &&
         (transceiver.direction == "sendrecv" ||
@@ -938,7 +944,7 @@ class RTCPeerConnection {
       this._ensureOfferToReceive("video");
     }
 
-    this.getTransceivers()
+    this._transceivers
       .filter(transceiver => {
         return (
           (options.offerToReceiveVideo === false &&
@@ -959,6 +965,7 @@ class RTCPeerConnection {
   _createOffer(options) {
     this._checkClosed();
     this._ensureTransceiversForOfferToReceive(options);
+    this._syncTransceivers();
     return this._chain(() => this._createAnOffer(options));
   }
 
@@ -1001,6 +1008,7 @@ class RTCPeerConnection {
 
   _createAnswer(options) {
     this._checkClosed();
+    this._syncTransceivers();
     return this._chain(() => this._createAnAnswer());
   }
 
@@ -1211,6 +1219,7 @@ class RTCPeerConnection {
               ""
             );
           });
+          this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
           this._updateCanTrickle();
           if (this._closed) {
             return;
@@ -1224,6 +1233,7 @@ class RTCPeerConnection {
           this._pc.setRemoteDescription(this._actions[type], sdp);
         });
         await p;
+        this._transceivers = this._transceivers.filter(t => !t.shouldRemove);
         this._updateCanTrickle();
       })();
 
@@ -1349,9 +1359,7 @@ class RTCPeerConnection {
     this._checkClosed();
 
     if (
-      this.getTransceivers().some(
-        transceiver => transceiver.sender.track == track
-      )
+      this._transceivers.some(transceiver => transceiver.sender.track == track)
     ) {
       throw new this._win.DOMException(
         "This track is already set on a sender.",
@@ -1359,7 +1367,7 @@ class RTCPeerConnection {
       );
     }
 
-    let transceiver = this.getTransceivers().find(transceiver => {
+    let transceiver = this._transceivers.find(transceiver => {
       return (
         transceiver.sender.track == null &&
         transceiver.getKind() == track.kind &&
@@ -1384,6 +1392,7 @@ class RTCPeerConnection {
     }
 
     transceiver.setAddTrackMagic();
+    transceiver.sync();
     this.updateNegotiationNeeded();
     return transceiver.sender;
   }
@@ -1398,7 +1407,7 @@ class RTCPeerConnection {
       );
     }
 
-    let transceiver = this.getTransceivers().find(
+    let transceiver = this._transceivers.find(
       transceiver => !transceiver.stopped && transceiver.sender == sender
     );
 
@@ -1414,6 +1423,7 @@ class RTCPeerConnection {
       transceiver.setDirectionInternal("inactive");
     }
 
+    transceiver.sync();
     this.updateNegotiationNeeded();
   }
 
@@ -1434,7 +1444,24 @@ class RTCPeerConnection {
       kind = sendTrack.kind;
     }
 
-    return this._pc.addTransceiver(init, kind, sendTrack);
+    let transceiverImpl = this._pc.createTransceiverImpl(kind, sendTrack);
+    let transceiver = this._win.RTCRtpTransceiver._create(
+      this._win,
+      new RTCRtpTransceiver(this, transceiverImpl, init, kind, sendTrack)
+    );
+    transceiver.sync();
+    this._transceivers.push(transceiver);
+    return transceiver;
+  }
+
+  _onTransceiverNeeded(kind, transceiverImpl) {
+    let init = { direction: "recvonly" };
+    let transceiver = this._win.RTCRtpTransceiver._create(
+      this._win,
+      new RTCRtpTransceiver(this, transceiverImpl, init, kind, null)
+    );
+    transceiver.sync();
+    this._transceivers.push(transceiver);
   }
 
   addTransceiver(sendTrackOrKind, init) {
@@ -1442,6 +1469,10 @@ class RTCPeerConnection {
     let transceiver = this._addTransceiverNoEvents(sendTrackOrKind, init);
     this.updateNegotiationNeeded();
     return transceiver;
+  }
+
+  _syncTransceivers() {
+    this._transceivers.forEach(transceiver => transceiver.sync());
   }
 
   updateNegotiationNeeded() {
@@ -1460,6 +1491,9 @@ class RTCPeerConnection {
     if (this._remoteIdp) {
       this._remoteIdp.close();
     }
+    if (!this._suppressEvents) {
+      this._transceivers.forEach(t => t.setStopped());
+    }
     this._pc.close();
     this._suppressEvents = true;
   }
@@ -1467,7 +1501,7 @@ class RTCPeerConnection {
   getLocalStreams() {
     this._checkClosed();
     let localStreams = new Set();
-    this.getTransceivers().forEach(transceiver => {
+    this._transceivers.forEach(transceiver => {
       transceiver.sender.getStreams().forEach(stream => {
         localStreams.add(stream);
       });
@@ -1505,7 +1539,7 @@ class RTCPeerConnection {
   }
 
   getTransceivers() {
-    return this._pc.getTransceivers();
+    return this._transceivers;
   }
 
   get localDescription() {
@@ -1943,6 +1977,10 @@ class PeerConnectionObserver {
       pc._onPacket(level, type, sending, packet);
     }
   }
+
+  syncTransceivers() {
+    this._dompc._syncTransceivers();
+  }
 }
 setupPrototype(PeerConnectionObserver, {
   classID: PC_OBS_CID,
@@ -1965,6 +2003,130 @@ setupPrototype(RTCPeerConnectionStatic, {
   QueryInterface: ChromeUtils.generateQI(["nsIDOMGlobalPropertyInitializer"]),
 });
 
+class RTCRtpTransceiver {
+  constructor(pc, transceiverImpl, init, kind, sendTrack) {
+    let receiver = transceiverImpl.receiver;
+    let sender = transceiverImpl.sender;
+    let streams = (init && init.streams) || [];
+    sender.setStreams(streams);
+
+    let direction = (init && init.direction) || "sendrecv";
+    Object.assign(this, {
+      _pc: pc,
+      mid: null,
+      sender,
+      receiver,
+      stopped: false,
+      _direction: direction,
+      currentDirection: null,
+      addTrackMagic: false,
+      shouldRemove: false,
+      _hasBeenUsedToSend: false,
+      // the receiver starts out without a track, so record this here
+      _kind: kind,
+      _transceiverImpl: transceiverImpl,
+    });
+  }
+
+  set direction(direction) {
+    this._pc._checkClosed();
+
+    if (this.stopped) {
+      throw new this._pc._win.DOMException(
+        "Transceiver is stopped!",
+        "InvalidStateError"
+      );
+    }
+
+    if (this._direction == direction) {
+      return;
+    }
+
+    this._direction = direction;
+    this.sync();
+    this._pc.updateNegotiationNeeded();
+  }
+
+  get direction() {
+    return this._direction;
+  }
+
+  setDirectionInternal(direction) {
+    this._direction = direction;
+  }
+
+  stop() {
+    this._pc._checkClosed();
+
+    if (this.stopped) {
+      return;
+    }
+
+    this.setStopped();
+    this.sync();
+    this._pc.updateNegotiationNeeded();
+  }
+
+  setStopped() {
+    this.stopped = true;
+    this.currentDirection = null;
+  }
+
+  getKind() {
+    return this._kind;
+  }
+
+  hasBeenUsedToSend() {
+    return this._hasBeenUsedToSend;
+  }
+
+  setAddTrackMagic() {
+    this.addTrackMagic = true;
+  }
+
+  sync() {
+    if (this._syncing) {
+      throw new DOMException("Reentrant sync! This is a bug!", "InternalError");
+    }
+    this._syncing = true;
+    this._transceiverImpl.syncWithJS(this.__DOM_IMPL__);
+    this._syncing = false;
+  }
+
+  // Used by _transceiverImpl.syncWithJS, don't call sync again!
+  setCurrentDirection(direction) {
+    if (this.stopped) {
+      return;
+    }
+
+    switch (direction) {
+      case "sendrecv":
+      case "sendonly":
+        this._hasBeenUsedToSend = true;
+        break;
+      default:
+    }
+
+    this.currentDirection = direction;
+  }
+
+  // Used by _transceiverImpl.syncWithJS, don't call sync again!
+  setMid(mid) {
+    this.mid = mid;
+  }
+
+  // Used by _transceiverImpl.syncWithJS, don't call sync again!
+  unsetMid() {
+    this.mid = null;
+  }
+}
+
+setupPrototype(RTCRtpTransceiver, {
+  classID: PC_TRANSCEIVER_CID,
+  contractID: PC_TRANSCEIVER_CONTRACT,
+  QueryInterface: ChromeUtils.generateQI([]),
+});
+
 class CreateOfferRequest {
   constructor(windowID, innerWindowID, callID, isSecure) {
     Object.assign(this, { windowID, innerWindowID, callID, isSecure });
@@ -1982,6 +2144,7 @@ var EXPORTED_SYMBOLS = [
   "RTCSessionDescription",
   "RTCPeerConnection",
   "RTCPeerConnectionStatic",
+  "RTCRtpTransceiver",
   "PeerConnectionObserver",
   "CreateOfferRequest",
 ];
