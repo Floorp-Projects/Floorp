@@ -85,8 +85,7 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   void UnloadModules();
 
-  void CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
-                          JS::MutableHandleObject aGlobal);
+  JSObject* CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation);
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
