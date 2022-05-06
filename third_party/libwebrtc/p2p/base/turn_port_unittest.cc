@@ -41,6 +41,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/virtual_socket_server.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
 
 using rtc::SocketAddress;
@@ -58,6 +59,11 @@ static const SocketAddress kTurnTcpIntAddr("99.99.99.4",
 static const SocketAddress kTurnUdpExtAddr("99.99.99.5", 0);
 static const SocketAddress kTurnAlternateIntAddr("99.99.99.6",
                                                  cricket::TURN_SERVER_PORT);
+// Port for redirecting to a TCP Web server. Should not work.
+static const SocketAddress kTurnDangerousAddr("99.99.99.7", 80);
+// Port 443 (the HTTPS port); should work.
+static const SocketAddress kTurnPort443Addr("99.99.99.7", 443);
+// The default TURN server port.
 static const SocketAddress kTurnIntAddr("99.99.99.7",
                                         cricket::TURN_SERVER_PORT);
 static const SocketAddress kTurnIPv6IntAddr(
@@ -94,6 +100,11 @@ static const cricket::ProtocolAddress kTurnTlsProtoAddr(kTurnTcpIntAddr,
                                                         cricket::PROTO_TLS);
 static const cricket::ProtocolAddress kTurnUdpIPv6ProtoAddr(kTurnUdpIPv6IntAddr,
                                                             cricket::PROTO_UDP);
+static const cricket::ProtocolAddress kTurnDangerousProtoAddr(
+    kTurnDangerousAddr,
+    cricket::PROTO_TCP);
+static const cricket::ProtocolAddress kTurnPort443ProtoAddr(kTurnPort443Addr,
+                                                            cricket::PROTO_TCP);
 
 static const unsigned int MSG_TESTFINISH = 0;
 
@@ -1783,6 +1794,50 @@ TEST_F(TurnPortTest, TestOverlongUsername) {
   RelayCredentials credentials(overlong_username, kTurnPassword);
   EXPECT_FALSE(
       CreateTurnPort(overlong_username, kTurnPassword, kTurnTlsProtoAddr));
+}
+
+TEST_F(TurnPortTest, TestTurnDangerousServer) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnDangerousProtoAddr);
+  ASSERT_FALSE(turn_port_);
+}
+
+TEST_F(TurnPortTest, TestTurnDangerousServerPermits443) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnPort443ProtoAddr);
+  ASSERT_TRUE(turn_port_);
+}
+
+TEST_F(TurnPortTest, TestTurnDangerousAlternateServer) {
+  const ProtocolType protocol_type = PROTO_TCP;
+  std::vector<rtc::SocketAddress> redirect_addresses;
+  redirect_addresses.push_back(kTurnDangerousAddr);
+
+  TestTurnRedirector redirector(redirect_addresses);
+
+  turn_server_.AddInternalSocket(kTurnIntAddr, protocol_type);
+  turn_server_.AddInternalSocket(kTurnDangerousAddr, protocol_type);
+  turn_server_.set_redirect_hook(&redirector);
+  CreateTurnPort(kTurnUsername, kTurnPassword,
+                 ProtocolAddress(kTurnIntAddr, protocol_type));
+
+  // Retrieve the address before we run the state machine.
+  const SocketAddress old_addr = turn_port_->server_address().address;
+
+  turn_port_->PrepareAddress();
+  // This should result in an error event.
+  EXPECT_TRUE_SIMULATED_WAIT(error_event_.error_code != 0,
+                             TimeToGetAlternateTurnCandidate(protocol_type),
+                             fake_clock_);
+  // but should NOT result in the port turning ready, and no candidates
+  // should be gathered.
+  EXPECT_FALSE(turn_ready_);
+  ASSERT_EQ(0U, turn_port_->Candidates().size());
+}
+
+TEST_F(TurnPortTest, TestTurnDangerousServerAllowedWithFieldTrial) {
+  webrtc::test::ScopedFieldTrials override_field_trials(
+      "WebRTC-Turn-AllowSystemPorts/Enabled/");
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnDangerousProtoAddr);
+  ASSERT_TRUE(turn_port_);
 }
 
 }  // namespace cricket
