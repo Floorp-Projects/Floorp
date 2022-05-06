@@ -141,7 +141,7 @@ if (is_android) {
 
     suppressed_configs += [ "//build/config/android:hide_all_but_jni_onload" ]
     configs += [ "//build/config/android:hide_all_but_jni" ]
-    ldflags = [ "-lEGL" ]
+    ldflags = [ "-lEGL", "-Wl,--build-id" ]
 
     deps = [
       ":libjingle_peerconnection_jni",
