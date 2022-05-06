@@ -497,28 +497,27 @@ void RtpVideoSender::SetActiveModulesLocked(
       active_ = true;
     }
 
-    const bool was_active = rtp_streams_[i].rtp_rtcp->SendingMedia();
+    RtpRtcpInterface& rtp_module = *rtp_streams_[i].rtp_rtcp;
+    const bool was_active = rtp_module.SendingMedia();
     const bool should_be_active = active_modules[i];
 
     // Sends a kRtcpByeCode when going from true to false.
-    rtp_streams_[i].rtp_rtcp->SetSendingStatus(active_modules[i]);
+    rtp_module.SetSendingStatus(active_modules[i]);
 
     if (was_active && !should_be_active) {
       // Disabling media, remove from packet router map to reduce size and
       // prevent any stray packets in the pacer from asynchronously arriving
       // to a disabled module.
-      transport_->packet_router()->RemoveSendRtpModule(
-          rtp_streams_[i].rtp_rtcp.get());
+      transport_->packet_router()->RemoveSendRtpModule(&rtp_module);
     }
 
     // If set to false this module won't send media.
-    rtp_streams_[i].rtp_rtcp->SetSendingMediaStatus(active_modules[i]);
+    rtp_module.SetSendingMediaStatus(active_modules[i]);
 
     if (!was_active && should_be_active) {
       // Turning on media, register with packet router.
-      transport_->packet_router()->AddSendRtpModule(
-          rtp_streams_[i].rtp_rtcp.get(),
-          /*remb_candidate=*/true);
+      transport_->packet_router()->AddSendRtpModule(&rtp_module,
+                                                    /*remb_candidate=*/true);
     }
   }
 }
