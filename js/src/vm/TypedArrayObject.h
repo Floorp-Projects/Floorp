@@ -166,9 +166,6 @@ class TypedArrayObject : public ArrayBufferViewObject {
   static bool copyWithin_impl(JSContext* cx, const CallArgs& args);
 };
 
-[[nodiscard]] bool TypedArray_bufferGetter(JSContext* cx, unsigned argc,
-                                           Value* vp);
-
 extern TypedArrayObject* NewTypedArrayWithTemplateAndLength(
     JSContext* cx, HandleObject templateObj, int32_t len);
 
