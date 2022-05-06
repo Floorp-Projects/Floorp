@@ -602,7 +602,6 @@ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
 
   RTCStatsMember<uint32_t> width;
   RTCStatsMember<uint32_t> height;
-  // TODO(hbos): Implement this metric.
   RTCStatsMember<uint32_t> frames;
   RTCStatsMember<uint32_t> frames_per_second;
 };

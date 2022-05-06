@@ -1620,6 +1620,7 @@ void RTCStatsCollector::ProduceMediaSourceStats_s(
           if (video_sender_info) {
             video_source_stats->frames_per_second =
                 video_sender_info->framerate_input;
+            video_source_stats->frames = video_sender_info->frames;
           }
         }
         media_source_stats = std::move(video_source_stats);

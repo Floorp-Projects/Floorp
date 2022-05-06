@@ -2474,6 +2474,7 @@ TEST_F(RTCStatsCollectorTest, RTCVideoSourceStatsCollectedForSenderWithTrack) {
       cricket::SsrcSenderInfo());
   video_media_info.aggregated_senders[0].local_stats[0].ssrc = kSsrc;
   video_media_info.aggregated_senders[0].framerate_input = 29;
+  video_media_info.aggregated_senders[0].frames = 10001;
   auto* video_media_channel = pc_->AddVideoChannel("VideoMid", "TransportName");
   video_media_channel->SetStats(video_media_info);
 
@@ -2493,9 +2494,8 @@ TEST_F(RTCStatsCollectorTest, RTCVideoSourceStatsCollectedForSenderWithTrack) {
   expected_video.kind = "video";
   expected_video.width = kVideoSourceWidth;
   expected_video.height = kVideoSourceHeight;
-  // |expected_video.frames| is expected to be undefined because it is not set.
-  // TODO(hbos): When implemented, set its expected value here.
   expected_video.frames_per_second = 29;
+  expected_video.frames = 10001;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(report->Get(expected_video.id())->cast_to<RTCVideoSourceStats>(),
@@ -2535,6 +2535,7 @@ TEST_F(RTCStatsCollectorTest,
   auto video_stats =
       report->Get("RTCVideoSource_42")->cast_to<RTCVideoSourceStats>();
   EXPECT_FALSE(video_stats.frames_per_second.is_defined());
+  EXPECT_FALSE(video_stats.frames.is_defined());
 }
 
 // The track not having a source is not expected to be true in practise, but
