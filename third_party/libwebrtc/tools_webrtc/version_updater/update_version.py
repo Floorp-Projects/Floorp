@@ -42,6 +42,14 @@ def _RemovePreviousUpdateBranch():
     logging.info('No branch to remove')
 
 
+def _GetLastAuthor():
+    """Returns a string with the author of the last commit."""
+    author = subprocess.check_output(['git', 'log',
+                                      '-1',
+                                      '--pretty=format:"%an"']).splitlines()
+    return author
+
+
 def _GetBranches():
     """Returns a tuple (active, branches).
 
@@ -142,11 +150,15 @@ def main():
     if opts.clean:
         _RemovePreviousUpdateBranch()
 
+    if _GetLastAuthor() == 'webrtc-version-updater':
+      logging.info('Last commit is a version change, skipping CL.')
+      return 0
+
     version_filename = os.path.join(CHECKOUT_SRC_DIR, 'call', 'version.cc')
     _CreateUpdateBranch()
     _UpdateWebRTCVersion(version_filename)
     if _IsTreeClean():
-        logging.info("No WebRTC version change detected, skipping CL.")
+        logging.info('No WebRTC version change detected, skipping CL.')
     else:
         _LocalCommit()
         logging.info('Uploading CL...')
