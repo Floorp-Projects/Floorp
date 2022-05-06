@@ -260,42 +260,23 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
       supportsString = do_QueryInterface(tmp);
       if (!supportsString) return NS_ERROR_FAILURE;
 
-      nsAutoString imageRequestMime;
-      supportsString->GetData(imageRequestMime);
+      nsAutoString contentType;
+      supportsString->GetData(contentType);
 
-      // If we have a MIME type, check the extension is compatible
-      if (!imageRequestMime.IsEmpty()) {
-        // Build a URL to get the filename extension
-        nsCOMPtr<nsIURL> imageURL = do_QueryInterface(sourceURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsAutoCString extension;
-        rv = imageURL->GetFileExtension(extension);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        NS_ConvertUTF16toUTF8 mimeCString(imageRequestMime);
-        bool isValidExtension;
-        nsAutoCString primaryExtension;
-        rv = CheckAndGetExtensionForMime(extension, mimeCString,
-                                         &isValidExtension, &primaryExtension);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (!isValidExtension && !primaryExtension.IsEmpty()) {
-          // The filename extension is missing or incompatible
-          // with the MIME type, replace it with the primary
-          // extension.
-          nsAutoCString newFileName;
-          rv = imageURL->GetFileBaseName(newFileName);
-          NS_ENSURE_SUCCESS(rv, rv);
-          newFileName.Append(".");
-          newFileName.Append(primaryExtension);
-          CopyUTF8toUTF16(newFileName, targetFilename);
-        }
+      nsCOMPtr<nsIMIMEService> mimeService =
+          do_GetService("@mozilla.org/mime;1");
+      if (NS_WARN_IF(!mimeService)) {
+        return NS_ERROR_FAILURE;
       }
+
+      mimeService->ValidateFileNameForSaving(
+          targetFilename, NS_ConvertUTF16toUTF8(contentType),
+          nsIMIMEService::VALIDATE_DEFAULT, targetFilename);
+    } else {
+      // make the filename safe for the filesystem
+      targetFilename.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS,
+                                 '-');
     }
-    // make the filename safe for the filesystem
-    targetFilename.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS,
-                               '-');
 #endif /* defined(XP_MACOSX) */
 
     // get the target directory from the kFilePromiseDirectoryMime
@@ -418,54 +399,27 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
     nsCString mimeType;
     aRequest->GetMimeType(getter_Copies(mimeType));
 
+    nsAutoCString fileName;
+    aRequest->GetFileName(fileName);
+
 #if defined(XP_MACOSX)
     // Save the MIME type so we can make sure the extension
     // is compatible (and replace it if it isn't) when the
     // image is dropped. On Mac, we need to get the OS MIME
     // handler information in the parent due to sandboxing.
     CopyUTF8toUTF16(mimeType, mImageRequestMime);
+    CopyUTF8toUTF16(fileName, mImageDestFileName);
 #else
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
     if (NS_WARN_IF(!mimeService)) {
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeService->GetFromTypeAndExtension(mimeType, ""_ns,
-                                         getter_AddRefs(mimeInfo));
-    if (mimeInfo) {
-      nsAutoCString extension;
-      imgUrl->GetFileExtension(extension);
-
-      bool validExtension;
-      if (extension.IsEmpty() ||
-          NS_FAILED(mimeInfo->ExtensionExists(extension, &validExtension)) ||
-          !validExtension) {
-        // Fix the file extension in the URL
-        nsAutoCString primaryExtension;
-        mimeInfo->GetPrimaryExtension(primaryExtension);
-        if (!primaryExtension.IsEmpty()) {
-          rv = NS_MutateURI(imgUrl)
-                   .Apply(&nsIURLMutator::SetFileExtension, primaryExtension,
-                          nullptr)
-                   .Finalize(imgUrl);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-    }
-#endif /* defined(XP_MACOSX) */
-
-    nsAutoCString fileName;
-    imgUrl->GetFileName(fileName);
-
-    NS_UnescapeURL(fileName);
-
-#if !defined(XP_MACOSX)
-    // make the filename safe for the filesystem
-    fileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-#endif
-
     CopyUTF8toUTF16(fileName, mImageDestFileName);
+    mimeService->ValidateFileNameForSaving(mImageDestFileName, mimeType,
+                                           nsIMIMEService::VALIDATE_DEFAULT,
+                                           mImageDestFileName);
+#endif
 
     // and the image object
     mImage = aImage;
