@@ -13,54 +13,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=901250
   <script type="application/javascript">
 "use strict";
 
-window.onload = function() {
+window.onload = async function() {
   SimpleTest.waitForExplicitFinish();
-  runNextTest();
-};
 
-let gInspectee = null;
-let gWalker = null;
-
-addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
-  gInspectee = doc;
   const inspector = await target.getFront("inspector");
-  gWalker = inspector.walker;
-  runNextTest();
-});
+  const walker = inspector.walker;
 
-addTest(async function testScrollIntoView() {
   const id = "#scroll-into-view";
-  let rect = gInspectee.querySelector(id).getBoundingClientRect();
-  const nodeFront = await gWalker.querySelector(gWalker.rootNode, id);
+  let rect = doc.querySelector(id).getBoundingClientRect();
+  const nodeFront = await walker.querySelector(walker.rootNode, id);
   let inViewport = rect.x >= 0 &&
                    rect.y >= 0 &&
-                   rect.y <= gInspectee.defaultView.innerHeight &&
-                   rect.x <= gInspectee.defaultView.innerWidth;
+                   rect.y <= doc.defaultView.innerHeight &&
+                   rect.x <= doc.defaultView.innerWidth;
 
-  ok(!inViewport, "Element is not in viewport.");
+  ok(!inViewport, "Element is not in viewport initially");
 
   await nodeFront.scrollIntoView();
 
-  SimpleTest.executeSoon(() => {
-    rect = gInspectee.querySelector(id).getBoundingClientRect();
-    inViewport = rect.x >= 0 &&
-                 rect.y >= 0 &&
-                 rect.y <= gInspectee.defaultView.innerHeight &&
-                 rect.x <= gInspectee.defaultView.innerWidth;
+  await new Promise(res => SimpleTest.executeSoon(res));
 
-    ok(inViewport, "Element is in viewport.");
+  rect = doc.querySelector(id).getBoundingClientRect();
+  inViewport = rect.x >= 0 &&
+                rect.y >= 0 &&
+                rect.y <= doc.defaultView.innerHeight &&
+                rect.x <= doc.defaultView.innerWidth;
+  ok(inViewport, "Element is in viewport after calling nodeFront.scrollIntoView");
 
-    runNextTest();
-  });
-});
-
-addTest(function cleanup() {
-  gWalker = null;
-  gInspectee = null;
-  runNextTest();
-});
+  await target.destroy();
+  SimpleTest.finish();
+};
   </script>
 </head>
 <body>
