@@ -10,21 +10,25 @@
 
 #include "video/adaptation/bitrate_constraint.h"
 
-#include <limits>
 #include <utility>
 #include <vector>
 
 #include "api/video_codecs/video_encoder.h"
 #include "call/adaptation/encoder_settings.h"
+#include "call/adaptation/test/fake_frame_rate_provider.h"
 #include "call/adaptation/video_source_restrictions.h"
-#include "call/adaptation/video_stream_input_state.h"
+#include "call/adaptation/video_stream_input_state_provider.h"
 #include "test/gtest.h"
 
 namespace webrtc {
 
-using ResolutionBitrateLimits = VideoEncoder::ResolutionBitrateLimits;
-
 namespace {
+const VideoSourceRestrictions k360p{/*max_pixels_per_frame=*/640 * 360,
+                                    /*target_pixels_per_frame=*/640 * 360,
+                                    /*max_frame_rate=*/30};
+const VideoSourceRestrictions k720p{/*max_pixels_per_frame=*/1280 * 720,
+                                    /*target_pixels_per_frame=*/1280 * 720,
+                                    /*max_frame_rate=*/30};
 
 void FillCodecConfig(VideoCodec* video_codec,
                      VideoEncoderConfig* encoder_config,
@@ -53,171 +57,135 @@ void FillCodecConfig(VideoCodec* video_codec,
   }
 }
 
+constexpr int kStartBitrateBps720p = 1000000;
+
 VideoEncoder::EncoderInfo MakeEncoderInfo() {
   VideoEncoder::EncoderInfo encoder_info;
-  encoder_info.resolution_bitrate_limits = std::vector<ResolutionBitrateLimits>(
-      {ResolutionBitrateLimits(640 * 360, 500000, 0, 5000000),
-       ResolutionBitrateLimits(1280 * 720, 1000000, 0, 5000000),
-       ResolutionBitrateLimits(1920 * 1080, 2000000, 0, 5000000)});
+  encoder_info.resolution_bitrate_limits = {
+      {640 * 360, 500000, 0, 5000000},
+      {1280 * 720, kStartBitrateBps720p, 0, 5000000},
+      {1920 * 1080, 2000000, 0, 5000000}};
   return encoder_info;
 }
+
 }  // namespace
 
-TEST(BitrateConstraintTest, AdaptUpAllowedAtSinglecastIfBitrateIsEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{true});
+class BitrateConstraintTest : public ::testing::Test {
+ public:
+  BitrateConstraintTest()
+      : frame_rate_provider_(), input_state_provider_(&frame_rate_provider_) {}
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
+ protected:
+  void OnEncoderSettingsUpdated(int width_px,
+                                int height_px,
+                                std::vector<bool> active_flags) {
+    VideoCodec video_codec;
+    VideoEncoderConfig encoder_config;
+    FillCodecConfig(&video_codec, &encoder_config, width_px, height_px,
+                    active_flags);
 
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000);
+    EncoderSettings encoder_settings(MakeEncoderInfo(),
+                                     std::move(encoder_config), video_codec);
+    bitrate_constraint_.OnEncoderSettingsUpdated(encoder_settings);
+    input_state_provider_.OnEncoderSettingsChanged(encoder_settings);
+  }
 
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
+  FakeFrameRateProvider frame_rate_provider_;
+  VideoStreamInputStateProvider input_state_provider_;
+  BitrateConstraint bitrate_constraint_;
+};
 
-  EXPECT_TRUE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+TEST_F(BitrateConstraintTest, AdaptUpAllowedAtSinglecastIfBitrateIsEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{true});
+
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p);
+
+  EXPECT_TRUE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
 }
 
-TEST(BitrateConstraintTest, AdaptUpDisallowedAtSinglecastIfBitrateIsNotEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{true});
+TEST_F(BitrateConstraintTest,
+       AdaptUpDisallowedAtSinglecastIfBitrateIsNotEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{true});
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
-
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
   // 1 bps less than needed for 720p.
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000 - 1);
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p - 1);
 
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
-
-  EXPECT_FALSE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+  EXPECT_FALSE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
 }
 
-TEST(BitrateConstraintTest,
-     AdaptUpAllowedAtSinglecastUpperLayerActiveIfBitrateIsEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{false, true});
+TEST_F(BitrateConstraintTest,
+       AdaptUpAllowedAtSinglecastUpperLayerActiveIfBitrateIsEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{false, true});
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p);
 
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000);
-
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
-
-  EXPECT_TRUE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+  EXPECT_TRUE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
 }
 
-TEST(BitrateConstraintTest,
-     AdaptUpDisallowedAtSinglecastUpperLayerActiveIfBitrateIsNotEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{false, true});
+TEST_F(BitrateConstraintTest,
+       AdaptUpDisallowedAtSinglecastUpperLayerActiveIfBitrateIsNotEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{false, true});
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
-
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
   // 1 bps less than needed for 720p.
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000 - 1);
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p - 1);
 
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
-
-  EXPECT_FALSE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+  EXPECT_FALSE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
 }
 
-TEST(BitrateConstraintTest,
-     AdaptUpAllowedAtSinglecastLowestLayerActiveIfBitrateIsNotEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{true, false});
+TEST_F(BitrateConstraintTest,
+       AdaptUpAllowedAtSinglecastLowestLayerActiveIfBitrateIsNotEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{true, false});
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
-
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
   // 1 bps less than needed for 720p.
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000 - 1);
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p - 1);
 
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
-
-  EXPECT_TRUE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+  EXPECT_TRUE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
 }
 
-TEST(BitrateConstraintTest, AdaptUpAllowedAtSimulcastIfBitrateIsNotEnough) {
-  VideoCodec video_codec;
-  VideoEncoderConfig encoder_config;
-  FillCodecConfig(&video_codec, &encoder_config,
-                  /*width_px=*/640, /*height_px=*/360,
-                  /*active_flags=*/{true, true});
+TEST_F(BitrateConstraintTest, AdaptUpAllowedAtSimulcastIfBitrateIsNotEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{true, true});
 
-  EncoderSettings encoder_settings(MakeEncoderInfo(), std::move(encoder_config),
-                                   video_codec);
-
-  BitrateConstraint bitrate_constraint;
-  bitrate_constraint.OnEncoderSettingsUpdated(encoder_settings);
   // 1 bps less than needed for 720p.
-  bitrate_constraint.OnEncoderTargetBitrateUpdated(1000 * 1000 - 1);
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(kStartBitrateBps720p - 1);
 
-  VideoSourceRestrictions restrictions_before(
-      /*max_pixels_per_frame=*/640 * 360, /*target_pixels_per_frame=*/640 * 360,
-      /*max_frame_rate=*/30);
-  VideoSourceRestrictions restrictions_after(
-      /*max_pixels_per_frame=*/1280 * 720,
-      /*target_pixels_per_frame=*/1280 * 720, /*max_frame_rate=*/30);
+  EXPECT_TRUE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k720p));
+}
 
-  EXPECT_TRUE(bitrate_constraint.IsAdaptationUpAllowed(
-      VideoStreamInputState(), restrictions_before, restrictions_after));
+TEST_F(BitrateConstraintTest,
+       AdaptUpInFpsAllowedAtNoResolutionIncreaseIfBitrateIsNotEnough) {
+  OnEncoderSettingsUpdated(/*width_px=*/640, /*height_px=*/360,
+                           /*active_flags=*/{true});
+
+  bitrate_constraint_.OnEncoderTargetBitrateUpdated(1);
+
+  EXPECT_TRUE(bitrate_constraint_.IsAdaptationUpAllowed(
+      input_state_provider_.InputState(),
+      /*restrictions_before=*/k360p,
+      /*restrictions_after=*/k360p));
 }
 
 }  // namespace webrtc
