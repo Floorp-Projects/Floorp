@@ -72,8 +72,6 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
 
-  static bool IsTrustedScheme(nsIURI* aURI);
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  protected:
@@ -87,31 +85,20 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   void UnloadModules();
 
-  JSObject* CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation);
+  void CreateLoaderGlobal(JSContext* aCx, const nsACString& aLocation,
+                          JS::MutableHandleObject aGlobal);
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
-  static nsresult GetSourceFile(nsIURI* aResolvedURI, nsIFile** aSourceFileOut);
-
-  static bool LocationIsRealFile(nsIURI* aURI);
-
   JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aComponentFile,
-                                     nsIURI* aComponent, bool aRealFile);
+                                     nsIURI* aComponent, bool* aRealFile);
 
   nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
                              nsIFile* aComponentFile,
                              JS::MutableHandleObject aObject,
                              JS::MutableHandleScript aTableScript,
-                             char** aLocation, bool aCatchException,
+                             char** location, bool aCatchException,
                              JS::MutableHandleValue aException);
-
-  // Get the script for a given location, either from a cached stencil or by
-  // loading and compiling it.
-  static nsresult GetScriptForLocation(JSContext* aCx,
-                                       ComponentLoaderInfo& aInfo,
-                                       nsIFile* aComponentFile, bool aUseMemMap,
-                                       JS::MutableHandleScript aScriptOut,
-                                       char** aLocationOut);
 
   nsresult ImportInto(const nsACString& aLocation, JS::HandleObject targetObj,
                       JSContext* callercx, JS::MutableHandleObject vp);
