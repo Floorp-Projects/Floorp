@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="util.js"></script>
+<body>
+<svg width="144130" height="20" style="visibility:hidden">
+<rect width="144130" height="20" fill="#555"/>
+<g fill="#fff" font-family="sans-serif" font-size="110">
+<!-- The use of textLength here forces adjusted positioning of all the glyphs,
+     which may put the SVG layout engine under some strain -->
+<text id="test" x="500" y="140" transform="scale(.1)" textLength="2440730"></text>
+</g>
+</svg>
+<script>
+window.onload = function() {
+  // "word0 word1 word2 ... word99 " -> 690 chars
+  text = "";
+  for (i = 0; i < 100; i++) {
+    text = text + "word" + i + " ";
+  }
+  // 6 doublings -> approx 44k chars
+  for (i = 0; i < 6; i++) {
+    text = text + text;
+  }
+  // set the text and time how long a reflow takes
+  testElem = document.getElementById("test");
+  testElem.textContent = text;
+  perf_start();
+  flush_layout();
+  perf_finish();
+}
+</script>
