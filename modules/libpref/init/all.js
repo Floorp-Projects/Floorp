@@ -95,8 +95,8 @@ pref("security.OCSP.timeoutMilliseconds.hard", 10000);
 pref("security.pki.cert_short_lifetime_in_days", 10);
 // NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
 // See the comment in CertVerifier.cpp.
-// 3 = only allow SHA-1 for certificates issued by an imported root.
-pref("security.pki.sha1_enforcement_level", 3);
+// 1 = forbid sha1 in certificate signatures, even for imported roots
+pref("security.pki.sha1_enforcement_level", 1);
 
 // This preference controls what signature algorithms are accepted for signed
 // apps (i.e. add-ons). The number is interpreted as a bit mask with the
