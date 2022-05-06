@@ -4,7 +4,7 @@
 
 /**
  * Legacy `devtools-toolbarbutton` styles, extracted from common.css because
- * we're only using them in a couple panels (Performance & Style Editor),
+ * we're only using them in Style Editor,
  * and it makes maintaining the newer `devtools-button` styles easier.
  */
 
