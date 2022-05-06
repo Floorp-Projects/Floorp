@@ -8302,48 +8302,6 @@ TEST_F(WebRtcVideoChannelTest, ConfiguresLocalSsrcOnExistingReceivers) {
   TestReceiverLocalSsrcConfiguration(true);
 }
 
-TEST_F(WebRtcVideoChannelTest, Simulcast_QualityScalingNotAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(true, true);
-  EXPECT_FALSE(stream->GetEncoderConfig().is_quality_scaling_allowed);
-}
-
-TEST_F(WebRtcVideoChannelTest, Singlecast_QualityScalingAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(false, true);
-  EXPECT_TRUE(stream->GetEncoderConfig().is_quality_scaling_allowed);
-}
-
-TEST_F(WebRtcVideoChannelTest,
-       SinglecastScreenSharing_QualityScalingNotAllowed) {
-  SetUpSimulcast(false, true);
-
-  webrtc::test::FrameForwarder frame_forwarder;
-  VideoOptions options;
-  options.is_screencast = true;
-  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, &options, &frame_forwarder));
-  // Fetch the latest stream since SetVideoSend() may recreate it if the
-  // screen content setting is changed.
-  FakeVideoSendStream* stream = fake_call_->GetVideoSendStreams().front();
-
-  EXPECT_FALSE(stream->GetEncoderConfig().is_quality_scaling_allowed);
-  EXPECT_TRUE(channel_->SetVideoSend(last_ssrc_, nullptr, nullptr));
-}
-
-TEST_F(WebRtcVideoChannelTest,
-       SimulcastSingleActiveStream_QualityScalingAllowed) {
-  FakeVideoSendStream* stream = SetUpSimulcast(true, false);
-
-  webrtc::RtpParameters rtp_parameters =
-      channel_->GetRtpSendParameters(last_ssrc_);
-  ASSERT_EQ(3u, rtp_parameters.encodings.size());
-  ASSERT_TRUE(rtp_parameters.encodings[0].active);
-  ASSERT_TRUE(rtp_parameters.encodings[1].active);
-  ASSERT_TRUE(rtp_parameters.encodings[2].active);
-  rtp_parameters.encodings[0].active = false;
-  rtp_parameters.encodings[1].active = false;
-  EXPECT_TRUE(channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
-  EXPECT_TRUE(stream->GetEncoderConfig().is_quality_scaling_allowed);
-}
-
 class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
  public:
   WebRtcVideoChannelSimulcastTest()
