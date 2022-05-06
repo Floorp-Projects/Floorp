@@ -8,16 +8,16 @@ add_task(async function() {
   const target = await createAndAttachTargetForTab(gBrowser.selectedTab);
 
   info("Cached front when getFront has not been called");
-  let getCachedFront = target.getCachedFront("performance");
+  let getCachedFront = target.getCachedFront("accessibility");
   ok(!getCachedFront, "no front exists");
 
   info("Cached front when getFront has been called but has not finished");
-  const asyncFront = target.getFront("performance");
-  getCachedFront = target.getCachedFront("performance");
+  const asyncFront = target.getFront("accessibility");
+  getCachedFront = target.getCachedFront("accessibility");
   ok(!getCachedFront, "no front exists");
 
   info("Cached front when getFront has been called and has finished");
   const front = await asyncFront;
-  getCachedFront = target.getCachedFront("performance");
+  getCachedFront = target.getCachedFront("accessibility");
   is(getCachedFront, front, "front is the same as async front");
 });
