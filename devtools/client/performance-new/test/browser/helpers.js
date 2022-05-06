@@ -480,10 +480,6 @@ async function withDevToolsPanel(url, callback, aWindow = window) {
 
   const { gBrowser } = aWindow;
 
-  SpecialPowers.pushPrefEnv({
-    set: [["devtools.performance.new-panel-enabled", "true"]],
-  });
-
   const { gDevTools } = require("devtools/client/framework/devtools");
 
   info(`Create a new tab with url "${url}".`);

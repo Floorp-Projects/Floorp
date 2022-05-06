@@ -129,10 +129,8 @@ function setPrefDefaults() {
   );
   Services.prefs.setBoolPref("layout.css.emulate-moz-box-with-flex", false);
 
-  // We force enabling the new performance panel in the browser toolbox,
-  // even if it was disabled in firefox.
+  // We force enabling the performance panel in the browser toolbox.
   Services.prefs.setBoolPref("devtools.performance.enabled", true);
-  Services.prefs.setBoolPref("devtools.performance.new-panel-enabled", true);
 }
 
 window.addEventListener(
