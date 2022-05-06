@@ -101,7 +101,7 @@ struct SimulationSettings {
   absl::optional<bool> use_pre_amplifier;
   absl::optional<bool> use_hpf;
   absl::optional<bool> use_ns;
-  absl::optional<bool> use_ts;
+  absl::optional<int> use_ts;
   absl::optional<bool> use_analog_agc;
   absl::optional<bool> use_vad;
   absl::optional<bool> use_le;

@@ -467,7 +467,7 @@ void AudioProcessingSimulator::DetachAecDump() {
 void AudioProcessingSimulator::ConfigureAudioProcessor() {
   AudioProcessing::Config apm_config;
   if (settings_.use_ts) {
-    apm_config.transient_suppression.enabled = *settings_.use_ts;
+    apm_config.transient_suppression.enabled = *settings_.use_ts != 0;
   }
   if (settings_.multi_channel_render) {
     apm_config.pipeline.multi_channel_render = *settings_.multi_channel_render;
@@ -574,7 +574,9 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
   ap_->ApplyConfig(apm_config);
 
   if (settings_.use_ts) {
-    ap_->set_stream_key_pressed(*settings_.use_ts);
+    // Default to key pressed if activating the transient suppressor with
+    // continuous key events.
+    ap_->set_stream_key_pressed(*settings_.use_ts == 2);
   }
 
   if (settings_.aec_dump_output_filename) {
