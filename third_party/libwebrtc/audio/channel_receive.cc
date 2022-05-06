@@ -996,11 +996,9 @@ int ChannelReceive::GetRtpTimestampRateHz() const {
 }
 
 int64_t ChannelReceive::GetRTT() const {
-  std::vector<RTCPReportBlock> report_blocks;
-  rtp_rtcp_->RemoteRTCPStat(&report_blocks);
+  std::vector<ReportBlockData> report_blocks =
+      rtp_rtcp_->GetLatestReportBlockData();
 
-  // TODO(nisse): Could we check the return value from the ->RTT() call below,
-  // instead of checking if we have any report blocks?
   if (report_blocks.empty()) {
     MutexLock lock(&assoc_send_channel_lock_);
     // Tries to get RTT from an associated channel.
@@ -1010,16 +1008,14 @@ int64_t ChannelReceive::GetRTT() const {
     return associated_send_channel_->GetRTT();
   }
 
-  int64_t rtt = 0;
-  int64_t avg_rtt = 0;
-  int64_t max_rtt = 0;
-  int64_t min_rtt = 0;
   // TODO(nisse): This method computes RTT based on sender reports, even though
   // a receive stream is not supposed to do that.
-  if (rtp_rtcp_->RTT(remote_ssrc_, &rtt, &avg_rtt, &min_rtt, &max_rtt) != 0) {
-    return 0;
+  for (const ReportBlockData& data : report_blocks) {
+    if (data.report_block().sender_ssrc == remote_ssrc_) {
+      return data.last_rtt_ms();
+    }
   }
-  return rtt;
+  return 0;
 }
 
 }  // namespace
