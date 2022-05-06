@@ -6,57 +6,6 @@
 // consolidated here to avoid confusion and re-implementation of existing
 // algorithms.
 
-// For sorting values with limited range; uint8 and int8.
-function CountingSort(array, len, signed, comparefn) {
-    assert(IsPossiblyWrappedTypedArray(array), "CountingSort works only with typed arrays.");
-
-    // Determined by performance testing.
-    if (len < 128) {
-        QuickSort(array, len, comparefn);
-        return array;
-    }
-
-    // Map int8 values onto the uint8 range when storing in buffer.
-    var min = 0;
-    if (signed) {
-        min = -128;
-    }
-
-    /* eslint-disable comma-spacing */
-    // 32 * 8 = 256 entries.
-    var buffer = [
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-    ];
-    /* eslint-enable comma-spacing */
-
-    // Populate the buffer
-    for (var i = 0; i < len; i++) {
-        var val = array[i];
-        buffer[val - min]++;
-    }
-
-    // Traverse the buffer in order and write back elements to array
-    var val = -1;
-    for (var i = 0; i < len;) {
-        // Invariant: sum(buffer[val:]) == len-i
-        var j;
-        do {
-            j = buffer[++val];
-        } while (j === 0);
-
-        for (; j > 0; j--)
-            array[i++] = val + min;
-    }
-    return array;
-}
-
 // Helper for RadixSort
 function ByteAtCol(x, pos) {
     return (x >> (pos * 8)) & 0xFF;
