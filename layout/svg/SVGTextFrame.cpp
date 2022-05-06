@@ -126,7 +126,13 @@ static void GetAscentAndDescentInAppUnits(nsTextFrame* aFrame,
   gfxTextRun::Range range = ConvertOriginalToSkipped(
       it, aFrame->GetContentOffset(), aFrame->GetContentLength());
 
-  textRun->GetLineHeightMetrics(range, aAscent, aDescent);
+  // We pass in null for the PropertyProvider since letter-spacing and
+  // word-spacing should not affect the ascent and descent values we get.
+  gfxTextRun::Metrics metrics =
+      textRun->MeasureText(range, gfxFont::LOOSE_INK_EXTENTS, nullptr, nullptr);
+
+  aAscent = metrics.mAscent;
+  aDescent = metrics.mDescent;
 }
 
 /**
@@ -273,23 +279,26 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
                                    StyleDominantBaseline aDominantBaseline,
                                    float aFontSizeScaleFactor) {
   WritingMode writingMode = aFrame->GetWritingMode();
-  gfxFloat ascent, descent;
-  aTextRun->GetLineHeightMetrics(ascent, descent);
+  // We pass in null for the PropertyProvider since letter-spacing and
+  // word-spacing should not affect the ascent and descent values we get.
+  gfxTextRun::Metrics metrics =
+      aTextRun->MeasureText(gfxFont::LOOSE_INK_EXTENTS, nullptr);
 
   auto convertIfVerticalRL = [&](gfxFloat dominantBaseline) {
-    return writingMode.IsVerticalRL() ? ascent + descent - dominantBaseline
-                                      : dominantBaseline;
+    return writingMode.IsVerticalRL()
+               ? metrics.mAscent + metrics.mDescent - dominantBaseline
+               : dominantBaseline;
   };
 
   switch (aDominantBaseline) {
     case StyleDominantBaseline::Hanging:
-      return convertIfVerticalRL(ascent * 0.2);
+      return convertIfVerticalRL(metrics.mAscent * 0.2);
     case StyleDominantBaseline::TextBeforeEdge:
       return convertIfVerticalRL(0);
 
     case StyleDominantBaseline::Alphabetic:
       return writingMode.IsVerticalRL()
-                 ? ascent * 0.5
+                 ? metrics.mAscent * 0.5
                  : aFrame->GetLogicalBaseline(writingMode);
 
     case StyleDominantBaseline::Auto:
@@ -303,12 +312,13 @@ static nscoord GetBaselinePosition(nsTextFrame* aFrame, gfxTextRun* aTextRun,
 
     case StyleDominantBaseline::TextAfterEdge:
     case StyleDominantBaseline::Ideographic:
-      return writingMode.IsVerticalLR() ? 0 : ascent + descent;
+      return writingMode.IsVerticalLR() ? 0
+                                        : metrics.mAscent + metrics.mDescent;
 
     case StyleDominantBaseline::Central:
-      return (ascent + descent) / 2.0;
+      return (metrics.mAscent + metrics.mDescent) / 2.0;
     case StyleDominantBaseline::Mathematical:
-      return convertIfVerticalRL(ascent / 2.0);
+      return convertIfVerticalRL(metrics.mAscent / 2.0);
   }
 
   MOZ_ASSERT_UNREACHABLE("unexpected dominant-baseline value");
