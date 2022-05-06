@@ -552,31 +552,6 @@ bool jit::IsUint32Type(const MDefinition* def) {
          def->getOperand(1)->toConstant()->toInt32() == 0;
 }
 
-// Return whether a block simply computes the specified constant value.
-static bool BlockComputesConstant(MBasicBlock* block, MDefinition* value,
-                                  bool* constBool) {
-  // Look for values with no uses. This is used to eliminate constant
-  // computing blocks in condition statements, and the phi which used to
-  // consume the constant has already been removed.
-  if (value->hasUses()) {
-    return false;
-  }
-
-  if (!value->isConstant() || value->block() != block) {
-    return false;
-  }
-  if (!block->phisEmpty()) {
-    return false;
-  }
-  for (MInstructionIterator iter = block->begin(); iter != block->end();
-       ++iter) {
-    if (*iter != value || !iter->isGoto()) {
-      return false;
-    }
-  }
-  return value->toConstant()->valueToBoolean(constBool);
-}
-
 // Determine whether phiBlock/testBlock simply compute a phi and perform a
 // test on it.
 static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
@@ -838,9 +813,7 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
   // Optimize the MIR graph to improve the code generated for conditional
   // operations. A test like 'if (a ? b : c)' normally requires four blocks,
   // with a phi for the intermediate value. This can be improved to use three
-  // blocks with no phi value, and if either b or c is constant,
-  // e.g. 'if (a ? b : 0)', then the block associated with that constant
-  // can be eliminated.
+  // blocks with no phi value.
 
   /*
    * Look for a diamond pattern:
@@ -903,18 +876,10 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
   // Remove the phi from phiBlock.
   phiBlock->discardPhi(*phiBlock->phisBegin());
 
-  // If either trueBranch or falseBranch just computes a constant for the
-  // test, determine the block that branch will end up jumping to and eliminate
-  // the branch. Otherwise, change the end of the block to a test that jumps
-  // directly to successors of testBlock, rather than to testBlock itself.
+  // Change the end of the block to a test that jumps directly to successors of
+  // testBlock, rather than to testBlock itself.
 
-  MBasicBlock* trueTarget = trueBranch;
-  bool constBool;
-  if (BlockComputesConstant(trueBranch, trueResult, &constBool)) {
-    trueTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
-    phiBlock->removePredecessor(trueBranch);
-    graph.removeBlock(trueBranch);
-  } else if (IsTestInputMaybeToBool(initialTest, trueResult)) {
+  if (IsTestInputMaybeToBool(initialTest, trueResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(),
                              testBlock)) {
       return false;
@@ -927,12 +892,7 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
     }
   }
 
-  MBasicBlock* falseTarget = falseBranch;
-  if (BlockComputesConstant(falseBranch, falseResult, &constBool)) {
-    falseTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
-    phiBlock->removePredecessor(falseBranch);
-    graph.removeBlock(falseBranch);
-  } else if (IsTestInputMaybeToBool(initialTest, falseResult)) {
+  if (IsTestInputMaybeToBool(initialTest, falseResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(),
                              testBlock)) {
       return false;
@@ -943,13 +903,6 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
                               testBlock)) {
       return false;
     }
-  }
-
-  // Short circuit the initial test to skip any constant branch eliminated
-  // above.
-  if (!UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
-                            trueTarget, falseTarget, testBlock)) {
-    return false;
   }
 
   // Remove phiBlock, if different from testBlock.
