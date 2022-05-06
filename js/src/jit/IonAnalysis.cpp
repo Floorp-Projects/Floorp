@@ -802,6 +802,8 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
     return true;
   }
 
+  MOZ_ASSERT(phi->numOperands() == 2);
+
   MDefinition* trueResult =
       phi->getOperand(phiBlock->indexForPredecessor(trueBranch));
   MDefinition* falseResult =
@@ -875,10 +877,215 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
   return true;
 }
 
+/*
+ * Look for a triangle pattern:
+ *
+ *        initialBlock
+ *          /     \
+ *  trueBranch     |
+ *          \     /
+ *     phiBlock+falseBranch
+ *             |
+ *         testBlock
+ *
+ * Or:
+ *
+ *        initialBlock
+ *          /     \
+ *         |    falseBranch
+ *          \     /
+ *     phiBlock+trueBranch
+ *             |
+ *         testBlock
+ */
+static bool IsTrianglePattern(MBasicBlock* initialBlock) {
+  MInstruction* ins = initialBlock->lastIns();
+  if (!ins->isTest()) {
+    return false;
+  }
+  MTest* initialTest = ins->toTest();
+
+  MBasicBlock* trueBranch = initialTest->ifTrue();
+  MBasicBlock* falseBranch = initialTest->ifFalse();
+
+  if (trueBranch->numSuccessors() == 1 &&
+      trueBranch->getSuccessor(0) == falseBranch) {
+    if (trueBranch->numPredecessors() != 1) {
+      return false;
+    }
+    if (falseBranch->numPredecessors() != 2) {
+      return false;
+    }
+    return true;
+  }
+
+  if (falseBranch->numSuccessors() == 1 &&
+      falseBranch->getSuccessor(0) == trueBranch) {
+    if (trueBranch->numPredecessors() != 2) {
+      return false;
+    }
+    if (falseBranch->numPredecessors() != 1) {
+      return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
+static bool MaybeFoldTriangleConditionBlock(MIRGraph& graph,
+                                            MBasicBlock* initialBlock) {
+  MOZ_ASSERT(IsTrianglePattern(initialBlock));
+
+  // Optimize the MIR graph to improve the code generated for boolean
+  // operations. A test like 'if (a && b)' normally requires three blocks, with
+  // a phi for the intermediate value. This can be improved to use no phi value.
+
+  /*
+   * Look for a triangle pattern:
+   *
+   *        initialBlock
+   *          /     \
+   *  trueBranch     |
+   *          \     /
+   *     phiBlock+falseBranch
+   *             |
+   *         testBlock
+   *
+   * Or:
+   *
+   *        initialBlock
+   *          /     \
+   *         |    falseBranch
+   *          \     /
+   *     phiBlock+trueBranch
+   *             |
+   *         testBlock
+   *
+   * Where phiBlock contains a single phi combining values pushed onto the stack
+   * by trueBranch and falseBranch, and testBlock contains a test on that phi.
+   * phiBlock and testBlock may be the same block; generated code will use
+   * different blocks if the (&&) op is in an inlined function.
+   */
+
+  MTest* initialTest = initialBlock->lastIns()->toTest();
+
+  MBasicBlock* trueBranch = initialTest->ifTrue();
+  MBasicBlock* falseBranch = initialTest->ifFalse();
+  if (initialBlock->isLoopBackedge() || trueBranch->isLoopBackedge() ||
+      falseBranch->isLoopBackedge()) {
+    return true;
+  }
+
+  MBasicBlock* phiBlock;
+  if (trueBranch->numSuccessors() == 1 &&
+      trueBranch->getSuccessor(0) == falseBranch) {
+    phiBlock = falseBranch;
+  } else {
+    MOZ_ASSERT(falseBranch->getSuccessor(0) == trueBranch);
+    phiBlock = trueBranch;
+  }
+
+  MBasicBlock* testBlock = phiBlock;
+  if (testBlock->numSuccessors() == 1) {
+    MOZ_ASSERT(!testBlock->isLoopBackedge());
+
+    testBlock = testBlock->getSuccessor(0);
+    if (testBlock->numPredecessors() != 1) {
+      return true;
+    }
+  }
+
+  // Make sure the test block does not have any outgoing loop backedges.
+  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
+    return false;
+  }
+
+  MPhi* phi;
+  MTest* finalTest;
+  if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest)) {
+    return true;
+  }
+
+  MOZ_ASSERT(phi->numOperands() == 2);
+
+  MDefinition* trueResult;
+  MDefinition* falseResult;
+  if (phiBlock == trueBranch) {
+    trueResult = phi->getOperand(phiBlock->indexForPredecessor(initialBlock));
+    falseResult = phi->getOperand(phiBlock->indexForPredecessor(falseBranch));
+  } else {
+    trueResult = phi->getOperand(phiBlock->indexForPredecessor(trueBranch));
+    falseResult = phi->getOperand(phiBlock->indexForPredecessor(initialBlock));
+  }
+
+  // OK, we found the desired pattern, now transform the graph.
+
+  // Remove the phi from phiBlock.
+  phiBlock->discardPhi(*phiBlock->phisBegin());
+
+  // Change the end of the block to a test that jumps directly to successors of
+  // testBlock, rather than to testBlock itself.
+
+  if (phiBlock == trueBranch) {
+    if (!UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
+                              finalTest->ifTrue(), initialTest->ifFalse(),
+                              testBlock)) {
+      return false;
+    }
+  } else if (initialTest->input() == trueResult) {
+    if (!UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(),
+                             testBlock)) {
+      return false;
+    }
+  } else {
+    if (!UpdateTestSuccessors(graph.alloc(), trueBranch, trueResult,
+                              finalTest->ifTrue(), finalTest->ifFalse(),
+                              testBlock)) {
+      return false;
+    }
+  }
+
+  if (phiBlock == falseBranch) {
+    if (!UpdateTestSuccessors(graph.alloc(), initialBlock, initialTest->input(),
+                              initialTest->ifTrue(), finalTest->ifFalse(),
+                              testBlock)) {
+      return false;
+    }
+  } else if (initialTest->input() == falseResult) {
+    if (!UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(),
+                             testBlock)) {
+      return false;
+    }
+  } else {
+    if (!UpdateTestSuccessors(graph.alloc(), falseBranch, falseResult,
+                              finalTest->ifTrue(), finalTest->ifFalse(),
+                              testBlock)) {
+      return false;
+    }
+  }
+
+  // Remove phiBlock, if different from testBlock.
+  if (phiBlock != testBlock) {
+    testBlock->removePredecessor(phiBlock);
+    graph.removeBlock(phiBlock);
+  }
+
+  // Remove testBlock itself.
+  finalTest->ifTrue()->removePredecessor(testBlock);
+  finalTest->ifFalse()->removePredecessor(testBlock);
+  graph.removeBlock(testBlock);
+
+  return true;
+}
+
 static bool MaybeFoldConditionBlock(MIRGraph& graph,
                                     MBasicBlock* initialBlock) {
   if (IsDiamondPattern(initialBlock)) {
     return MaybeFoldDiamondConditionBlock(graph, initialBlock);
+  }
+  if (IsTrianglePattern(initialBlock)) {
+    return MaybeFoldTriangleConditionBlock(graph, initialBlock);
   }
   return true;
 }
