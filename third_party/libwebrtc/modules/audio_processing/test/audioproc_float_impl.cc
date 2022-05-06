@@ -201,6 +201,16 @@ ABSL_FLAG(int,
           simulated_mic_kind,
           kParameterNotSpecifiedValue,
           "Specify which microphone kind to use for microphone simulation");
+ABSL_FLAG(int,
+          frame_for_sending_capture_output_used_false,
+          kParameterNotSpecifiedValue,
+          "Capture frame index for sending a runtime setting for that the "
+          "capture output is not used.");
+ABSL_FLAG(int,
+          frame_for_sending_capture_output_used_true,
+          kParameterNotSpecifiedValue,
+          "Capture frame index for sending a runtime setting for that the "
+          "capture output is used.");
 ABSL_FLAG(bool, performance_report, false, "Report the APM performance ");
 ABSL_FLAG(std::string,
           performance_report_output_file,
@@ -451,6 +461,12 @@ SimulationSettings CreateSettings() {
   settings.simulate_mic_gain = absl::GetFlag(FLAGS_simulate_mic_gain);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_simulated_mic_kind),
                         &settings.simulated_mic_kind);
+  SetSettingIfSpecified(
+      absl::GetFlag(FLAGS_frame_for_sending_capture_output_used_false),
+      &settings.frame_for_sending_capture_output_used_false);
+  SetSettingIfSpecified(
+      absl::GetFlag(FLAGS_frame_for_sending_capture_output_used_true),
+      &settings.frame_for_sending_capture_output_used_true);
   settings.report_performance = absl::GetFlag(FLAGS_performance_report);
   SetSettingIfSpecified(absl::GetFlag(FLAGS_performance_report_output_file),
                         &settings.performance_report_output_filename);
