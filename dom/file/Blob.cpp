@@ -161,7 +161,7 @@ already_AddRefed<File> Blob::ToFile(const nsAString& aName,
 
 already_AddRefed<Blob> Blob::CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) {
+                                         ErrorResult& aRv) const {
   RefPtr<BlobImpl> impl =
       mImpl->CreateSlice(aStart, aLength, aContentType, aRv);
   if (aRv.Failed()) {

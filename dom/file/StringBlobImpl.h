@@ -27,7 +27,7 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   size_t GetAllocationSize() const override { return mData.Length(); }
 
