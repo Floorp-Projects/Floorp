@@ -2678,6 +2678,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   const int64_t kReportBlockTimestampUtcUs = 123456789;
   const int64_t kRoundTripTimeMs = 13000;
   const double kRoundTripTimeSeconds = 13.0;
+  const uint8_t kFractionLost = 12;
 
   // The report block's timestamp cannot be from the future, set the fake clock
   // to match.
@@ -2690,6 +2691,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
     // |source_ssrc|, "SSRC of the RTP packet sender".
     report_block.source_ssrc = ssrc;
     report_block.packets_lost = 7;
+    report_block.fraction_lost = kFractionLost;
     ReportBlockData report_block_data;
     report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
     report_block_data.AddRoundTripTimeSample(1234);
@@ -2708,6 +2710,8 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
         "RTCRemoteInboundRtp" + MediaTypeUpperCase() + stream_id,
         kReportBlockTimestampUtcUs);
     expected_remote_inbound_rtp.ssrc = ssrc;
+    expected_remote_inbound_rtp.fraction_lost =
+        static_cast<double>(kFractionLost) / (1 << 8);
     expected_remote_inbound_rtp.kind = MediaTypeLowerCase();
     expected_remote_inbound_rtp.transport_id =
         "RTCTransport_TransportName_1";  // 1 for RTP (we have no RTCP
