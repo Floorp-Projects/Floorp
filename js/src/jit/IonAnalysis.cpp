@@ -1315,11 +1315,7 @@ bool jit::FoldTests(MIRGraph& graph) {
     if (!MaybeFoldConditionBlock(graph, *block)) {
       return false;
     }
-  }
-
-  for (PostorderIterator iter(graph.poBegin()); iter != graph.poEnd();) {
-    auto* block = *iter++;
-    if (!MaybeFoldTestBlock(graph, block)) {
+    if (!MaybeFoldTestBlock(graph, *block)) {
       return false;
     }
   }
