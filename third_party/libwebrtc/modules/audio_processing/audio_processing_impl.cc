@@ -114,6 +114,10 @@ GainControl::Mode Agc1ConfigModeToInterfaceMode(
   RTC_CHECK_NOTREACHED();
 }
 
+bool MinimizeProcessingForUnusedOutput() {
+  return !field_trial::IsEnabled("WebRTC-MutedStateKillSwitch");
+}
+
 // Maximum lengths that frame of samples being passed from the render side to
 // the capture side can have (does not apply to AEC3).
 static const size_t kMaxAllowedValuesOfSamplesPerBand = 160;
@@ -266,7 +270,9 @@ AudioProcessingImpl::AudioProcessingImpl(
                      "WebRTC-ApmExperimentalMultiChannelRenderKillSwitch"),
                  !field_trial::IsEnabled(
                      "WebRTC-ApmExperimentalMultiChannelCaptureKillSwitch"),
-                 EnforceSplitBandHpf()),
+                 EnforceSplitBandHpf(),
+                 MinimizeProcessingForUnusedOutput()),
+      capture_(),
       capture_nonlocked_() {
   RTC_LOG(LS_INFO) << "Injected APM submodules:"
                       "\nEcho control factory: "
@@ -670,7 +676,9 @@ void AudioProcessingImpl::set_output_will_be_muted(bool muted) {
 
 void AudioProcessingImpl::HandleCaptureOutputUsedSetting(
     bool capture_output_used) {
-  capture_.capture_output_used = capture_output_used;
+  capture_.capture_output_used =
+      capture_output_used || !constants_.minimize_processing_for_unused_output;
+
   if (submodules_.agc_manager.get()) {
     submodules_.agc_manager->HandleCaptureOutputUsedChange(
         capture_.capture_output_used);
@@ -912,11 +920,7 @@ void AudioProcessingImpl::HandleCaptureRuntimeSettings() {
 void AudioProcessingImpl::HandleOverrunInCaptureRuntimeSettingsQueue() {
   // Fall back to a safe state for the case when a setting for capture output
   // usage setting has been missed.
-  capture_.capture_output_used = true;
-  if (submodules_.echo_controller) {
-    submodules_.echo_controller->SetCaptureOutputUsage(
-        capture_.capture_output_used);
-  }
+  HandleCaptureOutputUsedSetting(/*capture_output_used=*/true);
 }
 
 void AudioProcessingImpl::HandleRenderRuntimeSettings() {
@@ -1283,94 +1287,101 @@ int AudioProcessingImpl::ProcessCaptureStreamLocked() {
     capture_buffer->MergeFrequencyBands();
   }
 
-  if (capture_.capture_fullband_audio) {
-    const auto& ec = submodules_.echo_controller;
-    bool ec_active = ec ? ec->ActiveProcessing() : false;
-    // Only update the fullband buffer if the multiband processing has changed
-    // the signal. Keep the original signal otherwise.
-    if (submodule_states_.CaptureMultiBandProcessingActive(ec_active)) {
-      capture_buffer->CopyTo(capture_.capture_fullband_audio.get());
+  capture_.stats.output_rms_dbfs = absl::nullopt;
+  if (capture_.capture_output_used) {
+    if (capture_.capture_fullband_audio) {
+      const auto& ec = submodules_.echo_controller;
+      bool ec_active = ec ? ec->ActiveProcessing() : false;
+      // Only update the fullband buffer if the multiband processing has changed
+      // the signal. Keep the original signal otherwise.
+      if (submodule_states_.CaptureMultiBandProcessingActive(ec_active)) {
+        capture_buffer->CopyTo(capture_.capture_fullband_audio.get());
+      }
+      capture_buffer = capture_.capture_fullband_audio.get();
     }
-    capture_buffer = capture_.capture_fullband_audio.get();
+
+    if (config_.residual_echo_detector.enabled) {
+      RTC_DCHECK(submodules_.echo_detector);
+      submodules_.echo_detector->AnalyzeCaptureAudio(
+          rtc::ArrayView<const float>(capture_buffer->channels()[0],
+                                      capture_buffer->num_frames()));
+    }
+
+    // TODO(aluebs): Investigate if the transient suppression placement should
+    // be before or after the AGC.
+    if (submodules_.transient_suppressor) {
+      float voice_probability =
+          submodules_.agc_manager.get()
+              ? submodules_.agc_manager->voice_probability()
+              : 1.f;
+
+      submodules_.transient_suppressor->Suppress(
+          capture_buffer->channels()[0], capture_buffer->num_frames(),
+          capture_buffer->num_channels(),
+          capture_buffer->split_bands_const(0)[kBand0To8kHz],
+          capture_buffer->num_frames_per_band(),
+          capture_.keyboard_info.keyboard_data,
+          capture_.keyboard_info.num_keyboard_frames, voice_probability,
+          capture_.key_pressed);
+    }
+
+    // Experimental APM sub-module that analyzes |capture_buffer|.
+    if (submodules_.capture_analyzer) {
+      submodules_.capture_analyzer->Analyze(capture_buffer);
+    }
+
+    if (submodules_.gain_controller2) {
+      submodules_.gain_controller2->NotifyAnalogLevel(
+          recommended_stream_analog_level_locked());
+      submodules_.gain_controller2->Process(capture_buffer);
+    }
+
+    if (submodules_.capture_post_processor) {
+      submodules_.capture_post_processor->Process(capture_buffer);
+    }
+
+    // The level estimator operates on the recombined data.
+    if (config_.level_estimation.enabled) {
+      submodules_.output_level_estimator->ProcessStream(*capture_buffer);
+      capture_.stats.output_rms_dbfs =
+          submodules_.output_level_estimator->RMS();
+    }
+
+    capture_output_rms_.Analyze(rtc::ArrayView<const float>(
+        capture_buffer->channels_const()[0],
+        capture_nonlocked_.capture_processing_format.num_frames()));
+    if (log_rms) {
+      RmsLevel::Levels levels = capture_output_rms_.AverageAndPeak();
+      RTC_HISTOGRAM_COUNTS_LINEAR(
+          "WebRTC.Audio.ApmCaptureOutputLevelAverageRms", levels.average, 1,
+          RmsLevel::kMinLevelDb, 64);
+      RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.ApmCaptureOutputLevelPeakRms",
+                                  levels.peak, 1, RmsLevel::kMinLevelDb, 64);
+    }
+
+    if (submodules_.agc_manager) {
+      int level = recommended_stream_analog_level_locked();
+      data_dumper_->DumpRaw("experimental_gain_control_stream_analog_level", 1,
+                            &level);
+    }
+
+    // Compute echo-detector stats.
+    if (config_.residual_echo_detector.enabled) {
+      RTC_DCHECK(submodules_.echo_detector);
+      auto ed_metrics = submodules_.echo_detector->GetMetrics();
+      capture_.stats.residual_echo_likelihood = ed_metrics.echo_likelihood;
+      capture_.stats.residual_echo_likelihood_recent_max =
+          ed_metrics.echo_likelihood_recent_max;
+    }
   }
 
-  if (config_.residual_echo_detector.enabled) {
-    RTC_DCHECK(submodules_.echo_detector);
-    submodules_.echo_detector->AnalyzeCaptureAudio(rtc::ArrayView<const float>(
-        capture_buffer->channels()[0], capture_buffer->num_frames()));
-  }
-
-  // TODO(aluebs): Investigate if the transient suppression placement should be
-  // before or after the AGC.
-  if (submodules_.transient_suppressor) {
-    float voice_probability = submodules_.agc_manager.get()
-                                  ? submodules_.agc_manager->voice_probability()
-                                  : 1.f;
-
-    submodules_.transient_suppressor->Suppress(
-        capture_buffer->channels()[0], capture_buffer->num_frames(),
-        capture_buffer->num_channels(),
-        capture_buffer->split_bands_const(0)[kBand0To8kHz],
-        capture_buffer->num_frames_per_band(),
-        capture_.keyboard_info.keyboard_data,
-        capture_.keyboard_info.num_keyboard_frames, voice_probability,
-        capture_.key_pressed);
-  }
-
-  // Experimental APM sub-module that analyzes |capture_buffer|.
-  if (submodules_.capture_analyzer) {
-    submodules_.capture_analyzer->Analyze(capture_buffer);
-  }
-
-  if (submodules_.gain_controller2) {
-    submodules_.gain_controller2->NotifyAnalogLevel(
-        recommended_stream_analog_level_locked());
-    submodules_.gain_controller2->Process(capture_buffer);
-  }
-
-  if (submodules_.capture_post_processor) {
-    submodules_.capture_post_processor->Process(capture_buffer);
-  }
-
-  // The level estimator operates on the recombined data.
-  if (config_.level_estimation.enabled) {
-    submodules_.output_level_estimator->ProcessStream(*capture_buffer);
-    capture_.stats.output_rms_dbfs = submodules_.output_level_estimator->RMS();
-  } else {
-    capture_.stats.output_rms_dbfs = absl::nullopt;
-  }
-
-  capture_output_rms_.Analyze(rtc::ArrayView<const float>(
-      capture_buffer->channels_const()[0],
-      capture_nonlocked_.capture_processing_format.num_frames()));
-  if (log_rms) {
-    RmsLevel::Levels levels = capture_output_rms_.AverageAndPeak();
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.ApmCaptureOutputLevelAverageRms",
-                                levels.average, 1, RmsLevel::kMinLevelDb, 64);
-    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.ApmCaptureOutputLevelPeakRms",
-                                levels.peak, 1, RmsLevel::kMinLevelDb, 64);
-  }
-
-  if (submodules_.agc_manager) {
-    int level = recommended_stream_analog_level_locked();
-    data_dumper_->DumpRaw("experimental_gain_control_stream_analog_level", 1,
-                          &level);
-  }
-
-  // Compute echo-related stats.
+  // Compute echo-controller stats.
   if (submodules_.echo_controller) {
     auto ec_metrics = submodules_.echo_controller->GetMetrics();
     capture_.stats.echo_return_loss = ec_metrics.echo_return_loss;
     capture_.stats.echo_return_loss_enhancement =
         ec_metrics.echo_return_loss_enhancement;
     capture_.stats.delay_ms = ec_metrics.delay_ms;
-  }
-  if (config_.residual_echo_detector.enabled) {
-    RTC_DCHECK(submodules_.echo_detector);
-    auto ed_metrics = submodules_.echo_detector->GetMetrics();
-    capture_.stats.residual_echo_likelihood = ed_metrics.echo_likelihood;
-    capture_.stats.residual_echo_likelihood_recent_max =
-        ed_metrics.echo_likelihood_recent_max;
   }
 
   // Pass stats for reporting.
