@@ -90,7 +90,11 @@ function afterDragTests()
   sendMouseEventsForDrag("userselectnone");
   synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
 
-  if (gExtraDragTests == 6)
+  gDragInfo = { target: $("draggable_with_undraggable_descendant"), testid: "undraggable inside draggable" };
+  sendMouseEventsForDrag("undraggable_inside_draggable");
+  synthesizeMouse(draggable, 12, 12, { type: "mouseup" });
+
+  if (gExtraDragTests == 7)
     SimpleTest.finish();
 }
 
@@ -670,5 +674,11 @@ shadow_host_containing_image.attachShadow({ mode: 'open' }).innerHTML =
     This is an unselectable, undraggable area.
   </span>
 </a>
+
+<div id="draggable_with_undraggable_descendant" draggable="true" ondragstart="onDragStartDraggable(event)">
+  <a id="undraggable_inside_draggable" href="http://example.org" draggable="false" ondragstart="onDragOverDraggableFalse(event)">
+    This is an undraggable link inside a draggable ancestor.
+  </a>
+</div>
 </body>
 </html>

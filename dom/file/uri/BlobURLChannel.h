@@ -13,8 +13,7 @@
 
 class nsIURI;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BlobImpl;
 
@@ -23,7 +22,7 @@ class BlobURLChannel final : public nsBaseChannel {
   BlobURLChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo);
 
  private:
-  ~BlobURLChannel();
+  ~BlobURLChannel() override;
 
   nsresult OpenContentStream(bool aAsync, nsIInputStream** aResult,
                              nsIChannel** aChannel) override;
@@ -31,7 +30,6 @@ class BlobURLChannel final : public nsBaseChannel {
   bool mContentStreamOpened;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_BlobURLChannel_h */

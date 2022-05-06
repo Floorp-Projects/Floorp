@@ -15,8 +15,7 @@
 
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileBlobImpl : public BlobImpl {
  public:
@@ -68,7 +67,7 @@ class FileBlobImpl : public BlobImpl {
 
   void GetType(nsAString& aType) override;
 
-  virtual void GetBlobImplType(nsAString& aBlobImplType) const override;
+  void GetBlobImplType(nsAString& aBlobImplType) const override;
 
   size_t GetAllocationSize() const override { return 0; }
 
@@ -83,10 +82,10 @@ class FileBlobImpl : public BlobImpl {
     return nullptr;
   }
 
-  virtual void CreateInputStream(nsIInputStream** aInputStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
-  int64_t GetFileId() override { return mFileId; }
+  int64_t GetFileId() const override { return mFileId; }
 
   void SetLazyData(const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLength, int64_t aLastModifiedDate) override {
@@ -116,7 +115,7 @@ class FileBlobImpl : public BlobImpl {
   }
 
  protected:
-  ~FileBlobImpl() = default;
+  ~FileBlobImpl() override = default;
 
   // Create slice
   FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart, uint64_t aLength,
@@ -124,7 +123,7 @@ class FileBlobImpl : public BlobImpl {
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   class GetTypeRunnable;
   void GetTypeInternal(nsAString& aType, const MutexAutoLock& aProofOfLock);
@@ -153,7 +152,6 @@ class FileBlobImpl : public BlobImpl {
   bool mWholeFile;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileBlobImpl_h

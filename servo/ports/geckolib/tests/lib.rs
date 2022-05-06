@@ -27,7 +27,9 @@ extern crate size_of_test;
 extern crate style;
 extern crate style_traits;
 extern crate to_shmem;
+extern crate euclid;
 
 #[cfg(target_pointer_width = "64")]
 mod size_of;
 mod specified_values;
+mod piecewise_linear;

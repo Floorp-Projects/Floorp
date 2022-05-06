@@ -82,7 +82,6 @@ class MOZ_STACK_CLASS DragDataProducer {
                                             bool* outDragSelectedText);
   [[nodiscard]] static nsresult GetAnchorURL(nsIContent* inNode,
                                              nsAString& outURL);
-  static void GetNodeString(nsIContent* inNode, nsAString& outNodeString);
   static void CreateLinkText(const nsAString& inURL, const nsAString& inText,
                              nsAString& outLinkText);
 
@@ -261,42 +260,23 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable* aTransferable,
       supportsString = do_QueryInterface(tmp);
       if (!supportsString) return NS_ERROR_FAILURE;
 
-      nsAutoString imageRequestMime;
-      supportsString->GetData(imageRequestMime);
+      nsAutoString contentType;
+      supportsString->GetData(contentType);
 
-      // If we have a MIME type, check the extension is compatible
-      if (!imageRequestMime.IsEmpty()) {
-        // Build a URL to get the filename extension
-        nsCOMPtr<nsIURL> imageURL = do_QueryInterface(sourceURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        nsAutoCString extension;
-        rv = imageURL->GetFileExtension(extension);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        NS_ConvertUTF16toUTF8 mimeCString(imageRequestMime);
-        bool isValidExtension;
-        nsAutoCString primaryExtension;
-        rv = CheckAndGetExtensionForMime(extension, mimeCString,
-                                         &isValidExtension, &primaryExtension);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (!isValidExtension && !primaryExtension.IsEmpty()) {
-          // The filename extension is missing or incompatible
-          // with the MIME type, replace it with the primary
-          // extension.
-          nsAutoCString newFileName;
-          rv = imageURL->GetFileBaseName(newFileName);
-          NS_ENSURE_SUCCESS(rv, rv);
-          newFileName.Append(".");
-          newFileName.Append(primaryExtension);
-          CopyUTF8toUTF16(newFileName, targetFilename);
-        }
+      nsCOMPtr<nsIMIMEService> mimeService =
+          do_GetService("@mozilla.org/mime;1");
+      if (NS_WARN_IF(!mimeService)) {
+        return NS_ERROR_FAILURE;
       }
+
+      mimeService->ValidateFileNameForSaving(
+          targetFilename, NS_ConvertUTF16toUTF8(contentType),
+          nsIMIMEService::VALIDATE_DEFAULT, targetFilename);
+    } else {
+      // make the filename safe for the filesystem
+      targetFilename.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS,
+                                 '-');
     }
-    // make the filename safe for the filesystem
-    targetFilename.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS,
-                               '-');
 #endif /* defined(XP_MACOSX) */
 
     // get the target directory from the kFilePromiseDirectoryMime
@@ -342,13 +322,16 @@ DragDataProducer::DragDataProducer(nsPIDOMWindowOuter* aWindow,
       mIsAltKeyPressed(aIsAltKeyPressed),
       mIsAnchor(false) {}
 
-//
-// FindParentLinkNode
-//
-// Finds the parent with the given link tag starting at |aContent|. If
-// it gets up to the root without finding it, we stop looking and
-// return null.
-//
+static nsIContent* FindDragTarget(nsIContent* aContent) {
+  for (nsIContent* content = aContent; content;
+       content = content->GetFlattenedTreeParent()) {
+    if (nsContentUtils::ContentIsDraggable(content)) {
+      return content;
+    }
+  }
+  return nullptr;
+}
+
 static nsIContent* FindParentLinkNode(nsIContent* aContent) {
   for (nsIContent* content = aContent; content;
        content = content->GetFlattenedTreeParent()) {
@@ -399,26 +382,6 @@ void DragDataProducer::CreateLinkText(const nsAString& inURL,
   outLinkText = linkText;
 }
 
-//
-// GetNodeString
-//
-// Gets the text associated with a node
-//
-void DragDataProducer::GetNodeString(nsIContent* inNode,
-                                     nsAString& outNodeString) {
-  nsCOMPtr<nsINode> node = inNode;
-
-  outNodeString.Truncate();
-
-  // use a range to get the text-equivalent of the node
-  nsCOMPtr<Document> doc = node->OwnerDoc();
-  RefPtr<nsRange> range = doc->CreateRange(IgnoreErrors());
-  if (range) {
-    range->SelectNode(*node, IgnoreErrors());
-    range->ToString(outNodeString, IgnoreErrors());
-  }
-}
-
 nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
                                         imgIRequest* aRequest) {
   nsCOMPtr<nsIURI> imgUri;
@@ -436,54 +399,27 @@ nsresult DragDataProducer::GetImageData(imgIContainer* aImage,
     nsCString mimeType;
     aRequest->GetMimeType(getter_Copies(mimeType));
 
+    nsAutoCString fileName;
+    aRequest->GetFileName(fileName);
+
 #if defined(XP_MACOSX)
     // Save the MIME type so we can make sure the extension
     // is compatible (and replace it if it isn't) when the
     // image is dropped. On Mac, we need to get the OS MIME
     // handler information in the parent due to sandboxing.
     CopyUTF8toUTF16(mimeType, mImageRequestMime);
+    CopyUTF8toUTF16(fileName, mImageDestFileName);
 #else
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService("@mozilla.org/mime;1");
     if (NS_WARN_IF(!mimeService)) {
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIMIMEInfo> mimeInfo;
-    mimeService->GetFromTypeAndExtension(mimeType, ""_ns,
-                                         getter_AddRefs(mimeInfo));
-    if (mimeInfo) {
-      nsAutoCString extension;
-      imgUrl->GetFileExtension(extension);
-
-      bool validExtension;
-      if (extension.IsEmpty() ||
-          NS_FAILED(mimeInfo->ExtensionExists(extension, &validExtension)) ||
-          !validExtension) {
-        // Fix the file extension in the URL
-        nsAutoCString primaryExtension;
-        mimeInfo->GetPrimaryExtension(primaryExtension);
-        if (!primaryExtension.IsEmpty()) {
-          rv = NS_MutateURI(imgUrl)
-                   .Apply(&nsIURLMutator::SetFileExtension, primaryExtension,
-                          nullptr)
-                   .Finalize(imgUrl);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-    }
-#endif /* defined(XP_MACOSX) */
-
-    nsAutoCString fileName;
-    imgUrl->GetFileName(fileName);
-
-    NS_UnescapeURL(fileName);
-
-#if !defined(XP_MACOSX)
-    // make the filename safe for the filesystem
-    fileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
-#endif
-
     CopyUTF8toUTF16(fileName, mImageDestFileName);
+    mimeService->ValidateFileNameForSaving(mImageDestFileName, mimeType,
+                                           nsIMIMEService::VALIDATE_DEFAULT,
+                                           mImageDestFileName);
+#endif
 
     // and the image object
     mImage = aImage;
@@ -590,14 +526,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
         return NS_OK;
       }
 
-      draggedNode = mTarget;
-      if (auto* el = nsGenericHTMLElement::FromNodeOrNull(draggedNode)) {
-        if (el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
-                            nsGkAtoms::_false, eIgnoreCase)) {
-          *aCanDrag = false;
-          return NS_OK;
-        }
-      }
+      draggedNode = FindDragTarget(mTarget);
     }
 
     nsCOMPtr<nsIImageLoadingContent> image;
@@ -631,10 +560,7 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
     {
       // set for linked images, and links
       nsCOMPtr<nsIContent> linkNode;
-
-      RefPtr<HTMLAreaElement> areaElem =
-          HTMLAreaElement::FromNodeOrNull(draggedNode);
-      if (areaElem) {
+      if (const auto* areaElem = HTMLAreaElement::FromNodeOrNull(draggedNode)) {
         // use the alt text (or, if missing, the href) as the title
         areaElem->GetAttr(nsGkAtoms::alt, mTitleString);
         if (mTitleString.IsEmpty()) {
@@ -702,10 +628,6 @@ nsresult DragDataProducer::Produce(DataTransfer* aDataTransfer, bool* aCanDrag,
           nodeToSerialize = draggedNode;
         }
         dragNode = nodeToSerialize;
-      } else if (draggedNode && draggedNode->IsHTMLElement(nsGkAtoms::a)) {
-        // set linkNode. The code below will handle this
-        linkNode = draggedNode;  // XXX test this
-        GetNodeString(draggedNode, mTitleString);
       } else if (parentLink) {
         // parentLink will always be null if there's selected content
         linkNode = parentLink;

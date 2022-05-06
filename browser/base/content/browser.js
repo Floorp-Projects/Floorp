@@ -533,6 +533,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gAlwaysOpenPanel",
+  "browser.download.alwaysOpenPanel",
+  true
+);
+
 customElements.setElementCreationCallback("translation-notification", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/translation-notification.js",
@@ -621,7 +628,7 @@ async function gLazyFindCommand(cmd, ...args) {
 
 var gPageIcons = {
   "about:home": "chrome://branding/content/icon32.png",
-  "about:myfirefox": "chrome://branding/content/icon32.png",
+  "about:firefoxview": "chrome://branding/content/icon32.png",
   "about:newtab": "chrome://branding/content/icon32.png",
   "about:welcome": "chrome://branding/content/icon32.png",
   "about:privatebrowsing": "chrome://browser/skin/privatebrowsing/favicon.svg",
@@ -630,7 +637,7 @@ var gPageIcons = {
 var gInitialPages = [
   "about:blank",
   "about:home",
-  ...(AppConstants.NIGHTLY_BUILD ? ["about:myfirefox"] : []),
+  ...(AppConstants.NIGHTLY_BUILD ? ["about:firefoxview"] : []),
   "about:newtab",
   "about:privatebrowsing",
   "about:sessionrestore",
@@ -6319,9 +6326,9 @@ nsBrowserAccess.prototype = {
         break;
       }
       case Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER: {
-        let browser = PrintUtils.startPrintWindow(aOpenWindowInfo.parent, {
-          openWindowInfo: aOpenWindowInfo,
-        });
+        let browser = PrintUtils.handleStaticCloneCreatedForPrint(
+          aOpenWindowInfo
+        );
         if (browser) {
           browsingContext = browser.browsingContext;
         }
@@ -6401,9 +6408,9 @@ nsBrowserAccess.prototype = {
     aSkipLoad
   ) {
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_PRINT_BROWSER) {
-      return PrintUtils.startPrintWindow(aParams.openWindowInfo.parent, {
-        openWindowInfo: aParams.openWindowInfo,
-      });
+      return PrintUtils.handleStaticCloneCreatedForPrint(
+        aParams.openWindowInfo
+      );
     }
 
     if (aWhere != Ci.nsIBrowserDOMWindow.OPEN_NEWTAB) {
@@ -7315,6 +7322,29 @@ var ToolbarContextMenu = {
   onDownloadsAutoHideChange(event) {
     let autoHide = event.target.getAttribute("checked") == "true";
     Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
+  },
+
+  updateDownloadsAlwaysOpenPanel(popup) {
+    let separator = document.getElementById(
+      "toolbarDownloadsAnchorMenuSeparator"
+    );
+    let checkbox = document.getElementById(
+      "toolbar-context-always-open-downloads-panel"
+    );
+    let isDownloads =
+      popup.triggerNode &&
+      ["downloads-button", "wrapper-downloads-button"].includes(
+        popup.triggerNode.id
+      );
+    separator.hidden = checkbox.hidden = !isDownloads;
+    gAlwaysOpenPanel
+      ? checkbox.setAttribute("checked", "true")
+      : checkbox.removeAttribute("checked");
+  },
+
+  onDownloadsAlwaysOpenPanelChange(event) {
+    let alwaysOpen = event.target.getAttribute("checked") == "true";
+    Services.prefs.setBoolPref("browser.download.alwaysOpenPanel", alwaysOpen);
   },
 
   _getUnwrappedTriggerNode(popup) {

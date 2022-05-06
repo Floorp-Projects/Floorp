@@ -313,6 +313,13 @@ def add_common_arguments(parser):
         dest="crashAsPass",
         help="Harness level crashes will be treated as passing",
     )
+    parser.add_argument(
+        "--disable-fission",
+        action="store_true",
+        default=False,
+        dest="disableFission",
+        help="disable fission mode (back to e10s || 1proc)",
+    )
 
 
 def add_remote_arguments(parser):

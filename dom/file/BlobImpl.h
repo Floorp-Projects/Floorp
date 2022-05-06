@@ -78,14 +78,14 @@ class BlobImpl : public nsISupports {
   virtual already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart,
                                                  uint64_t aLength,
                                                  const nsAString& aContentType,
-                                                 ErrorResult& aRv) = 0;
+                                                 ErrorResult& aRv) const = 0;
 
   virtual const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const = 0;
 
   virtual void CreateInputStream(nsIInputStream** aStream,
-                                 ErrorResult& aRv) = 0;
+                                 ErrorResult& aRv) const = 0;
 
-  virtual int64_t GetFileId() = 0;
+  virtual int64_t GetFileId() const = 0;
 
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset);

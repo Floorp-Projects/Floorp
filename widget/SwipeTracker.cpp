@@ -128,14 +128,20 @@ nsEventStatus SwipeTracker::ProcessEvent(const PanGestureInput& aEvent) {
     mLastEventTimeStamp = aEvent.mTimeStamp;
   } else {
     mEventsAreControllingSwipe = false;
-    double targetValue = 0.0;
     if (ComputeSwipeSuccess()) {
       // Let's use same timestamp as previous event because this is caused by
       // the preceding event.
       SendSwipeEvent(eSwipeGesture, mSwipeDirection, 0.0, aEvent.mTimeStamp);
-      targetValue = SwipeSuccessTargetValue();
+      UnregisterFromRefreshDriver();
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("SwipeTracker::SwipeFinished",
+                                 [swipeTracker = RefPtr<SwipeTracker>(this),
+                                  timeStamp = aEvent.mTimeStamp] {
+                                   swipeTracker->SwipeFinished(timeStamp);
+                                 }));
+    } else {
+      StartAnimating(0.0);
     }
-    StartAnimating(targetValue);
   }
 
   return nsEventStatus_eConsumeNoDefault;

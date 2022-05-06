@@ -22,7 +22,7 @@ class RecentlyClosedTabsList extends HTMLElement {
 
   get fluentStrings() {
     if (!this._fluentStrings) {
-      this._fluentStrings = new Localization(["preview/myFirefox.ftl"], true);
+      this._fluentStrings = new Localization(["preview/firefoxView.ftl"], true);
     }
     return this._fluentStrings;
   }
@@ -50,7 +50,7 @@ class RecentlyClosedTabsList extends HTMLElement {
     if (elapsed <= nowThresholdMs) {
       // Use a different string for very recent timestamps
       formattedTime = this.fluentStrings.formatValueSync(
-        "myfirefox-just-now-timestamp"
+        "firefoxview-just-now-timestamp"
       );
     } else {
       formattedTime = relativeTimeFormat.formatBestUnit(new Date(timestamp));
@@ -114,7 +114,7 @@ class RecentlyClosedTabsList extends HTMLElement {
 
       const targetURI = this.getTargetURI(tab);
       li.dataset.targetURI = targetURI;
-      document.l10n.setAttributes(li, "myfirefox-closed-tabs-tab-button", {
+      document.l10n.setAttributes(li, "firefoxview-closed-tabs-tab-button", {
         targetURI,
       });
 

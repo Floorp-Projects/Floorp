@@ -65,7 +65,7 @@ DIRS += ["build"]
 if CONFIG["NIGHTLY_BUILD"]:
     DIRS += [
         "colorways",
-        "myfirefox",
+        "firefoxview",
     ]
 
 

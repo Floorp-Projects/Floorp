@@ -5,7 +5,8 @@
 job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
     run-without-variant: false
-    variants: ["1proc"]
+    variants:
+        - 1proc
     virtualization: virtual
     mozharness:
         script:
@@ -39,7 +40,10 @@ cppunit:
             android-em-7.*: geckoview-test_runner.apk
             default: null
     tier: default
-    run-on-projects: built-projects
+    run-on-projects:
+        by-variant:
+            1proc: built-projects
+            default: []
 
 gtest:
     description: "GTests run"
@@ -47,12 +51,16 @@ gtest:
     treeherder-symbol: GTest
     instance-size: xlarge
     run-on-projects:
-        by-test-platform:
-            .*-devedition.*/.*: []  # don't run on devedition
-            linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
-            linux1804-32-qr/opt: []  # try only, shippable on m-c
-            linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c
-            default: built-projects
+        by-variant:
+            1proc:
+                by-test-platform:
+                    .*android.*: built-projects
+                    .*-devedition.*/.*: []  # don't run on devedition
+                    linux1804-32-qr/opt: []  # try only, shippable on m-c
+                    linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
+                    linux1804-32-shippable-qr/opt: ['mozilla-central']  # try and m-c
+                    default: built-projects
+            default: []
     target:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
@@ -64,10 +72,13 @@ jittest:
     suite: jittest
     treeherder-symbol: Jit
     run-on-projects:
-        by-test-platform:
-            android-hw-.*-aarch64-qr/debug: ['mozilla-central', 'release']
-            android-hw-.*-arm7-qr/debug: ['mozilla-central', 'release']
-            default: built-projects
+        by-variant:
+            1proc:
+                by-test-platform:
+                    android-hw-.*-aarch64-qr/debug: ['mozilla-central', 'release']
+                    android-hw-.*-arm7-qr/debug: ['mozilla-central', 'release']
+                    default: built-projects
+            default: []
     chunks:
         by-test-platform:
             windows.*: 1

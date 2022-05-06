@@ -324,7 +324,7 @@ class Page extends Domain {
 
     // Focus the window, and select the corresponding tab
     await windowManager.focusWindow(window);
-    TabManager.selectTab(tab);
+    await TabManager.selectTab(tab);
   }
 
   /**

@@ -54,7 +54,7 @@ class BlobCreationDoneRunnable final : public Runnable {
   }
 
  private:
-  ~BlobCreationDoneRunnable() {
+  ~BlobCreationDoneRunnable() override {
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release these objects in the
     // correct thread.
@@ -147,7 +147,7 @@ class WriteRunnable final : public Runnable {
     MOZ_ASSERT(aData);
   }
 
-  ~WriteRunnable() { free(mData); }
+  ~WriteRunnable() override { free(mData); }
 
   RefPtr<MutableBlobStorage> mBlobStorage;
   void* mData;
@@ -170,7 +170,7 @@ class CloseFileRunnable final : public Runnable {
   }
 
  private:
-  ~CloseFileRunnable() {
+  ~CloseFileRunnable() override {
     if (mFD) {
       PR_Close(mFD);
     }
@@ -218,7 +218,7 @@ class CreateBlobRunnable final : public Runnable,
   }
 
  private:
-  ~CreateBlobRunnable() {
+  ~CreateBlobRunnable() override {
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release data in the correct
     // thread.
@@ -258,7 +258,7 @@ class LastRunnable final : public Runnable {
   }
 
  private:
-  ~LastRunnable() {
+  ~LastRunnable() override {
     MOZ_ASSERT(mBlobStorage);
     // If something when wrong, we still have to release data in the correct
     // thread.

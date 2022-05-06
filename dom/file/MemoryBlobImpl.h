@@ -18,8 +18,7 @@
 #include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MemoryBlobImpl final : public BaseBlobImpl {
  public:
@@ -44,11 +43,12 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   bool IsMemoryFile() const override { return true; }
 
@@ -123,7 +123,7 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     size_t SizeOfExcludingThisEvenIfShared(MallocSizeOf) override { return 0; }
 
    private:
-    ~DataOwnerAdapter() = default;
+    ~DataOwnerAdapter() override = default;
 
     DataOwnerAdapter(DataOwner* aDataOwner, Span<const char> aData)
         : mDataOwner(aDataOwner), mData(aData) {}
@@ -149,13 +149,12 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     MOZ_ASSERT(mDataOwner && mDataOwner->mData, "must have data");
   }
 
-  ~MemoryBlobImpl() = default;
+  ~MemoryBlobImpl() override = default;
 
   // Used when backed by a memory store
   RefPtr<DataOwner> mDataOwner;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MemoryBlobImpl_h

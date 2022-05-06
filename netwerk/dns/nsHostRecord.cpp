@@ -317,7 +317,7 @@ void AddrHostRecord::ResolveComplete() {
     Telemetry::Accumulate(Telemetry::TRR_SKIP_REASON_TRR_FIRST2,
                           TRRService::ProviderKey(),
                           static_cast<uint32_t>(mTRRSkippedReason));
-    if (!mTRRSuccess) {
+    if (!mTRRSuccess && LoadNativeUsed()) {
       Telemetry::Accumulate(
           mNativeSuccess ? Telemetry::TRR_SKIP_REASON_NATIVE_SUCCESS
                          : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
@@ -359,12 +359,6 @@ void AddrHostRecord::ResolveComplete() {
       if (mTRRSuccess) {
         Telemetry::Accumulate(Telemetry::TRR_ATTEMPT_COUNT,
                               TRRService::ProviderKey(), mTrrAttempts);
-      } else if (LoadNativeUsed()) {
-        Telemetry::Accumulate(mNativeSuccess
-                                  ? Telemetry::TRR_SKIP_REASON_NATIVE_SUCCESS
-                                  : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
-                              TRRService::ProviderKey(),
-                              static_cast<uint32_t>(mTRRSkippedReason));
       }
     }
   }

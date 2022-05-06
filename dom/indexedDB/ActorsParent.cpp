@@ -5547,7 +5547,7 @@ class EncryptedFileBlobImpl final : public FileBlobImpl {
   }
 
   void CreateInputStream(nsIInputStream** aInputStream,
-                         ErrorResult& aRv) override {
+                         ErrorResult& aRv) const override {
     nsCOMPtr<nsIInputStream> baseInputStream;
     FileBlobImpl::CreateInputStream(getter_AddRefs(baseInputStream), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -5567,7 +5567,7 @@ class EncryptedFileBlobImpl final : public FileBlobImpl {
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override {
+                                         ErrorResult& aRv) const override {
     MOZ_CRASH("Not implemented because this should be unreachable.");
   }
 

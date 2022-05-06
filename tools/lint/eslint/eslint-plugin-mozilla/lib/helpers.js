@@ -15,7 +15,6 @@ const fs = require("fs");
 const ini = require("multi-ini");
 const recommendedConfig = require("./configs/recommended");
 
-var gModules = null;
 var gRootDir = null;
 var directoryManifests = new Map();
 
@@ -50,10 +49,6 @@ const callExpressionMultiDefinitions = [
   "loader.lazyRequireGetter(globalThis,",
 ];
 
-const imports = [
-  /^(?:Cu|Components\.utils|ChromeUtils)\.import\(".*\/((.*?)\.jsm?)", (?:globalThis|this)\)/,
-];
-
 const workerImportFilenameMatch = /(.*\/)*((.*?)\.jsm?)/;
 
 module.exports = {
@@ -62,24 +57,6 @@ module.exports = {
       this._iniParser = new ini.Parser();
     }
     return this._iniParser;
-  },
-
-  get modulesGlobalData() {
-    if (!gModules) {
-      if (this.isMozillaCentralBased()) {
-        gModules = require(path.join(
-          this.rootDir,
-          "tools",
-          "lint",
-          "eslint",
-          "modules.json"
-        ));
-      } else {
-        gModules = require("./modules.json");
-      }
-    }
-
-    return gModules;
   },
 
   get servicesData() {
@@ -299,7 +276,7 @@ module.exports = {
 
   /**
    * Attempts to convert an CallExpressions that look like module imports
-   * into global variable definitions, using modules.json data if appropriate.
+   * into global variable definitions.
    *
    * @param  {Object} node
    *         The AST node to convert.
@@ -339,33 +316,6 @@ module.exports = {
       source = this.getASTSource(node);
     } catch (e) {
       return [];
-    }
-
-    for (let reg of imports) {
-      let match = source.match(reg);
-      if (match) {
-        // The two argument form is only acceptable in the global scope
-        if (node.expression.arguments.length > 1 && !isGlobal) {
-          return [];
-        }
-
-        let globalModules = this.modulesGlobalData;
-
-        if (match[1] in globalModules) {
-          // XXX We mark as explicit when there is only one exported symbol from
-          // the module. For now this avoids no-unused-vars complaining in the
-          // cases where we import everything from a module but only use one
-          // of them.
-          let explicit = globalModules[match[1]].length == 1;
-          return globalModules[match[1]].map(name => ({
-            name,
-            writable: true,
-            explicit,
-          }));
-        }
-
-        return [{ name: match[2], writable: true, explicit: true }];
-      }
     }
 
     // The definition matches below must be in the global scope for us to define

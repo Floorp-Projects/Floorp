@@ -11,8 +11,7 @@
 
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BlobImpl;
 
@@ -28,7 +27,7 @@ class FileCreatorParent final : public mozilla::dom::PFileCreatorParent {
       const bool& aIsFromNsIFile);
 
  private:
-  ~FileCreatorParent();
+  ~FileCreatorParent() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -41,7 +40,6 @@ class FileCreatorParent final : public mozilla::dom::PFileCreatorParent {
   bool mIPCActive;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileCreatorParent_h

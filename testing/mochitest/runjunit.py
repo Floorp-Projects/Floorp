@@ -156,6 +156,11 @@ class JUnitTestRunner(MochitestDesktop):
 
         # Set preferences
         self.merge_base_profiles(self.options, "geckoview-junit")
+
+        self.options.extra_prefs.append("fission.autostart=true")
+        if self.options.disable_fission:
+            self.options.extra_prefs.pop()
+            self.options.extra_prefs.append("fission.autostart=false")
         prefs = parse_preferences(self.options.extra_prefs)
         self.profile.set_preferences(prefs)
 
@@ -242,8 +247,11 @@ class JUnitTestRunner(MochitestDesktop):
         env["MOZ_WEBRENDER"] = "1"
         # FIXME: When android switches to using Fission by default,
         # MOZ_FORCE_DISABLE_FISSION will need to be configured correctly.
-        if self.options.enable_fission:
+        if self.options.disable_fission:
+            env["MOZ_FORCE_DISABLE_FISSION"] = "1"
+        else:
             env["MOZ_FORCE_ENABLE_FISSION"] = "1"
+
         # Add additional env variables
         for [key, value] in [p.split("=", 1) for p in self.options.add_env]:
             env[key] = value
@@ -573,11 +581,11 @@ class JunitArgumentParser(argparse.ArgumentParser):
             help="If collecting code coverage, save the report file in this dir.",
         )
         self.add_argument(
-            "--enable-fission",
+            "--disable-fission",
             action="store_true",
-            dest="enable_fission",
+            dest="disable_fission",
             default=False,
-            help="Run the tests with Fission (site isolation) enabled.",
+            help="Run the tests without Fission (site isolation) enabled.",
         )
         self.add_argument(
             "--repeat",

@@ -2628,8 +2628,13 @@ void LIRGenerator::visitInt32ToIntPtr(MInt32ToIntPtr* ins) {
     auto* lir = new (alloc()) LInt32ToIntPtr(useAnyAtStart(input));
     define(lir, ins);
   } else {
+#  ifdef DEBUG
     auto* lir = new (alloc()) LInt32ToIntPtr(useRegisterAtStart(input));
     defineReuseInput(lir, ins, 0);
+#  else
+    // In non-debug mode this is a no-op.
+    redefine(ins, input);
+#  endif
   }
 #else
   // On 32-bit platforms this is a no-op.
@@ -3075,6 +3080,17 @@ void LIRGenerator::visitNewClassBodyEnvironmentObject(
 
   LNewClassBodyEnvironmentObject* lir = new (alloc())
       LNewClassBodyEnvironmentObject(useRegisterAtStart(enclosing));
+
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitNewVarEnvironmentObject(MNewVarEnvironmentObject* ins) {
+  MDefinition* enclosing = ins->enclosing();
+  MOZ_ASSERT(enclosing->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LNewVarEnvironmentObject(useRegisterAtStart(enclosing));
 
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);

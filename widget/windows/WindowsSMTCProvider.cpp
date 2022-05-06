@@ -222,8 +222,7 @@ void WindowsSMTCProvider::SetPlaybackState(
 void WindowsSMTCProvider::SetMediaMetadata(
     const mozilla::dom::MediaMetadataBase& aMetadata) {
   MOZ_ASSERT(mInitialized);
-  SetMusicMetadata(aMetadata.mArtist.get(), aMetadata.mTitle.get(),
-                   aMetadata.mAlbum.get());
+  SetMusicMetadata(aMetadata.mArtist, aMetadata.mTitle);
   LoadThumbnail(aMetadata.mArtwork);
 }
 
@@ -395,13 +394,9 @@ bool WindowsSMTCProvider::InitDisplayAndControls() {
   return true;
 }
 
-bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
-                                           const wchar_t* aTitle,
-                                           const wchar_t* aAlbumArtist) {
+bool WindowsSMTCProvider::SetMusicMetadata(const nsString& aArtist,
+                                           const nsString& aTitle) {
   MOZ_ASSERT(mDisplay);
-  MOZ_ASSERT(aArtist);
-  MOZ_ASSERT(aTitle);
-  MOZ_ASSERT(aAlbumArtist);
   ComPtr<IMusicDisplayProperties> musicProps;
 
   HRESULT hr = mDisplay->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
@@ -413,21 +408,15 @@ bool WindowsSMTCProvider::SetMusicMetadata(const wchar_t* aArtist,
     return false;
   }
 
-  hr = musicProps->put_Artist(HStringReference(aArtist).Get());
+  hr = musicProps->put_Artist(HStringReference(aArtist.get()).Get());
   if (FAILED(hr)) {
     LOG("Failed to set the music's artist");
     return false;
   }
 
-  hr = musicProps->put_Title(HStringReference(aTitle).Get());
+  hr = musicProps->put_Title(HStringReference(aTitle.get()).Get());
   if (FAILED(hr)) {
     LOG("Failed to set the music's title");
-    return false;
-  }
-
-  hr = musicProps->put_AlbumArtist(HStringReference(aAlbumArtist).Get());
-  if (FAILED(hr)) {
-    LOG("Failed to set the music's album");
     return false;
   }
 
