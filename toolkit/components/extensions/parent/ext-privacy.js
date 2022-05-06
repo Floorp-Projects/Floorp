@@ -223,7 +223,7 @@ ExtensionPreferencesManager.addSetting("services.passwordSavingEnabled", {
 
 ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
   permission: "privacy",
-  prefNames: ["network.cookie.cookieBehavior", "network.cookie.lifetimePolicy"],
+  prefNames: ["network.cookie.cookieBehavior"],
 
   setCallback(value) {
     const cookieBehavior = cookieBehaviorValues.get(value.behavior);
@@ -241,11 +241,15 @@ ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
         `Invalid cookieConfig '${value.behavior}' when firstPartyIsolate is enabled`
       );
     }
+
+    if (typeof value.nonPersistentCookies === "boolean") {
+      Cu.reportError(
+        "'nonPersistentCookies' has been deprecated and it has no effect anymore."
+      );
+    }
+
     return {
       "network.cookie.cookieBehavior": cookieBehavior,
-      "network.cookie.lifetimePolicy": value.nonPersistentCookies
-        ? cookieSvc.ACCEPT_SESSION
-        : cookieSvc.ACCEPT_NORMALLY,
     };
   },
 
@@ -255,9 +259,8 @@ ExtensionPreferencesManager.addSetting("websites.cookieConfig", {
       behavior: Array.from(cookieBehaviorValues.entries()).find(
         entry => entry[1] === prefValue
       )[0],
-      nonPersistentCookies:
-        getIntPref("network.cookie.lifetimePolicy") ===
-        cookieSvc.ACCEPT_SESSION,
+      // Bug 1754924 - this property is now deprecated.
+      nonPersistentCookies: false,
     };
   },
 });

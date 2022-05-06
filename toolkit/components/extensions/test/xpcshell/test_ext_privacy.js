@@ -312,7 +312,6 @@ add_task(async function test_privacy_other_prefs() {
     },
     "websites.cookieConfig": {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
   };
 
@@ -536,8 +535,8 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "reject_third_party", nonPersistentCookies: true },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
-    }
+    },
+    { behavior: "reject_third_party", nonPersistentCookies: false }
   );
   // A missing nonPersistentCookies property should default to false.
   await testSetting(
@@ -545,7 +544,6 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "reject_third_party" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "reject_third_party", nonPersistentCookies: false }
   );
@@ -555,16 +553,14 @@ add_task(async function test_privacy_other_prefs() {
     { nonPersistentCookies: true },
     {
       "network.cookie.cookieBehavior": defaultCookieBehavior,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
     },
-    { behavior: defaultBehavior, nonPersistentCookies: true }
+    { behavior: defaultBehavior, nonPersistentCookies: false }
   );
   await testSetting(
     "websites.cookieConfig",
     { behavior: "reject_all" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "reject_all", nonPersistentCookies: false }
   );
@@ -573,7 +569,6 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "allow_visited" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_LIMIT_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "allow_visited", nonPersistentCookies: false }
   );
@@ -582,7 +577,6 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "allow_all" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_ACCEPT,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "allow_all", nonPersistentCookies: false }
   );
@@ -591,16 +585,14 @@ add_task(async function test_privacy_other_prefs() {
     { nonPersistentCookies: true },
     {
       "network.cookie.cookieBehavior": defaultCookieBehavior,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_SESSION,
     },
-    { behavior: defaultBehavior, nonPersistentCookies: true }
+    { behavior: defaultBehavior, nonPersistentCookies: false }
   );
   await testSetting(
     "websites.cookieConfig",
     { nonPersistentCookies: false },
     {
       "network.cookie.cookieBehavior": defaultCookieBehavior,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: defaultBehavior, nonPersistentCookies: false }
   );
@@ -609,7 +601,6 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "reject_trackers" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_TRACKER,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "reject_trackers", nonPersistentCookies: false }
   );
@@ -619,7 +610,6 @@ add_task(async function test_privacy_other_prefs() {
     {
       "network.cookie.cookieBehavior":
         cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",
@@ -640,7 +630,6 @@ add_task(async function test_privacy_other_prefs() {
     { behavior: "reject_trackers" },
     {
       "network.cookie.cookieBehavior": cookieSvc.BEHAVIOR_REJECT_TRACKER,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     { behavior: "reject_trackers", nonPersistentCookies: false }
   );
@@ -669,7 +658,6 @@ add_task(async function test_privacy_other_prefs() {
     {
       "network.cookie.cookieBehavior":
         cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",
@@ -687,7 +675,6 @@ add_task(async function test_privacy_other_prefs() {
     {
       "network.cookie.cookieBehavior":
         cookieSvc.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-      "network.cookie.lifetimePolicy": cookieSvc.ACCEPT_NORMALLY,
     },
     {
       behavior: "reject_trackers_and_partition_foreign",
