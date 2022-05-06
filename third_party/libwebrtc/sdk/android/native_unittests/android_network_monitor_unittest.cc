@@ -74,7 +74,7 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIpv4Address) {
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle =
-      network_monitor_->FindNetworkHandleFromAddress(ipv4_address);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv4_address, "");
 
   ASSERT_TRUE(network_handle.has_value());
   EXPECT_EQ(ipv4_handle, *network_handle);
@@ -91,9 +91,9 @@ TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingFullIpv6Address) {
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle1 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address1);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address1, "");
   auto network_handle2 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address2);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address2, "");
 
   ASSERT_TRUE(network_handle1.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle1);
@@ -116,14 +116,56 @@ TEST_F(AndroidNetworkMonitorTest,
   network_monitor_->SetNetworkInfos(net_infos);
 
   auto network_handle1 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address1);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address1, "");
   auto network_handle2 =
-      network_monitor_->FindNetworkHandleFromAddress(ipv6_address2);
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv6_address2, "");
 
   ASSERT_TRUE(network_handle1.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle1);
   ASSERT_TRUE(network_handle2.has_value());
   EXPECT_EQ(ipv6_handle, *network_handle2);
+}
+
+TEST_F(AndroidNetworkMonitorTest, TestFindNetworkHandleUsingIfName) {
+  ScopedFieldTrials field_trials("WebRTC-BindUsingInterfaceName/Enabled/");
+  // Start() updates the states introduced by the field trial.
+  network_monitor_->Start();
+  jni::NetworkHandle ipv6_handle = 200;
+  rtc::IPAddress ipv6_address1 = GetIpAddressFromIpv6String(kTestIpv6Address1);
+
+  // Set up an IPv6 network.
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv6_handle, ipv6_address1);
+  std::vector<jni::NetworkInformation> net_infos(1, net_info);
+  network_monitor_->SetNetworkInfos(net_infos);
+
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+
+  // Search using ip address only...
+  auto network_handle1 =
+      network_monitor_->FindNetworkHandleFromAddressOrName(ipv4_address, "");
+
+  // Search using ip address AND if_name (for typical ipv4 over ipv6 tunnel).
+  auto network_handle2 = network_monitor_->FindNetworkHandleFromAddressOrName(
+      ipv4_address, "v4-wlan0");
+
+  ASSERT_FALSE(network_handle1.has_value());
+  ASSERT_TRUE(network_handle2.has_value());
+  EXPECT_EQ(ipv6_handle, *network_handle2);
+}
+
+TEST_F(AndroidNetworkMonitorTest, TestUnderlyingVpnType) {
+  ScopedFieldTrials field_trials("WebRTC-BindUsingInterfaceName/Enabled/");
+  jni::NetworkHandle ipv4_handle = 100;
+  rtc::IPAddress ipv4_address(kTestIpv4Address);
+  jni::NetworkInformation net_info =
+      CreateNetworkInformation("wlan0", ipv4_handle, ipv4_address);
+  net_info.type = jni::NETWORK_VPN;
+  net_info.underlying_type_for_vpn = jni::NETWORK_WIFI;
+  network_monitor_->SetNetworkInfos({net_info});
+
+  EXPECT_EQ(rtc::ADAPTER_TYPE_WIFI,
+            network_monitor_->GetVpnUnderlyingAdapterType("v4-wlan0"));
 }
 
 }  // namespace test
