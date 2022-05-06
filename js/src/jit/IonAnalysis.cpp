@@ -1179,10 +1179,194 @@ static bool MaybeFoldConditionBlock(MIRGraph& graph,
   return true;
 }
 
+static bool MaybeFoldTestBlock(MIRGraph& graph, MBasicBlock* initialBlock) {
+  // Handle test expressions on more than two inputs. For example
+  // |if ((x > 10) && (y > 20) && (z > 30)) { ... }|, which results in the below
+  // pattern.
+  //
+  // Look for the pattern:
+  //                       ┌─────────────────┐
+  //                    1  │ 1 compare       │
+  //                 ┌─────┤ 2 test compare1 │
+  //                 │     └──────┬──────────┘
+  //                 │            │0
+  //         ┌───────▼─────────┐  │
+  //         │ 3 compare       │  │
+  //         │ 4 test compare3 │  └──────────┐
+  //         └──┬──────────┬───┘             │
+  //           1│          │0                │
+  // ┌──────────▼──────┐   │                 │
+  // │ 5 compare       │   └─────────┐       │
+  // │ 6 goto          │             │       │
+  // └───────┬─────────┘             │       │
+  //         │                       │       │
+  //         │    ┌──────────────────▼───────▼───────┐
+  //         └───►│ 9 phi compare1 compare3 compare5 │
+  //              │10 goto                           │
+  //              └────────────────┬─────────────────┘
+  //                               │
+  //                      ┌────────▼────────┐
+  //                      │11 test phi9     │
+  //                      └─────┬─────┬─────┘
+  //                           1│     │0
+  //         ┌────────────┐     │     │      ┌─────────────┐
+  //         │ TrueBranch │◄────┘     └─────►│ FalseBranch │
+  //         └────────────┘                  └─────────────┘
+  //
+  // And transform it to:
+  //
+  //                      ┌─────────────────┐
+  //                   1  │ 1 compare       │
+  //                  ┌───┤ 2 test compare1 │
+  //                  │   └──────────┬──────┘
+  //                  │              │0
+  //          ┌───────▼─────────┐    │
+  //          │ 3 compare       │    │
+  //          │ 4 test compare3 │    │
+  //          └──┬─────────┬────┘    │
+  //            1│         │0        │
+  //  ┌──────────▼──────┐  │         │
+  //  │ 5 compare       │  └──────┐  │
+  //  │ 6 test compare5 │         │  │
+  //  └────┬────────┬───┘         │  │
+  //      1│        │0            │  │
+  // ┌─────▼──────┐ │         ┌───▼──▼──────┐
+  // │ TrueBranch │ └─────────► FalseBranch │
+  // └────────────┘           └─────────────┘
+
+  auto* ins = initialBlock->lastIns();
+  if (!ins->isTest()) {
+    return true;
+  }
+  auto* initialTest = ins->toTest();
+
+  MBasicBlock* trueBranch = initialTest->ifTrue();
+  MBasicBlock* falseBranch = initialTest->ifFalse();
+
+  // MaybeFoldConditionBlock handles the case for two operands.
+  MBasicBlock* phiBlock;
+  if (trueBranch->numPredecessors() > 2) {
+    phiBlock = trueBranch;
+  } else if (falseBranch->numPredecessors() > 2) {
+    phiBlock = falseBranch;
+  } else {
+    return true;
+  }
+
+  MBasicBlock* testBlock = phiBlock;
+  if (testBlock->numSuccessors() == 1) {
+    if (testBlock->isLoopBackedge()) {
+      return true;
+    }
+    testBlock = testBlock->getSuccessor(0);
+    if (testBlock->numPredecessors() != 1) {
+      return true;
+    }
+  }
+
+  MOZ_ASSERT(!phiBlock->isLoopBackedge());
+
+  MPhi* phi = nullptr;
+  MTest* finalTest = nullptr;
+  if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest)) {
+    return true;
+  }
+
+  MOZ_ASSERT(phiBlock->numPredecessors() == phi->numOperands());
+
+  MBasicBlock* newTestBlock = nullptr;
+  MDefinition* newTestInput = nullptr;
+
+  // The block of each phi operand must either end with a test instruction on
+  // that phi operand or it's the sole block which ends with a goto instruction.
+  for (size_t i = 0; i < phiBlock->numPredecessors(); i++) {
+    auto* pred = phiBlock->getPredecessor(i);
+    auto* operand = phi->getOperand(i);
+
+    // Each predecessor must end with either a test or goto instruction.
+    auto* lastIns = pred->lastIns();
+    if (lastIns->isGoto() && !newTestBlock) {
+      newTestBlock = pred;
+      newTestInput = operand;
+    } else if (!lastIns->isTest()) {
+      return true;
+    }
+
+    MOZ_ASSERT(!pred->isLoopBackedge());
+  }
+
+  // Ensure we found the single goto block.
+  if (!newTestBlock) {
+    return true;
+  }
+
+  // Make sure the test block does not have any outgoing loop backedges.
+  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
+    return false;
+  }
+
+  // OK, we found the desired pattern, now transform the graph.
+
+  // Remove the phi from phiBlock.
+  phiBlock->discardPhi(*phiBlock->phisBegin());
+
+  // Create the new test instruction.
+  if (!UpdateTestSuccessors(graph.alloc(), newTestBlock, newTestInput,
+                            finalTest->ifTrue(), finalTest->ifFalse(),
+                            testBlock)) {
+    return false;
+  }
+
+  // Update all test instructions to point to the final target.
+  while (phiBlock->numPredecessors()) {
+    mozilla::DebugOnly<size_t> oldNumPred = phiBlock->numPredecessors();
+
+    auto* pred = phiBlock->getPredecessor(0);
+    auto* test = pred->lastIns()->toTest();
+    if (test->ifTrue() == phiBlock) {
+      if (!UpdateTestSuccessors(graph.alloc(), pred, test->input(),
+                                finalTest->ifTrue(), test->ifFalse(),
+                                testBlock)) {
+        return false;
+      }
+    } else {
+      MOZ_ASSERT(test->ifFalse() == phiBlock);
+      if (!UpdateTestSuccessors(graph.alloc(), pred, test->input(),
+                                test->ifTrue(), finalTest->ifFalse(),
+                                testBlock)) {
+        return false;
+      }
+    }
+
+    // Ensure we've made progress.
+    MOZ_ASSERT(phiBlock->numPredecessors() + 1 == oldNumPred);
+  }
+
+  // Remove phiBlock, if different from testBlock.
+  if (phiBlock != testBlock) {
+    testBlock->removePredecessor(phiBlock);
+    graph.removeBlock(phiBlock);
+  }
+
+  // Remove testBlock itself.
+  finalTest->ifTrue()->removePredecessor(testBlock);
+  finalTest->ifFalse()->removePredecessor(testBlock);
+  graph.removeBlock(testBlock);
+
+  return true;
+}
+
 bool jit::FoldTests(MIRGraph& graph) {
   for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
        block++) {
     if (!MaybeFoldConditionBlock(graph, *block)) {
+      return false;
+    }
+  }
+
+  for (PostorderIterator iter(graph.poBegin()); iter != graph.poEnd();) {
+    auto* block = *iter++;
+    if (!MaybeFoldTestBlock(graph, block)) {
       return false;
     }
   }
