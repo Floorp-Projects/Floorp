@@ -285,6 +285,12 @@ RTC_OBJC_EXPORT
     addTransceiverOfType:(RTCRtpMediaType)mediaType
                     init:(RTC_OBJC_TYPE(RTCRtpTransceiverInit) *)init;
 
+/** Tells the PeerConnection that ICE should be restarted. This triggers a need
+ * for negotiation and subsequent offerForConstraints:completionHandler call will act as if
+ * RTCOfferAnswerOptions::ice_restart is true.
+ */
+- (void)restartIce;
+
 /** Generate an SDP offer. */
 - (void)offerForConstraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
           completionHandler:(nullable void (^)(RTC_OBJC_TYPE(RTCSessionDescription) * _Nullable sdp,

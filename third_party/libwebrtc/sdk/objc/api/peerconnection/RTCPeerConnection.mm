@@ -537,6 +537,10 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
       nativeRtpTransceiver:nativeTransceiverOrError.MoveValue()];
 }
 
+- (void)restartIce {
+  _peerConnection->RestartIce();
+}
+
 - (void)offerForConstraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
           completionHandler:(void (^)(RTC_OBJC_TYPE(RTCSessionDescription) * sessionDescription,
                                       NSError *error))completionHandler {
