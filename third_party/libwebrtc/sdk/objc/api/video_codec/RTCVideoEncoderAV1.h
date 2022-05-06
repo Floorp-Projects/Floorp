@@ -1,5 +1,5 @@
 /*
- *  Copyright 2017 The WebRTC project authors. All Rights Reserved.
+ *  Copyright 2021 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -11,16 +11,16 @@
 #import <Foundation/Foundation.h>
 
 #import "RTCMacros.h"
-#import "RTCVideoDecoder.h"
+#import "RTCVideoEncoder.h"
 
 RTC_OBJC_EXPORT
-@interface RTC_OBJC_TYPE (RTCVideoDecoderVP9) : NSObject
+@interface RTC_OBJC_TYPE (RTCVideoEncoderAV1) : NSObject
 
-/* This returns a VP9 decoder that can be returned from a RTCVideoDecoderFactory injected into
- * RTCPeerConnectionFactory. Even though it implements the RTCVideoDecoder protocol, it can not be
+/* This returns a AV1 encoder that can be returned from a RTCVideoEncoderFactory injected into
+ * RTCPeerConnectionFactory. Even though it implements the RTCVideoEncoder protocol, it can not be
  * used independently from the RTCPeerConnectionFactory.
  */
-+ (id<RTC_OBJC_TYPE(RTCVideoDecoder)>)vp9Decoder;
++ (id<RTC_OBJC_TYPE(RTCVideoEncoder)>)av1Encoder;
 
 + (bool)isSupported;
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,15 +12,15 @@
 #import <Foundation/Foundation.h>
 
 #import "RTCMacros.h"
-#import "RTCVideoDecoderVP9.h"
+#import "RTCVideoDecoderAV1.h"
 #import "RTCWrappedNativeVideoDecoder.h"
 
-#include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
 
-@implementation RTC_OBJC_TYPE (RTCVideoDecoderVP9)
+@implementation RTC_OBJC_TYPE (RTCVideoDecoderAV1)
 
-+ (id<RTC_OBJC_TYPE(RTCVideoDecoder)>)vp9Decoder {
-  std::unique_ptr<webrtc::VideoDecoder> nativeDecoder(webrtc::VP9Decoder::Create());
++ (id<RTC_OBJC_TYPE(RTCVideoDecoder)>)av1Decoder {
+  std::unique_ptr<webrtc::VideoDecoder> nativeDecoder(webrtc::CreateLibaomAv1Decoder());
   if (nativeDecoder == nullptr) {
     return nil;
   }
@@ -29,11 +29,7 @@
 }
 
 + (bool)isSupported {
-#if defined(RTC_ENABLE_VP9)
-  return true;
-#else
-  return false;
-#endif
+  return webrtc::kIsLibaomAv1DecoderSupported;
 }
 
 @end

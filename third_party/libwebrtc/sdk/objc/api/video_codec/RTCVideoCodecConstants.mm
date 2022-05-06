@@ -15,3 +15,4 @@
 
 NSString *const kRTCVideoCodecVp8Name = @(cricket::kVp8CodecName);
 NSString *const kRTCVideoCodecVp9Name = @(cricket::kVp9CodecName);
+NSString *const kRTCVideoCodecAv1Name = @(cricket::kAv1CodecName);
