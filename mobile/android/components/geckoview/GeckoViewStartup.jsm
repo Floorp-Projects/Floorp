@@ -167,18 +167,6 @@ class GeckoViewStartup {
       }
 
       case "profile-after-change": {
-        // Parent process only.
-        // ContentPrefServiceParent is needed for e10s file picker.
-        GeckoViewUtils.addLazyGetter(this, "ContentPrefServiceParent", {
-          module: "resource://gre/modules/ContentPrefServiceParent.jsm",
-          init: cpsp => cpsp.alwaysInit(),
-          ppmm: [
-            "ContentPrefs:FunctionCall",
-            "ContentPrefs:AddObserverForName",
-            "ContentPrefs:RemoveObserverForName",
-          ],
-        });
-
         GeckoViewUtils.addLazyGetter(this, "GeckoViewRemoteDebugger", {
           module: "resource://gre/modules/GeckoViewRemoteDebugger.jsm",
           init: gvrd => gvrd.onInit(),
