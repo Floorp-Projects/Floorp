@@ -529,6 +529,12 @@ void moz_container_wayland_set_scale_factor_locked(MozContainer* container) {
 
     LOGWAYLAND("%s [%p] scale %d\n", __FUNCTION__,
                (void*)moz_container_get_nsWindow(container), scale);
+    // There is a chance that the attached wl_buffer has not yet been doubled
+    // on the main thread when scale factor changed to 2. This leads to
+    // crash with the following message:
+    // Buffer size (AxB) must be an integer multiple of the buffer_scale (2)
+    // Removing the possibly wrong wl_buffer to prevent that crash:
+    wl_surface_attach(wl_container->surface, nullptr, 0, 0);
     wl_surface_set_buffer_scale(wl_container->surface, scale);
     wl_container->buffer_scale = scale;
   }
