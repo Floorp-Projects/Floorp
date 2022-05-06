@@ -3436,7 +3436,8 @@ TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
   // - 96 on a Linux workstation
   // - 64 at win_x86_more_configs and win_x64_msvc_dbg
   // - 32 on android_arm64_rel and linux_dbg bots
-  while (current_size < 16) {
+  // - 16 on Android 64 (Nexus 5x)
+  while (current_size < 8) {
     // Double the number of tracks
     for (int i = 0; i < current_size; i++) {
       caller()->pc()->AddTransceiver(cricket::MEDIA_TYPE_VIDEO);
