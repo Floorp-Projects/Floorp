@@ -101,20 +101,6 @@ class HyperTextAccessibleBase {
               int32_t* aStartOffset = nullptr, int32_t* aEndOffset = nullptr);
 
   /**
-   * Return a rect (in dev pixels) for character at given offset relative given
-   * coordinate system.
-   */
-  virtual LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
-
-  /**
-   * Return a rect (in dev pixels) of the given text range relative given
-   * coordinate system.
-   */
-  virtual LayoutDeviceIntRect TextBounds(int32_t aStartOffset,
-                                         int32_t aEndOffset,
-                                         uint32_t aCoordType);
-
-  /**
    * Get a TextLeafPoint for a given offset in this HyperTextAccessible.
    * If the offset points to an embedded object and aDescendToEnd is true,
    * the point right at the end of this subtree will be returned instead of the

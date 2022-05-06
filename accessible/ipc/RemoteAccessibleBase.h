@@ -169,8 +169,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual LayoutDeviceIntRect Bounds() const override;
 
-  nsRect GetBoundsInAppUnits() const;
-
   virtual uint64_t State() override;
 
   virtual already_AddRefed<AccAttributes> Attributes() override;
@@ -278,7 +276,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();
-  Maybe<nsTArray<nsRect>> GetCachedCharData();
   RefPtr<const AccAttributes> GetCachedTextAttributes();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() override {
@@ -328,7 +325,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   Maybe<nsRect> RetrieveCachedBounds() const;
   bool ApplyTransform(nsRect& aBounds) const;
   void ApplyScrollOffset(nsRect& aBounds) const;
-  LayoutDeviceIntRect BoundsWithOffset(Maybe<nsRect> aOffset) const;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;
@@ -349,8 +345,6 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   friend Derived;
   friend DocAccessibleParent;
-  friend TextLeafPoint;
-  friend HyperTextAccessibleBase;
   friend class xpcAccessible;
   friend class CachedTableCellAccessible;
 

@@ -377,21 +377,7 @@ void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
 }
 
 template <class Derived>
-nsRect RemoteAccessibleBase<Derived>::GetBoundsInAppUnits() const {
-  dom::CanonicalBrowsingContext* cbc =
-      static_cast<dom::BrowserParent*>(mDoc->Manager())
-          ->GetBrowsingContext()
-          ->Top();
-  dom::BrowserParent* bp = cbc->GetBrowserParent();
-  nsPresContext* presContext =
-      bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-  return LayoutDeviceIntRect::ToAppUnits(Bounds(),
-                                         presContext->AppUnitsPerDevPixel());
-}
-
-template <class Derived>
-LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
-    Maybe<nsRect> aOffset) const {
+LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
     if (maybeBounds) {
@@ -403,18 +389,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
       dom::BrowserParent* bp = cbc->GetBrowserParent();
       nsPresContext* presContext =
           bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
-
-      if (aOffset.isSome()) {
-        // The rect we've passed in is in app units, so no conversion needed.
-        nsRect internalRect = *aOffset;
-        // XXX: Right now this is exclusively used for
-        // text bounds, which already have their zoom level
-        // applied. Remove it, because we'll multiply it back
-        // in later on.
-        internalRect.ScaleRoundOut(1 / cbc->GetFullZoom());
-        bounds.SetRectX(bounds.x + internalRect.x, internalRect.width);
-        bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
-      }
 
       Unused << ApplyTransform(bounds);
 
@@ -502,11 +476,6 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
 }
 
 template <class Derived>
-LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
-  return BoundsWithOffset(Nothing());
-}
-
-template <class Derived>
 void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
                                                  uint32_t aStartOffset,
                                                  uint32_t aLength) {
@@ -559,28 +528,6 @@ RemoteAccessibleBase<Derived>::GetCachedTextLines() {
   }
   VERIFY_CACHE(CacheDomain::Text);
   return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
-}
-
-template <class Derived>
-Maybe<nsTArray<nsRect>> RemoteAccessibleBase<Derived>::GetCachedCharData() {
-  MOZ_ASSERT(IsText());
-  if (!mCachedFields) {
-    return Nothing();
-  }
-
-  if (Maybe<const nsTArray<int32_t>&> maybeCharData =
-          mCachedFields->GetAttribute<nsTArray<int32_t>>(
-              nsGkAtoms::characterData)) {
-    const nsTArray<int32_t>& charData = *maybeCharData;
-    nsTArray<nsRect> rects;
-    for (int i = 0; i < static_cast<int32_t>(charData.Length()); i += 4) {
-      nsRect r(charData[i], charData[i + 1], charData[i + 2], charData[i + 3]);
-      rects.AppendElement(r);
-    }
-    return Some(std::move(rects));
-  }
-
-  return Nothing();
 }
 
 template <class Derived>
