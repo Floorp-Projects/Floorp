@@ -880,11 +880,6 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
     }
   }
 
-  // Make sure the test block does not have any outgoing loop backedges.
-  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
-    return false;
-  }
-
   MPhi* phi;
   MTest* finalTest;
   if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest)) {
@@ -892,6 +887,11 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
   }
 
   MOZ_ASSERT(phi->numOperands() == 2);
+
+  // Make sure the test block does not have any outgoing loop backedges.
+  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
+    return false;
+  }
 
   MDefinition* trueResult =
       phi->getOperand(phiBlock->indexForPredecessor(trueBranch));
@@ -1085,11 +1085,6 @@ static bool MaybeFoldTriangleConditionBlock(MIRGraph& graph,
     }
   }
 
-  // Make sure the test block does not have any outgoing loop backedges.
-  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
-    return false;
-  }
-
   MPhi* phi;
   MTest* finalTest;
   if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest)) {
@@ -1097,6 +1092,11 @@ static bool MaybeFoldTriangleConditionBlock(MIRGraph& graph,
   }
 
   MOZ_ASSERT(phi->numOperands() == 2);
+
+  // Make sure the test block does not have any outgoing loop backedges.
+  if (!SplitCriticalEdgesForBlock(graph, testBlock)) {
+    return false;
+  }
 
   MDefinition* trueResult;
   MDefinition* falseResult;
