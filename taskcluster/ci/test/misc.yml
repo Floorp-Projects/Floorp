@@ -63,7 +63,9 @@ test-verify:
     loopback-video: true
     max-run-time: 10800
     allow-software-gl-layers: false
-    variants: ["fission"]
+    variants:
+        - fission
+        - no-fission
     run-without-variant: false
     run-on-projects:
         by-variant:
@@ -74,7 +76,17 @@ test-verify:
                     # we prefer -qr platforms with fission, no need to run on both
                     (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    android.*: []
                     default: ['integration']
+            no-fission:
+                by-test-platform:
+                    # do not run on ccov or asan or shippable
+                    .*(-ccov|-asan|-shippable).*: []
+                    # we prefer -qr platforms with fission, no need to run on both
+                    (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
+                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    android.*: ['integration']
+                    default: []
             default: []
     built-projects-only: true
     target:
