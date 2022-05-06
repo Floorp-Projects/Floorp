@@ -310,7 +310,7 @@
     ],
     'libfuzzer_asan_release_bot_x64': [
       'libfuzzer', 'asan', 'optimize_for_fuzzing', 'openh264', 'release_bot',
-      'x64', 'no_rtc_tests'
+      'x64'
     ],
 
     # Windows
