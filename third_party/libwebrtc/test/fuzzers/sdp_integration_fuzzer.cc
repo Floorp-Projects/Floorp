@@ -31,7 +31,8 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
 
   FuzzerTest test;
   test.CreatePeerConnectionWrappers();
-  test.ConnectFakeSignaling();
+  // Note - we do not do test.ConnectFakeSignaling(); all signals
+  // generated are discarded.
 
   rtc::scoped_refptr<MockSetSessionDescriptionObserver> srd_observer(
       new rtc::RefCountedObject<MockSetSessionDescriptionObserver>());
@@ -41,6 +42,17 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
       CreateSessionDescription("offer", message, &error));
   // Note: This form of SRD takes ownership of the description.
   test.caller()->pc()->SetRemoteDescription(srd_observer, sdp.release());
+  // Wait a short time for observer to be called. Timeout is short
+  // because the fuzzer should be trying many branches.
+  EXPECT_TRUE_WAIT(srd_observer->called(), 100);
+
+  // If set-remote-description was successful, try to answer.
+  rtc::scoped_refptr<MockSetSessionDescriptionObserver> sld_observer(
+      new rtc::RefCountedObject<MockSetSessionDescriptionObserver>());
+  if (srd_observer->result()) {
+    test.caller()->pc()->SetLocalDescription(sld_observer.get());
+    EXPECT_TRUE_WAIT(sld_observer->called(), 100);
+  }
 }
 
 }  // namespace webrtc
