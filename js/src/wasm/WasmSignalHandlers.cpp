@@ -789,8 +789,6 @@ static void WasmTrapHandler(int signum, siginfo_t* info, void* context) {
 extern "C" MFBT_API bool IsSignalHandlingBroken();
 #  endif
 
-#endif  // !(JS_CODEGEN_NONE)
-
 struct InstallState {
   bool tried;
   bool success;
@@ -800,7 +798,13 @@ struct InstallState {
 static ExclusiveData<InstallState> sEagerInstallState(
     mutexid::WasmSignalInstallState);
 
+#endif  // !(JS_CODEGEN_NONE)
+
 void wasm::EnsureEagerProcessSignalHandlers() {
+#ifdef JS_CODEGEN_NONE
+  // If there is no JIT, then there should be no Wasm signal handlers.
+  return;
+#else
   auto eagerInstallState = sEagerInstallState.lock();
   if (eagerInstallState->tried) {
     return;
@@ -808,11 +812,6 @@ void wasm::EnsureEagerProcessSignalHandlers() {
 
   eagerInstallState->tried = true;
   MOZ_RELEASE_ASSERT(eagerInstallState->success == false);
-
-#if defined(JS_CODEGEN_NONE)
-  // If there is no JIT, then there should be no Wasm signal handlers.
-  return;
-#else
 
 #  if defined(ANDROID) && defined(MOZ_LINKER)
   // Signal handling is broken on some android systems.
@@ -885,6 +884,7 @@ void wasm::EnsureEagerProcessSignalHandlers() {
 #endif
 }
 
+#ifndef JS_CODEGEN_NONE
 static ExclusiveData<InstallState> sLazyInstallState(
     mutexid::WasmSignalInstallState);
 
@@ -897,7 +897,7 @@ static bool EnsureLazyProcessSignalHandlers() {
   lazyInstallState->tried = true;
   MOZ_RELEASE_ASSERT(lazyInstallState->success == false);
 
-#ifdef XP_DARWIN
+#  ifdef XP_DARWIN
   // Create the port that all JSContext threads will redirect their traps to.
   kern_return_t kret;
   kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE,
@@ -919,13 +919,17 @@ static bool EnsureLazyProcessSignalHandlers() {
     return false;
   }
   handlerThread.detach();
-#endif
+#  endif
 
   lazyInstallState->success = true;
   return true;
 }
+#endif  // JS_CODEGEN_NONE
 
 bool wasm::EnsureFullSignalHandlers(JSContext* cx) {
+#ifdef JS_CODEGEN_NONE
+  return false;
+#else
   if (cx->wasm().triedToInstallSignalHandlers) {
     return cx->wasm().haveSignalHandlers;
   }
@@ -945,7 +949,7 @@ bool wasm::EnsureFullSignalHandlers(JSContext* cx) {
     return false;
   }
 
-#ifdef XP_DARWIN
+#  ifdef XP_DARWIN
   // In addition to the process-wide signal handler setup, OSX needs each
   // thread configured to send its exceptions to sMachDebugPort. While there
   // are also task-level (i.e. process-level) exception ports, those are
@@ -963,14 +967,18 @@ bool wasm::EnsureFullSignalHandlers(JSContext* cx) {
   if (kret != KERN_SUCCESS) {
     return false;
   }
-#endif
+#  endif
 
   cx->wasm().haveSignalHandlers = true;
   return true;
+#endif
 }
 
 bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
                              uint32_t numBytes, uint8_t** newPC) {
+#ifdef JS_CODEGEN_NONE
+  return false;
+#else
   const wasm::CodeSegment* codeSegment = wasm::LookupCodeSegment(regs.pc);
   if (!codeSegment || !codeSegment->isModule()) {
     return false;
@@ -986,12 +994,12 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
   switch (trap) {
     case Trap::OutOfBounds:
       break;
-#ifdef WASM_HAS_HEAPREG
+#  ifdef WASM_HAS_HEAPREG
     case Trap::IndirectCallToNull:
       // We use the null pointer exception from loading the heapreg to
       // handle indirect calls to null.
       break;
-#endif
+#  endif
     default:
       return false;
   }
@@ -1006,7 +1014,7 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
         return false;
       }
       break;
-#ifdef WASM_HAS_HEAPREG
+#  ifdef WASM_HAS_HEAPREG
     case Trap::IndirectCallToNull:
       // Null pointer plus the appropriate offset.
       if (addr !=
@@ -1014,7 +1022,7 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
         return false;
       }
       break;
-#endif
+#  endif
     default:
       MOZ_CRASH("Should not happen");
   }
@@ -1024,10 +1032,14 @@ bool wasm::MemoryAccessTraps(const RegisterState& regs, uint8_t* addr,
   activation->startWasmTrap(trap, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;
+#endif
 }
 
 bool wasm::HandleIllegalInstruction(const RegisterState& regs,
                                     uint8_t** newPC) {
+#ifdef JS_CODEGEN_NONE
+  return false;
+#else
   const wasm::CodeSegment* codeSegment = wasm::LookupCodeSegment(regs.pc);
   if (!codeSegment || !codeSegment->isModule()) {
     return false;
@@ -1046,4 +1058,5 @@ bool wasm::HandleIllegalInstruction(const RegisterState& regs,
   activation->startWasmTrap(trap, bytecode.offset(), regs);
   *newPC = segment.trapCode();
   return true;
+#endif
 }
