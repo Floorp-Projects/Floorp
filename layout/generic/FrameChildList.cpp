@@ -22,8 +22,6 @@ const char* ChildListName(FrameChildListID aListID) {
       return "CaptionList";
     case kColGroupList:
       return "ColGroupList";
-    case kSelectPopupList:
-      return "SelectPopupList";
     case kAbsoluteList:
       return "AbsoluteList";
     case kFixedList:

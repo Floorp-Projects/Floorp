@@ -35,7 +35,6 @@ enum FrameChildListID {
   kPopupList,
   kCaptionList,
   kColGroupList,
-  kSelectPopupList,
   kAbsoluteList,
   kFixedList,
   kOverflowList,
