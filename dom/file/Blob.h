@@ -101,8 +101,8 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
       const GlobalObject& aGlobal, const Optional<Sequence<BlobPart>>& aData,
       const BlobPropertyBag& aBag, ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   uint64_t GetSize(ErrorResult& aRv);
 

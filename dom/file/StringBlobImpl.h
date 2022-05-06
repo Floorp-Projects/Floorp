@@ -43,7 +43,7 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
  private:
   StringBlobImpl(const nsACString& aData, const nsAString& aContentType);
 
-  ~StringBlobImpl();
+  ~StringBlobImpl() override;
 
   nsCString mData;
 };

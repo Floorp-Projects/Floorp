@@ -36,7 +36,7 @@ class TemporaryIPCBlobChild final : public PTemporaryIPCBlobChild {
                   const nsACString& aContentType, PRFileDesc* aFD);
 
  private:
-  ~TemporaryIPCBlobChild();
+  ~TemporaryIPCBlobChild() override;
 
   mozilla::ipc::IPCResult RecvFileDesc(const FileDescriptor& aFD);
 
