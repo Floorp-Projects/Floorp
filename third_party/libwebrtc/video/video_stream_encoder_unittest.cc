@@ -7923,4 +7923,65 @@ TEST_F(VideoStreamEncoderTest, EncoderResolutionsExposedInSimulcast) {
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest,
+       QualityScalingNotAllowed_QualityScalingDisabled) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Disable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = false;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+
+#if !defined(WEBRTC_IOS)
+// TODO(bugs.webrtc.org/12401): Disabled because WebRTC-Video-QualityScaling is
+// disabled by default on iOS.
+TEST_F(VideoStreamEncoderTest, QualityScalingAllowed_QualityScalingEnabled) {
+  VideoEncoderConfig video_encoder_config = video_encoder_config_.Copy();
+
+  // Disable scaling settings in encoder info.
+  fake_encoder_.SetQualityScaling(false);
+  // Enable quality scaling in encoder config.
+  video_encoder_config.is_quality_scaling_allowed = true;
+  ConfigureEncoder(std::move(video_encoder_config));
+
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps),
+      DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+
+  test::FrameForwarder source;
+  video_stream_encoder_->SetSource(
+      &source, webrtc::DegradationPreference::MAINTAIN_FRAMERATE);
+  EXPECT_THAT(source.sink_wants(), UnlimitedSinkWants());
+  EXPECT_FALSE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  source.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+  video_stream_encoder_->TriggerQualityLow();
+  EXPECT_TRUE(stats_proxy_->GetStats().bw_limited_resolution);
+
+  video_stream_encoder_->Stop();
+}
+#endif
+
 }  // namespace webrtc
