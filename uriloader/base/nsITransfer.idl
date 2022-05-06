@@ -11,6 +11,7 @@ interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
 interface nsIReferrerInfo;
+interface nsIHttpChannel;
 webidl BrowsingContext;
 
 [scriptable, uuid(37ec75d3-97ad-4da8-afaa-eabe5b4afd73)]
@@ -74,25 +75,28 @@ interface nsITransfer : nsIWebProgressListener2 {
     /**
      * Same as init, but allows for passing the browsingContext
      * which will allow for opening the download with the same
-     * userContextId
+     * userContextId and auth header.
      *
      * @param aBrowsingContext BrowsingContext of the initiating document.
      *
      * @param aHandleInternally Set to true if the download should be opened within
      *                          the browser.
+     * @param aHttpChannel Channel of the initiating document.
      */
     void initWithBrowsingContext(in nsIURI aSource,
-                                 in nsIURI aTarget,
-                                 in AString aDisplayName,
-                                 in nsIMIMEInfo aMIMEInfo,
-                                 in PRTime startTime,
-                                 in nsIFile aTempFile,
-                                 in nsICancelable aCancelable,
-                                 in boolean aIsPrivate,
-                                 in long aDownloadClassification,
-                                 in nsIReferrerInfo aReferrerInfo,
-                                 in BrowsingContext aBrowsingContext,
-                                 in boolean aHandleInternally);
+                                  in nsIURI aTarget,
+                                    in AString aDisplayName,
+                                    in nsIMIMEInfo aMIMEInfo,
+                                    in PRTime startTime,
+                                    in nsIFile aTempFile,
+                                    in nsICancelable aCancelable,
+                                    in boolean aIsPrivate,
+                                    in long aDownloadClassification,
+                                    in nsIReferrerInfo aReferrerInfo,
+                                    in BrowsingContext aBrowsingContext,
+                                    in boolean aHandleInternally,
+                                    in nsIHttpChannel aHttpChannel);
+
 
     /*
      * Used to notify the transfer object of the hash of the downloaded file.
