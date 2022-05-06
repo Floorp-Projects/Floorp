@@ -480,6 +480,7 @@ void Connection::OnReadPacket(const char* data,
     // If this is a STUN response, then update the writable bit.
     // Log at LS_INFO if we receive a ping on an unwritable connection.
     rtc::LoggingSeverity sev = (!writable() ? rtc::LS_INFO : rtc::LS_VERBOSE);
+    msg->ValidateMessageIntegrity(remote_candidate().password());
     switch (msg->type()) {
       case STUN_BINDING_REQUEST:
         RTC_LOG_V(sev) << ToString() << ": Received "
@@ -505,8 +506,7 @@ void Connection::OnReadPacket(const char* data,
       // id's match.
       case STUN_BINDING_RESPONSE:
       case STUN_BINDING_ERROR_RESPONSE:
-        if (msg->ValidateMessageIntegrity(data, size,
-                                          remote_candidate().password())) {
+        if (msg->IntegrityOk()) {
           requests_.CheckResponse(msg.get());
         }
         // Otherwise silently discard the response message.
@@ -523,8 +523,7 @@ void Connection::OnReadPacket(const char* data,
         break;
       case GOOG_PING_RESPONSE:
       case GOOG_PING_ERROR_RESPONSE:
-        if (msg->ValidateMessageIntegrity32(data, size,
-                                            remote_candidate().password())) {
+        if (msg->IntegrityOk()) {
           requests_.CheckResponse(msg.get());
         }
         break;

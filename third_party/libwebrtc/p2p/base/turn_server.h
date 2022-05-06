@@ -278,7 +278,7 @@ class TurnServer : public sigslot::has_slots<> {
 
   bool GetKey(const StunMessage* msg, std::string* key);
   bool CheckAuthorization(TurnServerConnection* conn,
-                          const StunMessage* msg,
+                          StunMessage* msg,
                           const char* data,
                           size_t size,
                           const std::string& key);
