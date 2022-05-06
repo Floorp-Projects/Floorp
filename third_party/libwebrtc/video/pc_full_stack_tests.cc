@@ -1738,9 +1738,9 @@ TEST(PCFullStackTest, MAYBE_LargeRoomVP8_50thumb) {
 }
 */
 
+/*
 class PCDualStreamsTest : public ::testing::TestWithParam<int> {};
 
-/*
 // Disable dual video test on mobile device becuase it's too heavy.
 // TODO(bugs.webrtc.org/9840): Investigate why is this test flaky on MAC.
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS) && !defined(WEBRTC_MAC)
@@ -1842,10 +1842,10 @@ TEST_P(PCDualStreamsTest, Conference_Restricted) {
   auto fixture = CreateVideoQualityTestFixture();
   fixture->RunWithAnalyzer(dual_streams);
 }
-*/
 
 INSTANTIATE_TEST_SUITE_P(PCFullStackTest,
                          PCDualStreamsTest,
                          ::testing::Values(0, 1));
+*/
 
 }  // namespace webrtc
