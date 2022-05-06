@@ -205,10 +205,36 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
 
     // Enabled the pre-amplifier. It amplifies the capture signal
     // before any other processing is done.
+    // TODO(webrtc:5298): Deprecate and use the pre-gain functionality in
+    // capture_level_adjustment instead.
     struct PreAmplifier {
       bool enabled = false;
       float fixed_gain_factor = 1.f;
     } pre_amplifier;
+
+    // Functionality for general level adjustment in the capture pipeline. This
+    // should not be used together with the legacy PreAmplifier functionality.
+    struct CaptureLevelAdjustment {
+      bool operator==(const CaptureLevelAdjustment& rhs) const;
+      bool operator!=(const CaptureLevelAdjustment& rhs) const {
+        return !(*this == rhs);
+      }
+      bool enabled = false;
+      // The `pre_gain_factor` scales the signal before any processing is done.
+      float pre_gain_factor = 1.f;
+      // The `post_gain_factor` scales the signal after all processing is done.
+      float post_gain_factor = 1.f;
+      struct AnalogMicGainEmulation {
+        bool operator==(const AnalogMicGainEmulation& rhs) const;
+        bool operator!=(const AnalogMicGainEmulation& rhs) const {
+          return !(*this == rhs);
+        }
+        bool enabled = false;
+        // Initial analog gain level to use for the emulated analog gain. Must
+        // be in the range [0...255].
+        int initial_level = 255;
+      } analog_mic_gain_emulation;
+    } capture_level_adjustment;
 
     struct HighPassFilter {
       bool enabled = false;
@@ -380,6 +406,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       kPlayoutVolumeChange,
       kCustomRenderProcessingRuntimeSetting,
       kPlayoutAudioDeviceChange,
+      kCapturePostGain,
       kCaptureOutputUsed
     };
 
@@ -393,8 +420,11 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     ~RuntimeSetting() = default;
 
     static RuntimeSetting CreateCapturePreGain(float gain) {
-      RTC_DCHECK_GE(gain, 1.f) << "Attenuation is not allowed.";
       return {Type::kCapturePreGain, gain};
+    }
+
+    static RuntimeSetting CreateCapturePostGain(float gain) {
+      return {Type::kCapturePostGain, gain};
     }
 
     // Corresponds to Config::GainController1::compression_gain_db, but for

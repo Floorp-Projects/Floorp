@@ -599,8 +599,23 @@ void AecDumpBasedSimulator::HandleMessage(
   RTC_CHECK(ap_.get());
   if (msg.has_capture_pre_gain()) {
     // Handle capture pre-gain runtime setting only if not overridden.
-    if ((!settings_.use_pre_amplifier || *settings_.use_pre_amplifier) &&
-        !settings_.pre_amplifier_gain_factor) {
+    const bool pre_amplifier_overridden =
+        (!settings_.use_pre_amplifier || *settings_.use_pre_amplifier) &&
+        !settings_.pre_amplifier_gain_factor;
+    const bool capture_level_adjustment_overridden =
+        (!settings_.use_capture_level_adjustment ||
+         *settings_.use_capture_level_adjustment) &&
+        !settings_.pre_gain_factor;
+    if (pre_amplifier_overridden || capture_level_adjustment_overridden) {
+      ap_->SetRuntimeSetting(
+          AudioProcessing::RuntimeSetting::CreateCapturePreGain(
+              msg.capture_pre_gain()));
+    }
+  } else if (msg.has_capture_post_gain()) {
+    // Handle capture post-gain runtime setting only if not overridden.
+    if ((!settings_.use_capture_level_adjustment ||
+         *settings_.use_capture_level_adjustment) &&
+        !settings_.post_gain_factor) {
       ap_->SetRuntimeSetting(
           AudioProcessing::RuntimeSetting::CreateCapturePreGain(
               msg.capture_pre_gain()));
