@@ -35,7 +35,7 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
   }
 
  protected:
-  ~TemporaryFileBlobImpl();
+  ~TemporaryFileBlobImpl() override;
 
  private:
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,

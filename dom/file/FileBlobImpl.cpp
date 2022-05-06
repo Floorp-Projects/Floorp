@@ -178,7 +178,7 @@ class FileBlobImpl::GetTypeRunnable final : public WorkerMainThreadRunnable {
   }
 
  private:
-  ~GetTypeRunnable() = default;
+  ~GetTypeRunnable() override = default;
 
   RefPtr<FileBlobImpl> mBlobImpl;
   const MutexAutoLock& mProofOfLock;

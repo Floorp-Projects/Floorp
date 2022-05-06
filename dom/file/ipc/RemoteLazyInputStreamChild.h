@@ -70,7 +70,7 @@ class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
   void Migrated();
 
  private:
-  ~RemoteLazyInputStreamChild();
+  ~RemoteLazyInputStreamChild() override;
 
   // Raw pointers because these streams keep this actor alive. When the last
   // stream is unregister, the actor will be deleted. This list is protected by

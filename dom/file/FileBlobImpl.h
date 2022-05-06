@@ -68,7 +68,7 @@ class FileBlobImpl : public BlobImpl {
 
   void GetType(nsAString& aType) override;
 
-  virtual void GetBlobImplType(nsAString& aBlobImplType) const override;
+  void GetBlobImplType(nsAString& aBlobImplType) const override;
 
   size_t GetAllocationSize() const override { return 0; }
 
@@ -83,8 +83,8 @@ class FileBlobImpl : public BlobImpl {
     return nullptr;
   }
 
-  virtual void CreateInputStream(nsIInputStream** aInputStream,
-                                 ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aInputStream,
+                         ErrorResult& aRv) override;
 
   int64_t GetFileId() override { return mFileId; }
 
@@ -116,7 +116,7 @@ class FileBlobImpl : public BlobImpl {
   }
 
  protected:
-  ~FileBlobImpl() = default;
+  ~FileBlobImpl() override = default;
 
   // Create slice
   FileBlobImpl(const FileBlobImpl* aOther, uint64_t aStart, uint64_t aLength,

@@ -56,8 +56,8 @@ class File final : public Blob {
 
   // WebIDL methods
 
-  virtual JSObject* WrapObject(JSContext* cx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* cx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   // File constructor
   static already_AddRefed<File> Constructor(const GlobalObject& aGlobal,
@@ -90,13 +90,13 @@ class File final : public Blob {
   void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv);
 
  protected:
-  virtual bool HasFileInterface() const override { return true; }
+  bool HasFileInterface() const override { return true; }
 
  private:
   // File constructor should never be used directly. Use Blob::Create or
   // File::Create.
   File(nsIGlobalObject* aGlobal, BlobImpl* aImpl);
-  ~File();
+  ~File() override;
 };
 
 }  // namespace dom
