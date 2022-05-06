@@ -5940,10 +5940,6 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_DISPLAYCHANGE: {
       ScreenHelperWin::RefreshScreens();
-      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-      if (gfxInfo) {
-        gfxInfo->RefreshMonitors();
-      }
       if (mWidgetListener) {
         mWidgetListener->UIResolutionChanged();
       }
