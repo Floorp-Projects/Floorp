@@ -39,13 +39,14 @@ class ScalabilityStructureFullSvc : public ScalableVideoController {
  private:
   enum FramePattern {
     kNone,
+    kKey,
     kDeltaT2A,
     kDeltaT1,
     kDeltaT2B,
     kDeltaT0,
   };
   static constexpr absl::string_view kFramePatternNames[] = {
-      "None", "DeltaT2A", "DeltaT1", "DeltaT2B", "DeltaT0"};
+      "None", "Key", "DeltaT2A", "DeltaT1", "DeltaT2B", "DeltaT0"};
   static constexpr int kMaxNumSpatialLayers = 3;
   static constexpr int kMaxNumTemporalLayers = 3;
 
