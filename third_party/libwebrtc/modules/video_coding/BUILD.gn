@@ -173,6 +173,7 @@ rtc_library("video_coding") {
     "../../api:sequence_checker",
     "../../api/units:data_rate",
     "../../api/units:time_delta",
+    "../../api/units:timestamp",
     "../../api/video:builtin_video_bitrate_allocator_factory",
     "../../api/video:encoded_frame",
     "../../api/video:encoded_image",
