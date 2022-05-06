@@ -119,6 +119,14 @@ For [Ninja][ninja] project files generated in `out/Default`:
 $ ninja -C out/Default
 ```
 
+To build everything in the generated folder (`out/Default`):
+
+```
+$ ninja all -C out/Default
+```
+
+See [Ninja build rules][ninja-build-rules] to read more about difference between `ninja` and `ninja all`.
+
 
 ## Using Another Build System
 
@@ -262,6 +270,7 @@ Target name `turnserver`. Used for unit tests.
 
 
 [ninja]: https://ninja-build.org/
+[ninja-build-rules]: https://gn.googlesource.com/gn/+/master/docs/reference.md#the-all-and-default-rules
 [gn]: https://gn.googlesource.com/gn/+/master/README.md
 [gn-doc]: https://gn.googlesource.com/gn/+/master/docs/reference.md#IDE-options
 [webrtc-android-development]: https://webrtc.googlesource.com/src/+/refs/heads/master/docs/native-code/android/index.md
