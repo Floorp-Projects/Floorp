@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
-  waitForEvent: "chrome://remote/content/marionette/sync.js",
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
 });
 
@@ -164,8 +164,8 @@ class WindowManager {
    */
   async focusWindow(win) {
     if (Services.focus.activeWindow != win) {
-      let activated = waitForEvent(win, "activate");
-      let focused = waitForEvent(win, "focus", { capture: true });
+      let activated = new EventPromise(win, "activate");
+      let focused = new EventPromise(win, "focus", { capture: true });
 
       win.focus();
 
@@ -208,8 +208,8 @@ class WindowManager {
         // race condition when promptly focusing to the original window again.
         const win = openerWindow.OpenBrowserWindow({ private: isPrivate });
 
-        const activated = waitForEvent(win, "activate");
-        const focused = waitForEvent(win, "focus", { capture: true });
+        const activated = new EventPromise(win, "activate");
+        const focused = new EventPromise(win, "focus", { capture: true });
         const startup = waitForObserverTopic(
           "browser-delayed-startup-finished",
           {
