@@ -68,10 +68,9 @@ std::vector<VideoStream> CreateVideoStreams(
             : DefaultVideoStreamFactory::kMaxBitratePerStream[i];
     max_bitrate_bps = std::min(bitrate_left_bps, max_bitrate_bps);
 
-    int target_bitrate_bps =
-        stream.target_bitrate_bps > 0
-            ? stream.target_bitrate_bps
-            : DefaultVideoStreamFactory::kMaxBitratePerStream[i];
+    int target_bitrate_bps = stream.target_bitrate_bps > 0
+                                 ? stream.target_bitrate_bps
+                                 : max_bitrate_bps;
     target_bitrate_bps = std::min(max_bitrate_bps, target_bitrate_bps);
 
     if (stream.min_bitrate_bps > 0) {
@@ -91,7 +90,8 @@ std::vector<VideoStream> CreateVideoStreams(
     }
     stream_settings[i].target_bitrate_bps = target_bitrate_bps;
     stream_settings[i].max_bitrate_bps = max_bitrate_bps;
-    stream_settings[i].active = stream.active;
+    stream_settings[i].active =
+        encoder_config.number_of_streams == 1 || stream.active;
 
     bitrate_left_bps -= stream_settings[i].target_bitrate_bps;
   }
