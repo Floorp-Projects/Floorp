@@ -454,6 +454,121 @@
          Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
     <string name="external_app_prompt">Selle lingi avamiseks äpis %2$s võid lahkuda %1$sest.</string>
 
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Linki avada suutva äpi otsimine</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">Ükski sinu seadmes olev äpp ei saa seda linki avada. Võid lahkuda %1$sest, et otsida äpist %2$s sobivat äppi.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Kas väljuda privaatsest veebilehitsemisest?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">Faili %1$s allalaadimine on lõpetatud</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Ava</string>
+
+    <string name="error_hostLookup_title">Serverit ei leitud</string>
+
+    <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">Tere tulemast %1$sesse!</string>
+
+    <!-- Onboarding: Description -->
+    <string name="onboarding_description">Järgmise taseme privaatne lehitsemine, puhuks kui vajad seda</string>
+
+    <!-- Onboarding: Incognito Title -->
+    <string name="onboarding_incognito_title">Kus inkognito kohtub nähtamatusega</string>
+
+    <!-- Onboarding: Incognito Description -->
+    <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
+    <string name="onboarding_incognito_description">%s on esmajoones privaatsusele orienteeritud brauser, millesse on sisse ehitatud eriti tugev jälitamise ja küpsiste vastane kaitse.</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">Lehitse nii nagu seda poleks kunagi juhtunud</string>
+
+    <!-- Onboarding: History Description -->
+    <string moz:removedIn="100" name="onboarding_history_description" tools:ignore="UnusedResources">Üks puudutus kustutab lehitsemise ajaloo ja küpsised ning takistab reklaamidel sinu jälitamist.</string>
+    <string name="onboarding_history_description2">Üks puudutus kustutab lehitsemise ajaloo ja küpsised ning takistab reklaamidel sinu jälitamist.</string>
+
+    <!-- Onboarding: Protection Title -->
+    <string name="onboarding_protection_title">Privaatsus, mis sobib igas olukorras</string>
+
+    <!-- Onboarding: Protection Description -->
+    <string name="onboarding_protection_description">Kui sinu lehitsemine vajab muutust, siis on privaatsuse taset lihtne suurendada või vähendada.</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">Alusta veebilehitsemist</string>
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Tugevda oma privaatsust</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Vii privaatne veebilehitsemine uuele tasemele. Bloki reklaamid ja muu sisu, mis võib sinu tegevust erinevatel saitidel jälitada ja lehtede laadimist aeglustada.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Sinu otsing, sinu moodi</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Otsid midagi muud? Vali sätetes mõni teine vaikeotsingumootor.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Lisa otsetee oma avaekraanile</string>
+
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Naase kiiresti oma lemmiksaitidele %1$ses. Lihtsalt vali %1$se menüüst \&quot;Lisa avaekraanile\&quot;.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Muuda privaatsus harjumuseks</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Määra %1$s oma vaikebrauseriks ja kasuta teistest äppidest veebilehtede avamisel privaatse lehitsemise eeliseid.</string>
+
+    <string name="firstrun_close_button">Olgu, sain aru!</string>
+    <string name="firstrun_skip_button">Jäta vahele</string>
+    <string name="firstrun_next_button">Järgmine</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Lisa</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">JAH</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Loobu</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">EI</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Otsetee avaneb keelatud täiustatud jälitamisvastase kaitsega</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Privaatse veebilehitsemise seanss</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Teavitused võimaldavad sul %1$se seansi kustutada puudutusega. Sa ei pea äppi avama ega vaatama, mis brauseris töötab.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Kustuta lehitsemise ajalugu</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Laadi alla Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s on Mozilla ja teiste kaasautorite poolt loodud vaba ja avatud tarkvara.]]></string>
+
     <!-- Tips displayed on the home view -->
 
     <!-- Tracking protection bottom sheet -->

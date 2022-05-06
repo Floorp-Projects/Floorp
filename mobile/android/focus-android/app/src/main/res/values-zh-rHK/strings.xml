@@ -236,6 +236,9 @@
     <string name="preference_privacy_should_block_cookies_third_party_only_option">淨係阻擋第三方 Cookies</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">好吖，唔該晒</string>
 
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">用指紋去解鎖個 app</string>
+
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">隱形</string>
@@ -505,6 +508,9 @@
 
     <!-- Tips displayed on the home view -->
 
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">關閉喺開始畫面上嘅貼士</string>
+
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">已開啟新嘅 tab</string>
 
@@ -581,5 +587,9 @@
     <string name="preference_dark_theme">深色</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
     <string name="preference_auto_battery_theme">按省電模式決定</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">關閉 tab</string>
 
     </resources>
