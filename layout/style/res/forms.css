@@ -269,9 +269,6 @@ select > button {
   inline-size: 12px;
   white-space: nowrap;
   position: static;
-  background-image: url("arrow.gif");
-  background-repeat: no-repeat;
-  background-position: center;
   appearance: auto;
   -moz-default-appearance: -moz-menulist-arrow-button;
 
@@ -285,26 +282,6 @@ select > button {
     display frame, so the dropmarker is what gets the vertical-align.
   */
   vertical-align: top;
-}
-
-select > button:active {
-  background-image: url("arrowd.gif") !important;
-}
-
-select > button[orientation="left"] {
-  background-image: url("arrow-left.gif") !important;
-}
-
-select > button[orientation="right"] {
-  background-image: url("arrow-right.gif") !important;
-}
-
-select > button[orientation="left"]:active {
-  background-image: url("arrowd-left.gif") !important;
-}
-
-select > button[orientation="right"]:active {
-  background-image: url("arrowd-right.gif") !important;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
