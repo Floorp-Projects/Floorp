@@ -153,7 +153,7 @@ interface nsIMIMEService : nsISupports {
      *  - Whitespace and periods are removed from the beginning and end.
      *  - Unless VALIDATE_DONT_COLLAPSE_WHITESPACE is specified, multiple
      *    consecutive whitespace characters are collapsed to a single space
-     *    character (' ').
+     *    character, either ' ' or an ideographic space 0x3000 if present.
      *  - Unless VALIDATE_DONT_TRUNCATE is specified, the filename is truncated
      *    to a maximum length, preserving the extension if possible.
      *
