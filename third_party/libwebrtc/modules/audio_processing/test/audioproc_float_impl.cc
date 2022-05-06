@@ -65,11 +65,11 @@ ABSL_FLAG(bool,
 ABSL_FLAG(int,
           aec,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the echo canceller");
+          "Activate (1) or deactivate (0) the echo canceller");
 ABSL_FLAG(int,
           aecm,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the mobile echo controller");
+          "Activate (1) or deactivate (0) the mobile echo controller");
 ABSL_FLAG(int,
           ed,
           kParameterNotSpecifiedValue,
@@ -81,39 +81,40 @@ ABSL_FLAG(std::string,
 ABSL_FLAG(int,
           agc,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the AGC");
+          "Activate (1) or deactivate (0) the AGC");
 ABSL_FLAG(int,
           agc2,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the AGC2");
+          "Activate (1) or deactivate (0) the AGC2");
 ABSL_FLAG(int,
           pre_amplifier,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the pre amplifier");
+          "Activate (1) or deactivate (0) the pre amplifier");
 ABSL_FLAG(int,
           hpf,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the high-pass filter");
+          "Activate (1) or deactivate (0) the high-pass filter");
 ABSL_FLAG(int,
           ns,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the noise suppressor");
+          "Activate (1) or deactivate (0) the noise suppressor");
 ABSL_FLAG(int,
           ts,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the transient suppressor");
+          "Activate (1), deactivate (0) or activate the transient suppressor "
+          "with continuous key events (2)");
 ABSL_FLAG(int,
           analog_agc,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the transient suppressor");
+          "Activate (1) or deactivate (0) the analog AGC");
 ABSL_FLAG(int,
           vad,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the voice activity detector");
+          "Activate (1) or deactivate (0) the voice activity detector");
 ABSL_FLAG(int,
           le,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the level estimator");
+          "Activate (1) or deactivate (0) the level estimator");
 ABSL_FLAG(bool,
           all_default,
           false,
@@ -135,7 +136,7 @@ ABSL_FLAG(int,
 ABSL_FLAG(int,
           agc_limiter,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the level estimator");
+          "Activate (1) or deactivate (0) the level estimator");
 ABSL_FLAG(int,
           agc_compression_gain,
           kParameterNotSpecifiedValue,
@@ -143,7 +144,7 @@ ABSL_FLAG(int,
 ABSL_FLAG(int,
           agc2_enable_adaptive_gain,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) the AGC2 adaptive gain");
+          "Activate (1) or deactivate (0) the AGC2 adaptive gain");
 ABSL_FLAG(float,
           agc2_fixed_gain_db,
           kParameterNotSpecifiedValue,
@@ -177,7 +178,7 @@ ABSL_FLAG(int,
 ABSL_FLAG(int,
           use_stream_delay,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) reporting the stream delay");
+          "Activate (1) or deactivate (0) reporting the stream delay");
 ABSL_FLAG(int,
           stream_drift_samples,
           kParameterNotSpecifiedValue,
@@ -186,16 +187,16 @@ ABSL_FLAG(int, initial_mic_level, 100, "Initial mic level (0-255)");
 ABSL_FLAG(int,
           simulate_mic_gain,
           0,
-          "Activate (1) or deactivate(0) the analog mic gain simulation");
+          "Activate (1) or deactivate (0) the analog mic gain simulation");
 ABSL_FLAG(int,
           multi_channel_render,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) multi-channel render processing in "
+          "Activate (1) or deactivate (0) multi-channel render processing in "
           "APM pipeline");
 ABSL_FLAG(int,
           multi_channel_capture,
           kParameterNotSpecifiedValue,
-          "Activate (1) or deactivate(0) multi-channel capture processing in "
+          "Activate (1) or deactivate (0) multi-channel capture processing in "
           "APM pipeline");
 ABSL_FLAG(int,
           simulated_mic_kind,
@@ -415,7 +416,7 @@ SimulationSettings CreateSettings() {
                       &settings.use_pre_amplifier);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_hpf), &settings.use_hpf);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_ns), &settings.use_ns);
-  SetSettingIfFlagSet(absl::GetFlag(FLAGS_ts), &settings.use_ts);
+  SetSettingIfSpecified(absl::GetFlag(FLAGS_ts), &settings.use_ts);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_analog_agc),
                       &settings.use_analog_agc);
   SetSettingIfFlagSet(absl::GetFlag(FLAGS_vad), &settings.use_vad);
