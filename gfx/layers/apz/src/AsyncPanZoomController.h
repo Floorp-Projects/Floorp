@@ -573,6 +573,8 @@ class AsyncPanZoomController {
   // Returns the cached current frame time.
   SampleTime GetFrameTime() const;
 
+  bool IsZero(const ParentLayerPoint& aPoint) const;
+
  private:
   // Get whether the horizontal content of the honoured target of auto-dir
   // scrolling starts from right to left. If you don't know of auto-dir
