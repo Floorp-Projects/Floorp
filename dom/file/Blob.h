@@ -81,7 +81,7 @@ class Blob : public nsSupportsWeakReference, public nsWrapperCache {
 
   void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) const;
 
-  int64_t GetFileId();
+  int64_t GetFileId() const;
 
   // A utility function that enforces the spec constraints on the type of a
   // blob: no codepoints outside the ASCII range (otherwise type becomes empty)

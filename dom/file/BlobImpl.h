@@ -85,7 +85,7 @@ class BlobImpl : public nsISupports {
   virtual void CreateInputStream(nsIInputStream** aStream,
                                  ErrorResult& aRv) const = 0;
 
-  virtual int64_t GetFileId() = 0;
+  virtual int64_t GetFileId() const = 0;
 
   nsresult GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                        nsACString& aContentType, nsACString& aCharset);
