@@ -27,10 +27,22 @@ const MOCK_STORAGE = [{
   "cc-exp-year": 2022,
 }];
 
+const MOCK_STORAGE_EXPECTED_FILL = [{
+  "cc-name": "Test Name",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": "04",
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": "12",
+  "cc-exp-year": 2022,
+}]
+
 const MOCK_STORAGE_PREVIEW = [{
   "cc-name": "Test Name",
   "cc-number": "************1045",
-  "cc-exp-month": "4",
+  "cc-exp-month": "04",
   "cc-exp-year": "2017",
 }, {
   "cc-name": "Timothy Berners-Lee",
@@ -138,7 +150,7 @@ add_task(async function check_filled_highlight() {
   synthesizeKey("KEY_Enter");
   await osKeyStoreLoginShown;
   let elements = document.querySelectorAll("input, select");
-  let profile = MOCK_STORAGE[0];
+  let profile = MOCK_STORAGE_EXPECTED_FILL[0];
   await setupListeners(elements, profile);
   await checkMultipleCCNumberFormStyle(profile, false);
 });

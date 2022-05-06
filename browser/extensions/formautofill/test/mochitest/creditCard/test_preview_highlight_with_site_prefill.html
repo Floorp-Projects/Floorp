@@ -30,13 +30,25 @@ const MOCK_STORAGE = [{
 const MOCK_STORAGE_PREVIEW = [{
   "cc-name": "Test Name",
   "cc-number": "************1045",
-  "cc-exp-month": "4",
+  "cc-exp-month": "04",
   "cc-exp-year": "2017",
 }, {
   "cc-name": "Timothy Berners-Lee",
   "cc-number": "************7870",
   "cc-exp-month": "12",
   "cc-exp-year": "2022",
+}];
+
+const MOCK_STORAGE_EXPECTED_FILL = [{
+  "cc-name": "Test Name",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": "04",
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": "12",
+  "cc-exp-year": 2022,
 }];
 
 initPopupListener();
@@ -77,9 +89,9 @@ add_task(async function check_filled_highlight() {
   await triggerPopupAndHoverItem("#cc-number", 0);
   let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
   // filled 1st credit card option
-  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_STORAGE_EXPECTED_FILL[0]);
   await osKeyStoreLoginShown;
-  await checkFormFieldsStyle(MOCK_STORAGE[0], false);
+  await checkFormFieldsStyle(MOCK_STORAGE_EXPECTED_FILL[0], false);
 });
 </script>
 <p id="display"></p>
