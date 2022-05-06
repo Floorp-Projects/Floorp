@@ -135,11 +135,13 @@ struct ScreenDetails {
   DesktopIntRect availRectDisplayPix;
   int32_t pixelDepth;
   int32_t colorDepth;
+  uint32_t refreshRate; // In Hz, or 0 if not known.
   DesktopToLayoutDeviceScale contentsScaleFactor;
   CSSToLayoutDeviceScale defaultCSSScaleFactor;
   float dpi;
   ScreenOrientation orientation;
   uint16_t orientationAngle;
+  bool isPseudoDisplay;
 };
 
 struct DimensionInfo
