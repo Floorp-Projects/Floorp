@@ -38,8 +38,8 @@ int GenerateUniqueId() {
 }
 
 // Define proxy for DataChannelInterface.
-BEGIN_SIGNALING_PROXY_MAP(DataChannel)
-PROXY_SIGNALING_THREAD_DESTRUCTOR()
+BEGIN_PRIMARY_PROXY_MAP(DataChannel)
+PROXY_PRIMARY_THREAD_DESTRUCTOR()
 PROXY_METHOD1(void, RegisterObserver, DataChannelObserver*)
 PROXY_METHOD0(void, UnregisterObserver)
 BYPASS_PROXY_CONSTMETHOD0(std::string, label)
