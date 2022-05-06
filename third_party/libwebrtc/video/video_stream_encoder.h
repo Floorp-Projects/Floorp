@@ -34,6 +34,7 @@
 #include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_input_state_provider.h"
 #include "modules/video_coding/utility/frame_dropper.h"
+#include "modules/video_coding/utility/qp_parser.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/numerics/exp_filter.h"
 #include "rtc_base/race_checker.h"
@@ -442,6 +443,11 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   // Default bitrate limits in EncoderInfoSettings allowed.
   const bool default_limits_allowed_;
+
+  // QP parser is used to extract QP value from encoded frame when that is not
+  // provided by encoder.
+  QpParser qp_parser_;
+  const bool qp_parsing_allowed_;
 
   // Public methods are proxied to the task queues. The queues must be destroyed
   // first to make sure no tasks run that use other members.

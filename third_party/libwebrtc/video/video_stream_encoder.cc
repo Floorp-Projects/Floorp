@@ -658,6 +658,8 @@ VideoStreamEncoder::VideoStreamEncoder(
                                     /*source=*/nullptr),
       default_limits_allowed_(
           !field_trial::IsEnabled("WebRTC-DefaultBitrateLimitsKillSwitch")),
+      qp_parsing_allowed_(
+          !field_trial::IsEnabled("WebRTC-QpParsingKillSwitch")),
       encoder_queue_(task_queue_factory->CreateTaskQueue(
           "EncoderQueue",
           TaskQueueFactory::Priority::NORMAL)) {
@@ -1872,6 +1874,18 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   frame_encode_metadata_writer_.UpdateBitstream(codec_specific_info,
                                                 &image_copy);
 
+  VideoCodecType codec_type = codec_specific_info
+                                  ? codec_specific_info->codecType
+                                  : VideoCodecType::kVideoCodecGeneric;
+
+  if (image_copy.qp_ < 0 && qp_parsing_allowed_) {
+    // Parse encoded frame QP if that was not provided by encoder.
+    image_copy.qp_ = qp_parser_
+                         .Parse(codec_type, spatial_idx, image_copy.data(),
+                                image_copy.size())
+                         .value_or(-1);
+  }
+
   // Piggyback ALR experiment group id and simulcast id into the content type.
   const uint8_t experiment_id =
       experiment_groups_[videocontenttypehelpers::IsScreenshare(
@@ -1894,12 +1908,9 @@ EncodedImageCallback::Result VideoStreamEncoder::OnEncodedImage(
   // Post a task because |send_codec_| requires |encoder_queue_| lock.
   unsigned int image_width = image_copy._encodedWidth;
   unsigned int image_height = image_copy._encodedHeight;
-  VideoCodecType codec = codec_specific_info
-                             ? codec_specific_info->codecType
-                             : VideoCodecType::kVideoCodecGeneric;
-  encoder_queue_.PostTask([this, codec, image_width, image_height] {
+  encoder_queue_.PostTask([this, codec_type, image_width, image_height] {
     RTC_DCHECK_RUN_ON(&encoder_queue_);
-    if (codec == VideoCodecType::kVideoCodecVP9 &&
+    if (codec_type == VideoCodecType::kVideoCodecVP9 &&
         send_codec_.VP9()->automaticResizeOn) {
       unsigned int expected_width = send_codec_.width;
       unsigned int expected_height = send_codec_.height;
