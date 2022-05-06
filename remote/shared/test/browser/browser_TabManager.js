@@ -39,13 +39,13 @@ add_task(async function test_addTab_focus() {
 
   let newTab1, newTab2, newTab3;
   try {
-    newTab1 = TabManager.addTab({ focus: true });
+    newTab1 = await TabManager.addTab({ focus: true });
 
     ok(gBrowser.tabs.includes(newTab1), "A new tab was created");
     is(gBrowser.tabs.length, tabsCount + 1);
     is(gBrowser.selectedTab, newTab1, "Tab added with focus: true is selected");
 
-    newTab2 = TabManager.addTab({ focus: false });
+    newTab2 = await TabManager.addTab({ focus: false });
 
     ok(gBrowser.tabs.includes(newTab2), "A new tab was created");
     is(gBrowser.tabs.length, tabsCount + 2);
@@ -55,7 +55,7 @@ add_task(async function test_addTab_focus() {
       "Tab added with focus: false is not selected"
     );
 
-    newTab3 = TabManager.addTab();
+    newTab3 = await TabManager.addTab();
 
     ok(gBrowser.tabs.includes(newTab3), "A new tab was created");
     is(gBrowser.tabs.length, tabsCount + 3);
@@ -78,21 +78,21 @@ add_task(async function test_addTab_window() {
     // openNewBrowserWindow should ensure the new window is focused.
     is(Services.wm.getMostRecentBrowserWindow(null), win2);
 
-    const newTab1 = TabManager.addTab({ window: win1 });
+    const newTab1 = await TabManager.addTab({ window: win1 });
     is(
       newTab1.ownerGlobal,
       win1,
       "The new tab was opened in the specified window"
     );
 
-    const newTab2 = TabManager.addTab({ window: win2 });
+    const newTab2 = await TabManager.addTab({ window: win2 });
     is(
       newTab2.ownerGlobal,
       win2,
       "The new tab was opened in the specified window"
     );
 
-    const newTab3 = TabManager.addTab();
+    const newTab3 = await TabManager.addTab();
     is(
       newTab3.ownerGlobal,
       win2,

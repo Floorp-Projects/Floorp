@@ -2,7 +2,7 @@
 
 let cache;
 let url = "foo.html";
-let redirectURL = "http://example.com/foo-bar.html";
+let redirectURL = "https://example.com/foo-bar.html";
 caches
   .open("redirect-" + context)
   .then(c => {

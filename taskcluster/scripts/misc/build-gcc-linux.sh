@@ -17,6 +17,10 @@ ln -sf ../mpc-source mpc
 ln -sf ../mpfr-source mpfr
 popd
 
+for patch in "$@"; do
+  apply_patch $GECKO_PATH/$patch
+done
+
 build_gcc
 
 # Put a tarball in the artifacts dir

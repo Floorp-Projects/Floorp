@@ -25,3 +25,4 @@ smallvec = "1.0"
 style_traits = {path = "../../../components/style_traits"}
 style = {path = "../../../components/style", features = ["gecko"]}
 to_shmem = {path = "../../../components/to_shmem"}
+euclid = "0.22"

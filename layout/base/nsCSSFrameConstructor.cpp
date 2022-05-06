@@ -3029,7 +3029,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructSelectFrame(
     DebugOnly<nsresult> rv =
         GetAnonymousContent(content, comboboxFrame, newAnonymousItems);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    MOZ_ASSERT(newAnonymousItems.Length() == 2);
+    MOZ_ASSERT(!newAnonymousItems.IsEmpty());
 
     // Manually create a frame for the special NAC.
     MOZ_ASSERT(newAnonymousItems[0].mContent ==

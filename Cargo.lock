@@ -4961,6 +4961,7 @@ dependencies = [
  "cssparser",
  "cstr",
  "env_logger",
+ "euclid",
  "geckoservo",
  "libc",
  "log",

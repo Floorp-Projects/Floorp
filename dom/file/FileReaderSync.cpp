@@ -334,7 +334,7 @@ class ReadReadyRunnable final : public WorkerSyncRunnable {
   }
 
  private:
-  ~ReadReadyRunnable() = default;
+  ~ReadReadyRunnable() override = default;
 };
 
 // This class implements nsIInputStreamCallback and it will be called when the

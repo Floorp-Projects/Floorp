@@ -161,7 +161,7 @@ already_AddRefed<File> Blob::ToFile(const nsAString& aName,
 
 already_AddRefed<Blob> Blob::CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) {
+                                         ErrorResult& aRv) const {
   RefPtr<BlobImpl> impl =
       mImpl->CreateSlice(aStart, aLength, aContentType, aRv);
   if (aRv.Failed()) {
@@ -241,11 +241,11 @@ already_AddRefed<Blob> Blob::Constructor(
   return blob.forget();
 }
 
-int64_t Blob::GetFileId() { return mImpl->GetFileId(); }
+int64_t Blob::GetFileId() const { return mImpl->GetFileId(); }
 
 bool Blob::IsMemoryFile() const { return mImpl->IsMemoryFile(); }
 
-void Blob::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) {
+void Blob::CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) const {
   mImpl->CreateInputStream(aStream, aRv);
 }
 
@@ -260,16 +260,16 @@ size_t BindingJSObjectMallocBytes(Blob* aBlob) {
   return aBlob->GetAllocationSize();
 }
 
-already_AddRefed<Promise> Blob::Text(ErrorResult& aRv) {
+already_AddRefed<Promise> Blob::Text(ErrorResult& aRv) const {
   return ConsumeBody(BodyConsumer::CONSUME_TEXT, aRv);
 }
 
-already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) {
+already_AddRefed<Promise> Blob::ArrayBuffer(ErrorResult& aRv) const {
   return ConsumeBody(BodyConsumer::CONSUME_ARRAYBUFFER, aRv);
 }
 
 already_AddRefed<Promise> Blob::ConsumeBody(
-    BodyConsumer::ConsumeType aConsumeType, ErrorResult& aRv) {
+    BodyConsumer::ConsumeType aConsumeType, ErrorResult& aRv) const {
   if (NS_WARN_IF(!mGlobal)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -321,7 +321,7 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
   RefPtr<ReadableStream> mStream;
 
  protected:
-  virtual ~BlobBodyStreamHolder() { NullifyStream(); }
+  ~BlobBodyStreamHolder() override { NullifyStream(); }
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BlobBodyStreamHolder)
@@ -350,7 +350,7 @@ NS_INTERFACE_MAP_END_INHERITING(BodyStreamHolder)
 }  // anonymous namespace
 
 already_AddRefed<ReadableStream> Blob::Stream(JSContext* aCx,
-                                              ErrorResult& aRv) {
+                                              ErrorResult& aRv) const {
   nsCOMPtr<nsIInputStream> stream;
   CreateInputStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {

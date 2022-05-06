@@ -16,11 +16,11 @@
             ["dom.caches.testing.enabled", true]],
   }, function() {
     // attach to a different origin's CacheStorage
-    var url = "http://example.com/";
+    var url = "https://example.com/";
     var storage = SpecialPowers.createChromeCache("content", url);
 
     // verify we can use the other origin's CacheStorage as normal
-    var req = new Request("http://example.com/index.html");
+    var req = new Request("https://example.com/index.html");
     var res = new Response("hello world");
     var cache;
     storage.open("foo").then(function(c) {

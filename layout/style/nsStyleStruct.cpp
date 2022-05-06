@@ -2351,6 +2351,24 @@ static bool ScrollbarGenerationChanged(const nsStyleDisplay& aOld,
          changed(aOld.mOverflowY, aNew.mOverflowY);
 }
 
+static bool AppearanceValueAffectsFrames(StyleAppearance aDefaultAppearance,
+                                         StyleAppearance aAppearance) {
+  switch (aAppearance) {
+    case StyleAppearance::Textfield:
+      // This is for <input type=number> where we allow authors to specify a
+      // |-moz-appearance:textfield| to get a control without a spinner. (The
+      // spinner is present for |-moz-appearance:number-input| but also other
+      // values such as 'none'.) We need to reframe since this affects the
+      // spinbox creation in nsNumberControlFrame::CreateAnonymousContent.
+      return aDefaultAppearance == StyleAppearance::NumberInput;
+    case StyleAppearance::Menulist:
+      // This affects the menulist button creation.
+      return aDefaultAppearance == StyleAppearance::Menulist;
+    default:
+      return false;
+  }
+}
+
 nsChangeHint nsStyleDisplay::CalcDifference(
     const nsStyleDisplay& aNewData, const nsStylePosition& aOldPosition) const {
   if (mDisplay != aNewData.mDisplay || mContain != aNewData.mContain ||
@@ -2368,20 +2386,14 @@ nsChangeHint nsStyleDisplay::CalcDifference(
 
   auto oldAppearance = EffectiveAppearance();
   auto newAppearance = aNewData.EffectiveAppearance();
-
-  if ((oldAppearance == StyleAppearance::Textfield &&
-       newAppearance != StyleAppearance::Textfield) ||
-      (oldAppearance != StyleAppearance::Textfield &&
-       newAppearance == StyleAppearance::Textfield)) {
-    // This is for <input type=number> where we allow authors to specify a
-    // |-moz-appearance:textfield| to get a control without a spinner. (The
-    // spinner is present for |-moz-appearance:number-input| but also other
-    // values such as 'none'.) We need to reframe since we want to use
-    // nsTextControlFrame instead of nsNumberControlFrame if the author
-    // specifies 'textfield'.
-    // TODO: Now that we have -moz-default appearance we should do this only if
-    // `mDefaultAppearance` is or was `number-input`.
-    return nsChangeHint_ReconstructFrame;
+  if (oldAppearance != newAppearance) {
+    // Changes to the relevant default appearance changes in
+    // AppearanceValueRequiresFrameReconstruction require reconstruction on
+    // their own, so we can just pick either the new or the old.
+    if (AppearanceValueAffectsFrames(oldAppearance, mDefaultAppearance) ||
+        AppearanceValueAffectsFrames(newAppearance, mDefaultAppearance)) {
+      return nsChangeHint_ReconstructFrame;
+    }
   }
 
   auto hint = nsChangeHint(0);

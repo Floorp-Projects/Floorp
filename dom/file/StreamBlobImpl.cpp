@@ -126,7 +126,7 @@ StreamBlobImpl::~StreamBlobImpl() {
 }
 
 void StreamBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                       ErrorResult& aRv) {
+                                       ErrorResult& aRv) const {
   if (!mInputStream) {
     // We failed to clone the input stream in EnsureCloneableStream.
     *aStream = nullptr;
@@ -148,7 +148,7 @@ void StreamBlobImpl::CreateInputStream(nsIInputStream** aStream,
 
 already_AddRefed<BlobImpl> StreamBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   if (!aLength) {
     RefPtr<BlobImpl> impl = new EmptyBlobImpl(aContentType);
     return impl.forget();

@@ -1496,6 +1496,11 @@ DownloadSource.prototype = {
   cookieJarSettings: null,
 
   /**
+   * Represents the authentication header of the download source, could be null if
+   * the download source had no authentication header.
+   */
+  authHeader: null,
+  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
@@ -1632,6 +1637,10 @@ DownloadSource.fromSerializable = function(aSerializable) {
       }
     }
 
+    if ("authHeader" in aSerializable) {
+      source.authHeader = aSerializable.authHeader;
+    }
+
     deserializeUnknownProperties(
       source,
       aSerializable,
@@ -1639,7 +1648,8 @@ DownloadSource.fromSerializable = function(aSerializable) {
         property != "url" &&
         property != "isPrivate" &&
         property != "referrerInfo" &&
-        property != "cookieJarSettings"
+        property != "cookieJarSettings" &&
+        property != "authHeader"
     );
   }
 
@@ -2458,6 +2468,18 @@ DownloadCopySaver.prototype = {
         ) {
           channel.loadInfo.cookieJarSettings =
             download.source.cookieJarSettings;
+        }
+        if (
+          channel instanceof Ci.nsIHttpChannel &&
+          download.source.authHeader
+        ) {
+          try {
+            channel.setRequestHeader(
+              "Authorization",
+              download.source.authHeader,
+              true
+            );
+          } catch (e) {}
         }
 
         if (download.source.userContextId) {

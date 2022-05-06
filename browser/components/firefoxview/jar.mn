@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-    content/browser/myfirefox.html
-    content/browser/myfirefox.js
-    content/browser/myfirefox.css
+    content/browser/firefoxview.html
+    content/browser/firefoxview.js
+    content/browser/firefoxview.css
     content/browser/tabs-pickup.js
     content/browser/recently-closed-tabs.js
 

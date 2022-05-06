@@ -468,7 +468,7 @@ class ReleasingTimerHolder final : public Runnable,
   explicit ReleasingTimerHolder(const nsACString& aURI)
       : Runnable("ReleasingTimerHolder"), mURI(aURI) {}
 
-  ~ReleasingTimerHolder() = default;
+  ~ReleasingTimerHolder() override = default;
 
   void RevokeURI() {
     // Remove the shutting down blocker

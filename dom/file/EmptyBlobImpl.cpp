@@ -11,14 +11,14 @@ namespace mozilla::dom {
 
 already_AddRefed<BlobImpl> EmptyBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   MOZ_ASSERT(!aStart && !aLength);
   RefPtr<BlobImpl> impl = new EmptyBlobImpl(aContentType);
   return impl.forget();
 }
 
 void EmptyBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                      ErrorResult& aRv) {
+                                      ErrorResult& aRv) const {
   if (NS_WARN_IF(!aStream)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

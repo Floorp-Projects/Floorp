@@ -384,9 +384,8 @@ class CallObject : public EnvironmentObject {
 class VarEnvironmentObject : public EnvironmentObject {
   static constexpr uint32_t SCOPE_SLOT = 1;
 
-  static VarEnvironmentObject* create(JSContext* cx, HandleShape shape,
-                                      HandleObject enclosing,
-                                      gc::InitialHeap heap);
+  static VarEnvironmentObject* createInternal(JSContext* cx, HandleShape shape,
+                                              HandleObject enclosing);
 
   void initScope(Scope* scope) {
     initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
@@ -399,7 +398,9 @@ class VarEnvironmentObject : public EnvironmentObject {
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::QualifiedVarObj};
 
   static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
-                                      AbstractFramePtr frame);
+                                      HandleObject enclosing);
+  static VarEnvironmentObject* createForFrame(JSContext* cx, HandleScope scope,
+                                              AbstractFramePtr frame);
   static VarEnvironmentObject* createHollowForDebug(JSContext* cx,
                                                     Handle<Scope*> scope);
 

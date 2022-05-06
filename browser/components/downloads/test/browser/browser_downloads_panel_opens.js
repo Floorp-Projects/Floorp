@@ -2,79 +2,23 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure the downloads panel opens automatically with a new download.
+ * Check that the downloads panel opens when a download is spoofed.
  */
-add_task(async function test_downloads_panel_opens() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
-  });
-
-  info("waiting for panel to open");
+async function checkPanelOpens() {
+  info("Waiting for panel to open.");
   let promise = promisePanelOpened();
   DownloadsCommon.getData(window)._notifyDownloadEvent("start");
   is(
     DownloadsPanel.isPanelShowing,
     true,
-    "Panel state should indicate a preparation to be opened"
+    "Panel state should indicate a preparation to be opened."
   );
   await promise;
 
-  is(DownloadsPanel.panel.state, "open", "Panel should be opened");
+  is(DownloadsPanel.panel.state, "open", "Panel should be opened.");
 
   DownloadsPanel.hidePanel();
-});
-
-add_task(async function test_customizemode_doesnt_wreck_things() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.download.improvements_to_download_panel", true],
-      ["browser.download.always_ask_before_handling_new_types", false],
-    ],
-  });
-
-  // Enter customize mode:
-  let customizationReadyPromise = BrowserTestUtils.waitForEvent(
-    gNavToolbox,
-    "customizationready"
-  );
-  gCustomizeMode.enter();
-  await customizationReadyPromise;
-
-  info("try to open the panel (will not work, in customize mode)");
-  let promise = promisePanelOpened();
-  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
-  await TestUtils.waitForCondition(
-    () => DownloadsPanel._state == DownloadsPanel.kStateHidden,
-    "Should try to show but stop short and hide the panel"
-  );
-  is(
-    DownloadsPanel._state,
-    DownloadsPanel.kStateHidden,
-    "Should not start opening the panel."
-  );
-
-  let afterCustomizationPromise = BrowserTestUtils.waitForEvent(
-    gNavToolbox,
-    "aftercustomization"
-  );
-  gCustomizeMode.exit();
-  await afterCustomizationPromise;
-
-  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
-  is(
-    DownloadsPanel.isPanelShowing,
-    true,
-    "Panel state should indicate a preparation to be opened"
-  );
-  await promise;
-
-  is(DownloadsPanel.panel.state, "open", "Panel should be opened");
-
-  DownloadsPanel.hidePanel();
-});
+}
 
 /**
  * Start a download and check that the downloads panel opens correctly according
@@ -128,6 +72,80 @@ async function downloadAndCheckPanel({ openDownloadsListOnStart = true } = {}) {
   DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
 }
+
+function clickCheckbox(checkbox) {
+  // Clicking a checkbox toggles its checkedness first.
+  if (checkbox.getAttribute("checked") == "true") {
+    checkbox.removeAttribute("checked");
+  } else {
+    checkbox.setAttribute("checked", "true");
+  }
+  // Then it runs the command and closes the popup.
+  checkbox.doCommand();
+  checkbox.parentElement.hidePopup();
+}
+
+/**
+ * Make sure the downloads panel opens automatically with a new download.
+ */
+add_task(async function test_downloads_panel_opens() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
+  });
+  await checkPanelOpens();
+});
+
+add_task(async function test_customizemode_doesnt_wreck_things() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.always_ask_before_handling_new_types", false],
+    ],
+  });
+
+  // Enter customize mode:
+  let customizationReadyPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "customizationready"
+  );
+  gCustomizeMode.enter();
+  await customizationReadyPromise;
+
+  info("try to open the panel (will not work, in customize mode)");
+  let promise = promisePanelOpened();
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  await TestUtils.waitForCondition(
+    () => DownloadsPanel._state == DownloadsPanel.kStateHidden,
+    "Should try to show but stop short and hide the panel"
+  );
+  is(
+    DownloadsPanel._state,
+    DownloadsPanel.kStateHidden,
+    "Should not start opening the panel."
+  );
+
+  let afterCustomizationPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "aftercustomization"
+  );
+  gCustomizeMode.exit();
+  await afterCustomizationPromise;
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  is(
+    DownloadsPanel.isPanelShowing,
+    true,
+    "Panel state should indicate a preparation to be opened"
+  );
+  await promise;
+
+  is(DownloadsPanel.panel.state, "open", "Panel should be opened");
+
+  DownloadsPanel.hidePanel();
+});
 
 /**
  * Make sure the downloads panel _does not_ open automatically if we set the
@@ -385,4 +403,56 @@ add_task(async function test_downloads_panel_inactive_window() {
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
 
   testRunnerWindow = null;
+});
+
+/**
+ * When right-clicking the downloads toolbar button, there should be a menuitem
+ * for toggling alwaysOpenPanel. Check that it works correctly.
+ */
+add_task(async function test_alwaysOpenPanel_menuitem() {
+  const alwaysOpenPanelPref = "browser.download.alwaysOpenPanel";
+  let checkbox = document.getElementById(
+    "toolbar-context-always-open-downloads-panel"
+  );
+  let button = document.getElementById("downloads-button");
+
+  Services.prefs.clearUserPref(alwaysOpenPanelPref);
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.autohideButton", false]],
+  });
+  registerCleanupFunction(async () => {
+    await SpecialPowers.popPrefEnv();
+    Services.prefs.clearUserPref(alwaysOpenPanelPref);
+  });
+
+  is(button.hidden, false, "Downloads button should not be hidden.");
+
+  info("Check context menu for downloads button.");
+  await openContextMenu(button);
+  is(checkbox.hidden, false, "Always Open checkbox is visible.");
+  is(checkbox.getAttribute("checked"), "true", "Always Open is enabled.");
+
+  info("Disable Always Open via context menu.");
+  clickCheckbox(checkbox);
+  is(
+    Services.prefs.getBoolPref(alwaysOpenPanelPref),
+    false,
+    "Always Open pref has been set to false."
+  );
+
+  await downloadAndCheckPanel();
+
+  await openContextMenu(button);
+  is(checkbox.hidden, false, "Always Open checkbox is visible.");
+  isnot(checkbox.getAttribute("checked"), "true", "Always Open is disabled.");
+
+  info("Enable Always Open via context menu");
+  clickCheckbox(checkbox);
+  is(
+    Services.prefs.getBoolPref(alwaysOpenPanelPref),
+    true,
+    "Pref has been set to true"
+  );
+
+  await checkPanelOpens();
 });

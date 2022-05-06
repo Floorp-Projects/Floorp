@@ -7,6 +7,7 @@ import re
 import mozperftest.utils as utils
 import pathlib
 from mozperftest.runner import HERE
+import traceback
 
 ACCEPTED_BROWSERS = ["Chrome", "Firefox"]
 
@@ -217,10 +218,17 @@ class WebPageTest(Layer):
         self.check_urls_are_valid(test_list)
 
     def location_queue(self, location):
-        location_list = self.request_with_timeout(
-            "https://www.webpagetest.org/getLocations.php?f=json"
-        )["data"]
-        if location not in location_list.keys():
+        location_list = {}
+        try:
+            location_list = self.request_with_timeout(
+                "https://www.webpagetest.org/getLocations.php?f=json"
+            )["data"]
+        except Exception:
+            self.error(
+                "Error with getting location queue data, see below for more details"
+            )
+            self.info(traceback.format_exc())
+        if location and location not in location_list.keys():
             raise WPTLocationSelectionError(
                 "Invalid location selected please choose one of the locations here: "
                 f"{location_list.keys()}"

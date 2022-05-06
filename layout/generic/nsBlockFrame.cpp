@@ -7714,6 +7714,46 @@ nsBlockFrame::FloatAvoidingISizeToClear nsBlockFrame::ISizeToClearPastFloats(
                                    aState.mReflowInput.mRenderingContext, wm,
                                    aState.mContentArea.ISize(wm));
   const LogicalMargin computedMargin = sizingInput.ComputedLogicalMargin(wm);
+
+  nscoord marginISize = computedMargin.IStartEnd(wm);
+  const auto& iSize = reflowInput.mStylePosition->ISize(wm);
+  if (marginISize < 0 && (iSize.IsAuto() || iSize.IsMozAvailable())) {
+    // If we get here, floatAvoidingBlock has a negative amount of inline-axis
+    // margin and an 'auto' (or ~equivalently, -moz-available) inline
+    // size. Under these circumstances, we use the margin to establish a
+    // (positive) minimum size for the border-box, in order to satisfy the
+    // equation in CSS2 10.3.3.  That equation essentially simplifies to the
+    // following:
+    //
+    //   iSize of margins + iSize of borderBox = iSize of containingBlock
+    //
+    // ...where "iSize of borderBox" is the sum of floatAvoidingBlock's
+    // inline-axis components of border, padding, and {width,height}.
+    //
+    // Right now, in the above equation, "iSize of margins" is the only term
+    // that we know for sure. (And we also know that it's negative, since we
+    // got here.) The other terms are as-yet unresolved, since the frame has an
+    // 'auto' iSize, and since we aren't yet sure if we'll clear this frame
+    // beyond floats or place it alongside them.
+    //
+    // However: we *do* know that the equation's "iSize of containingBlock"
+    // term *must* be non-negative, since boxes' widths and heights generally
+    // can't be negative in CSS.  To satisfy that requirement, we can then
+    // infer that the equation's "iSize of borderBox" term *must* be large
+    // enough to cancel out the (known-to-be-negative) "iSize of margins"
+    // term. Therefore, marginISize value (negated to make it positive)
+    // establishes a lower-bound for how much inline-axis space our border-box
+    // will really require in order to fit alongside any floats.
+    //
+    // XXXdholbert This explanation is admittedly a bit hand-wavy and may not
+    // precisely match what any particular spec requires. It's the best
+    // reasoning I could come up with to explain engines' behavior.  Also, our
+    // behavior with -moz-available doesn't seem particularly correct here, per
+    // bug 1767217, though that's probably due to a bug elsewhere in our float
+    // handling code...
+    result.borderBoxISize = std::max(result.borderBoxISize, -marginISize);
+  }
+
   result.marginIStart = computedMargin.IStart(wm);
   return result;
 }

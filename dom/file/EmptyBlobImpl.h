@@ -9,8 +9,7 @@
 
 #include "BaseBlobImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EmptyBlobImpl final : public BaseBlobImpl {
  public:
@@ -20,11 +19,12 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   explicit EmptyBlobImpl(const nsAString& aContentType)
       : BaseBlobImpl(aContentType, 0 /* aLength */) {}
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   bool IsMemoryFile() const override { return true; }
 
@@ -33,10 +33,9 @@ class EmptyBlobImpl final : public BaseBlobImpl {
   }
 
  private:
-  ~EmptyBlobImpl() = default;
+  ~EmptyBlobImpl() override = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_EmptyBlobImpl_h

@@ -10,8 +10,7 @@
 #include "mozilla/dom/PTemporaryIPCBlob.h"
 #include "mozilla/dom/PTemporaryIPCBlobChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BlobImpl;
 class MutableBlobStorage;
@@ -30,13 +29,13 @@ class TemporaryIPCBlobChild final : public PTemporaryIPCBlobChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(TemporaryIPCBlobChild)
 
-  explicit TemporaryIPCBlobChild(MutableBlobStorage* aMutableBlobStorage);
+  explicit TemporaryIPCBlobChild(MutableBlobStorage* aStorage);
 
   void AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
                   const nsACString& aContentType, PRFileDesc* aFD);
 
  private:
-  ~TemporaryIPCBlobChild();
+  ~TemporaryIPCBlobChild() override;
 
   mozilla::ipc::IPCResult RecvFileDesc(const FileDescriptor& aFD);
 
@@ -49,7 +48,6 @@ class TemporaryIPCBlobChild final : public PTemporaryIPCBlobChild {
   bool mActive;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TemporaryIPCBlobChild_h

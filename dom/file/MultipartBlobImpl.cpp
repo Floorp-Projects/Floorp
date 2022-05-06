@@ -52,7 +52,7 @@ already_AddRefed<MultipartBlobImpl> MultipartBlobImpl::Create(
 }
 
 void MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                          ErrorResult& aRv) {
+                                          ErrorResult& aRv) const {
   *aStream = nullptr;
 
   uint32_t length = mBlobImpls.Length();
@@ -106,7 +106,7 @@ void MultipartBlobImpl::CreateInputStream(nsIInputStream** aStream,
 
 already_AddRefed<BlobImpl> MultipartBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   // If we clamped to nothing we create an empty blob
   nsTArray<RefPtr<BlobImpl>> blobImpls;
 

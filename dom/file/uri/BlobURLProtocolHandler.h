@@ -76,7 +76,7 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
                            nsIPrincipal* aTriggeringPrincipal,
                            const OriginAttributes& aOriginAttributes,
                            uint64_t aInnerWindowId,
-                           const Maybe<nsID>& blobAgentClusterId,
+                           const Maybe<nsID>& aAgentClusterId,
                            bool aAlsoIfRevoked = false);
 
   static void Traverse(const nsACString& aUri,

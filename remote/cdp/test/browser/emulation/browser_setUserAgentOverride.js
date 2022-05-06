@@ -125,8 +125,7 @@ add_task(async function notSetForNewContext({ client }) {
     "Custom platform has been set"
   );
 
-  const { targetInfo } = await openTab(Target);
-  await Target.activateTarget({ targetId: targetInfo.targetId });
+  await openTab(Target, { activate: true });
 
   isnot(
     await getNavigatorProperty("userAgent"),

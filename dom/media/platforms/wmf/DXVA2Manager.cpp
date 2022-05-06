@@ -657,6 +657,8 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   bool SupportsConfig(const VideoInfo& aInfo, IMFMediaType* aInputType,
                       IMFMediaType* aOutputType) override;
 
+  void BeforeShutdownVideoMFTDecoder() override;
+
  private:
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
@@ -665,6 +667,8 @@ class D3D11DXVA2Manager : public DXVA2Manager {
 
   already_AddRefed<ID3D11VideoDecoder> CreateDecoder(
       const D3D11_VIDEO_DECODER_DESC& aDesc) const;
+  void RefreshIMFSampleWrappers();
+  void ReleaseAllIMFSamples();
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mContext;
@@ -681,6 +685,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   GUID mInputSubType;
   gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
+  std::list<ThreadSafeWeakPtr<layers::IMFSampleWrapper>> mIMFSampleWrappers;
 };
 
 bool D3D11DXVA2Manager::SupportsConfig(const VideoInfo& aInfo,
@@ -1143,14 +1148,46 @@ HRESULT D3D11DXVA2Manager::WrapTextureWithImage(IMFSample* aVideoSample,
   UINT arrayIndex;
   dxgiBuf->GetSubresourceIndex(&arrayIndex);
 
+  RefreshIMFSampleWrappers();
+
   RefPtr<D3D11TextureIMFSampleImage> image = new D3D11TextureIMFSampleImage(
       aVideoSample, texture, arrayIndex, gfx::IntSize(mWidth, mHeight), aRegion,
       mYUVColorSpace, mColorRange);
   image->AllocateTextureClient(mKnowsCompositor);
 
+  RefPtr<IMFSampleWrapper> wrapper = image->GetIMFSampleWrapper();
+  ThreadSafeWeakPtr<IMFSampleWrapper> weak(wrapper);
+  mIMFSampleWrappers.push_back(weak);
+
   image.forget(aOutImage);
 
   return S_OK;
+}
+
+void D3D11DXVA2Manager::RefreshIMFSampleWrappers() {
+  for (auto it = mIMFSampleWrappers.begin(); it != mIMFSampleWrappers.end();) {
+    auto wrapper = RefPtr<IMFSampleWrapper>(*it);
+    if (!wrapper) {
+      // wrapper is already destroyed.
+      it = mIMFSampleWrappers.erase(it);
+      continue;
+    }
+    it++;
+  }
+}
+
+void D3D11DXVA2Manager::ReleaseAllIMFSamples() {
+  for (auto it = mIMFSampleWrappers.begin(); it != mIMFSampleWrappers.end();
+       it++) {
+    RefPtr<IMFSampleWrapper> wrapper = RefPtr<IMFSampleWrapper>(*it);
+    if (wrapper) {
+      wrapper->ClearVideoSample();
+    }
+  }
+}
+
+void D3D11DXVA2Manager::BeforeShutdownVideoMFTDecoder() {
+  ReleaseAllIMFSamples();
 }
 
 HRESULT

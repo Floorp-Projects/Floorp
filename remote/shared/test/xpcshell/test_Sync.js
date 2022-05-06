@@ -4,9 +4,66 @@
 
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
-const { AnimationFramePromise, Deferred, PollPromise } = ChromeUtils.import(
-  "chrome://remote/content/shared/Sync.jsm"
-);
+const {
+  AnimationFramePromise,
+  Deferred,
+  EventPromise,
+  PollPromise,
+} = ChromeUtils.import("chrome://remote/content/shared/Sync.jsm");
+
+/**
+ * Mimic a DOM node for listening for events.
+ */
+class MockElement {
+  constructor() {
+    this.capture = false;
+    this.eventName = null;
+    this.func = null;
+    this.mozSystemGroup = false;
+    this.wantUntrusted = false;
+    this.untrusted = false;
+  }
+
+  addEventListener(name, func, options = {}) {
+    const { capture, mozSystemGroup, wantUntrusted } = options;
+
+    this.eventName = name;
+    this.func = func;
+    this.capture = capture ?? false;
+    this.mozSystemGroup = mozSystemGroup ?? false;
+    this.wantUntrusted = wantUntrusted ?? false;
+  }
+
+  click() {
+    if (this.func) {
+      const event = {
+        capture: this.capture,
+        mozSystemGroup: this.mozSystemGroup,
+        target: this,
+        type: this.eventName,
+        untrusted: this.untrusted,
+        wantUntrusted: this.wantUntrusted,
+      };
+      this.func(event);
+    }
+  }
+
+  dispatchEvent(event) {
+    if (this.wantUntrusted) {
+      this.untrusted = true;
+    }
+    this.click();
+  }
+
+  removeEventListener(name, func) {
+    this.capture = false;
+    this.eventName = null;
+    this.func = null;
+    this.mozSystemGroup = false;
+    this.untrusted = false;
+    this.wantUntrusted = false;
+  }
+}
 
 add_task(async function test_AnimationFramePromise() {
   let called = false;
@@ -52,7 +109,149 @@ add_task(async function test_DeferredResolved() {
   equal(result, "foo");
 });
 
-add_test(function test_executeSoon_callback() {
+add_task(async function test_EventPromise_subjectTypes() {
+  for (const subject of ["foo", 42, null, undefined, true, [], {}]) {
+    Assert.throws(() => new EventPromise(subject, "click"), /TypeError/);
+  }
+});
+
+add_task(async function test_EventPromise_eventNameTypes() {
+  const element = new MockElement();
+
+  for (const eventName of [42, null, undefined, true, [], {}]) {
+    Assert.throws(() => new EventPromise(element, eventName), /TypeError/);
+  }
+});
+
+add_task(async function test_EventPromise_subjectAndEventNameEvent() {
+  const element = new MockElement();
+
+  const clicked = new EventPromise(element, "click");
+  element.click();
+  const event = await clicked;
+
+  equal(element, event.target);
+});
+
+add_task(async function test_EventPromise_captureTypes() {
+  const element = new MockElement();
+
+  for (const capture of [null, "foo", 42, [], {}]) {
+    Assert.throws(
+      () => new EventPromise(element, "click", { capture }),
+      /TypeError/
+    );
+  }
+});
+
+add_task(async function test_EventPromise_captureEvent() {
+  const element = new MockElement();
+
+  for (const capture of [undefined, false, true]) {
+    const expectedCapture = capture ?? false;
+
+    const clicked = new EventPromise(element, "click", { capture });
+    element.click();
+    const event = await clicked;
+
+    equal(element, event.target);
+    equal(expectedCapture, event.capture);
+  }
+});
+
+add_task(async function test_EventPromise_checkFnTypes() {
+  const element = new MockElement();
+
+  for (const checkFn of ["foo", 42, true, [], {}]) {
+    Assert.throws(
+      () => new EventPromise(element, "click", { checkFn }),
+      /TypeError/
+    );
+  }
+});
+
+add_task(async function test_EventPromise_checkFnCallback() {
+  const element = new MockElement();
+
+  let count;
+  const data = [
+    { checkFn: null, expected_count: 0 },
+    { checkFn: undefined, expected_count: 0 },
+    {
+      checkFn: event => {
+        throw new Error("foo");
+      },
+      expected_count: 0,
+    },
+    { checkFn: event => count++ > 0, expected_count: 2 },
+  ];
+
+  for (const { checkFn, expected_count } of data) {
+    count = 0;
+
+    const clicked = new EventPromise(element, "click", { checkFn });
+    element.click();
+    element.click();
+    const event = await clicked;
+
+    equal(element, event.target);
+    equal(expected_count, count);
+  }
+});
+
+add_task(async function test_EventPromise_mozSystemGroupTypes() {
+  const element = new MockElement();
+
+  for (const mozSystemGroup of [null, "foo", 42, [], {}]) {
+    Assert.throws(
+      () => new EventPromise(element, "click", { mozSystemGroup }),
+      /TypeError/
+    );
+  }
+});
+
+add_task(async function test_EventPromise_mozSystemGroupEvent() {
+  const element = new MockElement();
+
+  for (const mozSystemGroup of [undefined, false, true]) {
+    const expectedMozSystemGroup = mozSystemGroup ?? false;
+
+    const clicked = new EventPromise(element, "click", { mozSystemGroup });
+    element.click();
+    const event = await clicked;
+
+    equal(element, event.target);
+    equal(expectedMozSystemGroup, event.mozSystemGroup);
+  }
+});
+
+add_task(async function test_EventPromise_wantUntrustedTypes() {
+  const element = new MockElement();
+
+  for (let wantUntrusted of [null, "foo", 42, [], {}]) {
+    Assert.throws(
+      () => new EventPromise(element, "click", { wantUntrusted }),
+      /TypeError/
+    );
+  }
+});
+
+add_task(async function test_EventPromise_wantUntrustedEvent() {
+  for (const wantUntrusted of [undefined, false, true]) {
+    let expected_untrusted = wantUntrusted ?? false;
+
+    const element = new MockElement();
+
+    const clicked = new EventPromise(element, "click", { wantUntrusted });
+    element.dispatchEvent(new CustomEvent("click", {}));
+    const event = await clicked;
+
+    equal(element, event.target);
+    equal(expected_untrusted, event.untrusted);
+  }
+});
+
+add_task(function test_executeSoon_callback() {
   // executeSoon() is already defined for xpcshell in head.js. As such import
   // our implementation into a custom namespace.
   let sync = ChromeUtils.import("chrome://remote/content/shared/Sync.jsm");
@@ -66,21 +265,17 @@ add_test(function test_executeSoon_callback() {
     a = 1;
   });
   executeSoon(() => equal(1, a));
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_funcTypes() {
+add_task(function test_PollPromise_funcTypes() {
   for (let type of ["foo", 42, null, undefined, true, [], {}]) {
     Assert.throws(() => new PollPromise(type), /TypeError/);
   }
   new PollPromise(() => {});
   new PollPromise(function() {});
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_timeoutTypes() {
+add_task(function test_PollPromise_timeoutTypes() {
   for (let timeout of ["foo", true, [], {}]) {
     Assert.throws(() => new PollPromise(() => {}, { timeout }), /TypeError/);
   }
@@ -90,11 +285,9 @@ add_test(function test_PollPromise_timeoutTypes() {
   for (let timeout of [null, undefined, 42]) {
     new PollPromise(resolve => resolve(1), { timeout });
   }
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_intervalTypes() {
+add_task(function test_PollPromise_intervalTypes() {
   for (let interval of ["foo", null, true, [], {}]) {
     Assert.throws(() => new PollPromise(() => {}, { interval }), /TypeError/);
   }
@@ -102,8 +295,6 @@ add_test(function test_PollPromise_intervalTypes() {
     Assert.throws(() => new PollPromise(() => {}, { interval }), /RangeError/);
   }
   new PollPromise(() => {}, { interval: 42 });
-
-  run_next_test();
 });
 
 add_task(async function test_PollPromise_retvalTypes() {

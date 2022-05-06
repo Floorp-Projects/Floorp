@@ -167,7 +167,7 @@ class BrowsingContextModule extends Module {
             `browsingContext.create with type "tab" not supported in ${AppInfo.name}`
           );
         }
-        let tab = TabManager.addTab({ focus: false });
+        let tab = await TabManager.addTab({ focus: false });
         browser = TabManager.getBrowserForTab(tab);
     }
 
