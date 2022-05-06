@@ -19,9 +19,6 @@
 #include "rtc_base/logging.h"
 
 namespace webrtc {
-namespace {
-enum : int { kKey, kDelta };
-}  // namespace
 
 constexpr int ScalabilityStructureFullSvc::kMaxNumSpatialLayers;
 constexpr int ScalabilityStructureFullSvc::kMaxNumTemporalLayers;
@@ -102,6 +99,7 @@ ScalabilityStructureFullSvc::FramePattern
 ScalabilityStructureFullSvc::NextPattern() const {
   switch (last_pattern_) {
     case kNone:
+      return kKey;
     case kDeltaT2B:
       return kDeltaT0;
     case kDeltaT2A:
@@ -114,6 +112,7 @@ ScalabilityStructureFullSvc::NextPattern() const {
         return kDeltaT2B;
       }
       return kDeltaT0;
+    case kKey:
     case kDeltaT0:
       if (TemporalLayerIsActive(2)) {
         return kDeltaT2A;
@@ -123,6 +122,8 @@ ScalabilityStructureFullSvc::NextPattern() const {
       }
       return kDeltaT0;
   }
+  RTC_NOTREACHED();
+  return kNone;
 }
 
 std::vector<ScalableVideoController::LayerFrameConfig>
@@ -143,6 +144,7 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
   absl::optional<int> spatial_dependency_buffer_id;
   switch (current_pattern) {
     case kDeltaT0:
+    case kKey:
       // Disallow temporal references cross T0 on higher temporal layers.
       can_reference_t1_frame_for_spatial_id_.reset();
       for (int sid = 0; sid < num_spatial_layers_; ++sid) {
@@ -154,11 +156,11 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
         }
         configs.emplace_back();
         ScalableVideoController::LayerFrameConfig& config = configs.back();
-        config.Id(last_pattern_ == kNone ? kKey : kDelta).S(sid).T(0);
+        config.Id(current_pattern).S(sid).T(0);
 
         if (spatial_dependency_buffer_id) {
           config.Reference(*spatial_dependency_buffer_id);
-        } else if (last_pattern_ == kNone) {
+        } else if (current_pattern == kKey) {
           config.Keyframe();
         }
 
@@ -182,7 +184,7 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
         }
         configs.emplace_back();
         ScalableVideoController::LayerFrameConfig& config = configs.back();
-        config.Id(kDelta).S(sid).T(1);
+        config.Id(current_pattern).S(sid).T(1);
         // Temporal reference.
         config.Reference(BufferIndex(sid, /*tid=*/0));
         // Spatial reference unless this is the lowest active spatial layer.
@@ -205,7 +207,7 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
         }
         configs.emplace_back();
         ScalableVideoController::LayerFrameConfig& config = configs.back();
-        config.Id(kDelta).S(sid).T(2);
+        config.Id(current_pattern).S(sid).T(2);
         // Temporal reference.
         if (current_pattern == kDeltaT2B &&
             can_reference_t1_frame_for_spatial_id_[sid]) {
@@ -243,12 +245,16 @@ ScalabilityStructureFullSvc::NextFrameConfig(bool restart) {
     return NextFrameConfig(/*restart=*/true);
   }
 
-  last_pattern_ = current_pattern;
   return configs;
 }
 
 GenericFrameInfo ScalabilityStructureFullSvc::OnEncodeDone(
     const LayerFrameConfig& config) {
+  // When encoder drops all frames for a temporal unit, it is better to reuse
+  // old temporal pattern rather than switch to next one, thus switch to next
+  // pattern defered here from the `NextFrameConfig`.
+  // In particular creating VP9 references rely on this behavior.
+  last_pattern_ = static_cast<FramePattern>(config.Id());
   if (config.TemporalId() == 1) {
     can_reference_t1_frame_for_spatial_id_.set(config.SpatialId());
   }
