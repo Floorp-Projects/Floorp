@@ -1249,6 +1249,11 @@ nsresult mozJSComponentLoader::ExtractExports(
   return NS_OK;
 }
 
+/* static */
+bool mozJSComponentLoader::IsTrustedScheme(nsIURI* aURI) {
+  return aURI->SchemeIs("resource") || aURI->SchemeIs("chrome");
+}
+
 nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       const nsACString& aLocation,
                                       JS::MutableHandleObject aModuleGlobal,
@@ -1281,8 +1286,7 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
     MOZ_TRY(info.EnsureResolvedURI());
 
     // Reject imports from untrusted sources.
-    if ((!info.URI()->SchemeIs("resource")) &&
-        (!info.URI()->SchemeIs("chrome"))) {
+    if (!IsTrustedScheme(info.URI())) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
