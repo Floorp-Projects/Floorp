@@ -1320,12 +1320,6 @@
   mirror: always
   rust: true
 
-- name: browser.proton.places-tooltip.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled
   type: bool
@@ -2795,6 +2789,12 @@
 - name: dom.moduleScripts.enabled
   type: bool
   value: true
+  mirror: always
+
+# Is support for import maps (<script type="importmap">) enabled for content?
+- name: dom.importMaps.enabled
+  type: bool
+  value: false
   mirror: always
 
 # Whether we disable triggering mutation events for changes to style
@@ -4884,7 +4884,11 @@
 #ifdef FUZZING
 -   name: fuzzing.enabled
     type: bool
+#ifdef FUZZING_SNAPSHOT
+    value: true
+#else
     value: false
+#endif
     mirror: always
 
 -   name: fuzzing.necko.enabled
@@ -11945,7 +11949,7 @@
   # true means win32k system calls are not permitted.
 -   name: security.sandbox.content.win32k-disable
     type: RelaxedAtomicBool
-    value: @IS_EARLY_BETA_OR_EARLIER@
+    value: true
     mirror: always
 
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test

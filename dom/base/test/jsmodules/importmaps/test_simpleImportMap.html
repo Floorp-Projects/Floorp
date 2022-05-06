@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test a simple import map</title>
+<script type="importmap">
+{
+  "imports": {
+    "simple": "./module_simpleExport.js",
+    "dir/": "/content/chrome/dom/base/test/jsmodules/importmaps/",
+    "./module.js": "/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.js",
+    "https://example.com/module.js": "./module_simpleExport.js"
+  },
+  "scopes": {
+    "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/scope1/": {
+      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/module_simpleExport.js"
+    },
+    "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/scope1/scope2/": {
+      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/scope2/module_simpleExport.js"
+    }
+  }
+}
+</script>
+
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script>
+  var result, result_dir, result_remap, result_remap_https;
+  var result_scope1, result_scope2;
+
+  SimpleTest.waitForExplicitFinish();
+
+  function testLoaded() {
+    ok(result == 42, 'Check imported value result: ' + result);
+    ok(result_dir == 43, 'Check imported value result_dir: ' + result_dir);
+    ok(result_remap == 44, 'Check imported value result_remap: ' + result_remap);
+    ok(result_remap_https == 45,
+       'Check imported value result_remap_https: ' + result_remap_https);
+    ok(result_scope1 == 84, 'Check imported value result_scope1: ' + result_scope1);
+    ok(result_scope2 == 126, 'Check imported value result_scope2: ' + result_scope2);
+
+    import("simple").then((ns) => {
+      ok(ns.x == 42, 'Check simple imported value result: ' + ns.x);
+      return import("dir/module_simpleExport.js");
+    }).then((ns) => {
+      ok(ns.x == 42, 'Check dir imported value result: ' + ns.x);
+      return import("./module.js");
+    }).then((ns) => {
+      ok(ns.x == 42, 'Check remap imported value result: ' + ns.x);
+      return import("https://example.com/module.js");
+    }).then((ns) => {
+      ok(ns.x == 42, 'Check remap https imported value result: ' + ns.x);
+      SimpleTest.finish();
+    });
+  }
+</script>
+<script type="module" src="module_simpleImportMap.js"></script>
+<script type="module" src="module_simpleImportMap_dir.js"></script>
+<script type="module" src="module_simpleImportMap_remap.js"></script>
+<script type="module" src="module_simpleImportMap_remap_https.js"></script>
+<script type="module" src="module_simpleImportMap_remap_https.js"></script>
+<script type="module" src="scope1/module_simpleImportMap.js"></script>
+<script type="module" src="scope1/scope2/module_simpleImportMap.js"></script>
+<body onload='testLoaded()'></body>

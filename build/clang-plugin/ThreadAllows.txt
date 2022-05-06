@@ -37,6 +37,7 @@ HTML5 Parser
 ICS parser
 IMAP
 IPC Launch
+IPCFuzzLoop
 IPDL Background
 IPDL UnitTest
 IdentityCrypto

@@ -114,7 +114,8 @@ class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
       PBackgroundIDBFactoryRequestChild* aActor);
 
   PBackgroundIDBDatabaseChild* AllocPBackgroundIDBDatabaseChild(
-      const DatabaseSpec& aSpec, PBackgroundIDBFactoryRequestChild* aRequest);
+      const DatabaseSpec& aSpec,
+      PBackgroundIDBFactoryRequestChild* aRequest) const;
 
   bool DeallocPBackgroundIDBDatabaseChild(PBackgroundIDBDatabaseChild* aActor);
 
@@ -261,7 +262,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       const IPCBlob& aIPCBlob);
 
   bool DeallocPBackgroundIDBDatabaseFileChild(
-      PBackgroundIDBDatabaseFileChild* aActor);
+      PBackgroundIDBDatabaseFileChild* aActor) const;
 
   PBackgroundIDBDatabaseRequestChild* AllocPBackgroundIDBDatabaseRequestChild(
       const DatabaseRequestParams& aParams);
@@ -281,7 +282,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
 
   PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
-      const nsString& aName, const nsString& aType);
+      const nsString& aName, const nsString& aType) const;
 
   bool DeallocPBackgroundMutableFileChild(PBackgroundMutableFileChild* aActor);
 
@@ -493,7 +494,8 @@ class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
   PBackgroundFileHandleChild* AllocPBackgroundFileHandleChild(
       const FileMode& aMode);
 
-  bool DeallocPBackgroundFileHandleChild(PBackgroundFileHandleChild* aActor);
+  bool DeallocPBackgroundFileHandleChild(
+      PBackgroundFileHandleChild* aActor) const;
 };
 
 class BackgroundRequestChild final : public BackgroundRequestChildBase,

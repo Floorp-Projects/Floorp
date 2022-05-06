@@ -78,6 +78,11 @@ const TESTCASES = [
     fieldId: "targetElement",
     expectedResult: true,
   },
+  {
+    document: `<input id="targetElement" type="text" disabled>`,
+    fieldId: "targetElement",
+    expectedResult: true,
+  },
 ];
 
 TESTCASES.forEach(testcase => {
@@ -91,7 +96,7 @@ TESTCASES.forEach(testcase => {
 
     let field = doc.getElementById(testcase.fieldId);
     Assert.equal(
-      FormAutofillUtils.isFieldEligibleForAutofill(field),
+      FormAutofillUtils.isCreditCardOrAddressFieldType(field),
       testcase.expectedResult
     );
   });

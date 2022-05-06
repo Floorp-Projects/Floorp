@@ -15,7 +15,7 @@ codegenTestX64_v128_v128(
 45 0f c2 ff 00            cmpps \\$0x00, %xmm15, %xmm15
 66 41 0f db c7            pand %xmm15, %xmm0`],
      ['i32x4.trunc_sat_f32x4_u', `
-66 45 0f ef ff            pxor %xmm15, %xmm15
+45 0f 57 ff               xorps %xmm15, %xmm15
 41 0f 5f c7               maxps %xmm15, %xmm0`],
      ['f32x4.convert_i32x4_u', `
 66 45 0f ef ff            pxor %xmm15, %xmm15

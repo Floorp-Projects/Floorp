@@ -659,7 +659,6 @@ bool Module::instantiateMemory(JSContext* cx,
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 bool Module::instantiateTags(JSContext* cx,
                              WasmTagObjectVector& tagObjs) const {
   size_t tagLength = metadata().tags.length();
@@ -687,7 +686,6 @@ bool Module::instantiateTags(JSContext* cx,
   }
   return true;
 }
-#endif
 
 bool Module::instantiateImportedTable(JSContext* cx, const TableDesc& td,
                                       Handle<WasmTableObject*> tableObj,
@@ -985,12 +983,10 @@ static bool CreateExportObject(
         }
         break;
       }
-#ifdef ENABLE_WASM_EXCEPTIONS
       case DefinitionKind::Tag: {
         val = ObjectValue(*tagObjs[exp.tagIndex()]);
         break;
       }
-#endif
     }
 
     if (!JS_DefinePropertyById(cx, exportObj, id, val, propertyAttr)) {
@@ -1029,11 +1025,9 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // On the contrary, all the slots of exceptionTags will be filled with
   // unique tags.
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   if (!instantiateTags(cx, imports.tagObjs)) {
     return false;
   }
-#endif
 
   // Note that tableObjs is sparse: it will be null in slots that contain
   // tables that are neither exported nor imported.

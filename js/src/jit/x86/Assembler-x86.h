@@ -125,9 +125,9 @@ static constexpr Register ABINonVolatileReg = ebx;
 // and non-volatile registers.
 static constexpr Register ABINonArgReturnVolatileReg = ecx;
 
-// TLS pointer argument register for WebAssembly functions. This must not alias
-// any other register used for passing function arguments or return values.
-// Preserved by WebAssembly functions.
+// Instance pointer argument register for WebAssembly functions. This must not
+// alias any other register used for passing function arguments or return
+// values. Preserved by WebAssembly functions.
 static constexpr Register InstanceReg = esi;
 
 // Registers used for asm.js/wasm table calls. These registers must be disjoint

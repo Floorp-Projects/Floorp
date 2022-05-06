@@ -235,7 +235,7 @@ void GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
                               FuncOffsets* offsets);
 
 // Iterates through frames for either possible cross-instance call or an entry
-// stub to obtain tls that corresponds to the passed fp.
+// stub to obtain instance that corresponds to the passed fp.
 const Instance* GetNearestEffectiveInstance(const Frame* fp);
 Instance* GetNearestEffectiveInstance(Frame* fp);
 

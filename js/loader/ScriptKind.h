@@ -9,7 +9,7 @@
 
 namespace JS::loader {
 
-enum class ScriptKind { eClassic, eModule, eEvent };
+enum class ScriptKind { eClassic, eModule, eEvent, eImportMap };
 
 }  // namespace JS::loader
 

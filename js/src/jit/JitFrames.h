@@ -192,7 +192,7 @@ struct ResumeFromException {
   uint8_t* stackPointer;
   uint8_t* target;
   ExceptionResumeKind kind;
-  wasm::Instance* tlsData;
+  wasm::Instance* instance;
 
   // Value to push when resuming into a |finally| block.
   // Also used by Wasm to send the exception object to the throw stub.
@@ -214,8 +214,8 @@ struct ResumeFromException {
     return offsetof(ResumeFromException, target);
   }
   static size_t offsetOfKind() { return offsetof(ResumeFromException, kind); }
-  static size_t offsetOfTlsData() {
-    return offsetof(ResumeFromException, tlsData);
+  static size_t offsetOfInstance() {
+    return offsetof(ResumeFromException, instance);
   }
   static size_t offsetOfException() {
     return offsetof(ResumeFromException, exception);

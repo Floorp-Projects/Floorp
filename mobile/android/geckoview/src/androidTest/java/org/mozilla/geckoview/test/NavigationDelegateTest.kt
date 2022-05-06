@@ -99,7 +99,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         if (errorPageUrl != null) {
             sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
                 @AssertCalled(count = 1, order = [1])
-                override fun onLocationChange(session: GeckoSession, url: String?) {
+                override fun onLocationChange(
+                    session: GeckoSession,
+                    url: String?,
+                    perms: MutableList<PermissionDelegate.ContentPermission>) {
                     assertThat("URL should match", url, equalTo(testLoader.getUri()))
                 }
 
@@ -558,7 +561,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, equalTo(httpsUri))
             }
 
@@ -1226,7 +1232,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", url, notNullValue())
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
@@ -1261,7 +1270,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match the provided data URL", url, equalTo(dataUrl))
             }
 
@@ -1293,7 +1305,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Test that if we unset the navigation delegate during a load, the load still proceeds.
         var onLocationCount = 0
         mainSession.navigationDelegate = object : NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 onLocationCount++
             }
         }
@@ -1327,7 +1342,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should be a data URL", url,
                            equalTo(createDataUri(dataString, mimeType)))
             }
@@ -1345,7 +1363,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should be a data URL", url, startsWith("data:"))
             }
 
@@ -1373,7 +1394,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, "text/html")))
             }
 
@@ -1404,7 +1428,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, mimeType)))
             }
 
@@ -1450,7 +1477,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
@@ -1483,7 +1513,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
         })
@@ -1502,7 +1535,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
 
@@ -1536,7 +1572,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
 
@@ -2220,7 +2259,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         var currentUrl: String? = null
         mainSession.delegateUntilTestEnd(object: NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 currentUrl = url
             }
 
@@ -2301,7 +2343,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URI should match", url, endsWith("#test1"))
             }
         })
@@ -2317,7 +2362,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1)
-            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<PermissionDelegate.ContentPermission>) {
+            override fun onLocationChange(
+                session: GeckoSession,
+                url: String?,
+                perms: MutableList<PermissionDelegate.ContentPermission>) {
                 assertThat("URI should match", url, endsWith("#test2"))
             }
         })

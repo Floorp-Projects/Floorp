@@ -304,7 +304,7 @@
 
 - name: WasmInterruptCheck
   operands:
-    tlsPtr: WordSized
+    instance: WordSized
   mir_op: true
 
 - name: TypeOfV
@@ -1025,7 +1025,7 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-    tls: WordSized
+    instance: WordSized
   call_instruction: true
   mir_op: true
 
@@ -1224,13 +1224,13 @@
   num_temps: 1
   mir_op: TruncateToInt32
 
-# Convert a double to a truncated int32 with tls offset because we need it for
-# the slow ool path.
+# Convert a double to a truncated int32 with instance offset because we need it
+# for the slow ool path.
 - name: WasmBuiltinTruncateDToInt32
   result_type: WordSized
   operands:
     in: WordSized
-    tls: WordSized
+    instance: WordSized
   num_temps: 1
   mir_op: WasmBuiltinTruncateToInt32
 
@@ -1244,13 +1244,13 @@
   num_temps: 1
   mir_op: TruncateToInt32
 
-# Convert a float32 to a truncated int32 with tls offset because we need it for
-# the slow ool path.
+# Convert a float32 to a truncated int32 with instance offset because we need
+# it for the slow ool path.
 - name: WasmBuiltinTruncateFToInt32
   result_type: WordSized
   operands:
     in: WordSized
-    tls: WordSized
+    instance: WordSized
   num_temps: 1
   mir_op: WasmBuiltinTruncateToInt32
 
@@ -2669,22 +2669,22 @@
     ptr: Int64
   mir_op: WasmAlignmentCheck
 
-- name: WasmLoadTls
+- name: WasmLoadInstance
   result_type: WordSized
   operands:
-    tlsPtr: WordSized
+    instance: WordSized
   mir_op: true
 
-- name: WasmLoadTls64
+- name: WasmLoadInstance64
   result_type: Int64
   operands:
-    tlsPtr: WordSized
-  mir_op: WasmLoadTls
+    instance: WordSized
+  mir_op: WasmLoadInstance
 
 - name: WasmHeapBase
   result_type: WordSized
   operands:
-    tlsPtr: WordSized
+    instance: WordSized
   mir_op: true
 
 - name: WasmLoad
@@ -2774,7 +2774,7 @@
 
 - name: WasmStoreRef
   operands:
-    tls: WordSized
+    instance: WordSized
     valueAddr: WordSized
     value: WordSized
   num_temps: 1
@@ -2789,12 +2789,12 @@
 - name: WasmReturn
   operands:
     rval: WordSized
-    tls: WordSized
+    instance: WordSized
 
 - name: WasmReturnI64
   operands:
     rval: Int64
-    tls: WordSized
+    instance: WordSized
 
 - name: WasmReturnVoid
   operands:

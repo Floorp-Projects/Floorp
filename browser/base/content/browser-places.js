@@ -931,15 +931,6 @@ var BookmarksEventHandler = {
       return false;
     }
 
-    if (
-      gProtonPlacesTooltip &&
-      tooltipNode &&
-      !tooltipNode.closest("menupopup")
-    ) {
-      aEvent.target.setAttribute("position", "after_start");
-      aEvent.target.moveToAnchor(tooltipNode, "after_start");
-    }
-
     let tooltipTitle = aEvent.target.querySelector(".places-tooltip-title");
     tooltipTitle.hidden = !title || title == url;
     if (!tooltipTitle.hidden) {

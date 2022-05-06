@@ -1583,7 +1583,7 @@ class ConnectionPool final {
 
   void PerformIdleDatabaseMaintenance(DatabaseInfo& aDatabaseInfo);
 
-  void CloseDatabase(DatabaseInfo& aDatabaseInfo);
+  void CloseDatabase(DatabaseInfo& aDatabaseInfo) const;
 
   bool CloseDatabaseWhenIdleInternal(const nsACString& aDatabaseId);
 };
@@ -3638,7 +3638,8 @@ class CreateIndexOp final : public VersionChangeTransactionOp {
 
   nsresult InsertDataFromObjectStore(DatabaseConnection* aConnection);
 
-  nsresult InsertDataFromObjectStoreInternal(DatabaseConnection* aConnection);
+  nsresult InsertDataFromObjectStoreInternal(
+      DatabaseConnection* aConnection) const;
 
   bool Init(TransactionBase& aTransaction) override;
 
@@ -3688,9 +3689,9 @@ class DeleteIndexOp final : public VersionChangeTransactionOp {
 
   ~DeleteIndexOp() override = default;
 
-  nsresult RemoveReferencesToIndex(DatabaseConnection* aConnection,
-                                   const Key& aObjectDataKey,
-                                   nsTArray<IndexDataValue>& aIndexValues);
+  nsresult RemoveReferencesToIndex(
+      DatabaseConnection* aConnection, const Key& aObjectDataKey,
+      nsTArray<IndexDataValue>& aIndexValues) const;
 
   nsresult DoDatabaseWork(DatabaseConnection* aConnection) override;
 };
@@ -8653,7 +8654,7 @@ void ConnectionPool::PerformIdleDatabaseMaintenance(
       NS_DISPATCH_NORMAL));
 }
 
-void ConnectionPool::CloseDatabase(DatabaseInfo& aDatabaseInfo) {
+void ConnectionPool::CloseDatabase(DatabaseInfo& aDatabaseInfo) const {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(!aDatabaseInfo.TotalTransactionCount());
   aDatabaseInfo.mThreadInfo.AssertValid();
@@ -12413,7 +12414,7 @@ nsresult DatabaseFileManager::SyncDeleteFile(const int64_t aId) {
 }
 
 nsresult DatabaseFileManager::SyncDeleteFile(nsIFile& aFile,
-                                             nsIFile& aJournalFile) {
+                                             nsIFile& aJournalFile) const {
   QuotaManager* const quotaManager =
       EnforcingQuota() ? QuotaManager::Get() : nullptr;
   MOZ_ASSERT_IF(EnforcingQuota(), quotaManager);
@@ -18437,7 +18438,7 @@ nsresult CreateIndexOp::InsertDataFromObjectStore(
 }
 
 nsresult CreateIndexOp::InsertDataFromObjectStoreInternal(
-    DatabaseConnection* aConnection) {
+    DatabaseConnection* aConnection) const {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(mMaybeUniqueIndexTable);
@@ -18759,7 +18760,7 @@ DeleteIndexOp::DeleteIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
 
 nsresult DeleteIndexOp::RemoveReferencesToIndex(
     DatabaseConnection* aConnection, const Key& aObjectStoreKey,
-    nsTArray<IndexDataValue>& aIndexValues) {
+    nsTArray<IndexDataValue>& aIndexValues) const {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aConnection);

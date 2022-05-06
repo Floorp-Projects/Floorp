@@ -22,8 +22,8 @@
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmDebug.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmStubs.h"
-#include "wasm/WasmTlsData.h"
 
 #include "vm/NativeObject-inl.h"
 

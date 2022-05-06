@@ -877,18 +877,18 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared> {
   Register dest_;
   bool widenFloatToDouble_;
   wasm::BytecodeOffset bytecodeOffset_;
-  bool preserveTls_;
+  bool preserveInstance_;
 
  public:
   OutOfLineTruncateSlow(
       FloatRegister src, Register dest, bool widenFloatToDouble = false,
       wasm::BytecodeOffset bytecodeOffset = wasm::BytecodeOffset(),
-      bool preserveTls = false)
+      bool preserveInstance = false)
       : src_(src),
         dest_(dest),
         widenFloatToDouble_(widenFloatToDouble),
         bytecodeOffset_(bytecodeOffset),
-        preserveTls_(preserveTls) {}
+        preserveInstance_(preserveInstance) {}
 
   void accept(CodeGeneratorShared* codegen) override {
     codegen->visitOutOfLineTruncateSlow(this);
@@ -896,17 +896,17 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared> {
   FloatRegister src() const { return src_; }
   Register dest() const { return dest_; }
   bool widenFloatToDouble() const { return widenFloatToDouble_; }
-  bool preserveTls() const { return preserveTls_; }
+  bool preserveInstance() const { return preserveInstance_; }
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
 };
 
 OutOfLineCode* CodeGeneratorShared::oolTruncateDouble(
     FloatRegister src, Register dest, MInstruction* mir,
-    wasm::BytecodeOffset bytecodeOffset, bool preserveTls) {
+    wasm::BytecodeOffset bytecodeOffset, bool preserveInstance) {
   MOZ_ASSERT_IF(IsCompilingWasm(), bytecodeOffset.isValid());
 
   OutOfLineTruncateSlow* ool = new (alloc()) OutOfLineTruncateSlow(
-      src, dest, /* float32 */ false, bytecodeOffset, preserveTls);
+      src, dest, /* float32 */ false, bytecodeOffset, preserveInstance);
   addOutOfLineCode(ool, mir);
   return ool;
 }

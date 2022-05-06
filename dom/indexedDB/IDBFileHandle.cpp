@@ -369,7 +369,7 @@ void IDBFileHandle::Abort(ErrorResult& aRv) {
   Abort();
 }
 
-bool IDBFileHandle::CheckState(ErrorResult& aRv) {
+bool IDBFileHandle::CheckState(ErrorResult& aRv) const {
   if (!IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
     return false;

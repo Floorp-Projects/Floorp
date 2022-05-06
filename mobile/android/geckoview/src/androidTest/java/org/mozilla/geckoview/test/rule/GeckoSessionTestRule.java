@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KClass;
 import org.hamcrest.Matcher;
@@ -807,6 +808,14 @@ public class GeckoSessionTestRule implements TestRule {
       return null;
     }
 
+    // The default impl of this will call `onLocationChange(2)` which causes duplicated
+    // call records, to avoid that we implement it here so that it doesn't do anything.
+    @Override
+    public void onLocationChange(
+        @NonNull GeckoSession session,
+        @Nullable String url,
+        @NonNull List<ContentPermission> perms) {}
+
     @Override
     public void onShutdown() {}
 
@@ -1519,7 +1528,7 @@ public class GeckoSessionTestRule implements TestRule {
     methodCalls.add(
         new MethodCall(session, sOnPageStop, new CallRequirement(/* allowed */ true, count, null)));
 
-    waitUntilCalled(session, GeckoSession.ProgressDelegate.class, methodCalls);
+    waitUntilCalled(session, GeckoSession.ProgressDelegate.class, methodCalls, null);
   }
 
   /**
@@ -1590,7 +1599,7 @@ public class GeckoSessionTestRule implements TestRule {
           if (!pattern.matcher(method.getName()).matches()) {
             continue;
           }
-          waitMethods.add(new MethodCall(session, method, /* requirement */ null));
+          waitMethods.add(new MethodCall(session, method, new CallRequirement(true, -1, null)));
           break;
         }
       }
@@ -1602,7 +1611,7 @@ public class GeckoSessionTestRule implements TestRule {
         isSessionCallback,
         equalTo(true));
 
-    waitUntilCalled(session, callback, waitMethods);
+    waitUntilCalled(session, callback, waitMethods, null);
   }
 
   /**
@@ -1649,9 +1658,7 @@ public class GeckoSessionTestRule implements TestRule {
           throw new RuntimeException(e);
         }
         final AssertCalled ac = getAssertCalled(callbackMethod, callback);
-        if (ac != null && ac.value() && ac.count() != 0) {
-          methodCalls.add(new MethodCall(session, method, ac, /* target */ null));
-        }
+        methodCalls.add(new MethodCall(session, method, ac, /* target */ null));
       }
       isSessionCallback = true;
     }
@@ -1662,14 +1669,29 @@ public class GeckoSessionTestRule implements TestRule {
         isSessionCallback,
         equalTo(true));
 
-    waitUntilCalled(session, callback.getClass(), methodCalls);
-    forCallbacksDuringWait(session, callback);
+    waitUntilCalled(session, callback.getClass(), methodCalls, callback);
+  }
+
+  /**
+   * * Implement this interface in {@link #waitUntilCalled} to allow waiting until this method
+   * returns true. E.g. for when the test needs to wait for a specific value on a delegate call.
+   */
+  public interface ShouldContinue {
+    /**
+     * Whether the test should keep waiting or not.
+     *
+     * @return true if the test should keep waiting.
+     */
+    default boolean shouldContinue() {
+      return false;
+    }
   }
 
   private void waitUntilCalled(
       final @Nullable GeckoSession session,
       final @NonNull Class<?> delegate,
-      final @NonNull List<MethodCall> methodCalls) {
+      final @NonNull List<MethodCall> methodCalls,
+      final @Nullable Object callback) {
     ThreadUtils.assertOnUiThread();
 
     if (session != null && !session.equals(mMainSession)) {
@@ -1680,9 +1702,9 @@ public class GeckoSessionTestRule implements TestRule {
     // instead of through GeckoSession directly, so that we can still record calls even with
     // custom handlers set.
     for (final Class<?> ifce : DEFAULT_DELEGATES) {
-      final Object callback;
+      final Object sessionDelegate;
       try {
-        callback = getDelegate(ifce, session == null ? mMainSession : session);
+        sessionDelegate = getDelegate(ifce, session == null ? mMainSession : session);
       } catch (final NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
         throw unwrapRuntimeException(e);
       }
@@ -1694,12 +1716,12 @@ public class GeckoSessionTestRule implements TestRule {
           ifce.getSimpleName()
               + " callbacks should be "
               + "accessed through GeckoSessionTestRule delegate methods",
-          callback,
+          sessionDelegate,
           sameInstance(mCallbackProxy));
     }
 
     for (final Class<?> ifce : DEFAULT_RUNTIME_DELEGATES) {
-      final Object callback = getRuntimeDelegate(ifce, getRuntime());
+      final Object runtimeDelegate = getRuntimeDelegate(ifce, getRuntime());
       if (mNullDelegates.contains(ifce)) {
         // Null-delegates are initially null but are allowed to be any value.
         continue;
@@ -1708,7 +1730,7 @@ public class GeckoSessionTestRule implements TestRule {
           ifce.getSimpleName()
               + " callbacks should be "
               + "accessed through GeckoSessionTestRule delegate methods",
-          callback,
+          runtimeDelegate,
           sameInstance(mCallbackProxy));
     }
 
@@ -1734,7 +1756,19 @@ public class GeckoSessionTestRule implements TestRule {
 
     beforeWait();
 
-    while (!calledAny || !methodCalls.isEmpty()) {
+    ShouldContinue cont = new ShouldContinue() {};
+    if (callback instanceof ShouldContinue) {
+      cont = (ShouldContinue) callback;
+    }
+
+    List<MethodCall> pendingMethodCalls =
+        methodCalls.stream()
+            .filter(
+                mc -> mc.requirement != null && mc.requirement.count != 0 && mc.requirement.allowed)
+            .collect(Collectors.toList());
+
+    int order = 0;
+    while (!calledAny || !pendingMethodCalls.isEmpty() || cont.shouldContinue()) {
       final int currentIndex = index;
 
       // Let's wait for more messages if we reached the end
@@ -1744,8 +1778,12 @@ public class GeckoSessionTestRule implements TestRule {
         throw new UiThreadUtils.TimeoutException("Timed out after " + mTimeoutMillis + "ms");
       }
 
-      final MethodCall recorded = mCallRecords.get(index).methodCall;
-      calledAny |= recorded.method.getDeclaringClass().isAssignableFrom(delegate);
+      final CallRecord record = mCallRecords.get(index);
+      final MethodCall recorded = record.methodCall;
+
+      final boolean isDelegate = recorded.method.getDeclaringClass().isAssignableFrom(delegate);
+
+      calledAny |= isDelegate;
       index++;
 
       final int i = methodCalls.indexOf(recorded);
@@ -1754,9 +1792,25 @@ public class GeckoSessionTestRule implements TestRule {
       }
 
       final MethodCall methodCall = methodCalls.get(i);
+      assertAllowMoreCalls(methodCall);
+
       methodCall.incrementCounter();
+      assertOrder(methodCall, order);
+      order = Math.max(methodCall.getOrder(), order);
+
       if (methodCall.allowUnlimitedCalls() || !methodCall.allowMoreCalls()) {
-        methodCalls.remove(i);
+        pendingMethodCalls.remove(methodCall);
+      }
+
+      if (isDelegate && callback != null) {
+        try {
+          mCurrentMethodCall = methodCall;
+          record.method.invoke(callback, record.args);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+          throw unwrapRuntimeException(e);
+        } finally {
+          mCurrentMethodCall = null;
+        }
       }
     }
 

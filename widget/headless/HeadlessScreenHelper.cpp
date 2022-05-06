@@ -32,9 +32,9 @@ LayoutDeviceIntRect HeadlessScreenHelper::GetScreenRect() {
 HeadlessScreenHelper::HeadlessScreenHelper() {
   AutoTArray<RefPtr<Screen>, 1> screenList;
   LayoutDeviceIntRect rect = GetScreenRect();
-  auto ret =
-      MakeRefPtr<Screen>(rect, rect, 24, 24, DesktopToLayoutDeviceScale(),
-                         CSSToLayoutDeviceScale(), 96.0f);
+  auto ret = MakeRefPtr<Screen>(
+      rect, rect, 24, 24, 0, DesktopToLayoutDeviceScale(),
+      CSSToLayoutDeviceScale(), 96.0f, Screen::IsPseudoDisplay::No);
   screenList.AppendElement(ret.forget());
   ScreenManager::Refresh(std::move(screenList));
 }

@@ -11,11 +11,6 @@ div {
 </style>
 <script>
 window.onload = function(){
-  if (typeof Object.getOwnPropertyDescriptor(window.Animation.prototype,
-      'timeline').set == 'undefined') {
-    return;
-  }
-
   let body = document.getElementsByTagName("body")[0];
   let target = document.createElement("div");
   let anim1 = new Animation();

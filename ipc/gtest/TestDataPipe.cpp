@@ -10,6 +10,7 @@
 #include "mozilla/ipc/DataPipe.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla::ipc {
@@ -134,6 +135,56 @@ TEST(DataPipe, SegmentedReadWrite)
   rv = reader->Available(&available);
   EXPECT_EQ(available, 1024u);
   ConsumeAndValidateStream(reader, inputData2);
+}
+
+TEST(DataPipe, SegmentedPartialRead)
+{
+  RefPtr<DataPipeReceiver> reader;
+  RefPtr<DataPipeSender> writer;
+
+  nsresult rv =
+      NewDataPipe(1024, getter_AddRefs(writer), getter_AddRefs(reader));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCString inputData1;
+  CreateData(512, inputData1);
+
+  uint32_t numWritten = 0;
+  rv = writer->Write(inputData1.BeginReading(), inputData1.Length(),
+                     &numWritten);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_EQ(numWritten, 512u);
+
+  uint64_t available = 0;
+  rv = reader->Available(&available);
+  EXPECT_EQ(available, 512u);
+  ConsumeAndValidateStream(reader, inputData1);
+
+  nsCString inputData2;
+  CreateData(1024, inputData2);
+
+  rv = writer->Write(inputData2.BeginReading(), inputData2.Length(),
+                     &numWritten);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_EQ(numWritten, 1024u);
+
+  rv = reader->Available(&available);
+  EXPECT_EQ(available, 1024u);
+
+  nsAutoCString outputData;
+  rv = NS_ReadInputStreamToString(reader, outputData, 768);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_EQ(768u, outputData.Length());
+  ASSERT_TRUE(Substring(inputData2, 0, 768).Equals(outputData));
+
+  rv = reader->Available(&available);
+  EXPECT_EQ(available, 256u);
+
+  nsAutoCString outputData2;
+  rv = NS_ReadInputStreamToString(reader, outputData2, 256);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  ASSERT_EQ(256u, outputData2.Length());
+  ASSERT_TRUE(Substring(inputData2, 768).Equals(outputData2));
 }
 
 TEST(DataPipe, Write_AsyncWait)

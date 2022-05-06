@@ -35,6 +35,10 @@
 #  include "sddl.h"
 #endif
 
+#ifdef FUZZING_SNAPSHOT
+#  include "mozilla/fuzzing/IPCFuzzController.h"
+#endif
+
 using namespace IPC;
 
 using base::GetCurrentProcId;
@@ -511,6 +515,10 @@ void IProtocol::ActorConnected() {
   if (mLinkStatus != LinkStatus::Inactive) {
     return;
   }
+
+#ifdef FUZZING_SNAPSHOT
+  fuzzing::IPCFuzzController::instance().OnActorConnected(this);
+#endif
 
   mLinkStatus = LinkStatus::Connected;
 

@@ -129,9 +129,9 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
     auto screen = MakeRefPtr<Screen>(
-        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
+        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0, 0,
         DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */,
-        hal::ScreenOrientation::None, 0);
+        Screen::IsPseudoDisplay::No, hal::ScreenOrientation::None, 0);
     screen.forget(aOutScreen);
     return NS_OK;
   }
@@ -215,10 +215,10 @@ already_AddRefed<Screen> ScreenManager::GetPrimaryScreen() {
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
-    return MakeAndAddRef<Screen>(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
-                                 0, 0, DesktopToLayoutDeviceScale(),
-                                 CSSToLayoutDeviceScale(), 96 /* dpi */,
-                                 hal::ScreenOrientation::None, 0);
+    return MakeAndAddRef<Screen>(
+        LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0, 0,
+        DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */,
+        Screen::IsPseudoDisplay::No, hal::ScreenOrientation::None, 0);
   }
 
   return do_AddRef(mScreenList[0]);

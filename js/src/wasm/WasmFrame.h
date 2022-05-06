@@ -29,7 +29,7 @@
  * be hairy).  On x86-32 there are no register arguments.
  *
  * We have no callee-saves registers in the wasm-internal ABI, regardless of the
- * platform ABI conventions, though see below about TlsReg or HeapReg.
+ * platform ABI conventions, though see below about InstanceReg or HeapReg.
  *
  * We return the last return value in the first return register, according to
  * platform ABI conventions.  If there is more than one return value, an area is
@@ -39,32 +39,33 @@
  * see below about alignment of this area and the values in it.
  *
  * When a function is entered, there are two incoming register values in
- * addition to the function's declared parameters: TlsReg must have the correct
- * TLS pointer, and HeapReg the correct memoryBase, for the function.  (On
- * x86-32 there is no HeapReg.)  From the TLS we can get to the JSContext, the
- * instance, the MemoryBase, and many other things.  The TLS maps one-to-one
- * with an instance.
+ * addition to the function's declared parameters: InstanceReg must have the
+ * correct instance pointer, and HeapReg the correct memoryBase, for the
+ * function.  (On x86-32 there is no HeapReg.)  From the instance we can get to
+ * the JSContext, the instance, the MemoryBase, and many other things.  The
+ * instance maps one-to-one with an instance.
  *
- * HeapReg and TlsReg are not parameters in the usual sense, nor are they
+ * HeapReg and InstanceReg are not parameters in the usual sense, nor are they
  * callee-saves registers.  Instead they constitute global register state, the
  * purpose of which is to bias the call ABI in favor of intra-instance calls,
- * the predominant case where the caller and the callee have the same TlsReg and
- * HeapReg values.
+ * the predominant case where the caller and the callee have the same
+ * InstanceReg and HeapReg values.
  *
  * With this global register state, literally no work needs to take place to
- * save and restore the TLS and MemoryBase values across intra-instance call
- * boundaries.
+ * save and restore the instance and MemoryBase values across intra-instance
+ * call boundaries.
  *
  * For inter-instance calls, in contrast, there must be an instance switch at
- * the call boundary: Before the call, the callee's TLS must be loaded (from a
- * closure or from the import table), and from the TLS we load the callee's
- * MemoryBase, the realm, and the JSContext.  The caller's and callee's TLS
- * values must be stored into the frame (to aid unwinding), the callee's realm
- * must be stored into the JSContext, and the callee's TLS and MemoryBase values
- * must be moved to appropriate registers.  After the call, the caller's TLS
- * must be loaded, and from it the caller's MemoryBase and realm, and the
- * JSContext.  The realm must be stored into the JSContext and the caller's TLS
- * and MemoryBase values must be moved to appropriate registers.
+ * the call boundary: Before the call, the callee's instance must be loaded
+ * (from a closure or from the import table), and from the instance we load the
+ * callee's MemoryBase, the realm, and the JSContext.  The caller's and callee's
+ * instance values must be stored into the frame (to aid unwinding), the
+ * callee's realm must be stored into the JSContext, and the callee's instance
+ * and MemoryBase values must be moved to appropriate registers.  After the
+ * call, the caller's instance must be loaded, and from it the caller's
+ * MemoryBase and realm, and the JSContext.  The realm must be stored into the
+ * JSContext and the caller's instance and MemoryBase values must be moved to
+ * appropriate registers.
  *
  * Direct calls to functions within the same module are always intra-instance,
  * while direct calls to imported functions are always inter-instance.  Indirect
@@ -91,8 +92,8 @@
  *     |       Stack args (optional)       |   |
  *     |               ...                 |   |
  *     +-----------------------------------+ -+|
- *     |          Caller TLS slot          |   \
- *     |          Callee TLS slot          |   | \
+ *     |          Caller instance slot     |   \
+ *     |          Callee instance slot     |   | \
  *     +-----------------------------------+   |  \
  *     |       Shadowstack area (Win64)    |   |  wasm::FrameWithInstances
  *     |            (32 bytes)             |   |  /
@@ -106,14 +107,15 @@
  *     +-----------------------------------+    <=  SP
  *
  * The FrameWithInstances is a struct with four fields: the saved FP, the return
- * address, and the two TLS slots; the shadow stack area is there only on Win64
- * and is unused by wasm but is part of the native ABI, with which the wasm ABI
- * is mostly compatible.  The slots for caller and callee TLS are only populated
- * by the instance switching code in inter-instance calls so that stack
- * unwinding can keep track of the correct TLS value for each frame, the TLS not
- * being obtainable from anywhere else.  Nothing in the frame itself indicates
- * directly whether the TLS slots are valid - for that, the return address must
- * be used to look up a CallSite structure that carries that information.
+ * address, and the two instance slots; the shadow stack area is there only on
+ * Win64 and is unused by wasm but is part of the native ABI, with which the
+ * wasm ABI is mostly compatible.  The slots for caller and callee instance are
+ * only populated by the instance switching code in inter-instance calls so that
+ * stack unwinding can keep track of the correct instance value for each frame,
+ * the instance not being obtainable from anywhere else.  Nothing in the frame
+ * itself indicates directly whether the instance slots are valid - for that,
+ * the return address must be used to look up a CallSite structure that carries
+ * that information.
  *
  * The stack area above the return address is owned by the caller, which may
  * deallocate the area on return or choose to reuse it for subsequent calls.
@@ -367,9 +369,9 @@ static_assert(sizeof(Frame) == 2 * sizeof(void*),
 
 class FrameWithInstances : public Frame {
   // `ShadowStackSpace` bytes will be allocated here on Win64, at higher
-  // addresses than Frame and at lower addresses than the TLS fields.
+  // addresses than Frame and at lower addresses than the instance fields.
 
-  // The TLS area MUST be two pointers exactly.
+  // The instance area MUST be two pointers exactly.
   Instance* calleeInstance_;
   Instance* callerInstance_;
 
@@ -406,10 +408,10 @@ class FrameWithInstances : public Frame {
 
 static_assert(FrameWithInstances::calleeInstanceOffsetWithoutFrame() ==
                   js::jit::ShadowStackSpace,
-              "Callee tls stored right above the return address.");
+              "Callee instance stored right above the return address.");
 static_assert(FrameWithInstances::callerInstanceOffsetWithoutFrame() ==
                   js::jit::ShadowStackSpace + sizeof(void*),
-              "Caller tls stored right above the callee tls.");
+              "Caller instance stored right above the callee instance.");
 
 static_assert(FrameWithInstances::sizeOfInstanceFields() == 2 * sizeof(void*),
               "There are only two additional slots");

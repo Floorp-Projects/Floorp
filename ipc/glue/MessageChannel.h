@@ -27,6 +27,10 @@
 #include "mozilla/ipc/ScopedPort.h"
 #include "nsITargetShutdownTask.h"
 
+#ifdef FUZZING_SNAPSHOT
+#  include "mozilla/fuzzing/IPCFuzzController.h"
+#endif
+
 class MessageLoop;
 
 namespace IPC {
@@ -324,6 +328,13 @@ class MessageChannel : HasResultCodes {
   bool IsCrossProcess() const REQUIRES(*mMonitor);
   void SetIsCrossProcess(bool aIsCrossProcess) REQUIRES(*mMonitor);
 
+#ifdef FUZZING_SNAPSHOT
+  Maybe<mojo::core::ports::PortName> GetPortName() {
+    MonitorAutoLock lock(*mMonitor);
+    return mLink->GetPortName();
+  }
+#endif
+
 #ifdef OS_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
     explicit SyncStackFrame(MessageChannel* channel);
@@ -524,7 +535,7 @@ class MessageChannel : HasResultCodes {
     }
 
    private:
-    ~MessageTask() = default;
+    ~MessageTask();
 
     MessageChannel* Channel() REQUIRES(*mMonitor) {
       mMonitor->AssertCurrentThreadOwns();
@@ -540,6 +551,9 @@ class MessageChannel : HasResultCodes {
     MessageChannel* const mChannel;
     Message mMessage;
     bool mScheduled : 1 GUARDED_BY(*mMonitor);
+#ifdef FUZZING_SNAPSHOT
+    bool mFuzzStopped;
+#endif
   };
 
   bool ShouldRunMessage(const Message& aMsg) REQUIRES(*mMonitor);

@@ -37,8 +37,8 @@
 #include "vm/TypedArrayObject.h"
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmCodegenTypes.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
-#include "wasm/WasmTlsData.h"
 #include "wasm/WasmValidate.h"
 
 #include "jit/TemplateObject-inl.h"
@@ -2413,7 +2413,7 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   if (compilingWasm) {
     Push(InstanceReg);
   }
-  int32_t framePushedAfterTls = framePushed();
+  int32_t framePushedAfterInstance = framePushed();
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) ||     \
     defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
@@ -2440,11 +2440,11 @@ void MacroAssembler::outOfLineTruncateSlow(FloatRegister src, Register dest,
   MOZ_ASSERT(src.isDouble());
 
   if (compilingWasm) {
-    int32_t tlsOffset = framePushed() - framePushedAfterTls;
+    int32_t instanceOffset = framePushed() - framePushedAfterInstance;
     setupWasmABICall();
     passABIArg(src, MoveOp::DOUBLE);
     callWithABI(callOffset, wasm::SymbolicAddress::ToInt32,
-                mozilla::Some(tlsOffset));
+                mozilla::Some(instanceOffset));
   } else {
     using Fn = int32_t (*)(double);
     setupUnalignedABICall(dest);
@@ -3153,18 +3153,19 @@ void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
 
 CodeOffset MacroAssembler::callWithABI(wasm::BytecodeOffset bytecode,
                                        wasm::SymbolicAddress imm,
-                                       mozilla::Maybe<int32_t> tlsOffset,
+                                       mozilla::Maybe<int32_t> instanceOffset,
                                        MoveOp::Type result) {
   MOZ_ASSERT(wasm::NeedsBuiltinThunk(imm));
 
   uint32_t stackAdjust;
   callWithABIPre(&stackAdjust, /* callFromWasm = */ true);
 
-  // The TLS register is used in builtin thunks and must be set.
-  if (tlsOffset) {
-    loadPtr(Address(getStackPointer(), *tlsOffset + stackAdjust), InstanceReg);
+  // The instance register is used in builtin thunks and must be set.
+  if (instanceOffset) {
+    loadPtr(Address(getStackPointer(), *instanceOffset + stackAdjust),
+            InstanceReg);
   } else {
-    MOZ_CRASH("tlsOffset is Nothing only for unsupported abi calls.");
+    MOZ_CRASH("instanceOffset is Nothing only for unsupported abi calls.");
   }
   CodeOffset raOffset = call(
       wasm::CallSiteDesc(bytecode.offset(), wasm::CallSite::Symbolic), imm);
@@ -3750,12 +3751,10 @@ void MacroAssembler::wasmTrap(wasm::Trap trap,
   append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 [[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
   wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
   return append(tryNote, tryNoteIndex);
 }
-#endif
 
 std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
     uint32_t amount, wasm::BytecodeOffset trapOffset) {
@@ -3822,7 +3821,7 @@ CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,
   loadPtr(Address(InstanceReg, wasm::Instance::offsetOfCx()), ABINonArgReg2);
   storePtr(ABINonArgReg1, Address(ABINonArgReg2, JSContext::offsetOfRealm()));
 
-  // Switch to the callee's TLS and pinned registers and make the call.
+  // Switch to the callee's instance and pinned registers and make the call.
   loadWasmGlobalPtr(
       globalDataOffset + offsetof(wasm::FuncImportInstanceData, instance),
       InstanceReg);
@@ -3914,10 +3913,10 @@ CodeOffset MacroAssembler::asmCallIndirect(const wasm::CallSiteDesc& desc,
 
 // In principle, call_indirect requires an expensive context switch to the
 // callee's instance and realm before the call and an almost equally expensive
-// switch back to the caller's ditto after.  However, if the caller's tls is the
-// same as the callee's tls then no context switch is required, and it only
-// takes a compare-and-branch at run-time to test this - all values are in
-// registers already.  We therefore generate two call paths, one for the fast
+// switch back to the caller's ditto after.  However, if the caller's instance
+// is the same as the callee's instance then no context switch is required, and
+// it only takes a compare-and-branch at run-time to test this - all values are
+// in registers already.  We therefore generate two call paths, one for the fast
 // call without the context switch (which additionally avoids a null check) and
 // one for the slow call with the context switch.
 
@@ -3978,15 +3977,15 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   loadWasmGlobalPtr(callee.tableFunctionBaseGlobalDataOffset(), calleeScratch);
   shiftIndex32AndAdd(index, shift, calleeScratch);
 
-  // Load the callee tls and decide whether to take the fast path or the slow
-  // path.
+  // Load the callee instance and decide whether to take the fast path or the
+  // slow path.
 
   Label fastCall;
   Label done;
-  const Register newTlsTemp = WasmTableCallScratchReg1;
+  const Register newInstanceTemp = WasmTableCallScratchReg1;
   loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, instance)),
-          newTlsTemp);
-  branchPtr(Assembler::Equal, InstanceReg, newTlsTemp, &fastCall);
+          newInstanceTemp);
+  branchPtr(Assembler::Equal, InstanceReg, newInstanceTemp, &fastCall);
 
   // Slow path: Save context, check for null, setup new context, call, restore
   // context.
@@ -3998,13 +3997,13 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
 
   storePtr(InstanceReg,
            Address(getStackPointer(), WasmCallerInstanceOffsetBeforeCall));
-  movePtr(newTlsTemp, InstanceReg);
+  movePtr(newInstanceTemp, InstanceReg);
   storePtr(InstanceReg,
            Address(getStackPointer(), WasmCalleeInstanceOffsetBeforeCall));
 
 #ifdef WASM_HAS_HEAPREG
   // Use the null pointer exception resulting from loading HeapReg from a null
-  // Tls to handle a call to a null slot.
+  // instance to handle a call to a null slot.
   MOZ_ASSERT(nullCheckFailedLabel == nullptr);
   loadWasmPinnedRegsFromInstance(mozilla::Some(trapOffset));
 #else
@@ -4029,20 +4028,20 @@ void MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
   jump(&done);
 
-  // Fast path: just load the code pointer and go.  The tls and heap register
-  // are the same as in the caller, and nothing will be null.
+  // Fast path: just load the code pointer and go.  The instance and heap
+  // register are the same as in the caller, and nothing will be null.
   //
-  // (In particular, the code pointer will not be null: if it were, the tls
+  // (In particular, the code pointer will not be null: if it were, the instance
   // would have been null, and then it would not have been equivalent to our
-  // current tls.  So no null check is needed on the fast path.)
+  // current instance.  So no null check is needed on the fast path.)
 
   bind(&fastCall);
 
   loadPtr(Address(calleeScratch, offsetof(wasm::FunctionTableElem, code)),
           calleeScratch);
 
-  // We use a different type of call site for the fast call since the Tls slots
-  // in the frame do not have valid values.
+  // We use a different type of call site for the fast call since the instance
+  // slots in the frame do not have valid values.
 
   wasm::CallSiteDesc newDesc(desc.lineOrBytecode(),
                              wasm::CallSiteDesc::IndirectFast);

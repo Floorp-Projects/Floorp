@@ -46,6 +46,11 @@ interface FuzzingFunctions {
   static void enableAccessibility();
 
   /**
+   * Send IPC fuzzing ready event to parent.
+   */
+  static void signalIPCReady();
+
+  /**
    * synthesizeKeyboardEvents() synthesizes a set of "keydown",
    * "keypress" (only when it's necessary) and "keyup" events in top DOM window
    * in current process (and the synthesized events will be retargeted to

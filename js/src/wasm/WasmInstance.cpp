@@ -139,18 +139,16 @@ const void** Instance::addressOfTypeId(const TypeIdDesc& typeId) const {
 }
 
 FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
-  return *(FuncImportInstanceData*)(globalData() + fi.tlsDataOffset());
+  return *(FuncImportInstanceData*)(globalData() + fi.instanceOffset());
 }
 
 TableInstanceData& Instance::tableInstanceData(const TableDesc& td) const {
   return *(TableInstanceData*)(globalData() + td.globalDataOffset);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
-GCPtrWasmTagObject& Instance::tagTls(const TagDesc& td) const {
+GCPtrWasmTagObject& Instance::tagInstanceData(const TagDesc& td) const {
   return *(GCPtrWasmTagObject*)(globalData() + td.globalDataOffset);
 }
-#endif
 
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
@@ -998,9 +996,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return 0;
 }
 
-/* static */ void* Instance::tableGetFunc(Instance* instance, uint32_t index,
-                                          uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableGetFunc.failureMode == FailureMode::FailOnInvalidRef);
+/* static */ void* Instance::tableGet(Instance* instance, uint32_t index,
+                                      uint32_t tableIndex) {
+  MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
 
   JSContext* cx = instance->cx();
   const Table& table = *instance->tables()[tableIndex];
@@ -1009,13 +1007,19 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return AnyRef::invalid().forCompiledCode();
   }
 
-  MOZ_RELEASE_ASSERT(table.repr() == TableRepr::Func);
-  MOZ_RELEASE_ASSERT(!table.isAsmJS());
-  RootedFunction fun(cx);
-  if (!table.getFuncRef(cx, index, &fun)) {
-    return AnyRef::invalid().forCompiledCode();
+  switch (table.repr()) {
+    case TableRepr::Ref:
+      return table.getAnyRef(index).forCompiledCode();
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
+      RootedFunction fun(cx);
+      if (!table.getFuncRef(cx, index, &fun)) {
+        return AnyRef::invalid().forCompiledCode();
+      }
+      return FuncRef::fromJSFunction(fun).forCompiledCode();
+    }
   }
-  return FuncRef::fromJSFunction(fun).forCompiledCode();
+  MOZ_CRASH("Should not happen");
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
@@ -1044,9 +1048,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return oldSize;
 }
 
-/* static */ int32_t Instance::tableSetFunc(Instance* instance, uint32_t index,
-                                            void* value, uint32_t tableIndex) {
-  MOZ_ASSERT(SASigTableSetFunc.failureMode == FailureMode::FailOnNegI32);
+/* static */ int32_t Instance::tableSet(Instance* instance, uint32_t index,
+                                        void* value, uint32_t tableIndex) {
+  MOZ_ASSERT(SASigTableSet.failureMode == FailureMode::FailOnNegI32);
 
   JSContext* cx = instance->cx();
   Table& table = *instance->tables()[tableIndex];
@@ -1056,10 +1060,24 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
     return -1;
   }
 
-  MOZ_RELEASE_ASSERT(table.repr() == TableRepr::Func);
-  MOZ_RELEASE_ASSERT(!table.isAsmJS());
-  table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx);
+  switch (table.repr()) {
+    case TableRepr::Ref:
+      table.fillAnyRef(index, 1, AnyRef::fromCompiledCode(value));
+      break;
+    case TableRepr::Func:
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
+      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value), cx);
+      break;
+  }
+
   return 0;
+}
+
+/* static */ uint32_t Instance::tableSize(Instance* instance,
+                                          uint32_t tableIndex) {
+  MOZ_ASSERT(SASigTableSize.failureMode == FailureMode::Infallible);
+  Table& table = *instance->tables()[tableIndex];
+  return table.length();
 }
 
 /* static */ void* Instance::refFunc(Instance* instance, uint32_t funcIndex) {
@@ -1206,7 +1224,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   return TypedObject::createArray(cx, rttValue, length);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 /* static */ void* Instance::exceptionNew(Instance* instance, JSObject* tag) {
   MOZ_ASSERT(SASigExceptionNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
@@ -1230,7 +1247,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // and use that to trigger the stack walking for this exception.
   return -1;
 }
-#endif
 
 /* static */ int32_t Instance::refTest(Instance* instance, void* refPtr,
                                        void* rttPtr) {
@@ -1382,7 +1398,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   addressOfNeedsIncrementalBarrier_ =
       cx->compartment()->zone()->addressOfNeedsIncrementalBarrier();
 
-  // Initialize function imports in the tls data
+  // Initialize function imports in the instance data
   Tier callerTier = code_->bestTier();
   for (size_t i = 0; i < metadata(callerTier).funcImports.length(); i++) {
     JSFunction* f = funcImports[i];
@@ -1411,25 +1427,23 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     }
   }
 
-  // Initialize tables in the tls data
+  // Initialize tables in the instance data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
     TableInstanceData& table = tableInstanceData(td);
     table.length = tables_[i]->length();
-    table.elements = tables_[i]->tlsElements();
+    table.elements = tables_[i]->instanceElements();
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
-  // Initialize tags in the tls data
+  // Initialize tags in the instance data
   for (size_t i = 0; i < metadata().tags.length(); i++) {
     const TagDesc& td = metadata().tags[i];
     MOZ_ASSERT(td.globalDataOffset != UINT32_MAX);
     MOZ_ASSERT(tagObjs[i] != nullptr);
-    tagTls(td) = tagObjs[i];
+    tagInstanceData(td) = tagObjs[i];
   }
   pendingException_ = nullptr;
   pendingExceptionTag_ = nullptr;
-#endif
 
   // Add debug filtering table.
   if (metadata().debugEnabled) {
@@ -1511,7 +1525,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     }
   }
 
-  // Initialize globals in the tls data.
+  // Initialize globals in the instance data.
   //
   // This must be performed after we have initialized runtime types as a global
   // initializer may reference them.
@@ -1607,9 +1621,7 @@ Instance::~Instance() {
   }
 
   // Any pending exceptions should have been consumed.
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 }
 
 void Instance::setInterrupt() {
@@ -1668,7 +1680,7 @@ void Instance::tracePrivate(JSTracer* trc) {
   TraceEdge(trc, &object_, "wasm instance object");
 
   // OK to just do one tier here; though the tiers have different funcImports
-  // tables, they share the tls object.
+  // tables, they share the instance object.
   for (const FuncImport& fi : metadata(code().stableTier()).funcImports) {
     TraceNullableEdge(trc, &funcImportInstanceData(fi).fun, "wasm import");
   }
@@ -1687,11 +1699,9 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, obj, "wasm reference-typed global");
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   for (const TagDesc& tag : code().metadata().tags) {
-    TraceNullableEdge(trc, &tagTls(tag), "wasm tag");
+    TraceNullableEdge(trc, &tagInstanceData(tag), "wasm tag");
   }
-#endif
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
 #ifdef ENABLE_WASM_GC
@@ -1706,10 +1716,8 @@ void Instance::tracePrivate(JSTracer* trc) {
   }
 #endif
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   TraceNullableEdge(trc, &pendingException_, "wasm pending exception value");
   TraceNullableEdge(trc, &pendingExceptionTag_, "wasm pending exception tag");
-#endif
 
   if (maybeDebug_) {
     maybeDebug_->trace(trc);
@@ -2179,9 +2187,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   DebugCodegen(DebugChannel::Function, "]\n");
 
   // Ensure pending exception is cleared before and after (below) call.
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 
   {
     JitActivation activation(cx);
@@ -2193,9 +2199,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
     }
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(!pendingException_);
-#endif
 
   if (isAsmJS() && args.isConstructing()) {
     // By spec, when a JS function is called as a constructor and this
@@ -2224,7 +2228,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 static JSObject* GetExceptionTag(JSObject* exn) {
   return exn->is<WasmExceptionObject>() ? &exn->as<WasmExceptionObject>().tag()
                                         : nullptr;
@@ -2234,7 +2237,6 @@ void Instance::setPendingException(HandleAnyRef exn) {
   pendingException_ = exn.get().asJSObject();
   pendingExceptionTag_ = GetExceptionTag(exn.get().asJSObject());
 }
-#endif
 
 bool Instance::constantRefFunc(uint32_t funcIndex,
                                MutableHandleFuncRef result) {
@@ -2327,7 +2329,7 @@ void Instance::onMovingGrowTable(const Table* theTable) {
     if (tables_[i] == theTable) {
       TableInstanceData& table = tableInstanceData(metadata().tables[i]);
       table.length = tables_[i]->length();
-      table.elements = tables_[i]->tlsElements();
+      table.elements = tables_[i]->instanceElements();
     }
   }
 }

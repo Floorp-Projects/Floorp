@@ -226,6 +226,9 @@ class GeckoMediaPluginServiceParent final
   // processes we have. When this is empty we can safely shut down.
   // Synchronized across thread via mMutex in base class.
   nsTArray<GMPServiceParent*> mServiceParents;
+
+  uint32_t mDirectoriesAdded = 0;
+  uint32_t mDirectoriesInProgress = 0;
 };
 
 nsresult WriteToFile(nsIFile* aPath, const nsCString& aFileName,

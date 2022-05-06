@@ -174,6 +174,10 @@ function Article(props) {
   const url = new URL(article.url || article.resolved_url || "");
   const urlSearchParams = new URLSearchParams(utmParams);
 
+  if (openInPocketReader && article.item_id && !url.href.match(/getpocket\.com\/read/)) {
+    url.href = `https://getpocket.com/read/${article.item_id}`;
+  }
+
   for (let [key, val] of urlSearchParams.entries()) {
     url.searchParams.set(key, val);
   } // Using array notation because there is a key titled `1` (`images` is an object)
@@ -184,16 +188,10 @@ function Article(props) {
   const title = article.title || article.resolved_title; // Sometimes domain_metadata is not there, depending on the source.
 
   const publisher = article.publisher || article.domain_metadata?.name || article.resolved_domain;
-  let constructedURL = url.href;
-
-  if (openInPocketReader && article.item_id && !url.href.match(/getpocket\.com\/read/)) {
-    constructedURL = `https://getpocket.com/read/${article.item_id}`;
-  }
-
   return /*#__PURE__*/react.createElement("li", {
     className: "stp_article_list_item"
   }, /*#__PURE__*/react.createElement(ArticleUrl, {
-    url: constructedURL,
+    url: url.href,
     savedArticle: savedArticle,
     position: position,
     source: source,
@@ -1008,7 +1006,8 @@ function Saved(props) {
     "data-l10n-id": "pocket-panel-button-remove"
   }))), savedStory && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
     articles: [savedStory],
-    openInPocketReader: true
+    openInPocketReader: true,
+    utmParams: utmParams
   }), /*#__PURE__*/react.createElement(TagPicker_TagPicker, {
     tags: [],
     itemUrl: itemUrl
