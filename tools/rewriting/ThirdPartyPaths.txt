@@ -7,7 +7,6 @@ browser/extensions/formautofill/test/fixtures/third_party/
 browser/extensions/screenshots/build/raven.js
 devtools/client/inspector/markup/test/lib_*
 devtools/client/jsonview/lib/require.js
-devtools/client/shared/demangle.js
 devtools/client/shared/build/babel.js
 devtools/client/shared/source-map/
 devtools/client/shared/sourceeditor/codemirror/
