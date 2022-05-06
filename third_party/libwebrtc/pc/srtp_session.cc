@@ -269,22 +269,12 @@ bool SrtpSession::DoSetKey(int type,
 
   srtp_policy_t policy;
   memset(&policy, 0, sizeof(policy));
-  if (cs == rtc::SRTP_AES128_CM_SHA1_80) {
-    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtp);
-    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
-  } else if (cs == rtc::SRTP_AES128_CM_SHA1_32) {
-    // RTP HMAC is shortened to 32 bits, but RTCP remains 80 bits.
-    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&policy.rtp);
-    srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&policy.rtcp);
-  } else if (cs == rtc::SRTP_AEAD_AES_128_GCM) {
-    srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtp);
-    srtp_crypto_policy_set_aes_gcm_128_16_auth(&policy.rtcp);
-  } else if (cs == rtc::SRTP_AEAD_AES_256_GCM) {
-    srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtp);
-    srtp_crypto_policy_set_aes_gcm_256_16_auth(&policy.rtcp);
-  } else {
-    RTC_LOG(LS_WARNING) << "Failed to " << (session_ ? "update" : "create")
-                        << " SRTP session: unsupported cipher_suite " << cs;
+  if (!(srtp_crypto_policy_set_from_profile_for_rtp(
+            &policy.rtp, (srtp_profile_t)cs) == srtp_err_status_ok &&
+        srtp_crypto_policy_set_from_profile_for_rtcp(
+            &policy.rtcp, (srtp_profile_t)cs) == srtp_err_status_ok)) {
+    RTC_LOG(LS_ERROR) << "Failed to " << (session_ ? "update" : "create")
+                      << " SRTP session: unsupported cipher_suite " << cs;
     return false;
   }
 
