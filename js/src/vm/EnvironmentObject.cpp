@@ -273,10 +273,8 @@ const JSClass CallObject::class_ = {
 /*****************************************************************************/
 
 /* static */
-VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
-                                                   HandleShape shape,
-                                                   HandleObject enclosing,
-                                                   gc::InitialHeap heap) {
+VarEnvironmentObject* VarEnvironmentObject::createInternal(
+    JSContext* cx, HandleShape shape, HandleObject enclosing) {
   MOZ_ASSERT(shape->getObjectClass() == &class_);
 
   auto* env = CreateEnvironmentObject<VarEnvironmentObject>(cx, shape);
@@ -294,7 +292,21 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
                                                    HandleScope scope,
-                                                   AbstractFramePtr frame) {
+                                                   HandleObject enclosing) {
+  MOZ_ASSERT(scope->is<EvalScope>() || scope->is<VarScope>());
+
+  RootedShape shape(cx, scope->environmentShape());
+  auto* env = createInternal(cx, shape, enclosing);
+  if (!env) {
+    return nullptr;
+  }
+  env->initScope(scope);
+  return env;
+}
+
+/* static */
+VarEnvironmentObject* VarEnvironmentObject::createForFrame(
+    JSContext* cx, HandleScope scope, AbstractFramePtr frame) {
 #ifdef DEBUG
   if (frame.isEvalFrame()) {
     MOZ_ASSERT(scope->is<EvalScope>() && scope == frame.script()->bodyScope());
@@ -310,15 +322,8 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
   }
 #endif
 
-  RootedScript script(cx, frame.script());
   RootedObject envChain(cx, frame.environmentChain());
-  RootedShape shape(cx, scope->environmentShape());
-  VarEnvironmentObject* env = create(cx, shape, envChain, gc::DefaultHeap);
-  if (!env) {
-    return nullptr;
-  }
-  env->initScope(scope);
-  return env;
+  return create(cx, scope, envChain);
 }
 
 /* static */
@@ -337,8 +342,8 @@ VarEnvironmentObject* VarEnvironmentObject::createHollowForDebug(
   // enclosing link, which is what Debugger uses to construct the tree of
   // Debugger.Environment objects.
   RootedObject enclosingEnv(cx, &cx->global()->lexicalEnvironment());
-  Rooted<VarEnvironmentObject*> env(
-      cx, create(cx, shape, enclosingEnv, gc::TenuredHeap));
+  Rooted<VarEnvironmentObject*> env(cx,
+                                    createInternal(cx, shape, enclosingEnv));
   if (!env) {
     return nullptr;
   }
@@ -3956,7 +3961,7 @@ bool js::InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame) {
 
 bool js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
                                   AbstractFramePtr frame) {
-  VarEnvironmentObject* env = VarEnvironmentObject::create(cx, scope, frame);
+  auto* env = VarEnvironmentObject::createForFrame(cx, scope, frame);
   if (!env) {
     return false;
   }
