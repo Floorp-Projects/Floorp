@@ -521,7 +521,9 @@ void VideoStreamEncoderResourceManager::ConfigureQualityScaler(
   const auto scaling_settings = encoder_info.scaling_settings;
   const bool quality_scaling_allowed =
       IsResolutionScalingEnabled(degradation_preference_) &&
-      scaling_settings.thresholds;
+      (scaling_settings.thresholds.has_value() ||
+       (encoder_settings_.has_value() &&
+        encoder_settings_->encoder_config().is_quality_scaling_allowed));
 
   // TODO(https://crbug.com/webrtc/11222): Should this move to
   // QualityScalerResource?
@@ -535,9 +537,9 @@ void VideoStreamEncoderResourceManager::ConfigureQualityScaler(
         experimental_thresholds = QualityScalingExperiment::GetQpThresholds(
             GetVideoCodecTypeOrGeneric(encoder_settings_));
       }
-      UpdateQualityScalerSettings(experimental_thresholds
-                                      ? *experimental_thresholds
-                                      : *(scaling_settings.thresholds));
+      UpdateQualityScalerSettings(experimental_thresholds.has_value()
+                                      ? experimental_thresholds
+                                      : scaling_settings.thresholds);
     }
   } else {
     UpdateQualityScalerSettings(absl::nullopt);
