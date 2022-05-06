@@ -205,10 +205,9 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
   );
 
   // x
-  isWithin(
-    expectedX,
+  is(
     xObj.value,
-    1,
+    expectedX,
     "Wrong x coordinate of text between offsets (" +
       aStartOffset +
       ", " +
@@ -219,8 +218,8 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
 
   // y
   isWithin(
-    expectedY,
     yObj.value,
+    expectedY,
     1,
     `y coord of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
       `for ${prettyName(aID)}`
@@ -233,22 +232,17 @@ function testTextBounds(aID, aStartOffset, aEndOffset, aRect, aCoordOrigin) {
     ", " +
     aEndOffset +
     ") for " +
-    prettyName(aID) +
-    " - Got " +
-    widthObj.value +
-    " Expected " +
-    expectedWidth;
-  if (!WIN) {
-    isWithin(expectedWidth, widthObj.value, 1, msg);
+    prettyName(aID);
+  if (widthObj.value == expectedWidth) {
+    ok(true, msg);
   } else {
-    // fails on some windows machines
     todo(false, msg);
-  }
+  } // fails on some windows machines
 
   // Height
   isWithin(
-    expectedHeight,
     heightObj.value,
+    expectedHeight,
     1,
     `height of text between offsets (${aStartOffset}, ${aEndOffset}) ` +
       `for ${prettyName(aID)}`

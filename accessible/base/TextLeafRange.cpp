@@ -391,10 +391,6 @@ bool TextLeafPoint::operator<(const TextLeafPoint& aPoint) const {
   return mAcc->IsBefore(aPoint.mAcc);
 }
 
-bool TextLeafPoint::operator<=(const TextLeafPoint& aPoint) const {
-  return *this == aPoint || *this < aPoint;
-}
-
 bool TextLeafPoint::IsEmptyLastLine() const {
   if (mAcc->IsHTMLBr() && mOffset == 1) {
     return true;
@@ -1116,20 +1112,6 @@ TextLeafPoint TextLeafPoint::FindTextAttrsStart(
       aDirection == eDirPrevious
           ? 0
           : static_cast<int32_t>(nsAccUtils::TextLength(lastPoint.mAcc)));
-}
-
-LayoutDeviceIntRect TextLeafPoint::CharBounds() {
-  if (!mAcc || !mAcc->IsRemote() || !mAcc->AsRemote() ||
-      !mAcc->AsRemote()->mCachedFields) {
-    return LayoutDeviceIntRect();
-  }
-
-  RemoteAccessible* acc = mAcc->AsRemote();
-  if (Maybe<nsTArray<nsRect>> charBounds = acc->GetCachedCharData()) {
-    return acc->BoundsWithOffset(Some(charBounds->ElementAt(mOffset)));
-  }
-
-  return LayoutDeviceIntRect();
 }
 
 }  // namespace mozilla::a11y

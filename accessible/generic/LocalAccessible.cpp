@@ -54,7 +54,6 @@
 #include "nsIStringBundle.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
-#include "nsTextFrame.h"
 #include "nsView.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIScrollableFrame.h"
@@ -3207,31 +3206,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  nsIFrame* frame = GetFrame();
-  if ((aCacheDomain & CacheDomain::TextBounds) && IsTextLeaf()) {
-    if (frame && frame->IsTextFrame()) {
-      nsTArray<int32_t> charData;
-      nsIFrame* currTextFrame = frame;
-      while (currTextFrame) {
-        nsTArray<nsRect> charBounds;
-        currTextFrame->GetCharacterRectsInRange(
-            0, static_cast<nsTextFrame*>(currTextFrame)->GetContentLength(),
-            charBounds);
-        for (const nsRect& rect : charBounds) {
-          charData.AppendElement(rect.x);
-          charData.AppendElement(rect.y);
-          charData.AppendElement(rect.width);
-          charData.AppendElement(rect.height);
-        }
-        currTextFrame = currTextFrame->GetNextContinuation();
-      }
-
-      if (charData.Length()) {
-        fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
-      }
-    }
-  }
-
   bool boundsChanged = false;
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
@@ -3319,6 +3293,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
+  nsIFrame* frame = GetFrame();
   if (aCacheDomain & CacheDomain::TransformMatrix) {
     if (frame && frame->IsTransformed()) {
       // We need to find a frame to make our transform relative to.

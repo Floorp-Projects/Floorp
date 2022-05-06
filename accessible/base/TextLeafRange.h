@@ -58,8 +58,6 @@ class TextLeafPoint final {
 
   bool operator<(const TextLeafPoint& aPoint) const;
 
-  bool operator<=(const TextLeafPoint& aPoint) const;
-
   /**
    * A valid TextLeafPoint evaluates to true. An invalid TextLeafPoint
    * evaluates to false.
@@ -147,14 +145,6 @@ class TextLeafPoint final {
                                    bool aIncludeOrigin = false,
                                    const AccAttributes* aOriginAttrs = nullptr,
                                    bool aIncludeDefaults = true) const;
-
-  /**
-   * Returns a rect (in dev pixels) describing position and size of
-   * the character at mOffset in mAcc. This rect is screen-relative.
-   * This function only works on remote accessibles, and assumes caching
-   * is enabled.
-   */
-  LayoutDeviceIntRect CharBounds();
 
   bool IsLineFeedChar() const { return GetChar() == '\n'; }
 

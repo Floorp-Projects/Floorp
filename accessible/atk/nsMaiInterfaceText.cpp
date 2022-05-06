@@ -337,6 +337,7 @@ static void getCharacterExtentsCB(AtkText* aText, gint aOffset, gint* aX,
   }
   *aX = *aY = *aWidth = *aHeight = -1;
 
+  LayoutDeviceIntRect rect;
   uint32_t geckoCoordType;
   if (aCoords == ATK_XY_SCREEN) {
     geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
@@ -344,17 +345,19 @@ static void getCharacterExtentsCB(AtkText* aText, gint aOffset, gint* aX,
     geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
   }
 
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
-  if (!acc) {
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return;
+    }
+
+    rect = text->CharBounds(aOffset, geckoCoordType);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    rect = proxy->CharBounds(aOffset, geckoCoordType);
+  } else {
     return;
   }
-
-  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
-  if (!text || !acc->IsTextRole()) {
-    return;
-  }
-
-  LayoutDeviceIntRect rect = text->CharBounds(aOffset, geckoCoordType);
 
   *aX = rect.x;
   *aY = rect.y;
@@ -370,6 +373,7 @@ static void getRangeExtentsCB(AtkText* aText, gint aStartOffset,
   }
   aRect->x = aRect->y = aRect->width = aRect->height = -1;
 
+  LayoutDeviceIntRect rect;
   uint32_t geckoCoordType;
   if (aCoords == ATK_XY_SCREEN) {
     geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE;
@@ -377,18 +381,19 @@ static void getRangeExtentsCB(AtkText* aText, gint aStartOffset,
     geckoCoordType = nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE;
   }
 
-  Accessible* acc = GetInternalObj(ATK_OBJECT(aText));
-  if (!acc) {
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (accWrap) {
+    HyperTextAccessible* text = accWrap->AsHyperText();
+    if (!text || !text->IsTextRole()) {
+      return;
+    }
+
+    rect = text->TextBounds(aStartOffset, aEndOffset, geckoCoordType);
+  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    rect = proxy->TextBounds(aStartOffset, aEndOffset, geckoCoordType);
+  } else {
     return;
   }
-
-  HyperTextAccessibleBase* text = acc->AsHyperTextBase();
-  if (!text || !acc->IsTextRole()) {
-    return;
-  }
-
-  LayoutDeviceIntRect rect =
-      text->TextBounds(aStartOffset, aEndOffset, geckoCoordType);
 
   aRect->x = rect.x;
   aRect->y = rect.y;
