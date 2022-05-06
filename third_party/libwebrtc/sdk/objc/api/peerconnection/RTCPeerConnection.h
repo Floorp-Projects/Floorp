@@ -219,7 +219,12 @@ RTC_OBJC_EXPORT
 - (void)close;
 
 /** Provide a remote candidate to the ICE Agent. */
-- (void)addIceCandidate:(RTC_OBJC_TYPE(RTCIceCandidate) *)candidate;
+- (void)addIceCandidate:(RTC_OBJC_TYPE(RTCIceCandidate) *)candidate
+    DEPRECATED_MSG_ATTRIBUTE("Please use addIceCandidate:completionHandler: instead");
+
+/** Provide a remote candidate to the ICE Agent. */
+- (void)addIceCandidate:(RTC_OBJC_TYPE(RTCIceCandidate) *)candidate
+      completionHandler:(void (^)(NSError *_Nullable error))completionHandler;
 
 /** Remove a group of remote candidates from the ICE Agent. */
 - (void)removeIceCandidates:(NSArray<RTC_OBJC_TYPE(RTCIceCandidate) *> *)candidates;
