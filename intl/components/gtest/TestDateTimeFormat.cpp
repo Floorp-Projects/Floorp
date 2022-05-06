@@ -89,42 +89,6 @@ TEST(IntlDateTimeFormat, Style_enUS_fallback_to_default_styles)
   ASSERT_TRUE(buffer.verboseMatches("Sep 23, 2002, 8:07:30 PM"));
 }
 
-TEST(IntlDateTimeFormat, Skeleton_enUS_utf8_in)
-{
-  UniquePtr<DateTimePatternGenerator> gen = nullptr;
-  auto dateTimePatternGenerator =
-      DateTimePatternGenerator::TryCreate("en").unwrap();
-
-  UniquePtr<DateTimeFormat> dtFormat =
-      DateTimeFormat::TryCreateFromSkeleton(
-          MakeStringSpan("en-US"), MakeStringSpan("yMdhhmmss"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan("GMT+3")))
-          .unwrap();
-  TestBuffer<char> buffer;
-  dtFormat->TryFormat(DATE, buffer).unwrap();
-
-  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 08:07:30 PM"));
-}
-
-TEST(IntlDateTimeFormat, Skeleton_enUS_utf16_in)
-{
-  UniquePtr<DateTimePatternGenerator> gen = nullptr;
-  auto dateTimePatternGenerator =
-      DateTimePatternGenerator::TryCreate("en").unwrap();
-
-  UniquePtr<DateTimeFormat> dtFormat =
-      DateTimeFormat::TryCreateFromSkeleton(
-          MakeStringSpan("en-US"), MakeStringSpan(u"yMdhhmmss"),
-          dateTimePatternGenerator.get(), Nothing(),
-          Some(MakeStringSpan(u"GMT+3")))
-          .unwrap();
-  TestBuffer<char> buffer;
-  dtFormat->TryFormat(DATE, buffer).unwrap();
-
-  ASSERT_TRUE(buffer.verboseMatches("9/23/2002, 08:07:30 PM"));
-}
-
 TEST(IntlDateTimeFormat, Time_zone_IANA_identifier)
 {
   auto gen = DateTimePatternGenerator::TryCreate("en").unwrap();
@@ -543,10 +507,17 @@ TEST(IntlDateTimeFormat, TryFormatToParts)
   auto dateTimePatternGenerator =
       DateTimePatternGenerator::TryCreate("en").unwrap();
 
+  DateTimeFormat::ComponentsBag components;
+  components.year = Some(DateTimeFormat::Numeric::Numeric);
+  components.month = Some(DateTimeFormat::Month::TwoDigit);
+  components.day = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.hour = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.minute = Some(DateTimeFormat::Numeric::TwoDigit);
+  components.hour12 = Some(false);
+
   UniquePtr<DateTimeFormat> dtFormat =
-      DateTimeFormat::TryCreateFromSkeleton(
-          MakeStringSpan("en-US"), MakeStringSpan(u"yMMddHHmm"),
-          dateTimePatternGenerator.get(), Nothing(),
+      DateTimeFormat::TryCreateFromComponents(
+          MakeStringSpan("en-US"), components, dateTimePatternGenerator.get(),
           Some(MakeStringSpan(u"GMT")))
           .unwrap();
 

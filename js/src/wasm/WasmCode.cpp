@@ -383,9 +383,7 @@ size_t MetadataTier::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
   return funcToCodeRange.sizeOfExcludingThis(mallocSizeOf) +
          codeRanges.sizeOfExcludingThis(mallocSizeOf) +
          callSites.sizeOfExcludingThis(mallocSizeOf) +
-#ifdef ENABLE_WASM_EXCEPTIONS
          tryNotes.sizeOfExcludingThis(mallocSizeOf) +
-#endif
          trapSites.sizeOfExcludingThis(mallocSizeOf) +
          SizeOfVectorExcludingThis(funcImports, mallocSizeOf) +
          SizeOfVectorExcludingThis(funcExports, mallocSizeOf);
@@ -541,9 +539,7 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
   MOZ_ASSERT(masm.callSites().empty());
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(masm.tryNotes().empty());
-#endif
 
   if (masm.oom()) {
     return false;
@@ -743,11 +739,9 @@ bool MetadataTier::clone(const MetadataTier& src) {
   if (!callSites.appendAll(src.callSites)) {
     return false;
   }
-#ifdef ENABLE_WASM_EXCEPTIONS
   if (!tryNotes.appendAll(src.tryNotes)) {
     return false;
   }
-#endif
 
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
     if (!trapSites[trap].appendAll(src.trapSites[trap])) {
@@ -777,9 +771,7 @@ size_t Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
          typesRenumbering.sizeOfExcludingThis(mallocSizeOf) +
          globals.sizeOfExcludingThis(mallocSizeOf) +
          tables.sizeOfExcludingThis(mallocSizeOf) +
-#ifdef ENABLE_WASM_EXCEPTIONS
          tags.sizeOfExcludingThis(mallocSizeOf) +
-#endif
          funcNames.sizeOfExcludingThis(mallocSizeOf) +
          filename.sizeOfExcludingThis(mallocSizeOf) +
          sourceMapURL.sizeOfExcludingThis(mallocSizeOf);
@@ -885,7 +877,6 @@ const CodeRange* CodeTier::lookupRange(const void* pc) const {
   return LookupInSorted(metadata_->codeRanges, target);
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
   size_t target = (uint8_t*)pc - segment_->base();
   const WasmTryNoteVector& tryNotes = metadata_->tryNotes;
@@ -900,7 +891,6 @@ const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
 
   return nullptr;
 }
-#endif
 
 bool JumpTables::init(CompileMode mode, const ModuleSegment& ms,
                       const CodeRangeVector& codeRanges) {
@@ -1101,7 +1091,6 @@ const StackMap* Code::lookupStackMap(uint8_t* nextPC) const {
   return nullptr;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 const wasm::WasmTryNote* Code::lookupWasmTryNote(void* pc, Tier* tier) const {
   for (Tier t : tiers()) {
     const WasmTryNote* result = codeTier(t).lookupWasmTryNote(pc);
@@ -1112,7 +1101,6 @@ const wasm::WasmTryNote* Code::lookupWasmTryNote(void* pc, Tier* tier) const {
   }
   return nullptr;
 }
-#endif
 
 struct TrapSitePCOffset {
   const TrapSiteVector& trapSites;

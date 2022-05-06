@@ -63,9 +63,6 @@ interface nsIWindowsShellService : nsISupports
    * Current User). If none can be found, one will be created with the correct
    * AUMID for proper launching and grouping.
    *
-   * NOTE: This method probably shouldn't be used on the main thread, it
-   * performs blocking disk I/O.
-   *
    * NOTE: It is possible for the shortcut match to fail even when a
    * shortcut refers to the current executable, if the paths differ due
    * to e.g. symlinks. This should be rare.
@@ -73,28 +70,41 @@ interface nsIWindowsShellService : nsISupports
    * This is fully supported on Windows 7, 8, and 11. On Windows 10, it will
    * definitely fail on a version prior to build 1809 (October 2018 Update).
    *
+   * NOTE: Can only run on the main thread, but the actual work occurs on a
+   * background thread.
+   *
+   * @throws NS_ERROR_NOT_SAME_THREAD
+   *         if called off main thread.
    * @throws NS_ERROR_NOT_AVAILABLE
    *         if OS is not at least Windows 10 build 1809, or if creating the
    *         Taskband Pin object fails
-   * @throws NS_ERROR_FILE_NOT_FOUND
-   *         if a shortcut matching this app's AUMID and exe path wasn't found
    * @throws NS_ERROR_FAILURE
    *         for unexpected errors
+   *
+   * @rejects NS_ERROR_FILE_NOT_FOUND
+   *         if a shortcut matching this app's AUMID and exe path wasn't found
+   *
+   * @returns {Promise<void>} A promise that resolves to |undefined| if
+   *                          successful or rejects with an nserror.
    */
-  void pinCurrentAppToTaskbar(in bool aPrivateBrowsing);
+  [implicit_jscontext]
+  Promise pinCurrentAppToTaskbarAsync(in bool aPrivateBrowsing);
 
   /*
-   * Do a dry run of pinCurrentAppToTaskbar()
+   * Do a dry run of pinCurrentAppToTaskbar().
+   *
+   * NOTE: Can only be run on the main thread, but the actual work occurs on a
+   * background thread.
    *
    * This does all the same checks and setup, throws the same errors, but doesn't
    * do the final step of creating the pin.
    *
-   * NOTE: This method probably shouldn't be used on the main thread, it
-   * performs blocking disk I/O.
-   *
-   * @throws same as pinCurrentAppToTaskbar()
+   * @throws same as pinCurrentAppToTaskbarAsync()
+   * @rejects same as pinCurrentAppToTaskbarAsync()
+   * @returns same as pinCurrentAppToTaskbarAsync()
    */
-  void checkPinCurrentAppToTaskbar(in bool aPrivateBrowsing);
+  [implicit_jscontext]
+  Promise checkPinCurrentAppToTaskbarAsync(in bool aPrivateBrowsing);
 
   /*
    * Search for the current executable among taskbar pins

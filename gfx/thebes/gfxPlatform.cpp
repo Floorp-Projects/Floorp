@@ -105,7 +105,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsIObserverService.h"
-#include "nsIScreenManager.h"
+#include "mozilla/widget/Screen.h"
+#include "mozilla/widget/ScreenManager.h"
 #include "MainThreadUtils.h"
 
 #include "nsWeakReference.h"
@@ -1033,19 +1034,19 @@ void gfxPlatform::ReportTelemetry() {
                      "GFX: Only allowed to be called from parent process.");
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-  nsTArray<uint32_t> displayWidths;
-  nsTArray<uint32_t> displayHeights;
-  gfxInfo->GetDisplayWidth(displayWidths);
-  gfxInfo->GetDisplayHeight(displayHeights);
 
-  uint32_t displayCount = displayWidths.Length();
-  uint32_t displayWidth = displayWidths.Length() > 0 ? displayWidths[0] : 0;
-  uint32_t displayHeight = displayHeights.Length() > 0 ? displayHeights[0] : 0;
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_COUNT, displayCount);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_HEIGHT,
-                       displayHeight);
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_WIDTH,
-                       displayWidth);
+  {
+    auto& screenManager = widget::ScreenManager::GetSingleton();
+    const uint32_t screenCount = screenManager.CurrentScreenList().Length();
+    RefPtr<widget::Screen> primaryScreen = screenManager.GetPrimaryScreen();
+    const LayoutDeviceIntRect rect = primaryScreen->GetRect();
+
+    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_COUNT, screenCount);
+    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_HEIGHT,
+                         uint32_t(rect.Height()));
+    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_DISPLAY_PRIMARY_WIDTH,
+                         uint32_t(rect.Width()));
+  }
 
   nsString adapterDesc;
   gfxInfo->GetAdapterDescription(adapterDesc);
@@ -3203,18 +3204,19 @@ void gfxPlatform::GetCMSSupportInfo(mozilla::widget::InfoObject& aObj) {
 }
 
 void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
-  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  auto& screens = widget::ScreenManager::GetSingleton().CurrentScreenList();
+  aObj.DefineProperty("DisplayCount", screens.Length());
 
-  nsTArray<nsString> displayInfo;
-  auto rv = gfxInfo->GetDisplayInfo(displayInfo);
-  if (NS_SUCCEEDED(rv)) {
-    size_t displayCount = displayInfo.Length();
-    aObj.DefineProperty("DisplayCount", displayCount);
+  size_t i = 0;
+  for (auto& screen : screens) {
+    const LayoutDeviceIntRect rect = screen->GetRect();
+    nsPrintfCString value("%dx%d@%dHz scales:%f|%f", rect.width, rect.height,
+                          screen->GetRefreshRate(),
+                          screen->GetContentsScaleFactor(),
+                          screen->GetDefaultCSSScaleFactor());
 
-    for (size_t i = 0; i < displayCount; i++) {
-      nsPrintfCString name("Display%zu", i);
-      aObj.DefineProperty(name.get(), displayInfo[i]);
-    }
+    aObj.DefineProperty(nsPrintfCString("Display%zu", i++).get(),
+                        NS_ConvertUTF8toUTF16(value));
   }
 
   // Platform display info is only currently used for about:support and getting

@@ -235,8 +235,8 @@ class FunctionCompiler {
   uint32_t blockDepth_;
   ControlFlowPatchVectorVector blockPatches_;
 
-  // TLS pointer argument to the current function.
-  MWasmParameter* tlsPointer_;
+  // Instance pointer argument to the current function.
+  MWasmParameter* instancePointer_;
   MWasmParameter* stackResultPointer_;
 
   // Reference to masm.tryNotes_
@@ -259,7 +259,7 @@ class FunctionCompiler {
         maxStackArgBytes_(0),
         loopDepth_(0),
         blockDepth_(0),
-        tlsPointer_(nullptr),
+        instancePointer_(nullptr),
         stackResultPointer_(nullptr),
         tryNotes_(tryNotes) {}
 
@@ -305,10 +305,10 @@ class FunctionCompiler {
       }
     }
 
-    // Set up a parameter that receives the hidden TLS pointer argument.
-    tlsPointer_ =
+    // Set up a parameter that receives the hidden instance pointer argument.
+    instancePointer_ =
         MWasmParameter::New(alloc(), ABIArg(InstanceReg), MIRType::Pointer);
-    curBlock_->add(tlsPointer_);
+    curBlock_->add(instancePointer_);
     if (!mirGen_.ensureBallast()) {
       return false;
     }
@@ -603,11 +603,11 @@ class FunctionCompiler {
     }
 
     // For x86 and arm we implement i64 div via c++ builtin.
-    // A call to c++ builtin requires tls pointer.
+    // A call to c++ builtin requires instance pointer.
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
     if (type == MIRType::Int64) {
       auto* ins =
-          MWasmBuiltinDivI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
+          MWasmBuiltinDivI64::New(alloc(), lhs, rhs, instancePointer_, unsignd,
                                   trapOnError, bytecodeOffset());
       curBlock_->add(ins);
       return ins;
@@ -622,7 +622,7 @@ class FunctionCompiler {
 
   MInstruction* createTruncateToInt32(MDefinition* op) {
     if (op->type() == MIRType::Double || op->type() == MIRType::Float32) {
-      return MWasmBuiltinTruncateToInt32::New(alloc(), op, tlsPointer_);
+      return MWasmBuiltinTruncateToInt32::New(alloc(), op, instancePointer_);
     }
 
     return MTruncateToInt32::New(alloc(), op);
@@ -645,11 +645,11 @@ class FunctionCompiler {
     }
 
     // For x86 and arm we implement i64 mod via c++ builtin.
-    // A call to c++ builtin requires tls pointer.
+    // A call to c++ builtin requires instance pointer.
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
     if (type == MIRType::Int64) {
       auto* ins =
-          MWasmBuiltinModI64::New(alloc(), lhs, rhs, tlsPointer_, unsignd,
+          MWasmBuiltinModI64::New(alloc(), lhs, rhs, instancePointer_, unsignd,
                                   trapOnError, bytecodeOffset());
       curBlock_->add(ins);
       return ins;
@@ -657,10 +657,10 @@ class FunctionCompiler {
 #endif
 
     // Should be handled separately because we call BuiltinThunk for this case
-    // and so, need to add the dependency from tlsPointer.
+    // and so, need to add the dependency from instancePointer.
     if (type == MIRType::Double) {
-      auto* ins = MWasmBuiltinModD::New(alloc(), lhs, rhs, tlsPointer_, type,
-                                        bytecodeOffset());
+      auto* ins = MWasmBuiltinModD::New(alloc(), lhs, rhs, instancePointer_,
+                                        type, bytecodeOffset());
       curBlock_->add(ins);
       return ins;
     }
@@ -754,7 +754,7 @@ class FunctionCompiler {
     }
 #if defined(JS_CODEGEN_ARM)
     auto* ins = MBuiltinInt64ToFloatingPoint::New(
-        alloc(), op, tlsPointer_, type, bytecodeOffset(), isUnsigned);
+        alloc(), op, instancePointer_, type, bytecodeOffset(), isUnsigned);
 #else
     auto* ins = MInt64ToFloatingPoint::New(alloc(), op, type, bytecodeOffset(),
                                            isUnsigned);
@@ -784,11 +784,11 @@ class FunctionCompiler {
   }
 
 #if defined(JS_CODEGEN_ARM)
-  MDefinition* truncateWithTls(MDefinition* op, TruncFlags flags) {
+  MDefinition* truncateWithInstance(MDefinition* op, TruncFlags flags) {
     if (inDeadCode()) {
       return nullptr;
     }
-    auto* ins = MWasmBuiltinTruncateToInt64::New(alloc(), op, tlsPointer_,
+    auto* ins = MWasmBuiltinTruncateToInt64::New(alloc(), op, instancePointer_,
                                                  flags, bytecodeOffset());
     curBlock_->add(ins);
     return ins;
@@ -961,16 +961,17 @@ class FunctionCompiler {
   // addresses and bounds checking" in WasmMemory.cpp.
 
  private:
-  // If the platform does not have a HeapReg, load the memory base from Tls.
-  MWasmLoadTls* maybeLoadMemoryBase() {
-    MWasmLoadTls* load = nullptr;
+  // If the platform does not have a HeapReg, load the memory base from
+  // instance.
+  MWasmLoadInstance* maybeLoadMemoryBase() {
+    MWasmLoadInstance* load = nullptr;
 #ifdef JS_CODEGEN_X86
     AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                             wasm::Instance::offsetOfMemoryBase(),
-                             MIRType::Pointer, aliases);
+    load = MWasmLoadInstance::New(alloc(), instancePointer_,
+                                  wasm::Instance::offsetOfMemoryBase(),
+                                  MIRType::Pointer, aliases);
     curBlock_->add(load);
 #endif
     return load;
@@ -984,15 +985,15 @@ class FunctionCompiler {
     AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    base = MWasmHeapBase::New(alloc(), tlsPointer_, aliases);
+    base = MWasmHeapBase::New(alloc(), instancePointer_, aliases);
     curBlock_->add(base);
     return base;
   }
 
  private:
   // If the bounds checking strategy requires it, load the bounds check limit
-  // from the Tls.
-  MWasmLoadTls* maybeLoadBoundsCheckLimit(MIRType type) {
+  // from the instance.
+  MWasmLoadInstance* maybeLoadBoundsCheckLimit(MIRType type) {
     MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
     if (moduleEnv_.hugeMemoryEnabled()) {
       return nullptr;
@@ -1000,9 +1001,9 @@ class FunctionCompiler {
     AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                                   wasm::Instance::offsetOfBoundsCheckLimit(),
-                                   type, aliases);
+    auto* load = MWasmLoadInstance::New(
+        alloc(), instancePointer_, wasm::Instance::offsetOfBoundsCheckLimit(),
+        type, aliases);
     curBlock_->add(load);
     return load;
   }
@@ -1088,7 +1089,7 @@ class FunctionCompiler {
     }
   }
 
-  MWasmLoadTls* needBoundsCheck() {
+  MWasmLoadInstance* needBoundsCheck() {
 #ifdef JS_64BIT
     // For 32-bit base pointers:
     //
@@ -1113,7 +1114,8 @@ class FunctionCompiler {
         mem32LimitIs64Bits || isMem64() ? MIRType::Int64 : MIRType::Int32);
   }
 
-  void performBoundsCheck(MDefinition** base, MWasmLoadTls* boundsCheckLimit) {
+  void performBoundsCheck(MDefinition** base,
+                          MWasmLoadInstance* boundsCheckLimit) {
     // At the outset, actualBase could be the result of pretty much any integer
     // operation, or it could be the load of an integer constant.  If its type
     // is i32, we may assume the value has a canonical representation for the
@@ -1185,7 +1187,7 @@ class FunctionCompiler {
 
     // Emit the bounds check if necessary; it traps if it fails.  This may
     // update *base.
-    MWasmLoadTls* boundsCheckLimit = needBoundsCheck();
+    MWasmLoadInstance* boundsCheckLimit = needBoundsCheck();
     if (boundsCheckLimit) {
       performBoundsCheck(base, boundsCheckLimit);
     }
@@ -1249,11 +1251,11 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MInstruction* load = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
-      MWasmLoadTls* boundsCheckLimit =
+      MWasmLoadInstance* boundsCheckLimit =
           maybeLoadBoundsCheckLimit(MIRType::Int32);
       load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
                                  access->type());
@@ -1277,11 +1279,11 @@ class FunctionCompiler {
       return;
     }
 
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MInstruction* store = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
-      MWasmLoadTls* boundsCheckLimit =
+      MWasmLoadInstance* boundsCheckLimit =
           maybeLoadBoundsCheckLimit(MIRType::Int32);
       store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
                                    access->type(), v);
@@ -1323,10 +1325,10 @@ class FunctionCompiler {
       newv = cvtNewv;
     }
 
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
-    MInstruction* cas =
-        MWasmCompareExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
-                                      base, *access, oldv, newv, tlsPointer_);
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MInstruction* cas = MWasmCompareExchangeHeap::New(
+        alloc(), bytecodeOffset(), memoryBase, base, *access, oldv, newv,
+        instancePointer_);
     if (!cas) {
       return nullptr;
     }
@@ -1358,10 +1360,10 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MInstruction* xchg =
         MWasmAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
-                                     base, *access, value, tlsPointer_);
+                                     base, *access, value, instancePointer_);
     if (!xchg) {
       return nullptr;
     }
@@ -1394,10 +1396,10 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MInstruction* binop =
         MWasmAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase,
-                                  base, *access, value, tlsPointer_);
+                                  base, *access, value, instancePointer_);
     if (!binop) {
       return nullptr;
     }
@@ -1482,7 +1484,7 @@ class FunctionCompiler {
 
     MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -1506,7 +1508,7 @@ class FunctionCompiler {
     }
     MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
-    MWasmLoadTls* memoryBase = maybeLoadMemoryBase();
+    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -1540,13 +1542,13 @@ class FunctionCompiler {
       // applies to the denoted value as a whole.
       auto* cellPtr =
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
-                                  /*isConst=*/true, tlsPointer_);
+                                  /*isConst=*/true, instancePointer_);
       curBlock_->add(cellPtr);
       load = MWasmLoadGlobalCell::New(alloc(), type, cellPtr);
     } else {
       // Pull the value directly out of Instance::globalArea.
       load = MWasmLoadGlobalVar::New(alloc(), type, globalDataOffset, isConst,
-                                     tlsPointer_);
+                                     instancePointer_);
     }
     curBlock_->add(load);
     return load;
@@ -1563,7 +1565,7 @@ class FunctionCompiler {
       // store through that pointer.
       auto* valueAddr =
           MWasmLoadGlobalVar::New(alloc(), MIRType::Pointer, globalDataOffset,
-                                  /*isConst=*/true, tlsPointer_);
+                                  /*isConst=*/true, instancePointer_);
       curBlock_->add(valueAddr);
 
       // Handle a store to a ref-typed field specially
@@ -1574,8 +1576,8 @@ class FunctionCompiler {
         curBlock_->add(prevValue);
 
         // Store the new value
-        auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
-                                         AliasSet::WasmGlobalCell);
+        auto* store = MWasmStoreRef::New(alloc(), instancePointer_, valueAddr,
+                                         v, AliasSet::WasmGlobalCell);
         curBlock_->add(store);
 
         // Call the post-write barrier
@@ -1592,7 +1594,7 @@ class FunctionCompiler {
     if (v->type() == MIRType::RefOrNull) {
       // Compute the address of the ref-typed global
       auto* valueAddr = MWasmDerivedPointer::New(
-          alloc(), tlsPointer_,
+          alloc(), instancePointer_,
           wasm::Instance::offsetOfGlobalArea() + globalDataOffset);
       curBlock_->add(valueAddr);
 
@@ -1602,7 +1604,7 @@ class FunctionCompiler {
       curBlock_->add(prevValue);
 
       // Store the new value
-      auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
+      auto* store = MWasmStoreRef::New(alloc(), instancePointer_, valueAddr, v,
                                        AliasSet::WasmGlobalVar);
       curBlock_->add(store);
 
@@ -1610,8 +1612,8 @@ class FunctionCompiler {
       return postBarrierPrecise(lineOrBytecode, valueAddr, prevValue);
     }
 
-    auto* store =
-        MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v, tlsPointer_);
+    auto* store = MWasmStoreGlobalVar::New(alloc(), globalDataOffset, v,
+                                           instancePointer_);
     curBlock_->add(store);
     return true;
   }
@@ -1620,8 +1622,9 @@ class FunctionCompiler {
                               MIRType type) {
     uint32_t globalDataOffset = wasm::Instance::offsetOfGlobalArea() +
                                 table.globalDataOffset + fieldOffset;
-    auto* load = MWasmLoadTls::New(alloc(), tlsPointer_, globalDataOffset, type,
-                                   AliasSet::Load(AliasSet::WasmTableMeta));
+    auto* load =
+        MWasmLoadInstance::New(alloc(), instancePointer_, globalDataOffset,
+                               type, AliasSet::Load(AliasSet::WasmTableMeta));
     curBlock_->add(load);
     return load;
   }
@@ -1680,7 +1683,7 @@ class FunctionCompiler {
     curBlock_->add(loc);
 
     // Store the new value
-    auto* store = MWasmStoreRef::New(alloc(), tlsPointer_, loc, value,
+    auto* store = MWasmStoreRef::New(alloc(), instancePointer_, loc, value,
                                      AliasSet::WasmTableElement);
     curBlock_->add(store);
 
@@ -1693,7 +1696,7 @@ class FunctionCompiler {
       return;
     }
     curBlock_->add(
-        MWasmInterruptCheck::New(alloc(), tlsPointer_, bytecodeOffset()));
+        MWasmInterruptCheck::New(alloc(), instancePointer_, bytecodeOffset()));
   }
 
   bool postBarrierPrecise(uint32_t lineOrBytecode, MDefinition* valueAddr,
@@ -1846,7 +1849,7 @@ class FunctionCompiler {
     }
 
     if (!call->regArgs_.append(
-            MWasmCallBase::Arg(AnyRegister(InstanceReg), tlsPointer_))) {
+            MWasmCallBase::Arg(AnyRegister(InstanceReg), instancePointer_))) {
       return false;
     }
 
@@ -1973,11 +1976,9 @@ class FunctionCompiler {
                      const ArgTypeVector& argTypes,
                      MDefinition* index = nullptr) {
     MWasmCallTryDesc tryDesc;
-#ifdef ENABLE_WASM_EXCEPTIONS
     if (!beginTryCall(&tryDesc)) {
       return false;
     }
-#endif
 
     MInstruction* ins;
     if (tryDesc.inTry) {
@@ -1994,11 +1995,9 @@ class FunctionCompiler {
     }
     curBlock_->add(ins);
 
-#ifdef ENABLE_WASM_EXCEPTIONS
     if (!finishTryCall(&tryDesc)) {
       return false;
     }
-#endif
     return true;
   }
 
@@ -2138,7 +2137,7 @@ class FunctionCompiler {
     }
 
     if (values.empty()) {
-      curBlock_->end(MWasmReturnVoid::New(alloc(), tlsPointer_));
+      curBlock_->end(MWasmReturnVoid::New(alloc(), instancePointer_));
     } else {
       ResultType resultType = ResultType::Vector(funcType().results());
       ABIResultIter iter(resultType);
@@ -2159,7 +2158,7 @@ class FunctionCompiler {
                                                  result.stackOffset());
             curBlock_->add(loc);
             auto* store =
-                MWasmStoreRef::New(alloc(), tlsPointer_, loc, values[i],
+                MWasmStoreRef::New(alloc(), instancePointer_, loc, values[i],
                                    AliasSet::WasmStackResult);
             curBlock_->add(store);
           } else {
@@ -2170,7 +2169,8 @@ class FunctionCompiler {
         } else {
           MOZ_ASSERT(iter.remaining() == 1);
           MOZ_ASSERT(i + 1 == values.length());
-          curBlock_->end(MWasmReturn::New(alloc(), values[i], tlsPointer_));
+          curBlock_->end(
+              MWasmReturn::New(alloc(), values[i], instancePointer_));
         }
       }
     }
@@ -2420,7 +2420,6 @@ class FunctionCompiler {
     // Pending jumps to an enclosing try-catch may reference the recycled phis.
     // We have to search above all enclosing try blocks, as a delegate may move
     // patches around.
-#ifdef ENABLE_WASM_EXCEPTIONS
     for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
       LabelKind kind = iter().controlKind(depth);
       if (kind != LabelKind::Try && kind != LabelKind::Body) {
@@ -2434,7 +2433,6 @@ class FunctionCompiler {
         }
       }
     }
-#endif
 
     // Discard redundant phis and add to the free list.
     for (MPhiIterator phi = loopEntry->phisBegin();
@@ -2643,7 +2641,6 @@ class FunctionCompiler {
 
   /********************************************************** Exceptions ***/
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   bool inTryBlock(uint32_t* relativeDepth) {
     return iter().controlFindInnermost(LabelKind::Try, relativeDepth);
   }
@@ -2656,30 +2653,31 @@ class FunctionCompiler {
   MDefinition* loadTag(uint32_t tagIndex) {
     MWasmLoadGlobalVar* tag = MWasmLoadGlobalVar::New(
         alloc(), MIRType::RefOrNull, moduleEnv_.tags[tagIndex].globalDataOffset,
-        true, tlsPointer_);
+        true, instancePointer_);
     curBlock_->add(tag);
     return tag;
   }
 
   void loadPendingExceptionState(MInstruction** exception, MInstruction** tag) {
-    *exception = MWasmLoadTls::New(
-        alloc(), tlsPointer_, wasm::Instance::offsetOfPendingException(),
+    *exception = MWasmLoadInstance::New(
+        alloc(), instancePointer_, wasm::Instance::offsetOfPendingException(),
         MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(*exception);
 
-    *tag = MWasmLoadTls::New(
-        alloc(), tlsPointer_, wasm::Instance::offsetOfPendingExceptionTag(),
-        MIRType::RefOrNull, AliasSet::Load(AliasSet::WasmPendingException));
+    *tag = MWasmLoadInstance::New(
+        alloc(), instancePointer_,
+        wasm::Instance::offsetOfPendingExceptionTag(), MIRType::RefOrNull,
+        AliasSet::Load(AliasSet::WasmPendingException));
     curBlock_->add(*tag);
   }
 
   bool setPendingExceptionState(MDefinition* exception, MDefinition* tag) {
     // Set the pending exception object
     auto* exceptionAddr = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, Instance::offsetOfPendingException());
+        alloc(), instancePointer_, Instance::offsetOfPendingException());
     curBlock_->add(exceptionAddr);
     auto* setException =
-        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionAddr, exception,
+        MWasmStoreRef::New(alloc(), instancePointer_, exceptionAddr, exception,
                            AliasSet::WasmPendingException);
     curBlock_->add(setException);
     if (!postBarrierPrecise(0, exceptionAddr, exception)) {
@@ -2688,10 +2686,10 @@ class FunctionCompiler {
 
     // Set the pending exception tag object
     auto* exceptionTagAddr = MWasmDerivedPointer::New(
-        alloc(), tlsPointer_, Instance::offsetOfPendingExceptionTag());
+        alloc(), instancePointer_, Instance::offsetOfPendingExceptionTag());
     curBlock_->add(exceptionTagAddr);
     auto* setExceptionTag =
-        MWasmStoreRef::New(alloc(), tlsPointer_, exceptionTagAddr, tag,
+        MWasmStoreRef::New(alloc(), instancePointer_, exceptionTagAddr, tag,
                            AliasSet::WasmPendingException);
     curBlock_->add(setExceptionTag);
     return postBarrierPrecise(0, exceptionTagAddr, tag);
@@ -3137,7 +3135,7 @@ class FunctionCompiler {
 
       // Store the new value
       auto* store = MWasmStoreObjectDataRefField::New(
-          alloc(), tlsPointer_, exception, fieldAddr, argValues[i]);
+          alloc(), instancePointer_, exception, fieldAddr, argValues[i]);
       if (!store) {
         return false;
       }
@@ -3218,7 +3216,6 @@ class FunctionCompiler {
                tag->type() == MIRType::RefOrNull);
     return throwFrom(exception, tag);
   }
-#endif
 
   /************************************************************ DECODING ***/
 
@@ -3339,7 +3336,7 @@ MDefinition* FunctionCompiler::unary<MWasmBuiltinTruncateToInt32>(
   if (inDeadCode()) {
     return nullptr;
   }
-  auto* ins = MWasmBuiltinTruncateToInt32::New(alloc(), op, tlsPointer_,
+  auto* ins = MWasmBuiltinTruncateToInt32::New(alloc(), op, instancePointer_,
                                                bytecodeOffset());
   curBlock_->add(ins);
   return ins;
@@ -3486,11 +3483,9 @@ static bool EmitEnd(FunctionCompiler& f) {
   DefVector postJoinDefs;
   switch (kind) {
     case LabelKind::Body:
-#ifdef ENABLE_WASM_EXCEPTIONS
       if (!f.emitBodyDelegateThrowPad(control)) {
         return false;
       }
-#endif
       if (!f.finishBlock(&postJoinDefs)) {
         return false;
       }
@@ -3535,7 +3530,6 @@ static bool EmitEnd(FunctionCompiler& f) {
       }
       f.iter().popEnd();
       break;
-#ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
@@ -3544,7 +3538,6 @@ static bool EmitEnd(FunctionCompiler& f) {
       }
       f.iter().popEnd();
       break;
-#endif
   }
 
   MOZ_ASSERT_IF(!f.inDeadCode(), postJoinDefs.length() == type.length());
@@ -3623,7 +3616,6 @@ static bool EmitUnreachable(FunctionCompiler& f) {
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 static bool EmitTry(FunctionCompiler& f) {
   ResultType params;
   if (!f.iter().readTry(&params)) {
@@ -3733,7 +3725,6 @@ static bool EmitRethrow(FunctionCompiler& f) {
 
   return f.emitRethrow(relativeDepth);
 }
-#endif
 
 static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
                          const DefVector& args, CallCompileState* call) {
@@ -4037,7 +4028,7 @@ static bool EmitTruncate(FunctionCompiler& f, ValType operandType,
     MOZ_ASSERT(resultType == ValType::I64);
     MOZ_ASSERT(!f.moduleEnv().isAsmJS());
 #if defined(JS_CODEGEN_ARM)
-    f.iter().setResult(f.truncateWithTls(input, flags));
+    f.iter().setResult(f.truncateWithInstance(input, flags));
 #else
     f.iter().setResult(f.truncate<MWasmTruncateToInt64>(input, flags));
 #endif
@@ -5221,7 +5212,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  const SymbolicAddressSignature& callee = SASigTableGetFunc;
+  const SymbolicAddressSignature& callee = SASigTableGet;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5324,7 +5315,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return f.tableSetAnyRef(table, index, value, bytecodeOffset);
   }
 
-  const SymbolicAddressSignature& callee = SASigTableSetFunc;
+  const SymbolicAddressSignature& callee = SASigTableSet;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -5719,7 +5710,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitIf(f));
       case uint16_t(Op::Else):
         CHECK(EmitElse(f));
-#ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!f.moduleEnv().exceptionsEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
@@ -5753,7 +5743,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitRethrow(f));
-#endif
       case uint16_t(Op::Br):
         CHECK(EmitBr(f));
       case uint16_t(Op::BrIf):

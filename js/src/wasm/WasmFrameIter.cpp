@@ -23,9 +23,9 @@
 #include "vm/JSContext.h"
 #include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmStubs.h"
-#include "wasm/WasmTlsData.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "wasm/WasmInstance-inl.h"
@@ -1173,7 +1173,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
       } else if (offsetInCode >= codeRange->ret() - PoppedFP &&
                  offsetInCode <= codeRange->ret()) {
         // The fixedFP field of the Frame has been loaded into fp.
-        // The ra and TLS might also be loaded, but the Frame structure is
+        // The ra and instance might also be loaded, but the Frame structure is
         // still on stack, so we can acess the ra form there.
         MOZ_ASSERT(*sp == fp);
         fixedPC = Frame::fromUntaggedWasmExitFP(sp)->returnAddress();
@@ -1205,7 +1205,7 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         fixedFP = fp;
         AssertMatchesCallSite(fixedPC, fixedFP);
       } else if (offsetInCode == codeRange->ret()) {
-        // Both the TLS and fixedFP fields have been popped and fp now
+        // Both the instance and fixedFP fields have been popped and fp now
         // points to the caller's frame.
         fixedPC = sp[0];
         fixedFP = fp;
@@ -1578,14 +1578,16 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native table.fill function";
     case SymbolicAddress::ElemDrop:
       return "call to native elem.drop function";
-    case SymbolicAddress::TableGetFunc:
+    case SymbolicAddress::TableGet:
       return "call to native table.get function";
     case SymbolicAddress::TableGrow:
       return "call to native table.grow function";
     case SymbolicAddress::TableInit:
       return "call to native table.init function";
-    case SymbolicAddress::TableSetFunc:
+    case SymbolicAddress::TableSet:
       return "call to native table.set function";
+    case SymbolicAddress::TableSize:
+      return "call to native table.size function";
     case SymbolicAddress::RefFunc:
       return "call to native ref.func function";
     case SymbolicAddress::PreBarrierFiltering:
@@ -1596,12 +1598,10 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:
       return "call to native struct.new (in wasm)";
-#if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
-#endif
     case SymbolicAddress::ArrayNew:
       return "call to native array.new (in wasm)";
     case SymbolicAddress::RefTest:

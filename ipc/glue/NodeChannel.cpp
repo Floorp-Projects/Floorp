@@ -14,6 +14,10 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
+#ifdef FUZZING_SNAPSHOT
+#  include "mozilla/fuzzing/IPCFuzzController.h"
+#endif
+
 template <>
 struct IPC::ParamTraits<mozilla::ipc::NodeChannel::Introduction> {
   using paramType = mozilla::ipc::NodeChannel::Introduction;
@@ -208,6 +212,12 @@ void NodeChannel::SendMessage(UniquePtr<IPC::Message> aMessage) {
 }
 
 void NodeChannel::DoSendMessage(UniquePtr<IPC::Message> aMessage) {
+#ifdef FUZZING_SNAPSHOT
+  if (mBlockSendRecv) {
+    return;
+  }
+#endif
+
   AssertIOThread();
   if (mClosed) {
     NS_WARNING("Dropping message as channel has been closed");
@@ -225,9 +235,23 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
 
   if (!aMessage.is_valid()) {
     NS_WARNING("Received an invalid message");
+
+#ifdef FUZZING_SNAPSHOT
+    if (aMessage.IsFuzzMsg()) {
+      MOZ_FUZZING_NYX_PRINT("ERROR: Received invalid fuzzing IPC message?!\n");
+      MOZ_REALLY_CRASH(__LINE__);
+    }
+#endif
+
     OnChannelError();
     return;
   }
+
+#ifdef FUZZING_SNAPSHOT
+  if (mBlockSendRecv && !aMessage.IsFuzzMsg()) {
+    return;
+  }
+#endif
 
   IPC::MessageReader reader(aMessage);
   switch (aMessage.type()) {
@@ -269,6 +293,13 @@ void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
     // FIXME: Consider doing something cleaner in the future?
     case EVENT_MESSAGE_TYPE:
     default: {
+#ifdef FUZZING_SNAPSHOT
+      if (!fuzzing::IPCFuzzController::instance().ObserveIPCMessage(this,
+                                                                    aMessage)) {
+        return;
+      }
+#endif
+
       mListener->OnEventMessage(mName,
                                 MakeUnique<IPC::Message>(std::move(aMessage)));
       return;

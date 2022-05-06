@@ -102,6 +102,7 @@ impl From<&str> for FluentDateTimeStyle {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FluentDateTimeHourCycle {
     H24,
@@ -129,6 +130,7 @@ impl From<&str> for FluentDateTimeHourCycle {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FluentDateTimeTextComponent {
     Long,
@@ -154,6 +156,7 @@ impl From<&str> for FluentDateTimeTextComponent {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FluentDateTimeNumericComponent {
     Numeric,
@@ -177,6 +180,7 @@ impl From<&str> for FluentDateTimeNumericComponent {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FluentDateTimeMonthComponent {
     Numeric,
@@ -206,6 +210,7 @@ impl From<&str> for FluentDateTimeMonthComponent {
     }
 }
 
+#[repr(C)]
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum FluentDateTimeTimeZoneNameComponent {
     Long,
@@ -292,98 +297,6 @@ impl FluentDateTimeOptions {
     }
 }
 
-#[repr(C)]
-pub struct FluentDateTimeOptionsRaw {
-    pub date_style: FluentDateTimeStyle,
-    pub time_style: FluentDateTimeStyle,
-    pub skeleton: nsCString,
-}
-
-impl FluentDateTimeOptionsRaw {
-    fn convert_options_to_skeleton(input: &FluentDateTimeOptions) -> String {
-        let mut result = String::new();
-
-        match input.weekday {
-            FluentDateTimeTextComponent::Narrow => result.push_str("EEEEE"),
-            FluentDateTimeTextComponent::Short => result.push_str("E"),
-            FluentDateTimeTextComponent::Long => result.push_str("EEEE"),
-            FluentDateTimeTextComponent::None => {}
-        }
-        match input.era {
-            FluentDateTimeTextComponent::Narrow => result.push_str("GGGGG"),
-            FluentDateTimeTextComponent::Short => result.push_str("G"),
-            FluentDateTimeTextComponent::Long => result.push_str("GGGG"),
-            FluentDateTimeTextComponent::None => {}
-        }
-        match input.year {
-            FluentDateTimeNumericComponent::Numeric => result.push_str("y"),
-            FluentDateTimeNumericComponent::TwoDigit => result.push_str("yy"),
-            FluentDateTimeNumericComponent::None => {}
-        }
-        match input.month {
-            FluentDateTimeMonthComponent::Numeric => result.push_str("M"),
-            FluentDateTimeMonthComponent::TwoDigit => result.push_str("MM"),
-            FluentDateTimeMonthComponent::Narrow => result.push_str("MMMMM"),
-            FluentDateTimeMonthComponent::Short => result.push_str("MMM"),
-            FluentDateTimeMonthComponent::Long => result.push_str("MMMM"),
-            FluentDateTimeMonthComponent::None => {}
-        }
-        match input.day {
-            FluentDateTimeNumericComponent::Numeric => result.push_str("d"),
-            FluentDateTimeNumericComponent::TwoDigit => result.push_str("dd"),
-            FluentDateTimeNumericComponent::None => {}
-        }
-        let hour_skeleton_char = match input.hour_cycle {
-            FluentDateTimeHourCycle::H24 => 'H',
-            FluentDateTimeHourCycle::H23 => 'H',
-            FluentDateTimeHourCycle::H12 => 'h',
-            FluentDateTimeHourCycle::H11 => 'h',
-            FluentDateTimeHourCycle::None => 'j',
-        };
-        match input.hour {
-            FluentDateTimeNumericComponent::Numeric => result.push(hour_skeleton_char),
-            FluentDateTimeNumericComponent::TwoDigit => {
-                result.push(hour_skeleton_char);
-                result.push(hour_skeleton_char);
-            }
-            FluentDateTimeNumericComponent::None => {}
-        }
-        match input.minute {
-            FluentDateTimeNumericComponent::Numeric => result.push_str("m"),
-            FluentDateTimeNumericComponent::TwoDigit => result.push_str("mm"),
-            FluentDateTimeNumericComponent::None => {}
-        }
-        match input.second {
-            FluentDateTimeNumericComponent::Numeric => result.push_str("s"),
-            FluentDateTimeNumericComponent::TwoDigit => result.push_str("ss"),
-            FluentDateTimeNumericComponent::None => {}
-        }
-        match input.time_zone_name {
-            FluentDateTimeTimeZoneNameComponent::Short => result.push_str("z"),
-            FluentDateTimeTimeZoneNameComponent::Long => result.push_str("zzzz"),
-            FluentDateTimeTimeZoneNameComponent::None => {}
-        }
-        result
-    }
-}
-
-impl From<&FluentDateTimeOptions> for FluentDateTimeOptionsRaw {
-    fn from(input: &FluentDateTimeOptions) -> Self {
-        let skeleton = if input.date_style == FluentDateTimeStyle::None
-            && input.time_style == FluentDateTimeStyle::None
-        {
-            Self::convert_options_to_skeleton(&input).into()
-        } else {
-            nsCString::new()
-        };
-        Self {
-            date_style: input.date_style,
-            time_style: input.time_style,
-            skeleton,
-        }
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct FluentDateTime {
     epoch: f64,
@@ -441,7 +354,7 @@ impl DateTimeFormat {
             raw: unsafe {
                 NonNull::new(ffi::FluentBuiltInDateTimeFormatterCreate(
                     &loc,
-                    &(&options).into(),
+                    options,
                 ))
             },
         }

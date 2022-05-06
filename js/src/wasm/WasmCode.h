@@ -316,11 +316,11 @@ using FuncExportVector = Vector<FuncExport, 0, SystemAllocPolicy>;
 class FuncImport {
  public:
   struct CacheablePod {
-    uint32_t tlsDataOffset_;
+    uint32_t instanceOffset_;
     uint32_t interpExitCodeOffset_;  // Machine code offset
     uint32_t jitExitCodeOffset_;     // Machine code offset
 
-    WASM_CHECK_CACHEABLE_POD(tlsDataOffset_, interpExitCodeOffset_,
+    WASM_CHECK_CACHEABLE_POD(instanceOffset_, interpExitCodeOffset_,
                              jitExitCodeOffset_);
   };
 
@@ -331,9 +331,9 @@ class FuncImport {
  public:
   FuncImport() { memset(&pod, 0, sizeof(CacheablePod)); }
 
-  FuncImport(FuncType&& funcType, uint32_t tlsDataOffset)
+  FuncImport(FuncType&& funcType, uint32_t instanceOffset)
       : funcType_(std::move(funcType)) {
-    pod.tlsDataOffset_ = tlsDataOffset;
+    pod.instanceOffset_ = instanceOffset;
     pod.interpExitCodeOffset_ = 0;
     pod.jitExitCodeOffset_ = 0;
   }
@@ -348,7 +348,7 @@ class FuncImport {
   }
 
   const FuncType& funcType() const { return funcType_; }
-  uint32_t tlsDataOffset() const { return pod.tlsDataOffset_; }
+  uint32_t instanceOffset() const { return pod.instanceOffset_; }
   uint32_t interpExitCodeOffset() const { return pod.interpExitCodeOffset_; }
   uint32_t jitExitCodeOffset() const { return pod.jitExitCodeOffset_; }
 
@@ -410,9 +410,7 @@ struct Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod {
   RenumberVector typesRenumbering;
   GlobalDescVector globals;
   TableDescVector tables;
-#ifdef ENABLE_WASM_EXCEPTIONS
   TagDescVector tags;
-#endif
   CacheableChars filename;
   CacheableChars sourceMapURL;
 
@@ -499,9 +497,7 @@ struct MetadataTier {
   FuncImportVector funcImports;
   FuncExportVector funcExports;
   StackMaps stackMaps;
-#ifdef ENABLE_WASM_EXCEPTIONS
   WasmTryNoteVector tryNotes;
-#endif
 
   // Debug information, not serialized.
   uint32_t debugTrapOffset;
@@ -671,9 +667,7 @@ class CodeTier {
   }
 
   const CodeRange* lookupRange(const void* pc) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(const void* pc) const;
-#endif
 
   void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                      size_t* data) const;
@@ -856,9 +850,7 @@ class Code : public ShareableBase<Code> {
   const CallSite* lookupCallSite(void* returnAddress) const;
   const CodeRange* lookupFuncRange(void* pc) const;
   const StackMap* lookupStackMap(uint8_t* nextPC) const;
-#ifdef ENABLE_WASM_EXCEPTIONS
   const WasmTryNote* lookupWasmTryNote(void* pc, Tier* tier) const;
-#endif
   bool containsCodePC(const void* pc) const;
   bool lookupTrap(void* pc, Trap* trap, BytecodeOffset* bytecode) const;
 

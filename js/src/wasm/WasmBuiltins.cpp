@@ -228,12 +228,11 @@ const SymbolicAddressSignature SASigTableFill = {
     _FailOnNegI32,
     5,
     {_PTR, _I32, _RoN, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigTableGetFunc = {
-    SymbolicAddress::TableGetFunc,
-    _RoN,
-    _FailOnInvalidRef,
-    3,
-    {_PTR, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigTableGet = {SymbolicAddress::TableGet,
+                                                _RoN,
+                                                _FailOnInvalidRef,
+                                                3,
+                                                {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
     SymbolicAddress::TableGrow,
     _I32,
@@ -246,12 +245,13 @@ const SymbolicAddressSignature SASigTableInit = {
     _FailOnNegI32,
     6,
     {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigTableSetFunc = {
-    SymbolicAddress::TableSetFunc,
-    _VOID,
-    _FailOnNegI32,
-    4,
-    {_PTR, _I32, _RoN, _I32, _END}};
+const SymbolicAddressSignature SASigTableSet = {SymbolicAddress::TableSet,
+                                                _VOID,
+                                                _FailOnNegI32,
+                                                4,
+                                                {_PTR, _I32, _RoN, _I32, _END}};
+const SymbolicAddressSignature SASigTableSize = {
+    SymbolicAddress::TableSize, _I32, _Infallible, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigRefFunc = {
     SymbolicAddress::RefFunc, _RoN, _FailOnInvalidRef, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigPreBarrierFiltering = {
@@ -276,7 +276,6 @@ const SymbolicAddressSignature SASigPostBarrierFiltering = {
     {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigStructNew = {
     SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
-#ifdef ENABLE_WASM_EXCEPTIONS
 const SymbolicAddressSignature SASigExceptionNew = {
     SymbolicAddress::ExceptionNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigThrowException = {
@@ -285,7 +284,6 @@ const SymbolicAddressSignature SASigThrowException = {
     _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
-#endif
 const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _RoN,
                                                 _FailOnNullPtr,
@@ -455,7 +453,6 @@ static bool WasmHandleDebugTrap() {
 }
 
 // Check if the pending exception, if any, is catchable by wasm.
-#ifdef ENABLE_WASM_EXCEPTIONS
 static bool HasCatchableException(JitActivation* activation, JSContext* cx,
                                   MutableHandleValue exn) {
   if (!cx->isExceptionPending()) {
@@ -490,7 +487,6 @@ static bool HasCatchableException(JitActivation* activation, JSContext* cx,
   MOZ_ASSERT(cx->isThrowingOutOfMemory());
   return false;
 }
-#endif
 
 // Unwind the entire activation in response to a thrown exception. This function
 // is responsible for notifying the debugger of each unwound frame. The return
@@ -527,18 +523,15 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
   // itself which is owned by the innermost instance.
   RootedWasmInstanceObject keepAlive(cx, iter.instance()->object());
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   JitActivation* activation = CallingActivation(cx);
   RootedValue exn(cx);
   bool hasCatchableException = HasCatchableException(activation, cx, &exn);
-#endif
 
   for (; !iter.done(); ++iter) {
     // Wasm code can enter same-compartment realms, so reset cx->realm to
     // this frame's realm.
     cx->setRealmForJitExceptionHandler(iter.instance()->realm());
 
-#ifdef ENABLE_WASM_EXCEPTIONS
     // Only look for an exception handler if there's a catchable exception.
     if (hasCatchableException) {
       const wasm::Code& code = iter.instance()->code();
@@ -561,7 +554,7 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         rfe->kind = ExceptionResumeKind::WasmCatch;
         rfe->framePointer = (uint8_t*)iter.frame();
-        rfe->tlsData = iter.instance();
+        rfe->instance = iter.instance();
 
         rfe->stackPointer =
             (uint8_t*)(rfe->framePointer - tryNote->framePushed);
@@ -575,7 +568,6 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
         return true;
       }
     }
-#endif
 
     if (!iter.debugEnabled()) {
       continue;
@@ -781,11 +773,11 @@ static void* BoxValue_Anyref(Value* rawVal) {
   return result.get().forCompiledCode();
 }
 
-static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* tlsData,
+static int32_t CoerceInPlace_JitEntry(int funcExportIndex, Instance* instance,
                                       Value* argv) {
   JSContext* cx = TlsContext.get();  // Cold code
 
-  const Code& code = tlsData->code();
+  const Code& code = instance->code();
   const FuncExport& fe =
       code.metadata(code.stableTier()).funcExports[funcExportIndex];
 
@@ -1227,18 +1219,22 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralInt32Int32Int32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigTableInit));
       return FuncCast(Instance::tableInit, *abiType);
-    case SymbolicAddress::TableGetFunc:
+    case SymbolicAddress::TableGet:
       *abiType = Args_General_GeneralInt32Int32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigTableGetFunc));
-      return FuncCast(Instance::tableGetFunc, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableGet));
+      return FuncCast(Instance::tableGet, *abiType);
     case SymbolicAddress::TableGrow:
       *abiType = Args_Int32_GeneralGeneralInt32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigTableGrow));
       return FuncCast(Instance::tableGrow, *abiType);
-    case SymbolicAddress::TableSetFunc:
+    case SymbolicAddress::TableSet:
       *abiType = Args_Int32_GeneralInt32GeneralInt32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigTableSetFunc));
-      return FuncCast(Instance::tableSetFunc, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableSet));
+      return FuncCast(Instance::tableSet, *abiType);
+    case SymbolicAddress::TableSize:
+      *abiType = Args_Int32_GeneralInt32;
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableSize));
+      return FuncCast(Instance::tableSize, *abiType);
     case SymbolicAddress::RefFunc:
       *abiType = Args_General_GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigRefFunc));
@@ -1280,7 +1276,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General1;
       return (void*)&js::InlineTypedObject::class_;
 
-#if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
       *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
@@ -1289,7 +1284,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
-#endif
 
 #ifdef WASM_CODEGEN_DEBUG
     case SymbolicAddress::PrintI32:
@@ -1444,20 +1438,19 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::TableCopy:
     case SymbolicAddress::ElemDrop:
     case SymbolicAddress::TableFill:
-    case SymbolicAddress::TableGetFunc:
+    case SymbolicAddress::TableGet:
     case SymbolicAddress::TableGrow:
     case SymbolicAddress::TableInit:
-    case SymbolicAddress::TableSetFunc:
+    case SymbolicAddress::TableSet:
+    case SymbolicAddress::TableSize:
     case SymbolicAddress::RefFunc:
     case SymbolicAddress::PreBarrierFiltering:
     case SymbolicAddress::PostBarrier:
     case SymbolicAddress::PostBarrierPrecise:
     case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:
-#ifdef ENABLE_WASM_EXCEPTIONS
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
-#endif
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:
     case SymbolicAddress::RttSub:
@@ -1760,9 +1753,7 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSites().empty());
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
-#ifdef ENABLE_WASM_EXCEPTIONS
   MOZ_ASSERT(masm.tryNotes().empty());
-#endif
 
   if (!ExecutableAllocator::makeExecutableAndFlushICache(
           FlushICacheSpec::LocalThreadOnly, thunks->codeBase,

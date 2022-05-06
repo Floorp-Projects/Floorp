@@ -42,9 +42,9 @@
 #include "wasm/WasmConstants.h"
 #include "wasm/WasmException.h"
 #include "wasm/WasmExprType.h"
+#include "wasm/WasmInstanceData.h"
 #include "wasm/WasmMemory.h"
 #include "wasm/WasmModuleTypes.h"
-#include "wasm/WasmTlsData.h"    // UniqueTlsData
 #include "wasm/WasmTypeDecls.h"  // MutableHandleWasmInstanceObject
 #include "wasm/WasmValType.h"
 #include "wasm/WasmValue.h"

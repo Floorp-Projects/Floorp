@@ -225,6 +225,19 @@ var UrlbarUtils = {
     "ftp:",
   ],
 
+  // Valid URI schemes that are considered safe but don't contain
+  // an authority component (e.g host:port). There are many URI schemes
+  // that do not contain an authority, but these in particular have
+  // some likelihood of being entered or bookmarked by a user.
+  // `file:` is an exceptional case because an authority is optional
+  PROTOCOLS_WITHOUT_AUTHORITY: [
+    "about:",
+    "data:",
+    "file:",
+    "javascript:",
+    "view-source:",
+  ],
+
   // Search mode objects corresponding to the local shortcuts in the view, in
   // order they appear.  Pref names are relative to the `browser.urlbar` branch.
   get LOCAL_SEARCH_MODES() {
@@ -942,11 +955,12 @@ var UrlbarUtils = {
   /**
    * Strips the prefix from a URL and returns the prefix and the remainder of the
    * URL.  "Prefix" is defined to be the scheme and colon, plus, if present, two
-   * slashes.  If the given string is not actually a URL, then an empty prefix and
-   * the string itself is returned.
+   * slashes.  If the given string is not actually a URL or it has a prefix
+   * we don't recognize, then an empty prefix and the string itself is returned.
    *
-   * @param {string} str The possible URL to strip.
-   * @returns {array} If `str` is a URL, then [prefix, remainder].  Otherwise, ["", str].
+   * @param   {string} str The possible URL to strip.
+   * @returns {array} If `str` is a URL with a prefix we recognize,
+   *          then [prefix, remainder].  Otherwise, ["", str].
    */
   stripURLPrefix(str) {
     let match = UrlbarTokenizer.REGEXP_PREFIX.exec(str);
@@ -955,9 +969,19 @@ var UrlbarUtils = {
     }
     let prefix = match[0];
     if (prefix.length < str.length && str[prefix.length] == " ") {
+      // A space following a prefix:
+      // e.g. "http:// some search string", "about: some search string"
       return ["", str];
     }
-    return [prefix, str.substr(prefix.length)];
+    if (
+      prefix.endsWith(":") &&
+      !UrlbarUtils.PROTOCOLS_WITHOUT_AUTHORITY.includes(prefix)
+    ) {
+      // Something that looks like a URI scheme but we won't treat as one:
+      // e.g. "localhost:8888"
+      return ["", str];
+    }
+    return [prefix, str.substring(prefix.length)];
   },
 
   /**

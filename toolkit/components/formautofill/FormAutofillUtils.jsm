@@ -440,13 +440,23 @@ this.FormAutofillUtils = {
   },
 
   /**
+   * Determines if an element can be autofilled or not.
+   *
+   * @param {HTMLElement} element
+   * @returns {boolean} true if the element can be autofilled
+   */
+  isFieldAutofillable(element) {
+    return element && !element.readOnly && !element.disabled;
+  },
+
+  /**
    *  Determines if an element is visually hidden or not.
    *
    * NOTE: this does not encompass every possible way of hiding an element.
    * Instead, we check some of the more common methods of hiding for performance reasons.
    * See Bug 1727832 for follow up.
    * @param {HTMLElement} element
-   * @returns {boolean}
+   * @returns {boolean} true if the element is visible
    */
   isFieldVisible(element) {
     if (element.hidden) {
@@ -462,9 +472,9 @@ this.FormAutofillUtils = {
    * Determines if an element is eligible to be used by credit card or address autofill.
    *
    * @param {HTMLElement} element
-   * @returns {boolean}
+   * @returns {boolean} true if element can be used by credit card or address autofill
    */
-  isFieldEligibleForAutofill(element) {
+  isCreditCardOrAddressFieldType(element) {
     if (!element) {
       return false;
     }

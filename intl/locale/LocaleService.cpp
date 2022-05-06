@@ -26,11 +26,13 @@
 
 #define INTL_SYSTEM_LOCALES_CHANGED "intl:system-locales-changed"
 
+#define PSEUDO_LOCALE_PREF "intl.l10n.pseudo"
 #define REQUESTED_LOCALES_PREF "intl.locale.requested"
 #define WEB_EXPOSED_LOCALES_PREF "intl.locale.privacy.web_exposed"
 
 static const char* kObservedPrefs[] = {REQUESTED_LOCALES_PREF,
-                                       WEB_EXPOSED_LOCALES_PREF, nullptr};
+                                       WEB_EXPOSED_LOCALES_PREF,
+                                       PSEUDO_LOCALE_PREF, nullptr};
 
 using namespace mozilla::intl::ffi;
 using namespace mozilla::intl;
@@ -299,6 +301,8 @@ LocaleService::Observe(nsISupports* aSubject, const char* aTopic,
       RequestedLocalesChanged();
     } else if (pref.EqualsLiteral(WEB_EXPOSED_LOCALES_PREF)) {
       WebExposedLocalesChanged();
+    } else if (pref.EqualsLiteral(PSEUDO_LOCALE_PREF)) {
+      NotifyAppLocaleChanged();
     }
   }
 

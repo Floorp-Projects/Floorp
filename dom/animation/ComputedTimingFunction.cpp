@@ -10,12 +10,11 @@
 
 namespace mozilla {
 
-void ComputedTimingFunction::Init(const nsTimingFunction& aFunction) {
+ComputedTimingFunction::Function ComputedTimingFunction::ConstructFunction(
+    const nsTimingFunction& aFunction) {
   const StyleComputedTimingFunction& timing = aFunction.mTiming;
   switch (timing.tag) {
     case StyleComputedTimingFunction::Tag::Keyword: {
-      mType = static_cast<Type>(static_cast<uint8_t>(timing.keyword._0));
-
       static_assert(
           static_cast<uint8_t>(StyleTimingKeyword::Linear) == 0 &&
               static_cast<uint8_t>(StyleTimingKeyword::Ease) == 1 &&
@@ -23,7 +22,6 @@ void ComputedTimingFunction::Init(const nsTimingFunction& aFunction) {
               static_cast<uint8_t>(StyleTimingKeyword::EaseOut) == 3 &&
               static_cast<uint8_t>(StyleTimingKeyword::EaseInOut) == 4,
           "transition timing function constants not as expected");
-
       static const float timingFunctionValues[5][4] = {
           {0.00f, 0.00f, 1.00f, 1.00f},  // linear
           {0.25f, 0.10f, 0.25f, 1.00f},  // ease
@@ -31,22 +29,27 @@ void ComputedTimingFunction::Init(const nsTimingFunction& aFunction) {
           {0.00f, 0.00f, 0.58f, 1.00f},  // ease-out
           {0.42f, 0.00f, 0.58f, 1.00f}   // ease-in-out
       };
-      const float(&values)[4] = timingFunctionValues[uint8_t(mType)];
-      mTimingFunction.Init(values[0], values[1], values[2], values[3]);
-      break;
+      const float(&values)[4] =
+          timingFunctionValues[uint8_t(timing.keyword._0)];
+      return AsVariant(KeywordFunction{
+          timing.keyword._0,
+          SMILKeySpline{values[0], values[1], values[2], values[3]}});
     }
     case StyleComputedTimingFunction::Tag::CubicBezier:
-      mType = Type::CubicBezier;
-      mTimingFunction.Init(timing.cubic_bezier.x1, timing.cubic_bezier.y1,
-                           timing.cubic_bezier.x2, timing.cubic_bezier.y2);
-      break;
+      return AsVariant(
+          SMILKeySpline{timing.cubic_bezier.x1, timing.cubic_bezier.y1,
+                        timing.cubic_bezier.x2, timing.cubic_bezier.y2});
     case StyleComputedTimingFunction::Tag::Steps:
-      mType = Type::Step;
-      mSteps.mSteps = static_cast<uint32_t>(timing.steps._0);
-      mSteps.mPos = timing.steps._1;
-      break;
+      return AsVariant(
+          StepFunc{static_cast<uint32_t>(timing.steps._0), timing.steps._1});
   }
+  MOZ_ASSERT_UNREACHABLE("Unknown timing function.");
+  return ConstructFunction(nsTimingFunction{StyleTimingKeyword::Linear});
 }
+
+ComputedTimingFunction::ComputedTimingFunction(
+    const nsTimingFunction& aFunction)
+    : mFunction{ConstructFunction(aFunction)} {}
 
 static inline double StepTiming(
     const ComputedTimingFunction::StepFunc& aStepFunc, double aPortion,
@@ -109,126 +112,84 @@ static inline double StepTiming(
   return double(checkedCurrentStep.value()) / double(jumps.value());
 }
 
-double ComputedTimingFunction::GetValue(
-    double aPortion, ComputedTimingFunction::BeforeFlag aBeforeFlag) const {
-  if (HasSpline()) {
-    // Check for a linear curve.
-    // (GetSplineValue(), below, also checks this but doesn't work when
-    // aPortion is outside the range [0.0, 1.0]).
-    if (mTimingFunction.X1() == mTimingFunction.Y1() &&
-        mTimingFunction.X2() == mTimingFunction.Y2()) {
-      return aPortion;
-    }
-
-    // Ensure that we return 0 or 1 on both edges.
-    if (aPortion == 0.0) {
-      return 0.0;
-    }
-    if (aPortion == 1.0) {
-      return 1.0;
-    }
-
-    // For negative values, try to extrapolate with tangent (p1 - p0) or,
-    // if p1 is coincident with p0, with (p2 - p0).
-    if (aPortion < 0.0) {
-      if (mTimingFunction.X1() > 0.0) {
-        return aPortion * mTimingFunction.Y1() / mTimingFunction.X1();
-      } else if (mTimingFunction.Y1() == 0 && mTimingFunction.X2() > 0.0) {
-        return aPortion * mTimingFunction.Y2() / mTimingFunction.X2();
-      }
-      // If we can't calculate a sensible tangent, don't extrapolate at all.
-      return 0.0;
-    }
-
-    // For values greater than 1, try to extrapolate with tangent (p2 - p3) or,
-    // if p2 is coincident with p3, with (p1 - p3).
-    if (aPortion > 1.0) {
-      if (mTimingFunction.X2() < 1.0) {
-        return 1.0 + (aPortion - 1.0) * (mTimingFunction.Y2() - 1) /
-                         (mTimingFunction.X2() - 1);
-      } else if (mTimingFunction.Y2() == 1 && mTimingFunction.X1() < 1.0) {
-        return 1.0 + (aPortion - 1.0) * (mTimingFunction.Y1() - 1) /
-                         (mTimingFunction.X1() - 1);
-      }
-      // If we can't calculate a sensible tangent, don't extrapolate at all.
-      return 1.0;
-    }
-
-    return mTimingFunction.GetSplineValue(aPortion);
+static inline double GetSplineValue(double aPortion,
+                                    const SMILKeySpline& aSpline) {
+  // Check for a linear curve.
+  // (GetSplineValue(), below, also checks this but doesn't work when
+  // aPortion is outside the range [0.0, 1.0]).
+  if (aSpline.X1() == aSpline.Y1() && aSpline.X2() == aSpline.Y2()) {
+    return aPortion;
   }
 
-  return StepTiming(mSteps, aPortion, aBeforeFlag);
+  // Ensure that we return 0 or 1 on both edges.
+  if (aPortion == 0.0) {
+    return 0.0;
+  }
+  if (aPortion == 1.0) {
+    return 1.0;
+  }
+
+  // For negative values, try to extrapolate with tangent (p1 - p0) or,
+  // if p1 is coincident with p0, with (p2 - p0).
+  if (aPortion < 0.0) {
+    if (aSpline.X1() > 0.0) {
+      return aPortion * aSpline.Y1() / aSpline.X1();
+    }
+    if (aSpline.Y1() == 0 && aSpline.X2() > 0.0) {
+      return aPortion * aSpline.Y2() / aSpline.X2();
+    }
+    // If we can't calculate a sensible tangent, don't extrapolate at all.
+    return 0.0;
+  }
+
+  // For values greater than 1, try to extrapolate with tangent (p2 - p3) or,
+  // if p2 is coincident with p3, with (p1 - p3).
+  if (aPortion > 1.0) {
+    if (aSpline.X2() < 1.0) {
+      return 1.0 + (aPortion - 1.0) * (aSpline.Y2() - 1) / (aSpline.X2() - 1);
+    }
+    if (aSpline.Y2() == 1 && aSpline.X1() < 1.0) {
+      return 1.0 + (aPortion - 1.0) * (aSpline.Y1() - 1) / (aSpline.X1() - 1);
+    }
+    // If we can't calculate a sensible tangent, don't extrapolate at all.
+    return 1.0;
+  }
+
+  return aSpline.GetSplineValue(aPortion);
 }
 
-int32_t ComputedTimingFunction::Compare(
-    const ComputedTimingFunction& aRhs) const {
-  if (mType != aRhs.mType) {
-    return int32_t(mType) - int32_t(aRhs.mType);
-  }
-
-  if (mType == Type::CubicBezier) {
-    int32_t order = mTimingFunction.Compare(aRhs.mTimingFunction);
-    if (order != 0) {
-      return order;
-    }
-  } else if (mType == Type::Step) {
-    if (mSteps.mPos != aRhs.mSteps.mPos) {
-      return int32_t(mSteps.mPos) - int32_t(aRhs.mSteps.mPos);
-    } else if (mSteps.mSteps != aRhs.mSteps.mSteps) {
-      return int32_t(mSteps.mSteps) - int32_t(aRhs.mSteps.mSteps);
-    }
-  }
-
-  return 0;
+double ComputedTimingFunction::GetValue(
+    double aPortion, ComputedTimingFunction::BeforeFlag aBeforeFlag) const {
+  return mFunction.match(
+      [aPortion](const KeywordFunction& aFunction) {
+        return GetSplineValue(aPortion, aFunction.mFunction);
+      },
+      [aPortion](const SMILKeySpline& aFunction) {
+        return GetSplineValue(aPortion, aFunction);
+      },
+      [aPortion, aBeforeFlag](const StepFunc& aFunction) {
+        return StepTiming(aFunction, aPortion, aBeforeFlag);
+      });
 }
 
 void ComputedTimingFunction::AppendToString(nsACString& aResult) const {
   nsTimingFunction timing;
-  switch (mType) {
-    case Type::CubicBezier:
-      timing.mTiming = StyleComputedTimingFunction::CubicBezier(
-          mTimingFunction.X1(), mTimingFunction.Y1(), mTimingFunction.X2(),
-          mTimingFunction.Y2());
-      break;
-    case Type::Step:
-      timing.mTiming =
-          StyleComputedTimingFunction::Steps(mSteps.mSteps, mSteps.mPos);
-      break;
-    case Type::Linear:
-    case Type::Ease:
-    case Type::EaseIn:
-    case Type::EaseOut:
-    case Type::EaseInOut:
-      timing.mTiming = StyleComputedTimingFunction::Keyword(
-          static_cast<StyleTimingKeyword>(mType));
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported timing type");
-  }
+  timing.mTiming = {mFunction.match(
+      [](const KeywordFunction& aFunction) {
+        return StyleComputedTimingFunction::Keyword(aFunction.mKeyword);
+      },
+      [](const SMILKeySpline& aFunction) {
+        return StyleComputedTimingFunction::CubicBezier(
+            static_cast<float>(aFunction.X1()),
+            static_cast<float>(aFunction.Y1()),
+            static_cast<float>(aFunction.X2()),
+            static_cast<float>(aFunction.Y2()));
+      },
+      [](const StepFunc& aFunction) {
+        return StyleComputedTimingFunction::Steps(
+            static_cast<int>(aFunction.mSteps), aFunction.mPos);
+      })};
   Servo_SerializeEasing(&timing, &aResult);
-}
-
-/* static */
-int32_t ComputedTimingFunction::Compare(
-    const Maybe<ComputedTimingFunction>& aLhs,
-    const Maybe<ComputedTimingFunction>& aRhs) {
-  // We can't use |operator<| for const Maybe<>& here because
-  // 'ease' is prior to 'linear' which is represented by Nothing().
-  // So we have to convert Nothing() as 'linear' and check it first.
-  Type lhsType = aLhs.isNothing() ? Type::Linear : aLhs->GetType();
-  Type rhsType = aRhs.isNothing() ? Type::Linear : aRhs->GetType();
-
-  if (lhsType != rhsType) {
-    return int32_t(lhsType) - int32_t(rhsType);
-  }
-
-  // Both of them are Nothing().
-  if (lhsType == Type::Linear) {
-    return 0;
-  }
-
-  // Other types.
-  return aLhs->Compare(aRhs.value());
 }
 
 }  // namespace mozilla

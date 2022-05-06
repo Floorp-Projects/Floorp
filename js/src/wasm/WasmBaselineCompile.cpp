@@ -158,7 +158,7 @@ bool BaseCompiler::addInterruptCheck() {
   Register tmp(InstanceReg);
 #else
   ScratchI32 tmp(*this);
-  fr.loadTlsPtr(tmp);
+  fr.loadInstancePtr(tmp);
 #endif
   Label ok;
   masm.branch32(Assembler::Equal,
@@ -301,32 +301,37 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 }
 
 #ifdef JS_CODEGEN_X86
-void BaseCompiler::stashI64(RegPtr regForTls, RegI64 r) {
+void BaseCompiler::stashI64(RegPtr regForInstance, RegI64 r) {
   MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
-  MOZ_ASSERT(regForTls != r.low && regForTls != r.high);
+  MOZ_ASSERT(regForInstance != r.low && regForInstance != r.high);
 #  ifdef RABALDR_PIN_INSTANCE
-#    error "Pinned tls not expected"
+#    error "Pinned instance not expected"
 #  endif
-  fr.loadTlsPtr(regForTls);
-  masm.store32(r.low, Address(regForTls, Instance::offsetOfBaselineScratch()));
-  masm.store32(r.high,
-               Address(regForTls, Instance::offsetOfBaselineScratch() + 4));
+  fr.loadInstancePtr(regForInstance);
+  masm.store32(r.low,
+               Address(regForInstance, Instance::offsetOfBaselineScratch()));
+  masm.store32(
+      r.high, Address(regForInstance, Instance::offsetOfBaselineScratch() + 4));
 }
 
-void BaseCompiler::unstashI64(RegPtr regForTls, RegI64 r) {
+void BaseCompiler::unstashI64(RegPtr regForInstance, RegI64 r) {
   MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
 #  ifdef RABALDR_PIN_INSTANCE
-#    error "Pinned tls not expected"
+#    error "Pinned instance not expected"
 #  endif
-  fr.loadTlsPtr(regForTls);
-  if (regForTls == r.low) {
-    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch() + 4),
-                r.high);
-    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch()), r.low);
+  fr.loadInstancePtr(regForInstance);
+  if (regForInstance == r.low) {
+    masm.load32(
+        Address(regForInstance, Instance::offsetOfBaselineScratch() + 4),
+        r.high);
+    masm.load32(Address(regForInstance, Instance::offsetOfBaselineScratch()),
+                r.low);
   } else {
-    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch()), r.low);
-    masm.load32(Address(regForTls, Instance::offsetOfBaselineScratch() + 4),
-                r.high);
+    masm.load32(Address(regForInstance, Instance::offsetOfBaselineScratch()),
+                r.low);
+    masm.load32(
+        Address(regForInstance, Instance::offsetOfBaselineScratch() + 4),
+        r.high);
   }
 }
 #endif
@@ -502,7 +507,7 @@ bool BaseCompiler::beginFunction() {
   }
 
   fr.zeroLocals(&ra);
-  fr.storeTlsPtr(InstanceReg);
+  fr.storeInstancePtr(InstanceReg);
 
   if (compilerEnv_.debugEnabled()) {
     insertBreakablePoint(CallSiteDesc::EnterFrame);
@@ -563,9 +568,9 @@ bool BaseCompiler::endFunction() {
   }
 
 #ifndef RABALDR_PIN_INSTANCE
-  // To satisy Tls extent invariant we need to reload InstanceReg because
+  // To satisy instance extent invariant we need to reload InstanceReg because
   // baseline can clobber it.
-  fr.loadTlsPtr(InstanceReg);
+  fr.loadInstancePtr(InstanceReg);
 #endif
   GenerateFunctionEpilogue(masm, fr.fixedAllocSize(), &offsets_);
 
@@ -607,7 +612,7 @@ bool BaseCompiler::endFunction() {
 
 void BaseCompiler::insertBreakablePoint(CallSiteDesc::Kind kind) {
 #ifndef RABALDR_PIN_INSTANCE
-  fr.loadTlsPtr(InstanceReg);
+  fr.loadInstancePtr(InstanceReg);
 #endif
 
   // The breakpoint code must call the breakpoint handler installed on the
@@ -1104,7 +1109,6 @@ void BaseCompiler::popBlockResults(ResultType type, StackHeight stackBase,
   }
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 // This function is similar to popBlockResults, but additionally handles the
 // implicit exception pointer that is pushed to the value stack on entry to
 // a catch handler by dropping it appropriately.
@@ -1127,7 +1131,6 @@ void BaseCompiler::popCatchResults(ResultType type, StackHeight stackBase) {
   }
   fr.popStackBeforeBranch(stackBase, type);
 }
-#endif
 
 Stk BaseCompiler::captureStackResult(const ABIResult& result,
                                      StackHeight resultsBase,
@@ -1331,16 +1334,16 @@ void BaseCompiler::endCall(FunctionCall& call, size_t stackSpace) {
   stackMapGenerator_.framePushedExcludingOutboundCallArgs.reset();
 
   if (call.restoreRegisterStateAndRealm) {
-    // The Tls has been clobbered, so always reload
-    fr.loadTlsPtr(InstanceReg);
+    // The instance has been clobbered, so always reload
+    fr.loadInstancePtr(InstanceReg);
     masm.loadWasmPinnedRegsFromInstance();
     masm.switchToWasmInstanceRealm(ABINonArgReturnReg0, ABINonArgReturnReg1);
   } else if (call.usesSystemAbi) {
     // On x86 there are no pinned registers, so don't waste time
-    // reloading the Tls.
+    // reloading the instance.
 #ifndef JS_CODEGEN_X86
-    // The Tls has been clobbered, so always reload
-    fr.loadTlsPtr(InstanceReg);
+    // The instance has been clobbered, so always reload
+    fr.loadInstancePtr(InstanceReg);
     masm.loadWasmPinnedRegsFromInstance();
 #endif
   }
@@ -1622,8 +1625,8 @@ CodeOffset BaseCompiler::builtinInstanceMethodCall(
     const SymbolicAddressSignature& builtin, const ABIArg& instanceArg,
     const FunctionCall& call) {
 #ifndef RABALDR_PIN_INSTANCE
-  // Builtin method calls assume the TLS register has been set.
-  fr.loadTlsPtr(InstanceReg);
+  // Builtin method calls assume the instance register has been set.
+  fr.loadInstancePtr(InstanceReg);
 #endif
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Symbolic);
   return masm.wasmCallBuiltinInstanceMethod(desc, instanceArg, builtin.identity,
@@ -1646,7 +1649,7 @@ bool BaseCompiler::pushCallResults(const FunctionCall& call, ResultType type,
 //////////////////////////////////////////////////////////////////////////////
 //
 // Exception handling
-#ifdef ENABLE_WASM_EXCEPTIONS
+
 // Abstracted helper for throwing, used for throw, rethrow, and rethrowing
 // at the end of a series of catch blocks (if none matched the exception).
 bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
@@ -1656,10 +1659,10 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
   return emitInstanceCall(lineOrBytecode, SASigThrowException);
 }
 
-void BaseCompiler::loadTag(RegPtr tlsData, uint32_t tagIndex, RegRef tagDst) {
+void BaseCompiler::loadTag(RegPtr instance, uint32_t tagIndex, RegRef tagDst) {
   const TagDesc& tagDesc = moduleEnv_.tags[tagIndex];
   size_t offset = Instance::offsetOfGlobalArea() + tagDesc.globalDataOffset;
-  masm.loadPtr(Address(tlsData, offset), tagDst);
+  masm.loadPtr(Address(instance, offset), tagDst);
 }
 
 void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
@@ -1679,7 +1682,6 @@ void BaseCompiler::consumePendingException(RegRef* exnDst, RegRef* tagDst) {
   emitBarrieredClear(pendingAddr);
   freePtr(pendingAddr);
 }
-#endif
 
 ////////////////////////////////////////////////////////////
 //
@@ -2124,17 +2126,18 @@ void BaseCompiler::convertI64ToF64(RegI64 src, bool isUnsigned, RegF64 dest,
 // Global variable access.
 
 Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
-  uint32_t globalToTlsOffset = Instance::offsetOfGlobalArea() + global.offset();
+  uint32_t globalToInstanceOffset =
+      Instance::offsetOfGlobalArea() + global.offset();
 #ifdef RABALDR_PIN_INSTANCE
   movePtr(RegPtr(InstanceReg), tmp);
 #else
-  fr.loadTlsPtr(tmp);
+  fr.loadInstancePtr(tmp);
 #endif
   if (global.isIndirect()) {
-    masm.loadPtr(Address(tmp, globalToTlsOffset), tmp);
+    masm.loadPtr(Address(tmp, globalToInstanceOffset), tmp);
     return Address(tmp, 0);
   }
-  return Address(tmp, globalToTlsOffset);
+  return Address(tmp, globalToInstanceOffset);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -2142,24 +2145,25 @@ Address BaseCompiler::addressOfGlobalVar(const GlobalDesc& global, RegPtr tmp) {
 // Table access.
 
 Address BaseCompiler::addressOfTableField(const TableDesc& table,
-                                          uint32_t fieldOffset, RegPtr tls) {
-  uint32_t tableToTlsOffset = wasm::Instance::offsetOfGlobalArea() +
-                              table.globalDataOffset + fieldOffset;
-  return Address(tls, tableToTlsOffset);
+                                          uint32_t fieldOffset,
+                                          RegPtr instance) {
+  uint32_t tableToInstanceOffset = wasm::Instance::offsetOfGlobalArea() +
+                                   table.globalDataOffset + fieldOffset;
+  return Address(instance, tableToInstanceOffset);
 }
 
-void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr tls,
+void BaseCompiler::loadTableLength(const TableDesc& table, RegPtr instance,
                                    RegI32 length) {
   masm.load32(
-      addressOfTableField(table, offsetof(TableInstanceData, length), tls),
+      addressOfTableField(table, offsetof(TableInstanceData, length), instance),
       length);
 }
 
-void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr tls,
+void BaseCompiler::loadTableElements(const TableDesc& table, RegPtr instance,
                                      RegPtr elements) {
-  masm.loadPtr(
-      addressOfTableField(table, offsetof(TableInstanceData, elements), tls),
-      elements);
+  masm.loadPtr(addressOfTableField(table, offsetof(TableInstanceData, elements),
+                                   instance),
+               elements);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -3585,11 +3589,9 @@ bool BaseCompiler::emitEnd() {
       // This is emitted here after `doReturn` to avoid being executed in the
       // normal return path of a function, and instead only when a `delegate`
       // jumps to it.
-#ifdef ENABLE_WASM_EXCEPTIONS
       if (!emitBodyDelegateThrowPad()) {
         return false;
       }
-#endif
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
       return iter_.endFunction(iter_.end());
@@ -3616,7 +3618,6 @@ bool BaseCompiler::emitEnd() {
       }
       iter_.popEnd();
       break;
-#ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
     case LabelKind::Catch:
     case LabelKind::CatchAll:
@@ -3625,7 +3626,6 @@ bool BaseCompiler::emitEnd() {
       }
       iter_.popEnd();
       break;
-#endif
   }
 
   return true;
@@ -3808,7 +3808,6 @@ bool BaseCompiler::emitBrTable() {
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 bool BaseCompiler::emitTry() {
   ResultType params;
   if (!iter_.readTry(&params)) {
@@ -3967,14 +3966,14 @@ bool BaseCompiler::emitCatch() {
         break;
       }
       case ValType::V128: {
-#  ifdef ENABLE_WASM_SIMD
+#ifdef ENABLE_WASM_SIMD
         RegV128 reg = needV128();
         masm.loadUnalignedSimd128(Address(data, offset), reg);
         pushV128(reg);
         break;
-#  else
+#else
         MOZ_CRASH("No SIMD support");
-#  endif
+#endif
       }
       case ValType::Rtt:
       case ValType::Ref: {
@@ -4101,7 +4100,7 @@ bool BaseCompiler::emitDelegate() {
   // Store the Instance that was left in InstanceReg by the exception
   // handling mechanism, that is this frame's Instance but with the exception
   // filled in Instance::pendingException.
-  fr.storeTlsPtr(InstanceReg);
+  fr.storeInstancePtr(InstanceReg);
 
   // If the target block is a non-try block, skip over it and find the next
   // try block or the very last block (to re-throw out of the function).
@@ -4189,7 +4188,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   // Store the Instance that was left in InstanceReg by the exception
   // handling mechanism, that is this frame's Instance but with the exception
   // filled in Instance::pendingException.
-  fr.storeTlsPtr(InstanceReg);
+  fr.storeInstancePtr(InstanceReg);
 
   // Load exception pointer from Instance and make sure that it is
   // saved before the following call will clear it.
@@ -4263,17 +4262,17 @@ bool BaseCompiler::emitThrow() {
   const TagOffsetVector& offsets = tagDesc.type->argOffsets_;
 
   // Load the tag object
-#  ifdef RABALDR_PIN_INSTANCE
-  RegPtr tls(InstanceReg);
-#  else
-  RegPtr tls = needPtr();
-  fr.loadTlsPtr(tls);
-#  endif
+#ifdef RABALDR_PIN_INSTANCE
+  RegPtr instance(InstanceReg);
+#else
+  RegPtr instance = needPtr();
+  fr.loadInstancePtr(instance);
+#endif
   RegRef tag = needRef();
-  loadTag(tls, tagIndex, tag);
-#  ifndef RABALDR_PIN_INSTANCE
-  freePtr(tls);
-#  endif
+  loadTag(instance, tagIndex, tag);
+#ifndef RABALDR_PIN_INSTANCE
+  freePtr(instance);
+#endif
 
   // Create the new exception object that we will throw.
   pushRef(tag);
@@ -4317,14 +4316,14 @@ bool BaseCompiler::emitThrow() {
         break;
       }
       case ValType::V128: {
-#  ifdef ENABLE_WASM_SIMD
+#ifdef ENABLE_WASM_SIMD
         RegV128 reg = popV128();
         masm.storeUnalignedSimd128(reg, Address(data, offset));
         freeV128(reg);
         break;
-#  else
+#else
         MOZ_CRASH("No SIMD support");
-#  endif
+#endif
       }
       case ValType::Rtt:
       case ValType::Ref: {
@@ -4371,7 +4370,6 @@ bool BaseCompiler::emitRethrow() {
 
   return throwFrom(exn, lineOrBytecode);
 }
-#endif
 
 bool BaseCompiler::emitDrop() {
   if (!iter_.readDrop()) {
@@ -4452,7 +4450,7 @@ bool BaseCompiler::emitCallArgs(const ValTypeVector& argTypes,
   }
 
 #ifndef RABALDR_PIN_INSTANCE
-  fr.loadTlsPtr(InstanceReg);
+  fr.loadInstancePtr(InstanceReg);
 #endif
   return true;
 }
@@ -4792,8 +4790,8 @@ bool BaseCompiler::emitDivOrModI64BuiltinCall(SymbolicAddress callee,
   masm.passABIArg(srcDest.low);
   masm.passABIArg(rhs.high);
   masm.passABIArg(rhs.low);
-  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee,
-                                         mozilla::Some(fr.getTlsPtrOffset()));
+  CodeOffset raOffset = masm.callWithABI(
+      bytecodeOffset(), callee, mozilla::Some(fr.getInstancePtrOffset()));
   if (!createStackMap("emitDivOrModI64Bui[..]", raOffset)) {
     return false;
   }
@@ -4824,7 +4822,7 @@ bool BaseCompiler::emitConvertInt64ToFloatingCallout(SymbolicAddress callee,
   masm.passABIArg(input.low);
 #  endif
   CodeOffset raOffset = masm.callWithABI(
-      bytecodeOffset(), callee, mozilla::Some(fr.getTlsPtrOffset()),
+      bytecodeOffset(), callee, mozilla::Some(fr.getInstancePtrOffset()),
       resultType == ValType::F32 ? MoveOp::FLOAT32 : MoveOp::DOUBLE);
   if (!createStackMap("emitConvertInt64To[..]", raOffset)) {
     return false;
@@ -4868,8 +4866,8 @@ bool BaseCompiler::emitConvertFloatingToInt64Callout(SymbolicAddress callee,
 
   masm.setupWasmABICall();
   masm.passABIArg(doubleInput, MoveOp::DOUBLE);
-  CodeOffset raOffset = masm.callWithABI(bytecodeOffset(), callee,
-                                         mozilla::Some(fr.getTlsPtrOffset()));
+  CodeOffset raOffset = masm.callWithABI(
+      bytecodeOffset(), callee, mozilla::Some(fr.getInstancePtrOffset()));
   if (!createStackMap("emitConvertFloatin[..]", raOffset)) {
     return false;
   }
@@ -5897,7 +5895,7 @@ bool BaseCompiler::emitTableGet() {
   }
   pushI32(tableIndex);
   // get(index:u32, table:u32) -> AnyRef
-  return emitInstanceCall(lineOrBytecode, SASigTableGetFunc);
+  return emitInstanceCall(lineOrBytecode, SASigTableGet);
 }
 
 bool BaseCompiler::emitTableGrow() {
@@ -5924,7 +5922,7 @@ bool BaseCompiler::emitTableSet() {
   }
   pushI32(tableIndex);
   // set(index:u32, value:ref, table:u32) -> void
-  return emitInstanceCall(lineOrBytecode, SASigTableSetFunc);
+  return emitInstanceCall(lineOrBytecode, SASigTableSet);
 }
 
 bool BaseCompiler::emitTableSize() {
@@ -5937,23 +5935,23 @@ bool BaseCompiler::emitTableSize() {
   }
   const TableDesc& table = moduleEnv_.tables[tableIndex];
 
-  RegPtr tls = needPtr();
+  RegPtr instance = needPtr();
   RegI32 length = needI32();
 
-  fr.loadTlsPtr(tls);
-  loadTableLength(table, tls, length);
+  fr.loadInstancePtr(instance);
+  loadTableLength(table, instance, length);
 
   pushI32(length);
-  freePtr(tls);
+  freePtr(instance);
   return true;
 }
 
 void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
-                                        RegPtr tls) {
+                                        RegPtr instance) {
   Label ok;
   masm.wasmBoundsCheck32(
       Assembler::Condition::Below, index,
-      addressOfTableField(table, offsetof(TableInstanceData, length), tls),
+      addressOfTableField(table, offsetof(TableInstanceData, length), instance),
       &ok);
   masm.wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset());
   masm.bind(&ok);
@@ -5962,18 +5960,18 @@ void BaseCompiler::emitTableBoundsCheck(const TableDesc& table, RegI32 index,
 bool BaseCompiler::emitTableGetAnyRef(uint32_t tableIndex) {
   const TableDesc& table = moduleEnv_.tables[tableIndex];
 
-  RegPtr tls = needPtr();
+  RegPtr instance = needPtr();
   RegPtr elements = needPtr();
   RegI32 index = popI32();
 
-  fr.loadTlsPtr(tls);
-  emitTableBoundsCheck(table, index, tls);
-  loadTableElements(table, tls, elements);
+  fr.loadInstancePtr(instance);
+  emitTableBoundsCheck(table, index, instance);
+  loadTableElements(table, instance, elements);
   masm.loadPtr(BaseIndex(elements, index, ScalePointer), elements);
 
   pushRef(RegRef(elements));
   freeI32(index);
-  freePtr(tls);
+  freePtr(instance);
 
   return true;
 }
@@ -5986,7 +5984,7 @@ bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
   RegPtr valueAddr = RegPtr(PreBarrierReg);
   needPtr(valueAddr);
 
-  RegPtr tls = needPtr();
+  RegPtr instance = needPtr();
   RegPtr elements = needPtr();
   RegRef value = popRef();
   RegI32 index = popI32();
@@ -5997,15 +5995,15 @@ bool BaseCompiler::emitTableSetAnyRef(uint32_t tableIndex) {
   pushRef(value);
 #endif
 
-  fr.loadTlsPtr(tls);
-  emitTableBoundsCheck(table, index, tls);
-  loadTableElements(table, tls, elements);
+  fr.loadInstancePtr(instance);
+  emitTableBoundsCheck(table, index, instance);
+  loadTableElements(table, instance, elements);
   masm.computeEffectiveAddress(BaseIndex(elements, index, ScalePointer),
                                valueAddr);
 
   freeI32(index);
   freePtr(elements);
-  freePtr(tls);
+  freePtr(instance);
 
 #ifdef JS_CODEGEN_X86
   value = popRef();
@@ -6039,16 +6037,16 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   ScratchPtr scratch(*this);
 
 #ifdef RABALDR_PIN_INSTANCE
-  Register tls(InstanceReg);
+  Register instance(InstanceReg);
 #else
-  Register tls(scratch);
-  fr.loadTlsPtr(tls);
+  Register instance(scratch);
+  fr.loadInstancePtr(instance);
 #endif
 
-  EmitWasmPreBarrierGuard(masm, tls, scratch, valueAddr, &skipBarrier);
+  EmitWasmPreBarrierGuard(masm, instance, scratch, valueAddr, &skipBarrier);
 
 #ifndef RABALDR_PIN_INSTANCE
-  fr.loadTlsPtr(tls);
+  fr.loadInstancePtr(instance);
 #endif
 #ifdef JS_CODEGEN_ARM64
   // The prebarrier stub assumes the PseudoStackPointer is set up.  It is OK
@@ -6058,7 +6056,7 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
   masm.Mov(x28, sp);
 #endif
   // The prebarrier call preserves all volatile registers
-  EmitWasmPreBarrierCall(masm, tls, scratch, valueAddr);
+  EmitWasmPreBarrierCall(masm, instance, scratch, valueAddr);
 
   masm.bind(&skipBarrier);
 }
@@ -6084,7 +6082,7 @@ bool BaseCompiler::emitPostBarrierImprecise(const Maybe<RegRef>& object,
   pushRef(value);
 
   // The `valueAddr` is a raw pointer to the cell within some GC object or
-  // TLS area, and we are careful so that the GC will not run while the
+  // instance area, and we are careful so that the GC will not run while the
   // post-barrier call is active, so push a uintptr_t value.
   pushPtr(valueAddr);
   if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier)) {
@@ -6180,7 +6178,7 @@ void BaseCompiler::emitGcCanon(uint32_t typeIndex) {
   const TypeIdDesc& typeId = moduleEnv_.typeIds[typeIndex];
   RegRef rp = needRef();
 #  ifndef RABALDR_PIN_INSTANCE
-  fr.loadTlsPtr(InstanceReg);
+  fr.loadInstancePtr(InstanceReg);
 #  endif
   masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
   pushRef(rp);
@@ -8461,7 +8459,6 @@ bool BaseCompiler::emitBody() {
         CHECK_NEXT(emitIf());
       case uint16_t(Op::Else):
         CHECK_NEXT(emitElse());
-#ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!moduleEnv_.exceptionsEnabled()) {
           return iter_.unrecognizedOpcode(&op);
@@ -8494,7 +8491,6 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitRethrow());
-#endif
       case uint16_t(Op::Br):
         CHECK_NEXT(emitBr());
       case uint16_t(Op::BrIf):

@@ -132,19 +132,7 @@ build_compiler_rt() {
   popd
 }
 
-merge_libs() {
-  cat <<EOF |llvm-ar -M
-CREATE tmp.a
-ADDLIB $1
-ADDLIB $2
-SAVE
-END
-EOF
-  llvm-ranlib tmp.a
-  mv tmp.a $1
-}
-
-build_libcxx() {
+build_runtimes() {
   # Below, we specify -g -gcodeview to build static libraries with debug information.
   # Because we're not distributing these builds, this is fine. If one were to distribute
   # the builds, perhaps one would want to make those flags conditional or investigation
@@ -152,8 +140,8 @@ build_libcxx() {
   DEBUG_FLAGS="-g -gcodeview"
 
   # First configure libcxx
-  mkdir libcxx
-  pushd libcxx
+  mkdir runtimes
+  pushd runtimes
   cmake \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
@@ -166,6 +154,7 @@ build_libcxx() {
       -DLLVM_COMPILER_CHECKED=TRUE \
       -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
       -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
+      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
       -DLIBCXX_USE_COMPILER_RT=ON \
       -DLIBCXX_INSTALL_HEADERS=ON \
       -DLIBCXX_ENABLE_EXCEPTIONS=ON \
@@ -179,79 +168,27 @@ build_libcxx() {
       -DLIBCXX_ENABLE_FILESYSTEM=OFF \
       -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=TRUE \
       -DLIBCXX_CXX_ABI=libcxxabi \
-      -DLIBCXX_CXX_ABI_INCLUDE_PATHS=$TOOLCHAIN_DIR/libcxxabi/include \
-      -DLIBCXX_CXX_ABI_LIBRARY_PATH=../libcxxabi/lib \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
-      $TOOLCHAIN_DIR/libcxx
-  popd
-
-  mkdir libunwind
-  pushd libunwind
-  cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
-      -DCMAKE_C_COMPILER=$CC \
-      -DCMAKE_CXX_COMPILER=$CXX \
-      -DCMAKE_CROSSCOMPILING=TRUE \
-      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
-      -DCMAKE_SYSTEM_NAME=Windows \
-      -DCMAKE_C_COMPILER_WORKS=TRUE \
-      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
-      -DLLVM_COMPILER_CHECKED=TRUE \
-      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
-      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
+      -DLIBCXXABI_USE_LLVM_UNWINDER=TRUE \
+      -DLIBCXXABI_ENABLE_STATIC_UNWINDER=TRUE \
       -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
-      -DCXX_SUPPORTS_CXX11=TRUE \
-      -DCXX_SUPPORTS_CXX_STD=TRUE \
       -DLIBUNWIND_USE_COMPILER_RT=TRUE \
       -DLIBUNWIND_ENABLE_THREADS=TRUE \
       -DLIBUNWIND_ENABLE_SHARED=FALSE \
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$TOOLCHAIN_DIR/build/libcxx/include/c++/v1 -DPSAPI_VERSION=2" \
-      -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
-      $MOZ_FETCHES_DIR/libunwind
-  make $make_flags
-  make $make_flags install
-  popd
-
-  mkdir libcxxabi
-  pushd libcxxabi
-  cmake \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$CROSS_PREFIX_DIR \
-      -DCMAKE_C_COMPILER=$CC \
-      -DCMAKE_CXX_COMPILER=$CXX \
-      -DCMAKE_CROSSCOMPILING=TRUE \
-      -DCMAKE_SYSTEM_NAME=Windows \
-      -DCMAKE_C_COMPILER_WORKS=TRUE \
-      -DCMAKE_CXX_COMPILER_WORKS=TRUE \
-      -DCMAKE_SYSROOT=$CROSS_PREFIX_DIR \
-      -DLLVM_COMPILER_CHECKED=TRUE \
-      -DCMAKE_AR=$INSTALL_DIR/bin/llvm-ar \
-      -DCMAKE_RANLIB=$INSTALL_DIR/bin/llvm-ranlib \
+      -DLIBUNWIND_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -DPSAPI_VERSION=2" \
+      -DLIBUNWIND_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
       -DLIBCXXABI_USE_COMPILER_RT=ON \
       -DLIBCXXABI_ENABLE_EXCEPTIONS=ON \
       -DLIBCXXABI_ENABLE_THREADS=ON \
       -DLIBCXXABI_TARGET_TRIPLE=$machine-w64-mingw32 \
       -DLIBCXXABI_ENABLE_SHARED=OFF \
-      -DLIBCXXABI_LIBCXX_INCLUDES=$TOOLCHAIN_DIR/libcxx/include/ \
-      -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
-      -DCXX_SUPPORTS_CXX11=TRUE \
-      -DCXX_SUPPORTS_CXX_STD=TRUE \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -I$TOOLCHAIN_DIR/build/libcxx/include/c++/v1 -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
-      $TOOLCHAIN_DIR/libcxxabi
-  make $make_flags VERBOSE=1
-  popd
+      -DLIBCXXABI_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCPP_HAS_THREAD_API_WIN32" \
+      -DLLVM_ENABLE_RUNTIMES="libcxxabi;libcxx;libunwind" \
+      $TOOLCHAIN_DIR/runtimes
 
-  pushd libcxx
   make $make_flags VERBOSE=1
   make $make_flags install
 
-  # libc++.a depends on libunwind.a. Whild linker will automatically link
-  # to libc++.a in C++ mode, it won't pick libunwind.a, requiring caller
-  # to explicitly pass -lunwind. Wo work around that, we merge libunwind.a
-  # into libc++.a.
-  merge_libs $CROSS_PREFIX_DIR/lib/libc++.a $CROSS_PREFIX_DIR/lib/libunwind.a
   popd
 }
 
@@ -296,7 +233,7 @@ pushd $TOOLCHAIN_DIR/build
 install_wrappers
 build_mingw
 build_compiler_rt
-build_libcxx
+build_runtimes
 build_libssp
 build_utils
 

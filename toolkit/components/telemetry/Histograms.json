@@ -10658,9 +10658,10 @@
     "products": ["firefox"],
     "alert_emails": ["webrtc-telemetry-alerts@mozilla.com"],
     "expires_in_version": "105",
-    "kind": "boolean",
-    "bug_numbers": [1767334],
-    "description": "Whether H264 encoding is an available capability for being sent to the content processes"
+    "kind": "enumerated",
+    "n_values": 5,
+    "bug_numbers": [1767334, 1768033],
+    "description": "Whether H264 encoding is an available capability for being sent to the content processes. 0=no h264, 1=h264 avaiable, 2=no h264 1 directory added, 3=no h264 >1 directories added, 4=directory adds in prorgress"
   },
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["content"],

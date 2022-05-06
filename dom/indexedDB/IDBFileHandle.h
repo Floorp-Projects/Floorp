@@ -208,7 +208,7 @@ class IDBFileHandle final : public DOMEventTargetHelper,
   IDBFileHandle(IDBMutableFile* aMutableFile, FileMode aMode);
   ~IDBFileHandle();
 
-  bool CheckState(ErrorResult& aRv);
+  bool CheckState(ErrorResult& aRv) const;
 
   bool CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv);
 

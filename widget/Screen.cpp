@@ -26,8 +26,9 @@ static hal::ScreenOrientation EffectiveOrientation(
 
 Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aPixelDepth, uint32_t aColorDepth,
-               DesktopToLayoutDeviceScale aContentsScale,
+               uint32_t aRefreshRate, DesktopToLayoutDeviceScale aContentsScale,
                CSSToLayoutDeviceScale aDefaultCssScale, float aDPI,
+               IsPseudoDisplay aIsPseudoDisplay,
                hal::ScreenOrientation aOrientation,
                OrientationAngle aOrientationAngle)
     : mRect(aRect),
@@ -36,11 +37,13 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
       mAvailRectDisplayPix(RoundedToInt(aAvailRect / aContentsScale)),
       mPixelDepth(aPixelDepth),
       mColorDepth(aColorDepth),
+      mRefreshRate(aRefreshRate),
       mContentsScale(aContentsScale),
       mDefaultCssScale(aDefaultCssScale),
       mDPI(aDPI),
       mScreenOrientation(EffectiveOrientation(aOrientation, aRect)),
-      mOrientationAngle(aOrientationAngle) {}
+      mOrientationAngle(aOrientationAngle),
+      mIsPseudoDisplay(aIsPseudoDisplay == IsPseudoDisplay::Yes) {}
 
 Screen::Screen(const dom::ScreenDetails& aScreen)
     : mRect(aScreen.rect()),
@@ -49,11 +52,13 @@ Screen::Screen(const dom::ScreenDetails& aScreen)
       mAvailRectDisplayPix(aScreen.availRectDisplayPix()),
       mPixelDepth(aScreen.pixelDepth()),
       mColorDepth(aScreen.colorDepth()),
+      mRefreshRate(aScreen.refreshRate()),
       mContentsScale(aScreen.contentsScaleFactor()),
       mDefaultCssScale(aScreen.defaultCSSScaleFactor()),
       mDPI(aScreen.dpi()),
       mScreenOrientation(aScreen.orientation()),
-      mOrientationAngle(aScreen.orientationAngle()) {}
+      mOrientationAngle(aScreen.orientationAngle()),
+      mIsPseudoDisplay(aScreen.isPseudoDisplay()) {}
 
 Screen::Screen(const Screen& aOther)
     : mRect(aOther.mRect),
@@ -62,17 +67,19 @@ Screen::Screen(const Screen& aOther)
       mAvailRectDisplayPix(aOther.mAvailRectDisplayPix),
       mPixelDepth(aOther.mPixelDepth),
       mColorDepth(aOther.mColorDepth),
+      mRefreshRate(aOther.mRefreshRate),
       mContentsScale(aOther.mContentsScale),
       mDefaultCssScale(aOther.mDefaultCssScale),
       mDPI(aOther.mDPI),
       mScreenOrientation(aOther.mScreenOrientation),
-      mOrientationAngle(aOther.mOrientationAngle) {}
+      mOrientationAngle(aOther.mOrientationAngle),
+      mIsPseudoDisplay(aOther.mIsPseudoDisplay) {}
 
 dom::ScreenDetails Screen::ToScreenDetails() const {
-  return dom::ScreenDetails(mRect, mRectDisplayPix, mAvailRect,
-                            mAvailRectDisplayPix, mPixelDepth, mColorDepth,
-                            mContentsScale, mDefaultCssScale, mDPI,
-                            mScreenOrientation, mOrientationAngle);
+  return dom::ScreenDetails(
+      mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix, mPixelDepth,
+      mColorDepth, mRefreshRate, mContentsScale, mDefaultCssScale, mDPI,
+      mScreenOrientation, mOrientationAngle, mIsPseudoDisplay);
 }
 
 NS_IMETHODIMP
@@ -135,6 +142,18 @@ Screen::GetDefaultCSSScaleFactor(double* aOutScale) {
 NS_IMETHODIMP
 Screen::GetDpi(float* aDPI) {
   *aDPI = mDPI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Screen::GetRefreshRate(int32_t* aRefreshRate) {
+  *aRefreshRate = mRefreshRate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Screen::GetIsPseudoDisplay(bool* aIsPseudoDisplay) {
+  *aIsPseudoDisplay = mIsPseudoDisplay;
   return NS_OK;
 }
 

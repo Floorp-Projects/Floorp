@@ -35,3 +35,4 @@ fuzzy-if(useDrawSnapshot,255-255,5-5) == 1724901-1.html 1724901-1-ref.html
 pref(image.downscale-during-decode.enabled,true) skip-if(Android) fuzzy-if(useDrawSnapshot&&browserIsFission,203-203,193600-193600) HTTP == 1724901-2.html 1724901-2-ref.html
 != 1761685-1.html 1761685-1-ref.html
 == 1761460.html 1761460-ref.html
+pref(layout.css.backdrop-filter.enabled,true) == 1765862.html 1765862-ref.html

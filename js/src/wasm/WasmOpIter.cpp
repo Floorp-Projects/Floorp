@@ -47,11 +47,6 @@ using namespace js::wasm;
 #  else
 #    define WASM_SIMD_OP(code) break
 #  endif
-#  ifdef ENABLE_WASM_EXCEPTIONS
-#    define WASM_EXN_OP(code) return code
-#  else
-#    define WASM_EXN_OP(code) break
-#  endif
 
 OpKind wasm::Classify(OpBytes op) {
   switch (Op(op.b0)) {
@@ -267,20 +262,18 @@ OpKind wasm::Classify(OpBytes op) {
       return OpKind::Else;
     case Op::End:
       return OpKind::End;
-#  ifdef ENABLE_WASM_EXCEPTIONS
     case Op::Catch:
-      WASM_EXN_OP(OpKind::Catch);
+      return OpKind::Catch;
     case Op::CatchAll:
-      WASM_EXN_OP(OpKind::CatchAll);
+      return OpKind::CatchAll;
     case Op::Delegate:
-      WASM_EXN_OP(OpKind::Delegate);
+      return OpKind::Delegate;
     case Op::Throw:
-      WASM_EXN_OP(OpKind::Throw);
+      return OpKind::Throw;
     case Op::Rethrow:
-      WASM_EXN_OP(OpKind::Rethrow);
+      return OpKind::Rethrow;
     case Op::Try:
-      WASM_EXN_OP(OpKind::Try);
-#  endif
+      return OpKind::Try;
     case Op::MemorySize:
       return OpKind::MemorySize;
     case Op::MemoryGrow:
@@ -790,7 +783,6 @@ OpKind wasm::Classify(OpBytes op) {
   MOZ_CRASH("unimplemented opcode");
 }
 
-#  undef WASM_EXN_OP
 #  undef WASM_GC_OP
 #  undef WASM_REF_OP
 

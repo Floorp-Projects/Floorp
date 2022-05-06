@@ -87,25 +87,26 @@ class BaseStackFrame;
 // Two flags, useABI and restoreRegisterStateAndRealm, control how calls are
 // made.
 //
-// UseABI::Wasm implies that the Tls/Heap/Global registers are nonvolatile,
+// UseABI::Wasm implies that the Instance/Heap/Global registers are nonvolatile,
 // except when RestoreRegisterStateAndRealm::True is also set, when they are
 // volatile.
 //
-// UseABI::Builtin implies that the Tls/Heap/Global registers are volatile.
+// UseABI::Builtin implies that the Instance/Heap/Global registers are volatile.
 // In this case, we require RestoreRegisterStateAndRealm::False.  The calling
 // convention is otherwise like UseABI::Wasm.
 //
-// UseABI::System implies that the Tls/Heap/Global registers are volatile.
+// UseABI::System implies that the Instance/Heap/Global registers are volatile.
 // Additionally, the parameter passing mechanism may be slightly different from
 // the UseABI::Wasm convention.
 //
-// When the Tls/Heap/Global registers are not volatile, the baseline compiler
-// will restore the Tls register from its save slot before the call, since the
-// baseline compiler uses the Tls register for other things.
+// When the Instance/Heap/Global registers are not volatile, the baseline
+// compiler will restore the Instance register from its save slot before the
+// call, since the baseline compiler uses the Instance register for other
+// things.
 //
 // When those registers are volatile, the baseline compiler will reload them
-// after the call (it will restore the Tls register from the save slot and load
-// the other two from the Tls data).
+// after the call (it will restore the Instance register from the save slot and
+// load the other two from the Instance data).
 
 enum class UseABI { Wasm, Builtin, System };
 enum class RestoreRegisterStateAndRealm { False = false, True = true };

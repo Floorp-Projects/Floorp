@@ -28,6 +28,7 @@ void RemoteDecoderChild::HandleRejectionError(
   // be rejected with SendError rather than ActorDestroyed. Both means the same
   // thing and we can consider that the parent has crashed. The child can no
   // longer be used.
+  //
 
   // The GPU/RDD process crashed.
   if (mLocation == RemoteDecodeIn::GpuProcess) {
@@ -40,17 +41,22 @@ void RemoteDecoderChild::HandleRejectionError(
     GetManager()->RunWhenGPUProcessRecreated(NS_NewRunnableFunction(
         "RemoteDecoderChild::HandleRejectionError",
         [self, callback = std::move(aCallback)]() {
-          MediaResult error(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR,
-                            __func__);
+          MediaResult error(
+              NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR,
+              __func__);
           callback(error);
         }));
     return;
   }
+
+  nsresult err = ((mLocation == RemoteDecodeIn::GpuProcess) ||
+                  (mLocation == RemoteDecodeIn::RddProcess))
+                     ? NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR
+                     : NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR;
   // The RDD process is restarted on demand and asynchronously, we can
   // immediately inform the caller that a new decoder is needed. The RDD will
   // then be restarted during the new decoder creation by
-  aCallback(
-      MediaResult(NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR, __func__));
+  aCallback(MediaResult(err, __func__));
 }
 
 // ActorDestroy is called if the channel goes down while waiting for a response.
@@ -124,8 +130,12 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   AssertOnManagerThread();
 
   if (mRemoteDecoderCrashed) {
-    return MediaDataDecoder::DecodePromise::CreateAndReject(
-        NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_ERR, __func__);
+    nsresult err =
+        ((mLocation == RemoteDecodeIn::GpuProcess) ||
+         (mLocation == RemoteDecodeIn::RddProcess))
+            ? NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_RDD_OR_GPU_ERR
+            : NS_ERROR_DOM_MEDIA_REMOTE_DECODER_CRASHED_UTILITY_ERR;
+    return MediaDataDecoder::DecodePromise::CreateAndReject(err, __func__);
   }
 
   auto samples = MakeRefPtr<ArrayOfRemoteMediaRawData>();

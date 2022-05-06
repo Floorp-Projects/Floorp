@@ -86,7 +86,7 @@ const SpecialMessageActions = {
    * @param {Window} window Reference to a window object
    */
   pinFirefoxToTaskbar(window) {
-    window.getShellService().pinToTaskbar();
+    return window.getShellService().pinToTaskbar();
   },
 
   /**
@@ -240,10 +240,10 @@ const SpecialMessageActions = {
         );
         break;
       case "PIN_FIREFOX_TO_TASKBAR":
-        this.pinFirefoxToTaskbar(window);
+        await this.pinFirefoxToTaskbar(window);
         break;
       case "PIN_AND_DEFAULT":
-        this.pinFirefoxToTaskbar(window);
+        await this.pinFirefoxToTaskbar(window);
         this.setDefaultBrowser(window);
         break;
       case "SET_DEFAULT_BROWSER":

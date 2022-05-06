@@ -1161,7 +1161,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         Nothing nothing;
         CHECK(iter.readRefIsNull(&nothing));
       }
-#ifdef ENABLE_WASM_EXCEPTIONS
       case uint16_t(Op::Try):
         if (!env.exceptionsEnabled()) {
           return iter.unrecognizedOpcode(&op);
@@ -1209,7 +1208,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unusedDepth;
         CHECK(iter.readRethrow(&unusedDepth));
       }
-#endif
       case uint16_t(Op::ThreadPrefix): {
         // Though thread ops can be used on nonshared memories, we make them
         // unavailable if shared memory has been disabled in the prefs, for
@@ -1928,8 +1926,7 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   return true;
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
-#  ifdef WASM_PRIVATE_REFTYPES
+#ifdef WASM_PRIVATE_REFTYPES
 static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
   for (auto t : type) {
     if (t.isTypeIndex()) {
@@ -1939,7 +1936,7 @@ static bool TagIsJSCompatible(Decoder& d, const ValTypeVector& type) {
 
   return true;
 }
-#  endif  // WASM_PRIVATE_REFTYPES
+#endif  // WASM_PRIVATE_REFTYPES
 
 static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
                       uint32_t* funcTypeIndex) {
@@ -1967,7 +1964,6 @@ static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
   }
   return true;
 }
-#endif
 
 static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
   UniqueChars moduleName = DecodeName(d);
@@ -2040,7 +2036,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       }
       break;
     }
-#ifdef ENABLE_WASM_EXCEPTIONS
     case DefinitionKind::Tag: {
       TagKind tagKind;
       uint32_t funcTypeIndex;
@@ -2051,11 +2046,11 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       if (!args.appendAll((*env->types)[funcTypeIndex].funcType().args())) {
         return false;
       }
-#  ifdef WASM_PRIVATE_REFTYPES
+#ifdef WASM_PRIVATE_REFTYPES
       if (!TagIsJSCompatible(d, args)) {
         return false;
       }
-#  endif
+#endif
       MutableTagType tagType = js_new<TagType>();
       if (!tagType || !tagType->initialize(std::move(args))) {
         return false;
@@ -2068,7 +2063,6 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       }
       break;
     }
-#endif
     default:
       return d.fail("unsupported import kind");
   }
@@ -2243,7 +2237,6 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
   return d.finishSection(*range, "global");
 }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
 static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::Tag, env, &range, "tag")) {
@@ -2291,7 +2284,6 @@ static bool DecodeTagSection(Decoder& d, ModuleEnvironment* env) {
 
   return d.finishSection(*range, "tag");
 }
-#endif
 
 using CStringSet =
     HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy>;
@@ -2394,7 +2386,6 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
       return env->exports.emplaceBack(std::move(fieldName), globalIndex,
                                       DefinitionKind::Global);
     }
-#ifdef ENABLE_WASM_EXCEPTIONS
     case DefinitionKind::Tag: {
       uint32_t tagIndex;
       if (!d.readVarU32(&tagIndex)) {
@@ -2404,17 +2395,16 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env,
         return d.fail("exported tag index out of bounds");
       }
 
-#  ifdef WASM_PRIVATE_REFTYPES
+#ifdef WASM_PRIVATE_REFTYPES
       if (!TagIsJSCompatible(d, env->tags[tagIndex].type->argTypes_)) {
         return false;
       }
-#  endif
+#endif
 
       env->tags[tagIndex].isExport = true;
       return env->exports.emplaceBack(std::move(fieldName), tagIndex,
                                       DefinitionKind::Tag);
     }
-#endif
     default:
       return d.fail("unexpected export kind");
   }
@@ -2792,11 +2782,9 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-#ifdef ENABLE_WASM_EXCEPTIONS
   if (!DecodeTagSection(d, env)) {
     return false;
   }
-#endif
 
   if (!DecodeGlobalSection(d, env)) {
     return false;

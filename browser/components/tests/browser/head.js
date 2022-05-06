@@ -36,13 +36,13 @@ function mockShell(overrides = {}) {
     didMockShell = true;
   }
 
-  const sharedPinStub = sinon.stub();
+  const sharedPinStub = sinon.stub().resolves(undefined);
   let mock = {
     canPin: false,
     isDefault: false,
     isPinned: false,
 
-    checkPinCurrentAppToTaskbar(privateBrowsing = false) {
+    async checkPinCurrentAppToTaskbarAsync(privateBrowsing = false) {
       if (!this.canPin) {
         throw Error;
       }
@@ -68,7 +68,7 @@ function mockShell(overrides = {}) {
     },
 
     ensureAppIsPinnedToDock: sharedPinStub,
-    pinCurrentAppToTaskbar: sharedPinStub,
+    pinCurrentAppToTaskbarAsync: sharedPinStub,
     setAsDefault: sinon.stub(),
     ...overrides,
   };

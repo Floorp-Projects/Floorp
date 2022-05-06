@@ -119,7 +119,7 @@ function autocompleteStringMatches(element, ccString) {
 function getFillableFormElements(element) {
   const formLike = FormLikeFactory.createFromField(element);
   return Array.from(formLike.elements).filter(el =>
-    FormAutofillUtils.isFieldEligibleForAutofill(el)
+    FormAutofillUtils.isCreditCardOrAddressFieldType(el)
   );
 }
 

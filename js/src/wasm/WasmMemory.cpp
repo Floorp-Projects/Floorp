@@ -72,12 +72,12 @@ bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
  *
  * A memory address in an access instruction has three components, the "memory
  * base", the "pointer", and the "offset".  The "memory base" - the HeapReg on
- * most platforms and a value loaded from the Tls on x86 - is a native pointer
- * that points to the start of the linear memory array; we'll ignore the memory
- * base in the following.  The "pointer" is the i32 or i64 index supplied by the
- * program as a separate value argument to the access instruction; it is usually
- * variable but can be constant.  The "offset" is a constant encoded in the
- * access instruction.
+ * most platforms and a value loaded from the instance on x86 - is a native
+ * pointer that points to the start of the linear memory array; we'll ignore the
+ * memory base in the following.  The "pointer" is the i32 or i64 index supplied
+ * by the program as a separate value argument to the access instruction; it is
+ * usually variable but can be constant.  The "offset" is a constant encoded in
+ * the access instruction.
  *
  * The "effective address" (EA) is the non-overflowed sum of the pointer and the
  * offset (if the sum overflows the program traps); the pointer, offset, and EA
@@ -136,7 +136,7 @@ bool wasm::ToIndexType(JSContext* cx, HandleValue value, IndexType* indexType) {
  *
  * The boundsCheckLimit.
  *
- * The bounds check limit that is stored in the Tls is always valid and is
+ * The bounds check limit that is stored in the instance is always valid and is
  * always a 64-bit datum, and it is always correct to load it and use it as a
  * 64-bit value.  However, in situations when the 32 upper bits are known to be
  * zero, it is also correct to load just the low 32 bits from the address of the

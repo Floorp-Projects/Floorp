@@ -25,11 +25,12 @@ class Screen final : public nsIScreen {
   NS_DECL_NSISCREEN
 
   using OrientationAngle = uint16_t;
+  enum class IsPseudoDisplay : bool { No, Yes };
 
   Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
-         uint32_t aPixelDepth, uint32_t aColorDepth,
+         uint32_t aPixelDepth, uint32_t aColorDepth, uint32_t aRefreshRate,
          DesktopToLayoutDeviceScale aContentsScale,
-         CSSToLayoutDeviceScale aDefaultCssScale, float aDpi,
+         CSSToLayoutDeviceScale aDefaultCssScale, float aDpi, IsPseudoDisplay,
          hal::ScreenOrientation = hal::ScreenOrientation::None,
          OrientationAngle = 0);
   explicit Screen(const dom::ScreenDetails& aScreenDetails);
@@ -44,6 +45,15 @@ class Screen final : public nsIScreen {
 
   float GetDPI() const { return mDPI; }
 
+  const LayoutDeviceIntRect& GetRect() const { return mRect; }
+  const LayoutDeviceIntRect& GetAvailRect() const { return mAvailRect; }
+  const DesktopToLayoutDeviceScale& GetContentsScaleFactor() const {
+    return mContentsScale;
+  }
+  const CSSToLayoutDeviceScale& GetDefaultCSSScaleFactor() const {
+    return mDefaultCssScale;
+  }
+
  private:
   virtual ~Screen() = default;
 
@@ -53,11 +63,13 @@ class Screen final : public nsIScreen {
   const DesktopIntRect mAvailRectDisplayPix;
   const uint32_t mPixelDepth;
   const uint32_t mColorDepth;
+  const uint32_t mRefreshRate;
   const DesktopToLayoutDeviceScale mContentsScale;
   const CSSToLayoutDeviceScale mDefaultCssScale;
   const float mDPI;
   const hal::ScreenOrientation mScreenOrientation;
   const OrientationAngle mOrientationAngle;
+  const bool mIsPseudoDisplay;
 };
 
 }  // namespace widget

@@ -34,6 +34,8 @@ class FuzzingFunctions final {
 
   static void MemoryPressure(const GlobalObject&);
 
+  static void SignalIPCReady(const GlobalObject&);
+
   static void EnableAccessibility(const GlobalObject&, ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY static void SynthesizeKeyboardEvents(

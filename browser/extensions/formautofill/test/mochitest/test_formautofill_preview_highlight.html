@@ -41,6 +41,12 @@ const MOCK_STORAGE = [
     "address-level1": "First Admin Level",
     tel: "+13453453456",
     name: "John Doe",
+  },
+  {
+    organization: "test org",
+    "address-level2": "Not a Town",
+    tel: "+13453453456",
+    name: "John Doe",
   }
 ];
 
@@ -105,6 +111,7 @@ add_task(async function check_filled_highlight() {
       </select>
     </label></p>
     <p><label>full name: <input id="name" autocomplete="name" readonly value="UNCHANGED"></label></p>
+    <p><label>address-level2: <input id="address-level2" autocomplete="address-level2" disabled value="Town"></label></p>
   </form>
 
 </div>

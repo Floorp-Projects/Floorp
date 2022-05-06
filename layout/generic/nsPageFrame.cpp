@@ -10,6 +10,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/intl/Segmenter.h"
 #include "gfxContext.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
@@ -334,28 +335,43 @@ void nsPageFrame::DrawHeaderFooter(gfxContext& aRenderingContext,
     nsAutoString str;
     ProcessSpecialCodes(aStr, str);
 
-    int32_t indx;
-    int32_t textWidth = 0;
-    const char16_t* text = str.get();
-
     int32_t len = (int32_t)str.Length();
     if (len == 0) {
       return;  // bail is empty string
     }
+
+    int32_t index;
+    int32_t textWidth = 0;
+    const char16_t* text = str.get();
     // find how much text fits, the "position" is the size of the available area
     if (nsLayoutUtils::BinarySearchForPosition(drawTarget, aFontMetrics, text,
                                                0, 0, 0, len, int32_t(aWidth),
-                                               indx, textWidth)) {
-      if (indx < len - 1) {
-        // we can't fit in all the text
-        if (indx > 3) {
-          // But we can fit in at least 4 chars.  Show all but 3 of them, then
-          // an ellipsis.
-          // XXXbz for non-plane0 text, this may be cutting things in the
-          // middle of a codepoint!  Also, we have no guarantees that the three
-          // dots will fit in the space the three chars we removed took up with
-          // these font metrics!
-          str.Truncate(indx - 3);
+                                               index, textWidth)) {
+      if (index < len - 1) {
+        // we can't fit in all the text, try to remove 3 glyphs and append
+        // three "." charactrers.
+
+        // TODO: This might not actually remove three glyphs in cases where
+        // ZWJ sequences, regional indicators, etc are used.
+        // We also have guarantee that removing three glyphs will make enough
+        // space for the ellipse, if they are zero-width or even just narrower
+        // than the "." character.
+        // See https://bugzilla.mozilla.org/1765008
+        mozilla::intl::GraphemeClusterBreakReverseIteratorUtf16 revIter(str);
+
+        // Start iteration at the point where the text does properly fit.
+        revIter.Seek(index);
+
+        // Step backwards 3 times, checking if we have any string left by the
+        // end.
+        revIter.Next();
+        revIter.Next();
+        if (const Maybe<uint32_t> maybeIndex = revIter.Next()) {
+          // TODO: We should consider checking for the ellipse character, or
+          // possibly for another continuation indicator based on
+          // localization.
+          // See https://bugzilla.mozilla.org/1765007
+          str.Truncate(*maybeIndex);
           str.AppendLiteral("...");
         } else {
           // We can only fit 3 or fewer chars.  Just show nothing
