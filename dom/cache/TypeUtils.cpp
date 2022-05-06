@@ -20,6 +20,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsCOMPtr.h"
@@ -33,9 +34,11 @@
 
 namespace mozilla::dom::cache {
 
+using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::FileDescriptor;
 using mozilla::ipc::PBackgroundChild;
+using mozilla::ipc::PFileDescriptorSetChild;
 
 namespace {
 
@@ -110,9 +113,10 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(
   return ToInternalRequest(aIn.GetAsUSVString(), aRv);
 }
 
-void TypeUtils::ToCacheRequest(CacheRequest& aOut, const InternalRequest& aIn,
-                               BodyAction aBodyAction,
-                               SchemeAction aSchemeAction, ErrorResult& aRv) {
+void TypeUtils::ToCacheRequest(
+    CacheRequest& aOut, const InternalRequest& aIn, BodyAction aBodyAction,
+    SchemeAction aSchemeAction,
+    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
   aIn.GetMethod(aOut.method());
   nsCString url(aIn.GetURLWithoutFragment());
   bool schemeValid;
@@ -157,7 +161,7 @@ void TypeUtils::ToCacheRequest(CacheRequest& aOut, const InternalRequest& aIn,
 
   nsCOMPtr<nsIInputStream> stream;
   aIn.GetBody(getter_AddRefs(stream));
-  SerializeCacheStream(stream, &aOut.body(), aRv);
+  SerializeCacheStream(stream, &aOut.body(), aStreamCleanupList, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -200,8 +204,9 @@ void TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aOut.paddingSize() = aIn.GetPaddingSize();
 }
 
-void TypeUtils::ToCacheResponse(JSContext* aCx, CacheResponse& aOut,
-                                Response& aIn, ErrorResult& aRv) {
+void TypeUtils::ToCacheResponse(
+    JSContext* aCx, CacheResponse& aOut, Response& aIn,
+    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
   bool bodyUsed = aIn.GetBodyUsed(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -226,7 +231,7 @@ void TypeUtils::ToCacheResponse(JSContext* aCx, CacheResponse& aOut,
     }
   }
 
-  SerializeCacheStream(stream, &aOut.body(), aRv);
+  SerializeCacheStream(stream, &aOut.body(), aStreamCleanupList, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -479,9 +484,9 @@ SafeRefPtr<InternalRequest> TypeUtils::ToInternalRequest(const nsAString& aIn,
   return request->GetInternalRequest();
 }
 
-void TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
-                                     Maybe<CacheReadStream>* aStreamOut,
-                                     ErrorResult& aRv) {
+void TypeUtils::SerializeCacheStream(
+    nsIInputStream* aStream, Maybe<CacheReadStream>* aStreamOut,
+    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList, ErrorResult& aRv) {
   *aStreamOut = Nothing();
   if (!aStream) {
     return;
@@ -489,7 +494,7 @@ void TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
 
   RefPtr<ReadStream> controlled = do_QueryObject(aStream);
   if (controlled) {
-    controlled->Serialize(aStreamOut, aRv);
+    controlled->Serialize(aStreamOut, aStreamCleanupList, aRv);
     return;
   }
 
@@ -499,9 +504,10 @@ void TypeUtils::SerializeCacheStream(nsIInputStream* aStream,
   cacheStream.controlChild() = nullptr;
   cacheStream.controlParent() = nullptr;
 
-  MOZ_ALWAYS_TRUE(mozilla::ipc::SerializeIPCStream(do_AddRef(aStream),
-                                                   cacheStream.stream(),
-                                                   /* aAllowLazy */ false));
+  UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(cacheStream.stream()));
+  autoStream->Serialize(aStream, GetIPCManager());
+
+  aStreamCleanupList.AppendElement(std::move(autoStream));
 }
 
 }  // namespace mozilla::dom::cache

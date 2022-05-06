@@ -475,7 +475,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   bool ShouldAddEntryForRefresh(const SessionHistoryEntry* aEntry) {
     return ShouldAddEntryForRefresh(aEntry->Info().GetURI(),
-                                    aEntry->Info().HasPostData());
+                                    aEntry->Info().GetPostData());
   }
   bool ShouldAddEntryForRefresh(nsIURI* aNewURI, bool aHasPostData) {
     nsCOMPtr<nsIURI> currentURI = GetCurrentURI();

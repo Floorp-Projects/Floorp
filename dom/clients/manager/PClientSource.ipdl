@@ -4,6 +4,10 @@
 
 include protocol PClientManager;
 include protocol PClientSourceOp;
+include protocol PChildToParentStream;
+include protocol PParentToChildStream;
+include protocol PFileDescriptorSet;
+include protocol PRemoteLazyInputStream;
 include ClientIPCTypes;
 
 namespace mozilla {

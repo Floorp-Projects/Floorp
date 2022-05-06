@@ -50,12 +50,22 @@ class TemporaryFileInputStream final : public nsFileInputStream {
     return NS_OK;
   }
 
-  void Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
-                 uint32_t* aSizeUsed) override {
+  void Serialize(InputStreamParams& aParams,
+                 FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+                 uint32_t aMaxSize, uint32_t* aSizeUsed,
+                 ParentToChildStreamActorManager* aManager) override {
     MOZ_CRASH("This inputStream cannot be serialized.");
   }
 
-  bool Deserialize(const InputStreamParams& aParams) override {
+  void Serialize(InputStreamParams& aParams,
+                 FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
+                 uint32_t aMaxSize, uint32_t* aSizeUsed,
+                 ChildToParentStreamActorManager* aManager) override {
+    MOZ_CRASH("This inputStream cannot be serialized.");
+  }
+
+  bool Deserialize(const InputStreamParams& aParams,
+                   const FileDescriptorArray& aFileDescriptors) override {
     MOZ_CRASH("This inputStream cannot be deserialized.");
     return false;
   }

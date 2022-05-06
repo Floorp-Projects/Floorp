@@ -2750,9 +2750,8 @@ nsresult BackgroundRequestChild::PreprocessHelper::ProcessStream() {
       do_QueryInterface(mStream);
   MOZ_ASSERT(blobInputStream);
 
-  nsCOMPtr<nsIInputStream> internalInputStream;
-  MOZ_ALWAYS_SUCCEEDS(
-      blobInputStream->TakeInternalStream(getter_AddRefs(internalInputStream)));
+  nsCOMPtr<nsIInputStream> internalInputStream =
+      blobInputStream->GetInternalStream();
   MOZ_ASSERT(internalInputStream);
 
   QM_TRY(MOZ_TO_RESULT(

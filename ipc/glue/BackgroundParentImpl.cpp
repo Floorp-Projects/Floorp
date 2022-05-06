@@ -7,6 +7,7 @@
 #include "BackgroundParentImpl.h"
 
 #include "BroadcastChannelParent.h"
+#include "FileDescriptorSetParent.h"
 #ifdef MOZ_WEBRTC
 #  include "CamerasParent.h"
 #endif
@@ -61,9 +62,12 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/IdleSchedulerParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
+#include "mozilla/ipc/PChildToParentStreamParent.h"
+#include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
 #include "mozilla/net/HttpBackgroundChannelParent.h"
@@ -650,6 +654,61 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPTemporaryIPCBlobConstructor(
 
 bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
     dom::PTemporaryIPCBlobParent* aActor) {
+  delete aActor;
+  return true;
+}
+
+already_AddRefed<PRemoteLazyInputStreamParent>
+BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
+                                                        const uint64_t& aSize) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  // There is nothing to construct here, so we do not implement
+  // RecvPRemoteLazyInputStreamConstructor.
+
+  RefPtr<RemoteLazyInputStreamParent> actor =
+      RemoteLazyInputStreamParent::Create(aID, aSize, this);
+  return actor.forget();
+}
+
+PFileDescriptorSetParent* BackgroundParentImpl::AllocPFileDescriptorSetParent(
+    const FileDescriptor& aFileDescriptor) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  return new FileDescriptorSetParent(aFileDescriptor);
+}
+
+bool BackgroundParentImpl::DeallocPFileDescriptorSetParent(
+    PFileDescriptorSetParent* aActor) {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<FileDescriptorSetParent*>(aActor);
+  return true;
+}
+
+PChildToParentStreamParent*
+BackgroundParentImpl::AllocPChildToParentStreamParent() {
+  return mozilla::ipc::AllocPChildToParentStreamParent();
+}
+
+bool BackgroundParentImpl::DeallocPChildToParentStreamParent(
+    PChildToParentStreamParent* aActor) {
+  delete aActor;
+  return true;
+}
+
+PParentToChildStreamParent*
+BackgroundParentImpl::AllocPParentToChildStreamParent() {
+  MOZ_CRASH(
+      "PParentToChildStreamParent actors should be manually constructed!");
+}
+
+bool BackgroundParentImpl::DeallocPParentToChildStreamParent(
+    PParentToChildStreamParent* aActor) {
   delete aActor;
   return true;
 }
@@ -1437,6 +1496,18 @@ BackgroundParentImpl::AllocPLockManagerParent(
     const ContentPrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
   return MakeAndAddRef<mozilla::dom::locks::LockManagerParent>(aPrincipalInfo,
                                                                aClientId);
+}
+
+PParentToChildStreamParent*
+BackgroundParentImpl::SendPParentToChildStreamConstructor(
+    PParentToChildStreamParent* aActor) {
+  return PBackgroundParent::SendPParentToChildStreamConstructor(aActor);
+}
+
+PFileDescriptorSetParent*
+BackgroundParentImpl::SendPFileDescriptorSetConstructor(
+    const FileDescriptor& aFD) {
+  return PBackgroundParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
 already_AddRefed<mozilla::net::PWebSocketConnectionParent>
