@@ -212,7 +212,8 @@ AdapterType GetAdapterTypeFromName(const char* network_name) {
     return ADAPTER_TYPE_ETHERNET;
   }
 
-  if (MatchTypeNameWithIndexPattern(network_name, "wlan")) {
+  if (MatchTypeNameWithIndexPattern(network_name, "wlan") ||
+      MatchTypeNameWithIndexPattern(network_name, "v4-wlan")) {
     return ADAPTER_TYPE_WIFI;
   }
 
@@ -478,15 +479,15 @@ Network* NetworkManagerBase::GetNetworkFromAddress(
   return nullptr;
 }
 
-BasicNetworkManager::BasicNetworkManager()
-    : allow_mac_based_ipv6_(
-          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")) {}
+BasicNetworkManager::BasicNetworkManager() : BasicNetworkManager(nullptr) {}
 
 BasicNetworkManager::BasicNetworkManager(
     NetworkMonitorFactory* network_monitor_factory)
     : network_monitor_factory_(network_monitor_factory),
       allow_mac_based_ipv6_(
-          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")) {}
+          webrtc::field_trial::IsEnabled("WebRTC-AllowMACBasedIPv6")),
+      bind_using_ifname_(
+          webrtc::field_trial::IsEnabled("WebRTC-BindUsingInterfaceName")) {}
 
 BasicNetworkManager::~BasicNetworkManager() {}
 
@@ -865,6 +866,15 @@ void BasicNetworkManager::StartNetworkMonitor() {
     network_monitor_->SignalNetworksChanged.connect(
         this, &BasicNetworkManager::OnNetworksChanged);
   }
+
+  if (network_monitor_->SupportsBindSocketToNetwork()) {
+    // Set NetworkBinder on SocketServer so that
+    // PhysicalSocket::Bind will call
+    // BasicNetworkManager::BindSocketToNetwork(), (that will lookup interface
+    // name and then call network_monitor_->BindSocketToNetwork()).
+    thread_->socketserver()->set_network_binder(this);
+  }
+
   network_monitor_->Start();
 }
 
@@ -873,6 +883,13 @@ void BasicNetworkManager::StopNetworkMonitor() {
     return;
   }
   network_monitor_->Stop();
+
+  if (network_monitor_->SupportsBindSocketToNetwork()) {
+    // Reset NetworkBinder on SocketServer.
+    if (thread_->socketserver()->network_binder() == this) {
+      thread_->socketserver()->set_network_binder(nullptr);
+    }
+  }
 }
 
 void BasicNetworkManager::OnMessage(Message* msg) {
@@ -952,6 +969,20 @@ void BasicNetworkManager::DumpNetworks() {
                      << ", active ? " << network->active()
                      << ((network->ignored()) ? ", Ignored" : "");
   }
+}
+
+NetworkBindingResult BasicNetworkManager::BindSocketToNetwork(
+    int socket_fd,
+    const IPAddress& address) {
+  RTC_DCHECK_RUN_ON(thread_);
+  std::string if_name;
+  if (bind_using_ifname_) {
+    Network* net = GetNetworkFromAddress(address);
+    if (net != nullptr) {
+      if_name = net->name();
+    }
+  }
+  return network_monitor_->BindSocketToNetwork(socket_fd, address, if_name);
 }
 
 Network::Network(const std::string& name,
