@@ -87,27 +87,31 @@ class ProcessThreadImpl : public ProcessThread {
   void Delete() override;
   // The part of Stop processing that doesn't need any locking.
   void StopNoLocks();
+  void WakeUpNoLocks(Module* module);
+  void WakeUpInternal(Module* module) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Members protected by this mutex are accessed on the constructor thread and
   // on the spawned process thread, and locking is needed only while the process
   // thread is running.
-  rtc::RecursiveCriticalSection lock_;
+  Mutex mutex_;
 
   SequenceChecker thread_checker_;
   rtc::Event wake_up_;
   // TODO(pbos): Remove unique_ptr and stop recreating the thread.
   std::unique_ptr<rtc::PlatformThread> thread_;
 
-  ModuleList modules_ RTC_GUARDED_BY(lock_);
+  ModuleList modules_ RTC_GUARDED_BY(mutex_);
+  // Set to true when calling Process, to allow reentrant calls to WakeUp.
+  bool holds_mutex_ RTC_GUARDED_BY(this) = false;
   std::queue<QueuedTask*> queue_;
-  std::priority_queue<DelayedTask> delayed_tasks_ RTC_GUARDED_BY(lock_);
+  std::priority_queue<DelayedTask> delayed_tasks_ RTC_GUARDED_BY(mutex_);
   // The `stop_` flag is modified only by the construction thread, protected by
   // `thread_checker_`. It is read also by the spawned `thread_`. The latter
-  // thread must take `lock_` before access, and for thread safety, the
-  // constructor thread needs to take `lock_` when it modifies `stop_` and
+  // thread must take `mutex_` before access, and for thread safety, the
+  // constructor thread needs to take `mutex_` when it modifies `stop_` and
   // `thread_` is running. Annotations like RTC_GUARDED_BY doesn't support this
   // usage pattern.
-  bool stop_ RTC_GUARDED_BY(lock_);
+  bool stop_ RTC_GUARDED_BY(mutex_);
   const char* thread_name_;
 };
 
