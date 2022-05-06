@@ -10,8 +10,7 @@
 #include "BaseBlobImpl.h"
 #include "nsIMemoryReporter.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
@@ -48,7 +47,6 @@ class StringBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   nsCString mData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_StringBlobImpl_h

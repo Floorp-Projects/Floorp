@@ -14,8 +14,7 @@
 
 class nsIEventTarget;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MutableBlobStreamListener final
     : public nsIStreamListener,
@@ -46,7 +45,6 @@ class MutableBlobStreamListener final
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MutableBlobStreamListener_h

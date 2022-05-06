@@ -36,8 +36,7 @@ inline NS_DEFINE_CID(kHOSTOBJECTURICID, NS_HOSTOBJECTURI_CID);
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIBlobURLMutator, NS_IBLOBURLMUTATOR_IID)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * These URIs refer to host objects with "blob" scheme.
@@ -119,7 +118,6 @@ class BlobURL final : public mozilla::net::nsSimpleURI {
     }                                                \
   }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_BlobURL_h */

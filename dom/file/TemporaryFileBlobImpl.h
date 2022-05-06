@@ -9,8 +9,7 @@
 
 #include "FileBlobImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This class is meant to be used by TemporaryIPCBlobParent only.
 // Don't use it for anything else, please!
@@ -43,7 +42,6 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
                                          ErrorResult& aRv) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TemporaryFileBlobImpl_h
