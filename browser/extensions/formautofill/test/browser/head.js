@@ -13,7 +13,7 @@
             openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard, setStorage,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
-            getNotification, promiseNotificationShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
+            getNotification, waitForPopupShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog */
 
 "use strict";
 
@@ -458,6 +458,7 @@ async function runAndWaitForAutocompletePopupOpen(browser, taskFn) {
           return (
             (item.getAttribute("originaltype") == "autofill-profile" ||
               item.getAttribute("originaltype") == "autofill-insecureWarning" ||
+              item.getAttribute("originaltype") == "autofill-clear-button" ||
               item.getAttribute("originaltype") == "autofill-footer") &&
             item.hasAttribute("formautofillattached")
           );
@@ -640,7 +641,7 @@ function getNotification(index = 0) {
   return notifications[index];
 }
 
-function promiseNotificationShown() {
+function waitForPopupShown() {
   return BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
 }
 
