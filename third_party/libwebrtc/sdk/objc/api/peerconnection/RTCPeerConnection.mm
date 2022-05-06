@@ -433,7 +433,24 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
       candidate.nativeCandidate);
   _peerConnection->AddIceCandidate(iceCandidate.get());
 }
-
+- (void)addIceCandidate:(RTC_OBJC_TYPE(RTCIceCandidate) *)candidate
+      completionHandler:(void (^)(NSError *_Nullable error))completionHandler {
+  RTC_DCHECK(completionHandler != nil);
+  auto iceCandidate = webrtc::CreateIceCandidate(candidate.nativeCandidate->sdp_mid(),
+                                                 candidate.nativeCandidate->sdp_mline_index(),
+                                                 candidate.nativeCandidate->candidate());
+  _peerConnection->AddIceCandidate(std::move(iceCandidate), [completionHandler](const auto &error) {
+    if (error.ok()) {
+      completionHandler(nil);
+    } else {
+      NSString *str = [NSString stringForStdString:error.message()];
+      NSError *err = [NSError errorWithDomain:kRTCPeerConnectionErrorDomain
+                                         code:static_cast<NSInteger>(error.type())
+                                     userInfo:@{NSLocalizedDescriptionKey : str}];
+      completionHandler(err);
+    }
+  });
+}
 - (void)removeIceCandidates:(NSArray<RTC_OBJC_TYPE(RTCIceCandidate) *> *)iceCandidates {
   std::vector<cricket::Candidate> candidates;
   for (RTC_OBJC_TYPE(RTCIceCandidate) * iceCandidate in iceCandidates) {
