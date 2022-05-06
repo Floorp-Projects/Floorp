@@ -264,9 +264,9 @@ class RtpTransceiver final
   const std::function<void()> on_negotiation_needed_;
 };
 
-BEGIN_SIGNALING_PROXY_MAP(RtpTransceiver)
+BEGIN_PRIMARY_PROXY_MAP(RtpTransceiver)
 
-PROXY_SIGNALING_THREAD_DESTRUCTOR()
+PROXY_PRIMARY_THREAD_DESTRUCTOR()
 BYPASS_PROXY_CONSTMETHOD0(cricket::MediaType, media_type)
 PROXY_CONSTMETHOD0(absl::optional<std::string>, mid)
 PROXY_CONSTMETHOD0(rtc::scoped_refptr<RtpSenderInterface>, sender)
