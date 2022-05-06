@@ -20,27 +20,12 @@
   min-width: 300px;
   max-width: 660px;
   min-height: 200px;
-  align-self: center;
-  margin-inline-start: calc(var(--sidebar-width) - 48px);
+  margin: auto;
   background-color: var(--in-content-page-background);
   color: var(--in-content-text-color);
   box-shadow: var(--shadow-30);
   /* show a border in high contrast mode */
   outline: 1px solid transparent;
-}
-
-@media screen and (max-width: 938px) {
-  .container {
-    margin-inline-start: auto;
-    margin-inline-end: 8px;
-  }
-}
-
-@media screen and (max-width: 676px) {
-  .container {
-    margin-inline-start: 8px;
-    margin-inline-end: 8px;
-  }
 }
 
 .title {
