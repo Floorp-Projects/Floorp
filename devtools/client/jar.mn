@@ -8,7 +8,6 @@ devtools.jar:
     content/shared/widgets/widgets.css (shared/widgets/widgets.css)
     content/shared/toolbarbutton.css (shared/toolbarbutton.css)
     content/shared/theme-switching.js (shared/theme-switching.js)
-    content/shared/widgets/graphs-frame.xhtml (shared/widgets/graphs-frame.xhtml)
     content/shared/widgets/cubic-bezier.css (shared/widgets/cubic-bezier.css)
     content/shared/widgets/filter-widget.css (shared/widgets/filter-widget.css)
     content/shared/widgets/spectrum.css (shared/widgets/spectrum.css)

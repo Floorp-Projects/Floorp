@@ -177,17 +177,13 @@
    * should improve keyboard navigation usability. */
   --theme-focus-outline-color: #000000;
 
-  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
-  --theme-graphs-green: #85d175;
-  --theme-graphs-blue: #83b7f6;
-  --theme-graphs-bluegrey: #0072ab;
+  /* Colors that were used in Graphs in the old performance tools, which was removed.
+   * They're also used on other panels and should be renamed (See Bug 1767617) */
   --theme-graphs-purple: #b693eb;
   --theme-graphs-yellow: #efc052;
   --theme-graphs-orange: #d97e00;
-  --theme-graphs-red: #e57180;
   --theme-graphs-grey: #cccccc;
   --theme-graphs-full-red: #f00;
-  --theme-graphs-full-blue: #00f;
 
   /* Common popup styles(used by HTMLTooltip and autocomplete) */
   --theme-popup-background: Field;
@@ -305,17 +301,13 @@
    * should improve keyboard navigation usability. */
   --theme-focus-outline-color: #ced3d9;
 
-  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
-  --theme-graphs-green: #70bf53;
-  --theme-graphs-blue: #46afe3;
-  --theme-graphs-bluegrey: #5e88b0;
+    /* Colors that were used in Graphs in the old performance tools, which was removed.
+   * They're also used on other panels and should be renamed (See Bug 1767617) */
   --theme-graphs-purple: #df80ff;
   --theme-graphs-yellow: #d99b28;
   --theme-graphs-orange: #d96629;
-  --theme-graphs-red: #eb5368;
   --theme-graphs-grey: #757873;
   --theme-graphs-full-red: #f00;
-  --theme-graphs-full-blue: #00f;
 
   /* Common popup styles(used by HTMLTooltip and autocomplete) */
   --theme-popup-background: var(--grey-60);
