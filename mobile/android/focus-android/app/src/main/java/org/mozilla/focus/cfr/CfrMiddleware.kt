@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.cfr
 
+import android.content.Context
 import androidx.core.net.toUri
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContentAction
@@ -11,7 +12,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.focus.Components
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.truncatedHost
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
@@ -21,16 +22,17 @@ import org.mozilla.focus.utils.ERASE_CFR_LIMIT
 /**
  * Middleware used to intercept browser store actions in order to decide when should we display a specific CFR
  */
-class CfrMiddleware(private val components: Components) : Middleware<BrowserState, BrowserAction> {
+class CfrMiddleware(private val appContext: Context) : Middleware<BrowserState, BrowserAction> {
     private val onboardingFeature = FocusNimbus.features.onboarding
     private lateinit var onboardingConfig: Onboarding
+    private val components = appContext.components
 
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction
     ) {
-        onboardingConfig = onboardingFeature.value()
+        onboardingConfig = onboardingFeature.value(context = appContext)
         onboardingFeature.recordExposure()
         next(action)
 

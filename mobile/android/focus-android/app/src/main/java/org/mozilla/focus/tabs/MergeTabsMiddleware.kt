@@ -22,7 +22,7 @@ import org.mozilla.focus.nimbus.FocusNimbus
  * a single tab with a merged state.
  */
 class MergeTabsMiddleware(
-    private val context: Context
+    private val appContext: Context
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
         context: MiddlewareContext<BrowserState, BrowserAction>,
@@ -30,7 +30,7 @@ class MergeTabsMiddleware(
         action: BrowserAction
     ) {
         val multiTabsFeature = FocusNimbus.features.tabs
-        if (multiTabsFeature.value().isMultiTab || action !is TabListAction.AddTabAction) {
+        if (multiTabsFeature.value(appContext).isMultiTab || action !is TabListAction.AddTabAction) {
             // If the experiment for tabs is enabled then we can just let the reducer create a
             // new tab.
             next(action)

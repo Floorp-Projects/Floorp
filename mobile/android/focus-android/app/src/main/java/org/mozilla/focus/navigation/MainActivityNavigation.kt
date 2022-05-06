@@ -138,7 +138,7 @@ class MainActivityNavigation(
      */
     fun firstRun() {
         val onboardingFeature = FocusNimbus.features.onboarding
-        val onboardingConfig = onboardingFeature.value()
+        val onboardingConfig = onboardingFeature.value(activity)
         val onboardingFragment = if (onboardingConfig.isEnabled) {
             OnboardingFragment.create()
         } else {

@@ -5,7 +5,6 @@ package org.mozilla.focus.cfr
 
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
@@ -19,49 +18,23 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito.doReturn
 import org.mockito.MockitoAnnotations
-import org.mozilla.focus.Components
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.nimbus.Onboarding
-import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
-import org.mozilla.focus.state.Screen
-import org.mozilla.focus.utils.Settings
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class CfrMiddlewareTest {
-    private lateinit var cfrMiddleware: CfrMiddleware
-    private lateinit var browserStore: BrowserStore
-    private lateinit var appStore: AppStore
-    private lateinit var settings: Settings
     private lateinit var onboardingExperiment: Onboarding
-
-    @Mock
-    private lateinit var components: Components
+    private val browserStore: BrowserStore = testContext.components.store
+    private val appStore: AppStore = testContext.components.appStore
 
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-
-        cfrMiddleware = CfrMiddleware(components)
         onboardingExperiment = FocusNimbus.features.onboarding.value(testContext)
-        browserStore = BrowserStore(
-            initialState = BrowserState(),
-            middleware = listOf(cfrMiddleware)
-        )
-        appStore = AppStore(
-            AppState(
-                screen = Screen.Home,
-                showTrackingProtectionCfr = false,
-            )
-        )
-        settings = Settings(testContext)
-
-        doReturn(appStore).`when`(components).appStore
-        doReturn(settings).`when`(components).settings
     }
 
     @Test
@@ -69,7 +42,7 @@ class CfrMiddlewareTest {
         if (onboardingExperiment.isCfrEnabled) {
             browserStore.dispatch(TabListAction.AddTabAction(createTab())).joinBlocking()
 
-            assertEquals(1, components.settings.numberOfTabsOpened)
+            assertEquals(1, testContext.components.settings.numberOfTabsOpened)
         }
     }
 
@@ -151,7 +124,10 @@ class CfrMiddlewareTest {
     ): TabSessionState {
         val tab = createTab(tabUrl, id = tabId.toString())
         return tab.copy(
-            content = tab.content.copy(securityInfo = SecurityInfoState(secure = isSecure))
+            content = tab.content.copy(
+                private = true,
+                securityInfo = SecurityInfoState(secure = isSecure)
+            )
         )
     }
 }

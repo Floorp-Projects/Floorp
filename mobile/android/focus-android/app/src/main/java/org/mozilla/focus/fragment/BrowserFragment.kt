@@ -749,7 +749,7 @@ class BrowserFragment :
         TelemetryWrapper.openFullBrowser()
 
         val multiTabsFeature = FocusNimbus.features.tabs
-        val multiTabsConfig = multiTabsFeature.value()
+        val multiTabsConfig = multiTabsFeature.value(context = requireContext())
         multiTabsFeature.recordExposure()
         if (multiTabsConfig.isMultiTab) {
             requireComponents.customTabsUseCases.migrate(tab.id)

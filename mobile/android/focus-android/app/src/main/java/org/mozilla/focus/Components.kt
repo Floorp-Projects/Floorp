@@ -133,7 +133,7 @@ class Components(
     val store by lazy {
         val onboardingFeature = FocusNimbus.features.onboarding
         val cfrMiddleware = if (onboardingFeature.value(context = context).isCfrEnabled) {
-            listOf(CfrMiddleware(context.components))
+            listOf(CfrMiddleware(context))
         } else {
             listOf()
         }
