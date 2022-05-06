@@ -27,7 +27,7 @@ add_task(async function test_new_submitted_card_is_normalized() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = promiseNotificationShown();
+      let promiseShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
         newValues: {
@@ -81,7 +81,7 @@ add_task(async function test_updated_card_is_normalized() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: CREDITCARD_FORM_URL },
     async function(browser) {
-      let promiseShown = promiseNotificationShown();
+      let promiseShown = waitForPopupShown();
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#cc-name",
         newValues: {
