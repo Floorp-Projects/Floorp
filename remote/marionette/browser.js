@@ -13,9 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  EventPromise: "chrome://remote/content/shared/Sync.jsm",
   MessageManagerDestroyedPromise: "chrome://remote/content/marionette/sync.js",
   TabManager: "chrome://remote/content/shared/TabManager.jsm",
-  waitForEvent: "chrome://remote/content/marionette/sync.js",
   WebElementEventTarget: "chrome://remote/content/marionette/dom.js",
   windowManager: "chrome://remote/content/shared/WindowManager.jsm",
 });
@@ -227,7 +227,7 @@ browser.Context = class {
 
     switch (AppInfo.name) {
       case "Firefox":
-        tabClosed = waitForEvent(this.tab, "TabClose");
+        tabClosed = new EventPromise(this.tab, "TabClose");
         this.tabBrowser.removeTab(this.tab);
         break;
 
@@ -248,7 +248,7 @@ browser.Context = class {
 
     switch (AppInfo.name) {
       case "Firefox":
-        const opened = waitForEvent(this.window, "TabOpen");
+        const opened = new EventPromise(this.window, "TabOpen");
         this.window.BrowserOpenTab();
         await opened;
 
@@ -308,7 +308,7 @@ browser.Context = class {
     }
 
     if (focus && this.tab != currentTab) {
-      const tabSelected = waitForEvent(this.window, "TabSelect");
+      const tabSelected = new EventPromise(this.window, "TabSelect");
       this.tabBrowser.selectedTab = this.tab;
       await tabSelected;
     }
