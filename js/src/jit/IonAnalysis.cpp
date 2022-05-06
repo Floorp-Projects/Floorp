@@ -667,6 +667,27 @@ static bool BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock,
   return true;
 }
 
+// Determine if value is directly or indirectly the test input.
+static bool IsTestInputMaybeToBool(MTest* test, MDefinition* value) {
+  auto* input = test->input();
+  bool hasEvenNumberOfNots = true;
+  while (true) {
+    // Only accept if there's an even number of MNot.
+    if (input == value && hasEvenNumberOfNots) {
+      return true;
+    }
+
+    // Unwrap boolean conversion performed through the '!!' idiom.
+    if (input->isNot()) {
+      input = input->toNot()->input();
+      hasEvenNumberOfNots = !hasEvenNumberOfNots;
+      continue;
+    }
+
+    return false;
+  }
+}
+
 // Change block so that it ends in a goto to the specific target block.
 // existingPred is an existing predecessor of the block.
 [[nodiscard]] static bool UpdateGotoSuccessor(TempAllocator& alloc,
@@ -856,7 +877,7 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
     trueTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
     phiBlock->removePredecessor(trueBranch);
     graph.removeBlock(trueBranch);
-  } else if (initialTest->input() == trueResult) {
+  } else if (IsTestInputMaybeToBool(initialTest, trueResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(),
                              testBlock)) {
       return false;
@@ -874,7 +895,7 @@ static bool MaybeFoldDiamondConditionBlock(MIRGraph& graph,
     falseTarget = constBool ? finalTest->ifTrue() : finalTest->ifFalse();
     phiBlock->removePredecessor(falseBranch);
     graph.removeBlock(falseBranch);
-  } else if (initialTest->input() == falseResult) {
+  } else if (IsTestInputMaybeToBool(initialTest, falseResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(),
                              testBlock)) {
       return false;
@@ -1064,7 +1085,7 @@ static bool MaybeFoldTriangleConditionBlock(MIRGraph& graph,
                               testBlock)) {
       return false;
     }
-  } else if (initialTest->input() == trueResult) {
+  } else if (IsTestInputMaybeToBool(initialTest, trueResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), trueBranch, finalTest->ifTrue(),
                              testBlock)) {
       return false;
@@ -1083,7 +1104,7 @@ static bool MaybeFoldTriangleConditionBlock(MIRGraph& graph,
                               testBlock)) {
       return false;
     }
-  } else if (initialTest->input() == falseResult) {
+  } else if (IsTestInputMaybeToBool(initialTest, falseResult)) {
     if (!UpdateGotoSuccessor(graph.alloc(), falseBranch, finalTest->ifFalse(),
                              testBlock)) {
       return false;
