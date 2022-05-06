@@ -988,10 +988,57 @@ const TESTCASES = [
     expectedOptionElements: [],
   },
   {
+    description:
+      "Fill a cc-exp field using adjacent label (MM/YY) as expiry string placeholder",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <label>Expiry (MM/YY)</label>
+                <input autocomplete="cc-exp">
+              </form>
+              `,
+    profileData: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [
+      { ...DEFAULT_EXPECTED_CREDITCARD_RECORD, "cc-exp": "01/25" },
+    ],
+  },
+  {
+    description:
+      "Fill a cc-exp field using adjacent label (MM - YY) as expiry string placeholder",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <label>Expiry (MM - YY)</label>
+                <input autocomplete="cc-exp">
+              </form>
+              `,
+    profileData: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [
+      { ...DEFAULT_EXPECTED_CREDITCARD_RECORD, "cc-exp": "01-25" },
+    ],
+  },
+  {
+    description: "Fill a cc-exp field correctly while ignoring unrelated label",
+    document: `<form>
+                <label>Credit card number label</label>
+                <input autocomplete="cc-number">
+                <input autocomplete="cc-exp">
+              </form>
+              `,
+    profileData: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
+  },
+  {
     description: "Fill a cc-exp without placeholder on the cc-exp field",
     document: `<form><input autocomplete="cc-number">
                <input autocomplete="cc-exp"></form>`,
-    profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
+    profileData: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
+  },
+  {
+    description:
+      "Fill a cc-exp with whitespace placeholder on the cc-exp field",
+    document: `<form><input autocomplete="cc-number">
+               <input autocomplete="cc-exp" placeholder=" "></form>`,
+    profileData: [DEFAULT_CREDITCARD_RECORD],
     expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
   },
   {
@@ -1071,21 +1118,21 @@ const TESTCASES = [
     document: `<form><input autocomplete="cc-number">
                <input placeholder="mmm yyyy" autocomplete="cc-exp"></form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
   },
   {
     description: "Use placeholder to adjust cc-exp format [mm foo yyyy].",
     document: `<form><input autocomplete="cc-number">
                <input placeholder="mm foo yyyy" autocomplete="cc-exp"></form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
   },
   {
     description: "Use placeholder to adjust cc-exp format [mm - - yyyy].",
     document: `<form><input autocomplete="cc-number">
                <input placeholder="mm - - yyyy" autocomplete="cc-exp"></form>`,
     profileData: [{ ...DEFAULT_CREDITCARD_RECORD }],
-    expectedResult: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [DEFAULT_EXPECTED_CREDITCARD_RECORD],
   },
   {
     description: "Use placeholder to adjust cc-exp-month field [mm].",
