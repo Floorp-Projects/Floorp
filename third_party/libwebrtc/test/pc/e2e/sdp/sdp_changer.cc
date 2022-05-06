@@ -524,9 +524,11 @@ SignalingInterceptor::PatchOffererIceCandidates(
         context_.simulcast_infos_by_mid.find(candidate->sdp_mid());
     if (simulcast_info_it != context_.simulcast_infos_by_mid.end()) {
       // This is candidate for simulcast section, so it should be transformed
-      // into candidates for replicated sections
-      out.push_back(CreateIceCandidate(simulcast_info_it->second->rids[0], 0,
-                                       candidate->candidate()));
+      // into candidates for replicated sections. The sdpMLineIndex is set to
+      // -1 and ignored if the rid is present.
+      for (auto rid : simulcast_info_it->second->rids) {
+        out.push_back(CreateIceCandidate(rid, -1, candidate->candidate()));
+      }
     } else {
       out.push_back(CreateIceCandidate(candidate->sdp_mid(),
                                        candidate->sdp_mline_index(),
@@ -550,6 +552,9 @@ SignalingInterceptor::PatchAnswererIceCandidates(
       // section.
       out.push_back(CreateIceCandidate(simulcast_info_it->second->mid, 0,
                                        candidate->candidate()));
+    } else if (context_.simulcast_infos_by_rid.size()) {
+      // When using simulcast and bundle, put everything on the first m-line.
+      out.push_back(CreateIceCandidate("", 0, candidate->candidate()));
     } else {
       out.push_back(CreateIceCandidate(candidate->sdp_mid(),
                                        candidate->sdp_mline_index(),
