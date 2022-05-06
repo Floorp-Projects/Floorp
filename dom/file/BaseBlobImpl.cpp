@@ -51,7 +51,7 @@ int64_t BaseBlobImpl::GetLastModified(ErrorResult& aRv) {
   return mLastModificationDate / PR_USEC_PER_MSEC;
 }
 
-int64_t BaseBlobImpl::GetFileId() { return -1; }
+int64_t BaseBlobImpl::GetFileId() const { return -1; }
 
 /* static */
 uint64_t BaseBlobImpl::NextSerialNumber() {

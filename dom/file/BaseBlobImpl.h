@@ -97,7 +97,7 @@ class BaseBlobImpl : public BlobImpl {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 
-  int64_t GetFileId() override;
+  int64_t GetFileId() const override;
 
   void SetLazyData(const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLength, int64_t aLastModifiedDate) override {
