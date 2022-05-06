@@ -3010,14 +3010,16 @@ toolbar#nav-bar {
     def runTests(self, options):
         """Prepare, configure, run tests and cleanup"""
         self.extraPrefs = parse_preferences(options.extraPrefs)
-        self.extraPrefs["fission.autostart"] = not options.disable_fission
+
+        if "fission.autostart" not in self.extraPrefs:
+            self.extraPrefs["fission.autostart"] = options.fission
 
         # for test manifest parsing.
         mozinfo.update(
             {
                 "a11y_checks": options.a11y_checks,
                 "e10s": options.e10s,
-                "fission": not options.disable_fission,
+                "fission": self.extraPrefs.get("fission.autostart", True),
                 "headless": options.headless,
                 # Until the test harness can understand default pref values,
                 # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
@@ -3369,7 +3371,7 @@ toolbar#nav-bar {
                 )
                 self.log.info(
                     "runtests.py | Running with fission: {}".format(
-                        mozinfo.info.get("fission", True)
+                        mozinfo.info.get("fission", False)
                     )
                 )
                 self.log.info(
