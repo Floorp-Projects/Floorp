@@ -941,6 +941,9 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 }
 
 void WMFVideoMFTManager::Shutdown() {
+  if (mDXVA2Manager) {
+    mDXVA2Manager->BeforeShutdownVideoMFTDecoder();
+  }
   mDecoder = nullptr;
   mDXVA2Manager.reset();
 }
