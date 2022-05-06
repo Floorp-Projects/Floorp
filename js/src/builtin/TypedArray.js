@@ -1018,26 +1018,10 @@ function TypedArraySort(comparefn) {
         var v = +comparefn(x, y);
 
         // Step b.
-        var length;
-        if (isTypedArray) {
-            length = TypedArrayLength(obj);
-        } else {
-            length = callFunction(CallTypedArrayMethodIfWrapped, obj, "TypedArrayLengthMethod");
-        }
-
-        // It's faster for us to check the typed array's length than to check
-        // for detached buffers.
-        if (length === 0) {
-            assert(PossiblyWrappedTypedArrayHasDetachedBuffer(obj),
-                   "Length can only change from non-zero to zero when the buffer was detached");
-            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-        }
-
-        // Step c.
         if (v !== v)
             return 0;
 
-        // Step d.
+        // Step c.
         return v;
     };
 
