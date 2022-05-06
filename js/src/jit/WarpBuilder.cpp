@@ -2112,6 +2112,18 @@ bool WarpBuilder::build_RecreateLexicalEnv(BytecodeLocation) {
   return true;
 }
 
+bool WarpBuilder::build_PushVarEnv(BytecodeLocation loc) {
+  MOZ_ASSERT(usesEnvironmentChain());
+
+  VarScope* scope = &loc.getScope(script_)->as<VarScope>();
+  MDefinition* env = current->environmentChain();
+
+  auto* ins = MNewVarEnvironmentObject::New(alloc(), env, scope);
+  current->add(ins);
+  current->setEnvironmentChain(ins);
+  return true;
+}
+
 bool WarpBuilder::build_ImplicitThis(BytecodeLocation loc) {
   MOZ_ASSERT(usesEnvironmentChain());
 

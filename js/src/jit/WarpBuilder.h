@@ -36,8 +36,6 @@ namespace jit {
   _(SetElemSuper)                        \
   _(StrictSetPropSuper)                  \
   _(StrictSetElemSuper)                  \
-  /* Environments (bug 1366470) */       \
-  _(PushVarEnv)                          \
   /* Compound assignment */              \
   _(GetBoundName)                        \
   /* Generators / Async (bug 1317690) */ \
