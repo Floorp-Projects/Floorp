@@ -65,7 +65,7 @@
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
-#include "js/Modules.h"                 // JS::GetModulePrivate
+#include "js/Modules.h"             // JS::GetModulePrivate
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById
 #include "js/PropertySpec.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
@@ -2388,7 +2388,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_TypedArrayInitFromPackedArray, 2, 0),
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength, 1, 0,
                     IntrinsicTypedArrayLength),
-    JS_FN("TypedArrayNativeSort", intrinsic_TypedArrayNativeSort, 1, 0),
     JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot",
                     intrinsic_UnsafeGetBooleanFromReservedSlot, 2, 0,
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
@@ -2539,6 +2538,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
 #ifdef ENABLE_RECORD_TUPLE
     JS_FN("std_Tuple_unchecked", tuple_construct, 1, 0),
 #endif
+    JS_FN("std_TypedArray_buffer", js::TypedArray_bufferGetter, 1, 0),
 
     JS_FS_END};
 
