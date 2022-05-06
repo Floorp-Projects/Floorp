@@ -270,7 +270,7 @@ function oncePerAnimationFrame(fn, { getDocument }) {
  * functions.
  *
  * This tree component is well tested and reliable. See the tests in ./tests
- * and its usage in the performance and memory panels in mozilla-central.
+ * and its usage in the memory panel in mozilla-central.
  *
  * This tree component doesn't make any assumptions about how to render items in
  * the tree. You provide a `renderItem` function, and this component will ensure
