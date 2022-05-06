@@ -352,7 +352,8 @@ VideoEncoder::EncoderInfo GetEncoderInfoWithBitrateLimitUpdate(
   // the default limits (bitrate limits are not used for simulcast).
   VideoEncoder::EncoderInfo new_info = info;
   new_info.resolution_bitrate_limits =
-      EncoderInfoSettings::GetDefaultSinglecastBitrateLimits();
+      EncoderInfoSettings::GetDefaultSinglecastBitrateLimits(
+          encoder_config.codec_type);
   return new_info;
 }
 

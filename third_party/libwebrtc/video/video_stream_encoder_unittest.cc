@@ -2111,7 +2111,7 @@ TEST_F(VideoStreamEncoderTest,
   const absl::optional<VideoEncoder::ResolutionBitrateLimits>
       kDefaultLimits270p =
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
-              480 * 270);
+              kVideoCodecVP8, 480 * 270);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 480, 270));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, kNumStreams);
@@ -2124,7 +2124,7 @@ TEST_F(VideoStreamEncoderTest,
   const absl::optional<VideoEncoder::ResolutionBitrateLimits>
       kDefaultLimits360p =
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
-              640 * 360);
+              kVideoCodecVP8, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(2, 640, 360));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits360p->min_bitrate_bps),
@@ -2145,7 +2145,7 @@ TEST_F(VideoStreamEncoderTest,
   const absl::optional<VideoEncoder::ResolutionBitrateLimits>
       kDefaultLimits540p =
           EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
-              960 * 540);
+              kVideoCodecVP8, 960 * 540);
   video_source_.IncomingCapturedFrame(CreateFrame(4, 960, 540));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(static_cast<uint32_t>(kDefaultLimits540p->min_bitrate_bps),
@@ -5530,8 +5530,8 @@ TEST_F(VideoStreamEncoderTest,
 
   // The default bitrate limits for 360p should be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits360p =
-      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(640 *
-                                                                          360);
+      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+          kVideoCodecVP9, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, 1);
@@ -5548,8 +5548,8 @@ TEST_F(VideoStreamEncoderTest,
 
   // The default bitrate limits for 270p should be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits270p =
-      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(480 *
-                                                                          270);
+      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+          kVideoCodecVP9, 480 * 270);
   video_source_.IncomingCapturedFrame(CreateFrame(2, 960, 540));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, 1);
@@ -5598,13 +5598,12 @@ TEST_F(VideoStreamEncoderTest, DefaultMaxAndMinBitratesNotUsedIfDisabled) {
 
   // The default bitrate limits for 360p should not be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits360p =
-      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(640 *
-                                                                          360);
+      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+          kVideoCodecVP9, 640 * 360);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, 1);
-  EXPECT_EQ(fake_encoder_.video_codec().codecType,
-            VideoCodecType::kVideoCodecVP9);
+  EXPECT_EQ(fake_encoder_.video_codec().codecType, kVideoCodecVP9);
   EXPECT_EQ(fake_encoder_.video_codec().VP9()->numberOfSpatialLayers, 2);
   EXPECT_TRUE(fake_encoder_.video_codec().spatialLayers[0].active);
   EXPECT_EQ(640, fake_encoder_.video_codec().spatialLayers[0].width);
@@ -5621,8 +5620,8 @@ TEST_F(VideoStreamEncoderTest, SinglecastBitrateLimitsNotUsedForOneStream) {
 
   // The default singlecast bitrate limits for 720p should not be used.
   const absl::optional<VideoEncoder::ResolutionBitrateLimits> kLimits720p =
-      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(1280 *
-                                                                          720);
+      EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+          kVideoCodecVP9, 1280 * 720);
   video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
   EXPECT_FALSE(WaitForFrame(1000));
   EXPECT_EQ(fake_encoder_.video_codec().numberOfSimulcastStreams, 1);

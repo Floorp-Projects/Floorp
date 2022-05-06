@@ -35,7 +35,17 @@ std::vector<VideoEncoder::ResolutionBitrateLimits> ToResolutionBitrateLimits(
 // Default bitrate limits for simulcast with one active stream:
 // {frame_size_pixels, min_start_bitrate_bps, min_bitrate_bps, max_bitrate_bps}.
 std::vector<VideoEncoder::ResolutionBitrateLimits>
-EncoderInfoSettings::GetDefaultSinglecastBitrateLimits() {
+EncoderInfoSettings::GetDefaultSinglecastBitrateLimits(
+    VideoCodecType codec_type) {
+  // Specific limits for VP9. Other codecs use VP8 limits.
+  if (codec_type == kVideoCodecVP9) {
+    return {{320 * 180, 0, 30000, 150000},
+            {480 * 270, 120000, 30000, 300000},
+            {640 * 360, 190000, 30000, 420000},
+            {960 * 540, 350000, 30000, 1000000},
+            {1280 * 720, 480000, 30000, 1500000}};
+  }
+
   return {{320 * 180, 0, 30000, 300000},
           {480 * 270, 200000, 30000, 500000},
           {640 * 360, 300000, 30000, 800000},
@@ -45,9 +55,11 @@ EncoderInfoSettings::GetDefaultSinglecastBitrateLimits() {
 
 absl::optional<VideoEncoder::ResolutionBitrateLimits>
 EncoderInfoSettings::GetDefaultSinglecastBitrateLimitsForResolution(
+    VideoCodecType codec_type,
     int frame_size_pixels) {
   VideoEncoder::EncoderInfo info;
-  info.resolution_bitrate_limits = GetDefaultSinglecastBitrateLimits();
+  info.resolution_bitrate_limits =
+      GetDefaultSinglecastBitrateLimits(codec_type);
   return info.GetEncoderBitrateLimitsForResolution(frame_size_pixels);
 }
 
