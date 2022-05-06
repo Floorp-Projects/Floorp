@@ -282,8 +282,8 @@ TEST_F(SctpTransportTest, MessageInterleavedWithNotification) {
   meta.rcv_tsn = 42;
   meta.rcv_cumtsn = 42;
   chunk.SetData("meow?", 5);
-  EXPECT_EQ(1, transport1->InjectDataOrNotificationFromSctpForTesting(
-                   chunk.data(), chunk.size(), meta, 0));
+  transport1->InjectDataOrNotificationFromSctpForTesting(chunk.data(),
+                                                         chunk.size(), meta, 0);
 
   // Inject a notification in between chunks.
   union sctp_notification notification;
@@ -292,15 +292,15 @@ TEST_F(SctpTransportTest, MessageInterleavedWithNotification) {
   notification.sn_header.sn_type = SCTP_PEER_ADDR_CHANGE;
   notification.sn_header.sn_flags = 0;
   notification.sn_header.sn_length = sizeof(notification);
-  EXPECT_EQ(1, transport1->InjectDataOrNotificationFromSctpForTesting(
-                   &notification, sizeof(notification), {0}, MSG_NOTIFICATION));
+  transport1->InjectDataOrNotificationFromSctpForTesting(
+      &notification, sizeof(notification), {0}, MSG_NOTIFICATION);
 
   // Inject chunk 2/2
   meta.rcv_tsn = 42;
   meta.rcv_cumtsn = 43;
   chunk.SetData(" rawr!", 6);
-  EXPECT_EQ(1, transport1->InjectDataOrNotificationFromSctpForTesting(
-                   chunk.data(), chunk.size(), meta, MSG_EOR));
+  transport1->InjectDataOrNotificationFromSctpForTesting(
+      chunk.data(), chunk.size(), meta, MSG_EOR);
 
   // Expect the message to contain both chunks.
   EXPECT_TRUE_WAIT(ReceivedData(&recv1, 1, "meow? rawr!"), kDefaultTimeout);
