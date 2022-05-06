@@ -315,6 +315,7 @@ class FormAutofillSection {
         }
       } else {
         delete profile[key];
+        delete profile[`${key}-formatted`];
       }
     }
   }
@@ -1163,21 +1164,12 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return element.tagName === "INPUT" ? element : null;
     };
     let month = getInputElementByField("cc-exp-month", this);
-    // If the expiration month element is an input,
-    // then we examine any placeholder to see if we should format the expiration month
-    // as a zero padded string in order to autofill correctly.
     if (month) {
-      let placeholder = month.placeholder;
-
-      // Checks for 'MM' placeholder and converts the month to a two digit string.
-      let result = /(?<!.)mm(?!.)/i.test(placeholder);
-      if (result) {
-        profile["cc-exp-month-formatted"] = profile["cc-exp-month"]
-          .toString()
-          .padStart(2, "0");
-      }
+      // Transform the expiry month to MM since this is a common format needed for filling.
+      profile["cc-exp-month-formatted"] = profile["cc-exp-month"]
+        ?.toString()
+        .padStart(2, "0");
     }
-
     let year = getInputElementByField("cc-exp-year", this);
     // If the expiration year element is an input,
     // then we examine any placeholder to see if we should format the expiration year
