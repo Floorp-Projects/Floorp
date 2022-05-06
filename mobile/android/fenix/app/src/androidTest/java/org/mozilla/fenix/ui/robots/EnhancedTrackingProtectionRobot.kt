@@ -10,9 +10,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
@@ -25,6 +23,7 @@ import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
@@ -192,8 +191,11 @@ private fun assertTrackingContentBlocked() {
 private fun trackingContentBlockListButton() = onView(withId(R.id.tracking_content))
 
 private fun assertSecuritySheetIsCompletelyDisplayed() {
-    mDevice.findObject(UiSelector().description("Quick settings sheet"))
+    mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
         .waitForExists(waitingTime)
-    onView(withContentDescription("Quick settings sheet"))
-        .check(matches(isCompletelyDisplayed()))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/quick_action_sheet")
+        ).waitForExists(waitingTime)
+    )
 }
