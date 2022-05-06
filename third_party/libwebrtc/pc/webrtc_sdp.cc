@@ -107,6 +107,15 @@ namespace webrtc {
 // the form:
 // <type>=<value>
 // where <type> MUST be exactly one case-significant character.
+
+// Legal characters in a <token> value (RFC 4566 section 9):
+//    token-char =          %x21 / %x23-27 / %x2A-2B / %x2D-2E / %x30-39
+//                         / %x41-5A / %x5E-7E
+static const char kLegalTokenCharacters[] =
+    "!#$%&'*+-."                          // %x21, %x23-27, %x2A-2B, %x2D-2E
+    "0123456789"                          // %x30-39
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"          // %x41-5A
+    "^_`abcdefghijklmnopqrstuvwxyz{|}~";  // %x5E-7E
 static const int kLinePrefixLength = 2;  // Length of <type>=
 static const char kLineTypeVersion = 'v';
 static const char kLineTypeOrigin = 'o';
@@ -615,6 +624,22 @@ static bool GetValue(const std::string& message,
       leftpart.compare(leftpart.length() - attribute.length(),
                        attribute.length(), attribute) != 0) {
     return ParseFailedGetValue(message, attribute, error);
+  }
+  return true;
+}
+
+// Get a single [token] from <attribute>:<token>
+static bool GetSingleTokenValue(const std::string& message,
+                                const std::string& attribute,
+                                std::string* value,
+                                SdpParseError* error) {
+  if (!GetValue(message, attribute, value, error)) {
+    return false;
+  }
+  if (strspn(value->c_str(), kLegalTokenCharacters) != value->size()) {
+    rtc::StringBuilder description;
+    description << "Illegal character found in the value of " << attribute;
+    return ParseFailed(message, description.str(), error);
   }
   return true;
 }
@@ -3099,7 +3124,7 @@ bool ParseContent(const std::string& message,
       // mid-attribute      = "a=mid:" identification-tag
       // identification-tag = token
       // Use the mid identification-tag as the content name.
-      if (!GetValue(line, kAttributeMid, &mline_id, error)) {
+      if (!GetSingleTokenValue(line, kAttributeMid, &mline_id, error)) {
         return false;
       }
       *content_name = mline_id;

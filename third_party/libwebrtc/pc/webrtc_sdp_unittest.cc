@@ -951,8 +951,9 @@ static void ExpectParseFailure(const std::string& bad_sdp,
   JsepSessionDescription desc(kDummyType);
   SdpParseError error;
   bool ret = webrtc::SdpDeserialize(bad_sdp, &desc, &error);
-  EXPECT_FALSE(ret);
-  EXPECT_NE(std::string::npos, error.line.find(bad_part.c_str()));
+  ASSERT_FALSE(ret);
+  EXPECT_NE(std::string::npos, error.line.find(bad_part.c_str()))
+      << "Did not find " << bad_part << " in " << error.line;
 }
 
 // Expect fail to parse kSdpFullString if replace |good_part| with |bad_part|.
@@ -4774,4 +4775,11 @@ TEST_F(WebRtcSdpTest, SctpPortInUnsupportedContent) {
 
   JsepSessionDescription jdesc_output(kDummyType);
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc_output));
+}
+
+TEST_F(WebRtcSdpTest, IllegalMidCharacterValue) {
+  std::string sdp = kSdpString;
+  // [ is an illegal token value.
+  Replace("a=mid:", "a=mid:[]", &sdp);
+  ExpectParseFailure(std::string(sdp), "a=mid:[]");
 }
