@@ -944,9 +944,9 @@ rtc::DiffServCodePoint TurnPort::StunDscpValue() const {
 
 // static
 bool TurnPort::AllowedTurnPort(int port) {
-  // Port 443 is used for existing deployments. Ports above 1024 are assumed to
-  // be OK to use.
-  if (port == 443 || port >= 1024) {
+  // Port 80 and 443 are used for existing deployments.
+  // Ports above 1024 are assumed to be OK to use.
+  if (port == 80 || port == 443 || port >= 1024) {
     return true;
   }
   // Allow any port if relevant field trial is set. This allows disabling the

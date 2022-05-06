@@ -60,7 +60,9 @@ static const SocketAddress kTurnUdpExtAddr("99.99.99.5", 0);
 static const SocketAddress kTurnAlternateIntAddr("99.99.99.6",
                                                  cricket::TURN_SERVER_PORT);
 // Port for redirecting to a TCP Web server. Should not work.
-static const SocketAddress kTurnDangerousAddr("99.99.99.7", 80);
+static const SocketAddress kTurnDangerousAddr("99.99.99.7", 81);
+// Port 80 (the HTTP port); should work.
+static const SocketAddress kTurnPort80Addr("99.99.99.7", 80);
 // Port 443 (the HTTPS port); should work.
 static const SocketAddress kTurnPort443Addr("99.99.99.7", 443);
 // The default TURN server port.
@@ -103,6 +105,8 @@ static const cricket::ProtocolAddress kTurnUdpIPv6ProtoAddr(kTurnUdpIPv6IntAddr,
 static const cricket::ProtocolAddress kTurnDangerousProtoAddr(
     kTurnDangerousAddr,
     cricket::PROTO_TCP);
+static const cricket::ProtocolAddress kTurnPort80ProtoAddr(kTurnPort80Addr,
+                                                           cricket::PROTO_TCP);
 static const cricket::ProtocolAddress kTurnPort443ProtoAddr(kTurnPort443Addr,
                                                             cricket::PROTO_TCP);
 
@@ -1803,6 +1807,11 @@ TEST_F(TurnPortTest, TestTurnDangerousServer) {
 
 TEST_F(TurnPortTest, TestTurnDangerousServerPermits443) {
   CreateTurnPort(kTurnUsername, kTurnPassword, kTurnPort443ProtoAddr);
+  ASSERT_TRUE(turn_port_);
+}
+
+TEST_F(TurnPortTest, TestTurnDangerousServerPermits80) {
+  CreateTurnPort(kTurnUsername, kTurnPassword, kTurnPort80ProtoAddr);
   ASSERT_TRUE(turn_port_);
 }
 
