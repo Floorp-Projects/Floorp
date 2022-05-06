@@ -32,15 +32,12 @@ devtools.jar:
     skin/images/breadcrumbs-scrollbutton.svg (themes/images/breadcrumbs-scrollbutton.svg)
     skin/animation.css (themes/animation.css)
     skin/perf.css (themes/perf.css)
-    skin/performance.css (themes/performance.css)
     skin/memory.css (themes/memory.css)
     skin/storage.css (themes/storage.css)
     skin/splitview.css (themes/splitview.css)
     skin/styleeditor.css (themes/styleeditor.css)
     skin/components-frame.css (themes/components-frame.css)
     skin/components-h-split-box.css (themes/components-h-split-box.css)
-    skin/jit-optimizations.css (themes/jit-optimizations.css)
-    skin/images/filter.svg (themes/images/filter.svg)
     skin/images/filter-small.svg (themes/images/filter-small.svg)
     skin/images/search.svg (themes/images/search.svg)
     skin/images/item-toggle.svg (themes/images/item-toggle.svg)
@@ -167,9 +164,6 @@ devtools.jar:
     skin/images/pseudo-class.svg (themes/images/pseudo-class.svg)
     skin/images/copy.svg (themes/images/copy.svg)
     skin/images/animation-fast-track.svg (themes/images/animation-fast-track.svg)
-    skin/images/performance-details-waterfall.svg (themes/images/performance-details-waterfall.svg)
-    skin/images/performance-details-call-tree.svg (themes/images/performance-details-call-tree.svg)
-    skin/images/performance-details-flamegraph.svg (themes/images/performance-details-flamegraph.svg)
     skin/breadcrumbs.css (themes/breadcrumbs.css)
     skin/chart.css (themes/chart.css)
     skin/widgets.css (themes/widgets.css)
@@ -336,7 +330,6 @@ devtools.jar:
     content/debugger/src/utils/editor/source-editor.css (debugger/src/utils/editor/source-editor.css)
 
     # Perfomance
-    content/performance/index.xhtml (performance/index.xhtml)
     content/performance-new/index.xhtml (performance-new/index.xhtml)
 
     # Memory

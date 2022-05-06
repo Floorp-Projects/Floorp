@@ -417,11 +417,6 @@
       "test-linux1804-64/debug-*-e10s",
       "test-windows10-64-2004/opt-*-e10s"
     ],
-    "devtools/client/performance/test/browser.ini": [
-      "test-windows10-64-2004/opt-*-e10s",
-      "test-linux1804-64/opt-*-e10s",
-      "test-windows7-32/debug-*-e10s"
-    ],
     "devtools/client/responsive/test/browser/browser.ini": [
       "test-linux1804-64/debug-*-spi-nw-e10s"
     ],
@@ -2222,7 +2217,6 @@
     "devtools/client/jsonview/test/browser.ini": 0.62,
     "devtools/client/netmonitor/src/har/test/browser.ini": 0.76,
     "devtools/client/netmonitor/test/browser.ini": 0.91,
-    "devtools/client/performance/test/browser.ini": 0.65,
     "devtools/client/responsive/test/browser/browser.ini": 0.71,
     "devtools/client/responsive/test/xpcshell/xpcshell.ini": 0.55,
     "devtools/client/shared/sourceeditor/test/browser.ini": 0.71,
