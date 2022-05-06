@@ -12,6 +12,7 @@
 #define SDK_ANDROID_SRC_JNI_ANDROID_NETWORK_MONITOR_H_
 
 #include <stdint.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "absl/types/optional.h"
 #include "rtc_base/network_monitor.h"
 #include "rtc_base/network_monitor_factory.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "sdk/android/src/jni/jni_helpers.h"
@@ -147,6 +149,8 @@ class AndroidNetworkMonitor : public rtc::NetworkMonitorInterface {
   // This applies to adapter_type_by_name_, vpn_underlying_adapter_type_by_name_
   // and FindNetworkHandleFromIfname.
   bool bind_using_ifname_ RTC_GUARDED_BY(network_thread_) = true;
+  const rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag_
+      RTC_PT_GUARDED_BY(network_thread_);
 };
 
 class AndroidNetworkMonitorFactory : public rtc::NetworkMonitorFactory {
