@@ -987,6 +987,7 @@ UtilityProcessSandboxingKind:
   description: >
     The SandboxingKind passed for this Utility process instance
   type: integer
+  ping: true
 
 Vendor:
   description: >
