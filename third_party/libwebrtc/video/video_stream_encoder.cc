@@ -370,6 +370,7 @@ void ApplyVp9BitrateLimits(const VideoEncoder::EncoderInfo& encoder_info,
                            const VideoEncoderConfig& encoder_config,
                            VideoCodec* codec) {
   if (codec->codecType != VideoCodecType::kVideoCodecVP9 ||
+      encoder_config.simulcast_layers.size() <= 1 ||
       VideoStreamEncoderResourceManager::IsSimulcast(encoder_config)) {
     // Resolution bitrate limits usage is restricted to singlecast.
     return;
@@ -387,12 +388,43 @@ void ApplyVp9BitrateLimits(const VideoEncoder::EncoderInfo& encoder_info,
     return;
   }
 
+  // Index for the active stream.
+  absl::optional<size_t> index;
+  for (size_t i = 0; i < encoder_config.simulcast_layers.size(); ++i) {
+    if (encoder_config.simulcast_layers[i].active)
+      index = i;
+  }
+  if (!index.has_value()) {
+    return;
+  }
+
+  int min_bitrate_bps;
+  if (encoder_config.simulcast_layers[*index].min_bitrate_bps <= 0) {
+    min_bitrate_bps = bitrate_limits->min_bitrate_bps;
+  } else {
+    min_bitrate_bps =
+        std::max(bitrate_limits->min_bitrate_bps,
+                 encoder_config.simulcast_layers[*index].min_bitrate_bps);
+  }
+  int max_bitrate_bps;
+  if (encoder_config.simulcast_layers[*index].max_bitrate_bps <= 0) {
+    max_bitrate_bps = bitrate_limits->max_bitrate_bps;
+  } else {
+    max_bitrate_bps =
+        std::min(bitrate_limits->max_bitrate_bps,
+                 encoder_config.simulcast_layers[*index].max_bitrate_bps);
+  }
+  if (min_bitrate_bps >= max_bitrate_bps) {
+    RTC_LOG(LS_WARNING) << "Bitrate limits not used, min_bitrate_bps "
+                        << min_bitrate_bps << " >= max_bitrate_bps "
+                        << max_bitrate_bps;
+    return;
+  }
+
   for (int i = 0; i < codec->VP9()->numberOfSpatialLayers; ++i) {
     if (codec->spatialLayers[i].active) {
-      codec->spatialLayers[i].minBitrate =
-          bitrate_limits->min_bitrate_bps / 1000;
-      codec->spatialLayers[i].maxBitrate =
-          bitrate_limits->max_bitrate_bps / 1000;
+      codec->spatialLayers[i].minBitrate = min_bitrate_bps / 1000;
+      codec->spatialLayers[i].maxBitrate = max_bitrate_bps / 1000;
       codec->spatialLayers[i].targetBitrate =
           std::min(codec->spatialLayers[i].targetBitrate,
                    codec->spatialLayers[i].maxBitrate);
