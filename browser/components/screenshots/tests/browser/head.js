@@ -17,6 +17,28 @@ const gScreenshotUISelectors = {
   copyButton: "button.highlight-button-copy",
 };
 
+// MouseEvents is for the mouse events on the Anonymous content
+const MouseEvents = {
+  mouse: new Proxy(
+    {},
+    {
+      get: (target, name) =>
+        async function(x, y, selector = ":root") {
+          if (name === "click") {
+            this.down(x, y);
+            this.up(x, y);
+          } else {
+            await safeSynthesizeMouseEventInContentPage(selector, x, y, {
+              type: "mouse" + name,
+            });
+          }
+        },
+    }
+  ),
+};
+
+const { mouse } = MouseEvents;
+
 class ScreenshotsHelper {
   constructor(browser) {
     this.browser = browser;
@@ -39,6 +61,114 @@ class ScreenshotsHelper {
     button.click();
   }
 
+  async waitForOverlay() {
+    let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+      "#screenshotsPagePanel"
+    );
+    await BrowserTestUtils.waitForMutationCondition(
+      panel,
+      { attributes: true },
+      () => {
+        return BrowserTestUtils.is_visible(panel);
+      }
+    );
+    ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
+
+    await BrowserTestUtils.waitForCondition(async () => {
+      let init = await this.isOverlayInitialized();
+      return init;
+    });
+    info("Overlay is visible");
+  }
+
+  async waitForOverlayClosed() {
+    await BrowserTestUtils.waitForCondition(async () => {
+      let init = !(await this.isOverlayInitialized());
+      info("Is overlay initialized: " + !init);
+      return init;
+    });
+    info("Overlay is not visible");
+  }
+
+  async isOverlayInitialized() {
+    return SpecialPowers.spawn(this.browser, [], () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      return screenshotsChild?._overlay?._initialized;
+    });
+  }
+
+  async getOverlayState() {
+    return ContentTask.spawn(this.browser, null, async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      return screenshotsChild._overlay.stateHandler.getState();
+    });
+  }
+
+  async waitForStateChange(newState) {
+    await BrowserTestUtils.waitForCondition(async () => {
+      let state = await this.getOverlayState();
+      return state === newState;
+    });
+  }
+
+  async dragOverlay(startX, startY, endX, endY) {
+    await this.waitForStateChange("crosshairs");
+    let state = await this.getOverlayState();
+    Assert.equal(state, "crosshairs", "The overlay is in the crosshairs state");
+
+    mouse.down(startX, startY);
+
+    await this.waitForStateChange("draggingReady");
+    state = await this.getOverlayState();
+    Assert.equal(
+      state,
+      "draggingReady",
+      "The overlay is in the draggingReady state"
+    );
+
+    mouse.move(endX, endY);
+
+    await this.waitForStateChange("dragging");
+    state = await this.getOverlayState();
+    Assert.equal(state, "dragging", "The overlay is in the dragging state");
+
+    mouse.up(endX, endY);
+
+    await this.waitForStateChange("selected");
+    state = await this.getOverlayState();
+    Assert.equal(state, "selected", "The overlay is in the selected state");
+
+    this.endX = endX;
+    this.endY = endY;
+  }
+
+  clickCopyButton() {
+    // click copy button with last x and y position from dragOverlay
+    // the middle of the copy button is last X - 163 and last Y + 30.
+    // Ex. 500, 500 would be 336, 530
+    mouse.click(this.endX - 166, this.endY + 30);
+  }
+
+  clickCancelButton() {
+    // click copy button with last x and y position from dragOverlay
+    // the middle of the copy button is last X - 230 and last Y + 30.
+    // Ex. 500, 500 would be 270, 530
+    mouse.click(this.endX - 230, this.endY + 30);
+  }
+
+  async zoomBrowser(zoom) {
+    await SpecialPowers.spawn(this.browser, [zoom], zoomLevel => {
+      const { Layout } = ChromeUtils.import(
+        "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+      );
+      Layout.zoomDocument(content.document, zoomLevel);
+    });
+  }
+
   /**
    * Gets the dialog box
    * @returns The dialog box
@@ -59,7 +189,7 @@ class ScreenshotsHelper {
     const initialClipboardData = Date.now().toString();
     SpecialPowers.clipboardCopyString(initialClipboardData);
 
-    let promiseChanged = BrowserTestUtils.waitForCondition(() => {
+    let promiseChanged = TestUtils.waitForCondition(() => {
       let data;
       try {
         data = getRawClipboardData("image/png");
@@ -83,7 +213,6 @@ class ScreenshotsHelper {
   getContentDimensions() {
     return SpecialPowers.spawn(this.browser, [], async function() {
       let doc = content.document.documentElement;
-      // let rect = doc.documentElement.getBoundingClientRect();
       return {
         clientHeight: doc.clientHeight,
         clientWidth: doc.clientWidth,
@@ -228,4 +357,41 @@ function getRawClipboardData(flavor) {
   }
   data = data.value || null;
   return data;
+}
+
+/**
+ * Synthesize a mouse event on an element, after ensuring that it is visible
+ * in the viewport.
+ *
+ * @param {String} selector: The node selector to get the node target for the event.
+ * @param {number} x
+ * @param {number} y
+ * @param {object} options: Options that will be passed to BrowserTestUtils.synthesizeMouse
+ */
+async function safeSynthesizeMouseEventInContentPage(
+  selector,
+  x,
+  y,
+  options = {}
+) {
+  let context = gBrowser.selectedBrowser.browsingContext;
+
+  await scrollContentPageNodeIntoView(context, selector);
+  BrowserTestUtils.synthesizeMouse(selector, x, y, options, context);
+}
+
+/**
+ * Scroll into view an element in the content page matching the passed selector
+ *
+ * @param {BrowsingContext} browsingContext: The browsing context the element lives in.
+ * @param {String} selector: The node selector to get the node to scroll into view
+ * @returns {Promise}
+ */
+function scrollContentPageNodeIntoView(browsingContext, selector) {
+  return SpecialPowers.spawn(browsingContext, [selector], function(
+    innerSelector
+  ) {
+    const node = content.wrappedJSObject.document.querySelector(innerSelector);
+    node.scrollIntoView();
+  });
 }

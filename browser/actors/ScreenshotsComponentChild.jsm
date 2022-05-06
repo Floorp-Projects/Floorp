@@ -50,6 +50,21 @@ class ScreenshotsComponentChild extends JSWindowActorChild {
     this.sendAsyncMessage("Screenshots:CancelScreenshot", null);
   }
 
+  requestCopyScreenshot(box) {
+    this.sendAsyncMessage("Screenshots:CopyScreenshot", box);
+  }
+
+  requestDownloadScreenshot(box) {
+    this.sendAsyncMessage("Screenshots:DownloadScreenshot", {
+      title: this.getTitle(),
+      downloadBox: box,
+    });
+  }
+
+  getTitle() {
+    return this.document.title;
+  }
+
   /**
    * Resolves when the document is ready to have an overlay injected into it.
    *

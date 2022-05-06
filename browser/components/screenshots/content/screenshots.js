@@ -170,7 +170,7 @@ class ScreenshotsUI extends HTMLElement {
 
   getFilename() {
     let filenameTitle = "Dummy Page"; /* TODO: retrieve title froom image */
-    const date = new Date(Date.now());
+    const date = new Date();
     // eslint-disable-next-line no-control-regex
     filenameTitle = filenameTitle.replace(/[:\\<>/!@&?"*.|\x00-\x1F]/g, " ");
     filenameTitle = filenameTitle.replace(/\s{1,4000}/g, " ");
