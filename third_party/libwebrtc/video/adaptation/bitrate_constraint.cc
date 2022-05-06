@@ -10,7 +10,6 @@
 
 #include "video/adaptation/bitrate_constraint.h"
 
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -60,9 +59,8 @@ bool BitrateConstraint::IsAdaptationUpAllowed(
       return true;
     }
 
-    absl::optional<uint32_t> current_frame_size_px =
-        VideoStreamAdapter::GetSingleActiveLayerPixels(
-            encoder_settings_->video_codec());
+    absl::optional<int> current_frame_size_px =
+        input_state.single_active_stream_pixels();
     if (!current_frame_size_px.has_value()) {
       return true;
     }
