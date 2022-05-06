@@ -546,6 +546,11 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
   remote_inbound->round_trip_time =
       static_cast<double>(report_block_data.last_rtt_ms()) /
       rtc::kNumMillisecsPerSec;
+  remote_inbound->total_round_trip_time =
+      static_cast<double>(report_block_data.sum_rtt_ms()) /
+      rtc::kNumMillisecsPerSec;
+  remote_inbound->round_trip_time_measurements =
+      report_block_data.num_rtts();
 
   std::string local_id = RTCOutboundRTPStreamStatsIDFromSSRC(
       media_type == cricket::MEDIA_TYPE_AUDIO, report_block.source_ssrc);
