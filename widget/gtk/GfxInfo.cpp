@@ -159,6 +159,7 @@ void GfxInfo::GetData() {
   nsCString mesaAccelerated;
   // Available if using a DRI-based libGL stack.
   nsCString driDriver;
+  nsCString screenInfo;
   nsCString adapterRam;
 
   nsCString drmRenderDevice;
@@ -201,6 +202,8 @@ void GfxInfo::GetData() {
       stringToFill = &ddxDriver;
     } else if (!strcmp(line, "DRI_DRIVER")) {
       stringToFill = &driDriver;
+    } else if (!strcmp(line, "SCREEN_INFO")) {
+      stringToFill = &screenInfo;
     } else if (!strcmp(line, "PCI_VENDOR_ID")) {
       stringToFill = pciVendors.AppendElement();
     } else if (!strcmp(line, "PCI_DEVICE_ID")) {
@@ -335,6 +338,24 @@ void GfxInfo::GetData() {
     // TODO: Look into ways to find the device ID on FGLRX.
   } else {
     NS_WARNING("Failed to detect GL vendor!");
+  }
+
+  if (!screenInfo.IsEmpty()) {
+    PRInt32 start = 0;
+    PRInt32 loc = screenInfo.Find(";", PR_FALSE, start);
+    while (loc != kNotFound) {
+      int isDefault = 0;
+      nsCString line(screenInfo.get() + start, loc - start);
+      ScreenInfo info{};
+      if (sscanf(line.get(), "%ux%u:%u", &info.mWidth, &info.mHeight,
+                 &isDefault) == 3) {
+        info.mIsDefault = isDefault != 0;
+        mScreenInfo.AppendElement(info);
+      }
+
+      start = loc + 1;
+      loc = screenInfo.Find(";", PR_FALSE, start);
+    }
   }
 
   if (!adapterRam.IsEmpty()) {
@@ -1113,6 +1134,36 @@ GfxInfo::GetAdapterSubsysID(nsAString& aAdapterSubsysID) {
 NS_IMETHODIMP
 GfxInfo::GetAdapterSubsysID2(nsAString& aAdapterSubsysID) {
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
+  GetData();
+
+  for (auto screenInfo : mScreenInfo) {
+    nsString infoString;
+    infoString.AppendPrintf("%dx%d %s", screenInfo.mWidth, screenInfo.mHeight,
+                            screenInfo.mIsDefault ? "default" : "");
+    aDisplayInfo.AppendElement(infoString);
+  }
+
+  return aDisplayInfo.IsEmpty() ? NS_ERROR_FAILURE : NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
+  for (auto screenInfo : mScreenInfo) {
+    aDisplayWidth.AppendElement((uint32_t)screenInfo.mWidth);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
+  for (auto screenInfo : mScreenInfo) {
+    aDisplayHeight.AppendElement((uint32_t)screenInfo.mHeight);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

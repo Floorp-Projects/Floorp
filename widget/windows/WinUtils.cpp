@@ -2318,5 +2318,58 @@ void WinUtils::EnableWindowOcclusion(const bool aEnable) {
                 reinterpret_cast<LPARAM>(&aEnable));
 }
 
+void WinUtils::GetDisplayOrientation(const char16ptr_t aName,
+                                     hal::ScreenOrientation& aOrientation,
+                                     uint16_t& aAngle) {
+  aOrientation = hal::ScreenOrientation::None;
+  aAngle = 0;
+
+  DEVMODEW mode = {.dmSize = sizeof(DEVMODEW)};
+  if (!EnumDisplaySettingsW(aName, ENUM_CURRENT_SETTINGS, &mode)) {
+    return;
+  }
+  MOZ_ASSERT(mode.dmFields & DM_DISPLAYORIENTATION);
+
+  // conver to default/natural size
+  if (mode.dmDisplayOrientation == DMDO_90 ||
+      mode.dmDisplayOrientation == DMDO_270) {
+    DWORD temp = mode.dmPelsHeight;
+    mode.dmPelsHeight = mode.dmPelsWidth;
+    mode.dmPelsWidth = temp;
+  }
+
+  bool defaultIsLandscape = mode.dmPelsWidth >= mode.dmPelsHeight;
+  switch (mode.dmDisplayOrientation) {
+    case DMDO_DEFAULT:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::LandscapePrimary
+                         : hal::ScreenOrientation::PortraitPrimary;
+      aAngle = 0;
+      break;
+    case DMDO_90:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::PortraitPrimary
+                         : hal::ScreenOrientation::LandscapeSecondary;
+      aAngle = 270;
+      break;
+    case DMDO_180:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::LandscapeSecondary
+                         : hal::ScreenOrientation::PortraitSecondary;
+      aAngle = 180;
+      break;
+    case DMDO_270:
+      aOrientation = defaultIsLandscape
+                         ? hal::ScreenOrientation::PortraitSecondary
+                         : hal::ScreenOrientation::LandscapePrimary;
+      aAngle = 90;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected angle");
+      break;
+  }
+  return;
+}
+
 }  // namespace widget
 }  // namespace mozilla

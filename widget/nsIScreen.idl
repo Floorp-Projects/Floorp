@@ -62,8 +62,8 @@ interface nsIScreen : nsISupports
   }
 %}
 
-  [infallible] readonly attribute long pixelDepth;
-  [infallible] readonly attribute long colorDepth;
+  readonly attribute long pixelDepth;
+  readonly attribute long colorDepth;
 
   /**
    * The number of device pixels per desktop pixel for this screen (for
@@ -107,9 +107,5 @@ interface nsIScreen : nsISupports
   /**
    * The DPI of the screen.
    */
-  [infallible] readonly attribute float dpi;
-
-  /** The target screen refresh rate, in Hz, or 0 if unknown */
-  [infallible] readonly attribute long refreshRate;
-  [infallible] readonly attribute boolean isPseudoDisplay;
+  readonly attribute float dpi;
 };

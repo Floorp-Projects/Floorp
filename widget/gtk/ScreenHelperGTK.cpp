@@ -39,23 +39,10 @@ static LazyLogModule sScreenLog("WidgetScreen");
 using GdkMonitor = struct _GdkMonitor;
 
 static UniquePtr<ScreenGetter> gScreenGetter;
-struct MonitorConfig {
-  int id = 0;
-  int x = 0;
-  int y = 0;
-  int width_mm = 0;
-  int height_mm = 0;
-  int width = 0;
-  int height = 0;
-  int scale = 0;
-  int refresh = 0;
-
-  explicit MonitorConfig(int aId) : id(aId) {}
-};
 
 static void monitors_changed(GdkScreen* aScreen, gpointer aClosure) {
   LOG_SCREEN("Received monitors-changed event");
-  auto* self = static_cast<ScreenGetterGtk*>(aClosure);
+  ScreenGetterGtk* self = static_cast<ScreenGetterGtk*>(aClosure);
   self->RefreshScreens();
 }
 
@@ -157,25 +144,6 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
 
   LayoutDeviceIntRect rect;
 
-  gint refreshRate = [&] {
-    // Since gtk 3.22
-    static auto s_gdk_display_get_monitor = (GdkMonitor * (*)(GdkDisplay*, int))
-        dlsym(RTLD_DEFAULT, "gdk_display_get_monitor");
-    static auto s_gdk_monitor_get_refresh_rate = (int (*)(GdkMonitor*))dlsym(
-        RTLD_DEFAULT, "gdk_monitor_get_refresh_rate");
-
-    if (!s_gdk_monitor_get_refresh_rate) {
-      return 0;
-    }
-    GdkMonitor* monitor =
-        s_gdk_display_get_monitor(gdk_display_get_default(), aMonitorNum);
-    if (!monitor) {
-      return 0;
-    }
-    // Convert to Hz.
-    return NSToIntRound(s_gdk_monitor_get_refresh_rate(monitor) / 1000.0f);
-  }();
-
   GdkRectangle workarea;
   gdk_screen_get_monitor_workarea(aScreen, aMonitorNum, &workarea);
   LayoutDeviceIntRect availRect(workarea.x * geometryScaleFactor,
@@ -215,12 +183,11 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
 
   LOG_SCREEN(
       "New monitor %d size [%d,%d -> %d x %d] depth %d scale %f CssScale %f  "
-      "DPI %f refresh %d ]",
+      "DPI %f ]",
       aMonitorNum, rect.x, rect.y, rect.width, rect.height, pixelDepth,
-      contentsScale.scale, defaultCssScale.scale, dpi, refreshRate);
+      contentsScale.scale, defaultCssScale.scale, dpi);
   return MakeAndAddRef<Screen>(rect, availRect, pixelDepth, pixelDepth,
-                               refreshRate, contentsScale, defaultCssScale, dpi,
-                               Screen::IsPseudoDisplay::No);
+                               contentsScale, defaultCssScale, dpi);
 }
 
 void ScreenGetterGtk::RefreshScreens() {
@@ -244,7 +211,7 @@ static void output_handle_geometry(void* data, struct wl_output* wl_output,
                                    int physical_height, int subpixel,
                                    const char* make, const char* model,
                                    int32_t transform) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
+  MonitorConfig* monitor = (MonitorConfig*)data;
   LOG_SCREEN(
       "wl_output: geometry position %d %d physical size %d %d, subpixel %d, "
       "transform %d",
@@ -262,7 +229,7 @@ static void output_handle_done(void* data, struct wl_output* wl_output) {
 
 static void output_handle_scale(void* data, struct wl_output* wl_output,
                                 int32_t scale) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
+  MonitorConfig* monitor = (MonitorConfig*)data;
   LOG_SCREEN("wl_output: scale %d", scale);
   monitor->scale = scale;
 }
@@ -270,13 +237,13 @@ static void output_handle_scale(void* data, struct wl_output* wl_output,
 static void output_handle_mode(void* data, struct wl_output* wl_output,
                                uint32_t flags, int width, int height,
                                int refresh) {
-  auto* monitor = static_cast<MonitorConfig*>(data);
+  MonitorConfig* monitor = (MonitorConfig*)data;
+
   LOG_SCREEN("wl_output: mode output size %d x %d refresh %d", width, height,
              refresh);
 
   if ((flags & WL_OUTPUT_MODE_CURRENT) == 0) return;
 
-  monitor->refresh = NSToIntRound(refresh / 1000.0f);
   monitor->width = width;
   monitor->height = height;
 }
@@ -291,7 +258,7 @@ static const struct wl_output_listener output_listener = {
 static void screen_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
-  auto* getter = static_cast<ScreenGetterWayland*>(data);
+  ScreenGetterWayland* getter = static_cast<ScreenGetterWayland*>(data);
   if (strcmp(interface, "wl_output") == 0 && version > 1) {
     auto* output =
         WaylandRegistryBind<wl_output>(registry, id, &wl_output_interface, 2);
@@ -341,8 +308,6 @@ bool ScreenGetterWayland::RemoveMonitorConfig(int aId) {
   return false;
 }
 
-ScreenGetterWayland::ScreenGetterWayland() = default;
-
 ScreenGetterWayland::~ScreenGetterWayland() {
   g_clear_pointer(&mRegistry, wl_registry_destroy);
 }
@@ -382,12 +347,11 @@ already_AddRefed<Screen> ScreenGetterWayland::MakeScreenWayland(gint aMonitor) {
 
   LOG_SCREEN(
       "Monitor %d [%d %d -> %d x %d depth %d content scale %f css scale %f "
-      "DPI %f, refresh %d]",
+      "DPI %f]",
       aMonitor, rect.x, rect.y, rect.width, rect.height, pixelDepth,
-      contentsScale.scale, defaultCssScale.scale, dpi, monitor->refresh);
+      contentsScale.scale, defaultCssScale.scale, dpi);
   return MakeAndAddRef<Screen>(rect, rect, pixelDepth, pixelDepth,
-                               monitor->refresh, contentsScale, defaultCssScale,
-                               dpi, Screen::IsPseudoDisplay::No);
+                               contentsScale, defaultCssScale, dpi);
 }
 
 void ScreenGetterWayland::RefreshScreens() {
@@ -441,7 +405,7 @@ int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {
     // we can rely on Gtk work area start position to match wl_output.
     if (mMonitors[i]->x == workArea.x && mMonitors[i]->y == workArea.y) {
       LOG_SCREEN(" monitor %d values %d %d -> %d x %d", i, mMonitors[i]->x,
-                 mMonitors[i]->y, mMonitors[i]->width, mMonitors[i]->height);
+                  mMonitors[i]->y, mMonitors[i]->width, mMonitors[i]->height);
       return i;
     }
   }
