@@ -68,6 +68,12 @@ class TurnPort : public Port {
     if (credentials.username.size() > kMaxTurnUsernameLength) {
       return nullptr;
     }
+    // Do not connect to low-numbered ports. The default STUN port is 3478.
+    if (!AllowedTurnPort(server_address.address.port())) {
+      RTC_LOG(LS_ERROR) << "Attempt to use TURN to connect to port "
+                        << server_address.address.port();
+      return nullptr;
+    }
     // Using `new` to access a non-public constructor.
     return absl::WrapUnique(new TurnPort(
         thread, factory, network, socket, username, password, server_address,
@@ -111,6 +117,12 @@ class TurnPort : public Port {
       rtc::SSLCertificateVerifier* tls_cert_verifier = nullptr) {
     // Do basic parameter validation.
     if (credentials.username.size() > kMaxTurnUsernameLength) {
+      return nullptr;
+    }
+    // Do not connect to low-numbered ports. The default STUN port is 3478.
+    if (!AllowedTurnPort(server_address.address.port())) {
+      RTC_LOG(LS_ERROR) << "Attempt to use TURN to connect to port "
+                        << server_address.address.port();
       return nullptr;
     }
     // Using `new` to access a non-public constructor.
@@ -296,6 +308,7 @@ class TurnPort : public Port {
   typedef std::map<rtc::Socket::Option, int> SocketOptionsMap;
   typedef std::set<rtc::SocketAddress> AttemptedServerSet;
 
+  static bool AllowedTurnPort(int port);
   void OnMessage(rtc::Message* pmsg) override;
 
   bool CreateTurnClientSocket();

@@ -346,6 +346,15 @@ void TurnPort::PrepareAddress() {
     server_address_.address.SetPort(TURN_DEFAULT_PORT);
   }
 
+  if (!AllowedTurnPort(server_address_.address.port())) {
+    // This can only happen after a 300 ALTERNATE SERVER, since the port can't
+    // be created with a disallowed port number.
+    RTC_LOG(LS_ERROR) << "Attempt to start allocation with disallowed port# "
+                      << server_address_.address.port();
+    OnAllocateError(STUN_ERROR_SERVER_ERROR,
+                    "Attempt to start allocation to a disallowed port");
+    return;
+  }
   if (server_address_.address.IsUnresolvedIP()) {
     ResolveTurnAddress(server_address_.address);
   } else {
@@ -941,6 +950,21 @@ void TurnPort::Close() {
 
 rtc::DiffServCodePoint TurnPort::StunDscpValue() const {
   return stun_dscp_value_;
+}
+
+// static
+bool TurnPort::AllowedTurnPort(int port) {
+  // Port 443 is used for existing deployments. Ports above 1024 are assumed to
+  // be OK to use.
+  if (port == 443 || port >= 1024) {
+    return true;
+  }
+  // Allow any port if relevant field trial is set. This allows disabling the
+  // check.
+  if (webrtc::field_trial::IsEnabled("WebRTC-Turn-AllowSystemPorts")) {
+    return true;
+  }
+  return false;
 }
 
 void TurnPort::OnMessage(rtc::Message* message) {
