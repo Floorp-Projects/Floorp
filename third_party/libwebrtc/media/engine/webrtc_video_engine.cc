@@ -2492,17 +2492,11 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
 
   encoder_config.legacy_conference_mode = parameters_.conference_mode;
 
-  encoder_config.is_quality_scaling_allowed =
-      !disable_automatic_resize_ && !is_screencast &&
-      (parameters_.config.rtp.ssrcs.size() == 1 ||
-       NumActiveStreams(rtp_parameters_) == 1);
-
   int max_qp = kDefaultQpMax;
   codec.GetParam(kCodecParamMaxQuantization, &max_qp);
   encoder_config.video_stream_factory =
       new rtc::RefCountedObject<EncoderStreamFactory>(
           codec.name, max_qp, is_screencast, parameters_.conference_mode);
-
   return encoder_config;
 }
 
