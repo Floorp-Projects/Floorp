@@ -91,7 +91,7 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
                        "timestamp", decodedImage.timestamp());
   // TODO(holmer): We should improve this so that we can handle multiple
   // callbacks from one call to Decode().
-  VCMFrameInformation* frameInfo;
+  absl::optional<VCMFrameInformation> frameInfo;
   int timestamp_map_size = 0;
   {
     MutexLock lock(&lock_);
@@ -99,7 +99,7 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
     timestamp_map_size = _timestampMap.Size();
   }
 
-  if (frameInfo == NULL) {
+  if (!frameInfo) {
     RTC_LOG(LS_WARNING) << "Too many frames backed up in the decoder, dropping "
                            "this one.";
     _receiveCallback->OnDroppedFrames(1);
@@ -196,14 +196,14 @@ void VCMDecodedFrameCallback::OnDecoderImplementationName(
 }
 
 void VCMDecodedFrameCallback::Map(uint32_t timestamp,
-                                  VCMFrameInformation* frameInfo) {
+                                  const VCMFrameInformation& frameInfo) {
   MutexLock lock(&lock_);
   _timestampMap.Add(timestamp, frameInfo);
 }
 
 int32_t VCMDecodedFrameCallback::Pop(uint32_t timestamp) {
   MutexLock lock(&lock_);
-  if (_timestampMap.Pop(timestamp) == NULL) {
+  if (_timestampMap.Pop(timestamp) == absl::nullopt) {
     return VCM_GENERAL_ERROR;
   }
   _receiveCallback->OnDroppedFrames(1);
@@ -215,8 +215,6 @@ VCMGenericDecoder::VCMGenericDecoder(std::unique_ptr<VideoDecoder> decoder)
 
 VCMGenericDecoder::VCMGenericDecoder(VideoDecoder* decoder, bool isExternal)
     : _callback(NULL),
-      _frameInfos(),
-      _nextFrameInfoIdx(0),
       decoder_(decoder),
       _codecType(kVideoCodecGeneric),
       _isExternal(isExternal),
@@ -249,26 +247,25 @@ int32_t VCMGenericDecoder::InitDecode(const VideoCodec* settings,
 int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   TRACE_EVENT1("webrtc", "VCMGenericDecoder::Decode", "timestamp",
                frame.Timestamp());
-  _frameInfos[_nextFrameInfoIdx].decodeStart = now;
-  _frameInfos[_nextFrameInfoIdx].renderTimeMs = frame.RenderTimeMs();
-  _frameInfos[_nextFrameInfoIdx].rotation = frame.rotation();
-  _frameInfos[_nextFrameInfoIdx].timing = frame.video_timing();
-  _frameInfos[_nextFrameInfoIdx].ntp_time_ms =
-      frame.EncodedImage().ntp_time_ms_;
-  _frameInfos[_nextFrameInfoIdx].packet_infos = frame.PacketInfos();
+  VCMFrameInformation frame_info;
+  frame_info.decodeStart = now;
+  frame_info.renderTimeMs = frame.RenderTimeMs();
+  frame_info.rotation = frame.rotation();
+  frame_info.timing = frame.video_timing();
+  frame_info.ntp_time_ms = frame.EncodedImage().ntp_time_ms_;
+  frame_info.packet_infos = frame.PacketInfos();
 
   // Set correctly only for key frames. Thus, use latest key frame
   // content type. If the corresponding key frame was lost, decode will fail
   // and content type will be ignored.
   if (frame.FrameType() == VideoFrameType::kVideoFrameKey) {
-    _frameInfos[_nextFrameInfoIdx].content_type = frame.contentType();
+    frame_info.content_type = frame.contentType();
     _last_keyframe_content_type = frame.contentType();
   } else {
-    _frameInfos[_nextFrameInfoIdx].content_type = _last_keyframe_content_type;
+    frame_info.content_type = _last_keyframe_content_type;
   }
-  _callback->Map(frame.Timestamp(), &_frameInfos[_nextFrameInfoIdx]);
+  _callback->Map(frame.Timestamp(), frame_info);
 
-  _nextFrameInfoIdx = (_nextFrameInfoIdx + 1) % kDecoderFrameMemoryLength;
   int32_t ret = decoder_->Decode(frame.EncodedImage(), frame.MissingFrame(),
                                  frame.RenderTimeMs());
   VideoDecoder::DecoderInfo decoder_info = decoder_->GetDecoderInfo();

@@ -29,18 +29,6 @@ class VCMReceiveCallback;
 
 enum { kDecoderFrameMemoryLength = 30 };
 
-struct VCMFrameInformation {
-  int64_t renderTimeMs;
-  absl::optional<Timestamp> decodeStart;
-  void* userData;
-  VideoRotation rotation;
-  VideoContentType content_type;
-  EncodedImage::Timing timing;
-  int64_t ntp_time_ms;
-  RtpPacketInfos packet_infos;
-  // ColorSpace is not stored here, as it might be modified by decoders.
-};
-
 class VCMDecodedFrameCallback : public DecodedImageCallback {
  public:
   VCMDecodedFrameCallback(VCMTiming* timing, Clock* clock);
@@ -56,7 +44,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
 
   void OnDecoderImplementationName(const char* implementation_name);
 
-  void Map(uint32_t timestamp, VCMFrameInformation* frameInfo);
+  void Map(uint32_t timestamp, const VCMFrameInformation& frameInfo);
   int32_t Pop(uint32_t timestamp);
 
  private:
@@ -117,7 +105,6 @@ class VCMGenericDecoder {
  private:
   VCMDecodedFrameCallback* _callback;
   VCMFrameInformation _frameInfos[kDecoderFrameMemoryLength];
-  uint32_t _nextFrameInfoIdx;
   std::unique_ptr<VideoDecoder> decoder_;
   VideoCodecType _codecType;
   const bool _isExternal;
