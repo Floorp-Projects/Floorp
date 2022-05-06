@@ -96,8 +96,16 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                              nsIFile* aComponentFile,
                              JS::MutableHandleObject aObject,
                              JS::MutableHandleScript aTableScript,
-                             char** location, bool aCatchException,
+                             char** aLocation, bool aCatchException,
                              JS::MutableHandleValue aException);
+
+  // Get the script for a given location, either from a cached stencil or by
+  // loading and compiling it.
+  static nsresult GetScriptForLocation(JSContext* aCx,
+                                       ComponentLoaderInfo& aInfo,
+                                       nsIFile* aComponentFile, bool aUseMemMap,
+                                       JS::MutableHandleScript aScriptOut,
+                                       char** aLocationOut);
 
   nsresult ImportInto(const nsACString& aLocation, JS::HandleObject targetObj,
                       JSContext* callercx, JS::MutableHandleObject vp);
