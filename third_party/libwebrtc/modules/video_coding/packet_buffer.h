@@ -36,7 +36,6 @@ class PacketBuffer {
     Packet() = default;
     Packet(const RtpPacketReceived& rtp_packet,
            const RTPVideoHeader& video_header,
-           int64_t ntp_time_ms,
            int64_t receive_time_ms);
     Packet(const Packet&) = delete;
     Packet(Packet&&) = delete;
@@ -62,8 +61,6 @@ class PacketBuffer {
     uint8_t payload_type = 0;
     uint16_t seq_num = 0;
     uint32_t timestamp = 0;
-    // NTP time of the capture time in local timebase in milliseconds.
-    int64_t ntp_time_ms = -1;
     int times_nacked = -1;
 
     rtc::CopyOnWriteBuffer video_payload;

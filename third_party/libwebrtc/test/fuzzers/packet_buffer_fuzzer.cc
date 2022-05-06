@@ -35,7 +35,6 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     helper.CopyTo(&packet->payload_type);
     helper.CopyTo(&packet->seq_num);
     helper.CopyTo(&packet->timestamp);
-    helper.CopyTo(&packet->ntp_time_ms);
     helper.CopyTo(&packet->times_nacked);
 
     // Fuzz non-POD member of the packet.

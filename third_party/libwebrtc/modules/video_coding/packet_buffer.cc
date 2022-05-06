@@ -37,13 +37,11 @@ namespace video_coding {
 
 PacketBuffer::Packet::Packet(const RtpPacketReceived& rtp_packet,
                              const RTPVideoHeader& video_header,
-                             int64_t ntp_time_ms,
                              int64_t receive_time_ms)
     : marker_bit(rtp_packet.Marker()),
       payload_type(rtp_packet.PayloadType()),
       seq_num(rtp_packet.SequenceNumber()),
       timestamp(rtp_packet.Timestamp()),
-      ntp_time_ms(ntp_time_ms),
       times_nacked(-1),
       video_header(video_header),
       packet_info(rtp_packet.Ssrc(),
