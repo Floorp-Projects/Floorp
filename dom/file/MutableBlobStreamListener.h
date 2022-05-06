@@ -14,8 +14,7 @@
 
 class nsIEventTarget;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MutableBlobStreamListener final
     : public nsIStreamListener,
@@ -26,10 +25,10 @@ class MutableBlobStreamListener final
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
-  MutableBlobStreamListener(MutableBlobStorage::MutableBlobStorageType aType,
-                            const nsACString& aContentType,
-                            MutableBlobStorageCallback* aCallback,
-                            nsIEventTarget* aEventTarget = nullptr);
+  MutableBlobStreamListener(
+      MutableBlobStorage::MutableBlobStorageType aStorageType,
+      const nsACString& aContentType, MutableBlobStorageCallback* aCallback,
+      nsIEventTarget* aEventTarget = nullptr);
 
  private:
   ~MutableBlobStreamListener();
@@ -46,7 +45,6 @@ class MutableBlobStreamListener final
   nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MutableBlobStreamListener_h

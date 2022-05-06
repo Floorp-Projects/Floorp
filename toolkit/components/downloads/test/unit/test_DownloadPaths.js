@@ -40,27 +40,27 @@ add_task(async function test_sanitize() {
     testSanitize("Website | Page!", "Website Page!");
     testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else if (AppConstants.platform == "win") {
-    testSanitize(kSpecialChars, "A ''(());,+=[]B][=+,;))(('' C");
+    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
     testSanitize(" :: Website :: ", "Website");
     testSanitize("* Website!", "Website!");
     testSanitize("Website | Page!", "Website Page!");
     testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else if (AppConstants.platform == "macosx") {
-    testSanitize(kSpecialChars, 'A *?|""<<>>;,+=[]B][=+,;>><<""|?* C');
+    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
     testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "* Website!");
-    testSanitize("Website | Page!", "Website | Page!");
+    testSanitize("* Website!", "Website!");
+    testSanitize("Website | Page!", "Website Page!");
     testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   } else {
-    testSanitize(kSpecialChars, kSpecialChars.replace(/[:]/g, " "));
+    testSanitize(kSpecialChars, "A ;,+=[]B][=+,; C");
     testSanitize(" :: Website :: ", "Website");
-    testSanitize("* Website!", "* Website!");
-    testSanitize("Website | Page!", "Website | Page!");
+    testSanitize("* Website!", "Website!");
+    testSanitize("Website | Page!", "Website Page!");
     testSanitize("Directory Listing: /a/b/", "Directory Listing _a_b_");
   }
 
   // Conversion of consecutive runs of slashes and backslashes to underscores.
-  testSanitize("\\ \\\\Website\\/Page// /", "_ _Website_Page_ _");
+  testSanitize("\\ \\\\Website\\/Page// /", "_ __Website__Page__ _");
 
   // Removal of leading and trailing whitespace and dots after conversion.
   testSanitize("  Website  ", "Website");
@@ -77,8 +77,8 @@ add_task(async function test_sanitize() {
   testSanitize(" . ", "");
 
   // Stripping of BIDI formatting characters.
-  testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "test");
-  testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB CD");
+  testSanitize("\u200e \u202b\u202c\u202d\u202etest\x7f\u200f", "_ ____test _");
+  testSanitize("AB\x7f\u202a\x7f\u202a\x7fCD", "AB _ _ CD");
 
   // Stripping of colons:
   testSanitize("foo:bar", "foo bar");

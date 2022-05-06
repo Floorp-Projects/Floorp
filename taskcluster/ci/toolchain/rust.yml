@@ -22,12 +22,8 @@ linux64-rust-1.57:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust-toolchain
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 linux64-rust-1.59:
     treeherder:
@@ -40,11 +36,7 @@ linux64-rust-1.59:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
         ]
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 linux64-rust-1.60:
     treeherder:
@@ -57,12 +49,8 @@ linux64-rust-1.60:
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'aarch64-unknown-linux-gnu',
             '--target', 'wasm32-wasi',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
@@ -78,7 +66,6 @@ linux64-rust-dev:
             '--channel', 'dev',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
-            '--compiler-builtins-hack',
         ]
     fetches:
         fetch:
@@ -168,12 +155,8 @@ linux64-rust-android-1.60:
             '--target', 'aarch64-linux-android',
             '--target', 'i686-linux-android',
             '--target', 'x86_64-linux-android',
-            '--compiler-builtins-hack',
         ]
         toolchain-alias: linux64-rust-android
-    fetches:
-        toolchain:
-            - linux64-clang-toolchain
 
 linux64-rust-windows-1.57:
     description: "rust repack with windows-cross support"

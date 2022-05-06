@@ -13,7 +13,7 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/firefoxSuggest.ftl                       (../components/urlbar/content/firefoxSuggest.ftl)
 #ifdef NIGHTLY_BUILD
-  preview/myFirefox.ftl                            (../components/myfirefox/myFirefox.ftl)
+  preview/firefoxView.ftl                            (../components/firefoxview/firefoxView.ftl)
 #endif
   browser                                          (%browser/**/*.ftl)
 

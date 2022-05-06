@@ -12,8 +12,7 @@
 
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TemporaryIPCBlobParent final : public PTemporaryIPCBlobParent {
   friend class PTemporaryIPCBlobParent;
@@ -24,7 +23,7 @@ class TemporaryIPCBlobParent final : public PTemporaryIPCBlobParent {
   mozilla::ipc::IPCResult CreateAndShareFile();
 
  private:
-  ~TemporaryIPCBlobParent();
+  ~TemporaryIPCBlobParent() override;
 
   mozilla::ipc::IPCResult RecvOperationFailed();
 
@@ -39,7 +38,6 @@ class TemporaryIPCBlobParent final : public PTemporaryIPCBlobParent {
   bool mActive;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TemporaryIPCBlobParent_h

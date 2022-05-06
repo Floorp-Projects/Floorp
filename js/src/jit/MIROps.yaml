@@ -1691,6 +1691,15 @@
   possibly_calls: true
   alias_set: custom
 
+- name: NewVarEnvironmentObject
+  operands:
+    enclosing: Object
+  arguments:
+    scope: VarScope*
+  result_type: Object
+  possibly_calls: true
+  alias_set: none
+
 - name: HomeObject
   operands:
     function: Object

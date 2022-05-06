@@ -8,6 +8,7 @@
 interface nsIFile;
 interface nsIMIMEInfo;
 interface nsIURI;
+interface nsIChannel;
 
 %{C++
 #define NS_MIMESERVICE_CID                           \
@@ -97,4 +98,124 @@ interface nsIMIMEService : nsISupports {
     nsIMIMEInfo getMIMEInfoFromOS(in ACString aType,
                                   in ACString aFileExtension,
                                   out boolean aFound);
+
+    /**
+     * Default filename validation for getValidFileName and
+     * validateFileNameForSaving where other flags are not true.
+     * That is, the extension is modified to fit the content type,
+     * duplicate whitespace is collapsed, and long filenames are
+     * truncated. A valid content type must be supplied. See the
+     * description of getValidFileName for more details about how
+     * the flags are used.
+     */
+    const long VALIDATE_DEFAULT = 0;
+
+    /**
+     * If true, then the filename is only validated to ensure that it is
+     * acceptable for the file system. If false, then the extension is also
+     * checked to ensure that it is valid for the content type. If the
+     * extension is not valid, the filename is modified to have the proper
+     * extension.
+     */
+    const long VALIDATE_SANITIZE_ONLY = 1;
+
+    /**
+     * Don't collapse strings of duplicate whitespace into a single string.
+     */
+    const long VALIDATE_DONT_COLLAPSE_WHITESPACE = 2;
+
+    /**
+     * Don't truncate long filenames.
+     */
+    const long VALIDATE_DONT_TRUNCATE = 4;
+
+    /**
+     * True to ignore the content type and guess the type from any existing
+     * extension instead. "application/octet-stream" is used as the default
+     * if there is no extension or there is no information available for
+     * the extension.
+     */
+    const long VALIDATE_GUESS_FROM_EXTENSION = 8;
+
+    /**
+     * If the filename is empty, return the empty filename
+     * without modification.
+     */
+    const long VALIDATE_ALLOW_EMPTY = 16;
+
+    /**
+     * Don't apply a default filename if the non-extension portion of the
+     * filename is empty.
+     */
+    const long VALIDATE_NO_DEFAULT_FILENAME = 32;
+
+    /**
+     * Generate a valid filename from the channel that can be used to save
+     * the content of the channel to the local disk.
+     *
+     * The filename is determined from the content disposition, the filename
+     * of the uri, or a default filename. The following modifications are
+     * applied:
+     *  - If the VALIDATE_SANITIZE_ONLY flag is not specified, then the
+     *    extension of the filename is modified to suit the supplied content type.
+     *  - Path separators (typically / and \) are replaced by underscores (_)
+     *  - Characters that are not valid or would be confusing in filenames are
+     *    replaced by spaces (*, :, etc)
+     *  - Bidi related marks are replaced by underscores (_)
+     *  - Whitespace and periods are removed from the beginning and end.
+     *  - Unless VALIDATE_DONT_COLLAPSE_WHITESPACE is specified, multiple
+     *    consecutive whitespace characters are collapsed to a single space
+     *    character, either ' ' or an ideographic space 0x3000 if present.
+     *  - Unless VALIDATE_DONT_TRUNCATE is specified, the filename is truncated
+     *    to a maximum length, preserving the extension if possible.
+     *  - Some filenames are invalid on certain platforms. These are replaced if
+     *    possible.
+     *
+     * If the VALIDATE_NO_DEFAULT_FILENAME flag is not specified, and after the
+     * rules above are applied, the resulting filename is empty, a default
+     * filename is used.
+     *
+     * If the VALIDATE_ALLOW_EMPTY flag is specified, an empty string may be
+     * returned only if the filename could not be determined or was blank.
+     *
+     * If either the VALIDATE_SANITIZE_ONLY or VALIDATE_GUESS_FROM_EXTENSION flags
+     * are specified, then the content type may be empty. Otherwise, the type must
+     * not be empty.
+     *
+     * The aOriginalURI would be specified if the channel is for a local file but
+     * it was originally sourced from a different uri.
+     *
+     * When saving an image, use validateFileNameForSaving instead and
+     * pass the result of imgIRequest::GetFileName() as the filename to
+     * check.
+     *
+     * @param aChannel The channel of the content to save.
+     * @param aType The MIME type to use, which would usually be the
+     *              same as the content type of the channel.
+     * @param aOriginalURL the source url of the file, but may be null.
+     * @param aFlags one or more of the flags above.
+     * @returns The resulting filename.
+     */
+    AString getValidFileName(in nsIChannel aChannel,
+                             in ACString aType,
+                             in nsIURI aOriginalURI,
+                             in unsigned long aFlags);
+
+    /**
+     * Similar to getValidFileName, but used when a specific filename needs
+     * to be validated. The filename is modified as needed based on the 
+     * content type in the same manner as getValidFileName.
+     *
+     * If the filename came from a uri, it should not be escaped, that is,
+     * any needed unescaping of the filename should happen before calling
+     * this method.
+     *
+     * @param aType The MIME type to use.
+     * @param aFlags one or more of the flags above.
+     * @param aFileName The filename to validate.
+     * @returns The validated filename.
+     */
+    AString validateFileNameForSaving(in AString aFileName,
+                                      in ACString aType,
+                                      in unsigned long aFlags);
 };

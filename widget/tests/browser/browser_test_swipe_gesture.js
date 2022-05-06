@@ -502,3 +502,126 @@ add_task(async () => {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-threshold", 0.25],
+      // Set the velocity-contribution to 0 so we can exactly control the
+      // values in the swipe tracker via the delta in the events that we send.
+      ["widget.swipe.success-velocity-contribution", 0.0],
+      ["widget.swipe.whole-page-pixel-size", 550.0],
+    ],
+  });
+
+  function swipeGestureEndPromise() {
+    return new Promise(resolve => {
+      let promiseObserver = {
+        handleEvent(aEvent) {
+          switch (aEvent.type) {
+            case "MozSwipeGestureEnd":
+              gBrowser.tabbox.removeEventListener(
+                "MozSwipeGestureEnd",
+                promiseObserver,
+                true
+              );
+              resolve();
+              break;
+          }
+        },
+      };
+      gBrowser.tabbox.addEventListener(
+        "MozSwipeGestureEnd",
+        promiseObserver,
+        true
+      );
+    });
+  }
+
+  const firstPage = "about:about";
+  const secondPage = "about:mozilla";
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    firstPage,
+    true /* waitForLoad */
+  );
+
+  BrowserTestUtils.loadURI(tab.linkedBrowser, secondPage);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, secondPage);
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+  // and we cannot go forward to the next page.
+  ok(!gBrowser.webNavigation.canGoForward);
+
+  let numSwipeGestureEndEvents = 0;
+  var anObserver = {
+    handleEvent(aEvent) {
+      switch (aEvent.type) {
+        case "MozSwipeGestureEnd":
+          numSwipeGestureEndEvents++;
+          break;
+      }
+    },
+  };
+
+  gBrowser.tabbox.addEventListener("MozSwipeGestureEnd", anObserver, true);
+
+  let gestureEndPromise = swipeGestureEndPromise();
+
+  is(
+    numSwipeGestureEndEvents,
+    0,
+    "expected no MozSwipeGestureEnd got " + numSwipeGestureEndEvents
+  );
+
+  // Send a pan that starts a navigate back but doesn't have enough delta to do
+  // anything.
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 0.9);
+
+  await waitForWhile();
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, secondPage);
+  // end event comes after a swipe that does not navigate
+  await gestureEndPromise;
+  is(
+    numSwipeGestureEndEvents,
+    1,
+    "expected one MozSwipeGestureEnd got " + numSwipeGestureEndEvents
+  );
+
+  // Try to navigate backward.
+  let startLoadingPromise = BrowserTestUtils.browserStarted(
+    tab.linkedBrowser,
+    firstPage
+  );
+  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    firstPage
+  );
+
+  gestureEndPromise = swipeGestureEndPromise();
+
+  await panLeftToRight(tab.linkedBrowser, 100, 100, 1);
+
+  // Make sure the gesture triggered going back to the previous page.
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
+
+  ok(gBrowser.webNavigation.canGoForward);
+
+  await gestureEndPromise;
+
+  is(
+    numSwipeGestureEndEvents,
+    2,
+    "expected one MozSwipeGestureEnd got " + (numSwipeGestureEndEvents - 1)
+  );
+
+  gBrowser.tabbox.removeEventListener("MozSwipeGestureEnd", anObserver, true);
+
+  BrowserTestUtils.removeTab(tab);
+});

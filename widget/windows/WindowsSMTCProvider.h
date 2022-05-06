@@ -64,8 +64,7 @@ class WindowsSMTCProvider final : public mozilla::dom::MediaControlKeySource {
 
   // Sets the Metadata for the currently playing media and sets the playback
   // type to "MUSIC"
-  bool SetMusicMetadata(const wchar_t* aArtist, const wchar_t* aTitle,
-                        const wchar_t* aAlbumArtist);
+  bool SetMusicMetadata(const nsString& aArtist, const nsString& aTitle);
 
   // Sets one of the artwork to the SMTC interface asynchronously
   void LoadThumbnail(const nsTArray<mozilla::dom::MediaImage>& aArtwork);

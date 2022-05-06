@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>File that loads a non-script file-extension as script</title>
+</head>
+<body>
+  <script>
+    window.ran = 'before';
+  </script>
+  <script src="file_nonscript.xyz" onerror="window.ran = 'error'"></script>
+</html>

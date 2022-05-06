@@ -13,8 +13,7 @@
 
 #define FONTTABLEURI_SCHEME "moz-fonttable"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FontTableURIProtocolHandler final
     : public nsIProtocolHandler,
@@ -37,7 +36,6 @@ inline bool IsFontTableURI(nsIURI* aUri) {
   return aUri->SchemeIs(FONTTABLEURI_SCHEME);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* FontTableURIProtocolHandler_h */

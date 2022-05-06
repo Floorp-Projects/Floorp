@@ -12,8 +12,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsICloneableInputStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
@@ -34,15 +33,16 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
       const nsAString& aContentType, int64_t aLastModifiedDate,
       uint64_t aLength, const nsAString& aBlobImplType);
 
-  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 
   bool IsMemoryFile() const override { return true; }
 
-  int64_t GetFileId() override { return mFileId; }
+  int64_t GetFileId() const override { return mFileId; }
 
   void SetFileId(int64_t aFileId) { mFileId = aFileId; }
 
@@ -77,7 +77,7 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
                  int64_t aLastModifiedDate, uint64_t aLength,
                  const nsAString& aBlobImplType);
 
-  ~StreamBlobImpl();
+  ~StreamBlobImpl() override;
 
   void MaybeRegisterMemoryReporter();
 
@@ -90,7 +90,6 @@ class StreamBlobImpl final : public BaseBlobImpl, public nsIMemoryReporter {
   int64_t mFileId;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_StreamBlobImpl_h

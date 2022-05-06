@@ -109,6 +109,7 @@ gc_pointer_types = [
     "GetterSetter*",
     "JSAtom*",
     "ClassBodyScope*",
+    "VarScope*",
     "NamedLambdaObject*",
     "RegExpObject*",
     "JSScript*",

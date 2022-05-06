@@ -1528,11 +1528,6 @@ impl<'le> TElement for GeckoElement<'le> {
         self.is_root_of_native_anonymous_subtree()
     }
 
-    fn set_selector_flags(&self, flags: ElementSelectorFlags) {
-        debug_assert!(!flags.is_empty());
-        self.set_flags(selector_flags_to_node_flags(flags));
-    }
-
     #[inline]
     fn may_have_animations(&self) -> bool {
         if let Some(pseudo) = self.implemented_pseudo_element() {
@@ -1962,6 +1957,11 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         None
     }
 
+    fn set_selector_flags(&self, flags: ElementSelectorFlags) {
+        debug_assert!(!flags.is_empty());
+        self.set_flags(selector_flags_to_node_flags(flags));
+    }
+
     fn attr_matches(
         &self,
         ns: &NamespaceConstraint<&Namespace>,
@@ -2074,15 +2074,11 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         self.local_name() == other.local_name() && self.namespace() == other.namespace()
     }
 
-    fn match_non_ts_pseudo_class<F>(
+    fn match_non_ts_pseudo_class(
         &self,
         pseudo_class: &NonTSPseudoClass,
         context: &mut MatchingContext<Self::Impl>,
-        flags_setter: &mut F,
-    ) -> bool
-    where
-        F: FnMut(&Self, ElementSelectorFlags),
-    {
+    ) -> bool {
         use selectors::matching::*;
         match *pseudo_class {
             NonTSPseudoClass::Autofill |
@@ -2138,7 +2134,9 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 self.is_link() && context.visited_handling().matches_visited()
             },
             NonTSPseudoClass::MozFirstNode => {
-                flags_setter(self, ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR);
+                if context.needs_selector_flags() {
+                    self.apply_selector_flags(ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR);
+                }
                 let mut elem = self.as_node();
                 while let Some(prev) = elem.prev_sibling() {
                     if prev.contains_non_whitespace_content() {
@@ -2149,7 +2147,9 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 true
             },
             NonTSPseudoClass::MozLastNode => {
-                flags_setter(self, ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR);
+                if context.needs_selector_flags() {
+                    self.apply_selector_flags(ElementSelectorFlags::HAS_EDGE_CHILD_SELECTOR);
+                }
                 let mut elem = self.as_node();
                 while let Some(next) = elem.next_sibling() {
                     if next.contains_non_whitespace_content() {
@@ -2160,7 +2160,9 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                 true
             },
             NonTSPseudoClass::MozOnlyWhitespace => {
-                flags_setter(self, ElementSelectorFlags::HAS_EMPTY_SELECTOR);
+                if context.needs_selector_flags() {
+                    self.apply_selector_flags(ElementSelectorFlags::HAS_EMPTY_SELECTOR);
+                }
                 if self
                     .as_node()
                     .dom_children()

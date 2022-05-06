@@ -27,14 +27,14 @@ StringBlobImpl::~StringBlobImpl() { UnregisterWeakMemoryReporter(this); }
 
 already_AddRefed<BlobImpl> StringBlobImpl::CreateSlice(
     uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-    ErrorResult& aRv) {
+    ErrorResult& aRv) const {
   RefPtr<BlobImpl> impl =
       new StringBlobImpl(Substring(mData, aStart, aLength), aContentType);
   return impl.forget();
 }
 
 void StringBlobImpl::CreateInputStream(nsIInputStream** aStream,
-                                       ErrorResult& aRv) {
+                                       ErrorResult& aRv) const {
   aRv = NS_NewCStringInputStream(aStream, mData);
 }
 

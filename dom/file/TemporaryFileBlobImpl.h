@@ -9,8 +9,7 @@
 
 #include "FileBlobImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This class is meant to be used by TemporaryIPCBlobParent only.
 // Don't use it for anything else, please!
@@ -20,30 +19,29 @@ namespace dom {
 // IPCBlobUtils.
 class TemporaryFileBlobImpl final : public FileBlobImpl {
 #ifdef DEBUG
-  bool mInputStreamCreated;
+  mutable bool mInputStreamCreated;
 #endif
 
  public:
   explicit TemporaryFileBlobImpl(nsIFile* aFile, const nsAString& aContentType);
 
   // Overrides
-  void CreateInputStream(nsIInputStream** aInputStream,
-                         ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream,
+                         ErrorResult& aRv) const override;
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
     aBlobImplType = u"TemporaryFileBlobImpl"_ns;
   }
 
  protected:
-  ~TemporaryFileBlobImpl();
+  ~TemporaryFileBlobImpl() override;
 
  private:
   already_AddRefed<BlobImpl> CreateSlice(uint64_t aStart, uint64_t aLength,
                                          const nsAString& aContentType,
-                                         ErrorResult& aRv) override;
+                                         ErrorResult& aRv) const override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TemporaryFileBlobImpl_h

@@ -102,6 +102,9 @@ def init_mocked_request(status_code, **kwargs):
     return_value=init_placeholder_wpt_data(),
 )
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_no_issues_mocked_results(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -112,6 +115,9 @@ def test_webpagetest_no_issues_mocked_results(*mocked):
 
 
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_invalid_browser(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_parameters"]["browser"] = "Invalid Browser"
@@ -121,6 +127,9 @@ def test_webpagetest_test_invalid_browser(*mocked):
 
 
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_invalid_connection(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -130,6 +139,9 @@ def test_webpagetest_test_invalid_connection(*mocked):
 
 
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_invalid_url(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -139,6 +151,9 @@ def test_webpagetest_test_invalid_url(*mocked):
 
 
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_invalid_statistic(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -150,6 +165,10 @@ def test_webpagetest_test_invalid_statistic(*mocked):
 
 @mock.patch("requests.get", return_value=init_mocked_request(200))
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.request_with_timeout",
+    return_value={"data": {}},
+)
 def test_webpagetest_test_invalid_location(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -160,6 +179,9 @@ def test_webpagetest_test_invalid_location(*mocked):
 
 @mock.patch("requests.get", return_value=init_mocked_request(400))
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_timeout(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     test = webpagetest.WebPageTest(env, mach_cmd)
@@ -177,6 +199,9 @@ def test_webpagetest_test_timeout(*mocked):
     ),
 )
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_wrong_browserlocation(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_list"] = ["google.ca"]
@@ -191,6 +216,9 @@ def test_webpagetest_test_wrong_browserlocation(*mocked):
     return_value=init_placeholder_wpt_data(invalid_results=True),
 )
 @mock.patch("mozperftest.utils.get_tc_secret", return_value={"wpt_key": "fake_key"})
+@mock.patch(
+    "mozperftest.test.webpagetest.WebPageTest.location_queue", return_value=None
+)
 def test_webpagetest_test_metric_not_found(*mocked):
     mach_cmd, metadata, env = running_env(tests=[str(EXAMPLE_WPT_TEST)])
     metadata.script["options"]["test_list"] = ["google.ca"]
