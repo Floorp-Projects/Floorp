@@ -49,6 +49,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PREFER_SYSTEM_DIALOG",
+  "print.prefer_system_dialog",
+  false
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "PromptUtils",
@@ -257,7 +264,7 @@ var PrintUtils = {
       }
     }
 
-    if (!PRINT_ALWAYS_SILENT) {
+    if (!PRINT_ALWAYS_SILENT && !PREFER_SYSTEM_DIALOG) {
       return this._openTabModalPrint(
         browsingContext,
         windowDotPrintOpenWindowInfo,
@@ -266,6 +273,8 @@ var PrintUtils = {
         printFrameOnly
       );
     }
+
+    const useSystemDialog = PREFER_SYSTEM_DIALOG && !PRINT_ALWAYS_SILENT;
 
     let browser = null;
     if (windowDotPrintOpenWindowInfo) {
@@ -278,10 +287,14 @@ var PrintUtils = {
       browsingContext = browser.browsingContext;
     }
 
-    // This code is only wrapped in an async function so that we can call
-    // getCurrentDirectory.
+    // This code is wrapped in an async function so that we can await the async
+    // functions that it calls.
     async function makePrintSettingsAndInvokePrint() {
-      let settings = PrintUtils.getPrintSettings();
+      let settings = PrintUtils.getPrintSettings(
+        /*aPrinterName*/ "",
+        /*aDefaultsOnly*/ false,
+        /*aAllowPseudoPrinter*/ !useSystemDialog
+      );
       settings.printSelectionOnly = printSelectionOnly;
       if (
         settings.outputDestination ==
@@ -300,20 +313,53 @@ var PrintUtils = {
         settings.toFileName = OS.Path.join(dest || "", "mozilla.pdf");
       }
 
-      // We only really need to return to the event loop before calling
-      // BrowsingContext.print() if we were called for `window.print()`. In
-      // that case, if we failed to return to the event loop then in the child
-      // process we would re-enter nsGlobalWindowOuter::Print under the nested
-      // event loop that's spun under its OpenInternal call. Printing would
-      // then fail since the outer nsGlobalWindowOuter::Print call wouldn't yet
-      // have created the static clone.
-      setTimeout(() => {
-        // At some point we should handle the Promise that this returns (at
-        // least report rejection to telemetry).
-        browsingContext.print(settings);
-      }, 0);
+      if (useSystemDialog) {
+        // Prompt the user to choose a printer and make any desired print
+        // settings changes.
+        try {
+          await Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
+            .getService(Ci.nsIPrintingPromptService)
+            .showPrintDialog(browsingContext.topChromeWindow, settings);
+        } catch (e) {
+          if (browser) {
+            browser.remove(); // don't leak this
+          }
+          if (e.result == Cr.NS_ERROR_ABORT) {
+            return; // user cancelled
+          }
+          throw e;
+        }
+
+        // Update the saved last used printer name and print settings:
+        Services.prefs.setStringPref("print_printer", settings.printerName);
+        var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
+          Ci.nsIPrintSettingsService
+        );
+        PSSVC.savePrintSettingsToPrefs(
+          settings,
+          true,
+          Ci.nsIPrintSettings.kInitSaveAll
+        );
+      }
+
+      // At some point we should handle the Promise that this returns (at
+      // least report rejection to telemetry).
+      browsingContext.print(settings);
     }
-    makePrintSettingsAndInvokePrint();
+
+    // We need to return to the event loop before calling
+    // makePrintSettingsAndInvokePrint() if we were called for `window.print()`.
+    // That's because if that function synchronously calls `browser.remove()`
+    // or `browsingContext.print()` before we return `browser`, the nested
+    // event loop that is being spun in the content process under the
+    // OpenInternal call in nsGlobalWindowOuter::Print will still be active.
+    // In the case of `browser.remove()`, nsGlobalWindowOuter::Print would then
+    // get unhappy once OpenInternal does return since it will fail to return
+    // a BrowsingContext. In the case of `browsingContext.print()`, we would
+    // re-enter nsGlobalWindowOuter::Print under the nested event loop and
+    // printing would then fail since the outer nsGlobalWindowOuter::Print call
+    // wouldn't yet have created the static clone.
+    setTimeout(makePrintSettingsAndInvokePrint, 0);
 
     return browser;
   },
@@ -449,20 +495,34 @@ var PrintUtils = {
     );
   },
 
-  getPrintSettings(aPrinterName, defaultsOnly) {
+  getPrintSettings(aPrinterName, aDefaultsOnly, aAllowPseudoPrinter = true) {
     var printSettings;
     try {
       var PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
         Ci.nsIPrintSettingsService
       );
 
+      function isValidPrinterName(aPrinterName) {
+        return (
+          aPrinterName &&
+          (aAllowPseudoPrinter ||
+            aPrinterName != PrintUtils.SAVE_TO_PDF_PRINTER)
+        );
+      }
+
       // We must not try to print using an nsIPrintSettings without a printer
       // name set.
-      let printerName =
-        aPrinterName ||
-        PSSVC.lastUsedPrinterName ||
-        Cc["@mozilla.org/gfx/printerlist;1"].getService(Ci.nsIPrinterList)
-          .systemDefaultPrinterName;
+      const printerName = (function() {
+        if (isValidPrinterName(aPrinterName)) {
+          return aPrinterName;
+        }
+        if (isValidPrinterName(PSSVC.lastUsedPrinterName)) {
+          return PSSVC.lastUsedPrinterName;
+        }
+        return Cc["@mozilla.org/gfx/printerlist;1"].getService(
+          Ci.nsIPrinterList
+        ).systemDefaultPrinterName;
+      })();
 
       printSettings = PSSVC.newPrintSettings;
       printSettings.printerName = printerName;
@@ -476,7 +536,7 @@ var PrintUtils = {
         );
       }
 
-      if (!defaultsOnly) {
+      if (!aDefaultsOnly) {
         // Apply any settings that have been saved for this printer.
         PSSVC.initPrintSettingsFromPrefs(
           printSettings,
