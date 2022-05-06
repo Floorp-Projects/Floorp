@@ -58,13 +58,13 @@ class BaseBlobImpl : public BlobImpl {
 
   void GetName(nsAString& aName) const override;
 
-  void GetDOMPath(nsAString& aName) const override;
+  void GetDOMPath(nsAString& aPath) const override;
 
-  void SetDOMPath(const nsAString& aName) override;
+  void SetDOMPath(const nsAString& aPath) override;
 
   int64_t GetLastModified(ErrorResult& aRv) override;
 
-  void GetMozFullPath(nsAString& aName, SystemCallerGuarantee /* unused */,
+  void GetMozFullPath(nsAString& aFileName, SystemCallerGuarantee /* unused */,
                       ErrorResult& aRv) override;
 
   void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv) override;

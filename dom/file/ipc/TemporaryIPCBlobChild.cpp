@@ -32,21 +32,22 @@ mozilla::ipc::IPCResult TemporaryIPCBlobChild::RecvFileDesc(
 }
 
 mozilla::ipc::IPCResult TemporaryIPCBlobChild::Recv__delete__(
-    const IPCBlobOrError& aData) {
+    const IPCBlobOrError& aBlobOrError) {
   mActive = false;
   mMutableBlobStorage = nullptr;
 
-  if (aData.type() == IPCBlobOrError::TIPCBlob) {
+  if (aBlobOrError.type() == IPCBlobOrError::TIPCBlob) {
     // This must be always deserialized.
-    RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(aData.get_IPCBlob());
+    RefPtr<BlobImpl> blobImpl =
+        IPCBlobUtils::Deserialize(aBlobOrError.get_IPCBlob());
     MOZ_ASSERT(blobImpl);
 
     if (mCallback) {
       mCallback->OperationSucceeded(blobImpl);
     }
   } else if (mCallback) {
-    MOZ_ASSERT(aData.type() == IPCBlobOrError::Tnsresult);
-    mCallback->OperationFailed(aData.get_nsresult());
+    MOZ_ASSERT(aBlobOrError.type() == IPCBlobOrError::Tnsresult);
+    mCallback->OperationFailed(aBlobOrError.get_nsresult());
   }
 
   mCallback = nullptr;
