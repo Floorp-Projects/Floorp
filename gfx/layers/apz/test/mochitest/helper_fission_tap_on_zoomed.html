@@ -57,7 +57,7 @@ async function test() {
   ok(iframeResponse, "code_for_oopif_to_run successfully installed");
 
   iframePromise = promiseOneEvent(window, "OOPIF:ClickData", null);
-  synthesizeNativeTap(document.documentElement, 200, 200, function() {
+  await synthesizeNativeTap(document.documentElement, 200, 200, function() {
     dump("Finished synthesizing click, waiting for OOPIF message...\n");
   });
   iframeResponse = await iframePromise;

@@ -12,7 +12,7 @@
 async function test() {
   let transformEndPromise = promiseTransformEnd();
 
-  synthesizeNativeTouchDrag(document.getElementById("outer"), 10, 100, 0, -50);
+  await synthesizeNativeTouchDrag(document.getElementById("outer"), 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
 
   await transformEndPromise;

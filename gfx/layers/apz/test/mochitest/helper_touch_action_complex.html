@@ -59,7 +59,7 @@ async function test() {
     dy = -dy;
     // Do the pan
     let touchEndPromise = promiseTouchEnd(document.body);
-    ok(synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
+    ok(await synthesizeNativeTouchDrag(scrollframe, x, y, dx, dy),
         "Synthesized drag of (" + dx + ", " + dy + ") on configuration " + configuration);
     await touchEndPromise;
     await promiseAllPaintsDone();
