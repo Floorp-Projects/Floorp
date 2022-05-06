@@ -1349,7 +1349,7 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4(
   // values to FFFFFFFFh and negative values to zero.  NaN and -0 become 0.
 
   // Convert NaN and negative values to zeroes in dest.
-  vpxor(Operand(scratch), scratch, scratch);
+  vxorps(Operand(scratch), scratch, scratch);
   vmaxps(Operand(scratch), src, dest);
 
   // Place the largest positive signed integer in all lanes in scratch.
@@ -1405,8 +1405,8 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat32x4ToInt32x4Relaxed(
 
   // Convert lanes below 80000000h into unsigned int without issues.
   vcvttps2dq(dest, dest);
-  // Knowing IEEE-754 number representation, to convert lanes above
-  // 7FFFFFFFh, mutiply by 2 (to add 1 in exponent) and shift left by 8 bits.
+  // Knowing IEEE-754 number representation: convert lanes above 7FFFFFFFh,
+  // mutiply by 2 (to add 1 in exponent) and shift to the left by 8 bits.
   vaddps(Operand(scratch), scratch, scratch);
   vpslld(Imm32(8), scratch, scratch);
 
