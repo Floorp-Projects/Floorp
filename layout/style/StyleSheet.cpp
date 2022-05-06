@@ -123,7 +123,8 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   sheet->SetURIs(sheetURI, originalURI, baseURI);
 
   sheet->SetPrincipal(constructorDocument->NodePrincipal());
-  sheet->SetReferrerInfo(constructorDocument->GetReferrerInfo());
+  auto referrerInfo = MakeRefPtr<ReferrerInfo>(*constructorDocument);
+  sheet->SetReferrerInfo(referrerInfo);
   sheet->mConstructorDocument = constructorDocument;
   if (constructorDocument) {
     sheet->mRelevantGlobal = constructorDocument->GetParentObject();
