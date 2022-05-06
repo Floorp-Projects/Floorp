@@ -409,21 +409,26 @@ bool gfxTextRun::GetAdjustedSpacingArray(
   return true;
 }
 
-void gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange) const {
-  if (aRange->start >= aRange->end) return;
+bool gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange) const {
+  if (aRange->start >= aRange->end) {
+    return false;
+  }
 
   const CompressedGlyph* charGlyphs = mCharacterGlyphs;
-
+  bool adjusted = false;
   while (aRange->start < aRange->end &&
          !charGlyphs[aRange->start].IsLigatureGroupStart()) {
     ++aRange->start;
+    adjusted = true;
   }
   if (aRange->end < GetLength()) {
     while (aRange->end > aRange->start &&
            !charGlyphs[aRange->end].IsLigatureGroupStart()) {
       --aRange->end;
+      adjusted = true;
     }
   }
+  return adjusted;
 }
 
 void gfxTextRun::DrawGlyphs(gfxFont* aFont, Range aRange, gfx::Point* aPt,
@@ -669,11 +674,12 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
     }
 
     Range ligatureRange(runRange);
-    ShrinkToLigatureBoundaries(&ligatureRange);
+    bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
     bool drawPartial =
-        (aParams.drawMode & (DrawMode::GLYPH_FILL | DrawMode::GLYPH_STROKE)) ||
-        (aParams.drawMode == DrawMode::GLYPH_PATH && aParams.callbacks);
+        adjusted &&
+        ((aParams.drawMode & (DrawMode::GLYPH_FILL | DrawMode::GLYPH_STROKE)) ||
+         (aParams.drawMode == DrawMode::GLYPH_PATH && aParams.callbacks));
     gfx::Point origPt = pt;
 
     if (drawPartial) {
@@ -731,11 +737,13 @@ void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
     uint32_t start = iter.GetStringStart();
     uint32_t end = iter.GetStringEnd();
     Range ligatureRange(start, end);
-    ShrinkToLigatureBoundaries(&ligatureRange);
+    bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
-    inlineCoord +=
-        direction * ComputePartialLigatureWidth(
-                        Range(start, ligatureRange.start), aProvider);
+    if (adjusted) {
+      inlineCoord +=
+          direction * ComputePartialLigatureWidth(
+                          Range(start, ligatureRange.start), aProvider);
+    }
 
     AutoTArray<PropertyProvider::Spacing, 200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(ligatureRange, aProvider,
@@ -744,8 +752,10 @@ void gfxTextRun::DrawEmphasisMarks(gfxContext* aContext, gfxTextRun* aMark,
     font->DrawEmphasisMarks(this, &aPt, ligatureRange.start,
                             ligatureRange.Length(), params);
 
-    inlineCoord += direction * ComputePartialLigatureWidth(
-                                   Range(ligatureRange.end, end), aProvider);
+    if (adjusted) {
+      inlineCoord += direction * ComputePartialLigatureWidth(
+                                     Range(ligatureRange.end, end), aProvider);
+    }
   }
 }
 
@@ -810,12 +820,17 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
     uint32_t start = iter.GetStringStart();
     uint32_t end = iter.GetStringEnd();
     Range ligatureRange(start, end);
-    ShrinkToLigatureBoundaries(&ligatureRange);
+    bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
-    AccumulatePartialLigatureMetrics(
-        font, Range(start, ligatureRange.start), aBoundingBoxType,
-        aRefDrawTarget, aProvider, iter.GetGlyphRun()->mOrientation,
-        &accumulatedMetrics);
+    if (adjusted) {
+      AccumulatePartialLigatureMetrics(
+          font, Range(start, ligatureRange.start), aBoundingBoxType,
+          aRefDrawTarget, aProvider, iter.GetGlyphRun()->mOrientation,
+          &accumulatedMetrics);
+      AccumulatePartialLigatureMetrics(
+          font, Range(ligatureRange.end, end), aBoundingBoxType, aRefDrawTarget,
+          aProvider, iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
+    }
 
     // XXX This sucks. We have to get glyph extents just so we can detect
     // glyphs outside the font box, even when aBoundingBoxType is LOOSE,
@@ -825,10 +840,6 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
     AccumulateMetricsForRun(
         font, ligatureRange, aBoundingBoxType, aRefDrawTarget, aProvider,
         ligatureRange, iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
-
-    AccumulatePartialLigatureMetrics(
-        font, Range(ligatureRange.end, end), aBoundingBoxType, aRefDrawTarget,
-        aProvider, iter.GetGlyphRun()->mOrientation, &accumulatedMetrics);
   }
 
   return accumulatedMetrics;
@@ -1207,12 +1218,14 @@ gfxFloat gfxTextRun::GetAdvanceWidth(
   NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
   Range ligatureRange = aRange;
-  ShrinkToLigatureBoundaries(&ligatureRange);
+  bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
-  gfxFloat result = ComputePartialLigatureWidth(
-                        Range(aRange.start, ligatureRange.start), aProvider) +
-                    ComputePartialLigatureWidth(
-                        Range(ligatureRange.end, aRange.end), aProvider);
+  gfxFloat result =
+      adjusted ? ComputePartialLigatureWidth(
+                     Range(aRange.start, ligatureRange.start), aProvider) +
+                     ComputePartialLigatureWidth(
+                         Range(ligatureRange.end, aRange.end), aProvider)
+               : 0.0;
 
   if (aSpacing) {
     aSpacing->mBefore = aSpacing->mAfter = 0;
@@ -1244,13 +1257,15 @@ gfxFloat gfxTextRun::GetMinAdvanceWidth(Range aRange) {
   MOZ_ASSERT(aRange.end <= GetLength(), "Substring out of range");
 
   Range ligatureRange = aRange;
-  ShrinkToLigatureBoundaries(&ligatureRange);
+  bool adjusted = ShrinkToLigatureBoundaries(&ligatureRange);
 
   gfxFloat result =
-      std::max(ComputePartialLigatureWidth(
-                   Range(aRange.start, ligatureRange.start), nullptr),
-               ComputePartialLigatureWidth(Range(ligatureRange.end, aRange.end),
-                                           nullptr));
+      adjusted
+          ? std::max(ComputePartialLigatureWidth(
+                         Range(aRange.start, ligatureRange.start), nullptr),
+                     ComputePartialLigatureWidth(
+                         Range(ligatureRange.end, aRange.end), nullptr))
+          : 0.0;
 
   // Compute min advance width by assuming each grapheme cluster takes its own
   // line.
