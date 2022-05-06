@@ -433,6 +433,7 @@ class AudioProcessingImpl : public AudioProcessing {
     ~ApmCaptureState();
     bool was_stream_delay_set;
     bool capture_output_used;
+    bool capture_output_used_last_frame;
     bool key_pressed;
     std::unique_ptr<AudioBuffer> capture_audio;
     std::unique_ptr<AudioBuffer> capture_fullband_audio;
