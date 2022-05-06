@@ -93,7 +93,6 @@
 #include "pc/test/fake_video_track_renderer.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "pc/video_track_source.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/fake_mdns_responder.h"
@@ -110,6 +109,8 @@
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_stream_adapter.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/test_certificate_verifier.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
@@ -958,9 +959,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     if (signaling_delay_ms_ == 0) {
       RelaySdpMessageIfReceiverExists(type, msg);
     } else {
-      invoker_.AsyncInvokeDelayed<void>(
-          RTC_FROM_HERE, rtc::Thread::Current(),
-          [this, type, msg] { RelaySdpMessageIfReceiverExists(type, msg); },
+      rtc::Thread::Current()->PostDelayedTask(
+          ToQueuedTask(task_safety_.flag(),
+                       [this, type, msg] {
+                         RelaySdpMessageIfReceiverExists(type, msg);
+                       }),
           signaling_delay_ms_);
     }
   }
@@ -979,11 +982,12 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     if (signaling_delay_ms_ == 0) {
       RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index, msg);
     } else {
-      invoker_.AsyncInvokeDelayed<void>(
-          RTC_FROM_HERE, rtc::Thread::Current(),
-          [this, sdp_mid, sdp_mline_index, msg] {
-            RelayIceMessageIfReceiverExists(sdp_mid, sdp_mline_index, msg);
-          },
+      rtc::Thread::Current()->PostDelayedTask(
+          ToQueuedTask(task_safety_.flag(),
+                       [this, sdp_mid, sdp_mline_index, msg] {
+                         RelayIceMessageIfReceiverExists(sdp_mid,
+                                                         sdp_mline_index, msg);
+                       }),
           signaling_delay_ms_);
     }
   }
@@ -1179,7 +1183,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::string rtp_stats_id_;
   std::string audio_track_stats_id_;
 
-  rtc::AsyncInvoker invoker_;
+  ScopedTaskSafety task_safety_;
 
   friend class PeerConnectionIntegrationBaseTest;
 };
