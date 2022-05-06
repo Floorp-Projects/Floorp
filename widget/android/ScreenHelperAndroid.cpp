@@ -40,10 +40,9 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   auto orientation =
       hal::ScreenOrientation(java::GeckoAppShell::GetScreenOrientation());
   uint16_t angle = java::GeckoAppShell::GetScreenAngle();
-  return MakeAndAddRef<Screen>(bounds, bounds, depth, depth, 0,
-                               DesktopToLayoutDeviceScale(density),
-                               CSSToLayoutDeviceScale(1.0f), dpi,
-                               Screen::IsPseudoDisplay::No, orientation, angle);
+  return MakeAndAddRef<Screen>(
+      bounds, bounds, depth, depth, DesktopToLayoutDeviceScale(density),
+      CSSToLayoutDeviceScale(1.0f), dpi, orientation, angle);
 }
 
 ScreenHelperAndroid::ScreenHelperAndroid() {

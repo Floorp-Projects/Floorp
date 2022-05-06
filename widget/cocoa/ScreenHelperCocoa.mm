@@ -120,12 +120,8 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
            rect.height, availRect.x, availRect.y, availRect.width, availRect.height, pixelDepth,
            contentsScaleFactor.scale, defaultCssScaleFactor.scale, dpi));
 
-  // Getting the refresh rate is a little hard on OS X. We could use
-  // CVDisplayLinkGetNominalOutputVideoRefreshPeriod, but that's a little
-  // involved. Ideally we could query it from vsync. For now, we leave it out.
-  RefPtr<Screen> screen =
-      new Screen(rect, availRect, pixelDepth, pixelDepth, 0, contentsScaleFactor,
-                 defaultCssScaleFactor, dpi, Screen::IsPseudoDisplay::No);
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth, contentsScaleFactor,
+                                     defaultCssScaleFactor, dpi);
   return screen.forget();
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);

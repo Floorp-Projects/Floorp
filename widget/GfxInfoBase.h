@@ -56,6 +56,7 @@ class GfxInfoBase : public nsIGfxInfo,
 
   NS_IMETHOD GetMonitors(JSContext* cx,
                          JS::MutableHandleValue _retval) override;
+  NS_IMETHOD RefreshMonitors() override;
   NS_IMETHOD GetFailures(nsTArray<int32_t>& indices,
                          nsTArray<nsCString>& failures) override;
   NS_IMETHOD_(void) LogFailure(const nsACString& failure) override;
@@ -85,7 +86,12 @@ class GfxInfoBase : public nsIGfxInfo,
   virtual nsresult Init();
 
   NS_IMETHOD_(void) GetData() override;
-  NS_IMETHOD_(int32_t) GetMaxRefreshRate(bool* aMixed) override;
+  NS_IMETHOD_(int32_t) GetMaxRefreshRate(bool* aMixed) override {
+    if (aMixed) {
+      *aMixed = false;
+    }
+    return -1;
+  }
 
   static void AddCollector(GfxInfoCollectorBase* collector);
   static void RemoveCollector(GfxInfoCollectorBase* collector);
