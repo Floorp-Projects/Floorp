@@ -621,10 +621,10 @@ bool BaselineStackBuilder::buildBaselineFrame() {
     // complete initial environment.
     envChain = &envChainSlot.toObject();
 
-    // Set the HAS_INITIAL_ENV flag if needed.
+    // Set the HAS_INITIAL_ENV flag if needed. See IsFrameInitialEnvironment.
+    MOZ_ASSERT(!script_->isForEval());
     if (fun_ && fun_->needsFunctionEnvironmentObjects()) {
       MOZ_ASSERT(fun_->nonLazyScript()->initialEnvironmentShape());
-      MOZ_ASSERT(!fun_->needsExtraBodyVarEnvironment());
       flags |= BaselineFrame::HAS_INITIAL_ENV;
     }
   } else {
