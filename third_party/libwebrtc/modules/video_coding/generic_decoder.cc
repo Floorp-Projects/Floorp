@@ -272,7 +272,7 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   if (decoder_info != decoder_info_) {
     RTC_LOG(LS_INFO) << "Changed decoder implementation to: "
                      << decoder_info.ToString();
-
+    decoder_info_ = decoder_info;
     _callback->OnDecoderImplementationName(
         decoder_info.implementation_name.empty()
             ? "unknown"
