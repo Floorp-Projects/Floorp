@@ -49,7 +49,7 @@ use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalSh
 use selectors::attr::{CaseSensitivity, NamespaceConstraint};
 use selectors::bloom::BloomFilter;
 use selectors::matching::VisitedHandlingMode;
-use selectors::matching::{matches_selector, ElementSelectorFlags, MatchingContext, MatchingMode};
+use selectors::matching::{matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags};
 use selectors::parser::{AncestorHashes, Combinator, Component, Selector, SelectorIter};
 use selectors::visitor::SelectorVisitor;
 use selectors::NthIndexCache;
@@ -1093,22 +1093,12 @@ impl Stylist {
     {
         debug_assert!(pseudo.is_lazy());
 
-        // Apply the selector flags. We should be in sequential mode
-        // already, so we can directly apply the parent flags.
-        let mut set_selector_flags = |element: &E, flags: ElementSelectorFlags| {
-            if cfg!(feature = "servo") {
-                // Servo calls this function from the worker, but only for internal
-                // pseudos, so we should never generate selector flags here.
-                unreachable!("internal pseudo generated slow selector flags?");
-            }
-
-            // No need to bother setting the selector flags when we're computing
-            // default styles.
-            if rule_inclusion == RuleInclusion::DefaultOnly {
-                return;
-            }
-
-            element.apply_selector_flags(flags);
+        // No need to bother setting the selector flags when we're computing
+        // default styles.
+        let needs_selector_flags = if rule_inclusion == RuleInclusion::DefaultOnly {
+            NeedsSelectorFlags::No
+        } else {
+            NeedsSelectorFlags::Yes
         };
 
         let mut declarations = ApplicableDeclarationList::new();
@@ -1117,6 +1107,7 @@ impl Stylist {
             None,
             None,
             self.quirks_mode,
+            needs_selector_flags,
         );
 
         matching_context.pseudo_element_matching_fn = matching_fn;
@@ -1130,7 +1121,6 @@ impl Stylist {
             rule_inclusion,
             &mut declarations,
             &mut matching_context,
-            &mut set_selector_flags,
         );
 
         if declarations.is_empty() && is_probe {
@@ -1148,6 +1138,7 @@ impl Stylist {
                 None,
                 VisitedHandlingMode::RelevantLinkVisited,
                 self.quirks_mode,
+                needs_selector_flags,
             );
             matching_context.pseudo_element_matching_fn = matching_fn;
 
@@ -1160,7 +1151,6 @@ impl Stylist {
                 rule_inclusion,
                 &mut declarations,
                 &mut matching_context,
-                &mut set_selector_flags,
             );
             if !declarations.is_empty() {
                 let rule_node = self.rule_tree.insert_ordered_rules_with_important(
@@ -1273,7 +1263,7 @@ impl Stylist {
     }
 
     /// Returns the applicable CSS declarations for the given element.
-    pub fn push_applicable_declarations<E, F>(
+    pub fn push_applicable_declarations<E>(
         &self,
         element: E,
         pseudo_element: Option<&PseudoElement>,
@@ -1283,10 +1273,8 @@ impl Stylist {
         rule_inclusion: RuleInclusion,
         applicable_declarations: &mut ApplicableDeclarationList,
         context: &mut MatchingContext<E::Impl>,
-        flags_setter: &mut F,
     ) where
         E: TElement,
-        F: FnMut(&E, ElementSelectorFlags),
     {
         RuleCollector::new(
             self,
@@ -1298,7 +1286,6 @@ impl Stylist {
             rule_inclusion,
             applicable_declarations,
             context,
-            flags_setter,
         )
         .collect_all();
     }
@@ -1378,16 +1365,15 @@ impl Stylist {
 
     /// Computes the match results of a given element against the set of
     /// revalidation selectors.
-    pub fn match_revalidation_selectors<E, F>(
+    pub fn match_revalidation_selectors<E>(
         &self,
         element: E,
         bloom: Option<&BloomFilter>,
         nth_index_cache: &mut NthIndexCache,
-        flags_setter: &mut F,
+        needs_selector_flags: NeedsSelectorFlags,
     ) -> SmallBitVec
     where
         E: TElement,
-        F: FnMut(&E, ElementSelectorFlags),
     {
         // NB: `MatchingMode` doesn't really matter, given we don't share style
         // between pseudos.
@@ -1396,6 +1382,7 @@ impl Stylist {
             bloom,
             Some(nth_index_cache),
             self.quirks_mode,
+            needs_selector_flags,
         );
 
         // Note that, by the time we're revalidating, we're guaranteed that the
@@ -1418,7 +1405,6 @@ impl Stylist {
                                 Some(&selector_and_hashes.hashes),
                                 &element,
                                 matching_context,
-                                flags_setter,
                             ));
                             true
                         },
@@ -1441,7 +1427,6 @@ impl Stylist {
                         Some(&selector_and_hashes.hashes),
                         &element,
                         &mut matching_context,
-                        flags_setter,
                     ));
                     true
                 },

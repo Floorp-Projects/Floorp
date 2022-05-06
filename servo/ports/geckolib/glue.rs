@@ -9,7 +9,6 @@ use cssparser::ToCss as ParserToCss;
 use cssparser::{ParseErrorKind, Parser, ParserInput, SourceLocation, UnicodeRange};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
-use selectors::matching::{matches_selector, MatchingContext, MatchingMode, VisitedHandlingMode};
 use selectors::{NthIndexCache, SelectorList};
 use servo_arc::{Arc, ArcBorrow, RawOffsetArc};
 use smallvec::SmallVec;
@@ -2449,6 +2448,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     pseudo_type: PseudoStyleType,
     relevant_link_visited: bool,
 ) -> bool {
+    use selectors::matching::{matches_selector, MatchingContext, MatchingMode, VisitedHandlingMode, NeedsSelectorFlags};
     read_locked_arc(rule, |rule: &StyleRule| {
         let index = index as usize;
         if index >= rule.selectors.0.len() {
@@ -2485,9 +2485,15 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         } else {
             VisitedHandlingMode::AllLinksUnvisited
         };
-        let mut ctx =
-            MatchingContext::new_for_visited(matching_mode, None, None, visited_mode, quirks_mode);
-        matches_selector(selector, 0, None, &element, &mut ctx, &mut |_, _| {})
+        let mut ctx = MatchingContext::new_for_visited(
+            matching_mode,
+            None,
+            None,
+            visited_mode,
+            quirks_mode,
+            NeedsSelectorFlags::No,
+        );
+        matches_selector(selector, 0, None, &element, &mut ctx)
     })
 }
 
