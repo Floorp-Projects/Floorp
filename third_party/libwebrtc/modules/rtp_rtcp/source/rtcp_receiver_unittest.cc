@@ -208,7 +208,8 @@ TEST(RtcpReceiverTest, InjectSrPacket) {
   RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
-  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr));
+  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr,
+                            nullptr, nullptr, nullptr));
 
   int64_t now = mocks.clock.TimeInMilliseconds();
   rtcp::SenderReport sr;
@@ -219,7 +220,8 @@ TEST(RtcpReceiverTest, InjectSrPacket) {
               OnReceivedRtcpReceiverReport(IsEmpty(), _, now));
   receiver.IncomingPacket(sr.Build());
 
-  EXPECT_TRUE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr));
+  EXPECT_TRUE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                           nullptr, nullptr));
 }
 
 TEST(RtcpReceiverTest, InjectSrPacketFromUnknownSender) {
@@ -239,7 +241,8 @@ TEST(RtcpReceiverTest, InjectSrPacketFromUnknownSender) {
   receiver.IncomingPacket(sr.Build());
 
   // But will not flag that he's gotten sender information.
-  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr));
+  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr,
+                            nullptr, nullptr, nullptr));
 }
 
 TEST(RtcpReceiverTest, InjectSrPacketCalculatesRTT) {
