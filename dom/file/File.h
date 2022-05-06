@@ -67,17 +67,17 @@ class File final : public Blob {
 
   // ChromeOnly
   static already_AddRefed<Promise> CreateFromFileName(
-      const GlobalObject& aGlobal, const nsAString& aFilePath,
+      const GlobalObject& aGlobal, const nsAString& aPath,
       const ChromeFilePropertyBag& aBag, SystemCallerGuarantee aGuarantee,
       ErrorResult& aRv);
 
   // ChromeOnly
   static already_AddRefed<Promise> CreateFromNsIFile(
-      const GlobalObject& aGlobal, nsIFile* aFile,
+      const GlobalObject& aGlobal, nsIFile* aData,
       const ChromeFilePropertyBag& aBag, SystemCallerGuarantee aGuarantee,
       ErrorResult& aRv);
 
-  void GetName(nsAString& aName) const;
+  void GetName(nsAString& aFileName) const;
 
   int64_t GetLastModified(ErrorResult& aRv);
 
@@ -86,7 +86,7 @@ class File final : public Blob {
   void GetMozFullPath(nsAString& aFilename, SystemCallerGuarantee aGuarantee,
                       ErrorResult& aRv);
 
-  void GetMozFullPathInternal(nsAString& aName, ErrorResult& aRv);
+  void GetMozFullPathInternal(nsAString& aFileName, ErrorResult& aRv);
 
  protected:
   bool HasFileInterface() const override { return true; }

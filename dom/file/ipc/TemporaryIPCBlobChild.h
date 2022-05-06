@@ -29,7 +29,7 @@ class TemporaryIPCBlobChild final : public PTemporaryIPCBlobChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(TemporaryIPCBlobChild)
 
-  explicit TemporaryIPCBlobChild(MutableBlobStorage* aMutableBlobStorage);
+  explicit TemporaryIPCBlobChild(MutableBlobStorage* aStorage);
 
   void AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
                   const nsACString& aContentType, PRFileDesc* aFD);

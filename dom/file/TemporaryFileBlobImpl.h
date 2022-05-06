@@ -26,8 +26,7 @@ class TemporaryFileBlobImpl final : public FileBlobImpl {
   explicit TemporaryFileBlobImpl(nsIFile* aFile, const nsAString& aContentType);
 
   // Overrides
-  void CreateInputStream(nsIInputStream** aInputStream,
-                         ErrorResult& aRv) override;
+  void CreateInputStream(nsIInputStream** aStream, ErrorResult& aRv) override;
 
   void GetBlobImplType(nsAString& aBlobImplType) const override {
     aBlobImplType = u"TemporaryFileBlobImpl"_ns;
