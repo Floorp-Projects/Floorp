@@ -94,6 +94,16 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
     drop_prob_ = drop_prob;
   }
 
+  // Controls the maximum UDP payload for the networks simulated
+  // by this server. Any UDP payload sent that is larger than this will
+  // be dropped.
+  size_t max_udp_payload() { return max_udp_payload_; }
+  void set_max_udp_payload(size_t payload_size) {
+    max_udp_payload_ = payload_size;
+  }
+
+  size_t largest_seen_udp_payload() { return largest_seen_udp_payload_; }
+
   // If |blocked| is true, subsequent attempts to send will result in -1 being
   // returned, with the socket error set to EWOULDBLOCK.
   //
@@ -308,6 +318,13 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
   std::unique_ptr<Function> delay_dist_;
 
   double drop_prob_;
+  // The largest UDP payload permitted on this virtual socket server.
+  // The default is the max size of IPv4 fragmented UDP packet payload:
+  // 65535 bytes - 8 bytes UDP header - 20 bytes IP header.
+  size_t max_udp_payload_ = 65507;
+  // The largest UDP payload seen so far.
+  size_t largest_seen_udp_payload_ = 0;
+
   bool sending_blocked_ = false;
   RTC_DISALLOW_COPY_AND_ASSIGN(VirtualSocketServer);
 };

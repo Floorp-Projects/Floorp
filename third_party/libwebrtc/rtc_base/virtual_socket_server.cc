@@ -900,7 +900,22 @@ int VirtualSocketServer::SendUdp(VirtualSocket* socket,
     return -1;
   }
 
+  if (data_size > largest_seen_udp_payload_) {
+    if (data_size > 1000) {
+      RTC_LOG(LS_VERBOSE) << "Largest UDP seen is " << data_size;
+    }
+    largest_seen_udp_payload_ = data_size;
+  }
+
   // See if we want to drop this packet.
+  if (data_size > max_udp_payload_) {
+    RTC_LOG(LS_VERBOSE) << "Dropping too large UDP payload of size "
+                        << data_size << ", UDP payload limit is "
+                        << max_udp_payload_;
+    // Return as if send was successful; packet disappears.
+    return data_size;
+  }
+
   if (Random() < drop_prob_) {
     RTC_LOG(LS_VERBOSE) << "Dropping packet: bad luck";
     return static_cast<int>(data_size);
