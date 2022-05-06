@@ -74,7 +74,7 @@ NS_ASSUME_NONNULL_BEGIN
 /** Initialize an RTCPeerConnection with a configuration, constraints, and
  *  dependencies.
  */
-- (RTC_OBJC_TYPE(RTCPeerConnection) *)
+- (nullable RTC_OBJC_TYPE(RTCPeerConnection) *)
     peerConnectionWithDependencies:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
                        constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
                       dependencies:(std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies

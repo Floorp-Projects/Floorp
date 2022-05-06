@@ -307,10 +307,10 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
 @synthesize delegate = _delegate;
 @synthesize factory = _factory;
 
-- (instancetype)initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
-                  configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
-                    constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-                       delegate:(id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate {
+- (nullable instancetype)initWithFactory:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+                           configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
+                             constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+                                delegate:(id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate {
   NSParameterAssert(factory);
   std::unique_ptr<webrtc::PeerConnectionDependencies> dependencies =
       std::make_unique<webrtc::PeerConnectionDependencies>(nullptr);
@@ -321,12 +321,12 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
                            delegate:delegate];
 }
 
-- (instancetype)initWithDependencies:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
-                       configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
-                         constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
-                        dependencies:
-                            (std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies
-                            delegate:(id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate {
+- (nullable instancetype)
+    initWithDependencies:(RTC_OBJC_TYPE(RTCPeerConnectionFactory) *)factory
+           configuration:(RTC_OBJC_TYPE(RTCConfiguration) *)configuration
+             constraints:(RTC_OBJC_TYPE(RTCMediaConstraints) *)constraints
+            dependencies:(std::unique_ptr<webrtc::PeerConnectionDependencies>)dependencies
+                delegate:(id<RTC_OBJC_TYPE(RTCPeerConnectionDelegate)>)delegate {
   NSParameterAssert(factory);
   NSParameterAssert(dependencies.get());
   std::unique_ptr<webrtc::PeerConnectionInterface::RTCConfiguration> config(
@@ -456,8 +456,8 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
   [_localStreams removeObject:stream];
 }
 
-- (RTC_OBJC_TYPE(RTCRtpSender) *)addTrack:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track
-                                streamIds:(NSArray<NSString *> *)streamIds {
+- (nullable RTC_OBJC_TYPE(RTCRtpSender) *)addTrack:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track
+                                         streamIds:(NSArray<NSString *> *)streamIds {
   std::vector<std::string> nativeStreamIds;
   for (NSString *streamId in streamIds) {
     nativeStreamIds.push_back([streamId UTF8String]);
@@ -480,13 +480,13 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
   return result;
 }
 
-- (RTC_OBJC_TYPE(RTCRtpTransceiver) *)addTransceiverWithTrack:
+- (nullable RTC_OBJC_TYPE(RTCRtpTransceiver) *)addTransceiverWithTrack:
     (RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track {
   return [self addTransceiverWithTrack:track
                                   init:[[RTC_OBJC_TYPE(RTCRtpTransceiverInit) alloc] init]];
 }
 
-- (RTC_OBJC_TYPE(RTCRtpTransceiver) *)
+- (nullable RTC_OBJC_TYPE(RTCRtpTransceiver) *)
     addTransceiverWithTrack:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track
                        init:(RTC_OBJC_TYPE(RTCRtpTransceiverInit) *)init {
   webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>> nativeTransceiverOrError =
@@ -501,14 +501,14 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
       nativeRtpTransceiver:nativeTransceiverOrError.MoveValue()];
 }
 
-- (RTC_OBJC_TYPE(RTCRtpTransceiver) *)addTransceiverOfType:(RTCRtpMediaType)mediaType {
+- (nullable RTC_OBJC_TYPE(RTCRtpTransceiver) *)addTransceiverOfType:(RTCRtpMediaType)mediaType {
   return [self addTransceiverOfType:mediaType
                                init:[[RTC_OBJC_TYPE(RTCRtpTransceiverInit) alloc] init]];
 }
 
-- (RTC_OBJC_TYPE(RTCRtpTransceiver) *)addTransceiverOfType:(RTCRtpMediaType)mediaType
-                                                      init:(RTC_OBJC_TYPE(RTCRtpTransceiverInit) *)
-                                                               init {
+- (nullable RTC_OBJC_TYPE(RTCRtpTransceiver) *)
+    addTransceiverOfType:(RTCRtpMediaType)mediaType
+                    init:(RTC_OBJC_TYPE(RTCRtpTransceiverInit) *)init {
   webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>> nativeTransceiverOrError =
       _peerConnection->AddTransceiver(
           [RTC_OBJC_TYPE(RTCRtpReceiver) nativeMediaTypeForMediaType:mediaType], init.nativeInit);
