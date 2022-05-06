@@ -3080,6 +3080,17 @@ void LIRGenerator::visitNewClassBodyEnvironmentObject(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewVarEnvironmentObject(MNewVarEnvironmentObject* ins) {
+  MDefinition* enclosing = ins->enclosing();
+  MOZ_ASSERT(enclosing->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LNewVarEnvironmentObject(useRegisterAtStart(enclosing));
+
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitKeepAliveObject(MKeepAliveObject* ins) {
   MDefinition* obj = ins->object();
   MOZ_ASSERT(obj->type() == MIRType::Object);
