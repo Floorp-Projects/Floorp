@@ -27,16 +27,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
 
     function changeARIAActiveDescendant(aContainer, aItem, aPrevItemId) {
       let itemID = aItem instanceof Node ? aItem.id : aItem;
-      this.eventSeq = [
-        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aItem),
-        new focusChecker(aItem),
-      ];
+      this.eventSeq = [new focusChecker(aItem)];
 
       if (aPrevItemId) {
-        this.eventSeq.unshift(
+        this.eventSeq.push(
           new stateChangeChecker(EXT_STATE_ACTIVE, true, false, aPrevItemId)
         );
       }
+
+      this.eventSeq.push(
+        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aItem)
+      );
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
         getNode(aContainer).setAttribute("aria-activedescendant", itemID);
@@ -53,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       ];
 
       if (aPrevItemId) {
-        this.eventSeq.unshift(
+        this.eventSeq.push(
           new stateChangeChecker(EXT_STATE_ACTIVE, true, false, aPrevItemId)
         );
       }
@@ -81,7 +82,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       ];
 
       if (aPrevItemId) {
-        this.eventSeq.unshift(
+        this.eventSeq.push(
           new stateChangeChecker(EXT_STATE_ACTIVE, true, false, aPrevItemId)
         );
       }
@@ -98,16 +99,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     function insertItemNFocus(aID, aNewItemID, aPrevItemId) {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, aNewItemID),
-        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aNewItemID),
         new focusChecker(aNewItemID),
       ];
 
       if (aPrevItemId) {
-        this.eventSeq.splice(
-          1, 0,
+        this.eventSeq.push(
           new stateChangeChecker(EXT_STATE_ACTIVE, true, false, aPrevItemId)
         );
       }
+
+      this.eventSeq.push(
+        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aNewItemID)
+      );
 
       this.invoke = function insertItemNFocus_invoke() {
         var container  = getNode(aID);
@@ -138,8 +141,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     */
     function moveARIAActiveDescendantID(aFromID, aToID) {
       this.eventSeq = [
-        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aToID),
         new focusChecker(aToID),
+        new stateChangeChecker(EXT_STATE_ACTIVE, true, true, aToID),
       ];
 
       this.invoke = function moveARIAActiveDescendantID_invoke() {
@@ -215,12 +218,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       await evtProm;
       testStates("hiddenListOption", STATE_FOCUSED);
 
+      info("Testing active state changes when not focused");
       testStates("listbox", 0, 0, STATE_FOCUSED);
       evtProm = Promise.all([
         PromEvents.waitForStateChange("roaming3", EXT_STATE_ACTIVE, false, true),
         PromEvents.waitForStateChange("item1", EXT_STATE_ACTIVE, true, true),
       ]);
       getNode("listbox").setAttribute("aria-activedescendant", "item1");
+      await evtProm;
+
+      info("Testing that focus is always fired first");
+      const listbox = getNode("listbox");
+      evtProm = PromEvents.waitForEvent(EVENT_FOCUS, "item1");
+      listbox.focus();
+      await evtProm;
+      const item1 = getNode("item1");
+      evtProm = PromEvents.waitForOrderedEvents([
+        [EVENT_FOCUS, "item2"],
+        [EVENT_NAME_CHANGE, item1],
+      ], "Focus then name change");
+      item1.setAttribute("aria-label", "changed");
+      listbox.setAttribute("aria-activedescendant", "item2");
       await evtProm;
 
       SimpleTest.finish();
