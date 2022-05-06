@@ -1424,6 +1424,10 @@ class PictureInPictureChild extends JSWindowActorChild {
     // semantic markup like <b> and <i> tags are rendered.
     allCuesArray.forEach(cue => {
       let text = cue.text;
+      // Trim extra newlines and whitespaces
+      const re = /(\s*\n{2,}\s*)/g;
+      text = text.trim();
+      text = text.replace(re, "\n");
       let cueTextNode = WebVTT.convertCueToDOMTree(playerVideoWindow, text);
       let cueDiv = this.document.createElement("div");
       cueDiv.appendChild(cueTextNode);
