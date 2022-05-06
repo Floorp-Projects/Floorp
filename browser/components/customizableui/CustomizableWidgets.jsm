@@ -640,7 +640,7 @@ if (Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
       let tabbrowser = window.gBrowser;
       let tab = window.__firefoxViewTab;
       if (!tab) {
-        tab = tabbrowser.addTrustedTab("about:myfirefox", { index: 0 });
+        tab = tabbrowser.addTrustedTab("about:firefoxview", { index: 0 });
         tabbrowser.hideTab(tab);
         window.__firefoxViewTab = tab;
 
