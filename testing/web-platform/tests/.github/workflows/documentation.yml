@@ -19,6 +19,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
+          # Documentation is generated using Python 3.9 due to spinx-js not
+          # supporting 3.10: https://github.com/mozilla/sphinx-js/issues/186
           python-version: '3.9'
       - name: Set up Node
         uses: actions/setup-node@v3
