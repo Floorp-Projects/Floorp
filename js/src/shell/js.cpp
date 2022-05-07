@@ -59,10 +59,6 @@
 #ifdef XP_LINUX
 #  include <sys/prctl.h>
 #endif
-#ifdef XP_DARWIN
-#  include <crt_externs.h>  // for _NSGetEnviron()
-#  include <spawn.h>        // for posix_spawn() and friends
-#endif
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -6668,52 +6664,6 @@ static bool CompileAndSerializeInSeparateProcess(JSContext* cx,
 
   int childPid = _spawnv(P_NOWAIT, sArgv[0], argv.get());
   if (childPid == -1) {
-    return false;
-  }
-#  elif defined(XP_DARWIN)
-  // The file actions below will happen in the child process as if they were
-  // executed right after fork() returned and before execve() is called.
-  // Redirect stdin/stdout to the respective ends of the pipes. Closing
-  // stdIn.writer() is necessary for stdin to hit EOF. If the operations fail
-  // in the child process they will be reported after posix_spawn() has
-  // returned.
-  posix_spawn_file_actions_t file_actions;
-  if (posix_spawn_file_actions_init(&file_actions) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_adddup2(&file_actions, stdIn.reader(),
-                                       STDIN_FILENO) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_adddup2(&file_actions, stdOut.writer(),
-                                       STDOUT_FILENO) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_addclose(&file_actions, stdIn.reader()) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_addclose(&file_actions, stdIn.writer()) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_addclose(&file_actions, stdOut.reader()) != 0) {
-    return false;
-  }
-
-  if (posix_spawn_file_actions_addclose(&file_actions, stdOut.writer()) != 0) {
-    return false;
-  }
-
-  pid_t childPid = 0;
-  int rv = posix_spawn(&childPid, sArgv[0], &file_actions,
-                       /* attrp */ nullptr, argv.get(), *_NSGetEnviron());
-
-  (void)posix_spawn_file_actions_destroy(&file_actions);
-  if (rv != 0) {
     return false;
   }
 #  else
