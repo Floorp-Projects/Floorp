@@ -512,4 +512,31 @@ TEST_F(UlpfecReceiverTest, TruncatedPacketWithoutDataPastFirstBlock) {
   SurvivesMaliciousPacket(kPacket, sizeof(kPacket), 100);
 }
 
+TEST_F(UlpfecReceiverTest, MediaWithPadding) {
+  const size_t kNumFecPackets = 1;
+  std::list<AugmentedPacket*> augmented_media_packets;
+  ForwardErrorCorrection::PacketList media_packets;
+  PacketizeFrame(2, 0, &augmented_media_packets, &media_packets);
+
+  // Append four bytes of padding to the first media packet.
+  const uint8_t kPadding[] = {0, 0, 0, 4};
+  augmented_media_packets.front()->data.AppendData(kPadding);
+  augmented_media_packets.front()->data.MutableData()[0] |= 1 << 5;  // P bit.
+  augmented_media_packets.front()->header.paddingLength = 4;
+
+  std::list<ForwardErrorCorrection::Packet*> fec_packets;
+  EncodeFec(media_packets, kNumFecPackets, &fec_packets);
+
+  auto it = augmented_media_packets.begin();
+  BuildAndAddRedMediaPacket(augmented_media_packets.front());
+
+  VerifyReconstructedMediaPacket(**it, 1);
+  EXPECT_EQ(0, receiver_fec_->ProcessReceivedFec());
+
+  BuildAndAddRedFecPacket(fec_packets.front());
+  ++it;
+  VerifyReconstructedMediaPacket(**it, 1);
+  EXPECT_EQ(0, receiver_fec_->ProcessReceivedFec());
+}
+
 }  // namespace webrtc

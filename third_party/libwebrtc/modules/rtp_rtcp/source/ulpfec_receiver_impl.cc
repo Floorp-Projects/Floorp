@@ -132,9 +132,8 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
         rtp_packet.Buffer().Slice(rtp_packet.headers_size() + kRedHeaderLength,
                                   rtp_packet.payload_size() - kRedHeaderLength);
   } else {
-    auto red_payload = rtp_packet.payload().subview(kRedHeaderLength);
-    received_packet->pkt->data.EnsureCapacity(rtp_packet.headers_size() +
-                                              red_payload.size());
+    received_packet->pkt->data.EnsureCapacity(rtp_packet.size() -
+                                              kRedHeaderLength);
     // Copy RTP header.
     received_packet->pkt->data.SetData(rtp_packet.data(),
                                        rtp_packet.headers_size());
@@ -142,9 +141,10 @@ bool UlpfecReceiverImpl::AddReceivedRedPacket(
     uint8_t& payload_type_byte = received_packet->pkt->data.MutableData()[1];
     payload_type_byte &= 0x80;          // Reset RED payload type.
     payload_type_byte += payload_type;  // Set media payload type.
-    // Copy payload data.
-    received_packet->pkt->data.AppendData(red_payload.data(),
-                                          red_payload.size());
+    // Copy payload and padding data, after the RED header.
+    received_packet->pkt->data.AppendData(
+        rtp_packet.data() + rtp_packet.headers_size() + kRedHeaderLength,
+        rtp_packet.size() - rtp_packet.headers_size() - kRedHeaderLength);
   }
 
   if (received_packet->pkt->data.size() > 0) {
