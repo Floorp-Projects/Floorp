@@ -830,7 +830,9 @@ where
             }
             true
         }),
-        Component::Combinator(_) => unreachable!(),
+        Component::Combinator(_) => unsafe {
+            debug_unreachable!("Shouldn't try to selector-match combinators")
+        },
     }
 }
 
