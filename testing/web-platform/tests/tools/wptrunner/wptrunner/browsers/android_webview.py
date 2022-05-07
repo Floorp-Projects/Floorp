@@ -85,7 +85,7 @@ class SystemWebViewShell(ChromeAndroidBrowserBase):
     """
 
     def __init__(self, logger, binary, webdriver_binary="chromedriver",
-                 adb_binary="adb",
+                 adb_binary=None,
                  remote_queue=None,
                  device_serial=None,
                  webdriver_args=None,
