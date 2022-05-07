@@ -834,6 +834,21 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
   return accumulatedMetrics;
 }
 
+void gfxTextRun::GetLineHeightMetrics(gfxFloat& aAscent,
+                                      gfxFloat& aDescent) const {
+  Metrics accumulatedMetrics;
+  GlyphRunIterator iter(this, Range(this));
+  while (iter.NextRun()) {
+    gfxFont* font = iter.GetGlyphRun()->mFont;
+    auto metrics =
+        font->Measure(this, 0, 0, gfxFont::LOOSE_INK_EXTENTS, nullptr, nullptr,
+                      iter.GetGlyphRun()->mOrientation);
+    accumulatedMetrics.CombineWith(metrics, false);
+  }
+  aAscent = accumulatedMetrics.mAscent;
+  aDescent = accumulatedMetrics.mDescent;
+}
+
 #define MEASUREMENT_BUFFER_SIZE 100
 
 void gfxTextRun::ClassifyAutoHyphenations(uint32_t aStart, Range aRange,
