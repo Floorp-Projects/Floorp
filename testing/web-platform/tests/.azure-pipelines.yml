@@ -11,9 +11,6 @@
 # project is required:
 #  - The "Build pull requests from forks of this repository" setting must be
 #    enabled: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github#validate-contributions-from-forks
-#  - A self-hosted Windows 10 agent pool named 'Hosted Windows Client'.
-#    Documention for the setup of these agents:
-#    https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-windows
 
 trigger:
 # These are all the branches referenced in the jobs that follow.
@@ -345,32 +342,6 @@ jobs:
       directory: tools/wpt/
       toxenv: py39
 
-- job: infrastructure_win10
-  displayName: 'infrastructure/ tests: Windows 10'
-  # This job is only triggered manually until it has been shown to be robust.
-  condition: and(eq(variables['Build.Reason'], 'Manual'), variables['run_infrastructure_win10'])
-  pool:
-    name: 'Hosted Windows Client'
-  steps:
-  - template: tools/ci/azure/system_info.yml
-  - template: tools/ci/azure/checkout.yml
-  - template: tools/ci/azure/install_python.yml
-  - template: tools/ci/azure/pip_install.yml
-    parameters:
-      packages: virtualenv
-  - template: tools/ci/azure/install_certs.yml
-  - template: tools/ci/azure/install_edge.yml
-  - template: tools/ci/azure/update_hosts.yml
-  - template: tools/ci/azure/update_manifest.yml
-  - script: python ./wpt run --yes --no-manifest-update --install-fonts --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info --channel dev edgechromium infrastructure/
-    displayName: 'Run tests (Edge Dev)'
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish results'
-    inputs:
-      artifactName: 'infrastructure'
-    condition: always()
-  - template: tools/ci/azure/cleanup_win10.yml
-
 - job: results_edge_stable
   displayName: 'all tests: Edge Stable'
   condition: |
@@ -381,11 +352,13 @@ jobs:
     parallel: 10 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
-    name: 'Hosted Windows Client'
+    vmImage: 'windows-2019'
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.9'
   - template: tools/ci/azure/system_info.yml
   - template: tools/ci/azure/checkout.yml
-  - template: tools/ci/azure/install_python.yml
   - template: tools/ci/azure/pip_install.yml
     parameters:
       packages: virtualenv
@@ -401,7 +374,7 @@ jobs:
     displayName: 'Publish results'
     inputs:
       artifactName: 'edge-stable-results'
-  - template: tools/ci/azure/cleanup_win10.yml
+  - template: tools/ci/azure/publish_logs.yml
 - template: tools/ci/azure/fyi_hook.yml
   parameters:
     dependsOn: results_edge_stable
@@ -417,11 +390,13 @@ jobs:
     parallel: 10 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
-    name: 'Hosted Windows Client'
+    vmImage: 'windows-2019'
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.9'
   - template: tools/ci/azure/system_info.yml
   - template: tools/ci/azure/checkout.yml
-  - template: tools/ci/azure/install_python.yml
   - template: tools/ci/azure/pip_install.yml
     parameters:
       packages: virtualenv
@@ -437,7 +412,7 @@ jobs:
     displayName: 'Publish results'
     inputs:
       artifactName: 'edge-dev-results'
-  - template: tools/ci/azure/cleanup_win10.yml
+  - template: tools/ci/azure/publish_logs.yml
 - template: tools/ci/azure/fyi_hook.yml
   parameters:
     dependsOn: results_edge_dev
@@ -453,11 +428,12 @@ jobs:
     parallel: 10 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
-    name: 'Hosted Windows Client'
+    vmImage: 'windows-2019'
   steps:
-  - template: tools/ci/azure/system_info.yml
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.9'
   - template: tools/ci/azure/checkout.yml
-  - template: tools/ci/azure/install_python.yml
   - template: tools/ci/azure/pip_install.yml
     parameters:
       packages: virtualenv
@@ -473,7 +449,7 @@ jobs:
     displayName: 'Publish results'
     inputs:
       artifactName: 'edge-canary-results'
-  - template: tools/ci/azure/cleanup_win10.yml
+  - template: tools/ci/azure/publish_logs.yml
 - template: tools/ci/azure/fyi_hook.yml
   parameters:
     dependsOn: results_edge_canary
