@@ -751,6 +751,8 @@ rtc_library("dtmf_sender") {
     "../rtc_base:checks",
     "../rtc_base:rtc_base",
     "../rtc_base:threading",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
