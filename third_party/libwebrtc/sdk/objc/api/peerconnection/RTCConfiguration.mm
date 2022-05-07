@@ -57,6 +57,7 @@
 @synthesize rtcpAudioReportIntervalMs = _rtcpAudioReportIntervalMs;
 @synthesize rtcpVideoReportIntervalMs = _rtcpVideoReportIntervalMs;
 @synthesize enableImplicitRollback = _enableImplicitRollback;
+@synthesize offerExtmapAllowMixed = _offerExtmapAllowMixed;
 
 - (instancetype)init {
   // Copy defaults.
@@ -136,6 +137,7 @@
     _rtcpVideoReportIntervalMs = config.video_rtcp_report_interval_ms();
     _allowCodecSwitching = config.allow_codec_switching.value_or(false);
     _enableImplicitRollback = config.enable_implicit_rollback;
+    _offerExtmapAllowMixed = config.offer_extmap_allow_mixed;
   }
   return self;
 }
@@ -268,6 +270,7 @@
   nativeConfig->set_video_rtcp_report_interval_ms(_rtcpVideoReportIntervalMs);
   nativeConfig->allow_codec_switching = _allowCodecSwitching;
   nativeConfig->enable_implicit_rollback = _enableImplicitRollback;
+  nativeConfig->offer_extmap_allow_mixed = _offerExtmapAllowMixed;
   return nativeConfig.release();
 }
 
