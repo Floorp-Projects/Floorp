@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import uuid
 import time
 import os

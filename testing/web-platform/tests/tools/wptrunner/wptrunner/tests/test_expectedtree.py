@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from .. import expectedtree, metadata
 from collections import defaultdict
 
