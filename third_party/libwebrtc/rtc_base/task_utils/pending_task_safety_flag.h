@@ -58,10 +58,28 @@ namespace webrtc {
 class PendingTaskSafetyFlag : public rtc::RefCountInterface {
  public:
   static rtc::scoped_refptr<PendingTaskSafetyFlag> Create();
+  // Creates a flag, but with its SequenceChecker initially detached. Hence, it
+  // may be created on a different thread than the flag will be used on.
+  static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateDetached();
 
   ~PendingTaskSafetyFlag() = default;
 
   void SetNotAlive();
+  // The SetAlive method is intended to support Start/Stop/Restart usecases.
+  // When a class has called SetNotAlive on a flag used for posted tasks, and
+  // decides it wants to post new tasks and have them run, there are two
+  // reasonable ways to do that:
+  //
+  // (i) Use the below SetAlive method. One subtlety is that any task posted
+  //     prior to SetNotAlive, and still in the queue, is resurrected and will
+  //     run.
+  //
+  // (ii) Create a fresh flag, and just drop the reference to the old one. This
+  //      avoids the above problem, and ensures that tasks poster prior to
+  //      SetNotAlive stay cancelled. Instead, there's a potential data race on
+  //      the flag pointer itself. Some synchronization is required between the
+  //      thread overwriting the flag pointer, and the threads that want to post
+  //      tasks and therefore read that same pointer.
   void SetAlive();
   bool alive() const;
 
@@ -101,6 +119,21 @@ class ScopedTaskSafety {
  private:
   rtc::scoped_refptr<PendingTaskSafetyFlag> flag_ =
       PendingTaskSafetyFlag::Create();
+};
+
+// Like ScopedTaskSafety, but allows construction on a different thread than
+// where the flag will be used.
+class ScopedTaskSafetyDetached {
+ public:
+  ScopedTaskSafetyDetached() = default;
+  ~ScopedTaskSafetyDetached() { flag_->SetNotAlive(); }
+
+  // Returns a new reference to the safety flag.
+  rtc::scoped_refptr<PendingTaskSafetyFlag> flag() const { return flag_; }
+
+ private:
+  rtc::scoped_refptr<PendingTaskSafetyFlag> flag_ =
+      PendingTaskSafetyFlag::CreateDetached();
 };
 
 }  // namespace webrtc

@@ -20,8 +20,9 @@
 #include "absl/types/optional.h"
 #include "api/ice_transport_interface.h"
 #include "p2p/base/ice_transport_internal.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace cricket {
 
@@ -305,12 +306,12 @@ class FakeIceTransport : public IceTransportInternal {
     if (!combine_outgoing_packets_ || send_packet_.size() > len) {
       rtc::CopyOnWriteBuffer packet(std::move(send_packet_));
       if (async_) {
-        invoker_.AsyncInvokeDelayed<void>(
-            RTC_FROM_HERE, network_thread_,
-            [this, packet] {
-              RTC_DCHECK_RUN_ON(network_thread_);
-              FakeIceTransport::SendPacketInternal(packet);
-            },
+        network_thread_->PostDelayedTask(
+            ToQueuedTask(task_safety_.flag(),
+                         [this, packet] {
+                           RTC_DCHECK_RUN_ON(network_thread_);
+                           FakeIceTransport::SendPacketInternal(packet);
+                         }),
             async_delay_ms_);
       } else {
         SendPacketInternal(packet);
@@ -389,7 +390,6 @@ class FakeIceTransport : public IceTransportInternal {
     }
   }
 
-  rtc::AsyncInvoker invoker_;
   const std::string name_;
   const int component_;
   FakeIceTransport* dest_ RTC_GUARDED_BY(network_thread_) = nullptr;
@@ -420,6 +420,7 @@ class FakeIceTransport : public IceTransportInternal {
       RTC_GUARDED_BY(network_thread_);
   rtc::CopyOnWriteBuffer last_sent_packet_ RTC_GUARDED_BY(network_thread_);
   rtc::Thread* const network_thread_;
+  webrtc::ScopedTaskSafetyDetached task_safety_;
 };
 
 class FakeIceTransportWrapper : public webrtc::IceTransportInterface {
