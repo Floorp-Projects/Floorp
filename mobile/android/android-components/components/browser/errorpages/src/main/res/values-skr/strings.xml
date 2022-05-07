@@ -7,6 +7,10 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ارداس پوری کائنی کر سڳدا</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>ایں مسئلے بارے وادھوں معلومات فی الحال دستیاب کائنی۔</p>]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسہ کنکشن ناکام تھی ڳیا</string>
 
@@ -33,11 +37,20 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">کنکشن ٹائم آوٹ تھی ڳیا ہے</string>
 
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">جڑݨ وچ ناکام ریہا</string>
+
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور ولوں غیر متوقع  جواب</string>
 
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">ورقہ ٹھیک طرح ری ڈائریکٹ کائنی تھیندا پیا</string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">آف لائن موڈ</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">حفاظتی وجوہات کیتے پورٹ محدود کر ݙتا ڳیا ہے</string>
 
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">کنکشن ریسٹ تھی ڳیا</string>
@@ -53,6 +66,9 @@
     <string name="mozac_browser_errorpages_corrupted_content_title">خراب مواد نقص</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">مواد تباہ تھی ڳیا</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">مواد اینکوڈ کرݨ وچ خرابی</string>
 
     <!-- The document title and heading of an error page. -->
@@ -60,6 +76,8 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">کوئی انٹرنیٹ کنکشن کائنی</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">اپݨے نیٹ ورک کنکشن دی پڑتال کرو یا کجھ لمحے بعد ولدا کوشش کرو۔</string>
     <!-- Text that will show up on the button at the bottom of the error page -->
     <string name="mozac_browser_errorpages_no_internet_refresh_button">ولدا لوڈ کرو</string>
 
@@ -74,6 +92,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">فائل کائنی لبھی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">فائل تائیں رسائی مسترد کر ݙتی ڳئی ہائی</string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">پراکسی سرور کنکشن دا انکار کر ݙتے</string>
