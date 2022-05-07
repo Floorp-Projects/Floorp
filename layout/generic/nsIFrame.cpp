@@ -3249,8 +3249,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   aBuilder->SetContainsBlendMode(false);
 
   bool usingBackdropFilter =
-      IsVisibleForPainting() &&
-      effects->HasBackdropFilters() &&
+      IsVisibleForPainting() && effects->HasBackdropFilters() &&
       nsDisplayBackdropFilters::CanCreateWebRenderCommands(aBuilder, this);
 
   if (usingBackdropFilter) {
