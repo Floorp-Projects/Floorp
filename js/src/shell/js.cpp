@@ -60,8 +60,8 @@
 #  include <sys/prctl.h>
 #endif
 #ifdef XP_DARWIN
-#  include <spawn.h>        // for posix_spawn() and friends
 #  include <crt_externs.h>  // for _NSGetEnviron()
+#  include <spawn.h>        // for posix_spawn() and friends
 #endif
 
 #include "jsapi.h"
