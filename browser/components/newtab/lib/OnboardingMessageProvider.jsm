@@ -97,6 +97,7 @@ const ONBOARDING_MESSAGES = () => [
   },
   {
     id: "PB_NEWTAB_FOCUS_PROMO",
+    type: "default",
     template: "pb_newtab",
     groups: ["pbNewtab"],
     content: {
@@ -123,7 +124,6 @@ const ONBOARDING_MESSAGES = () => [
               id: "FOCUS_PROMO",
               template: "multistage",
               modal: "tab",
-              metrics: "block",
               backdrop: "transparent",
               screens: [
                 {
@@ -206,6 +206,7 @@ const ONBOARDING_MESSAGES = () => [
   },
   {
     id: "PB_NEWTAB_KLAR_PROMO",
+    type: "default",
     template: "pb_newtab",
     groups: ["pbNewtab"],
     content: {
@@ -233,7 +234,6 @@ const ONBOARDING_MESSAGES = () => [
               id: "KLAR_PROMO",
               template: "multistage",
               modal: "tab",
-              metrics: "block",
               backdrop: "transparent",
               screens: [
                 {
