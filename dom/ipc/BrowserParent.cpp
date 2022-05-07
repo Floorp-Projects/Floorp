@@ -1450,10 +1450,11 @@ void BrowserParent::UpdateVsyncParentVsyncDispatcher() {
   }
 
   if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
-    if (RefPtr<VsyncDispatcher> vsyncDispatcher =
-            widget->GetVsyncDispatcher()) {
-      mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
+    RefPtr<VsyncDispatcher> vsyncDispatcher = widget->GetVsyncDispatcher();
+    if (!vsyncDispatcher) {
+      vsyncDispatcher = gfxPlatform::GetPlatform()->GetGlobalVsyncDispatcher();
     }
+    mVsyncParent->UpdateVsyncDispatcher(vsyncDispatcher);
   }
 }
 
