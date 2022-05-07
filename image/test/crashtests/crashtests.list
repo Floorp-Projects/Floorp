@@ -68,3 +68,4 @@ HTTP load 1634839-1.html
 HTTP load 1634839-2.html
 pref(image.animated.decode-on-demand.batch-size,1) pref(image.animated.decode-on-demand.threshold-kb,0) HTTP load 1676172-1.html
 pref(browser.soft_reload.only_force_validate_top_level_document,false) HTTP load 1763581-1.html
+load 1765871-1.jpg
