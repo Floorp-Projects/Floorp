@@ -1006,17 +1006,6 @@ impl Combinator {
 #[derive(Clone, Eq, PartialEq, ToShmem)]
 #[shmem(no_bounds)]
 pub enum Component<Impl: SelectorImpl> {
-    Combinator(Combinator),
-
-    ExplicitAnyNamespace,
-    ExplicitNoNamespace,
-    DefaultNamespace(#[shmem(field_bound)] Impl::NamespaceUrl),
-    Namespace(
-        #[shmem(field_bound)] Impl::NamespacePrefix,
-        #[shmem(field_bound)] Impl::NamespaceUrl,
-    ),
-
-    ExplicitUniversalType,
     LocalName(LocalName<Impl>),
 
     ID(#[shmem(field_bound)] Impl::Identifier),
@@ -1038,6 +1027,16 @@ pub enum Component<Impl: SelectorImpl> {
     },
     // Use a Box in the less common cases with more data to keep size_of::<Component>() small.
     AttributeOther(Box<AttrSelectorWithOptionalNamespace<Impl>>),
+
+    ExplicitUniversalType,
+    ExplicitAnyNamespace,
+
+    ExplicitNoNamespace,
+    DefaultNamespace(#[shmem(field_bound)] Impl::NamespaceUrl),
+    Namespace(
+        #[shmem(field_bound)] Impl::NamespacePrefix,
+        #[shmem(field_bound)] Impl::NamespaceUrl,
+    ),
 
     /// Pseudo-classes
     Negation(Box<[Selector<Impl>]>),
@@ -1095,6 +1094,8 @@ pub enum Component<Impl: SelectorImpl> {
     Is(Box<[Selector<Impl>]>),
     /// An implementation-dependent pseudo-element selector.
     PseudoElement(#[shmem(field_bound)] Impl::PseudoElement),
+
+    Combinator(Combinator),
 }
 
 impl<Impl: SelectorImpl> Component<Impl> {
