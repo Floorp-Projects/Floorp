@@ -23,7 +23,7 @@ async function afterpaint() {
   info("vv pos " + visualViewport.pageLeft + "," + visualViewport.pageTop);
   info("vv size " + visualViewport.width + "," + visualViewport.height);
   info("win scroll " + window.scrollX + "," + window.scrollY);
-  info("res " + getResolution());
+  info("res " + await getResolution());
   if (hasPrev) {
     ok(zoomingIn ?
          lastVVLeft <= visualViewport.pageLeft :

@@ -26,6 +26,16 @@ const getCCExpYearFormatted = () => {
   return DEFAULT_CREDITCARD_RECORD["cc-exp-year"].toString().substring(2);
 };
 
+const getCCExpMonthFormatted = () => {
+  return DEFAULT_CREDITCARD_RECORD["cc-exp-month"].toString().padStart(2, "0");
+};
+
+const DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY_FIELDS = {
+  ...DEFAULT_CREDITCARD_RECORD,
+  "cc-exp-month-formatted": getCCExpMonthFormatted(),
+  "cc-exp-year-formatted": getCCExpYearFormatted(),
+};
+
 const FR_TESTCASES = [
   {
     description: "Use placeholder to adjust cc-exp format [mm/aa].",
@@ -102,9 +112,7 @@ const FR_TESTCASES = [
                </form>`,
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [
-      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
-        "cc-exp-year-formatted": getCCExpYearFormatted(),
-      }),
+      { ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY_FIELDS },
     ],
   },
 ];
@@ -218,9 +226,7 @@ const DE_TESTCASES = [
                </form>`,
     profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
     expectedResult: [
-      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
-        "cc-exp-year-formatted": getCCExpYearFormatted(),
-      }),
+      { ...DEFAULT_EXPECTED_CREDITCARD_RECORD_SEPARATE_EXPIRY_FIELDS },
     ],
   },
 ];

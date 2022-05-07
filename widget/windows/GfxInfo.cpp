@@ -83,24 +83,6 @@ GfxInfo::GetHasBattery(bool* aHasBattery) {
   return NS_OK;
 }
 
-int32_t GfxInfo::GetMaxRefreshRate(bool* aMixed) {
-  AssertNotWin32kLockdown();
-
-  int32_t maxRefreshRate = -1;
-  if (aMixed) {
-    *aMixed = false;
-  }
-
-  for (auto displayInfo : mDisplayInfo) {
-    int32_t refreshRate = int32_t(displayInfo.mRefreshRate);
-    if (aMixed && maxRefreshRate > 0 && maxRefreshRate != refreshRate) {
-      *aMixed = true;
-    }
-    maxRefreshRate = std::max(maxRefreshRate, refreshRate);
-  }
-  return maxRefreshRate;
-}
-
 NS_IMETHODIMP
 GfxInfo::GetEmbeddedInFirefoxReality(bool* aEmbeddedInFirefoxReality) {
   *aEmbeddedInFirefoxReality = gfxVars::FxREmbedded();
@@ -882,9 +864,6 @@ nsresult GfxInfo::Init() {
     }
   }
 
-  // Get monitor information
-  RefreshMonitors();
-
   const char* spoofedDriverVersionString =
       PR_GetEnv("MOZ_GFX_SPOOF_DRIVER_VERSION");
   if (spoofedDriverVersionString) {
@@ -919,45 +898,6 @@ GfxInfo::GetAdapterDescription2(nsAString& aAdapterDescription) {
   AssertNotWin32kLockdown();
 
   aAdapterDescription = mDeviceString[1 - mActiveGPUIndex];
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::RefreshMonitors() {
-  AssertNotWin32kLockdown();
-
-  mDisplayInfo.Clear();
-
-  for (int deviceIndex = 0;; deviceIndex++) {
-    DISPLAY_DEVICEW device;
-    device.cb = sizeof(device);
-    if (!::EnumDisplayDevicesW(nullptr, deviceIndex, &device, 0)) {
-      break;
-    }
-
-    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
-      continue;
-    }
-
-    DEVMODEW mode;
-    mode.dmSize = sizeof(mode);
-    mode.dmDriverExtra = 0;
-    if (!::EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS,
-                                &mode)) {
-      continue;
-    }
-
-    DisplayInfo displayInfo;
-
-    displayInfo.mScreenWidth = mode.dmPelsWidth;
-    displayInfo.mScreenHeight = mode.dmPelsHeight;
-    displayInfo.mRefreshRate = mode.dmDisplayFrequency;
-    displayInfo.mIsPseudoDisplay =
-        !!(device.StateFlags & DISPLAY_DEVICE_MIRRORING_DRIVER);
-    displayInfo.mDeviceString = device.DeviceString;
-
-    mDisplayInfo.AppendElement(displayInfo);
-  }
   return NS_OK;
 }
 
@@ -1123,43 +1063,6 @@ GfxInfo::GetIsGPU2Active(bool* aIsGPU2Active) {
   // This is never the case, as the active GPU ends up being
   // the first one.  It should probably be removed.
   *aIsGPU2Active = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
-  AssertNotWin32kLockdown();
-
-  for (auto displayInfo : mDisplayInfo) {
-    nsString value;
-    value.AppendPrintf("%dx%d@%dHz %s %s", displayInfo.mScreenWidth,
-                       displayInfo.mScreenHeight, displayInfo.mRefreshRate,
-                       displayInfo.mIsPseudoDisplay ? "Pseudo Display :" : ":",
-                       NS_ConvertUTF16toUTF8(displayInfo.mDeviceString).get());
-
-    aDisplayInfo.AppendElement(value);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) {
-  AssertNotWin32kLockdown();
-
-  for (auto displayInfo : mDisplayInfo) {
-    aDisplayWidth.AppendElement((uint32_t)displayInfo.mScreenWidth);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-GfxInfo::GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) {
-  AssertNotWin32kLockdown();
-
-  for (auto displayInfo : mDisplayInfo) {
-    aDisplayHeight.AppendElement((uint32_t)displayInfo.mScreenHeight);
-  }
   return NS_OK;
 }
 
@@ -2058,35 +1961,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
 
   return GfxInfoBase::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
-}
-
-nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
-  AssertNotWin32kLockdown();
-
-  int deviceCount = 0;
-  for (auto displayInfo : mDisplayInfo) {
-    JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
-
-    JS::Rooted<JS::Value> screenWidth(aCx,
-                                      JS::Int32Value(displayInfo.mScreenWidth));
-    JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
-
-    JS::Rooted<JS::Value> screenHeight(
-        aCx, JS::Int32Value(displayInfo.mScreenHeight));
-    JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
-
-    JS::Rooted<JS::Value> refreshRate(aCx,
-                                      JS::Int32Value(displayInfo.mRefreshRate));
-    JS_SetProperty(aCx, obj, "refreshRate", refreshRate);
-
-    JS::Rooted<JS::Value> pseudoDisplay(
-        aCx, JS::BooleanValue(displayInfo.mIsPseudoDisplay));
-    JS_SetProperty(aCx, obj, "pseudoDisplay", pseudoDisplay);
-
-    JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));
-    JS_SetElement(aCx, aOutArray, deviceCount++, element);
-  }
-  return NS_OK;
 }
 
 void GfxInfo::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {

@@ -38,6 +38,18 @@ const MOCK_CC_STORAGE = [{
   "cc-exp-year": 2022,
 }];
 
+const MOCK_CC_STORAGE_EXPECTED_FILL = [{
+  "cc-name": "John Doe",
+  "cc-number": "4929001587121045",
+  "cc-exp-month": "04",
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "5103059495477870",
+  "cc-exp-month": "12",
+  "cc-exp-year": 2022,
+}];
+
 initPopupListener();
 
 add_task(async function setup_storage() {
@@ -144,7 +156,7 @@ add_task(async function clear_distinct_section() {
   document.getElementById("form1").reset();
   await triggerPopupAndHoverItem("#cc-name", 0);
   let osKeyStoreLoginShown = waitForOSKeyStoreLogin(true);
-  await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE_EXPECTED_FILL[0]);
   await osKeyStoreLoginShown;
 
   await triggerPopupAndHoverItem("#organization", 0);
@@ -152,7 +164,7 @@ add_task(async function clear_distinct_section() {
   await triggerPopupAndHoverItem("#street-address", 0);
   await confirmClear("#street-address");
 
-  for (const [id, val] of Object.entries(MOCK_CC_STORAGE[0])) {
+  for (const [id, val] of Object.entries(MOCK_CC_STORAGE_EXPECTED_FILL[0])) {
     const element = document.getElementById(id);
     if (!element) {
       return;

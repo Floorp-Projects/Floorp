@@ -56,7 +56,7 @@ async function test() {
     scrolled = true;
   });
 
-  synthesizeNativeWheel(iframeElement, 10, 10, 0, -50);
+  await synthesizeNativeWheel(iframeElement, 10, 10, 0, -50);
 
   // Advance a bunch of frames. The only goal here is to ensure enough time
   // passes so that if the OOPIF does scroll, we find out about it via the

@@ -46,7 +46,7 @@ Starting with Firefox 36 (thanks to [bug 1069673](https://bugzilla.mozilla.org/s
 Detecting if the server has an actor: all you need is access to the `Toolbox` instance, which all panels do, when they get instantiated. Then you can do:
 
 ```js
-let hasPerformanceActor = toolbox.target.hasActor("performance");
+let hasSomeActor = toolbox.target.hasActor("actorTypeName");
 ```
 
 The `hasActor` method returns a boolean synchronously.

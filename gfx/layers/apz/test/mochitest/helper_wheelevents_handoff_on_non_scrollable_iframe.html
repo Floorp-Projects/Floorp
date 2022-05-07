@@ -45,7 +45,7 @@ async function test(targetOrigin) {
     window.addEventListener("scroll", resolve, { once: true });
   });
 
-  synthesizeNativeWheel(iframe, 100, 100, 0, -10);
+  await synthesizeNativeWheel(iframe, 100, 100, 0, -10);
   await scrollEventPromise;
   await waitToClearOutAnyPotentialScrolls(window);
 
@@ -82,7 +82,7 @@ async function test(targetOrigin) {
   const scrollPos = window.scrollY;
 
   // Send a mousemove event on the iframe to finish the last wheel event block.
-  synthesizeNativeMouseEventWithAPZ({
+  await synthesizeNativeMouseEventWithAPZ({
     type: "mousemove",
     target: iframe,
     offsetX: 100,
@@ -91,7 +91,7 @@ async function test(targetOrigin) {
   await mousemoveEventPromise;
 
   // Try to scroll up by a new wheel event on the iframe.
-  synthesizeNativeWheel(iframe, 100, 100 + scrollPos, 0, 10);
+  await synthesizeNativeWheel(iframe, 100, 100 + scrollPos, 0, 10);
   await waitToClearOutAnyPotentialScrolls(window);
 
   // The wheel event should not be handed off to the root scroller since the

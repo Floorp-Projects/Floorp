@@ -6,7 +6,26 @@
 // Tests errors are handled properly by the DevToolsWorker.
 
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
-const WORKER_URL = "resource://devtools/client/shared/widgets/GraphsWorker.js";
+
+const blob = new Blob(
+  [
+    `
+importScripts("resource://gre/modules/workers/require.js");
+const { createTask } = require("resource://devtools/shared/worker/helper.js");
+
+createTask(self, "myTask", function({
+  shouldThrow,
+} = {}) {
+  if (shouldThrow) {
+    throw new Error("err");
+  }
+
+  return "OK";
+});
+    `,
+  ],
+  { type: "application/javascript" }
+);
 
 add_task(async function() {
   try {
@@ -16,11 +35,10 @@ add_task(async function() {
     ok(true, "Creating a DevToolsWorker with an invalid URL throws");
   }
 
+  const WORKER_URL = URL.createObjectURL(blob);
   const worker = new DevToolsWorker(WORKER_URL);
   try {
-    // plotTimestampsGraph requires timestamp, interval an duration props on the object
-    // passed in so there should be an error thrown in the worker
-    await worker.performTask("plotTimestampsGraph", {});
+    await worker.performTask("myTask", { shouldThrow: true });
     ok(
       false,
       "DevToolsWorker returns a rejected promise when an error occurs in the worker"
@@ -47,11 +65,7 @@ add_task(async function() {
 
   worker.destroy();
   try {
-    await worker.performTask("plotTimestampsGraph", {
-      timestamps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      interval: 1,
-      duration: 1,
-    });
+    await worker.performTask("myTask");
     ok(
       false,
       "DevToolsWorker rejects when performing a task on a destroyed worker"
@@ -62,4 +76,6 @@ add_task(async function() {
       "DevToolsWorker rejects when performing a task on a destroyed worker"
     );
   }
+
+  URL.revokeObjectURL(WORKER_URL);
 });

@@ -52,18 +52,10 @@ class GfxInfo : public GfxInfoBase {
       nsAString& aAdapterDriverVersion) override;
   NS_IMETHOD GetAdapterDriverDate2(nsAString& aAdapterDriverDate) override;
   NS_IMETHOD GetIsGPU2Active(bool* aIsGPU2Active) override;
-  NS_IMETHOD GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) override;
-  NS_IMETHOD GetDisplayWidth(nsTArray<uint32_t>& aDisplayWidth) override;
-  NS_IMETHOD GetDisplayHeight(nsTArray<uint32_t>& aDisplayHeight) override;
   NS_IMETHOD GetDrmRenderDevice(nsACString& aDrmRenderDevice) override;
-  NS_IMETHOD RefreshMonitors() override;
-
-  NS_IMETHOD_(int32_t) GetMaxRefreshRate(bool* aMixed) override;
 
   uint32_t OperatingSystemVersion() override { return mWindowsVersion; }
   uint32_t OperatingSystemBuild() override { return mWindowsBuildNumber; }
-
-  nsresult FindMonitors(JSContext* cx, JS::HandleObject array) override;
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
@@ -71,14 +63,6 @@ class GfxInfo : public GfxInfoBase {
 #endif
 
  private:
-  struct DisplayInfo {
-    uint32_t mScreenWidth;
-    uint32_t mScreenHeight;
-    uint32_t mRefreshRate;
-    bool mIsPseudoDisplay;
-    nsString mDeviceString;
-  };
-
   ~GfxInfo() = default;
 
   // Disallow copy/move
@@ -110,7 +94,6 @@ class GfxInfo : public GfxInfoBase {
   uint32_t mWindowsVersion = 0;
   uint32_t mWindowsBuildNumber = 0;
   uint32_t mActiveGPUIndex = 0;  // This must be 0 or 1
-  nsTArray<DisplayInfo> mDisplayInfo;
   bool mHasDualGPU = false;
   bool mHasDriverVersionMismatch = false;
   bool mHasBattery = false;

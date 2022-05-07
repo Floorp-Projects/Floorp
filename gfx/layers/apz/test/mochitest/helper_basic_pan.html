@@ -23,7 +23,7 @@ async function test() {
   // processing the scroll.
   let transformEndPromise = promiseTransformEnd();
 
-  synthesizeNativeTouchDrag(document.body, 10, 100, 0, -50);
+  await synthesizeNativeTouchDrag(document.body, 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.

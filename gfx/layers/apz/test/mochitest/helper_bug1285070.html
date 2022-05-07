@@ -8,7 +8,7 @@
   <script type="application/javascript" src="apz_test_utils.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript">
-    function test() {
+    async function test() {
       let eventsList = ["pointerover", "pointerenter", "pointerdown",
                         "pointerup", "pointerleave", "pointerout",
                         "mousedown", "mouseup",
@@ -31,7 +31,7 @@
         subtestDone();
       });
 
-      synthesizeNativeTap(document.getElementById("div1"), 100, 100);
+      await synthesizeNativeTap(document.getElementById("div1"), 100, 100);
     }
 
     waitUntilApzStable().then(test);
