@@ -22,6 +22,10 @@ VsyncParent::VsyncParent()
 
 void VsyncParent::UpdateVsyncDispatcher(
     const RefPtr<VsyncDispatcher>& aVsyncDispatcher) {
+  if (aVsyncDispatcher == mVsyncDispatcher) {
+    return;
+  }
+
   if (mObservingVsync && mVsyncDispatcher) {
     mVsyncDispatcher->RemoveVsyncObserver(this);
   }
