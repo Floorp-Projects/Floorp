@@ -508,11 +508,6 @@ void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(
       packet_count, octet_count, ntp_timestamp_ms, remote_ntp_timestamp_ms);
 }
 
-int32_t ModuleRtpRtcpImpl2::RemoteRTCPStat(
-    std::vector<RTCPReportBlock>* receive_blocks) const {
-  return rtcp_receiver_.StatisticsReceived(receive_blocks);
-}
-
 std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
     const {
   return rtcp_receiver_.GetLatestReportBlockData();
