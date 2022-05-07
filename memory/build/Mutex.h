@@ -10,7 +10,7 @@
 #if defined(XP_WIN)
 #  include <windows.h>
 #elif defined(XP_DARWIN)
-#  include <os/lock.h>
+#  include <libkern/OSAtomic.h>
 #else
 #  include <pthread.h>
 #endif
@@ -24,7 +24,7 @@ struct Mutex {
 #if defined(XP_WIN)
   CRITICAL_SECTION mMutex;
 #elif defined(XP_DARWIN)
-  os_unfair_lock mMutex;
+  OSSpinLock mMutex;
 #else
   pthread_mutex_t mMutex;
 #endif
@@ -36,7 +36,7 @@ struct Mutex {
       return false;
     }
 #elif defined(XP_DARWIN)
-    mMutex = OS_UNFAIR_LOCK_INIT;
+    mMutex = OS_SPINLOCK_INIT;
 #elif defined(XP_LINUX) && !defined(ANDROID)
     pthread_mutexattr_t attr;
     if (pthread_mutexattr_init(&attr) != 0) {
@@ -60,7 +60,7 @@ struct Mutex {
 #if defined(XP_WIN)
     EnterCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
-    os_unfair_lock_lock(&mMutex);
+    OSSpinLockLock(&mMutex);
 #else
     pthread_mutex_lock(&mMutex);
 #endif
@@ -70,7 +70,7 @@ struct Mutex {
 #if defined(XP_WIN)
     LeaveCriticalSection(&mMutex);
 #elif defined(XP_DARWIN)
-    os_unfair_lock_unlock(&mMutex);
+    OSSpinLockUnlock(&mMutex);
 #else
     pthread_mutex_unlock(&mMutex);
 #endif
@@ -101,7 +101,7 @@ struct StaticMutex {
 typedef Mutex StaticMutex;
 
 #  if defined(XP_DARWIN)
-#    define STATIC_MUTEX_INIT OS_UNFAIR_LOCK_INIT
+#    define STATIC_MUTEX_INIT OS_SPINLOCK_INIT
 #  elif defined(XP_LINUX) && !defined(ANDROID)
 #    define STATIC_MUTEX_INIT PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
 #  else
