@@ -518,6 +518,47 @@ TEST_P(SctpTransportTestWithOrdered, SendLargeBufferedOutgoingMessage) {
   EXPECT_EQ(2u, receiver2()->num_messages_received());
 }
 
+// Tests that a large message gets buffered and later sent by the SctpTransport
+// when the sctp library only accepts the message partially during a stream
+// reset.
+TEST_P(SctpTransportTestWithOrdered,
+       SendLargeBufferedOutgoingMessageDuringReset) {
+  bool ordered = GetParam();
+  SetupConnectedTransportsWithTwoStreams();
+  SctpTransportObserver transport2_observer(transport2());
+
+  // Wait for initial SCTP association to be formed.
+  EXPECT_EQ_WAIT(1, transport1_ready_to_send_count(), kDefaultTimeout);
+  // Make the fake transport unwritable so that messages pile up for the SCTP
+  // socket.
+  fake_dtls1()->SetWritable(false);
+  SendDataResult result;
+
+  // Fill almost all of sctp library's send buffer.
+  ASSERT_TRUE(SendData(transport1(), /*sid=*/1,
+                       std::string(kSctpSendBufferSize / 2, 'a'), &result,
+                       ordered));
+
+  std::string buffered_message(kSctpSendBufferSize, 'b');
+  // SctpTransport accepts this message by buffering the second half.
+  ASSERT_TRUE(
+      SendData(transport1(), /*sid=*/1, buffered_message, &result, ordered));
+  // Queue a stream reset
+  transport1()->ResetStream(/*sid=*/1);
+
+  // Make the transport writable again and expect a "SignalReadyToSendData" at
+  // some point after sending the buffered message.
+  fake_dtls1()->SetWritable(true);
+  EXPECT_EQ_WAIT(2, transport1_ready_to_send_count(), kDefaultTimeout);
+
+  // Queued message should be received by the receiver before receiving the
+  // reset
+  EXPECT_TRUE_WAIT(ReceivedData(receiver2(), 1, buffered_message),
+                   kDefaultTimeout);
+  EXPECT_EQ(2u, receiver2()->num_messages_received());
+  EXPECT_TRUE_WAIT(transport2_observer.WasStreamClosed(1), kDefaultTimeout);
+}
+
 TEST_P(SctpTransportTestWithOrdered, SendData) {
   bool ordered = GetParam();
   SetupConnectedTransportsWithTwoStreams();
