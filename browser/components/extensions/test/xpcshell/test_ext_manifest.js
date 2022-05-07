@@ -5,9 +5,7 @@
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
 async function testManifest(manifest, expectedError) {
-  ExtensionTestUtils.failOnSchemaWarnings(false);
   let normalized = await ExtensionTestUtils.normalizeManifest(manifest);
-  ExtensionTestUtils.failOnSchemaWarnings(true);
 
   if (expectedError) {
     ok(
@@ -77,6 +75,10 @@ add_task(async function test_manifest() {
 });
 
 add_task(async function test_action_version() {
+  // The above test validates these work with the correct version,
+  // here we verify they fail with the incorrect version for MV3.
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
   let warnings = await testManifest({
     manifest_version: 3,
     browser_action: {
@@ -102,22 +104,33 @@ add_task(async function test_action_version() {
     [`Property "action" is unsupported in Manifest Version 2`],
     `Manifest v2 with "action" key first warning is clear.`
   );
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
 
-add_task(async function test_mv2_scripting_permission_always_enabled() {
-  let warnings = await testManifest({
-    manifest_version: 2,
-    permissions: ["scripting"],
-  });
+add_task(async function test_scripting_permission() {
+  ExtensionTestUtils.failOnSchemaWarnings(false);
 
-  Assert.deepEqual(warnings, [], "Got no warnings");
-});
-
-add_task(async function test_mv3_scripting_permission_always_enabled() {
+  // The "scripting" permission is only available in MV3.
   let warnings = await testManifest({
     manifest_version: 3,
     permissions: ["scripting"],
   });
 
   Assert.deepEqual(warnings, [], "Got no warnings");
+
+  warnings = await testManifest({
+    manifest_version: 2,
+    permissions: ["scripting"],
+  });
+
+  equal(warnings.length, 1, "Got exactly one warning");
+  ok(
+    warnings[0]?.startsWith(
+      `Warning processing permissions: Error processing permissions.0: Value "scripting" must either:`
+    ),
+    `Got the expected warning message: ${warnings[0]}`
+  );
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
