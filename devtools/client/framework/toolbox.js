@@ -299,7 +299,6 @@ function Toolbox(
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
   this._onBrowserMessage = this._onBrowserMessage.bind(this);
-  this._onPerformanceFrontEvent = this._onPerformanceFrontEvent.bind(this);
   this._onTabsOrderUpdated = this._onTabsOrderUpdated.bind(this);
   this._onToolbarFocus = this._onToolbarFocus.bind(this);
   this._onToolbarArrowKeypress = this._onToolbarArrowKeypress.bind(this);
@@ -726,7 +725,6 @@ Toolbox.prototype = {
       if (targetFront.isDestroyed()) {
         return;
       }
-      await this.initPerformance();
     }
 
     if (targetFront.targetForm.ignoreSubFrames) {
@@ -925,7 +923,6 @@ Toolbox.prototype = {
       // Forward configuration flags to the DevTools server.
       this._applyCacheSettings();
       this._applyServiceWorkersTestingSettings();
-      this._applyNewPerfPanelEnabled();
 
       this._addWindowListeners();
       this._addChromeEventHandlerEvents();
@@ -1022,17 +1019,6 @@ Toolbox.prototype = {
         await this.commands.targetConfigurationCommand.updateConfiguration({
           restoreFocus: true,
         });
-      }
-
-      // Lazily connect to the profiler here and don't wait for it to complete,
-      // used to intercept console.profile calls before the performance tools are open.
-      const performanceFrontConnection = this.initPerformance();
-
-      // If in testing environment, wait for performance connection to finish,
-      // so we don't have to explicitly wait for this in tests; ideally, all tests
-      // will handle this on their own, but each have their own tear down function.
-      if (flags.testing) {
-        await performanceFrontConnection;
       }
 
       await this.initHarAutomation();
@@ -2211,23 +2197,6 @@ Toolbox.prototype = {
     const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
     this.commands.targetConfigurationCommand.updateConfiguration({
       serviceWorkersTestingEnabled,
-    });
-  },
-
-  /**
-   * When the new performance panel is enabled, the profiler and recorder will
-   * not react to console.profile calls. The server should instead log a message
-   * to warn the user that the API has no effect.
-   *
-   * Forward the value of the new perf panel preference so that the server can
-   * decide to warn or not.
-   */
-  _applyNewPerfPanelEnabled: function() {
-    this.commands.targetConfigurationCommand.updateConfiguration({
-      isNewPerfPanelEnabled: Services.prefs.getBoolPref(
-        "devtools.performance.new-panel-enabled",
-        false
-      ),
     });
   },
 
@@ -4186,57 +4155,6 @@ Toolbox.prototype = {
    */
   getTextBoxContextMenu: function() {
     return this.topDoc.getElementById("toolbox-menu");
-  },
-
-  /**
-   * Connects to the Gecko Profiler when the developer tools are open. This is
-   * necessary because of the WebConsole's `profile` and `profileEnd` methods.
-   */
-  async initPerformance() {
-    // If:
-    // - target does not have performance actor (addons)
-    // - or client uses the new performance panel (incompatible with console.profile())
-    // do not even register the shared performance connection.
-    const isNewPerfPanel = Services.prefs.getBoolPref(
-      "devtools.performance.new-panel-enabled",
-      false
-    );
-    if (isNewPerfPanel || !this.target.hasActor("performance")) {
-      return;
-    }
-    if (this.target.isDestroyed()) {
-      return;
-    }
-    const performanceFront = await this.target.getFront("performance");
-    performanceFront.once("console-profile-start", () =>
-      this._onPerformanceFrontEvent(performanceFront)
-    );
-
-    return performanceFront;
-  },
-
-  /**
-   * Called when a "console-profile-start" event comes from the PerformanceFront. If
-   * the performance tool is already loaded when the first event comes in, immediately
-   * unbind this handler, as this is only used to load the tool for the first time when
-   * `console.profile()` recordings are started before the tool loads.
-   */
-  async _onPerformanceFrontEvent(performanceFront) {
-    if (this.getPanel("performance")) {
-      // the performance panel is already recording all performance, we no longer
-      // need the queue, if it was started
-      performanceFront.flushQueuedRecordings();
-      return;
-    }
-
-    // Before any console recordings, we'll get a `console-profile-start` event
-    // warning us that a recording will come later (via `recording-started`), so
-    // start to boot up the tool and populate the tool with any other recordings
-    // observed during that time.
-    const panel = await this.loadTool("performance");
-    const recordings = performanceFront.flushQueuedRecordings();
-    panel.panelWin.PerformanceController.populateWithRecordings(recordings);
-    await panel.open();
   },
 
   /**

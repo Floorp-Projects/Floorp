@@ -43,7 +43,7 @@ async function test() {
   ];
 
   var touchIds = [0];
-  synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+  await synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.
   await transformEndPromise;

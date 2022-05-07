@@ -2718,7 +2718,7 @@ ParentLayerPoint APZCTreeManager::DispatchFling(
     residualVelocity += current->AttemptFling(transformedHandoffState);
 
     // If there's no residual velocity, there's nothing more to hand off.
-    if (IsZero(residualVelocity)) {
+    if (current->IsZero(residualVelocity)) {
       return ParentLayerPoint();
     }
 

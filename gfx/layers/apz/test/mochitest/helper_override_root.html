@@ -33,7 +33,7 @@ async function test() {
   // Ensure APZ gets a paint with the d-t-c region
   await promiseApzFlushedRepaints();
 
-  synthesizeNativeWheel(document.body, 100, 100, 0, -50);
+  await synthesizeNativeWheel(document.body, 100, 100, 0, -50);
   dump("Finished native wheel, waiting for listener to run...\n");
 
   await wheelEventPromise;

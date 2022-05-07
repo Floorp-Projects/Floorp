@@ -71,7 +71,7 @@ async function test() {
   iframePromise = Promise.all([waitForTouchEvent("touchstart"),
                                waitForTouchEvent("touchmove"),
                                waitForTouchEvent("touchend")]);
-  synthesizeNativeTouchSequences(document.body,
+  await synthesizeNativeTouchSequences(document.body,
     [[{x: 100, y: 100}], [{x: 150, y: 150}], [{x: 150, y: 150}]], function() {
     dump("Finished synthesizing touch tap, waiting for OOPIF message...\n");
   });

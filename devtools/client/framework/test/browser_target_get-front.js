@@ -71,8 +71,8 @@ add_task(async function() {
 
   info("Test async front retrieval");
   // use two fronts that are initialized one after the other.
-  const asyncFront1 = target.getFront("performance");
-  const asyncFront2 = target.getFront("performance");
+  const asyncFront1 = target.getFront("accessibility");
+  const asyncFront2 = target.getFront("accessibility");
 
   info("waiting on async fronts returns a real front");
   const awaitedAsyncFront1 = await asyncFront1;
@@ -95,7 +95,7 @@ async function testDestroy() {
   const target = await createAndAttachTargetForTab(tab);
 
   // do not wait for the front to finish loading
-  target.getFront("performance");
+  target.getFront("accessibility");
 
   try {
     await target.destroy();

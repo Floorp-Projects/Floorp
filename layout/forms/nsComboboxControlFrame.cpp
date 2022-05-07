@@ -843,7 +843,6 @@ void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   mEventListener->Detach();
 
   // Cleanup frames in popup child list
-  mPopupFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
   aPostDestroyData.AddAnonymousContent(mDisplayContent.forget());
   aPostDestroyData.AddAnonymousContent(mButtonContent.forget());
   nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
@@ -851,15 +850,11 @@ void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 const nsFrameList& nsComboboxControlFrame::GetChildList(
     ChildListID aListID) const {
-  if (kSelectPopupList == aListID) {
-    return mPopupFrames;
-  }
   return nsBlockFrame::GetChildList(aListID);
 }
 
 void nsComboboxControlFrame::GetChildLists(nsTArray<ChildList>* aLists) const {
   nsBlockFrame::GetChildLists(aLists);
-  mPopupFrames.AppendIfNonempty(aLists, kSelectPopupList);
 }
 
 void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
@@ -869,20 +864,16 @@ void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
     MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
   }
 #endif
-  if (kSelectPopupList == aListID) {
-    mPopupFrames.SetFrames(aChildList);
-  } else {
-    for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
-      nsCOMPtr<nsIFormControl> formControl =
-          do_QueryInterface(e.get()->GetContent());
-      if (formControl &&
-          formControl->ControlType() == FormControlType::ButtonButton) {
-        mButtonFrame = e.get();
-        break;
-      }
+  for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
+    nsCOMPtr<nsIFormControl> formControl =
+        do_QueryInterface(e.get()->GetContent());
+    if (formControl &&
+        formControl->ControlType() == FormControlType::ButtonButton) {
+      mButtonFrame = e.get();
+      break;
     }
-    nsBlockFrame::SetInitialChildList(aListID, aChildList);
   }
+  nsBlockFrame::SetInitialChildList(aListID, aChildList);
 }
 
 namespace mozilla {

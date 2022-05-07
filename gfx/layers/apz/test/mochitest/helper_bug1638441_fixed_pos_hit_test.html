@@ -51,7 +51,7 @@ async function test() {
     });
   });
 
-  synthesizeNativeTap(target, 10, 10);
+  await synthesizeNativeTap(target, 10, 10);
   await mouseDownPromise;
 
   is(mouseDownEvent.target, target, "mousedown event targeted the correct element");
