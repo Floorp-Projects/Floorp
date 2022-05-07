@@ -47,6 +47,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
 
+using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::Invoke;
 using ::testing::Return;
@@ -331,6 +332,8 @@ rtc::scoped_refptr<MockRtpSenderInternal> CreateMockSender(
   }));
   EXPECT_CALL(*sender, AttachmentId()).WillRepeatedly(Return(attachment_id));
   EXPECT_CALL(*sender, stream_ids()).WillRepeatedly(Return(local_stream_ids));
+  EXPECT_CALL(*sender, SetTransceiverAsStopped());
+  EXPECT_CALL(*sender, Stop());
   return sender;
 }
 
@@ -357,6 +360,7 @@ rtc::scoped_refptr<MockRtpReceiverInternal> CreateMockReceiver(
     return params;
   }));
   EXPECT_CALL(*receiver, AttachmentId()).WillRepeatedly(Return(attachment_id));
+  EXPECT_CALL(*receiver, StopAndEndTrack());
   return receiver;
 }
 
@@ -498,6 +502,7 @@ class RTCStatsCollectorWrapper {
           rtc::scoped_refptr<MediaStreamTrackInterface>(local_audio_track),
           voice_sender_info.local_stats[0].ssrc,
           voice_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
+      EXPECT_CALL(*rtp_sender, SetMediaChannel(_));
       pc_->AddSender(rtp_sender);
     }
 
@@ -516,6 +521,7 @@ class RTCStatsCollectorWrapper {
               voice_receiver_info.local_stats[0].ssrc + 10);
       EXPECT_CALL(*rtp_receiver, streams())
           .WillRepeatedly(Return(remote_streams));
+      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_));
       pc_->AddReceiver(rtp_receiver);
     }
 
@@ -533,6 +539,7 @@ class RTCStatsCollectorWrapper {
           rtc::scoped_refptr<MediaStreamTrackInterface>(local_video_track),
           video_sender_info.local_stats[0].ssrc,
           video_sender_info.local_stats[0].ssrc + 10, local_stream_ids);
+      EXPECT_CALL(*rtp_sender, SetMediaChannel(_));
       pc_->AddSender(rtp_sender);
     }
 
@@ -551,6 +558,7 @@ class RTCStatsCollectorWrapper {
               video_receiver_info.local_stats[0].ssrc + 10);
       EXPECT_CALL(*rtp_receiver, streams())
           .WillRepeatedly(Return(remote_streams));
+      EXPECT_CALL(*rtp_receiver, SetMediaChannel(_));
       pc_->AddReceiver(rtp_receiver);
     }
 
