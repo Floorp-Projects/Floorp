@@ -132,7 +132,7 @@ class ChromeAndroidBrowserBase(WebDriverBrowser):
     def __init__(self,
                  logger,
                  webdriver_binary="chromedriver",
-                 adb_binary="adb",
+                 adb_binary=None,
                  remote_queue=None,
                  device_serial=None,
                  webdriver_args=None,
@@ -142,7 +142,7 @@ class ChromeAndroidBrowserBase(WebDriverBrowser):
                          binary=None,
                          webdriver_binary=webdriver_binary,
                          webdriver_args=webdriver_args,)
-        self.adb_binary = adb_binary
+        self.adb_binary = adb_binary or "adb"
         self.device_serial = device_serial
         self.stackwalk_binary = stackwalk_binary
         self.symbols_path = symbols_path
@@ -228,7 +228,7 @@ class ChromeAndroidBrowser(ChromeAndroidBrowserBase):
 
     def __init__(self, logger, package_name,
                  webdriver_binary="chromedriver",
-                 adb_binary="adb",
+                 adb_binary=None,
                  remote_queue = None,
                  device_serial=None,
                  webdriver_args=None,
