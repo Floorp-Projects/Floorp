@@ -220,6 +220,13 @@ RTC_OBJC_EXPORT
  */
 @property(nonatomic, assign) int rtcpVideoReportIntervalMs;
 
+/**
+ * Allow implicit rollback of local description when remote description
+ * conflicts with local description.
+ * See: https://w3c.github.io/webrtc-pc/#dom-peerconnection-setremotedescription
+ */
+@property(nonatomic, assign) BOOL enableImplicitRollback;
+
 - (instancetype)init;
 
 @end

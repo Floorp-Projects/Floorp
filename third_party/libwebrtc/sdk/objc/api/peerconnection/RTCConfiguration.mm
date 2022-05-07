@@ -56,6 +56,7 @@
 @synthesize turnLoggingId = _turnLoggingId;
 @synthesize rtcpAudioReportIntervalMs = _rtcpAudioReportIntervalMs;
 @synthesize rtcpVideoReportIntervalMs = _rtcpVideoReportIntervalMs;
+@synthesize enableImplicitRollback = _enableImplicitRollback;
 
 - (instancetype)init {
   // Copy defaults.
@@ -134,6 +135,7 @@
     _rtcpAudioReportIntervalMs = config.audio_rtcp_report_interval_ms();
     _rtcpVideoReportIntervalMs = config.video_rtcp_report_interval_ms();
     _allowCodecSwitching = config.allow_codec_switching.value_or(false);
+    _enableImplicitRollback = config.enable_implicit_rollback;
   }
   return self;
 }
@@ -141,7 +143,7 @@
 - (NSString *)description {
   static NSString *formatString = @"RTC_OBJC_TYPE(RTCConfiguration): "
                                   @"{\n%@\n%@\n%@\n%@\n%@\n%@\n%@\n%@\n%d\n%d\n%d\n%d\n%d\n%d\n"
-                                  @"%d\n%@\n%d\n%d\n%d\n%d\n%d\n%@\n}\n";
+                                  @"%d\n%@\n%d\n%d\n%d\n%d\n%d\n%@\n%@\n}\n";
 
   return [NSString
       stringWithFormat:formatString,
@@ -167,7 +169,8 @@
                        _disableIPV6OnWiFi,
                        _maxIPv6Networks,
                        _activeResetSrtpParams,
-                       _enableDscp];
+                       _enableDscp,
+                       _enableImplicitRollback];
 }
 
 #pragma mark - Private
@@ -264,6 +267,7 @@
   nativeConfig->set_audio_rtcp_report_interval_ms(_rtcpAudioReportIntervalMs);
   nativeConfig->set_video_rtcp_report_interval_ms(_rtcpVideoReportIntervalMs);
   nativeConfig->allow_codec_switching = _allowCodecSwitching;
+  nativeConfig->enable_implicit_rollback = _enableImplicitRollback;
   return nativeConfig.release();
 }
 
