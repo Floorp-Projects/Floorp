@@ -222,29 +222,25 @@ const ExperimentFakes = {
     { manager = ExperimentManager } = {}
   ) {
     await manager.store.ready();
-    // Use id passed in featureConfig value to compute experimentId
-    // This help filter telemetry events (such as expose) in race conditions when telemetry
-    // from multiple experiments with same featureId co-exist in snapshot
-    let experimentId = `${featureConfig.featureId}${
-      featureConfig?.value?.id ? "-" + featureConfig?.value?.id : ""
-    }-experiment-${Math.random()}`;
-
-    let recipe = this.recipe(experimentId, {
-      bucketConfig: {
-        namespace: "mstest-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
-      branches: [
-        {
-          slug: "control",
-          ratio: 1,
-          features: [featureConfig],
+    let recipe = this.recipe(
+      `${featureConfig.featureId}-experiment-${Math.random()}`,
+      {
+        bucketConfig: {
+          namespace: "mstest-utils",
+          randomizationUnit: "normandy_id",
+          start: 0,
+          count: 1000,
+          total: 1000,
         },
-      ],
-    });
+        branches: [
+          {
+            slug: "control",
+            ratio: 1,
+            features: [featureConfig],
+          },
+        ],
+      }
+    );
     let {
       enrollmentPromise,
       doExperimentCleanup,
