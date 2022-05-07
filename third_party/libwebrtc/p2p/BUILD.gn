@@ -144,6 +144,8 @@ if (rtc_include_tests) {
       "../api:libjingle_peerconnection_api",
       "../rtc_base",
       "../rtc_base:rtc_base_approved",
+      "../rtc_base/task_utils:pending_task_safety_flag",
+      "../rtc_base/task_utils:to_queued_task",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
