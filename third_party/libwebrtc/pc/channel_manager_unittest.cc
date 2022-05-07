@@ -62,16 +62,6 @@ class ChannelManagerTest : public ::testing::Test {
     fme_->SetVideoCodecs(MAKE_VECTOR(kVideoCodecs));
   }
 
-  std::unique_ptr<webrtc::RtpTransportInternal> CreateDtlsSrtpTransport() {
-    rtp_dtls_transport_ = std::make_unique<FakeDtlsTransport>(
-        "fake_dtls_transport", cricket::ICE_CANDIDATE_COMPONENT_RTP);
-    auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
-        /*rtcp_mux_required=*/true);
-    dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport_.get(),
-                                           /*rtcp_dtls_transport=*/nullptr);
-    return dtls_srtp_transport;
-  }
-
   void TestCreateDestroyChannels(webrtc::RtpTransportInternal* rtp_transport) {
     cricket::VoiceChannel* voice_channel = cm_->CreateVoiceChannel(
         &fake_call_, cricket::MediaConfig(), rtp_transport,
@@ -95,7 +85,6 @@ class ChannelManagerTest : public ::testing::Test {
     cm_->Terminate();
   }
 
-  std::unique_ptr<DtlsTransportInternal> rtp_dtls_transport_;
   std::unique_ptr<rtc::Thread> network_;
   std::unique_ptr<rtc::Thread> worker_;
   std::unique_ptr<webrtc::VideoBitrateAllocatorFactory>
@@ -178,8 +167,13 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
 
 TEST_F(ChannelManagerTest, CreateDestroyChannels) {
   EXPECT_TRUE(cm_->Init());
-  auto rtp_transport = CreateDtlsSrtpTransport();
-  TestCreateDestroyChannels(rtp_transport.get());
+  auto rtp_dtls_transport = std::make_unique<FakeDtlsTransport>(
+      "fake_dtls_transport", cricket::ICE_CANDIDATE_COMPONENT_RTP);
+  auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
+      /*rtcp_mux_required=*/true);
+  dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport.get(),
+                                         /*rtcp_dtls_transport=*/nullptr);
+  TestCreateDestroyChannels(dtls_srtp_transport.get());
 }
 
 TEST_F(ChannelManagerTest, CreateDestroyChannelsOnThread) {
@@ -188,8 +182,17 @@ TEST_F(ChannelManagerTest, CreateDestroyChannelsOnThread) {
   EXPECT_TRUE(cm_->set_worker_thread(worker_.get()));
   EXPECT_TRUE(cm_->set_network_thread(network_.get()));
   EXPECT_TRUE(cm_->Init());
-  auto rtp_transport = CreateDtlsSrtpTransport();
-  TestCreateDestroyChannels(rtp_transport.get());
+  auto rtp_dtls_transport = std::make_unique<FakeDtlsTransport>(
+      "fake_dtls_transport", cricket::ICE_CANDIDATE_COMPONENT_RTP,
+      network_.get());
+  auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
+      /*rtcp_mux_required=*/true);
+  network_->Invoke<void>(
+      RTC_FROM_HERE, [&rtp_dtls_transport, &dtls_srtp_transport] {
+        dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport.get(),
+                                               /*rtcp_dtls_transport=*/nullptr);
+      });
+  TestCreateDestroyChannels(dtls_srtp_transport.get());
 }
 
 }  // namespace cricket

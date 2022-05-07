@@ -170,11 +170,12 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     } else {
       // Confirmed to work with KT_RSA and KT_ECDSA.
       fake_rtp_dtls_transport1_.reset(new cricket::FakeDtlsTransport(
-          "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTP));
+          "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTP, network_thread_));
       rtp1 = fake_rtp_dtls_transport1_.get();
       if (!(flags1 & RTCP_MUX)) {
         fake_rtcp_dtls_transport1_.reset(new cricket::FakeDtlsTransport(
-            "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTCP));
+            "channel1", cricket::ICE_CANDIDATE_COMPONENT_RTCP,
+            network_thread_));
         rtcp1 = fake_rtcp_dtls_transport1_.get();
       }
       if (flags1 & DTLS) {
@@ -199,11 +200,12 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     } else {
       // Confirmed to work with KT_RSA and KT_ECDSA.
       fake_rtp_dtls_transport2_.reset(new cricket::FakeDtlsTransport(
-          "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTP));
+          "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTP, network_thread_));
       rtp2 = fake_rtp_dtls_transport2_.get();
       if (!(flags2 & RTCP_MUX)) {
         fake_rtcp_dtls_transport2_.reset(new cricket::FakeDtlsTransport(
-            "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTCP));
+            "channel2", cricket::ICE_CANDIDATE_COMPONENT_RTCP,
+            network_thread_));
         rtcp2 = fake_rtcp_dtls_transport2_.get();
       }
       if (flags2 & DTLS) {
@@ -284,10 +286,14 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     auto rtp_transport = std::make_unique<webrtc::RtpTransport>(
         rtcp_packet_transport == nullptr);
 
-    rtp_transport->SetRtpPacketTransport(rtp_packet_transport);
-    if (rtcp_packet_transport) {
-      rtp_transport->SetRtcpPacketTransport(rtcp_packet_transport);
-    }
+    network_thread_->Invoke<void>(
+        RTC_FROM_HERE,
+        [&rtp_transport, rtp_packet_transport, rtcp_packet_transport] {
+          rtp_transport->SetRtpPacketTransport(rtp_packet_transport);
+          if (rtcp_packet_transport) {
+            rtp_transport->SetRtcpPacketTransport(rtcp_packet_transport);
+          }
+        });
     return rtp_transport;
   }
 
@@ -297,8 +303,12 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     auto dtls_srtp_transport = std::make_unique<webrtc::DtlsSrtpTransport>(
         rtcp_dtls_transport == nullptr);
 
-    dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport,
-                                           rtcp_dtls_transport);
+    network_thread_->Invoke<void>(
+        RTC_FROM_HERE,
+        [&dtls_srtp_transport, rtp_dtls_transport, rtcp_dtls_transport] {
+          dtls_srtp_transport->SetDtlsTransports(rtp_dtls_transport,
+                                                 rtcp_dtls_transport);
+        });
     return dtls_srtp_transport;
   }
 
@@ -1268,13 +1278,19 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
         fake_rtp_dtls_transport2_.get(), fake_rtcp_dtls_transport2_.get());
     channel1_->SetRtpTransport(new_rtp_transport_.get());
 
-    int option_val;
-    ASSERT_TRUE(fake_rtp_dtls_transport2_->GetOption(
-        rtc::Socket::Option::OPT_SNDBUF, &option_val));
-    EXPECT_EQ(kSndBufSize, option_val);
-    ASSERT_TRUE(fake_rtp_dtls_transport2_->GetOption(
-        rtc::Socket::Option::OPT_RCVBUF, &option_val));
-    EXPECT_EQ(kRcvBufSize, option_val);
+    bool rcv_success, send_success;
+    int rcv_buf, send_buf;
+    network_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+      send_success = fake_rtp_dtls_transport2_->GetOption(
+          rtc::Socket::Option::OPT_SNDBUF, &send_buf);
+      rcv_success = fake_rtp_dtls_transport2_->GetOption(
+          rtc::Socket::Option::OPT_RCVBUF, &rcv_buf);
+    });
+
+    ASSERT_TRUE(send_success);
+    EXPECT_EQ(kSndBufSize, send_buf);
+    ASSERT_TRUE(rcv_success);
+    EXPECT_EQ(kRcvBufSize, rcv_buf);
   }
 
   void CreateSimulcastContent(const std::vector<std::string>& rids,
