@@ -2386,38 +2386,6 @@ pref("devtools.memory.max-retaining-paths", 10);
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);
 
-// The default Performance UI settings
-pref("devtools.performance.memory.sample-probability", "0.05");
-// Can't go higher than this without causing internal allocation overflows while
-// serializing the allocations data over the RDP.
-pref("devtools.performance.memory.max-log-length", 125000);
-pref("devtools.performance.timeline.hidden-markers",
-  "[\"Composite\",\"CompositeForwardTransaction\"]");
-pref("devtools.performance.profiler.buffer-size", 10000000);
-pref("devtools.performance.profiler.sample-frequency-hz", 1000);
-pref("devtools.performance.ui.invert-call-tree", true);
-pref("devtools.performance.ui.invert-flame-graph", false);
-pref("devtools.performance.ui.flatten-tree-recursion", true);
-pref("devtools.performance.ui.show-platform-data", false);
-pref("devtools.performance.ui.show-idle-blocks", true);
-pref("devtools.performance.ui.enable-memory", false);
-pref("devtools.performance.ui.enable-allocations", false);
-pref("devtools.performance.ui.enable-framerate", true);
-pref("devtools.performance.ui.show-jit-optimizations", false);
-pref("devtools.performance.ui.show-triggers-for-gc-types",
-  "TOO_MUCH_MALLOC ALLOC_TRIGGER LAST_DITCH EAGER_ALLOC_TRIGGER");
-
-// Temporary pref disabling memory flame views
-// TODO remove once we have flame charts via bug 1148663
-pref("devtools.performance.ui.enable-memory-flame", false);
-
-// Enable experimental options in the UI only in Nightly
-#if defined(NIGHTLY_BUILD)
-  pref("devtools.performance.ui.experimental", true);
-#else
-  pref("devtools.performance.ui.experimental", false);
-#endif
-
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
 
@@ -2572,9 +2540,6 @@ pref("devtools.browserconsole.input.editorWidth", 0);
 
 // Display an onboarding UI for the Editor mode.
 pref("devtools.webconsole.input.editorOnboarding", true);
-
-// Enable the new performance panel in all channels of Firefox.
-pref("devtools.performance.new-panel-enabled", true);
 
 // Enable message grouping in the console, true by default
 pref("devtools.webconsole.groupWarningMessages", true);

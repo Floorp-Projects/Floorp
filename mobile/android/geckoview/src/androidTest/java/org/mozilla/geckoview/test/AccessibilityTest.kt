@@ -385,6 +385,7 @@ class AccessibilityTest : BaseSessionTest() {
             }
         })
 
+        // This focuses the link.
         mainSession.finder.find("sweet", 0)
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -397,6 +398,9 @@ class AccessibilityTest : BaseSessionTest() {
         // reset caret position
         mainSession.evaluateJS("""
             this.select(document.body, 0, 0);
+            // Changing DOM selection doesn't focus the document! Force focus
+            // here so we can use that to determine when this is done.
+            document.activeElement.blur();
         """.trimIndent())
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)

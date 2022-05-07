@@ -41,7 +41,7 @@ async function test_onetouchpinch() {
   ];
 
   var touchIds = [0];
-  synthesizeNativeTouchSequences(scroller, zoom_in, null, touchIds);
+  await synthesizeNativeTouchSequences(scroller, zoom_in, null, touchIds);
 
   // Wait for the APZ:TransformEnd to be fired after touch events are processed.
   await transformEndPromise;

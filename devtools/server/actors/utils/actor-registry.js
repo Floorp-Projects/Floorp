@@ -4,7 +4,6 @@
 
 "use strict";
 
-var { Ci } = require("chrome");
 var gRegisteredModules = Object.create(null);
 
 const ActorRegistry = {
@@ -200,11 +199,6 @@ const ActorRegistry = {
       constructor: "MemoryActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/framerate", {
-      prefix: "framerate",
-      constructor: "FramerateActor",
-      type: { target: true },
-    });
     this.registerModule("devtools/server/actors/reflow", {
       prefix: "reflow",
       constructor: "ReflowActor",
@@ -215,13 +209,6 @@ const ActorRegistry = {
       constructor: "CssPropertiesActor",
       type: { target: true },
     });
-    if ("nsIProfiler" in Ci) {
-      this.registerModule("devtools/server/actors/performance", {
-        prefix: "performance",
-        constructor: "PerformanceActor",
-        type: { target: true },
-      });
-    }
     this.registerModule("devtools/server/actors/animation", {
       prefix: "animations",
       constructor: "AnimationsActor",

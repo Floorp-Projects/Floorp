@@ -3339,6 +3339,10 @@ bool WarpCacheIRTranspiler::emitCallRegExpTesterResult(
 
 MInstruction* WarpCacheIRTranspiler::convertToBoolean(MDefinition* input) {
   // Convert to bool with the '!!' idiom.
+  //
+  // The FoldTests and GVN passes both specifically handle this pattern. If you
+  // change this code, make sure to update FoldTests and GVN, too.
+
   auto* resultInverted = MNot::New(alloc(), input);
   add(resultInverted);
   auto* result = MNot::New(alloc(), resultInverted);

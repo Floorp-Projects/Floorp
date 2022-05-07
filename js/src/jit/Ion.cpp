@@ -1018,6 +1018,20 @@ bool OptimizeMIR(MIRGenerator* mir) {
     }
   }
 
+  // Remove trivially dead resume point operands before folding tests, so the
+  // latter pass can optimize more aggressively.
+  if (!mir->compilingWasm()) {
+    if (!EliminateTriviallyDeadResumePointOperands(mir, graph)) {
+      return false;
+    }
+    gs.spewPass("Eliminate trivially dead resume point operands");
+    AssertBasicGraphCoherency(graph);
+
+    if (mir->shouldCancel("Eliminate trivially dead resume point operands")) {
+      return false;
+    }
+  }
+
   {
     AutoTraceLog log(logger, TraceLogger_FoldTests);
     if (!FoldTests(graph)) {
@@ -1171,6 +1185,9 @@ bool OptimizeMIR(MIRGenerator* mir) {
       if (!EliminateDeadResumePointOperands(mir, graph)) {
         return false;
       }
+
+      gs.spewPass("Eliminate dead resume point operands");
+      AssertExtendedGraphCoherency(graph);
 
       if (mir->shouldCancel("Eliminate dead resume point operands")) {
         return false;

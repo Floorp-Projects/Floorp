@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for chrome-only rules in constructable stylesheets (in content)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  add_task(async function chrome_rules_constructable_stylesheets_in_content() {
+    let sheet = new CSSStyleSheet();
+    sheet.replaceSync(".foo { -moz-default-appearance: none }");
+    is(sheet.cssRules[0].style.length, 0, "Should not parse chrome-only property in content  document");
+  });
+
+  add_task(async function chrome_rules_constructable_stylesheets_in_content() {
+    let sheet = new CSSStyleSheet({ baseURL: "chrome://browser/content/browser.xhtml" })
+    sheet.replaceSync(".foo { -moz-default-appearance: none }");
+    is(sheet.cssRules[0].style.length, 0, "Should not parse chrome-only property in content  document, even with chrome baseURL");
+  });
+</script>

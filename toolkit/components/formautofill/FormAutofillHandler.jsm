@@ -315,6 +315,7 @@ class FormAutofillSection {
         }
       } else {
         delete profile[key];
+        delete profile[`${key}-formatted`];
       }
     }
   }
@@ -1079,67 +1080,94 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return;
     }
 
-    let element = detail.elementWeakRef.get();
+    function monthYearOrderCheck(
+      _expiryDateTransformFormat,
+      _ccExpMonth,
+      _ccExpYear
+    ) {
+      // Bug 1687681: This is a short term fix to other locales having
+      // different characters to represent year.
+      // For example, FR locales may use "A" to represent year.
+      // For example, DE locales may use "J" to represent year.
+      // This approach will not scale well and should be investigated in a follow up bug.
+      let monthChars = "m";
+      let yearChars = "yaj";
+      let result;
 
+      let monthFirstCheck = new RegExp(
+        "(?:\\b|^)((?:[" +
+          monthChars +
+          "]{2}){1,2})\\s*([\\-/])\\s*((?:[" +
+          yearChars +
+          "]{2}){1,2})(?:\\b|$)",
+        "i"
+      );
+
+      // If the month first check finds a result, where placeholder is "mm - yyyy",
+      // the result will be structured as such: ["mm - yyyy", "mm", "-", "yyyy"]
+      result = monthFirstCheck.exec(_expiryDateTransformFormat);
+      if (result) {
+        return (
+          _ccExpMonth.toString().padStart(result[1].length, "0") +
+          result[2] +
+          _ccExpYear.toString().substr(-1 * result[3].length)
+        );
+      }
+
+      let yearFirstCheck = new RegExp(
+        "(?:\\b|^)((?:[" +
+        yearChars +
+        "]{2}){1,2})\\s*([\\-/])\\s*((?:[" + // either one or two counts of 'yy' or 'aa' sequence
+          monthChars +
+          "]){1,2})(?:\\b|$)",
+        "i" // either one or two counts of a 'm' sequence
+      );
+
+      // If the year first check finds a result, where placeholder is "yyyy mm",
+      // the result will be structured as such: ["yyyy mm", "yyyy", " ", "mm"]
+      result = yearFirstCheck.exec(_expiryDateTransformFormat);
+
+      if (result) {
+        return (
+          _ccExpYear.toString().substr(-1 * result[1].length) +
+          result[2] +
+          _ccExpMonth.toString().padStart(result[3].length, "0")
+        );
+      }
+      return null;
+    }
+
+    let element = detail.elementWeakRef.get();
+    let result;
     let ccExpMonth = profile["cc-exp-month"];
     let ccExpYear = profile["cc-exp-year"];
-    if (element.tagName != "INPUT" || !element.placeholder) {
+    if (element.tagName == "INPUT") {
+      // Use the placeholder to determine the expiry string format.
+      if (element.placeholder) {
+        result = monthYearOrderCheck(
+          element.placeholder,
+          ccExpMonth,
+          ccExpYear
+        );
+      }
+      // If the previous sibling is a label, it is most likely meant to describe the
+      // expiry field.
+      if (!result && element.previousElementSibling?.tagName == "LABEL") {
+        result = monthYearOrderCheck(
+          element.previousElementSibling.textContent,
+          ccExpMonth,
+          ccExpYear
+        );
+      }
+    }
+
+    if (result) {
+      profile["cc-exp"] = result;
+    } else {
       // Bug 1688576: Change YYYY-MM to MM/YYYY since MM/YYYY is the
       // preferred presentation format for credit card expiry dates.
       profile["cc-exp"] =
         ccExpMonth.toString().padStart(2, "0") + "/" + ccExpYear.toString();
-      return;
-    }
-
-    let result,
-      placeholder = element.placeholder;
-
-    // Bug 1687681: This is a short term fix to other locales having
-    // different characters to represent year.
-    // For example, FR locales may use "A" to represent year.
-    // For example, DE locales may use "J" to represent year.
-    // This approach will not scale well and should be investigated in a follow up bug.
-    let monthChars = "m";
-    let yearChars = "yaj";
-
-    let monthFirstCheck = new RegExp(
-      "(?:\\b|^)((?:[" +
-        monthChars +
-        "]{2}){1,2})\\s*([\\-/])\\s*((?:[" +
-        yearChars +
-        "]{2}){1,2})(?:\\b|$)",
-      "i"
-    );
-
-    // If the month first check finds a result, where placeholder is "mm - yyyy",
-    // the result will be structured as such: ["mm - yyyy", "mm", "-", "yyyy"]
-    result = monthFirstCheck.exec(placeholder);
-    if (result) {
-      profile["cc-exp"] =
-        ccExpMonth.toString().padStart(result[1].length, "0") +
-        result[2] +
-        ccExpYear.toString().substr(-1 * result[3].length);
-      return;
-    }
-
-    let yearFirstCheck = new RegExp(
-      "(?:\\b|^)((?:[" +
-      yearChars +
-      "]{2}){1,2})\\s*([\\-/])\\s*((?:[" + // either one or two counts of 'yy' or 'aa' sequence
-        monthChars +
-        "]){1,2})(?:\\b|$)",
-      "i" // either one or two counts of a 'm' sequence
-    );
-
-    // If the year first check finds a result, where placeholder is "yyyy mm",
-    // the result will be structured as such: ["yyyy mm", "yyyy", " ", "mm"]
-    result = yearFirstCheck.exec(placeholder);
-
-    if (result) {
-      profile["cc-exp"] =
-        ccExpYear.toString().substr(-1 * result[1].length) +
-        result[2] +
-        ccExpMonth.toString().padStart(result[3].length, "0");
     }
   }
 
@@ -1163,21 +1191,12 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
       return element.tagName === "INPUT" ? element : null;
     };
     let month = getInputElementByField("cc-exp-month", this);
-    // If the expiration month element is an input,
-    // then we examine any placeholder to see if we should format the expiration month
-    // as a zero padded string in order to autofill correctly.
     if (month) {
-      let placeholder = month.placeholder;
-
-      // Checks for 'MM' placeholder and converts the month to a two digit string.
-      let result = /(?<!.)mm(?!.)/i.test(placeholder);
-      if (result) {
-        profile["cc-exp-month-formatted"] = profile["cc-exp-month"]
-          .toString()
-          .padStart(2, "0");
-      }
+      // Transform the expiry month to MM since this is a common format needed for filling.
+      profile["cc-exp-month-formatted"] = profile["cc-exp-month"]
+        ?.toString()
+        .padStart(2, "0");
     }
-
     let year = getInputElementByField("cc-exp-year", this);
     // If the expiration year element is an input,
     // then we examine any placeholder to see if we should format the expiration year

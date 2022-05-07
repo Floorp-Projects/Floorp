@@ -79,7 +79,7 @@ bool SmoothMsdScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // layout.css.scroll-behavior.damping-ratio preference is set to less than 1
   // (underdamped) or if a smooth scroll inherits velocity from a fling
   // gesture.
-  if (!IsZero(overscroll)) {
+  if (!IsZero(overscroll / zoom)) {
     // Hand off a fling with the remaining momentum to the next APZC in the
     // overscroll handoff chain.
 

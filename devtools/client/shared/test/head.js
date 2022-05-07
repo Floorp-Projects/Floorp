@@ -19,7 +19,6 @@ const { Hosts } = require("devtools/client/framework/toolbox-hosts");
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const TEST_URI_ROOT_SSL =
   "https://example.com/browser/devtools/client/shared/test/";
-const OPTIONS_VIEW_URL = CHROME_URL_ROOT + "doc_options-view.xhtml";
 
 const EXAMPLE_URL =
   "chrome://mochitests/content/browser/devtools/client/shared/test/";
@@ -150,27 +149,6 @@ async function openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
     info("Closing toolbox " + (i + 1));
     await toolbox.destroy();
   }
-}
-
-/**
- * Synthesize a profile for testing.
- */
-function synthesizeProfileForTest(samples) {
-  const RecordingUtils = require("devtools/shared/performance/recording-utils");
-
-  samples.unshift({
-    time: 0,
-    frames: [],
-  });
-
-  const uniqueStacks = new RecordingUtils.UniqueStacks();
-  return RecordingUtils.deflateThread(
-    {
-      samples: samples,
-      markers: [],
-    },
-    uniqueStacks
-  );
 }
 
 /**

@@ -48,7 +48,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   // Flush and Drain operation, always run
   virtual RefPtr<FlushPromise> ProcessFlush();
   virtual void ProcessShutdown();
-  virtual void InitCodecContext() {}
+  virtual void InitCodecContext() REQUIRES(sMutex) {}
   AVFrame* PrepareFrame();
   MediaResult InitDecoder();
   MediaResult AllocateExtraData();
@@ -65,9 +65,8 @@ class FFmpegDataDecoder<LIBAV_VER>
   AVCodecID mCodecID;  // set in constructor
 
  protected:
-  static StaticMutex sMutex
-      MOZ_UNANNOTATED;  // used to provide critical-section locking
-                        // for calls into ffmpeg
+  static StaticMutex sMutex;  // used to provide critical-section locking
+                              // for calls into ffmpeg
   const RefPtr<TaskQueue> mTaskQueue;  // set in constructor
 
  private:

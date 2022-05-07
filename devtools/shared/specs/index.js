@@ -108,11 +108,6 @@ const Types = (exports.__TypesForTests = [
     spec: "devtools/shared/specs/frame",
     front: "devtools/client/fronts/frame",
   },
-  {
-    types: ["framerate"],
-    spec: "devtools/shared/specs/framerate",
-    front: "devtools/client/fronts/framerate",
-  },
   /* heap snapshot has old fashion client and no front */
   {
     types: ["heapSnapshotFile"],
@@ -189,16 +184,6 @@ const Types = (exports.__TypesForTests = [
     types: ["perf"],
     spec: "devtools/shared/specs/perf",
     front: "devtools/client/fronts/perf",
-  },
-  {
-    types: ["performance"],
-    spec: "devtools/shared/specs/performance",
-    front: "devtools/client/fronts/performance",
-  },
-  {
-    types: ["performance-recording"],
-    spec: "devtools/shared/specs/performance-recording",
-    front: "devtools/client/fronts/performance-recording",
   },
   {
     types: ["preference"],

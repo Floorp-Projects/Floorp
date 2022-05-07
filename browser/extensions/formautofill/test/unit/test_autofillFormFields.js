@@ -263,7 +263,8 @@ const TESTCASES = [
     },
   },
   {
-    description: "Fill credit card fields in a form with addr and CC fields.",
+    description:
+      "Fill credit card fields in a form with address and CC fields.",
     document: `<form>
                <input id="given-name" autocomplete="given-name">
                <input id="family-name" autocomplete="family-name">
@@ -296,7 +297,7 @@ const TESTCASES = [
       tel: "",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
@@ -346,7 +347,7 @@ const TESTCASES = [
     expectedResult: {
       "cc-number": "4111111111111111",
       "cc-name": "test name",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
@@ -371,7 +372,7 @@ const TESTCASES = [
     expectedResult: {
       "cc-number": "4111111111111111",
       "cc-name": "test name",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
@@ -400,7 +401,7 @@ const TESTCASES = [
       guid: "123",
       "visible-cc": "4111111111111111",
       "visible-name": "test name",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
       "hidden-cc": undefined,
       "hidden-cc-2": undefined,
@@ -429,7 +430,7 @@ const TESTCASES = [
       guid: "123",
       "cc-number": "4111111111111111",
       "cc-name": "test name",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
@@ -457,7 +458,7 @@ const TESTCASES = [
       "cc-number2": "4963",
       "cc-number3": "5398",
       "cc-number4": "431",
-      "cc-exp-month": "6",
+      "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
   },
@@ -499,7 +500,7 @@ const TESTCASES = [
       "cc-number2": "4963",
       "cc-number3": "5398",
       "cc-number4": "431",
-      "cc-exp-month1": "6",
+      "cc-exp-month1": "06",
       "cc-exp-year1": "25",
       "cc-type2": "",
       "cc-number-5": "",

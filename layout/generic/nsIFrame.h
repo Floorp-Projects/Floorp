@@ -1738,7 +1738,6 @@ class nsIFrame : public nsQueryFrame {
   static const ChildListID kPopupList = mozilla::layout::kPopupList;
   static const ChildListID kPushedFloatsList =
       mozilla::layout::kPushedFloatsList;
-  static const ChildListID kSelectPopupList = mozilla::layout::kSelectPopupList;
   static const ChildListID kBackdropList = mozilla::layout::kBackdropList;
   // A special alias for kPrincipalList that do not request reflow.
   static const ChildListID kNoReflowPrincipalList =

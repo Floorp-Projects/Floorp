@@ -40,11 +40,6 @@ loader.lazyGetter(
 );
 loader.lazyGetter(
   this,
-  "PerformancePanel",
-  () => require("devtools/client/performance/panel").PerformancePanel
-);
-loader.lazyGetter(
-  this,
   "NewPerformancePanel",
   () => require("devtools/client/performance-new/panel").PerformancePanel
 );
@@ -259,6 +254,7 @@ Tools.performance = {
   id: "performance",
   ordinal: 6,
   icon: "chrome://devtools/skin/images/tool-profiler.svg",
+  url: "chrome://devtools/content/performance-new/index.xhtml",
   visibilityswitch: "devtools.performance.enabled",
   label: l10n("performance.label"),
   panelLabel: l10n("performance.panelLabel"),
@@ -270,53 +266,19 @@ Tools.performance = {
   },
   accesskey: l10n("performance.accesskey"),
   inMenu: false,
+  isToolSupported: function(toolbox) {
+    // Only use the new performance panel on local tab toolboxes, as they are guaranteed
+    // to have a performance actor.
+    // Remote tab toolboxes (eg about:devtools-toolbox from about:debugging) should not
+    // use the performance panel; about:debugging provides a "Profile performance" button
+    // which can be used instead, without having the overhead of starting a remote toolbox.
+    // Also accept the Browser Toolbox, so that we can profile its process via a second browser toolbox.
+    return toolbox.target.isLocalTab || toolbox.isBrowserToolbox;
+  },
+  build: function(frame, toolbox, commands) {
+    return new NewPerformancePanel(frame, toolbox, commands);
+  },
 };
-
-function switchPerformancePanel() {
-  if (
-    Services.prefs.getBoolPref("devtools.performance.new-panel-enabled", false)
-  ) {
-    Tools.performance.url =
-      "chrome://devtools/content/performance-new/index.xhtml";
-    Tools.performance.build = function(frame, toolbox, commands) {
-      return new NewPerformancePanel(frame, toolbox, commands);
-    };
-    Tools.performance.isToolSupported = function(toolbox) {
-      // Only use the new performance panel on local tab toolboxes, as they are guaranteed
-      // to have a performance actor.
-      // Remote tab toolboxes (eg about:devtools-toolbox from about:debugging) should not
-      // use the performance panel; about:debugging provides a "Profile performance" button
-      // which can be used instead, without having the overhead of starting a remote toolbox.
-      // Also accept the Browser Toolbox, so that we can profile its process via a second browser toolbox.
-      return toolbox.target.isLocalTab || toolbox.isBrowserToolbox;
-    };
-  } else {
-    Tools.performance.url = "chrome://devtools/content/performance/index.xhtml";
-    Tools.performance.build = function(frame, toolbox, commands) {
-      return new PerformancePanel(frame, toolbox, commands);
-    };
-    Tools.performance.isToolSupported = function(toolbox) {
-      return toolbox.target.hasActor("performance");
-    };
-  }
-}
-switchPerformancePanel();
-
-const prefObserver = { observe: switchPerformancePanel };
-Services.prefs.addObserver(
-  "devtools.performance.new-panel-enabled",
-  prefObserver
-);
-const unloadObserver = function(subject) {
-  if (subject.wrappedJSObject == require("@loader/unload")) {
-    Services.prefs.removeObserver(
-      "devtools.performance.new-panel-enabled",
-      prefObserver
-    );
-    Services.obs.removeObserver(unloadObserver, "devtools:loader:destroy");
-  }
-};
-Services.obs.addObserver(unloadObserver, "devtools:loader:destroy");
 
 Tools.memory = {
   id: "memory",

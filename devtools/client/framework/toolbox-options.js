@@ -424,13 +424,6 @@ OptionsPanel.prototype = {
   setupAdditionalOptions: function() {
     const prefDefinitions = [];
 
-    prefDefinitions.push({
-      pref: "devtools.performance.new-panel-enabled",
-      label: L10N.getStr("options.enableNewPerformancePanel"),
-      id: "devtools-new-performance",
-      parentId: "context-options",
-    });
-
     if (GetPref("devtools.custom-formatters")) {
       prefDefinitions.push({
         pref: "devtools.custom-formatters.enabled",
