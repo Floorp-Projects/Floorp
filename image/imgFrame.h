@@ -109,7 +109,8 @@ class imgFrame {
    *                         may be marked as read only if possible).
    */
   void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
-              bool aFinalize = true);
+              bool aFinalize = true,
+              bool aOrientationSwapsWidthAndHeight = false);
 
   /**
    * Mark this imgFrame as aborted. This informs the imgFrame that if it isn't
