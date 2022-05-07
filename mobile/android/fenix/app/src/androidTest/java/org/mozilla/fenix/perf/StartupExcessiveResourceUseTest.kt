@@ -26,7 +26,8 @@ private const val EXPECTED_SUPPRESSION_COUNT = 19
 private val EXPECTED_RUNBLOCKING_RANGE = 0..1 // CI has +1 counts compared to local runs: increment these together
 private val EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN =
     4..5 // The messaging framework is not deterministic and could add a +1 to the count
-private const val EXPECTED_NUMBER_OF_INFLATION = 14
+private val EXPECTED_NUMBER_OF_INFLATION =
+    14..15 // The messaging framework is not deterministic and could add a +1 to the count
 
 private val failureMsgStrictMode = getErrorMessage(
     shortName = "StrictMode suppression",
@@ -89,10 +90,13 @@ class StartupExcessiveResourceUseTest {
         assertEquals(failureMsgStrictMode, EXPECTED_SUPPRESSION_COUNT, actualSuppresionCount)
         assertTrue(failureMsgRunBlocking + "actual: $actualRunBlocking", actualRunBlocking in EXPECTED_RUNBLOCKING_RANGE)
         assertTrue(
-            failureMsgRecyclerViewConstraintLayoutChildren + "actual: $actualRunBlocking",
+            failureMsgRecyclerViewConstraintLayoutChildren + "actual: $actualRecyclerViewConstraintLayoutChildren",
             actualRecyclerViewConstraintLayoutChildren in EXPECTED_RECYCLER_VIEW_CONSTRAINT_LAYOUT_CHILDREN,
         )
-        assertEquals(failureMsgNumberOfInflation, EXPECTED_NUMBER_OF_INFLATION, actualNumberOfInflations)
+        assertTrue(
+            failureMsgNumberOfInflation + "actual: $actualNumberOfInflations",
+            actualNumberOfInflations in EXPECTED_NUMBER_OF_INFLATION,
+        )
     }
 }
 
