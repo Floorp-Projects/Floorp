@@ -83,6 +83,10 @@ def unzip(fileobj, dest=None, limit=None):
                     link_dst_dir = os.path.dirname(info_dst_path)
                     if not os.path.isdir(link_dst_dir):
                         os.makedirs(link_dst_dir)
+
+                    # Remove existing link if exists.
+                    if os.path.islink(info_dst_path):
+                        os.unlink(info_dst_path)
                     os.symlink(link_src_path, info_dst_path)
                 else:
                     zip_data.extract(info, path=dest)
