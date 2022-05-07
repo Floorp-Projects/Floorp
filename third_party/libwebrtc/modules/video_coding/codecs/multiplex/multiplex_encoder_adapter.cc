@@ -298,9 +298,6 @@ EncodedImageCallback::Result MultiplexEncoderAdapter::OnEncodedImage(
       PayloadStringToCodecType(associated_format_.name);
   image_component.encoded_image = encodedImage;
 
-  // If we don't already own the buffer, make a copy.
-  image_component.encoded_image.Retain();
-
   MutexLock lock(&mutex_);
   const auto& stashed_image_itr =
       stashed_images_.find(encodedImage.Timestamp());
