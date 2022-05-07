@@ -184,19 +184,21 @@ UlpfecPacketGenerator::UlpfecPacketGenerator(uint32_t ssrc)
 RtpPacketReceived UlpfecPacketGenerator::BuildMediaRedPacket(
     const AugmentedPacket& packet,
     bool is_recovered) {
-  RtpPacketReceived red_packet;
-  // Copy RTP header.
+  // Create a temporary buffer used to wrap the media packet in RED.
+  rtc::CopyOnWriteBuffer red_buffer;
   const size_t kHeaderLength = packet.header.headerLength;
-  red_packet.Parse(packet.data.cdata(), kHeaderLength);
-  RTC_DCHECK_EQ(red_packet.headers_size(), kHeaderLength);
-  uint8_t* rtp_payload =
-      red_packet.AllocatePayload(packet.data.size() + 1 - kHeaderLength);
-  // Move payload type into rtp payload.
-  rtp_payload[0] = red_packet.PayloadType();
+  // Append header.
+  red_buffer.SetData(packet.data.data(), kHeaderLength);
+  // Find payload type and add it as RED header.
+  uint8_t media_payload_type = red_buffer[1] & 0x7F;
+  red_buffer.AppendData({media_payload_type});
+  // Append rest of payload/padding.
+  red_buffer.AppendData(
+      packet.data.Slice(kHeaderLength, packet.data.size() - kHeaderLength));
+
+  RtpPacketReceived red_packet;
+  RTC_CHECK(red_packet.Parse(std::move(red_buffer)));
   red_packet.SetPayloadType(kRedPayloadType);
-  // Copy the payload.
-  memcpy(rtp_payload + 1, packet.data.cdata() + kHeaderLength,
-         packet.data.size() - kHeaderLength);
   red_packet.set_recovered(is_recovered);
 
   return red_packet;
