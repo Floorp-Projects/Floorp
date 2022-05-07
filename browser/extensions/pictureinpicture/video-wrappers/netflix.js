@@ -8,9 +8,7 @@ class PictureInPictureVideoWrapper {
   constructor() {
     let netflixPlayerAPI = window.wrappedJSObject.netflix.appContext.state.playerApp.getAPI()
       .videoPlayer;
-    let sessionId = netflixPlayerAPI
-      .getAllPlayerSessionIds()
-      .find(id => id.startsWith("watch-"));
+    let sessionId = netflixPlayerAPI.getAllPlayerSessionIds()[0];
     this.player = netflixPlayerAPI.getVideoPlayerBySessionId(sessionId);
   }
   play() {
