@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from .event_listener import EventListener
 
 class HttpPollingEventListener(EventListener):

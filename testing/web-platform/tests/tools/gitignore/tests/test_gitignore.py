@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import pytest
 
 from ..gitignore import fnmatch_translate, PathFilter
