@@ -121,7 +121,6 @@ class VideoProcessor {
           : video_processor_(video_processor),
             encoded_image_(encoded_image),
             codec_specific_info_(*codec_specific_info) {
-        encoded_image_.Retain();
       }
 
       bool Run() override {

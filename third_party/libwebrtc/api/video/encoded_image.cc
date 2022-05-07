@@ -66,20 +66,10 @@ EncodedImage::EncodedImage() = default;
 EncodedImage::EncodedImage(EncodedImage&&) = default;
 EncodedImage::EncodedImage(const EncodedImage&) = default;
 
-EncodedImage::EncodedImage(uint8_t* buffer, size_t size, size_t capacity)
-    : size_(size), buffer_(buffer), capacity_(capacity) {}
-
 EncodedImage::~EncodedImage() = default;
 
 EncodedImage& EncodedImage::operator=(EncodedImage&&) = default;
 EncodedImage& EncodedImage::operator=(const EncodedImage&) = default;
-
-void EncodedImage::Retain() {
-  if (buffer_) {
-    encoded_data_ = EncodedImageBuffer::Create(buffer_, size_);
-    buffer_ = nullptr;
-  }
-}
 
 void EncodedImage::SetEncodeTime(int64_t encode_start_ms,
                                  int64_t encode_finish_ms) {

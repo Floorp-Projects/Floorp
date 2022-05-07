@@ -73,13 +73,10 @@ class RTC_EXPORT EncodedImage {
   EncodedImage();
   EncodedImage(EncodedImage&&);
   EncodedImage(const EncodedImage&);
-  ABSL_DEPRECATED("")
-  EncodedImage(uint8_t* buffer, size_t length, size_t capacity);
 
   ~EncodedImage();
 
   EncodedImage& operator=(EncodedImage&&);
-  // Discouraged: potentially expensive.
   EncodedImage& operator=(const EncodedImage&);
 
   // TODO(nisse): Change style to timestamp(), set_timestamp(), for consistency
@@ -129,33 +126,30 @@ class RTC_EXPORT EncodedImage {
     RTC_DCHECK_LE(new_size, new_size == 0 ? 0 : capacity());
     size_ = new_size;
   }
+
   void SetEncodedData(
       rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data) {
     encoded_data_ = encoded_data;
     size_ = encoded_data->size();
-    buffer_ = nullptr;
   }
 
   void ClearEncodedData() {
     encoded_data_ = nullptr;
     size_ = 0;
-    buffer_ = nullptr;
-    capacity_ = 0;
   }
 
   rtc::scoped_refptr<EncodedImageBufferInterface> GetEncodedData() const {
-    RTC_DCHECK(buffer_ == nullptr);
     return encoded_data_;
   }
 
   const uint8_t* data() const {
-    return buffer_ ? buffer_
-                   : (encoded_data_ ? encoded_data_->data() : nullptr);
+    return encoded_data_ ? encoded_data_->data() : nullptr;
   }
 
-  // Hack to workaround lack of ownership of the encoded data. If we don't
-  // already own the underlying data, make an owned copy.
-  void Retain();
+  // TODO(bugs.webrtc.org/9378): Obsolete, delete as soon as downstream calls
+  // are fixed.
+  ABSL_DEPRECATED("")
+  void Retain() {}
 
   uint32_t _encodedWidth = 0;
   uint32_t _encodedHeight = 0;
@@ -186,18 +180,10 @@ class RTC_EXPORT EncodedImage {
   } timing_;
 
  private:
-  size_t capacity() const {
-    return buffer_ ? capacity_ : (encoded_data_ ? encoded_data_->size() : 0);
-  }
+  size_t capacity() const { return encoded_data_ ? encoded_data_->size() : 0; }
 
-  // TODO(bugs.webrtc.org/9378): We're transitioning to always owning the
-  // encoded data.
   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   size_t size_ = 0;  // Size of encoded frame data.
-  // Non-null when used with an un-owned buffer.
-  uint8_t* buffer_ = nullptr;
-  // Allocated size of _buffer; relevant only if it's non-null.
-  size_t capacity_ = 0;
   uint32_t timestamp_rtp_ = 0;
   absl::optional<int> spatial_index_;
   std::map<int, size_t> spatial_layer_frame_size_bytes_;
