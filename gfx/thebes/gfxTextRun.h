@@ -830,7 +830,8 @@ class gfxTextRun : public gfxShapedText {
   // Advance aRange.start to the start of the nearest ligature, back
   // up aRange.end to the nearest ligature end; may result in
   // aRange->start == aRange->end.
-  void ShrinkToLigatureBoundaries(Range* aRange) const;
+  // Returns whether any adjustment was made.
+  bool ShrinkToLigatureBoundaries(Range* aRange) const;
   // result in appunits
   gfxFloat GetPartialLigatureWidth(Range aRange,
                                    PropertyProvider* aProvider) const;
