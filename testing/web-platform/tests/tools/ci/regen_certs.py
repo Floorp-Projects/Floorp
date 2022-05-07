@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import argparse
 import base64
 import logging

@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import http.client as httplib
 import sys
 import logging
