@@ -848,10 +848,10 @@ gfxTextRun::Metrics gfxTextRun::MeasureText(
   return accumulatedMetrics;
 }
 
-void gfxTextRun::GetLineHeightMetrics(gfxFloat& aAscent,
+void gfxTextRun::GetLineHeightMetrics(Range aRange, gfxFloat& aAscent,
                                       gfxFloat& aDescent) const {
   Metrics accumulatedMetrics;
-  GlyphRunIterator iter(this, Range(this));
+  GlyphRunIterator iter(this, aRange);
   while (iter.NextRun()) {
     gfxFont* font = iter.GetGlyphRun()->mFont;
     auto metrics =
