@@ -28,6 +28,8 @@
 % http://localhost/tests/perf-reftest-singletons/style-attr-1.html
 % http://localhost/tests/perf-reftest-singletons/style-sharing-style-attr.html
 % http://localhost/tests/perf-reftest-singletons/style-sharing.html
+% http://localhost/tests/perf-reftest-singletons/svg-text-textLength-1.html
+% http://localhost/tests/perf-reftest-singletons/svg-text-getExtentOfChar-1.html
 % http://localhost/tests/perf-reftest-singletons/tiny-traversal-singleton.html
 % http://localhost/tests/perf-reftest-singletons/window-named-property-get.html
 # When modifying this list, please also update build/pgo/index.html.
