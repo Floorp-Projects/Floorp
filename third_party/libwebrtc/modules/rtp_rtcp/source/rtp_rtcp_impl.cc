@@ -123,20 +123,18 @@ void ModuleRtpRtcpImpl::Process() {
     // processed RTT for at least |kRtpRtcpRttProcessTimeMs| milliseconds.
     // Note that LastReceivedReportBlockMs() grabs a lock, so check
     // |process_rtt| first.
-    if (process_rtt &&
+    if (process_rtt && rtt_stats_ != nullptr &&
         rtcp_receiver_.LastReceivedReportBlockMs() > last_rtt_process_time_) {
-      std::vector<RTCPReportBlock> receive_blocks;
-      rtcp_receiver_.StatisticsReceived(&receive_blocks);
-      int64_t max_rtt = 0;
-      for (std::vector<RTCPReportBlock>::iterator it = receive_blocks.begin();
-           it != receive_blocks.end(); ++it) {
-        int64_t rtt = 0;
-        rtcp_receiver_.RTT(it->sender_ssrc, &rtt, NULL, NULL, NULL);
-        max_rtt = (rtt > max_rtt) ? rtt : max_rtt;
+      int64_t max_rtt_ms = 0;
+      for (const auto& block : rtcp_receiver_.GetLatestReportBlockData()) {
+        if (block.last_rtt_ms() > max_rtt_ms) {
+          max_rtt_ms = block.last_rtt_ms();
+        }
       }
       // Report the rtt.
-      if (rtt_stats_ && max_rtt != 0)
-        rtt_stats_->OnRttUpdate(max_rtt);
+      if (max_rtt_ms > 0) {
+        rtt_stats_->OnRttUpdate(max_rtt_ms);
+      }
     }
 
     // Verify receiver reports are delivered and the reported sequence number
@@ -541,11 +539,6 @@ void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(
     int64_t* remote_ntp_timestamp_ms) const {
   return rtcp_receiver_.RemoteRTCPSenderInfo(
       packet_count, octet_count, ntp_timestamp_ms, remote_ntp_timestamp_ms);
-}
-
-int32_t ModuleRtpRtcpImpl::RemoteRTCPStat(
-    std::vector<RTCPReportBlock>* receive_blocks) const {
-  return rtcp_receiver_.StatisticsReceived(receive_blocks);
 }
 
 std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
