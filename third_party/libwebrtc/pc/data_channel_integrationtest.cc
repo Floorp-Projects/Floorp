@@ -83,26 +83,6 @@ class DataChannelIntegrationTestUnifiedPlan
       : PeerConnectionIntegrationBaseTest(SdpSemantics::kUnifiedPlan) {}
 };
 
-class DummyDtmfObserver : public DtmfSenderObserverInterface {
- public:
-  DummyDtmfObserver() : completed_(false) {}
-
-  // Implements DtmfSenderObserverInterface.
-  void OnToneChange(const std::string& tone) override {
-    tones_.push_back(tone);
-    if (tone.empty()) {
-      completed_ = true;
-    }
-  }
-
-  const std::vector<std::string>& tones() const { return tones_; }
-  bool completed() const { return completed_; }
-
- private:
-  bool completed_;
-  std::vector<std::string> tones_;
-};
-
 #ifdef WEBRTC_HAVE_SCTP
 
 // This test causes a PeerConnection to enter Disconnected state, and
