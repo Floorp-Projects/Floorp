@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting APIs and permissions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+const verifyRegisterContentScripts = async ({ manifest_version }) => {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version,
+      permissions: ["scripting"],
+      host_permissions: ["*://example.com/*"],
+      optional_permissions: ["*://example.org/*"],
+
+    },
+    async background() {
+      browser.test.onMessage.addListener(async (msg, value) => {
+        switch (msg) {
+          case "grant-permission":
+            let granted = await new Promise(resolve => {
+              browser.test.withHandlingUserInput(() => {
+                resolve(browser.permissions.request(value));
+              });
+            });
+            browser.test.assertTrue(granted, "permission request succeeded");
+            browser.test.sendMessage("permission-granted");
+            break;
+
+          default:
+            browser.test.fail(`invalid message received: ${msg}`);
+        }
+      });
+
+      await browser.scripting.registerContentScripts([
+        {
+          id: "script",
+          js: ["script.js"],
+          matches: [
+            "*://example.com/*",
+            "*://example.net/*",
+            "*://example.org/*",
+          ],
+          persistAcrossSessions: false,
+        },
+      ]);
+
+      browser.test.sendMessage("background-ready");
+    },
+    files: {
+      "script.js": () => {
+        browser.test.sendMessage(
+          "script-ran",
+          window.location.host + window.location.search
+        );
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  if (manifest_version > 2) {
+    extension.sendMessage("grant-permission", {
+      origins: ["*://example.com/*"],
+    });
+    await extension.awaitMessage("permission-granted");
+  }
+
+  // `example.net` is not declared in the list of `permissions`.
+  let tabExampleNet = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.net/",
+    true
+  );
+  // `example.org` is listed in `optional_permissions`.
+  let tabExampleOrg = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.org/",
+    true
+  );
+  // `example.com` is listed in `permissions`.
+  let tabExampleCom = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.com/",
+    true
+  );
+
+  let value = await extension.awaitMessage("script-ran");
+  ok(
+    value === "example.com",
+    `expected: example.com, received: ${value}`
+  );
+
+  extension.sendMessage("grant-permission", {
+    origins: ["*://example.org/*"],
+  });
+  await extension.awaitMessage("permission-granted");
+
+  let tabExampleOrg2 = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://example.org/?2",
+    true
+  );
+
+  value = await extension.awaitMessage("script-ran");
+  ok(
+    value === "example.org?2",
+    `expected: example.org?2, received: ${value}`
+  );
+
+  await AppTestDelegate.removeTab(window, tabExampleNet);
+  await AppTestDelegate.removeTab(window, tabExampleOrg);
+  await AppTestDelegate.removeTab(window, tabExampleCom);
+  await AppTestDelegate.removeTab(window, tabExampleOrg2);
+
+  await extension.unload();
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // TODO: remove the pref below when Bug 1766822 has been fixed.
+      ["dom.ipc.processPrelaunch.enabled", false],
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.webextOptionalPermissionPrompts", false],
+    ],
+  });
+});
+
+add_task(async function test_scripting_registerContentScripts_mv2() {
+  await verifyRegisterContentScripts({ manifest_version: 2 });
+});
+
+add_task(async function test_scripting_registerContentScripts_mv3() {
+  await verifyRegisterContentScripts({ manifest_version: 3 });
+});
+
+</script>
+
+</body>
+</html>
