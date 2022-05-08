@@ -1,0 +1,10 @@
+# Verify that blurs on backdrop-filters use edgeMode=duplicate
+---
+root:
+  items:
+    - type: rect
+      bounds: 0 0 400 400
+      color: red
+    - type: rect
+      bounds: 100 100 200 200
+      color: blue
