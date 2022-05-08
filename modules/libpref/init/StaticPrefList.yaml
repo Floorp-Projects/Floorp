@@ -13319,11 +13319,6 @@
   value: 0.0000001f
   mirror: always
 
-- name: widget.swipe.success-threshold
-  type: float
-  value: 0.25f
-  mirror: always
-
 - name: widget.swipe.success-velocity-contribution
   type: float
   value: 0.05f
