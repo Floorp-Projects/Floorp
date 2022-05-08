@@ -67,8 +67,6 @@
     <string name="cfr_neg_button_text">Жоқ, рахмет</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Firefox-ты сілтемелерді қолданбаларда автоматты түрде ашатын етіп баптауға болады.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">%1$s қолданбасын сілтемелерді қолданбаларда автоматты түрде ашатын етіп баптауға болады.</string>
     <!-- Text for the positive action button -->
@@ -97,8 +95,6 @@
     <string name="tab_tray_inactive_onboarding_button_text">Баптауларда сөндіру</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Бір айдан кейін автожабу керек пе?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox соңғы айда қаралмаған беттерді жаба алады.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s сіз соңғы айда қарамаған беттерді жаба алады.</string>
@@ -251,15 +247,10 @@
     <string name="search_settings_menu_item">Іздеу баптаулары</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox ішінде не жаңалық</string>
-
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s ішінде не жаңалық</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Енді тоқтаған жерден жалғастыру оңайырақ.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Жеке Firefox басты беті</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Жеке %1$s басты беті</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -277,8 +268,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Сіздің жекелендірілген Firefox үй беті енді тоқтаған жерден жалғастыруды жеңілдетеді. Соңғы беттерді, бетбелгілерді және іздеу нәтижелерін табыңыз.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Жаңа Firefox бетін ашу</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Жаңа %1$s бетін ашу</string>
     <!-- Text preview for smaller sized widgets -->
@@ -447,11 +436,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Қарап шығу</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Түсқағазды өзгерту үшін логотипті шертіңіз</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Firefox басты бетінің логотипін түрту арқылы тұсқағазды өзгертіңіз</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Негізгі беттен шықпай-ақ суретті айналдырыңыз және жаңартыңыз.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -671,8 +656,6 @@
     <string name="studies_remove">Өшіру</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Белсенді</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox кейде зерттеулерді орнатып, орындай алады.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s кейде зерттеулерді орнатып, орындай алады.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -759,8 +742,6 @@
     <string name="tab_tray_header_title_1">Басқа беттер</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Іздеу жолын енгізіңіз</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Іздеу жолын енгізіңіз</string>
     <!-- Text for the button to clear all history -->
@@ -1227,8 +1208,6 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Үздіксіз құпиялылық</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатады.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s компанияларды интернетте сізді жасырын түрде бақылауын автоматты түрде тоқтатады.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1619,7 +1598,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Адрестерді басқару</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Толық аты</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Толық аты</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Аты</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Әкесінің аты</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Тегi</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Көше адресі</string>
     <!-- The header for the city of an address -->
@@ -1848,25 +1833,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Автожабу іске қосылған</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Firefox-ты жақсартуға көмектесіңіз</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Белсенді емес беттер мүмкіндігін неліктен сөндірдіңіз?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Мен оның қалай жұмыс істейтінін түсінбеймін</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Мен ескі беттерді өзім тазалағанды қалаймын</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Екі апталық уақыт кезеңі тым ұзақ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Екі апталық уақыт кезеңі тым қысқа</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Жіберу</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Жабу</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Веб-сайттар, эл. пошта хаттары және хабарламалардан сілтемелерді Firefox-та автоматты түрде ашылатындай етіп баптау.</string>

@@ -73,8 +73,6 @@
     <string name="cfr_neg_button_text">ਨਹੀਂ, ਧੰਨਵਾਦ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">ਤੁਸੀਂ ਐਪਾਂ ਵਿਚਲੇ ਲਿੰਕਾਂ ਨੂੰ ਆਪਣੇ-ਆਪ Firefox ਨਾਲ ਖੋਲ੍ਹਣ ਲਈ ਸੈੱਟ ਕਰੋ।</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">ਤੁਸੀਂ ਐਪਾਂ ਵਿੱਚ ਲਿੰਕ ਆਪਣੇ-ਆਪ ਖੋਲ੍ਹਣ ਲਈ %1$s ਸੈਟਅੱਪ ਕਰ ਸਕਦੇ ਹੋ।</string>
     <!-- Text for the positive action button -->
@@ -104,8 +102,6 @@
     <string name="tab_tray_inactive_onboarding_button_text">ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਬੰਦ ਕਰੋ</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">ਇੱਕ ਮਹੀਨੇ ਬਾਅਦ ਆਪੇ ਬੰਦ ਕਰਨਾ ਹੈ?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox ਉਹਨਾਂ ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦਾ ਹੈ, ਜਿਨਾਂ ਨੂੰ ਤੁਸੀਂ ਪਿਛਲੇ ਮਹੀਨੇ ਭਰ ਤੋਂ ਨਹੀਂ ਵੇਖਿਆ ਹੈ।</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">ਜੇ ਤੁਸੀਂ ਪਿਛਲੇ ਮਹੀਨੇ ਤੋਂ ਵੱਧ ਦੌਰਾਨ ਟੈਬਾਂ ਨਹੀਂ ਵੇਖੀਆਂ ਤਾਂ %1$s ਉਹਨਾਂ ਨੂੰ ਬੰਦ ਕਰ ਸਕਦਾ ਹੈ।</string>
@@ -261,14 +257,10 @@
     <string name="search_settings_menu_item">ਖੋਜ ਸੈਟਿੰਗਾਂ</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s ਵਿੱਚ ਨਵਾਂ ਕੀ ਹੈ</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਈ ਸੀ, ਉਥੋਂ ਹੀ ਮੁੜ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਹੈ।</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ Firefox ਮੁੱਖ-ਸਫ਼ਾ</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">ਆਪਣੇ ਮੁਤਾਬਕ ਢਾਲਿਆ %1$s ਦਾ ਮੁੱਖ-ਸਫ਼ਾ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -286,8 +278,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ਤੁਹਾਡੇ ਆਪਣੇ ਬਣਾਏ Firefox ਮੁੱਖ-ਸਫ਼ੇ ਨੇ ਹੁਣ ਜਿੱਥੇ ਤੁਸੀਂ ਛੱਡ ਕੇ ਗਏ ਸੀ, ਉਥੋਂ ਹੀ ਸ਼ੁਰੂ ਕਰਨਾ ਸੌਖਾ ਬਣਾ ਦਿੱਤਾ ਹੈ। ਆਪਣੀਆਂ ਸੱਜਰੀਆਂ ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ ਅਤੇ ਖੋਜ ਨਤੀਜੇ ਲੱਭੋ।</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">ਨਵੀਂ Firefox ਟੈਬ ਖੋਲ੍ਹੋ</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ਨਵੀਂ %1$s ਟੈਬ ਖੋਲ੍ਹੋ</string>
     <!-- Text preview for smaller sized widgets -->
@@ -460,11 +450,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">ਵੇਖੋ</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">ਵਾਲਪੇਪਰ ਬਦਲਣ ਲਈ ਲੋਗੋ ਨੂੰ ਛੂਹੋ</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Firefox ਮੁੱਖ-ਸਫ਼ੇ ਲੋਗੋ ਨੂੰ ਛੂਹ ਕੇ ਵਾਲਪੇਪਰ ਬਦਲੋ</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">ਬਿਨਾਂ ਮੁੱਖ ਸਫ਼ਾ ਬਦਲੇ ਚਿੱਤਰ ਬਦਲੋ ਅਤੇ ਅੱਪਡੇਟ ਕਰੋ।</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -693,8 +679,6 @@
     <string name="studies_remove">ਹਟਾਓ</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ਸਰਗਰਮ</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox ਸਮੇਂ ਸਮੇਂ ਉੱਤੇ ਅਧਿਐਨ ਇੰਸਟਾਲ ਅਤੇ ਚਲਾ ਸਕਦਾ ਹੈ।</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s ਸਮੇਂ ਸਮੇਂ ਉੱਤੇ ਅਧਿਐਨ ਇੰਸਟਾਲ ਕਰ ਤੇ ਚਲਾ ਸਕਦਾ ਹੈ।</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -781,8 +765,6 @@
     <string name="tab_tray_header_title_1">ਹੋਰ ਟੈਬਾਂ</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">ਖੋਜ ਸ਼ਬਦ ਦਿਓ</string>
     <!-- Text for the button to clear all history -->
@@ -1253,8 +1235,6 @@
     <string name="onboarding_firefox_account_sync_is_on">ਸਿੰਕ ਚਾਲੂ ਹੈ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ਪਰਦੇਦਾਰੀ ਹਮੇਸ਼ਾਂ ਚਾਲੂ</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ ਚੋਰੀ ਵੈੱਬ ਉੱਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ Firefox ਆਪਣੇ-ਆਪ ਹੀ ਰੋਕਦਾ ਹੈ।</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">ਤੁਹਾਡੇ ਵਲੋਂ ਵੈਬ ਵਰਤਣ ਦੇ ਦੌਰਾਨ ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ-ਛੁਪੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ %1$s ਆਪਣੇ-ਆਪ ਰੋਕਦਾ ਹੈ।</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1641,7 +1621,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">ਸਿਰਨਾਵਿਆਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">ਪੂਰਾ ਨਾਂ</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">ਪੂਰਾ ਨਾਂ</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">ਨਾਂ ਦਾ ਪਹਿਲਾਂ ਹਿੱਸਾ</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">ਮੱਧ ਨਾਂ</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">ਨਾਂ ਦਾ ਆਖਰੀ ਹਿੱਸਾ</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">ਸੜਕ ਸਿਰਨਾਵਾਂ</string>
     <!-- The header for the city of an address -->
@@ -1869,25 +1855,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">ਆਪੇ ਬੰਦ ਕਰਨਾ ਸਮਰੱਥ ਹੈ</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Firefox ਸੁਧਾਰਨ ਲਈ ਮਦਦ</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">ਤੁਸੀਂ ਨਾ-ਸਰਗਰਮ ਟੈਬਾਂ ਨੂੰ ਅਸਮਰੱਥ ਕਿਉਂ ਕੀਤਾ ਸੀ?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">ਮੈਨੂੰ ਸਮਝ ਨਹੀਂ ਆਈ ਕਿ ਇਹ ਕਿਵੇਂ ਕਰਦਾ ਹੈ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">ਮੈਂ ਆਪਣੀਆਂ ਪੁਰਾਣੀਆਂ ਟੈਬਾਂ ਖੁਦ ਸਾਫ਼ ਕਰਨੀਆਂ ਹਨ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">ਦੋ ਹਫ਼ਤੇ ਦਾ ਸਮਾਂ ਬਹੁਤ ਜ਼ਿਆਦਾ ਹੈ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">ਦੋ ਹਫ਼ਤੇ ਦਾ ਸਮਾਂ ਬਹੁਤ ਘੱਟ ਹੈ</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ਭੇਜੋ</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">ਬੰਦ ਕਰੋ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ਵੈੱਬਸਾਈਟਾਂ, ਈਮੇਲਾਂ ਅਤੇ ਸੁਨੇਹਿਆਂ ਨੂੰ Firefox ਵਿੱਚ ਆਪਣੇ ਖੋਲ੍ਹਣ ਲਈ ਲਿੰਕ ਸੈੱਟ ਕਰੋ।</string>

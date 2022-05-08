@@ -67,8 +67,6 @@
     <string name="cfr_neg_button_text">ᱵᱟᱝᱟ ᱥᱟᱨᱦᱟᱣ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">ᱟᱢ ᱮᱯᱯ ᱠᱚ ᱮᱢᱟᱱ ᱨᱮ ᱟᱡ ᱛᱮᱜᱮ ᱞᱤᱝᱠ ᱠᱚ ᱮᱢᱟᱱ ᱚᱰᱚᱠ ᱨᱮᱭᱟᱜ Firefox ᱨᱮ ᱥᱮᱴ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">ᱟᱢ ᱮᱯᱯ ᱠᱚ ᱮᱢᱟᱱ ᱨᱮ ᱟᱡ ᱛᱮᱜᱮ ᱞᱤᱝᱠ ᱠᱚ ᱮᱢᱟᱱ ᱚᱰᱚᱠ ᱨᱮᱭᱟᱜ %1$s ᱨᱮ ᱥᱮᱴ ᱫᱟᱲᱮᱟᱜᱼᱟᱢ ᱾</string>
     <!-- Text for the positive action button -->
@@ -99,8 +97,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">ᱢᱤᱫ ᱪᱟᱸᱫᱚ ᱛᱟᱭᱚᱢ ᱟᱡ ᱛᱮ ᱵᱚᱸᱫᱽ ᱟᱢ ᱥᱮ?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵ ᱠᱚ Firefox ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ᱾</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱪᱟᱸᱫᱚ ᱨᱮ ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱠᱟᱱ ᱴᱮᱵ ᱠᱚ %1$s ᱵᱚᱸᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱭ ᱾</string>
@@ -252,16 +248,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ᱴᱷᱤᱠᱬᱟ ᱵᱟᱨ ᱠᱷᱚᱱ ᱥᱤᱫᱷᱟᱹ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
 
-    <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">%s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟᱜ-ᱟ</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">ᱥᱮᱸᱫᱽᱨᱟ ᱥᱟᱡᱟᱣ ᱠᱚ</string>
 
+    <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s ᱨᱮ ᱪᱮᱫ ᱱᱟᱶᱟ ᱢᱮᱱᱟ-ᱟ</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">ᱱᱤᱛᱚᱜ ᱫᱚ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ ᱱᱚᱰᱮ ᱠᱷᱚᱱ ᱥᱟᱵ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ᱾</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">ᱱᱤᱡᱮ ᱛᱮ ᱛᱮᱭᱟᱨ Firefox ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">ᱱᱤᱡᱮ ᱛᱮ ᱛᱮᱭᱟᱨ %1$s ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -280,8 +274,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱢᱚᱱᱮᱛᱮᱭᱟᱜ Firefox ᱚᱲᱟᱜᱥᱟᱦᱴᱟ ᱫᱚ ᱱᱤᱛᱚᱜ ᱡᱟᱦᱟᱸ ᱨᱮ ᱟᱲᱟᱜ ᱠᱟᱜᱼᱟᱢ ᱚᱱᱰᱮ ᱜᱮ ᱤᱫᱤ ᱢᱮᱭᱟᱭ ᱾ ᱟᱢᱟᱜ ᱱᱤᱛᱚᱜᱟᱜ ᱴᱮᱵᱽ ᱠᱚ, ᱵᱩᱠᱢᱟᱨᱠ ᱠᱚ ᱟᱨ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ ᱯᱟᱱᱛᱮ ᱛᱟᱢ ᱾</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">ᱱᱟᱶᱟ Firefox ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">ᱱᱟᱶᱟ ᱴᱮᱵᱽ %1$s ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Text preview for smaller sized widgets -->
@@ -329,12 +321,24 @@
     <string name="preferences_add_private_browsing_shortcut">ᱱᱤᱡᱮᱨᱟᱜ ᱵᱨᱟᱩᱡᱤᱝ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ᱠᱷᱟᱹᱞᱤᱼHTTPS ᱢᱳᱰ</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">ᱵᱮᱰᱷᱟᱣ ᱠᱟᱱᱟ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱛᱮ HTTPS ᱫᱟᱱᱟᱝ ᱵᱮᱵᱷᱟᱨ ᱛᱮ ᱥᱟᱭᱤᱴ ᱠᱚ ᱥᱟᱞᱟᱜ ᱟᱡ ᱛᱮ ᱡᱩᱲᱟᱹᱣ ᱵᱤᱲᱟᱹᱣ ᱾</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on">ᱪᱟᱹᱞᱩ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="preferences_https_only_off">ᱵᱚᱸᱫᱚ</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">ᱡᱷᱚᱛᱚ ᱴᱮᱵᱽ ᱠᱚᱨᱮ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">ᱯᱨᱟᱭᱣᱮᱴ ᱴᱮᱵᱽ ᱨᱮᱜᱮ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱭᱤᱴ ᱫᱚ ᱵᱟᱹᱱᱩᱜ ᱟᱹᱱᱤᱡ</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">ᱡᱟᱹᱥᱛᱤ ᱠᱷᱚᱱ ᱡᱟᱹᱥᱛᱤ, ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱫᱚ HTTPS ᱵᱟᱭ ᱥᱟᱹᱯᱚᱴᱟᱭ ᱾</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">ᱢᱮᱱᱠᱷᱟᱱ, ᱱᱚᱶᱟ ᱦᱚᱸ ᱦᱩᱭ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱡᱮ ᱢᱤᱫᱴᱟᱹᱝ ᱢᱩᱸᱦᱟᱹ ᱤᱡ ᱦᱚᱸ ᱛᱟᱦᱮᱸ ᱠᱚᱜᱼᱟᱭ ᱾ ᱟᱢ ᱡᱩᱫᱤ ᱣᱮᱵᱽᱥᱟᱭᱤᱴ ᱥᱮᱫ ᱞᱟᱦᱟᱜ ᱠᱷᱟᱱ ᱫᱚᱢ, ᱟᱢ ᱫᱚ ᱡᱟᱦᱟᱱᱟᱜ ᱥᱚᱢᱵᱮᱫᱚᱱ ᱡᱤᱱᱤᱥ ᱟᱞᱚᱢ ᱟᱫᱮᱨ ᱛᱟᱢᱟᱸ ᱾ ᱡᱤᱫᱤ ᱟᱢ ᱞᱟᱦᱟᱜ ᱠᱷᱟᱱ, HTTPSᱼᱢᱳᱰ ᱫᱚ ᱥᱟᱭᱤᱴ ᱞᱟᱹᱜᱤᱫ ᱛᱤᱱᱟᱹᱜ ᱜᱟᱱ ᱚᱠᱛᱚ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ᱟᱹᱛᱩᱨ ᱫᱟᱲᱮᱭᱟᱜ</string>
     <!-- Preference to override the Firefox Account server -->
@@ -439,11 +443,7 @@
     <string name="wallpaper_updated_snackbar_action">ᱧᱮᱞ</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">ᱠᱟᱸᱛᱷᱪᱤᱛᱟᱹᱨ ᱵᱚᱫᱚᱞ ᱞᱟᱹᱜᱤᱫ ᱞᱚᱜᱚ ᱨᱮ ᱚᱛᱟᱭ ᱢᱮ</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Firefox ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱞᱚᱜᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱠᱟᱛᱮ ᱞᱟᱴᱷᱟ ᱪᱤᱛᱟᱹᱨ ᱵᱚᱫᱚᱞ ᱢᱮ</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱵᱤᱱᱟᱹ ᱟᱲᱟᱜ ᱠᱟᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱟᱨ ᱪᱤᱛᱟᱹᱨ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱢᱮ ᱾</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -671,8 +671,6 @@
 
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ᱩᱥᱨᱟᱹᱣ</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox ᱵᱚᱦᱟᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱟᱨ ᱥᱚᱢᱚᱭ ᱠᱷᱚᱱ ᱥᱚᱢᱚᱨ ᱯᱟᱲᱦᱟᱣ ᱠᱚ ᱪᱟᱹᱞᱩᱜᱼᱟ ᱾</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s ᱵᱚᱦᱟᱞ ᱫᱟᱲᱮᱭᱟᱜᱼᱟ ᱟᱨ ᱥᱚᱢᱚᱭ ᱠᱷᱚᱱ ᱥᱚᱢᱚᱨ ᱯᱟᱲᱦᱟᱣ ᱠᱚ ᱪᱟᱹᱞᱩᱜᱼᱟ ᱾</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -758,8 +756,6 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱚᱞ ᱟᱫᱮᱨ ᱢᱮ</string>
-    <!-- Text for the button to search all history -->
     <string name="history_search_1">ᱥᱮᱸᱫᱽᱨᱟ ᱚᱞ ᱠᱚ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">ᱱᱟᱜᱟᱢ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
@@ -784,6 +780,11 @@
     <string name="history_older">ᱢᱟᱨᱮᱭᱟᱜ</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ᱱᱚᱰᱮ ᱱᱟᱜᱟᱢ ᱵᱚᱱᱩᱜ-ᱟ</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ ᱟᱹᱭᱩᱨ ᱢᱤᱫ ᱠᱟᱱᱟ</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">ᱮᱴᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱠᱷᱚᱱ</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1076,6 +1077,8 @@
     <string name="snackbar_message_bookmarks_saved">ᱵᱩᱻᱠᱢᱟᱨᱠ ᱠᱚ ᱥᱟᱺᱪᱟᱣ ᱮᱱᱟ!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱥ!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">!ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱛᱮ ᱥᱮᱞᱮᱫᱽ ᱮᱱᱟ!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">ᱱᱤᱡᱮᱨᱟᱜ ᱴᱮᱵᱽ ᱵᱚᱸᱫᱚᱭᱮᱱᱟ</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1166,6 +1169,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ᱵᱨᱟᱩᱡᱤᱝ ᱰᱟᱴᱟ ᱢᱮᱴᱟᱣ ᱦᱩᱭᱩ ᱠᱟᱱᱟ…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">ᱱᱚᱶᱟ ᱫᱚ ᱡᱷᱚᱛᱚ ᱡᱤᱱᱤᱥ ᱢᱮᱴᱟᱣ ᱜᱚᱫ ᱠᱟᱜᱼᱟᱭ ᱾</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">ᱢᱮᱴᱟᱣ</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">ᱫᱳᱞ ᱢᱮᱴᱟᱣ ᱦᱩᱭ</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview ᱱᱤᱛᱚᱜ ᱫᱚ Firefox Nightly ᱦᱩᱭ ᱮᱱᱟ</string>
@@ -1211,8 +1223,6 @@
     <string name="onboarding_firefox_account_sync_is_on">ᱥᱭᱝᱠ ᱪᱟᱹᱞᱩ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ᱯᱨᱟᱭᱣᱮᱥᱭ ᱡᱷᱚᱛᱚ ᱵᱮᱲᱟ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">ᱯᱷᱟᱭᱟᱹᱨᱯᱷᱚᱠᱥ ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s ᱫᱚ ᱵᱟᱦᱨᱮ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱣᱮᱵᱽ ᱨᱮ ᱟᱢ ᱯᱟᱸᱡᱟ ᱠᱚ ᱵᱚᱸᱫᱚᱜᱼᱟ ᱾</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1518,6 +1528,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ᱞᱚᱜᱤᱱ ᱢᱮᱱᱭᱩ ᱥᱟᱞᱟᱭ ᱢᱮ</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">ᱟᱡ ᱛᱮ ᱯᱩᱨᱟᱹᱣ</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">ᱴᱷᱤᱠᱬᱟᱤᱭᱟᱹ</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ</string>
 
@@ -1535,6 +1550,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">ᱥᱟᱺᱪᱟᱣ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ᱠᱟᱰ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Title of the "Edit card" screen -->
@@ -1584,6 +1603,38 @@
     <string name="credit_cards_biometric_prompt_message_pin">ᱟᱢᱟᱜ ᱥᱟᱫᱷᱚᱱ ᱚᱱᱞᱚᱠ ᱢᱮ</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">ᱫᱚᱦᱚ ᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱤᱵᱨᱚᱬ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">ᱴᱷᱤᱠᱬᱟᱹ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">ᱯᱩᱨᱟᱹ ᱧᱩᱛᱩᱢ</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">ᱯᱩᱭᱞᱩ ᱧᱩᱛᱩᱢ</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">ᱛᱟᱞᱟ ᱧᱩᱛᱩᱢ</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">ᱢᱩᱪᱟᱹᱫ ᱧᱩᱛᱩᱢ</string>
+
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">ᱥᱚᱰᱚᱠ ᱴᱷᱤᱠᱬᱟᱹ</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">ᱥᱚᱦᱚᱨ</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">ᱯᱚᱱᱚᱛ</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">ᱡᱤᱯ</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">ᱯᱷᱚᱱ</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">ᱤᱢᱮᱞ</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">ᱥᱟᱧᱪᱟᱣ</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">ᱵᱟᱹᱰᱨᱟᱹ</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
@@ -1669,6 +1720,10 @@
     <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱥᱟᱭᱤᱴ ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Browser menu button that removes a top site from the home fragment -->
     <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ ᱨᱤᱱ ᱥᱟᱭᱤᱴ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱠᱟᱜ ᱢᱮ</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱛᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱠᱷᱚᱱ ᱚᱪᱚᱜᱽ ᱢᱮ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">ᱯᱚᱨᱢᱟᱱᱤᱡᱺ%1$s</string>
@@ -1744,8 +1799,12 @@
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ᱴᱚᱯ ᱥᱟᱭᱤᱴ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨᱮᱱᱟ</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱞᱤᱢᱤᱴ ᱥᱮᱴᱮᱨ ᱦᱩᱭ ᱮᱱᱟ</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">ᱱᱟᱶᱟ ᱴᱟᱹᱯ ᱥᱟᱭᱤᱴ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">ᱢᱤᱫ ᱱᱟᱶᱟ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱥᱮᱞᱮᱫᱽ ᱞᱟᱹᱜᱤᱫ, ᱢᱤᱫᱴᱟᱹᱝ ᱚᱰᱚᱠ ᱢᱮ ᱾ ᱥᱟᱭᱤᱴ ᱴᱤᱯᱟᱹᱣ ᱟᱨ ᱚᱛᱟ ᱛᱷᱤᱨ ᱠᱟᱛᱮ ᱵᱟᱪᱷᱟᱣ ᱢᱮ ᱟᱨ ᱚᱰᱚᱠ ᱢᱮ ᱾</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
 
@@ -1755,7 +1814,9 @@
 	<string name="top_sites_rename_dialog_title">ᱧᱩᱛᱩᱢ</string>
 	<!-- Hint for renaming title of a top site -->
 	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ᱴᱳᱯ ᱥᱟᱭᱤᱴ ᱧᱩᱛᱩᱢ</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱧᱩᱛᱩᱢ</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">ᱴᱷᱤᱠ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
@@ -1783,25 +1844,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">ᱟᱡᱼᱛᱮᱼᱵᱚᱸᱫ ᱮᱢ ᱮᱱᱟ</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Firefox ᱥᱩᱫᱷᱨᱟᱹᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢ ᱢᱮ</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">ᱵᱟᱝ ᱪᱟᱹᱞᱩᱜ ᱠᱟᱱ ᱴᱮᱵᱽ ᱠᱚ ᱪᱮᱫᱟᱜ ᱵᱚᱸᱫ ᱠᱮᱜᱼᱟᱢ ?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">ᱤᱧ ᱵᱟᱹᱧ ᱵᱩᱡᱷᱟᱹᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ ᱱᱚᱶᱟ ᱫᱚ ᱪᱮᱞᱠᱟ ᱛᱮ ᱠᱟᱹᱢᱤ ᱠᱟᱱᱟ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">ᱤᱧ ᱫᱚ ᱢᱟᱨᱮ ᱴᱮᱵᱽ ᱠᱚ ᱤᱧ ᱛᱮᱜᱮ ᱯᱷᱟᱨᱪᱟ ᱥᱮᱱᱟᱹᱧ ᱠᱟᱱᱟ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱡᱤᱞᱤᱧ ᱟ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">ᱵᱚᱨᱼᱦᱟᱴ ᱚᱠᱛᱚ ᱫᱚ ᱟᱹᱰᱤ ᱠᱷᱟᱴᱚ ᱜᱮᱭᱟ</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ᱠᱩᱞ ᱢᱮ</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Firefox ᱟᱡ ᱛᱮ ᱠᱷᱩᱞᱟᱹ ᱪᱷᱚ ᱞᱟᱹᱜᱤᱫ ᱣᱮᱵᱥᱟᱭᱤᱴ, ᱤᱢᱮᱞ, ᱟᱨ ᱢᱮᱥᱮᱡᱽ ᱨᱮᱭᱟᱜ ᱞᱤᱝᱠ ᱥᱮᱴ ᱢᱮ ᱾ </string>
@@ -1832,4 +1874,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
 
-    </resources>
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">ᱰᱟᱴᱟ ᱵᱷᱮᱡᱟ ᱞᱟᱹᱜᱤᱫ ᱴᱮᱞᱤᱢᱮᱴᱨᱭ ᱮᱢ ᱪᱷᱚᱭ ᱢᱮ ᱾</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">ᱥᱟᱡᱟᱣ ᱴᱷᱮᱱ ᱪᱟᱞᱟᱜ ᱢᱮ</string>
+</resources>

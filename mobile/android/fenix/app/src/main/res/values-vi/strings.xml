@@ -69,8 +69,6 @@
     <string name="cfr_neg_button_text">Không, cảm ơn</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Bạn có thể đặt Firefox để tự động mở các liên kết trong ứng dụng.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Bạn có thể đặt %1$s để tự động mở các liên kết trong ứng dụng.</string>
     <!-- Text for the positive action button -->
@@ -99,8 +97,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Tự động đóng sau một tháng?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox có thể đóng các thẻ bạn không xem trong tháng qua.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s có thể đóng các thẻ bạn chưa xem trong tháng qua.</string>
@@ -253,14 +249,10 @@
     <string name="search_settings_menu_item">Cài đặt tìm kiếm</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Có gì mới trong Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Có gì mới trong %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Giờ đây, việc tiếp tục nơi bạn đã dừng lại sẽ trở nên dễ dàng hơn.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Trang chủ Firefox được cá nhân hóa</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Trang chủ %1$s được cá nhân hóa</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -278,8 +270,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Trang chủ Firefox được cá nhân hóa của bạn giờ đây giúp bạn tiếp tục lại nơi bạn đã dừng lại dễ dàng hơn. Tìm các thẻ, dấu trang và kết quả tìm kiếm gần đây của bạn.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Mở một thẻ Firefox mới</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Mở thẻ %1$s mới</string>
     <!-- Text preview for smaller sized widgets -->
@@ -449,11 +439,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Hiển thị</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Nhấn vào logo để thay đổi hình nền</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Thay đổi hình nền bằng cách nhấn vào biểu trưng trang chủ của Firefox</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Chuyển qua và cập nhật hình ảnh mà không cần rời khỏi trang chủ.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -675,8 +661,6 @@
     <string name="studies_remove">Xóa</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Hoạt động</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox có thể cài đặt và chạy các nghiên cứu theo thời gian.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s có thể cài đặt và chạy các nghiên cứu theo thời gian.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -763,8 +747,6 @@
     <string name="tab_tray_header_title_1">Các thẻ khác</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Nhập từ tìm kiếm</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Nhập từ tìm kiếm</string>
     <!-- Text for the button to clear all history -->
@@ -1225,8 +1207,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Đồng bộ hóa được bật</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Luôn bảo vệ quyền riêng tư</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox tự động ngăn các công ty bí mật theo dõi bạn trên web.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s tự động ngăn các công ty bí mật theo dõi bạn trên web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1611,7 +1591,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Quản lý địa chỉ</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Họ và tên</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Họ và tên</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Tên</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Tên đệm</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Họ</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Địa chỉ đường phố</string>
     <!-- The header for the city of an address -->
@@ -1839,25 +1825,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Tự động đóng đã bật</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Giúp cải tiến Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Tại sao bạn tắt tính năng các thẻ không hoạt động?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Tôi không hiểu cách nào nó hoạt động</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Tôi muốn tự xóa các thẻ cũ</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Khoảng thời gian hai tuần là quá dài</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Khoảng thời gian hai tuần là quá ngắn</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Gửi</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Đóng</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Đặt các liên kết từ trang web, email và tin nhắn để tự động mở trong Firefox.</string>

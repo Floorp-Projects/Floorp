@@ -69,8 +69,6 @@
     <string name="cfr_neg_button_text">Dim diolch</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Gallwch osod Firefox i agor dolenni mewn apiau’n awtomatig.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Gallwch osod %1$s i agor dolenni mewn apiau’n awtomatig.</string>
     <!-- Text for the positive action button -->
@@ -99,8 +97,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Autogau ar ôl mis?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">Gall %1$s gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
@@ -253,14 +249,10 @@
     <string name="search_settings_menu_item">Gosodiadau chwilio</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Beth sy’n newydd yn Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Beth sy’n newydd yn %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Mae nawr yn haws ailgychwyn o’r lle y gwnaethoch chi adael.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Tudalen cartref personoledig Firefox</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Tudalen cartref personoledig %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -278,8 +270,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Mae eich cartref personoledig Firefox bellach yn ei gwneud hi’n haws i fynd yn ôl i le wnaethoch chi adael. Dewch o hyd i’ch tabiau, nodau tudalen a’ch canlyniadau chwilio diweddar.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Agorwch tab Firefox newydd</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Agor tab %1$s newydd</string>
     <!-- Text preview for smaller sized widgets -->
@@ -451,11 +441,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Golwg</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tapiwch y logo i newid y papur wal</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Newidiwch y papur wal trwy dapio logo tudalen hafan Firefox</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Cylchwch drwyddyn nhw a diweddaru’r ddelwedd heb adael y dudalen gartref.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -677,8 +663,6 @@
     <string name="studies_remove">Tynnu</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Gweithredol</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Efallai y bydd Firefox yn gosod a rhedeg astudiaethau o bryd i’w gilydd.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">Gall %1$s osod a rhedeg astudiaethau o bryd i’w gilydd.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -766,8 +750,6 @@
     <string name="tab_tray_header_title_1">Tabiau eraill</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Rhowch gair chwilio</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Rhowch gair chwilio</string>
     <!-- Text for the button to clear all history -->
@@ -1232,8 +1214,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Preifatrwydd parhaus</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Mae Firefox yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">Mae %1$s yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1621,7 +1601,13 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Rheoli cyfeiriadau</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Enw Llawn</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Enw Llawn</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Enw Cyntaf</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Enw Canol</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Enw Olaf</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Cyfeiriad Stryd</string>
     <!-- The header for the city of an address -->
@@ -1850,25 +1836,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Autogau wedi’i alluogi</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Helpwch i wella Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Pam wnaethoch chi analluogi tabiau anweithredol?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Dwi ddim yn deall sut mae’n gweithio</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Rwy’n hoffi clirio hen dabiau fy hun</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Mae’r cyfnod o bythefnos yn rhy hir</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Mae’r cyfnod o bythefnos yn rhy fyr</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Anfon</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Cau</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Gosod dolenni o wefannau, e-byst, a negeseuon i agor yn awtomatig yn Firefox.</string>

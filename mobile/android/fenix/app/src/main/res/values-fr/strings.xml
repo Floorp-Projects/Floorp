@@ -69,8 +69,6 @@
     <string name="cfr_neg_button_text">Non merci</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Vous pouvez configurer Firefox pour ouvrir automatiquement les liens dans des applications.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Vous pouvez configurer %1$s pour ouvrir automatiquement les liens dans des applications.</string>
     <!-- Text for the positive action button -->
@@ -100,8 +98,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Fermeture automatique après un mois ?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
@@ -253,15 +249,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Recherchez directement depuis la barre d’adresse</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Paramètres de recherche</string>
+
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Les nouveautés de Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Nouveautés dans %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Il est désormais plus facile de reprendre là où vous en étiez.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Accueil personnalisé de Firefox</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Accueil personnalisé de %1$s</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -280,8 +275,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">L’accueil personnalisé de Firefox permet désormais de reprendre plus facilement là où vous en étiez. Retrouvez vos onglets, marque-pages et résultats de recherche récents.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ouvrir un nouvel onglet dans Firefox</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ouvrir un nouvel onglet %1$s</string>
     <!-- Text preview for smaller sized widgets -->
@@ -453,11 +446,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Afficher</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Appuyez sur le logo pour changer de fond d’écran</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Changez le fond d’écran en appuyant sur le logo Firefox de la page d’accueil</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Parcourez et mettez à jour l’image sans quitter la page d’accueil.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -684,8 +673,6 @@
     <string name="studies_remove">Supprimer</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Activées</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox peut installer et lancer des études de temps en temps.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s peut installer et lancer des études de temps en temps.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -775,8 +762,6 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Saisissez le terme à rechercher</string>
-    <!-- Text for the button to search all history -->
     <string name="history_search_1">Termes à rechercher</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Effacer l’historique</string>
@@ -802,6 +787,11 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Pas d’historique</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Synchronisé depuis d’autres appareils</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Depuis d’autres appareils</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1206,6 +1196,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Suppression des données de navigation…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Cette action supprimera tous les éléments.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Annuler</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Supprimer</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Groupe supprimé</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview est désormais Firefox Nightly</string>
@@ -1252,8 +1251,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="onboarding_firefox_account_sync_is_on">Synchronisation activée</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Confidentialité toujours assurée</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s empêche automatiquement les entreprises de vous suivre secrètement sur le Web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1558,7 +1555,11 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu de tri des identifiants</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Remplissage automatique</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Adresses</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Cartes bancaires</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1574,6 +1575,10 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Gérer les cartes enregistrées</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Ajouter une adresse</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Gérer les adresses</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ajouter une carte</string>
     <!-- Title of the "Edit card" screen -->
@@ -1625,6 +1630,37 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="credit_cards_biometric_prompt_message_pin">Déverrouillez votre appareil</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Déverrouillez pour utiliser les informations de cartes bancaires enregistrées</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Ajouter une adresse</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Gérer les adresses</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nom complet</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Prénom</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Deuxième prénom</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Nom de famille</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Adresse postale</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Ville</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">État</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Code postal</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Téléphone</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Adresse électronique</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Enregistrer</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Annuler</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Supprimer l’adresse</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ajouter un moteur de recherche</string>
@@ -1835,26 +1871,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Fermeture automatique activée</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Aidez à améliorer Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Pourquoi avez-vous désactivé les onglets inactifs ?</string>
-
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Je ne comprends pas comment ça marche</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Je préfère effacer moi-même les anciens onglets</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Le délai de deux semaines est trop long</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Le délai de deux semaines est trop court</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Envoyer</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Fermer</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Faites en sorte que les liens des sites web, des courriels et des messages s’ouvrent automatiquement dans Firefox.</string>

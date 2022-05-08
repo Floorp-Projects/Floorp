@@ -70,8 +70,6 @@
     <string name="cfr_neg_button_text">不要，謝謝</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">您可以設定使用 Firefox 自動開啟各應用程式當中的鏈結。</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">您可以設定使用 %1$s 自動開啟各應用程式當中的鏈結。</string>
     <!-- Text for the positive action button -->
@@ -100,8 +98,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">等一個月後再自動關閉？</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox 可自動關閉您超過一個月未檢視的分頁。</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s 可自動關閉您超過一個月未檢視的分頁。</string>
@@ -258,14 +254,10 @@
     <string name="search_settings_menu_item">搜尋設定</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Firefox 有什麼新鮮事</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s 有什麼新鮮事</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">更簡單就能回到上次中斷的地方繼續上網。</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">個人化的 Firefox 首頁</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">個人化的 %1$s 首頁</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -283,8 +275,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">現在起，有您的風格的 Firefox 首頁，可讓您更簡單就從上次結束瀏覽的地方繼續上網。快速找到您最近開啟的分頁、書籤、搜尋結果等分頁。</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">開新 Firefox 分頁</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">開啟新 %1$s 分頁</string>
     <!-- Text preview for smaller sized widgets -->
@@ -458,11 +448,7 @@
     <string name="wallpaper_updated_snackbar_action">檢視</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">點擊圖示即可更換背景圖</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">點擊 Firefox 首頁的圖示即可更改背景圖</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">不用離開首頁即可更換背景圖。</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -688,8 +674,6 @@
     <string name="studies_remove">移除</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">進行中</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox 會不定時安裝並執行使用者研究。</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s 會不定時安裝並執行使用者研究。</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -778,8 +762,6 @@
     <string name="tab_tray_header_title_1">其他分頁</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">輸入搜尋詞彙</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">輸入搜尋詞彙</string>
     <!-- Text for the button to clear all history -->
@@ -1266,8 +1248,6 @@
     <string name="onboarding_firefox_account_sync_is_on">已開啟 Sync</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">隨時都有隱私保護</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox 會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s 會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1654,7 +1634,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">管理已存地址</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">全名</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">全名</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">名字</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">中間名</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">姓氏</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">街道地址</string>
     <!-- The header for the city of an address -->
@@ -1882,25 +1868,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">已開啟分頁自動關閉功能</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">協助改善 Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">您為什麼會想關閉「閒置分頁」功能？</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">我不了解它的運作原理</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">我想自己清理太久沒閱讀的分頁</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">兩週清理期限太長</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">兩週清理期限太短</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">傳送</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">關閉</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">設定使用 Firefox 自動開啟網站、郵件、簡訊當中的鏈結。</string>

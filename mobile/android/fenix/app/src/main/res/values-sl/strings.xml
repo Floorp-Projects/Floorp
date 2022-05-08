@@ -71,8 +71,6 @@
     <string name="cfr_neg_button_text">Ne, hvala</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Firefox lahko nastavite tako, da samodejno odpira povezave v aplikacijah.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">%1$s lahko nastavite, naj samodejno odpira povezave v aplikacijah.</string>
     <!-- Text for the positive action button -->
@@ -101,8 +99,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Samodejno zapri po enem mesecu?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox lahko zapre zavihke, ki si jih niste ogledali v zadnjem mesecu.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s lahko zapre zavihke, ki si jih niste ogledali v zadnjem mesecu.</string>
@@ -255,15 +251,10 @@
     <string name="search_settings_menu_item">Nastavitve iskanja</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Kaj je novega v Firefoxu</string>
-
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Kaj je novega v %1$su</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Zdaj je lažje nadaljevati, kjer ste nazadnje končali.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Prilagojena domača stran Firefoxa</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Prilagojena domača stran %1$sa</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -282,8 +273,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Prilagojena domača stran Firefoxa vam zdaj olajšuje nadaljevanje nedokončanih opravil. Poiščite svoje nedavne zavihke, zaznamke in rezultate iskanja.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Odpri nov zavihek v Firefoxu</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Odpri nov zavihek v %1$su</string>
     <!-- Text preview for smaller sized widgets -->
@@ -455,13 +444,9 @@
     <string name="wallpaper_updated_snackbar_message">Ozadje spremenjeno!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Prikaži</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Tapnite na logotip za spremembo ozadja</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Spremeni ozadje z dotikom logotipa na domači strani Firefoxa</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Listajte med slikami in posodobite ozadje brez zapuščanja domače strani.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Logtip Firefoxa – spremeni ozadje, gumb</string>
@@ -688,8 +673,6 @@
     <string name="studies_remove">Odstrani</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Dejavna</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox lahko občasno namesti in zažene raziskave.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s lahko občasno namesti in izvaja raziskave.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -778,8 +761,6 @@
     <string name="tab_tray_header_title_1">Ostali zavihki</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Vnesite iskalni niz</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Vnesite iskalni niz</string>
     <!-- Text for the button to clear all history -->
@@ -1247,8 +1228,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync je vklopljen</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Vedno vključena zasebnost</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox samodejno prepreči, da bi vas podjetja na skrivaj spremljala po spletu.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s samodejno prepreči, da bi vas podjetja skrivaj spremljala po spletu.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1643,7 +1622,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Upravljanje naslovov</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Polno ime</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Polno ime</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Ime</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Drugo ime</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Priimek</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Ulica</string>
     <!-- The header for the city of an address -->
@@ -1877,26 +1862,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Samodejno zapiranje omogočeno</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Pomagajte izboljšati Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Zakaj ste onemogočili nedejavne zavihke?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ne razumem, kako deluje</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Stare zavihke raje počistim sam</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Obdobje dveh tednov je predolgo</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Obdobje dveh tednov je prekratko</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Pošlji</string>
-
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Zapre se</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nastavite, naj se povezave s spletnih strani, e-pošte in sporočil samodejno odpirajo v Firefoxu.</string>

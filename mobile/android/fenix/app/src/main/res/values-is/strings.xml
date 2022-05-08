@@ -69,8 +69,6 @@
     <string name="cfr_neg_button_text">Nei takk</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Þú getur stillt Firefox til að opna tengla sjálfvirkt í forritum.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Þú getur stillt %1$s til að opna tengla sjálfvirkt í forritum.</string>
     <!-- Text for the positive action button -->
@@ -97,8 +95,6 @@
     <string name="tab_tray_inactive_onboarding_button_text">Slökkva á í stillingum</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Loka sjálfvirkt eftir einn mánuð?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox getur lokað flipum sem þú hefur ekki skoðað síðastliðinn mánuð.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s getur lokað flipum sem þú hefur ekki skoðað síðastliðinn mánuð.</string>
@@ -252,14 +248,10 @@
     <string name="search_settings_menu_item">Leitarstillingar</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Hvað er nýtt í Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Hvað er nýtt í %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Nú er auðveldara að halda áfram þar sem frá var horfið.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Persónuleg Firefox upphafssíða</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Persónuleg %1$s upphafssíða</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -278,8 +270,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Sérsniðin Firefox-upphafssíða þín gerir það nú auðveldara að halda áfram þar sem frá var horfið. Finndu nýlega flipa, bókamerki og leitarniðurstöður.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Opna nýjan Firefox-flipa</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Opna nýjan %1$s-flipa</string>
     <!-- Text preview for smaller sized widgets -->
@@ -450,11 +440,7 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Skoða</string>
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Ýttu á merkið til að skipta um bakgrunn</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Skiptu um bakgrunn með því að smella á táknmynd Firefox-heimasíðunnar</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Flettu í gegnum og uppfærðu mynd án þess að fara af upphafssíðunni.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -677,8 +663,6 @@
     <string name="studies_remove">Fjarlægja</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Virkt</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox kann að setja upp og keyra rannsóknir af og til.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s kann að setja upp og keyra rannsóknir af og til.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -764,8 +748,6 @@
     <string name="tab_tray_header_title_1">Aðrir flipar</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Settu inn leitarorð</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Settu inn leitarorð</string>
     <!-- Text for the button to clear all history -->
@@ -1231,8 +1213,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Kveikt er á samstillingu</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Sívökul friðhelgi</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s kemur sjálfkrafa í veg fyrir að fyrirtæki fylgi þér í laumi um vefinn.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1393,7 +1373,7 @@
     <string name="about_whats_new">Hvað er nýtt í %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
-    <string name="open_source_licenses_title">%s | OSS söfn</string>
+    <string name="open_source_licenses_title">%s | OSS-aðgerðasöfn</string>
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Endurbeina rekjurum</string>
@@ -1416,7 +1396,7 @@
     <!-- About page link text to open licensing information link -->
     <string name="about_licensing_information">Leyfisupplýsingar</string>
     <!-- About page link text to open a screen with libraries that are used -->
-    <string name="about_other_open_source_libraries">Söfn sem við notum</string>
+    <string name="about_other_open_source_libraries">Aðgerðasöfn sem við notum</string>
 
     <!-- Toast shown to the user when they are activating the secret dev menu
         The first parameter is number of long clicks left to enable the menu -->
@@ -1618,7 +1598,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Sýsla með tölvupóstföng</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Fullt nafn</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Fullt nafn</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Skírnarnafn</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Millinafn</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Eftirnafn</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Heimilisfang</string>
     <!-- The header for the city of an address -->
@@ -1846,26 +1832,6 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">KVEIKJA Á SJÁLFVIRKRI LOKUN</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Sjálfvirk lokun virkjuð</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Hjálpaðu til við að bæta Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Af hverju slökktirðu á óvirkum flipum?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ég skil ekki hvernig þetta virkar</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Mér finnst best að hreinsa sjálf/ur út gamla flipa</string>
-
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Tveggja vikna tímamörkin er of langt</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Tveggja vikna tímamörkin er of stutt</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Senda</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Loka</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Stilltu tengla frá vefsvæðum, tölvupósti og skilaboðum til að opna sjálfkrafa í Firefox.</string>

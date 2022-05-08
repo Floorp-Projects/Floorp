@@ -69,8 +69,6 @@
     <string name="cfr_neg_button_text">Köszönöm, nem</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Beállíthatja, hogy a Firefox automatikusan alkalmazásokban nyisson meg hivatkozásokat.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Beállíthatja, hogy a %1$s automatikusan alkalmazásokban nyisson meg hivatkozásokat.</string>
     <!-- Text for the positive action button -->
@@ -99,8 +97,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Automatikus bezárás egy hónap után?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">A Firefox bezárhatja azokat a lapokat, amelyeket az elmúlt hónapban nem nézett meg.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">A %1$s bezárhatja azokat a lapokat, amelyeket az elmúlt hónapban nem nézett meg.</string>
@@ -256,15 +252,10 @@
     <string name="search_settings_menu_item">Keresési beállítások</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Újdonságok a Firefoxban</string>
-
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">A %s újdonságai</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Mostantól könnyebb ott folytatni, ahol abbahagyta.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Személyre szabott Firefox kezdőoldal</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Személyre szabott %1$s kezdőoldal</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -283,8 +274,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">A személyre szabott Firefox kezdőlapja megkönnyíti, hogy ott folytassa, ahol abbahagyta. Találja meg a legutóbbi lapjait, könyvjelzőit és keresési találatait.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Új Firefox-lap megnyitása</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Új %1$s lap megnyitása</string>
     <!-- Text preview for smaller sized widgets -->
@@ -456,11 +445,7 @@
     <string name="wallpaper_updated_snackbar_action">Nézet</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Koppintson a logóra a háttérkép megváltoztatásához</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">A háttérkép módosításához koppintson a Firefox kezdőlap logójára</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Végigléptetés és a kép frissítése a kezdőképernyő elhagyása nélkül.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -685,8 +670,6 @@
     <string name="studies_remove">Eltávolítás</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktív</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">A Firefox időről időre tanulmányokat telepíthet és futtathat.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">A %1$s időről időre tanulmányokat telepíthet és futtathat.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -775,8 +758,6 @@
     <string name="tab_tray_header_title_1">Más lapok</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Adja meg a keresési kifejezést</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Adja meg a keresési kifejezéseket</string>
     <!-- Text for the button to clear all history -->
@@ -1246,8 +1227,6 @@
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Mindig bekapcsolt adatvédelem</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">A Firefox automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1637,7 +1616,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Címek kezelése</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Teljes név</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Teljes név</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Utónév</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Egyéb név</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Vezetéknév</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Utca, hászszám</string>
     <!-- The header for the city of an address -->
@@ -1867,25 +1852,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Automatikus bezárás engedélyezve</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Segítsen a Firefox tökéletesítésében</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Miért tiltotta le az inaktív lapokat?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Nem értem, hogyan működik</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Én magam szeretem kitörölni a régi lapokat</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">A kéthetes időszak túl hosszú</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">A kéthetes időszak túl rövid</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Küldés</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Bezárás</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Állítsa be a webhelyek, e-mailek és üzenetek hivatkozásait, hogy azok automatikusan a Firefoxban nyíljanak meg.</string>

@@ -72,8 +72,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="cfr_neg_button_text">Ala, tanemmirt</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Tzemreḍ ad tesbaduḍ akken ad yeldi iseɣwan s wudem awurman deg isnasen.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Tzemreḍ ad tesbaduḍ %1$s akken ad yeldi iseɣwan s wudem awurman deg yisnasen.</string>
     <!-- Text for the positive action button -->
@@ -102,8 +100,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Amdal awurman seld yiwen wayyur?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox izmer ad imdel accaren i twalaḍ aggur iɛeddan.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s izmer ad imdel accaren i twalaḍ ayyur iɛeddan.</string>
@@ -257,15 +253,10 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="search_settings_menu_item">Nadi ismenyifen</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">D acu i d amaynut deg Firefox</string>
-
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">D acu i d maynut deg %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Akka tura fessus ad tkemmleḍ ansi akken i tḥebseḍ.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Asebter agejdan n Firefox yettwasagnen</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Asebter agejdan n %1$s yettwasagnen</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -284,8 +275,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Asebter-inek•inem n Firefox udmawan yettarra tura fessus ugar akemmel seg wanda akken i tḥebseḍ. Af accaren-ik•im n melmi kan, ticraḍ n yisebtar, d yigmaḍ n unadi.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Ldi iccer amaynut n Firefox</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Ldi-t iccer amaynut %1$s</string>
     <!-- Text preview for smaller sized widgets -->
@@ -460,11 +449,7 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="wallpaper_updated_snackbar_action">Wali</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Sit ɣef ulugu i ubeddel n tugna n ugilal</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Beddel tugna n ugilal s tira n ulugu n usebter agejdan n Firefox</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Lqeḍ rnu leqqem tugna war ma teffɣeḍ seg usebtar agejdan.</string>
 
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
@@ -692,8 +677,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="studies_remove">Kkes</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Rmed</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox yezmer ad isebded yerna ad iseddu leqraya seg wakud ɣer wayeḍ.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s yezmer ad isebded yerna ad iseddu leqraya seg wakud ɣer wayeḍ.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -780,8 +763,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="tab_tray_header_title_1">Accaren wiyaḍ</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Sekcem awal n unadi</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">Sekcem awalen n unadi</string>
     <!-- Text for the button to clear all history -->
@@ -1249,8 +1230,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="onboarding_firefox_account_sync_is_on">Amtawi yermed</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Tabaḍnit tezga tettwaḍmen</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox yessewḥal s wudem awurman tikebbaniyin ara ak-iḍefren deg web.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s yessewḥal s wudem awurman tikebbaniyin ara ak-iḍefren deg web.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1640,7 +1619,13 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Sefrek tansiwin</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">Isem ummid</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Isem ummid</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Aɣara</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Isem alemmas</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Isem</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Tansa n taddart</string>
     <!-- The header for the city of an address -->
@@ -1873,25 +1858,6 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Amdal awurman yermed</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Mudd afus i tneflit n Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Ayɣer i tsenseḍ accaren irurmiden?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Ur fhimeɣ ara amek i iteddu</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Bɣiɣ d nekk ara isefḍen accaren iqburen</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Azal n sin yimalas ɣezzif aṭas</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Azal n sin yimalas wezzil aṭas</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Azen</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Mdel</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Sbadu iseɣwan seg yismal web, seg yimaylen d yiznan i twaledyawt s wudem awurman deg Firefox.</string>
