@@ -1,11 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Description for privacy add-on permission. -->
+    <string name="mozac_feature_addons_permissions_privacy_description">رازداری ترتیباں  پڑھو تے تبدیل کرو</string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">ساری ویب سائٹس کیتے آپݨے ڈیٹا تائیں رسائی گھنو</string>
+    <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_one_site_description">%1$s کیتے آپݨے ڈیٹا تائیں رسائی گھنو۔</string>
+    <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">%1$s ڈومین وچ آپݨی سائٹس دے ڈیٹا تے رسائی حاصل کرو</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">1 ٻئی سائٹ تے آپݨے ڈیٹا تائیں رسائی گھنو۔</string>
+    <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
+     then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
+     %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">%1$d ٻیاں سائٹاں تے آپݨے ڈیٹا تائیں رسائی گھنو</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+      then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">1 ٻئی ڈومین تے آپݨے ڈیٹا تائیں رسائی گھنو۔</string>
+    <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
+     then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
+     %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">%1$d ٻئی ڈومیناں  تے آپݨے ڈیٹا تے  رسائی گھنو</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">براؤزر ٹیبز تائیں رسائی حاصل کرو</string>
+    <!-- Description for unlimited_storage permission. -->
+    <string name="mozac_feature_addons_permissions_unlimited_storage_description">گاہک دی طرفوں بے انت ڈیٹا ذخیرہ کرو</string>
+    <!-- Description for navigation permission. -->
+    <string name="mozac_feature_addons_permissions_web_navigation_description">نیویگیشݨ دے دوران براوئزر دی سرگرمی تائیں رسائی</string>
+    <!-- Description for bookmarks permission. -->
+    <string name="mozac_feature_addons_permissions_bookmarks_description">کتاب نشان پڑھو تے ترمیم کرو</string>
+    <!-- Description for browser_setting permission. -->
+    <string name="mozac_feature_addons_permissions_browser_setting_description">براؤزر ترتیباں پڑھو تے تبدیل کرو</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ کنوں ڈیٹا گھنو</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">کلپ بورڈ وچ ڈیٹا پاؤ</string>
+    <!-- Description for find permission. -->
+    <string name="mozac_feature_addons_permissions_find_description">سارے کھلے ٹیباں دی عبارت پڑھو</string>
+    <!-- Description for geolocation permission. -->
+    <string name="mozac_feature_addons_permissions_geolocation_description">آپݨے مقام تائیں اپڑو</string>
+    <!-- Description for history permission. -->
+    <string name="mozac_feature_addons_permissions_history_description">براؤزنگ تاریخ تے اپڑو</string>
+    <!-- Description for top_sites permission. -->
+    <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ تاریخ تے اپڑو</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورشن</string>
     <!-- The authors of an add-on. -->
@@ -36,6 +74,8 @@
     <string name="mozac_feature_addons_installed_section">انسٹال تھیا</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
     <string name="mozac_feature_addons_recommended_section">سفارش تھئے ہوئے</string>
+    <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
+    <string name="mozac_feature_addons_unsupported_section">اڄݨ تائیں سہارا تھیا کائنی</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
     <string name="mozac_feature_addons_unavailable_section">اڄݨ تائیں دستاب کائنی</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the disabled section. -->
@@ -46,6 +86,8 @@
     <string name="mozac_feature_addons_permissions">اجازتاں</string>
     <!-- This is button that remove (uninstall an add-on). -->
     <string name="mozac_feature_addons_remove">ہٹاؤ</string>
+    <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کروں؟</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">شامل کرو</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -74,6 +116,10 @@
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">نویں ایڈ ــ آن دستیاب ہے</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s وچ %1$s شامل کرو</string>
+    <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s تے %2$s کوں %3$s وچ جوڑو</string>
+    <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
+    <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">اُنہاں کوں %1$s وچ شامل کرو</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption"> 1 ایڈ ــ آن</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->

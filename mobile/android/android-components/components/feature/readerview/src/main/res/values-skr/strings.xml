@@ -9,6 +9,11 @@
     <!-- Accessible description for the font option -->
     <string name="mozac_feature_readerview_serif_font_desc">سیرف فونٹ</string>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">فونٹ سائز گھٹاؤ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">فونٹ سائز ودھاؤ</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">شوخ</string>
     <!-- Accessible description for the color option -->

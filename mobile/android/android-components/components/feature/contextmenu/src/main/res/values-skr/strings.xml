@@ -28,6 +28,10 @@
     <string name="mozac_feature_contextmenu_snackbar_link_copied">لنک کلپ بورڈ تے نقل تھی ڳیا</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">سوئچ</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">ای میل پتہ شیئر کرو</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">ای میل پتہ نقل کرو</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">ڳولو</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->

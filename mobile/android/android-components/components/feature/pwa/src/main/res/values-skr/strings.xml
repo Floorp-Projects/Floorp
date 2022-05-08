@@ -5,4 +5,6 @@
 
     <!-- Refresh button in site controls notification. -->
     <string name="mozac_feature_pwa_site_controls_refresh">تازہ کرو</string>
-    </resources>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">یوآرایل نقل تھی ڳیا۔</string>
+</resources>

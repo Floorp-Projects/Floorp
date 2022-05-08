@@ -43,6 +43,11 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور ولوں غیر متوقع  جواب</string>
 
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>سائٹ نے نیٹ ورک ارداس دا غیر متوقع طریقے نال جواب ݙتا تے براؤزر جاری کائنی رہ سڳدا۔</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ورقہ ٹھیک طرح ری ڈائریکٹ کائنی تھیندا پیا</string>
 
@@ -111,6 +116,11 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">نقصان دہ سائٹ مسئلہ</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">فریبی سائٹ مسئلہ</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">محفوظ سائٹ دستیاب کائنی</string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">ایچ ٹی ٹی پی سائٹ تے جاری رکھو</string>
 </resources>
