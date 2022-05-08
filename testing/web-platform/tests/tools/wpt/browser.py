@@ -789,7 +789,7 @@ class Chromium(ChromeChromiumBase):
         # Make sure we use the same revision in an invocation.
         # If we have a url that was last used successfully during this run,
         # that url takes priority over trying to form another.
-        if self.last_url_used is not None:
+        if hasattr(self, "last_url_used") and self.last_url_used is not None:
             return f"{self.last_url_used}{filename}"
 
         return f"{self._get_chromium_download_url(version)}{filename}"
