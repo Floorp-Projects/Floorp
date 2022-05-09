@@ -16,8 +16,7 @@
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/PFetchEventOpProxyChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class InternalRequest;
 class InternalResponse;
@@ -57,7 +56,6 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   RefPtr<FetchEventPreloadResponsePromise::Private> mPreloadResponsePromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_fetcheventopproxychild_h__
