@@ -9,8 +9,7 @@
 
 #include "MediaTrack.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioStreamTrack;
 
@@ -48,7 +47,6 @@ class AudioTrack : public MediaTrack {
   RefPtr<AudioStreamTrack> mAudioStreamTrack;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_AudioTrack_h

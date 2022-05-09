@@ -12,12 +12,10 @@
 #include "nsTArray.h"
 
 // Specialization for nsTArray CopyChooser.
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 template <class T>
 class IntervalSet;
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 template <class E>
 struct nsTArray_RelocationStrategy<mozilla::media::IntervalSet<E>> {
@@ -25,8 +23,7 @@ struct nsTArray_RelocationStrategy<mozilla::media::IntervalSet<E>> {
       Type;
 };
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 /* Interval defines an interval between two points. Unlike a traditional
    interval [A,B] where A <= x <= B, the upper boundary B is exclusive: A <= x <
@@ -753,7 +750,6 @@ IntervalSet<T> Intersection(const IntervalSet<T>& aIntervals1,
   return intersection;
 }
 
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 #endif  // DOM_MEDIA_INTERVALS_H_

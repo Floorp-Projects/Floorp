@@ -11,8 +11,7 @@
 #include "CrossGraphPort.h"
 #include "nsClassHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioStreamTrack : public MediaStreamTrack {
  public:
@@ -50,7 +49,6 @@ class AudioStreamTrack : public MediaStreamTrack {
   nsClassHashtable<nsPtrHashKey<void>, UniquePtr<CrossGraphPort>> mCrossGraphs;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* AUDIOSTREAMTRACK_H_ */

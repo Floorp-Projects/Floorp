@@ -23,8 +23,7 @@ template <typename>
 struct ParamTraits;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Represents a LocalStorage value. From content's perspective, values (if
@@ -131,7 +130,6 @@ const LSValue& VoidLSValue();
  */
 bool PutCStringBytesToString(const nsACString& aSrc, nsString& aDest);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSValue_h
