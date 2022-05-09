@@ -13,8 +13,7 @@
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DebuggerNotification : public nsISupports, public nsWrapperCache {
  public:
@@ -66,7 +65,6 @@ MOZ_CAN_RUN_SCRIPT inline void DebuggerNotificationDispatch(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DebuggerNotification_h

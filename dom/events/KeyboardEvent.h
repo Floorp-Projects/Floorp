@@ -11,8 +11,7 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class KeyboardEvent : public UIEvent {
  public:
@@ -122,8 +121,7 @@ class KeyboardEvent : public UIEvent {
       const WidgetKeyboardEvent& aKeyboardEvent, CallerType aCallerType) const;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::KeyboardEvent> NS_NewDOMKeyboardEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

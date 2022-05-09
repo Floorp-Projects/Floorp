@@ -11,8 +11,7 @@
 #include "mozilla/dom/CommandEventBinding.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CommandEvent : public Event {
  public:
@@ -32,8 +31,7 @@ class CommandEvent : public Event {
   ~CommandEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::CommandEvent> NS_NewDOMCommandEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
