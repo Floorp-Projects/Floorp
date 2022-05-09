@@ -239,5 +239,15 @@ TEST(RtpVideoLayersAllocationExtension,
   EXPECT_EQ(written_allocation, parsed_allocation);
 }
 
+TEST(RtpVideoLayersAllocationExtension,
+     WriteEmptyAllocationCanHaveAnyRtpStreamIndex) {
+  VideoLayersAllocation written_allocation;
+  written_allocation.rtp_stream_index = 1;
+  rtc::Buffer buffer(
+      RtpVideoLayersAllocationExtension::ValueSize(written_allocation));
+  EXPECT_TRUE(
+      RtpVideoLayersAllocationExtension::Write(buffer, written_allocation));
+}
+
 }  // namespace
 }  // namespace webrtc

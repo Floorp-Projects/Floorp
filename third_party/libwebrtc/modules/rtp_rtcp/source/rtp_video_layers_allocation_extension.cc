@@ -117,7 +117,8 @@ bool AllocationIsValid(const VideoLayersAllocation& allocation) {
     }
   }
   if (allocation.rtp_stream_index < 0 ||
-      allocation.rtp_stream_index > max_rtp_stream_idx) {
+      (!allocation.active_spatial_layers.empty() &&
+       allocation.rtp_stream_index > max_rtp_stream_idx)) {
     return false;
   }
   return true;
