@@ -537,7 +537,6 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsDefined(candidate.candidate_type);
     verifier.TestMemberIsNonNegative<int32_t>(candidate.priority);
     verifier.TestMemberIsUndefined(candidate.url);
-    verifier.TestMemberIsDefined(candidate.deleted);
     verifier.TestMemberIsUndefined(candidate.relay_protocol);
     return verifier.ExpectAllMembersSuccessfullyTested();
   }
@@ -830,7 +829,6 @@ class RTCStatsReportVerifier {
     // this test. See RFC 3550.
     verifier.TestMemberIsNonNegative<int32_t>(inbound_stream.packets_lost);
     verifier.TestMemberIsDefined(inbound_stream.last_packet_received_timestamp);
-    verifier.TestMemberIsDefined(inbound_stream.is_remote);
     if (inbound_stream.frames_received.ValueOrDefault(0) > 0) {
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.frame_width);
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.frame_height);
@@ -961,7 +959,6 @@ class RTCStatsReportVerifier {
                                        RTCAudioSourceStats::kType);
       verifier.TestMemberIsUndefined(outbound_stream.qp_sum);
     }
-    verifier.TestMemberIsDefined(outbound_stream.is_remote);
     verifier.TestMemberIsOptionalIDReference(
         outbound_stream.remote_id, RTCRemoteInboundRtpStreamStats::kType);
     verifier.TestMemberIsNonNegative<uint32_t>(outbound_stream.packets_sent);

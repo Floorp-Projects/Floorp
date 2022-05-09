@@ -265,8 +265,7 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidateStats, RTCStats, "abstract-ice-candidate",
     &relay_protocol,
     &candidate_type,
     &priority,
-    &url,
-    &deleted)
+    &url)
 // clang-format on
 
 RTCIceCandidateStats::RTCIceCandidateStats(const std::string& id,
@@ -288,8 +287,7 @@ RTCIceCandidateStats::RTCIceCandidateStats(std::string&& id,
       relay_protocol("relayProtocol"),
       candidate_type("candidateType"),
       priority("priority"),
-      url("url"),
-      deleted("deleted", false) {}
+      url("url") {}
 
 RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other)
     : RTCStats(other.id(), other.timestamp_us()),
@@ -303,8 +301,7 @@ RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other)
       relay_protocol(other.relay_protocol),
       candidate_type(other.candidate_type),
       priority(other.priority),
-      url(other.url),
-      deleted(other.deleted) {}
+      url(other.url) {}
 
 RTCIceCandidateStats::~RTCIceCandidateStats() {}
 
@@ -679,8 +676,7 @@ WEBRTC_RTCSTATS_IMPL(
     &fir_count,
     &pli_count,
     &nack_count,
-    &qp_sum,
-    &is_remote)
+    &qp_sum)
 // clang-format on
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(const std::string& id,
@@ -736,8 +732,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string&& id,
       fir_count("firCount"),
       pli_count("pliCount"),
       nack_count("nackCount"),
-      qp_sum("qpSum"),
-      is_remote("isRemote") {}
+      qp_sum("qpSum") {}
 
 RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
     const RTCInboundRTPStreamStats& other)
@@ -789,8 +784,7 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
       fir_count(other.fir_count),
       pli_count(other.pli_count),
       nack_count(other.nack_count),
-      qp_sum(other.qp_sum),
-      is_remote(other.is_remote) {}
+      qp_sum(other.qp_sum) {}
 
 RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {}
 
@@ -823,8 +817,7 @@ WEBRTC_RTCSTATS_IMPL(
     &fir_count,
     &pli_count,
     &nack_count,
-    &qp_sum,
-    &is_remote)
+    &qp_sum)
 // clang-format on
 
 RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(const std::string& id,
@@ -861,8 +854,7 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string&& id,
       fir_count("firCount"),
       pli_count("pliCount"),
       nack_count("nackCount"),
-      qp_sum("qpSum"),
-      is_remote("isRemote") {}
+      qp_sum("qpSum") {}
 
 RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
     const RTCOutboundRTPStreamStats& other)
@@ -894,8 +886,7 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
       fir_count(other.fir_count),
       pli_count(other.pli_count),
       nack_count(other.nack_count),
-      qp_sum(other.qp_sum),
-      is_remote(other.is_remote) {}
+      qp_sum(other.qp_sum) {}
 
 RTCOutboundRTPStreamStats::~RTCOutboundRTPStreamStats() {}
 

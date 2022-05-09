@@ -161,6 +161,7 @@ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
   // TODO(hbos): Support enum types?
   // "RTCStatsMember<RTCStatsIceCandidatePairState>"?
   RTCStatsMember<std::string> state;
+  // Obsolete: priority
   RTCStatsMember<uint64_t> priority;
   RTCStatsMember<bool> nominated;
   // TODO(hbos): Collect this the way the spec describes it. We have a value for
@@ -208,6 +209,7 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   ~RTCIceCandidateStats() override;
 
   RTCStatsMember<std::string> transport_id;
+  // Obsolete: is_remote
   RTCStatsMember<bool> is_remote;
   RTCStatsMember<std::string> network_type;
   RTCStatsMember<std::string> ip;
@@ -220,9 +222,6 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   RTCStatsMember<int32_t> priority;
   // TODO(hbos): Not collected by |RTCStatsCollector|. crbug.com/632723
   RTCStatsMember<std::string> url;
-  // TODO(hbos): |deleted = true| case is not supported by |RTCStatsCollector|.
-  // crbug.com/632723
-  RTCStatsMember<bool> deleted;  // = false
 
  protected:
   RTCIceCandidateStats(const std::string& id,
@@ -376,6 +375,7 @@ class RTC_EXPORT RTCRTPStreamStats : public RTCStats {
 
   RTCStatsMember<uint32_t> ssrc;
   RTCStatsMember<std::string> kind;
+  // Obsolete: track_id
   RTCStatsMember<std::string> track_id;
   RTCStatsMember<std::string> transport_id;
   RTCStatsMember<std::string> codec_id;
@@ -503,9 +503,6 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   // audio and video but is only defined in the "video" case. crbug.com/657856
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
-
-  // Obsolete
-  RTCStatsMember<bool> is_remote;  // = false
 };
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
@@ -561,9 +558,6 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   // audio and video but is only defined in the "video" case. crbug.com/657856
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
-
-  // Obsolete
-  RTCStatsMember<bool> is_remote;  // = false
 };
 
 // https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*
