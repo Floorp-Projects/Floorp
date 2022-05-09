@@ -17,8 +17,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEColorMatrix)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEColorMatrixElement::WrapNode(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {
@@ -135,5 +134,4 @@ SVGFEColorMatrixElement::GetNumberListInfo() {
                                   ArrayLength(sNumberListInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

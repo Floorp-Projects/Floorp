@@ -18,8 +18,7 @@
 #include "nsIURI.h"
 #include "prtime.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -373,5 +372,4 @@ void SVGAnimationElement::AnimationTargetChanged() {
   AnimationNeedsResample();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

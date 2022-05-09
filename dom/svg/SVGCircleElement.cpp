@@ -16,8 +16,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Circle)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGCircleElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -172,5 +171,4 @@ nsCSSPropertyID SVGCircleElement::GetCSSPropertyIdForAttrEnum(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
