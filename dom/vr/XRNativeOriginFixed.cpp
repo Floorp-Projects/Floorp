@@ -6,13 +6,11 @@
 
 #include "XRNativeOriginFixed.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRNativeOriginFixed::XRNativeOriginFixed(const gfx::PointDouble3D& aPosition)
     : mPosition(aPosition) {}
 
 gfx::PointDouble3D XRNativeOriginFixed::GetPosition() { return mPosition; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

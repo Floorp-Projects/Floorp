@@ -11,8 +11,7 @@
 
 #include "mozilla/Telemetry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace gfx;
 
@@ -179,5 +178,4 @@ bool VREventObserver::IsWebVR(uint32_t aDisplayID) const {
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
