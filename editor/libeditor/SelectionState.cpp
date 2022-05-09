@@ -58,8 +58,6 @@ template nsresult RangeUpdater::SelAdjInsertNode(const EditorDOMPoint& aPoint);
 template nsresult RangeUpdater::SelAdjInsertNode(
     const EditorRawDOMPoint& aPoint);
 
-SelectionState::SelectionState() : mDirection(eDirNext) {}
-
 void SelectionState::SaveSelection(Selection& aSelection) {
   // if we need more items in the array, new them
   if (mArray.Length() < aSelection.RangeCount()) {
@@ -114,28 +112,6 @@ nsresult SelectionState::RestoreSelection(Selection& aSelection) {
   return NS_OK;
 }
 
-bool SelectionState::IsCollapsed() const {
-  if (mArray.Length() != 1) {
-    return false;
-  }
-  RefPtr<nsRange> range = mArray[0]->GetRange();
-  if (!range) {
-    NS_WARNING("RangeItem::GetRange() failed");
-    return false;
-  }
-  return range->Collapsed();
-}
-
-bool SelectionState::HasOnlyCollapsedRange() const {
-  if (mArray.Length() != 1) {
-    return false;
-  }
-  if (!mArray[0]->IsPositioned() || !mArray[0]->Collapsed()) {
-    return false;
-  }
-  return true;
-}
-
 bool SelectionState::Equals(const SelectionState& aOther) const {
   if (mArray.Length() != aOther.mArray.Length()) {
     return false;
@@ -147,65 +123,14 @@ bool SelectionState::Equals(const SelectionState& aOther) const {
     return false;
   }
 
-  // XXX Creating nsRanges are really expensive.  Why cannot we just check
-  //     the container and offsets??
-  IgnoredErrorResult ignoredError;
-  for (size_t i = 0; i < mArray.Length(); i++) {
-    RefPtr<nsRange> range = mArray[i]->GetRange();
-    if (!range) {
-      NS_WARNING("Failed to create a range from the range item");
-      return false;
-    }
-    RefPtr<nsRange> otherRange = aOther.mArray[i]->GetRange();
-    if (!otherRange) {
-      NS_WARNING("Failed to create a range from the other's range item");
-      return false;
-    }
-
-    int16_t compResult = range->CompareBoundaryPoints(
-        Range_Binding::START_TO_START, *otherRange, ignoredError);
-    if (ignoredError.Failed()) {
-      NS_WARNING(
-          "nsRange::CompareBoundaryPoints(Range_Binding::START_TO_START) "
-          "failed");
-      return false;
-    }
-    if (compResult) {
-      return false;
-    }
-    compResult = range->CompareBoundaryPoints(Range_Binding::END_TO_END,
-                                              *otherRange, ignoredError);
-    if (ignoredError.Failed()) {
-      NS_WARNING(
-          "nsRange::CompareBoundaryPoints(Range_Binding::END_TO_END) failed");
-      return false;
-    }
-    if (compResult) {
+  for (uint32_t i : IntegerRange(mArray.Length())) {
+    if (NS_WARN_IF(!mArray[i]) || NS_WARN_IF(!aOther.mArray[i]) ||
+        !mArray[i]->Equals(*aOther.mArray[i])) {
       return false;
     }
   }
   // if we got here, they are equal
   return true;
-}
-
-void SelectionState::Clear() {
-  // free any items in the array
-  mArray.Clear();
-  mDirection = eDirNext;
-}
-
-bool SelectionState::IsEmpty() const { return mArray.IsEmpty(); }
-
-nsINode* SelectionState::GetCommonRootNode() const {
-  nsINode* rootNode = nullptr;
-  for (const RefPtr<RangeItem>& rangeItem : mArray) {
-    nsINode* newRootNode = rangeItem->GetRoot();
-    if (!newRootNode || (rootNode && rootNode != newRootNode)) {
-      return nullptr;
-    }
-    rootNode = newRootNode;
-  }
-  return rootNode;
 }
 
 /******************************************************************************
