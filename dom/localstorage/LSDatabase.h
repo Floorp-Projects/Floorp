@@ -15,8 +15,7 @@
 #include "nsString.h"
 #include "nsTArrayForwardDeclare.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class LSDatabaseChild;
 class LSNotifyInfo;
@@ -101,7 +100,6 @@ class LSDatabase final {
   void AllowToClose();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSDatabase_h

@@ -16,8 +16,7 @@
 
 class nsRefreshDriver;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * L10nMutations manage observing roots for localization
@@ -84,7 +83,6 @@ class L10nMutations final : public nsStubMutationObserver,
   bool IsInRoots(nsINode* aNode);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_l10n_L10nMutations_h__

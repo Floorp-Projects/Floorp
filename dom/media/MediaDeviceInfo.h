@@ -14,8 +14,7 @@
 #include "nsStringFwd.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #define MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID \
   {                                                    \
@@ -55,7 +54,6 @@ class MediaDeviceInfo final : public nsISupports, public nsWrapperCache {
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDeviceInfo,
                               MOZILLA_DOM_MEDIADEVICEINFO_IMPLEMENTATION_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MediaDeviceInfo_h
