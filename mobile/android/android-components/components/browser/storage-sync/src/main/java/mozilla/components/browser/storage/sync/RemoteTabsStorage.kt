@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.storage.sync
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
@@ -15,16 +16,20 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.utils.logElapsedTime
+import java.io.File
 import mozilla.appservices.remotetabs.InternalException as RemoteTabProviderException
 import mozilla.appservices.remotetabs.TabsStore as RemoteTabsProvider
+
+private const val TABS_DB_NAME = "tabs.sqlite"
 
 /**
  * An interface which defines read/write methods for remote tabs data.
  */
 open class RemoteTabsStorage(
+    private val context: Context,
     private val crashReporter: CrashReporting? = null
 ) : Storage, SyncableStore {
-    internal val api by lazy { RemoteTabsProvider() }
+    internal val api by lazy { RemoteTabsProvider(File(context.filesDir, TABS_DB_NAME).canonicalPath) }
     private val scope by lazy { CoroutineScope(Dispatchers.IO) }
     internal val logger = Logger("RemoteTabsStorage")
 

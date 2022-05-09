@@ -38,7 +38,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
-    private val tabsStorage: RemoteTabsStorage = RemoteTabsStorage(),
+    private val tabsStorage: RemoteTabsStorage,
     private val debounceMillis: Long = 1000L,
 ) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
