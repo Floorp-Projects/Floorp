@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(TSpan)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGTSpanElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -51,5 +50,4 @@ SVGTSpanElement::IsAttributeMapped(const nsAtom* name) const {
          SVGTSpanElementBase::IsAttributeMapped(name);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

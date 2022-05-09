@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(View)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGViewElement_Binding;
 
@@ -77,5 +76,4 @@ SVGViewElement::GetAnimatedPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
