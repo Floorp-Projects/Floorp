@@ -347,10 +347,8 @@ void SetInboundRTPStreamStatsFromVoiceReceiverInfo(
   // |fir_count|, |pli_count| and |sli_count| are only valid for video and are
   // purposefully left undefined for audio.
   if (voice_receiver_info.last_packet_received_timestamp_ms) {
-    inbound_audio->last_packet_received_timestamp =
-        static_cast<double>(
-            *voice_receiver_info.last_packet_received_timestamp_ms) /
-        rtc::kNumMillisecsPerSec;
+    inbound_audio->last_packet_received_timestamp = static_cast<double>(
+        *voice_receiver_info.last_packet_received_timestamp_ms);
   }
   if (voice_receiver_info.estimated_playout_ntp_timestamp_ms) {
     inbound_audio->estimated_playout_timestamp = static_cast<double>(

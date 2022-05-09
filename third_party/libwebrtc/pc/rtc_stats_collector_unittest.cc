@@ -1864,7 +1864,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
 
   // Set previously undefined values and "GetStats" again.
   voice_media_info.receivers[0].last_packet_received_timestamp_ms = 3000;
-  expected_audio.last_packet_received_timestamp = 3.0;
+  expected_audio.last_packet_received_timestamp = 3000.0;
   voice_media_info.receivers[0].estimated_playout_ntp_timestamp_ms = 4567;
   expected_audio.estimated_playout_timestamp = 4567;
   voice_media_channel->SetStats(voice_media_info);
