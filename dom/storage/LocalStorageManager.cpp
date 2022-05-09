@@ -25,8 +25,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace StorageUtils;
 
@@ -452,5 +451,4 @@ LocalStorageManager* LocalStorageManager::Ensure() {
   return sSelf;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

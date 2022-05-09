@@ -16,8 +16,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SessionStorage, Storage, mManager);
 
@@ -256,5 +255,4 @@ nsresult SessionStorage::EnsureCacheLoadedOrCloned() const {
   return mManager->LoadData(*StoragePrincipal(), *mCache);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
