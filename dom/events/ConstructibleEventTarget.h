@@ -10,8 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "js/RootingAPI.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ConstructibleEventTarget : public DOMEventTargetHelper {
  public:
@@ -26,7 +25,6 @@ class ConstructibleEventTarget : public DOMEventTargetHelper {
                                JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ConstructibleEventTarget_h_

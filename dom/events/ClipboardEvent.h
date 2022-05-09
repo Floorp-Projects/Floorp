@@ -11,8 +11,7 @@
 #include "mozilla/dom/ClipboardEventBinding.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class DataTransfer;
 
 class ClipboardEvent : public Event {
@@ -40,8 +39,7 @@ class ClipboardEvent : public Event {
   ~ClipboardEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::ClipboardEvent> NS_NewDOMClipboardEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

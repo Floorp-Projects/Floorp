@@ -10,8 +10,7 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MouseScrollEvent : public MouseEvent {
  public:
@@ -39,8 +38,7 @@ class MouseScrollEvent : public MouseEvent {
   ~MouseScrollEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::MouseScrollEvent> NS_NewDOMMouseScrollEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

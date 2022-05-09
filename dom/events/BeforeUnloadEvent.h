@@ -10,8 +10,7 @@
 #include "mozilla/dom/BeforeUnloadEventBinding.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BeforeUnloadEvent : public Event {
  public:
@@ -37,8 +36,7 @@ class BeforeUnloadEvent : public Event {
   nsString mText;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::BeforeUnloadEvent> NS_NewDOMBeforeUnloadEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

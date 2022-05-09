@@ -11,8 +11,7 @@
 #include "mozilla/dom/DeviceMotionEventBinding.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DeviceRotationRate final : public nsWrapperCache {
  public:
@@ -121,8 +120,7 @@ class DeviceMotionEvent final : public Event {
   Nullable<double> mInterval;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::DeviceMotionEvent> NS_NewDOMDeviceMotionEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
