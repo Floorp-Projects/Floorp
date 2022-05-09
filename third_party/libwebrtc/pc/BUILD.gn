@@ -77,6 +77,7 @@ rtc_library("rtc_pc_base") {
   deps = [
     ":media_protocol_names",
     "../api:array_view",
+    "../api:async_dns_resolver",
     "../api:audio_options_api",
     "../api:call_api",
     "../api:function_view",
@@ -236,6 +237,7 @@ rtc_library("peerconnection") {
     ":video_track",
     ":video_track_source",
     "../api:array_view",
+    "../api:async_dns_resolver",
     "../api:audio_options_api",
     "../api:call_api",
     "../api:callfactory_api",
