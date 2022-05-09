@@ -464,8 +464,7 @@ impl RenderNotifier for Notifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       composite_needed: bool,
-                       _render_time: Option<u64>) {
+                       composite_needed: bool) {
         // TODO(gw): Refactor wrench so that it can take advantage of cases
         //           where no composite is required when appropriate.
         self.wake_up(composite_needed);

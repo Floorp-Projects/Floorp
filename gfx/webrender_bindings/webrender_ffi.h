@@ -110,13 +110,6 @@ template struct mozilla::wr::Point2D<float, mozilla::wr::WorldPixel>;
 template struct mozilla::wr::Box2D<int32_t, mozilla::wr::DevicePixel>;
 template struct mozilla::wr::Box2D<int, mozilla::wr::LayoutPixel>;
 
-// More functions invoked from Rust code. These are down here because they
-// refer to data structures from webrender_ffi_generated.h
-extern "C" {
-void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe,
-                           uint64_t aTimeNs);
-}
-
 namespace mozilla {
 namespace wr {
 
