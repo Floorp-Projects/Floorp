@@ -13,8 +13,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Feature final {
  public:
@@ -61,7 +60,6 @@ class Feature final {
   CopyableTArray<nsCOMPtr<nsIPrincipal>> mAllowList;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Feature_h

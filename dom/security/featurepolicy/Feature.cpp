@@ -7,8 +7,7 @@
 #include "Feature.h"
 #include "mozilla/BasePrincipal.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void Feature::GetAllowList(nsTArray<nsCOMPtr<nsIPrincipal>>& aList) const {
   MOZ_ASSERT(mPolicy == eAllowList);
@@ -74,5 +73,4 @@ bool Feature::AllowListContains(nsIPrincipal* aPrincipal) const {
 
 bool Feature::HasAllowList() const { return mPolicy == eAllowList; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

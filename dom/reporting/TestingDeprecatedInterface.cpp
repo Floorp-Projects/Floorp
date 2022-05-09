@@ -8,8 +8,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ReportingBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TestingDeprecatedInterface, mGlobal)
 
@@ -46,5 +45,4 @@ void TestingDeprecatedInterface::DeprecatedMethod() const {}
 
 bool TestingDeprecatedInterface::DeprecatedAttribute() const { return true; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

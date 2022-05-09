@@ -25,8 +25,7 @@ class ModuleLoadRequest;
 }  // namespace loader
 }  // namespace JS
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ScriptLoader;
 class SRIMetadata;
@@ -85,7 +84,6 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
   const Kind mKind;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ModuleLoader_h

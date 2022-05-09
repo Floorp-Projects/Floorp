@@ -14,8 +14,7 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FeaturePolicy)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FeaturePolicy)
@@ -332,5 +331,4 @@ void FeaturePolicy::MaybeSetAllowedPolicy(const nsAString& aFeatureName) {
   mAttributeEnabledFeatureNames.AppendElement(aFeatureName);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -9,8 +9,7 @@
 
 #include "mozilla/Logging.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SRILogHelper final {
  public:
@@ -20,7 +19,6 @@ class SRILogHelper final {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SRILogHelper_h
