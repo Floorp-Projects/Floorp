@@ -13,9 +13,7 @@
 #include "AudioContext.h"
 #include "AudioNodeEngine.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct PeriodicWaveOptions;
@@ -56,7 +54,6 @@ class PeriodicWave final : public nsWrapperCache {
   bool mDisableNormalization;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
