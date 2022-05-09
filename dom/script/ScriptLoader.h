@@ -433,7 +433,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   nsIURI* GetBaseURI() const override;
 
  private:
-  virtual ~ScriptLoader();
+  ~ScriptLoader();
 
   already_AddRefed<ScriptLoadRequest> CreateLoadRequest(
       ScriptKind aKind, nsIURI* aURI, nsIScriptElement* aElement,
