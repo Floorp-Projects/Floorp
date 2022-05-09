@@ -422,8 +422,7 @@ button:disabled {
   visibility: hidden;
   border-radius: 4px;
   border: 1px solid var(--popup-border);
-  box-shadow: 0 0px 10px 0 var(--popup-shadow);
-  border-bottom-width: 0;
+  box-shadow: 0 0 10px 0 var(--popup-shadow);
   top: 0;
 }
 

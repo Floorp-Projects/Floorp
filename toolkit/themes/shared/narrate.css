@@ -203,10 +203,6 @@ body.dark .narrate-word-highlight {
   min-height: 40px;
 }
 
-.voiceselect.open > button.select-toggle {
-  border-bottom: 1px solid var(--border-color);
-}
-
 .voiceselect > button.select-toggle::after {
   content: '';
   background-image: url("chrome://global/skin/narrate/arrow.svg");
@@ -251,6 +247,7 @@ body.dark .voiceselect > .options:not(.hovering) > button.option:focus {
 
 .voiceselect.open > .options {
   display: block;
+  border-top: 1px solid var(--border-color);
 }
 
 .current-voice {
