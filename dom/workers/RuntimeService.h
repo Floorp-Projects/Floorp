@@ -24,8 +24,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct WorkerLoadInfo;
 class WorkerThread;
 
@@ -194,7 +193,6 @@ class RuntimeService final : public nsIObserver {
 };
 
 }  // namespace workerinternals
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_runtimeservice_h__ */
