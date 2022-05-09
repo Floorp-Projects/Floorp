@@ -186,29 +186,36 @@ HRESULT WgcCaptureSession::GetFrame(
   if (FAILED(hr))
     return hr;
 
-  // If the size has changed since the last capture, we must be sure to choose
-  // the smaller of the two sizes. Otherwise we might overrun our buffer, or
+  // If the size has changed since the last capture, we must be sure to use
+  // the smaller dimensions. Otherwise we might overrun our buffer, or
   // read stale data from the last frame.
-  int previous_area = previous_size_.Width * previous_size_.Height;
-  int new_area = new_size.Width * new_size.Height;
-  auto smaller_size = previous_area < new_area ? previous_size_ : new_size;
+  int image_height = std::min(previous_size_.Height, new_size.Height);
+  int image_width = std::min(previous_size_.Width, new_size.Width);
+  int row_data_length = image_width * DesktopFrame::kBytesPerPixel;
 
   // Make a copy of the data pointed to by |map_info.pData| so we are free to
   // unmap our texture.
-  uint8_t* data = static_cast<uint8_t*>(map_info.pData);
-  int data_size = smaller_size.Height * map_info.RowPitch;
-  std::vector<uint8_t> image_data(data, data + data_size);
-  DesktopSize size(smaller_size.Width, smaller_size.Height);
+  uint8_t* src_data = static_cast<uint8_t*>(map_info.pData);
+  std::vector<uint8_t> image_data;
+  image_data.reserve(image_height * row_data_length);
+  uint8_t* image_data_ptr = image_data.data();
+  for (int i = 0; i < image_height; i++) {
+    memcpy(image_data_ptr, src_data, row_data_length);
+    image_data_ptr += row_data_length;
+    src_data += map_info.RowPitch;
+  }
 
   // Transfer ownership of |image_data| to the output_frame.
-  *output_frame = std::make_unique<WgcDesktopFrame>(
-      size, static_cast<int>(map_info.RowPitch), std::move(image_data));
+  DesktopSize size(image_width, image_height);
+  *output_frame = std::make_unique<WgcDesktopFrame>(size, row_data_length,
+                                                    std::move(image_data));
 
   d3d_context->Unmap(mapped_texture_.Get(), 0);
 
   // If the size changed, we must resize the texture and frame pool to fit the
   // new size.
-  if (previous_area != new_area) {
+  if (previous_size_.Height != new_size.Height ||
+      previous_size_.Width != new_size.Width) {
     hr = CreateMappedTexture(texture_2D, new_size.Width, new_size.Height);
     if (FAILED(hr))
       return hr;
