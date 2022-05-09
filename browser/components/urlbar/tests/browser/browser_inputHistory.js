@@ -470,6 +470,23 @@ add_task(async function test_adaptive_searchmode() {
   await Services.search.removeEngine(suggestionsEngine);
 });
 
+add_task(async function test_ignore_case() {
+  const url = "http://example.com/";
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.addVisits([url]);
+  await UrlbarUtils.addToInputHistory(url, "SampLE");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    value: "sAM",
+  });
+  const result = await UrlbarTestUtils.getDetailsOfResultAt(win, 1);
+  Assert.equal(
+    result.url,
+    url,
+    "Seaching for input history is case-insensitive"
+  );
+});
+
 add_task(async function test_adaptive_history_in_privatewindow() {
   info(
     "Check adaptive history is not shown in private window as tab switching candidate."
