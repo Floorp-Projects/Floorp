@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/memory/memory.h"
 #include "api/packet_socket_factory.h"
 #include "api/transport/stun.h"
 #include "p2p/base/async_stun_tcp_socket.h"
@@ -25,6 +26,7 @@
 #include "rtc_base/message_digest.h"
 #include "rtc_base/socket_adapters.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 
 namespace cricket {
@@ -554,20 +556,14 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
     rtc::AsyncPacketSocket* socket = iter->first;
     socket->SignalReadPacket.disconnect(this);
     server_sockets_.erase(iter);
+    std::unique_ptr<rtc::AsyncPacketSocket> socket_to_delete =
+        absl::WrapUnique(socket);
     // We must destroy the socket async to avoid invalidating the sigslot
     // callback list iterator inside a sigslot callback. (In other words,
     // deleting an object from within a callback from that object).
-    sockets_to_delete_.push_back(
-        std::unique_ptr<rtc::AsyncPacketSocket>(socket));
-    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, rtc::Thread::Current(), [this] {
-      RTC_DCHECK_RUN_ON(thread_);
-      FreeSockets();
-    });
+    thread_->PostTask(webrtc::ToQueuedTask(
+        [socket_to_delete = std::move(socket_to_delete)] {}));
   }
-}
-
-void TurnServer::FreeSockets() {
-  sockets_to_delete_.clear();
 }
 
 TurnServerConnection::TurnServerConnection(const rtc::SocketAddress& src,
