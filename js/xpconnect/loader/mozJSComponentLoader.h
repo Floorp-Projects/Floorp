@@ -72,6 +72,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
 
+  static bool IsTrustedScheme(nsIURI* aURI);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  protected:
