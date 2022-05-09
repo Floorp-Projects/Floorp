@@ -619,6 +619,30 @@ JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
 }
 
 /* static */
+nsresult mozJSComponentLoader::GetSourceFile(nsIURI* aResolvedURI,
+                                             nsIFile** aSourceFileOut) {
+  // Get the JAR if there is one.
+  nsCOMPtr<nsIJARURI> jarURI;
+  nsresult rv = NS_OK;
+  jarURI = do_QueryInterface(aResolvedURI, &rv);
+  nsCOMPtr<nsIFileURL> baseFileURL;
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIURI> baseURI;
+    while (jarURI) {
+      jarURI->GetJARFile(getter_AddRefs(baseURI));
+      jarURI = do_QueryInterface(baseURI, &rv);
+    }
+    baseFileURL = do_QueryInterface(baseURI, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    baseFileURL = do_QueryInterface(aResolvedURI, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return baseFileURL->GetFile(aSourceFileOut);
+}
+
+/* static */
 bool mozJSComponentLoader::LocationIsRealFile(nsIURI* aURI) {
   // We need to be extra careful checking for URIs pointing to files.
   // EnsureFile may not always get called, especially on resource URIs so we
@@ -1264,25 +1288,8 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    // get the JAR if there is one
-    nsCOMPtr<nsIJARURI> jarURI;
-    jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
-    nsCOMPtr<nsIFileURL> baseFileURL;
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIURI> baseURI;
-      while (jarURI) {
-        jarURI->GetJARFile(getter_AddRefs(baseURI));
-        jarURI = do_QueryInterface(baseURI, &rv);
-      }
-      baseFileURL = do_QueryInterface(baseURI, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
     nsCOMPtr<nsIFile> sourceFile;
-    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
+    rv = GetSourceFile(info.ResolvedURI(), getter_AddRefs(sourceFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = info.ResolvedURI()->GetSpec(newEntry->resolvedURL);
