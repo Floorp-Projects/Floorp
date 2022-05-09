@@ -13,11 +13,9 @@
 #define kTXWrapper "transformiix:result"
 
 class txOutputFormat;
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
-}
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 /**
  * An interface for handling XML documents, loosely modeled

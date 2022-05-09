@@ -9,8 +9,7 @@
 
 #include "XULPopupElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsXULElement* NS_NewXULTooltipElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -33,7 +32,6 @@ class XULTooltipElement final : public XULPopupElement {
   virtual ~XULTooltipElement() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // XULPopupElement_h

@@ -19,8 +19,7 @@
 
 class txAExprResult;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * A class for evaluating an XPath expression string
@@ -152,7 +151,6 @@ class XPathResult final : public nsStubMutationObserver, public nsWrapperCache {
   nsString mStringResult;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_XPathResult_h */
