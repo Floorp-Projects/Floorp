@@ -1235,7 +1235,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_remote_srflx.protocol = "remote_srflx's protocol";
   expected_a_remote_srflx.candidate_type = "srflx";
   expected_a_remote_srflx.priority = 1;
-  expected_a_remote_srflx.deleted = false;
   EXPECT_TRUE(*expected_a_remote_srflx.is_remote);
 
   std::unique_ptr<cricket::Candidate> a_local_prflx = CreateFakeCandidate(
@@ -1251,7 +1250,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_prflx.protocol = "a_local_prflx's protocol";
   expected_a_local_prflx.candidate_type = "prflx";
   expected_a_local_prflx.priority = 2;
-  expected_a_local_prflx.deleted = false;
   EXPECT_FALSE(*expected_a_local_prflx.is_remote);
 
   std::unique_ptr<cricket::Candidate> a_remote_relay = CreateFakeCandidate(
@@ -1266,7 +1264,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_remote_relay.protocol = "a_remote_relay's protocol";
   expected_a_remote_relay.candidate_type = "relay";
   expected_a_remote_relay.priority = 3;
-  expected_a_remote_relay.deleted = false;
   EXPECT_TRUE(*expected_a_remote_relay.is_remote);
 
   std::unique_ptr<cricket::Candidate> a_local_relay = CreateFakeCandidate(
@@ -1284,7 +1281,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_relay.relay_protocol = "tcp";
   expected_a_local_relay.candidate_type = "relay";
   expected_a_local_relay.priority = 1;
-  expected_a_local_relay.deleted = false;
   EXPECT_TRUE(*expected_a_local_relay.is_remote);
 
   // Candidates in the second transport stats.
@@ -1301,7 +1297,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_local.protocol = "b_local's protocol";
   expected_b_local.candidate_type = "host";
   expected_b_local.priority = 42;
-  expected_b_local.deleted = false;
   EXPECT_FALSE(*expected_b_local.is_remote);
 
   std::unique_ptr<cricket::Candidate> b_remote = CreateFakeCandidate(
@@ -1316,7 +1311,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_remote.protocol = "b_remote's protocol";
   expected_b_remote.candidate_type = "host";
   expected_b_remote.priority = 42;
-  expected_b_remote.deleted = false;
   EXPECT_TRUE(*expected_b_remote.is_remote);
 
   // Add candidate pairs to connection.
@@ -1518,7 +1512,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_local_candidate.protocol = "protocol";
   expected_local_candidate.candidate_type = "host";
   expected_local_candidate.priority = 42;
-  expected_local_candidate.deleted = false;
   EXPECT_FALSE(*expected_local_candidate.is_remote);
   ASSERT_TRUE(report->Get(expected_local_candidate.id()));
   EXPECT_EQ(expected_local_candidate,
@@ -1534,7 +1527,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_remote_candidate.protocol = "protocol";
   expected_remote_candidate.candidate_type = "host";
   expected_remote_candidate.priority = 42;
-  expected_remote_candidate.deleted = false;
   EXPECT_TRUE(*expected_remote_candidate.is_remote);
   ASSERT_TRUE(report->Get(expected_remote_candidate.id()));
   EXPECT_EQ(expected_remote_candidate,
@@ -1973,7 +1965,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Audio) {
   RTCInboundRTPStreamStats expected_audio("RTCInboundRTPAudioStream_1",
                                           report->timestamp_us());
   expected_audio.ssrc = 1;
-  expected_audio.is_remote = false;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_id = stats_of_track_type[0]->id();
@@ -2072,7 +2063,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   RTCInboundRTPStreamStats expected_video("RTCInboundRTPVideoStream_1",
                                           report->timestamp_us());
   expected_video.ssrc = 1;
-  expected_video.is_remote = false;
   expected_video.media_type = "video";
   expected_video.kind = "video";
   expected_video.track_id = IdForType<RTCMediaStreamTrackStats>(report);
@@ -2161,7 +2151,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   expected_audio.media_source_id = "RTCAudioSource_50";
   // |expected_audio.remote_id| should be undefined.
   expected_audio.ssrc = 1;
-  expected_audio.is_remote = false;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report);
@@ -2245,7 +2234,6 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Video) {
   expected_video.media_source_id = "RTCVideoSource_50";
   // |expected_video.remote_id| should be undefined.
   expected_video.ssrc = 1;
-  expected_video.is_remote = false;
   expected_video.media_type = "video";
   expected_video.kind = "video";
   expected_video.track_id = stats_of_track_type[0]->id();
@@ -2555,7 +2543,6 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
                                            report->timestamp_us());
   expected_audio.media_source_id = "RTCAudioSource_50";
   expected_audio.ssrc = 1;
-  expected_audio.is_remote = false;
   expected_audio.media_type = "audio";
   expected_audio.kind = "audio";
   expected_audio.track_id = IdForType<RTCMediaStreamTrackStats>(report);
