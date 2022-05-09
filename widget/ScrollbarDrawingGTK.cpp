@@ -55,7 +55,7 @@ Maybe<nsITheme::Transparency> ScrollbarDrawingGTK::GetScrollbarPartTransparency(
 template <typename PaintBackendData>
 bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
@@ -63,14 +63,15 @@ bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
 
   LayoutDeviceRect thumbRect(aRect);
 
+  const bool horizontal = aScrollbarKind == ScrollbarKind::Horizontal;
   if (aFrame->PresContext()->UseOverlayScrollbars() &&
       !ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
-    if (aHorizontal) {
+    if (horizontal) {
       thumbRect.height *= 0.5;
       thumbRect.y += thumbRect.height;
     } else {
       thumbRect.width *= 0.5;
-      if (aFrame->GetWritingMode().IsPhysicalLTR()) {
+      if (aScrollbarKind == ScrollbarKind::VerticalRight) {
         thumbRect.x += thumbRect.width;
       }
     }
@@ -80,13 +81,13 @@ bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
     float factor = std::max(
         0.0f,
         1.0f - StaticPrefs::widget_non_native_theme_gtk_scrollbar_thumb_size());
-    thumbRect.Deflate((aHorizontal ? thumbRect.height : thumbRect.width) *
+    thumbRect.Deflate((horizontal ? thumbRect.height : thumbRect.width) *
                       factor);
   }
 
   LayoutDeviceCoord radius =
       StaticPrefs::widget_non_native_theme_gtk_scrollbar_round_thumb()
-          ? (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f
+          ? (horizontal ? thumbRect.height : thumbRect.width) / 2.0f
           : 0.0f;
 
   ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, thumbRect, thumbColor,
@@ -96,21 +97,21 @@ bool ScrollbarDrawingGTK::DoPaintScrollbarThumb(
 }
 
 bool ScrollbarDrawingGTK::PaintScrollbarThumb(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aDrawTarget, aRect, aHorizontal, aFrame, aStyle,
-                               aElementState, aDocumentState, aColors,
+  return DoPaintScrollbarThumb(aDrawTarget, aRect, aScrollbarKind, aFrame,
+                               aStyle, aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
 
 bool ScrollbarDrawingGTK::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+  return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
