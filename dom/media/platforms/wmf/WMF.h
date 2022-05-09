@@ -37,8 +37,7 @@
 #  undef max
 #endif
 
-namespace mozilla {
-namespace wmf {
+namespace mozilla::wmf {
 
 // A helper class for automatically starting and shuting down the Media
 // Foundation. Prior to using Media Foundation in a process, users should call
@@ -65,6 +64,7 @@ class MediaFoundationInitializer final {
     }
     return Get()->mHasInitialized;
   }
+
  private:
   static MediaFoundationInitializer* Get() {
     {
@@ -74,18 +74,19 @@ class MediaFoundationInitializer final {
         GetMainThreadSerialEventTarget()->Dispatch(
             NS_NewRunnableFunction("MediaFoundationInitializer::Get", [&] {
               // Need to run this before MTA thread gets destroyed.
-              RunOnShutdown([&] {
-                sInitializer.reset();
-                sIsShutdown = true;
-              }, ShutdownPhase::XPCOMShutdown);
+              RunOnShutdown(
+                  [&] {
+                    sInitializer.reset();
+                    sIsShutdown = true;
+                  },
+                  ShutdownPhase::XPCOMShutdown);
             }));
       }
     }
     return sInitializer.get();
   }
 
-  MediaFoundationInitializer()
-    : mHasInitialized(SUCCEEDED(MFStartup())) {
+  MediaFoundationInitializer() : mHasInitialized(SUCCEEDED(MFStartup())) {
     if (!mHasInitialized) {
       NS_WARNING("MFStartup failed");
     }
@@ -166,7 +167,6 @@ HRESULT MFCreatePresentationDescriptor(
 
 HRESULT MFCreateMemoryBuffer(DWORD cbMaxLength, IMFMediaBuffer** ppBuffer);
 
-}  // end namespace wmf
-}  // end namespace mozilla
+}  // namespace mozilla::wmf
 
 #endif

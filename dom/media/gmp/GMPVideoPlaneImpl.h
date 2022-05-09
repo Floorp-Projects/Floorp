@@ -9,8 +9,7 @@
 #include "gmp-video-plane.h"
 #include "mozilla/ipc/Shmem.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPVideoHostImpl;
 class GMPPlaneData;
@@ -57,7 +56,6 @@ class GMPPlaneImpl : public GMPPlane {
   GMPVideoHostImpl* mHost;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPVideoPlaneImpl_h_
