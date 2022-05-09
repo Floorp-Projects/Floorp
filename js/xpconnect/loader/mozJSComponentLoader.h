@@ -90,6 +90,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   JSObject* GetSharedGlobal(JSContext* aCx);
 
+  static nsresult GetSourceFile(nsIURI* aResolvedURI, nsIFile** aSourceFileOut);
+
   static bool LocationIsRealFile(nsIURI* aURI);
 
   JSObject* PrepareObjectForLocation(JSContext* aCx, nsIFile* aComponentFile,
