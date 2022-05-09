@@ -465,6 +465,7 @@ class ProxyContextParent extends BaseContext {
   constructor(envType, extension, params, xulBrowser, principal) {
     super(envType, extension);
 
+    this.childId = params.childId;
     this.uri = Services.io.newURI(params.url);
 
     this.incognito = params.incognito;
@@ -814,7 +815,7 @@ ParentAPIManager = {
         "RemoveListener",
       ],
       send: ["CallResult"],
-      query: ["RunListener"],
+      query: ["RunListener", "StreamFilterSuspendCancel"],
     });
   },
 
@@ -851,6 +852,10 @@ ParentAPIManager = {
         this.proxyContexts.delete(childId);
       }
     }
+  },
+
+  queryStreamFilterSuspendCancel(childId) {
+    return this.conduit.queryStreamFilterSuspendCancel(childId);
   },
 
   recvCreateProxyContext(data, { actor, sender }) {
