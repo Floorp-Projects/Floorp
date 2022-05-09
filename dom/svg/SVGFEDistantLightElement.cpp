@@ -12,8 +12,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDistantLight)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEDistantLightElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -65,5 +64,4 @@ SVGElement::NumberAttributesInfo SVGFEDistantLightElement::GetNumberInfo() {
                               ArrayLength(sNumberInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

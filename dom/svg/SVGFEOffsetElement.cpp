@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEOffset)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEOffsetElement::WrapNode(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
@@ -96,5 +95,4 @@ SVGElement::StringAttributesInfo SVGFEOffsetElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
