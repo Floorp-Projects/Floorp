@@ -8,7 +8,6 @@ TEST_DIRS += ["tests"]
 
 XPIDL_SOURCES += [
     "nsITransaction.idl",
-    "nsITransactionListener.idl",
     "nsITransactionManager.idl",
 ]
 

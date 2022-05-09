@@ -4425,32 +4425,29 @@ class HTMLEditor final : public EditorBase,
   }
 
   MOZ_CAN_RUN_SCRIPT void DidDoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
       nsresult aDoTransactionResult) {
     if (mComposerCommandsUpdater) {
       RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
-      updater->DidDoTransaction(aTransactionManager, aTransaction,
-                                aDoTransactionResult);
+      updater->DidDoTransaction(aTransactionManager);
     }
   }
 
   MOZ_CAN_RUN_SCRIPT void DidUndoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
       nsresult aUndoTransactionResult) {
     if (mComposerCommandsUpdater) {
       RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
-      updater->DidUndoTransaction(aTransactionManager, aTransaction,
-                                  aUndoTransactionResult);
+      updater->DidUndoTransaction(aTransactionManager);
     }
   }
 
   MOZ_CAN_RUN_SCRIPT void DidRedoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
       nsresult aRedoTransactionResult) {
     if (mComposerCommandsUpdater) {
       RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
-      updater->DidRedoTransaction(aTransactionManager, aTransaction,
-                                  aRedoTransactionResult);
+      updater->DidRedoTransaction(aTransactionManager);
     }
   }
 
