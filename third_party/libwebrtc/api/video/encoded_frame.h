@@ -59,11 +59,6 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   int64_t id_ = -1;
 };
 
-// TODO(bugs.webrtc.org/12579): Remove when downstream has been updated.
-namespace video_coding {
-using ::webrtc::EncodedFrame;
-}  // namespace video_coding
-
 }  // namespace webrtc
 
 #endif  // API_VIDEO_ENCODED_FRAME_H_

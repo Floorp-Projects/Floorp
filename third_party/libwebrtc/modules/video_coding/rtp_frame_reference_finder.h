@@ -28,11 +28,6 @@ class OnCompleteFrameCallback {
   virtual void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) = 0;
 };
 
-// TODO(bugs.webrtc.org/12579): Remove when downstream has been update.
-namespace video_coding {
-using OnCompleteFrameCallback = webrtc::OnCompleteFrameCallback;
-}  // namespace video_coding
-
 class RtpFrameReferenceFinder {
  public:
   using ReturnVector = absl::InlinedVector<std::unique_ptr<RtpFrameObject>, 3>;
