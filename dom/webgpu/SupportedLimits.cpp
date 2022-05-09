@@ -8,8 +8,7 @@
 #include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(SupportedLimits, mParent)
 GPU_IMPL_JS_WRAP(SupportedLimits)
@@ -72,5 +71,4 @@ uint32_t SupportedLimits::MaxVertexBufferArrayStride() const {
   return mLimits->max_vertex_buffer_array_stride;
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
