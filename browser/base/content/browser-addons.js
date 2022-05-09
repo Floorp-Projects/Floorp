@@ -435,7 +435,7 @@ var gXPInstallObserver = {
     "addon-install-failed",
     "addon-install-origin-blocked",
     "addon-install-webapi-blocked",
-    "addon-install-webapi-blocked-policy",
+    "addon-install-policy-blocked",
     "addon-progress",
     "addon-webext-permissions",
     "xpinstall-disabled",
@@ -555,9 +555,9 @@ var gXPInstallObserver = {
         break;
       }
       case "addon-install-webapi-blocked":
-      case "addon-install-webapi-blocked-policy":
+      case "addon-install-policy-blocked":
       case "addon-install-origin-blocked": {
-        if (aTopic == "addon-install-webapi-blocked-policy") {
+        if (aTopic == "addon-install-policy-blocked") {
           messageString = gNavigatorBundle.getString(
             "addonDomainBlockedByPolicy"
           );
