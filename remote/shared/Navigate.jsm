@@ -51,7 +51,9 @@ async function waitForInitialNavigationCompleted(webProgress, options = {}) {
   const browsingContext = webProgress.browsingContext;
 
   // Start the listener right away to avoid race conditions.
-  const listener = new ProgressListener(webProgress, { resolveWhenStarted });
+  const listener = new ProgressListener(webProgress, {
+    resolveWhenStarted,
+  });
   const navigated = listener.start();
 
   // Right after a browsing context has been attached it could happen that
@@ -85,6 +87,7 @@ async function waitForInitialNavigationCompleted(webProgress, options = {}) {
  * WebProgressListener to observe for page loads.
  */
 class ProgressListener {
+  #expectNavigation;
   #resolveWhenStarted;
   #unloadTimeout;
   #waitForExplicitStart;
@@ -101,12 +104,18 @@ class ProgressListener {
    * @param {WebProgress} webProgress
    *     The web progress to attach the listener to.
    * @param {Object=} options
+   * @param {Boolean=} options.expectNavigation
+   *     Flag to indicate that a navigation is guaranteed to happen.
+   *     When set to `true`, the ProgressListener will ignore options.unloadTimeout
+   *     and will only resolve when the expected navigation happens.
+   *     Defaults to `false`.
    * @param {Boolean=} options.resolveWhenStarted
    *     Flag to indicate that the Promise has to be resolved when the
    *     page load has been started. Otherwise wait until the page has
    *     finished loading. Defaults to `false`.
    * @param {Number=} options.unloadTimeout
    *     Time to allow before the page gets unloaded. Defaults to 200ms.
+   *     Ignored if options.expectNavigation is set to `true`
    * @param {Boolean=} options.waitForExplicitStart
    *     Flag to indicate that the Promise can only resolve after receiving a
    *     STATE_START state change. In other words, if the webProgress is already
@@ -115,11 +124,13 @@ class ProgressListener {
    */
   constructor(webProgress, options = {}) {
     const {
+      expectNavigation = false,
       resolveWhenStarted = false,
       unloadTimeout = 200,
       waitForExplicitStart = false,
     } = options;
 
+    this.#expectNavigation = expectNavigation;
     this.#resolveWhenStarted = resolveWhenStarted;
     this.#unloadTimeout = unloadTimeout;
     this.#waitForExplicitStart = waitForExplicitStart;
@@ -205,14 +216,16 @@ class ProgressListener {
   }
 
   #setUnloadTimer() {
-    this.#unloadTimerId = setTimeout(() => {
-      logger.trace(
-        truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
-      );
-      // Assume the target is the currently loaded URI.
-      this.#targetURI = this.currentURI;
-      this.stop();
-    }, this.#unloadTimeout);
+    if (!this.#expectNavigation) {
+      this.#unloadTimerId = setTimeout(() => {
+        logger.trace(
+          truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
+        );
+        // Assume the target is the currently loaded URI.
+        this.#targetURI = this.currentURI;
+        this.stop();
+      }, this.#unloadTimeout);
+    }
   }
 
   onStateChange(progress, request, flag, status) {
