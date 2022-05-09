@@ -9,8 +9,7 @@
 
 #include "mozilla/MozPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // These enumerations are defined in the FIDO U2F Javascript API under the
 // interface "ErrorCode" as constant integers, and thus in the U2F.webidl file.
@@ -28,7 +27,6 @@ typedef MozPromise<nsString, ErrorCode, false> U2FPromise;
 
 constexpr auto kRequiredU2FVersion = u"U2F_V2"_ns;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_U2FAuthenticator_h

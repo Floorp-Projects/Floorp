@@ -10,11 +10,9 @@
 #include "nsIOSPermissionRequest.h"
 #include "nsWeakReference.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Promise;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 using mozilla::dom::Promise;
 

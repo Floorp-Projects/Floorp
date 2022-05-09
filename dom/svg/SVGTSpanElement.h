@@ -12,8 +12,7 @@
 nsresult NS_NewSVGTSpanElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGTSpanElementBase = SVGTextPositioningElement;
 
@@ -48,7 +47,6 @@ class SVGTSpanElement final : public SVGTSpanElementBase {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGTSPANELEMENT_H_

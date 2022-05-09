@@ -12,8 +12,7 @@
 nsresult NS_NewSVGTextElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGTextElementBase = SVGTextPositioningElement;
 
@@ -49,7 +48,6 @@ class SVGTextElement final : public SVGTextElementBase {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGTEXTELEMENT_H_
