@@ -13,8 +13,7 @@
 
 #include "nsINode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename T, typename Iter>
 class FilteredNodeIterator : public Iter {
@@ -53,7 +52,6 @@ class FilteredNodeIterator : public Iter {
   FilteredNodeIterator() : Iter() {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FilteredNodeIterator.h

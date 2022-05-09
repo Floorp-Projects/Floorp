@@ -17,8 +17,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EventSourceEventService final : public nsIEventSourceEventService,
                                       public nsIObserver {
@@ -64,8 +63,7 @@ class EventSourceEventService final : public nsIEventSourceEventService,
   Atomic<uint64_t> mCountListeners;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 /**
  * Casting EventSourceEventService to nsISupports is ambiguous.
