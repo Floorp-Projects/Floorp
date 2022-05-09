@@ -1,5 +1,3 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
-
 "use strict";
 
 add_setup(async function() {
@@ -270,11 +268,12 @@ add_task(async function test_addInvalidCreditCard() {
     SimpleTest.requestFlakyTimeout(
       "Ensure the window remains open after save attempt"
     );
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     setTimeout(() => {
       win.removeEventListener("unload", unloadHandler);
       info("closing");
       win.close();
-    }, 500);
+    }, TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED);
   });
   info("closed");
   let creditCards = await getCreditCards();
