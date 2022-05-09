@@ -17,6 +17,26 @@ const WCHAR kWindowClass[] = L"DesktopCaptureTestWindowClass";
 const int kWindowHeight = 200;
 const int kWindowWidth = 300;
 
+LRESULT CALLBACK WindowProc(HWND hwnd,
+                            UINT msg,
+                            WPARAM w_param,
+                            LPARAM l_param) {
+  switch (msg) {
+    case WM_PAINT:
+      PAINTSTRUCT paint_struct;
+      HDC hdc = BeginPaint(hwnd, &paint_struct);
+
+      // Paint the window so the color is consistent and we can inspect the
+      // pixels in tests and know what to expect.
+      FillRect(hdc, &paint_struct.rcPaint,
+               CreateSolidBrush(RGB(kTestWindowRValue, kTestWindowGValue,
+                                    kTestWindowBValue)));
+
+      EndPaint(hwnd, &paint_struct);
+  }
+  return DefWindowProc(hwnd, msg, w_param, l_param);
+}
+
 }  // namespace
 
 WindowInfo CreateTestWindow(const WCHAR* window_title,
@@ -25,7 +45,7 @@ WindowInfo CreateTestWindow(const WCHAR* window_title,
   WindowInfo info;
   ::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
                            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                       reinterpret_cast<LPCWSTR>(&::DefWindowProc),
+                       reinterpret_cast<LPCWSTR>(&WindowProc),
                        &info.window_instance);
 
   WNDCLASSEXW wcex;
@@ -33,7 +53,7 @@ WindowInfo CreateTestWindow(const WCHAR* window_title,
   wcex.cbSize = sizeof(wcex);
   wcex.style = CS_HREDRAW | CS_VREDRAW;
   wcex.hInstance = info.window_instance;
-  wcex.lpfnWndProc = &::DefWindowProc;
+  wcex.lpfnWndProc = &WindowProc;
   wcex.lpszClassName = kWindowClass;
   info.window_class = ::RegisterClassExW(&wcex);
 
