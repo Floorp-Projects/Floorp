@@ -10,8 +10,7 @@
 #include "mozilla/dom/PClientSourceOpChild.h"
 #include "ClientOpPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientSource;
 
@@ -41,7 +40,6 @@ class ClientSourceOpChild final : public PClientSourceOpChild {
   FlippedOnce<false> mInitialized;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientSourceOpChild_h

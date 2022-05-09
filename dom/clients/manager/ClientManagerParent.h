@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/PClientManagerParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientManagerService;
 
@@ -65,7 +64,6 @@ class ClientManagerParent final : public PClientManagerParent {
   void Init();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientManagerParent_h
