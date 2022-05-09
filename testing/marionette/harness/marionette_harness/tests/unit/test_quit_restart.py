@@ -67,6 +67,10 @@ class TestServerQuitApplication(MarionetteTestCase):
         with self.assertRaises(errors.InvalidArgumentException):
             self.quit(("eAttemptQuit", "eForceQuit"))
 
+    def test_safe_mode_requires_restart(self):
+        with self.assertRaises(errors.InvalidArgumentException):
+            self.quit(("eAttemptQuit",), True)
+
     def test_attempt_quit(self):
         cause = self.quit(("eAttemptQuit",))
         self.assertEqual("shutdown", cause)
@@ -74,15 +78,6 @@ class TestServerQuitApplication(MarionetteTestCase):
     def test_force_quit(self):
         cause = self.quit(("eForceQuit",))
         self.assertEqual("shutdown", cause)
-
-    def test_safe_mode_requires_restart(self):
-        with self.assertRaises(errors.InvalidArgumentException):
-            self.quit(("eAttemptQuit",), True)
-
-    @unittest.skipUnless(sys.platform.startswith("darwin"), "Only supported on MacOS")
-    def test_silent_quit_missing_windowless_capability(self):
-        with self.assertRaises(errors.UnsupportedOperationException):
-            self.quit(("eSilently",))
 
 
 class TestQuitRestart(MarionetteTestCase):
@@ -301,36 +296,6 @@ class TestQuitRestart(MarionetteTestCase):
 
         self.marionette.restart(in_app=True)
         self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
-
-    @unittest.skipUnless(sys.platform.startswith("darwin"), "Only supported on MacOS")
-    def test_in_app_silent_restart_fails_without_windowless_flag_on_mac_os(self):
-        self.marionette.delete_session()
-        self.marionette.start_session()
-
-        with self.assertRaises(errors.UnsupportedOperationException):
-            self.marionette.restart(silent=True)
-
-    @unittest.skipUnless(sys.platform.startswith("darwin"), "Only supported on MacOS")
-    def test_in_app_silent_restart_windowless_flag_on_mac_os(self):
-        self.marionette.delete_session()
-        self.marionette.start_session(capabilities={"moz:windowless": True})
-
-        self.marionette.restart(silent=True)
-        self.assertTrue(self.marionette.session_capabilities["moz:windowless"])
-
-        self.marionette.restart(in_app=True)
-        self.assertTrue(self.marionette.session_capabilities["moz:windowless"])
-
-        self.marionette.delete_session()
-
-    @unittest.skipIf(
-        sys.platform.startswith("darwin"), "Not supported on other platforms than MacOS"
-    )
-    def test_in_app_silent_restart_windowless_flag_unsupported_platforms(self):
-        self.marionette.delete_session()
-
-        with self.assertRaises(errors.SessionNotCreatedException):
-            self.marionette.start_session(capabilities={"moz:windowless": True})
 
     def test_in_app_quit(self):
         details = self.marionette.quit(in_app=True)
