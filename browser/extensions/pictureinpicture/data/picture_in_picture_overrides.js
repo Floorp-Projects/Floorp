@@ -12,13 +12,14 @@ let AVAILABLE_PIP_OVERRIDES;
   // See PictureInPictureControls.jsm for these values.
   // eslint-disable-next-line no-unused-vars
   const TOGGLE_POLICIES = browser.pictureInPictureChild.getPolicies();
-  const KEYBOARD_CONTROLS = browser.pictureInPictureChild.getKeyboardControls();
 
   AVAILABLE_PIP_OVERRIDES = {
     // The keys of this object are match patterns for URLs, as documented in
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
     //
     // Example:
+    //  const KEYBOARD_CONTROLS = browser.pictureInPictureChild.getKeyboardControls();
+    //
     //
     // "https://*.youtube.com/*": {
     //   policy: TOGGLE_POLICIES.THREE_QUARTERS,
@@ -46,7 +47,6 @@ let AVAILABLE_PIP_OVERRIDES;
 
     netflix: {
       "https://*.netflix.com/*": {
-        keyboardControls: ~KEYBOARD_CONTROLS.SEEK,
         videoWrapperScriptPath: "video-wrappers/netflix.js",
       },
       "https://*.netflix.com/browse*": { policy: TOGGLE_POLICIES.HIDDEN },
