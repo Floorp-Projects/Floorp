@@ -251,12 +251,14 @@ rtc_library("rtc_error") {
 rtc_source_set("packet_socket_factory") {
   visibility = [ "*" ]
   sources = [
+    "async_dns_resolver.h",
     "async_resolver_factory.h",
     "packet_socket_factory.h",
   ]
   deps = [
     "../rtc_base:async_resolver_interface",
     "../rtc_base:rtc_base",
+    "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]
 }
