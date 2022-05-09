@@ -18,8 +18,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IdleRequestCallback;
 
@@ -47,7 +46,6 @@ class IdleRequest final : public LinkedListElement<RefPtr<IdleRequest>> {
   mozilla::Maybe<int32_t> mTimeoutHandle;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_idlerequest_h

@@ -15,12 +15,10 @@ class nsINode;
 class nsAttrValue;
 class nsTextNode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
 class HTMLSlotElement;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 namespace mozilla {
 
