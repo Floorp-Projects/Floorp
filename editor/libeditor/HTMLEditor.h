@@ -4075,6 +4075,8 @@ class HTMLEditor final : public EditorBase,
    * RemoveStyleInside() removes elements which represent aProperty/aAttribute
    * and removes CSS style.  This handles aElement and all its descendants
    * (including leaf text nodes) recursively.
+   * TODO: Rename this to explain that this maybe remove aElement from the DOM
+   *       tree.
    *
    * @param aSpecifiedStyle  Whether the class and style attributes should
    *                         be preserved or discareded.
@@ -4100,8 +4102,10 @@ class HTMLEditor final : public EditorBase,
    *     calling this.  Which is the way to smart to make every caller
    *     must check the editor state?
    */
-  MOZ_CAN_RUN_SCRIPT bool IsRemovableParentStyleWithNewSpanElement(
-      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute) const;
+  MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
+  IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
+                                           nsAtom* aHTMLProperty,
+                                           nsAtom* aAttribute) const;
 
   /**
    * XXX These methods seem odd and except the only caller,

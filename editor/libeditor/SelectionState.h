@@ -52,10 +52,21 @@ struct RangeItem final {
     mStartOffset = mEndOffset = 0;
   }
   already_AddRefed<nsRange> GetRange();
-  bool IsCollapsed() const {
+
+  // Same as the API of dom::AbstractRange
+  [[nodiscard]] nsINode* GetRoot() const;
+  [[nodiscard]] bool Collapsed() const {
     return mStartContainer == mEndContainer && mStartOffset == mEndOffset;
   }
-  bool IsSet() const { return mStartContainer && mEndContainer; }
+  [[nodiscard]] bool IsPositioned() const {
+    return mStartContainer && mEndContainer;
+  }
+  [[nodiscard]] bool Equals(const RangeItem& aOther) const {
+    return mStartContainer == aOther.mStartContainer &&
+           mEndContainer == aOther.mEndContainer &&
+           mStartOffset == aOther.mStartOffset &&
+           mEndOffset == aOther.mEndOffset;
+  }
   EditorDOMPoint StartPoint() const {
     return EditorDOMPoint(mStartContainer, mStartOffset);
   }
@@ -88,20 +99,74 @@ struct RangeItem final {
 
 class SelectionState final {
  public:
-  SelectionState();
-  ~SelectionState() { Clear(); }
+  /**
+   * Same as the API as dom::Selection
+   */
+  [[nodiscard]] bool IsCollapsed() const {
+    if (mArray.Length() != 1) {
+      return false;
+    }
+    return mArray[0]->Collapsed();
+  }
 
+  void RemoveAllRanges() {
+    mArray.Clear();
+    mDirection = eDirNext;
+  }
+
+  [[nodiscard]] uint32_t RangeCount() const { return mArray.Length(); }
+
+  /**
+   * Saving all ranges of aSelection.
+   */
   void SaveSelection(dom::Selection& aSelection);
+
+  /**
+   * Setting aSelection to have all ranges stored by this instance.
+   */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   RestoreSelection(dom::Selection& aSelection);
-  bool IsCollapsed() const;
-  bool Equals(SelectionState& aOther) const;
-  void Clear();
-  bool IsEmpty() const;
+
+  /**
+   * HasOnlyCollapsedRange() returns true only when there is a positioned range
+   * which is collapsed.  I.e., the selection represents a caret point.
+   */
+  [[nodiscard]] bool HasOnlyCollapsedRange() const {
+    if (mArray.Length() != 1) {
+      return false;
+    }
+    if (!mArray[0]->IsPositioned() || !mArray[0]->Collapsed()) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Equals() returns true only when there are same number of ranges and
+   * all their containers and offsets are exactly same.  This won't check
+   * the validity of each range with the current DOM tree.
+   */
+  [[nodiscard]] bool Equals(const SelectionState& aOther) const;
+
+  /**
+   * Returns common root node of all ranges' start and end containers.
+   * Some of them have different root nodes, this returns nullptr.
+   */
+  [[nodiscard]] nsINode* GetCommonRootNode() const {
+    nsINode* rootNode = nullptr;
+    for (const RefPtr<RangeItem>& rangeItem : mArray) {
+      nsINode* newRootNode = rangeItem->GetRoot();
+      if (!newRootNode || (rootNode && rootNode != newRootNode)) {
+        return nullptr;
+      }
+      rootNode = newRootNode;
+    }
+    return rootNode;
+  }
 
  private:
   CopyableAutoTArray<RefPtr<RangeItem>, 1> mArray;
-  nsDirection mDirection;
+  nsDirection mDirection = eDirNext;
 
   friend class RangeUpdater;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
