@@ -7,8 +7,15 @@
 #include "AudioSinkWrapper.h"
 #include "AudioSink.h"
 #include "VideoUtils.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Result.h"
 #include "nsPrintfCString.h"
+
+mozilla::LazyLogModule gAudioSinkWrapperLog("AudioSinkWrapper");
+#define LOG(...) \
+  MOZ_LOG(gAudioSinkWrapperLog, mozilla::LogLevel::Debug, (__VA_ARGS__));
+#define LOGV(...) \
+  MOZ_LOG(gAudioSinkWrapperLog, mozilla::LogLevel::Verbose, (__VA_ARGS__));
 
 namespace mozilla {
 
@@ -60,12 +67,16 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     MOZ_ASSERT(mAudioSink);
     // Rely on the audio sink to report playback position when it is not ended.
     pos = mAudioSink->GetPosition();
+    LOGV("%p: Getting position from the Audio Sink %lf", this, pos.ToSeconds());
   } else if (!mPlayStartTime.IsNull()) {
     // Calculate playback position using system clock if we are still playing.
     pos = GetVideoPosition(t);
+    LOGV("%p: Getting position from the system clock %lf", this,
+         pos.ToSeconds());
   } else {
     // Return how long we've played if we are not playing.
     pos = mPlayDuration;
+    LOGV("%p: Getting static position, not playing %lf", this, pos.ToSeconds());
   }
 
   if (aTimeStamp) {
@@ -130,6 +141,7 @@ void AudioSinkWrapper::SetPreservesPitch(bool aPreservesPitch) {
 
 void AudioSinkWrapper::SetPlaying(bool aPlaying) {
   AssertOwnerThread();
+  LOG("%p: SetPlaying %s", this, aPlaying ? "true" : "false");
 
   // Resume/pause matters only when playback started.
   if (!mIsStarted) {
@@ -246,3 +258,6 @@ void AudioSinkWrapper::GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) {
 }
 
 }  // namespace mozilla
+
+#undef LOG
+#undef LOGV
