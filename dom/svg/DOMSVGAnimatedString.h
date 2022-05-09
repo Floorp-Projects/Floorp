@@ -10,8 +10,7 @@
 #include "mozilla/SVGAnimatedClassOrString.h"
 #include "mozilla/dom/SVGElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMSVGAnimatedString final : public nsWrapperCache {
  public:
@@ -45,7 +44,6 @@ class DOMSVGAnimatedString final : public nsWrapperCache {
   RefPtr<SVGElement> mSVGElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_DOMSVGANIMATEDSTRING_H_
