@@ -11,8 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadButton : public nsISupports, public nsWrapperCache {
  public:
@@ -49,7 +48,6 @@ class GamepadButton : public nsISupports, public nsWrapperCache {
   bool mTouched;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_GamepadButton_h

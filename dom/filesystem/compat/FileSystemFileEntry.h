@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/FileSystemEntry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class File;
 class FileCallback;
@@ -45,7 +44,6 @@ class FileSystemFileEntry final : public FileSystemEntry {
   RefPtr<File> mFile;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileSystemFileEntry_h

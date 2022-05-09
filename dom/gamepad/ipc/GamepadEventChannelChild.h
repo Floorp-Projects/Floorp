@@ -9,8 +9,7 @@
 #ifndef mozilla_dom_GamepadEventChannelChild_h_
 #  define mozilla_dom_GamepadEventChannelChild_h_
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadEventChannelChild final : public PGamepadEventChannelChild {
  public:
@@ -35,7 +34,6 @@ class GamepadEventChannelChild final : public PGamepadEventChannelChild {
   nsRefPtrHashtable<nsUint32HashKey, dom::Promise> mPromiseList;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

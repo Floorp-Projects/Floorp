@@ -13,8 +13,7 @@
 
 class nsFlexContainerFrame;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Element;
 class FlexLineValues;
@@ -45,7 +44,6 @@ class Flex : public nsISupports, public nsWrapperCache {
   FlexPhysicalDirection mCrossAxisDirection;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_Flex_h */

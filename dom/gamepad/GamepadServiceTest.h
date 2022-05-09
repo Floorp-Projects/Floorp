@@ -13,8 +13,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/WeakPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadChangeEvent;
 class GamepadManager;
@@ -110,7 +109,6 @@ class GamepadServiceTest final : public DOMEventTargetHelper,
   GamepadHandle GetHandleInSlot(uint32_t aHandleSlot) const;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

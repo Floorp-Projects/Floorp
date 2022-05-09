@@ -22,8 +22,7 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadHapticActuator;
 
@@ -141,7 +140,6 @@ class Gamepad final : public nsISupports, public nsWrapperCache {
   nsTHashMap<nsUint32HashKey, uint32_t> mTouchIdHash;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_Gamepad_h
