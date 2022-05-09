@@ -304,7 +304,7 @@ add_task(async function() {
  * @returns Boolean
  */
 function navHasAllFilteredClass(ui) {
-  return ui._view._nav.classList.contains("splitview-all-filtered");
+  return ui._nav.classList.contains("splitview-all-filtered");
 }
 
 /**

@@ -115,7 +115,6 @@ ol.splitview-nav > li.splitview-filtered {
   display: -moz-box;
 }
 
-/* this is to keep in sync with SplitView.jsm's LANDSCAPE_MEDIA_QUERY */
 @media (min-width: 701px) {
   .splitview-root {
     -moz-box-orient: horizontal;
