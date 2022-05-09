@@ -609,24 +609,6 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void quick_test(TestTransactionFactory* factory) {
 
   /*******************************************************************
    *
-   * Call AddListener() with a null listener pointer:
-   *
-   *******************************************************************/
-
-  rv = mgr->AddListener(nullptr);
-  EXPECT_EQ(rv, NS_ERROR_NULL_POINTER);
-
-  /*******************************************************************
-   *
-   * Call RemoveListener() with a null listener pointer:
-   *
-   *******************************************************************/
-
-  rv = mgr->RemoveListener(nullptr);
-  EXPECT_EQ(rv, NS_ERROR_NULL_POINTER);
-
-  /*******************************************************************
-   *
    * Test coalescing by executing a transaction that can merge any
    * command into itself. Then execute 20 transaction. Afterwards,
    * we should still have the first transaction sitting on the undo

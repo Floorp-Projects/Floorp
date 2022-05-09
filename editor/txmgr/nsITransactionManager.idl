@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 #include "nsITransaction.idl"
-#include "nsITransactionListener.idl"
 
 %{C++
 namespace mozilla {
@@ -136,23 +135,6 @@ interface nsITransactionManager : nsISupports
    * of the redo stack.
    */
   nsITransaction peekRedoStack();
-
-  /**
-   * Adds a listener to the transaction manager's notification list. Listeners
-   * are notified whenever a transaction is done, undone, or redone.
-   * <P>
-   * The listener's AddRef() method is called.
-   * @param aListener the lister to add.
-   */
-  void AddListener(in nsITransactionListener aListener);
-
-  /**
-   * Removes a listener from the transaction manager's notification list.
-   * <P>
-   * The listener's Release() method is called.
-   * @param aListener the lister to remove.
-   */
-  void RemoveListener(in nsITransactionListener aListener);
 
 %{C++
   /**

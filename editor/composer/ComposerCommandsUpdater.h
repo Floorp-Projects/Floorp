@@ -85,17 +85,15 @@ class ComposerCommandsUpdater final : public nsITimerCallback, public nsINamed {
 
   /**
    * The following methods are called when aTransactionManager did
-   * `DoTransaction`, `UndoTransaction` or `RedoTransaction` of aTransaction.
+   * `DoTransaction`, `UndoTransaction` or `RedoTransaction` of a transaction
+   * instance.
    */
   MOZ_CAN_RUN_SCRIPT void DidDoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-      nsresult aDoTransactionResult);
+      TransactionManager& aTransactionManager);
   MOZ_CAN_RUN_SCRIPT void DidUndoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-      nsresult aUndoTransactionResult);
+      TransactionManager& aTransactionManager);
   MOZ_CAN_RUN_SCRIPT void DidRedoTransaction(
-      TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-      nsresult aRedoTransactionResult);
+      TransactionManager& aTransactionManager);
 
  protected:
   virtual ~ComposerCommandsUpdater();

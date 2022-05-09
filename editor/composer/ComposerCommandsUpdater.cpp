@@ -53,8 +53,7 @@ NS_IMPL_CYCLE_COLLECTION(ComposerCommandsUpdater, mUpdateTimer, mDOMWindow,
 #endif
 
 void ComposerCommandsUpdater::DidDoTransaction(
-    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-    nsresult aDoTransactionResult) {
+    TransactionManager& aTransactionManager) {
   // only need to update if the status of the Undo menu item changes.
   if (aTransactionManager.NumberOfUndoItems() == 1) {
     if (mFirstDoOfFirstUndo) {
@@ -65,8 +64,7 @@ void ComposerCommandsUpdater::DidDoTransaction(
 }
 
 void ComposerCommandsUpdater::DidUndoTransaction(
-    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-    nsresult aUndoTransactionResult) {
+    TransactionManager& aTransactionManager) {
   if (!aTransactionManager.NumberOfUndoItems()) {
     mFirstDoOfFirstUndo = true;  // reset the state for the next do
   }
@@ -74,8 +72,7 @@ void ComposerCommandsUpdater::DidUndoTransaction(
 }
 
 void ComposerCommandsUpdater::DidRedoTransaction(
-    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
-    nsresult aRedoTransactionResult) {
+    TransactionManager& aTransactionManager) {
   UpdateCommandGroup(CommandGroup::Undo);
 }
 
