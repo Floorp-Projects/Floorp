@@ -14,8 +14,7 @@
 
 #include "mozilla/Attributes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SpeechRecognition;
 
@@ -45,7 +44,6 @@ class SpeechRecognitionAlternative final : public nsISupports,
   RefPtr<SpeechRecognition> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

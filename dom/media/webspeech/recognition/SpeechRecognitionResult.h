@@ -17,8 +17,7 @@
 
 #include "SpeechRecognitionAlternative.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SpeechRecognitionResult final : public nsISupports,
                                       public nsWrapperCache {
@@ -50,7 +49,6 @@ class SpeechRecognitionResult final : public nsISupports,
   RefPtr<SpeechRecognition> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
