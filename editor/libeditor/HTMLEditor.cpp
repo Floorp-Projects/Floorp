@@ -295,9 +295,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLEditor)
   NS_INTERFACE_MAP_ENTRY(nsIEditorMailSupport)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
-nsresult HTMLEditor::Init(Document& aDocument, uint32_t aFlags) {
+nsresult HTMLEditor::Init(Document& aDocument,
+                          ComposerCommandsUpdater& aComposerCommandsUpdater,
+                          uint32_t aFlags) {
   MOZ_ASSERT(!mInitSucceeded,
              "HTMLEditor::Init() called again without calling PreDestroy()?");
+
+  MOZ_DIAGNOSTIC_ASSERT(!mComposerCommandsUpdater ||
+                        mComposerCommandsUpdater == &aComposerCommandsUpdater);
+  mComposerCommandsUpdater = &aComposerCommandsUpdater;
 
   RefPtr<PresShell> presShell = aDocument.GetPresShell();
   if (NS_WARN_IF(!presShell)) {
@@ -371,7 +377,12 @@ nsresult HTMLEditor::Init(Document& aDocument, uint32_t aFlags) {
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
   ClearUndoRedo();
-  EnableUndoRedo();
+  EnableUndoRedo();  // FYI: Creating mTransactionManager in this call
+
+  if (mTransactionManager) {
+    mTransactionManager->Attach(*this);
+  }
+
   MOZ_ASSERT(!mInitSucceeded, "HTMLEditor::Init() shouldn't be nested");
   mInitSucceeded = true;
   return NS_OK;
@@ -714,6 +725,19 @@ void HTMLEditor::RemoveEventListeners() {
   }
 
   EditorBase::RemoveEventListeners();
+}
+
+void HTMLEditor::Detach(
+    const ComposerCommandsUpdater& aComposerCommandsUpdater) {
+  MOZ_DIAGNOSTIC_ASSERT_IF(
+      mComposerCommandsUpdater,
+      &aComposerCommandsUpdater == mComposerCommandsUpdater);
+  if (mComposerCommandsUpdater == &aComposerCommandsUpdater) {
+    mComposerCommandsUpdater = nullptr;
+    if (mTransactionManager) {
+      mTransactionManager->Detach(*this);
+    }
+  }
 }
 
 NS_IMETHODIMP HTMLEditor::BeginningOfDocument() {

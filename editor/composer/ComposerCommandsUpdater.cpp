@@ -16,7 +16,6 @@
 #include "nsError.h"                     // for NS_OK, NS_ERROR_FAILURE, etc
 #include "nsID.h"                        // for NS_GET_IID, etc
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
-#include "nsITransactionManager.h"       // for nsITransactionManager
 #include "nsLiteralString.h"             // for NS_LITERAL_STRING
 #include "nsPIDOMWindow.h"               // for nsPIDOMWindow
 
@@ -40,10 +39,9 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(ComposerCommandsUpdater)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ComposerCommandsUpdater)
 
 NS_INTERFACE_MAP_BEGIN(ComposerCommandsUpdater)
-  NS_INTERFACE_MAP_ENTRY(nsITransactionListener)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITransactionListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(ComposerCommandsUpdater)
 NS_INTERFACE_MAP_END
 
@@ -54,40 +52,31 @@ NS_IMPL_CYCLE_COLLECTION(ComposerCommandsUpdater, mUpdateTimer, mDOMWindow,
 #  pragma mark -
 #endif
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP ComposerCommandsUpdater::DidDo(nsITransactionManager* aManager,
-                                             nsITransaction* aTransaction,
-                                             nsresult aDoResult) {
+void ComposerCommandsUpdater::DidDoTransaction(
+    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+    nsresult aDoTransactionResult) {
   // only need to update if the status of the Undo menu item changes.
-  size_t undoCount = aManager->AsTransactionManager()->NumberOfUndoItems();
-  if (undoCount == 1) {
+  if (aTransactionManager.NumberOfUndoItems() == 1) {
     if (mFirstDoOfFirstUndo) {
       UpdateCommandGroup(CommandGroup::Undo);
     }
     mFirstDoOfFirstUndo = false;
   }
-
-  return NS_OK;
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP ComposerCommandsUpdater::DidUndo(nsITransactionManager* aManager,
-                                               nsITransaction* aTransaction,
-                                               nsresult aUndoResult) {
-  size_t undoCount = aManager->AsTransactionManager()->NumberOfUndoItems();
-  if (!undoCount) {
+void ComposerCommandsUpdater::DidUndoTransaction(
+    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+    nsresult aUndoTransactionResult) {
+  if (!aTransactionManager.NumberOfUndoItems()) {
     mFirstDoOfFirstUndo = true;  // reset the state for the next do
   }
   UpdateCommandGroup(CommandGroup::Undo);
-  return NS_OK;
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY
-NS_IMETHODIMP ComposerCommandsUpdater::DidRedo(nsITransactionManager* aManager,
-                                               nsITransaction* aTransaction,
-                                               nsresult aRedoResult) {
+void ComposerCommandsUpdater::DidRedoTransaction(
+    TransactionManager& aTransactionManager, nsITransaction* aTransaction,
+    nsresult aRedoTransactionResult) {
   UpdateCommandGroup(CommandGroup::Undo);
-  return NS_OK;
 }
 
 #if 0

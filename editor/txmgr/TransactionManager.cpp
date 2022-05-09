@@ -7,6 +7,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/HTMLEditor.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/TransactionStack.h"
 #include "nsCOMPtr.h"
@@ -30,6 +31,7 @@ TransactionManager::TransactionManager(int32_t aMaxTransactionCount)
 NS_IMPL_CYCLE_COLLECTION_CLASS(TransactionManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TransactionManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
   tmp->mDoStack.DoUnlink();
   tmp->mUndoStack.DoUnlink();
@@ -38,6 +40,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TransactionManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TransactionManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHTMLEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
   tmp->mDoStack.DoTraverse(cb);
   tmp->mUndoStack.DoTraverse(cb);
@@ -52,6 +55,17 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TransactionManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TransactionManager)
+
+void TransactionManager::Attach(HTMLEditor& aHTMLEditor) {
+  mHTMLEditor = &aHTMLEditor;
+}
+
+void TransactionManager::Detach(const HTMLEditor& aHTMLEditor) {
+  MOZ_DIAGNOSTIC_ASSERT_IF(mHTMLEditor, &aHTMLEditor == mHTMLEditor);
+  if (mHTMLEditor == &aHTMLEditor) {
+    mHTMLEditor = nullptr;
+  }
+}
 
 NS_IMETHODIMP TransactionManager::DoTransaction(nsITransaction* aTransaction) {
   if (NS_WARN_IF(!aTransaction)) {
@@ -398,6 +412,10 @@ NS_IMETHODIMP TransactionManager::ClearRedoStack() {
 
 nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
                                          nsresult aDoResult) {
+  if (mHTMLEditor) {
+    RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+    htmlEditor->DidDoTransaction(*this, aTransaction, aDoResult);
+  }
   nsCOMArray<nsITransactionListener> listeners(mListeners);
   for (nsITransactionListener* listener : listeners) {
     if (NS_WARN_IF(!listener)) {
@@ -414,6 +432,10 @@ nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
 
 nsresult TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
                                            nsresult aUndoResult) {
+  if (mHTMLEditor) {
+    RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+    htmlEditor->DidUndoTransaction(*this, aTransaction, aUndoResult);
+  }
   nsCOMArray<nsITransactionListener> listeners(mListeners);
   for (nsITransactionListener* listener : listeners) {
     if (NS_WARN_IF(!listener)) {
@@ -430,6 +452,10 @@ nsresult TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
 
 nsresult TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
                                            nsresult aRedoResult) {
+  if (mHTMLEditor) {
+    RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+    htmlEditor->DidRedoTransaction(*this, aTransaction, aRedoResult);
+  }
   nsCOMArray<nsITransactionListener> listeners(mListeners);
   for (nsITransactionListener* listener : listeners) {
     if (NS_WARN_IF(!listener)) {
