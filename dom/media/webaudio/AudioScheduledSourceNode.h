@@ -10,8 +10,7 @@
 #include "AudioNode.h"
 #include "mozilla/dom/AudioScheduledSourceNodeBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 
@@ -29,7 +28,6 @@ class AudioScheduledSourceNode : public AudioNode {
   virtual ~AudioScheduledSourceNode() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

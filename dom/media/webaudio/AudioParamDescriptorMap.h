@@ -10,15 +10,13 @@
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Note: we call this "map" to match the spec, but we store audio param
 // descriptors in an array, because we need ordered access, and don't need the
 // map functionalities.
 typedef nsTArray<AudioParamDescriptor> AudioParamDescriptorMap;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_AudioParamDescriptor_h
