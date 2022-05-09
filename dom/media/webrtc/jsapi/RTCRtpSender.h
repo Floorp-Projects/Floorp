@@ -25,7 +25,6 @@ class MediaPipelineTransmit;
 class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
-class TransceiverImpl;
 class PeerConnectionImpl;
 class DOMMediaStream;
 
@@ -34,6 +33,7 @@ class MediaStreamTrack;
 class Promise;
 class RTCDtlsTransport;
 class RTCDTMFSender;
+class RTCRtpTransceiver;
 
 class RTCRtpSender : public nsISupports, public nsWrapperCache {
  public:
@@ -41,8 +41,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
                MediaTransportHandler* aTransportHandler,
                JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                nsISerialEventTarget* aStsThread, MediaSessionConduit* aConduit,
-               dom::MediaStreamTrack* aTrack,
-               TransceiverImpl* aTransceiverImpl);
+               dom::MediaStreamTrack* aTrack, RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -126,7 +125,7 @@ class RTCRtpSender : public nsISupports, public nsWrapperCache {
   RefPtr<dom::MediaStreamTrack> mSenderTrack;
   RTCRtpParameters mParameters;
   RefPtr<MediaPipelineTransmit> mPipeline;
-  RefPtr<TransceiverImpl> mTransceiverImpl;
+  RefPtr<RTCRtpTransceiver> mTransceiver;
   nsTArray<RefPtr<DOMMediaStream>> mStreams;
   bool mHaveSetupTransport = false;
 
