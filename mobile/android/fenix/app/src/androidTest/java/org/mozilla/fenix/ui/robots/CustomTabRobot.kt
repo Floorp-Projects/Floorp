@@ -60,12 +60,17 @@ class CustomTabRobot {
     }
 
     fun verifyCustomTabToolbarTitle(title: String) {
+        waitForPageToLoad()
+
         mDevice.waitForObjects(
             mDevice.findObject(
                 UiSelector()
                     .resourceId("$packageName:id/mozac_browser_toolbar_title_view")
                     .textContains(title)
             )
+                .getFromParent(
+                    UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_origin_view")
+                )
         )
 
         assertTrue(

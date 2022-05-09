@@ -27,7 +27,10 @@ import org.mozilla.fenix.ui.robots.searchScreen
 class CustomTabsTest {
     private lateinit var mockWebServer: MockWebServer
     private val customMenuItem = "TestMenuItem"
-    private val externalLinksPWAPage = "https://mozilla-mobile.github.io/testapp/externalLinks.html"
+    /* Updated externalLinks.html to v2.0,
+       changed the hypertext reference to mozilla-mobile.github.io/testapp/downloads for "External link"
+     */
+    private val externalLinksPWAPage = "https://mozilla-mobile.github.io/testapp/v2.0/externalLinks.html"
     private val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
 
     @get:Rule
@@ -54,6 +57,7 @@ class CustomTabsTest {
     @SmokeTest
     @Test
     fun customTabsOpenExternalLinkTest() {
+        val externalLinkURL = "https://mozilla-mobile.github.io/testapp/downloads"
 
         intentReceiverActivityTestRule.launchActivity(
             createCustomTabIntent(
@@ -66,7 +70,7 @@ class CustomTabsTest {
             waitForPageToLoad()
             clickLinkMatchingText("External link")
             waitForPageToLoad()
-            verifyCustomTabToolbarTitle("Google")
+            verifyCustomTabToolbarTitle(externalLinkURL)
         }
     }
 
