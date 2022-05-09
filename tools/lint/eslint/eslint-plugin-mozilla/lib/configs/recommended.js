@@ -34,13 +34,7 @@ module.exports = {
     InternalError: true,
     // https://developer.mozilla.org/docs/Web/API/Window/dump
     dump: true,
-    // Override the "browser" env definition of "location" to allow writing as it
-    // is a writeable property.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1509270#c1 for more information.
-    location: true,
     openDialog: false,
-    // https://developer.mozilla.org/docs/Web/API/Window/sizeToContent
-    sizeToContent: false,
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/uneval
     uneval: false,
   },

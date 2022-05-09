@@ -195,7 +195,7 @@ function onAlertLoad() {
   let alertImageBox = document.getElementById("alertImageBox");
   alertImageBox.style.minHeight = alertTextBox.scrollHeight + "px";
 
-  sizeToContent();
+  window.sizeToContent();
 
   if (gReplacedWindow && !gReplacedWindow.closed) {
     moveWindowToReplace(gReplacedWindow);
