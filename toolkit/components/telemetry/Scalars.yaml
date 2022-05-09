@@ -4262,7 +4262,7 @@ pdf.viewer:
       - 1754659
     description: >
       How many times a PDF that sends Content-Disposition: attachment is opened.
-    expires: "103"
+    expires: "109"
     kind: uint
     notification_emails:
       - rtestard@mozilla.com
