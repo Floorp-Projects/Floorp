@@ -932,7 +932,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
 }
 
 bool HTMLEditor::ArePreservingSelection() const {
-  return IsEditActionDataAvailable() && !SavedSelectionRef().IsEmpty();
+  return IsEditActionDataAvailable() && SavedSelectionRef().RangeCount();
 }
 
 void HTMLEditor::PreserveSelectionAcrossActions() {
@@ -945,7 +945,9 @@ void HTMLEditor::PreserveSelectionAcrossActions() {
 nsresult HTMLEditor::RestorePreservedSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (SavedSelectionRef().IsEmpty()) {
+  if (!SavedSelectionRef().RangeCount()) {
+    // XXX Returing error when it does not store is odd because no selection
+    //     ranges is not illegal case in general.
     return NS_ERROR_FAILURE;
   }
   DebugOnly<nsresult> rvIgnored =
@@ -961,7 +963,7 @@ void HTMLEditor::StopPreservingSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   RangeUpdaterRef().DropSelectionState(SavedSelectionRef());
-  SavedSelectionRef().Clear();
+  SavedSelectionRef().RemoveAllRanges();
 }
 
 void HTMLEditor::PreHandleMouseDown(const MouseEvent& aMouseDownEvent) {
