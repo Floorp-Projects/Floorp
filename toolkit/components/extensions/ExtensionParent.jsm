@@ -2003,10 +2003,13 @@ StartupCache = {
   async _readData() {
     let result = new Map();
     try {
+      Glean.extensions.startupCacheLoadTime.start();
       let { buffer } = await IOUtils.read(this.file);
 
       result = aomStartup.decodeBlob(buffer);
+      Glean.extensions.startupCacheLoadTime.stop();
     } catch (e) {
+      Glean.extensions.startupCacheLoadTime.cancel();
       if (!DOMException.isInstance(e) || e.name !== "NotFoundError") {
         Cu.reportError(e);
       }
