@@ -211,7 +211,9 @@ bool IsEnabled(const webrtc::WebRtcKeyValueConfig& config,
 struct AdaptivePtimeConfig {
   bool enabled = false;
   webrtc::DataRate min_payload_bitrate = webrtc::DataRate::KilobitsPerSec(16);
-  webrtc::DataRate min_encoder_bitrate = webrtc::DataRate::KilobitsPerSec(12);
+  // Value is chosen to ensure FEC can be encoded, see LBRR_WB_MIN_RATE_BPS in
+  // libopus.
+  webrtc::DataRate min_encoder_bitrate = webrtc::DataRate::KilobitsPerSec(16);
   bool use_slow_adaptation = true;
 
   absl::optional<std::string> audio_network_adaptor_config;

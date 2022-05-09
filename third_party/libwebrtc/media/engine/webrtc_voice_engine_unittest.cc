@@ -1218,7 +1218,7 @@ TEST_P(WebRtcVoiceEngineTestFake, SetRtpParametersAdaptivePtime) {
   parameters.encodings[0].adaptive_ptime = true;
   EXPECT_TRUE(channel_->SetRtpSendParameters(kSsrcX, parameters).ok());
   EXPECT_TRUE(GetAudioNetworkAdaptorConfig(kSsrcX));
-  EXPECT_EQ(12000, GetSendStreamConfig(kSsrcX).min_bitrate_bps);
+  EXPECT_EQ(16000, GetSendStreamConfig(kSsrcX).min_bitrate_bps);
 
   parameters.encodings[0].adaptive_ptime = false;
   EXPECT_TRUE(channel_->SetRtpSendParameters(kSsrcX, parameters).ok());
