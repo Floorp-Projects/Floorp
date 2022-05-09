@@ -16,13 +16,13 @@
 #include <vector>
 
 #include "api/sequence_checker.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/network.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/system/rtc_export.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 
 namespace rtc {
@@ -233,14 +233,14 @@ class RTC_EXPORT StunProber : public sigslot::has_slots<> {
   // This tracks how many of the sockets are ready.
   size_t total_ready_sockets_ = 0;
 
-  rtc::AsyncInvoker invoker_;
-
   Observer* observer_ = nullptr;
   // TODO(guoweis): Remove this once all dependencies move away from
   // AsyncCallback.
   ObserverAdapter observer_adapter_;
 
   rtc::NetworkManager::NetworkList networks_;
+
+  webrtc::ScopedTaskSafety task_safety_;
 
   RTC_DISALLOW_COPY_AND_ASSIGN(StunProber);
 };

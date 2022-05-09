@@ -24,6 +24,7 @@
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 
@@ -261,6 +262,7 @@ StunProber::StunProber(rtc::PacketSocketFactory* socket_factory,
       networks_(networks) {}
 
 StunProber::~StunProber() {
+  RTC_DCHECK(thread_checker_.IsCurrent());
   for (auto* req : requesters_) {
     if (req) {
       delete req;
@@ -357,8 +359,8 @@ void StunProber::OnServerResolved(rtc::AsyncResolverInterface* resolver) {
 
   // Deletion of AsyncResolverInterface can't be done in OnResolveResult which
   // handles SignalDone.
-  invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_,
-                             [resolver] { resolver->Destroy(false); });
+  thread_->PostTask(
+      webrtc::ToQueuedTask([resolver] { resolver->Destroy(false); }));
   servers_.pop_back();
 
   if (servers_.size()) {
@@ -451,12 +453,13 @@ int StunProber::get_wake_up_interval_ms() {
 }
 
 void StunProber::MaybeScheduleStunRequests() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   int64_t now = rtc::TimeMillis();
 
   if (Done()) {
-    invoker_.AsyncInvokeDelayed<void>(
-        RTC_FROM_HERE, thread_, [this] { ReportOnFinished(SUCCESS); },
+    thread_->PostDelayedTask(
+        webrtc::ToQueuedTask(task_safety_.flag(),
+                             [this] { ReportOnFinished(SUCCESS); }),
         timeout_ms_);
     return;
   }
@@ -467,8 +470,9 @@ void StunProber::MaybeScheduleStunRequests() {
     }
     next_request_time_ms_ = now + interval_ms_;
   }
-  invoker_.AsyncInvokeDelayed<void>(
-      RTC_FROM_HERE, thread_, [this] { MaybeScheduleStunRequests(); },
+  thread_->PostDelayedTask(
+      webrtc::ToQueuedTask(task_safety_.flag(),
+                           [this] { MaybeScheduleStunRequests(); }),
       get_wake_up_interval_ms());
 }
 
