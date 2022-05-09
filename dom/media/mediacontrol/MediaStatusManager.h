@@ -14,8 +14,7 @@
 #include "nsTHashMap.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaSessionInfo {
  public:
@@ -272,7 +271,6 @@ class MediaStatusManager : public IMediaInfoUpdater {
   MediaPlaybackStatus mPlaybackStatusDelegate;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_MEDIA_MEDIACONTROL_MEDIASTATUSMANAGER_H_

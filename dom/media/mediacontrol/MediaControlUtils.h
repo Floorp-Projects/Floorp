@@ -18,8 +18,7 @@
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 inline const char* ToMediaControlKeyStr(MediaControlKey aKey) {
   switch (aKey) {
@@ -212,7 +211,6 @@ inline uint32_t GetMediaKeyMask(mozilla::dom::MediaControlKey aKey) {
   return 1 << static_cast<uint8_t>(aKey);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
