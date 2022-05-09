@@ -851,16 +851,6 @@ function startup() {
         "browser-idle-startup-tasks-finished"
       )
     );
-
-    InitLater(() => {
-      // This lets Marionette start listening (when enabled).
-      // Both GeckoView and this remote protocol do most of their
-      // initialization in "profile-after-change", and there is no order enforced
-      // between them.  Therefore we defer asking the Marionette component to
-      // startup until after all "profile-after-change" handlers (including this
-      // one) have completed.
-      Services.obs.notifyObservers(null, "marionette-startup-requested");
-    });
   });
 
   // Move focus to the content window at the end of startup,
