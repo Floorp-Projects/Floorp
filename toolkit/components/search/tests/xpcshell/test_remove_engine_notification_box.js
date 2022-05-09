@@ -39,6 +39,23 @@ const CONFIG = [
   },
 ];
 
+const CONFIG_UPDATED = [
+  {
+    webExtension: {
+      id: "engine-pref@search.mozilla.org",
+    },
+    appliesTo: [
+      {
+        included: { everywhere: true },
+      },
+      {
+        included: { regions: ["FR"] },
+        default: "yes",
+      },
+    ],
+  },
+];
+
 let stub;
 let settingsFilePath;
 let userSettings;
@@ -223,6 +240,26 @@ add_task(async function test_default_engine_changed_and_metadata_unchanged() {
 
   await loadEngines(settings);
   Assert.ok(stub.calledTwice, "_loadEngines should show the notification box.");
+});
+
+add_task(async function test_app_default_engine_changed_on_start_up() {
+  let settings = structuredClone(userSettings);
+
+  // Set the current engine to "" so we can use the app default engine as
+  // default
+  settings.metaData.current = "";
+
+  let searchSettingsObj = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  // Restore the get method in order to stub it again in useTestEngines
+  searchSettingsObj.get.restore();
+  // Update config by removing the app default engine
+  await SearchTestUtils.useTestEngines("data", null, CONFIG_UPDATED);
+
+  await loadEngines(settings);
+  Assert.ok(
+    stub.calledThrice,
+    "_loadEngines should show the notification box."
+  );
 });
 
 function writeSettings(settings) {
