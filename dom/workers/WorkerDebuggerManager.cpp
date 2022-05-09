@@ -17,8 +17,7 @@
 #include "WorkerPrivate.h"
 #include "nsIObserverService.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -328,5 +327,4 @@ WorkerDebuggerManager::CloneListeners() {
   return mListeners.Clone();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
