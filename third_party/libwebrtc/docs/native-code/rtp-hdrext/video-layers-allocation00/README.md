@@ -80,3 +80,5 @@ extension size. Encoded (width - 1), 16-bit, (height - 1), 16-bit, max frame
 rate 8-bit per spatial layer per RTP stream. Values are stored in (RTP stream
 id, spatial id) ascending order.
 
+An empty layer allocation (i.e nothing sent on ssrc) is encoded as
+special case with a single 0 byte.
