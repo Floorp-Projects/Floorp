@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/FileSystemDirectoryEntry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry {
  public:
@@ -44,7 +43,6 @@ class FileSystemRootDirectoryEntry final : public FileSystemDirectoryEntry {
   Sequence<RefPtr<FileSystemEntry>> mEntries;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileSystemRootDirectoryEntry_h

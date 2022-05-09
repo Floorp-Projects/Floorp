@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_gamepad_GamepadPoseState_h_
 #define mozilla_dom_gamepad_GamepadPoseState_h_
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum class GamepadCapabilityFlags : uint16_t {
   Cap_None = 0,
@@ -106,7 +105,6 @@ struct GamepadPoseState {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_GamepadPoseState_h_
