@@ -17,8 +17,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class GlobalObject;
 
 class TestingDeprecatedInterface final : public nsISupports,
@@ -46,7 +45,6 @@ class TestingDeprecatedInterface final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TestingDeprecatedInterface_h

@@ -42,8 +42,7 @@ class nsHttpChannel;
 
 using mozilla::Maybe;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * The ReferrerInfo class holds the raw referrer and potentially a referrer
@@ -471,7 +470,6 @@ class ReferrerInfo : public nsIReferrerInfo {
 #endif  // DEBUG
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReferrerInfo_h

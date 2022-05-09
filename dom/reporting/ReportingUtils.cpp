@@ -14,8 +14,7 @@
 #include "nsAtom.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 void ReportingUtils::Report(nsIGlobalObject* aGlobal, nsAtom* aType,
@@ -43,5 +42,4 @@ void ReportingUtils::Report(nsIGlobalObject* aGlobal, nsAtom* aType,
   ReportDeliver::Record(window, type, aGroupName, aURL, aBody);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
