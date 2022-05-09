@@ -16,7 +16,6 @@
 #include <map>
 #include <utility>
 
-#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/rtp_packet_infos.h"
 #include "api/scoped_refptr.h"
@@ -145,11 +144,6 @@ class RTC_EXPORT EncodedImage {
   const uint8_t* data() const {
     return encoded_data_ ? encoded_data_->data() : nullptr;
   }
-
-  // TODO(bugs.webrtc.org/9378): Obsolete, delete as soon as downstream calls
-  // are fixed.
-  ABSL_DEPRECATED("")
-  void Retain() {}
 
   uint32_t _encodedWidth = 0;
   uint32_t _encodedHeight = 0;
