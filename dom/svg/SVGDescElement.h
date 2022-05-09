@@ -13,8 +13,7 @@
 nsresult NS_NewSVGDescElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGDescElementBase = SVGElement;
 
@@ -32,7 +31,6 @@ class SVGDescElement final : public SVGDescElementBase {
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGDESCELEMENT_H_

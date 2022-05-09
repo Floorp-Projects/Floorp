@@ -17,8 +17,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Ellipse)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGEllipseElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -191,5 +190,4 @@ nsCSSPropertyID SVGEllipseElement::GetCSSPropertyIdForAttrEnum(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

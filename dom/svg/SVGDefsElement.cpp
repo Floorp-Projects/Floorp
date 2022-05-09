@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Defs)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGDefsElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -47,5 +46,4 @@ SVGDefsElement::IsAttributeMapped(const nsAtom* name) const {
          SVGGraphicsElement::IsAttributeMapped(name);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

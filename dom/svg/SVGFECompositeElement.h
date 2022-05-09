@@ -14,8 +14,7 @@
 nsresult NS_NewSVGFECompositeElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFECompositeElementBase = SVGFE;
 
@@ -76,7 +75,6 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
   static StringInfo sStringInfo[3];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFECOMPOSITEELEMENT_H_
