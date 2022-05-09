@@ -11,8 +11,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //----------------------------------------------------------------------
 // Implementation
@@ -127,5 +126,4 @@ bool SVGPolyElement::GetGeometryBounds(Rect* aBounds,
   }
   return true;
 }
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

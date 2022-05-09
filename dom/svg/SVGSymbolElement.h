@@ -12,8 +12,7 @@
 nsresult NS_NewSVGSymbolElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGSymbolElementBase = SVGViewportElement;
 
@@ -35,7 +34,6 @@ class SVGSymbolElement final : public SVGSymbolElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGSYMBOLELEMENT_H_
