@@ -3250,7 +3250,9 @@ bool IMContextWrapper::EnsureToCacheContentSelection(
     return true;
   }
 
-  if (NS_WARN_IF(!mLastFocusedWindow)) {
+  RefPtr<nsWindow> dispatcherWindow =
+      mLastFocusedWindow ? mLastFocusedWindow : mOwnerWindow;
+  if (NS_WARN_IF(!dispatcherWindow)) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
              "no focused window",
@@ -3260,9 +3262,9 @@ bool IMContextWrapper::EnsureToCacheContentSelection(
 
   nsEventStatus status;
   WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
-                                                 mLastFocusedWindow);
+                                                 dispatcherWindow);
   InitEvent(querySelectedTextEvent);
-  mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
+  dispatcherWindow->DispatchEvent(&querySelectedTextEvent, status);
   if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
     MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p EnsureToCacheContentSelection(), FAILED, due to "
