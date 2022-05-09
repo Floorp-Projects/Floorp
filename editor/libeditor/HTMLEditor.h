@@ -4075,6 +4075,8 @@ class HTMLEditor final : public EditorBase,
    * RemoveStyleInside() removes elements which represent aProperty/aAttribute
    * and removes CSS style.  This handles aElement and all its descendants
    * (including leaf text nodes) recursively.
+   * TODO: Rename this to explain that this maybe remove aElement from the DOM
+   *       tree.
    *
    * @param aSpecifiedStyle  Whether the class and style attributes should
    *                         be preserved or discareded.

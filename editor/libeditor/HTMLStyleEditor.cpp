@@ -2156,6 +2156,11 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
               NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
               return rv;
             }
+            // If the element was removed from the DOM tree by
+            // RemoveStyleInside, we need nothing to do for it anymore.
+            if (!content->GetParentNode()) {
+              continue;
+            }
           }
 
           Result<bool, nsresult> isRemovableParentStyleOrError =
@@ -2222,6 +2227,8 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
           // they still have the style.
           AutoTArray<OwningNonNull<Text>, 32> leafTextNodes;
           for (OwningNonNull<nsIContent>& content : arrayOfContents) {
+            // XXX Should we ignore content which has already removed from the
+            //     DOM tree by the previous for-loop?
             if (content->IsElement()) {
               CollectEditableLeafTextNodes(*content->AsElement(),
                                            leafTextNodes);
