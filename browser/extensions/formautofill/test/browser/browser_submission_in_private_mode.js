@@ -1,5 +1,13 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
+
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.addresses.capture.enabled", true],
+      ["extensions.formautofill.addresses.supported", "on"],
+    ],
+  });
+});
 
 add_task(async function test_add_address() {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
@@ -12,20 +20,22 @@ add_task(async function test_add_address() {
   await BrowserTestUtils.withNewTab(
     { gBrowser: privateWin.gBrowser, url: FORM_URL },
     async function(privateBrowser) {
-      await SpecialPowers.spawn(privateBrowser, [], async function() {
-        content.document.getElementById("organization").focus();
-        content.document.getElementById("organization").value = "Mozilla";
-        content.document.getElementById("street-address").value =
-          "331 E. Evelyn Avenue";
-        content.document.getElementById("tel").value = "1-650-903-0800";
-
-        content.document.querySelector("input[type=submit]").click();
+      await focusUpdateSubmitForm(privateBrowser, {
+        focusSelector: "#organization",
+        newValues: {
+          "#organization": "Mozilla",
+          "#street-address": "331 E. Evelyn Avenue",
+          "#tel": "1-650-903-0800",
+        },
       });
     }
   );
 
   // Wait 1 second to make sure the profile has not been saved
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve =>
+    /* eslint-disable mozilla/no-arbitrary-setTimeout */
+    setTimeout(resolve, TIMEOUT_ENSURE_PROFILE_NOT_SAVED)
+  );
   addresses = await getAddresses();
   is(addresses.length, 0, "No address saved in private browsing mode");
 
