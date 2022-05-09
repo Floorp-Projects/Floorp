@@ -9,8 +9,7 @@
 
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // A sorted tree-ordered list of raw pointers to nodes.
 template <typename Node>
@@ -37,7 +36,6 @@ class TreeOrderedArray {
   AutoTArray<Node*, 1> mList;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

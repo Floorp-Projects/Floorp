@@ -33,11 +33,9 @@
 // XXX Avoid including this here by moving function bodies to the cpp file.
 #include "nsIContent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class nsBaseContentList : public nsINodeList {
  public:

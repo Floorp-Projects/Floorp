@@ -18,12 +18,10 @@ class nsITransferable;
 class nsIContent;
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class DataTransfer;
 class Selection;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 //
 // class nsContentAreaDragDrop, used to generate the dragdata

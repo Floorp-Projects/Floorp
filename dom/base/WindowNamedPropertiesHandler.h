@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/DOMJSProxyHandler.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WindowNamedPropertiesHandler : public BaseDOMProxyHandler {
  public:
@@ -59,7 +58,6 @@ class WindowNamedPropertiesHandler : public BaseDOMProxyHandler {
   static JSObject* Create(JSContext* aCx, JS::Handle<JSObject*> aProto);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_WindowNamedPropertiesHandler_h */
