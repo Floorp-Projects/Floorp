@@ -12,8 +12,7 @@
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ValidityState final : public nsISupports, public nsWrapperCache {
   ~ValidityState() = default;
@@ -89,7 +88,6 @@ class ValidityState final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIConstraintValidation> mConstraintValidation;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ValidityState_h

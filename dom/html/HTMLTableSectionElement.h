@@ -10,8 +10,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentList.h"  // For ctor.
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLTableSectionElement final : public nsGenericHTMLElement {
  public:
@@ -73,7 +72,6 @@ class HTMLTableSectionElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLTableSectionElement_h */

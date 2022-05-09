@@ -12,8 +12,7 @@
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaError final : public nsISupports, public nsWrapperCache {
   ~MediaError() = default;
@@ -44,7 +43,6 @@ class MediaError final : public nsISupports, public nsWrapperCache {
   const nsCString mMessage;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MediaError_h

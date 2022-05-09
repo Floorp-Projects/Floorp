@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DateTimeInputTypeBase : public InputType {
  public:
@@ -155,7 +154,6 @@ class DateTimeLocalInputType : public DateTimeInputTypeBase {
       : DateTimeInputTypeBase(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_DateTimeInputTypes_h__ */

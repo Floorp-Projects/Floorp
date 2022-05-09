@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SingleLineTextInputTypeBase : public InputType {
  public:
@@ -154,7 +153,6 @@ class PasswordInputType : public SingleLineTextInputTypeBase {
       : SingleLineTextInputTypeBase(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_SingleLineTextInputTypes_h__ */
