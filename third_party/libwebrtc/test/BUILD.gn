@@ -57,7 +57,6 @@ rtc_library("frame_generator_impl") {
     "../api/video:encoded_image",
     "../api/video:video_frame",
     "../api/video:video_frame_i010",
-    "../api/video:video_frame_nv12",
     "../api/video:video_rtp_headers",
     "../api/video_codecs:video_codecs_api",
     "../common_video",
