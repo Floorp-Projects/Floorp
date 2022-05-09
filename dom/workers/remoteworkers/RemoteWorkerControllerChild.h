@@ -13,8 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PRemoteWorkerControllerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Parent-process main-thread proxy used by ServiceWorkerManager to control
@@ -60,7 +59,6 @@ class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
   bool mIPCActive = true;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_remoteworkercontrollerchild_h__

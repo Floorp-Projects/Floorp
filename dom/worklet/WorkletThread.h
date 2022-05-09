@@ -17,8 +17,7 @@
 
 class nsIRunnable;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkletThread final : public nsThread, public nsIObserver {
  public:
@@ -69,7 +68,6 @@ class WorkletThread final : public nsThread, public nsIObserver {
   bool mIsTerminating;  // main thread
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_worklet_WorkletThread_h

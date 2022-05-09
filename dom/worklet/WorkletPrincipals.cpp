@@ -9,8 +9,7 @@
 #include "mozilla/dom/WorkletImpl.h"
 #include "nsJSPrincipals.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 WorkletPrincipals::WorkletPrincipals(WorkletImpl* aWorkletImpl)
     : JSPrincipals(), mWorkletImpl(aWorkletImpl) {
@@ -37,5 +36,4 @@ void WorkletPrincipals::Destroy(JSPrincipals* aPrincipals) {
   delete static_cast<WorkletPrincipals*>(aPrincipals);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

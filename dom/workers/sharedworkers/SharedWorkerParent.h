@@ -12,8 +12,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MessagePortIdentifier;
 class RemoteWorkerData;
@@ -77,7 +76,6 @@ class SharedWorkerParent final
   bool mFrozen;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_dom_SharedWorkerParent_h
