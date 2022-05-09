@@ -15,8 +15,7 @@
 
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGElement;
 
@@ -649,8 +648,7 @@ class DOMSVGPathSegCurvetoQuadraticSmoothRel : public DOMSVGPathSeg {
   float mArgs[2];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 
