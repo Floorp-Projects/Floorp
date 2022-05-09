@@ -6,6 +6,7 @@
 #ifndef mozilla_TransactionManager_h
 #define mozilla_TransactionManager_h
 
+#include "mozilla/EditorForwards.h"
 #include "mozilla/TransactionStack.h"
 
 #include "nsCOMArray.h"
@@ -61,12 +62,14 @@ class TransactionManager final : public nsITransactionManager,
   bool RemoveTransactionListener(nsITransactionListener& aListener) {
     return mListeners.RemoveObject(&aListener);
   }
+  void Attach(HTMLEditor& aHTMLEditor);
+  void Detach(const HTMLEditor& aHTMLEditor);
 
   // FYI: We don't need to treat the following methods as `MOZ_CAN_RUN_SCRIPT`
   //      for now because only ComposerCommandUpdater is the listener and it
   //      does not do something dangerous synchronously.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidDoNotify(nsITransaction* aTransaction,
-                                                   nsresult aExecuteResult);
+                                                   nsresult aDoResult);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   DidUndoNotify(nsITransaction* aTransaction, nsresult aUndoResult);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
@@ -90,6 +93,7 @@ class TransactionManager final : public nsITransactionManager,
   TransactionStack mUndoStack;
   TransactionStack mRedoStack;
   nsCOMArray<nsITransactionListener> mListeners;
+  RefPtr<HTMLEditor> mHTMLEditor;
 };
 
 }  // namespace mozilla
