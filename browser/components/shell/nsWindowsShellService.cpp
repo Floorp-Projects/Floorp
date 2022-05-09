@@ -1066,7 +1066,7 @@ static nsresult PinCurrentAppToTaskbarWin7(bool aCheckOnly,
   hr = shellWindows->FindWindowSW(&loc, &empty, SWC_DESKTOP, &hwnd,
                                   SWFO_NEEDDISPATCH,
                                   getter_AddRefs(dispDesktop));
-  if (FAILED(hr)) return NS_ERROR_FAILURE;
+  if (FAILED(hr) || hr == S_FALSE) return NS_ERROR_FAILURE;
 
   RefPtr<IServiceProvider> servProv;
   hr = dispDesktop->QueryInterface(IID_IServiceProvider,
