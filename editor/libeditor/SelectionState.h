@@ -95,7 +95,8 @@ class SelectionState final {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   RestoreSelection(dom::Selection& aSelection);
   bool IsCollapsed() const;
-  bool Equals(SelectionState& aOther) const;
+  bool HasOnlyCollapsedRange() const;
+  bool Equals(const SelectionState& aOther) const;
   void Clear();
   bool IsEmpty() const;
 

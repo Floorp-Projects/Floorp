@@ -107,7 +107,17 @@ bool SelectionState::IsCollapsed() const {
   return range->Collapsed();
 }
 
-bool SelectionState::Equals(SelectionState& aOther) const {
+bool SelectionState::HasOnlyCollapsedRange() const {
+  if (mArray.Length() != 1) {
+    return false;
+  }
+  if (!mArray[0]->IsSet() || !mArray[0]->IsCollapsed()) {
+    return false;
+  }
+  return true;
+}
+
+bool SelectionState::Equals(const SelectionState& aOther) const {
   if (mArray.Length() != aOther.mArray.Length()) {
     return false;
   }
