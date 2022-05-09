@@ -57,6 +57,8 @@ class ScriptLoaderInterface : public nsISupports {
   using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
   using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
 
+  virtual ~ScriptLoaderInterface() = default;
+
   // In some environments, we will need to default to a base URI
   virtual nsIURI* GetBaseURI() const = 0;
 
