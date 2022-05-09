@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_FromParser_h
 #define mozilla_dom_FromParser_h
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Constants for passing as aFromParser
@@ -21,7 +20,6 @@ enum FromParser {
   FROM_PARSER_XSLT = 1 << 3
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FromParser_h

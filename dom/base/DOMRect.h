@@ -29,8 +29,7 @@ struct JSStructuredCloneReader;
 struct JSStructuredCloneWriter;
 struct nsRect;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GlobalObject;
 struct DOMRectInit;
@@ -175,7 +174,6 @@ class DOMRectList final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsISupports> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /*MOZILLA_DOMRECT_H_*/

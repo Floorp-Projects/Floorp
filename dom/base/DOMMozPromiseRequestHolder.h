@@ -10,8 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MozPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * This is a helper class that can be used when MozPromises are
@@ -108,7 +107,6 @@ class DOMMozPromiseRequestHolder final : public DOMEventTargetHelper {
                                        DOMEventTargetHelper)
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DOMMozPromiseRequestHolder_h
