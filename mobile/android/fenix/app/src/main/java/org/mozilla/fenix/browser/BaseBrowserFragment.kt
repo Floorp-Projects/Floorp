@@ -128,6 +128,7 @@ import java.lang.ref.WeakReference
 import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehavior
 import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.service.sync.autofill.DefaultCreditCardValidationDelegate
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.kotlin.getOrigin
@@ -584,6 +585,9 @@ abstract class BaseBrowserFragment :
                 store = store,
                 customTabId = customTabSessionId,
                 fragmentManager = parentFragmentManager,
+                creditCardValidationDelegate = DefaultCreditCardValidationDelegate(
+                    context.components.core.lazyAutofillStorage
+                ),
                 loginValidationDelegate = DefaultLoginValidationDelegate(
                     context.components.core.lazyPasswordsStorage
                 ),
