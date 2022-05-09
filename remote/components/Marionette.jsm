@@ -75,10 +75,6 @@ class MarionetteParentProcess {
     this.classID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
     this.helpInfo = "  --marionette       Enable remote control server.\n";
 
-    // holds reference to ChromeWindow
-    // used to run GFX sanity tests on Windows
-    this.gfxWindow = null;
-
     // indicates that all pending window checks have been completed
     // and that we are ready to start the Marionette server
     this.finalUIStartup = false;
@@ -169,18 +165,6 @@ class MarionetteParentProcess {
 
         break;
 
-      case "domwindowclosed":
-        if (this.gfxWindow === null || subject === this.gfxWindow) {
-          Services.obs.removeObserver(this, topic);
-          Services.obs.removeObserver(this, "toplevel-window-ready");
-
-          Services.obs.addObserver(this, "quit-application");
-
-          this.finalUIStartup = true;
-          await this.init();
-        }
-        break;
-
       case "domwindowopened":
         Services.obs.removeObserver(this, topic);
         this.suppressSafeModeDialog(subject);
@@ -205,33 +189,11 @@ class MarionetteParentProcess {
 
       case "marionette-startup-requested":
         Services.obs.removeObserver(this, topic);
+        Services.obs.removeObserver(this, "toplevel-window-ready");
+        Services.obs.addObserver(this, "quit-application");
 
-        // When Firefox starts on Windows, an additional GFX sanity test
-        // window may appear off-screen.  Marionette should wait for it
-        // to close.
-        for (let win of Services.wm.getEnumerator(null)) {
-          if (
-            win.document.documentURI ==
-            "chrome://gfxsanity/content/sanityparent.html"
-          ) {
-            this.gfxWindow = win;
-            break;
-          }
-        }
-
-        if (this.gfxWindow) {
-          logger.trace(
-            "GFX sanity window detected, waiting until it has been closed..."
-          );
-          Services.obs.addObserver(this, "domwindowclosed");
-        } else {
-          Services.obs.removeObserver(this, "toplevel-window-ready");
-
-          Services.obs.addObserver(this, "quit-application");
-
-          this.finalUIStartup = true;
-          await this.init();
-        }
+        this.finalUIStartup = true;
+        await this.init();
 
         break;
 
