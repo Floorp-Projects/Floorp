@@ -13,8 +13,7 @@
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLAudioElement final : public HTMLMediaElement {
  public:
@@ -46,7 +45,6 @@ class HTMLAudioElement final : public HTMLMediaElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLAudioElement_h
