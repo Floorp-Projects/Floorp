@@ -14,8 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLSharedElement final : public nsGenericHTMLElement {
  public:
@@ -139,7 +138,6 @@ class HTMLSharedElement final : public nsGenericHTMLElement {
                                 bool aNotify) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLSharedElement_h
