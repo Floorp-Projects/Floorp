@@ -59,6 +59,9 @@
       [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
       testTextAtOffset("li2", BOUNDARY_PARAGRAPH,
       [[0, 0, "• ", 0, 2], [2, 3, "a", 2, 3]]);
+      // Test a list item containing multiple text leaf nodes.
+      testTextAtOffset("liMultiLeaf", BOUNDARY_PARAGRAPH,
+      [[0, 0, "• ", 0, 2], [2, 4, "ab", 2, 4]]);
 
       // Test line breaks in a textarea.
       testTextAtOffset("textarea", BOUNDARY_PARAGRAPH,
@@ -129,6 +132,7 @@
   <ul id="ul"><li id="li1">a</li><li>b</li></ul>
   <style>#li2::marker { content:'\2022\0020'; }</style>
   <ul id="ul"><li id="li2">a</li><li>b</li></ul>
+  <ul><li id="liMultiLeaf">a<span>b</span></li></ul>
   <textarea id="textarea">a
 b
 
