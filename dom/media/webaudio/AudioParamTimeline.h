@@ -11,9 +11,7 @@
 #include "AudioNodeTrack.h"
 #include "AudioSegment.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 // This helper class is used to represent the part of the AudioParam
 // class that gets sent to AudioNodeEngine instances.  In addition to
@@ -137,7 +135,6 @@ inline void AudioParamTimeline::GetValuesAtTime(int64_t aTime, float* aBuffer,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

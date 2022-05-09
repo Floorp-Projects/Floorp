@@ -10,8 +10,7 @@
 #include "AudioNode.h"
 #include "AudioParam.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct DelayOptions;
@@ -51,7 +50,6 @@ class DelayNode final : public AudioNode {
   RefPtr<AudioParam> mDelay;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

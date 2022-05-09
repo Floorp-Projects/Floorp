@@ -17,9 +17,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/MemoryReporting.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AudioListenerEngine final {
  public:
@@ -82,7 +80,6 @@ class AudioListener final : public nsWrapperCache {
   ThreeDPoint mRightVector;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

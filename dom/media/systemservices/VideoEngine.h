@@ -16,8 +16,7 @@
 #include <memory>
 #include <functional>
 
-namespace mozilla {
-namespace camera {
+namespace mozilla::camera {
 
 // Historically the video engine was part of webrtc
 // it was removed (and reimplemented in Talk)
@@ -90,6 +89,5 @@ class VideoEngine {
   webrtc::Timestamp mExpiryTime = webrtc::Timestamp::Micros(0);
   int32_t GenerateId();
 };
-}  // namespace camera
-}  // namespace mozilla
+}  // namespace mozilla::camera
 #endif
