@@ -242,8 +242,6 @@ async function waitForStorageChangedEvents(...eventTypes) {
 /**
  * Wait until the element found matches the expected autofill value
  *
- * Note. This function assumes the element is in a form whose id is "form"
- *
  * @param {Object} target
  *        The target in which to run the task.
  * @param {string} selector
@@ -257,8 +255,7 @@ async function waitForAutofill(target, selector, value) {
     val
   ) {
     await ContentTaskUtils.waitForCondition(() => {
-      let form = content.document.getElementById("form");
-      let element = form.querySelector(selector);
+      let element = content.document.querySelector(selector);
       return element.value == val;
     }, "Autofill never fills");
   });
