@@ -7,6 +7,7 @@
 
 #include "mozilla/mozalloc.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/TransactionManager.h"
 #include "mozilla/TransactionStack.h"
@@ -123,26 +124,17 @@ nsresult TransactionItem::UndoChildren(
     mRedoStack = new TransactionStack(TransactionStack::FOR_REDO);
   }
 
-  size_t undoStackSize = mUndoStack->GetSize();
+  const size_t undoStackSize = mUndoStack->GetSize();
 
   nsresult rv = NS_OK;
-  while (undoStackSize-- > 0) {
+  for ([[maybe_unused]] const size_t undoneCount :
+       IntegerRange(undoStackSize)) {
     RefPtr<TransactionItem> transactionItem = mUndoStack->Peek();
     if (!transactionItem) {
       return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
-    bool doInterrupt = false;
-    rv = aTransactionManager->WillUndoNotify(transaction, &doInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("TransactionManager::WillUndoNotify() failed");
-      return rv;
-    }
-    if (doInterrupt) {
-      return NS_OK;
-    }
-
     rv = transactionItem->UndoTransaction(aTransactionManager);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "TransactionItem::UndoTransaction() failed");
@@ -194,26 +186,17 @@ nsresult TransactionItem::RedoChildren(
   }
 
   /* Redo all of the transaction items children! */
-  size_t redoStackSize = mRedoStack->GetSize();
+  const size_t redoStackSize = mRedoStack->GetSize();
 
   nsresult rv = NS_OK;
-  while (redoStackSize-- > 0) {
+  for ([[maybe_unused]] const size_t redoneCount :
+       IntegerRange(redoStackSize)) {
     RefPtr<TransactionItem> transactionItem = mRedoStack->Peek();
     if (NS_WARN_IF(!transactionItem)) {
       return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
-    bool doInterrupt = false;
-    rv = aTransactionManager->WillRedoNotify(transaction, &doInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("TransactionManager::WillRedoNotify() failed");
-      return rv;
-    }
-    if (doInterrupt) {
-      return NS_OK;
-    }
-
     rv = transactionItem->RedoTransaction(aTransactionManager);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "TransactionItem::RedoTransaction() failed");

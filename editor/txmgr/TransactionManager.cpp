@@ -58,18 +58,7 @@ NS_IMETHODIMP TransactionManager::DoTransaction(nsITransaction* aTransaction) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  bool doInterrupt = false;
-
-  nsresult rv = WillDoNotify(aTransaction, &doInterrupt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TransactionManager::WillDoNotify() failed");
-    return rv;
-  }
-  if (doInterrupt) {
-    return NS_OK;
-  }
-
-  rv = BeginTransaction(aTransaction, nullptr);
+  nsresult rv = BeginTransaction(aTransaction, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("TransactionManager::BeginTransaction() failed");
     DebugOnly<nsresult> rvIgnored = DidDoNotify(aTransaction, rv);
@@ -87,8 +76,8 @@ NS_IMETHODIMP TransactionManager::DoTransaction(nsITransaction* aTransaction) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
                        "TransactionManager::DidDoNotify() failed");
 
-  // XXX The result of EndTransaction() or DidDoNotify() if EndTransaction()
-  //     succeeded.
+  // The result of EndTransaction() or DidDoNotify() if EndTransaction()
+  // succeeded.
   return NS_SUCCEEDED(rv) ? rv2 : rv;
 }
 
@@ -112,17 +101,7 @@ nsresult TransactionManager::Undo() {
   }
 
   nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
-  bool doInterrupt = false;
-  nsresult rv = WillUndoNotify(transaction, &doInterrupt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TransactionManager::WillUndoNotify() failed");
-    return rv;
-  }
-  if (doInterrupt) {
-    return NS_OK;
-  }
-
-  rv = transactionItem->UndoTransaction(this);
+  nsresult rv = transactionItem->UndoTransaction(this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionItem::UndoTransaction() failed");
   if (NS_SUCCEEDED(rv)) {
@@ -134,8 +113,8 @@ nsresult TransactionManager::Undo() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
                        "TransactionManager::DidUndoNotify() failed");
 
-  // XXX The result of UndoTransaction() or DidUndoNotify() if UndoTransaction()
-  //     succeeded.
+  // The result of UndoTransaction() or DidUndoNotify() if UndoTransaction()
+  // succeeded.
   return NS_SUCCEEDED(rv) ? rv2 : rv;
 }
 
@@ -159,17 +138,7 @@ nsresult TransactionManager::Redo() {
   }
 
   nsCOMPtr<nsITransaction> transaction = transactionItem->GetTransaction();
-  bool doInterrupt = false;
-  nsresult rv = WillRedoNotify(transaction, &doInterrupt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TransactionManager::WillRedoNotify() failed");
-    return rv;
-  }
-  if (doInterrupt) {
-    return NS_OK;
-  }
-
-  rv = transactionItem->RedoTransaction(this);
+  nsresult rv = transactionItem->RedoTransaction(this);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionItem::RedoTransaction() failed");
   if (NS_SUCCEEDED(rv)) {
@@ -181,8 +150,8 @@ nsresult TransactionManager::Redo() {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
                        "TransactionManager::DidRedoNotify() failed");
 
-  // XXX The result of RedoTransaction() or DidRedoNotify() if RedoTransaction()
-  //     succeeded.
+  // The result of RedoTransaction() or DidRedoNotify() if RedoTransaction()
+  // succeeded.
   return NS_SUCCEEDED(rv) ? rv2 : rv;
 }
 
@@ -202,27 +171,10 @@ nsresult TransactionManager::BeginBatchInternal(nsISupports* aData) {
   // a dummy transaction item on the do stack. This dummy transaction item
   // will be popped off the do stack, and then pushed on the undo stack
   // in EndBatch().
-  bool doInterrupt = false;
-  nsresult rv = WillBeginBatchNotify(&doInterrupt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TransactionManager::WillBeginBatchNotify() failed");
-    return rv;
-  }
-  if (doInterrupt) {
-    return NS_OK;
-  }
-
-  rv = BeginTransaction(nullptr, aData);
+  nsresult rv = BeginTransaction(nullptr, aData);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionManager::BeginTransaction() failed");
-
-  nsresult rv2 = DidBeginBatchNotify(rv);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                       "TransactionManager::DidBeginBatchNotify() failed");
-
-  // XXX The result of BeginTransaction() or DidBeginBatchNotify() if
-  //     BeginTransaction() succeeded.
-  return NS_SUCCEEDED(rv) ? rv2 : rv;
+  return rv;
 }
 
 NS_IMETHODIMP TransactionManager::EndBatch(bool aAllowEmpty) {
@@ -252,27 +204,10 @@ nsresult TransactionManager::EndBatchInternal(bool aAllowEmpty) {
     return NS_ERROR_FAILURE;
   }
 
-  bool doInterrupt = false;
-  nsresult rv = WillEndBatchNotify(&doInterrupt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("TransactionManager::WillEndBatchNotify() failed");
-    return rv;
-  }
-  if (doInterrupt) {
-    return NS_OK;
-  }
-
-  rv = EndTransaction(aAllowEmpty);
+  nsresult rv = EndTransaction(aAllowEmpty);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionManager::EndTransaction() failed");
-
-  nsresult rv2 = DidEndBatchNotify(rv);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                       "TransactionManager::DidEndBatchNotify() failed");
-
-  // XXX The result of EndTransaction() or DidEndBatchNotify() if
-  //     EndTransaction() succeeded.
-  return NS_SUCCEEDED(rv) ? rv2 : rv;
+  return rv;
 }
 
 NS_IMETHODIMP TransactionManager::GetNumberOfUndoItems(int32_t* aNumItems) {
@@ -461,25 +396,6 @@ NS_IMETHODIMP TransactionManager::ClearRedoStack() {
   return NS_OK;
 }
 
-nsresult TransactionManager::WillDoNotify(nsITransaction* aTransaction,
-                                          bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillDo(this, aTransaction, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillDo() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
 nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
                                          nsresult aDoResult) {
   nsCOMArray<nsITransactionListener> listeners(mListeners);
@@ -491,25 +407,6 @@ nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
     if (NS_FAILED(rv)) {
       NS_WARNING("nsITransactionListener::DidDo() failed");
       return rv;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::WillUndoNotify(nsITransaction* aTransaction,
-                                            bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillUndo(this, aTransaction, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillUndo() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
     }
   }
   return NS_OK;
@@ -531,25 +428,6 @@ nsresult TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
   return NS_OK;
 }
 
-nsresult TransactionManager::WillRedoNotify(nsITransaction* aTransaction,
-                                            bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillRedo(this, aTransaction, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillRedo() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
 nsresult TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
                                            nsresult aRedoResult) {
   nsCOMArray<nsITransactionListener> listeners(mListeners);
@@ -560,111 +438,6 @@ nsresult TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
     nsresult rv = listener->DidRedo(this, aTransaction, aRedoResult);
     if (NS_FAILED(rv)) {
       NS_WARNING("nsITransactionListener::DidRedo() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::WillBeginBatchNotify(bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillBeginBatch(this, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillBeginBatch() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::DidBeginBatchNotify(nsresult aResult) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->DidBeginBatch(this, aResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidBeginBatch() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::WillEndBatchNotify(bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillEndBatch(this, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillEndBatch() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::DidEndBatchNotify(nsresult aResult) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->DidEndBatch(this, aResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidEndBatch() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::WillMergeNotify(nsITransaction* aTop,
-                                             nsITransaction* aTransaction,
-                                             bool* aInterrupt) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->WillMerge(this, aTop, aTransaction, aInterrupt);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::WillMerge() failed");
-      return rv;
-    }
-    if (*aInterrupt) {
-      return NS_OK;
-    }
-  }
-  return NS_OK;
-}
-
-nsresult TransactionManager::DidMergeNotify(nsITransaction* aTop,
-                                            nsITransaction* aTransaction,
-                                            bool aDidMerge,
-                                            nsresult aMergeResult) {
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv =
-        listener->DidMerge(this, aTop, aTransaction, aDidMerge, aMergeResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidMerge() failed");
       return rv;
     }
   }
@@ -750,27 +523,12 @@ nsresult TransactionManager::EndTransaction(bool aAllowEmpty) {
     nsCOMPtr<nsITransaction> topTransaction =
         topTransactionItem->GetTransaction();
     if (topTransaction) {
-      bool doInterrupt = false;
-      nsresult rv = WillMergeNotify(topTransaction, transaction, &doInterrupt);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("TransactionManager::WillMergeNotify() failed");
+      nsresult rv = topTransaction->Merge(transaction, &didMerge);
+      if (didMerge) {
         return rv;
       }
-
-      if (!doInterrupt) {
-        nsresult rv = topTransaction->Merge(transaction, &didMerge);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "nsITransaction::Merge() failed");
-        nsresult rv2 =
-            DidMergeNotify(topTransaction, transaction, didMerge, rv);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                             "TransactionManager::DidMergeNotify() failed");
-        if (didMerge) {
-          return NS_SUCCEEDED(rv) ? rv2 : rv;
-        }
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "The previous error was ignored");
-      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "nsITransaction::Merge() failed, but ignored");
     }
   }
 
