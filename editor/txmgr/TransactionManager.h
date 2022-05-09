@@ -65,27 +65,12 @@ class TransactionManager final : public nsITransactionManager,
   // FYI: We don't need to treat the following methods as `MOZ_CAN_RUN_SCRIPT`
   //      for now because only ComposerCommandUpdater is the listener and it
   //      does not do something dangerous synchronously.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidDoNotify(nsITransaction* aTransaction,
                                                    nsresult aExecuteResult);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   DidUndoNotify(nsITransaction* aTransaction, nsresult aUndoResult);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillRedoNotify(nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   DidRedoNotify(nsITransaction* aTransaction, nsresult aRedoResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillBeginBatchNotify(bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidBeginBatchNotify(nsresult aResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillEndBatchNotify(bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidEndBatchNotify(nsresult aResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillMergeNotify(
-      nsITransaction* aTop, nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  DidMergeNotify(nsITransaction* aTop, nsITransaction* aTransaction,
-                 bool aDidMerge, nsresult aMergeResult);
 
   /**
    * Exposing non-virtual methods of nsITransactionManager methods.

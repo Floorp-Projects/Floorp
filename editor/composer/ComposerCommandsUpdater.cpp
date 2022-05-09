@@ -54,13 +54,6 @@ NS_IMPL_CYCLE_COLLECTION(ComposerCommandsUpdater, mUpdateTimer, mDOMWindow,
 #  pragma mark -
 #endif
 
-NS_IMETHODIMP ComposerCommandsUpdater::WillDo(nsITransactionManager* aManager,
-                                              nsITransaction* aTransaction,
-                                              bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP ComposerCommandsUpdater::DidDo(nsITransactionManager* aManager,
                                              nsITransaction* aTransaction,
@@ -77,13 +70,6 @@ NS_IMETHODIMP ComposerCommandsUpdater::DidDo(nsITransactionManager* aManager,
   return NS_OK;
 }
 
-NS_IMETHODIMP ComposerCommandsUpdater::WillUndo(nsITransactionManager* aManager,
-                                                nsITransaction* aTransaction,
-                                                bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP ComposerCommandsUpdater::DidUndo(nsITransactionManager* aManager,
                                                nsITransaction* aTransaction,
@@ -96,54 +82,11 @@ NS_IMETHODIMP ComposerCommandsUpdater::DidUndo(nsITransactionManager* aManager,
   return NS_OK;
 }
 
-NS_IMETHODIMP ComposerCommandsUpdater::WillRedo(nsITransactionManager* aManager,
-                                                nsITransaction* aTransaction,
-                                                bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP ComposerCommandsUpdater::DidRedo(nsITransactionManager* aManager,
                                                nsITransaction* aTransaction,
                                                nsresult aRedoResult) {
   UpdateCommandGroup(CommandGroup::Undo);
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::WillBeginBatch(
-    nsITransactionManager* aManager, bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::DidBeginBatch(
-    nsITransactionManager* aManager, nsresult aResult) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::WillEndBatch(
-    nsITransactionManager* aManager, bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::DidEndBatch(
-    nsITransactionManager* aManager, nsresult aResult) {
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::WillMerge(
-    nsITransactionManager* aManager, nsITransaction* aTopTransaction,
-    nsITransaction* aTransactionToMerge, bool* aInterrupt) {
-  *aInterrupt = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP ComposerCommandsUpdater::DidMerge(
-    nsITransactionManager* aManager, nsITransaction* aTopTransaction,
-    nsITransaction* aTransactionToMerge, bool aDidMerge,
-    nsresult aMergeResult) {
   return NS_OK;
 }
 
