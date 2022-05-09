@@ -248,6 +248,10 @@ class ModuleLoaderBase : public nsISupports {
   // Implements https://html.spec.whatwg.org/#run-a-module-script
   nsresult EvaluateModule(ModuleLoadRequest* aRequest);
 
+  // Evaluate a module in the given context. Does not push an entry to the
+  // execution stack.
+  nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest);
+
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
   void CancelAndClearDynamicImports();
