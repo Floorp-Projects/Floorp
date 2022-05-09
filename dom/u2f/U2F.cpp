@@ -31,8 +31,7 @@ class nsHTMLDocument {
                                             const nsACString& aOrigHost);
 };
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 constexpr auto kFinishEnrollment = u"navigator.id.finishEnrollment"_ns;
 constexpr auto kGetAssertion = u"navigator.id.getAssertion"_ns;
@@ -642,5 +641,4 @@ void U2F::HandleVisibilityChange() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

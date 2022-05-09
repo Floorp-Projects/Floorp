@@ -14,8 +14,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/GeolocationPositionErrorBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(WindowsLocationProvider::MLSUpdate, nsIGeolocationUpdate);
 
@@ -268,5 +267,4 @@ void WindowsLocationProvider::CancelMLSProvider() {
   mMLSProvider = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
