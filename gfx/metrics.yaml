@@ -43,3 +43,53 @@ wr:
       - gfx-telemetry-alerts@mozilla.com
     expires: never
     telemetry_mirror: WR_RASTERIZE_GLYPHS_TIME
+  framebuild_time:
+    type: timing_distribution
+    description: >
+      The time to rasterize glyphs for consumption by WebRender.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1584109
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    expires: never
+    telemetry_mirror: WR_FRAMEBUILD_TIME
+  scenebuild_time:
+    type: timing_distribution
+    description: >
+      WebRender scene build time.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    expires: never
+    telemetry_mirror: WR_SCENEBUILD_TIME
+  sceneswap_time:
+    type: timing_distribution
+    description: >
+      WebRender scene swap time.
+    time_unit: microsecond
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1470901
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - gfx-telemetry-alerts@mozilla.com
+      - jmuizelaar@mozilla.com
+    expires: never
+    telemetry_mirror: WR_SCENESWAP_TIME

@@ -1,4 +1,4 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Publi
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -31,6 +31,7 @@ use crate::render_backend::SceneView;
 use crate::renderer::{FullFrameStats, PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
 use crate::spatial_tree::{SceneSpatialTree, SpatialTreeUpdates};
+use crate::telemetry::Telemetry;
 use std::iter;
 use time::precise_time_ns;
 use crate::util::drain_filter;
@@ -682,7 +683,8 @@ impl SceneBuilderThread {
 
                     let (tx, rx) = single_msg_channel();
                     let txn = txns.iter().find(|txn| txn.built_scene.is_some()).unwrap();
-                    hooks.pre_scene_swap((txn.profile.get(profiler::SCENE_BUILD_TIME).unwrap() * 1000000.0) as u64);
+                    Telemetry::record_scenebuild_time(Duration::from_millis(txn.profile.get(profiler::SCENE_BUILD_TIME).unwrap() as u64));
+                    hooks.pre_scene_swap();
 
                     (Some(info), Some(tx), Some(rx))
                 } else {
@@ -692,7 +694,7 @@ impl SceneBuilderThread {
             _ => (None, None, None)
         };
 
-        let scene_swap_start_time = precise_time_ns();
+        let timer_id = Telemetry::start_sceneswap_time();
         let document_ids = txns.iter().map(|txn| txn.document_id).collect();
         let have_resources_updates : Vec<DocumentId> = if pipeline_info.is_none() {
             txns.iter()
@@ -715,18 +717,20 @@ impl SceneBuilderThread {
         if let Some(pipeline_info) = pipeline_info {
             // Block until the swap is done, then invoke the hook.
             let swap_result = result_rx.unwrap().recv();
-            let scene_swap_time = precise_time_ns() - scene_swap_start_time;
+            Telemetry::stop_and_accumulate_sceneswap_time(timer_id);
             self.hooks.as_ref().unwrap().post_scene_swap(&document_ids,
-                                                         pipeline_info, scene_swap_time);
+                                                         pipeline_info);
             // Once the hook is done, allow the RB thread to resume
             if let Ok(SceneSwapResult::Complete(resume_tx)) = swap_result {
                 resume_tx.send(()).ok();
             }
         } else if !have_resources_updates.is_empty() {
+            Telemetry::cancel_sceneswap_time(timer_id);
             if let Some(ref hooks) = self.hooks {
                 hooks.post_resource_update(&have_resources_updates);
             }
         } else if let Some(ref hooks) = self.hooks {
+            Telemetry::cancel_sceneswap_time(timer_id);
             hooks.post_empty_scene_build();
         }
     }
