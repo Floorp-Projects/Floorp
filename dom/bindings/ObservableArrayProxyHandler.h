@@ -10,8 +10,7 @@
 #include "js/TypeDecls.h"
 #include "js/Wrapper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Proxy handler for observable array exotic object.
@@ -102,7 +101,6 @@ inline const ObservableArrayProxyHandler* GetObservableArrayProxyHandler(
       js::GetProxyHandler(obj));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ObservableArrayProxyHandler_h */

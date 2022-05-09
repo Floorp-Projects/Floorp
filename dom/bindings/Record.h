@@ -19,8 +19,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace binding_detail {
 template <typename KeyType, typename ValueType>
@@ -72,8 +71,7 @@ class Record {
   nsTArray<EntryType> mEntries;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 template <typename K, typename V>
 class nsDefaultComparator<mozilla::dom::binding_detail::RecordEntry<K, V>, K> {
