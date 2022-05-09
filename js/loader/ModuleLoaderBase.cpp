@@ -222,6 +222,11 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
   RefPtr<ModuleLoadRequest> request = loader->CreateDynamicImport(
       aCx, uri, script, aReferencingPrivate, specifierString, aPromise);
 
+  if (!request) {
+    JS_ReportErrorASCII(aCx, "Dynamic import not supported in this context");
+    return false;
+  }
+
   loader->StartDynamicImport(request);
   return true;
 }
