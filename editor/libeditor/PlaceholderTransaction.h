@@ -59,8 +59,6 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
-  bool StartSelectionEquals(SelectionState& aSelectionState);
-
   nsresult EndPlaceHolderBatch();
 
   void ForwardEndBatchTo(PlaceholderTransaction& aForwardingTransaction) {

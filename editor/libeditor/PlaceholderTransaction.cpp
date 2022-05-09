@@ -243,16 +243,67 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
              nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
+
   // check if start selection of next placeholder matches
   // end selection of this placeholder
-  if (!otherPlaceholderTransaction->StartSelectionEquals(mEndSel)) {
+  // XXX Theese checks seem wrong.  The ending selection is initialized with
+  //     actual Selection rather than expected Selection.  Therefore, even when
+  //     web apps modifies Selection, we don't merge mergable transactions.
+
+  // If the new transaction's starting Selection is not a caret, we shouldn't be
+  // merged with it because it's probably caused deleting the selection.
+  if (!otherPlaceholderTransaction->mStartSel.HasOnlyCollapsedRange()) {
     MOZ_LOG(GetLogModule(), LogLevel::Debug,
             ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
-             "mName=%s } returned false due to selection difference",
+             "mName=%s } returned false due to not collapsed selection at "
+             "start of new transactions",
              this, __FUNCTION__, aOtherTransaction,
              nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
     return NS_OK;
   }
+
+  // If our ending Selection is not a caret, we should not be merged with it
+  // because we probably changed format of a block or style of text.
+  if (!mEndSel.HasOnlyCollapsedRange()) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to not collapsed selection at end "
+             "of previous transactions",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+    return NS_OK;
+  }
+
+  // If the caret positions are now in different root nodes, e.g., the previous
+  // caret position was removed from the DOM tree, this merge should not be
+  // done.
+  const bool isPreviousCaretPointInSameRootOfNewCaretPoint = [&]() {
+    nsINode* previousRootInCurrentDOMTree = mEndSel.GetCommonRootNode();
+    return previousRootInCurrentDOMTree &&
+           previousRootInCurrentDOMTree ==
+               otherPlaceholderTransaction->mStartSel.GetCommonRootNode();
+  }();
+  if (!isPreviousCaretPointInSameRootOfNewCaretPoint) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to the caret points are in "
+             "different root nodes",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+    return NS_OK;
+  }
+
+  // If the caret points of end of us and start of new transaction are not same,
+  // we shouldn't merge them.
+  if (!otherPlaceholderTransaction->mStartSel.Equals(mEndSel)) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to caret positions were different",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+    return NS_OK;
+  }
+
   mAbsorb = true;  // we need to start absorbing again
   otherPlaceholderTransaction->ForwardEndBatchTo(*this);
   // AppendChild(editTransactionBase);
@@ -273,14 +324,6 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
            this, __FUNCTION__, aOtherTransaction,
            nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
   return NS_OK;
-}
-
-bool PlaceholderTransaction::StartSelectionEquals(
-    SelectionState& aSelectionState) {
-  // determine if starting selection matches the given selection state.
-  // note that we only care about collapsed selections.
-  return mStartSel.IsCollapsed() && aSelectionState.IsCollapsed() &&
-         mStartSel.Equals(aSelectionState);
 }
 
 nsresult PlaceholderTransaction::EndPlaceHolderBatch() {
