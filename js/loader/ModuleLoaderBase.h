@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsILoadInfo.h"  // nsSecurityFlags
 #include "nsINode.h"      // nsIURI
+#include "nsThreadUtils.h"  // GetMainThreadSerialEventTarget
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/JSExecutionContext.h"
@@ -155,6 +156,10 @@ class ModuleLoaderBase : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
+  // Event handler used to process MozPromise actions, used internally to wait
+  // for fetches to finish and for imports to become avilable.
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+
   // https://wicg.github.io/import-maps/#document-acquiring-import-maps
   //
   // Each Document has an acquiring import maps boolean. It is initially true.
@@ -171,7 +176,9 @@ class ModuleLoaderBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader,
-                            nsIGlobalObject* aGlobalObject);
+                            nsIGlobalObject* aGlobalObject,
+                            nsISerialEventTarget* aEventTarget =
+                                mozilla::GetMainThreadSerialEventTarget());
 
   using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
