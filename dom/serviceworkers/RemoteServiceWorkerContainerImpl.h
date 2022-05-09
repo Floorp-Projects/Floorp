@@ -9,8 +9,7 @@
 
 #include "ServiceWorkerContainer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerContainerChild;
 
@@ -57,7 +56,6 @@ class RemoteServiceWorkerContainerImpl final
   NS_INLINE_DECL_REFCOUNTING(RemoteServiceWorkerContainerImpl, override)
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_remoteserviceworkercontainerimpl_h__

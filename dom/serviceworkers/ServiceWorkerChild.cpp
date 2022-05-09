@@ -9,8 +9,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void ServiceWorkerChild::ActorDestroy(ActorDestroyReason aReason) {
   mIPCWorkerRef = nullptr;
@@ -67,5 +66,4 @@ void ServiceWorkerChild::MaybeStartTeardown() {
   Unused << SendTeardown();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

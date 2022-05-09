@@ -11,8 +11,7 @@
 #include "mozilla/dom/PFetchEventOpProxyParent.h"
 #include "mozilla/dom/ServiceWorkerOpPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FetchEventOpParent;
 class PRemoteWorkerParent;
@@ -64,7 +63,6 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
   RefPtr<ServiceWorkerFetchEventOpPromise::Private> mLifetimePromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_fetcheventopproxyparent_h__
