@@ -17,8 +17,7 @@
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/StateWatching.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class HTMLTrackElement;
@@ -338,7 +337,6 @@ class TextTrackCue final : public DOMEventTargetHelper {
   WatchManager<TextTrackCue> mWatchManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TextTrackCue_h

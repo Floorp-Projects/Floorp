@@ -11,8 +11,7 @@
 #include "mozilla/dom/PMessagePortParent.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MessagePortService;
 
@@ -57,7 +56,6 @@ class MessagePortParent final
   bool mCanSendData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MessagePortParent_h
