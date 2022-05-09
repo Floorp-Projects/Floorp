@@ -29,9 +29,9 @@ UNIFIED_SOURCES += [
     "RTCDTMFSender.cpp",
     "RTCRtpReceiver.cpp",
     "RTCRtpSender.cpp",
+    "RTCRtpTransceiver.cpp",
     "RTCStatsIdGenerator.cpp",
     "RTCStatsReport.cpp",
-    "TransceiverImpl.cpp",
     "WebrtcGlobalInformation.cpp",
 ]
 

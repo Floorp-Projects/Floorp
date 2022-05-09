@@ -5,7 +5,7 @@
 #include "RTCDTMFSender.h"
 #include "libwebrtcglue/MediaConduitInterface.h"
 #include "transport/logging.h"
-#include "TransceiverImpl.h"
+#include "RTCRtpTransceiver.h"
 #include "nsITimer.h"
 #include "mozilla/dom/RTCDTMFSenderBinding.h"
 #include "mozilla/dom/RTCDTMFToneChangeEvent.h"
@@ -29,7 +29,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 LazyLogModule gDtmfLog("RTCDTMFSender");
 
 RTCDTMFSender::RTCDTMFSender(nsPIDOMWindowInner* aWindow,
-                             TransceiverImpl* aTransceiver)
+                             RTCRtpTransceiver* aTransceiver)
     : DOMEventTargetHelper(aWindow), mTransceiver(aTransceiver) {}
 
 JSObject* RTCDTMFSender::WrapObject(JSContext* aCx,
