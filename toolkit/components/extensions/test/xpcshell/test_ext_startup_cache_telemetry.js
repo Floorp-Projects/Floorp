@@ -37,6 +37,11 @@ add_setup(async () => {
     true
   );
 
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+
   await AddonTestUtils.promiseStartupManager();
 });
 
@@ -114,4 +119,55 @@ add_task(async function test_startupCache_read_errors() {
   );
 
   restoreStartupCacheFile();
+});
+
+add_task(async function test_startupCache_load_timestamps() {
+  const { StartupCache } = ExtensionParent;
+
+  // Clear any pre-existing keyed scalar.
+  TelemetryTestUtils.getProcessScalars("parent", false, true);
+
+  // Make sure the _readData has been called and we can expect
+  // the startupCache load telemetry timestamps to have been
+  // recorded.
+  await StartupCache._readData();
+
+  info(
+    "Verify telemetry recorded for the 'extensions.startup_cache_load_time' Glean metric"
+  );
+
+  const gleanMetric = Glean.extensions.startupCacheLoadTime.testGetValue();
+  equal(
+    typeof gleanMetric,
+    "number",
+    "Expect extensions.startup_cache_load_time Glean metric to be set to a number"
+  );
+
+  ok(
+    gleanMetric > 0,
+    "Expect extensions.startup_cache_load_time Glean metric to be set to a non-zero value"
+  );
+
+  info(
+    "Verify telemetry mirrored into the 'extensions.startupCache.load_time' scalar"
+  );
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
+
+  equal(
+    typeof scalars["extensions.startupCache.load_time"],
+    "number",
+    "Expect extensions.startupCache.load_time mirrored scalar to be set to a number"
+  );
+
+  ok(
+    scalars["extensions.startupCache.load_time"] > 0,
+    "Expect extensions.startupCache.load_time mirrored scalar to be set to a non-zero value"
+  );
+
+  equal(
+    scalars["extensions.startupCache.load_time"],
+    gleanMetric,
+    "Expect the glean metric and mirrored scalar to be set to the same value"
+  );
 });

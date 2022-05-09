@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'WebExtensions :: General'
+
+extensions:
+  startup_cache_load_time:
+    type: timespan
+    time_unit: millisecond
+    expires: never
+    description: |
+      Time to load and deserialize the extensions startupCache data.
+    lifetime: application
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1767336/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1767336#c7
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_STARTUPCACHE_LOAD_TIME
