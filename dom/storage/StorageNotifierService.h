@@ -14,8 +14,7 @@ class nsIEventTarget;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class StorageEvent;
 
@@ -70,7 +69,6 @@ class StorageNotifierService final {
   nsTObserverArray<RefPtr<StorageNotificationObserver>> mObservers;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_StorageNotifierService_h

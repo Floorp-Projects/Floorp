@@ -11,8 +11,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -127,5 +126,4 @@ void StorageNotifierService::Unregister(
   mObservers.RemoveElement(aObserver);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
