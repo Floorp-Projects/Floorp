@@ -47,6 +47,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.menu.candidate.DrawableMenuIcon
 import mozilla.components.concept.menu.candidate.TextMenuCandidate
 import mozilla.components.concept.storage.HistoryStorage
+import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.qr.QrFeature
 import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.lib.state.ext.consumeFrom
@@ -109,9 +110,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
     private var dialogHandledAction = false
-    private var qrButtonAlreadyAdded = false
     private var searchSelectorAlreadyAdded = false
-    private var voiceSearchButtonAlreadyAdded = false
+    private var qrButtonAction: Toolbar.Action? = null
+    private var voiceSearchButtonAction: Toolbar.Action? = null
 
     override fun onStart() {
         super.onStart()
@@ -392,10 +393,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
             if (showUnifiedSearchFeature) {
                 addSearchSelector()
-                addQrButton(it)
+                updateQrButton(it)
             }
 
-            addVoiceSearchButton(it)
+            updateVoiceSearchButton(it)
         }
     }
 
@@ -700,8 +701,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         searchSelectorAlreadyAdded = true
     }
 
-    private fun addVoiceSearchButton(searchFragmentState: SearchFragmentState) {
-        if (voiceSearchButtonAlreadyAdded) return
+    private fun updateVoiceSearchButton(searchFragmentState: SearchFragmentState) {
         val searchEngine = searchFragmentState.searchEngineSource.searchEngine
 
         val isVisible =
@@ -709,18 +709,30 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 isSpeechAvailable() &&
                 requireContext().settings().shouldShowVoiceSearch
 
-        if (isVisible) {
-            val voiceSearchAction = BrowserToolbar.Button(
-                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
-                requireContext().getString(R.string.voice_search_content_description),
-                visible = { true },
-                listener = ::launchVoiceSearch
-            )
-            toolbarView.view.run {
-                addEditActionEnd(IncreasedTapAreaActionDecorator(voiceSearchAction))
-                invalidateActions()
+        when (isVisible) {
+            true -> {
+                if (voiceSearchButtonAction == null) {
+                    voiceSearchButtonAction = IncreasedTapAreaActionDecorator(
+                        BrowserToolbar.Button(
+                            AppCompatResources.getDrawable(requireContext(), R.drawable.ic_microphone)!!,
+                            requireContext().getString(R.string.voice_search_content_description),
+                            visible = { true },
+                            listener = ::launchVoiceSearch
+                        )
+                    ).also { action ->
+                        toolbarView.view.run {
+                            addEditActionEnd(action)
+                            invalidateActions()
+                        }
+                    }
+                }
             }
-            voiceSearchButtonAlreadyAdded = true
+            false -> {
+                voiceSearchButtonAction?.let { action ->
+                    toolbarView.view.removeEditActionEnd(action)
+                    voiceSearchButtonAction = null
+                }
+            }
         }
     }
 
@@ -741,31 +753,31 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         startActivityForResult(speechIntent, VoiceSearchActivity.SPEECH_REQUEST_CODE)
     }
 
-    private fun addQrButton(searchFragmentState: SearchFragmentState) {
-        if (qrButtonAlreadyAdded) {
-            return
-        }
-
-        val searchEngine = searchFragmentState.searchEngineSource.searchEngine
-
-        val isVisible =
-            searchEngine?.id?.contains("google") == true &&
-                isSpeechAvailable() &&
-                requireContext().settings().shouldShowVoiceSearch
-
-        if (isVisible) {
-            val qrAction = BrowserToolbar.Button(
-                AppCompatResources.getDrawable(requireContext(), R.drawable.ic_qr)!!,
-                requireContext().getString(R.string.search_scan_button),
-                autoHide = { true },
-                listener = ::launchQr,
-            )
-            toolbarView.view.run {
-                addEditActionEnd(IncreasedTapAreaActionDecorator(qrAction))
-                invalidateActions()
+    private fun updateQrButton(searchFragmentState: SearchFragmentState) {
+        when (searchFragmentState.searchEngineSource.searchEngine == searchFragmentState.defaultEngine) {
+            true -> {
+                if (qrButtonAction == null) {
+                    qrButtonAction = IncreasedTapAreaActionDecorator(
+                        BrowserToolbar.Button(
+                            AppCompatResources.getDrawable(requireContext(), R.drawable.ic_qr)!!,
+                            requireContext().getString(R.string.search_scan_button),
+                            autoHide = { true },
+                            listener = ::launchQr,
+                        )
+                    ).also { action ->
+                        toolbarView.view.run {
+                            addEditActionEnd(action)
+                            invalidateActions()
+                        }
+                    }
+                }
             }
-
-            qrButtonAlreadyAdded = true
+            false -> {
+                qrButtonAction?.let { action ->
+                    toolbarView.view.removeEditActionEnd(action)
+                    qrButtonAction = null
+                }
+            }
         }
     }
 
