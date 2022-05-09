@@ -1214,6 +1214,7 @@ rtc_library("rtc_base_tests_utils") {
     "../api/units:timestamp",
     "memory:fifo_buffer",
     "synchronization:mutex",
+    "task_utils:to_queued_task",
     "third_party/sigslot",
   ]
   absl_deps = [
