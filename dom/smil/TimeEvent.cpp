@@ -11,8 +11,7 @@
 #include "nsPresContext.h"
 #include "nsGlobalWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 TimeEvent::TimeEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                      InternalSMILTimeEvent* aEvent)
@@ -46,8 +45,7 @@ void TimeEvent::InitTimeEvent(const nsAString& aType,
   mView = aView ? aView->GetOuterWindow() : nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 using namespace mozilla;
 using namespace mozilla::dom;

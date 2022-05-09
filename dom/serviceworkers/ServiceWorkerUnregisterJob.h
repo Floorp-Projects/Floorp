@@ -9,8 +9,7 @@
 
 #include "ServiceWorkerJob.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerUnregisterJob final : public ServiceWorkerJob {
  public:
@@ -32,7 +31,6 @@ class ServiceWorkerUnregisterJob final : public ServiceWorkerJob {
   bool mSendToParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerunregisterjob_h
