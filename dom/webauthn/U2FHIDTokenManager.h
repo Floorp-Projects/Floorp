@@ -15,8 +15,7 @@
  * for the U2F and WebAuthn APIs, talking to HIDs.
  */
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class U2FAppIds {
  public:
@@ -181,7 +180,6 @@ class U2FHIDTokenManager final : public U2FTokenTransport {
   MozPromiseHolder<U2FSignPromise> mSignPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_U2FHIDTokenManager_h

@@ -13,8 +13,7 @@
 
 #include "mozilla/dom/CryptoBuffer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsresult CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
                                 /* out */ CryptoBuffer& aPubKeyObj);
@@ -27,7 +26,6 @@ nsresult CBOREncodeFidoU2FAttestationObj(
 nsresult CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
                                       /* out */ CryptoBuffer& aAttestationObj);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnCBORUtil_h
