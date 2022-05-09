@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -297,6 +298,10 @@ void PrintResult(absl::string_view measurement,
   std::vector<double> samples(timed_samples.size());
   for (size_t i = 0; i < timed_samples.size(); ++i) {
     samples[i] = timed_samples[i].value;
+  }
+  // If we have an empty counter, default it to 0.
+  if (samples.empty()) {
+    samples.push_back(0);
   }
 
   GetPerfWriter().LogResultList(graph_name.str(), trace, samples, units,
