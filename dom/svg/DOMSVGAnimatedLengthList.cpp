@@ -15,8 +15,7 @@
 
 // See the architecture comment in this file's header.
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static inline SVGAttrTearoffTable<SVGAnimatedLengthList,
                                   DOMSVGAnimatedLengthList>&
@@ -127,5 +126,4 @@ const SVGAnimatedLengthList& DOMSVGAnimatedLengthList::InternalAList() const {
   return *mElement->GetAnimatedLengthList(mAttrEnum);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
