@@ -1,0 +1,35 @@
+#navigator-toolbox :-moz-any(toolbar, #nav-bar-customization-target):not(#toolbar-menubar)
+{
+  -moz-box-align: center !important;
+  min-height: 0px !important;
+}
+
+
+.toolbar-items {
+  display: none !important;
+}
+
+:root[tabsintitlebar] .titlebar-buttonbox-container {
+  display: block !important;
+  position: fixed !important;
+  right: 0 !important;
+  z-index: 1 !important;
+}
+
+:root[tabsintitlebar] #titlebar {
+  appearance: none !important;
+}
+
+:root[tabsintitlebar][sizemode="maximized"] #titlebar {
+  margin-top: 0px !important;
+}
+
+:root[tabsintitlebar] #nav-bar::after {
+  content: "";
+  display: block;
+  width: 135px;
+}
+
+#titlebar{
+  margin: 0 !important;
+}

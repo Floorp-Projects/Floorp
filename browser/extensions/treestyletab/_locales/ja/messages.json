@@ -1,0 +1,805 @@
+{
+  "extensionName": { "message": "Tree-shaped vertical tabs - ツリー型垂直タブ" },
+  "extensionDescription": { "message": "タブをツリー状に表示します。" },
+
+  "sidebarTitle": { "message": "ツリー型垂直タブ" },
+  "sidebarToggleDescription": { "message": "ツリー型垂直タブのサイドバーの表示・非表示を切り替える" },
+
+  "command_tabMoveUp":             { "message": "現在のタブを単体で1つ上に移動" },
+  "command_treeMoveUp":            { "message": "現在のタブとその配下のタブを1つ上に移動" },
+  "command_tabMoveDown":           { "message": "現在のタブを単体で1つ下に移動" },
+  "command_treeMoveDown":          { "message": "現在のタブとその配下のタブを1つ下に移動" },
+  "command_focusPrevious":         { "message": "前のタブにフォーカスを移す（ツリーを展開する）" },
+  "command_focusPreviousSilently": { "message": "前のタブにフォーカスを移す（ツリーを展開しない）" },
+  "command_focusNext":             { "message": "次のタブにフォーカスを移す（ツリーを展開する）" },
+  "command_focusNextSilently":     { "message": "次のタブにフォーカスを移す（ツリーを展開しない）" },
+  "command_focusParent":           { "message": "親のタブにフォーカスを移す" },
+  "command_focusFirstChild":       { "message": "最初の子タブにフォーカスを移す" },
+  "command_focusLastChild":        { "message": "最後の子タブにフォーカスを移す" },
+  "command_focusPreviousSibling":  { "message": "同階層の前のタブにフォーカスを移す" },
+  "command_focusNextSibling":      { "message": "同階層の次のタブにフォーカスを移す" },
+  "command_tabbarUp":              { "message": "タブの一覧を数行上にスクロール" },
+  "command_tabbarPageUp":          { "message": "タブの一覧を1ページ上にスクロール" },
+  "command_tabbarHome":            { "message": "タブの一覧を先頭までスクロール" },
+  "command_tabbarDown":            { "message": "タブの一覧を数行下にスクロール" },
+  "command_tabbarPageDown":        { "message": "タブの一覧を1ページ下にスクロール" },
+  "command_tabbarEnd":             { "message": "タブの一覧を末尾までスクロール" },
+  "command_toggleSubPanel":        { "message": "サブパネルの表示・非表示を切り替える" },
+  "command_switchSubPanel":        { "message": "サブパネルの内容を切り替える" },
+  "command_increaseSubPanel":      { "message": "サブパネルの高さを広げる" },
+  "command_decreaseSubPanel":      { "message": "サブパネルの高さを縮める" },
+
+  "tab_closebox_aria_label": { "message": "タブを閉じる #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_closebox_tab_tooltip": { "message": "タブを閉じる" },
+  "tab_closebox_tab_tooltip_multiselected": { "message": "選択されたタブを閉じる" },
+  "tab_closebox_tree_tooltip": { "message": "ツリーを閉じる" },
+  "tab_soundButton_aria_label": { "message": "タブをミュート #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_soundButton_muted_tooltip": { "message": "タブのミュートを解除" },
+  "tab_soundButton_muted_tooltip_multiselected": { "message": "選択されたタブのミュートを解除" },
+  "tab_soundButton_playing_tooltip": { "message": "タブをミュート" },
+  "tab_soundButton_playing_tooltip_multiselected": { "message": "選択されたタブをミュート" },
+  "tab_twisty_aria_label": { "message": "ツリーを開閉 #$ID$",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_twisty_expanded_tooltip": { "message": "ツリーをたたむ" },
+  "tab_twisty_collapsed_tooltip": { "message": "ツリーを展開する" },
+  "tab_tree_tooltip": { "message": "$TREE$\n  ...（省略されたタブ：$COUNT$個）",
+    "placeholders": {
+      "tree": { "content": "$1", "example": "* Tree\n  * Style\n    * Tab" },
+      "count": { "content": "$2", "example": "3" }
+    }},
+  "tabbar_newTabButton_tooltip": { "message": "新しいタブを開く" },
+
+  "tabbar_newTabAction_tooltip":           { "message": "関係を指定して新しいタブを開く..." },
+  "tabbar_newTabAction_independent_label": { "message": "独立したタブ(&I)" },
+  "tabbar_newTabAction_independent_command": { "message": "独立したタブ" },
+  "tabbar_newTabAction_child_label":       { "message": "子タブ(&C)" },
+  "tabbar_newTabAction_child_command":       { "message": "子タブ" },
+  "tabbar_newTabAction_sibling_label":     { "message": "同階層のタブ(&S)" },
+  "tabbar_newTabAction_sibling_command":     { "message": "同階層のタブ" },
+  "tabbar_newTabAction_nextSibling_label": { "message": "同階層の隣のタブ(&N)" },
+  "tabbar_newTabAction_nextSibling_command": { "message": "同階層の隣のタブ" },
+
+  "tabbar_newTabWithContexualIdentity_tooltip": { "message": "新しいコンテナータブ" },
+  "tabbar_newTabWithContexualIdentity_default": { "message": "既定" },
+
+  "groupTab_label": { "message": "$TITLE$ など",
+    "placeholders": {
+      "title": { "content": "$1", "example": "タイトル" }
+    }},
+  "groupTab_label_default": { "message": "グループ" },
+  "groupTab_temporary_label": { "message": "子タブがすべてなくなったらこのタブを閉じる" },
+  "groupTab_temporaryAggressive_label": { "message": "子タブが1つ以下になったらこのタブを閉じる" },
+  "groupTab_fromPinnedTab_label": { "message": "$TITLE$ から開いたタブ",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_options_label": { "message": "オプション設定でこのタブを開かないようにできます" },
+  "groupTab_options_dismiss": { "message": "このヒント情報を表示しない" },
+
+  "bookmarkFolder_label_default": { "message": "$TITLE$ など (%YEAR%.%MONTH%.%DATE%)",
+    "placeholders": {
+      "title": { "content": "$1", "example": "タイトル" }
+    }},
+
+  "bookmark_notification_notPermitted_title": { "message": "権限のエラー" },
+  "bookmark_notification_notPermitted_message": { "message": "ブックマーク作成に必要な権限を取得できませんでした。この通知をクリックして追加の権限を許可して下さい。" },
+  "bookmark_notification_notPermitted_message_linux": { "message": "ブックマーク作成に必要な権限を取得できませんでした。ボタンをクリックして追加の権限を許可して下さい。" },
+
+  "bookmarkContext_notification_notPermitted_title": { "message": "権限のエラー" },
+  "bookmarkContext_notification_notPermitted_message": { "message": "ブックマークに関するコンテキストメニューを開くのに必要な権限を取得できませんでした。この通知をクリックして追加の権限を許可して下さい。" },
+  "bookmarkContext_notification_notPermitted_message_linux": { "message": "ブックマークに関するコンテキストメニューを開くのに必要な権限を取得できませんでした。ボタンをクリックして追加の権限を許可して下さい。" },
+
+  "dropLinksOnTabBehavior_message": { "message": "どのように開きますか？" },
+  "dropLinksOnTabBehavior_save":    { "message": "今後も同じ動作を行う" },
+  "dropLinksOnTabBehavior_load":    { "message": "このタブに読み込む" },
+  "dropLinksOnTabBehavior_newtab":  { "message": "新しい子タブで開く" },
+
+  "tabDragBehaviorNotification_message_duration_single":  { "message": "8s" },
+  "tabDragBehaviorNotification_message_duration_both":  { "message": "16s" },
+  "tabDragBehaviorNotification_message_base":  { "message": "サイドバー外へのドロップで、$RESULT$。",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_with_shift":  { "message": "Shiftキーを押しながらドラッグ開始すると、$RESULT$。",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_without_shift":  { "message": "Shiftキーを押さずにドラッグ開始すると、$RESULT$。",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_tree_tearoff":  { "message": "すべてのタブがウィンドウから切り離されます" },
+  "tabDragBehaviorNotification_message_tab_tearoff":   { "message": "このタブがウィンドウから切り離されます" },
+  "tabDragBehaviorNotification_message_tree_bookmark": { "message": "ドロップ位置にすべてのタブからリンクまたはブックマークが作成されます" },
+  "tabDragBehaviorNotification_message_tab_bookmark":  { "message": "ドロップ位置にこのタブからリンクまたはブックマークが作成されます" },
+
+  "warnOnCloseTabs_title":     { "message": "タブを閉じますか？" },
+  "warnOnCloseTabs_message":   { "message": "複数 ($NUMBER$) のタブを閉じようとしています。すべてのタブを閉じてよろしいですか？",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_warnAgain": { "message": "同時に複数のタブを閉じるときは確認する" },
+  "warnOnCloseTabs_close":     { "message": "タブを閉じる" },
+  "warnOnCloseTabs_cancel":    { "message": "キャンセル" },
+
+  "warnOnCloseTabs_fromOutside_title":     { "message": "配下のタブを閉じますか？" },
+  "warnOnCloseTabs_fromOutside_message":   { "message": "今閉じたタブの配下には $NUMBER$ 個のタブがあります。それらもすべて閉じてよろしいですか？\n（※キャンセルすると今閉じた親タブを復元します）",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnCloseTabs_notification_message": { "message": "操作を取り消す場合はこの通知をクリックしてください。\n続行して問題がなければ、$TIMEOUT$ 秒後に残りのタブも閉じられます。",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_notification_message_linux": { "message": "操作を取り消す場合はボタンをクリックしてください。\n続行して問題がなければ、$TIMEOUT$ 秒後に残りのタブも閉じられます。",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnAutoGroupNewTabs_title":     { "message": "タブをグループ化しますか？" },
+  "warnOnAutoGroupNewTabs_message":   { "message": "$NUMBER$ 個のタブが一度に開かれました。グループとして1つのツリーにまとめますか？",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnAutoGroupNewTabs_warnAgain": { "message": "複数のタブが一度に開かれたときは確認する" },
+  "warnOnAutoGroupNewTabs_close":     { "message": "グループ化する" },
+  "warnOnAutoGroupNewTabs_cancel":    { "message": "そのままにする" },
+
+  "bookmarkDialog_dialogTitle_single":   { "message": "新しいブックマーク" },
+  "bookmarkDialog_dialogTitle_multiple": { "message": "新しいブックマーク" },
+  "bookmarkDialog_title":    { "message": "名前(N):" },
+  "bookmarkDialog_title_accessKey": { "message": "n" },
+  "bookmarkDialog_url":      { "message": "URL:" },
+  "bookmarkDialog_url_accessKey": { "message": "l" },
+  "bookmarkDialog_parentId": { "message": "フォルダー:" },
+  "bookmarkDialog_saveContainerRedirectKey": { "message": "コンテナーの情報をContainer Bookmarks形式で保存する" },
+  "bookmarkDialog_accept":   { "message": "保存" },
+  "bookmarkDialog_cancel":   { "message": "キャンセル" },
+
+  "bookmarkFolderChooser_unspecified":   { "message": "(選択されていません)" },
+  "bookmarkFolderChooser_blank":         { "message": "(名前なし)" },
+  "bookmarkFolderChooser_useThisFolder": { "message": "このフォルダーを選択" },
+
+  "syncDeviceDefaultName": { "message": "$PLATFORM$ の $BROWSER$",
+    "placeholders": {
+      "PLATFORM": { "content": "$1", "example": "Firefox" },
+      "BROWSER":  { "content": "$2", "example": "Windows" }
+    }},
+  "syncDeviceMissingDeviceName": { "message": "名前が設定されていない端末" },
+  "syncDeviceUnknownDevice":     { "message": "不明な端末" },
+  "syncAvailable_notification_title":   { "message": "タブをTSTから他の端末に送れます" },
+  "syncAvailable_notification_message": { "message": "他の端末との間でタブを送受信できます。ここをクリックして、この端末に分かりやすい名前を設定してください。" },
+  "syncAvailable_notification_message_linux": { "message": "他の端末との間でタブを送受信できます。ボタンをクリックして、この端末に分かりやすい名前を設定してください。" },
+  "sentTabs_notification_title":            { "message": "\u200b" },
+  "sentTabs_notification_message":          { "message": "$DEVICE$ にタブを送信しました",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "sentTabs_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabs_notification_message_multiple": { "message": "$DEVICE$ にタブを送信しました",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "sentTabsToAllDevices_notification_title":            { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message":          { "message": "すべての端末にタブを送信しました" },
+  "sentTabsToAllDevices_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message_multiple": { "message": "すべての端末にタブを送信しました" },
+  "receiveTabs_notification_title":            { "message": "$DEVICE$ からのタブ",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "receiveTabs_notification_message":          { "message": "$URL$",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" }
+    }},
+  "receiveTabs_notification_title_multiple":   { "message": "$DEVICE$ からのタブ",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox on Device X" }
+    }},
+  "receiveTabs_notification_message_multiple": { "message": "$URL$\nを含む $ALL$ 個のタブ",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" },
+      "ALL": { "content": "$2", "example": "4" },
+      "REST": { "content": "$3", "example": "3" }
+    }},
+
+  "sidebarPositionRighsideNotification_message":   { "message": "サイドバーが右側に置かれていることを検出しました。現在の位置に合わせて表示を切り替えますか？" },
+  "sidebarPositionRighsideNotification_rightside": { "message": "右側用の表示に切り替える" },
+  "sidebarPositionRighsideNotification_leftside":  { "message": "左側用の表示を維持する" },
+
+  "sidebarPositionOptionNotification_title":   { "message": "サイドバーの内容の表示設定を保存しました" },
+  "sidebarPositionOptionNotification_message": { "message": "サイドバーの内容の表示を変更するには、Tree-shaped vertical tabsの設定画面の「外観」を参照して下さい" },
+
+  "startup_notification_title_installed":   { "message": "Tree-shaped vertical tabsを使い始める方へ" },
+  "startup_notification_message_installed": { "message": "より自然な操作感を得るためには、追加の権限を許可する必要があります。ここをクリックして権限を設定してください。" },
+  "startup_notification_message_installed_linux": { "message": "より自然な操作感を得るためには、追加の権限を許可する必要があります。ボタンをクリックして権限を設定してください。" },
+  "startup_notification_title_updated":     { "message": "Tree-shaped vertical tabsの動作が変わりました" },
+  "startup_notification_message_updated":   { "message": "操作感に影響する大きな変更がありました。ここをクリックして変更履歴を確認してください。" },
+  "startup_notification_message_updated_linux":   { "message": "操作感に影響する大きな変更がありました。ボタンをクリックして変更履歴を確認してください。" },
+
+  "message_startup_description_1": { "message": "Tree-shaped vertical tabsの縦型タブバーは切り替え可能なサイドバーパネルの一つになっています。もし表示されていない場合は、" },
+  "message_startup_description_key": { "message": "「F1」キー" },
+  "message_startup_description_2": { "message": "を押すかツールバー上の「" },
+  "message_startup_description_3": { "message": "」ボタンをクリックして「ツリー型垂直タブ」サイドバーパネルを表示して下さい。" },
+  "message_startup_description_sync_before": { "message": "Firefox Sync経由でのタブの他の端末への送信は、TSTが動作している端末に対してのみ行えます。事前にFirefoxの設定画面からFirefox Syncを有効化しておき、他の端末でもTSTを有効化しておいてください。また、" },
+  "message_startup_description_sync_link":   { "message": "端末名は手動で設定する必要があります" },
+  "message_startup_description_sync_after":  { "message": "。" },
+
+  "message_startup_history_before":     { "message": "更新によって変更された動作は、設定で元の動作に戻せる場合があります。詳細は" },
+  "message_startup_history_uri":        { "message": "https://addons.mozilla.org/firefox/addon/tree-style-tab/versions/" },
+  "message_startup_history_link_label": { "message": "変更履歴" },
+  "message_startup_history_after":      { "message": "を参照してください。" },
+
+  "message_startup_requestPermissions_description": { "message": "⚠以下の機能には追加の権限が必要です。機能を使いたい場合のみ権限を付与して下さい。" },
+  "message_startup_requestPermissions_bookmarks": { "message": "コンテキストメニューの「このツリーをブックマーク」、他の環境からインポートされたブックマークの内部URLの自動移行、ブックマークから開かれたタブの検出（ブックマークの操作の許可が必要）" },
+  "message_startup_requestPermissions_allUrls":   { "message": "キーボードショートカットでのタブ切り替え中は、折りたたまれた子孫タブにはフォーカスせず、折りたたまれたツリーも展開しない" },
+
+  "message_startup_userChromeCss_notify": { "message": "タブバーとサイドバーのヘッダーを隠したい場合" },
+  "message_startup_userChromeCss_description_1": { "message": "WebExtensionsの仕様上、FirefoxのタブバーとサイドバーのヘッダーはTree-shaped vertical tabsから制御できません。これらを隠したい場合は" },
+  "message_startup_userChromeCss_description_link_label": { "message": "userChrome.cssでのカスタマイズ例" },
+  "message_startup_userChromeCss_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss" },
+  "message_startup_userChromeCss_description_2": { "message": "を参照して下さい。ただし、" },
+  "message_startup_userChromeCss_description_note": { "message": "この方法は低レイヤのカスタマイズ手段のため、Firefoxの将来のバージョンで使えなくなったり、トラブルの原因になったりする恐れがあります。自己の責任と判断に基づいて、トラブルを自己解決できる自信がある場合にだけこの方法を使って下さい。" },
+  "message_startup_userChromeCss_description_3": { "message": "\u200b" },
+
+  "api_requestedPermissions_title": { "message": "アクセス権の要求" },
+  "api_requestedPermissions_message": { "message": "⚠アドオン「$NAME$」がTree-shaped vertical tabsのAPIを経由して以下のことをしようとしています。\n\n$PERMISSIONS$\n\n許可する場合はこの通知をクリックしてアドオンに許可を与えてください。",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_message_linux": { "message": "⚠アドオン「$NAME$」がTree-shaped vertical tabsのAPIを経由して以下のことをしようとしています。\n\n$PERMISSIONS$\n\n許可する場合はボタンをクリックしてアドオンに許可を与えてください。",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_type_activeTab": { "message": "ブラウザーの現在のタブへのアクセス" },
+  "api_requestedPermissions_type_tabs":      { "message": "ブラウザーのタブへのアクセス" },
+  "api_requestedPermissions_type_cookies":   { "message": "ブラウザーのタブのコンテナーの識別" },
+
+  "context_menu_label": { "message": "タブのツリーを操作" },
+
+  "context_reloadTree_label": { "message": "このツリーを再読み込み(&R)" },
+  "context_reloadTree_label_multiselected": { "message": "選択したツリーを再読み込み(&R)" },
+  "context_reloadTree_command": { "message": "このツリーを再読み込み" },
+  "context_reloadDescendants_label": { "message": "このタブの配下のタブをすべて再読み込み(&E)" },
+  "context_reloadDescendants_label_multiselected": { "message": "選択したタブの配下のタブをすべて再読み込み(&E)" },
+  "context_reloadDescendants_command": { "message": "このタブの配下のタブをすべて再読み込み" },
+  "context_closeTree_label": { "message": "このツリーを閉じる(&C)" },
+  "context_closeTree_label_multiselected": { "message": "選択したツリーを閉じる(&C)" },
+  "context_closeTree_command": { "message": "このツリーを閉じる" },
+  "context_closeDescendants_label": { "message": "このタブの配下のタブをすべて閉じる(&L)" },
+  "context_closeDescendants_label_multiselected": { "message": "選択したタブの配下のタブをすべて閉じる(&L)" },
+  "context_closeDescendants_command": { "message": "このタブの配下のタブをすべて閉じる" },
+  "context_closeOthers_label": { "message": "このツリー以外の他のタブをすべて閉じる(&O)" },
+  "context_closeOthers_label_multiselected": { "message": "選択したツリー以外の他のタブをすべて閉じる(&O)" },
+  "context_closeOthers_command": { "message": "このツリー以外の他のタブをすべて閉じる" },
+  "context_collapseTree_label": { "message": "このツリーをたたむ(&S)" },
+  "context_collapseTree_label_multiselected": { "message": "選択したツリーをたたむ(&S)" },
+  "context_collapseTree_command": { "message": "このツリーをたたむ" },
+  "context_collapseTreeRecursively_label": { "message": "このツリーを再帰的にたたむ(&L)" },
+  "context_collapseTreeRecursively_label_multiselected": { "message": "選択したツリーを再帰的にたたむ(&L)" },
+  "context_collapseTreeRecursively_command": { "message": "このツリーを再帰的にたたむ" },
+  "context_collapseAll_label": { "message": "すべてのツリーをたたむ(&P)" },
+  "context_collapseAll_command": { "message": "すべてのツリーをたたむ" },
+  "context_expandTree_label": { "message": "このツリーを展開(&A)" },
+  "context_expandTree_label_multiselected": { "message": "選択したツリーを展開(&A)" },
+  "context_expandTree_command": { "message": "このツリーを展開" },
+  "context_expandTreeRecursively_label": { "message": "このツリーを再帰的に展開(&U)" },
+  "context_expandTreeRecursively_label_multiselected": { "message": "選択したツリーを再帰的に展開(&U)" },
+  "context_expandTreeRecursively_command": { "message": "このツリーを再帰的に展開" },
+  "context_expandAll_label": { "message": "すべてのツリーを展開(&X)" },
+  "context_expandAll_command": { "message": "すべてのツリーを展開" },
+  "context_bookmarkTree_label": { "message": "このツリーをブックマーク(&B)..." },
+  "context_bookmarkTree_label_multiselected": { "message": "選択したツリーをブックマーク(&B)..." },
+  "context_bookmarkTree_command": { "message": "このツリーをブックマーク..." },
+  "context_sendTreeToDevice_label": { "message": "このツリーを端末に送信(&D)" },
+  "context_sendTreeToDevice_label_multiselected": { "message": "選択したツリーを端末に送信(&D)" },
+  "context_sendTreeToDevice_command": { "message": "このツリーを端末に送信" },
+  "context_topLevel_prefix": { "message": "トップレベルの項目: " },
+
+  "context_openAllBookmarksWithStructure_label": { "message": "ツリーとしてすべて開く(&A)" },
+  "context_openAllBookmarksWithStructureRecursively_label": { "message": "サブフォルダーも含めてツリーとしてすべて開く(&A)" },
+
+
+
+  "config_title": { "message": "Tree-shaped vertical tabsの設定" },
+
+  "config_showExpertOptions_label": { "message": "上級者向けの設定をアンロック" },
+  "config_openOptionsInTab_label": { "message": "この設定画面をより広いスペースで開く" },
+
+  "config_appearance_caption": { "message": "外観" },
+
+  "config_sidebarPosition_caption": { "message": "サイドバーの位置に合わせたスタイル:" },
+  "config_sidebarPosition_left": { "message": "左側用" },
+  "config_sidebarPosition_right": { "message": "右側用" },
+  "config_sidebarPosition_auto": { "message": "サイドバーが表示された時に自動で判定" },
+  "config_sidebarPosition_description": { "message": "※この設定はサイドバー自体の位置を変更しません。サイドバーをウィンドウの右側に移動するには、サイドバーのヘッダ上の切り替えメニューから「サイドバーを右側に移動」を選択して下さい。" },
+
+  "config_style_caption": { "message": "テーマ" },
+  "config_style_proton": { "message": "Proton" },
+  "config_style_photon": { "message": "Photon" },
+  "config_style_sidebar": { "message": "Sidebar" },
+  "config_style_highcontrast": { "message": "ハイコントラスト" },
+  "config_style_none": { "message": "装飾無し" },
+  "config_style_none_info": { "message": "（※「サイドバー内用の追加のスタイル指定」でお好みの装飾を設定してください)" },
+
+  "config_colorScheme_caption": { "message": "配色:" },
+  "config_colorScheme_photon": { "message": "Photon" },
+  "config_colorScheme_systemColor": { "message": "システムカラー" },
+
+  "config_maxTreeLevel_before": { "message": "ツリーを" },
+  "config_maxTreeLevel_after": { "message": "階層までインデント表示する（※負の値を指定した場合は無制限）" },
+
+  "config_faviconizePinnedTabs_label": { "message": "ピン留めされたタブはアイコンのみ表示する" },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_before": { "message": "一行に" },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_after": { "message": "個までタブを表示（※0以下で自動折り返し）" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_before": { "message": "ピン留めされたタブを表示する領域の最大の高さ：サイドバーの" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_after":  { "message": "%まで" },
+  "config_animation_label": { "message": "アニメーション効果を有効にする" },
+  "config_animationForce_label": { "message": "アニメーションを抑制するプラットフォームの設定を無視して有効にする" },
+  "config_showCollapsedDescendantsByTooltip_label": { "message": "タブのツールチップに折りたたまれた子孫タブの情報を含める" },
+  "config_suppressGapFromShownOrHiddenToolbar_caption": { "message": "以下の場面でツールバーの表示・非表示が一時的に切り替わった場合に、サイドバーの内容をずらして視覚的なガタつきを抑制する" },
+  "config_suppressGapFromShownOrHiddenToolbarOnFullScreen_label": { "message": "フルスクリーンモードのウィンドウ" },
+  "config_suppressGapFromShownOrHiddenToolbarOnNewTab_label": { "message": "Firefox 85以降での新しい空のタブ" },
+  "config_suppressGapFromShownOrHiddenToolbarOnlyOnMouseOperation_label": { "message": "サイドバーをマウスで操作した場合のみ抑制する" },
+  "config_showDialogInSidebar_label": { "message": "可能であればサイドバー内でダイアログを表示する" },
+
+  "config_iconColor_caption": { "message": "ツールバーアイコンの色:" },
+  "config_iconColor_auto":    { "message": "自動" },
+  "config_iconColor_bright":  { "message": "明るいテーマ用" },
+  "config_iconColor_dark":    { "message": "暗いテーマ用" },
+
+
+  "config_context_caption": { "message": "コンテキストメニュー" },
+  "config_emulateDefaultContextMenu_label": { "message": "サイドバー上でタブのコンテキストメニューを再現する" },
+  "config_extraItems_tabs_caption": { "message": "タブのコンテキストメニューに追加する項目" },
+  "config_extraItems_tabs_topLevel": { "message": "トップレベル" },
+  "config_extraItems_tabs_subMenu": { "message": "サブメニュー" },
+  "config_extraItems_tabs_middleClick": { "message": "ミドルクリック時の動作" },
+  "config_extraItems_bookmarks_caption": { "message": "ブックマークのコンテキストメニューに追加する項目" },
+  "config_openAllBookmarksWithStructureDiscarded_label": { "message": "読み込みを保留した状態でタブを開く" },
+
+  "config_sendTabsToDevice_caption": { "message": "Firefox Syncによる、コンテキストメニューからの他の端末へのタブ送信" },
+  "config_syncRequirements_description": { "message": "この機能はFirefox Syncに依存し、TSTが動作している端末に対してのみタブを送信できます。事前にFirefoxの設定画面からFirefox Syncを有効化しておき、他の端末でもTSTを有効化しておいてください。" },
+  "config_syncDeviceInfo_name_label": { "message": "この端末の表示名とアイコン:" },
+  "config_syncDeviceInfo_name_description_before": { "message": "WebExtensions APIの制約により、TSTはFirefox Syncで設定済みの端末名を自動認識しません。分かりやすい端末名を手動で設定してください。（" },
+  "config_syncDeviceInfo_name_description_link": { "message": "Firefox Syncと同じ端末名" },
+  "config_syncDeviceInfo_name_description_href": { "message": "https://accounts.firefox.com/settings/clients" },
+  "config_syncDeviceInfo_name_description_after": { "message": "に設定することを推奨します）" },
+  "config_syncDeviceExpirationDays_label_before": { "message": "\u200b" },
+  "config_syncDeviceExpirationDays_label_after": { "message": "日以上接続接続していない端末は自動的に端末一覧から削除する（\"0\"=自動削除しない）" },
+  "config_syncUnsendableUrlPattern_label": { "message": "送信できないタブを識別するためのマッチングルール（※Firefox自身の \"services.sync.engine.tabs.filteredUrls\" と同じ内容を設定してください）" },
+  "config_otherDevices_caption": { "message": "使用可能な他の端末:" },
+  "config_removeDeviceButton_label": { "message": "削除" },
+  "config_removeDeviceButton_tooltip": { "message": "この端末を一覧から削除する" },
+
+
+  "config_newTab_caption": { "message": "新しいタブの挙動" },
+
+  "config_newTabButton_caption": { "message": "「新しいタブ」ボタンの特殊操作" },
+  "config_longPressOnNewTabButton_before":               { "message": "ボタンの長押しで" },
+  "config_longPressOnNewTabButton_newTabAction":         { "message": "関係を指定して新しいタブを開く" },
+  "config_longPressOnNewTabButton_contextualIdentities": { "message": "コンテナータブを開く" },
+  "config_longPressOnNewTabButton_none":                 { "message": "何もしない" },
+  "config_longPressOnNewTabButton_after":                { "message": "\u200b" },
+  "config_showNewTabActionSelector_label":               { "message": "ボタンをポイントした時に、関係を指定して新しいタブを開くためのボタンを表示する" },
+  "config_showContextualIdentitiesSelector_label":       { "message": "ボタンをポイントした時に、コンテナータブを選択するためのボタンを表示する" },
+
+  "config_newTabAction_caption": { "message": "新しい空のタブの基本的な取り扱い" },
+  "config_autoAttachOnNewTabCommand_before": { "message": "新しい空のタブを" },
+  "config_autoAttachOnNewTabCommand_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnNewTabCommand_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnNewTabCommand_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnNewTabCommand_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnNewTabCommand_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnNewTabCommand_after": { "message": "開く" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before": { "message": "URLが" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after": { "message": "であるタブが開かれた場合、新しい空のタブが開かれたとみなす" },
+
+  "config_autoAttachOnNewTabButtonMiddleClick_before": { "message": "中クリックした時、新しい空のタブを" },
+  "config_autoAttachOnNewTabButtonMiddleClick_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnNewTabButtonMiddleClick_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnNewTabButtonMiddleClick_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSiblingWithInheritedContainer": { "message": "Ctrl-クリックと同様に（同階層で隣に、同じコンテナーで）" },
+  "config_autoAttachOnNewTabButtonMiddleClick_after": { "message": "開く" },
+
+  "config_autoAttachOnNewTabButtonAccelClick_before": { "message": "Ctrl/⌘-クリックした時、新しい空のタブを" },
+  "config_autoAttachOnNewTabButtonAccelClick_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnNewTabButtonAccelClick_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnNewTabButtonAccelClick_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnNewTabButtonAccelClick_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSiblingWithInheritedContainer": { "message": "同階層で隣に、同じコンテナーで" },
+  "config_autoAttachOnNewTabButtonAccelClick_after": { "message": "開く" },
+
+  "config_autoAttachWithURL_caption": { "message": "空でない新しいタブ" },
+
+  "config_duplicateTabAction_caption": { "message": "複製されたタブ（「再読み込み」ボタンの中クリックなど）" },
+
+  "config_autoAttachOnDuplicated_before": { "message": "複製されたタブを" },
+  "config_autoAttachOnDuplicated_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnDuplicated_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnDuplicated_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnDuplicated_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnDuplicated_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnDuplicated_after": { "message": "開く" },
+
+  "config_fromExternal_caption": { "message": "Firefoxの外から開かれたタブ" },
+  "config_autoAttachOnOpenedFromExternal_before": { "message": "\u200b" },
+  "config_autoAttachOnOpenedFromExternal_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnOpenedFromExternal_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnOpenedFromExternal_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnOpenedFromExternal_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnOpenedFromExternal_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnOpenedFromExternal_after": { "message": "開く" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_label": { "message": "コンテナー:" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_default": { "message": "（制御しない）" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_parent": { "message": "ツリー上での親から継承" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_lastActive": { "message": "現在のタブから継承" },
+
+  "config_sameSiteOrphan_caption": { "message": "ロケーションバー、ブックマーク、履歴、およびその他のきっかけから開かれた、現在のタブと同じWebサイトのタブ" },
+  "config_autoAttachSameSiteOrphan_before": { "message": "\u200b" },
+  "config_autoAttachSameSiteOrphan_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachSameSiteOrphan_independent": { "message": "独立したタブとして" },
+  "config_autoAttachSameSiteOrphan_child": { "message": "現在のタブの子として" },
+  "config_autoAttachSameSiteOrphan_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachSameSiteOrphan_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachSameSiteOrphan_after": { "message": "開く" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_label": { "message": "コンテナー:" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_default": { "message": "（制御しない）" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_parent": { "message": "ツリー上での親から継承" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_lastActive": { "message": "現在のタブから継承" },
+
+  "config_anyOtherTrigger_caption": { "message": "それ以外の契機で開かれたタブ" },
+  "config_autoAttachOnAnyOtherTrigger_before": { "message": "\u200b" },
+  "config_autoAttachOnAnyOtherTrigger_noControl": { "message": "(制御せず既定の位置に)" },
+  "config_autoAttachOnAnyOtherTrigger_independent": { "message": "独立したタブとして" },
+  "config_autoAttachOnAnyOtherTrigger_child": { "message": "現在のタブの子として" },
+  "config_autoAttachOnAnyOtherTrigger_sibling": { "message": "現在のタブと同階層に" },
+  "config_autoAttachOnAnyOtherTrigger_nextSibling": { "message": "現在のタブと同階層で隣に" },
+  "config_autoAttachOnAnyOtherTrigger_after": { "message": "開く" },
+  "config_autoAttachOnAnyOtherTrigger_caution": { "message": "※警告：このオプションは他のアドオンの動作を妨げる危険性があります" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_label": { "message": "コンテナー:" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_default": { "message": "（制御しない）" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_parent": { "message": "ツリー上での親から継承" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_lastActive": { "message": "現在のタブから継承" },
+
+  "config_insertNewChildAt_caption": { "message": "新しい子タブを開く位置" },
+  "config_insertNewChildAt_noControl": { "message": "制御しない（Firefoxや他のアドオンの判断に任せる）" },
+  "config_insertNewChildAt_nextToLastRelateTab": { "message": "直近に開いた子タブの隣、もしくは親タブの隣（Firefox既定の挙動の再現）" },
+  "config_insertNewChildAt_top": { "message": "ツリーの先頭（親タブの隣）" },
+  "config_insertNewChildAt_end": { "message": "ツリーの末尾" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "ピン留めされたタブから（最上位のタブとして表れる）新しい子タブを開く位置" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "制御しない（Firefoxや他のアドオンの判断に任せる）" },
+  "config_insertNewTabFromPinnedTabAt_nextToLastRelateTab": { "message": "直近に開いた子タブの隣、もしくは親タブの近く（Firefox既定の挙動の再現）" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "ツリーの先頭（親タブの近く）" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "ツリーの末尾" },
+
+  "config_insertDroppedTabsAt_caption": { "message": "親タブにドロップされた子タブの挿入位置" },
+  "config_insertDroppedTabsAt_inherit": { "message": "親タブから新しい子タブを開いたときと同様に扱う" },
+  "config_insertDroppedTabsAt_first": { "message": "ツリーの先頭（親タブの隣）" },
+  "config_insertDroppedTabsAt_end": { "message": "ツリーの末尾" },
+
+  "config_groupTab_caption": { "message": "タブを自動的にグループ化する" },
+
+  "config_autoGroupNewTabsFromBookmarks_before": { "message": "1つのブックマークフォルダーから" },
+  "config_autoGroupNewTabsFromBookmarks_after": { "message": "ミリ秒以内に連続して開かれたタブを自動的にグループ化する（「～など」というタイトルのグループ化用タブが開かれます）" },
+  "config_autoGroupNewTabsFromBookmarks_tooltiptext": { "message": "この機能はブックマークへのアクセス権を必要とします。ここをクリックして必要な権限を与えてください。" },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_before": { "message": "(" },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_after": { "message": "タブとブックマークの対応関係の検出を許可する)" },
+  "config_tabsFromSameFolderMinThresholdPercentage_before": { "message": "開かれたタブのURLのうち" },
+  "config_tabsFromSameFolderMinThresholdPercentage_after": { "message":  "%以上が共通のフォルダー内にブックマークされていれば、開かれたタブすべてがそのブックマークフォルダーから開かれたと判断する" },
+  "config_autoGroupNewTabsFromOthers_label": { "message": "ブックマーク以外から連続して開かれたタブも自動的にグループ化する" },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "ただし、新しいウィンドウが開かれてから" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "ミリ秒以内に開かれたタブは「ホームページ」の一部と見なしてグループ化しない" },
+  "config_warnOnAutoGroupNewTabs_label": { "message": "自動的にグループ化する前に確認する" },
+  "config_warnOnAutoGroupNewTabsWithListing_label": { "message": "グループ化しようとしているタブの一覧を確認のダイアログに表示する" },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "同じピン留めされたタブから開かれたタブを自動的にグループ化する（「～から開いたタブ」というタイトルのグループ化用タブが開かれます）" },
+  "config_renderTreeInGroupTabs_label": { "message": "グループ化用のタブにツリーを表示する" },
+
+  "config_groupTabTemporaryState_caption": { "message": "場合ごとのグループ化用のタブの初期状態" },
+  "config_groupTabTemporaryState_option_default": { "message": "何もチェックしない" },
+  "config_groupTabTemporaryState_option_checked_before": { "message": "「" },
+  "config_groupTabTemporaryState_option_checked_after": { "message": "」をチェック済みにする" },
+  "config_groupTabTemporaryStateForNewTabsFromBookmarks_label": { "message": "ブックマークから開かれたタブをグループ化した場合:" },
+  "config_groupTabTemporaryStateForNewTabsFromOthers_label": { "message": "ブックマーク以外から連続して開かれたタブをグループ化した場合:" },
+  "config_groupTabTemporaryStateForChildrenOfPinned_label": { "message": "同じピン留めされたタブから開かれたタブをグループ化した場合:" },
+  "config_groupTabTemporaryStateForOrphanedTabs_label": { "message": "閉じられた親タブを置き換える形で開かれた場合:" },
+
+  "config_inheritContextualIdentityToChildTabMode_label": { "message": "コンテナー:" },
+  "config_inheritContextualIdentityToChildTabMode_default": { "message": "（制御しない）" },
+  "config_inheritContextualIdentityToChildTabMode_parent": { "message": "ツリー上での親から継承" },
+  "config_inheritContextualIdentityToChildTabMode_lastActive": { "message": "現在のタブから継承" },
+
+
+  "config_treeBehavior_caption": { "message": "ツリーの挙動" },
+
+  "config_successorTabControlLevel_caption": { "message": "現在のタブが最後の子タブだった時に、現在のタブを閉じた後は" },
+  "config_successorTabControlLevel_inTree": { "message": "ツリー内の1つ前のタブにフォーカスを移す" },
+  "config_successorTabControlLevel_simulateDefault": { "message": "次のタブにフォーカスを移す（Firefox既定の動作）" },
+  "config_successorTabControlLevel_never": { "message": "フォーカスを制御しない（Firefoxまたは他のアドオンによる制御を尊重）" },
+  "config_successorTabControlLevel_legacyDescription": { "message": "※Firefox組み込みの機能である\"browser.tabs.selectOwnerOnClose\"=\"true\"の挙動の方が、この設定よりも優先的に反映されます。" },
+  "config_simulateSelectOwnerOnClose_label": { "message": "現在のタブが閉じられた時、可能であればそのタブを開いた元のタブにフォーカスを戻す（※Firefox組み込みの機能である\"browser.tabs.selectOwnerOnClose\"=\"true\"の挙動の再現。上記の設定よりも優先的に反映されます。）" },
+
+  "config_fixupTreeOnTabVisibilityChanged_caption": { "message": "タブの表示・非表示が他のアドオンによって切り替えられた場合" },
+  "config_fixupTreeOnTabVisibilityChanged_fix":     { "message": "表示中のタブに基づいてツリー構造を自動的に修正する（※タブのグループを切り替えるアドオンとの併用時に推奨）" },
+  "config_fixupTreeOnTabVisibilityChanged_keep":    { "message": "非表示のタブも含めてツリー構造を維持する（※一時的にタブを非表示にするアドオンとの併用時に推奨）" },
+
+  "config_autoCollapseExpandSubtreeOnAttach_label": { "message": "新しいツリーが作られた時は、自動的に他のツリーを折りたたむ" },
+  "config_autoCollapseExpandSubtreeOnSelect_label": { "message": "タブを切り替えた時は、フォーカスされたタブのツリーを自動的に展開して、他のツリーを折りたたむ" },
+  "config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label": { "message": "現在のタブを閉じてタブのフォーカスが切り替わった場合を除く" },
+  "config_unfocusableCollapsedTab_label": { "message": "折りたたまれたツリー配下のタブがフォーカスされた時に、そのタブが含まれるツリーを自動的に展開する" },
+  "config_autoDiscardTabForUnexpectedFocus_label": { "message": "待機状態のタブが意図せずフォーカスされた後にすぐ別のタブへフォーカスし直された場合、タブを待機状態に戻す" },
+  "config_avoidDiscardedTabToBeActivatedIfPossible_label": { "message": "現在のタブを閉じたりツリーを折りたたんだりした時に、なるべく待機状態のタブが選択されないようにする" },
+
+  "config_treeDoubleClickBehavior_caption":             { "message": "タブのダブルクリック" },
+  "config_treeDoubleClickBehavior_toggleCollapsed":     { "message": "ツリーを開閉する" },
+  "config_treeDoubleClickBehavior_close":               { "message": "タブを閉じる（※Firefox組み込みの機能である\"browser.tabs.closeTabByDblclick\"=\"true\"の再現）" },
+  "config_treeDoubleClickBehavior_none":                { "message": "何もしない" },
+
+  "config_parentTabOperationBehaviorMode_caption": { "message": "親タブを閉じたり移動したりした時の挙動" },
+  "config_parentTabOperationBehaviorMode_noteForPermanentlyConsistentBehaviors": { "message": "ここでの設定に関わらず、サイドバー内での以下の動作は常に固定です;\n･ 折りたたまれたツリーの親タブを閉じる: 子孫タブも一緒に閉じる\n･ 折りたたまれたツリーの親タブを移動: 子孫タブも一緒に移動\n･ 展開状態のツリーの親タブを移動: 「ドラッグ＆ドロップ」での設定に従う" },
+
+  "config_parentTabOperationBehaviorMode_parallel": { "message": "タブを個別に操作するUIとしてFirefox自身のタブバーを使う場合の推奨動作" },
+  "config_closeParentBehavior_insideSidebar":       { "message": "展開状態のツリーの親タブをサイドバー内で閉じた時は、" },
+  "config_closeParentBehavior_outsideSidebar":      { "message": "ツリーの開閉状態に関わらず、Firefox自身のタブバー、キーボードショートカット、他のアドオンでツリーの親タブを閉じた時は、" },
+  "config_moveParentBehavior_outsideSidebar":       { "message": "ツリーの開閉状態に関わらず、Firefox自身のタブバー、キーボードショートカット、他のアドオンでツリーの親タブを移動した時は、" },
+
+  "config_parentTabOperationBehaviorMode_consistent":         { "message": "タブの振る舞いを全面的にTSTで制御する場合の推奨動作" },
+  "config_parentTabOperationBehaviorMode_consistent_caption": { "message": "展開状態のツリーの親タブを閉じた/移動した時は、" },
+  "config_parentTabOperationBehaviorMode_consistent_notes":   { "message": "Firefox自身のタブバー、キーボードショートカット、他のアドオンでの操作に対しても、常にこの通り動作します。" },
+
+  "config_parentTabOperationBehaviorMode_custom":                { "message": "カスタム" },
+  "config_closeParentBehavior_insideSidebar_expanded_caption":   { "message": "閉じる：展開状態のツリーの親タブを、サイドバー内で閉じた場合は、" },
+  "config_closeParentBehavior_outsideSidebar_collapsed_caption": { "message": "閉じる：折りたたまれたツリーの親タブを、Firefox自身のタブバー、キーボードショートカット、他のアドオンで閉じた場合は、" },
+  "config_closeParentBehavior_noSidebar_collapsed_caption":      { "message": "サイドバーが非表示の時は、" },
+  "config_closeParentBehavior_outsideSidebar_expanded_caption":  { "message": "閉じる：展開状態のツリーの親タブを、Firefox自身のタブバー、キーボードショートカット、他のアドオンで閉じた場合は、" },
+  "config_closeParentBehavior_noSidebar_expanded_caption":       { "message": "サイドバーが非表示の時は、" },
+  "config_moveParentBehavior_outsideSidebar_collapsed_caption":  { "message": "移動：折りたたまれたツリーの親タブを、Firefox自身のタブバー、キーボードショートカット、他のアドオンで移動した場合は、" },
+  "config_moveParentBehavior_noSidebar_collapsed_caption":       { "message": "サイドバーが非表示の時は、" },
+  "config_moveParentBehavior_outsideSidebar_expanded_caption":   { "message": "移動：展開状態のツリーの親タブを、Firefox自身のタブバー、キーボードショートカット、他のアドオンで移動した場合は、" },
+  "config_moveParentBehavior_noSidebar_expanded_caption":        { "message": "サイドバーが非表示の時は、" },
+
+  "config_parentTabOperationBehavior_entireTree":           { "message": "ツリー全体を閉じる/移動する" },
+  "config_closeParentBehavior_entireTree":                  { "message": "ツリー全体を閉じる" },
+  "config_moveParentBehavior_entireTree":                   { "message": "ツリー全体を移動する" },
+  "config_parentTabOperationBehavior_replaceWithGroupTab":  { "message": "閉じた/移動した親の代わりにグループ化用のタブを開く" },
+  "config_closeParentBehavior_replaceWithGroupTab":         { "message": "閉じた親の代わりにグループ化用のタブを開く" },
+  "config_moveParentBehavior_replaceWithGroupTab":          { "message": "移動した親の代わりにグループ化用のタブを開く" },
+  "config_parentTabOperationBehavior_promoteFirst":         { "message": "常に最初の子タブを新しい親に昇格させる" },
+  "config_closeParentBehavior_promoteFirst":                { "message": "常に最初の子タブを新しい親に昇格させる" },
+  "config_moveParentBehavior_promoteFirst":                 { "message": "常に最初の子タブを新しい親に昇格させる" },
+  "config_parentTabOperationBehavior_promoteAll":           { "message": "常にすべての子タブを昇格させる" },
+  "config_closeParentBehavior_promoteAll":                  { "message": "常にすべての子タブを昇格させる" },
+  "config_moveParentBehavior_promoteAll":                   { "message": "常にすべての子タブを昇格させる" },
+  "config_parentTabOperationBehavior_promoteIntelligently": { "message": "最上位階層では最初の子を昇格させ、それ以外はすべての子タブを昇格" },
+  "config_closeParentBehavior_promoteIntelligently":        { "message": "最上位階層では最初の子を昇格させ、それ以外はすべての子タブを昇格" },
+  "config_moveParentBehavior_promoteIntelligently":         { "message": "最上位階層では最初の子を昇格させ、それ以外はすべての子タブを昇格" },
+  "config_parentTabOperationBehavior_detach":               { "message": "子孫のタブをツリーから解放する" },
+  "config_closeParentBehavior_detach":                      { "message": "子孫のタブをツリーから解放する" },
+  "config_moveParentBehavior_detach":                       { "message": "子孫のタブをツリーから解放する" },
+
+  "config_warnOnCloseTabs_label": { "message": "同時に複数のタブを閉じるときは確認する" },
+  "config_warnOnCloseTabsByClosebox_label": { "message": "クローズボックスの通常のクリック操作で同時に複数のタブを閉じるときは確認する" },
+  "config_warnOnCloseTabsWithListing_label": { "message": "閉じようとしているタブの一覧を確認のダイアログに表示する" },
+
+
+  "config_drag_caption": { "message": "ドラッグ＆ドロップ" },
+
+  "config_tabDragBehavior_caption":       { "message": "サイドバー内で親タブをドラッグ開始した時の動作" },
+  "config_tabDragBehavior_description":   { "message": "Firefoxの制限のため、タブバー外へのドロップ後にタブをどう取り扱うかは、ドラッグ操作開始時に決定する必要があります。" },
+  "config_tabDragBehavior_label":         { "message": "通常のドラッグ" },
+  "config_tabDragBehaviorShift_label":    { "message": "Shift-ドラッグ" },
+  "config_tabDragBehavior_label_behaviorInsideSidebar":  { "message": "サイドバー内へのドロップ" },
+  "config_tabDragBehavior_label_behaviorOutsideSidebar": { "message": "サイドバー外へのドロップ" },
+  "config_tabDragBehavior_moveEntireTreeAlways":         { "message": "常にツリー全体を移動する" },
+  "config_tabDragBehavior_detachEntireTreeAlways":       { "message": "常にツリー全体を別ウィンドウに切り離す（ブックマークの作成はできません）" },
+  "config_tabDragBehavior_bookmarkEntireTreeAlways":     { "message": "常にツリー全体のタブからリンクかブックマークを作成する（別ウィンドウへの切り離しはできません）" },
+  "config_tabDragBehavior_moveSoloTabIfExpanded":        { "message": "展開状態のツリーではタブ単体を移動し、折りたたまれているツリーでは全体を移動する" },
+  "config_tabDragBehavior_detachSoloTabIfExpanded":      { "message": "展開状態のツリーではタブ単体を、折りたたまれているツリーでは全体を別ウィンドウに切り離す（ブックマークの作成はできません）" },
+  "config_tabDragBehavior_bookmarkSoloTabIfExpanded":    { "message": "展開状態のツリーではタブ単体から、折りたたまれているツリーでは全体からリンクかブックマークを作成する（別ウィンドウへの切り離しはできません）" },
+  "config_tabDragBehavior_doNothing":                    { "message": "何もしない" },
+  "config_tabDragBehavior_noteForDragstartOutsideSidebar": { "message": "Firefox自身のタブバー上で親タブをドラッグ開始した時の動作は、「ツリーの挙動」→「親タブを閉じたり移動したりした時の挙動」での指定に準じます" },
+  "config_showTabDragBehaviorNotification_label": { "message": "タブのドラッグ中、サイドバー外にドロップした時の操作説明を表示する" },
+
+  "config_dropLinksOnTabBehavior_caption": { "message": "タブにリンクやURL文字列をドロップしたとき" },
+  "config_dropLinksOnTabBehavior_ask":     { "message": "どうするか常に訊ねる" },
+  "config_dropLinksOnTabBehavior_load":    { "message": "そのタブに読み込む" },
+  "config_dropLinksOnTabBehavior_newtab":  { "message": "新しい子タブで開く" },
+
+  "config_autoExpandOnLongHoverDelay_before":  { "message": "ドラッグ操作中、折りたたまれたツリーの上で" },
+  "config_autoExpandOnLongHoverDelay_after":  { "message": "ミリ秒以上経過したらツリーを展開する" },
+  "config_autoExpandOnLongHoverRestoreIniitalState_label":  { "message": "ドラッグ操作の終了後、ツリーを折りたたんだ状態に自動的に戻す" },
+  "config_autoExpandIntelligently_label":  { "message": "折りたたまれたツリーを自動展開したときに、他のツリーを自動的に折りたたむ" },
+  "config_ignoreTabDropNearSidebarArea_label":  { "message": "サイドバーの近くにタブをドロップした場合はウィンドウから切り離さない（\"privacy.resistFingerprinting\"=\"true\" に設定しているときはチェックを外すことをおすすめします）" },
+
+
+  "config_more_caption": { "message": "その他..." },
+
+  "config_shortcuts_caption": { "message": "キーボードショートカット" },
+
+  "config_requestPermissions_allUrls_ctrlTabTracking":   { "message": "キーボードショートカットでのタブ切り替え中は、折りたたまれた子孫タブにはフォーカスせず、折りたたまれたツリーも展開しない（※Webページ内でのスクリプトの実行を許可する必要があります）" },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_before": { "message": "折りたたまれたツリーにフォーカスがある状態でTabキーを" },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_after": { "message": "ミリ秒以上押し続けたらツリーを展開する" },
+  "config_accelKey_label":   { "message": "キーボードショートカットのアクセラレータキー（※「ui.key.accelKey」の設定と一致させる必要があります）:" },
+  "config_accelKey_auto":    { "message": "既定（macOS=⌘, それ以外=Ctrl）" },
+  "config_accelKey_alt":     { "message": "Alt" },
+  "config_accelKey_control": { "message": "Ctrl/Control" },
+  "config_accelKey_meta":    { "message": "Meta/⌘" },
+
+  "config_shortcuts_resetAll": { "message": "すべて初期値に戻す" },
+
+
+  "config_advanced_caption": { "message": "詳細設定" },
+
+  "config_bookmarkTreeFolderName_before": { "message": "ツリーをブックマークする時のフォルダー名:" },
+  "config_bookmarkTreeFolderName_after": { "message": "\u200b" },
+  "config_bookmarkTreeFolderName_description": { "message": "以下のプレースホルダを使用できます: %TITLE%（1つ目のタブのタイトル）, %URL%（1つ目のタブのURL）, %YEAR%（4桁の年）, %SHORT_YEAR%（2桁の年）, %MONTH%（2桁の月）, %DATE%（2桁の日）" },
+
+  "config_defaultBookmarkParentId_label_before":  { "message": "ブックマークを" },
+  "config_defaultBookmarkParentId_label_after":   { "message": "の中に作成する" },
+
+  "config_supportTabsMultiselect_label": { "message": "タブのフォーカスの制御にタブの複数選択APIを使う（※Firefoxの設定である\"browser.tabs.multiselect\"=\"true\"に依存)" },
+
+  "config_undoMultipleTabsClose_label": { "message": "最後にまとめて閉じたタブ群のうちの1つが「閉じたタブを元に戻す」で復元されたとき、タブ群全体を復元する" },
+
+  "config_scrollLines_label_before": { "message": "キーボードショートカットの「タブの一覧を数行上/下にスクロール」で" },
+  "config_scrollLines_label_after":  { "message": "行分スクロールする" },
+
+  "config_userStyleRules_label": { "message": "ツリー型垂直タブが提供するページ用の追加のスタイル指定" },
+  "config_userStyleRules_description_before": { "message": "\u200b" },
+  "config_userStyleRules_description_link_label": { "message": "目的別の指定例" },
+  "config_userStyleRules_description_after": { "message": "も参照して下さい。" },
+  "config_userStyleRules_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-version-2x" },
+  "config_userStyleRules_themeRules_description": { "message": "現在のブラウザのテーマに基づいて、「var()」で以下のカスタムプロパティも使用できます：" },
+  "config_userStyleRules_themeRules_description_alphaVariations": { "message": "「--theme-colors-tab_background_text-30」のようにカスタムプロパティ名の後に不透明度を指定すると、10%刻みで不透明度を変えられます（この例では不透明度30%）" },
+  "config_userStyleRules_import": { "message": "ファイルから読み込み" },
+  "config_userStyleRules_export": { "message": "ファイルに保存" },
+  "config_userStyleRules_overwrite_title":     { "message": "現在の内容を置き換えますか？" },
+  "config_userStyleRules_overwrite_message":   { "message": "読み込んだ内容で現在のスタイル指定をすべて置き換えますか？" },
+  "config_userStyleRules_overwrite_overwrite": { "message": "すべて置き換える" },
+  "config_userStyleRules_overwrite_append":    { "message": "最後に追加する" },
+  "config_tooLargeUserStyleRulesCaution": { "message": "スタイル指定が長すぎます！ もっと短くしてください" },
+  "config_userStyleRulesTheme_label":     { "message": "テーマ:" },
+  "config_userStyleRulesTheme_auto":      { "message": "自動" },
+  "config_userStyleRulesTheme_separator": { "message": "-----------------" },
+  "config_userStyleRulesTheme_default":   { "message": "既定" },
+
+
+  "config_addons_caption": { "message": "他のアドオンによる機能追加" },
+
+  "config_addons_description_before": { "message": "\u200b" },
+  "config_addons_description_link_label": { "message": "TST自体を拡張する他のアドオン" },
+  "config_addons_description_after": { "message": "を組み合わせると、TSTのサイドバーにさらに機能を追加できます。" },
+  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#addons-that-extend-tst" },
+
+  "config_theme_description_before": { "message": "組み込みのテーマは現在「Plain」「Sidebar」「ハイコントラスト」のみ利用可能です。他のテーマを使用したい場合、" },
+  "config_theme_description_link_label": { "message": "コードスニペット" },
+  "config_theme_description_after": { "message": "にある例を参照して下さい。" },
+  "helper_theme_list_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#restore-old-built-in-themes" },
+
+  "config_externaladdonpermissions_label": { "message": "他のアドオンからのAPI呼び出しに与える許可" },
+  "config_externaladdonpermissions_description": { "message": "ここでチェックを入れたアドオンは、Firefox自体がそのアドオンにタブの詳細情報やプライベートウィンドウのタブへのアクセスを禁止していても、<em>Tree-shaped vertical tabsの権限で</em>それらにアクセスできるようになります。<em>信用できないアドオンに対しては絶対に権限を与えないで下さい。<em>" },
+  "config_externalAddonPermissions_header_name": { "message": "アドオン名" },
+  "config_externalAddonPermissions_header_permissions": { "message": "許可する特別な操作" },
+  "config_externalAddonPermissions_header_incognito": { "message": "プライベートウィンドウからのメッセージを通知する" },
+
+  "addon_containerBookmarks_label": { "message": "Container Bookmarks" },
+  "addon_containerBookmarks_uri": { "message": "https://addons.mozilla.org/firefox/addon/container-bookmarks/" },
+  "config_containerRedirectKey_label": { "message": "リダイレクトキー（※Container Bookmarksの設定画面の値と揃えて下さい）:" },
+
+
+  "config_debug_caption": { "message": "開発用" },
+
+  "config_link_startupPage_label": { "message": "初回起動時用のページ" },
+  "config_link_groupPage_label":   { "message": "グループ化用タブのページ" },
+  "config_link_tabbarPage_label":   { "message": "タブバーのページ" },
+
+  "config_runTests_label": { "message": "自動テストを実行" },
+  "config_runBenchmark_label": { "message": "ベンチマークを実行" },
+  "config_enableLinuxBehaviors_label": { "message": "Linux専用の挙動を有効化する" },
+  "config_enableMacOSBehaviors_label": { "message": "macOS専用の挙動を有効化する" },
+  "config_enableWindowsBehaviors_label": { "message": "Windows専用の挙動を有効化する" },
+  "config_debug_label": { "message": "デバッグモード" },
+  "config_log_caption":               { "message": "詳細なログ" },
+  "config_logTimestamp_label": { "message": "日時をログに付与する" },
+  "config_logFor_common":     { "message": "共通モジュールからのログ" },
+  "config_logFor_background": { "message": "バックグラウンドモジュールからのログ" },
+  "config_logFor_sidebar":    { "message": "サイドバーモジュールからのログ" },
+  "config_loggingQueries_label": { "message": "タブの検索処理のログを収集" },
+  "config_loggingConnectionMessages_label": { "message": "内部通信のログを収集" },
+  "config_showLogsButton_label": { "message": "ログを表示" },
+  "config_simulateSVGContextFill_label": { "message": "Bug 1388193およびBug 1421329を回避して擬似的にSVGアイコンを表示する（※CPU負荷が高まる可能性があります。このオプションを無効にする場合、これらのBugが修正されるまでは\"about:config\"で\"svg.context-properties.content.enabled\"を有効化する必要があります。）" },
+  "config_staticARIALabel_label": { "message": "タブ要素のARIAラベルを固定する" },
+  "config_staticARIALabel_description": { "message": "※何らかのタブ操作のあとで音声認識システムがタブ要素を見失ってしまう場合、このチェックをONにしてください。" },
+  "config_useCachedTree_label": { "message": "キャッシュを使ってツリーの初期化を高速化する" },
+  "config_useCachedTree_description": { "message": "※キャッシュの不整合で動作が不安定になっている場合、このチェックをOFFにして再度ONにすることでキャッシュが刷新され状況が改善するかもしれません。" },
+  "config_acceleratedTabCreation_label": { "message": "新しいタブが開かれた時の処理を高速化する（※動作が不安定になります）" },
+  "config_maximumAcceptableDelayForTabDuplication_before": { "message": "\u200b" },
+  "config_maximumAcceptableDelayForTabDuplication_after": { "message": "ミリ秒以内にタブの複製を完了できなかった場合は処理を中断する" },
+  "config_delayForDuplicatedTabDetection_label_before": { "message": "複製されたタブの検出の待ち時間:" },
+  "config_delayForDuplicatedTabDetection_label_after": { "message": "ミリ秒（複製されたタブの検出に失敗する場合に数字を増やして下さい）" },
+  "config_delayForDuplicatedTabDetection_autoDetect": { "message": "自動設定" },
+  "config_delayForDuplicatedTabDetection_test": { "message": "検出率をテスト" },
+  "config_delayForDuplicatedTabDetection_test_resultMessage": { "message": "識別の成功率は $PERCENTAGE$% でした",
+    "placeholders": {
+      "percentage": { "content": "$1", "example": "50" }
+    }},
+  "config_labelOverflowStyle_caption": { "message": "タブのラベルが長すぎる場合:" },
+  "config_labelOverflowStyle_fade":    { "message": "フェードアウトする（視認性を重視）" },
+  "config_labelOverflowStyle_crop":    { "message": "「..」で切り取る（動作速度を重視）" },
+
+  "config_requestPermissions_bookmarks": { "message": "ブックマークの読み取りと作成を許可する" },
+  "config_requestPermissions_bookmarks_context": { "message": "ブックマーク用のコンテキストメニューを開くことを許可する" },
+  "config_requestPermissions_tabHide":   { "message": "個々のタブの表示・非表示の制御を許可する（※この操作が許可されていることを確かめるため、テスト実行前には必ずチェックボックスを一旦OFFにしてから再度ONにして下さい）" },
+
+  "config_requestPermissions_fallbackToToolbarButton_title": { "message": "ツールバーの「ツリー型垂直タブ」ボタンをクリックして下さい" },
+  "config_requestPermissions_fallbackToToolbarButton_message": { "message": "Firefoxのバグのため、権限をこの画面から要求することができません。ツールバー上の「ツリー型垂直タブ」ボタンをクリックして権限を承認して下さい。" },
+
+  "config_all_caption": { "message": "すべての設定" },
+
+  "config_terms_delimiter": { "message": "\u200b" },
+
+
+  "tabContextMenu_newTab_label":      { "message": "新しいタブ(&W)" },
+
+  "tabContextMenu_reload_label":      { "message": "タブを再読み込み(&R)" },
+  "tabContextMenu_mute_label":        { "message": "タブをミュート(&M)" },
+  "tabContextMenu_unmute_label":      { "message": "タブのミュートを解除(&M)" },
+
+  "tabContextMenu_pin_label":         { "message": "タブをピン留め(&P)" },
+  "tabContextMenu_unpin_label":       { "message": "タブのピン留めを外す(&P)" },
+  "tabContextMenu_duplicate_label":   { "message": "タブを複製(&D)" },
+  "tabContextMenu_selectAllTabs_label": { "message": "すべてのタブを選択(&S)" },
+  "tabContextMenu_bookmark_label":    { "message": "タブをブックマーク(&B)" },
+  "tabContextMenu_reopenInContainer_label":             { "message": "新しいコンテナータブで開く(&E)" },
+  "tabContextMenu_reopenInContainer_noContainer_label": { "message": "コンテナーなし(&N)" },
+  "tabContextMenu_moveTab_label":     { "message": "タブを移動(&V)" },
+  "tabContextMenu_moveTabToStart_label": { "message": "先頭へ移動(&S)" },
+  "tabContextMenu_moveTabToEnd_label":   { "message": "末尾へ移動(&E)" },
+  "tabContextMenu_tearOff_label":     { "message": "新しいウィンドウへ移動(&W)" },
+  "tabContextMenu_sendTabsToDevice_label": { "message": "%S 個のタブを端末へ送信(&N)" },
+  "tabContextMenu_sendTabsToAllDevices_label": { "message": "すべての端末に送信" },
+  "tabContextMenu_manageSyncDevices_label": { "message": "端末を管理..." },
+  "tabContextMenu_shareTabURL_label":   { "message": "共有(&H)" },
+
+  "tabContextMenu_closeMultipleTabs_label":  { "message": "複数のタブを閉じる(&M)" },
+  "tabContextMenu_closeTabsToTop_label":  { "message": "上のタブをすべて閉じる(&T)" },
+  "tabContextMenu_closeTabsToBottom_label":  { "message": "下のタブをすべて閉じる(&B)" },
+  "tabContextMenu_closeOther_label":  { "message": "他のタブをすべて閉じる(&O)" },
+
+  "tabContextMenu_undoClose_label":   { "message": "閉じたタブを開き直す(&U)" },
+  "tabContextMenu_undoClose_label_multiple":  { "message": "閉じたタブを開き直す(&U)" },
+  "tabContextMenu_close_label":       { "message": "タブを閉じる(&C)" },
+
+  "tabContextMenu_reload_label_multiselected":      { "message": "タブを再読み込み(&R)" },
+  "tabContextMenu_mute_label_multiselected":        { "message": "タブをミュート(&M)" },
+  "tabContextMenu_unmute_label_multiselected":      { "message": "タブのミュートを解除(&M)" },
+
+  "tabContextMenu_duplicate_label_multiselected":   { "message": "選択したタブを複製(&D)" },
+
+  "tabContextMenu_pin_label_multiselected":         { "message": "タブをピン留め(&P)" },
+  "tabContextMenu_unpin_label_multiselected":       { "message": "タブのピン留めを外す(&P)" },
+
+  "tabContextMenu_moveTab_label_multiselected": { "message": "選択したタブを移動(&V)" },
+  "tabContextMenu_sendTabsToDevice_label_multiselected": { "message": "%S 個のタブを端末へ送信(&N)" },
+
+  "tabContextMenu_bookmark_label_multiselected": { "message": "タブをブックマーク(&B)…" },
+  "tabContextMenu_bookmarkSelected_label":       { "message": "選択したタブをブックマーク(&T)…" },
+
+  "tabContextMenu_close_label_multiselected":       { "message": "選択したタブを閉じる(&S)" }
+}

@@ -1,0 +1,139 @@
+#eDivResult {
+    all: initial;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-style: normal;
+    font-variant: normal;
+    line-height: normal;
+    font-size: 12px;
+    font-weight: 500;
+
+    z-index: 2147483647;
+    position: fixed;
+    border-radius: 5px;
+    top: 0px;
+    left: 0px;
+    background-color: white;
+    color: black;
+    border: 1px solid grey;
+    visibility: visible;
+    opacity: 1;
+    display: none;
+}
+
+#eSelTextTrans,
+#eOrigText {
+    padding: 14px;
+    font-size: 16px;
+    max-width: 360px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre-wrap;
+}
+
+#eOrigText {
+    outline: none;
+}
+
+#eButtonTransSelText {
+    all: initial;
+    z-index: 2147483647;
+    position: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url("/icons/icon-32.png");
+    width: 22px;
+    height: 22px;
+    top: 0px;
+    left: 0px;
+    cursor: pointer;
+    visibility: visible;
+    opacity: 1;
+    display: none;
+}
+
+ul {
+    margin: 0px;
+    padding: 3px;
+    list-style-type: none;
+    overflow: hidden;
+    user-select: none;
+}
+
+li {
+    margin: 3px;
+    float: left;
+    cursor: pointer;
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 6px;
+    box-shadow: 0 0 2px 0px #999;
+}
+
+li:hover {
+    background-color: #ccc;
+}
+
+#moreOrLess {
+    margin: 6px;
+    cursor: pointer;
+    text-align: center;
+    padding: 4px 6px;
+    border-radius: 6px;
+    box-shadow: 0 0 2px 0px #999;
+    max-height: 16px;
+}
+
+#moreOrLess:hover {
+    background-color: #ccc;
+}
+
+hr {
+    border: 1px solid #ddd;
+}
+
+.selected {
+    background-color: #ccc;
+}
+
+.arrow {
+    border: solid black;
+    border-width: 0 1px 1px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.up {
+    transform: rotate(-135deg) translate(-5px, -5px);
+}
+
+.down {
+    transform: rotate(45deg) translate(2px, 2px);
+}
+
+#eOrigTextDiv {
+    display: none;
+}
+
+#drag {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+#moreOrLess {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#less {
+    display: none;
+}
+
+#listen {
+    padding-top: 6px;
+    padding-bottom: 2px;
+}
+
+#listen svg {
+    enable-background: new 0 0 93.038 93.038;
+}

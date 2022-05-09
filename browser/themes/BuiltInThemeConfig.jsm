@@ -250,19 +250,11 @@ const ColorwayCollections = new Map([
   [
     "life-in-color",
     {
-      expiry:
-        colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
-          ? "2022-08-03"
-          : "2022-02-08",
     },
   ],
   [
     "true-colors",
     {
-      expiry:
-        colorwayClosetEnabled && AppConstants.NIGHTLY_BUILD
-          ? "2022-04-20"
-          : "2022-05-03",
     },
   ],
 ]);

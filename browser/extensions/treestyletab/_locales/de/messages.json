@@ -1,0 +1,810 @@
+{
+  "extensionName": { "message": "Tree-shaped vertical tabs" },
+  "extensionDescription": { "message": "Stellt Tabs in einer Baumstruktur dar." },
+
+  "sidebarTitle": { "message": "Tree-shaped vertical tabs" },
+  "sidebarToggleDescription": { "message": "\"Tree-shaped vertical tabs\" Seitenleiste Ein-/Ausblenden" },
+
+  "command_tabMoveUp":             { "message": "Aktuellen Tab nach oben schieben" },
+  "command_treeMoveUp":            { "message": "Aktuellen Zweig nach oben schieben" },
+  "command_tabMoveDown":           { "message": "Aktuellen Tab nach unten schieben" },
+  "command_treeMoveDown":          { "message": "Aktuellen Zweig nach unten schieben" },
+  "command_focusPrevious":         { "message": "Zum vorherigen Tab wechseln (Zweig ausklappen)" },
+  "command_focusPreviousSilently": { "message": "Zum vorherigen Tab wechseln (Zweig nicht ausklappen)" },
+  "command_focusNext":             { "message": "Zum nächsten Tab wechseln (Zweig ausklappen)" },
+  "command_focusNextSilently":     { "message": "Zum nächsten Tab wechseln (Zweig nicht ausklappen)" },
+  "command_focusParent":           { "message": "Zum übergeordneten Tab wechseln" },
+  "command_focusFirstChild":       { "message": "Zum ersten untergeordneten Tab wechseln" },
+  "command_focusLastChild":        { "message": "Zum letzten untergeordneten Tab wechseln" },
+  "command_focusPreviousSibling":  { "message": "Zum vorherigen benachbarten Tab wechseln" },
+  "command_focusNextSibling":      { "message": "Zum nächsten benachbarten Tab wechseln" },
+  "command_tabbarUp":              { "message": "Zeilenweise in Tabs nach oben scrollen" },
+  "command_tabbarPageUp":          { "message": "Seitenweise in Tabs nach oben scrollen" },
+  "command_tabbarHome":            { "message": "Zum ersten Tab scrollen" },
+  "command_tabbarDown":            { "message": "Zeilenweise in Tabs nach unten scrollen" },
+  "command_tabbarPageDown":        { "message": "Seitenweise in Tabs nach unten scrollen" },
+  "command_tabbarEnd":             { "message": "Zum letzten Tab scrollen" },
+  "command_toggleSubPanel":        { "message": "Sichtbarkeit des Unter-Bedienfelds umschalten" },
+  "command_switchSubPanel":        { "message": "Inhalt des Unter-Bedienfelds wechseln" },
+  "command_increaseSubPanel":      { "message": "Größe des Unter-Bedienfeld erhöhen" },
+  "command_decreaseSubPanel":      { "message": "Größe des Unter-Bedienfeld verringern" },
+
+  "tab_closebox_aria_label": { "message": "Tab #$ID$ schließen",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_closebox_tab_tooltip": { "message": "Tab schließen" },
+  "tab_closebox_tab_tooltip_multiselected": { "message": "Tabs schließen" },
+  "tab_closebox_tree_tooltip": { "message": "Zweig schließen" },
+  "tab_soundButton_aria_label": { "message": "Tab #$ID$ stumm schalten",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_soundButton_muted_tooltip": { "message": "Stummschaltung für Tab aufheben" },
+  "tab_soundButton_muted_tooltip_multiselected": { "message": "Stummschaltung für Tabs aufheben" },
+  "tab_soundButton_playing_tooltip": { "message": "Tab stumm schalten" },
+  "tab_soundButton_playing_tooltip_multiselected": { "message": "Tabs stumm schalten" },
+  "tab_twisty_aria_label": { "message": "Zweig #$ID$ umschalten",
+    "placeholders": {
+      "id": { "content": "$1", "example": "1" }
+    }},
+  "tab_twisty_expanded_tooltip": { "message": "Zweig zuklappen" },
+  "tab_twisty_collapsed_tooltip": { "message": "Zweig aufklappen" },
+  "tab_tree_tooltip": { "message": "$TREE$\n  …und $COUNT$ weitere(r) Tab (s)",
+    "placeholders": {
+      "tree": { "content": "$1", "example": "* Tree\n  * Style\n    * Tab" },
+      "count": { "content": "$2", "example": "3" }
+    }},
+  "tabbar_newTabButton_tooltip": { "message": "Neuen Tab öffnen" },
+
+  "tabbar_newTabAction_tooltip":           { "message": "Neuen Tab öffnen als…" },
+  "tabbar_newTabAction_independent_label": { "message": "&Eigenständigen Tab" },
+  "tabbar_newTabAction_independent_command": { "message": "Eigenständigen Tab" },
+  "tabbar_newTabAction_child_label":       { "message": "&Untergeordneten Tab" },
+  "tabbar_newTabAction_child_command":       { "message": "Untergeordneten Tab" },
+  "tabbar_newTabAction_sibling_label":     { "message": "Tab auf der Ebene des &aktiven Tab" },
+  "tabbar_newTabAction_sibling_command":     { "message": "Tab auf der Ebene des aktiven Tab" },
+  "tabbar_newTabAction_nextSibling_label": { "message": "Direkter &Nachbar auf der Ebene des aktiven Tab" },
+  "tabbar_newTabAction_nextSibling_command": { "message": "Direkter Nachbar auf der Ebene des aktiven Tab" },
+
+  "tabbar_newTabWithContexualIdentity_tooltip": { "message": "Neuer Tab in Umgebung" },
+  "tabbar_newTabWithContexualIdentity_default": { "message": "Standard" },
+
+  "groupTab_label": { "message": "$TITLE$ und mehr",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Titel" }
+    }},
+  "groupTab_label_default": { "message": "Gruppe" },
+  "groupTab_temporary_label": { "message": "Diesen Tab schließen, wenn keine untergeordneten Tabs mehr existieren" },
+  "groupTab_temporaryAggressive_label": { "message": "Diesen Tab schließen, wenn nicht mehr als ein untergeordneter Tab existiert" },
+  "groupTab_fromPinnedTab_label": { "message": "Tabs von $TITLE$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Titel" }
+    }},
+  "groupTab_options_label": { "message": "Es gibt eine Einstellung um das Öffnen von Tabs dieser Art zu deaktivieren." },
+  "groupTab_options_dismiss": { "message": "Diesen Hinweis ausblenden" },
+
+  "bookmarkFolder_label_default": { "message": "$TITLE$ und mehr (%YEAR%.%MONTH%.%DATE%)",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Titel" }
+    }},
+
+  "bookmark_notification_notPermitted_title": { "message": "Berechtigungs-Fehler" },
+  "bookmark_notification_notPermitted_message": { "message": "Fehlende Berechtigung zum Erstellen von Lesezeichen. Bitte hier klicken um Berechtigungen zu erteilen." },
+  "bookmark_notification_notPermitted_message_linux": { "message": "Fehlende Berechtigung zum Erstellen von Lesezeichen. Bitte auf die Schaltfläche klicken um Berechtigungen zu erteilen." },
+
+  "bookmarkContext_notification_notPermitted_title": { "message": "Berechtigungs-Fehler" },
+  "bookmarkContext_notification_notPermitted_message": { "message": "Fehlende Berechtigung zum Öffnen des Kontextmenüs für Lesezeichen. Bitte hier klicken um Berechtigungen zu erteilen." },
+  "bookmarkContext_notification_notPermitted_message_linux": { "message": "Fehlende Berechtigung zum Öffnen des Kontextmenüs für Lesezeichen. Bitte auf die Schaltfläche klicken um Berechtigungen zu erteilen." },
+
+  "dropLinksOnTabBehavior_message": { "message": "Wie soll der Link geöffnet werden?" },
+  "dropLinksOnTabBehavior_save":    { "message": "Die Auswahl beim nächsten Mal beibehalten" },
+  "dropLinksOnTabBehavior_load":    { "message": "In diesem Tab öffnen" },
+  "dropLinksOnTabBehavior_newtab":  { "message": "In neuem untergeordneten Tab öffnen" },
+
+  "tabDragBehaviorNotification_message_duration_single":  { "message": "8s" },
+  "tabDragBehaviorNotification_message_duration_both":  { "message": "16s" },
+  "tabDragBehaviorNotification_message_base":  { "message": "Ablegen außerhalb der Seitenleiste wird $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "irgendwas geschehen lassen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_with_shift":  { "message": "Shift-Ziehen wird $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "irgendwas geschehen lassen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_without_shift":  { "message": "Ziehen ohne Shift wird $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "irgendwas geschehen lassen" }
+    }},
+  "tabDragBehaviorNotification_message_tree_tearoff":  { "message": "Tabs vom Fenster ablösen" },
+  "tabDragBehaviorNotification_message_tab_tearoff":   { "message": "den Tab vom Fenster ablösen" },
+  "tabDragBehaviorNotification_message_tree_bookmark": { "message": "Verweise oder Lesezeichen an dem Platz anlegen, an dem die Tabs abgelegt werden" },
+  "tabDragBehaviorNotification_message_tab_bookmark":  { "message": "einen Verweis oder ein Lesezeichen an dem Platz anlegen, an dem der Tab abgelegt wird" },
+
+  "warnOnCloseTabs_title":     { "message": "Tabs schließen?" },
+  "warnOnCloseTabs_message":   { "message": "Möchtest du wirklich $NUMBER$ Tabs schließen?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_warnAgain": { "message": "Warnen wenn mehrere Tabs geschlossen werden sollen" },
+  "warnOnCloseTabs_close":     { "message": "Tabs schließen" },
+  "warnOnCloseTabs_cancel":    { "message": "Abbrechen" },
+
+  "warnOnCloseTabs_fromOutside_title":     { "message": "Mit untergeordneten Tabs schließen?" },
+  "warnOnCloseTabs_fromOutside_message":   { "message": "Der geschlossene Tab hatte $NUMBER$ untergeordnete Tabs. Sicher, dass diese auch geschlossen werden sollen?\n(*Abbruch wird den geschlossenen übergeordneten Tab wiederherstellen.)",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnCloseTabs_notification_message": { "message": "Falls nicht, hier zum Abbrechen klicken.\nAndernfalls werden die Tabs nach $TIMEOUT$ Sekunden geschlossen.",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_notification_message_linux": { "message": "Falls nicht, zum Abbrechen auf die Schaltfläche klicken.\nAndernfalls werden die Tabs nach $TIMEOUT$ Sekunden geschlossen.",
+    "placeholders": {
+      "TIMEOUT": { "content": "$1", "example": "10" }
+    }},
+
+  "warnOnAutoGroupNewTabs_title":     { "message": "Tabs gruppieren?" },
+  "warnOnAutoGroupNewTabs_message":   { "message": "$NUMBER$ Tabs werden gleichzeitig geöffnet. Sollen sie in einem Zweig gruppiert geöffnet werden?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnAutoGroupNewTabs_warnAgain": { "message": "Fragen, wenn mehrere Tabs gleichzeitig geöffnet werden" },
+  "warnOnAutoGroupNewTabs_close":     { "message": "Tabs gruppieren" },
+  "warnOnAutoGroupNewTabs_cancel":    { "message": "Tabs nebeneinander anzeigen" },
+
+  "bookmarkDialog_dialogTitle_single":   { "message": "Neues Lesezeichen" },
+  "bookmarkDialog_dialogTitle_multiple": { "message": "Neue Lesezeichen" },
+  "bookmarkDialog_title":    { "message": "Name:" },
+  "bookmarkDialog_title_accessKey": { "message": "n" },
+  "bookmarkDialog_url":      { "message": "Ort:" },
+  "bookmarkDialog_url_accessKey": { "message": "l" },
+  "bookmarkDialog_parentId": { "message": "Ordner:" },
+  "bookmarkDialog_saveContainerRedirectKey": { "message": "Umgebungs-Informationen für Container Bookmarks speichern" },
+  "bookmarkDialog_accept":   { "message": "Speichern" },
+  "bookmarkDialog_cancel":   { "message": "Abbrechen" },
+
+  "bookmarkFolderChooser_unspecified":   { "message": "(unbekannt)" },
+  "bookmarkFolderChooser_blank":         { "message": "(kein Name)" },
+  "bookmarkFolderChooser_useThisFolder": { "message": "Diesen Orner nutzen" },
+
+  "syncDeviceDefaultName": { "message": "$BROWSER$ unter $PLATFORM$",
+    "placeholders": {
+      "PLATFORM": { "content": "$1", "example": "Firefox" },
+      "BROWSER":  { "content": "$2", "example": "Windows" }
+    }},
+  "syncDeviceMissingDeviceName": { "message": "ein nicht benanntes Gerät" },
+  "syncDeviceUnknownDevice":     { "message": "ein unbekanntes Gerät" },
+  "syncAvailable_notification_title":   { "message": "Tabs können nun auf andere Geräte gesendet werden." },
+  "syncAvailable_notification_message": { "message": "Tabs köknnen nun zwischen Geräten synchronisiert werden. Hier klicken um diesem Gerät einen Namen zu geben." },
+  "syncAvailable_notification_message_linux": { "message": "Tabs köknnen nun zwischen Geräten synchronisiert werden. Auf die Schaltfläche klicken um diesem Gerät einen Namen zu geben." },
+  "sentTabs_notification_title":            { "message": "\u200b" },
+  "sentTabs_notification_message":          { "message": "Tabs werden an $DEVICE$ gesendet",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox auf Gerät X" }
+    }},
+  "sentTabs_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabs_notification_message_multiple": { "message": "Tabs wurden an $DEVICE$ gesendet",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox auf Gerät X" }
+    }},
+  "sentTabsToAllDevices_notification_title":            { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message":          { "message": "Tab wird an alle Geräte gesendet" },
+  "sentTabsToAllDevices_notification_title_multiple":   { "message": "\u200b" },
+  "sentTabsToAllDevices_notification_message_multiple": { "message": "Tabs werden an alle Geräte gesendet" },
+  "receiveTabs_notification_title":            { "message": "Tab von $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox auf Gerät X" }
+    }},
+  "receiveTabs_notification_message":          { "message": "$URL$",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" }
+    }},
+  "receiveTabs_notification_title_multiple":   { "message": "Tabs von $DEVICE$",
+    "placeholders": {
+      "DEVICE": { "content": "$1", "example": "Firefox auf Gerät X" }
+    }},
+  "receiveTabs_notification_message_multiple": { "message": "$URL$\nund $REST$ mehr Tab(s)",
+    "placeholders": {
+      "URL": { "content": "$1", "example": "http://example.com/" },
+      "ALL": { "content": "$2", "example": "4" },
+      "REST": { "content": "$3", "example": "3" }
+    }},
+
+  "sidebarPositionRighsideNotification_message":   { "message": "TST hat die Position der Seitenleiste als \"Rechte Seite\" erkannt. Soll das Erscheinungsbild an die aktuelle Position angepasst werden?" },
+  "sidebarPositionRighsideNotification_rightside": { "message": "Erscheinungsbild an rechte Seite anpassen" },
+  "sidebarPositionRighsideNotification_leftside":  { "message": "Erscheinungsbild für linke Seite beibehalten" },
+
+  "sidebarPositionOptionNotification_title":   { "message": "Anzeigeeinstellungen für die Seitenleiste wurden gespeichert" },
+  "sidebarPositionOptionNotification_message": { "message": "Bitte den Abschnitt \"Erscheinungsbild\" der Optionen von Tree-shaped vertical tabs zum Anpassen der Einstellungen beachten." },
+
+  "startup_notification_title_installed":   { "message": "Für neue Nutzer von Tree-shaped vertical tabs" },
+  "startup_notification_message_installed": { "message": "Einige zusätzliche Berechtigungen sind für ein natürlicheres Nutzererlebnis erforderlich. Hier klicken um sie zu gewähren." },
+  "startup_notification_message_installed_linux": { "message": "Einige zusätzliche Berechtigungen sind für ein natürlicheres Nutzererlebnis erforderlich. Auf die Schaltfläche klicken um sie zu gewähren." },
+  "startup_notification_title_updated":     { "message": "Spürbare Änderungen von Tree-shaped vertical tabs" },
+  "startup_notification_message_updated":   { "message": "Einige Änderungen können die gewohnte Nutzung beeinträchtigen. Hier klicken um die Änderungen zu sehen." },
+  "startup_notification_message_updated_linux":   { "message": "Einige Änderungen können die gewohnte Nutzung beeinträchtigen. Auf die Schaltfläche klicken um die Änderungen zu sehen." },
+
+  "message_startup_description_1": { "message": "Tree-shaped vertical tabs wurde wiedergeboren basierend auf der WebExtensions-Technologie für Firefox 57 (und neuer). Seine senkrechte Tab-Leiste ist als eine der auswählbaren Seitenleiste verfügbar. Falls sie noch nicht angezeigt wird, drücke die " },
+  "message_startup_description_key": { "message": "\"F1\" Taste" },
+  "message_startup_description_2": { "message": " oder klicke auf den " },
+  "message_startup_description_3": { "message": " Button in der Symbolleiste um die Seitenleiste zu aktivieren." },
+  "message_startup_description_sync_before": { "message": "Tabs können via Firefox Sync nur auf Geräte gesendet werden, auf denen TST installiert ist. Bitte zuerst Firefox Sync über die Browsereinstellungen aktivieren und TST auf den anderen Geräten installieren. Außerdem" },
+  "message_startup_description_sync_link":   { "message": "sollte der Gerätename manuell angepasst werden" },
+  "message_startup_description_sync_after":  { "message": "." },
+
+  "message_startup_history_before":     { "message": "Geändertes Verhalten kann (oder auch nicht) durch Workarounds wiederhergestellt werden. Siehe" },
+  "message_startup_history_uri":        { "message": "https://addons.mozilla.org/firefox/addon/tree-style-tab/versions/" },
+  "message_startup_history_link_label": { "message": "die Liste der Änderungen" },
+  "message_startup_history_after":      { "message": " für weitere Informationen." },
+
+  "message_startup_requestPermissions_description": { "message": "⚠Für einige Funktionen sind zusätzliche Berechtigungen erforderlich. Falls du sie aktivieren möchtest, erteile bitte manuell die Berechtigungen." },
+  "message_startup_requestPermissions_bookmarks": { "message": "\"Lesezeichen für diesen Zweig erstellen\" im Kontextmenü von Tabs (benötigt Zugriff auf Lesezeichen.)" },
+  "message_startup_requestPermissions_allUrls":   { "message": "Beim Auswählen von Tabs per Tastatur zugeklappte Zweige nicht ausklappen und zugeklappte untergeordnete Tabs überspringen" },
+
+  "message_startup_userChromeCss_notify": { "message": "Wie kann man die Tableiste und die Überschrift der Seitenleiste ausblenden?" },
+  "message_startup_userChromeCss_description_1": { "message": "Aufgrund von Beschränkungen für WebExtensions, hat Tree-shaped vertical tabs keine Kontrolle über die Tableiste und die Seitenleiste-Überschriften von Firefox. Um sie zu verändern, siehe " },
+  "message_startup_userChromeCss_description_link_label": { "message": "Beispiele zur Anpassung durch userChrome.css" },
+  "message_startup_userChromeCss_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss" },
+  "message_startup_userChromeCss_description_2": { "message": ". Aber " },
+  "message_startup_userChromeCss_description_note": { "message": "sei Dir bewusst, dass es sich um tiefgreifende Anpassungen handelt. Daher gibt es keine Garantie und sie können in künftigen Firefox-Versionen Probleme verursachen. Bitte auf eigenes Risiko ausprobieren und nur wenn du weißt, was du tust und dir zutraust, mögliche Probleme selbst zu beheben." },
+  "message_startup_userChromeCss_description_3": { "message": "." },
+
+  "api_requestedPermissions_title": { "message": "Erteilung von zusätzlichen Berechtigungen" },
+  "api_requestedPermissions_message": { "message": "⚠Die Erweiterung \"$NAME$\" bittet um zusätzliche Berechtigungen über Tree-shaped vertical tabs:\n\n$PERMISSIONS$\n\nHier klicken um die Berechtigungen zu erteilen.",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_message_linux": { "message": "⚠Die Erweiterung \"$NAME$\" bittet um zusätzliche Berechtigungen über Tree-shaped vertical tabs:\n\n$PERMISSIONS$\n\nAuf die Schaltfläche klicken um die Berechtigungen zu erteilen.",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_type_activeTab": { "message": "Zugriff auf aktiven Tab" },
+  "api_requestedPermissions_type_tabs":      { "message": "Zugriff auf Tabs" },
+  "api_requestedPermissions_type_cookies":   { "message": "Erkennung der Tab-Umgebungen" },
+
+
+  "context_menu_label": { "message": "Baumstruktur" },
+
+  "context_reloadTree_label": { "message": "Zweig neu la&den" },
+  "context_reloadTree_label_multiselected": { "message": "Ausgewählte Zweige neu la&den" },
+  "context_reloadTree_command": { "message": "Zweig neu laden" },
+  "context_reloadDescendants_label": { "message": "&Untergeordnete Tabs neu laden" },
+  "context_reloadDescendants_label_multiselected": { "message": "&Untergeordnete Tabs der Auswahl neu laden" },
+  "context_reloadDescendants_command": { "message": "Untergeordnete Tabs neu laden" },
+  "context_closeTree_label": { "message": "Zweig &schließen" },
+  "context_closeTree_label_multiselected": { "message": "Ausgewählte Zweige &schließen" },
+  "context_closeTree_command": { "message": "Zweig schließen" },
+  "context_closeDescendants_label": { "message": "U&ntergeordnete Tabs schließen" },
+  "context_closeDescendants_label_multiselected": { "message": "U&ntergeordnete Tabs der Auswahl schließen" },
+  "context_closeDescendants_command": { "message": "Untergeordnete Tabs schließen" },
+  "context_closeOthers_label": { "message": "&Alle anderen Tabs außer diesen Zweig schließen" },
+  "context_closeOthers_label_multiselected": { "message": "&Alle anderen Tabs außer ausgewählter Zweige schließen" },
+  "context_closeOthers_command": { "message": "Alle anderen Tabs außer diesen Zweig schließen" },
+  "context_collapseTree_label": { "message": "Di&esen Zweig zuklappen" },
+  "context_collapseTree_label_multiselected": { "message": "Ausgewählte Zw&eige zuklappen" },
+  "context_collapseTree_command": { "message": "Diesen Zweig zuklappen" },
+  "context_collapseTreeRecursively_label": { "message": "Diesen Zweig rekursiv zuklappen" },
+  "context_collapseTreeRecursively_label_multiselected": { "message": "Ausgewählte Zweige rekursiv zuklappen" },
+  "context_collapseTreeRecursively_command": { "message": "Diesen Zwei rekursiv zuklappen" },
+  "context_collapseAll_label": { "message": "Alle &zuklappen" },
+  "context_collapseAll_command": { "message": "Alle zuklappen" },
+  "context_expandTree_label": { "message": "Diesen Zweig auskla&ppen" },
+  "context_expandTree_label_multiselected": { "message": "Ausgewählte Zweige auskla&ppen" },
+  "context_expandTree_command": { "message": "Diesen Zweig ausklappen" },
+  "context_expandTreeRecursively_label": { "message": "Diesen Zweig rekursiv ausklappen" },
+  "context_expandTreeRecursively_label_multiselected": { "message": "Ausgewählte Zweige rekursiv ausklappen" },
+  "context_expandTreeRecursively_command": { "message": "Diesen Zweig rekursiv ausklappen" },
+  "context_expandAll_label": { "message": "Alle au&fklappen" },
+  "context_expandAll_command": { "message": "Alle aufklappen" },
+  "context_bookmarkTree_label": { "message": "&Lesezeichen für diesen Zweig anlegen…" },
+  "context_bookmarkTree_label_multiselected": { "message": "&Lesezeichen für ausgewählte Zweige anlegen…" },
+  "context_bookmarkTree_command": { "message": "Lesezeichen für diesen Zweig anlegen…" },
+  "context_sendTreeToDevice_label": { "message": "Sen&de diesen Zweig an Gerät" },
+  "context_sendTreeToDevice_label_multiselected": { "message": "Sen&de ausgewählte Zweige an Gerät" },
+  "context_sendTreeToDevice_command": { "message": "Sende diesen Zweig an Gerät" },
+  "context_topLevel_prefix": { "message": "Oberstes Objekt: " },
+
+  "context_collapsed_label": { "message": "Zugeklappt (für Test eines \"checkbox\" Menüs)" },
+  "context_pinnedTab_label": { "message": "Angeheftet (für Test eines \"radio\" Menüs)" },
+  "context_unpinnedTab_label": { "message": "Abgelöst (für Test eines \"radio\" Menüs)" },
+
+  "context_openAllBookmarksWithStructure_label": { "message": "&Alle als Zweig laden" },
+  "context_openAllBookmarksWithStructureRecursively_label": { "message": "&Alle als Zweig inklusive Unterverzeichnisse laden" },
+
+
+  "config_title": { "message": "Tree-shaped vertical tabs Einstellungen" },
+
+  "config_showExpertOptions_label": { "message": "Experteneinstellungen anzeigen" },
+  "config_openOptionsInTab_label": { "message": "Diese Einstellungsseite verbreitert anzeigen" },
+
+  "config_appearance_caption": { "message": "Erscheinungsbild" },
+
+  "config_sidebarPosition_caption": { "message": "Ausrichtung des Seitenleisten-Inhalts:" },
+  "config_sidebarPosition_left": { "message": "Rechtsbündig" },
+  "config_sidebarPosition_right": { "message": "Linksbündig" },
+  "config_sidebarPosition_auto": { "message": "Automatisch erkennen, wenn die Seitenleiste angezeigt wird" },
+  "config_sidebarPosition_description": { "message": "*Diese Einstellung ändert nicht die Position der Seitenleiste. Klicke dafür auf die Seitenleisten-Überschrift und dann auf \"Seitenleiste nach rechts (links) verschieben\"." },
+
+  "config_style_caption": { "message": "Design" },
+  "config_style_proton": { "message": "Proton" },
+  "config_style_photon": { "message": "Photon" },
+  "config_style_sidebar": { "message": "Seitenleiste" },
+  "config_style_highcontrast": { "message": "Hoher Kontrast" },
+  "config_style_none": { "message": "Keine Designvorgabe" },
+  "config_style_none_info": { "message": " (*Passe alles selbst über das Feld \"Style-Regeln für Seitenleisten-Inhalte\" an)" },
+
+  "config_colorScheme_caption": { "message": "Farbschema:" },
+  "config_colorScheme_photon": { "message": "Photon" },
+  "config_colorScheme_systemColor": { "message": "Systemfarben" },
+
+  "config_maxTreeLevel_before": { "message": "Tabs einrücken bis" },
+  "config_maxTreeLevel_after": { "message": "Stufen (*Negative Werte bedeuten \"unbegrenzt\")" },
+
+  "config_faviconizePinnedTabs_label": { "message": "Angeheftete Tabs nur mit Ihrem Symbol anzeigen" },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_before": { "message": "Zeige " },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_after": { "message": " oder weniger Tabs für jede Reihe (*0 oder weniger bedeutet automatische Bestimmung)" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_before": { "message": "Maximale Höhe des Bereichs für angeheftete Tabs:" },
+  "config_maxPinnedTabsRowsAreaPercentage_label_after":  { "message": "% der Seitenleiste" },
+  "config_animation_label": { "message": "Animationen aktivieren" },
+  "config_animationForce_label": { "message": "Animationen unabhängig von der Einstellung \"Animationen verringern\" aktivieren" },
+  "config_showCollapsedDescendantsByTooltip_label": { "message": "Eingeklappte untergeordnete Tabs als Tooltip anzeigen" },
+  "config_suppressGapFromShownOrHiddenToolbar_caption": { "message": "Den Abstand zwischen Seitenleisteninhalten in Fällen reduzieren, die durch vorübergehend angezeigte Toolbars entstehen" },
+  "config_suppressGapFromShownOrHiddenToolbarOnFullScreen_label": { "message": "Vollbildfenster" },
+  "config_suppressGapFromShownOrHiddenToolbarOnNewTab_label": { "message": "Neuer leerer Tab unter Firefox 85 und später" },
+  "config_suppressGapFromShownOrHiddenToolbarOnlyOnMouseOperation_label": { "message": "Nur wenn von einer Mausaktion auf der Seitenleiste ausgelöst" },
+  "config_showDialogInSidebar_label": { "message": "Zeige Dialoge in Seitenleiste falls möglich" },
+
+  "config_iconColor_caption": { "message": "Toolbar Icon Farbe:" },
+  "config_iconColor_auto":    { "message": "Auto" },
+  "config_iconColor_bright":  { "message": "für helles Theme" },
+  "config_iconColor_dark":    { "message": "für dunkles Theme" },
+
+
+  "config_context_caption": { "message": "Kontexmenü" },
+  "config_emulateDefaultContextMenu_label": { "message": "Tab-Kontextmenü in der Seitenleiste simulieren" },
+  "config_extraItems_tabs_caption": { "message": "Zusätzliche Kontextmenü-Einträge" },
+  "config_extraItems_tabs_topLevel": { "message": "Oberste Ebene" },
+  "config_extraItems_tabs_subMenu": { "message": "Untermenü" },
+  "config_extraItems_tabs_middleClick": { "message": "Aktion bei Mittelklick" },
+  "config_extraItems_bookmarks_caption": { "message": "Zusätzliche Einträge im Lesezeichen-Kontextmenü" },
+  "config_openAllBookmarksWithStructureDiscarded_label": { "message": "Tabs ausstehend lassen bis sie aktiv werden" },
+
+  "config_sendTabsToDevice_caption": { "message": "Tabs über das Kontextmenü via Firefox Sync zu anderen Geräten senden" },
+  "config_syncRequirements_description": { "message": "Diese Funktion hängt ab von Firefox Sync und Tabs können nur an Geräte gesendet werden, auf denen TST installiert ist. Bitte Firefox Sync über die Browsereinstellungen aktivieren und TST auf den anderen Geräten installieren." },
+  "config_syncDeviceInfo_name_label": { "message": "Name und Bild dieses Geräts:" },
+  "config_syncDeviceInfo_name_description_before": { "message": "Aufgrund von Einschränkungen der WebExtensions API kann TST den Namen dieses Geräts nicht automatisch bestimmen. Bitte manuell einen beschreibenden Namen für dieses Gerät eingeben. (Es wird empfohlen, " },
+  "config_syncDeviceInfo_name_description_link": { "message": "den Gerätenamen von Firefox Sync" },
+  "config_syncDeviceInfo_name_description_href": { "message": "https://accounts.firefox.com/settings/clients" },
+  "config_syncDeviceInfo_name_description_after": { "message": " zu verwenden.)" },
+  "config_syncDeviceExpirationDays_label_before": { "message": "Geräte autmatisch ablaufen lassen, wenn sie " },
+  "config_syncDeviceExpirationDays_label_after": { "message": " Tage nicht verwendet wurden (\"0\" bedeutet \"kein Ablaufen\")" },
+  "config_syncUnsendableUrlPattern_label": { "message": "Regel zum Erkennen von Tabs, die nicht gesendet werden sollen (*Dies muss mit der Einstellung \"services.sync.engine.tabs.filteredUrls\" von Firefox synchronisiert sein):" },
+  "config_otherDevices_caption": { "message": "Andere aktive Geräte:" },
+  "config_removeDeviceButton_label": { "message": "Löschen" },
+  "config_removeDeviceButton_tooltip": { "message": "Dieses Gerät von der Liste löschen" },
+
+
+  "config_newTab_caption": { "message": "Verhalten für neue Tabs" },
+
+  "config_newTabButton_caption": { "message": "Besondere Aktionen für die \"Neuer Tab\" Schaltfläche" },
+  "config_longPressOnNewTabButton_before":               { "message": "Die Schaltfläche \"Neuer Tab\" lang gedrückt halten, um " },
+  "config_longPressOnNewTabButton_newTabAction":         { "message": "auszuwählen, wo der neue Tab geöffnet werden soll" },
+  "config_longPressOnNewTabButton_contextualIdentities": { "message": "eine Tab-Umgebung auszuwählen" },
+  "config_longPressOnNewTabButton_none":                 { "message": "(nichts)" },
+  "config_longPressOnNewTabButton_after":                { "message": "\u200b" },
+  "config_showNewTabActionSelector_label":               { "message": "Auswahl wo der neue Tab geöffnet werden soll, auf der Schaltfläche \"Neuer Tab \" anzeigen, wenn der Cursor auf die Schaltfläche zeigt" },
+  "config_showContextualIdentitiesSelector_label":       { "message": "Auswahl der Tab-Umgebung auf der Schaltfläche \"Neuer Tab\" anzeigen, wenn der Cursor auf die Schaltfläche zeigt" },
+
+  "config_newTabAction_caption": { "message": "Grundsätzliche Steuerung für \"Neuer leerer Tab\"" },
+  "config_autoAttachOnNewTabCommand_before": { "message": "Neuen leeren Tab als " },
+  "config_autoAttachOnNewTabCommand_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnNewTabCommand_independent": { "message": "eigenständigen Tab" },
+  "config_autoAttachOnNewTabCommand_child": { "message": "untergeordneten Tab des aktiven Tab" },
+  "config_autoAttachOnNewTabCommand_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabCommand_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabCommand_after": { "message": "öffnen" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before": { "message": "Einen neuen Tab behandeln als sei er durch den Befehl \"Neuer leerer Tab\" geöffnet worden, wenn er mit dieser URL geöffnet wird:" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonMiddleClick_before": { "message": "Mit der mittleren Maustaste einen neuen leeren Tab öffnen als" },
+  "config_autoAttachOnNewTabButtonMiddleClick_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_independent": { "message": "eigenständigen Tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_child": { "message": "untergeordneten Tab des aktiven Tabs" },
+  "config_autoAttachOnNewTabButtonMiddleClick_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSiblingWithInheritedContainer": { "message": "identisch mit Strg-Klick (nächster Nachbar, gleiche Umgebung)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonAccelClick_before": { "message": "Für Strg/⌘-Klick, neuen leeren Tab öffnen als" },
+  "config_autoAttachOnNewTabButtonAccelClick_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnNewTabButtonAccelClick_independent": { "message": "eigenständigen Tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_child": { "message": "untergeordneten Tab des aktiven Tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnNewTabButtonAccelClick_nextSiblingWithInheritedContainer": { "message": "direkter Nachbar, gleiche Umgebung" },
+  "config_autoAttachOnNewTabButtonAccelClick_after": { "message": "\u200b" },
+
+  "config_autoAttachWithURL_caption": { "message": "Nicht-leere neue Tabs" },
+
+  "config_duplicateTabAction_caption": { "message": "Tabs duplizieren (Mittelklick auf die \"Neu laden\"-Schaltfläche usw.)" },
+
+  "config_autoAttachOnDuplicated_before": { "message": "Den Tab duplizieren als" },
+  "config_autoAttachOnDuplicated_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnDuplicated_independent": { "message": "eigenständigen Tab" },
+  "config_autoAttachOnDuplicated_child": { "message": "untergeordneten Tab des aktiven Tabs" },
+  "config_autoAttachOnDuplicated_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnDuplicated_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnDuplicated_after": { "message": "\u200b" },
+
+  "config_fromExternal_caption": { "message": "Neuer Tab außerhalb von Firefox" },
+  "config_autoAttachOnOpenedFromExternal_before": { "message": "Öffnen als" },
+  "config_autoAttachOnOpenedFromExternal_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnOpenedFromExternal_independent": { "message": "unabhängigen Tab" },
+  "config_autoAttachOnOpenedFromExternal_child": { "message": "untergeordneten Tab des aktuellen Tab" },
+  "config_autoAttachOnOpenedFromExternal_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnOpenedFromExternal_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnOpenedFromExternal_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_label": { "message": "Tab-Umgebung:" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_default": { "message": "(keine Steuerung)" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_parent": { "message": "Vom übergeordneten Tab im Zweig erben" },
+  "config_inheritContextualIdentityToTabsFromExternalMode_lastActive": { "message": "Vom aktuellen Tab erben" },
+
+  "config_sameSiteOrphan_caption": { "message": "Neuer Tab mit der gleichen Webseite wie der aktuelle Tab über die Adressleiste, Lesezeichen, Verlauf oder anderes" },
+  "config_autoAttachSameSiteOrphan_before": { "message": "Öffnen als" },
+  "config_autoAttachSameSiteOrphan_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachSameSiteOrphan_independent": { "message": "unabhängigen Tab" },
+  "config_autoAttachSameSiteOrphan_child": { "message": "untergeordneten Tab des aktuellen Tab" },
+  "config_autoAttachSameSiteOrphan_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachSameSiteOrphan_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachSameSiteOrphan_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_label": { "message": "Tab-Umgebung:" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_default": { "message": "(keine Steuerung)" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_parent": { "message": "Vom übergeordneten Tab im Zweig erben" },
+  "config_inheritContextualIdentityToSameSiteOrphanMode_lastActive": { "message": "Vom aktuellen Tab erben" },
+
+  "config_anyOtherTrigger_caption": { "message": "Tabs aus einem anderen Grund" },
+  "config_autoAttachOnAnyOtherTrigger_before": { "message": "Öffnen als" },
+  "config_autoAttachOnAnyOtherTrigger_noControl": { "message": "(keine Steuerung)" },
+  "config_autoAttachOnAnyOtherTrigger_independent": { "message": "unabhängigen Tab" },
+  "config_autoAttachOnAnyOtherTrigger_child": { "message": "untergeordneten Tab des aktuellen Tab" },
+  "config_autoAttachOnAnyOtherTrigger_sibling": { "message": "Tab auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnAnyOtherTrigger_nextSibling": { "message": "direkten Nachbar auf der Ebene des aktiven Tab" },
+  "config_autoAttachOnAnyOtherTrigger_after": { "message": "\u200b" },
+  "config_autoAttachOnAnyOtherTrigger_caution": { "message": "*ACHTUNG: Diese Option birgt die Gefahr, andere Erweiterungen zu behindern." },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_label": { "message": "Tab-Umgebung:" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_default": { "message": "(keine Steuerung)" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_parent": { "message": "Vom übergeordneten Tab im Zweig erben" },
+  "config_inheritContextualIdentityToTabsFromAnyOtherTriggerMode_lastActive": { "message": "Vom aktuellen Tab erben" },
+
+  "config_insertNewChildAt_caption": { "message": "Einfügeposition neuer untergeordneter Tabs" },
+  "config_insertNewChildAt_noControl": { "message": "Keine Voreinstellung (das Verhalten von Firefox oder anderer Tab-Add-Ons beibehalten)" },
+  "config_insertNewChildAt_nextToLastRelateTab": { "message": "Neben dem zuletzt untergeordneten Tab oder neben dem übergeordneten Tab (simuliert Firefox Standardverhalten)" },
+  "config_insertNewChildAt_top": { "message": "Am Anfang des Zweigs, als erster untergeordneter Tab" },
+  "config_insertNewChildAt_end": { "message": "Am Ende des Zweigs" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Einfügeposition neuer Tabs von angehefteten Tabs" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "Keine Voreinstellung (das Verhalten von Firefox oder anderer Tab-Add-Ons beibehalten)" },
+  "config_insertNewTabFromPinnedTabAt_nextToLastRelateTab": { "message": "Neben dem zuletzt untergeordneten Tab oder neben dem übergeordneten Tab (simuliert Firefox Standardverhalten)" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "Am Anfang des Zweigs, als erster untergeordneter Tab" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "Am Ende des Zweigs" },
+
+  "config_insertDroppedTabsAt_caption": { "message": "Einfügeposition von Tabs, die auf übergeordnete Tabs abgelegt werden" },
+  "config_insertDroppedTabsAt_inherit": { "message": "Wie neue untergeordnete Tab behandeln" },
+  "config_insertDroppedTabsAt_first": { "message": "Am Anfang des Zweigs (neben dem übergeordneten Tab)" },
+  "config_insertDroppedTabsAt_end": { "message": "Am Ende des Zweigs" },
+
+  "config_groupTab_caption": { "message": "Automatische Gruppierung der Tabs" },
+
+  "config_autoGroupNewTabsFromBookmarks_before": { "message": "Tabs automatisch gruppieren, die innerhalb von" },
+  "config_autoGroupNewTabsFromBookmarks_after": { "message": "Millisekunden aus einem Lesezeichen-Ordner geöffnet wurden" },
+  "config_autoGroupNewTabsFromBookmarks_tooltiptext": { "message": "Diese Funktion benötigt Zugriff auf die Lesezeichen. Hier klicken um die zusätzliche Berechtigung zu gewähren." },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_before": { "message": "(" },
+  "config_requestPermissions_bookmarks_autoGroupNewTabs_after": { "message": "Erkennen von zu Tabs gehörenden Lesezeichen erlauben)" },
+  "config_tabsFromSameFolderMinThresholdPercentage_before": { "message": "Alle neuen Tabs als aus einem Lesezeichen-Ordner stammend betrachten, falls mehr als " },
+  "config_tabsFromSameFolderMinThresholdPercentage_after": { "message":  "% Tabs ein entsprechendes Lesezeichen in einem Lesezeichen-Ordner haben" },
+  "config_autoGroupNewTabsFromOthers_label": { "message": "Zeitgleich geöffnete Tabs gruppieren, auch wenn sie nicht aus den Lesezeichen stammen" },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "Aber neue Tabs nicht gruppieren, die innerhalb von" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "Millisekunden geöffnet werden, wenn ein neues Fenster geöffnet wird, als Teil von Tabs, die als \"Startseite\" geöffnet werden." },
+  "config_warnOnAutoGroupNewTabs_label": { "message": "Bestätige Gruppierung von Tabs" },
+  "config_warnOnAutoGroupNewTabsWithListing_label": { "message": "Tabs, die gruppiert werden sollen, im Bestätigungsdialog auflisten" },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "Tabs automatisch gruppieren, die aus dem gleichen angehefteten Tab heraus geöffnet werden" },
+  "config_renderTreeInGroupTabs_label": { "message": "Zeige Baum in Gruppen-Tab" },
+
+  "config_groupTabTemporaryState_caption": { "message": "Standardzustand von Gruppen-Tabs für jede Situation" },
+  "config_groupTabTemporaryState_option_default": { "message": "Keine Option auswählen" },
+  "config_groupTabTemporaryState_option_checked_before": { "message": "Option \"" },
+  "config_groupTabTemporaryState_option_checked_after": { "message": "\" auswählen" },
+  "config_groupTabTemporaryStateForNewTabsFromBookmarks_label": { "message": "Für Tabs, die aus Lesezeichen geöffnet wurden:" },
+  "config_groupTabTemporaryStateForNewTabsFromOthers_label": { "message": "Für zeitgleich geöffnete Tabs, die nicht aus Lesezeichen geöffnet wurden:" },
+  "config_groupTabTemporaryStateForChildrenOfPinned_label": { "message": "Für Tabs, die vom gleichen angehefteten Tab geöffnet wurden:" },
+  "config_groupTabTemporaryStateForOrphanedTabs_label": { "message": "Geöffnet, um einen geschlossenen übergeordneten Tab zu ersetzen:" },
+
+  "config_inheritContextualIdentityToChildTabMode_label": { "message": "Tab-Umgebung:" },
+  "config_inheritContextualIdentityToChildTabMode_default": { "message": "(keine Steuerung)" },
+  "config_inheritContextualIdentityToChildTabMode_parent": { "message": "Vom übergeordneten Tab im Zweig erben" },
+  "config_inheritContextualIdentityToChildTabMode_lastActive": { "message": "Vom aktuellen Tab erben" },
+
+
+  "config_treeBehavior_caption": { "message": "Verhalten der Zweige" },
+
+  "config_successorTabControlLevel_caption": { "message": "Wenn der aktive Tab als letzter verbleibender untergeordneter Tab geschlossen wird" },
+  "config_successorTabControlLevel_inTree": { "message": "Zum vorherigen Tab im Zweig wechseln" },
+  "config_successorTabControlLevel_simulateDefault": { "message": "Immer zum nächsten Tab wechseln (Firefox Standardverhalten)" },
+  "config_successorTabControlLevel_never": { "message": "Den Fokus niemals steuern (Steuerung von Firefox oder anderer Erweiterungen respektieren)" },
+  "config_successorTabControlLevel_legacyDescription": { "message": "*Firefox eingebautes Verhalten für \"browser.tabs.selectOwnerOnClose\"=\"true\" hat Priorität vor dieser Einstellung." },
+  "config_simulateSelectOwnerOnClose_label": { "message": "Wenn möglich, setze den Fokus auf den öffnenden Tab, wenn der aktuelle Tab geschlossen wird (*Simulation von Firefox eingebautem Verhalten für \"browser.tabs.selectOwnerOnClose\"=\"true\", vor der obigen Einstellung)" },
+
+  "config_fixupTreeOnTabVisibilityChanged_caption": { "message": "Wenn die Sichtbarkeit von Tabs von anderen Erweiterungen geändert wird" },
+  "config_fixupTreeOnTabVisibilityChanged_fix":     { "message": "Automatisch die Baumstruktur mit den sichtbaren Tabs aktualisieren (*Empfohlen bei der Verwendung von anderen Erweiterungen um Tab-Gruppen zu wechseln)" },
+  "config_fixupTreeOnTabVisibilityChanged_keep":    { "message": "Baumstruktur inklusive versteckten Tabs beibehalten (*Empfohlen bei der Verwendung von anderen Erweiterungen, welche vorübergehend die Sichtbarkeit von Tabs ändern)" },
+
+  "config_autoCollapseExpandSubtreeOnAttach_label": { "message": "Wenn ein neuer Zweig erscheint, alle anderen automatisch einklappen" },
+  "config_autoCollapseExpandSubtreeOnSelect_label": { "message": "Wenn ein Tab ausgewählt wird, automatisch seinen Zweig ausklappen und alle anderen einklappen" },
+  "config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label": { "message": "Es sei denn, dass das Auswählen des Tabs durch das Schließen des aktiven Tabs verursacht wird" },
+  "config_unfocusableCollapsedTab_label": { "message": "Wenn ein Tab unter einem eingeklappten Zweig fokussiert wird, den Zweig automatisch ausklappen" },
+  "config_autoDiscardTabForUnexpectedFocus_label": { "message": "Tabs ausstehend lassen, wenn Tabs versehentlich fokussiert werden und der Fokus sofort umgeleitet wird" },
+  "config_avoidDiscardedTabToBeActivatedIfPossible_label": { "message": "Vermeiden, dass ausstehende Tabs versehentlich aktiviert werden, wenn der aktuelle Tab geschlossen oder ein Zweig eingeklappt wird" },
+
+  "config_treeDoubleClickBehavior_caption":             { "message": "Doppelklick auf einen Tab" },
+  "config_treeDoubleClickBehavior_toggleCollapsed":     { "message": "Aus-/einklappen eines Zweigs" },
+  "config_treeDoubleClickBehavior_close":               { "message": "Tab schließen (*Simuliert Firefox eingebautes Verhalten für \"browser.tabs.closeTabByDblclick\"=\"true\")" },
+  "config_treeDoubleClickBehavior_none":                { "message": "Nichts machen" },
+
+  "config_parentTabOperationBehaviorMode_caption":           { "message": "Wenn ein übergeordneter Tab geschlossen oder verschoben wird" },
+  "config_parentTabOperationBehaviorMode_noteForPermanentlyConsistentBehaviors": { "message": "Unabhängig von diesen Einstellungen gibt es einige festgelegte Verhaltensweisen in der Seitenleiste;\n･ Schließen eines eingeklappten, übergeordneten Tabs: den gesamten Zweig schließen\n･ Verschieben eines eingeklappten, übergeordneten Tabs: den gesamten Zweig verschieben\n･ Verschieben eines ausgeklappten, übergeordneten Tabs: Verhalten wie im Bereich \"Ziehen und Ablegen\" eingestellt" },
+
+  "config_parentTabOperationBehaviorMode_parallel": { "message": "Empfohlenes Verhalten für Nutzer, welche auch die eingebaute Tableiste von Firefox verwenden" },
+  "config_closeParentBehavior_insideSidebar":       { "message": "Wenn ein übergeordneter Tab mit ausgeklapptem Zweig über die Seitenleiste geschlossen wird," },
+  "config_closeParentBehavior_outsideSidebar":      { "message": "Wenn ein übergeordneter Tab (unabhängig ob der Zweig auf- oder zugeklappt ist) über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen geschlossen wird," },
+  "config_moveParentBehavior_outsideSidebar":       { "message": "Wenn ein übergeordneter Tab (unabhängig ob der Zweig auf- oder zugeklappt ist) über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen verschoben wird," },
+
+  "config_parentTabOperationBehaviorMode_consistent":         { "message": "Empfohlenes Verhalten für Nutzer, welche die eingebaute Tableiste von Firefox nicht verwenden" },
+  "config_parentTabOperationBehaviorMode_consistent_caption": { "message": "Wenn ein übergeordneter Tab mit ausgeklapptem Zweig geschlossen/verschoben wird," },
+  "config_parentTabOperationBehaviorMode_consistent_notes":   { "message": "Tabs verhalten sich konsistent wie oben festgelegt, auch bei der eingebauten Tableiste, Tastenkombinationen oder andere Erweiterungen." },
+
+  "config_parentTabOperationBehaviorMode_custom":                { "message": "Benutzerdefiniert" },
+  "config_closeParentBehavior_insideSidebar_expanded_caption":   { "message": "Schließen: Wenn ein übergeordneter Tab mit ausgeklapptem Zweig über die Seitenleiste geschlossen wird," },
+  "config_closeParentBehavior_outsideSidebar_collapsed_caption": { "message": "Schließen: Wenn ein übergeordneter Tab mit eingeklapptem Zweig über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen geschlossen wird," },
+  "config_closeParentBehavior_outsideSidebar_expanded_caption":  { "message": "Schließen: Wenn ein übergeordneter Tab mit ausgeklapptem Zweig über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen geschlossen wird," },
+  "config_closeParentBehavior_noSidebar_collapsed_caption":      { "message": "wenn die Seitenleiste geschlossen ist," },
+  "config_closeParentBehavior_noSidebar_expanded_caption":       { "message": "wenn die Seitenleiste geschlossen ist," },
+  "config_moveParentBehavior_outsideSidebar_collapsed_caption":  { "message": "Verschieben: Wenn ein übergeordneter Tab mit eingeklapptem Zweig über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen verschoben wird," },
+  "config_moveParentBehavior_outsideSidebar_expanded_caption":   { "message": "Verschieben: Wenn ein übergeordneter Tab mit ausgeklapptem Zweig über die eingebaute Tableiste, Tastenkombinationen oder andere Erweiterungen verschoben wird," },
+  "config_moveParentBehavior_noSidebar_collapsed_caption":       { "message": "wenn die Seitenleiste geschlossen ist," },
+  "config_moveParentBehavior_noSidebar_expanded_caption":        { "message": "wenn die Seitenleiste geschlossen ist," },
+
+  "config_parentTabOperationBehavior_entireTree":           { "message": "Untergeordnete Tabs ebenfalls schließen" },
+  "config_closeParentBehavior_entireTree":                  { "message": "Gesamten Zweig schließen" },
+  "config_moveParentBehavior_entireTree":                   { "message": "Gesamten Zweig verschieben" },
+  "config_parentTabOperationBehavior_replaceWithGroupTab":  { "message": "Den geschlossenen/verschobenen übergeordneten Tab durch einen Platzhalter ersetzen" },
+  "config_closeParentBehavior_replaceWithGroupTab":         { "message": "Den geschlossenen übergeordneten Tab durch einen Platzhalter ersetzen" },
+  "config_moveParentBehavior_replaceWithGroupTab":          { "message": "Den verschobenen übergeordneten Tab durch einen Platzhalter ersetzen" },
+  "config_parentTabOperationBehavior_promoteFirst":         { "message": "Den geschlossenen übergeordneten Tab durch den ersten untergeordneten Tab ersetzen" },
+  "config_closeParentBehavior_promoteFirst":                { "message": "Den geschlossenen übergeordneten Tab durch den ersten untergeordneten Tab ersetzen" },
+  "config_moveParentBehavior_promoteFirst":                 { "message": "Den geschlossenen übergeordneten Tab durch den ersten untergeordneten Tab ersetzen" },
+  "config_parentTabOperationBehavior_promoteAll":           { "message": "Alle untergeordneten Tabs auf die Ebene des geschlossenen übergeordneten Tabs bringen" },
+  "config_closeParentBehavior_promoteAll":                  { "message": "Alle untergeordneten Tabs auf die Ebene des geschlossenen übergeordneten Tabs bringen" },
+  "config_moveParentBehavior_promoteAll":                   { "message": "Alle untergeordneten Tabs auf die Ebene des geschlossenen übergeordneten Tabs bringen" },
+  "config_parentTabOperationBehavior_promoteIntelligently": { "message": "Den geschlossenen Tab durch den ersten untergeordneten Tab ersetzen, wenn er sich auf der obersten Ebene befand, andernfalls alle untergeordneten Tabs auf die Ebene des geschlossenen Tabs bringen" },
+  "config_closeParentBehavior_promoteIntelligently":        { "message": "Den geschlossenen Tab durch den ersten untergeordneten Tab ersetzen, wenn er sich auf der obersten Ebene befand, andernfalls alle untergeordneten Tabs auf die Ebene des geschlossenen Tabs bringen" },
+  "config_moveParentBehavior_promoteIntelligently":         { "message": "Den geschlossenen Tab durch den ersten untergeordneten Tab ersetzen, wenn er sich auf der obersten Ebene befand, andernfalls alle untergeordneten Tabs auf die Ebene des geschlossenen Tabs bringen" },
+  "config_parentTabOperationBehavior_detach":               { "message": "Untergeordnete Tabs vom Zweig lösen" },
+  "config_closeParentBehavior_detach":                      { "message": "Untergeordnete Tabs vom Zweig lösen" },
+  "config_moveParentBehavior_detach":                       { "message": "Untergeordnete Tabs vom Zweig lösen" },
+
+  "config_warnOnCloseTabs_label": { "message": "Warnen, wenn mehrere Tabs geschlossen werden sollen" },
+  "config_warnOnCloseTabsByClosebox_label": { "message": "Warnen, wenn mehrere Tabs durch einen Klick auf eine Schließen-Schaltfläche geschlossen werden sollen" },
+  "config_warnOnCloseTabsWithListing_label": { "message": "Tabs, die geschlossen werden sollen, im Bestätigungsdialog auflisten" },
+
+
+  "config_drag_caption": { "message": "Ziehen und Ablegen" },
+
+  "config_tabDragBehavior_caption":       { "message": "Wenn ein übergeordneter Zweig gezogen und abgelegt wird" },
+  "config_tabDragBehavior_description":   { "message": "Aufgrund von Firefox Einschränkungen muss beim Beginn des Ziehens bekannt sein, wie Tabs beim Ablegen außerhalb der Seitenleiste von TST behandelt werden sollen." },
+  "config_tabDragBehavior_label":         { "message": "Ziehen" },
+  "config_tabDragBehaviorShift_label":    { "message": "Shift-Ziehen" },
+  "config_tabDragBehavior_label_behaviorInsideSidebar": { "message": "Verhalten innerhalb" },
+  "config_tabDragBehavior_label_behaviorOutsideSidebar": { "message": "außerhalb der Seitenleiste" },
+  "config_tabDragBehavior_moveEntireTreeAlways":         { "message": "Gesamten Zweig verschieben" },
+  "config_tabDragBehavior_detachEntireTreeAlways":       { "message": "Gesamten Zweig vom Fenster ablösen (aber unmöglich, Lesezeichen anzulegen)" },
+  "config_tabDragBehavior_bookmarkEntireTreeAlways":     { "message": "Verweise oder Lesezeichen vom gesamten Zweig erstellen (aber unmöglich, vom Fenster abzulösen)" },
+  "config_tabDragBehavior_moveSoloTabIfExpanded":        { "message": "Einzelnen Tab verschieben" },
+  "config_tabDragBehavior_detachSoloTabIfExpanded":      { "message": "Einzelnen Tab vom Fenster ablösen (aber unmöglich, Lesezeichen anzulegen)" },
+  "config_tabDragBehavior_bookmarkSoloTabIfExpanded":    { "message": "Verweis oder Lesezeichen vom einzelnen Tab erstellen (aber unmöglich, vom Fenster abzulösen)" },
+  "config_tabDragBehavior_doNothing":                    { "message": "Nichts machen" },
+  "config_tabDragBehavior_noteForDragstartOutsideSidebar": { "message": "Wenn ein übergeordneter Tab aus der eingebaute Tableiste von Firefox verschoben wird, wie im Abschnitt \"Verhalten der Zweige\" => \"Wenn ein übergeordneter Tab geschlossen oder verschoben wird\" verhalten." },
+  "config_showTabDragBehaviorNotification_label": { "message": "Zeige Benachrichtigung was geschenen wird, wenn Tabs außerhalb der Seitenleiste abgelegt werden, während ein Tab gezogen wird." },
+
+  "config_dropLinksOnTabBehavior_caption": { "message": "Wenn ein Link oder eine URL-Zeichenkette per Ziehen und Ablegen auf einen Tab abgelegt wird" },
+  "config_dropLinksOnTabBehavior_ask":     { "message": "Immer nachfragen" },
+  "config_dropLinksOnTabBehavior_load":    { "message": "In diesem Tab öffnen" },
+  "config_dropLinksOnTabBehavior_newtab":  { "message": "In einem neuen untergeordneten Tab öffnen" },
+
+  "config_autoExpandOnLongHoverDelay_before":  { "message": "Eingeklappten Zweig ausklappen, wenn er beim Ziehen über " },
+  "config_autoExpandOnLongHoverDelay_after":  { "message": " ms schwebt" },
+  "config_autoExpandOnLongHoverRestoreIniitalState_label":  { "message": "Solche Zweige nach dem Ziehen automatisch einklappen" },
+  "config_autoExpandIntelligently_label":  { "message": "Andere Zweige einklappen, wenn ein eingeklappter Zweig automatisch ausgeklappt wird" },
+  "config_ignoreTabDropNearSidebarArea_label":  { "message": "Tab nicht vom Fenster trennen, wenn er in der Nähe der Seitenleiste abgelegt wird (es wird empfohlen, dies zu deaktivieren, falls \"privacy.resistFingerprinting\"=\"true\" ist)" },
+
+
+  "config_more_caption": { "message": "Mehr…" },
+
+  "config_shortcuts_caption": { "message": "Tastenkombinationen" },
+
+  "config_requestPermissions_allUrls_ctrlTabTracking":   { "message": "Beim Umschalten zwischen Tabs mit der Tastatur eingeklappte Zweige nicht ausklappen und eingeklappte untergeordnete Tabs überspringen. (*Das Ausführen von Scripts auf den Webseiten muss erlaubt sein.)" },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_before": { "message": "Aktiven eingeklappten Zweig ausklappen, wenn die Tab-Taste für mehr als " },
+  "config_autoExpandOnTabSwitchingShortcutsDelay_after": { "message": " ms gedrückt ist" },
+  "config_accelKey_label":   { "message": "Taste für Tastenkürzel (*Muss mit der Konfiguration von \"ui.key.accelKey\" übereinstimmen):" },
+  "config_accelKey_auto":    { "message": "Standard (macOS=⌘, andere=Strg)" },
+  "config_accelKey_alt":     { "message": "Alt" },
+  "config_accelKey_control": { "message": "Strg/Control" },
+  "config_accelKey_meta":    { "message": "Meta/⌘" },
+
+  "config_shortcuts_resetAll": { "message": "Alle Tastenkombinationen zurücksetzen" },
+
+
+  "config_advanced_caption": { "message": "Erweitert" },
+
+  "config_bookmarkTreeFolderName_before": { "message": "Ordnernamen für \"Lesezeichen für diesen Zweig erstellen\":" },
+  "config_bookmarkTreeFolderName_after": { "message": "\u200b" },
+  "config_bookmarkTreeFolderName_description": { "message": "Verfügbare Platzhalter: %TITLE% (Titel des ersten Tabs), %URL% (URL des ersten Tabs), %YEAR% (Jahr, vierstellig), %MONTH% (Monat, zweistellig), %DATE% (Tag, zweistellig)" },
+
+  "config_defaultBookmarkParentId_label_before":  { "message": "Neue Lesezeichen erstellen unter" },
+  "config_defaultBookmarkParentId_label_after":   { "message": "\u200b" },
+
+  "config_supportTabsMultiselect_label": { "message": "Verwende Schnittstelle zur Mehrfachauswahl von Tabs um den Tab-Fokus zu steuern (*hängt von der eingebauten Einstellung von Firefox \"browser.tabs.multiselect\"=\"true\" ab)" },
+
+  "config_undoMultipleTabsClose_label": { "message": "Zuletzt geschlossene Tabs wiederherstellen, wenn einer der Tabs über den \"Geschlossener Tab wiederherstellen\" Befehl wiederhergestellt wird" },
+
+  "config_scrollLines_label_before": { "message": "Bewege " },
+  "config_scrollLines_label_after":  { "message": "Zeilen auf oder ab beim \"Zeilenweise hoch oder runter scrollen\" Befehl" },
+
+  "config_userStyleRules_label": { "message": "Zusätzliche Style-Regeln für Seitenleisten-Inhalte" },
+  "config_userStyleRules_description_before": { "message": "Für weitere Optionen siehe " },
+  "config_userStyleRules_description_link_label": { "message": "Codebeispiele im TST Wiki" },
+  "config_userStyleRules_description_after": { "message": "." },
+  "config_userStyleRules_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-version-2x" },
+  "config_userStyleRules_themeRules_description": { "message": "Folgende Eigenschaften sind per \"var()\" basierend auf dem aktuellen Browser-Design verfügbar:" },
+  "config_userStyleRules_themeRules_description_alphaVariations": { "message": "Die Transparenz einer Farbe kann mit einem Suffix wie \"--theme-colors-tab_background_text-30\" in 10%-Schritten geändert werden (in diesem Fall 30%)" },
+  "config_userStyleRules_import": { "message": "Aus Datei laden" },
+  "config_userStyleRules_export": { "message": "Als Datei speichern" },
+  "config_userStyleRules_overwrite_title":     { "message": "Aktuelle Style-Regeln ersetzen?" },
+  "config_userStyleRules_overwrite_message":   { "message": "Sollen die aktuellen Style-Regeln durch die geladene Datei komplett ersetzt werden?" },
+  "config_userStyleRules_overwrite_overwrite": { "message": "Alles ersetzen" },
+  "config_userStyleRules_overwrite_append":    { "message": "Am Ende anfügen" },
+  "config_tooLargeUserStyleRulesCaution": { "message": "Die Style-Regeln sind zu lang! Bitte kürzen." },
+  "config_userStyleRulesTheme_label":     { "message": "Design:" },
+  "config_userStyleRulesTheme_auto":      { "message": "Auto" },
+  "config_userStyleRulesTheme_separator": { "message": "-----------------" },
+  "config_userStyleRulesTheme_default":   { "message": "Standard" },
+
+
+  "config_addons_caption": { "message": "Zusätzliche Funktionen über andere Erweiterungen" },
+
+  "config_addons_description_before": { "message": "Es existieren " },
+  "config_addons_description_link_label": { "message": "Erweiterungen, welche TST erweitern" },
+  "config_addons_description_after": { "message": ". Probiere sie aus, wenn Du mehr Funktionen in der Seitenleiste von TST haben möchtest." },
+  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#addons-that-extend-tst" },
+
+  "config_theme_description_before": { "message": "Aktuell gibt es nur die eingebauten Designs \"Pur\", \"Seitenleiste\" und \"Hoher Kontrast\". Für weitere Designs siehe " },
+  "config_theme_description_link_label": { "message": "die Code-Beispiele im Wiki" },
+  "config_theme_description_after": { "message": " für Beispiele." },
+  "helper_theme_list_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#restore-old-built-in-themes" },
+
+  "config_externaladdonpermissions_label": { "message": "Berechtigungen für API-Zugriffe von anderen Erweiterungen" },
+  "config_externaladdonpermissions_description": { "message": "Hier zugelassene Erweiterungen erhalten Zugriff auf detaillierte Tab-Informationen und Tabs in privaten Fenstern, <em>durch die Berechtigungen von Tree-shaped vertical tabs</em>, auch wenn die Berechtigungen der Erweiterung selbst durch Firefox nicht erteilt wurden. <em>Berechtigungen nicht erteilen, wenn der Erweiterung nicht vertraut wird.</em>" },
+  "config_externalAddonPermissions_header_name": { "message": "Name der Erweiterung" },
+  "config_externalAddonPermissions_header_permissions": { "message": "Zugelassene spezielle Operationen" },
+  "config_externalAddonPermissions_header_incognito": { "message": "Benachrichtigungen von privaten Fenstern" },
+
+  "addon_containerBookmarks_label": { "message": "Container Bookmarks" },
+  "addon_containerBookmarks_uri": { "message": "https://addons.mozilla.org/firefox/addon/container-bookmarks/" },
+  "config_containerRedirectKey_label": { "message": "Redirect Key (*Bitte den gleichen Wert setzen wie in den Einstellungen der Erweiterung):" },
+
+
+  "config_debug_caption": { "message": "Entwicklung" },
+
+  "config_link_startupPage_label": { "message": "Seite für ersten Start" },
+  "config_link_groupPage_label":   { "message": "Seite für Gruppen-Tab" },
+  "config_link_tabbarPage_label":   { "message": "Seite für Tab-Leiste" },
+
+  "config_runTests_label": { "message": "Automatischen Test starten" },
+  "config_runBenchmark_label": { "message": "Benchmark starten" },
+  "config_enableLinuxBehaviors_label": { "message": "Linux-spezifisches Verhalten aktivieren" },
+  "config_enableMacOSBehaviors_label": { "message": "macOS-spezifisches Verhalten aktivieren" },
+  "config_enableWindowsBehaviors_label": { "message": "Windows-spezifisches Verhalten aktivieren" },
+  "config_debug_label": { "message": "Testmodus" },
+  "config_log_caption":               { "message": "Detaillierte Logs" },
+  "config_logTimestamp_label": { "message": "Mit Zeitstempel loggen" },
+  "config_logFor_common":     { "message": "Logs von gemeinesamen Modulen" },
+  "config_logFor_background": { "message": "Logs von Hintergrundmodulen" },
+  "config_logFor_sidebar":    { "message": "Logs von Seitenleisten-Modulen" },
+  "config_loggingQueries_label": { "message": "Abfrage von Tabs loggen" },
+  "config_loggingConnectionMessages_label": { "message": "Interne Nachrichten loggen" },
+  "config_showLogsButton_label": { "message": "Zeige Logs" },
+  "config_simulateSVGContextFill_label": { "message": "Workaround für Bug 1388193 und Bug 1421329 aktivieren um SVG-Icons zu simulieren (*Kann die CPU-Last erhöhen. Um diese Option zu deaktivieren, aktiviere \"svg.context-properties.content.enabled\" via \"about:config\", bis diese Bugs behoben sind.)" },
+  "config_staticARIALabel_label": { "message": "Festes ARIA Label für Tab-Elemente verwenden" },
+  "config_staticARIALabel_description": { "message": "*Diese Option könnte helfen, falls Tab-Elemente nach manchen Operationen von der Sprachausgabe nicht erkannt werden." },
+  "config_useCachedTree_label": { "message": "Zweig-Wiederherstellung mit Cache optimieren" },
+  "config_useCachedTree_description": { "message": "*Sollte es zu instabilem Verhalten der Baumstruktur kommen, kann es helfen, diese Einstellung zu deaktivieren und wieder zu aktivieren, um den Cache zu erneuern." },
+  "config_acceleratedTabCreation_label": { "message": "Operationen zu neu geöffneten Tabs beschleunigen (*HINWEIS: Du wirst unstabilies Verhalten rund um Tabs feststellen.)" },
+  "config_maximumAcceptableDelayForTabDuplication_before": { "message": "Das Duplizieren von Tabs abbrechen, wenn es länger als" },
+  "config_maximumAcceptableDelayForTabDuplication_after": { "message": "Millisekunden dauert." },
+  "config_delayForDuplicatedTabDetection_label_before": { "message": "Verzögerung um duplizierte Tabs zu erkennen:" },
+  "config_delayForDuplicatedTabDetection_label_after": { "message": "ms (erhöhen, wenn duplizierte Tabs nicht korrekt erkannt werden)" },
+  "config_delayForDuplicatedTabDetection_autoDetect": { "message": "Automatisch erkennen" },
+  "config_delayForDuplicatedTabDetection_test": { "message": "Testerkennung" },
+  "config_delayForDuplicatedTabDetection_test_resultMessage": { "message": "$PERCENTAGE$% erfolgreich erkannt.",
+    "placeholders": {
+      "percentage": { "content": "$1", "example": "50" }
+    }},
+  "config_labelOverflowStyle_caption": { "message": "Zu lange Beschriftung von Tabs:" },
+  "config_labelOverflowStyle_fade":    { "message": "Ausblenden (bessere Sichtbarkeit)" },
+  "config_labelOverflowStyle_crop":    { "message": "Abschneiden mit \"..\" (bessere Leistung)" },
+
+  "config_requestPermissions_bookmarks": { "message": "Lesen und Erstellen von Lesezeichen zulassen" },
+  "config_requestPermissions_bookmarks_context": { "message": "Öffnen des Kontextmenüs für Lesezeichen zulassen" },
+  "config_requestPermissions_tabHide":   { "message": "Erlaube, einzelne Tabs anzuzeigen/auszublenden (*Aus- und wieder einschalten, bevor Tests ausgeführt werden, um sicherzustellen, dass die Berechtigung gewährt wurde.)" },
+
+  "config_requestPermissions_fallbackToToolbarButton_title": { "message": "Klicke auf das \"Tree-shaped vertical tabs\" Symbol in der Symbolleiste" },
+  "config_requestPermissions_fallbackToToolbarButton_message": { "message": "Wegen eines Bugs in Firefox, kannst du Berechtigungen nicht in diesem Menü erteilen. Bitte klicke auf das das \"Tree-shaped vertical tabs\" Symbol in der Symbolleiste um Berechtigungen zu erteilen." },
+
+  "config_all_caption": { "message": "Alle Einstellungen" },
+
+  "config_terms_delimiter": { "message": " " },
+
+
+  "tabContextMenu_newTab_label":      { "message": "Neuer Ta&b" },
+
+  "tabContextMenu_reload_label":      { "message": "Tab neu la&den" },
+  "tabContextMenu_mute_label":        { "message": "Tab stu&mmschalten" },
+  "tabContextMenu_unmute_label":      { "message": "Stu&mmschaltung aufheben" },
+
+  "tabContextMenu_pin_label":         { "message": "Tab an&heften" },
+  "tabContextMenu_unpin_label":       { "message": "Ta&b ablösen" },
+  "tabContextMenu_duplicate_label":   { "message": "Tab &klonen" },
+  "tabContextMenu_selectAllTabs_label": { "message": "&Alle Tabs auswählen" },
+  "tabContextMenu_bookmark_label":    { "message": "Tab als &Lesezeichen hinzufügen" },
+  "tabContextMenu_reopenInContainer_label":             { "message": "In Tab-&Umgebung öffnen" },
+  "tabContextMenu_reopenInContainer_noContainer_label": { "message": "Keine Tab-&Umgebung" },
+  "tabContextMenu_moveTab_label":     { "message": "Tab &verschieben" },
+  "tabContextMenu_moveTabToStart_label": { "message": "An &Anfang verschieben" },
+  "tabContextMenu_moveTabToEnd_label":   { "message": "An &Ende verschieben" },
+  "tabContextMenu_tearOff_label":     { "message": "In &neues Fenster verschieben" },
+  "tabContextMenu_sendTabsToDevice_label": { "message": "Sen&de Tab an Geräte" },
+  "tabContextMenu_sendTabsToAllDevices_label": { "message": "Sen&de Tab an alle Geräte" },
+  "tabContextMenu_manageSyncDevices_label": { "message": "Geräte verwalten…" },
+  "tabContextMenu_shareTabURL_label":   { "message": "&Teilen" },
+
+
+  "tabContextMenu_closeMultipleTabs_label":  { "message": "&Mehrere Tabs schließen" },
+  "tabContextMenu_closeTabsToTop_label":  { "message": "Tabs nach &oben schließen" },
+  "tabContextMenu_closeTabsToBottom_label":  { "message": "Tabs nach un&ten schließen" },
+  "tabContextMenu_closeOther_label":  { "message": "Andere Tabs &schließen" },
+
+  "tabContextMenu_undoClose_label":   { "message": "&Geschlossenen Tab wiederherstellen" },
+  "tabContextMenu_undoClose_label_multiple": { "message": "&Geschlossene Tabs wiederherstellen" },
+  "tabContextMenu_close_label":       { "message": "Tab s&chließen" },
+
+  "tabContextMenu_reload_label_multiselected":      { "message": "Ausgewählte Tabs neu la&den" },
+  "tabContextMenu_mute_label_multiselected":        { "message": "Tabs st&ummschalten" },
+  "tabContextMenu_unmute_label_multiselected":      { "message": "Stu&mmschaltung aufheben" },
+
+  "tabContextMenu_pin_label_multiselected":         { "message": "Tabs an&heften" },
+  "tabContextMenu_unpin_label_multiselected":       { "message": "Ta&bs ablösen" },
+
+  "tabContextMenu_duplicate_label_multiselected":   { "message": "Tabs &klonen" },
+
+  "tabContextMenu_moveTab_label_multiselected": { "message": "Tabs &verschieben" },
+  "tabContextMenu_sendTabsToDevice_label_multiselected": { "message": "Sen&de %S Tabs an Gerät" },
+
+  "tabContextMenu_bookmark_label_multiselected": { "message": "&Lesezeichen für Tabs hinzufügen…" },
+  "tabContextMenu_bookmarkSelected_label":       { "message": "&Lesezeichen für ausgewählte Tabs hinzufügen…" },
+
+  "tabContextMenu_close_label_multiselected":       { "message": "Ausgewählte Tabs s&chließen" }
+}

@@ -2817,7 +2817,7 @@ pref("font.size.monospace.x-math", 13);
   pref("gfx.font_rendering.cleartype_params.force_gdi_classic_max_size", 15);
 
   // Locate plugins by the directories specified in the Windows registry for PLIDs
-  // Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
+  // Which is currently HKLM\Software\AblazePlugins\xxxPLIDxxx\Path
   pref("plugin.scan.plid.all", true);
 
   // Switch the keyboard layout per window

@@ -2388,7 +2388,7 @@ function shouldRunServiceTest() {
   let isBinSigned = isBinarySigned(updaterBinPath);
 
   const REG_PATH =
-    "SOFTWARE\\Mozilla\\MaintenanceService\\" +
+    "SOFTWARE\\Ablaze\\MaintenanceService\\" +
     "3932ecacee736d366d6436db0f55bce4";
   let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
     Ci.nsIWindowsRegKey

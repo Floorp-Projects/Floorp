@@ -192,6 +192,32 @@ if (AppConstants.MOZ_UPDATER) {
   }
 }
 
+// Floorp 固有の Preference from 8.7.2
+
+Preferences.addAll([
+  { id: "floorp.optimized.msbutton.ope", type: "bool" },
+  { id: "floorp.hide.tabbrowser-tab.enable", type: "bool" },
+  { id: "floorp.optimized.verticaltab", type: "bool" },
+  { id: "floorp.horizontal.tab.position.shift", type: "bool" },
+  { id: "floorp.Tree-type.verticaltab.optimization", type: "bool" },
+  { id: "floorp.bookmarks.bar.focus.mode", type: "bool" },
+  { id: "floorp.material.effect.enable", type: "bool" },
+
+  { id: "enable.floorp.update", type: "bool" },
+  { id: "enable.floorp.updater.latest", type: "bool" },
+
+  { id: "ui.systemUsesDarkTheme", type: "int" },
+  { id: "floorp.browser.user.interface", type: "int"},
+  { id: "floorp.browser.tabbar.settings", type:"int"},
+
+  { id: "floorp.bookmarks.fakestatus.mode", type:"bool"},
+  { id: "floorp.search.top.mode", type:"bool"},
+  { id: "floorp.legacy.menu.mode", type:"bool"},
+
+]);
+
+// Floorp の設定項目終わり
+
 XPCOMUtils.defineLazyGetter(this, "gHasWinPackageId", () => {
   let hasWinPackageId = false;
   try {
@@ -522,6 +548,70 @@ var gMainPane = {
       link.setAttribute("href", mediaControlLearnMoreUrl);
     }
 
+    // Floorp 固有の設定
+    this.SetSystemThemeColor();
+    setEventListener("SystemThemeGroup", "command", event => {
+      this.checkUpdateSystemThemeColor(event.target.value);
+    });
+
+    //themes
+      const themeelement = document.getElementsByClassName('themes');
+      for(let i = 0; i < themeelement.length; i++) {
+          themeelement[i].addEventListener('click',
+
+          function()
+          {
+            (async() => {
+              let userConfirm = await confirmRestartPrompt(true)
+              if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+                Services.startup.quit(
+                  Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+                );
+              }
+            })
+          }
+
+          ,false);
+        }
+
+        const tabarelement = document.getElementsByClassName('tabbar');
+        for(let i = 0; i < tabarelement.length; i++) {
+          tabarelement[i].addEventListener('click',
+  
+          function()
+          {
+            (async() => {
+              let userConfirm = await confirmRestartPrompt()
+              if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+                Services.startup.quit(
+                  Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+                );
+              }
+            })()
+          }
+  
+            ,false);
+        }
+
+        const OptionsClass = document.getElementsByClassName('options');
+        for(let i = 0; i < OptionsClass.length; i++) {
+          OptionsClass[i].addEventListener('click',
+  
+          function()
+          {
+            (async() => {
+              let userConfirm = await confirmRestartPrompt()
+              if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
+                Services.startup.quit(
+                  Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+                );
+              }
+            })()
+          }
+  
+            ,false);
+        }
+
     // Initializes the fonts dropdowns displayed in this pane.
     this._rebuildFonts();
 
@@ -702,7 +792,7 @@ var gMainPane = {
           );
           wrk.open(
             wrk.ROOT_KEY_LOCAL_MACHINE,
-            "SOFTWARE\\Mozilla\\MaintenanceService",
+            "SOFTWARE\\Ablaze\\MaintenanceService",
             wrk.ACCESS_READ | wrk.WOW64_64
           );
           installed = wrk.readIntValue("Installed");
@@ -2072,6 +2162,26 @@ var gMainPane = {
     }
   },
 
+  async SetSystemThemeColor() {
+    let radiogroup = document.getElementById("SystemThemeColorGroup");
+    radiogroup.disabled = true;
+    radiogroup.value = Services.prefs.getIntPref("ui.systemUsesDarkTheme", -1);
+    radiogroup.disabled = false;
+  },
+  async checkUpdateSystemThemeColor(value) {
+    switch (value) {
+      case "1":
+        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 1);
+        break;
+      case "0":
+        Services.prefs.setIntPref("ui.systemUsesDarkTheme", 0);
+        break;
+      case "-1":
+        Services.prefs.clearUserPref("ui.systemUsesDarkTheme");
+        break;
+      }
+  },
+
   /**
    * Displays the history of installed updates.
    */
@@ -2365,10 +2475,7 @@ var gMainPane = {
 
     let internalMenuItem;
     // Add the "Open in Firefox" option for optional internal handlers.
-    if (
-      handlerInfo instanceof InternalHandlerInfoWrapper &&
-      !handlerInfo.preventInternalViewing
-    ) {
+    if (handlerInfo instanceof InternalHandlerInfoWrapper) {
       internalMenuItem = document.createXULElement("menuitem");
       internalMenuItem.setAttribute(
         "action",

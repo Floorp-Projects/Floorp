@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+<style>
+  g:not(:target) {
+    display: none;
+  }
+</style>
+<symbol id="icon">
+  <path  d="M0.7,18c0,4.9,3.6,8.8,8.1,9.5v4.3c0.2,0,3.2,0,3.2,0v-4.3c1.8-0.4,3.6-1.1,4.9-2.5c0.2-0.2,0.2-0.2,0.2-0.5  c-0.2-0.4-0.2-1.1-0.2-1.6c0-2,0.2-4.9,1.6-7.9c0,0,0.9-1.6,0.7-1.8C18,7.2,14.4,0,10.4,0C5,0,0.7,12.6,0.7,18z M18.3,22.8  c0,3.1,2.2,5.6,4.9,6.3V32h3.2v-2.9c2.7-0.7,4.9-3.2,4.9-6.3c0-3.6-2.9-12.9-6.5-12.9S18.3,19.2,18.3,22.8z"/>
+</symbol>
+<g id="blue" fill="#37adff"><use href="#icon"/></g><g id="turquoise" fill="#00c79a"><use href="#icon"/></g><g id="green" fill="#51cd00"><use href="#icon"/></g><g id="yellow" fill="#ffcb00"><use href="#icon"/></g><g id="orange" fill="#ff9f00"><use href="#icon"/></g><g id="red" fill="#ff613d"><use href="#icon"/></g><g id="pink" fill="#ff4bda"><use href="#icon"/></g><g id="purple" fill="#af51f5"><use href="#icon"/></g><g id="toolbar-dark" fill="#F9F9FA"><use href="#icon"/></g><g id="toolbar-light" fill="#0C0C0D"><use href="#icon"/></g>
+</svg>

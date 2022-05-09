@@ -25,4 +25,5 @@ toolkit.jar:
 % resource default-theme %content/mozapps/extensions/default-theme/
   content/mozapps/extensions/default-theme                      (default-theme/*.svg)
   content/mozapps/extensions/default-theme/manifest.json        (default-theme/manifest.json)
+  content/mozapps/extensions/default-theme/                     (default-theme/*.css)
 #endif

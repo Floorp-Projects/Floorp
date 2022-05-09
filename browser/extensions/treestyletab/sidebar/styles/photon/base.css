@@ -1,0 +1,162 @@
+/*
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+tab-item-substance,
+.after-tabs button,
+.after-tabs [role="button"] {
+  border: 1px solid var(--tab-border);
+  border-width: 1px 0;
+  padding: 0.3em 0.25em;
+}
+tab-item,
+.after-tabs button,
+.after-tabs [role="button"] {
+  margin-bottom: -1px;
+}
+
+tab-item.pinned tab-item-substance {
+  border-width: 0 1px 1px 0;
+}
+
+tab-item.pinned.last-row tab-item-substance {
+  border-bottom-width: 0;
+}
+
+
+.after-tabs button,
+.after-tabs [role="button"] {
+  padding: 0em;
+}
+
+#tabbar + .after-tabs button,
+#tabbar + .after-tabs [role="button"] {
+  border-bottom: none;
+}
+
+
+:root.left tab-item:not(.pinned) tab-item-substance,
+:root.left .after-tabs button:not([data-menu-ui]),
+:root.left .after-tabs [role="button"]:not([data-menu-ui]) {
+  padding-right: 0.35em;
+}
+:root.left tab-item:not(.pinned)[data-parent-id] tab-item-substance {
+  border-left-width: 1px;
+}
+
+:root.right tab-item:not(.pinned) tab-item-substance,
+:root.right .after-tabs button:not([data-menu-ui]),
+:root.right .after-tabs [role="button"]:not([data-menu-ui]) {
+  padding-left: 0.35em;
+}
+:root.right tab-item:not(.pinned)[data-parent-id] tab-item-substance {
+  border-right-width: 1px;
+}
+
+#tabbar tab-item.pinned + tab-item:not(.pinned) tab-item-substance,
+#tabbar tab-item:not(.pinned):first-of-type tab-item-substance {
+  border-top: none;
+}
+
+:root.have-pinned-tabs #tabbar {
+  border-top: 1px solid var(--tab-border);
+}
+
+
+/* macOS workaround */
+:root.platform-mac.left #tabbar.overflow tab-item:not(.pinned) tab-item-substance {
+  padding-left: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+:root.platform-mac.right #tabbar.overflow tab-item:not(.pinned) tab-item-substance {
+  padding-right: var(--scrollbar-placeholder-size); /* it will be enough larger than the default padding */
+}
+
+
+tab-item tab-label {
+  margin-left: 0.25em;
+  padding: 0 0 0.25em 0;
+}
+
+tab-item tab-favicon {
+  margin-bottom: 0.25em;
+  margin-top: 0.25em;
+}
+
+tab-item {
+  --tab-closebox-offset: calc((var(--tab-size) - 1em) / 2);
+  --tab-closebox-negative-offset: calc((1em - var(--tab-size)) / 2);
+}
+
+/* expand closebox to fill full height of tab */
+tab-item tab-closebox {
+  margin-bottom: var(--tab-closebox-negative-offset);
+  margin-top: var(--tab-closebox-negative-offset);
+  padding: var(--tab-closebox-offset) 0.25em;
+}
+
+tab-item tab-closebox::before,
+tab-item:not(.faviconized) tab-sound-button::before {
+  border-radius: 10%;
+  content: "";
+  display: inline-block;
+  height: calc(var(--svg-small-icon-size) + 0.2em);
+  margin-left: -0.1em;
+  margin-top: -0.1em;
+  width: calc(var(--svg-small-icon-size) + 0.2em);
+  position: absolute;
+}
+
+tab-item tab-closebox:hover::before,
+tab-item:not(.faviconized) tab-sound-button:hover::before {
+  background: var(--tab-text);
+  box-shadow: 0 0 0.1em rgba(255, 255, 255, 0.3);
+  opacity: 0.1;
+}
+
+tab-item tab-closebox:active::before,
+tab-item:not(.faviconized) tab-sound-button:active::before {
+  opacity: 0.2;
+}
+
+tab-item.active tab-closebox:hover::before,
+tab-item:not(.faviconized).active tab-sound-button:hover::before {
+  background: var(--tab-text);
+}
+
+tab-item tab-closebox::after {
+  position: relative;
+}
+
+
+/* multiselection of tabs */
+
+:root {
+  --multiselected-color: Highlight;
+}
+
+.mutiple-highlighted > tab-item.highlighted tab-item-substance::after {
+  background: var(--multiselected-color);
+  bottom: 0;
+  content: " ";
+  display: block;
+  left: 0;
+  opacity: var(--multiselected-color-opacity);
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+
+/* show more-highlighter like as tree */
+
+tab-item:not(.faviconized) .highlighter::after {
+   top: calc(var(--tab-highlighter-size) * 2);
+}
+
+tab-item[data-child-ids].subtree-collapsed.highlighted.some-descendants-highlighted .highlighter::after {
+  width: calc(var(--tab-highlighter-size) * 2);
+}

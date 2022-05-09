@@ -1,0 +1,505 @@
+{
+  "extensionName": { "message": "Tree-shaped vertical tabs" },
+  "extensionDescription": { "message": "Affiche les onglets sous forme d'arbre." },
+
+  "sidebarTitle": { "message": "Tree-shaped vertical tabs" },
+  "sidebarToggleDescription": { "message": "Activer/Désactiver le panneau « Tree-shaped vertical tabs »" },
+
+  "command_indent":                { "message": "Indenter l'onglet courant" },
+  "command_outdent":               { "message": "Désindenter l'onglet courant" },
+  "command_tabMoveUp":             { "message": "Déplace l'onglet courant vers le haut" },
+  "command_treeMoveUp":            { "message": "Déplace l'arbre courant vers le haut" },
+  "command_tabMoveDown":           { "message": "Déplace l'onglet courant vers le bas" },
+  "command_treeMoveDown":          { "message": "Déplace l'arbre courant vers le bas" },
+  "command_focusPrevious":         { "message": "Focus sur l'onglet précédent (déplie l'arbre)" },
+  "command_focusPreviousSilently": { "message": "Focus sur l'onglet précédent (ne déplie pas l'arbre)" },
+  "command_focusNext":             { "message": "Focus sur l'onglet suivant (déplie l'arbre)" },
+  "command_focusNextSilently":     { "message": "Focus sur l'onglet suivant (ne déplie pas l'arbre)" },
+  "command_focusParent":           { "message": "Focus sur l'onglet parent" },
+  "command_focusFirstChild":       { "message": "Focus sur le premier onglet enfant" },
+  "command_focusLastChild":        { "message": "Focus sur le dernier onglet enfant" },
+  "command_focusPreviousSibling":  { "message": "Focus sur l'onglet de même niveau précédent" },
+  "command_focusNextSibling":      { "message": "Focus sur l'onglet de même niveau suivant" },
+  "command_tabbarUp":              { "message": "Défiler les onglets vers le haut d'une ligne" },
+  "command_tabbarPageUp":          { "message": "Défiler les onglets vers le haut d'une page" },
+  "command_tabbarHome":            { "message": "Défiler les onglets jusqu'en haut" },
+  "command_tabbarDown":            { "message": "Défiler les onglets vers le bas d'une ligne" },
+  "command_tabbarPageDown":        { "message": "Défiler les onglets vers le bas d'une page" },
+  "command_tabbarEnd":             { "message": "Défiler les onglets jusqu'en bas" },
+  "command_toggleSubPanel":        { "message": "Activer/désactiver le sous-panneau" },
+  "command_switchSubPanel":        { "message": "Changer les contenus du sous-panneau" },
+  "command_increaseSubPanel":      { "message": "Augmenter la taille du sous-panneau" },
+  "command_decreaseSubPanel":      { "message": "Diminuer la taille du sous-panneau" },
+  "command_groupSelectedTabs":     { "message": "Créer un nouveau groupe depuis les onglets sélectionnés" },
+
+  "tab_closebox_tab_tooltip": { "message": "Fermer l'onglet" },
+  "tab_closebox_tab_tooltip_multiselected": { "message": "Fermer les onglets" },
+  "tab_closebox_tree_tooltip": { "message": "Fermer cet arbre" },
+  "tab_soundButton_muted_tooltip": { "message": "Réactiver le son de l'onglet" },
+  "tab_soundButton_muted_tooltip_multiselected": { "message": "Réactiver le son des onglets" },
+  "tab_soundButton_playing_tooltip": { "message": "Rendre l'onglet muet" },
+  "tab_soundButton_playing_tooltip_multiselected": { "message": "Rendre les onglets muets" },
+  "tab_twisty_expanded_tooltip": { "message": "Replier l'arbre" },
+  "tab_twisty_collapsed_tooltip": { "message": "Déplier l'arbre" },
+  "tab_tree_tooltip": { "message": "$TREE$\n  ...et $COUNT$ plus d'onglet(s)",
+    "placeholders": {
+      "tree": { "content": "$1", "example": "* Tree\n  * Style\n    * Tab" },
+      "count": { "content": "$2", "example": "3" }
+    }},
+  "tabbar_newTabButton_tooltip": { "message": "Ouvrir un nouvel onglet" },
+
+  "tabbar_newTabAction_tooltip":           { "message": "Ouvrir un nouvel onglet comme…" },
+  "tabbar_newTabAction_independent_label": { "message": "Onglet &indépendant" },
+  "tabbar_newTabAction_independent_command": { "message": "Onglet indépendant" },
+  "tabbar_newTabAction_child_label":       { "message": "Onglet &enfant" },
+  "tabbar_newTabAction_child_command":       { "message": "Onglet enfant" },
+  "tabbar_newTabAction_sibling_label":     { "message": "Onglet au même &niveau" },
+  "tabbar_newTabAction_sibling_command":     { "message": "Onglet au même niveau" },
+  "tabbar_newTabAction_nextSibling_label": { "message": "Onglet au même niveau, juste après" },
+  "tabbar_newTabAction_nextSibling_command": { "message": "Onglet au même niveau, juste après" },
+
+  "tabbar_newTabWithContexualIdentity_tooltip": { "message": "Nouvel onglet dans un conteneur" },
+  "tabbar_newTabWithContexualIdentity_default": { "message": "Défaut" },
+
+  "groupTab_label": { "message": "$TITLE$ et plus",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_label_default": { "message": "Groupe" },
+  "groupTab_temporary_label": { "message": "Fermer cet onglet" },
+  "groupTab_temporaryAggressive_label": { "message": "Fermer cet onglet quand il y a un onglet ou moins" },
+  "groupTab_fromPinnedTab_label": { "message": "Tabs from $TITLE$",
+    "placeholders": {
+      "title": { "content": "$1", "example": "title" }
+    }},
+  "groupTab_options_label": { "message": "Il y a une option pour désactiver l'ouverture de ce type d'onglet." },
+  "groupTab_options_dismiss": { "message": "Cacher cette astuce" },
+
+  "bookmarkFolder_label_default": { "message": "$TITLE$ et plus (%YEAR%.%MONTH%.%DATE%)",
+    "placeholders": {
+      "title": { "content": "$1", "example": "Title" },
+      "year":  { "content": "$2", "example": "2018" },
+      "month": { "content": "$3", "example": "06" },
+      "date":  { "content": "$4", "example": "21" }
+    }},
+
+  "bookmark_notification_notPermitted_title": { "message": "Erreur de permission" },
+  "bookmark_notification_notPermitted_message": { "message": "Échec de l'obtention des permissions pour créer des marques-page. Cliquez ici pour accorder des permissions supplémentaires." },
+
+  "dropLinksOnTabBehavior_message": { "message": "Comment ouvrir ceci ?" },
+  "dropLinksOnTabBehavior_save":    { "message": "Toujours faire cette action" },
+  "dropLinksOnTabBehavior_load":    { "message": "Charger dans cet onglet" },
+  "dropLinksOnTabBehavior_newtab":  { "message": "Ouvrir un onglet enfant" },
+
+  "tabDragBehaviorNotification_message_duration_single":  { "message": "8s" },
+  "tabDragBehaviorNotification_message_duration_both":  { "message": "16s" },
+  "tabDragBehaviorNotification_message_base":  { "message": "Glisser en dehors du panneau latéral va $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_with_shift":  { "message": "Maj-glissé va $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_inverted_base_without_shift":  { "message": "Glisser sans la touche Maj va $RESULT$.",
+    "placeholders": {
+      "result": { "content": "$1", "example": "something happen" }
+    }},
+  "tabDragBehaviorNotification_message_tree_tearoff":  { "message": "détacher les onglets de la fenêtre" },
+  "tabDragBehaviorNotification_message_tab_tearoff":   { "message": "détacher l'onglet de la fenêtre" },
+  "tabDragBehaviorNotification_message_tree_bookmark": { "message": "créer des liens ou des marques-page à l'endroit où les onglets sont déposés" },
+  "tabDragBehaviorNotification_message_tab_bookmark":  { "message": "créer un lien ou un marque-page à l'endroit où l'onglet est déposé" },
+
+  "warnOnCloseTabs_message":   { "message": "Vous êtes sur le point de fermer $NUMBER$ onglets. Voulez-vous vraiment continuer ?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnCloseTabs_warnAgain": { "message": "Me prévenir quand j'essaie de fermer de multiples onglets" },
+  "warnOnCloseTabs_close":     { "message": "Fermer les onglets" },
+  "warnOnCloseTabs_cancel":    { "message": "Annuler" },
+
+  "warnOnAutoGroupNewTabs_message":   { "message": "$NUMBER$ tabs are opened in a time. Do you want them to be grouped in a tree?",
+    "placeholders": {
+      "NUMBER": { "content": "$1", "example": "10" }
+    }},
+  "warnOnAutoGroupNewTabs_warnAgain": { "message": "Demandez-moi quand plusieurs onglets sont ouverts en même temps" },
+  "warnOnAutoGroupNewTabs_close":     { "message": "Grouper les onglets" },
+  "warnOnAutoGroupNewTabs_cancel":    { "message": "Keep tabs flat" },
+
+  "bookmarkDialog_title":    { "message": "Titre :" },
+  "bookmarkDialog_url":      { "message": "Adresse :" },
+  "bookmarkDialog_parentId": { "message": "Dossier :" },
+  "bookmarkDialog_accept":   { "message": "Sauvegarder" },
+  "bookmarkDialog_cancel":   { "message": "Annuler" },
+
+  "bookmarkFolderChooser_unspecified":   { "message": "(non spécifié)" },
+  "bookmarkFolderChooser_blank":         { "message": "(sans titre)" },
+  "bookmarkFolderChooser_useThisFolder": { "message": "Utiliser ce dossier" },
+
+  "message_startup_description_1": { "message": "La barre d'onglets de Tree-shaped vertical tabs est l'un des choix possibles pour le panneau latéral. Si vous ne le voyez pas encore, appuyez sur la " },
+  "message_startup_description_key": { "message": "touche « F1 »" },
+  "message_startup_description_2": { "message": " ou cliquez sur le bouton " },
+  "message_startup_description_3": { "message": " dans la barre d'outils, pour activer le panneau latéral." },
+
+  "message_startup_requestPermissions_description": { "message": "⚠Quelques fonctionnalités requièrent des permissions supplémentaires. Si vous voulez les utiliser, acceptez les permissions manuellement." },
+  "message_startup_requestPermissions_bookmarks": { "message": "« Ajouter cet arbre aux marque-pages » dans le menu contextuel sur les onglets (requiert l'accès aux marque-pages)" },
+  "message_startup_requestPermissions_allUrls":   { "message": "Ne pas déplier les arbres repliés et ignorer les descendants repliés lorsque vous changez d'onglet courant via des raccourcis claviers" },
+
+  "message_startup_userChromeCss_notify": { "message": "Comment cacher la barre d'onglets du haut et l'entête du panneau latéral ?" },
+  "message_startup_userChromeCss_description_1": { "message": "À cause de restrictions de WebExtensions, Tree-shaped vertical tabs ne peut pas modifier la barre d'onglets du haut ou l'entête du panneau latéral de Firefox. Si vous voulez les modifier, consultez les " },
+  "message_startup_userChromeCss_description_link_label": { "message": "exemples de personnalisation via userChrome.css" },
+  "message_startup_userChromeCss_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss" },
+  "message_startup_userChromeCss_description_2": { "message": ". Mais " },
+  "message_startup_userChromeCss_description_note": { "message": "notez que c'est une personnalisation de très bas niveau, il n'y a donc aucune garantie et cela peut poser des problèmes dans des versions futures de Firefox. Faites ces modifications à vos risques et périls, uniquement si vous savez ce que vous faites et que vous êtes sûr·e que vous pouvez résoudre ce genre de problèmes par vous-même" },
+  "message_startup_userChromeCss_description_3": { "message": "." },
+
+  "api_requestedPermissions_title": { "message": "Requiert des permissions supplémentaires" },
+  "api_requestedPermissions_message": { "message": "⚠L'extension « $NAME$ » demande pour l'opération suivante :\n\n$PERMISSIONS$\n\nvia l'API de Tree-shaped vertical tabs. Cliquez ici si vous voulez l'y autoriser.",
+    "placeholders": {
+      "NAME":        { "content": "$1", "example": "foobar" },
+      "PERMISSIONS": { "content": "$2", "example": "tabs" }
+    }},
+  "api_requestedPermissions_type_activeTab": { "message": "Accéder à l'onglet actif du navigateur" },
+  "api_requestedPermissions_type_tabs":      { "message": "Accéder aux onglets du navigateur" },
+  "api_requestedPermissions_type_cookies":   { "message": "Détecter les conteneurs des onglets du navigateur" },
+
+
+  "context_reloadTree_label": { "message": "Actualiser cet arbre" },
+  "context_reloadTree_command": { "message": "Actualiser cet arbre" },
+  "context_reloadDescendants_label": { "message": "Actualiser les descendants" },
+  "context_reloadDescendants_command": { "message": "Actualiser les descendants" },
+  "context_closeTree_label": { "message": "Fermer cet arbre" },
+  "context_closeTree_command": { "message": "Fermer cet arbre" },
+  "context_closeDescendants_label": { "message": "Fermer les descendants" },
+  "context_closeDescendants_command": { "message": "Fermer les descendants" },
+  "context_closeOthers_label": { "message": "Fermer les autres onglets sauf cet arbre" },
+  "context_closeOthers_command": { "message": "Fermer les autres onglets sauf cet arbre" },
+  "context_collapseTree_label": { "message": "Replier cet arbre" },
+  "context_collapseTree_command": { "message": "Replier cet arbre" },
+  "context_collapseAll_label": { "message": "Replier tout" },
+  "context_collapseAll_command": { "message": "Replier tout" },
+  "context_expandTree_label": { "message": "Déplier cet arbre" },
+  "context_expandTree_command": { "message": "Déplier cet arbre" },
+  "context_expandAll_label": { "message": "Déplier tout" },
+  "context_expandAll_command": { "message": "Déplier tout" },
+  "context_bookmarkTree_label": { "message": "Ajouter cet arbre aux marque-pages…" },
+  "context_bookmarkTree_command": { "message": "Ajouter cet arbre aux marque-pages…" },
+  "context_groupTabs_label":    { "message": "Créer un nouveau groupe depuis les onglets" },
+  "context_groupTabs_command":    { "message": "Créer un nouveau groupe depuis les onglets" },
+  "context_topLevel_prefix": { "message": "Élément au plus haut niveau : " },
+
+  "context_collapsed_label": { "message": "Replié (pour tester un menu type case à cocher)" },
+  "context_pinnedTab_label": { "message": "Épinglé (pour tester un menu type bouton radio)" },
+  "context_unpinnedTab_label": { "message": "Désépinglé (pour tester un menu type bouton radio)" },
+
+
+  "config_title": { "message": "Options de Tree-shaped vertical tabs" },
+
+  "config_appearance_caption": { "message": "Apparence" },
+
+  "config_sidebarPosition_caption": { "message": "Style du contenu relatif à la position du panneau :" },
+  "config_sidebarPosition_left": { "message": "À gauche" },
+  "config_sidebarPosition_right": { "message": "À droite" },
+  "config_sidebarPosition_description": { "message": "*Cette configuration ne changera pas la position du panneau latéral lui-même. Vous devez sur le bouton dans l'entête du panneau latéral et cliquer sur « déplacer le panneau latéral à droite » manuellement." },
+
+  "config_style_caption": { "message": "Thème" },
+  "config_style_photon": { "message": "Simple" },
+  "config_style_sidebar": { "message": "Panneau" },
+  "config_style_highcontrast": { "message": "Contraste élevé" },
+  "config_style_none": { "message": "Pas de décoration" },
+  "config_style_none_info": { "message": " (*Veuillez tout décorer par vous-même via « Règles d'apparence supplémentaires pour les contenus du panneau »)" },
+
+  "config_colorScheme_caption": { "message": "Schéma de couleur :" },
+  "config_colorScheme_photon": { "message": "Photon" },
+  "config_colorScheme_systemColor": { "message": "Couleur du système" },
+
+  "config_maxTreeLevel_before": { "message": "Indenter les onglets jusqu'à" },
+  "config_maxTreeLevel_after": { "message": "niveau(x) (*Une valeur négative signifie « infini »)" },
+
+  "config_faviconizePinnedTabs_label": { "message": "Afficher les onglets épinglés uniquement par leur icône" },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_before": { "message": "Afficher " },
+  "config_maxFaviconizedPinnedTabsInOneRow_label_after": { "message": " onglets ou moins pour chaque rangée (*0 ou moins signifie calcul automatique)" },
+  "config_animation_label": { "message": "Activer les animations" },
+  "config_showCollapsedDescendantsByTooltip_label": { "message": "Montrer les descendants repliés dans l'infobulle des onglets" },
+  "config_applyThemeColorToIcon_label": { "message": "Appliquer les couleurs du thème sur le bouton de la barre d'outils" },
+  "config_applyThemeColorToIcon_label_info": { "message": "(*Vous devez définir \"svg.context-properties.content.enabled\" à \"true\" via \"about:config\")" },
+
+
+  "config_context_caption": { "message": "Menu contextuel" },
+  "config_emulateDefaultContextMenu_label": { "message": "Simuler le menu contextuel sur le panneau latéral" },
+  "config_extraItems_tabs_caption": { "message": "Éléments additionnels du menu contextuel" },
+  "config_extraItems_tabs_topLevel": { "message": "Premier niveau" },
+  "config_extraItems_tabs_subMenu": { "message": "Sous-menu" },
+
+
+  "config_newTab_caption": { "message": "Comportement des nouveaux onglets" },
+
+  "config_newTabButton_caption__": { "message": "Bouton « Nouvel onglet »" },
+  "config_longPressOnNewTabButton_before":               { "message": "Faire un appui long sur le bouton « Nouvel onglet » pour " },
+  "config_longPressOnNewTabButton_newTabAction":         { "message": "spécifier où ouvrir le nouvel onglet" },
+  "config_longPressOnNewTabButton_contextualIdentities": { "message": "choisir le conteneur" },
+  "config_longPressOnNewTabButton_none":                 { "message": "(rien)" },
+  "config_longPressOnNewTabButton_after":                { "message": "\u200b" },
+  "config_showNewTabActionSelector_label":               { "message": "Montrer le bouton du sélecteur pour spécifier où ouvrir le nouvel onglet, quand le bouton « Nouvel onglet » est survolé" },
+  "config_showContextualIdentitiesSelector_label":       { "message": "Montrer le bouton du sélecteur de conteneur, quand le bouton « Nouvel onglet » est survolé" },
+
+  "config_newTabAction_caption__": { "message": "« Nouvel onglet vide » ouvert depuis autre part (boutons de barre d'outils, raccourcis clavier, etc.)" },
+  "config_autoAttachOnNewTabCommand_before": { "message": "Ouvrir un nouvel onglet vide comme" },
+  "config_autoAttachOnNewTabCommand_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachOnNewTabCommand_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachOnNewTabCommand_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachOnNewTabCommand_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachOnNewTabCommand_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachOnNewTabCommand_after": { "message": "\u200b" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_before": { "message": "Deviner qu'un nouvel onglet est un « nouvel onglet vide » quand son URL est :" },
+  "config_guessNewOrphanTabAsOpenedByNewTabCommandUrl_after": { "message": "\u200b" },
+
+  "config_autoAttachOnNewTabButtonMiddleClick_before": { "message": "Avec le clic du milieu, ouvrir un nouvel onglet vierge comme" },
+  "config_autoAttachOnNewTabButtonMiddleClick_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachOnNewTabButtonMiddleClick_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachOnNewTabButtonMiddleClick_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachOnNewTabButtonMiddleClick_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachOnNewTabButtonMiddleClick_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachOnNewTabButtonMiddleClick_after": { "message": "\u200b" },
+
+  "config_duplicateTabAction_caption": { "message": "Dupliquer l'onglet (clic du milieu sur le bouton « Actualiser », etc.)" },
+
+  "config_autoAttachOnDuplicated_before": { "message": "Dupliquer l'onglet comme" },
+  "config_autoAttachOnDuplicated_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachOnDuplicated_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachOnDuplicated_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachOnDuplicated_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachOnDuplicated_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachOnDuplicated_after": { "message": "\u200b" },
+
+  "config_fromExternal_caption": { "message": "Nouvel onglet du en dehors de Firefox" },
+  "config_autoAttachOnOpenedFromExternal_before": { "message": "Ouvrir comme" },
+  "config_autoAttachOnOpenedFromExternal_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachOnOpenedFromExternal_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachOnOpenedFromExternal_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachOnOpenedFromExternal_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachOnOpenedFromExternal_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachOnOpenedFromExternal_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToTabsFromExternal_label": { "message": "Hériter du conteneur de l'onglet courant" },
+
+  "config_sameSiteOrphan_caption": { "message": "Nouvel onglet du même site que l'onglet courant depuis la barre d'adresse" },
+  "config_autoAttachSameSiteOrphan_before": { "message": "Ouvrir comme" },
+  "config_autoAttachSameSiteOrphan_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachSameSiteOrphan_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachSameSiteOrphan_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachSameSiteOrphan_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachSameSiteOrphan_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachSameSiteOrphan_after": { "message": "\u200b" },
+  "config_inheritContextualIdentityToSameSiteOrphan_label": { "message": "Hériter du conteneur de l'onglet courant" },
+
+  "config_autoAttachOnAnyOtherTrigger_before": { "message": "Ouvrir comme" },
+  "config_autoAttachOnAnyOtherTrigger_noControl": { "message": "(aucun contrôle)" },
+  "config_autoAttachOnAnyOtherTrigger_independent": { "message": "un onglet indépendant" },
+  "config_autoAttachOnAnyOtherTrigger_child": { "message": "un enfant de l'onglet courant" },
+  "config_autoAttachOnAnyOtherTrigger_sibling": { "message": "au même niveau que l'onglet courant" },
+  "config_autoAttachOnAnyOtherTrigger_nextSibling": { "message": "au même niveau que l'onglet courant, juste après" },
+  "config_autoAttachOnAnyOtherTrigger_after": { "message": "\u200b" },
+
+  "config_insertNewChildAt_caption": { "message": "Position d'insertion des nouveaux onglets enfants" },
+  "config_insertNewChildAt_noControl": { "message": "Aucun contrôle (respecter la décision de Firefox ou d'autres extensions d'onglets)" },
+  "config_insertNewChildAt_top": { "message": "Insérer en haut de l'arbre, comme premier enfant" },
+  "config_insertNewChildAt_end": { "message": "Ajouter à la fin de l'arbre" },
+
+  "config_insertNewTabFromPinnedTabAt_caption": { "message": "Position de l'insertion des nouveaux onglets ouverts depuis des onglets épinglés" },
+  "config_insertNewTabFromPinnedTabAt_noControl": { "message": "Aucun contrôle (respecter la décision de Firefox ou d'autres extensions d'onglets)" },
+  "config_insertNewTabFromPinnedTabAt_top": { "message": "Insérer en haut de l'arbre, comme premier enfant" },
+  "config_insertNewTabFromPinnedTabAt_end": { "message": "Ajouter à la fin de l'arbre" },
+
+  "config_groupTab_caption": { "message": "Groupement automatique des onglets" },
+
+  "config_autoGroupNewTabs_before": { "message": "Grouper automatiquement les onglets ouverts durant" },
+  "config_autoGroupNewTabs_after": { "message": "msec" },
+  "config_tabBunchesDetectionDelayOnNewWindow_before": { "message": "Mais ne pas grouper les nouveaux onglets ouverts durant" },
+  "config_tabBunchesDetectionDelayOnNewWindow_after": { "message": "msec quand une nouvelle fenêtre est ouverte, s'ils font partie des onglets ouverts comme « Page d'accueil »." },
+  "config_warnOnAutoGroupNewTabs_label": { "message": "Confirmer le groupement d'onglets" },
+
+  "config_autoGroupNewTabsFromPinned_label": { "message": "Grouper automatiquement les onglets ouverts depuis le même onglet épinglé" },
+  "config_renderTreeInGroupTabs_label": { "message": "Afficher les arbres dans les onglets de groupe" },
+
+  "config_newTabContainer_caption": { "message": "Conteneur des nouveaux onglets vides" },
+  "config_inheritContextualIdentityToNewChildTab_label": { "message": "Hériter du conteneur de l'onglet parent pour un nouvel onglet vide" },
+  "config_inheritContextualIdentityToNewChildTab_description": { "message": "(*Veuillez noter que le nouvel onglet n'héritera pas du conteneur de l'onglet précédemment actif, s'il est ouvert comme un onglet indépendant)" },
+
+
+  "config_treeBehavior_caption": { "message": "Comportement de l'arbre" },
+
+  "config_successorTabControlLevel_caption": { "message": "Quand le dernier enfant de l'arbre est fermé" },
+  "config_successorTabControlLevel_inTree": { "message": "Activer le précédent onglet de l'arbre" },
+  "config_successorTabControlLevel_simulateDefault": { "message": "Activer l'onglet suivant (comportement Firefox par défaut)" },
+  "config_successorTabControlLevel_never": { "message": "Ne pas modifier le focus (respecter la décision de Firefox ou d'autres extensions d'onglets)" },
+  "config_successorTabControlLevel_legacyDescription": { "message": "*Le comportement natif de Firefox pour \"browser.tabs.selectOwnerOnClose\"=\"true\" s'active avant cette config." },
+  "config_simulateSelectOwnerOnClose_label": { "message": "Rendre le focus à l'onglet qui l'a ouvert si possible, quand l'onglet courant est fermé (*simule le comportement natif de Firefox pour \"browser.tabs.selectOwnerOnClose\"=\"true\", avant la config ci-dessus)" },
+
+  "config_fixupTreeOnTabVisibilityChanged_caption": { "message": "Quand la visiblité des onglets est changée par d'autres extensions" },
+  "config_fixupTreeOnTabVisibilityChanged_fix":     { "message": "Corriger l'arbre avec les onglets visibles automatiquement (*Recommendé si vous utilisez une autre extension pour changer de groupe d'onglets)" },
+  "config_fixupTreeOnTabVisibilityChanged_keep":    { "message": "Garder l'arbre en incluant les onglets masqués (*Recommendé si vous utilisez une autre extension qui change temporairement la visibilité des onglets)" },
+
+  "config_autoCollapseExpandSubtreeOnAttach_label": { "message": "Quand un nouvel arbre est créé, replier les autres automatiquement" },
+  "config_autoCollapseExpandSubtreeOnSelect_label": { "message": "Quand un onglet a le focus, déplier l'arbre et replier les autres automatiquement" },
+  "config_autoCollapseExpandSubtreeOnSelectExceptActiveTabRemove_label": { "message": "Sauf lorsque le changement de focus est dû à la fermeture de l'onglet courant" },
+  "config_collapseExpandSubtreeByDblClick_label": { "message": "Double-cliquer sur l'onglet pour replier/déplier l'arbre" },
+
+  "config_treeDoubleClickBehavior_caption":             { "message": "Double-cliquer sur l'onglet" },
+  "config_treeDoubleClickBehavior_toggleCollapsed":     { "message": "Replier/déplier l'arbre" },
+  "config_treeDoubleClickBehavior_close":               { "message": "Fermer l'onglet (*simule le comportement de Firefox avec \"browser.tabs.closeTabByDblclick\"=\"true\")" },
+  "config_treeDoubleClickBehavior_none":                { "message": "Ne fais rien" },
+
+  "config_parentTabOperationBehaviorMode_caption": { "message": "Quand un onglet parent est fermé ou déplacé en tant qu'onglet seul" },
+  "config_parentTabOperationBehaviorMode_parallel":    { "message": "Comportement recommandé si vous utilisez toujours la barre d'onglets native de Firefox en plus" },
+  "_config_parentTabOperationBehaviorMode_parallel_caption_withoutSidebar": { "message": "Garder les arbre et le nombre d'onglets si possible, pour les opérations effectuées quand le panneau d'onglets en arbre est invisible." },
+  "_config_parentTabOperationBehaviorMode_parallel_caption_withSidebar":    { "message": "Quand le panneau d'onglets en arbre est visible :" },
+  "config_parentTabOperationBehaviorMode_consistent": { "message": "Comportement recommandé si vous n'utilisez pas la barre d'onglets native de Firefox" },
+  "_config_parentTabOperationBehaviorMode_consistent_caption":    { "message": "Peu importe la visibilité du panneau d'onglets en arbre, pour n'importe quelle opération :" },
+  "config_parentTabOperationBehaviorMode_custom":            { "message": "Personnalisé" },
+  "_config_parentTabOperationBehaviorMode_custom_caption_insideSidebar":  { "message": "Pour les opérations à l'intérieur du panneau d'onglets en arbre :" },
+  "_config_parentTabOperationBehaviorMode_custom_caption_outsideSidebar": { "message": "Pour les opérations sur la barre d'onglets native, de raccourcis clavier, ou d'autres extensions quand le panneau d'onglets en arbre est visible :" },
+  "_config_parentTabOperationBehaviorMode_custom_caption_noSidebar":      { "message": "Pour les opérations sur la barre d'onglets native, de raccourcis clavier, ou d'autres extensions" },
+  "config_parentTabOperationBehavior_entireTree": { "message": "Fermer également les descendants" },
+  "config_parentTabOperationBehavior_replaceWithGroupTab": { "message": "Remplacer l'onglet parent par un onglet factice et garder l'arbre" },
+  "config_parentTabOperationBehavior_promoteFirst": { "message": "Le premier onglet enfant devient le nouveau parent" },
+  "config_parentTabOperationBehavior_promoteAll": { "message": "Tous les onglets enfants passent au même niveau que l'onglet parent" },
+  "config_parentTabOperationBehavior_promoteIntelligently": { "message": "Le premier onglet enfant devient le nouveau parent si l'onglet fermé n'avait pas de parent, sinon tous les enfants passent au même niveau que l'onglet fermé" },
+  "config_parentTabOperationBehavior_detach": { "message": "Libère les onglets enfants de l'arbre" },
+
+  "config_warnOnCloseTabs_label": { "message": "M'avertir quand j'essaie de fermer plusieurs onglets" },
+
+
+  "config_drag_caption": { "message": "Glisser-déposer" },
+
+  "config_tabDragBehavior_caption_":       { "message": "Quand un arbre est glissé en dehors de la barre d'onglet" },
+  "config_tabDragBehavior_description":   { "message": "À cause de restrictions de Firefox, vous devez décider quand vous commencez le glisser-déposer : comment les onglets sont traités lorsque déposés en dehors du panneau latéral de TST." },
+  "config_tabDragBehavior_label":         { "message": "Glisser" },
+  "config_tabDragBehaviorShift_label":    { "message": "Maj-glisser" },
+  "config_tabDragBehavior_moveEntireTreeAlways":         { "message": "Move Entire Tree" },
+  "config_tabDragBehavior_detachEntireTreeAlways":       { "message": "Détacher l'arbre de la fenêtre (mais impossible de créer de marque-pages)" },
+  "config_tabDragBehavior_bookmarkEntireTreeAlways":     { "message": "Créer des liens et marque-pages pour l'arbre entier (mais impossible de le détacher de la fenêtre)" },
+  "config_tabDragBehavior_moveSoloTabIfExpanded":        { "message": "Move Solo Tab" },
+  "config_tabDragBehavior_detachSoloTabIfExpanded":      { "message": "Détacher un onglet seul de la fenêtre (mais impossible de créer un marque-page)" },
+  "config_tabDragBehavior_bookmarkSoloTabIfExpanded":    { "message": "Créer un lien ou un marque-page pour un onglet seul (mais impossible de le détacher de la fenêtre)" },
+  "config_tabDragBehavior_doNothing":                    { "message": "Ne rien faire" },
+  "config_showTabDragBehaviorNotification_label": { "message": "Afficher pendant le déplacement ce qui arrivera aux onglets déposés en dehors" },
+
+  "config_dropLinksOnTabBehavior_caption": { "message": "Quand un lien ou une URL est déposée sur un onglet" },
+  "config_dropLinksOnTabBehavior_ask":     { "message": "Toujours demander quoi faire" },
+  "config_dropLinksOnTabBehavior_load":    { "message": "Charger dans l'onglet" },
+  "config_dropLinksOnTabBehavior_newtab":  { "message": "Ouvrir un nouvel onglet enfant" },
+
+
+  "config_shortcuts_caption": { "message": "Raccourcis clavier" },
+  "config_shortcuts_resetAll": { "message": "Réinitialiser tous les raccourcis" },
+
+
+  "config_advanced_caption": { "message": "Avancé" },
+
+  "config_bookmarkTreeFolderName_before": { "message": "Nom du dossier pour « Ajouter cet arbre aux marque-pages » :" },
+  "config_bookmarkTreeFolderName_after": { "message": "\u200b" },
+  "config_bookmarkTreeFolderName_description": { "message": "Paramètres disponibles : %TITLE% (titre du premier onglet), %URL% (URL of the first tab), %YEAR% (année, quatre chiffres), %MONTH% (mois, deux chiffres), %DATE% (date, deux chiffres)" },
+
+  "config_defaultBookmarkParentId_label_before":  { "message": "Créer un nouveau marque-page sous" },
+  "config_defaultBookmarkParentId_label_after":   { "message": "\u200b" },
+
+  "config_supportTabsMultiselect_label": { "message": "Utiliser l'API de multi-sélection pour gérer le focus (*dépend du paramètre Firefox \"browser.tabs.multiselect\"=\"true\")" },
+
+  "config_userStyleRules_label": { "message": "Règles d'apparence supplémentaires pour les contenus du panneau" },
+  "config_userStyleRules_description_before": { "message": "Pour plus d'options, voir les " },
+  "config_userStyleRules_description_link_label": { "message": "extraits de code sur le wiki de TST" },
+  "config_userStyleRules_description_after": { "message": "." },
+  "config_userStyleRules_description_link_uri": { "message": "https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-version-2x" },
+  "config_userStyleRules_themeRules_description": { "message": "Les propriétés personnalisées suivantes sont aussi disponible via \"var()\", basées sur le thème courant du navigateur :" },
+
+
+
+  "config_addons_caption": { "message": "Fonctionnalités supplémentaires avec d'autres extensions" },
+
+  "config_addons_description_before": { "message": "Il existe des " },
+  "config_addons_description_link_label": { "message": "extensions qui étendent TST" },
+  "config_addons_description_after": { "message": ". Jetez-y un œil si vous avez besoin de plus de fonctionnalités dans le panneau latéral de TST." },
+  "helper_addons_list_link_uri": { "message": "https://github.com/piroor/treestyletab/blob/master/README.md#addons-that-extend-tst" },
+
+  "config_externaladdonpermissions_label": { "message": "Permissions pour les appels d'API depuis d'autres extensions" },
+  "config_externaladdonpermissions_description": { "message": "Les extensions autoriseés ici peuvent avoir accès aux données détaillées des onglets ou aux onglets dans les fenêtres de navigation privée, <em>via les permissions de Tree-shaped vertical tabs</em>, même si l'extension elle-même n'est pas autorisée par Firefox à y accéder. <em>Ne donnez pas de permissions à des extensions si vous ne leur faites pas confiance.</em>" },
+  "config_externalAddonPermissions_header_name": { "message": "Nom de l'extension" },
+  "config_externalAddonPermissions_header_permissions": { "message": "Opérations spéciales autorisées" },
+  "config_externalAddonPermissions_header_incognito": { "message": "Notifier par messages depuis les fenêtres de navigation privée" },
+
+
+  "config_debug_caption": { "message": "Développement" },
+
+  "config_link_startupPage_label": { "message": "Page pour le lancement initial" },
+  "config_link_groupPage_label":   { "message": "Page pour un groupe d'onglets" },
+
+  "config_runTests_label": { "message": "Exécuter les tests automatiques" },
+  "config_debug_label": { "message": "Mode débogage" },
+  "config_log_caption":               { "message": "Journalisation détaillée" },
+  "config_logTimestamp_label": { "message": "Journaliser avec l'horodotage" },
+  "config_logFor_common":     { "message": "Journaux des modules communs" },
+  "config_logFor_background": { "message": "Journaux des modules d'arrière-plan" },
+  "config_logFor_sidebar":    { "message": "Journaux des modules du panneau" },
+  "config_loggingQueries_label": { "message": "Journaliser les requêtes des onglets" },
+  "config_loggingConnectionMessages_label": { "message": "Journaliser les messages internes" },
+  "config_showLogsButton_label": { "message": "Montrer les journaux" },
+  "config_simulateSVGContextFill_label": { "message": "Activer le contournement pour le bug 1388193 et le bug 1421329 pour simuler des icônes SVG (*Ceci peut augmenter l'utilisation du processeur. Pour désactiver cette option, vous devez activer \"svg.context-properties.content.enabled\" via \"about:config\", jusqu'à que ces bugs soient corrigés.)" },
+  "config_useCachedTree_label": { "message": "Optimiser la restauration des arbres avec un cache" },
+  "config_useCachedTree_description": { "message": "*Veuillez essayer de décocher et re-cocher ceci pour rafraichir le cache, quand le comportement relatif aux arbres est instable." },
+  "config_acceleratedTabCreation_label": { "message": "Accélérer les opérations autour des onglets nouvellement ouverts (*NOTE : Vous observerez des comportements instables relatifs aux onglets.)" },
+  "config_maximumAcceptableDelayForTabDuplication_before": { "message": "Annuler la duplication d'un onglet si elle prend" },
+  "config_maximumAcceptableDelayForTabDuplication_after": { "message": "millisecondes ou plus." },
+  "config_labelOverflowStyle_caption": { "message": "Titre d'onglet trop long :" },
+  "config_labelOverflowStyle_fade":    { "message": "Fondu (Meilleure visibilité)" },
+  "config_labelOverflowStyle_crop":    { "message": "Tronque avec « .. » (Meilleure performance)" },
+
+  "config_requestPermissions_bookmarks": { "message": "Permettre de lire et de créer des marques-pages" },
+  "config_requestPermissions_allUrls_ctrlTabTracking":   { "message": "Ne pas déplier l'arbre et ignorer les descendants repliés, lorsque vous changez d'onglet courant via des raccourcis claviers. (*Vous devez autoriser l'exécution de scripts sur les pages web.)" },
+  "config_requestPermissions_tabHide":   { "message": "Autoriser à montrer/masquer des onglets individuels (*Vous devez décocher et recocher ceci avant de lancer des tests, pour s'assurer que la permission a vraiment été accordée.)" },
+
+  "config_requestPermissions_fallbackToToolbarButton_title": { "message": "Cliquez sur le bouton « Tree-shaped vertical tabs » dans la barre d'outils" },
+  "config_requestPermissions_fallbackToToolbarButton_message": { "message": "À cause d'un bug de Firefox, vous ne pouvez pas demander de permissions depuis cet écran. Cliquez sur le bouton « Tree-shaped vertical tabs » de la barre d'outils pour accorder les permissions." },
+
+  "config_all_caption": { "message": "Tous les paramètres" },
+
+  "config_terms_delimiter": { "message": " " },
+
+
+  "tabContextMenu_reload_label":      { "message": "&Actualiser l'onglet" },
+  "tabContextMenu_mute_label":        { "message": "&Rendre l'onglet muet" },
+  "tabContextMenu_unmute_label":      { "message": "&Réactiver le son de l'onglet" },
+
+  "tabContextMenu_pin_label":         { "message": "É&pingler l'onglet" },
+  "tabContextMenu_unpin_label":       { "message": "Désé&pingler l'onglet" },
+  "tabContextMenu_duplicate_label":   { "message": "D&upliquer l'onglet" },
+  "tabContextMenu_selectAllTabs_label": { "message": "&Selectionner tous les onglets" },
+  "tabContextMenu_bookmark_label":    { "message": "Ajouter l'onglet aux &marque-pages" },
+  "tabContextMenu_reopenInContainer_label":             { "message": "Rouvrir dans un onglet c&ontextuel" },
+  "tabContextMenu_reopenInContainer_noContainer_label": { "message": "Aucun conteneur" },
+  "tabContextMenu_moveTab_label":     { "message": "Déplacer l'onglet" },
+  "tabContextMenu_moveTabToStart_label": { "message": "Déplacer au &début" },
+  "tabContextMenu_moveTabToEnd_label":   { "message": "Déplacer à la &fin" },
+  "tabContextMenu_tearOff_label":     { "message": "Déplacer dans une &nouvelle fenêtre" },
+
+  "tabContextMenu_closeTabsToBottom_label":  { "message": "Fermer les onglets en &dessous" },
+  "tabContextMenu_closeOther_label":  { "message": "Fermer &tous les autres onglets" },
+
+  "tabContextMenu_undoClose_label":   { "message": "A&nnuler la fermeture de l'onglet" },
+  "tabContextMenu_close_label":       { "message": "&Fermer l'onglet" },
+
+  "tabContextMenu_reload_label_multiselected":      { "message": "Actualiser les onglets selectionnés" },
+  "tabContextMenu_mute_label_multiselected":        { "message": "Rendre les onglets muets" },
+  "tabContextMenu_unmute_label_multiselected":      { "message": "Réactiver le son des onglets" },
+
+  "tabContextMenu_pin_label_multiselected":         { "message": "Épingler les onglets" },
+  "tabContextMenu_unpin_label_multiselected":       { "message": "Désépingler les onglets" },
+
+  "tabContextMenu_duplicate_label_multiselected":   { "message": "Dupliquer les onglets" },
+
+  "tabContextMenu_moveTab_label_multiselected": { "message": "Déplacer les onglets" },
+
+  "tabContextMenu_bookmark_label_multiselected": { "message": "Marquer ces onglets…" },
+  "tabContextMenu_bookmarkSelected_label":       { "message": "Marquer les onglets selectionnés…" },
+
+  "tabContextMenu_close_label_multiselected":       { "message": "Fermer les onglets selectionnés" }
+}

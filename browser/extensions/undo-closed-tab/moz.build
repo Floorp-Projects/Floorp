@@ -1,0 +1,27 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+
+FINAL_TARGET_FILES.features["floorp-undo-closed-tab@floorp.ablaze.one"] += [
+    "background.js",
+    "i.svg",
+    "manifest.json",
+
+]
+
+FINAL_TARGET_FILES.features["floorp-undo-closed-tab@floorp.ablaze.one"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["floorp-undo-closed-tab@floorp.ablaze.one"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]  
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "undo-closed-tab")

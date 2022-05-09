@@ -1,0 +1,384 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"] += [
+    "manifest.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["background"] += [
+    "background/api-tabs-listener.js",
+    "background/background-cache.js",
+    "background/background.html",
+    "background/background.js",
+    "background/browser-action-menu.js",
+    "background/commands.js",
+    "background/context-menu.js",
+    "background/duplicated-tab-detection.js",
+    "background/handle-misc.js",
+    "background/handle-moved-tabs.js",
+    "background/handle-new-tabs.js",
+    "background/handle-removed-tabs.js",
+    "background/handle-tab-bunches.js",
+    "background/handle-tab-focus.js",
+    "background/handle-tab-multiselect.js",
+    "background/handle-tree-changes.js",
+    "background/index.js",
+    "background/migration.js",
+    "background/successor-tab.js",
+    "background/tab-context-menu.js",
+    "background/tabs-group.js",
+    "background/tabs-move.js",
+    "background/tabs-open.js",
+    "background/tree-structure.js",
+    "background/tree.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["common"] += [
+    "common/api-tabs.js",
+    "common/bookmark.js",
+    "common/browser-theme.js",
+    "common/color.js",
+    "common/common.js",
+    "common/constants.js",
+    "common/contextual-identities.js",
+    "common/dialog.js",
+    "common/diff.js",
+    "common/handle-accel-key.js",
+    "common/metrics-data.js",
+    "common/permissions.js",
+    "common/sidebar-connection.js",
+    "common/sync.js",
+    "common/Tab.js",
+    "common/tabs-internal-operation.js",
+    "common/tabs-store.js",
+    "common/tabs-update.js",
+    "common/tree-behavior.js",
+    "common/tst-api.js",
+    "common/unique-id.js",
+    "common/user-operation-blocker.js",
+    "common/Window.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["extlib"] += [
+    "extlib/codemirror-colorpicker.css",
+    "extlib/codemirror-colorpicker.js",
+    "extlib/codemirror-mode-css.js",
+    "extlib/codemirror.css",
+    "extlib/codemirror.js",
+    "extlib/Configs.js",
+    "extlib/diff.js",
+    "extlib/dom-updater.js",
+    "extlib/EventListenerManager.js",
+    "extlib/l10n-classic.js",
+    "extlib/l10n.js",
+    "extlib/MenuUI.js",
+    "extlib/Options.js",
+    "extlib/RichConfirm.js",
+    "extlib/TabFavIconHelper.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["extlib"]["codemirror-theme"] += [
+    "extlib/codemirror-theme/3024-day.css",
+    "extlib/codemirror-theme/3024-night.css",
+    "extlib/codemirror-theme/abbott.css",
+    "extlib/codemirror-theme/abcdef.css",
+    "extlib/codemirror-theme/ambiance-mobile.css",
+    "extlib/codemirror-theme/ambiance.css",
+    "extlib/codemirror-theme/ayu-dark.css",
+    "extlib/codemirror-theme/ayu-mirage.css",
+    "extlib/codemirror-theme/base16-dark.css",
+    "extlib/codemirror-theme/base16-light.css",
+    "extlib/codemirror-theme/bespin.css",
+    "extlib/codemirror-theme/blackboard.css",
+    "extlib/codemirror-theme/cobalt.css",
+    "extlib/codemirror-theme/colorforth.css",
+    "extlib/codemirror-theme/darcula.css",
+    "extlib/codemirror-theme/dracula.css",
+    "extlib/codemirror-theme/duotone-dark.css",
+    "extlib/codemirror-theme/duotone-light.css",
+    "extlib/codemirror-theme/eclipse.css",
+    "extlib/codemirror-theme/elegant.css",
+    "extlib/codemirror-theme/erlang-dark.css",
+    "extlib/codemirror-theme/gruvbox-dark.css",
+    "extlib/codemirror-theme/hopscotch.css",
+    "extlib/codemirror-theme/icecoder.css",
+    "extlib/codemirror-theme/idea.css",
+    "extlib/codemirror-theme/isotope.css",
+    "extlib/codemirror-theme/juejin.css",
+    "extlib/codemirror-theme/lesser-dark.css",
+    "extlib/codemirror-theme/liquibyte.css",
+    "extlib/codemirror-theme/lucario.css",
+    "extlib/codemirror-theme/material-darker.css",
+    "extlib/codemirror-theme/material-ocean.css",
+    "extlib/codemirror-theme/material-palenight.css",
+    "extlib/codemirror-theme/material.css",
+    "extlib/codemirror-theme/mbo.css",
+    "extlib/codemirror-theme/mdn-like.css",
+    "extlib/codemirror-theme/midnight.css",
+    "extlib/codemirror-theme/monokai.css",
+    "extlib/codemirror-theme/moxer.css",
+    "extlib/codemirror-theme/neat.css",
+    "extlib/codemirror-theme/neo.css",
+    "extlib/codemirror-theme/night.css",
+    "extlib/codemirror-theme/nord.css",
+    "extlib/codemirror-theme/oceanic-next.css",
+    "extlib/codemirror-theme/panda-syntax.css",
+    "extlib/codemirror-theme/paraiso-dark.css",
+    "extlib/codemirror-theme/paraiso-light.css",
+    "extlib/codemirror-theme/pastel-on-dark.css",
+    "extlib/codemirror-theme/railscasts.css",
+    "extlib/codemirror-theme/rubyblue.css",
+    "extlib/codemirror-theme/seti.css",
+    "extlib/codemirror-theme/shadowfox.css",
+    "extlib/codemirror-theme/solarized.css",
+    "extlib/codemirror-theme/ssms.css",
+    "extlib/codemirror-theme/the-matrix.css",
+    "extlib/codemirror-theme/tomorrow-night-bright.css",
+    "extlib/codemirror-theme/tomorrow-night-eighties.css",
+    "extlib/codemirror-theme/ttcn.css",
+    "extlib/codemirror-theme/twilight.css",
+    "extlib/codemirror-theme/vibrant-ink.css",
+    "extlib/codemirror-theme/xq-dark.css",
+    "extlib/codemirror-theme/xq-light.css",
+    "extlib/codemirror-theme/yeti.css",
+    "extlib/codemirror-theme/yonce.css",
+    "extlib/codemirror-theme/zenburn.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["options"] += [
+    "options/as-child.png",
+    "options/as-independent.png",
+    "options/as-next-sibling.png",
+    "options/as-sibling.png",
+    "options/init.js",
+    "options/options.css",
+    "options/options.html",
+    "options/style-highcontrast.png",
+    "options/style-photon.png",
+    "options/style-proton.png",
+    "options/style-sidebar.png",
+    "options/tab-drag-behavior-notification.png",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"] += [
+    "resources/16x16-dark.svg",
+    "resources/16x16-light.svg",
+    "resources/16x16.png",
+    "resources/16x16.svg",
+    "resources/20x20-dark.svg",
+    "resources/20x20-light.svg",
+    "resources/20x20.png",
+    "resources/20x20.svg",
+    "resources/24x24-dark.svg",
+    "resources/24x24-light.svg",
+    "resources/24x24.png",
+    "resources/24x24.svg",
+    "resources/32x32-dark.svg",
+    "resources/32x32-light.svg",
+    "resources/32x32.png",
+    "resources/32x32.svg",
+    "resources/64x64-dark.svg",
+    "resources/64x64-light.svg",
+    "resources/64x64.png",
+    "resources/64x64.svg",
+
+    "resources/blank.html",
+    "resources/group-tab.html",
+    "resources/group-tab.js",
+    "resources/logs.html",
+    "resources/protocol-handler.html",
+    "resources/startup.html",
+    "resources/ui-base.css",
+    "resources/ui-color.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icons"]["contextual-identities"] += [
+    "resources/icons/contextual-identities/briefcase.svg",
+    "resources/icons/contextual-identities/cart.svg",
+    "resources/icons/contextual-identities/chill.svg",
+    "resources/icons/contextual-identities/circle.svg",
+    "resources/icons/contextual-identities/dollar.svg",
+    "resources/icons/contextual-identities/fence.svg",
+    "resources/icons/contextual-identities/fingerprint.svg",
+    "resources/icons/contextual-identities/food.svg",
+    "resources/icons/contextual-identities/fruit.svg",
+    "resources/icons/contextual-identities/gift.svg",
+    "resources/icons/contextual-identities/pet.svg",
+    "resources/icons/contextual-identities/tree.svg",
+    "resources/icons/contextual-identities/vacation.svg",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["icons"] += [
+    "resources/icons/customize.svg",
+    "resources/icons/dashboard.svg",
+    "resources/icons/defaultFavicon.svg",
+    "resources/icons/developer.svg",
+    "resources/icons/device-desktop.svg",
+    "resources/icons/device-mobile.svg",
+    "resources/icons/device-tablet.svg",
+    "resources/icons/device-vr.svg",
+    "resources/icons/edit.svg",
+    "resources/icons/experiments.svg",
+    "resources/icons/extensionGeneric-16.svg",
+    "resources/icons/extensions.svg",
+    "resources/icons/folder-16.svg",
+    "resources/icons/folder.svg",
+    "resources/icons/globe-16.svg",
+    "resources/icons/home.svg",
+    "resources/icons/hourglass.svg",
+    "resources/icons/info.svg",
+    "resources/icons/lockwise.svg",
+    "resources/icons/performance.svg",
+    "resources/icons/privatebrowsing-favicon.svg",
+    "resources/icons/profiler-stopwatch.svg",
+    "resources/icons/robot.ico",
+    "resources/icons/settings-photon.svg",
+    "resources/icons/settings.svg",
+    "resources/icons/warning.svg",
+    "resources/icons/window.svg",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["resources"]["module"] += [
+    "resources/module/logs.js",
+    "resources/module/protocol-handler.js",
+    "resources/module/startup.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"] += [
+    "sidebar/background-connection.js",
+    "sidebar/collapse-expand.js",
+    "sidebar/drag-and-drop.js",
+    "sidebar/event-utils.js",
+    "sidebar/gap-canceller.js",
+    "sidebar/indent.js",
+    "sidebar/index.js",
+    "sidebar/mouse-event-listener.js",
+    "sidebar/pinned-tabs.js",
+    "sidebar/restoring-tab-count.js",
+    "sidebar/scroll.js",
+    "sidebar/sidebar-cache.js",
+    "sidebar/sidebar-tabs.js",
+    "sidebar/sidebar.css",
+    "sidebar/sidebar.html",
+    "sidebar/sidebar.js",
+    "sidebar/size.js",
+    "sidebar/subpanel.js",
+    "sidebar/tab-context-menu.js",
+    "sidebar/tst-api-frontend.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["components"] += [
+    "sidebar/components/TabCloseBoxElement.js",
+    "sidebar/components/TabCounterElement.js",
+    "sidebar/components/TabElement.js",
+    "sidebar/components/TabFaviconElement.js",
+    "sidebar/components/TabLabelElement.js",
+    "sidebar/components/TabSoundButtonElement.js",
+    "sidebar/components/TabTwistyElement.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["styles"] += [
+    "sidebar/styles/base.css",
+    "sidebar/styles/drag-and-drop.css",
+    "sidebar/styles/favicon.css",
+    "sidebar/styles/highlighter.css",
+    "sidebar/styles/sound-button.css",
+    "sidebar/styles/throbber.css",
+    "sidebar/styles/throbber.svg",
+    "sidebar/styles/twisty.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["styles"]["icons"] += [
+    "sidebar/styles/icons/ArrowheadDown.svg",
+    "sidebar/styles/icons/audio-16-mute.svg",
+    "sidebar/styles/icons/audio-16.svg",
+    "sidebar/styles/icons/close-16.svg",
+    "sidebar/styles/icons/moon.svg",
+    "sidebar/styles/icons/new-16.svg",
+    "sidebar/styles/icons/newtab-child.svg",
+    "sidebar/styles/icons/newtab-independent.svg",
+    "sidebar/styles/icons/newtab-next-sibling.svg",
+    "sidebar/styles/icons/newtab-sibling.svg",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["styles"]["photon"] += [
+    "sidebar/styles/photon/base.css",
+    "sidebar/styles/photon/highcontrast.css",
+    "sidebar/styles/photon/photon.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["styles"]["proton"] += [
+    "sidebar/styles/proton/proton.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["sidebar"]["styles"]["sidebar"] += [
+    "sidebar/styles/sidebar/closetab-white.png",
+    "sidebar/styles/sidebar/closetab.png",
+    "sidebar/styles/sidebar/dropmarker.png",
+    "sidebar/styles/sidebar/sidebar.css",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["tests"] += [
+    "tests/assert.js",
+    "tests/runner.html",
+    "tests/runner.js",
+    "tests/scenario.md",
+    "tests/test-close-parent-behavior.js",
+    "tests/test-context-menu.js",
+    "tests/test-dom-updater.js",
+    "tests/test-hidden.js",
+    "tests/test-new-tab.js",
+    "tests/test-successor.js",
+    "tests/test-tree.js",
+    "tests/utils.js",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["de"] += [
+    "_locales/de/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["fr"] += [
+    "_locales/fr/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ko"] += [
+    "_locales/ko/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"] += [
+    "_locales/README.md",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["ru"] += [
+    "_locales/ru/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["uk"] += [
+    "_locales/uk/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_CN"] += [
+    "_locales/zh_CN/messages.json",
+]
+
+FINAL_TARGET_FILES.features["treestyletab@piro.sakura.ne.jp"]["_locales"]["zh_TW"] += [
+    "_locales/zh_TW/messages.json",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "treestyletab@piro.sakura.ne.jp")

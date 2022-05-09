@@ -76,6 +76,7 @@ should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
 cancel-no-restart-button = Cancel
 restart-later = Restart Later
+feature-change-requires-restart = { -brand-short-name } must restart to change this feature.
 
 ## Extension Control Notifications
 ##
@@ -1413,3 +1414,88 @@ httpsonly-radio-disabled =
 desktop-folder-name = Desktop
 downloads-folder-name = Downloads
 choose-download-folder-title = Choose Download Folder:
+
+# Variables:
+#   $service-name (String) - Name of a cloud storage provider like Dropbox, Google Drive, etc...
+save-files-to-cloud-storage =
+    .label = Save files to { $service-name }
+
+# Floorp の固有設定。Firefox のソースコードではありません。from 8.7.2
+
+floorp-preference = Experimet Preferences
+browser-design-settings = Tab Bar Settings
+
+auto-reboot =If you change any of the settings below, your browser will be restarted to apply the changes. Please save the data you are working with before making any changes.
+
+operation-settings = Browser Operation Settings
+Mouse-side-button = Browser optimized for mouse operation with side buttons
+
+None-mode = 
+ .label= normal mode
+
+hide-horizontality-tabs = 
+ .label= Hide horizontality tabber
+
+verticalTab-setting = 
+ .label = Browser optimized for vertical tabs
+
+move-tabbar-position =
+ .label = Move the tab bar position to below the bookmark
+
+enable-classic-menu = 
+ .label = Menu button to classic view
+
+treestyletabSettings-l10 = Tree Style vertical tab settings
+treestyletab-Settings = Change the behavior of tree-type tabs so that they expand when the focus is on them.
+
+bookmarks-bar-settings = Bookmark Bar Settings
+bookmarks-focus-mode = Show the bookmark bar when the mouse is focused on the toolbar
+bookmarks-bottom-mode = Bookmark bar at the bottom of the browser
+
+material-effect = Allow Mica for everyone to modify the browser design
+learn-more-material = learn more
+other-preference = Other Preferences
+
+Search-positon-top = Display the search bar at the top of the page
+classic-menu-mode = Use classic style menus (May not be compatible)
+
+## Updater
+
+floorp-updater = { -brand-short-name } Updater Settings
+enable-floorp-updater = Check for { -brand-short-name } updates at startup
+floorp-update-latest = Notification that { -brand-short-name } is up-to-date during automatic update checks
+
+## system theme color
+
+system-color-settings = Both light and dark modes are available for this theme, and the design can be specified.
+preferences-theme-appearance-header = Setting the system theme
+
+system-theme-dark =
+ .label = Enforce dark mode
+
+system-theme-light = 
+ .label = Enforce light mode
+ 
+system-theme-auto =  
+ .label = Follow the system
+
+## user interface prefernces
+
+ui-preference = { -brand-short-name }'s  Design settings 
+
+preferences-browser-appearance-header = { -brand-short-name } appearance. Changing the settings here will not affect the theme settings. However, some themes may be incompatible.
+
+firefox-proton =
+ .label = Firefox modern Proton UI
+
+firefox-proton-fix =
+ .label = Firefox Proton FIX UI
+
+firefox-photon = 
+ .label = Firefox Legacy Photon UI
+ 
+floorp-legacy =  
+ .label = Floorp Legacy material UI 
+
+floorp-fluentUI =
+ .label = fluentUI

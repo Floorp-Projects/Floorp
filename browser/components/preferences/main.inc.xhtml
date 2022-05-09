@@ -174,6 +174,20 @@
   </html:div>
 </groupbox>
 
+<groupbox id="SystemThemeGroup" data-category="paneGeneral" hidden="true">
+    <label>
+      <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
+    </label>
+    <label>
+    <description class="text-blurb"  data-l10n-id="system-color-settings"></description>
+    </label>
+    <radiogroup id="SystemThemeColorGroup">
+      <radio value="1"  data-l10n-id="system-theme-dark"/>
+      <radio value="0"  data-l10n-id="system-theme-light"/>
+      <radio value="-1" data-l10n-id="system-theme-auto"/>
+    </radiogroup>
+</groupbox>
+
 <!-- Colors -->
 <groupbox id="colorsGroup" data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="preferences-colors-header"/></label>
@@ -489,6 +503,17 @@
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>
+      <label><html:h2 id="treestyletab" data-l10n-id="floorp-updater"/></label>
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="enable-floorp-updater"></description>
+    <checkbox id="treestyletabSettings" 
+             preference="enable.floorp.update"/>
+  </hbox>
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb" data-l10n-id="floorp-update-latest"></description>
+    <checkbox id="MoveLevelTabBar" 
+              preference="enable.floorp.updater.latest"/>
+  </hbox>
     </vbox>
 #ifdef MOZ_UPDATER
     <spacer flex="1"/>
@@ -807,4 +832,115 @@
     </hbox>
   </hbox>
 </groupbox>
+
+<groupbox data-category="paneGeneral" id="floorp-experiment"
+          hidden="true">
+    <label><html:h1 id="floorp-settings" data-l10n-id="floorp-preference"/></label>
+    <description class="text-blurb" id="sub-preference" data-l10n-id="auto-reboot"></description>
+
+    <html:h2 data-l10n-id="operation-settings"/>
+    <hbox align="center" data-subcategory="cfrfeatures">
+     <description class="text-blurb" data-l10n-id="Mouse-side-button"></description>
+     <checkbox id="MouseSideButton" 
+            class="options"  preference="floorp.optimized.msbutton.ope"/>
+    </hbox>
+
+  <html:h2 data-l10n-id="browser-design-settings"/>
+
+  <radiogroup id="SystemThemeColorGroup" preference="floorp.browser.tabbar.settings">
+
+     <radio value="1" class="tabbar"  data-l10n-id="None-mode"/>
+
+     <radio value="2" class="tabbar"  data-l10n-id="hide-horizontality-tabs"/>
+  
+     <radio value="3" class="tabbar"  data-l10n-id="verticalTab-setting"/>
+   
+     <radio value="4" class="tabbar"  data-l10n-id="move-tabbar-position"/>
+
+     <radio value="5" class="tabbar"  data-l10n-id="enable-classic-menu"/>
+
+  </radiogroup>
+
+  <label><html:h2 id="treestyletab" data-l10n-id="bookmarks-bar-settings"/></label>
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="bookmarks-focus-mode"></description>
+    <checkbox id="treestyletabSettings" 
+             preference="floorp.bookmarks.bar.focus.mode" class="options"/>
+  </hbox>
+
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="bookmarks-bottom-mode"></description>
+    <checkbox id="treestyletabSettings" 
+             preference="floorp.bookmarks.fakestatus.mode" class="options"/>
+  </hbox>
+    
+  <label><html:h2 id="treestyletab" data-l10n-id="treestyletabSettings-l10"/></label>
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="treestyletab-Settings"></description>
+    <checkbox id="treestyletabSettings" class="options" 
+             preference="floorp.Tree-type.verticaltab.optimization"/>
+  </hbox>
+
+  <!--その他の設定 -->
+  <label><html:h2 id="treestyletab" data-l10n-id="other-preference"/></label>
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="material-effect"></description>
+    <checkbox id="treestyletabSettings" 
+    class="options"       preference="floorp.material.effect.enable"/>
+    <label
+      class="learnMore" is="text-link" href="https://support.ablaze.one/floorp/452/"
+      data-l10n-id="do-not-track-learn-more"></label>
+  </hbox>
+
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="Search-positon-top"></description>
+    <checkbox id="treestyletabSettings" 
+             preference="floorp.search.top.mode" class="options"/>
+  </hbox>
+
+  <hbox align="center" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="classic-menu-mode"></description>
+    <checkbox id="treestyletabSettings" 
+             preference="floorp.legacy.menu.mode" class="options"/>
+  </hbox>
+
+</groupbox>
+
+<groupbox id="SystemThemeGroup" data-category="paneGeneral" hidden="true">
+    <label>
+      <html:h1 data-l10n-id="ui-preference" id="floorp-ui"/>
+    </label>
+    <description class="text-blurb" id="sub-preference" data-l10n-id="auto-reboot"></description>
+
+    <radiogroup id="SystemThemeColorGroup" preference="floorp.browser.user.interface">
+
+ <!--デザイン設定 -->
+     <radio value="1" class="themes"  data-l10n-id="firefox-proton"/>
+      <label>
+        <div id="proton"></div>  
+      </label>
+    
+      <radio value="2" class="themes" data-l10n-id="firefox-proton-fix"/>
+      <label>
+        <div id="proton-fix"></div>  
+      </label>
+    
+      <radio value="3" class="themes" data-l10n-id="firefox-photon"/>
+      <label>
+        <div id="photon"></div>    
+      </label>
+    
+      <radio value="4" class="themes"  data-l10n-id="floorp-legacy"/>
+      <label>
+        <div id="floorplegacy"></div>  
+      </label>
+
+      <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
+      <label>
+        <div id="fluentui"></div> 
+      </label>
+    
+    </radiogroup>
+ </groupbox>
+ 
 </html:template>

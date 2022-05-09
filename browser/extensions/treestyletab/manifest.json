@@ -1,0 +1,216 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "version": "3.8.21",
+  "author": "YUKI \"Piro\" Hiroshi",
+  "description": "__MSG_extensionDescription__",
+  "permissions": [
+    "activeTab",
+    "contextualIdentities",
+    "cookies",
+    "menus",
+    "menus.overrideContext",
+    "notifications",
+    "search",
+    "sessions",
+    "storage",
+    "tabs",
+    "theme",
+    "<all_urls>",
+    "bookmarks",
+    "tabHide"
+  ],
+  "icons": {
+    "16": "resources/16x16.png",
+    "20": "resources/20x20.png",
+    "24": "resources/24x24.png",
+    "32": "resources/32x32.png"
+  },
+  "background": {
+    "page": "background/background.html"
+  },
+  "browser_action": {
+    "default_title": "__MSG_sidebarTitle__",
+    "default_area" : "menupanel",
+    "default_icon": {
+      "16": "resources/16x16.svg",
+      "20": "resources/20x20.svg",
+      "24": "resources/24x24.svg",
+      "32": "resources/32x32.svg"
+    }
+  },
+  "sidebar_action": {
+    "default_title": "__MSG_sidebarTitle__",
+    "default_panel": "sidebar/sidebar.html",
+    "browser_style": false
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "description": "__MSG_sidebarToggleDescription__",
+      "suggested_key": {
+        "default": "F1"
+      }
+    },
+    "reloadTree": {
+      "description": "__MSG_context_reloadTree_command__"
+    },
+    "reloadDescendants": {
+      "description": "__MSG_context_reloadDescendants_command__"
+    },
+    "closeTree": {
+      "description": "__MSG_context_closeTree_command__"
+    },
+    "closeDescendants": {
+      "description": "__MSG_context_closeDescendants_command__"
+    },
+    "closeOthers": {
+      "description": "__MSG_context_closeOthers_command__"
+    },
+    "collapseTree": {
+      "description": "__MSG_context_collapseTree_command__"
+    },
+    "collapseTreeRecursively": {
+      "description": "__MSG_context_collapseTreeRecursively_command__"
+    },
+    "collapseAll": {
+      "description": "__MSG_context_collapseAll_command__"
+    },
+    "expandTree": {
+      "description": "__MSG_context_expandTree_command__"
+    },
+    "expandTreeRecursively": {
+      "description": "__MSG_context_expandTreeRecursively_command__"
+    },
+    "expandAll": {
+      "description": "__MSG_context_expandAll_command__"
+    },
+    "bookmarkTree": {
+      "description": "__MSG_context_bookmarkTree_command__"
+    },
+    "newIndependentTab": {
+      "description": "__MSG_tabbar_newTabButton_tooltip__: __MSG_tabbar_newTabAction_independent_command__"
+    },
+    "newChildTab": {
+      "description": "__MSG_tabbar_newTabButton_tooltip__: __MSG_tabbar_newTabAction_child_command__"
+    },
+    "newSiblingTab": {
+      "description": "__MSG_tabbar_newTabButton_tooltip__: __MSG_tabbar_newTabAction_sibling_command__"
+    },
+    "newNextSiblingTab": {
+      "description": "__MSG_tabbar_newTabButton_tooltip__: __MSG_tabbar_newTabAction_nextSibling_command__"
+    },
+    "newContainerTab": {
+      "description": "__MSG_tabbar_newTabWithContexualIdentity_tooltip__"
+    },
+    "tabMoveUp": {
+      "description": "__MSG_command_tabMoveUp__"
+    },
+    "treeMoveUp": {
+      "description": "__MSG_command_treeMoveUp__"
+    },
+    "tabMoveDown": {
+      "description": "__MSG_command_tabMoveDown__"
+    },
+    "treeMoveDown": {
+      "description": "__MSG_command_treeMoveDown__"
+    },
+    "focusPrevious": {
+      "description": "__MSG_command_focusPrevious__"
+    },
+    "focusPreviousSilently": {
+      "description": "__MSG_command_focusPreviousSilently__"
+    },
+    "focusNext": {
+      "description": "__MSG_command_focusNext__"
+    },
+    "focusNextSilently": {
+      "description": "__MSG_command_focusNextSilently__"
+    },
+    "focusParent": {
+      "description": "__MSG_command_focusParent__"
+    },
+    "focusFirstChild": {
+      "description": "__MSG_command_focusFirstChild__"
+    },
+    "focusLastChild": {
+      "description": "__MSG_command_focusLastChild__"
+    },
+    "focusPreviousSibling": {
+      "description": "__MSG_command_focusPreviousSibling__"
+    },
+    "focusNextSibling": {
+      "description": "__MSG_command_focusNextSibling__"
+    },
+    "tabbarUp": {
+      "description": "__MSG_command_tabbarUp__",
+      "suggested_key": {
+        "default": "Alt+Shift+Up"
+      }
+    },
+    "tabbarPageUp": {
+      "description": "__MSG_command_tabbarPageUp__",
+      "suggested_key": {
+        "default": "Alt+Shift+PageUp"
+      }
+    },
+    "tabbarHome": {
+      "description": "__MSG_command_tabbarHome__",
+      "suggested_key": {
+        "default": "Alt+Shift+Home"
+      }
+    },
+    "tabbarDown": {
+      "description": "__MSG_command_tabbarDown__",
+      "suggested_key": {
+        "default": "Alt+Shift+Down"
+      }
+    },
+    "tabbarPageDown": {
+      "description": "__MSG_command_tabbarPageDown__",
+      "suggested_key": {
+        "default": "Alt+Shift+PageDown"
+      }
+    },
+    "tabbarEnd": {
+      "description": "__MSG_command_tabbarEnd__",
+      "suggested_key": {
+        "default": "Alt+Shift+End"
+      }
+    },
+    "toggleSubPanel": {
+      "description": "__MSG_command_toggleSubPanel__",
+      "suggested_key": {
+        "default": "F2"
+      }
+    },
+    "switchSubPanel": {
+      "description": "__MSG_command_switchSubPanel__"
+    },
+    "increaseSubPanel": {
+      "description": "__MSG_command_increaseSubPanel__"
+    },
+    "decreaseSubPanel": {
+      "description": "__MSG_command_decreaseSubPanel__"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "browser_style": false
+  },
+  "web_accessible_resources": [
+    "resources/group-tab.html*"
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "ext+treestyletab",
+      "name": "Tree Style Tab",
+      "uriTemplate": "resources/protocol-handler.html?%s"
+    }
+  ],
+  "default_locale": "en",
+  "applications": {
+    "gecko": {
+      "id": "treestyletab@piro.sakura.ne.jp"
+    }
+  }
+}

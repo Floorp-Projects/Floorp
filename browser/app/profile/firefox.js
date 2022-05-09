@@ -19,6 +19,163 @@
   #endif
 #endif
 
+
+/*----------------------------------------------------- Floorp 専用の pref 設定 ----------------------------------------------------*/
+//Floorpアップデートの最新版である旨の通知を許可
+pref("enable.floorp.updater.latest", false);
+pref("enable.floorp.update", true);
+pref("update.id.floorp", "floorp-beta");
+
+//ブラウザーUIのカスタマイズ設定
+pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
+pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
+pref("floorp.optimized.verticaltab", false); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
+pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
+pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブのフォーカスした際の挙動を変更
+pref("floorp.bookmarks.bar.focus.mode", false);//フォーカスした際にブックマークバーを展開
+pref("floorp.material.effect.enable", false);//マテリアルモードの実装
+
+pref("ui.systemUsesDarkTheme", 1);// デフォルトのシステムテーマ使用可能のテーマデザイン
+pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
+pref("floorp.browser.tabbar.settings", 1);// タブの設定
+
+/*----------------------------------------------------------------------------------------------------------------------------------*/
+
+//検索エンジン
+pref("browser.search.separatePrivateDefault", true);
+pref("browser.search.separatePrivateDefault.ui.enabled", true);
+pref("browser.urlbar.update2.engineAliasRefresh", true);
+
+//個人設定の同期無効
+pref("services.sync.engine.prefs", false); // Never sync prefs, addons, or tabs with other browsers
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.feeds.snippets", false, locked);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsored", false, locked);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsoredTopSites", false, locked);
+pref("services.sync.telemetry.maxPayloadCount", "0", locked);
+pref("services.sync.telemetry.submissionInterval", "0", locked);
+pref("services.sync.prefs.sync.browser.startup.page", false, locked); // Firefox の自動復元機能を Firefox Sync で同期しないようにします。
+pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //たくさんのタブを閉じようとした際の警告表示を Firefox Sync で同期しないようにします。
+
+pref("toolkit.legacyUserProfileCustomizations.stylesheets" ,true);
+
+//たくさん閉じようとしたときに警告
+pref("browser.tabs.warnOnClose", true);
+pref("browser.tabs.warnOnCloseOtherTabs", true);
+
+//デフォルトブラウザーのチェック無効
+pref("browser.shell.checkDefaultBrowser", false, locked);
+
+//addon推奨プロンプトを消す
+pref("extensions.getAddons.showPane", false);
+//軽量化
+pref("browser.tabs.animate", false);
+pref("browser.panorama.animate_zoom", false);
+pref("network.http.pipelining", false);
+pref("network.http.pipelining.firstrequest", true);
+pref("network.http.pipelining.maxrequests", 8);
+pref("network.http.max-connections-per-server", 8);
+pref("network.http.max-connections", 32);
+pref("nglayout.initialpaint.delay", 0);
+pref("toolkit.telemetry.updatePing.enabledr", false);
+pref("content.notify.ontimer", true);
+pref("content.interrupt.parsing", true);
+pref("nglayout.initialpaint.delay", 0);
+
+//調査と思われるものを削除。Torでは削除済み。
+pref("app.normandy.api_url", "");
+pref("app.normandy.enabled", true);
+
+//backdropfilterを既定で有効化します。
+pref("layout.css.backdrop-filter.enabled", true);
+
+//SVG avif jxl 画像ファイルをの互換性向上または、既定で開けるように
+pref("svg.context-properties.content.enabled", true, locked);
+pref("image.avif.enabled", true, locked);
+pref("image.jxl.enabled", true, locked);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減
+pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//ブラックリストの参照の有効化
+pref("extensions.blocklist.enabled", true);
+pref("services.blocklist.update_enabled",	true);
+
+// Add-On のブラックリストをFloorpが参照する際の情報漏洩削減のために、先にリンク先を指定
+pref("extensions.blocklist.url", "https://blocklist.addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/");
+
+//Pocket機能を無効化*/
+pref("extensions.pocket.enabled", false);
+
+//コンテンツセキュリティポリシー(CSP)の有効化
+pref("security.csp.enable", true);
+
+//クラッシュレポートを無効化
+pref("breakpad.reportURL", "", locked);
+pref("browser.tabs.crashReporting.sendReport", false);
+pref("browser.crashReports.unsubmittedCheck.enabled",	false);
+
+//野良アドオンのインストールを許可。開発者向け。Floorp アドオンストアの準備。
+pref("xpinstall.signatures.required", false);
+
+// Firefox による、Mozilla への情報送信テレメンタリーを無効化
+pref("toolkit.telemetry.archive.enabled", false, locked);
+pref("toolkit.telemetry.bhrPing.enabled", false, locked);
+pref("toolkit.telemetry.enabled", false, locked);
+pref("toolkit.telemetry.firstShutdownPing.enabled", false, locked);
+pref("toolkit.telemetry.geckoview.streaming", false, locked);
+pref("toolkit.telemetry.newProfilePing.enabled", false, locked);
+pref("toolkit.telemetry.pioneer-new-studies-available", false, locked);
+pref("toolkit.telemetry.reportingpolicy.firstRun", false, locked);
+pref("toolkit.telemetry.server", "", locked);
+pref("toolkit.telemetry.shutdownPingSender.enabled", false, locked);
+pref("toolkit.telemetry.shutdownPingSender.enabledFirstSession", false, locked);
+pref("toolkit.telemetry.testing.overrideProductsCheck", false, locked);
+pref("toolkit.telemetry.unified", false, locked);
+pref("toolkit.telemetry.updatePing.enabled", false, locked);
+
+//Firefox調査を無効化
+pref("app.shield.optoutstudies.enabled", false, locked);
+
+// CPUのコア数を偽装し、正しい値をウェブサイトに返さないようにします。
+pref("dom.maxHardwareConcurrency",	2);
+
+//Mozillaが提供する位置特定型検索エンジンを使用しない。位置情報がより保護されます。
+pref("browser.search.geoSpecificDefaults", false);
+
+//http 通信時、Floorp は絶対にhttp:// をURLバーから隠しません
+pref("browser.urlbar.trimURLs", false);
+
+//「既定でオンを推奨」フィンガープリント対策の一環。
+//参考：https://www.torproject.org/projects/torbrowser/design/#fingerprinting-defenses
+pref("dom.network.enabled", false);
+
+// webRTCは完全に無効化しません。Brave・Safari では、既定で無効化されています。
+pref("media.peerconnection.enabled", true);
+
+//WebRTC が有効な場合、Floorp はできるだけ、IPアドレスを秘匿するよう動作します。
+pref("media.peerconnection.ice.default_address_only", true);
+pref("media.peerconnection.ice.no_host", true);
+
+//アドオンのフィンガープリント採取から保護
+pref("privacy.resistFingerprinting.block_mozAddonManager", true);
+
+//プライバシー機能をオンにし、テレメトリー採取を無効化します。
+pref("privacy.trackingprotection.origin_telemetry.enabled", false, locked);
+pref("privacy.userContext.enabled", true);
+pref("privacy.userContext.ui.enabled", true);
+pref("trailhead.firstrun.branches", "", locked);
+pref("extensions.webcompat-reporter.enabled", false);
+
+pref("browser.startup.page", 3);//自動復元
+pref("browser.tabs.closeWindowWithLastTab", false);//最後のタブを閉じてもブラウザが閉じないように
+/*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
+
+pref("extensions.htmlaboutaddons.recommendations.enabled", false, locked);
+pref("datareporting.policy.dataSubmissionEnable", false, locked);
+pref("datareporting.healthreport.uploadEnabled", false, locked);
+
+/*-----------------------------------------------------------------------------以下、Firefox の既定の設定-----------------------------------------------------------------------------*/
+
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.xhtml");
 
 // Enables some extra Extension System Logging (can reduce performance)
@@ -66,7 +223,7 @@ pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com
 pref("extensions.webextensions.remote", true);
 
 // Require signed add-ons by default
-pref("extensions.langpacks.signatures.required", true);
+//pref("extensions.langpacks.signatures.required", true);
 pref("xpinstall.signatures.required", true);
 pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 
@@ -262,7 +419,7 @@ pref("browser.touchmode.auto", true);
 pref("browser.compactmode.show", false);
 
 // At startup, check if we're the default browser and prompt user if not.
-pref("browser.shell.checkDefaultBrowser", true);
+//pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
@@ -285,7 +442,7 @@ pref("browser.shell.setDefaultPDFHandler.onlyReplaceBrowsers", true);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
-pref("browser.startup.page",                1);
+//pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "about:home");
 #ifdef NIGHTLY_BUILD
 pref("browser.startup.homepage.abouthome_cache.enabled", true);
@@ -616,7 +773,7 @@ pref("browser.search.widget.inNavBar", false);
 
 // Enables display of the options for the user using a separate default search
 // engine in private browsing mode.
-pref("browser.search.separatePrivateDefault.ui.enabled", false);
+//pref("browser.search.separatePrivateDefault.ui.enabled", false);
 // The maximum amount of times the private default banner is shown.
 pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 
@@ -682,7 +839,7 @@ pref("browser.link.open_newwindow.restriction", 2);
 
 // Tabbed browser
 pref("browser.tabs.closeTabByDblclick", false);
-pref("browser.tabs.closeWindowWithLastTab", true);
+//pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.allowTabDetach", true);
 // Open related links to a tab, e.g., link in current tab, at next to the
 // current tab if |insertRelatedAfterCurrent| is true.  Otherwise, always
@@ -693,8 +850,8 @@ pref("browser.tabs.insertRelatedAfterCurrent", true);
 // for non-related links. Note that if this is set to true, it will trump
 // the value of browser.tabs.insertRelatedAfterCurrent.
 pref("browser.tabs.insertAfterCurrent", false);
-pref("browser.tabs.warnOnClose", false);
-pref("browser.tabs.warnOnCloseOtherTabs", true);
+//pref("browser.tabs.warnOnClose", false);
+//pref("browser.tabs.warnOnCloseOtherTabs", true);
 pref("browser.tabs.warnOnOpen", true);
 pref("browser.tabs.maxOpenBeforeWarn", 15);
 pref("browser.tabs.loadInBackground", true);
@@ -1177,7 +1334,7 @@ pref("browser.zoom.siteSpecific", true);
 pref("browser.zoom.updateBackgroundTabs", true);
 
 // The breakpad report server to link to in about:crashes
-pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
+//pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
 
 // URL for "Learn More" for DataCollection
 pref("toolkit.datacollection.infoURL",
@@ -1191,7 +1348,7 @@ pref("toolkit.crashreporter.infoURL",
 pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
 // base url for web-based feedback pages
-pref("app.feedback.baseURL", "https://ideas.mozilla.org/");
+pref("app.feedback.baseURL", "https://support.ablaze.one/contact");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
@@ -1373,9 +1530,9 @@ pref("services.sync.prefs.sync.browser.safebrowsing.phishing.enabled", true);
 pref("services.sync.prefs.sync.browser.search.update", true);
 pref("services.sync.prefs.sync.browser.search.widget.inNavBar", true);
 pref("services.sync.prefs.sync.browser.startup.homepage", true);
-pref("services.sync.prefs.sync.browser.startup.page", true);
+//pref("services.sync.prefs.sync.browser.startup.page", true);
 pref("services.sync.prefs.sync.browser.tabs.loadInBackground", true);
-pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
+//pref("services.sync.prefs.sync.browser.tabs.warnOnClose", true);
 pref("services.sync.prefs.sync.browser.tabs.warnOnOpen", true);
 pref("services.sync.prefs.sync.browser.taskbar.previews.enable", true);
 pref("services.sync.prefs.sync.browser.urlbar.maxRichResults", true);
@@ -1539,11 +1696,11 @@ pref("browser.newtabpage.activity-stream.discoverystream.compactImages.enabled",
 pref("browser.newtabpage.activity-stream.discoverystream.imageGradient.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.titleLines", 3);
 pref("browser.newtabpage.activity-stream.discoverystream.descLines", 3);
-pref("browser.newtabpage.activity-stream.discoverystream.readTime.enabled", true);
+pref("browser.newtabpage.activity-stream.discoverystream.readTime.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.essentialReadsHeader.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.editorsPicksHeader.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "1,5,7,11,18,20");
+pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "2,4,11,20");
 
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
@@ -1762,7 +1919,7 @@ pref("browser.translation.engine", "Google");
 
 // Telemetry settings.
 // Determines if Telemetry pings can be archived locally.
-pref("toolkit.telemetry.archive.enabled", true);
+//pref("toolkit.telemetry.archive.enabled", true);
 // Enables sending the shutdown ping when Firefox shuts down.
 pref("toolkit.telemetry.shutdownPingSender.enabled", true);
 // Enables sending the shutdown ping using the pingsender from the first session.
@@ -1774,7 +1931,7 @@ pref("toolkit.telemetry.newProfilePing.enabled", true);
 // Enables sending 'update' pings on Firefox updates.
 pref("toolkit.telemetry.updatePing.enabled", true);
 // Enables sending 'bhr' pings when the browser hangs.
-pref("toolkit.telemetry.bhrPing.enabled", true);
+//pref("toolkit.telemetry.bhrPing.enabled", true);
 
 // Ping Centre Telemetry settings.
 pref("browser.ping-centre.telemetry", true);
@@ -1814,6 +1971,7 @@ pref("dom.storage_access.enabled", true);
 // Enable URL query stripping in Nightly.
 #ifdef NIGHTLY_BUILD
 pref("privacy.query_stripping.enabled", true);
+pref("privacy.query_stripping.strip_list", "mc_eid oly_anon_id oly_enc_id __s vero_id _hsenc mkt_tok fbclid");
 #endif
 
 pref("browser.contentblocking.cryptomining.preferences.ui.enabled", true);
@@ -2064,7 +2222,7 @@ pref("browser.migrate.chrome.history.maxAgeInDays", 180);
 pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
 
 pref("extensions.pocket.api", "api.getpocket.com");
-pref("extensions.pocket.enabled", true);
+//pref("extensions.pocket.enabled", true);
 pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
 pref("extensions.pocket.site", "getpocket.com");
 pref("extensions.pocket.onSaveRecs", true);
@@ -2078,12 +2236,7 @@ pref("extensions.pocket.showHome", true);
 pref("extensions.pocket.loggedOutVariant", "control");
 
 // Enable the new Pocket panels.
-#ifdef NIGHTLY_BUILD
-  pref("extensions.pocket.refresh.layout.enabled", true);
-#else
-  pref("extensions.pocket.refresh.layout.enabled", false);
-#endif
-
+pref("extensions.pocket.refresh.layout.enabled", false);
 // Just for the new Pocket panels, enables the email signup button.
 pref("extensions.pocket.refresh.emailButton.enabled", false);
 // Hides the recently saved section in the home panel.
@@ -2122,9 +2275,9 @@ pref("webchannel.allowObject.urlWhitelist", "https://content.cdn.mozilla.net htt
 // crash reports, and then show a notification for submitting
 // those reports.
 #ifdef NIGHTLY_BUILD
-  pref("browser.crashReports.unsubmittedCheck.enabled", true);
+//  pref("browser.crashReports.unsubmittedCheck.enabled", true);
 #else
-  pref("browser.crashReports.unsubmittedCheck.enabled", false);
+ // pref("browser.crashReports.unsubmittedCheck.enabled", false);
 #endif
 
 // chancesUntilSuppress is how many times we'll show the unsubmitted
@@ -2159,9 +2312,9 @@ pref("browser.chrome.errorReporter.infoURL",
      "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/nightly-error-collection");
 
 // Normandy client preferences
-pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
+//pref("app.normandy.api_url", "https://normandy.cdn.mozilla.net/api/v1");
 pref("app.normandy.dev_mode", false);
-pref("app.normandy.enabled", true);
+//pref("app.normandy.enabled", true);
 pref("app.normandy.first_run", true);
 pref("app.normandy.logging.level", 50); // Warn
 pref("app.normandy.run_interval_seconds", 21600); // 6 hours
@@ -2169,9 +2322,9 @@ pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%
 pref("app.normandy.last_seen_buildid", "");
 pref("app.normandy.onsync_skew_sec", 600);
 #ifdef MOZ_DATA_REPORTING
-  pref("app.shield.optoutstudies.enabled", true);
+//  pref("app.shield.optoutstudies.enabled", true);
 #else
-  pref("app.shield.optoutstudies.enabled", false);
+ // pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences:
@@ -2676,15 +2829,121 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
 // SnapshotScorer.
 pref("browser.snapshots.score.Visit", 1);
 pref("browser.snapshots.score.CurrentSession", 1);
+pref("browser.snapshots.score.InNavigation", 3);
+pref("browser.snapshots.score.IsOverlappingVisit", 3);
 pref("browser.snapshots.score.IsUserPersisted", 1);
 pref("browser.snapshots.score.IsUsedRemoved", -10);
+ 
 
-// A set of weights for the snapshot recommendation sources. The suffixes after
-// the last decimal map to the keys of `Snapshots.recommendationSources`.
-pref("browser.snapshots.source.CommonReferrer", 3);
-pref("browser.snapshots.source.Overlapping", 3);
 
-// Expiration days for snapshots.
-pref("browser.places.snapshots.expiration.days", 210);
-// For user managed snapshots we use more than a year, to support yearly tasks.
-pref("browser.places.snapshots.expiration.userManaged.days", 420);
+
+
+// ** Theme Default Options  by  photon Black 3651 ****************************************************
+
+// Proton Tooltip
+pref("browser.proton.places-tooltip.enabled", true);
+
+// Fill SVG Color
+pref("svg.context-properties.content.enabled", true);
+
+// CSS Color Mix - 88 Above
+pref("layout.css.color-mix.enabled", true);
+
+// CSS Blur Filter - 88 Above
+pref("layout.css.backdrop-filter.enabled", true);
+
+// Restore Compact Mode - 89 Above
+pref("browser.compactmode.show", true);
+
+// Browser Theme Based Scheme - Will be activate 95 Above
+// pref("layout.css.prefers-color-scheme.content-override", 3);
+
+// ** Theme Related Options ****************************************************
+// == Theme Distribution Settings ==============================================
+pref("userChrome.tab.connect_to_window",          true); // Original, Photon
+pref("userChrome.tab.color_like_toolbar",         true); // Original, Photon
+
+// pref("userChrome.tab.lepton_like_padding",     true); // Original
+pref("userChrome.tab.photon_like_padding",        true); // Photon
+
+// pref("userChrome.tab.dynamic_separtor",        true); // Original, Proton
+pref("userChrome.tab.static_separator",           true); // Photon
+
+// pref("userChrome.tab.newtab_button_like_tab",  true); // Original
+pref("userChrome.tab.newtab_button_smaller",      true); // Photon
+// pref("userChrome.tab.newtab_button_proton",    true); // Proton
+
+// pref("userChrome.icon.panel_full",             true); // Original, Proton
+pref("userChrome.icon.panel_photon",              true); // Photon
+
+// Photon Only
+pref("userChrome.tab.photon_like_contextline",    true);
+pref("userChrome.rounding.square_tab",            true);
+pref("userChrome.compatibility.theme",       true);
+pref("userChrome.compatibility.os",          true);
+pref("userChrome.theme.built_in_contrast",   true);
+pref("userChrome.theme.system_default",      true);
+pref("userChrome.theme.proton_color",        true);
+pref("userChrome.theme.proton_chrome",       true); // Need proton_color
+pref("userChrome.theme.fully_color",         true); // Need proton_color
+pref("userChrome.theme.fully_dark",          true); // Need proton_color
+
+pref("userChrome.decoration.cursor",         true);
+pref("userChrome.decoration.field_border",   true);
+pref("userChrome.decoration.download_panel", true);
+pref("userChrome.decoration.animate",        true);
+
+pref("userChrome.padding.tabbar_width",      true);
+pref("userChrome.padding.tabbar_height",     true);
+pref("userChrome.padding.toolbar_button",    true);
+pref("userChrome.padding.navbar_width",      true);
+pref("userChrome.padding.urlbar",            true);
+pref("userChrome.padding.bookmarkbar",       true);
+pref("userChrome.padding.infobar",           true);
+pref("userChrome.padding.menu",              true);
+pref("userChrome.padding.bookmark_menu",     true);
+pref("userChrome.padding.global_menubar",    true);
+pref("userChrome.padding.panel",             true);
+pref("userChrome.padding.popup_panel",       true);
+
+pref("userChrome.tab.multi_selected",        true);
+pref("userChrome.tab.unloaded",              true);
+pref("userChrome.tab.letters_cleary",        true);
+pref("userChrome.tab.close_button_at_hover", true);
+pref("userChrome.tab.sound_hide_label",      true);
+pref("userChrome.tab.sound_with_favicons",   true);
+pref("userChrome.tab.pip",                   true);
+pref("userChrome.tab.container",             true);
+pref("userChrome.tab.crashed",               true);
+
+pref("userChrome.fullscreen.overlap",        true);
+
+pref("userChrome.icon.library",              true);
+pref("userChrome.icon.panel",                true);
+pref("userChrome.icon.menu",                 true);
+pref("userChrome.icon.context_menu",         true);
+pref("userChrome.icon.global_menu",          true);
+pref("userChrome.icon.global_menubar",       true);
+
+// -- User Content -------------------------------------------------------------
+pref("userContent.player.ui",             true);
+pref("userContent.player.icon",           true);
+pref("userContent.player.noaudio",        true);
+pref("userContent.player.size",           true);
+pref("userContent.player.click_to_play",  true);
+pref("userContent.player.animate",        true);
+
+pref("userContent.newTab.field_border",   true);
+pref("userContent.newTab.full_icon",      true);
+pref("userContent.newTab.animate",        true);
+pref("userContent.newTab.pocket_to_last", true);
+pref("userContent.newTab.searchbar",      true);
+
+pref("userContent.page.illustration",     true);
+pref("userContent.page.proton_color",     true);
+pref("userContent.page.dark_mode",        true); // Need proton_color
+pref("userContent.page.proton",           true); // Need proton_color
+
+// ** Useful Options ***********************************************************
+// Integrated calculator at urlbar
+pref("browser.urlbar.suggest.calculator", true);

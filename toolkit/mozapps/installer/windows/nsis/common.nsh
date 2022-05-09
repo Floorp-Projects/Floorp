@@ -538,7 +538,7 @@
 
       ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
       ; several other places.
-      StrCpy $0 "$0\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38"
+      StrCpy $0 "$0\Ablaze-1de4eec8-1241-4177-a864-e594e8d1fb38"
 
       Exch $0   ; Restore original $0 and put our $0 on the stack.
     FunctionEnd
@@ -1205,7 +1205,7 @@
  *
  * @param   _KEY ($R1)
  *          Sub key containing all the installer prefs
- *          Usually "Software\Mozilla\${AppName}"
+ *          Usually "Software\Ablaze\${AppName}"
  * @param   _PREF ($R2)
  *          Name of the pref to look up
  * @return  _RESULT ($R3)
@@ -1670,7 +1670,7 @@
  * registry hive so you must call SetShellVarContext first.
  *
  * @param   _KEY
- *          The registry subkey (typically this will be Software\Mozilla).
+ *          The registry subkey (typically this will be Software\Ablaze).
  * @return  _RESULT
  *          false if a second install isn't found, path to the main exe if a
  *          second install is found.
@@ -1788,7 +1788,7 @@
  * first.
  *
  * @param   _KEY
- *          The registry subkey (typically this will be Software\Mozilla\App Name).
+ *          The registry subkey (typically this will be Software\Ablaze\App Name).
  * @return  _RESULT
  *          false if a single install location for this app name isn't found,
  *          path to the install directory if a single install location is found.
@@ -1904,7 +1904,7 @@
  * The shell context and the registry view should already have been set.
  *
  * @param   _KEY
- *          The registry subkey (typically Software\Mozilla\App Name).
+ *          The registry subkey (typically Software\Ablaze\App Name).
  * @return  _RESULT
  *          path to the install directory of the first location found, or
  *          the string "false" if no existing installation was found.
@@ -2606,7 +2606,7 @@
  * call SetShellVarContext first.
  *
  * @param   _KEY
- *          The registry subkey (typically this will be Software\Mozilla).
+ *          The registry subkey (typically this will be Software\Ablaze).
  *
  * $0  = loop counter
  * $1  = temporary value used for string searches
@@ -2853,7 +2853,7 @@
  *
  * @param   _KEY ($R1)
  *          The registry subkey
- *          (typically this will be Software\Mozilla\${AppName}).
+ *          (typically this will be Software\Ablaze\${AppName}).
  */
 !macro RegCleanPrefs
   !ifndef ${_MOZFUNC_UN}RegCleanPrefs
@@ -5806,7 +5806,7 @@
 !ifmacrodef InitHashAppModelId
       ; setup the application model id registration value
       !ifdef AppName
-      ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+      ${InitHashAppModelId} "$INSTDIR" "Software\Ablaze\${AppName}\TaskBarIDs"
       !endif
 !endif
 
@@ -6029,12 +6029,12 @@
         ; And verify that if we need to, we're going to clean up the registry
         ; correctly.
         ${If} "$R4" == "mms"
-          WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+          WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" "Write Test"
           ${If} ${Errors}
             ; Nothing initialized so no need to call OnEndCommon
             Quit
           ${Endif}
-          DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+          DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
         ${EndIf}
       !endif
 
@@ -6143,20 +6143,20 @@
       ${If} ${IsNativeAMD64}
       ${OrIf} ${IsNativeARM64}
         SetRegView 64
-        ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+        ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
         SetRegView lastused
       ${EndIf}
 
       StrCmp "$R9" "false" +1 finish_get_install_dir
 
       SetRegView 32
-      ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+      ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
       SetRegView lastused
 
       StrCmp "$R9" "false" +1 finish_get_install_dir
 
       SetShellVarContext current  ; Set SHCTX to HKCU
-      ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
+      ${GetSingleInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $R9
 
       finish_get_install_dir:
       StrCmp "$R9" "false" +2 +1
@@ -7823,7 +7823,7 @@
  *          The main application executable path
  * @param   _REG_PATH
  *          The HKLM/HKCU agnostic registry path where the key hash should
- *          be stored. ex: "Software\Mozilla\Firefox\TaskBarIDs"
+ *          be stored. ex: "Software\Ablaze\Floorp\TaskBarIDs"
  * @result  (Var) $AppUserModelID and $AppUserModelIDPrivate contain the
  *          app model id and the private app model id, respectively.
  */
@@ -7945,11 +7945,11 @@
   StrCpy $R0 ""
   ; Look for an install-specific profile, which might be listed as
   ; either a relative or an absolute path (installs.ini doesn't say which).
-  ${If} ${FileExists} "$APPDATA\Mozilla\Firefox\installs.ini"
+  ${If} ${FileExists} "$APPDATA\Ablaze\Floorp\installs.ini"
     ClearErrors
-    ReadINIStr $1 "$APPDATA\Mozilla\Firefox\installs.ini" "$AppUserModelID" "Default"
+    ReadINIStr $1 "$APPDATA\Ablaze\Floorp\installs.ini" "$AppUserModelID" "Default"
     ${IfNot} ${Errors}
-      ${${_MOZFUNC_UN}GetLongPath} "$APPDATA\Mozilla\Firefox\$1" $2
+      ${${_MOZFUNC_UN}GetLongPath} "$APPDATA\Ablaze\Floorp\$1" $2
       ${If} ${FileExists} $2
         StrCpy $R0 $2
       ${Else}
