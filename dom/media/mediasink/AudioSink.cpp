@@ -342,7 +342,8 @@ void AudioSink::NotifyAudioNeeded() {
              "Not called from the owner's thread");
 
   while (mAudioQueue.GetSize() &&
-         AudioQueuedInRingBufferMS() < mProcessedQueueThresholdMS) {
+         AudioQueuedInRingBufferMS() <
+             static_cast<uint32_t>(mProcessedQueueThresholdMS)) {
     // Check if there's room in our ring buffer.
     if (mAudioQueue.PeekFront()->Frames() >
         SampleToFrame(mProcessedSPSCQueue->AvailableWrite())) {
