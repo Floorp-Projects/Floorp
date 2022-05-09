@@ -15,8 +15,7 @@
 #include "mozilla/dom/XULFrameElement.h"
 #include "mozilla/dom/XULFrameElementBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XULFrameElement)
 
@@ -199,5 +198,4 @@ nsresult XULFrameElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                     aSubjectPrincipal, aNotify);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

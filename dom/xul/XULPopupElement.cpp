@@ -18,8 +18,7 @@
 #include "mozilla/dom/XULPopupElement.h"
 #include "mozilla/dom/XULPopupElementBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsXULElement* NS_NewXULPopupElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo) {
@@ -289,5 +288,4 @@ void XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
