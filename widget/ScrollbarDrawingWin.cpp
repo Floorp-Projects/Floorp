@@ -127,7 +127,7 @@ ComputedStyle* ScrollbarDrawingWin::GetCustomScrollbarStyle(
 template <typename PaintBackendData>
 bool ScrollbarDrawingWin::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
@@ -137,21 +137,21 @@ bool ScrollbarDrawingWin::DoPaintScrollbarThumb(
 }
 
 bool ScrollbarDrawingWin::PaintScrollbarThumb(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, ScrollbarKind aScrollbarKind,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aDrawTarget, aRect, aHorizontal, aFrame, aStyle,
+  return DoPaintScrollbarThumb(aDrawTarget, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
 
 bool ScrollbarDrawingWin::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+  return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
