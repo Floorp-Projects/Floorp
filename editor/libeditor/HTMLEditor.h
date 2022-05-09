@@ -4100,8 +4100,10 @@ class HTMLEditor final : public EditorBase,
    *     calling this.  Which is the way to smart to make every caller
    *     must check the editor state?
    */
-  MOZ_CAN_RUN_SCRIPT bool IsRemovableParentStyleWithNewSpanElement(
-      nsIContent& aContent, nsAtom* aHTMLProperty, nsAtom* aAttribute) const;
+  MOZ_CAN_RUN_SCRIPT Result<bool, nsresult>
+  IsRemovableParentStyleWithNewSpanElement(nsIContent& aContent,
+                                           nsAtom* aHTMLProperty,
+                                           nsAtom* aAttribute) const;
 
   /**
    * XXX These methods seem odd and except the only caller,
