@@ -33,11 +33,22 @@ else
   FILE_H=""
 fi
 
+# IWYU has a confusing set of exit codes. Discard it.
 iwyu -Xiwyu --no_fwd_decls -D__X86_64__  -DWEBRTC_POSIX -I . \
   -I third_party/abseil-cpp \
   -I third_party/googletest/src/googlemock/include \
   -I third_party/googletest/src/googletest/include \
-  $FILE_CC |& fix_include || echo "Some files modified"
+  $FILE_CC >& /tmp/includefixes$$ || echo "IWYU done, code $?"
+
+if grep 'fatal error' /tmp/includefixes$$; then
+  echo "iwyu run failed"
+  cat /tmp/includefixes$$
+  rm /tmp/includefixes$$
+  exit 1
+else
+  fix_include < /tmp/includefixes$$ || echo "Some files modified"
+  rm /tmp/includefixes$$
+fi
 
 if [ $REMOVE_CC_INCLUDES == "yes" ]; then
   if [ -n "$FILE_H" ]; then
