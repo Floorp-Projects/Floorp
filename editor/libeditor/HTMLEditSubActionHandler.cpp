@@ -8803,11 +8803,15 @@ nsresult HTMLEditor::GetInlineStyles(nsIContent& aContent,
       isSet = HTMLEditUtils::IsInlineStyleSetByElement(
           aContent, *tag, attribute, nullptr, &value);
     } else {
-      isSet = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-          aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute), value);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
+          mCSSEditUtils->IsComputedCSSEquivalentToHTMLInlineStyleSet(
+              aContent, MOZ_KnownLive(tag), MOZ_KnownLive(attribute), value);
+      if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
+        NS_WARNING(
+            "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet failed");
+        return isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrapErr();
       }
+      isSet = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
     }
     if (isSet) {
       aStyleCacheArray.AppendElement(StyleCache(tag, attribute, value));
@@ -8859,12 +8863,17 @@ nsresult HTMLEditor::ReapplyCachedStyles() {
     nsAutoString currentValue;
     if (useCSS) {
       // check computed style first in css case
-      isAny = CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet(
-          *startContainerContent, MOZ_KnownLive(styleCacheBeforeEdit.Tag()),
-          MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      Result<bool, nsresult> isComputedCSSEquivalentToHTMLInlineStyleOrError =
+          mCSSEditUtils->IsComputedCSSEquivalentToHTMLInlineStyleSet(
+              *startContainerContent, MOZ_KnownLive(styleCacheBeforeEdit.Tag()),
+              MOZ_KnownLive(styleCacheBeforeEdit.GetAttribute()), currentValue);
+      if (isComputedCSSEquivalentToHTMLInlineStyleOrError.isErr()) {
+        NS_WARNING(
+            "CSSEditUtils::IsComputedCSSEquivalentToHTMLInlineStyleSet() "
+            "failed");
+        return isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrapErr();
       }
+      isAny = isComputedCSSEquivalentToHTMLInlineStyleOrError.unwrap();
     }
     if (!isAny) {
       // then check typeinstate and html style
