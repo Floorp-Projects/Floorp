@@ -9,8 +9,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRRenderState, mParent, mSession,
                                       mBaseLayer, mOutputCanvas)
@@ -90,5 +89,4 @@ void XRRenderState::SessionEnded() {
   mOutputCanvas = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

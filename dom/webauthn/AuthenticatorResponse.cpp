@@ -8,8 +8,7 @@
 
 #include "nsPIDOMWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AuthenticatorResponse)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AuthenticatorResponse)
@@ -61,5 +60,4 @@ nsresult AuthenticatorResponse::SetClientDataJSON(CryptoBuffer& aBuffer) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

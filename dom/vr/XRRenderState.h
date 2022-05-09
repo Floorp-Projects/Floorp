@@ -12,8 +12,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class XRWebGLLayer;
 
 class XRRenderState final : public nsWrapperCache {
@@ -61,7 +60,6 @@ class XRRenderState final : public nsWrapperCache {
   bool mCompositionDisabled;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRRenderState_h_

@@ -10,8 +10,7 @@
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XRRigidTransform)
 
@@ -183,5 +182,4 @@ already_AddRefed<XRRigidTransform> XRRigidTransform::Inverse() {
   return inverse.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
