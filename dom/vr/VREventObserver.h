@@ -13,8 +13,7 @@
 
 class nsGlobalWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class VREventObserver final : public gfx::VRManagerEventObserver {
  public:
@@ -53,7 +52,6 @@ class VREventObserver final : public gfx::VRManagerEventObserver {
   bool mStopActivity;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_VREventObserver_h

@@ -8,8 +8,7 @@
 #include "XRNativeOriginLocalFloor.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRNativeOriginLocalFloor::XRNativeOriginLocalFloor(
     gfx::VRDisplayClient* aDisplay)
@@ -39,5 +38,4 @@ gfx::PointDouble3D XRNativeOriginLocalFloor::GetPosition() {
   return mInitialPosition;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
