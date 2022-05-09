@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PerformanceEntry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct PerformanceMarkOptions;
 
@@ -53,7 +52,6 @@ class PerformanceMark final : public PerformanceEntry {
   JS::Heap<JS::Value> mDetail;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_performancemark_h___ */
