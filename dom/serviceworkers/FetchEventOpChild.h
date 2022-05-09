@@ -17,8 +17,7 @@
 
 class nsIInterceptedChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class KeepAliveToken;
 class PRemoteWorkerControllerChild;
@@ -86,7 +85,6 @@ class FetchEventOpChild final : public PFetchEventOpChild {
   RefPtr<FetchServiceResponsePromise> mPreloadResponseReadyPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_fetcheventopchild_h__

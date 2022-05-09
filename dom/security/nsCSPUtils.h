@@ -18,12 +18,10 @@
 
 class nsIChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct CSP;
 class Document;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 /* =============== Logging =================== */
 

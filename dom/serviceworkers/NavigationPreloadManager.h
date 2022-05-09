@@ -16,8 +16,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 
@@ -58,7 +57,6 @@ class NavigationPreloadManager final : public nsISupports,
   RefPtr<ServiceWorkerRegistration::Inner> mInner;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_NavigationPreloadManager_h
