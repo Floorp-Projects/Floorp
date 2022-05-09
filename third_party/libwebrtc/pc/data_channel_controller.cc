@@ -22,6 +22,7 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 
 namespace webrtc {
 
@@ -137,59 +138,69 @@ void DataChannelController::OnDataReceived(
   cricket::ReceiveDataParams params;
   params.sid = channel_id;
   params.type = ToCricketDataMessageType(type);
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this, params, buffer] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        // TODO(bugs.webrtc.org/11547): The data being received should be
-        // delivered on the network thread. The way HandleOpenMessage_s works
-        // right now is that it's called for all types of buffers and operates
-        // as a selector function. Change this so that it's only called for
-        // buffers that it should be able to handle. Once we do that, we can
-        // deliver all other buffers on the network thread (change
-        // SignalDataChannelTransportReceivedData_s to
-        // SignalDataChannelTransportReceivedData_n).
-        if (!HandleOpenMessage_s(params, buffer)) {
-          SignalDataChannelTransportReceivedData_s(params, buffer);
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr(), params, buffer] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          // TODO(bugs.webrtc.org/11547): The data being received should be
+          // delivered on the network thread. The way HandleOpenMessage_s works
+          // right now is that it's called for all types of buffers and operates
+          // as a selector function. Change this so that it's only called for
+          // buffers that it should be able to handle. Once we do that, we can
+          // deliver all other buffers on the network thread (change
+          // SignalDataChannelTransportReceivedData_s to
+          // SignalDataChannelTransportReceivedData_n).
+          if (!self->HandleOpenMessage_s(params, buffer)) {
+            self->SignalDataChannelTransportReceivedData_s(params, buffer);
+          }
         }
-      });
+      }));
 }
 
 void DataChannelController::OnChannelClosing(int channel_id) {
   RTC_DCHECK_RUN_ON(network_thread());
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this, channel_id] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        SignalDataChannelTransportChannelClosing_s(channel_id);
-      });
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr(), channel_id] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          self->SignalDataChannelTransportChannelClosing_s(channel_id);
+        }
+      }));
 }
 
 void DataChannelController::OnChannelClosed(int channel_id) {
   RTC_DCHECK_RUN_ON(network_thread());
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this, channel_id] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        SignalDataChannelTransportChannelClosed_s(channel_id);
-      });
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr(), channel_id] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          self->SignalDataChannelTransportChannelClosed_s(channel_id);
+        }
+      }));
 }
 
 void DataChannelController::OnReadyToSend() {
   RTC_DCHECK_RUN_ON(network_thread());
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        data_channel_transport_ready_to_send_ = true;
-        SignalDataChannelTransportWritable_s(
-            data_channel_transport_ready_to_send_);
-      });
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr()] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          self->data_channel_transport_ready_to_send_ = true;
+          self->SignalDataChannelTransportWritable_s(
+              self->data_channel_transport_ready_to_send_);
+        }
+      }));
 }
 
 void DataChannelController::OnTransportClosed() {
   RTC_DCHECK_RUN_ON(network_thread());
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        OnTransportChannelClosed();
-      });
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr()] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          self->OnTransportChannelClosed();
+        }
+      }));
 }
 
 void DataChannelController::SetupDataChannelTransport_n() {
@@ -392,12 +403,12 @@ void DataChannelController::OnSctpDataChannelClosed(SctpDataChannel* channel) {
       sctp_data_channels_to_free_.push_back(*it);
       sctp_data_channels_.erase(it);
       signaling_thread()->PostTask(
-          RTC_FROM_HERE, [self = weak_factory_.GetWeakPtr()] {
+          ToQueuedTask([self = weak_factory_.GetWeakPtr()] {
             if (self) {
               RTC_DCHECK_RUN_ON(self->signaling_thread());
               self->sctp_data_channels_to_free_.clear();
             }
-          });
+          }));
       return;
     }
   }
@@ -598,13 +609,15 @@ bool DataChannelController::DataChannelSendData(
 
 void DataChannelController::NotifyDataChannelsOfTransportCreated() {
   RTC_DCHECK_RUN_ON(network_thread());
-  data_channel_transport_invoker_.AsyncInvoke<void>(
-      RTC_FROM_HERE, signaling_thread(), [this] {
-        RTC_DCHECK_RUN_ON(signaling_thread());
-        for (const auto& channel : sctp_data_channels_) {
-          channel->OnTransportChannelCreated();
+  signaling_thread()->PostTask(
+      ToQueuedTask([self = weak_factory_.GetWeakPtr()] {
+        if (self) {
+          RTC_DCHECK_RUN_ON(self->signaling_thread());
+          for (const auto& channel : self->sctp_data_channels_) {
+            channel->OnTransportChannelCreated();
+          }
         }
-      });
+      }));
 }
 
 rtc::Thread* DataChannelController::network_thread() const {

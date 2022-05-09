@@ -29,7 +29,6 @@
 #include "pc/data_channel_utils.h"
 #include "pc/rtp_data_channel.h"
 #include "pc/sctp_data_channel.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/ssl_stream_adapter.h"
@@ -245,6 +244,8 @@ class DataChannelController : public RtpDataChannelProviderInterface,
 
   // Owning PeerConnection.
   PeerConnection* const pc_;
+  // The weak pointers must be dereferenced and invalidated on the signalling
+  // thread only.
   rtc::WeakPtrFactory<DataChannelController> weak_factory_{this};
 };
 
