@@ -9,8 +9,7 @@
 #include "mozilla/ipc/ProcessChild.h"
 #include "GMPChild.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPLoader;
 
@@ -30,7 +29,6 @@ class GMPProcessChild final : public mozilla::ipc::ProcessChild {
   DISALLOW_COPY_AND_ASSIGN(GMPProcessChild);
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPProcessChild_h_

@@ -16,8 +16,7 @@
 
 class nsIRunnable;
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
  public:
@@ -106,7 +105,6 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   DISALLOW_COPY_AND_ASSIGN(GMPProcessParent);
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // ifndef GMPProcessParent_h
