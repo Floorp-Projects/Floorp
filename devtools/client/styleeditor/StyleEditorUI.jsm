@@ -18,9 +18,6 @@ const {
   optionsPopupMenu,
 } = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 const {
-  SplitView,
-} = require("resource://devtools/client/styleeditor/SplitView.jsm");
-const {
   StyleSheetEditor,
 } = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
 const { PluralForm } = require("devtools/shared/plural-form");
@@ -80,6 +77,9 @@ const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
 const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
 const PREF_ORIG_SOURCES = "devtools.source-map.client-service.enabled";
 
+const FILTERED_CLASSNAME = "splitview-filtered";
+const ALL_FILTERED_CLASSNAME = "splitview-all-filtered";
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -93,6 +93,14 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *
  */
 class StyleEditorUI extends EventEmitter {
+  #filter;
+  /**
+   * Maps keyed by summary element whose value is an object containing:
+   * - {Element} details: The associated details element (i.e. container for CodeMirror)
+   * - {StyleSheetEditor} editor: The associated editor, for easy retrieval
+   */
+  #summaryDataMap = new WeakMap();
+
   /**
    * @param {Toolbox} toolbox
    * @param {Object} commands Object defined from devtools/shared/commands to interact with the devtools backend
@@ -114,6 +122,7 @@ class StyleEditorUI extends EventEmitter {
     this.selectedEditor = null;
     this.savedLocations = {};
     this._seenSheets = new Map();
+    this._activeSummary = null;
 
     this._onOptionsButtonClick = this._onOptionsButtonClick.bind(this);
     this._onOrigSourcesPrefChanged = this._onOrigSourcesPrefChanged.bind(this);
@@ -130,6 +139,7 @@ class StyleEditorUI extends EventEmitter {
     this._onFocusFilterInputKeyboardShortcut = this._onFocusFilterInputKeyboardShortcut.bind(
       this
     );
+    this._onNavKeyDown = this._onNavKeyDown.bind(this);
 
     this._prefObserver = new PrefObserver("devtools.styleeditor.");
     this._prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
@@ -189,27 +199,17 @@ class StyleEditorUI extends EventEmitter {
     this._filterInputClearButton = this._root.querySelector(
       ".devtools-searchinput-clear"
     );
+    this._nav = this._root.querySelector(".splitview-nav");
+    this._side = this._root.querySelector(".splitview-side-details");
+    this._tplSummary = this._root.querySelector(
+      "#splitview-tpl-summary-stylesheet"
+    );
+    this._tplDetails = this._root.querySelector(
+      "#splitview-tpl-details-stylesheet"
+    );
 
     this._uiAbortController = new AbortController();
     const eventListenersConfig = { signal: this._uiAbortController.signal };
-
-    this._view = new SplitView(this._root);
-    this._view.on(
-      "active-summary-cleared",
-      () => {
-        this.selectedEditor = null;
-      },
-      eventListenersConfig
-    );
-    this._view.on(
-      "filter-state-change",
-      data => {
-        this._filterInput
-          .closest(".devtools-searchbox")
-          .classList.toggle("devtools-searchbox-no-match", !!data.allFiltered);
-      },
-      eventListenersConfig
-    );
 
     this._root.querySelector(".style-editor-newButton").addEventListener(
       "click",
@@ -285,6 +285,13 @@ class StyleEditorUI extends EventEmitter {
       eventListenersConfig
     );
 
+    // items list focus and search-on-type handling
+    this._nav.addEventListener(
+      "keydown",
+      this._onNavKeyDown,
+      eventListenersConfig
+    );
+
     this._shortcuts = new KeyShortcuts({
       window: this._window,
     });
@@ -303,9 +310,41 @@ class StyleEditorUI extends EventEmitter {
   }
 
   _onFilterInputChange() {
-    const filterInputValue = this._filterInput.value;
-    this._filterInputClearButton.toggleAttribute("hidden", !filterInputValue);
-    this._view.setFilter(filterInputValue);
+    this.#filter = this._filterInput.value;
+    this._filterInputClearButton.toggleAttribute("hidden", !this.#filter);
+
+    for (const summary of this._nav.childNodes) {
+      // Don't update nav class for every element, we do it after the loop.
+      this.handleSummaryVisibility(summary, {
+        triggerOnFilterStateChange: false,
+      });
+    }
+
+    this._onFilterStateChange();
+
+    if (this._activeSummary == null) {
+      const firstVisibleSummary = Array.from(this._nav.childNodes).find(
+        node => !node.classList.contains(FILTERED_CLASSNAME)
+      );
+
+      if (firstVisibleSummary) {
+        this.setActiveSummary(firstVisibleSummary, { reason: "filter-auto" });
+      }
+    }
+  }
+
+  _onFilterStateChange() {
+    const summaries = Array.from(this._nav.childNodes);
+    const hasVisibleSummary = summaries.some(
+      node => !node.classList.contains(FILTERED_CLASSNAME)
+    );
+    const allFiltered = summaries.length > 0 && !hasVisibleSummary;
+
+    this._nav.classList.toggle(ALL_FILTERED_CLASSNAME, allFiltered);
+
+    this._filterInput
+      .closest(".devtools-searchbox")
+      .classList.toggle("devtools-searchbox-no-match", !!allFiltered);
   }
 
   _onFocusFilterInputKeyboardShortcut(e) {
@@ -315,6 +354,68 @@ class StyleEditorUI extends EventEmitter {
       e.preventDefault();
     }
     this._filterInput.select();
+  }
+
+  _onNavKeyDown(event) {
+    function getFocusedItemWithin(nav) {
+      let node = nav.ownerDocument.activeElement;
+      while (node && node.parentNode != nav) {
+        node = node.parentNode;
+      }
+      return node;
+    }
+
+    // do not steal focus from inside iframes or textboxes
+    if (
+      event.target.ownerDocument != this._nav.ownerDocument ||
+      event.target.tagName == "input" ||
+      event.target.tagName == "textarea" ||
+      event.target.classList.contains("textbox")
+    ) {
+      return false;
+    }
+
+    // handle keyboard navigation within the items list
+    const visibleElements = Array.from(
+      this._nav.querySelectorAll(`li:not(.${FILTERED_CLASSNAME})`)
+    );
+    // Elements have a different visual order (due to the use of MozBoxOrdinalGroup), so
+    // we need to sort them by their data-ordinal attribute
+    visibleElements.sort(
+      (a, b) => a.getAttribute("data-ordinal") - b.getAttribute("data-ordinal")
+    );
+
+    let elementToFocus;
+    if (
+      event.keyCode == KeyCodes.DOM_VK_PAGE_UP ||
+      event.keyCode == KeyCodes.DOM_VK_HOME
+    ) {
+      elementToFocus = visibleElements[0];
+    } else if (
+      event.keyCode == KeyCodes.DOM_VK_PAGE_DOWN ||
+      event.keyCode == KeyCodes.DOM_VK_END
+    ) {
+      elementToFocus = visibleElements.at(-1);
+    } else if (event.keyCode == KeyCodes.DOM_VK_UP) {
+      const focusedIndex = visibleElements.indexOf(
+        getFocusedItemWithin(this._nav)
+      );
+      elementToFocus = visibleElements[focusedIndex - 1];
+    } else if (event.keyCode == KeyCodes.DOM_VK_DOWN) {
+      const focusedIndex = visibleElements.indexOf(
+        getFocusedItemWithin(this._nav)
+      );
+      elementToFocus = visibleElements[focusedIndex + 1];
+    }
+
+    if (elementToFocus !== undefined) {
+      event.stopPropagation();
+      event.preventDefault();
+      elementToFocus.focus();
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -384,7 +485,10 @@ class StyleEditorUI extends EventEmitter {
     }
 
     this._clearStyleSheetEditors();
-    this._view.removeAll();
+    // Clear the left sidebar items and their associated elements.
+    while (this._nav.hasChildNodes()) {
+      this.removeSplitViewItem(this._nav.firstChild);
+    }
 
     this.selectedEditor = null;
     // Here the keys are style sheet actors, and the values are
@@ -674,13 +778,13 @@ class StyleEditorUI extends EventEmitter {
    */
   _removeStyleSheetEditor(editor) {
     if (editor.summary) {
-      this._view.removeItem(editor.summary);
+      this.removeSplitViewItem(editor.summary);
     } else {
       const self = this;
       this.on("editor-added", function onAdd(added) {
         if (editor == added) {
           self.off("editor-added", onAdd);
-          self._view.removeItem(editor.summary);
+          self.removeSplitViewItem(editor.summary);
         }
       });
     }
@@ -700,81 +804,99 @@ class StyleEditorUI extends EventEmitter {
   }
 
   /**
-   * Called when a StyleSheetEditor's source has been fetched. Create a
-   * summary UI for the editor.
+   * Called when a StyleSheetEditor's source has been fetched.
+   * Add new sidebar item and editor to the UI
    *
    * @param  {StyleSheetEditor} editor
    *         Editor to create UI for.
    */
   _sourceLoaded(editor) {
+    // Create the detail and summary nodes from the templates node (declared in index.xhtml)
+    const details = this._tplDetails.cloneNode(true);
+    details.id = "";
+    const summary = this._tplSummary.cloneNode(true);
+    summary.id = "";
+
     let ordinal = editor.styleSheet.styleSheetIndex;
     ordinal = ordinal == -1 ? Number.MAX_SAFE_INTEGER : ordinal;
-    // add new sidebar item and editor to the UI
-    const { summary, details } = this._view.appendItem({
-      ordinal,
-      onShow: (detailsEl, options) => {
-        this.selectedEditor = editor;
+    summary.style.MozBoxOrdinalGroup = ordinal;
+    summary.setAttribute("data-ordinal", ordinal);
 
-        (async function() {
-          if (!editor.sourceEditor) {
-            // only initialize source editor when we switch to this view
-            const inputElement = detailsEl.querySelector(
-              ".stylesheet-editor-input"
-            );
-            await editor.load(inputElement, this._cssProperties);
-          }
+    this._nav.appendChild(summary);
+    this._side.appendChild(details);
 
-          editor.onShow(options);
-
-          this.emit("editor-selected", editor);
-        }
-          .bind(this)()
-          .catch(console.error));
-      },
+    this.#summaryDataMap.set(summary, {
+      details,
+      editor,
     });
 
     const createdEditor = editor;
     createdEditor.summary = summary;
     createdEditor.details = details;
 
-    summary
-      .querySelector(".stylesheet-enabled")
-      .addEventListener("click", event => {
+    const eventListenersConfig = { signal: this._uiAbortController.signal };
+
+    summary.addEventListener(
+      "click",
+      event => {
+        event.stopPropagation();
+        this.setActiveSummary(summary);
+      },
+      eventListenersConfig
+    );
+
+    summary.querySelector(".stylesheet-enabled").addEventListener(
+      "click",
+      event => {
         event.stopPropagation();
         event.target.blur();
 
         createdEditor.toggleDisabled();
-      });
+      },
+      eventListenersConfig
+    );
 
-    summary
-      .querySelector(".stylesheet-name")
-      .addEventListener("keypress", event => {
+    summary.querySelector(".stylesheet-name").addEventListener(
+      "keypress",
+      event => {
         if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-          this._view.setActiveSummary(summary);
+          this.setActiveSummary(summary);
         }
-      });
+      },
+      eventListenersConfig
+    );
 
-    summary
-      .querySelector(".stylesheet-saveButton")
-      .addEventListener("click", event => {
+    summary.querySelector(".stylesheet-saveButton").addEventListener(
+      "click",
+      event => {
         event.stopPropagation();
         event.target.blur();
 
         createdEditor.saveToFile(createdEditor.savedFile);
-      });
+      },
+      eventListenersConfig
+    );
 
     this._updateSummaryForEditor(createdEditor, summary);
 
-    summary.addEventListener("contextmenu", () => {
-      this._contextMenuStyleSheet = createdEditor.styleSheet;
-    });
+    summary.addEventListener(
+      "contextmenu",
+      () => {
+        this._contextMenuStyleSheet = createdEditor.styleSheet;
+      },
+      eventListenersConfig
+    );
 
-    summary.addEventListener("focus", function onSummaryFocus(event) {
-      if (event.target == summary) {
-        // autofocus the stylesheet name
-        summary.querySelector(".stylesheet-name").focus();
-      }
-    });
+    summary.addEventListener(
+      "focus",
+      function onSummaryFocus(event) {
+        if (event.target == summary) {
+          // autofocus the stylesheet name
+          summary.querySelector(".stylesheet-name").focus();
+        }
+      },
+      eventListenersConfig
+    );
 
     const sidebar = details.querySelector(".stylesheet-sidebar");
     sidebar.setAttribute(
@@ -783,18 +905,22 @@ class StyleEditorUI extends EventEmitter {
     );
 
     const splitter = details.querySelector(".devtools-side-splitter");
-    splitter.addEventListener("mousemove", () => {
-      const sidebarWidth = sidebar.getAttribute("width");
-      Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
+    splitter.addEventListener(
+      "mousemove",
+      () => {
+        const sidebarWidth = sidebar.getAttribute("width");
+        Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
 
-      // update all @media sidebars for consistency
-      const sidebars = [
-        ...this._panelDoc.querySelectorAll(".stylesheet-sidebar"),
-      ];
-      for (const mediaSidebar of sidebars) {
-        mediaSidebar.setAttribute("width", sidebarWidth);
-      }
-    });
+        // update all @media sidebars for consistency
+        const sidebars = [
+          ...this._panelDoc.querySelectorAll(".stylesheet-sidebar"),
+        ];
+        for (const mediaSidebar of sidebars) {
+          mediaSidebar.setAttribute("width", sidebarWidth);
+        }
+      },
+      eventListenersConfig
+    );
 
     // autofocus if it's a new user-created stylesheet
     if (createdEditor.isNew) {
@@ -811,7 +937,7 @@ class StyleEditorUI extends EventEmitter {
       !this.selectedEditor &&
       !this._styleSheetBoundToSelect &&
       createdEditor.styleSheet.styleSheetIndex == 0 &&
-      !summary.classList.contains(SplitView.FILTERED_CLASSNAME)
+      !summary.classList.contains(FILTERED_CLASSNAME)
     ) {
       this._selectEditor(createdEditor);
     }
@@ -904,7 +1030,7 @@ class StyleEditorUI extends EventEmitter {
       if (!this.editors.includes(editor)) {
         throw new Error("Editor was destroyed");
       }
-      this._view.setActiveSummary(summary);
+      this.setActiveSummary(summary);
     });
 
     return Promise.all([editorPromise, summaryPromise]);
@@ -1086,7 +1212,7 @@ class StyleEditorUI extends EventEmitter {
     );
 
     // We may need to change the summary visibility as a result of the changes.
-    this._view.handleSummaryVisibility(summary);
+    this.handleSummaryVisibility(summary);
   }
 
   /**
@@ -1359,6 +1485,117 @@ class StyleEditorUI extends EventEmitter {
     }
   }
 
+  /**
+   * Set the active item's summary element.
+   *
+   * @param DOMElement summary
+   * @param {Object} options
+   * @param {String=} options.reason: Indicates why the summary was selected. It's set to
+   *                  "filter-auto" when the summary was automatically selected as the result
+   *                  of the previous active summary being filtered out.
+   */
+  setActiveSummary(summary, options = {}) {
+    if (summary == this._activeSummary) {
+      return;
+    }
+
+    if (this._activeSummary) {
+      const binding = this.#summaryDataMap.get(this._activeSummary);
+
+      this._activeSummary.classList.remove("splitview-active");
+      binding.details.classList.remove("splitview-active");
+    }
+
+    this._activeSummary = summary;
+    if (!summary) {
+      this.selectedEditor = null;
+      return;
+    }
+
+    const { details } = this.#summaryDataMap.get(summary);
+    summary.classList.add("splitview-active");
+    details.classList.add("splitview-active");
+
+    this.showSummaryEditor(summary, options);
+  }
+
+  /**
+   * Show summary's associated editor
+   *
+   * @param DOMElement summary
+   * @param {Object} options
+   * @param {String=} options.reason: Indicates why the summary was selected. It's set to
+   *                  "filter-auto" when the summary was automatically selected as the result
+   *                  of the previous active summary being filtered out.
+   */
+  async showSummaryEditor(summary, options) {
+    const { details, editor } = this.#summaryDataMap.get(summary);
+    this.selectedEditor = editor;
+
+    try {
+      if (!editor.sourceEditor) {
+        // only initialize source editor when we switch to this view
+        const inputElement = details.querySelector(".stylesheet-editor-input");
+        await editor.load(inputElement, this._cssProperties);
+      }
+
+      editor.onShow(options);
+
+      this.emit("editor-selected", editor);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  /**
+   * Remove an item from the split view.
+   *
+   * @param DOMElement summary
+   *        Summary element of the item to remove.
+   */
+  removeSplitViewItem(summary) {
+    if (summary == this._activeSummary) {
+      this.setActiveSummary(null);
+    }
+
+    const data = this.#summaryDataMap.get(summary);
+    if (!data) {
+      return;
+    }
+
+    summary.remove();
+    data.details.remove();
+  }
+
+  /**
+   * Make the passed element visible or not, depending if it matches the current filter
+   *
+   * @param {Element} summary
+   * @param {Object} options
+   * @param {Boolean} options.triggerOnFilterStateChange: Set to false to avoid calling
+   *                  #onFilterStateChange directly here. This can be useful when this
+   *                  function is called for every item of the list, like in `setFilter`.
+   */
+  handleSummaryVisibility(summary, { triggerOnFilterStateChange = true } = {}) {
+    if (!this.#filter) {
+      summary.classList.remove(FILTERED_CLASSNAME);
+      return;
+    }
+
+    const label = summary.querySelector(".stylesheet-name label");
+    const itemText = label.value.toLowerCase();
+    const matchesSearch = itemText.includes(this.#filter.toLowerCase());
+    summary.classList.toggle(FILTERED_CLASSNAME, !matchesSearch);
+
+    if (this._activeSummary == summary && !matchesSearch) {
+      this.setActiveSummary(null);
+    }
+
+    if (triggerOnFilterStateChange) {
+      this._onFilterStateChange();
+    }
+  }
+
   destroy() {
     this._toolbox.resourceCommand.unwatchResources(
       [
@@ -1380,7 +1617,10 @@ class StyleEditorUI extends EventEmitter {
     this._seenSheets = null;
     this._filterInput = null;
     this._filterInputClearButton = null;
-    this._view = null;
+    this._nav = null;
+    this._side = null;
+    this._tplSummary = null;
+    this._tplDetails = null;
 
     const sidebar = this._panelDoc.querySelector(".splitview-controller");
     const sidebarWidth = sidebar.getAttribute("width");
