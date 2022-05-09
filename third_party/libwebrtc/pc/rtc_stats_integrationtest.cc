@@ -528,6 +528,7 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsDefined(candidate.network_type);
     }
     verifier.TestMemberIsDefined(candidate.ip);
+    verifier.TestMemberIsDefined(candidate.address);
     verifier.TestMemberIsNonNegative<int32_t>(candidate.port);
     verifier.TestMemberIsDefined(candidate.protocol);
     verifier.TestMemberIsDefined(candidate.candidate_type);
