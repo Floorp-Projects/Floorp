@@ -14,8 +14,7 @@
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ServiceWorkerCloneData::~ServiceWorkerCloneData() {
   RefPtr<ipc::SharedJSAllocatedData> sharedData = TakeSharedData();
@@ -122,5 +121,4 @@ bool ServiceWorkerCloneData::IsErrorMessageData() const {
   return mIsErrorMessageData;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

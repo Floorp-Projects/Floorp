@@ -12,8 +12,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
@@ -150,5 +149,4 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerContainerProxy::GetReady(
   return promise;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
