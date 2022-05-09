@@ -9,8 +9,7 @@
 #include "mozilla/JSONWriter.h"
 #include "mozilla/dom/FeaturePolicyBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 FeaturePolicyViolationReportBody::FeaturePolicyViolationReportBody(
     nsIGlobalObject* aGlobal, const nsAString& aFeatureId,
@@ -77,5 +76,4 @@ void FeaturePolicyViolationReportBody::ToJSON(JSONWriter& aWriter) const {
   aWriter.StringProperty("disposition", NS_ConvertUTF16toUTF8(mDisposition));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

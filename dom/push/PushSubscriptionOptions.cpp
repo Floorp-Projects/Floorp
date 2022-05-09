@@ -13,8 +13,7 @@
 #include "mozilla/dom/PushUtil.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 PushSubscriptionOptions::PushSubscriptionOptions(
     nsIGlobalObject* aGlobal, nsTArray<uint8_t>&& aRawAppServerKey)
@@ -72,5 +71,4 @@ void PushSubscriptionOptions::GetApplicationServerKey(
   aKey.set(mAppServerKey);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -18,8 +18,7 @@
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReportBody;
 
@@ -61,7 +60,6 @@ class ReportDeliver final : public nsIObserver,
   nsCOMPtr<nsITimer> mTimer;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReportDeliver_h
