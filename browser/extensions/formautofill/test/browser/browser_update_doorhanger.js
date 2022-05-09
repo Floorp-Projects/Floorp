@@ -1,5 +1,15 @@
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
+
+/**
+ * Note that this testcase is built based on the assumption that subtests are
+ * run in order. So if you're going to add a new subtest, please add it in the end.
+ */
+
+add_setup(async function() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.formautofill.addresses.capture.enabled", true]],
+  });
+});
 
 add_task(async function test_update_address() {
   await setStorage(TEST_ADDRESS_1);
@@ -9,24 +19,27 @@ add_task(async function test_update_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let onPopupShown = waitForPopupShown();
+    // Autofill address fields
     await openPopupOn(browser, "form #organization");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+    await waitForAutofill(browser, "#tel", addresses[0].tel);
 
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      let org = form.querySelector("#organization");
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      org.setUserInput("Mozilla");
-
-      // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      form.querySelector("input[type=submit]").click();
+    // Update address fields and submit
+    let onPopupShown = waitForPopupShown();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#organization",
+      newValues: {
+        "#organization": "Mozilla",
+      },
     });
 
     await onPopupShown;
+
+    // Choose to update address by doorhanger
+    let onUpdated = waitForStorageChangedEvents("update");
     await clickDoorhangerButton(MAIN_BUTTON);
+    await onUpdated;
   });
 
   addresses = await getAddresses();
@@ -41,24 +54,26 @@ add_task(async function test_create_new_address() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let onPopupShown = waitForPopupShown();
+    // Autofill address fields
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+    await waitForAutofill(browser, "#tel", addresses[0].tel);
 
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      let tel = form.querySelector("#tel");
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      tel.setUserInput("+1234567890");
-
-      // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      form.querySelector("input[type=submit]").click();
+    let onPopupShown = waitForPopupShown();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#tel",
+      newValues: {
+        "#tel": "+1234567890",
+      },
     });
 
     await onPopupShown;
+
+    // Choose to add address by doorhanger
+    let onAdded = waitForStorageChangedEvents("add");
     await clickDoorhangerButton(SECONDARY_BUTTON);
+    await onAdded;
   });
 
   addresses = await getAddresses();
@@ -73,20 +88,18 @@ add_task(async function test_create_new_address_merge() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #tel");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+    await waitForAutofill(browser, "#tel", addresses[1].tel);
 
     // Choose the latest address and revert to the original phone number
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.getElementById("form");
-      let tel = form.querySelector("#tel");
-      tel.setUserInput("+16172535702");
-
-      // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      form.querySelector("input[type=submit]").click();
+    let onPopupShown = waitForPopupShown();
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#tel",
+      newValues: {
+        "#tel": "+16172535702",
+      },
     });
 
     await onPopupShown;
@@ -104,33 +117,29 @@ add_task(async function test_submit_untouched_fields() {
   await BrowserTestUtils.withNewTab({ gBrowser, url: FORM_URL }, async function(
     browser
   ) {
-    let onPopupShown = waitForPopupShown();
     await openPopupOn(browser, "form #organization");
-    info("before down");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    info("after down, before return");
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
-    info("after return");
+    await waitForAutofill(browser, "#tel", addresses[0].tel);
 
+    let onPopupShown = waitForPopupShown();
     await SpecialPowers.spawn(browser, [], async function() {
       let form = content.document.getElementById("form");
-      let org = form.querySelector("#organization");
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      org.setUserInput("Organization");
-
       let tel = form.querySelector("#tel");
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
       tel.value = "12345"; // ".value" won't change the highlight status.
-
-      // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      info("before submit");
-      form.querySelector("input[type=submit]").click();
-      info("after submit");
     });
 
+    await focusUpdateSubmitForm(browser, {
+      focusSelector: "#tel",
+      newValues: {
+        "#organization": "Organization",
+      },
+    });
     await onPopupShown;
+
+    let onUpdated = waitForStorageChangedEvents("update");
     await clickDoorhangerButton(MAIN_BUTTON);
+    await onUpdated;
   });
 
   addresses = await getAddresses();
@@ -145,24 +154,26 @@ add_task(async function test_submit_reduced_fields() {
 
   let url = BASE_URL + "autocomplete_simple_basic.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-    let onPopupShown = waitForPopupShown();
+
     await openPopupOn(browser, "form#simple input[name=tel]");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+    await waitForAutofill(browser, "form #simple_tel", "6172535702");
 
-    await SpecialPowers.spawn(browser, [], async function() {
-      let form = content.document.querySelector("form#simple");
-      let tel = form.querySelector("input[name=tel]");
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      tel.setUserInput("123456789");
-
-      // Wait 1000ms before submission to make sure the input value applied
-      await new Promise(resolve => content.setTimeout(resolve, 1000));
-      form.querySelector("input[type=submit]").click();
+    let onPopupShown = waitForPopupShown();
+    await focusUpdateSubmitForm(browser, {
+      formSelector: "form#simple",
+      focusSelector: "form #simple_tel",
+      newValues: {
+        "input[name=tel]": "123456789",
+      },
     });
 
     await onPopupShown;
+
+    let onUpdated = waitForStorageChangedEvents("update");
     await clickDoorhangerButton(MAIN_BUTTON);
+    await onUpdated;
   });
 
   addresses = await getAddresses();
