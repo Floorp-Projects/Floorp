@@ -48,7 +48,7 @@ namespace internal {
 class VideoReceiveStream : public webrtc::DEPRECATED_VideoReceiveStream,
                            public rtc::VideoSinkInterface<VideoFrame>,
                            public NackSender,
-                           public video_coding::OnCompleteFrameCallback,
+                           public OnCompleteFrameCallback,
                            public Syncable,
                            public CallStatsObserver {
  public:
@@ -111,7 +111,7 @@ class VideoReceiveStream : public webrtc::DEPRECATED_VideoReceiveStream,
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
                 bool buffering_allowed) override;
 
-  // Implements video_coding::OnCompleteFrameCallback.
+  // Implements OnCompleteFrameCallback.
   void OnCompleteFrame(
       std::unique_ptr<video_coding::EncodedFrame> frame) override;
 

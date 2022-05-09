@@ -19,14 +19,13 @@
 #include "rtc_base/numerics/sequence_number_util.h"
 
 namespace webrtc {
-namespace video_coding {
 
 class RtpFrameIdOnlyRefFinder {
  public:
   RtpFrameIdOnlyRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<RtpFrameObject> frame,
+      std::unique_ptr<video_coding::RtpFrameObject> frame,
       int frame_id);
 
  private:
@@ -34,7 +33,6 @@ class RtpFrameIdOnlyRefFinder {
   SeqNumUnwrapper<uint16_t, kFrameIdLength> unwrapper_;
 };
 
-}  // namespace video_coding
 }  // namespace webrtc
 
 #endif  // MODULES_VIDEO_CODING_RTP_FRAME_ID_ONLY_REF_FINDER_H_

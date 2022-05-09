@@ -212,7 +212,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     ProcessThread* process_thread,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
-    video_coding::OnCompleteFrameCallback* complete_frame_callback,
+    OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
     : RtpVideoStreamReceiver(clock,
@@ -242,7 +242,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     ProcessThread* process_thread,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
-    video_coding::OnCompleteFrameCallback* complete_frame_callback,
+    OnCompleteFrameCallback* complete_frame_callback,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer)
     : clock_(clock),
@@ -324,8 +324,7 @@ RtpVideoStreamReceiver::RtpVideoStreamReceiver(
     process_thread_->RegisterModule(nack_module_.get(), RTC_FROM_HERE);
   }
 
-  reference_finder_ =
-      std::make_unique<video_coding::RtpFrameReferenceFinder>(this);
+  reference_finder_ = std::make_unique<RtpFrameReferenceFinder>(this);
 
   // Only construct the encrypted receiver if frame encryption is enabled.
   if (config_.crypto_options.sframe.require_frame_encryption) {
@@ -866,10 +865,9 @@ void RtpVideoStreamReceiver::OnAssembledFrame(
         // to overlap with old picture ids. To ensure that doesn't happen we
         // start from the |last_completed_picture_id_| and add an offset in case
         // of reordering.
-        reference_finder_ =
-            std::make_unique<video_coding::RtpFrameReferenceFinder>(
-                this, last_completed_picture_id_ +
-                          std::numeric_limits<uint16_t>::max());
+        reference_finder_ = std::make_unique<RtpFrameReferenceFinder>(
+            this,
+            last_completed_picture_id_ + std::numeric_limits<uint16_t>::max());
         current_codec_ = frame->codec_type();
       } else {
         // Old frame from before the codec switch, discard it.

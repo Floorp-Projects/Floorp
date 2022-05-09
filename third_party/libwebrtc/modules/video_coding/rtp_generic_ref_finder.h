@@ -17,18 +17,16 @@
 #include "modules/video_coding/rtp_frame_reference_finder.h"
 
 namespace webrtc {
-namespace video_coding {
 
 class RtpGenericFrameRefFinder {
  public:
   RtpGenericFrameRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<RtpFrameObject> frame,
+      std::unique_ptr<video_coding::RtpFrameObject> frame,
       const RTPVideoHeader::GenericDescriptorInfo& descriptor);
 };
 
-}  // namespace video_coding
 }  // namespace webrtc
 
 #endif  // MODULES_VIDEO_CODING_RTP_GENERIC_REF_FINDER_H_

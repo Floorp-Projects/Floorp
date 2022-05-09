@@ -27,7 +27,7 @@ namespace webrtc {
 namespace video_coding {
 
 namespace {
-std::unique_ptr<RtpFrameObject> CreateFrame(
+std::unique_ptr<video_coding::RtpFrameObject> CreateFrame(
     uint16_t seq_num_start,
     uint16_t seq_num_end,
     bool keyframe,
@@ -39,7 +39,7 @@ std::unique_ptr<RtpFrameObject> CreateFrame(
   video_header.video_type_header = video_type_header;
 
   // clang-format off
-  return std::make_unique<RtpFrameObject>(
+  return std::make_unique<video_coding::RtpFrameObject>(
       seq_num_start,
       seq_num_end,
       /*markerBit=*/true,
@@ -71,7 +71,8 @@ class TestRtpFrameReferenceFinder : public ::testing::Test,
 
   uint16_t Rand() { return rand_.Rand<uint16_t>(); }
 
-  void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override {
+  void OnCompleteFrame(
+      std::unique_ptr<video_coding::EncodedFrame> frame) override {
     int64_t pid = frame->Id();
     uint16_t sidx = *frame->SpatialIndex();
     auto frame_it = frames_from_callback_.find(std::make_pair(pid, sidx));
@@ -88,7 +89,7 @@ class TestRtpFrameReferenceFinder : public ::testing::Test,
   void InsertGeneric(uint16_t seq_num_start,
                      uint16_t seq_num_end,
                      bool keyframe) {
-    std::unique_ptr<RtpFrameObject> frame =
+    std::unique_ptr<video_coding::RtpFrameObject> frame =
         CreateFrame(seq_num_start, seq_num_end, keyframe, kVideoCodecGeneric,
                     RTPVideoTypeHeader());
 
@@ -96,7 +97,7 @@ class TestRtpFrameReferenceFinder : public ::testing::Test,
   }
 
   void InsertH264(uint16_t seq_num_start, uint16_t seq_num_end, bool keyframe) {
-    std::unique_ptr<RtpFrameObject> frame =
+    std::unique_ptr<video_coding::RtpFrameObject> frame =
         CreateFrame(seq_num_start, seq_num_end, keyframe, kVideoCodecH264,
                     RTPVideoTypeHeader());
     reference_finder_->ManageFrame(std::move(frame));
@@ -155,9 +156,10 @@ class TestRtpFrameReferenceFinder : public ::testing::Test,
       return f1.first < f2.first;
     }
   };
-  std::
-      map<std::pair<int64_t, uint8_t>, std::unique_ptr<EncodedFrame>, FrameComp>
-          frames_from_callback_;
+  std::map<std::pair<int64_t, uint8_t>,
+           std::unique_ptr<video_coding::EncodedFrame>,
+           FrameComp>
+      frames_from_callback_;
 };
 
 TEST_F(TestRtpFrameReferenceFinder, PaddingPackets) {
@@ -305,7 +307,7 @@ TEST_F(TestRtpFrameReferenceFinder, H264SequenceNumberWrapMulti) {
 
 TEST_F(TestRtpFrameReferenceFinder, Av1FrameNoDependencyDescriptor) {
   uint16_t sn = 0xFFFF;
-  std::unique_ptr<RtpFrameObject> frame =
+  std::unique_ptr<video_coding::RtpFrameObject> frame =
       CreateFrame(/*seq_num_start=*/sn, /*seq_num_end=*/sn, /*keyframe=*/true,
                   kVideoCodecAV1, RTPVideoTypeHeader());
 

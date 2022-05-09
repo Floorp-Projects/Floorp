@@ -77,7 +77,7 @@ struct VideoFrameMetaData {
 class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
                             public rtc::VideoSinkInterface<VideoFrame>,
                             public NackSender,
-                            public video_coding::OnCompleteFrameCallback,
+                            public OnCompleteFrameCallback,
                             public Syncable,
                             public CallStatsObserver {
  public:
@@ -130,7 +130,7 @@ class VideoReceiveStream2 : public webrtc::VideoReceiveStream,
   void SendNack(const std::vector<uint16_t>& sequence_numbers,
                 bool buffering_allowed) override;
 
-  // Implements video_coding::OnCompleteFrameCallback.
+  // Implements OnCompleteFrameCallback.
   void OnCompleteFrame(
       std::unique_ptr<video_coding::EncodedFrame> frame) override;
 
