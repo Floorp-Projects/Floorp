@@ -18,8 +18,7 @@
 class nsMediaQuery;
 class nsCSSValue;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ResponsiveImageCandidate;
 
@@ -200,7 +199,6 @@ class ResponsiveImageCandidate {
   } mValue;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_responsiveimageselector_h__

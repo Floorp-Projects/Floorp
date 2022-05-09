@@ -14,8 +14,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class StorageAccessPermissionRequest final
     : public ContentPermissionRequestBase {
@@ -57,7 +56,6 @@ class StorageAccessPermissionRequest final
   bool mCallbackCalled;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // StorageAccessPermissionRequest_h_
