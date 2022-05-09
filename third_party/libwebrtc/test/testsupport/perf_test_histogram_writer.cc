@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
