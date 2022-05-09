@@ -1,6 +1,5 @@
 import os
 
-import moznetwork
 from mozrunner import FennecEmulatorRunner, get_app_context
 
 from .base import (get_free_port,
@@ -94,10 +93,7 @@ def run_info_extras(**kwargs):
 
 
 def env_options():
-    # The server host is set to public localhost IP so that resources can be accessed
-    # from Android emulator
-    return {"server_host": moznetwork.get_ip(),
-            "bind_address": False,
+    return {"server_host": "127.0.0.1",
             "supports_debugger": True}
 
 
