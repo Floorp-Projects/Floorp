@@ -26,8 +26,7 @@
 
 class nsIEventTarget;
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 /* media::NewRunnableFrom() - Create a Runnable from a lambda.
  *
@@ -322,8 +321,6 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
   return Await(pool.forget(), p);
 }
 
-}  // namespace media
-
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 #endif  // mozilla_MediaUtils_h

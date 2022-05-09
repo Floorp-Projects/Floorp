@@ -11,8 +11,7 @@
 #include "ScriptProcessorNode.h"
 #include "mozilla/dom/Event.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioProcessingEvent final : public Event {
  public:
@@ -67,7 +66,6 @@ class AudioProcessingEvent final : public Event {
   uint32_t mNumberOfInputChannels;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

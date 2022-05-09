@@ -15,9 +15,7 @@
 #include "WebAudioUtils.h"
 #include "js/TypeDecls.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   virtual ~AudioParam();
@@ -242,7 +240,6 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   const float mMaxValue;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

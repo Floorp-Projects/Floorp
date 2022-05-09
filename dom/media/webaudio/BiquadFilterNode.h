@@ -11,8 +11,7 @@
 #include "AudioParam.h"
 #include "mozilla/dom/BiquadFilterNodeBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct BiquadFilterOptions;
@@ -67,7 +66,6 @@ class BiquadFilterNode final : public AudioNode {
   RefPtr<AudioParam> mGain;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

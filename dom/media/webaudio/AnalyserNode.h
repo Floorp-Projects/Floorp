@@ -11,8 +11,7 @@
 #include "FFTBlock.h"
 #include "AlignedTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct AnalyserOptions;
@@ -78,7 +77,6 @@ class AnalyserNode final : public AudioNode {
   AlignedTArray<float> mOutputBuffer;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

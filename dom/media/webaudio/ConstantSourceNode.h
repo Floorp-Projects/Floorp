@@ -11,8 +11,7 @@
 #include "AudioParam.h"
 #include "mozilla/dom/ConstantSourceNodeBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 
@@ -56,7 +55,6 @@ class ConstantSourceNode final : public AudioScheduledSourceNode,
   bool mStartCalled;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
