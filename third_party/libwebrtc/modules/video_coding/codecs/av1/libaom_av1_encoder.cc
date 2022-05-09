@@ -410,6 +410,14 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  ret = aom_codec_control(&ctx_, AV1E_SET_INTRA_DEFAULT_TX_ONLY, 1);
+  if (ret != AOM_CODEC_OK) {
+    RTC_LOG(LS_WARNING)
+        << "LibaomAv1Encoder::EncodeInit returned " << ret
+        << " on control AOM_CTRL_AV1E_SET_INTRA_DEFAULT_TX_ONLY.";
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
