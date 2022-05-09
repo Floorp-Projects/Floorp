@@ -94,8 +94,7 @@ class MockKeyFrameRequestSender : public KeyFrameRequestSender {
   MOCK_METHOD(void, RequestKeyFrame, (), (override));
 };
 
-class MockOnCompleteFrameCallback
-    : public video_coding::OnCompleteFrameCallback {
+class MockOnCompleteFrameCallback : public OnCompleteFrameCallback {
  public:
   MOCK_METHOD(void, DoOnCompleteFrame, (video_coding::EncodedFrame*), ());
   MOCK_METHOD(void,

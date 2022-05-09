@@ -66,7 +66,7 @@ class Frame {
     return *this;
   }
 
-  operator std::unique_ptr<RtpFrameObject>() {
+  operator std::unique_ptr<video_coding::RtpFrameObject>() {
     RTPVideoHeaderVP8 vp8_header{};
     vp8_header.pictureId = *picture_id_;
     vp8_header.temporalIdx = *temporal_id_;
@@ -78,7 +78,7 @@ class Frame {
                                            : VideoFrameType::kVideoFrameDelta;
     video_header.video_type_header = vp8_header;
     // clang-format off
-    return std::make_unique<RtpFrameObject>(
+    return std::make_unique<video_coding::RtpFrameObject>(
         /*seq_num_start=*/0,
         /*seq_num_end=*/0,
         /*markerBit=*/true,
@@ -113,7 +113,7 @@ class RtpVp8RefFinderTest : public ::testing::Test {
  protected:
   RtpVp8RefFinderTest() : ref_finder_(std::make_unique<RtpVp8RefFinder>()) {}
 
-  void Insert(std::unique_ptr<RtpFrameObject> frame) {
+  void Insert(std::unique_ptr<video_coding::RtpFrameObject> frame) {
     for (auto& f : ref_finder_->ManageFrame(std::move(frame))) {
       frames_.push_back(std::move(f));
     }

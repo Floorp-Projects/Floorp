@@ -15,10 +15,9 @@
 #include "rtc_base/logging.h"
 
 namespace webrtc {
-namespace video_coding {
 
 RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
-    std::unique_ptr<RtpFrameObject> frame) {
+    std::unique_ptr<video_coding::RtpFrameObject> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
   RtpFrameReferenceFinder::ReturnVector res;
@@ -40,7 +39,8 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 }
 
 RtpSeqNumOnlyRefFinder::FrameDecision
-RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
+RtpSeqNumOnlyRefFinder::ManageFrameInternal(
+    video_coding::RtpFrameObject* frame) {
   if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
     last_seq_num_gop_.insert(std::make_pair(
         frame->last_seq_num(),
@@ -184,5 +184,4 @@ void RtpSeqNumOnlyRefFinder::ClearTo(uint16_t seq_num) {
   }
 }
 
-}  // namespace video_coding
 }  // namespace webrtc

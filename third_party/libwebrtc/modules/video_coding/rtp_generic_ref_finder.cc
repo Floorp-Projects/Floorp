@@ -15,10 +15,9 @@
 #include "rtc_base/logging.h"
 
 namespace webrtc {
-namespace video_coding {
 
 RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
-    std::unique_ptr<RtpFrameObject> frame,
+    std::unique_ptr<video_coding::RtpFrameObject> frame,
     const RTPVideoHeader::GenericDescriptorInfo& descriptor) {
   // Frame IDs are unwrapped in the RtpVideoStreamReceiver, no need to unwrap
   // them here.
@@ -26,7 +25,8 @@ RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
   frame->SetSpatialIndex(descriptor.spatial_index);
 
   RtpFrameReferenceFinder::ReturnVector res;
-  if (EncodedFrame::kMaxFrameReferences < descriptor.dependencies.size()) {
+  if (video_coding::EncodedFrame::kMaxFrameReferences <
+      descriptor.dependencies.size()) {
     RTC_LOG(LS_WARNING) << "Too many dependencies in generic descriptor.";
     return res;
   }
@@ -40,5 +40,4 @@ RtpFrameReferenceFinder::ReturnVector RtpGenericFrameRefFinder::ManageFrame(
   return res;
 }
 
-}  // namespace video_coding
 }  // namespace webrtc
