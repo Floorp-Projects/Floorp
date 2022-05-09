@@ -34,8 +34,7 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
-                     MediaQueue<AudioData>& aAudioQueue,
-                     const AudioInfo& aInfo,
+                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo,
                      AudioDeviceInfo* aAudioDevice)
     : mInfo(aInfo),
       mAudioDevice(aAudioDevice),
