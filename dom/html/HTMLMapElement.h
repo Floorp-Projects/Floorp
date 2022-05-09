@@ -13,8 +13,7 @@
 
 class nsContentList;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLMapElement final : public nsGenericHTMLElement {
  public:
@@ -41,7 +40,6 @@ class HTMLMapElement final : public nsGenericHTMLElement {
   RefPtr<nsContentList> mAreas;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLMapElement_h

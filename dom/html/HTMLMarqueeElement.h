@@ -10,8 +10,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class HTMLMarqueeElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLMarqueeElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
@@ -128,7 +127,6 @@ class HTMLMarqueeElement final : public nsGenericHTMLElement {
   void DispatchEventToShadowRoot(const nsAString& aEventTypeArg);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* HTMLMarqueeElement_h___ */
