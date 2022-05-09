@@ -734,108 +734,10 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 
   JSAutoRealm ar(cx, obj);
 
-  nsAutoCString nativePath;
-  rv = aInfo.URI()->GetSpec(nativePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Before compiling the script, first check to see if we have it in
-  // the preloader cache or the startupcache.  Note: as a rule, preloader cache
-  // errors and startupcache errors are not fatal to loading the script, since
-  // we can always slow-load.
-
-  bool storeIntoStartupCache = false;
-  StartupCache* cache = StartupCache::GetSingleton();
-
-  aInfo.EnsureResolvedURI();
-
-  nsAutoCString cachePath;
-  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
-                  aInfo.ResolvedURI(), cachePath);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JS::DecodeOptions decodeOptions;
-  ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
-
-  RefPtr<JS::Stencil> stencil =
-      ScriptPreloader::GetSingleton().GetCachedStencil(cx, decodeOptions,
-                                                       cachePath);
-
-  if (!stencil && cache) {
-    ReadCachedStencil(cache, cachePath, cx, decodeOptions,
-                      getter_AddRefs(stencil));
-    if (!stencil) {
-      JS_ClearPendingException(cx);
-
-      storeIntoStartupCache = true;
-    }
-  }
-
-  if (stencil) {
-    LOG(("Successfully loaded %s from cache\n", nativePath.get()));
-  } else {
-    // The script wasn't in the cache , so compile it now.
-    LOG(("Slow loading %s\n", nativePath.get()));
-
-    CompileOptions options(cx);
-    ScriptPreloader::FillCompileOptionsForCachedStencil(options);
-    options.setFileAndLine(nativePath.get(), 1);
-    options.setForceStrictMode();
-    options.setNonSyntacticScope(true);
-
-    // If we can no longer write to caches, we should stop using lazy sources
-    // and instead let normal syntax parsing occur. This can occur in content
-    // processes after the ScriptPreloader is flushed where we can read but no
-    // longer write.
-    if (!storeIntoStartupCache && !ScriptPreloader::GetSingleton().Active()) {
-      options.setSourceIsLazy(false);
-    }
-
-    if (realFile) {
-      AutoMemMap map;
-      MOZ_TRY(map.init(aComponentFile));
-
-      // Note: exceptions will get handled further down;
-      // don't early return for them here.
-      auto buf = map.get<char>();
-
-      JS::SourceText<mozilla::Utf8Unit> srcBuf;
-      if (srcBuf.init(cx, buf.get(), map.size(),
-                      JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
-      }
-    } else {
-      nsCString str;
-      MOZ_TRY_VAR(str, ReadScript(aInfo));
-
-      JS::SourceText<mozilla::Utf8Unit> srcBuf;
-      if (srcBuf.init(cx, str.get(), str.Length(),
-                      JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(cx, options, srcBuf);
-      }
-    }
-
-#ifdef DEBUG
-    // The above shouldn't touch any options for instantiation.
-    JS::InstantiateOptions instantiateOptions(options);
-    instantiateOptions.assertDefault();
-#endif
-
-    if (!stencil) {
-      // Propagate the exception, if one exists. Also, don't leave the stale
-      // exception on this context.
-      if (aPropagateExceptions && jsapi.HasException()) {
-        if (!jsapi.StealException(aException)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  JS::InstantiateOptions instantiateOptions;
-  RootedScript script(
-      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
-  if (!script) {
+  RootedScript script(cx);
+  rv = GetScriptForLocation(cx, aInfo, aComponentFile, realFile, &script,
+                            aLocation);
+  if (NS_FAILED(rv)) {
     // Propagate the exception, if one exists. Also, don't leave the stale
     // exception on this context.
     if (aPropagateExceptions && jsapi.HasException()) {
@@ -843,28 +745,8 @@ nsresult mozJSComponentLoader::ObjectForLocation(
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
-    return NS_ERROR_FAILURE;
-  }
 
-  // ScriptPreloader::NoteScript needs to be called unconditionally, to
-  // reflect the usage into the next session's cache.
-  ScriptPreloader::GetSingleton().NoteStencil(nativePath, cachePath, stencil);
-
-  // Write to startup cache only when we didn't have any cache for the script
-  // and compiled it.
-  if (storeIntoStartupCache) {
-    MOZ_ASSERT(stencil);
-
-    // We successfully compiled the script, so cache it.
-    rv = WriteCachedStencil(cache, cachePath, cx, stencil);
-
-    // Don't treat failure to write as fatal, since we might be working
-    // with a read-only cache.
-    if (NS_SUCCEEDED(rv)) {
-      LOG(("Successfully wrote to cache\n"));
-    } else {
-      LOG(("Failed to write to cache\n"));
-    }
+    return rv;
   }
 
   // Assign aObject here so that it's available to recursive imports.
@@ -902,11 +784,137 @@ nsresult mozJSComponentLoader::ObjectForLocation(
     }
   }
 
-  /* Freed when we remove from the table. */
-  *aLocation = ToNewCString(nativePath, mozilla::fallible);
-  if (!*aLocation) {
-    aObject.set(nullptr);
-    aTableScript.set(nullptr);
+  return rv;
+}
+
+/* static */
+nsresult mozJSComponentLoader::GetScriptForLocation(
+    JSContext* aCx, ComponentLoaderInfo& aInfo, nsIFile* aComponentFile,
+    bool aUseMemMap, MutableHandleScript aScriptOut, char** aLocationOut) {
+  aScriptOut.set(nullptr);
+
+  nsAutoCString nativePath;
+  nsresult rv = aInfo.URI()->GetSpec(nativePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Before compiling the script, first check to see if we have it in
+  // the preloader cache or the startupcache.  Note: as a rule, preloader cache
+  // errors and startupcache errors are not fatal to loading the script, since
+  // we can always slow-load.
+
+  bool storeIntoStartupCache = false;
+  StartupCache* cache = StartupCache::GetSingleton();
+
+  aInfo.EnsureResolvedURI();
+
+  nsAutoCString cachePath;
+  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
+                  aInfo.ResolvedURI(), cachePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::DecodeOptions decodeOptions;
+  ScriptPreloader::FillDecodeOptionsForCachedStencil(decodeOptions);
+
+  RefPtr<JS::Stencil> stencil =
+      ScriptPreloader::GetSingleton().GetCachedStencil(aCx, decodeOptions,
+                                                       cachePath);
+
+  if (!stencil && cache) {
+    ReadCachedStencil(cache, cachePath, aCx, decodeOptions,
+                      getter_AddRefs(stencil));
+    if (!stencil) {
+      JS_ClearPendingException(aCx);
+
+      storeIntoStartupCache = true;
+    }
+  }
+
+  if (stencil) {
+    LOG(("Successfully loaded %s from cache\n", nativePath.get()));
+  } else {
+    // The script wasn't in the cache , so compile it now.
+    LOG(("Slow loading %s\n", nativePath.get()));
+
+    CompileOptions options(aCx);
+    ScriptPreloader::FillCompileOptionsForCachedStencil(options);
+    options.setFileAndLine(nativePath.get(), 1);
+    options.setForceStrictMode();
+    options.setNonSyntacticScope(true);
+
+    // If we can no longer write to caches, we should stop using lazy sources
+    // and instead let normal syntax parsing occur. This can occur in content
+    // processes after the ScriptPreloader is flushed where we can read but no
+    // longer write.
+    if (!storeIntoStartupCache && !ScriptPreloader::GetSingleton().Active()) {
+      options.setSourceIsLazy(false);
+    }
+
+    if (aUseMemMap) {
+      AutoMemMap map;
+      MOZ_TRY(map.init(aComponentFile));
+
+      // Note: exceptions will get handled further down;
+      // don't early return for them here.
+      auto buf = map.get<char>();
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      if (srcBuf.init(aCx, buf.get(), map.size(),
+                      JS::SourceOwnership::Borrowed)) {
+        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
+      }
+    } else {
+      nsCString str;
+      MOZ_TRY_VAR(str, ReadScript(aInfo));
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      if (srcBuf.init(aCx, str.get(), str.Length(),
+                      JS::SourceOwnership::Borrowed)) {
+        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
+      }
+    }
+
+#ifdef DEBUG
+    // The above shouldn't touch any options for instantiation.
+    JS::InstantiateOptions instantiateOptions(options);
+    instantiateOptions.assertDefault();
+#endif
+
+    if (!stencil) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  JS::InstantiateOptions instantiateOptions;
+  aScriptOut.set(
+      JS::InstantiateGlobalStencil(aCx, instantiateOptions, stencil));
+  if (!aScriptOut) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // ScriptPreloader::NoteScript needs to be called unconditionally, to
+  // reflect the usage into the next session's cache.
+  ScriptPreloader::GetSingleton().NoteStencil(nativePath, cachePath, stencil);
+
+  // Write to startup cache only when we didn't have any cache for the script
+  // and compiled it.
+  if (storeIntoStartupCache) {
+    MOZ_ASSERT(stencil);
+
+    // We successfully compiled the script, so cache it.
+    rv = WriteCachedStencil(cache, cachePath, aCx, stencil);
+
+    // Don't treat failure to write as fatal, since we might be working
+    // with a read-only cache.
+    if (NS_SUCCEEDED(rv)) {
+      LOG(("Successfully wrote to cache\n"));
+    } else {
+      LOG(("Failed to write to cache\n"));
+    }
+  }
+
+  /* Owned by ModuleEntry. Freed when we remove from the table. */
+  *aLocationOut = ToNewCString(nativePath, mozilla::fallible);
+  if (!*aLocationOut) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
