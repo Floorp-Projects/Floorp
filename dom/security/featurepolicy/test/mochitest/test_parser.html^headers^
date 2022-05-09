@@ -1,1 +1,1 @@
-Feature-Policy: camera *; geolocation 'self'; microphone http://example.com http://example.org; vr 'none'
+Feature-Policy: camera *; geolocation 'self'; microphone https://example.com https://example.org; vr 'none'
