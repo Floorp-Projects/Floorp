@@ -26,9 +26,6 @@ tooltip {
     background-color: #f9f9fb;
     color: #15141a;
     border-color: #cfcfd8;
-
-    /* Force a rounded-rect dropshadow to appear. */
-    -moz-window-shadow: cliprounded;
     border-radius: 4px;
   }
 
