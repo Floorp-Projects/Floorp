@@ -14,8 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/XPathResultBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XPathResult::XPathResult(nsINode* aParent)
     : mParent(aParent),
@@ -263,5 +262,4 @@ already_AddRefed<XPathResult> XPathResult::Clone(ErrorResult& aError) {
   return do_AddRef(new XPathResult(*this));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

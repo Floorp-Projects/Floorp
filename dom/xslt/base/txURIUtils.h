@@ -10,11 +10,9 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
-}
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 /**
  * A utility class for URI handling

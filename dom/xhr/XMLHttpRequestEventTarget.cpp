@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/DebuggerNotificationBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestEventTarget)
 
@@ -36,5 +35,4 @@ void XMLHttpRequestEventTarget::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

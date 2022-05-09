@@ -11,11 +11,9 @@
 
 class nsIURI;
 class nsIChannel;
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
-}
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #define NS_IXMLCONTENT_SINK_IID                      \
   {                                                  \
