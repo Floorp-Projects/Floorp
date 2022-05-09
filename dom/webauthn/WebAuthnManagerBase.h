@@ -18,8 +18,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebAuthnTransactionChild;
 class WebAuthnMakeCredentialResult;
@@ -69,7 +68,6 @@ class WebAuthnManagerBase : public nsIDOMEventListener {
   RefPtr<WebAuthnTransactionChild> mChild;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnManagerBase_h

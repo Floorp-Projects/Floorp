@@ -28,8 +28,7 @@
 
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /***********************************************************************
  * Statics
@@ -837,5 +836,4 @@ void WebAuthnManager::RunAbortAlgorithm() {
   CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

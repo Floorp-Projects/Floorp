@@ -9,8 +9,7 @@
 
 #include "Device.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(BindGroup, mParent)
 GPU_IMPL_JS_WRAP(BindGroup)
@@ -34,5 +33,4 @@ void BindGroup::Cleanup() {
   }
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
