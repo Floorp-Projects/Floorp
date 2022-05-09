@@ -156,7 +156,9 @@ open class PlacesHistoryStorage(
      */
     override suspend fun deleteEverything() {
         withContext(writeScope.coroutineContext) {
-            places.writer().deleteEverything()
+            handlePlacesExceptions("deleteEverything") {
+                places.writer().deleteEverything()
+            }
         }
     }
 
