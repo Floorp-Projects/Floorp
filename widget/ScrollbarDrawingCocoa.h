@@ -32,47 +32,47 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
 
   template <typename PaintBackendData>
   void DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
-                             bool aHorizontal, nsIFrame* aFrame,
+                             ScrollbarKind, nsIFrame* aFrame,
                              const ComputedStyle& aStyle,
                              const EventStates& aElementState,
                              const EventStates& aDocumentState,
                              const DPIRatio&);
-  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
+                           nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                           ScrollbarKind, nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
 
   template <typename PaintBackendData>
-  void DoPaintScrollbarTrack(PaintBackendData&, const LayoutDeviceRect&, bool,
-                             nsIFrame*, const ComputedStyle&,
+  void DoPaintScrollbarTrack(PaintBackendData&, const LayoutDeviceRect&,
+                             ScrollbarKind, nsIFrame*, const ComputedStyle&,
                              const EventStates&, const DPIRatio&);
   bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect& aRect,
-                           bool aHorizontal, nsIFrame* aFrame,
+                           ScrollbarKind, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarTrack(WebRenderBackendData&, const LayoutDeviceRect& aRect,
-                           bool aHorizontal, nsIFrame* aFrame,
+                           ScrollbarKind, nsIFrame* aFrame,
                            const ComputedStyle& aStyle,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
 
   template <typename PaintBackendData>
   void DoPaintScrollCorner(PaintBackendData&, const LayoutDeviceRect&,
-                           nsIFrame*, const ComputedStyle&, const EventStates&,
-                           const DPIRatio&);
-  bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
-                         nsIFrame* aFrame, const ComputedStyle& aStyle,
+                           ScrollbarKind, nsIFrame*, const ComputedStyle&,
+                           const EventStates&, const DPIRatio&);
+  bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
+                         nsIFrame*, const ComputedStyle&,
                          const EventStates& aDocumentState, const Colors&,
                          const DPIRatio&) override;
-  bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
-                         nsIFrame* aFrame, const ComputedStyle& aStyle,
+  bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect&,
+                         ScrollbarKind, nsIFrame*, const ComputedStyle&,
                          const EventStates& aDocumentState, const Colors&,
                          const DPIRatio&) override;
 

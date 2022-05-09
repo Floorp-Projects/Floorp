@@ -33,17 +33,17 @@ class ScrollbarDrawingWin : public ScrollbarDrawing {
 
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
-                             bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                             ScrollbarKind, nsIFrame*, const ComputedStyle&,
                              const EventStates& aElementState,
                              const EventStates& aDocumentState, const Colors&,
                              const DPIRatio&);
   bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                           ScrollbarKind, nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                           ScrollbarKind, nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;

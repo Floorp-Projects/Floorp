@@ -40,7 +40,7 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
       const Colors&) override;
 
   bool PaintScrollbarButton(DrawTarget&, StyleAppearance,
-                            const LayoutDeviceRect&, nsIFrame*,
+                            const LayoutDeviceRect&, ScrollbarKind, nsIFrame*,
                             const ComputedStyle&,
                             const EventStates& aElementState,
                             const EventStates& aDocumentState, const Colors&,
@@ -48,17 +48,17 @@ class ScrollbarDrawingWin11 final : public ScrollbarDrawingWin {
 
   template <typename PaintBackendData>
   bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
-                             bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                             ScrollbarKind, nsIFrame*, const ComputedStyle&,
                              const EventStates& aElementState,
                              const EventStates& aDocumentState, const Colors&,
                              const DPIRatio&);
-  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
+                           nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
   bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect&,
-                           bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                           ScrollbarKind, nsIFrame*, const ComputedStyle&,
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
