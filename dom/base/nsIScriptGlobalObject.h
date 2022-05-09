@@ -15,11 +15,9 @@
 class nsIScriptContext;
 class nsIScriptGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct ErrorEventInit;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // A helper function for nsIScriptGlobalObject implementations to use
 // when handling a script error.  Generally called by the global when a context

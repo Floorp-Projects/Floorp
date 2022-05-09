@@ -12,8 +12,7 @@
 #include "nsContentUtils.h"
 #include <type_traits>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename Node>
 size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
@@ -52,6 +51,5 @@ size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
   return idx;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

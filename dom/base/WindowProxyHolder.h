@@ -17,8 +17,7 @@ template <typename T>
 class MutableHandle;
 }  // namespace JS
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * This class is used for passing arguments and the return value for WebIDL
@@ -73,7 +72,6 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::Handle<JSObject*> aTransplantTo,
                                       JS::MutableHandle<JSObject*> aValue);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_WindowProxyHolder_h__ */

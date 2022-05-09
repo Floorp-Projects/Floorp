@@ -22,13 +22,11 @@ class nsIContent;
 class imgRequestProxy;
 class nsGenericHTMLElement;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
 class NodeInfo;
 struct CustomElementDefinition;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewElement(mozilla::dom::Element** aResult,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

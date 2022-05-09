@@ -154,8 +154,7 @@ class nsJSContext : public nsIScriptContext {
   static bool DOMOperationCallback(JSContext* cx);
 };
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SerializedStackHolder;
 
@@ -188,8 +187,7 @@ class AsyncErrorReporter final : public mozilla::Runnable {
   UniquePtr<SerializedStackHolder> mStackHolder;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // An interface for fast and native conversion to/from nsIArray. If an object
 // supports this interface, JS can reach directly in for the argv, and avoid

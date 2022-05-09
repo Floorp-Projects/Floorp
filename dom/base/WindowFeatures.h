@@ -14,8 +14,7 @@
 #include "nsStringFwd.h"  // nsCString, nsACString, nsAutoCString, nsLiteralCString
 #include "nsTStringHasher.h"  // mozilla::DefaultHasher<nsCString>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Represents `tokenizedFeatures` in
 // https://html.spec.whatwg.org/multipage/window-object.html#concept-window-open-features-tokenize
@@ -126,7 +125,6 @@ class WindowFeatures {
   mozilla::HashMap<nsCString, nsCString> tokenizedFeatures_;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // #ifndef mozilla_dom_WindowFeatures_h

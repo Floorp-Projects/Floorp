@@ -26,13 +26,11 @@ class Message;
 class MessageReader;
 class MessageWriter;
 }  // namespace IPC
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 class IProtocol;
 template <typename>
 struct IPDLParamTraits;
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
  public:
@@ -257,8 +255,7 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
 // the information and the potential resulting data leakage.
 // For now, this serializer is to only be used under a very narrowed scope
 // so that only the starting times are ever set.
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 template <>
 struct IPDLParamTraits<nsDOMNavigationTiming*> {
   static void Write(IPC::MessageWriter* aWriter, IProtocol* aActor,
@@ -267,7 +264,6 @@ struct IPDLParamTraits<nsDOMNavigationTiming*> {
                    RefPtr<nsDOMNavigationTiming>* aResult);
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif /* nsDOMNavigationTiming_h___ */
