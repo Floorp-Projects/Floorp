@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_workers_WorkerStatus_h
 #define mozilla_dom_workers_WorkerStatus_h
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Use this chart to help figure out behavior during each of the closing
@@ -54,7 +53,6 @@ enum WorkerStatus {
   Dead
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_WorkerStatus_h */
