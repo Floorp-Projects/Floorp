@@ -12,8 +12,7 @@
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 const uint64_t POLL_TIME_MS = 100;
 
@@ -928,5 +927,4 @@ ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
   return IPC_OK();
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
