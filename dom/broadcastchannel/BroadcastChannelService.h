@@ -15,8 +15,7 @@
 #  undef PostMessage
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BroadcastChannelParent;
 class MessageData;
@@ -43,7 +42,6 @@ class BroadcastChannelService final {
   nsClassHashtable<nsStringHashKey, nsTArray<BroadcastChannelParent*>> mAgents;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_BroadcastChannelService_h
