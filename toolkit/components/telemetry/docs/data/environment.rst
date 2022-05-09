@@ -421,7 +421,11 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``extensions.manifestV3.enabled``: Whether `"manifest_version": 3` extensions should be allowed to install successfully.
 
+- ``media.gmp-gmpopenh264.enabled``: Whether OpenH264 is enabled.
+
 - ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated.
+
+- ``media.gmp-gmpopenh264.visible``: Whether OpenH264 is visible.
 
 - ``media.gmp-manager.lastCheck``: When the gmp-manager last checked for updates.
 
