@@ -12,8 +12,7 @@
 #include "mozilla/dom/Event.h"
 #include "js/TypeDecls.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaKeyError final : public Event {
  public:
@@ -29,7 +28,6 @@ class MediaKeyError final : public Event {
   uint32_t mSystemCode;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

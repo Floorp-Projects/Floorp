@@ -16,11 +16,9 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 class TimeIntervals;
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 // CopyChooser specialization for nsTArray
 template <>
 struct nsTArray_RelocationStrategy<mozilla::media::TimeIntervals> {

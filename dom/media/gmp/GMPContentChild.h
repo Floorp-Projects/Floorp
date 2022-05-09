@@ -13,8 +13,7 @@
 #  include "mozilla/SandboxTestingChild.h"
 #endif
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPChild;
 
@@ -62,7 +61,6 @@ class GMPContentChild : public PGMPContentChild, public GMPSharedMem {
   ~GMPContentChild() = default;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPContentChild_h_

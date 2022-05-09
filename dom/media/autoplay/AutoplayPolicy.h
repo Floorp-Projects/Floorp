@@ -11,8 +11,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLMediaElement;
 class AudioContext;
@@ -63,7 +62,6 @@ class AutoplayPolicyTelemetryUtils {
       const AudioContext& aContext);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

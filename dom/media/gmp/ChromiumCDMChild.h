@@ -11,8 +11,7 @@
 #include "SimpleMap.h"
 #include "WidevineVideoFrame.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPContentChild;
 
@@ -141,7 +140,6 @@ class ChromiumCDMChild : public PChromiumCDMChild, public cdm::Host_10 {
   MozPromiseHolder<InitPromise> mInitPromise;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // ChromiumCDMChild_h_

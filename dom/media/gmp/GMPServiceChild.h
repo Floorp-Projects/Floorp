@@ -15,8 +15,7 @@
 #include "nsIAsyncShutdown.h"
 #include "nsRefPtrHashtable.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPContentParent;
 class GMPServiceChild;
@@ -159,7 +158,6 @@ class GMPServiceChild : public PGMPServiceChild {
   nsRefPtrHashtable<nsUint64HashKey, GMPContentParent> mContentParents;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPServiceChild_h_
