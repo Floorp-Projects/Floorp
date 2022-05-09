@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDiffuseLighting)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEDiffuseLightingElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -87,5 +86,4 @@ nsresult SVGFEDiffuseLightingElement::BindToTree(BindContext& aCtx,
   return SVGFE::BindToTree(aCtx, aParent);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

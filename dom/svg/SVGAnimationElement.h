@@ -21,8 +21,7 @@
     }                                                \
   }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGAnimationElementBase = SVGElement;
 
@@ -126,7 +125,6 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGAnimationElement,
                               MOZILLA_SVGANIMATIONELEMENT_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGANIMATIONELEMENT_H_

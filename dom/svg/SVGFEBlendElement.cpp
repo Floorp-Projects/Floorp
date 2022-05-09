@@ -13,8 +13,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEBlend)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEBlendElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -112,5 +111,4 @@ SVGElement::StringAttributesInfo SVGFEBlendElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
