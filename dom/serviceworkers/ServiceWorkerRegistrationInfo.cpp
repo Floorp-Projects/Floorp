@@ -14,8 +14,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -905,5 +904,4 @@ void ServiceWorkerRegistrationInfo::CheckQuotaUsage() {
   swm->CheckPrincipalQuotaUsage(mPrincipal, Scope());
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
