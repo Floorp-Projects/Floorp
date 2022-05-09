@@ -8,8 +8,7 @@
 #include "MediaControlKeySource.h"
 #include "MediaStatusManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BrowsingContext;
 
@@ -105,7 +104,6 @@ class ContentMediaController final : public ContentMediaAgent,
   nsTArray<RefPtr<ContentMediaControlKeyReceiver>> mReceivers;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_MEDIA_MEDIACONTROL_CONTENTMEDIACONTROLLER_H_

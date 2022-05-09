@@ -16,8 +16,7 @@
 #include "GMPVideoEncoderProxy.h"
 #include "GMPCrashHelperHolder.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPContentParent;
 
@@ -82,7 +81,6 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   const uint32_t mPluginId;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPVideoEncoderParent_h_
