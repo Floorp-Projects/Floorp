@@ -18,8 +18,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/HashTable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerManager;
 
@@ -153,7 +152,6 @@ class ServiceWorkerShutdownBlocker final : public nsIAsyncShutdownBlocker,
       mServiceWorkerManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkershutdownblocker_h__

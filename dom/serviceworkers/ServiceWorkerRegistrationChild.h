@@ -12,8 +12,7 @@
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCWorkerRef;
 class RemoteServiceWorkerRegistrationImpl;
@@ -48,7 +47,6 @@ class ServiceWorkerRegistrationChild final
   void MaybeStartTeardown();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerregistrationchild_h__

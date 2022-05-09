@@ -10,8 +10,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -88,5 +87,4 @@ void ServiceWorkerRegistrationChild::MaybeStartTeardown() {
   Unused << SendTeardown();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -15,8 +15,7 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "ServiceWorkerInfo.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
@@ -120,5 +119,4 @@ void ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
       SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

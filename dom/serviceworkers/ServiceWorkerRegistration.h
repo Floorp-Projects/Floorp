@@ -18,8 +18,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class NavigationPreloadManager;
 class Promise;
@@ -170,7 +169,6 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 NS_DEFINE_STATIC_IID_ACCESSOR(ServiceWorkerRegistration,
                               NS_DOM_SERVICEWORKERREGISTRATION_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ServiceWorkerRegistration_h */
