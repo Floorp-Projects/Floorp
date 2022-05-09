@@ -12,8 +12,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FormData;
 
@@ -99,7 +98,6 @@ class HTMLOutputElement final : public nsGenericHTMLFormControlElement,
   RefPtr<nsDOMTokenList> mTokenList;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLOutputElement_h
