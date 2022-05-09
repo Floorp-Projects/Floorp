@@ -15,8 +15,7 @@
 #include "nsTArray.h"
 #include "SafeRefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Blob;
 class IDBDatabase;
@@ -235,8 +234,7 @@ JSObject* StructuredCloneReadCallback(
     void* aClosure);
 
 }  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(
     mozilla::dom::indexedDB::StructuredCloneReadInfo<
