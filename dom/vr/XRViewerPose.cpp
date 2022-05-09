@@ -7,8 +7,7 @@
 #include "mozilla/dom/XRViewerPose.h"
 #include "mozilla/dom/XRView.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XRViewerPose)
 
@@ -42,5 +41,4 @@ void XRViewerPose::GetViews(nsTArray<RefPtr<XRView>>& aResult) {
   aResult = mViews.Clone();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

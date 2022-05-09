@@ -13,8 +13,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XRViewport final : public nsWrapperCache {
  public:
@@ -43,7 +42,6 @@ class XRViewport final : public nsWrapperCache {
   gfx::IntRect mRect;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRViewport_h_

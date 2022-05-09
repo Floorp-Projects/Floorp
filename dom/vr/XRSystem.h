@@ -14,8 +14,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct XRSessionCreationOptions;
 
@@ -170,7 +169,6 @@ class XRSystem final : public DOMEventTargetHelper,
       mRequestSessionRequestsWaitingForEnumeration;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRsystem_h_
