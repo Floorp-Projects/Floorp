@@ -15,11 +15,9 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID                       \
