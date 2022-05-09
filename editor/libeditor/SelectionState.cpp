@@ -10,6 +10,8 @@
 
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc.
 #include "mozilla/IntegerRange.h"  // for IntegerRange
+#include "mozilla/Likely.h"        // For MOZ_LIKELY and MOZ_UNLIKELY
+#include "mozilla/RangeUtils.h"    // for RangeUtils
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"  // for Selection
 #include "nsAString.h"              // for nsAString::Length
@@ -23,6 +25,23 @@
 namespace mozilla {
 
 using namespace dom;
+
+/*****************************************************************************
+ * mozilla::RangeItem
+ *****************************************************************************/
+
+nsINode* RangeItem::GetRoot() const {
+  if (MOZ_UNLIKELY(!IsPositioned())) {
+    return nullptr;
+  }
+  nsINode* rootNode = RangeUtils::ComputeRootNode(mStartContainer);
+  if (mStartContainer == mEndContainer) {
+    return rootNode;
+  }
+  return MOZ_LIKELY(rootNode == RangeUtils::ComputeRootNode(mEndContainer))
+             ? rootNode
+             : nullptr;
+}
 
 /******************************************************************************
  * mozilla::SelectionState
@@ -38,8 +57,6 @@ template nsresult RangeUpdater::SelAdjCreateNode(
 template nsresult RangeUpdater::SelAdjInsertNode(const EditorDOMPoint& aPoint);
 template nsresult RangeUpdater::SelAdjInsertNode(
     const EditorRawDOMPoint& aPoint);
-
-SelectionState::SelectionState() : mDirection(eDirNext) {}
 
 void SelectionState::SaveSelection(Selection& aSelection) {
   // if we need more items in the array, new them
@@ -95,19 +112,7 @@ nsresult SelectionState::RestoreSelection(Selection& aSelection) {
   return NS_OK;
 }
 
-bool SelectionState::IsCollapsed() const {
-  if (mArray.Length() != 1) {
-    return false;
-  }
-  RefPtr<nsRange> range = mArray[0]->GetRange();
-  if (!range) {
-    NS_WARNING("RangeItem::GetRange() failed");
-    return false;
-  }
-  return range->Collapsed();
-}
-
-bool SelectionState::Equals(SelectionState& aOther) const {
+bool SelectionState::Equals(const SelectionState& aOther) const {
   if (mArray.Length() != aOther.mArray.Length()) {
     return false;
   }
@@ -118,54 +123,15 @@ bool SelectionState::Equals(SelectionState& aOther) const {
     return false;
   }
 
-  // XXX Creating nsRanges are really expensive.  Why cannot we just check
-  //     the container and offsets??
-  IgnoredErrorResult ignoredError;
-  for (size_t i = 0; i < mArray.Length(); i++) {
-    RefPtr<nsRange> range = mArray[i]->GetRange();
-    if (!range) {
-      NS_WARNING("Failed to create a range from the range item");
-      return false;
-    }
-    RefPtr<nsRange> otherRange = aOther.mArray[i]->GetRange();
-    if (!otherRange) {
-      NS_WARNING("Failed to create a range from the other's range item");
-      return false;
-    }
-
-    int16_t compResult = range->CompareBoundaryPoints(
-        Range_Binding::START_TO_START, *otherRange, ignoredError);
-    if (ignoredError.Failed()) {
-      NS_WARNING(
-          "nsRange::CompareBoundaryPoints(Range_Binding::START_TO_START) "
-          "failed");
-      return false;
-    }
-    if (compResult) {
-      return false;
-    }
-    compResult = range->CompareBoundaryPoints(Range_Binding::END_TO_END,
-                                              *otherRange, ignoredError);
-    if (ignoredError.Failed()) {
-      NS_WARNING(
-          "nsRange::CompareBoundaryPoints(Range_Binding::END_TO_END) failed");
-      return false;
-    }
-    if (compResult) {
+  for (uint32_t i : IntegerRange(mArray.Length())) {
+    if (NS_WARN_IF(!mArray[i]) || NS_WARN_IF(!aOther.mArray[i]) ||
+        !mArray[i]->Equals(*aOther.mArray[i])) {
       return false;
     }
   }
   // if we got here, they are equal
   return true;
 }
-
-void SelectionState::Clear() {
-  // free any items in the array
-  mArray.Clear();
-  mDirection = eDirNext;
-}
-
-bool SelectionState::IsEmpty() const { return mArray.IsEmpty(); }
 
 /******************************************************************************
  * mozilla::RangeUpdater
