@@ -1829,7 +1829,7 @@ struct PlainImageTemplate {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PlainResources {
     font_templates: FastHashMap<FontKey, PlainFontTemplate>,
-    font_instances: FastHashMap<FontInstanceKey, Arc<BaseFontInstance>>,
+    font_instances: Vec<BaseFontInstance>,
     image_templates: FastHashMap<ImageKey, PlainImageTemplate>,
 }
 
@@ -1987,36 +1987,66 @@ impl ResourceCache {
             }
         }
 
+        let mut font_templates = FastHashMap::default();
+        let mut font_remap = FastHashMap::default();
+        // Generate a map from duplicate font keys to their template.
+        for key in res.fonts.font_keys.keys() {
+            let shared_key = res.fonts.font_keys.map_key(&key);
+            let template = match res.fonts.templates.get_font(&shared_key) {
+                Some(template) => template,
+                None => {
+                    debug!("Failed serializing font template {:?}", key);
+                    continue;
+                }
+            };
+            let plain_font = match template {
+                FontTemplate::Raw(arc, index) => {
+                    PlainFontTemplate {
+                        data: font_paths[&arc.as_ptr()].clone(),
+                        index,
+                    }
+                }
+                #[cfg(not(target_os = "macos"))]
+                FontTemplate::Native(native) => {
+                    PlainFontTemplate {
+                        data: native.path.to_string_lossy().to_string(),
+                        index: native.index,
+                    }
+                }
+                #[cfg(target_os = "macos")]
+                FontTemplate::Native(native) => {
+                    PlainFontTemplate {
+                        data: native.name,
+                        index: 0,
+                    }
+                }
+            };
+            font_templates.insert(key, plain_font);
+            // Generate a reverse map from a shared key to a representive key.
+            font_remap.insert(shared_key, key);
+        }
+        let mut font_instances = Vec::new();
+        // Build a list of duplicate instance keys.
+        for instance_key in res.fonts.instance_keys.keys() {
+            let shared_key = res.fonts.instance_keys.map_key(&instance_key);
+            let instance = match res.fonts.instances.get_font_instance(shared_key) {
+                Some(instance) => instance,
+                None => {
+                    debug!("Failed serializing font instance {:?}", instance_key);
+                    continue;
+                }
+            };
+            // Target the instance towards a representive duplicate font key. The font key will be
+            // de-duplicated on load to an appropriate shared key.
+            font_instances.push(BaseFontInstance {
+                font_key: font_remap.get(&instance.font_key).cloned().unwrap_or(instance.font_key),
+                instance_key,
+                ..(*instance).clone()
+            });
+        }
         let resources = PlainResources {
-            font_templates: res.fonts.templates
-                .lock()
-                .iter()
-                .map(|(key, template)| {
-                    (*key, match *template {
-                        FontTemplate::Raw(ref arc, index) => {
-                            PlainFontTemplate {
-                                data: font_paths[&arc.as_ptr()].clone(),
-                                index,
-                            }
-                        }
-                        #[cfg(not(target_os = "macos"))]
-                        FontTemplate::Native(ref native) => {
-                            PlainFontTemplate {
-                                data: native.path.to_string_lossy().to_string(),
-                                index: native.index,
-                            }
-                        }
-                        #[cfg(target_os = "macos")]
-                        FontTemplate::Native(ref native) => {
-                            PlainFontTemplate {
-                                data: native.name.clone(),
-                                index: 0,
-                            }
-                        }
-                    })
-                })
-                .collect(),
-            font_instances: res.fonts.instances.clone_map(),
+            font_templates,
+            font_instances,
             image_templates: res.image_templates.images
                 .iter()
                 .map(|(key, template)| {
@@ -2097,7 +2127,7 @@ impl ResourceCache {
         self.glyph_rasterizer.reset();
         let res = &mut self.resources;
         res.fonts.templates.clear();
-        res.fonts.instances.set_map(resources.font_instances);
+        res.fonts.instances.clear();
         res.image_templates.images.clear();
 
         info!("\tfont templates...");
@@ -2126,8 +2156,23 @@ impl ResourceCache {
             };
 
             let template = FontTemplate::Raw(arc, plain_template.index);
-            self.glyph_rasterizer.add_font(key, template.clone());
-            res.fonts.templates.add_font(key, template);
+            // Only add the template if this is the first time it has been seen.
+            if let Some(shared_key) = res.fonts.font_keys.add_key(&key, &template) {
+                self.glyph_rasterizer.add_font(shared_key, template.clone());
+                res.fonts.templates.add_font(shared_key, template);
+            }
+        }
+
+        info!("\tfont instances...");
+        for instance in resources.font_instances {
+            // Target the instance to a shared font key.
+            let base = BaseFontInstance {
+                font_key: res.fonts.font_keys.map_key(&instance.font_key),
+                ..instance
+            };
+            if let Some(shared_instance) = res.fonts.instance_keys.add_key(base) {
+                res.fonts.instances.add_font_instance(shared_instance);
+            }
         }
 
         info!("\timage templates...");

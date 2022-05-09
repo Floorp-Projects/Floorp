@@ -65,10 +65,10 @@ def main(output):
     elif buildconfig.substs["MOZ_BUILD_APP"] == "mobile/android":
         dumps_locations += ["services/settings/dumps/"]
     elif buildconfig.substs["MOZ_BUILD_APP"] == "comm/mail":
-        dumps_locations += ["mozilla/services/settings/dumps/"]
-        dumps_locations += ["mail/app/settings/dumps/"]
+        dumps_locations += ["services/settings/dumps/"]
+        dumps_locations += ["comm/mail/app/settings/dumps/"]
     elif buildconfig.substs["MOZ_BUILD_APP"] == "comm/suite":
-        dumps_locations += ["mozilla/services/settings/dumps/"]
+        dumps_locations += ["services/settings/dumps/"]
 
     remotesettings_dumps = {}
     for dumps_location in dumps_locations:

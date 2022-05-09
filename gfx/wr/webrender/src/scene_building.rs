@@ -2456,6 +2456,7 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filters,
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
+            None,
         );
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
@@ -3615,6 +3616,7 @@ impl<'a> SceneBuilder<'a> {
             filters,
             filter_primitives,
             filter_datas,
+            Some(false),
         );
 
         // Clip the backdrop filter to the outline of the backdrop-filter prim. If this is
@@ -3661,6 +3663,7 @@ impl<'a> SceneBuilder<'a> {
         mut filter_ops: Vec<Filter>,
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
+        should_inflate_override: Option<bool>,
     ) -> PictureChainBuilder {
         // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
         // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
@@ -3704,7 +3707,18 @@ impl<'a> SceneBuilder<'a> {
                     if filter.is_noop() {
                         continue;
                     } else {
-                        PictureCompositeMode::Filter(filter.clone())
+                        let mut filter = filter.clone();
+
+                        // backdrop-filter spec says that blurs should assume edgeMode=Duplicate
+                        // We can do this by not inflating the bounds, which means the blur
+                        // shader will duplicate pixels outside the sample rect
+                        if let Some(should_inflate_override) = should_inflate_override {
+                            if let Filter::Blur { ref mut should_inflate, .. } = filter {
+                                *should_inflate = should_inflate_override;
+                            }
+                        }
+
+                        PictureCompositeMode::Filter(filter)
                     }
                 }
             };

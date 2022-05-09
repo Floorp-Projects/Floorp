@@ -137,7 +137,6 @@ add_task(async () => {
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-threshold", 0.25],
       ["widget.swipe.success-velocity-contribution", 0.5],
     ],
   });
@@ -252,7 +251,6 @@ add_task(async () => {
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-threshold", 0.25],
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
@@ -351,7 +349,6 @@ add_task(async () => {
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-threshold", 0.25],
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
@@ -449,7 +446,6 @@ add_task(async () => {
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-threshold", 0.25],
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
@@ -510,7 +506,6 @@ add_task(async () => {
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
       ["widget.disable-swipe-tracker", false],
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
-      ["widget.swipe.success-threshold", 0.25],
       // Set the velocity-contribution to 0 so we can exactly control the
       // values in the swipe tracker via the delta in the events that we send.
       ["widget.swipe.success-velocity-contribution", 0.0],
