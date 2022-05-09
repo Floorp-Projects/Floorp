@@ -18,8 +18,7 @@
 class nsGlobalWindowInner;
 class nsDocShell;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BrowsingContext;
 class FeaturePolicy;
@@ -204,7 +203,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   int64_t mBeforeUnloadListeners = 0;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // !defined(mozilla_dom_WindowGlobalChild_h)
