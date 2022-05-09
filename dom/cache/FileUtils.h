@@ -17,9 +17,7 @@
 struct nsID;
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 #define PADDING_FILE_NAME u".padding"
 #define PADDING_TMP_FILE_NAME u".padding-tmp"
@@ -150,8 +148,6 @@ Result<int64_t, nsresult> DirectoryPaddingRestore(nsIFile& aBaseDir,
 
 nsresult DirectoryPaddingDeleteFile(nsIFile& aBaseDir,
                                     DirPaddingFile aPaddingFileType);
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_FileUtils_h

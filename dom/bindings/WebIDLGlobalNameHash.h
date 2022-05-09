@@ -13,16 +13,13 @@
 
 class JSLinearString;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum class BindingNamesOffset : uint16_t;
 
-namespace constructors {
-namespace id {
+namespace constructors::id {
 enum ID : uint16_t;
-}  // namespace id
-}  // namespace constructors
+}  // namespace constructors::id
 
 struct WebIDLNameTableEntry {
   // Check whether a constructor should be enabled for the given object.
@@ -90,7 +87,6 @@ class WebIDLGlobalNameHash {
   static const WebIDLNameTableEntry sEntries[];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebIDLGlobalNameHash_h__
