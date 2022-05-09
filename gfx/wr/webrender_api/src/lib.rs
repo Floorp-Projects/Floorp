@@ -219,7 +219,7 @@ pub trait RenderNotifier: Send {
         composite_needed: bool,
     );
     /// Notify the thread containing the `Renderer` that a new frame is ready.
-    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool, render_time_ns: Option<u64>);
+    fn new_frame_ready(&self, _: DocumentId, scrolled: bool, composite_needed: bool);
     /// A Gecko-specific notification mechanism to get some code executed on the
     /// `Renderer`'s thread, mostly replaced by `NotificationHandler`. You should
     /// probably use the latter instead.

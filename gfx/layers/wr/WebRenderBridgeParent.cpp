@@ -115,28 +115,6 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr,
   return reinterpret_cast<void*>(ret);
 }
 
-void record_telemetry_time(mozilla::wr::TelemetryProbe aProbe,
-                           uint64_t aTimeNs) {
-  uint32_t time_ms = (uint32_t)(aTimeNs / 1000000);
-  switch (aProbe) {
-    case mozilla::wr::TelemetryProbe::SceneBuildTime:
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_SCENEBUILD_TIME,
-                                     time_ms);
-      break;
-    case mozilla::wr::TelemetryProbe::SceneSwapTime:
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_SCENESWAP_TIME,
-                                     time_ms);
-      break;
-    case mozilla::wr::TelemetryProbe::FrameBuildTime:
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::WR_FRAMEBUILD_TIME,
-                                     time_ms);
-      break;
-    default:
-      MOZ_ASSERT(false);
-      break;
-  }
-}
-
 static CrashReporter::Annotation FromWrCrashAnnotation(
     mozilla::wr::CrashAnnotation aAnnotation) {
   switch (aAnnotation) {
