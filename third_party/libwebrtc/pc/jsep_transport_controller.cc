@@ -39,11 +39,11 @@ namespace webrtc {
 JsepTransportController::JsepTransportController(
     rtc::Thread* network_thread,
     cricket::PortAllocator* port_allocator,
-    AsyncResolverFactory* async_resolver_factory,
+    AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
     Config config)
     : network_thread_(network_thread),
       port_allocator_(port_allocator),
-      async_resolver_factory_(async_resolver_factory),
+      async_dns_resolver_factory_(async_dns_resolver_factory),
       config_(config),
       active_reset_srtp_params_(config.active_reset_srtp_params) {
   // The |transport_observer| is assumed to be non-null.
@@ -398,7 +398,7 @@ JsepTransportController::CreateIceTransport(const std::string& transport_name,
 
   IceTransportInit init;
   init.set_port_allocator(port_allocator_);
-  init.set_async_resolver_factory(async_resolver_factory_);
+  init.set_async_dns_resolver_factory(async_dns_resolver_factory_);
   init.set_event_log(config_.event_log);
   return config_.ice_transport_factory->CreateIceTransport(
       transport_name, component, std::move(init));

@@ -16,6 +16,7 @@
 #include "absl/memory/memory.h"
 #include "api/async_dns_resolver.h"
 #include "rtc_base/async_resolver.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
