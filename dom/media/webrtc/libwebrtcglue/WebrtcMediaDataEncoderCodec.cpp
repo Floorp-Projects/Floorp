@@ -416,8 +416,10 @@ int32_t WebrtcMediaDataEncoder::Encode(
           if (!mCallback) {
             break;
           }
-          webrtc::EncodedImage image(const_cast<uint8_t*>(frame->Data()),
-                                     frame->Size(), frame->Size());
+          webrtc::EncodedImage image;
+          image.SetEncodedData(
+              webrtc::EncodedImageBuffer::Create(frame->Data(),
+                                                 frame->Size()));
           image._encodedWidth = displaySize.width;
           image._encodedHeight = displaySize.height;
           CheckedInt64 time =
