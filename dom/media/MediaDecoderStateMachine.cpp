@@ -3673,7 +3673,12 @@ media::TimeUnit MediaDecoderStateMachine::GetClock(
     TimeStamp* aTimeStamp) const {
   MOZ_ASSERT(OnTaskQueue());
   auto clockTime = mMediaSink->GetPosition(aTimeStamp);
+  // This fails on Windows some times, see 1765563
+#if defined(XP_WIN)
+  NS_ASSERTION(GetMediaTime() <= clockTime, "Clock should go forwards.");
+#else
   MOZ_ASSERT(GetMediaTime() <= clockTime, "Clock should go forwards.");
+#endif
   return clockTime;
 }
 
