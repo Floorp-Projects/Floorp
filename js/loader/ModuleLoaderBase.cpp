@@ -27,11 +27,9 @@
 #include "nsContentUtils.h"
 #include "nsICacheInfoChannel.h"  // nsICacheInfoChannel
 #include "nsNetUtil.h"            // NS_NewURI
-#include "nsThreadUtils.h"        // GetMainThreadSerialEventTarget
 #include "xpcpublic.h"
 
 using mozilla::Err;
-using mozilla::GetMainThreadSerialEventTarget;
 using mozilla::Preferences;
 using mozilla::UniquePtr;
 using mozilla::WrapNotNull;
@@ -57,7 +55,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase, mFetchedModules,
-                         mDynamicImportRequests, mGlobalObject, mLoader)
+                         mDynamicImportRequests, mGlobalObject, mEventTarget,
+                         mLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase)
@@ -321,7 +320,7 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
   if (aRestart == RestartRequest::No && ModuleMapContainsURL(request->mURI)) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
     WaitForModuleFetch(request->mURI)
-        ->Then(GetMainThreadSerialEventTarget(), __func__, request,
+        ->Then(mEventTarget, __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
     return NS_OK;
@@ -747,9 +746,8 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
 
   // Wait for all imports to become ready.
   RefPtr<mozilla::GenericPromise::AllPromiseType> allReady =
-      mozilla::GenericPromise::All(mozilla::GetMainThreadSerialEventTarget(),
-                                   importsReady);
-  allReady->Then(mozilla::GetMainThreadSerialEventTarget(), __func__, aRequest,
+      mozilla::GenericPromise::All(mEventTarget, importsReady);
+  allReady->Then(mEventTarget, __func__, aRequest,
                  &ModuleLoadRequest::DependenciesLoaded,
                  &ModuleLoadRequest::ModuleErrored);
 }
@@ -852,9 +850,13 @@ void ModuleLoaderBase::FinishDynamicImport(
 }
 
 ModuleLoaderBase::ModuleLoaderBase(ScriptLoaderInterface* aLoader,
-                                   nsIGlobalObject* aGlobalObject)
-    : mGlobalObject(aGlobalObject), mLoader(aLoader) {
+                                   nsIGlobalObject* aGlobalObject,
+                                   nsISerialEventTarget* aEventTarget)
+    : mGlobalObject(aGlobalObject),
+      mEventTarget(aEventTarget),
+      mLoader(aLoader) {
   MOZ_ASSERT(mGlobalObject);
+  MOZ_ASSERT(mEventTarget);
   MOZ_ASSERT(mLoader);
 
   EnsureModuleHooksInitialized();
