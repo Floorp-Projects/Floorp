@@ -11,8 +11,7 @@
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ConsoleUtils final {
  public:
@@ -49,7 +48,6 @@ class ConsoleUtils final {
   RefPtr<JSObjectHolder> mSandbox;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ConsoleUtils_h */
