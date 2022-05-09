@@ -618,59 +618,52 @@ JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
   return mLoaderGlobal;
 }
 
-JSObject* mozJSComponentLoader::PrepareObjectForLocation(
-    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool* aRealFile) {
-  nsAutoCString nativePath;
-  NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
+/* static */
+bool mozJSComponentLoader::LocationIsRealFile(nsIURI* aURI) {
+  // We need to be extra careful checking for URIs pointing to files.
+  // EnsureFile may not always get called, especially on resource URIs so we
+  // need to call GetFile to make sure this is a valid file.
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+  nsCOMPtr<nsIFile> testFile;
+  if (NS_SUCCEEDED(rv)) {
+    fileURL->GetFile(getter_AddRefs(testFile));
+  }
 
+  return bool(testFile);
+}
+
+JSObject* mozJSComponentLoader::PrepareObjectForLocation(
+    JSContext* aCx, nsIFile* aComponentFile, nsIURI* aURI, bool aRealFile) {
   RootedObject globalObj(aCx, GetSharedGlobal(aCx));
+  NS_ENSURE_TRUE(globalObj, nullptr);
+  JSAutoRealm ar(aCx, globalObj);
 
   // |thisObj| is the object we set properties on for a particular .jsm.
-  RootedObject thisObj(aCx, globalObj);
+  RootedObject thisObj(aCx, JS::NewJSMEnvironment(aCx));
   NS_ENSURE_TRUE(thisObj, nullptr);
 
-  JSAutoRealm ar(aCx, thisObj);
+  if (aRealFile) {
+    if (XRE_IsParentProcess()) {
+      RootedObject locationObj(aCx);
 
-  thisObj = JS::NewJSMEnvironment(aCx);
-  NS_ENSURE_TRUE(thisObj, nullptr);
+      nsresult rv = nsXPConnect::XPConnect()->WrapNative(
+          aCx, thisObj, aComponentFile, NS_GET_IID(nsIFile),
+          locationObj.address());
+      NS_ENSURE_SUCCESS(rv, nullptr);
+      NS_ENSURE_TRUE(locationObj, nullptr);
 
-  *aRealFile = false;
-
-  // need to be extra careful checking for URIs pointing to files
-  // EnsureFile may not always get called, especially on resource URIs
-  // so we need to call GetFile to make sure this is a valid file
-  {
-    // Create an extra scope so that ~nsCOMPtr will run before the returned
-    // JSObject* is placed on the stack, since otherwise a GC in the destructor
-    // would invalidate the return value.
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-    nsCOMPtr<nsIFile> testFile;
-    if (NS_SUCCEEDED(rv)) {
-      fileURL->GetFile(getter_AddRefs(testFile));
-    }
-
-    if (testFile) {
-      *aRealFile = true;
-
-      if (XRE_IsParentProcess()) {
-        RootedObject locationObj(aCx);
-
-        rv = nsXPConnect::XPConnect()->WrapNative(aCx, thisObj, aComponentFile,
-                                                  NS_GET_IID(nsIFile),
-                                                  locationObj.address());
-        NS_ENSURE_SUCCESS(rv, nullptr);
-        NS_ENSURE_TRUE(locationObj, nullptr);
-
-        if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
-          return nullptr;
-        }
+      if (!JS_DefineProperty(aCx, thisObj, "__LOCATION__", locationObj, 0)) {
+        return nullptr;
       }
     }
   }
 
   // Expose the URI from which the script was imported through a special
   // variable that we insert into the JSM.
+  nsAutoCString nativePath;
+  NS_ENSURE_SUCCESS(aURI->GetSpec(nativePath), nullptr);
+
   RootedString exposedUri(
       aCx, JS_NewStringCopyN(aCx, nativePath.get(), nativePath.Length()));
   NS_ENSURE_TRUE(exposedUri, nullptr);
@@ -724,11 +717,13 @@ nsresult mozJSComponentLoader::ObjectForLocation(
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  bool realFile = false;
   nsresult rv = aInfo.EnsureURI();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  bool realFile = LocationIsRealFile(aInfo.URI());
+
   RootedObject obj(
-      cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(), &realFile));
+      cx, PrepareObjectForLocation(cx, aComponentFile, aInfo.URI(), realFile));
   NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
   MOZ_ASSERT(!JS_IsGlobalObject(obj));
 
