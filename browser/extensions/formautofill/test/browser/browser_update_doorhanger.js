@@ -154,7 +154,6 @@ add_task(async function test_submit_reduced_fields() {
 
   let url = BASE_URL + "autocomplete_simple_basic.html";
   await BrowserTestUtils.withNewTab({ gBrowser, url }, async function(browser) {
-
     await openPopupOn(browser, "form#simple input[name=tel]");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);

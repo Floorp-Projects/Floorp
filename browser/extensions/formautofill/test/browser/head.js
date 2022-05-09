@@ -10,7 +10,7 @@
             SUPPORTED_COUNTRIES_PREF,
             SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF, SYNC_CREDITCARDS_PREF, SYNC_CREDITCARDS_AVAILABLE_PREF, CREDITCARDS_USED_STATUS_PREF,
             sleep, waitForStorageChangedEvents, waitForAutofill, focusUpdateSubmitForm, runAndWaitForAutocompletePopupOpen,
-            openPopupOn, openPopupForSubframe, closePopup, closePopupForSubframe,
+            openPopupOn, openPopupOnSubframe, closePopup, closePopupForSubframe,
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard, setStorage,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, waitForPopupShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog,
@@ -525,7 +525,7 @@ async function openPopupOn(browser, selector) {
   await childNotifiedPromise;
 }
 
-async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
+async function openPopupOnSubframe(browser, frameBrowsingContext, selector) {
   let childNotifiedPromise = waitPopupStateInChild(
     frameBrowsingContext,
     "FormAutoComplete:PopupOpened"
@@ -536,7 +536,7 @@ async function openPopupForSubframe(browser, frameBrowsingContext, selector) {
   await runAndWaitForAutocompletePopupOpen(browser, async () => {
     await focusAndWaitForFieldsIdentified(frameBrowsingContext, selector);
     if (!selector.includes("cc-")) {
-      info(`openPopupForSubframe: before VK_DOWN on ${selector}`);
+      info(`openPopupOnSubframe: before VK_DOWN on ${selector}`);
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, frameBrowsingContext);
     }
   });

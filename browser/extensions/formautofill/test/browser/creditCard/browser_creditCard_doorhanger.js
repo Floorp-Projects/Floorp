@@ -172,7 +172,7 @@ add_task(async function test_submit_untouched_creditCard_form_iframe() {
         true
       );
       let iframeBC = browser.browsingContext.children[0];
-      await openPopupForSubframe(browser, iframeBC, "form #cc-name");
+      await openPopupOnSubframe(browser, iframeBC, "form #cc-name");
 
       EventUtils.synthesizeKey("VK_DOWN", {});
       EventUtils.synthesizeKey("VK_RETURN", {});
