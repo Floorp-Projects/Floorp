@@ -12,8 +12,7 @@
 #include "PeriodicWave.h"
 #include "mozilla/dom/OscillatorNodeBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct OscillatorOptions;
@@ -88,7 +87,6 @@ class OscillatorNode final : public AudioScheduledSourceNode,
   bool mStartCalled;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

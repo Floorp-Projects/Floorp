@@ -11,8 +11,7 @@
 #include "AudioParam.h"
 #include "mozilla/dom/IIRFilterNodeBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct IIRFilterOptions;
@@ -52,7 +51,6 @@ class IIRFilterNode final : public AudioNode {
   nsTArray<double> mFeedforward;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

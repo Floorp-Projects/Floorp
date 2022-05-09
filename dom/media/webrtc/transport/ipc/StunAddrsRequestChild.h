@@ -9,8 +9,7 @@
 
 class nsISerialEventTarget;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 class StunAddrsListener {
  public:
@@ -60,7 +59,6 @@ class StunAddrsRequestChild final : public PStunAddrsRequestChild {
   NS_DECL_OWNINGTHREAD
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // mozilla_net_StunAddrsRequestChild_h

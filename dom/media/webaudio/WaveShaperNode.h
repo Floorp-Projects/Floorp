@@ -11,8 +11,7 @@
 #include "mozilla/dom/WaveShaperNodeBinding.h"
 #include "mozilla/dom/TypedArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct WaveShaperOptions;
@@ -67,7 +66,6 @@ class WaveShaperNode final : public AudioNode {
   OverSampleType mType;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

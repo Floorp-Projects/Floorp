@@ -10,8 +10,7 @@
 #include "nsThreadUtils.h"
 #include "AudioNodeTrack.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PlayingRefChangeHandler final : public Runnable {
  public:
@@ -38,7 +37,6 @@ class PlayingRefChangeHandler final : public Runnable {
   ChangeType mChange;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
