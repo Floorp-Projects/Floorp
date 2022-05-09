@@ -8,8 +8,7 @@
 #include "mozilla/dom/CDATASectionBinding.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 CDATASection::~CDATASection() = default;
 
@@ -50,5 +49,4 @@ void CDATASection::DumpContent(FILE* out, int32_t aIndent,
                                bool aDumpAll) const {}
 #endif
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

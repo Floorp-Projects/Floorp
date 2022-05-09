@@ -26,8 +26,7 @@
 #include "txIXPathContext.h"
 #include "txURIUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // txIParseContext implementation
 class XPathEvaluatorParseContext : public txIParseContext {
@@ -186,5 +185,4 @@ bool XPathEvaluatorParseContext::caseInsensitiveNameTests() {
 
 void XPathEvaluatorParseContext::SetErrorOffset(uint32_t aOffset) {}
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

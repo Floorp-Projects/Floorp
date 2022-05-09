@@ -8,8 +8,7 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DOMString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XMLHttpRequestStringBuffer final {
   friend class XMLHttpRequestStringWriterHelper;
@@ -197,5 +196,4 @@ uint32_t XMLHttpRequestStringSnapshotReaderHelper::Length() const {
   return mBuffer->UnsafeLength();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
