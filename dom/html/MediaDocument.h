@@ -19,8 +19,7 @@
 #define NSMEDIADOCUMENT_PROPERTIES_URI_en_US \
   "resource://gre/res/locale/layout/MediaDocument.properties"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaDocument : public nsHTMLDocument {
  public:
@@ -118,7 +117,6 @@ class MediaDocumentStreamListener : public nsIStreamListener,
   nsCOMPtr<nsIStreamListener> mNextStream;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_MediaDocument_h */

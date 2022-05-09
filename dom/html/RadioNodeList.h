@@ -19,8 +19,7 @@
     }                                                \
   }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class RadioNodeList final : public nsSimpleContentList {
  public:
@@ -40,7 +39,6 @@ class RadioNodeList final : public nsSimpleContentList {
 NS_DEFINE_STATIC_IID_ACCESSOR(RadioNodeList,
                               MOZILLA_DOM_RADIONODELIST_IMPLEMENTATION_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_RadioNodeList_h
