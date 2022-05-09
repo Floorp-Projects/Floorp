@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PerformanceEntry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // http://www.w3.org/TR/user-timing/#performancemeasure
 class PerformanceMeasure final : public PerformanceEntry {
@@ -35,7 +34,6 @@ class PerformanceMeasure final : public PerformanceEntry {
   DOMHighResTimeStamp mDuration;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_performancemeasure_h___ */
