@@ -10,8 +10,7 @@
 #include "IndexedDatabase.h"
 #include "mozilla/dom/indexedDB/Key.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 namespace indexedDB {
 class ObjectStoreCursorResponse;
 class ObjectStoreKeyCursorResponse;
@@ -148,7 +147,6 @@ struct CursorData<IDBCursorType::Index> : IndexCursorDataBase,
              StructuredCloneReadInfoChild&& aCloneInfo);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
