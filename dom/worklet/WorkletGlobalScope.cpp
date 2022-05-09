@@ -12,8 +12,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(WorkletGlobalScope)
 
@@ -97,5 +96,4 @@ void WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const {
   fflush(stdout);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
