@@ -26,6 +26,11 @@ class AudioConverter;
 
 class AudioSink : private AudioStream::DataSource {
  public:
+  enum class InitializationType {
+    // This AudioSink is being initialized for the first time
+    INITIAL,
+    UNMUTING
+  };
   struct PlaybackParams {
     PlaybackParams(double aVolume, double aPlaybackRate, bool aPreservesPitch)
         : mVolume(aVolume),
@@ -42,7 +47,8 @@ class AudioSink : private AudioStream::DataSource {
   ~AudioSink();
 
   // Allocate and initialize mAudioStream. Returns NS_OK on success.
-  nsresult InitializeAudioStream(const PlaybackParams& aParams);
+  nsresult InitializeAudioStream(const PlaybackParams& aParams,
+                                 InitializationType aInitializationType);
 
   // Start audio playback.
   nsresult Start(const media::TimeUnit& aStartTime,
