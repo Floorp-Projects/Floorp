@@ -385,6 +385,11 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
       mImageAllocator(aAllocator),
       mImageContainer(aImageContainer),
       mInfo(aConfig),
+      mDecodedFrames(0),
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+      mDecodedFramesLate(0),
+#endif
+      mAverangeDecodeTime(0),
       mLowLatency(aLowLatency) {
   FFMPEG_LOG("FFmpegVideoDecoder::FFmpegVideoDecoder MIME %s Codec ID %d",
              aConfig.mMimeType.get(), mCodecID);
@@ -771,12 +776,36 @@ static int64_t GetFramePts(AVFrame* aFrame) {
 #endif
 }
 
+void FFmpegVideoDecoder<LIBAV_VER>::UpdateDecodeTimes(TimeStamp aDecodeStart) {
+  mDecodedFrames++;
+  float decodeTime = (TimeStamp::Now() - aDecodeStart).ToMilliseconds();
+  mAverangeDecodeTime =
+      (mAverangeDecodeTime * (mDecodedFrames - 1) + decodeTime) /
+      mDecodedFrames;
+  FFMPEG_LOG("  averange frame decode time %.2f ms decoded frames %d\n",
+             mAverangeDecodeTime, mDecodedFrames);
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+  int frameDuration = mFrame->pkt_duration;
+  if (frameDuration > 0 && frameDuration / 1000.0 < decodeTime) {
+    mDecodedFramesLate++;
+    FFMPEG_LOG(
+        "  slow decode: failed to decode in time, frame duration %.2f ms, "
+        "decode time %.2f\n",
+        frameDuration / 1000.0, decodeTime);
+    FFMPEG_LOG("  all decoded frames / late decoded frames %d/%d\n",
+               mDecodedFrames, mDecodedFramesLate);
+  }
+#endif
+}
+
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaRawData* aSample, uint8_t* aData, int aSize, bool* aGotFrame,
     MediaDataDecoder::DecodedData& aResults) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   AVPacket packet;
   mLib->av_init_packet(&packet);
+
+  TimeStamp decodeStart = TimeStamp::Now();
 
   packet.data = aData;
   packet.size = aSize;
@@ -796,7 +825,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("avcodec_send_packet error: %d", res));
   }
-
   if (aGotFrame) {
     *aGotFrame = false;
   }
@@ -832,6 +860,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                          RESULT_DETAIL("avcodec_receive_frame error: %d", res));
     }
+
+    UpdateDecodeTimes(decodeStart);
+    decodeStart = TimeStamp::Now();
 
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
@@ -899,6 +930,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     }
     return NS_OK;
   }
+
+  UpdateDecodeTimes(decodeStart);
 
   // If we've decoded a frame then we need to output it
   int64_t pts =
