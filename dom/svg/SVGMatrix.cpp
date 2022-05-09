@@ -12,8 +12,7 @@
 
 const double radPerDegree = 2.0 * M_PI / 360.0;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SVGMatrix, mTransform)
 
@@ -186,5 +185,4 @@ already_AddRefed<SVGMatrix> SVGMatrix::SkewY(float angle, ErrorResult& rv) {
   return matrix.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

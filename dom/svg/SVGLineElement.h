@@ -13,8 +13,7 @@
 nsresult NS_NewSVGLineElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGLineElementBase = SVGGeometryElement;
 
@@ -61,7 +60,6 @@ class SVGLineElement final : public SVGLineElementBase {
   static LengthInfo sLengthInfo[4];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGLINEELEMENT_H_

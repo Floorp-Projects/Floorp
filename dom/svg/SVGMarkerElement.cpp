@@ -24,8 +24,7 @@ using namespace mozilla::dom::SVGMarkerElement_Binding;
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Marker)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGAngle_Binding;
 
@@ -240,5 +239,4 @@ gfx::Matrix SVGMarkerElement::GetViewBoxTransform() {
   return *mViewBoxToViewportTransform;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

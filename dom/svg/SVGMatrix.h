@@ -43,8 +43,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * DOM wrapper for an SVG matrix.
@@ -125,7 +124,6 @@ class SVGMatrix final : public nsWrapperCache {
   gfxMatrix mMatrix;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGMATRIX_H_
