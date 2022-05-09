@@ -12,8 +12,7 @@
 #include "ipc/EnumSerializer.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerShutdownState {
  public:
@@ -46,8 +45,7 @@ class ServiceWorkerShutdownState {
 void MaybeReportServiceWorkerShutdownProgress(const ServiceWorkerOpArgs& aArgs,
                                               bool aShutdownCompleted = false);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 namespace IPC {
 
