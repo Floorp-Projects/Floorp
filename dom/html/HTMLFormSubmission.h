@@ -19,8 +19,7 @@ class nsIInputStream;
 class nsGenericHTMLElement;
 class nsIMultiplexInputStream;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Blob;
 class DialogFormSubmission;
@@ -288,7 +287,6 @@ class FSMultipartFormData : public EncodingFormSubmission {
   uint64_t mTotalLength;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLFormSubmission_h */

@@ -62,8 +62,7 @@ class nsGeoPosition final : public nsIDOMGeoPosition {
 // WebIDL wrappers for the classes above
 ////////////////////////////////////////////////////
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GeolocationCoordinates;
 
@@ -94,7 +93,6 @@ class GeolocationPosition final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIDOMGeoPosition> mGeoPosition;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_GeolocationPosition_h */
