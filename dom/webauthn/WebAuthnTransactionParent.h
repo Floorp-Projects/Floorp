@@ -15,8 +15,7 @@
  * information to U2FTokenManager.
  */
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
  public:
@@ -42,7 +41,6 @@ class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
   ~WebAuthnTransactionParent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnTransactionParent_h

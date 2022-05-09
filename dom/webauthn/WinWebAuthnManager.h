@@ -11,8 +11,7 @@
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/Tainting.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebAuthnTransactionParent;
 
@@ -49,7 +48,6 @@ class WinWebAuthnManager final {
   std::map<uint64_t, GUID*> mCancellationIds;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WinWebAuthnManager_h
