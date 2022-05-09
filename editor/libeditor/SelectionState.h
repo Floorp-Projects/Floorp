@@ -52,10 +52,14 @@ struct RangeItem final {
     mStartOffset = mEndOffset = 0;
   }
   already_AddRefed<nsRange> GetRange();
-  bool IsCollapsed() const {
+
+  // Same as the API of dom::AbstractRange
+  nsINode* GetRoot() const;
+  bool Collapsed() const {
     return mStartContainer == mEndContainer && mStartOffset == mEndOffset;
   }
-  bool IsSet() const { return mStartContainer && mEndContainer; }
+  bool IsPositioned() const { return mStartContainer && mEndContainer; }
+
   EditorDOMPoint StartPoint() const {
     return EditorDOMPoint(mStartContainer, mStartOffset);
   }
@@ -99,6 +103,7 @@ class SelectionState final {
   bool Equals(const SelectionState& aOther) const;
   void Clear();
   bool IsEmpty() const;
+  nsINode* GetCommonRootNode() const;
 
  private:
   CopyableAutoTArray<RefPtr<RangeItem>, 1> mArray;

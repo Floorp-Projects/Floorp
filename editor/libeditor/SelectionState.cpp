@@ -10,6 +10,8 @@
 
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc.
 #include "mozilla/IntegerRange.h"  // for IntegerRange
+#include "mozilla/Likely.h"        // For MOZ_LIKELY and MOZ_UNLIKELY
+#include "mozilla/RangeUtils.h"    // for RangeUtils
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"  // for Selection
 #include "nsAString.h"              // for nsAString::Length
@@ -23,6 +25,23 @@
 namespace mozilla {
 
 using namespace dom;
+
+/*****************************************************************************
+ * mozilla::RangeItem
+ *****************************************************************************/
+
+nsINode* RangeItem::GetRoot() const {
+  if (MOZ_UNLIKELY(!IsPositioned())) {
+    return nullptr;
+  }
+  nsINode* rootNode = RangeUtils::ComputeRootNode(mStartContainer);
+  if (mStartContainer == mEndContainer) {
+    return rootNode;
+  }
+  return MOZ_LIKELY(rootNode == RangeUtils::ComputeRootNode(mEndContainer))
+             ? rootNode
+             : nullptr;
+}
 
 /******************************************************************************
  * mozilla::SelectionState
@@ -111,7 +130,7 @@ bool SelectionState::HasOnlyCollapsedRange() const {
   if (mArray.Length() != 1) {
     return false;
   }
-  if (!mArray[0]->IsSet() || !mArray[0]->IsCollapsed()) {
+  if (!mArray[0]->IsPositioned() || !mArray[0]->Collapsed()) {
     return false;
   }
   return true;
@@ -176,6 +195,18 @@ void SelectionState::Clear() {
 }
 
 bool SelectionState::IsEmpty() const { return mArray.IsEmpty(); }
+
+nsINode* SelectionState::GetCommonRootNode() const {
+  nsINode* rootNode = nullptr;
+  for (const RefPtr<RangeItem>& rangeItem : mArray) {
+    nsINode* newRootNode = rangeItem->GetRoot();
+    if (!newRootNode || (rootNode && rootNode != newRootNode)) {
+      return nullptr;
+    }
+    rootNode = newRootNode;
+  }
+  return rootNode;
+}
 
 /******************************************************************************
  * mozilla::RangeUpdater

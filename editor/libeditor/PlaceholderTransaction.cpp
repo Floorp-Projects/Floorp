@@ -274,6 +274,25 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
     return NS_OK;
   }
 
+  // If the caret positions are now in different root nodes, e.g., the previous
+  // caret position was removed from the DOM tree, this merge should not be
+  // done.
+  const bool isPreviousCaretPointInSameRootOfNewCaretPoint = [&]() {
+    nsINode* previousRootInCurrentDOMTree = mEndSel.GetCommonRootNode();
+    return previousRootInCurrentDOMTree &&
+           previousRootInCurrentDOMTree ==
+               otherPlaceholderTransaction->mStartSel.GetCommonRootNode();
+  }();
+  if (!isPreviousCaretPointInSameRootOfNewCaretPoint) {
+    MOZ_LOG(GetLogModule(), LogLevel::Debug,
+            ("%p PlaceholderTransaction::%s(aOtherTransaction=%p) this={ "
+             "mName=%s } returned false due to the caret points are in "
+             "different root nodes",
+             this, __FUNCTION__, aOtherTransaction,
+             nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
+    return NS_OK;
+  }
+
   // If the caret points of end of us and start of new transaction are not same,
   // we shouldn't merge them.
   if (!otherPlaceholderTransaction->mStartSel.Equals(mEndSel)) {
