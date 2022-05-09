@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/EndpointForReportChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 EndpointForReportChild::EndpointForReportChild() = default;
 
@@ -28,5 +27,4 @@ mozilla::ipc::IPCResult EndpointForReportChild::Recv__delete__(
   return IPC_OK();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

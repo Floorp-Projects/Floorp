@@ -13,9 +13,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 class FullOriginMetadataResult : public nsIQuotaFullOriginMetadataResult {
   const FullOriginMetadata mFullOriginMetadata;
@@ -76,8 +74,6 @@ class EstimateResult : public nsIQuotaEstimateResult {
   NS_DECL_NSIQUOTAESTIMATERESULT
 };
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_QuotaResults_h

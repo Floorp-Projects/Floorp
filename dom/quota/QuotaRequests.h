@@ -20,9 +20,7 @@ class nsIQuotaCallback;
 class nsIQuotaUsageCallback;
 class nsIVariant;
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 class QuotaUsageRequestChild;
 
@@ -118,8 +116,6 @@ class Request final : public RequestBase, public nsIQuotaRequest {
   virtual void FireCallback() override;
 };
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_UsageRequest_h
