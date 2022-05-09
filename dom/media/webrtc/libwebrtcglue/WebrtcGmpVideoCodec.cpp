@@ -617,8 +617,10 @@ void WebrtcGmpVideoEncoder::Encoded(
                   aEncodedFrame->Size() - unitOffset);
   }
 
-  webrtc::EncodedImage unit(aEncodedFrame->Buffer(), aEncodedFrame->Size(),
-                            aEncodedFrame->Size());
+  webrtc::EncodedImage unit;
+  unit.SetEncodedData(
+      webrtc::EncodedImageBuffer::Create(aEncodedFrame->Buffer(),
+                                         aEncodedFrame->Size()));
   unit._frameType = ft;
   unit.SetTimestamp(timestamp);
   unit.capture_time_ms_ = capture_time.ms();
