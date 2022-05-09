@@ -245,7 +245,7 @@ class WindowManager {
    * @return {Promise<WindowProxy>}
    *     A promise that resolved to the application window.
    */
-  waitForInitialApplicationWindow() {
+  waitForInitialApplicationWindowLoaded() {
     return new TimedPromise(
       resolve => {
         const waitForWindow = () => {
