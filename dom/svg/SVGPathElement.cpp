@@ -27,8 +27,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Path)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGPathElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -400,5 +399,4 @@ bool SVGPathElement::IsDPropertyChangedViaCSS(const ComputedStyle& aNewStyle,
   return aNewStyle.StyleSVGReset()->mD != aOldStyle.StyleSVGReset()->mD;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

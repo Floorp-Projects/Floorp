@@ -16,9 +16,7 @@
 nsresult NS_NewSVGPathElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 using SVGPathElementBase = SVGGeometryElement;
 
@@ -133,7 +131,6 @@ class SVGPathElement final : public SVGPathElementBase {
   SVGAnimatedPathSegList mD;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGPATHELEMENT_H_

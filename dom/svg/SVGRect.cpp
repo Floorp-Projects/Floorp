@@ -13,8 +13,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //----------------------------------------------------------------------
 // nsISupports methods:
@@ -151,5 +150,4 @@ void SVGRect::SetHeight(float aHeight, ErrorResult& aRv) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

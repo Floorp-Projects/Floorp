@@ -12,8 +12,7 @@ using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polyline)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGPolylineElement::WrapNode(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
@@ -50,5 +49,4 @@ already_AddRefed<Path> SVGPolylineElement::BuildPath(PathBuilder* aBuilder) {
   return aBuilder->Finish();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
