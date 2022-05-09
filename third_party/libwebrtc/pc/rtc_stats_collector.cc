@@ -652,6 +652,7 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
       RTC_DCHECK_EQ(rtc::ADAPTER_TYPE_UNKNOWN, candidate.network_type());
     }
     candidate_stats->ip = candidate.address().ipaddr().ToString();
+    candidate_stats->address = candidate.address().ipaddr().ToString();
     candidate_stats->port = static_cast<int32_t>(candidate.address().port());
     candidate_stats->protocol = candidate.protocol();
     candidate_stats->candidate_type =

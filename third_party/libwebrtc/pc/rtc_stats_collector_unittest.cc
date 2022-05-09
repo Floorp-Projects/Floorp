@@ -1083,6 +1083,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_host.transport_id = "RTCTransport_a_0";
   expected_a_local_host.network_type = "vpn";
   expected_a_local_host.ip = "1.2.3.4";
+  expected_a_local_host.address = "1.2.3.4";
   expected_a_local_host.port = 5;
   expected_a_local_host.protocol = "a_local_host's protocol";
   expected_a_local_host.candidate_type = "host";
@@ -1096,6 +1097,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       "RTCIceCandidate_" + a_remote_srflx->id(), 0);
   expected_a_remote_srflx.transport_id = "RTCTransport_a_0";
   expected_a_remote_srflx.ip = "6.7.8.9";
+  expected_a_remote_srflx.address = "6.7.8.9";
   expected_a_remote_srflx.port = 10;
   expected_a_remote_srflx.protocol = "remote_srflx's protocol";
   expected_a_remote_srflx.candidate_type = "srflx";
@@ -1111,6 +1113,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_a_local_prflx.transport_id = "RTCTransport_a_0";
   expected_a_local_prflx.network_type = "cellular";
   expected_a_local_prflx.ip = "11.12.13.14";
+  expected_a_local_prflx.address = "11.12.13.14";
   expected_a_local_prflx.port = 15;
   expected_a_local_prflx.protocol = "a_local_prflx's protocol";
   expected_a_local_prflx.candidate_type = "prflx";
@@ -1125,6 +1128,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       "RTCIceCandidate_" + a_remote_relay->id(), 0);
   expected_a_remote_relay.transport_id = "RTCTransport_a_0";
   expected_a_remote_relay.ip = "16.17.18.19";
+  expected_a_remote_relay.address = "16.17.18.19";
   expected_a_remote_relay.port = 20;
   expected_a_remote_relay.protocol = "a_remote_relay's protocol";
   expected_a_remote_relay.candidate_type = "relay";
@@ -1141,6 +1145,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       "RTCIceCandidate_" + a_local_relay->id(), 0);
   expected_a_local_relay.transport_id = "RTCTransport_a_0";
   expected_a_local_relay.ip = "16.17.18.19";
+  expected_a_local_relay.address = "16.17.18.19";
   expected_a_local_relay.port = 21;
   expected_a_local_relay.protocol = "a_local_relay's protocol";
   expected_a_local_relay.relay_protocol = "tcp";
@@ -1158,6 +1163,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
   expected_b_local.transport_id = "RTCTransport_b_0";
   expected_b_local.network_type = "wifi";
   expected_b_local.ip = "42.42.42.42";
+  expected_b_local.address = "42.42.42.42";
   expected_b_local.port = 42;
   expected_b_local.protocol = "b_local's protocol";
   expected_b_local.candidate_type = "host";
@@ -1172,6 +1178,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidateStats) {
       "RTCIceCandidate_" + b_remote->id(), 0);
   expected_b_remote.transport_id = "RTCTransport_b_0";
   expected_b_remote.ip = "42.42.42.42";
+  expected_b_remote.address = "42.42.42.42";
   expected_b_remote.port = 42;
   expected_b_remote.protocol = "b_remote's protocol";
   expected_b_remote.candidate_type = "host";
@@ -1373,6 +1380,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_local_candidate.transport_id = *expected_pair.transport_id;
   expected_local_candidate.network_type = "wifi";
   expected_local_candidate.ip = "42.42.42.42";
+  expected_local_candidate.address = "42.42.42.42";
   expected_local_candidate.port = 42;
   expected_local_candidate.protocol = "protocol";
   expected_local_candidate.candidate_type = "host";
@@ -1388,6 +1396,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
       *expected_pair.remote_candidate_id, report->timestamp_us());
   expected_remote_candidate.transport_id = *expected_pair.transport_id;
   expected_remote_candidate.ip = "42.42.42.42";
+  expected_remote_candidate.address = "42.42.42.42";
   expected_remote_candidate.port = 42;
   expected_remote_candidate.protocol = "protocol";
   expected_remote_candidate.candidate_type = "host";

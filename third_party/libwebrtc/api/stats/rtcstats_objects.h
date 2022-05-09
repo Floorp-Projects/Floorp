@@ -211,6 +211,7 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   RTCStatsMember<bool> is_remote;
   RTCStatsMember<std::string> network_type;
   RTCStatsMember<std::string> ip;
+  RTCStatsMember<std::string> address;
   RTCStatsMember<int32_t> port;
   RTCStatsMember<std::string> protocol;
   RTCStatsMember<std::string> relay_protocol;
