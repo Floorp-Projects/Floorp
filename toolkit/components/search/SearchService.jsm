@@ -561,6 +561,7 @@ SearchService.prototype = {
     // config. These values will be compared after engines are loaded.
     let prevMetaData = { ...settings?.metaData };
     let prevCurrentEngine = prevMetaData.current;
+    let prevAppDefaultEngine = prevMetaData?.appDefaultEngine;
 
     logConsole.debug("_loadEngines: start");
     let { engines, privateDefault } = await this._fetchEngineSelectorEngines();
@@ -595,26 +596,85 @@ SearchService.prototype = {
 
     logConsole.debug("_loadEngines: done");
 
-    // If the defaultEngine has changed and the user's search settings are the
-    // same, notify user their engine has been removed.
     let newCurrentEngine = this._getEngineDefault(false)?.name;
+    this._settings.setAttribute(
+      "appDefaultEngine",
+      this.originalDefaultEngine?.name
+    );
 
     if (
-      prevCurrentEngine &&
-      newCurrentEngine &&
-      newCurrentEngine !== prevCurrentEngine &&
-      prevMetaData &&
-      settings.metaData &&
-      !this._hasUserMetaDataChanged(prevMetaData) &&
-      Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
+      this._shouldDisplayRemovalOfEngineNotificationBox(
+        settings,
+        prevMetaData,
+        newCurrentEngine,
+        prevCurrentEngine,
+        prevAppDefaultEngine
+      )
     ) {
       this._showRemovalOfSearchEngineNotificationBox(
-        prevCurrentEngine,
+        prevCurrentEngine || prevAppDefaultEngine,
         newCurrentEngine
       );
     }
   },
+  /**
+   * Helper function to determine if the removal of search engine notification
+   * box should be displayed.
+   *
+   * @param { object } settings
+   *   The user's search engine settings.
+   * @param { object } prevMetaData
+   *   The user's previous search settings metadata.
+   * @param { object } newCurrentEngine
+   *   The user's new current default engine.
+   * @param { object } prevCurrentEngine
+   *   The user's previous default engine.
+   * @param { object } prevAppDefaultEngine
+   *   The user's previous app default engine.
+   * @returns { boolean }
+   *   Return true if the previous default engine has been removed and
+   *   notification box should be displayed.
+   */
+  _shouldDisplayRemovalOfEngineNotificationBox(
+    settings,
+    prevMetaData,
+    newCurrentEngine,
+    prevCurrentEngine,
+    prevAppDefaultEngine
+  ) {
+    if (
+      !Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
+    ) {
+      return false;
+    }
 
+    // If for some reason we were unable to install any engines and hence no
+    // default engine, do not display the notification box
+    if (!newCurrentEngine) {
+      return false;
+    }
+
+    // If the user's previous engine is different than the new current engine,
+    // or if the user was using the app default engine and the app default
+    // engine is different than the new current engine, we check if the user's
+    // settings metadata has been upddated.
+    if (
+      (prevCurrentEngine && prevCurrentEngine !== newCurrentEngine) ||
+      (!prevCurrentEngine &&
+        prevAppDefaultEngine &&
+        prevAppDefaultEngine !== newCurrentEngine)
+    ) {
+      // Check settings metadata to detect an update to locale. Sometimes when
+      // the user changes their locale it causes a change in engines.
+      // If there is no update to settings metadata then the engine change was
+      // caused by an update to config rather than a user changing their locale.
+      if (!this._didSettingsMetaDataUpdate(prevMetaData)) {
+        return true;
+      }
+    }
+
+    return false;
+  },
   /**
    * Loads engines as specified by the configuration. We only expect
    * configured engines here, user engines should not be listed.
@@ -840,7 +900,7 @@ SearchService.prototype = {
       if (
         prevMetaData &&
         settings.metaData &&
-        !this._hasUserMetaDataChanged(prevMetaData) &&
+        !this._didSettingsMetaDataUpdate(prevMetaData) &&
         Services.prefs.getBoolPref("browser.search.removeEngineInfobar.enabled")
       ) {
         this._showRemovalOfSearchEngineNotificationBox(
@@ -902,6 +962,13 @@ SearchService.prototype = {
       }
       SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.REMOVED);
     }
+
+    // Save app default engine to the user's settings metaData incase it has
+    // been updated
+    this._settings.setAttribute(
+      "appDefaultEngine",
+      this.originalDefaultEngine?.name
+    );
 
     this._dontSetUseSavedOrder = false;
     // Clear out the sorted engines settings, so that we re-sort it if necessary.
@@ -2875,7 +2942,7 @@ SearchService.prototype = {
    *    Returns true if metaData has different property values than
    *    the cached _metaData.
    */
-  _hasUserMetaDataChanged(metaData) {
+  _didSettingsMetaDataUpdate(metaData) {
     let metaDataProperties = [
       "locale",
       "region",
