@@ -6,6 +6,15 @@
      with the name of the browser application (e.g. Firefox) -->
     <string name="mozac_feature_autofill_popup_unlock_application">%1$s اݨ لاک کرو</string>
 
+    <!-- Autofill: Text shown in popup in third-party app if we found a matching account, but no
+    username is saved (e.g. we only have a password). This text will be shown in place where otherwise
+    the username would be displayed. -->
+    <string name="mozac_feature_autofill_popup_no_username">(ورتݨ ناں کوئی کائنی)</string>
+
+    <!-- Autofill: Text shown in popup in third-party app to autofill the password for an account.
+    %1$s will be replaced with the login/username of the account. -->
+    <string name="mozac_feature_autofill_popup_password">%1$s کیتے پاس ورڈ</string>
+
     <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
     a third-party app after the authenticity verification failed. -->
     <string name="mozac_feature_autofill_confirmation_title">پڑتال ناکام تھی ڳئی</string>

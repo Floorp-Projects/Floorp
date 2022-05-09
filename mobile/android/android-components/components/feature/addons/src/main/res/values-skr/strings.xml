@@ -36,12 +36,18 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ کنوں ڈیٹا گھنو</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">کلپ بورڈ وچ ڈیٹا پاؤ</string>
+    <!-- Description for downloads_open permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_open_description">آپݨے ڈیوائس تے ڈاؤن لوڈ تھیاں فائلاں کھولو</string>
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">سارے کھلے ٹیباں دی عبارت پڑھو</string>
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">آپݨے مقام تائیں اپڑو</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">براؤزنگ تاریخ تے اپڑو</string>
+    <!-- Description for proxy permission. -->
+    <string name="mozac_feature_addons_permissions_proxy_description">براؤزر دیاں پراکسی ترتیباں کوں کنٹرول کرو</string>
+    <!-- Description for sessions permission. -->
+    <string name="mozac_feature_addons_permissions_sessions_description">حالیہ بند تھیاں ٹیباں تے اپڑو</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ تاریخ تے اپڑو</string>
     <!-- The version on of add-on. -->
@@ -108,6 +114,12 @@
     <string name="mozac_feature_addons_updater_notification_allow_button">اجازت ݙیوو</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
     <string name="mozac_feature_addons_updater_notification_deny_button">انکار کرو</string>
+    <!-- The tile of the notification, this will be shown to the user when an add-on needs new permissions, to be updated. %1$s is the name of the add-ons-->
+    <string name="mozac_feature_addons_updater_notification_title">%1$s کیتے ہک نویں اپ ڈیٹ ہے</string>
+    <!-- The content of the notification, this will be shown when an add-on needs new permissions, to be updated. %1$d is the amount of new permissions-->
+    <string name="mozac_feature_addons_updater_notification_content" tools:ignore="PluralsCandidate">%1$d کوں نویاں اجازتاں دی لوڑ ہے</string>
+    <!-- The content of the notification displayed when an add-on needs a new permission-->
+    <string name="mozac_feature_addons_updater_notification_content_singular">نویں اجازت ضروری ہے</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">ایڈ ــ آن اپ ڈیٹاں</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
@@ -120,6 +132,26 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s تے %2$s کوں %3$s وچ جوڑو</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">اُنہاں کوں %1$s وچ شامل کرو</string>
+    <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_installed">%1$s کامیابی نال انسٹال تھی ڳیا</string>
+    <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_install">%1$s انسٹال تھیوݨ وچ ناکام تھیا</string>
+    <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_enabled">%1$s کامیابی نال فعال تھی ڳیا</string>
+    <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_enable">%1$s فعال کرݨ وچ ناکام تھیا</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled">%1$s کامیابی نال غیرفعال تھی ڳیا</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s  غیرفعال کرݨ وچ ناکام تھیا</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s کامیابی نال اݨ انسٹال تھی ڳیا</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s اݨ انسٹال تھیوݨ وچ ناکام تھیا</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s کامیابی نال ہٹ ڳیا</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s ہٹاوݨ وچ ناکام تھیا</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption"> 1 ایڈ ــ آن</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -136,6 +168,8 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">چھیکڑی کوشش:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">حیثیت:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%2$s وچ %1$s شامل تھی ڳیا ہے</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">ایں کوں مینیو وچ کھولو</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->

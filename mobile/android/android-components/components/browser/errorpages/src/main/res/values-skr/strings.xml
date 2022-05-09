@@ -14,6 +14,14 @@
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسہ کنکشن ناکام تھی ڳیا</string>
 
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو موصول ڈیٹا  دی اصلیت دی تصدیق کائنی تھی سڳی۔</li> 
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">قابل بھروسہ کنکشن ناکام تھی ڳیا</string>
 
@@ -91,6 +99,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">پتہ ٹھیک کائنی</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ویب پتے عمومی طور تے این٘ویں <strong>http://www.example.com/</strong> لکھے ویندے ہن </li>
+        <li>یقینی بݨاؤ جو تساں فارورڈ سلیشیز (جین٘ویں <strong>/</strong>) ورتندے پئے ہو۔</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">نامعلوم پروٹوکول</string>
