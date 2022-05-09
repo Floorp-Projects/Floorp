@@ -112,6 +112,25 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   PushService: ["@mozilla.org/push/Service;1", "nsIPushService"],
 });
 
+if (AppConstants.ENABLE_WEBDRIVER) {
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "Marionette",
+    "@mozilla.org/remote/marionette;1",
+    "nsIMarionette"
+  );
+
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "RemoteAgent",
+    "@mozilla.org/remote/agent;1",
+    "nsIRemoteAgent"
+  );
+} else {
+  this.Marionette = { running: false };
+  this.RemoteAgent = { running: false };
+}
+
 const PREF_PDFJS_ISDEFAULT_CACHE_STATE = "pdfjs.enabledCache.state";
 const PREF_DFPI_ENABLED_BY_DEFAULT =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
@@ -2680,10 +2699,8 @@ BrowserGlue.prototype = {
           // `UpdateService.disabledForTesting`, but without creating the
           // service, which can perform a good deal of I/O in order to log its
           // state.  Since this is in the startup path, we avoid all of that.
-          // We also don't test for Marionette and Remote Agent since they are
-          // not yet initialized.
           let disabledForTesting =
-            Cu.isInAutomation &&
+            (Cu.isInAutomation || Marionette.running || RemoteAgent.running) &&
             Services.prefs.getBoolPref("app.update.disabledForTesting", false);
           if (!disabledForTesting) {
             BackgroundUpdate.maybeScheduleBackgroundUpdateTask();
@@ -2732,10 +2749,7 @@ BrowserGlue.prototype = {
         },
       },
 
-      // WebDriver components (Marionette) need to be
-      // initialized as very last step.
       {
-        condition: AppConstants.ENABLE_WEBDRIVER,
         task: () => {
           // Use idleDispatch a second time to run this after the per-window
           // idle tasks.
@@ -2744,12 +2758,10 @@ BrowserGlue.prototype = {
               null,
               "browser-startup-idle-tasks-finished"
             );
-
-            Services.obs.notifyObservers(null, "marionette-startup-requested");
           });
         },
       },
-      // Do NOT add anything after WebDriver initialization.
+      // Do NOT add anything after idle tasks finished.
     ];
 
     for (let task of idleTasks) {
