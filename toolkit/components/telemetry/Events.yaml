@@ -467,7 +467,7 @@ downloads:
       - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
-    expiry_version: "103"
+    expiry_version: "109"
 
 form_autocomplete:
   show:
