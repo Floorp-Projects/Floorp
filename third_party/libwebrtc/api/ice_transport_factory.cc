@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "p2p/base/ice_transport_internal.h"
+#include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
 #include "p2p/base/port_allocator.h"
 #include "rtc_base/thread.h"
@@ -59,8 +60,8 @@ rtc::scoped_refptr<IceTransportInterface> CreateIceTransport(
     IceTransportInit init) {
   return new rtc::RefCountedObject<IceTransportWithTransportChannel>(
       std::make_unique<cricket::P2PTransportChannel>(
-          "", 0, init.port_allocator(), init.async_resolver_factory(),
-          init.event_log()));
+          "", cricket::ICE_CANDIDATE_COMPONENT_RTP, init.port_allocator(),
+          init.async_resolver_factory(), init.event_log()));
 }
 
 }  // namespace webrtc
