@@ -12,8 +12,7 @@
 #include "nsThreadUtils.h"
 #include "ServiceWorkerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ServiceWorkerJob::Type ServiceWorkerJob::GetType() const { return mType; }
 
@@ -218,5 +217,4 @@ void ServiceWorkerJob::Finish(nsresult aRv) {
   Finish(converted);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

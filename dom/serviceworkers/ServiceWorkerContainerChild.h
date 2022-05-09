@@ -12,8 +12,7 @@
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class RemoteServiceWorkerContainerImpl;
 
@@ -43,7 +42,6 @@ class ServiceWorkerContainerChild final : public PServiceWorkerContainerChild {
   void MaybeStartTeardown();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkercontainerchild_h__
