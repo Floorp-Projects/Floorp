@@ -5643,11 +5643,11 @@ pub trait SceneBuilderHooks {
     /// This is called before each scene build starts.
     fn pre_scene_build(&self);
     /// This is called before each scene swap occurs.
-    fn pre_scene_swap(&self);
+    fn pre_scene_swap(&self, scenebuild_time: u64);
     /// This is called after each scene swap occurs. The PipelineInfo contains
     /// the updated epochs and pipelines removed in the new scene compared to
     /// the old scene.
-    fn post_scene_swap(&self, document_id: &Vec<DocumentId>, info: PipelineInfo);
+    fn post_scene_swap(&self, document_id: &Vec<DocumentId>, info: PipelineInfo, sceneswap_time: u64);
     /// This is called after a resource update operation on the scene builder
     /// thread, in the case where resource updates were applied without a scene
     /// build.
