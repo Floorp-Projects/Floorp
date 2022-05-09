@@ -5,7 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var EXPORTED_SYMBOLS = ["ExtensionTelemetry", "getTrimmedString"];
+var EXPORTED_SYMBOLS = [
+  "ExtensionTelemetry",
+  "getTrimmedString",
+  "getErrorNameForTelemetry",
+];
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -50,6 +54,36 @@ function getTrimmedString(str) {
   // the trimmed version is going to be composed by the first 40 chars and the last 37 and 3 dots
   // that joins the two parts, to visually indicate that the string has been trimmed.
   return `${str.slice(0, 40)}...${str.slice(length - 37, length)}`;
+}
+
+/**
+ * Get a string representing the error which can be included in telemetry data.
+ * If the resulting string is longer than 80 characters it is going to be
+ * trimmed using the `getTrimmedString` helper function.
+ *
+ * @param {Error | DOMException | Components.Exception} error
+ *        The error object to convert into a string representation.
+ *
+ * @returns {string}
+ *          - The `error.name` string on DOMException or Components.Exception
+ *            (trimmed to 80 chars).
+ *          - "NoError" if error is falsey.
+ *          - "UnkownError" as a fallback.
+ */
+function getErrorNameForTelemetry(error) {
+  let text = "UnknownError";
+  if (!error) {
+    text = "NoError";
+  } else if (
+    DOMException.isInstance(error) ||
+    error instanceof Components.Exception
+  ) {
+    text = error.name;
+    if (text.length > 80) {
+      text = getTrimmedString(text);
+    }
+  }
+  return text;
 }
 
 /**
