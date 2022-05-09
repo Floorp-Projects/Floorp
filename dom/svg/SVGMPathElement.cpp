@@ -19,8 +19,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(MPath)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGMPathElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -250,5 +249,4 @@ void SVGMPathElement::NotifyParentOfMpathChange(nsIContent* aParent) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

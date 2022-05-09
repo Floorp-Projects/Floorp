@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FETile)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFETileElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -72,5 +71,4 @@ nsresult SVGFETileElement::BindToTree(BindContext& aCtx, nsINode& aParent) {
   return SVGFE::BindToTree(aCtx, aParent);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

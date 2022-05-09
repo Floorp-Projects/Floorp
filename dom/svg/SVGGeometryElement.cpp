@@ -23,8 +23,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {nsGkAtoms::pathLength,
                                                           0, false};
@@ -303,5 +302,4 @@ void SVGGeometryElement::FlushStyleIfNeeded() {
   doc->FlushPendingNotifications(FlushType::Style);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
