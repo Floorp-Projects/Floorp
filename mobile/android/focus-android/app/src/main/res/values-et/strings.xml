@@ -569,7 +569,253 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
     <string name="your_rights_content1"><![CDATA[%1$s on Mozilla ja teiste kaasautorite poolt loodud vaba ja avatud tarkvara.]]></string>
 
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s on kättesaadavaks tehtud <a href="%2$s">Mozilla avaliku litsentsi</a> ja muude avatud lähtekoodi litsentside tingimuste alusel.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Sulle ei anta mingeid õigusi ega litsentse Mozilla Foundationi ega ühegi osapoole kaubamärkidele, sealhulgas Mozilla, Firefoxi või %1$se nimedele või logodele. <a href="%2$s">Lisateave</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[%1$se täiendav lähtekood on saadaval mitmesuguste vaba ja avatud lähtekoodi <a href="%2$s">litsentside</a> alusel.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s kasutab ka Disconnect, Inc. poolt pakutavat blokkimise nimekirja kui eraldiseisvat ja sõltumatut tööd <a href="%2$s">GNU GPL v3 litsentsi</a> all, mis on saadaval <a href="%3$s">siin</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Kasutajanimi</string>
+    <string name="gv_prompt_password_hint">Parool</string>
+    <string name="gv_prompt_clear">Tühjenda</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Turvaline ühendus</string>
+    <string name="security_popup_insecure_connection">Ebaturvaline ühendus</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Verifitseerija: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Saidi turvalisus</string>
+
+    <string name="preference_autocomplete_duplicate_url_error">URL on juba olemas</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Otsi lehelt</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Otsi lehelt</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">tulemus %1$d, kokku %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Leia järgmine tulemus</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Leia eelmine tulemus</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Katkesta otsimine</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Töölaua versioon</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Töölaua versioon</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL kopeeritud</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Arendaja tööriistad</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Lingid avatakse äppides</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Edasijõudnuile</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Saitide õigused</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Automaatne esitamine</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Lubamiseks:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Mine Androidi sätetesse</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Puuduta <b>Load</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Mine sätetesse</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Lülita <b>%1$s</b> olekusse SEES]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kaamera</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikrofon</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Asukoht</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Teavitused</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRMiga kaitstud sisu</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Alati küsitakse</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blokitud</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Lubatud</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Keelatud Androidi poolt</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Heli ja video on lubatud</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokitakse ainult heli</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Soovitatud</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokitakse heli ja video</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Uuringud</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox võib aegajalt paigaldada ja käivitada uuringuid.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Rohkem teavet</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Muudatuste rakendamiseks äpp suletakse</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Eemalda</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiivne</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Lõpetatud</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Kaugsilumine USB/Wi-Fi kaudu</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">Lukusta %1$s lahti</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">Jätkamiseks puuduta sõrmejäljeandurit.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">Uus seanss</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Ava link uues seansis</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Sõrmejälje ikoon</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Sõrmejälge ei tuvastatud. Proovi uuesti.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Sõrm liikus liiga kiiresti. Proovi uuesti.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Kas kuvada otsingusoovitusi?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Soovituste saamiseks peab %1$s saatma aadressiribale sisestatud teksti otsingumootorile.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Ei</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Jah</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Mõnedel otsingumootoritel pole võimalik soovitusi kuvada.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Peida</string>
+
     <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Kas sait käitub ootamatult?\n
+    Proovi jälitamisvastane kaitse välja lülitada</string>
+
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Saidil on sisu puudu või käitub imelikult?\n
+    Proovi jälitamisvastane kaitse välja lülitada</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Saa ühe puudutusega ligipääs saitidele, mida enim %1$ses kasutad. Menüü > Lisa avaekraanile]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Ava kõik lingid %1$ses\n
+        Määra %1$s vaikebrauseriks
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Lõpeta enimkülastatud saitide URLid automaatselt\n
+        Puuduta pikalt mis tahes URLi aadressiribal
+    </string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Ava link uuel kaardil\n
+        Puuduta pikalt mis tahes linki lehel
+    </string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Soovid näha saidi täisversiooni?\n
+        Lülitu %1$se menüüst töölaua versioonile</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Lülita näpunäited avakuval välja</string>
 
     <!-- Tracking protection bottom sheet -->
 

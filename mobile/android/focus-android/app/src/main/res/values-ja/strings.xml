@@ -700,7 +700,7 @@
     <string name="preference_phone_feature_microphone">マイク</string>
 
     <!-- Preference for altering the location access for all websites -->
-    <string name="preference_phone_feature_location">URL</string>
+    <string name="preference_phone_feature_location">位置情報</string>
 
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">通知</string>

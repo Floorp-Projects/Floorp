@@ -683,6 +683,12 @@
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Sijainti</string>
 
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Estetty</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Sallittu</string>
+
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Estetty Androidin toimesta</string>
 

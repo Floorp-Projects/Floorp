@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -462,7 +462,17 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Onboarding: Title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_title">%1$s میں خوش آمدید!</string>
+
+    <!-- Onboarding: History Title -->
+    <string name="onboarding_history_title">براؤز کریں جیسے ایسا کبھی نہیں ہوا۔</string>
+
+    <!-- Onboarding: Start browsing -->
+    <string name="onboarding_start_browsing">براؤزنگ شروع کریں</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">آپ کی نجی نوعیت کو پاور اپ کرے</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">نجی برائوزنگ کو اگلی سطح پر لے کر جائیں۔ اشتہارات اور دیگر مواد جو آپ کی مختلف سائٹ پر سراغ راہ کاری کر کے صفحہ کہ لوڈ ہوبے کے وقت کو سست کر سکتا ہے۔</string>
@@ -584,6 +594,45 @@
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">آٹو پلے</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">اس کی اجازت دینے کے لئے:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android کی سیٹنگز پر جائیں</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>اجازتوں</b> پر دبایں]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">سیٹنگز پر جائیں</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> کو چالو کرنے کے لئے ٹو گل کریں]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">کیمرہ</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">مائیکروفون</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">محل وقوع</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">اعلانات</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">اجازت کے لئے پوچھیں</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">بلاک کیا گیا</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">اجازت ہے</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android کے ذریعہ مسدود ہے</string>
+
     <!-- Preference for allow autoplay audio and video-->
     <string name="preference_allow_audio_video_autoplay">آڈیو اور ویڈیو کی اجازت دیں</string>
 
@@ -592,6 +641,9 @@
 
     <!-- Preference summary for block autoplay audio only-->
     <string name="preference_block_autoplay_audio_only_summary">تجویز کردہ</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">آڈیو اور ویڈیو کو مسدود کریں</string>
 
     <!-- Preference for studies -->
     <string name="preference_studies">مطالعہ</string>
@@ -757,4 +809,14 @@
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ٹیب بند کریں</string>
-</resources>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">پاپ اپ بند کریں۔</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">آپ محفوظ ہیں!</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">برخاست کریں</string>
+
+    </resources>
