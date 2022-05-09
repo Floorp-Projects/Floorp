@@ -42,10 +42,9 @@ class AudioSink : private AudioStream::DataSource {
 
   ~AudioSink();
 
-  // Start audio playback and return a promise which will be resolved when the
-  // playback finishes, or return an error result if any error occurs.
-  Result<already_AddRefed<MediaSink::EndedPromise>, nsresult> Start(
-      const PlaybackParams& aParams);
+  // Start audio playback.
+  nsresult Start(const PlaybackParams& aParams,
+                 MozPromiseHolder<MediaSink::EndedPromise>& aEndedPromise);
 
   /*
    * All public functions are not thread-safe.
@@ -61,8 +60,10 @@ class AudioSink : private AudioStream::DataSource {
   // The duration of the buffered frames.
   media::TimeUnit UnplayedDuration() const;
 
-  // Shut down the AudioSink's resources.
-  void Shutdown();
+  // Shut down the AudioSink's resources. If an AudioStream existed, return the
+  // ended promise it had, if it's shutting down-mid stream becaues it's muting.
+  Maybe<MozPromiseHolder<MediaSink::EndedPromise>> Shutdown(
+      ShutdownCause aShutdownCause = ShutdownCause::Regular);
 
   void SetVolume(double aVolume);
   void SetStreamName(const nsAString& aStreamName);
@@ -86,6 +87,15 @@ class AudioSink : private AudioStream::DataSource {
   uint32_t PopFrames(AudioDataValue* aBuffer, uint32_t aFrames,
                      bool aAudioThreadChanged) override;
   bool Ended() const override;
+
+  // When shutting down, it's important to not lose any audio data, it might be
+  // still of use, in two scenarios:
+  // - If the audio is now captured to a MediaStream, whatever is enqueued in
+  // the ring buffer needs to be played out now ;
+  // - If the AudioSink is shutting down because the audio is muted, it's
+  // important to keep the audio around in case it's quickly unmuted,
+  // and in general to keep A/V sync correct when unmuted.
+  void ReenqueueUnplayedAudioDataIfNeeded();
 
   void CheckIsAudible(const Span<AudioDataValue>& aInterleaved,
                       size_t aChannel);
