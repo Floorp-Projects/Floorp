@@ -11,8 +11,7 @@
 #include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DataTransfer;
 
@@ -47,8 +46,7 @@ class DragEvent : public MouseEvent {
   ~DragEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::DragEvent> NS_NewDOMDragEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
