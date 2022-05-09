@@ -18,7 +18,7 @@
 namespace webrtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame) {
+    std::unique_ptr<RtpFrameObject> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
   RtpFrameReferenceFinder::ReturnVector res;
@@ -40,7 +40,7 @@ RtpFrameReferenceFinder::ReturnVector RtpVp9RefFinder::ManageFrame(
 }
 
 RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
-    video_coding::RtpFrameObject* frame) {
+    RtpFrameObject* frame) {
   const RTPVideoHeader& video_header = frame->GetRtpVideoHeader();
   const RTPVideoHeaderVP9& codec_header =
       absl::get<RTPVideoHeaderVP9>(video_header.video_type_header);
@@ -57,8 +57,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
     last_picture_id_ = frame->Id();
 
   if (codec_header.flexible_mode) {
-    if (codec_header.num_ref_pics >
-        video_coding::EncodedFrame::kMaxFrameReferences) {
+    if (codec_header.num_ref_pics > EncodedFrame::kMaxFrameReferences) {
       return kDrop;
     }
     frame->num_references = codec_header.num_ref_pics;
@@ -179,8 +178,7 @@ RtpVp9RefFinder::FrameDecision RtpVp9RefFinder::ManageFrameInternal(
       ForwardDiff<uint16_t, kFrameIdLength>(info->gof->pid_start, frame->Id());
   size_t gof_idx = diff % info->gof->num_frames_in_gof;
 
-  if (info->gof->num_ref_pics[gof_idx] >
-      video_coding::EncodedFrame::kMaxFrameReferences) {
+  if (info->gof->num_ref_pics[gof_idx] > EncodedFrame::kMaxFrameReferences) {
     return kDrop;
   }
   // Populate references according to the scalability structure.
@@ -324,7 +322,7 @@ void RtpVp9RefFinder::RetryStashedFrames(
   } while (complete_frame);
 }
 
-void RtpVp9RefFinder::FlattenFrameIdAndRefs(video_coding::RtpFrameObject* frame,
+void RtpVp9RefFinder::FlattenFrameIdAndRefs(RtpFrameObject* frame,
                                             bool inter_layer_predicted) {
   for (size_t i = 0; i < frame->num_references; ++i) {
     frame->references[i] =
@@ -335,8 +333,7 @@ void RtpVp9RefFinder::FlattenFrameIdAndRefs(video_coding::RtpFrameObject* frame,
                *frame->SpatialIndex());
 
   if (inter_layer_predicted &&
-      frame->num_references + 1 <=
-          video_coding::EncodedFrame::kMaxFrameReferences) {
+      frame->num_references + 1 <= EncodedFrame::kMaxFrameReferences) {
     frame->references[frame->num_references] = frame->Id() - 1;
     ++frame->num_references;
   }

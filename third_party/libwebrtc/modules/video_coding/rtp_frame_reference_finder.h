@@ -25,8 +25,7 @@ class RtpFrameReferenceFinderImpl;
 class OnCompleteFrameCallback {
  public:
   virtual ~OnCompleteFrameCallback() {}
-  virtual void OnCompleteFrame(
-      std::unique_ptr<video_coding::EncodedFrame> frame) = 0;
+  virtual void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) = 0;
 };
 
 // TODO(bugs.webrtc.org/12579): Remove when downstream has been update.
@@ -36,8 +35,7 @@ using OnCompleteFrameCallback = webrtc::OnCompleteFrameCallback;
 
 class RtpFrameReferenceFinder {
  public:
-  using ReturnVector =
-      absl::InlinedVector<std::unique_ptr<video_coding::RtpFrameObject>, 3>;
+  using ReturnVector = absl::InlinedVector<std::unique_ptr<RtpFrameObject>, 3>;
 
   explicit RtpFrameReferenceFinder(OnCompleteFrameCallback* frame_callback);
   explicit RtpFrameReferenceFinder(OnCompleteFrameCallback* frame_callback,
@@ -50,7 +48,7 @@ class RtpFrameReferenceFinder {
   //  - We have too many stashed frames (determined by |kMaxStashedFrames|)
   //    so we drop this frame, or
   //  - It gets cleared by ClearTo, which also means we drop it.
-  void ManageFrame(std::unique_ptr<video_coding::RtpFrameObject> frame);
+  void ManageFrame(std::unique_ptr<RtpFrameObject> frame);
 
   // Notifies that padding has been received, which the reference finder
   // might need to calculate the references of a frame.

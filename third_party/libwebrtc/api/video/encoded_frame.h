@@ -17,7 +17,6 @@
 #include "modules/video_coding/encoded_frame.h"
 
 namespace webrtc {
-namespace video_coding {
 
 // TODO(philipel): Remove webrtc::VCMEncodedFrame inheritance.
 // TODO(philipel): Move transport specific info out of EncodedFrame.
@@ -60,7 +59,11 @@ class EncodedFrame : public webrtc::VCMEncodedFrame {
   int64_t id_ = -1;
 };
 
+// TODO(bugs.webrtc.org/12579): Remove when downstream has been updated.
+namespace video_coding {
+using ::webrtc::EncodedFrame;
 }  // namespace video_coding
+
 }  // namespace webrtc
 
 #endif  // API_VIDEO_ENCODED_FRAME_H_

@@ -17,7 +17,7 @@
 namespace webrtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame) {
+    std::unique_ptr<RtpFrameObject> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
   RtpFrameReferenceFinder::ReturnVector res;
@@ -39,8 +39,7 @@ RtpFrameReferenceFinder::ReturnVector RtpSeqNumOnlyRefFinder::ManageFrame(
 }
 
 RtpSeqNumOnlyRefFinder::FrameDecision
-RtpSeqNumOnlyRefFinder::ManageFrameInternal(
-    video_coding::RtpFrameObject* frame) {
+RtpSeqNumOnlyRefFinder::ManageFrameInternal(RtpFrameObject* frame) {
   if (frame->frame_type() == VideoFrameType::kVideoFrameKey) {
     last_seq_num_gop_.insert(std::make_pair(
         frame->last_seq_num(),

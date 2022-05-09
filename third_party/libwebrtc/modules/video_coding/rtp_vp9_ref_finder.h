@@ -28,7 +28,7 @@ class RtpVp9RefFinder {
   RtpVp9RefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame);
+      std::unique_ptr<RtpFrameObject> frame);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -48,7 +48,7 @@ class RtpVp9RefFinder {
     uint16_t last_picture_id;
   };
 
-  FrameDecision ManageFrameInternal(video_coding::RtpFrameObject* frame);
+  FrameDecision ManageFrameInternal(RtpFrameObject* frame);
   void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
 
   bool MissingRequiredFrameVp9(uint16_t picture_id, const GofInfo& info);
@@ -58,8 +58,7 @@ class RtpVp9RefFinder {
                              uint8_t temporal_idx,
                              uint16_t pid_ref);
 
-  void FlattenFrameIdAndRefs(video_coding::RtpFrameObject* frame,
-                             bool inter_layer_predicted);
+  void FlattenFrameIdAndRefs(RtpFrameObject* frame, bool inter_layer_predicted);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.
@@ -67,7 +66,7 @@ class RtpVp9RefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<video_coding::RtpFrameObject>> stashed_frames_;
+  std::deque<std::unique_ptr<RtpFrameObject>> stashed_frames_;
 
   // Where the current scalability structure is in the
   // |scalability_structures_| array.

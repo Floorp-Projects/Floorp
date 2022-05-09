@@ -25,7 +25,6 @@ using ::testing::SizeIs;
 using ::testing::UnorderedElementsAreArray;
 
 namespace webrtc {
-namespace video_coding {
 namespace {
 
 MATCHER_P2(HasIdAndRefs, id, refs, "") {
@@ -34,7 +33,7 @@ MATCHER_P2(HasIdAndRefs, id, refs, "") {
              rtc::ArrayView<int64_t>(arg->references, arg->num_references));
 }
 
-Matcher<const std::vector<std::unique_ptr<video_coding::EncodedFrame>>&>
+Matcher<const std::vector<std::unique_ptr<EncodedFrame>>&>
 HasFrameWithIdAndRefs(int64_t frame_id, const std::vector<int64_t>& refs) {
   return Contains(HasIdAndRefs(frame_id, refs));
 }
@@ -66,7 +65,7 @@ class Frame {
     return *this;
   }
 
-  operator std::unique_ptr<video_coding::RtpFrameObject>() {
+  operator std::unique_ptr<RtpFrameObject>() {
     RTPVideoHeaderVP8 vp8_header{};
     vp8_header.pictureId = *picture_id_;
     vp8_header.temporalIdx = *temporal_id_;
@@ -78,7 +77,7 @@ class Frame {
                                            : VideoFrameType::kVideoFrameDelta;
     video_header.video_type_header = vp8_header;
     // clang-format off
-    return std::make_unique<video_coding::RtpFrameObject>(
+    return std::make_unique<RtpFrameObject>(
         /*seq_num_start=*/0,
         /*seq_num_end=*/0,
         /*markerBit=*/true,
@@ -113,14 +112,14 @@ class RtpVp8RefFinderTest : public ::testing::Test {
  protected:
   RtpVp8RefFinderTest() : ref_finder_(std::make_unique<RtpVp8RefFinder>()) {}
 
-  void Insert(std::unique_ptr<video_coding::RtpFrameObject> frame) {
+  void Insert(std::unique_ptr<RtpFrameObject> frame) {
     for (auto& f : ref_finder_->ManageFrame(std::move(frame))) {
       frames_.push_back(std::move(f));
     }
   }
 
   std::unique_ptr<RtpVp8RefFinder> ref_finder_;
-  std::vector<std::unique_ptr<video_coding::EncodedFrame>> frames_;
+  std::vector<std::unique_ptr<EncodedFrame>> frames_;
 };
 
 TEST_F(RtpVp8RefFinderTest, Vp8RepeatedFrame_0) {
@@ -358,5 +357,4 @@ TEST_F(RtpVp8RefFinderTest, Vp8DetectMissingFrame_0212) {
   EXPECT_THAT(frames_, HasFrameWithIdAndRefs(8, {5, 6, 7}));
 }
 
-}  // namespace video_coding
 }  // namespace webrtc

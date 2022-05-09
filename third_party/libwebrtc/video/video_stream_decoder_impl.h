@@ -37,7 +37,7 @@ class VideoStreamDecoderImpl : public VideoStreamDecoderInterface {
 
   ~VideoStreamDecoderImpl() override;
 
-  void OnFrame(std::unique_ptr<video_coding::EncodedFrame> frame) override;
+  void OnFrame(std::unique_ptr<EncodedFrame> frame) override;
 
   void SetMinPlayoutDelay(TimeDelta min_delay) override;
   void SetMaxPlayoutDelay(TimeDelta max_delay) override;
@@ -69,11 +69,10 @@ class VideoStreamDecoderImpl : public VideoStreamDecoderInterface {
     VideoContentType content_type;
   };
 
-  void SaveFrameInfo(const video_coding::EncodedFrame& frame)
-      RTC_RUN_ON(bookkeeping_queue_);
+  void SaveFrameInfo(const EncodedFrame& frame) RTC_RUN_ON(bookkeeping_queue_);
   FrameInfo* GetFrameInfo(int64_t timestamp) RTC_RUN_ON(bookkeeping_queue_);
   void StartNextDecode() RTC_RUN_ON(bookkeeping_queue_);
-  void OnNextFrameCallback(std::unique_ptr<video_coding::EncodedFrame> frame,
+  void OnNextFrameCallback(std::unique_ptr<EncodedFrame> frame,
                            video_coding::FrameBuffer::ReturnReason res)
       RTC_RUN_ON(bookkeeping_queue_);
   void OnDecodedFrameCallback(VideoFrame& decodedImage,  // NOLINT
@@ -82,8 +81,7 @@ class VideoStreamDecoderImpl : public VideoStreamDecoderInterface {
 
   VideoDecoder* GetDecoder(int payload_type) RTC_RUN_ON(decode_queue_);
   VideoStreamDecoderImpl::DecodeResult DecodeFrame(
-      std::unique_ptr<video_coding::EncodedFrame> frame)
-      RTC_RUN_ON(decode_queue_);
+      std::unique_ptr<EncodedFrame> frame) RTC_RUN_ON(decode_queue_);
 
   VCMTiming timing_;
   DecodeCallbacks decode_callbacks_;

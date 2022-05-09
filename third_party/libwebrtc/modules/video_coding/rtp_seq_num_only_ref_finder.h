@@ -29,7 +29,7 @@ class RtpSeqNumOnlyRefFinder {
   RtpSeqNumOnlyRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame);
+      std::unique_ptr<RtpFrameObject> frame);
   RtpFrameReferenceFinder::ReturnVector PaddingReceived(uint16_t seq_num);
   void ClearTo(uint16_t seq_num);
 
@@ -39,7 +39,7 @@ class RtpSeqNumOnlyRefFinder {
 
   enum FrameDecision { kStash, kHandOff, kDrop };
 
-  FrameDecision ManageFrameInternal(video_coding::RtpFrameObject* frame);
+  FrameDecision ManageFrameInternal(RtpFrameObject* frame);
   void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
   void UpdateLastPictureIdWithPadding(uint16_t seq_num);
 
@@ -58,7 +58,7 @@ class RtpSeqNumOnlyRefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<video_coding::RtpFrameObject>> stashed_frames_;
+  std::deque<std::unique_ptr<RtpFrameObject>> stashed_frames_;
 
   // Unwrapper used to unwrap generic RTP streams. In a generic stream we derive
   // a picture id from the packet sequence number.

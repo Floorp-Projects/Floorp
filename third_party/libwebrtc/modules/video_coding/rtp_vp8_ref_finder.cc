@@ -17,7 +17,7 @@
 namespace webrtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame) {
+    std::unique_ptr<RtpFrameObject> frame) {
   FrameDecision decision = ManageFrameInternal(frame.get());
 
   RtpFrameReferenceFinder::ReturnVector res;
@@ -39,7 +39,7 @@ RtpFrameReferenceFinder::ReturnVector RtpVp8RefFinder::ManageFrame(
 }
 
 RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
-    video_coding::RtpFrameObject* frame) {
+    RtpFrameObject* frame) {
   const RTPVideoHeader& video_header = frame->GetRtpVideoHeader();
   const RTPVideoHeaderVP8& codec_header =
       absl::get<RTPVideoHeaderVP8>(video_header.video_type_header);
@@ -178,7 +178,7 @@ RtpVp8RefFinder::FrameDecision RtpVp8RefFinder::ManageFrameInternal(
   return kHandOff;
 }
 
-void RtpVp8RefFinder::UpdateLayerInfoVp8(video_coding::RtpFrameObject* frame,
+void RtpVp8RefFinder::UpdateLayerInfoVp8(RtpFrameObject* frame,
                                          int64_t unwrapped_tl0,
                                          uint8_t temporal_idx) {
   auto layer_info_it = layer_info_.find(unwrapped_tl0);
@@ -226,7 +226,7 @@ void RtpVp8RefFinder::RetryStashedFrames(
   } while (complete_frame);
 }
 
-void RtpVp8RefFinder::UnwrapPictureIds(video_coding::RtpFrameObject* frame) {
+void RtpVp8RefFinder::UnwrapPictureIds(RtpFrameObject* frame) {
   for (size_t i = 0; i < frame->num_references; ++i)
     frame->references[i] = unwrapper_.Unwrap(frame->references[i]);
   frame->SetId(unwrapper_.Unwrap(frame->Id()));

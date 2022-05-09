@@ -27,7 +27,7 @@ class RtpFrameReferenceFinderImpl {
   RtpFrameReferenceFinderImpl() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame);
+      std::unique_ptr<RtpFrameObject> frame);
   RtpFrameReferenceFinder::ReturnVector PaddingReceived(uint16_t seq_num);
   void ClearTo(uint16_t seq_num);
 
@@ -45,7 +45,7 @@ class RtpFrameReferenceFinderImpl {
 };
 
 RtpFrameReferenceFinder::ReturnVector RtpFrameReferenceFinderImpl::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame) {
+    std::unique_ptr<RtpFrameObject> frame) {
   const RTPVideoHeader& video_header = frame->GetRtpVideoHeader();
 
   if (video_header.generic.has_value()) {
@@ -156,7 +156,7 @@ RtpFrameReferenceFinder::RtpFrameReferenceFinder(
 RtpFrameReferenceFinder::~RtpFrameReferenceFinder() = default;
 
 void RtpFrameReferenceFinder::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame) {
+    std::unique_ptr<RtpFrameObject> frame) {
   // If we have cleared past this frame, drop it.
   if (cleared_to_seq_num_ != -1 &&
       AheadOf<uint16_t>(cleared_to_seq_num_, frame->first_seq_num())) {
