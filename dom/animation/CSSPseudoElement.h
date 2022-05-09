@@ -14,8 +14,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Animation;
 class Element;
@@ -69,7 +68,6 @@ class CSSPseudoElement final : public nsWrapperCache {
   PseudoStyleType mPseudoType;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CSSPseudoElement_h
