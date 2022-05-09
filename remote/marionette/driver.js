@@ -2065,10 +2065,13 @@ GeckoDriver.prototype.close = async function() {
   assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
   await this._handleUserPrompts();
 
-  // If there is only one window left, do not close it. Instead return
-  // a faked empty array of window handles.  This will instruct geckodriver
-  // to terminate the application.
-  if (TabManager.getTabCount() === 1) {
+  // If there is only one window left, do not close unless windowless mode is
+  // enabled. Instead return a faked empty array of window handles.
+  // This will instruct geckodriver to terminate the application.
+  if (
+    TabManager.getTabCount() === 1 &&
+    !this.currentSession.capabilities.get("moz:windowless")
+  ) {
     return [];
   }
 
@@ -2102,10 +2105,10 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
     nwins++;
   }
 
-  // If there is only one window left, do not close it.  Instead return
-  // a faked empty array of window handles. This will instruct geckodriver
-  // to terminate the application.
-  if (nwins == 1) {
+  // If there is only one window left, do not close unless windowless mode is
+  // enabled. Instead return a faked empty array of window handles.
+  // This will instruct geckodriver to terminate the application.
+  if (nwins == 1 && !this.currentSession.capabilities.get("moz:windowless")) {
     return [];
   }
 
@@ -2625,6 +2628,19 @@ GeckoDriver.prototype.quit = async function(cmd) {
     throw new error.InvalidArgumentError(
       `"safeMode" only works with restart flag`
     );
+  }
+
+  if (flags.includes("eSilently")) {
+    if (!this.currentSession.capabilities.get("moz:windowless")) {
+      throw new error.UnsupportedOperationError(
+        `Silent restarts only allowed with "moz:windowless" capability set`
+      );
+    }
+    if (!flags.includes("eRestart")) {
+      throw new error.InvalidArgumentError(
+        `"silently" only works with restart flag`
+      );
+    }
   }
 
   let quitSeen;

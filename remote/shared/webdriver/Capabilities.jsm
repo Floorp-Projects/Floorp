@@ -602,6 +602,13 @@ class Capabilities extends Map {
 
         case "moz:windowless":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
+
+          // Only supported on MacOS
+          if (v && !AppInfo.isMac) {
+            throw new error.InvalidArgumentError(
+              "moz:windowless only supported on MacOS"
+            );
+          }
           break;
       }
 
