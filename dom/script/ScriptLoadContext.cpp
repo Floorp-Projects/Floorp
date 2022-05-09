@@ -24,8 +24,7 @@
 #include "nsIClassOfService.h"
 #include "nsISupportsPriority.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //////////////////////////////////////////////////////////////
 // ScriptLoadContext
@@ -227,5 +226,4 @@ void ScriptLoadContext::GetProfilerLabel(nsACString& aOutString) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

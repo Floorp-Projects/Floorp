@@ -12,8 +12,7 @@
 class nsAtom;
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReportBody;
 
@@ -24,7 +23,6 @@ class ReportingUtils final {
                      ReportBody* aBody);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ReportingUtils_h
