@@ -21,7 +21,6 @@
 
 #include "api/sequence_checker.h"
 #include "p2p/base/port_interface.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/async_packet_socket.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -320,9 +319,6 @@ class TurnServer : public sigslot::has_slots<> {
   void DestroyInternalSocket(rtc::AsyncPacketSocket* socket)
       RTC_RUN_ON(thread_);
 
-  // Just clears |sockets_to_delete_|; called asynchronously.
-  void FreeSockets() RTC_RUN_ON(thread_);
-
   typedef std::map<rtc::AsyncPacketSocket*, ProtocolType> InternalSocketMap;
   typedef std::map<rtc::AsyncSocket*, ProtocolType> ServerSocketMap;
 
@@ -341,16 +337,11 @@ class TurnServer : public sigslot::has_slots<> {
 
   InternalSocketMap server_sockets_ RTC_GUARDED_BY(thread_);
   ServerSocketMap server_listen_sockets_ RTC_GUARDED_BY(thread_);
-  // Used when we need to delete a socket asynchronously.
-  std::vector<std::unique_ptr<rtc::AsyncPacketSocket>> sockets_to_delete_
-      RTC_GUARDED_BY(thread_);
   std::unique_ptr<rtc::PacketSocketFactory> external_socket_factory_
       RTC_GUARDED_BY(thread_);
   rtc::SocketAddress external_addr_ RTC_GUARDED_BY(thread_);
 
   AllocationMap allocations_ RTC_GUARDED_BY(thread_);
-
-  rtc::AsyncInvoker invoker_;
 
   // For testing only. If this is non-zero, the next NONCE will be generated
   // from this value, and it will be reset to 0 after generating the NONCE.
