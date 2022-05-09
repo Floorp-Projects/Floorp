@@ -29,8 +29,7 @@
 #include "nsTHashMap.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace StorageUtils;
 
@@ -985,5 +984,4 @@ void BackgroundSessionStorageManager::RemoveParticipatingActor(
   mParticipatingActors.RemoveElement(aActor);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
