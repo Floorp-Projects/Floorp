@@ -60,7 +60,8 @@ class MediaSink {
   // aTimeStamp returns the timeStamp corresponding to the returned position
   // which is used by the compositor to derive the render time of video frames.
   // Must be called after playback starts.
-  virtual media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) = 0;
+  virtual media::TimeUnit GetPosition(
+      TimeStamp* aTimeStamp = nullptr) const = 0;
 
   // Return true if there are data consumed but not played yet.
   // Can be called in any state.
