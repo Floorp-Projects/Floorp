@@ -9,8 +9,7 @@
 
 #include "nsXULElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XULTextElement final : public nsXULElement {
  public:
@@ -39,7 +38,6 @@ class XULTextElement final : public nsXULElement {
   JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // XULTextElement_h

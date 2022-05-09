@@ -17,8 +17,7 @@ namespace mozilla {
 class ErrorResult;
 }  // namespace mozilla
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * CSSValue - a DOM object representing values in DOM computed style.
@@ -50,7 +49,6 @@ class CSSValue : public RefCounted<CSSValue> {
   inline nsROCSSPrimitiveValue* AsPrimitiveValue();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
