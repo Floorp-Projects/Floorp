@@ -7,44 +7,44 @@
 </head>
 <body>
 <iframe src="empty.html" id="ifr"></iframe>
-<iframe src="http://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html" id="cross_ifr"></iframe>
+<iframe src="https://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html" id="cross_ifr"></iframe>
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
 
-const CROSS_ORIGIN = "http://example.org";
+const CROSS_ORIGIN = "https://example.org";
 
 function test_document() {
   info("Checking document.featurePolicy");
   ok("featurePolicy" in document, "We have document.featurePolicy");
 
   ok(!document.featurePolicy.allowsFeature("foobar"), "Random feature");
-  ok(!document.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+  ok(!document.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
   ok(document.featurePolicy.allowsFeature("camera"), "Camera is allowed for self");
-  ok(document.featurePolicy.allowsFeature("camera", "http://foo.bar"), "Camera is always allowed");
+  ok(document.featurePolicy.allowsFeature("camera", "https://foo.bar"), "Camera is always allowed");
   let allowed = document.featurePolicy.getAllowlistForFeature("camera");
   is(allowed.length, 1, "Only 1 entry in allowlist for camera");
   is(allowed[0], "*", "allowlist is *");
 
   ok(document.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
   ok(document.featurePolicy.allowsFeature("geolocation", location.origin), "Geolocation is allowed for self");
-  ok(!document.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+  ok(!document.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
   allowed = document.featurePolicy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
   is(allowed[0], location.origin, "allowlist is self");
 
   ok(!document.featurePolicy.allowsFeature("microphone"), "Microphone is disabled for self");
   ok(!document.featurePolicy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
-  ok(!document.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-  ok(document.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is allowed for example.com");
-  ok(document.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is allowed for example.org");
+  ok(!document.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+  ok(document.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is allowed for example.com");
+  ok(document.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is allowed for example.org");
   allowed = document.featurePolicy.getAllowlistForFeature("microphone");
   is(allowed.length, 0, "No allowlist for microphone");
 
   ok(!document.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
   ok(!document.featurePolicy.allowsFeature("vr", location.origin), "Vibrate is disabled for self");
-  ok(!document.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+  ok(!document.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
   allowed = document.featurePolicy.getAllowlistForFeature("vr");
   is(allowed.length, 0, "No allowlist for vr");
 
@@ -69,33 +69,33 @@ function test_iframe_without_allow() {
   ok("featurePolicy" in ifr, "HTMLIFrameElement.featurePolicy exists");
 
   ok(!ifr.featurePolicy.allowsFeature("foobar"), "Random feature");
-  ok(!ifr.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+  ok(!ifr.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
   ok(ifr.featurePolicy.allowsFeature("camera"), "Camera is allowed for self");
   ok(ifr.featurePolicy.allowsFeature("camera", location.origin), "Camera is allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("camera", "http://foo.bar"), "Camera is not allowed for a random URL");
+  ok(!ifr.featurePolicy.allowsFeature("camera", "https://foo.bar"), "Camera is not allowed for a random URL");
   let allowed = ifr.featurePolicy.getAllowlistForFeature("camera");
   is(allowed.length, 1, "Only 1 entry in allowlist for camera");
   is(allowed[0], location.origin, "allowlist is 'self'");
 
   ok(ifr.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
   ok(ifr.featurePolicy.allowsFeature("geolocation", location.origin), "Geolocation is allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+  ok(!ifr.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
   allowed = ifr.featurePolicy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
   is(allowed[0], location.origin, "allowlist is '*'");
 
   ok(!ifr.featurePolicy.allowsFeature("microphone"), "Microphone is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is disabled for example.org");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is disabled for example.org");
   allowed = ifr.featurePolicy.getAllowlistForFeature("microphone");
   is(allowed.length, 0, "No allowlist for microphone");
 
   ok(!ifr.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("vr", location.origin), "Vibrate is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
   allowed = ifr.featurePolicy.getAllowlistForFeature("vr");
   is(allowed.length, 0, "No allowlist for vr");
 
@@ -117,7 +117,7 @@ function test_iframe_with_allow() {
   ifr.setAttribute("allow", "camera 'none'");
 
   ok(!ifr.featurePolicy.allowsFeature("foobar"), "Random feature");
-  ok(!ifr.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+  ok(!ifr.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
   ok(!ifr.featurePolicy.allowsFeature("camera"), "Camera is not allowed");
   let allowed = ifr.featurePolicy.getAllowlistForFeature("camera");
@@ -125,22 +125,22 @@ function test_iframe_with_allow() {
 
   ok(ifr.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
   ok(ifr.featurePolicy.allowsFeature("geolocation", location.origin), "Geolocation is allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+  ok(!ifr.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
   allowed = ifr.featurePolicy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
   is(allowed[0], location.origin, "allowlist is '*'");
 
   ok(!ifr.featurePolicy.allowsFeature("microphone"), "Microphone is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is disabled for example.org");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is disabled for example.org");
   allowed = ifr.featurePolicy.getAllowlistForFeature("microphone");
   is(allowed.length, 0, "No allowlist for microphone");
 
   ok(!ifr.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("vr", location.origin), "Vibrate is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
   allowed = ifr.featurePolicy.getAllowlistForFeature("vr");
   is(allowed.length, 0, "No allowlist for vr");
 
@@ -158,33 +158,33 @@ function test_iframe_contentDocument() {
     ok("featurePolicy" in ifr.contentDocument, "We have ifr.contentDocument.featurePolicy");
 
     ok(!ifr.contentDocument.featurePolicy.allowsFeature("foobar"), "Random feature");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
     ok(ifr.contentDocument.featurePolicy.allowsFeature("camera"), "Camera is allowed for self");
     ok(ifr.contentDocument.featurePolicy.allowsFeature("camera", location.origin), "Camera is allowed for self");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("camera", "http://foo.bar"), "Camera is allowed for self");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("camera", "https://foo.bar"), "Camera is allowed for self");
     let allowed = ifr.contentDocument.featurePolicy.getAllowlistForFeature("camera");
     is(allowed.length, 1, "Only 1 entry in allowlist for camera");
     is(allowed[0], location.origin, "allowlist is 'self'");
 
     ok(ifr.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
     ok(ifr.featurePolicy.allowsFeature("geolocation", location.origin), "Geolocation is allowed for self");
-    ok(!ifr.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+    ok(!ifr.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
     allowed = ifr.featurePolicy.getAllowlistForFeature("geolocation");
     is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
     is(allowed[0], location.origin, "allowlist is '*'");
 
     ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone"), "Microphone is disabled for self");
     ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", location.origin), "Microphone is disabled for self");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is allowed for example.com");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is allowed for example.org");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is allowed for example.com");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is allowed for example.org");
     allowed = ifr.contentDocument.featurePolicy.getAllowlistForFeature("microphone");
     is(allowed.length, 0, "No allowlist for microphone");
 
     ok(!ifr.contentDocument.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
     ok(!ifr.contentDocument.featurePolicy.allowsFeature("vr", location.origin), "Vibrate is disabled for self");
-    ok(!ifr.contentDocument.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+    ok(!ifr.contentDocument.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
     allowed = ifr.contentDocument.featurePolicy.getAllowlistForFeature("vr");
     is(allowed.length, 0, "No allowlist for vr");
 
@@ -206,11 +206,11 @@ function test_cross_iframe_without_allow() {
   ok("featurePolicy" in ifr, "HTMLIFrameElement.featurePolicy exists");
 
   ok(!ifr.featurePolicy.allowsFeature("foobar"), "Random feature");
-  ok(!ifr.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+  ok(!ifr.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
   ok(ifr.featurePolicy.allowsFeature("camera"), "Camera is allowed for self");
   ok(ifr.featurePolicy.allowsFeature("camera", CROSS_ORIGIN), "Camera is allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("camera", "http://foo.bar"), "Camera is not allowed for a random URL");
+  ok(!ifr.featurePolicy.allowsFeature("camera", "https://foo.bar"), "Camera is not allowed for a random URL");
   let allowed = ifr.featurePolicy.getAllowlistForFeature("camera");
   is(allowed.length, 1, "Only 1 entry in allowlist for camera");
   is(allowed[0], CROSS_ORIGIN, "allowlist is 'self'");
@@ -218,21 +218,21 @@ function test_cross_iframe_without_allow() {
   ok(!ifr.featurePolicy.allowsFeature("geolocation"), "Geolocation is not allowed for self");
   ok(!ifr.featurePolicy.allowsFeature("geolocation", CROSS_ORIGIN),
     "Geolocation is not allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+  ok(!ifr.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
   allowed = ifr.featurePolicy.getAllowlistForFeature("geolocation");
   is(allowed.length, 0, "No allowlist for geolocation");
 
   ok(ifr.featurePolicy.allowsFeature("microphone"), "Microphone is enabled for self");
   ok(ifr.featurePolicy.allowsFeature("microphone", CROSS_ORIGIN), "Microphone is enabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
   allowed = ifr.featurePolicy.getAllowlistForFeature("microphone");
   is(allowed.length, 1, "Only 1 entry in allowlist for microphone");
   is(allowed[0], CROSS_ORIGIN, "allowlist is self");
 
   ok(!ifr.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("vr", CROSS_ORIGIN), "Vibrate is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
   allowed = ifr.featurePolicy.getAllowlistForFeature("vr");
   is(allowed.length, 0, "No allowlist for vr");
 
@@ -254,7 +254,7 @@ function test_cross_iframe_with_allow() {
   ifr.setAttribute("allow", "geolocation; camera 'none'");
 
   ok(!ifr.featurePolicy.allowsFeature("foobar"), "Random feature");
-  ok(!ifr.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+  ok(!ifr.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
   ok(!ifr.featurePolicy.allowsFeature("camera"), "Camera is not allowed");
   let allowed = ifr.featurePolicy.getAllowlistForFeature("camera");
@@ -262,22 +262,22 @@ function test_cross_iframe_with_allow() {
 
   ok(ifr.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
   ok(ifr.featurePolicy.allowsFeature("geolocation", CROSS_ORIGIN), "Geolocation is allowed for self");
-  ok(!ifr.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+  ok(!ifr.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
   allowed = ifr.featurePolicy.getAllowlistForFeature("geolocation");
   is(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
   is(allowed[0], CROSS_ORIGIN, "allowlist is '*'");
 
   ok(ifr.featurePolicy.allowsFeature("microphone"), "Microphone is enabled for self");
   ok(ifr.featurePolicy.allowsFeature("microphone", CROSS_ORIGIN), "Microphone is enabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-  ok(!ifr.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
   allowed = ifr.featurePolicy.getAllowlistForFeature("microphone");
   is(allowed.length, 1, "Only 1 entry in allowlist for microphone");
   is(allowed[0], CROSS_ORIGIN, "allowlist is self");
 
   ok(!ifr.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
   ok(!ifr.featurePolicy.allowsFeature("vr", CROSS_ORIGIN), "Vibrate is disabled for self");
-  ok(!ifr.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+  ok(!ifr.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
   allowed = ifr.featurePolicy.getAllowlistForFeature("vr");
   is(allowed.length, 0, "No allowlist for vr");
 
@@ -292,40 +292,40 @@ function test_cross_iframe_contentDocument_no_allow() {
   info("Checking cross iframe document.featurePolicy no allow");
 
   let ifr = document.createElement("iframe");
-  ifr.setAttribute("src", "http://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html");
+  ifr.setAttribute("src", "https://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html");
   ifr.onload = async function() {
     await SpecialPowers.spawn(ifr, [], () => {
       /* import-globals-from ../../../../../testing/modules/Assert.jsm */
       Assert.ok("featurePolicy" in this.content.document, "We have this.content.document.featurePolicy");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar"), "Random feature");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
       Assert.ok(this.content.document.featurePolicy.allowsFeature("camera"), "Camera is allowed for self");
-      Assert.ok(this.content.document.featurePolicy.allowsFeature("camera", "http://example.org"), "Camera is allowed for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("camera", "http://foo.bar"), "Camera is not allowed for a random URL");
+      Assert.ok(this.content.document.featurePolicy.allowsFeature("camera", "https://example.org"), "Camera is allowed for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("camera", "https://foo.bar"), "Camera is not allowed for a random URL");
       let allowed = this.content.document.featurePolicy.getAllowlistForFeature("camera");
       Assert.equal(allowed.length, 1, "Only 1 entry in allowlist for camera");
-      Assert.equal(allowed[0], "http://example.org", "allowlist is 'self'");
+      Assert.equal(allowed[0], "https://example.org", "allowlist is 'self'");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation"), "Geolocation is not allowed for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "http://example.org"),
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "https://example.org"),
         "Geolocation is not allowed for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("geolocation");
       Assert.equal(allowed.length, 0, "No allowlist for geolocation");
 
       Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone"), "Microphone is enabled for self");
-      Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is enabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
+      Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is enabled for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("microphone");
       Assert.equal(allowed.length, 1, "Only 1 entry in allowlist for microphone");
-      Assert.equal(allowed[0], "http://example.org", "allowlist is self");
+      Assert.equal(allowed[0], "https://example.org", "allowlist is self");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "http://example.org"), "Vibrate is disabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "https://example.org"), "Vibrate is disabled for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("vr");
       Assert.equal(allowed.length, 0, "No allowlist for vr");
 
@@ -346,37 +346,37 @@ function test_cross_iframe_contentDocument_allow() {
   info("Checking cross iframe document.featurePolicy with allow");
 
   let ifr = document.createElement("iframe");
-  ifr.setAttribute("src", "http://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html");
+  ifr.setAttribute("src", "https://example.org/tests/dom/security/featurePolicy/test/mochitest/empty.html");
   ifr.setAttribute("allow", "geolocation; camera 'none'");
   ifr.onload = async function() {
     await SpecialPowers.spawn(ifr, [], () => {
       Assert.ok("featurePolicy" in this.content.document, "We have this.content.document.featurePolicy");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar"), "Random feature");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar", "http://www.something.net"), "Random feature");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("foobar", "https://www.something.net"), "Random feature");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("camera"), "Camera is not allowed");
       let allowed = this.content.document.featurePolicy.getAllowlistForFeature("camera");
       Assert.equal(allowed.length, 0, "Camera has an empty allowlist");
 
       Assert.ok(this.content.document.featurePolicy.allowsFeature("geolocation"), "Geolocation is allowed for self");
-      Assert.ok(this.content.document.featurePolicy.allowsFeature("geolocation", "http://example.org"), "Geolocation is allowed for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "http://foo.bar"), "Geolocation is not allowed for any random URL");
+      Assert.ok(this.content.document.featurePolicy.allowsFeature("geolocation", "https://example.org"), "Geolocation is allowed for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("geolocation", "https://foo.bar"), "Geolocation is not allowed for any random URL");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("geolocation");
       Assert.equal(allowed.length, 1, "Only 1 entry in allowlist for geolocation");
-      Assert.equal(allowed[0], "http://example.org", "allowlist is '*'");
+      Assert.equal(allowed[0], "https://example.org", "allowlist is '*'");
 
       Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone"), "Microphone is enabled for self");
-      Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone", "http://example.org"), "Microphone is enabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "http://foo.bar"), "Microphone is disabled for foo.bar");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "http://example.com"), "Microphone is disabled for example.com");
+      Assert.ok(this.content.document.featurePolicy.allowsFeature("microphone", "https://example.org"), "Microphone is enabled for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "https://foo.bar"), "Microphone is disabled for foo.bar");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("microphone", "https://example.com"), "Microphone is disabled for example.com");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("microphone");
       Assert.equal(allowed.length, 1, "Only 1 entry in allowlist for microphone");
-      Assert.equal(allowed[0], "http://example.org", "allowlist is self");
+      Assert.equal(allowed[0], "https://example.org", "allowlist is self");
 
       Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr"), "Vibrate is disabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "http://example.org"), "Vibrate is disabled for self");
-      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "http://foo.bar"), "Vibrate is disabled for foo.bar");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "https://example.org"), "Vibrate is disabled for self");
+      Assert.ok(!this.content.document.featurePolicy.allowsFeature("vr", "https://foo.bar"), "Vibrate is disabled for foo.bar");
       allowed = this.content.document.featurePolicy.getAllowlistForFeature("vr");
       Assert.equal(allowed.length, 0, "No allowlist for vr");
 
