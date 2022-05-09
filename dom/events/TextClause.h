@@ -14,8 +14,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TextClause final : public nsISupports, public nsWrapperCache {
  public:
@@ -49,7 +48,6 @@ class TextClause final : public nsISupports, public nsWrapperCache {
   bool mIsTargetClause;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TextClause_h

@@ -10,8 +10,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/SpeechRecognitionErrorBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SpeechRecognitionError : public Event {
  public:
@@ -44,7 +43,6 @@ class SpeechRecognitionError : public Event {
   nsCString mMessage;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // SpeechRecognitionError_h__

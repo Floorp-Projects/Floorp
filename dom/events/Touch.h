@@ -17,8 +17,7 @@
 
 class nsPresContext;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EventTarget;
 
@@ -96,7 +95,6 @@ class Touch final : public nsISupports,
   bool mPointsInitialized;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Touch_h_
