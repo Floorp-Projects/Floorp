@@ -48,11 +48,9 @@ class ServiceWorkerRegistrationDescriptor;
 }  // namespace dom
 }  // namespace mozilla
 
-namespace JS {
-namespace loader {
+namespace JS::loader {
 class ModuleLoaderBase;
-}  // namespace loader
-}  // namespace JS
+}  // namespace JS::loader
 
 /**
  * See <https://developer.mozilla.org/en-US/docs/Glossary/Global_object>.

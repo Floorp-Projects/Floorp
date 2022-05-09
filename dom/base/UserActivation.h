@@ -10,8 +10,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class UserActivation final {
  public:
@@ -82,7 +81,6 @@ class MOZ_RAII AutoHandlingUserInputStatePusher final {
   bool mIsHandlingUserInput;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_UserAcitvation_h

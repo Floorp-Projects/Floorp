@@ -19,8 +19,7 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TreeWalker final : public nsISupports, public nsTraversal {
   virtual ~TreeWalker();
@@ -75,7 +74,6 @@ class TreeWalker final : public nsISupports, public nsTraversal {
                                                 ErrorResult& aResult);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TreeWalker_h
