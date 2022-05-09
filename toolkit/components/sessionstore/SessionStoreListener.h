@@ -16,8 +16,7 @@
 
 class nsITimer;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ContentSessionStore {
  public:
@@ -110,7 +109,6 @@ class TabListener : public nsIDOMEventListener,
   uint32_t mEpoch;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SessionStoreListener_h
