@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/MessageListenerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MessageBroadcaster;
 
@@ -28,7 +27,6 @@ class MessageSender : public MessageListenerManager {
       : MessageListenerManager(aCallback, aParentManager, aFlags) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MessageSender_h

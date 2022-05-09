@@ -10,8 +10,7 @@
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Information about a main or worker thread stack trace that can be accessed
 // from either kind of thread. When a worker thread stack is serialized, the
@@ -77,7 +76,6 @@ void ConvertSerializedStackToJSON(UniquePtr<SerializedStackHolder> aStackHolder,
 void NotifyNetworkMonitorAlternateStack(nsISupports* aChannel,
                                         const nsAString& aStackJSON);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SerializedStackHolder_h
