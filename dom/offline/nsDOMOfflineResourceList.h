@@ -22,12 +22,10 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Maybe.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class DOMStringList;
 class Event;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
                                        public nsIObserver,

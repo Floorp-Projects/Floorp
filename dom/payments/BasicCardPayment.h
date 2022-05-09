@@ -11,8 +11,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BasicCardService final {
  public:
@@ -33,7 +32,6 @@ class BasicCardService final {
   ~BasicCardService() = default;
 };
 
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
