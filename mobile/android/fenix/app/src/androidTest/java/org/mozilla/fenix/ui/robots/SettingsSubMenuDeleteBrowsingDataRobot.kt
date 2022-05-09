@@ -134,7 +134,7 @@ private fun openTabsCheckBox() = onView(allOf(withId(R.id.checkbox), hasSibling(
 private fun browsingHistorySubsection() =
     onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
 
-private fun browsingHistoryDescription(addresses: String) = onView(withText("$addresses addresses"))
+private fun browsingHistoryDescription(addresses: String) = mDevice.findObject(UiSelector().textContains("$addresses addresses"))
 
 private fun browsingHistoryCheckBox() =
     onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history and site data"))))
@@ -186,7 +186,7 @@ private fun assertAllOptionsAndCheckBoxes() {
     openTabsDescription("0").check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     openTabsCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     browsingHistorySubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    browsingHistoryDescription("0").check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    assertTrue(browsingHistoryDescription("0").waitForExists(waitingTime))
     browsingHistoryCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cookiesSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cookiesDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -213,7 +213,7 @@ private fun assertOpenTabsDescription(tabNumber: String) =
     openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertBrowsingHistoryDescription(addresses: String) =
-    browsingHistoryDescription(addresses).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    assertTrue(browsingHistoryDescription(addresses).waitForExists(waitingTime))
 
 private fun assertDeleteBrowsingDataSnackbar() {
     assertTrue(
