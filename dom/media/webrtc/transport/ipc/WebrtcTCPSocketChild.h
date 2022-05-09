@@ -11,9 +11,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "transport/nr_socket_proxy_config.h"
 
-namespace mozilla {
-
-namespace net {
+namespace mozilla::net {
 
 class WebrtcTCPSocketCallback;
 
@@ -43,7 +41,6 @@ class WebrtcTCPSocketChild : public PWebrtcTCPSocketChild {
   RefPtr<WebrtcTCPSocketCallback> mProxyCallbacks;
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // mozilla_net_WebrtcTCPSocketChild_h

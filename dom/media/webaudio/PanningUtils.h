@@ -10,8 +10,7 @@
 #include "AudioSegment.h"
 #include "AudioNodeEngine.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename T>
 void GainMonoToStereo(const AudioBlock& aInput, AudioBlock* aOutput, T aGainL,
@@ -58,7 +57,6 @@ void ApplyStereoPanning(const AudioBlock& aInput, AudioBlock* aOutput, T aGainL,
   aOutput->mVolume = aInput.mVolume;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // PANNING_UTILS_H

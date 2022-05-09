@@ -9,8 +9,7 @@
 
 #include "MediaStreamAudioSourceNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct MediaElementAudioSourceOptions;
@@ -63,7 +62,6 @@ class MediaElementAudioSourceNode final : public MediaStreamAudioSourceNode {
   RefPtr<HTMLMediaElement> mElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
