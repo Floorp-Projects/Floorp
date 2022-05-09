@@ -49,9 +49,8 @@ class AudioSinkWrapper : public MediaSink {
  public:
   template <typename Function>
   AudioSinkWrapper(AbstractThread* aOwnerThread,
-                   const MediaQueue<AudioData>& aAudioQueue,
-                   const Function& aFunc, double aVolume, double aPlaybackRate,
-                   bool aPreservesPitch)
+                   MediaQueue<AudioData>& aAudioQueue, const Function& aFunc,
+                   double aVolume, double aPlaybackRate, bool aPreservesPitch)
       : mOwnerThread(aOwnerThread),
         mCreator(new CreatorImpl<Function>(aFunc)),
         mIsStarted(false),
@@ -64,7 +63,7 @@ class AudioSinkWrapper : public MediaSink {
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
-  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
+  media::TimeUnit GetPosition(TimeStamp* aTimeStamp = nullptr) override;
   bool HasUnplayedFrames(TrackType aType) const override;
   media::TimeUnit UnplayedDuration(TrackType aType) const override;
 
@@ -113,7 +112,7 @@ class AudioSinkWrapper : public MediaSink {
 
   bool mAudioEnded;
   MozPromiseRequestHolder<EndedPromise> mAudioSinkEndedPromise;
-  const MediaQueue<AudioData>& mAudioQueue;
+  MediaQueue<AudioData>& mAudioQueue;
 };
 
 }  // namespace mozilla
