@@ -21,8 +21,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/BindingCallContext.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename T>
 struct TypeName {};
@@ -326,7 +325,6 @@ bool ValueToPrimitive(U& cx, JS::Handle<JS::Value> v,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_PrimitiveConversions_h */
