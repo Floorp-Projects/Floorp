@@ -2234,6 +2234,9 @@ class PictureInPictureChildVideoWrapper {
         let retVal = wrappedMethod.call(this.#siteWrapper, ...args);
 
         if (!validateRetVal) {
+          logConsole.debug(
+            `Invalid return value validator was found for method ${name}(). Replacing return value ${retVal} with null.`
+          );
           Cu.reportError(
             `No return value validator was provided for method ${name}(). Returning null.`
           );
@@ -2241,6 +2244,7 @@ class PictureInPictureChildVideoWrapper {
         }
 
         if (!validateRetVal(retVal)) {
+          logConsole.debug("Invalid return value:", retVal);
           Cu.reportError(
             `Calling method ${name}() returned an unexpected value: ${retVal}. Returning null.`
           );
@@ -2250,6 +2254,7 @@ class PictureInPictureChildVideoWrapper {
         return retVal;
       }
     } catch (e) {
+      logConsole.debug("Error:", e.message);
       Cu.reportError(`There was an error while calling ${name}(): `, e.message);
     }
 
