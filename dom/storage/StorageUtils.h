@@ -11,9 +11,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
-namespace StorageUtils {
+namespace mozilla::dom::StorageUtils {
 
 bool PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
                      nsIPrincipal* aSubjectPrincipal);
@@ -25,8 +23,6 @@ nsresult CreateReversedDomain(const nsACString& aAsciiDomain, nsACString& aKey);
 nsCString Scheme0Scope(const nsACString& aOriginSuffix,
                        const nsACString& aOriginNoSuffix);
 
-}  // namespace StorageUtils
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::StorageUtils
 
 #endif  // mozilla_dom_StorageUtils_h

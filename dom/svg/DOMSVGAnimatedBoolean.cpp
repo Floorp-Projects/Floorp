@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/SVGAnimatedBooleanBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedBoolean,
                                                mSVGElement)
@@ -22,5 +21,4 @@ JSObject* DOMSVGAnimatedBoolean::WrapObject(JSContext* aCx,
   return SVGAnimatedBoolean_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
