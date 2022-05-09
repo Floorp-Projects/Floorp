@@ -846,6 +846,7 @@ def wasm_verify_serialization_for_size(target, c_compiler, debug, milestone):
         debug == True
         and target.kernel == "Linux"
         and target.cpu == "x86_64"
+        and c_compiler
         and c_compiler.type == "clang"
         and milestone.is_nightly
     ):
