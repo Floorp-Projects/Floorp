@@ -10,9 +10,7 @@
 #include "jsapi.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
-namespace ConsoleCommon {
+namespace mozilla::dom::ConsoleCommon {
 
 // This class is used to clear any exception at the end of this method.
 class MOZ_RAII ClearException {
@@ -25,8 +23,6 @@ class MOZ_RAII ClearException {
   JSContext* mCx;
 };
 
-}  // namespace ConsoleCommon
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::ConsoleCommon
 
 #endif /* mozilla_dom_ConsoleCommon_h */
