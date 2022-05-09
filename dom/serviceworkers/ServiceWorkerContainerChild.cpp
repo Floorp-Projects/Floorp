@@ -11,8 +11,7 @@
 #include "RemoteServiceWorkerContainerImpl.h"
 #include "ServiceWorkerContainerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void ServiceWorkerContainerChild::ActorDestroy(ActorDestroyReason aReason) {
   mIPCWorkerRef = nullptr;
@@ -70,5 +69,4 @@ void ServiceWorkerContainerChild::MaybeStartTeardown() {
   mTeardownStarted = true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

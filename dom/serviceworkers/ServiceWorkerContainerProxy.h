@@ -10,8 +10,7 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerContainerParent;
 
@@ -42,7 +41,6 @@ class ServiceWorkerContainerProxy final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ServiceWorkerContainerProxy);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // moz_dom_ServiceWorkerContainerProxy_h

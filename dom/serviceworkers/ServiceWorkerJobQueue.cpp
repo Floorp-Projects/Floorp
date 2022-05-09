@@ -10,8 +10,7 @@
 #include "ServiceWorkerJob.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerJobQueue::Callback final
     : public ServiceWorkerJob::Callback {
@@ -118,5 +117,4 @@ void ServiceWorkerJobQueue::CancelAll() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
