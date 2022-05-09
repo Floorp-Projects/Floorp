@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEMergeNode)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEMergeNodeElement::WrapNode(JSContext* aCx,
                                           JS::Handle<JSObject*> aGivenProto) {
@@ -45,5 +44,4 @@ SVGElement::StringAttributesInfo SVGFEMergeNodeElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEMorphology)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEMorphologyElement::WrapNode(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {
@@ -138,5 +137,4 @@ SVGElement::StringAttributesInfo SVGFEMorphologyElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

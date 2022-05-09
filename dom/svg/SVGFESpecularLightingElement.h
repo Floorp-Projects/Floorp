@@ -12,8 +12,7 @@
 nsresult NS_NewSVGFESpecularLightingElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //---------------------SpecularLighting------------------------
 
@@ -52,7 +51,6 @@ class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase {
   already_AddRefed<DOMSVGAnimatedNumber> KernelUnitLengthY();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFESPECULARLIGHTINGELEMENT_H_
