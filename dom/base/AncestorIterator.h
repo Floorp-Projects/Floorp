@@ -19,8 +19,7 @@
 #include "nsIContentInlines.h"
 #include "FilteredNodeIterator.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #ifdef DEBUG
 #  define MUTATION_GUARD(class_name_) \
@@ -74,8 +73,7 @@ DEFINE_ANCESTOR_ITERATOR(FlatTreeAncestors, GetFlattenedTreeParentNode)
 
 #undef MUTATION_GUARD
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 template <typename T>
 inline mozilla::dom::AncestorsOfTypeIterator<T> nsINode::AncestorsOfType()

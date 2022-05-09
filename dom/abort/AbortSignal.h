@@ -10,8 +10,7 @@
 #include "mozilla/dom/AbortFollower.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // AbortSignal the spec concept includes the concept of a child signal
 // "following" a parent signal -- internally, adding abort steps to the parent
@@ -63,7 +62,6 @@ class AbortSignal : public DOMEventTargetHelper,
   ~AbortSignal();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_AbortSignal_h

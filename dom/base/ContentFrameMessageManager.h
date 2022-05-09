@@ -12,8 +12,7 @@
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename>
 struct Nullable;
@@ -58,7 +57,6 @@ class ContentFrameMessageManager : public DOMEventTargetHelper,
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentFrameMessageManager,
                               NS_CONTENTFRAMEMESSAGEMANAGER_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ContentFrameMessageManager_h

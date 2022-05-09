@@ -11,8 +11,7 @@
 #include "nsWeakReference.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CanonicalBrowsingContext;
 
@@ -94,7 +93,6 @@ class BrowsingContextWebProgress final : public nsIWebProgress,
   bool mIsLoadingDocument = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_BrowsingContextWebProgress_h

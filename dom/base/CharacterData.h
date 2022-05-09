@@ -20,12 +20,10 @@
 #include "nsError.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
 class HTMLSlotElement;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #define CHARACTER_DATA_FLAG_BIT(n_) \
   NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
