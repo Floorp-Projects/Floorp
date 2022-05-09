@@ -128,7 +128,7 @@ TurnServer::TurnServer(rtc::Thread* thread)
       enable_otu_nonce_(false) {}
 
 TurnServer::~TurnServer() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   for (InternalSocketMap::iterator it = server_sockets_.begin();
        it != server_sockets_.end(); ++it) {
     rtc::AsyncPacketSocket* socket = it->first;
@@ -144,7 +144,7 @@ TurnServer::~TurnServer() {
 
 void TurnServer::AddInternalSocket(rtc::AsyncPacketSocket* socket,
                                    ProtocolType proto) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(server_sockets_.end() == server_sockets_.find(socket));
   server_sockets_[socket] = proto;
   socket->SignalReadPacket.connect(this, &TurnServer::OnInternalPacket);
@@ -152,7 +152,7 @@ void TurnServer::AddInternalSocket(rtc::AsyncPacketSocket* socket,
 
 void TurnServer::AddInternalServerSocket(rtc::AsyncSocket* socket,
                                          ProtocolType proto) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(server_listen_sockets_.end() ==
              server_listen_sockets_.find(socket));
   server_listen_sockets_[socket] = proto;
@@ -162,20 +162,19 @@ void TurnServer::AddInternalServerSocket(rtc::AsyncSocket* socket,
 void TurnServer::SetExternalSocketFactory(
     rtc::PacketSocketFactory* factory,
     const rtc::SocketAddress& external_addr) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   external_socket_factory_.reset(factory);
   external_addr_ = external_addr;
 }
 
 void TurnServer::OnNewInternalConnection(rtc::AsyncSocket* socket) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   RTC_DCHECK(server_listen_sockets_.find(socket) !=
              server_listen_sockets_.end());
   AcceptConnection(socket);
 }
 
 void TurnServer::AcceptConnection(rtc::AsyncSocket* server_socket) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // Check if someone is trying to connect to us.
   rtc::SocketAddress accept_addr;
   rtc::AsyncSocket* accepted_socket = server_socket->Accept(&accept_addr);
@@ -192,7 +191,7 @@ void TurnServer::AcceptConnection(rtc::AsyncSocket* server_socket) {
 
 void TurnServer::OnInternalSocketClose(rtc::AsyncPacketSocket* socket,
                                        int err) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   DestroyInternalSocket(socket);
 }
 
@@ -201,7 +200,7 @@ void TurnServer::OnInternalPacket(rtc::AsyncPacketSocket* socket,
                                   size_t size,
                                   const rtc::SocketAddress& addr,
                                   const int64_t& /* packet_time_us */) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   // Fail if the packet is too small to even contain a channel header.
   if (size < TURN_CHANNEL_HEADER_SIZE) {
     return;
@@ -228,7 +227,6 @@ void TurnServer::OnInternalPacket(rtc::AsyncPacketSocket* socket,
 void TurnServer::HandleStunMessage(TurnServerConnection* conn,
                                    const char* data,
                                    size_t size) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   TurnMessage msg;
   rtc::ByteBufferReader buf(data, size);
   if (!msg.Read(&buf) || (buf.Length() > 0)) {
@@ -294,7 +292,6 @@ void TurnServer::HandleStunMessage(TurnServerConnection* conn,
 }
 
 bool TurnServer::GetKey(const StunMessage* msg, std::string* key) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   const StunByteStringAttribute* username_attr =
       msg->GetByteString(STUN_ATTR_USERNAME);
   if (!username_attr) {
@@ -310,7 +307,6 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
                                     const char* data,
                                     size_t size,
                                     const std::string& key) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // RFC 5389, 10.2.2.
   RTC_DCHECK(IsStunRequestType(msg->type()));
   const StunByteStringAttribute* mi_attr =
@@ -369,7 +365,6 @@ bool TurnServer::CheckAuthorization(TurnServerConnection* conn,
 
 void TurnServer::HandleBindingRequest(TurnServerConnection* conn,
                                       const StunMessage* req) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   StunMessage response;
   InitResponse(req, &response);
 
@@ -384,7 +379,6 @@ void TurnServer::HandleBindingRequest(TurnServerConnection* conn,
 void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
                                        const TurnMessage* msg,
                                        const std::string& key) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // Check the parameters in the request.
   const StunUInt32Attribute* transport_attr =
       msg->GetUInt32(STUN_ATTR_REQUESTED_TRANSPORT);
@@ -414,7 +408,6 @@ void TurnServer::HandleAllocateRequest(TurnServerConnection* conn,
 }
 
 std::string TurnServer::GenerateNonce(int64_t now) const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // Generate a nonce of the form hex(now + HMAC-MD5(nonce_key_, now))
   std::string input(reinterpret_cast<const char*>(&now), sizeof(now));
   std::string nonce = rtc::hex_encode(input.c_str(), input.size());
@@ -425,7 +418,6 @@ std::string TurnServer::GenerateNonce(int64_t now) const {
 }
 
 bool TurnServer::ValidateNonce(const std::string& nonce) const {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // Check the size.
   if (nonce.size() != kNonceSize) {
     return false;
@@ -452,7 +444,6 @@ bool TurnServer::ValidateNonce(const std::string& nonce) const {
 }
 
 TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   AllocationMap::const_iterator it = allocations_.find(*conn);
   return (it != allocations_.end()) ? it->second.get() : nullptr;
 }
@@ -460,7 +451,6 @@ TurnServerAllocation* TurnServer::FindAllocation(TurnServerConnection* conn) {
 TurnServerAllocation* TurnServer::CreateAllocation(TurnServerConnection* conn,
                                                    int proto,
                                                    const std::string& key) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   rtc::AsyncPacketSocket* external_socket =
       (external_socket_factory_)
           ? external_socket_factory_->CreateUdpSocket(external_addr_, 0, 0)
@@ -481,7 +471,7 @@ void TurnServer::SendErrorResponse(TurnServerConnection* conn,
                                    const StunMessage* req,
                                    int code,
                                    const std::string& reason) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   TurnMessage resp;
   InitErrorResponse(req, code, reason, &resp);
   RTC_LOG(LS_INFO) << "Sending error response, type=" << resp.type()
@@ -493,7 +483,6 @@ void TurnServer::SendErrorResponseWithRealmAndNonce(TurnServerConnection* conn,
                                                     const StunMessage* msg,
                                                     int code,
                                                     const std::string& reason) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   TurnMessage resp;
   InitErrorResponse(msg, code, reason, &resp);
 
@@ -513,7 +502,6 @@ void TurnServer::SendErrorResponseWithAlternateServer(
     TurnServerConnection* conn,
     const StunMessage* msg,
     const rtc::SocketAddress& addr) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   TurnMessage resp;
   InitErrorResponse(msg, STUN_ERROR_TRY_ALTERNATE,
                     STUN_ERROR_REASON_TRY_ALTERNATE_SERVER, &resp);
@@ -523,7 +511,7 @@ void TurnServer::SendErrorResponseWithAlternateServer(
 }
 
 void TurnServer::SendStun(TurnServerConnection* conn, StunMessage* msg) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   rtc::ByteBufferWriter buf;
   // Add a SOFTWARE attribute if one is set.
   if (!software_.empty()) {
@@ -536,13 +524,12 @@ void TurnServer::SendStun(TurnServerConnection* conn, StunMessage* msg) {
 
 void TurnServer::Send(TurnServerConnection* conn,
                       const rtc::ByteBufferWriter& buf) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
+  RTC_DCHECK_RUN_ON(thread_);
   rtc::PacketOptions options;
   conn->socket()->SendTo(buf.Data(), buf.Length(), conn->src(), options);
 }
 
 void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   // Removing the internal socket if the connection is not udp.
   rtc::AsyncPacketSocket* socket = allocation->conn()->socket();
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
@@ -562,7 +549,6 @@ void TurnServer::OnAllocationDestroyed(TurnServerAllocation* allocation) {
 }
 
 void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   InternalSocketMap::iterator iter = server_sockets_.find(socket);
   if (iter != server_sockets_.end()) {
     rtc::AsyncPacketSocket* socket = iter->first;
@@ -573,13 +559,14 @@ void TurnServer::DestroyInternalSocket(rtc::AsyncPacketSocket* socket) {
     // deleting an object from within a callback from that object).
     sockets_to_delete_.push_back(
         std::unique_ptr<rtc::AsyncPacketSocket>(socket));
-    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, rtc::Thread::Current(),
-                               [this] { FreeSockets(); });
+    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, rtc::Thread::Current(), [this] {
+      RTC_DCHECK_RUN_ON(thread_);
+      FreeSockets();
+    });
   }
 }
 
 void TurnServer::FreeSockets() {
-  RTC_DCHECK(thread_checker_.IsCurrent());
   sockets_to_delete_.clear();
 }
 
