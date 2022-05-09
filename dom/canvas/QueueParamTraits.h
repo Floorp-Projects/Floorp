@@ -22,8 +22,7 @@
 #include "nsString.h"
 #include "WebGLTypes.h"
 
-namespace mozilla {
-namespace webgl {
+namespace mozilla::webgl {
 
 template <typename T>
 struct RemoveCVR {
@@ -700,7 +699,6 @@ struct QueueParamTraits<mozilla::ipc::Shmem> {
   }
 };
 
-}  // namespace webgl
-}  // namespace mozilla
+}  // namespace mozilla::webgl
 
 #endif  // _QUEUEPARAMTRAITS_H_

@@ -12,8 +12,7 @@
 #include "nsWrapperCache.h"
 #include "gfxGradientCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CanvasRenderingContext2D;
 
@@ -54,7 +53,6 @@ class CanvasGradient : public nsWrapperCache {
   Type mType;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CanvasGradient_h

@@ -8,8 +8,7 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/DOMMatrix.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class
     HTMLImageElementOrSVGImageElementOrHTMLCanvasElementOrHTMLVideoElementOrOffscreenCanvasOrImageBitmap;
@@ -157,7 +156,6 @@ class BasicRenderingContext2D {
                        bool aAnticlockwise, ErrorResult& aError) = 0;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* BasicRenderingContext2D_h */

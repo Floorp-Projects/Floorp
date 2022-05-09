@@ -12,9 +12,7 @@
 #include "mozilla/dom/quota/Client.h"
 #include "mozIStorageConnection.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 already_AddRefed<quota::Client> CreateQuotaClient();
 
@@ -44,8 +42,6 @@ nsresult WipePaddingFile(const CacheDirectoryMetadata& aDirectoryMetadata,
 
 extern const nsLiteralString kCachesSQLiteFilename;
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_QuotaClient_h

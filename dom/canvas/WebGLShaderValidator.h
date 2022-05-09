@@ -14,8 +14,7 @@
 #include "GLSLANG/ShaderLang.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace webgl {
+namespace mozilla::webgl {
 
 class ShaderValidatorResults final {
  public:
@@ -68,7 +67,6 @@ class ShaderValidator final {
       const char*) const;
 };
 
-}  // namespace webgl
-}  // namespace mozilla
+}  // namespace mozilla::webgl
 
 #endif  // WEBGL_SHADER_VALIDATOR_H_
