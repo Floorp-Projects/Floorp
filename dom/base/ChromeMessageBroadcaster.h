@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/MessageBroadcaster.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Implementation for the WebIDL ChromeMessageBroadcaster interface. Used for
@@ -51,7 +50,6 @@ class ChromeMessageBroadcaster final : public MessageBroadcaster {
                            aFlags | MessageManagerFlags::MM_CHROME) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ChromeMessageBroadcaster_h

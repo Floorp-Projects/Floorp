@@ -15,8 +15,7 @@
 
 class nsIThread;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 class ThreadSafeWorkerRef;
@@ -133,7 +132,6 @@ class BodyConsumer final : public nsIObserver,
   bool mShuttingDown;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_BodyConsumer_h
