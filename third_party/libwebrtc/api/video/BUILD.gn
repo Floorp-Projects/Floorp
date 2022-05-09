@@ -43,6 +43,8 @@ rtc_library("video_frame") {
   sources = [
     "i420_buffer.cc",
     "i420_buffer.h",
+    "nv12_buffer.cc",
+    "nv12_buffer.h",
     "video_codec_type.h",
     "video_frame.cc",
     "video_frame.h",
@@ -90,27 +92,6 @@ rtc_library("video_frame_i010") {
     "../../rtc_base",
     "../../rtc_base:checks",
     "../../rtc_base/memory:aligned_malloc",
-    #"//third_party/libyuv",
-  ]
-  include_dirs = [
-    "/media/libyuv",
-    "/media/libyuv/libyuv/include",
-  ]
-}
-
-rtc_library("video_frame_nv12") {
-  visibility = [ "*" ]
-  sources = [
-    "nv12_buffer.cc",
-    "nv12_buffer.h",
-  ]
-  deps = [
-    ":video_frame",
-    "..:scoped_refptr",
-    "../../rtc_base",
-    "../../rtc_base:checks",
-    "../../rtc_base/memory:aligned_malloc",
-    "../../rtc_base/system:rtc_export",
     #"//third_party/libyuv",
   ]
   include_dirs = [
