@@ -11,15 +11,13 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CrashReport {
  public:
   static bool Deliver(nsIPrincipal* aPrincipal, bool aIsOOM);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CrashReport_h

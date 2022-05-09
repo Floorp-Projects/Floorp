@@ -11,8 +11,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FeaturePolicyViolationReportBody final : public ReportBody {
  public:
@@ -49,7 +48,6 @@ class FeaturePolicyViolationReportBody final : public ReportBody {
   const nsString mDisposition;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FeaturePolicyViolationReportBody_h
