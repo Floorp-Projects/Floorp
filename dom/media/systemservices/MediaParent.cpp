@@ -37,11 +37,10 @@ mozilla::LazyLogModule gMediaParentLog("MediaParent");
 
 namespace mozilla::media {
 
-StaticMutex sOriginKeyStoreMutex;
-static OriginKeyStore* sOriginKeyStore = nullptr;
+StaticMutex sOriginKeyStoreStsMutex;
 
-class OriginKeyStore : public nsISupports {
-  NS_DECL_THREADSAFE_ISUPPORTS
+class OriginKeyStore {
+  NS_INLINE_DECL_REFCOUNTING(OriginKeyStore);
   class OriginKey {
    public:
     static const size_t DecodedLength = 18;
@@ -375,28 +374,29 @@ class OriginKeyStore : public nsISupports {
   };
 
  private:
+  static OriginKeyStore* sOriginKeyStore;
+
   virtual ~OriginKeyStore() {
-    StaticMutexAutoLock lock(sOriginKeyStoreMutex);
+    MOZ_ASSERT(NS_IsMainThread());
     sOriginKeyStore = nullptr;
     LOG(("%s", __FUNCTION__));
   }
 
  public:
-  static OriginKeyStore* Get() {
+  static RefPtr<OriginKeyStore> Get() {
     MOZ_ASSERT(NS_IsMainThread());
-    StaticMutexAutoLock lock(sOriginKeyStoreMutex);
     if (!sOriginKeyStore) {
       sOriginKeyStore = new OriginKeyStore();
     }
-    return sOriginKeyStore;
+    return RefPtr(sOriginKeyStore);
   }
 
-  // Only accessed on StreamTS thread
-  OriginKeysLoader mOriginKeys;
-  OriginKeysTable mPrivateBrowsingOriginKeys;
+  // Only accessed on StreamTS threads
+  OriginKeysLoader mOriginKeys GUARDED_BY(sOriginKeyStoreStsMutex);
+  OriginKeysTable mPrivateBrowsingOriginKeys
+      GUARDED_BY(sOriginKeyStoreStsMutex);
 };
-
-NS_IMPL_ISUPPORTS0(OriginKeyStore)
+OriginKeyStore* OriginKeyStore::sOriginKeyStore = nullptr;
 
 template <class Super>
 mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
@@ -429,23 +429,19 @@ mozilla::ipc::IPCResult Parent<Super>::RecvGetPrincipalKey(
 
   InvokeAsync(
       taskQueue, __func__,
-      [that, profileDir, aPrincipalInfo, aPersist]() {
+      [this, that, profileDir, aPrincipalInfo, aPersist]() {
         MOZ_ASSERT(!NS_IsMainThread());
 
-        StaticMutexAutoLock lock(sOriginKeyStoreMutex);
-        if (!sOriginKeyStore) {
-          return PrincipalKeyPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                      __func__);
-        }
-        sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+        StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
+        mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
 
         nsresult rv;
         nsAutoCString result;
         if (IsPrincipalInfoPrivate(aPrincipalInfo)) {
-          rv = sOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(
+          rv = mOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(
               aPrincipalInfo, result);
         } else {
-          rv = sOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo,
+          rv = mOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo,
                                                             result, aPersist);
         }
 
@@ -482,19 +478,17 @@ mozilla::ipc::IPCResult Parent<Super>::RecvSanitizeOriginKeys(
   nsCOMPtr<nsIEventTarget> sts =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
+  RefPtr<Parent<Super>> that(this);
 
   rv = sts->Dispatch(
       NewRunnableFrom(
-          [profileDir, aSinceWhen, aOnlyPrivateBrowsing]() -> nsresult {
+          [this, that, profileDir, aSinceWhen, aOnlyPrivateBrowsing]() {
             MOZ_ASSERT(!NS_IsMainThread());
-            StaticMutexAutoLock lock(sOriginKeyStoreMutex);
-            if (!sOriginKeyStore) {
-              return NS_ERROR_FAILURE;
-            }
-            sOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
+            StaticMutexAutoLock lock(sOriginKeyStoreStsMutex);
+            mOriginKeyStore->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
             if (!aOnlyPrivateBrowsing) {
-              sOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
-              sOriginKeyStore->mOriginKeys.Clear(aSinceWhen);
+              mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
+              mOriginKeyStore->mOriginKeys.Clear(aSinceWhen);
             }
             return NS_OK;
           }),
@@ -520,6 +514,8 @@ Parent<Super>::Parent()
 
 template <class Super>
 Parent<Super>::~Parent() {
+  NS_ReleaseOnMainThread("Parent<Super>::mOriginKeyStore",
+                         mOriginKeyStore.forget());
   LOG(("~media::Parent: %p", this));
 }
 
