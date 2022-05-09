@@ -143,16 +143,12 @@ nsresult TransactionItem::UndoChildren(
       mRedoStack->Push(transactionItem.forget());
     }
 
-    nsresult rv2 = aTransactionManager->DidUndoNotify(transaction, rv);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                         "TransactionManager::DidUndoNotify() failed");
-    if (NS_SUCCEEDED(rv)) {
-      rv = rv2;
+    if (transaction) {
+      aTransactionManager->DidUndoNotify(*transaction, rv);
     }
   }
-  // XXX NS_OK if there is no Undo items or all methods work fine, otherwise,
-  //     the result of the last item's UndoTransaction() or
-  //     DidUndoNotify() if UndoTransaction() succeeded.
+  // NS_OK if there is no Undo items or all methods work fine, otherwise,
+  // the result of the last item's UndoTransaction().
   return rv;
 }
 
@@ -206,16 +202,12 @@ nsresult TransactionItem::RedoChildren(
     }
 
     // XXX Shouldn't this DidRedoNotify()? (bug 1311626)
-    nsresult rv2 = aTransactionManager->DidUndoNotify(transaction, rv);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                         "TransactionManager::DidUndoNotify() failed");
-    if (NS_SUCCEEDED(rv)) {
-      rv = rv2;
+    if (transaction) {
+      aTransactionManager->DidUndoNotify(*transaction, rv);
     }
   }
-  // XXX NS_OK if there is no Redo items or all methods work fine, otherwise,
-  //     the result of the last item's RedoTransaction() or
-  //     DidUndoNotify() if UndoTransaction() succeeded.
+  // NS_OK if there is no Redo items or all methods work fine, otherwise,
+  // the result of the last item's RedoTransaction().
   return rv;
 }
 

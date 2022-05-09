@@ -16,7 +16,6 @@
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
 #include "nsITransaction.h"
-#include "nsITransactionListener.h"
 #include "nsIWeakReference.h"
 #include "TransactionItem.h"
 
@@ -32,7 +31,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(TransactionManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TransactionManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHTMLEditor)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mListeners)
   tmp->mDoStack.DoUnlink();
   tmp->mUndoStack.DoUnlink();
   tmp->mRedoStack.DoUnlink();
@@ -41,7 +39,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TransactionManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHTMLEditor)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
   tmp->mDoStack.DoTraverse(cb);
   tmp->mUndoStack.DoTraverse(cb);
   tmp->mRedoStack.DoTraverse(cb);
@@ -67,18 +64,17 @@ void TransactionManager::Detach(const HTMLEditor& aHTMLEditor) {
   }
 }
 
-NS_IMETHODIMP TransactionManager::DoTransaction(nsITransaction* aTransaction) {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
+TransactionManager::DoTransaction(nsITransaction* aTransaction) {
   if (NS_WARN_IF(!aTransaction)) {
     return NS_ERROR_INVALID_ARG;
   }
+  OwningNonNull<nsITransaction> transaction = *aTransaction;
 
-  nsresult rv = BeginTransaction(aTransaction, nullptr);
+  nsresult rv = BeginTransaction(transaction, nullptr);
   if (NS_FAILED(rv)) {
     NS_WARNING("TransactionManager::BeginTransaction() failed");
-    DebugOnly<nsresult> rvIgnored = DidDoNotify(aTransaction, rv);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "TransactionManager::DidDoNotify() failed, but ignored");
+    DidDoNotify(transaction, rv);
     return rv;
   }
 
@@ -86,16 +82,13 @@ NS_IMETHODIMP TransactionManager::DoTransaction(nsITransaction* aTransaction) {
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "TransactionManager::EndTransaction() failed");
 
-  nsresult rv2 = DidDoNotify(aTransaction, rv);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                       "TransactionManager::DidDoNotify() failed");
-
-  // The result of EndTransaction() or DidDoNotify() if EndTransaction()
-  // succeeded.
-  return NS_SUCCEEDED(rv) ? rv2 : rv;
+  DidDoNotify(transaction, rv);
+  return rv;
 }
 
-NS_IMETHODIMP TransactionManager::UndoTransaction() { return Undo(); }
+MOZ_CAN_RUN_SCRIPT NS_IMETHODIMP TransactionManager::UndoTransaction() {
+  return Undo();
+}
 
 nsresult TransactionManager::Undo() {
   // It's possible to be called Undo() again while the transaction manager is
@@ -123,16 +116,16 @@ nsresult TransactionManager::Undo() {
     mRedoStack.Push(transactionItem.forget());
   }
 
-  nsresult rv2 = DidUndoNotify(transaction, rv);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                       "TransactionManager::DidUndoNotify() failed");
-
-  // The result of UndoTransaction() or DidUndoNotify() if UndoTransaction()
-  // succeeded.
-  return NS_SUCCEEDED(rv) ? rv2 : rv;
+  if (transaction) {
+    DidUndoNotify(*transaction, rv);
+  }
+  return rv;
 }
 
-NS_IMETHODIMP TransactionManager::RedoTransaction() { return Redo(); }
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
+TransactionManager::RedoTransaction() {
+  return Redo();
+}
 
 nsresult TransactionManager::Redo() {
   // It's possible to be called Redo() again while the transaction manager is
@@ -160,13 +153,10 @@ nsresult TransactionManager::Redo() {
     mUndoStack.Push(transactionItem.forget());
   }
 
-  nsresult rv2 = DidRedoNotify(transaction, rv);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv2),
-                       "TransactionManager::DidRedoNotify() failed");
-
-  // The result of RedoTransaction() or DidRedoNotify() if RedoTransaction()
-  // succeeded.
-  return NS_SUCCEEDED(rv) ? rv2 : rv;
+  if (transaction) {
+    DidRedoNotify(*transaction, rv);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP TransactionManager::Clear() {
@@ -376,24 +366,6 @@ nsresult TransactionManager::RemoveTopUndo() {
   return NS_OK;
 }
 
-NS_IMETHODIMP TransactionManager::AddListener(
-    nsITransactionListener* aListener) {
-  if (NS_WARN_IF(!aListener)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return NS_WARN_IF(!AddTransactionListener(*aListener)) ? NS_ERROR_FAILURE
-                                                         : NS_OK;
-}
-
-NS_IMETHODIMP TransactionManager::RemoveListener(
-    nsITransactionListener* aListener) {
-  if (NS_WARN_IF(!aListener)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  return NS_WARN_IF(!RemoveTransactionListener(*aListener)) ? NS_ERROR_FAILURE
-                                                            : NS_OK;
-}
-
 NS_IMETHODIMP TransactionManager::ClearUndoStack() {
   if (NS_WARN_IF(!mDoStack.IsEmpty())) {
     return NS_ERROR_FAILURE;
@@ -410,64 +382,28 @@ NS_IMETHODIMP TransactionManager::ClearRedoStack() {
   return NS_OK;
 }
 
-nsresult TransactionManager::DidDoNotify(nsITransaction* aTransaction,
-                                         nsresult aDoResult) {
+void TransactionManager::DidDoNotify(nsITransaction& aTransaction,
+                                     nsresult aDoResult) {
   if (mHTMLEditor) {
     RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
     htmlEditor->DidDoTransaction(*this, aTransaction, aDoResult);
   }
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->DidDo(this, aTransaction, aDoResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidDo() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
 }
 
-nsresult TransactionManager::DidUndoNotify(nsITransaction* aTransaction,
-                                           nsresult aUndoResult) {
+void TransactionManager::DidUndoNotify(nsITransaction& aTransaction,
+                                       nsresult aUndoResult) {
   if (mHTMLEditor) {
     RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
     htmlEditor->DidUndoTransaction(*this, aTransaction, aUndoResult);
   }
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->DidUndo(this, aTransaction, aUndoResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidUndo() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
 }
 
-nsresult TransactionManager::DidRedoNotify(nsITransaction* aTransaction,
-                                           nsresult aRedoResult) {
+void TransactionManager::DidRedoNotify(nsITransaction& aTransaction,
+                                       nsresult aRedoResult) {
   if (mHTMLEditor) {
     RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
     htmlEditor->DidRedoTransaction(*this, aTransaction, aRedoResult);
   }
-  nsCOMArray<nsITransactionListener> listeners(mListeners);
-  for (nsITransactionListener* listener : listeners) {
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_FAILURE;
-    }
-    nsresult rv = listener->DidRedo(this, aTransaction, aRedoResult);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsITransactionListener::DidRedo() failed");
-      return rv;
-    }
-  }
-  return NS_OK;
 }
 
 nsresult TransactionManager::BeginTransaction(nsITransaction* aTransaction,
