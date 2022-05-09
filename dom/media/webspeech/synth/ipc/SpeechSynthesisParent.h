@@ -9,8 +9,7 @@
 #include "mozilla/dom/PSpeechSynthesisRequestParent.h"
 #include "nsSpeechTask.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ContentParent;
 class SpeechTaskParent;
@@ -95,7 +94,6 @@ class SpeechTaskParent : public nsSpeechTask {
   SpeechSynthesisRequestParent* mActor;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

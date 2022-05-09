@@ -20,8 +20,7 @@
 
 class nsIDOMWindow;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class nsSpeechTask;
 
@@ -85,6 +84,5 @@ class SpeechSynthesis final : public DOMEventTargetHelper,
   uint64_t mInnerID;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif
