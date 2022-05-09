@@ -2107,7 +2107,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRTPStreamStats_Video) {
   video_media_info.receivers[0].qp_sum = 9;
   expected_video.qp_sum = 9;
   video_media_info.receivers[0].last_packet_received_timestamp_ms = 1000;
-  expected_video.last_packet_received_timestamp = 1.0;
+  expected_video.last_packet_received_timestamp = 1000.0;
   video_media_info.receivers[0].content_type = VideoContentType::SCREENSHARE;
   expected_video.content_type = "screenshare";
   video_media_info.receivers[0].estimated_playout_ntp_timestamp_ms = 1234;
