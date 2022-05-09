@@ -7,12 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#include "media/sctp/sctp_transport.h"
-
 #include <memory>
 #include <queue>
 #include <string>
 
+#include "media/sctp/sctp_transport.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
@@ -20,6 +19,8 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/random.h"
 #include "rtc_base/synchronization/mutex.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
+#include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
 
@@ -169,14 +170,14 @@ class SctpDataSender final {
   }
 
   void Start() {
-    invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_, [this] {
+    thread_->PostTask(ToQueuedTask(task_safety_.flag(), [this] {
       if (started_) {
         RTC_LOG(LS_INFO) << sender_id_ << " sender is already started";
         return;
       }
       started_ = true;
       SendNextMessage();
-    });
+    }));
   }
 
   uint64_t BytesSentCount() const { return num_bytes_sent_; }
@@ -219,15 +220,16 @@ class SctpDataSender final {
     switch (result) {
       case cricket::SDR_BLOCK:
         // retry after timeout
-        invoker_.AsyncInvokeDelayed<void>(
-            RTC_FROM_HERE, thread_, [this] { SendNextMessage(); }, 500);
+        thread_->PostDelayedTask(
+            ToQueuedTask(task_safety_.flag(), [this] { SendNextMessage(); }),
+            500);
         break;
       case cricket::SDR_SUCCESS:
         // send next
         num_bytes_sent_ += payload_.size();
         ++num_messages_sent_;
-        invoker_.AsyncInvoke<void>(RTC_FROM_HERE, thread_,
-                                   [this] { SendNextMessage(); });
+        thread_->PostTask(
+            ToQueuedTask(task_safety_.flag(), [this] { SendNextMessage(); }));
         break;
       case cricket::SDR_ERROR:
         // give up
@@ -244,11 +246,11 @@ class SctpDataSender final {
   const uint32_t sender_id_;
   rtc::CopyOnWriteBuffer payload_{std::string(1400, '.').c_str(), 1400};
   std::atomic<bool> started_ ATOMIC_VAR_INIT(false);
-  rtc::AsyncInvoker invoker_;
   std::atomic<uint64_t> num_messages_sent_ ATOMIC_VAR_INIT(0);
   rtc::Event sent_target_messages_count_{true, false};
   std::atomic<uint64_t> num_bytes_sent_ ATOMIC_VAR_INIT(0);
   absl::optional<std::string> last_error_;
+  webrtc::ScopedTaskSafety task_safety_;
   RTC_DISALLOW_COPY_AND_ASSIGN(SctpDataSender);
 };
 

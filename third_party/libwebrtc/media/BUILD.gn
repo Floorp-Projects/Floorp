@@ -646,6 +646,10 @@ if (rtc_include_tests) {
           "sctp/sctp_transport_reliability_unittest.cc",
           "sctp/sctp_transport_unittest.cc",
         ]
+        deps += [
+          "../rtc_base/task_utils:pending_task_safety_flag",
+          "../rtc_base/task_utils:to_queued_task",
+        ]
       }
 
       if (rtc_opus_support_120ms_ptime) {
