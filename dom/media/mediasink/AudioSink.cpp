@@ -127,10 +127,22 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
 
   // construct an AudioData
   int sampleCount = mProcessedSPSCQueue->AvailableRead();
-  uint32_t channelCount = mConverter->OutputConfig().Channels();
-  uint32_t rate = mConverter->OutputConfig().Rate();
-  uint32_t frameCount = sampleCount / channelCount;
 
+  if (!sampleCount) {
+    return;
+  }
+
+  uint32_t channelCount;
+  uint32_t rate;
+  if (mConverter) {
+    channelCount = mConverter->OutputConfig().Channels();
+    rate = mConverter->OutputConfig().Rate();
+  } else {
+    channelCount = mOutputChannels;
+    rate = mOutputRate;
+  }
+
+  uint32_t frameCount = sampleCount / channelCount;
   auto duration = FramesToTimeUnit(frameCount, rate);
   if (!duration.IsValid()) {
     NS_WARNING("Int overflow in AudioSink");
@@ -148,9 +160,18 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
   // at the front of the queue.
   // For `mTime`, assume there hasn't been a discontinuity recently.
   RefPtr<AudioData> frontPacket = mAudioQueue.PeekFront();
+  uint32_t offset;
+  TimeUnit time;
+  if (!frontPacket) {
+    // We do our best here, but it's not going to be perfect.
+    offset = 0;
+    time = std::max(GetPosition() - duration, TimeUnit::Zero());
+  } else {
+    offset = frontPacket->mOffset;
+    time = frontPacket->mTime - duration;
+  }
   RefPtr<AudioData> data =
-      new AudioData(frontPacket->mOffset, frontPacket->mTime - duration,
-                    std::move(queuedAudio), channelCount, rate);
+      new AudioData(offset, time, std::move(queuedAudio), channelCount, rate);
   MOZ_DIAGNOSTIC_ASSERT(duration == data->mDuration, "must be equal");
 
   SINK_LOG(
