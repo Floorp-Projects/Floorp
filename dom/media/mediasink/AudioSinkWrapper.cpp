@@ -77,8 +77,7 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
   TimeUnit pos;
   TimeStamp t = TimeStamp::Now();
 
-  if (!mAudioEnded && !IsMuted()) {
-    MOZ_ASSERT(mAudioSink);
+  if (!mAudioEnded && !IsMuted() && mAudioSink && mAudioSink->AudioStreamCallbackStarted()) {
     // Rely on the audio sink to report playback position when it is not ended.
     pos = mAudioSink->GetPosition();
     LOGV("%p: Getting position from the Audio Sink %lf", this, pos.ToSeconds());
