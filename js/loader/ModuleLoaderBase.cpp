@@ -1022,11 +1022,17 @@ void ModuleLoaderBase::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->mLoader == this);
 
-  AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
-
   mozilla::nsAutoMicroTask mt;
   mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule", true);
-  JSContext* cx = aes.cx();
+
+  return EvaluateModuleInContext(aes.cx(), aRequest);
+}
+
+nsresult ModuleLoaderBase::EvaluateModuleInContext(
+    JSContext* aCx, ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->mLoader == this);
+
+  AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
 
   nsAutoCString profilerLabelString;
   if (aRequest->HasLoadContext()) {
@@ -1035,7 +1041,7 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
 
   LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
   AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
-                            MarkerInnerWindowIdFromJSContext(cx),
+                            MarkerInnerWindowIdFromJSContext(aCx),
                             profilerLabelString);
 
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
@@ -1046,24 +1052,24 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   ModuleScript* moduleScript = request->mModuleScript;
   if (moduleScript->HasErrorToRethrow()) {
     LOG(("ScriptLoadRequest (%p):   module has error to rethrow", aRequest));
-    JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
-    JS_SetPendingException(cx, error);
+    JS::Rooted<JS::Value> error(aCx, moduleScript->ErrorToRethrow());
+    JS_SetPendingException(aCx, error);
     // For a dynamic import, the promise is rejected.  Otherwise an error
     // is either reported by AutoEntryScript.
     if (request->IsDynamicImport()) {
-      FinishDynamicImport(cx, request, NS_OK, nullptr);
+      FinishDynamicImport(aCx, request, NS_OK, nullptr);
     }
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
+  JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
   MOZ_ASSERT(module);
 
   if (!xpc::Scriptability::Get(module).Allowed()) {
     return NS_OK;
   }
 
-  nsresult rv = InitDebuggerDataForModuleGraph(cx, request);
+  nsresult rv = InitDebuggerDataForModuleGraph(aCx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (request->HasLoadContext()) {
@@ -1071,22 +1077,22 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
                    "scriptloader_evaluate_module");
   }
 
-  JS::Rooted<JS::Value> rval(cx);
+  JS::Rooted<JS::Value> rval(aCx);
 
-  mLoader->MaybePrepareModuleForBytecodeEncodingBeforeExecute(cx, request);
+  mLoader->MaybePrepareModuleForBytecodeEncodingBeforeExecute(aCx, request);
 
-  if (JS::ModuleEvaluate(cx, module, &rval)) {
+  if (JS::ModuleEvaluate(aCx, module, &rval)) {
     // If we have an infinite loop in a module, which is stopped by the
     // user, the module evaluation will fail, but we will not have an
     // AutoEntryScript exception.
-    MOZ_ASSERT(!aes.HasException());
+    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
   } else {
     LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
     // For a dynamic import, the promise is rejected. Otherwise an error is
     // reported by AutoEntryScript.
   }
 
-  JS::Rooted<JSObject*> aEvaluationPromise(cx);
+  JS::Rooted<JSObject*> aEvaluationPromise(aCx);
   if (rval.isObject()) {
     // If the user cancels the evaluation on an infinite loop, we need
     // to skip this step. In that case, ModuleEvaluate will not return a
@@ -1095,11 +1101,11 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
     aEvaluationPromise.set(&rval.toObject());
   }
   if (request->IsDynamicImport()) {
-    FinishDynamicImport(cx, request, NS_OK, aEvaluationPromise);
+    FinishDynamicImport(aCx, request, NS_OK, aEvaluationPromise);
   } else {
     // If this is not a dynamic import, and if the promise is rejected,
     // the value is unwrapped from the promise value.
-    if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+    if (!JS::ThrowOnModuleEvaluationFailure(aCx, aEvaluationPromise)) {
       LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
       // For a dynamic import, the promise is rejected. Otherwise an error is
       // reported by AutoEntryScript.
