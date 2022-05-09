@@ -13,17 +13,20 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <tuple>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/mock_fec_controller_override.h"
 #include "api/test/mock_video_encoder.h"
+#include "api/test/mock_video_encoder_factory.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_adaptation_reason.h"
 #include "api/video/video_bitrate_allocation.h"
+#include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/vp8_temporal_layers.h"
 #include "api/video_codecs/vp8_temporal_layers_factory.h"
@@ -33,6 +36,11 @@
 #include "common_video/include/video_frame_buffer.h"
 #include "media/base/video_adapter.h"
 #include "media/engine/webrtc_video_engine.h"
+#include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
+#include "modules/video_coding/codecs/h264/include/h264.h"
+#include "modules/video_coding/codecs/multiplex/include/multiplex_encoder_adapter.h"
+#include "modules/video_coding/codecs/vp8/include/vp8.h"
+#include "modules/video_coding/codecs/vp9/include/vp9.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "modules/video_coding/utility/quality_scaler.h"
 #include "modules/video_coding/utility/simulcast_rate_allocator.h"
@@ -50,6 +58,7 @@
 #include "test/frame_forwarder.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
+#include "test/mappable_native_buffer.h"
 #include "test/time_controller/simulated_time_controller.h"
 #include "test/video_encoder_proxy_factory.h"
 #include "video/send_statistics_proxy.h"
@@ -116,7 +125,8 @@ class TestBuffer : public webrtc::I420Buffer {
   rtc::Event* const event_;
 };
 
-// A fake native buffer that can't be converted to I420.
+// A fake native buffer that can't be converted to I420. Upon scaling, it
+// produces another FakeNativeBuffer.
 class FakeNativeBuffer : public webrtc::VideoFrameBuffer {
  public:
   FakeNativeBuffer(rtc::Event* event, int width, int height)
@@ -126,6 +136,16 @@ class FakeNativeBuffer : public webrtc::VideoFrameBuffer {
   int height() const override { return height_; }
   rtc::scoped_refptr<webrtc::I420BufferInterface> ToI420() override {
     return nullptr;
+  }
+  rtc::scoped_refptr<VideoFrameBuffer> CropAndScale(
+      int offset_x,
+      int offset_y,
+      int crop_width,
+      int crop_height,
+      int scaled_width,
+      int scaled_height) override {
+    return new rtc::RefCountedObject<FakeNativeBuffer>(nullptr, scaled_width,
+                                                       scaled_height);
   }
 
  private:
@@ -989,6 +1009,16 @@ class VideoStreamEncoderTest : public ::testing::Test {
       return settings;
     }
 
+    int GetLastInputWidth() const {
+      MutexLock lock(&local_mutex_);
+      return last_input_width_;
+    }
+
+    int GetLastInputHeight() const {
+      MutexLock lock(&local_mutex_);
+      return last_input_height_;
+    }
+
     absl::optional<VideoFrameBuffer::Type> GetLastInputPixelFormat() {
       MutexLock lock(&local_mutex_);
       return last_input_pixel_format_;
@@ -1555,7 +1585,7 @@ TEST_F(VideoStreamEncoderBlockedTest, DropsPendingFramesOnSlowEncode) {
   EXPECT_EQ(1, dropped_count);
 }
 
-TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420Conversion) {
+TEST_F(VideoStreamEncoderTest, NativeFrameWithoutI420SupportGetsDelivered) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -1564,12 +1594,18 @@ TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420Conversion) {
   rtc::Event frame_destroyed_event;
   video_source_.IncomingCapturedFrame(
       CreateFakeNativeFrame(1, &frame_destroyed_event));
-  ExpectDroppedFrame();
-  EXPECT_TRUE(frame_destroyed_event.Wait(kDefaultTimeoutMs));
+  WaitForEncodedFrame(1);
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
+            fake_encoder_.GetLastInputPixelFormat());
+  EXPECT_EQ(fake_encoder_.codec_config().width,
+            fake_encoder_.GetLastInputWidth());
+  EXPECT_EQ(fake_encoder_.codec_config().height,
+            fake_encoder_.GetLastInputHeight());
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420ConversionWithCrop) {
+TEST_F(VideoStreamEncoderTest,
+       NativeFrameWithoutI420SupportGetsCroppedIfNecessary) {
   // Use the cropping factory.
   video_encoder_config_.video_stream_factory =
       new rtc::RefCountedObject<CroppingVideoStreamFactory>();
@@ -1594,8 +1630,13 @@ TEST_F(VideoStreamEncoderTest, DropFrameWithFailedI420ConversionWithCrop) {
   rtc::Event frame_destroyed_event;
   video_source_.IncomingCapturedFrame(CreateFakeNativeFrame(
       2, &frame_destroyed_event, codec_width_ + 1, codec_height_ + 1));
-  ExpectDroppedFrame();
-  EXPECT_TRUE(frame_destroyed_event.Wait(kDefaultTimeoutMs));
+  WaitForEncodedFrame(2);
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
+            fake_encoder_.GetLastInputPixelFormat());
+  EXPECT_EQ(fake_encoder_.codec_config().width,
+            fake_encoder_.GetLastInputWidth());
+  EXPECT_EQ(fake_encoder_.codec_config().height,
+            fake_encoder_.GetLastInputHeight());
   video_stream_encoder_->Stop();
 }
 
@@ -1613,8 +1654,7 @@ TEST_F(VideoStreamEncoderTest, NonI420FramesShouldNotBeConvertedToI420) {
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest,
-       NativeFrameIsConvertedToI420IfNoFrameTypePreference) {
+TEST_F(VideoStreamEncoderTest, NativeFrameGetsDelivered_NoFrameTypePreference) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -1626,12 +1666,13 @@ TEST_F(VideoStreamEncoderTest,
   video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
       1, &frame_destroyed_event, codec_width_, codec_height_));
   WaitForEncodedFrame(1);
-  EXPECT_EQ(VideoFrameBuffer::Type::kI420,
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
             fake_encoder_.GetLastInputPixelFormat());
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest, NativeFrameMappedToPreferredPixelFormat) {
+TEST_F(VideoStreamEncoderTest,
+       NativeFrameGetsDelivered_PixelFormatPreferenceMatches) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -1643,12 +1684,12 @@ TEST_F(VideoStreamEncoderTest, NativeFrameMappedToPreferredPixelFormat) {
   video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
       1, &frame_destroyed_event, codec_width_, codec_height_));
   WaitForEncodedFrame(1);
-  EXPECT_EQ(VideoFrameBuffer::Type::kNV12,
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
             fake_encoder_.GetLastInputPixelFormat());
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest, NativeFrameConvertedToI420IfMappingNotFeasible) {
+TEST_F(VideoStreamEncoderTest, NativeFrameGetsDelivered_MappingIsNotFeasible) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -1661,12 +1702,12 @@ TEST_F(VideoStreamEncoderTest, NativeFrameConvertedToI420IfMappingNotFeasible) {
   video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
       1, &frame_destroyed_event, codec_width_, codec_height_));
   WaitForEncodedFrame(1);
-  EXPECT_EQ(VideoFrameBuffer::Type::kI420,
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
             fake_encoder_.GetLastInputPixelFormat());
   video_stream_encoder_->Stop();
 }
 
-TEST_F(VideoStreamEncoderTest, NativeFrameBackedByNV12FrameIsEncodedFromI420) {
+TEST_F(VideoStreamEncoderTest, NativeFrameGetsDelivered_BackedByNV12) {
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
       DataRate::BitsPerSec(kTargetBitrateBps),
       DataRate::BitsPerSec(kTargetBitrateBps),
@@ -1676,7 +1717,7 @@ TEST_F(VideoStreamEncoderTest, NativeFrameBackedByNV12FrameIsEncodedFromI420) {
   video_source_.IncomingCapturedFrame(CreateFakeNV12NativeFrame(
       1, &frame_destroyed_event, codec_width_, codec_height_));
   WaitForEncodedFrame(1);
-  EXPECT_EQ(VideoFrameBuffer::Type::kI420,
+  EXPECT_EQ(VideoFrameBuffer::Type::kNative,
             fake_encoder_.GetLastInputPixelFormat());
   video_stream_encoder_->Stop();
 }
@@ -7932,6 +7973,188 @@ TEST_F(VideoStreamEncoderTest, QualityScalingAllowed_QualityScalingEnabled) {
 
   video_stream_encoder_->Stop();
 }
+#endif
+
+// Test parameters: (VideoCodecType codec, bool allow_i420_conversion)
+class VideoStreamEncoderWithRealEncoderTest
+    : public VideoStreamEncoderTest,
+      public ::testing::WithParamInterface<std::pair<VideoCodecType, bool>> {
+ public:
+  VideoStreamEncoderWithRealEncoderTest()
+      : VideoStreamEncoderTest(),
+        codec_type_(std::get<0>(GetParam())),
+        allow_i420_conversion_(std::get<1>(GetParam())) {}
+
+  void SetUp() override {
+    VideoStreamEncoderTest::SetUp();
+    std::unique_ptr<VideoEncoder> encoder;
+    switch (codec_type_) {
+      case kVideoCodecVP8:
+        encoder = VP8Encoder::Create();
+        break;
+      case kVideoCodecVP9:
+        encoder = VP9Encoder::Create();
+        break;
+      case kVideoCodecAV1:
+        encoder = CreateLibaomAv1Encoder();
+        break;
+      case kVideoCodecH264:
+        encoder =
+            H264Encoder::Create(cricket::VideoCodec(cricket::kH264CodecName));
+        break;
+      case kVideoCodecMultiplex:
+        mock_encoder_factory_for_multiplex_ =
+            std::make_unique<MockVideoEncoderFactory>();
+        EXPECT_CALL(*mock_encoder_factory_for_multiplex_, Die);
+        EXPECT_CALL(*mock_encoder_factory_for_multiplex_, CreateVideoEncoder)
+            .WillRepeatedly([] { return VP8Encoder::Create(); });
+        encoder = std::make_unique<MultiplexEncoderAdapter>(
+            mock_encoder_factory_for_multiplex_.get(), SdpVideoFormat("VP8"),
+            false);
+        break;
+      default:
+        RTC_NOTREACHED();
+    }
+    ConfigureEncoderAndBitrate(codec_type_, std::move(encoder));
+  }
+
+  void TearDown() override {
+    video_stream_encoder_->Stop();
+    // Ensure |video_stream_encoder_| is destroyed before
+    // |encoder_proxy_factory_|.
+    video_stream_encoder_.reset();
+    VideoStreamEncoderTest::TearDown();
+  }
+
+ protected:
+  void ConfigureEncoderAndBitrate(VideoCodecType codec_type,
+                                  std::unique_ptr<VideoEncoder> encoder) {
+    // Configure VSE to use the encoder.
+    encoder_ = std::move(encoder);
+    encoder_proxy_factory_ = std::make_unique<test::VideoEncoderProxyFactory>(
+        encoder_.get(), &encoder_selector_);
+    video_send_config_.encoder_settings.encoder_factory =
+        encoder_proxy_factory_.get();
+    VideoEncoderConfig video_encoder_config;
+    test::FillEncoderConfiguration(codec_type, 1, &video_encoder_config);
+    video_encoder_config_ = video_encoder_config.Copy();
+    ConfigureEncoder(video_encoder_config_.Copy());
+
+    // Set bitrate to ensure frame is not dropped.
+    video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+        DataRate::BitsPerSec(kTargetBitrateBps),
+        DataRate::BitsPerSec(kTargetBitrateBps),
+        DataRate::BitsPerSec(kTargetBitrateBps), 0, 0, 0);
+  }
+
+  const VideoCodecType codec_type_;
+  const bool allow_i420_conversion_;
+  NiceMock<MockEncoderSelector> encoder_selector_;
+  std::unique_ptr<test::VideoEncoderProxyFactory> encoder_proxy_factory_;
+  std::unique_ptr<VideoEncoder> encoder_;
+  std::unique_ptr<MockVideoEncoderFactory> mock_encoder_factory_for_multiplex_;
+};
+
+TEST_P(VideoStreamEncoderWithRealEncoderTest, EncoderMapsNativeI420) {
+  auto native_i420_frame = test::CreateMappableNativeFrame(
+      1, VideoFrameBuffer::Type::kI420, codec_width_, codec_height_);
+  video_source_.IncomingCapturedFrame(native_i420_frame);
+  WaitForEncodedFrame(codec_width_, codec_height_);
+
+  auto mappable_native_buffer =
+      test::GetMappableNativeBufferFromVideoFrame(native_i420_frame);
+  std::vector<rtc::scoped_refptr<VideoFrameBuffer>> mapped_frame_buffers =
+      mappable_native_buffer->GetMappedFramedBuffers();
+  ASSERT_EQ(mapped_frame_buffers.size(), 1u);
+  EXPECT_EQ(mapped_frame_buffers[0]->width(), codec_width_);
+  EXPECT_EQ(mapped_frame_buffers[0]->height(), codec_height_);
+  EXPECT_EQ(mapped_frame_buffers[0]->type(), VideoFrameBuffer::Type::kI420);
+}
+
+TEST_P(VideoStreamEncoderWithRealEncoderTest, EncoderMapsNativeNV12) {
+  auto native_nv12_frame = test::CreateMappableNativeFrame(
+      1, VideoFrameBuffer::Type::kNV12, codec_width_, codec_height_);
+  video_source_.IncomingCapturedFrame(native_nv12_frame);
+  WaitForEncodedFrame(codec_width_, codec_height_);
+
+  auto mappable_native_buffer =
+      test::GetMappableNativeBufferFromVideoFrame(native_nv12_frame);
+  std::vector<rtc::scoped_refptr<VideoFrameBuffer>> mapped_frame_buffers =
+      mappable_native_buffer->GetMappedFramedBuffers();
+  ASSERT_EQ(mapped_frame_buffers.size(), 1u);
+  EXPECT_EQ(mapped_frame_buffers[0]->width(), codec_width_);
+  EXPECT_EQ(mapped_frame_buffers[0]->height(), codec_height_);
+  EXPECT_EQ(mapped_frame_buffers[0]->type(), VideoFrameBuffer::Type::kNV12);
+
+  if (!allow_i420_conversion_) {
+    EXPECT_FALSE(mappable_native_buffer->DidConvertToI420());
+  }
+}
+
+std::string TestParametersVideoCodecAndAllowI420ConversionToString(
+    testing::TestParamInfo<std::pair<VideoCodecType, bool>> info) {
+  VideoCodecType codec_type = std::get<0>(info.param);
+  bool allow_i420_conversion = std::get<1>(info.param);
+  std::string str;
+  switch (codec_type) {
+    case kVideoCodecGeneric:
+      str = "Generic";
+      break;
+    case kVideoCodecVP8:
+      str = "VP8";
+      break;
+    case kVideoCodecVP9:
+      str = "VP9";
+      break;
+    case kVideoCodecAV1:
+      str = "AV1";
+      break;
+    case kVideoCodecH264:
+      str = "H264";
+      break;
+    case kVideoCodecMultiplex:
+      str = "Multiplex";
+      break;
+    default:
+      RTC_NOTREACHED();
+  }
+  str += allow_i420_conversion ? "_AllowToI420" : "_DisallowToI420";
+  return str;
+}
+
+constexpr std::pair<VideoCodecType, bool> kVP8DisallowConversion =
+    std::make_pair(kVideoCodecVP8, /*allow_i420_conversion=*/false);
+constexpr std::pair<VideoCodecType, bool> kVP9DisallowConversion =
+    std::make_pair(kVideoCodecVP9, /*allow_i420_conversion=*/false);
+constexpr std::pair<VideoCodecType, bool> kAV1AllowConversion =
+    std::make_pair(kVideoCodecAV1, /*allow_i420_conversion=*/true);
+constexpr std::pair<VideoCodecType, bool> kMultiplexDisallowConversion =
+    std::make_pair(kVideoCodecMultiplex, /*allow_i420_conversion=*/false);
+#if defined(WEBRTC_USE_H264)
+constexpr std::pair<VideoCodecType, bool> kH264AllowConversion =
+    std::make_pair(kVideoCodecH264, /*allow_i420_conversion=*/true);
+
+// The windows compiler does not tolerate #if statements inside the
+// INSTANTIATE_TEST_SUITE_P() macro, so we have to have two definitions (with
+// and without H264).
+INSTANTIATE_TEST_SUITE_P(
+    All,
+    VideoStreamEncoderWithRealEncoderTest,
+    ::testing::Values(kVP8DisallowConversion,
+                      kVP9DisallowConversion,
+                      kAV1AllowConversion,
+                      kMultiplexDisallowConversion,
+                      kH264AllowConversion),
+    TestParametersVideoCodecAndAllowI420ConversionToString);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    All,
+    VideoStreamEncoderWithRealEncoderTest,
+    ::testing::Values(kVP8DisallowConversion,
+                      kVP9DisallowConversion,
+                      kAV1AllowConversion,
+                      kMultiplexDisallowConversion),
+    TestParametersVideoCodecAndAllowI420ConversionToString);
 #endif
 
 }  // namespace webrtc
