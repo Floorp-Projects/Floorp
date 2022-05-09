@@ -15,8 +15,7 @@
 nsresult NS_NewSVGFEDropShadowElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFEDropShadowElementBase = SVGFE;
 
@@ -75,7 +74,6 @@ class SVGFEDropShadowElement : public SVGFEDropShadowElementBase {
   static StringInfo sStringInfo[2];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFEDROPSHADOWELEMENT_H_
