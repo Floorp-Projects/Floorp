@@ -13,8 +13,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSExecutionManager* JSExecutionManager::mCurrentMTManager;
 
@@ -249,5 +248,4 @@ AutoYieldJSThreadExecution::AutoYieldJSThreadExecution() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

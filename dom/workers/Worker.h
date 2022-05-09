@@ -17,8 +17,7 @@
 #  undef PostMessage
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct StructuredSerializeOptions;
 struct WorkerOptions;
@@ -63,7 +62,6 @@ class Worker : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<WorkerPrivate> mWorkerPrivate;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_Worker_h */

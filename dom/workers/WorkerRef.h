@@ -12,8 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /*
  * If you want to play with a DOM Worker, you must know that it can go away
@@ -233,7 +232,6 @@ class IPCWorkerRefHelper final {
   ActorPtr* mActor;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_WorkerRef_h */

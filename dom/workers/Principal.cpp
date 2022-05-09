@@ -12,8 +12,7 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 WorkerPrincipal::WorkerPrincipal(bool aIsSystemOrAddonPrincipal)
     : JSPrincipals(), mIsSystemOrAddonPrincipal(aIsSystemOrAddonPrincipal) {
@@ -34,5 +33,4 @@ void WorkerPrincipal::Destroy(JSPrincipals* aPrincipals) {
   delete static_cast<WorkerPrincipal*>(aPrincipals);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
