@@ -11,8 +11,7 @@
 #include "nsClassHashtable.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileSystemSecurity final {
  public:
@@ -36,7 +35,6 @@ class FileSystemSecurity final {
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mPaths;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileSystemSecurity_h
