@@ -10,8 +10,7 @@
 #include "mozilla/dom/PFileSystemRequestParent.h"
 #include "mozilla/dom/FileSystemBase.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileSystemParams;
 class FileSystemTaskParentBase;
@@ -39,7 +38,6 @@ class FileSystemRequestParent final : public PFileSystemRequestParent {
   bool mDestroyed;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileSystemRequestParent_h

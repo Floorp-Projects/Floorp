@@ -18,8 +18,7 @@
 class nsIPrincipal;
 class nsIHttpChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class InternalRequest;
@@ -80,6 +79,5 @@ class FetchUtil final {
   static void ReportJSStreamError(JSContext* aCx, size_t aErrorCode);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

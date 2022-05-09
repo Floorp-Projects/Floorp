@@ -13,8 +13,7 @@
 
 class nsICookieJarSettings;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCDataTransferItem;
 class BrowserParent;
@@ -67,7 +66,6 @@ class RemoteDragStartData {
   RefPtr<mozilla::gfx::SourceSurface> mVisualization;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_RemoteDragStartData_h
