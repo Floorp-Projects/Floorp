@@ -76,8 +76,7 @@
 
 using namespace mozilla::net;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebSocketImpl;
 
@@ -2847,5 +2846,4 @@ nsresult WebSocketImpl::GetLoadingPrincipal(nsIPrincipal** aPrincipal) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -9,8 +9,7 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 namespace ffi {
 struct WGPULimits;
 }
@@ -48,7 +47,6 @@ class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
   void Cleanup() {}
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #endif  // GPU_SupportedLimits_H_

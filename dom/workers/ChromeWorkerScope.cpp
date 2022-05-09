@@ -14,8 +14,7 @@
 #include "nsNativeCharsetUtils.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -65,5 +64,4 @@ bool DefineChromeWorkerFunctions(JSContext* aCx,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
