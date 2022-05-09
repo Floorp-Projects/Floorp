@@ -216,7 +216,7 @@
         dump(
           "Trying to position a sizeless window; caller should have called sizeToContent() or sizeTo(). See bug 75649.\n"
         );
-        sizeToContent();
+        window.sizeToContent();
       }
 
       if (opener) {
