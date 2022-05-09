@@ -2884,10 +2884,10 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
   }
 
   RefPtr<MediaDecoderStateMachine> self = this;
-  auto audioSinkCreator = [self]() {
+  auto audioSinkCreator = [self](const media::TimeUnit& aStartTime) {
     MOZ_ASSERT(self->OnTaskQueue());
     AudioSink* audioSink =
-        new AudioSink(self->mTaskQueue, self->mAudioQueue,
+        new AudioSink(self->mTaskQueue, self->mAudioQueue, aStartTime,
                       self->Info().mAudio, self->mSinkDevice.Ref());
     self->mAudibleListener.DisconnectIfExists();
     self->mAudibleListener = audioSink->AudibleEvent().Connect(
@@ -3673,12 +3673,7 @@ media::TimeUnit MediaDecoderStateMachine::GetClock(
     TimeStamp* aTimeStamp) const {
   MOZ_ASSERT(OnTaskQueue());
   auto clockTime = mMediaSink->GetPosition(aTimeStamp);
-  // This fails on Windows some times, see 1765563
-#if defined(XP_WIN)
   NS_ASSERTION(GetMediaTime() <= clockTime, "Clock should go forwards.");
-#else
-  MOZ_ASSERT(GetMediaTime() <= clockTime, "Clock should go forwards.");
-#endif
   return clockTime;
 }
 
