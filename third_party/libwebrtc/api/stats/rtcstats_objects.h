@@ -388,6 +388,7 @@ class RTC_EXPORT RTCRTPStreamStats : public RTCStats {
   RTCRTPStreamStats(std::string&& id, int64_t timestamp_us);
 };
 
+// https://www.w3.org/TR/webrtc-stats/#receivedrtpstats-dict*
 class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
@@ -410,6 +411,22 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
   RTCReceivedRtpStreamStats(std::string&& id, int64_t timestamp_us);
 };
 
+// https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*
+class RTC_EXPORT RTCSentRtpStreamStats : public RTCRTPStreamStats {
+ public:
+  WEBRTC_RTCSTATS_DECL();
+
+  RTCSentRtpStreamStats(const RTCSentRtpStreamStats& other);
+  ~RTCSentRtpStreamStats() override;
+
+  RTCStatsMember<uint32_t> packets_sent;
+  RTCStatsMember<uint64_t> bytes_sent;
+
+ protected:
+  RTCSentRtpStreamStats(const std::string&& id, int64_t timestamp_us);
+  RTCSentRtpStreamStats(std::string&& id, int64_t timestamp_us);
+};
+
 // https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*
 // TODO(hbos): Support the remote case |is_remote = true|.
 // https://bugs.webrtc.org/7065
@@ -423,6 +440,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCInboundRTPStreamStats(const RTCInboundRTPStreamStats& other);
   ~RTCInboundRTPStreamStats() override;
 
+  RTCStatsMember<std::string> remote_id;
   RTCStatsMember<uint32_t> packets_received;
   RTCStatsMember<uint64_t> fec_packets_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
@@ -570,6 +588,22 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
   RTCStatsMember<double> fraction_lost;
   RTCStatsMember<double> total_round_trip_time;
   RTCStatsMember<int32_t> round_trip_time_measurements;
+};
+
+// https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*
+class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
+    : public RTCSentRtpStreamStats {
+ public:
+  WEBRTC_RTCSTATS_DECL();
+
+  RTCRemoteOutboundRtpStreamStats(const std::string& id, int64_t timestamp_us);
+  RTCRemoteOutboundRtpStreamStats(std::string&& id, int64_t timestamp_us);
+  RTCRemoteOutboundRtpStreamStats(const RTCRemoteOutboundRtpStreamStats& other);
+  ~RTCRemoteOutboundRtpStreamStats() override;
+
+  RTCStatsMember<std::string> local_id;
+  RTCStatsMember<double> remote_timestamp;
+  RTCStatsMember<uint64_t> reports_sent;
 };
 
 // https://w3c.github.io/webrtc-stats/#dom-rtcmediasourcestats
