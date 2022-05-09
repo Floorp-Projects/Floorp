@@ -28,7 +28,7 @@ class RtpVp8RefFinder {
   RtpVp8RefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame);
+      std::unique_ptr<RtpFrameObject> frame);
   void ClearTo(uint16_t seq_num);
 
  private:
@@ -40,12 +40,12 @@ class RtpVp8RefFinder {
 
   enum FrameDecision { kStash, kHandOff, kDrop };
 
-  FrameDecision ManageFrameInternal(video_coding::RtpFrameObject* frame);
+  FrameDecision ManageFrameInternal(RtpFrameObject* frame);
   void RetryStashedFrames(RtpFrameReferenceFinder::ReturnVector& res);
-  void UpdateLayerInfoVp8(video_coding::RtpFrameObject* frame,
+  void UpdateLayerInfoVp8(RtpFrameObject* frame,
                           int64_t unwrapped_tl0,
                           uint8_t temporal_idx);
-  void UnwrapPictureIds(video_coding::RtpFrameObject* frame);
+  void UnwrapPictureIds(RtpFrameObject* frame);
 
   // Save the last picture id in order to detect when there is a gap in frames
   // that have not yet been fully received.
@@ -58,7 +58,7 @@ class RtpVp8RefFinder {
 
   // Frames that have been fully received but didn't have all the information
   // needed to determine their references.
-  std::deque<std::unique_ptr<video_coding::RtpFrameObject>> stashed_frames_;
+  std::deque<std::unique_ptr<RtpFrameObject>> stashed_frames_;
 
   // Holds the information about the last completed frame for a given temporal
   // layer given an unwrapped Tl0 picture index.

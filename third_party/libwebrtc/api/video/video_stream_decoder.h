@@ -46,7 +46,7 @@ class VideoStreamDecoderInterface {
 
   virtual ~VideoStreamDecoderInterface() = default;
 
-  virtual void OnFrame(std::unique_ptr<video_coding::EncodedFrame> frame) = 0;
+  virtual void OnFrame(std::unique_ptr<EncodedFrame> frame) = 0;
 
   virtual void SetMinPlayoutDelay(TimeDelta min_delay) = 0;
   virtual void SetMaxPlayoutDelay(TimeDelta max_delay) = 0;

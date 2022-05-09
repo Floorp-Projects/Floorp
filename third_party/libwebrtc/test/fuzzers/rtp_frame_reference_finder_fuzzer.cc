@@ -59,8 +59,7 @@ class DataReader {
 };
 
 class NullCallback : public OnCompleteFrameCallback {
-  void OnCompleteFrame(
-      std::unique_ptr<video_coding::EncodedFrame> frame) override {}
+  void OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) override {}
 };
 
 absl::optional<RTPVideoHeader::GenericDescriptorInfo>
@@ -135,7 +134,7 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
     video_header.generic = GenerateGenericFrameDependencies(&reader);
 
     // clang-format off
-    auto frame = std::make_unique<video_coding::RtpFrameObject>(
+    auto frame = std::make_unique<RtpFrameObject>(
         first_seq_num,
         last_seq_num,
         marker_bit,

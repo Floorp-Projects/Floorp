@@ -76,7 +76,7 @@ class MockVideoDecoder : public VideoDecoder {
   const char* ImplementationName() const { return "MockVideoDecoder"; }
 };
 
-class FrameObjectFake : public video_coding::EncodedFrame {
+class FrameObjectFake : public EncodedFrame {
  public:
   void SetPayloadType(uint8_t payload_type) { _payloadType = payload_type; }
 
@@ -496,13 +496,12 @@ class VideoReceiveStreamTestWithSimulatedClock : public ::testing::Test {
 
   void OnFrameDecoded() { event_->Set(); }
 
-  void PassEncodedFrameAndWait(
-      std::unique_ptr<video_coding::EncodedFrame> frame) {
-      event_ = std::make_unique<rtc::Event>();
-      // This call will eventually end up in the Decoded method where the
-      // event is set.
-      video_receive_stream_.OnCompleteFrame(std::move(frame));
-      event_->Wait(rtc::Event::kForever);
+  void PassEncodedFrameAndWait(std::unique_ptr<EncodedFrame> frame) {
+    event_ = std::make_unique<rtc::Event>();
+    // This call will eventually end up in the Decoded method where the
+    // event is set.
+    video_receive_stream_.OnCompleteFrame(std::move(frame));
+    event_->Wait(rtc::Event::kForever);
   }
 
  protected:

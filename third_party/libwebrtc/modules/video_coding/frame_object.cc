@@ -19,7 +19,6 @@
 #include "rtc_base/checks.h"
 
 namespace webrtc {
-namespace video_coding {
 RtpFrameObject::RtpFrameObject(
     uint16_t first_seq_num,
     uint16_t last_seq_num,
@@ -128,5 +127,4 @@ const RTPVideoHeader& RtpFrameObject::GetRtpVideoHeader() const {
   return rtp_video_header_;
 }
 
-}  // namespace video_coding
 }  // namespace webrtc

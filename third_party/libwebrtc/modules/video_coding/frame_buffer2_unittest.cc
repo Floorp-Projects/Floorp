@@ -199,7 +199,7 @@ class TestFrameBuffer2 : public ::testing::Test {
     time_task_queue_.PostTask([this, max_wait_time, keyframe_required]() {
       buffer_->NextFrame(
           max_wait_time, keyframe_required, &time_task_queue_,
-          [this](std::unique_ptr<video_coding::EncodedFrame> frame,
+          [this](std::unique_ptr<EncodedFrame> frame,
                  video_coding::FrameBuffer::ReturnReason reason) {
             if (reason != FrameBuffer::ReturnReason::kStopped) {
               frames_.emplace_back(std::move(frame));

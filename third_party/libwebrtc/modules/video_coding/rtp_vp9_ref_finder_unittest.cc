@@ -26,7 +26,6 @@ using ::testing::Property;
 using ::testing::UnorderedElementsAreArray;
 
 namespace webrtc {
-namespace video_coding {
 
 namespace {
 class Frame {
@@ -83,7 +82,7 @@ class Frame {
     return *this;
   }
 
-  operator std::unique_ptr<video_coding::RtpFrameObject>() {
+  operator std::unique_ptr<RtpFrameObject>() {
     RTPVideoHeaderVP9 vp9_header{};
     vp9_header.picture_id = *picture_id;
     vp9_header.temporal_idx = *temporal_id;
@@ -112,7 +111,7 @@ class Frame {
                                        : VideoFrameType::kVideoFrameDelta;
     video_header.video_type_header = vp9_header;
     // clang-format off
-    return std::make_unique<video_coding::RtpFrameObject>(
+    return std::make_unique<RtpFrameObject>(
         seq_num_start,
         seq_num_end,
         /*markerBit=*/true,
@@ -209,7 +208,7 @@ class RtpVp9RefFinderTest : public ::testing::Test {
  protected:
   RtpVp9RefFinderTest() : ref_finder_(std::make_unique<RtpVp9RefFinder>()) {}
 
-  void Insert(std::unique_ptr<video_coding::RtpFrameObject> frame) {
+  void Insert(std::unique_ptr<RtpFrameObject> frame) {
     for (auto& f : ref_finder_->ManageFrame(std::move(frame))) {
       frames_.push_back(std::move(f));
     }
@@ -703,5 +702,4 @@ TEST_F(RtpVp9RefFinderTest, SpatialIndex) {
               Contains(Pointee(Property(&EncodedFrame::SpatialIndex, 2))));
 }
 
-}  // namespace video_coding
 }  // namespace webrtc

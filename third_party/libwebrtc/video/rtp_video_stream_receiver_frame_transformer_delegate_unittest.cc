@@ -35,15 +35,15 @@ using ::testing::ElementsAre;
 using ::testing::NiceMock;
 using ::testing::SaveArg;
 
-std::unique_ptr<video_coding::RtpFrameObject> CreateRtpFrameObject(
+std::unique_ptr<RtpFrameObject> CreateRtpFrameObject(
     const RTPVideoHeader& video_header) {
-  return std::make_unique<video_coding::RtpFrameObject>(
+  return std::make_unique<RtpFrameObject>(
       0, 0, true, 0, 0, 0, 0, 0, VideoSendTiming(), 0, video_header.codec,
       kVideoRotation_0, VideoContentType::UNSPECIFIED, video_header,
       absl::nullopt, RtpPacketInfos(), EncodedImageBuffer::Create(0));
 }
 
-std::unique_ptr<video_coding::RtpFrameObject> CreateRtpFrameObject() {
+std::unique_ptr<RtpFrameObject> CreateRtpFrameObject() {
   return CreateRtpFrameObject(RTPVideoHeader());
 }
 
@@ -54,7 +54,7 @@ class TestRtpVideoFrameReceiver : public RtpVideoFrameReceiver {
 
   MOCK_METHOD(void,
               ManageFrame,
-              (std::unique_ptr<video_coding::RtpFrameObject> frame),
+              (std::unique_ptr<RtpFrameObject> frame),
               (override));
 };
 

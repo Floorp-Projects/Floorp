@@ -127,7 +127,7 @@ class FakeVideoDecoderFactory : public VideoDecoderFactory {
   NiceMock<StubVideoDecoder> av1_decoder_;
 };
 
-class FakeEncodedFrame : public video_coding::EncodedFrame {
+class FakeEncodedFrame : public EncodedFrame {
  public:
   int64_t ReceivedTime() const override { return 0; }
   int64_t RenderTime() const override { return 0; }

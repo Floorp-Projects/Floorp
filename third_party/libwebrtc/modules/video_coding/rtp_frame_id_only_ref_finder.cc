@@ -17,7 +17,7 @@
 namespace webrtc {
 
 RtpFrameReferenceFinder::ReturnVector RtpFrameIdOnlyRefFinder::ManageFrame(
-    std::unique_ptr<video_coding::RtpFrameObject> frame,
+    std::unique_ptr<RtpFrameObject> frame,
     int frame_id) {
   frame->SetSpatialIndex(0);
   frame->SetId(unwrapper_.Unwrap(frame_id & (kFrameIdLength - 1)));

@@ -25,7 +25,7 @@ class RtpFrameIdOnlyRefFinder {
   RtpFrameIdOnlyRefFinder() = default;
 
   RtpFrameReferenceFinder::ReturnVector ManageFrame(
-      std::unique_ptr<video_coding::RtpFrameObject> frame,
+      std::unique_ptr<RtpFrameObject> frame,
       int frame_id);
 
  private:
