@@ -11,8 +11,7 @@
 #include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PermissionObserver;
 
@@ -54,7 +53,6 @@ class PermissionStatus final : public DOMEventTargetHelper {
   RefPtr<PermissionObserver> mObserver;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_permissionstatus_h_

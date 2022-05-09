@@ -24,8 +24,7 @@ class nsIHttpChannel;
 class nsITimedChannel;
 struct JSContext;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Performance;
 class PerformanceTimingData;
@@ -89,7 +88,6 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
   ~PerformanceNavigationTiming() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PerformanceNavigationTiming_h___

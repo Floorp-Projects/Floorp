@@ -22,8 +22,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 PushNotifier::PushNotifier() = default;
 
@@ -440,5 +439,4 @@ nsresult PushErrorDispatcher::HandleNoChildProcesses() {
       nsContentUtils::eOMIT_LOCATION);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

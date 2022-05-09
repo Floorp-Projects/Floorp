@@ -24,8 +24,7 @@
 
 class nsIHttpChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PerformanceTiming;
 
@@ -419,11 +418,9 @@ class PerformanceTiming final : public nsWrapperCache {
   UniquePtr<PerformanceTimingData> mTimingData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 template <>
 struct IPDLParamTraits<mozilla::dom::PerformanceTimingData> {
@@ -593,7 +590,6 @@ struct IPDLParamTraits<nsIServerTiming*> {
   }
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif  // mozilla_dom_PerformanceTiming_h
