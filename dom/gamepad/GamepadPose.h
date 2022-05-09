@@ -12,8 +12,7 @@
 #include "mozilla/dom/GamepadPoseState.h"
 #include "nsCOMPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadPose final : public Pose {
  public:
@@ -53,7 +52,6 @@ class GamepadPose final : public Pose {
   GamepadPoseState mPoseState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_GamepadPose_h
