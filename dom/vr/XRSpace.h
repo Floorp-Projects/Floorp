@@ -13,8 +13,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XRRigidTransform;
 class XRSession;
@@ -52,7 +51,6 @@ class XRSpace : public DOMEventTargetHelper {
   gfx::QuaternionDouble mOriginOffsetOrientation;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRSpace_h_

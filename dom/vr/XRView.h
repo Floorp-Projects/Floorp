@@ -12,8 +12,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum class XREye : uint8_t;
 class XRRigidTransform;
@@ -52,7 +51,6 @@ class XRView final : public nsWrapperCache {
   RefPtr<XRRigidTransform> mTransform;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRView_h_
