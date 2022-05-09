@@ -45,16 +45,29 @@ TimeUnit AudioSinkWrapper::GetEndTime(TrackType aType) const {
   if (aType == TrackInfo::kAudioTrack && mAudioSink) {
     return mAudioSink->GetEndTime();
   }
+
+  if (aType == TrackInfo::kAudioTrack && !mAudioSink && IsMuted()) {
+    if (IsPlaying()) {
+      return GetSystemClockPosition(TimeStamp::Now());
+    }
+
+    return mPlayDuration;
+  }
   return TimeUnit::Zero();
 }
 
-TimeUnit AudioSinkWrapper::GetVideoPosition(TimeStamp aNow) const {
+TimeUnit AudioSinkWrapper::GetSystemClockPosition(TimeStamp aNow) const {
   AssertOwnerThread();
   MOZ_ASSERT(!mPlayStartTime.IsNull());
   // Time elapsed since we started playing.
   double delta = (aNow - mPlayStartTime).ToSeconds();
   // Take playback rate into account.
   return mPlayDuration + TimeUnit::FromSeconds(delta * mParams.mPlaybackRate);
+}
+
+bool AudioSinkWrapper::IsMuted() const {
+  AssertOwnerThread();
+  return mParams.mVolume == 0.0;
 }
 
 TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
@@ -64,16 +77,30 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
   TimeUnit pos;
   TimeStamp t = TimeStamp::Now();
 
-  if (!mAudioEnded) {
+  if (!mAudioEnded && !IsMuted()) {
     MOZ_ASSERT(mAudioSink);
     // Rely on the audio sink to report playback position when it is not ended.
     pos = mAudioSink->GetPosition();
     LOGV("%p: Getting position from the Audio Sink %lf", this, pos.ToSeconds());
   } else if (!mPlayStartTime.IsNull()) {
-    // Calculate playback position using system clock if we are still playing.
-    pos = GetVideoPosition(t);
+    // Calculate playback position using system clock if we are still playing,
+    // but not rendering the audio, because this audio sink is muted.
+    pos = GetSystemClockPosition(t);
     LOGV("%p: Getting position from the system clock %lf", this,
          pos.ToSeconds());
+    if (mAudioQueue.GetSize() > 0 && IsMuted()) {
+      // audio track, but it's muted and won't be dequeued, discard packets that
+      // are behind the current media time, to keep the queue size under
+      // control.
+      DropAudioPacketsIfNeeded(pos);
+      // If muted, it's necessary to manually check if the audio has "ended",
+      // meaning that all the audio packets have been consumed, to resolve the
+      // ended promise.
+      if (CheckIfEnded()) {
+        MOZ_ASSERT(!mAudioSink);
+        mEndedPromiseHolder.Resolve(true, __func__);
+      }
+    }
   } else {
     // Return how long we've played if we are not playing.
     pos = mPlayDuration;
@@ -87,6 +114,10 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
   return pos;
 }
 
+bool AudioSinkWrapper::CheckIfEnded() const {
+  return mAudioQueue.IsFinished() && mAudioQueue.GetSize() == 0u;
+}
+
 bool AudioSinkWrapper::HasUnplayedFrames(TrackType aType) const {
   AssertOwnerThread();
   return mAudioSink ? mAudioSink->HasUnplayedFrames() : false;
@@ -97,8 +128,62 @@ media::TimeUnit AudioSinkWrapper::UnplayedDuration(TrackType aType) const {
   return mAudioSink ? mAudioSink->UnplayedDuration() : media::TimeUnit::Zero();
 }
 
+void AudioSinkWrapper::DropAudioPacketsIfNeeded(
+    const TimeUnit& aMediaPosition) {
+  RefPtr<AudioData> audio = mAudioQueue.PeekFront();
+  uint32_t dropped = 0;
+  while (audio && audio->mTime + audio->mDuration < aMediaPosition) {
+    // drop this packet, try the next one
+    audio = mAudioQueue.PopFront();
+    dropped++;
+    if (audio) {
+      LOG("Dropping audio packets: media position: %lf, "
+          "packet dropped: [%lf, %lf] (%u so far).\n",
+          aMediaPosition.ToSeconds(), audio->mTime.ToSeconds(),
+          (audio->mTime + audio->mDuration).ToSeconds(), dropped);
+    }
+    audio = mAudioQueue.PeekFront();
+  }
+}
+
+void AudioSinkWrapper::OnMuted(bool aMuted) {
+  AssertOwnerThread();
+  if (aMuted) {
+    if (mAudioSink) {
+      LOG("AudioSinkWrapper muted, shutting down AudioStream.");
+      mAudioSinkEndedPromise.DisconnectIfExists();
+      mPlayDuration = mAudioSink->GetPosition();
+      mPlayStartTime = TimeStamp::Now();
+      Maybe<MozPromiseHolder<MediaSink::EndedPromise>> rv =
+          mAudioSink->Shutdown(ShutdownCause::Muting);
+      MOZ_ASSERT(rv.isSome());
+      mEndedPromiseHolder = std::move(rv.ref());
+      mAudioSink = nullptr;
+    }
+  } else {
+    if (!IsPlaying()) {
+      return;
+    }
+    LOG("AudioSinkWrapper unmuted, re-creating an AudioStream.");
+    TimeUnit mediaPosition = GetSystemClockPosition(TimeStamp::Now());
+    DropAudioPacketsIfNeeded(mediaPosition);
+    nsresult rv = StartAudioSink(mediaPosition);
+    if (NS_FAILED(rv)) {
+      NS_WARNING(
+          "Could not start AudioSink from AudioSinkWrapper when unmuting");
+    }
+  }
+}
+
 void AudioSinkWrapper::SetVolume(double aVolume) {
   AssertOwnerThread();
+
+  if (aVolume == 0. && mParams.mVolume != 0.) {
+    OnMuted(true);
+  } else if (aVolume != 0. && mParams.mVolume == 0.) {
+    OnMuted(false);
+  }
+
   mParams.mVolume = aVolume;
   if (mAudioSink) {
     mAudioSink->SetVolume(aVolume);
@@ -114,22 +199,22 @@ void AudioSinkWrapper::SetStreamName(const nsAString& aStreamName) {
 
 void AudioSinkWrapper::SetPlaybackRate(double aPlaybackRate) {
   AssertOwnerThread();
-  if (!mAudioEnded) {
+  if (!mAudioEnded && mAudioSink) {
     // Pass the playback rate to the audio sink. The underlying AudioStream
     // will handle playback rate changes and report correct audio position.
     mAudioSink->SetPlaybackRate(aPlaybackRate);
   } else if (!mPlayStartTime.IsNull()) {
     // Adjust playback duration and start time when we are still playing.
     TimeStamp now = TimeStamp::Now();
-    mPlayDuration = GetVideoPosition(now);
+    mPlayDuration = GetSystemClockPosition(now);
     mPlayStartTime = now;
   }
-  // mParams.mPlaybackRate affects GetVideoPosition(). It should be updated
-  // after the calls to GetVideoPosition();
+  // mParams.mPlaybackRate affects GetSystemClockPosition(). It should be
+  // updated after the calls to GetSystemClockPosition();
   mParams.mPlaybackRate = aPlaybackRate;
 
   // Do nothing when not playing. Changes in playback rate will be taken into
-  // account by GetVideoPosition().
+  // account by GetSystemClockPosition().
 }
 
 void AudioSinkWrapper::SetPreservesPitch(bool aPreservesPitch) {
