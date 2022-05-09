@@ -47,4 +47,18 @@ TEST_F(BasicAsyncResolverFactoryTest, TestCreate) {
   TestCreate();
 }
 
+TEST(WrappingAsyncDnsResolverFactoryTest, TestCreate) {
+  WrappingAsyncDnsResolverFactory factory(
+      std::make_unique<BasicAsyncResolverFactory>());
+
+  std::unique_ptr<AsyncDnsResolverInterface> resolver(factory.Create());
+  ASSERT_TRUE(resolver);
+
+  bool address_resolved = false;
+  rtc::SocketAddress address("", 0);
+  resolver->Start(address, [&address_resolved]() { address_resolved = true; });
+  ASSERT_TRUE_WAIT(address_resolved, 10000 /*ms*/);
+  resolver.reset();
+}
+
 }  // namespace webrtc
