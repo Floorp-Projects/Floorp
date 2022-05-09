@@ -73,6 +73,8 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
 
   const uint32_t ssrc_;
   Clock* const clock_;
+  // Delta used to map internal timestamps to Unix epoch ones.
+  const int64_t delta_internal_unix_epoch_ms_;
   RateStatistics incoming_bitrate_;
   // In number of packets or sequence numbers.
   int max_reordering_threshold_;

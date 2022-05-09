@@ -24,9 +24,14 @@
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
+namespace {
+constexpr int64_t kStatisticsTimeoutMs = 8000;
+constexpr int64_t kStatisticsProcessIntervalMs = 1000;
 
-const int64_t kStatisticsTimeoutMs = 8000;
-const int64_t kStatisticsProcessIntervalMs = 1000;
+// Number of seconds since 1900 January 1 00:00 GMT (see
+// https://tools.ietf.org/html/rfc868).
+constexpr int64_t kNtpJan1970Millisecs = 2'208'988'800'000;
+}  // namespace
 
 StreamStatistician::~StreamStatistician() {}
 
@@ -35,6 +40,9 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
                                                int max_reordering_threshold)
     : ssrc_(ssrc),
       clock_(clock),
+      delta_internal_unix_epoch_ms_(clock_->CurrentNtpInMilliseconds() -
+                                    clock_->TimeInMilliseconds() -
+                                    kNtpJan1970Millisecs),
       incoming_bitrate_(kStatisticsProcessIntervalMs,
                         RateStatistics::kBpsScale),
       max_reordering_threshold_(max_reordering_threshold),
@@ -172,8 +180,11 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
   // TODO(nisse): Can we return a float instead?
   // Note: internal jitter value is in Q4 and needs to be scaled by 1/16.
   stats.jitter = jitter_q4_ >> 4;
-  stats.last_packet_received_timestamp_ms =
-      receive_counters_.last_packet_received_timestamp_ms;
+  if (receive_counters_.last_packet_received_timestamp_ms.has_value()) {
+    stats.last_packet_received_timestamp_ms =
+        *receive_counters_.last_packet_received_timestamp_ms +
+        delta_internal_unix_epoch_ms_;
+  }
   stats.packet_counter = receive_counters_.transmitted;
   return stats;
 }
