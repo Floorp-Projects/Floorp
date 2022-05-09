@@ -108,6 +108,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
     nsAutoCString dummy;
     return IsHardwareAccelerated(dummy);
   }
+  void UpdateDecodeTimes(TimeStamp aDecodeStart);
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
   layers::TextureClient* AllocateTextureClientForImage(
@@ -144,6 +145,11 @@ class FFmpegVideoDecoder<LIBAV_VER>
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
   VideoInfo mInfo;
+  int mDecodedFrames;
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+  int mDecodedFramesLate;
+#endif
+  float mAverangeDecodeTime;
 
   class PtsCorrectionContext {
    public:
