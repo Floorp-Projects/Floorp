@@ -12,8 +12,7 @@
 
 class nsGlobalWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * This class encapsulates a permission request to allow media key system
@@ -70,7 +69,6 @@ class MediaKeySystemAccessPermissionRequest
   MozPromiseHolder<RequestPromise> mPromiseHolder;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_MEDIA_EME_MEDIAKEYSYSTEMACCESSPERMISSIONREQUEST_H_

@@ -12,8 +12,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class VideoPlaybackQuality final : public nsWrapperCache {
  public:
@@ -44,7 +43,6 @@ class VideoPlaybackQuality final : public nsWrapperCache {
   uint32_t mDroppedFrames;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_VideoPlaybackQuality_h_

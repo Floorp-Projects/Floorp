@@ -14,8 +14,7 @@
 #  include "opmapi.h"
 #endif
 
-namespace mozilla {
-namespace cdmtest {
+namespace mozilla::cdmtest {
 
 #if defined(XP_WIN)
 typedef HRESULT(STDAPICALLTYPE* OPMGetVideoOutputsFromHMONITORProc)(
@@ -124,5 +123,4 @@ static void TestOuputProtectionAPIs() {
   FakeDecryptor::Message("OP tests completed");
 }
 
-}  // namespace cdmtest
-}  // namespace mozilla
+}  // namespace mozilla::cdmtest

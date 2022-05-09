@@ -9,8 +9,7 @@
 #include "mozilla/ipc/Shmem.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPSharedMemManager;
 
@@ -78,7 +77,6 @@ class GMPSharedMemManager {
   GMPSharedMem* mData;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPSharedMemManager_h_
