@@ -53,7 +53,7 @@ bool HasIPv4Enabled() {
     return false;
   }
   for (struct ifaddrs* cur = ifa; cur != nullptr; cur = cur->ifa_next) {
-    if (cur->ifa_addr->sa_family == AF_INET) {
+    if (cur->ifa_addr != nullptr && cur->ifa_addr->sa_family == AF_INET) {
       has_ipv4 = true;
       break;
     }
@@ -112,7 +112,7 @@ bool HasIPv6Enabled() {
     return false;
   }
   for (struct ifaddrs* cur = ifa; cur != nullptr; cur = cur->ifa_next) {
-    if (cur->ifa_addr->sa_family == AF_INET6) {
+    if (cur->ifa_addr != nullptr && cur->ifa_addr->sa_family == AF_INET6) {
       has_ipv6 = true;
       break;
     }
