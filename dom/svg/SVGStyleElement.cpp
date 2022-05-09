@@ -16,8 +16,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGStyleElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -197,5 +196,4 @@ Maybe<LinkStyle::SheetInfo> SVGStyleElement::GetStyleSheetInfo() {
   });
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

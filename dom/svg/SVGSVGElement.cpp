@@ -32,8 +32,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(SVG)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGPreserveAspectRatio_Binding;
 using namespace SVGSVGElement_Binding;
@@ -585,5 +584,4 @@ SVGAnimatedTransformList* SVGSVGElement::GetTransformInternal() const {
                                              : mTransforms.get();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
