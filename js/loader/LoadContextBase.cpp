@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ScriptLoadContext.h"
+#include "mozilla/loader/ComponentModuleLoader.h"
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ScriptLoadRequest.h"
 
@@ -45,6 +46,11 @@ void LoadContextBase::GetProfilerLabel(nsACString& aOutString) {
 mozilla::dom::ScriptLoadContext* LoadContextBase::AsWindowContext() {
   MOZ_ASSERT(IsWindowContext());
   return static_cast<mozilla::dom::ScriptLoadContext*>(this);
+}
+
+mozilla::loader::ComponentLoadContext* LoadContextBase::AsComponentContext() {
+  MOZ_ASSERT(IsComponentContext());
+  return static_cast<mozilla::loader::ComponentLoadContext*>(this);
 }
 
 }  // namespace JS::loader

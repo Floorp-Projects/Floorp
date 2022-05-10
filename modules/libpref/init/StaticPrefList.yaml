@@ -2329,7 +2329,7 @@
   mirror: always
 
 - name: dom.gamepad.test.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
