@@ -30,10 +30,6 @@ class CalcSnapPoints final {
   void AddEdge(nscoord aEdge, nscoord aDestination, nscoord aStartPos,
                nscoord aScrollingDirection, nscoord* aBestEdge,
                nscoord* aSecondBestEdge, bool* aEdgeFound);
-  void AddEdgeInterval(nscoord aInterval, nscoord aMinPos, nscoord aMaxPos,
-                       nscoord aOffset, nscoord aDestination, nscoord aStartPos,
-                       nscoord aScrollingDirection, nscoord* aBestEdge,
-                       nscoord* aSecondBestEdge, bool* aEdgeFound);
   nsPoint GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
     return std::abs(mBestEdge.x - mSecondBestEdge.x);
@@ -187,43 +183,6 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
   } else {
     NS_ERROR("Invalid scroll mode");
     return;
-  }
-}
-
-void CalcSnapPoints::AddEdgeInterval(
-    nscoord aInterval, nscoord aMinPos, nscoord aMaxPos, nscoord aOffset,
-    nscoord aDestination, nscoord aStartPos, nscoord aScrollingDirection,
-    nscoord* aBestEdge, nscoord* aSecondBestEdge, bool* aEdgeFound) {
-  if (aInterval == 0) {
-    // When interval is 0, there are no scroll snap points.
-    // Avoid division by zero and bail.
-    return;
-  }
-
-  // The only possible candidate interval snap points are the edges immediately
-  // surrounding aDestination.
-
-  // aDestination must be clamped to the scroll
-  // range in order to handle cases where the best matching snap point would
-  // result in scrolling out of bounds.  This clamping must be prior to
-  // selecting the two interval edges.
-  nscoord clamped = std::max(std::min(aDestination, aMaxPos), aMinPos);
-
-  // Add each edge in the interval immediately before aTarget and after aTarget
-  // Do not add edges that are out of range.
-  nscoord r = (clamped + aOffset) % aInterval;
-  if (r < aMinPos) {
-    r += aInterval;
-  }
-  nscoord edge = clamped - r;
-  if (edge >= aMinPos && edge <= aMaxPos) {
-    AddEdge(edge, aDestination, aStartPos, aScrollingDirection, aBestEdge,
-            aSecondBestEdge, aEdgeFound);
-  }
-  edge += aInterval;
-  if (edge >= aMinPos && edge <= aMaxPos) {
-    AddEdge(edge, aDestination, aStartPos, aScrollingDirection, aBestEdge,
-            aSecondBestEdge, aEdgeFound);
   }
 }
 
