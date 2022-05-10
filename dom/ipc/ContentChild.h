@@ -46,7 +46,6 @@ class ChildProfilerController;
 class BenchmarkStorageChild;
 
 namespace ipc {
-class PChildToParentStreamChild;
 class PFileDescriptorSetChild;
 }  // namespace ipc
 
@@ -231,12 +230,6 @@ class ContentChild final : public PContentChild,
       const bool& wantCacheData) override;
 
   PRemotePrintJobChild* AllocPRemotePrintJobChild();
-
-  PChildToParentStreamChild* AllocPChildToParentStreamChild();
-  bool DeallocPChildToParentStreamChild(PChildToParentStreamChild*);
-
-  PParentToChildStreamChild* AllocPParentToChildStreamChild();
-  bool DeallocPParentToChildStreamChild(PParentToChildStreamChild*);
 
   PMediaChild* AllocPMediaChild();
 
@@ -654,8 +647,6 @@ class ContentChild final : public PContentChild,
       Endpoint<PSandboxTestingChild>&& aEndpoint);
 #endif
 
-  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild* aActor) override;
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
