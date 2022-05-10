@@ -3743,13 +3743,19 @@ mozilla::ipc::IPCResult ContentChild::RecvOnContentBlockingDecision(
   return IPC_OK();
 }
 
-#ifdef NIGHTLY_BUILD
 void ContentChild::OnChannelReceivedMessage(const Message& aMsg) {
+  if (aMsg.is_sync() && !aMsg.is_reply()) {
+    LSObject::OnSyncMessageReceived();
+  }
+
+#ifdef NIGHTLY_BUILD
   if (nsContentUtils::IsMessageInputEvent(aMsg)) {
     mPendingInputEvents++;
   }
+#endif
 }
 
+#ifdef NIGHTLY_BUILD
 PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
   if (nsContentUtils::IsMessageInputEvent(aMsg)) {
     DebugOnly<uint32_t> prevEvts = mPendingInputEvents--;
@@ -3758,12 +3764,21 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
 
   return PContentChild::OnMessageReceived(aMsg);
 }
+#endif
 
 PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
                                                       Message*& aReply) {
-  return PContentChild::OnMessageReceived(aMsg, aReply);
+  Result result = PContentChild::OnMessageReceived(aMsg, aReply);
+
+  if (aMsg.is_sync()) {
+    // OnMessageReceived shouldn't be called for sync replies.
+    MOZ_ASSERT(!aMsg.is_reply());
+
+    LSObject::OnSyncMessageHandled();
+  }
+
+  return result;
 }
-#endif
 
 mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
     uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit) {
