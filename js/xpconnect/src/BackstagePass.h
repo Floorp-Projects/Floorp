@@ -32,8 +32,6 @@ class BackstagePass final : public nsIGlobalObject,
 
   nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
-  nsIPrincipal* GetEffectiveCookiePrincipal() override { return mPrincipal; }
-
   nsIPrincipal* GetEffectiveStoragePrincipal() override { return mPrincipal; }
 
   nsIPrincipal* PartitionedPrincipal() override { return mPrincipal; }
