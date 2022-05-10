@@ -1777,17 +1777,11 @@ gfxFontEntry* gfxFT2FontList::LookupLocalFont(nsPresContext* aPresContext,
 
     // if so, iterate over faces in this family to see if there is a match
     if (family.Equals(fullNameFamily, nsCaseInsensitiveCStringComparator)) {
-      nsTArray<RefPtr<gfxFontEntry>>& fontList = fontFamily->GetFontList();
-      int index, len = fontList.Length();
-      for (index = 0; index < len; index++) {
-        gfxFontEntry* fe = fontList[index];
-        if (!fe) {
-          continue;
-        }
-        if (fe->Name().Equals(aFontName, nsCaseInsensitiveCStringComparator)) {
-          fontEntry = static_cast<FT2FontEntry*>(fe);
-          goto searchDone;
-        }
+      gfxFontEntry* fe =
+          fontFamily->FindFont(aFontName, nsCaseInsensitiveCStringComparator);
+      if (fe) {
+        fontEntry = static_cast<FT2FontEntry*>(fe);
+        goto searchDone;
       }
     }
   }

@@ -1437,7 +1437,7 @@ gfxFontFamily* gfxPlatformFontList::CheckFamily(gfxFontFamily* aFamily) {
     aFamily->FindStyleVariations();
   }
 
-  if (aFamily && aFamily->GetFontList().Length() == 0) {
+  if (aFamily && aFamily->FontListLength() == 0) {
     // Failed to load any faces for this family, so discard it.
     nsAutoCString key;
     GenerateFontListKey(aFamily->Name(), key);
