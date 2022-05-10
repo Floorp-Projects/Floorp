@@ -577,6 +577,19 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports** aStream) {
   return NS_OK;
 }
 
+void nsBufferedInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                                 uint32_t* aSizeUsed,
+                                                 uint32_t* aPipes,
+                                                 uint32_t* aTransferables) {
+  if (mStream) {
+    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mStream);
+    MOZ_ASSERT(stream);
+
+    InputStreamHelper::SerializedComplexity(stream, aMaxSize, aSizeUsed, aPipes,
+                                            aTransferables);
+  }
+}
+
 void nsBufferedInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
     bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,

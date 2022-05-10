@@ -35,9 +35,6 @@ using namespace mozilla;
 using namespace mozilla::ipc;
 
 using mozilla::DeprecatedAbs;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
 
 class nsMultiplexInputStream final : public nsIMultiplexInputStream,
                                      public nsISeekableStream,
@@ -122,6 +119,10 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
     void* mClosure;
     bool mDone;
   };
+
+  void SerializedComplexityInternal(uint32_t aMaxSize, uint32_t* aSizeUsed,
+                                    uint32_t* aPipes, uint32_t* aTransferables,
+                                    bool* aSerializeAsPipe);
 
   template <typename M>
   void SerializeInternal(InputStreamParams& aParams,
@@ -956,6 +957,82 @@ nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
   return inst->QueryInterface(aIID, aResult);
 }
 
+void nsMultiplexInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                                  uint32_t* aSizeUsed,
+                                                  uint32_t* aPipes,
+                                                  uint32_t* aTransferables) {
+  MutexAutoLock lock(mLock);
+  bool serializeAsPipe = false;
+  SerializedComplexityInternal(aMaxSize, aSizeUsed, aPipes, aTransferables,
+                               &serializeAsPipe);
+}
+
+void nsMultiplexInputStream::SerializedComplexityInternal(
+    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
+    uint32_t* aTransferables, bool* aSerializeAsPipe) {
+  mLock.AssertCurrentThreadOwns();
+  CheckedUint32 totalSizeUsed = 0;
+  CheckedUint32 totalPipes = 0;
+  CheckedUint32 totalTransferables = 0;
+  CheckedUint32 maxSize = aMaxSize;
+
+  uint32_t streamCount = mStreams.Length();
+
+  for (uint32_t index = 0; index < streamCount; index++) {
+    uint32_t sizeUsed = 0;
+    uint32_t pipes = 0;
+    uint32_t transferables = 0;
+    InputStreamHelper::SerializedComplexity(mStreams[index].mOriginalStream,
+                                            maxSize.value(), &sizeUsed, &pipes,
+                                            &transferables);
+
+    MOZ_ASSERT(maxSize.value() >= sizeUsed);
+
+    maxSize -= sizeUsed;
+    MOZ_DIAGNOSTIC_ASSERT(maxSize.isValid());
+    totalSizeUsed += sizeUsed;
+    MOZ_DIAGNOSTIC_ASSERT(totalSizeUsed.isValid());
+    totalPipes += pipes;
+    MOZ_DIAGNOSTIC_ASSERT(totalPipes.isValid());
+    totalTransferables += transferables;
+    MOZ_DIAGNOSTIC_ASSERT(totalTransferables.isValid());
+  }
+
+  // If the combination of all streams when serialized independently is
+  // sufficiently complex, we may choose to serialize it as a pipe to limit the
+  // complexity of the payload.
+  if (totalTransferables.value() == 0) {
+    // If there are no transferables within our serialization, and it would
+    // contain at least one pipe, serialize the entire payload as a pipe for
+    // simplicity.
+    *aSerializeAsPipe = totalSizeUsed.value() > 0 && totalPipes.value() > 0;
+  } else {
+    // Otherwise, we may want to still serialize in segments to take advantage
+    // of the efficiency of serializing transferables. We'll only serialize as a
+    // pipe if the total attachment count exceeds kMaxAttachmentThreshold.
+    static constexpr uint32_t kMaxAttachmentThreshold = 8;
+    CheckedUint32 totalAttachments = totalPipes + totalTransferables;
+    *aSerializeAsPipe = !totalAttachments.isValid() ||
+                        totalAttachments.value() > kMaxAttachmentThreshold;
+  }
+
+  if (*aSerializeAsPipe) {
+    NS_WARNING(
+        nsPrintfCString("Choosing to serialize multiplex stream as a pipe "
+                        "(would be %u bytes, %u pipes, %u transferables)",
+                        totalSizeUsed.value(), totalPipes.value(),
+                        totalTransferables.value())
+            .get());
+    *aSizeUsed = 0;
+    *aPipes = 1;
+    *aTransferables = 0;
+  } else {
+    *aSizeUsed = totalSizeUsed.value();
+    *aPipes = totalPipes.value();
+    *aTransferables = totalTransferables.value();
+  }
+}
+
 void nsMultiplexInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
     bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
@@ -977,6 +1054,19 @@ void nsMultiplexInputStream::SerializeInternal(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
     bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
   MutexAutoLock lock(mLock);
+
+  // Check if we should serialize this stream as a pipe to reduce complexity.
+  uint32_t dummySizeUsed = 0, dummyPipes = 0, dummyTransferables = 0;
+  bool serializeAsPipe = false;
+  SerializedComplexityInternal(aMaxSize, &dummySizeUsed, &dummyPipes,
+                               &dummyTransferables, &serializeAsPipe);
+  if (serializeAsPipe) {
+    *aSizeUsed = 0;
+    MutexAutoUnlock unlock(mLock);
+    InputStreamHelper::SerializeInputStreamAsPipe(this, aParams, aDelayedStart,
+                                                  aManager);
+    return;
+  }
 
   MultiplexInputStreamParams params;
 
