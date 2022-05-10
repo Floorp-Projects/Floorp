@@ -240,6 +240,17 @@ extern JS_PUBLIC_API JSObject* CreateModuleRequest(
 extern JS_PUBLIC_API JSString* GetModuleRequestSpecifier(
     JSContext* cx, Handle<JSObject*> moduleRequestArg);
 
+/*
+ * Get the module record for a module script.
+ */
+extern JS_PUBLIC_API JSObject* GetModuleObject(Handle<JSScript*> moduleScript);
+
+/*
+ * Get the namespace object for a module.
+ */
+extern JS_PUBLIC_API JSObject* GetModuleNamespace(
+    JSContext* cx, Handle<JSObject*> moduleRecord);
+
 }  // namespace JS
 
 #endif  // js_Modules_h
