@@ -250,6 +250,8 @@ export class _DSCard extends React.PureComponent {
             ? "CARDGRID_VIDEO"
             : this.props.type.toUpperCase(),
           click: 0,
+          window_inner_width: this.props.windowObj.innerWidth,
+          window_inner_height: this.props.windowObj.innerHeight,
           tiles: [
             {
               id: this.props.id,
