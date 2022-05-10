@@ -62,12 +62,12 @@ void ScrollbarDrawingAndroid::DoPaintScrollbarThumb(
 }
 
 bool ScrollbarDrawingAndroid::PaintScrollbarThumb(
-    DrawTarget& aDt, const LayoutDeviceRect& aRect, ScrollbarKind aScrollbarKind,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    DrawTarget& aDt, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  DoPaintScrollbarThumb(aDt, aRect, aScrollbarKind, aFrame, aStyle, aElementState,
-                        aDocumentState, aColors, aDpiRatio);
+  DoPaintScrollbarThumb(aDt, aRect, aScrollbarKind, aFrame, aStyle,
+                        aElementState, aDocumentState, aColors, aDpiRatio);
   return true;
 }
 
