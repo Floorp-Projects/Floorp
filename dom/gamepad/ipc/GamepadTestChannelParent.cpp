@@ -8,11 +8,17 @@
 
 #include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/ipc/BackgroundParent.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 
 namespace mozilla::dom {
 
 already_AddRefed<GamepadTestChannelParent> GamepadTestChannelParent::Create() {
+  // Refuse to create the parent actor if this pref is disabled
+  if (!StaticPrefs::dom_gamepad_test_enabled()) {
+    return nullptr;
+  }
+
   return RefPtr<GamepadTestChannelParent>(new GamepadTestChannelParent())
       .forget();
 }
