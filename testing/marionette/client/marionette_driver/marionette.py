@@ -1050,7 +1050,9 @@ class Marionette(object):
         return quit_details
 
     @do_process_check
-    def restart(self, callback=None, clean=False, in_app=False, safe_mode=False):
+    def restart(
+        self, callback=None, clean=False, in_app=False, safe_mode=False, silent=False
+    ):
         """
         This will terminate the currently running instance, and spawn a new instance
         with the same profile and then reuse the session id when creating a session again.
@@ -1069,6 +1071,10 @@ class Marionette(object):
         :param safe_mode: Optional flag to indicate that the application has to
             be restarted in safe mode.
 
+        :param silent: Optional flag to indicate that the application should
+            not open any window after a restart. Note that this flag is only
+            supported on MacOS.
+
         :returns: A dictionary containing details of the application restart.
                   The `cause` property reflects the reason, and `forced` indicates
                   that something prevented the shutdown and the application had
@@ -1083,8 +1089,8 @@ class Marionette(object):
         context = self._send_message("Marionette:GetContext", key="value")
         restart_details = {"cause": "restart", "forced": False}
 
-        # Safe mode is only available with in_app restarts.
-        if safe_mode:
+        # Safe mode and the silent flag require in_app restarts.
+        if safe_mode or silent:
             in_app = True
 
         if in_app:
@@ -1106,9 +1112,19 @@ class Marionette(object):
                 if callback is not None:
                     callback()
                 else:
-                    restart_details = self._request_in_app_shutdown(
-                        flags=["eRestart"], safe_mode=safe_mode
-                    )
+                    flags = ["eRestart"]
+                    if silent:
+                        flags.append("eSilently")
+
+                    try:
+                        restart_details = self._request_in_app_shutdown(
+                            flags=flags, safe_mode=safe_mode
+                        )
+                    except Exception as e:
+                        self._send_message(
+                            "Marionette:AcceptConnections", {"value": True}
+                        )
+                        raise e
 
             except IOError:
                 # A possible IOError should be ignored at this point, given that
