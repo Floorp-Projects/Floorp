@@ -150,12 +150,13 @@ JS_PUBLIC_API bool JS::ModuleEvaluate(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::ThrowOnModuleEvaluationFailure(
-    JSContext* cx, Handle<JSObject*> evaluationPromise) {
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
+    ModuleErrorBehaviour errorBehaviour) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->releaseCheck(evaluationPromise);
 
-  return js::OnModuleEvaluationFailure(cx, evaluationPromise);
+  return js::OnModuleEvaluationFailure(cx, evaluationPromise, errorBehaviour);
 }
 
 JS_PUBLIC_API JSObject* JS::GetRequestedModules(JSContext* cx,
