@@ -270,7 +270,7 @@ class WindowManager {
         resolve(subject);
       },
       {
-        errorMessage: "No applicable application windows found",
+        errorMessage: "No applicable application window found",
       }
     );
   }
