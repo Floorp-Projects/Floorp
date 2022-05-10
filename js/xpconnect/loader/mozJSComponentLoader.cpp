@@ -23,6 +23,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"         // JS::CompileOptions
 #include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
+#include "js/loader/ModuleLoadRequest.h"
 #include "js/Object.h"                 // JS::GetCompartment
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperty, JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_HasOwnPropertyById, JS_SetProperty, JS_SetPropertyById
@@ -63,6 +64,7 @@
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/AutoEntryScript.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -1435,6 +1437,75 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   if (newEntry) {
     mImports.InsertOrUpdate(info.Key(), std::move(newEntry));
   }
+
+  return NS_OK;
+}
+
+nsresult mozJSComponentLoader::ImportModule(
+    JSContext* aCx, const nsACString& aLocation,
+    JS::MutableHandleObject aModuleNamespace) {
+  using namespace JS::loader;
+
+  MOZ_ASSERT(mModuleLoader);
+
+  // Called from ChromeUtils::ImportModule.
+  nsCString str(aLocation);
+
+  AUTO_PROFILER_MARKER_TEXT(
+      "ChromeUtils.importModule", JS,
+      MarkerOptions(MarkerStack::Capture(),
+                    MarkerInnerWindowIdFromJSContext(aCx)),
+      aLocation);
+
+  RootedObject globalObj(aCx, GetSharedGlobal(aCx));
+  NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
+  MOZ_ASSERT(xpc::Scriptability::Get(globalObj).Allowed());
+
+  JSAutoRealm ar(aCx, globalObj);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aLocation);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrincipal> principal =
+      mModuleLoader->GetGlobalObject()->PrincipalOrNull();
+  MOZ_ASSERT(principal);
+
+  RefPtr<ScriptFetchOptions> options = new ScriptFetchOptions(
+      CORS_NONE, dom::ReferrerPolicy::No_referrer, principal);
+
+  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
+
+  RefPtr<VisitedURLSet> visitedSet =
+      ModuleLoadRequest::NewVisitedSetForTopLevelImport(uri);
+
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      uri, options, dom::SRIMetadata(),
+      /* aReferrer = */ nullptr, context,
+      /* aIsTopLevel = */ true,
+      /* aIsDynamicImport = */ false, mModuleLoader, visitedSet, nullptr);
+
+  rv = request->StartModuleLoad();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mModuleLoader->ProcessRequests();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(request->IsReadyToRun());
+  if (!request->InstantiateModuleGraph()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = mModuleLoader->EvaluateModuleInContext(aCx, request,
+                                              JS::ThrowModuleErrorsSync);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (JS_IsExceptionPending(aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<ModuleScript> moduleScript = request->mModuleScript;
+  JS::Rooted<JSObject*> module(aCx, moduleScript->ModuleRecord());
+  aModuleNamespace.set(JS::GetModuleNamespace(aCx, module));
 
   return NS_OK;
 }

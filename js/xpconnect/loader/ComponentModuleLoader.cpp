@@ -8,6 +8,9 @@
 
 #include "nsISupportsImpl.h"
 
+#include "js/loader/ModuleLoadRequest.h"
+#include "mozJSComponentLoader.h"
+
 using namespace JS::loader;
 
 namespace mozilla {
@@ -44,41 +47,128 @@ nsresult ComponentScriptLoader::FillCompileOptionsForRequest(
 // ComponentModuleLoader
 //////////////////////////////////////////////////////////////
 
+NS_IMPL_ADDREF_INHERITED(ComponentModuleLoader, JS::loader::ModuleLoaderBase)
+NS_IMPL_RELEASE_INHERITED(ComponentModuleLoader, JS::loader::ModuleLoaderBase)
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ComponentModuleLoader,
-                                   JS::loader::ModuleLoaderBase)
+                                   JS::loader::ModuleLoaderBase, mLoadRequests)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ComponentModuleLoader)
+NS_INTERFACE_MAP_END_INHERITING(JS::loader::ModuleLoaderBase)
 
 ComponentModuleLoader::ComponentModuleLoader(
     ComponentScriptLoader* aScriptLoader, nsIGlobalObject* aGlobalObject)
-    : ModuleLoaderBase(aScriptLoader, aGlobalObject) {}
+    : ModuleLoaderBase(aScriptLoader, aGlobalObject, new SyncEventTarget()) {}
+
+ComponentModuleLoader::~ComponentModuleLoader() {
+  MOZ_ASSERT(mLoadRequests.isEmpty());
+}
 
 already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  MOZ_CRASH("NYI");
+  RefPtr<ComponentLoadContext> context = new ComponentLoadContext();
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aParent->mFetchOptions, SRIMetadata(), aParent->mURI, context,
+      false, /* is top level */
+      false, /* is dynamic import */
+      this, aParent->mVisitedSet, aParent->GetRootModule());
+  return request.forget();
 }
 
 already_AddRefed<ModuleLoadRequest> ComponentModuleLoader::CreateDynamicImport(
     JSContext* aCx, nsIURI* aURI, LoadedScript* aMaybeActiveScript,
     JS::Handle<JS::Value> aReferencingPrivate, JS::Handle<JSString*> aSpecifier,
     JS::Handle<JSObject*> aPromise) {
-  MOZ_CRASH("NYI");
+  return nullptr;  // Not yet implemented.
 }
 
 bool ComponentModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
                                          nsresult* aRvOut) {
-  return true;
+  return mozJSComponentLoader::IsTrustedScheme(aRequest->mURI);
 }
 
 nsresult ComponentModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aRequest->HasLoadContext());
+
+  aRequest->mBaseURL = aRequest->mURI;
+
+  // Loading script source and compilation are intertwined in
+  // mozJSComponentLoader. Perform both operations here but only report load
+  // failures. Compilation failure is reported in CompileFetchedModule.
+
+  dom::AutoJSAPI jsapi;
+  if (!jsapi.Init(GetGlobalObject())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  RootedScript script(cx);
+  nsresult rv =
+      mozJSComponentLoader::LoadSingleModuleScript(cx, aRequest->mURI, &script);
+  MOZ_ASSERT_IF(jsapi.HasException(), NS_FAILED(rv));
+  MOZ_ASSERT(bool(script) == NS_SUCCEEDED(rv));
+
+  // Check for failure to load script source and abort.
+  bool threwException = jsapi.HasException();
+  if (NS_FAILED(rv) && !threwException) {
+    return rv;
+  }
+
+  // Otherwise remember the results so we can report them later.
+  ComponentLoadContext* context = aRequest->GetComponentLoadContext();
+  context->mRv = rv;
+  if (threwException) {
+    context->mExceptionValue.init(cx);
+    if (!jsapi.StealException(&context->mExceptionValue)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  if (script) {
+    context->mScript.init(cx);
+    context->mScript = script;
+  }
+
+  mLoadRequests.AppendElement(aRequest);
+
+  return NS_OK;
 }
 
 nsresult ComponentModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
-    ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleScript) {
-  return NS_ERROR_FAILURE;
+    ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
+  // Compilation already happened in StartFetch. Report the result here.
+  ComponentLoadContext* context = aRequest->GetComponentLoadContext();
+  nsresult rv = context->mRv;
+  if (context->mScript) {
+    aModuleOut.set(JS::GetModuleObject(context->mScript));
+    context->mScript = nullptr;
+  }
+  if (NS_FAILED(rv)) {
+    JS_SetPendingException(aCx, context->mExceptionValue);
+    context->mExceptionValue = JS::UndefinedValue();
+  }
+
+  MOZ_ASSERT(JS_IsExceptionPending(aCx) == NS_FAILED(rv));
+  MOZ_ASSERT(bool(aModuleOut) == NS_SUCCEEDED(rv));
+
+  return rv;
 }
 
 void ComponentModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
+
+nsresult ComponentModuleLoader::ProcessRequests() {
+  // Work list to drive module loader since this is all synchronous.
+  while (!mLoadRequests.isEmpty()) {
+    RefPtr<ScriptLoadRequest> request = mLoadRequests.StealFirst();
+    nsresult rv = OnFetchComplete(request->AsModuleRequest(), NS_OK);
+    if (NS_FAILED(rv)) {
+      mLoadRequests.CancelRequestsAndClear();
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
 
 //////////////////////////////////////////////////////////////
 // ComponentModuleLoader::SyncEventTarget

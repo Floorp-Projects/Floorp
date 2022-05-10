@@ -65,10 +65,15 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                       JS::HandleValue aTargetObj, JSContext* aCx, uint8_t aArgc,
                       JS::MutableHandleValue aRetval);
 
+  // Load a JSM.
   nsresult Import(JSContext* aCx, const nsACString& aResourceURI,
                   JS::MutableHandleObject aModuleGlobal,
                   JS::MutableHandleObject aModuleExports,
                   bool aIgnoreExports = false);
+
+  // Load an ES6 module and all its dependencies.
+  nsresult ImportModule(JSContext* aCx, const nsACString& aResourceURI,
+                        JS::MutableHandleObject aModuleNamespace);
 
   nsresult Unload(const nsACString& aResourceURI);
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
@@ -112,7 +117,7 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                              JS::MutableHandleValue aException);
 
   // Get the script for a given location, either from a cached stencil or by
-  // loading and compiling it.
+  // compiling it from source.
   static nsresult GetScriptForLocation(JSContext* aCx,
                                        ComponentLoaderInfo& aInfo,
                                        nsIFile* aComponentFile, bool aUseMemMap,
