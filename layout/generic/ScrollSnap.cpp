@@ -32,10 +32,12 @@ class CalcSnapPoints final {
                nscoord* aSecondBestEdge, bool* aEdgeFound);
   nsPoint GetBestEdge() const;
   nscoord XDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(mBestEdge.x - mSecondBestEdge.x);
+    return std::abs(
+        NSCoordSaturatingSubtract(mSecondBestEdge.x, mBestEdge.x, nscoord_MAX));
   }
   nscoord YDistanceBetweenBestAndSecondEdge() const {
-    return std::abs(mBestEdge.y - mSecondBestEdge.y);
+    return std::abs(
+        NSCoordSaturatingSubtract(mSecondBestEdge.y, mBestEdge.y, nscoord_MAX));
   }
 
  protected:
@@ -45,8 +47,9 @@ class CalcSnapPoints final {
   nsPoint mStartPos;     // gives the position before scrolling
   nsIntPoint mScrollingDirection;  // always -1, 0, or 1
   nsPoint mBestEdge;  // keeps track of the position of the current best edge
-  nsPoint mSecondBestEdge;    // keeps track of the position of the current
-                              // second best edge
+  nsPoint mSecondBestEdge;  // keeps track of the position of the current
+                            // second best edge on the opposite side of the best
+                            // edge
   bool mHorizontalEdgeFound;  // true if mBestEdge.x is storing a valid
                               // horizontal edge
   bool mVerticalEdgeFound;    // true if mBestEdge.y is storing a valid vertical
@@ -74,6 +77,10 @@ CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, const nsPoint& aDestination,
     mScrollingDirection.y = 1;
   }
   mBestEdge = aDestination;
+  // We use NSCoordSaturatingSubtract to calculate the distance between a given
+  // position and this second best edge position so that it can be an
+  // uninitialized value as the maximum possible value, because the first
+  // distance calculation would always be nscoord_MAX.
   mSecondBestEdge = nsPoint(nscoord_MAX, nscoord_MAX);
   mHorizontalEdgeFound = false;
   mVerticalEdgeFound = false;
@@ -131,6 +138,8 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
     return;
   }
 
+  const bool isOnOppositeSide =
+      ((aEdge - aDestination) > 0) != ((*aBestEdge - aDestination) > 0);
   // A utility function to update the best and the second best edges in the
   // given conditions.
   // |aIsCloserThanBest| True if the current candidate is closer than the best
@@ -139,17 +148,25 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
   // the second best edge.
   auto updateBestEdges = [&](bool aIsCloserThanBest, bool aIsCloserThanSecond) {
     if (aIsCloserThanBest) {
-      *aSecondBestEdge = *aBestEdge;
+      // Replace the second best edge with the current best edge only if the new
+      // best edge (aEdge) is on the opposite side of the current best edge.
+      if (isOnOppositeSide) {
+        *aSecondBestEdge = *aBestEdge;
+      }
       *aBestEdge = aEdge;
     } else if (aIsCloserThanSecond) {
-      *aSecondBestEdge = aEdge;
+      if (isOnOppositeSide) {
+        *aSecondBestEdge = aEdge;
+      }
     }
   };
 
   if (mUnit == ScrollUnit::DEVICE_PIXELS || mUnit == ScrollUnit::LINES) {
     nscoord distance = std::abs(aEdge - aDestination);
-    updateBestEdges(distance < std::abs(*aBestEdge - aDestination),
-                    distance < std::abs(*aSecondBestEdge - aDestination));
+    updateBestEdges(
+        distance < std::abs(*aBestEdge - aDestination),
+        distance < std::abs(NSCoordSaturatingSubtract(
+                       *aSecondBestEdge, aDestination, nscoord_MAX)));
   } else if (mUnit == ScrollUnit::PAGES) {
     // distance to the edge from the scrolling destination in the direction of
     // scrolling
@@ -159,7 +176,8 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
     nscoord curOvershoot = (*aBestEdge - aDestination) * aScrollingDirection;
 
     nscoord secondOvershoot =
-        (*aSecondBestEdge - aDestination) * aScrollingDirection;
+        NSCoordSaturatingSubtract(*aSecondBestEdge, aDestination, nscoord_MAX) *
+        aScrollingDirection;
 
     // edges between the current position and the scrolling destination are
     // favoured to preserve context
