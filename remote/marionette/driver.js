@@ -423,63 +423,66 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       this._currentSession.capabilities.delete("webSocketUrl");
     }
 
-    // Creating a WebDriver session too early can cause issues with
-    // clients in not being able to find any available window handle.
-    // Also when closing the application while it's still starting up can
-    // cause shutdown hangs. As such Marionette will return a new session
-    // once the initial application window has finished initializing.
-    logger.debug(`Waiting for initial application window`);
-    await Marionette.browserStartupFinished;
+    // Don't wait for the initial window when Marionette is in windowless mode
+    if (!this.currentSession.capabilities.get("moz:windowless")) {
+      // Creating a WebDriver session too early can cause issues with
+      // clients in not being able to find any available window handle.
+      // Also when closing the application while it's still starting up can
+      // cause shutdown hangs. As such Marionette will return a new session
+      // once the initial application window has finished initializing.
+      logger.debug(`Waiting for initial application window`);
+      await Marionette.browserStartupFinished;
 
-    const win = await windowManager.waitForInitialApplicationWindowLoaded();
+      const appWin = await windowManager.waitForInitialApplicationWindowLoaded();
 
-    if (MarionettePrefs.clickToStart) {
-      Services.prompt.alert(
-        win,
-        "",
-        "Click to start execution of marionette tests"
-      );
+      if (MarionettePrefs.clickToStart) {
+        Services.prompt.alert(
+          appWin,
+          "",
+          "Click to start execution of marionette tests"
+        );
+      }
+
+      this.addBrowser(appWin);
+      this.mainFrame = appWin;
+
+      // Setup observer for modal dialogs
+      this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
+      this.dialogObserver.add(this.handleModalDialog.bind(this));
+
+      for (let win of windowManager.windows) {
+        const tabBrowser = TabManager.getTabBrowser(win);
+
+        if (tabBrowser) {
+          for (const tab of tabBrowser.tabs) {
+            const contentBrowser = TabManager.getBrowserForTab(tab);
+            this.registerBrowser(contentBrowser);
+          }
+        }
+
+        this.registerListenersForWindow(win);
+      }
+
+      if (this.mainFrame) {
+        this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
+        this.mainFrame.focus();
+      }
+
+      if (this.curBrowser.tab) {
+        const browsingContext = this.curBrowser.contentBrowser.browsingContext;
+        this.currentSession.contentBrowsingContext = browsingContext;
+
+        await waitForInitialNavigationCompleted(browsingContext.webProgress);
+
+        this.curBrowser.contentBrowser.focus();
+      }
+
+      // Check if there is already an open dialog for the selected browser window.
+      this.dialog = modal.findModalDialogs(this.curBrowser);
     }
-
-    this.addBrowser(win);
-    this.mainFrame = win;
 
     registerCommandsActor();
     enableEventsActor();
-
-    // Setup observer for modal dialogs
-    this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
-    this.dialogObserver.add(this.handleModalDialog.bind(this));
-
-    for (let win of windowManager.windows) {
-      const tabBrowser = TabManager.getTabBrowser(win);
-
-      if (tabBrowser) {
-        for (const tab of tabBrowser.tabs) {
-          const contentBrowser = TabManager.getBrowserForTab(tab);
-          this.registerBrowser(contentBrowser);
-        }
-      }
-
-      this.registerListenersForWindow(win);
-    }
-
-    if (this.mainFrame) {
-      this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
-      this.mainFrame.focus();
-    }
-
-    if (this.curBrowser.tab) {
-      const browsingContext = this.curBrowser.contentBrowser.browsingContext;
-      this.currentSession.contentBrowsingContext = browsingContext;
-
-      await waitForInitialNavigationCompleted(browsingContext.webProgress);
-
-      this.curBrowser.contentBrowser.focus();
-    }
-
-    // Check if there is already an open dialog for the selected browser window.
-    this.dialog = modal.findModalDialogs(this.curBrowser);
 
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
   } catch (e) {
