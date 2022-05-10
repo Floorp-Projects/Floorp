@@ -275,14 +275,13 @@ this.LoginRecipesContent = {
    * Tries to fetch recipes for a given host, using a local cache if possible.
    * Otherwise, the recipes are cached for later use.
    *
-   * @param {JSWindowActor} aActor - actor making request
    * @param {String} aHost (e.g. example.com:8080 [non-default port] or sub.example.com)
    * @param {Object} win - the window of the host
    * @return {Set} of recipes that apply to the host
    */
-  getRecipes(aActor, aHost, win) {
+  getRecipes(aHost, win) {
     let recipes;
-    let recipeMap = this._recipeCache.get(win);
+    const recipeMap = this._recipeCache.get(win);
 
     if (recipeMap) {
       recipes = recipeMap.get(aHost);
@@ -292,7 +291,11 @@ this.LoginRecipesContent = {
       }
     }
 
-    log.warn("getRecipes: falling back to a synchronous message for:", aHost);
+    if (!Cu.isInAutomation) {
+      // this is a blocking call we expect in tests and rarely expect in
+      // production, for example when Remote Settings are updated.
+      log.warn("getRecipes: falling back to a synchronous message for:", aHost);
+    }
     recipes = Services.cpmm.sendSyncMessage("PasswordManager:findRecipes", {
       formOrigin: aHost,
     })[0];

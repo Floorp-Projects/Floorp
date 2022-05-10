@@ -45,9 +45,6 @@ const ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD = 10;
 
 // copied from utilityOverlay.js
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
-const PREF_LOAD_BOOKMARKS_IN_BACKGROUND =
-  "browser.tabs.loadBookmarksInBackground";
-const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 
 let InternalFaviconLoader = {
   /**
@@ -1818,6 +1815,72 @@ var PlacesUIUtils = {
 
     aElement.setAttribute("image", iconURL);
   },
+
+  /**
+   * Determines the string indexes where titles differ from similar titles (where
+   * the first n characters are the same) in the provided list of items, and
+   * adds that into the item.
+   *
+   * This assumes the titles will be displayed along the lines of
+   * `Start of title ... place where differs` the index would be reference
+   * the `p` here.
+   *
+   * @param {object[]} candidates
+   *   An array of candidates to modify. The candidates should have a `title`
+   *   property.
+   *   The order of the array does not matter. The objects are modified
+   *   in-place.
+   *   If a difference to other similar titles is found then a
+   *   `titleDifferentIndex` property will be inserted into all similar
+   *   candidates with the index of the start of the difference.
+   */
+  insertTitleStartDiffs(candidates) {
+    function findStartDifference(a, b) {
+      let i;
+      // We already know the start is the same, so skip that part.
+      for (i = PlacesUIUtils.similarTitlesMinChars; i < a.length; i++) {
+        if (a[i] != b[i]) {
+          return i;
+        }
+      }
+      if (b.length > i) {
+        return i;
+      }
+      // They are the same.
+      return -1;
+    }
+
+    let longTitles = new Map();
+
+    for (let candidate of candidates) {
+      // Title is too short for us to care about, simply continue.
+      if (candidate.title.length < this.similarTitlesMinChars) {
+        continue;
+      }
+      let titleBeginning = candidate.title.slice(0, this.similarTitlesMinChars);
+      let matches = longTitles.get(titleBeginning);
+      if (matches) {
+        for (let match of matches) {
+          let startDiff = findStartDifference(candidate.title, match.title);
+          if (startDiff > 0) {
+            candidate.titleDifferentIndex = startDiff;
+            // If we have an existing difference index for the match, move
+            // it forward if this one is earlier in the string.
+            if (
+              !("titleDifferentIndex" in match) ||
+              match.titleDifferentIndex > startDiff
+            ) {
+              match.titleDifferentIndex = startDiff;
+            }
+          }
+        }
+
+        matches.push(candidate);
+      } else {
+        longTitles.set(titleBeginning, [candidate]);
+      }
+    }
+  },
 };
 
 /**
@@ -1853,14 +1916,20 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
 
 XPCOMUtils.defineLazyPreferenceGetter(
   PlacesUIUtils,
+  "similarTitlesMinChars",
+  "browser.places.similarTitlesMinChars",
+  20
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  PlacesUIUtils,
   "loadBookmarksInBackground",
-  PREF_LOAD_BOOKMARKS_IN_BACKGROUND,
+  "browser.tabs.loadBookmarksInBackground",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   PlacesUIUtils,
   "loadBookmarksInTabs",
-  PREF_LOAD_BOOKMARKS_IN_TABS,
+  "browser.tabs.loadBookmarksInTabs",
   false
 );
 XPCOMUtils.defineLazyPreferenceGetter(
