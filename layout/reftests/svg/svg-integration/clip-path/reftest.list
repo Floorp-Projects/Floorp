@@ -56,6 +56,6 @@ fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-
 fuzzy-if(useDrawSnapshot,0-64,0-146) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-002c.html clip-path-inset-002-ref.html
 fuzzy-if(useDrawSnapshot,0-64,0-340) fuzzy-if(!useDrawSnapshot,0-1,0-2) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
-== clip-path-stroke-001.html clip-path-stroke-001-ref.html
+fuzzy(0-1,0-10) == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 
 == clip-path-transform-001.html clip-path-transform-001-ref.html
