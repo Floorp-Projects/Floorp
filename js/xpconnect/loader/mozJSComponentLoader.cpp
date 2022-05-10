@@ -21,8 +21,7 @@
 #include "js/Array.h"  // JS::GetArrayLength, JS::IsArrayObject
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
-#include "js/CompileOptions.h"  // JS::CompileOptions
-#include "js/experimental/JSStencil.h"
+#include "js/CompileOptions.h"         // JS::CompileOptions
 #include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
 #include "js/Object.h"                 // JS::GetCompartment
 #include "js/Printf.h"
@@ -219,7 +218,7 @@ mozJSComponentLoader::mozJSComponentLoader()
 class MOZ_STACK_CLASS ComponentLoaderInfo {
  public:
   explicit ComponentLoaderInfo(const nsACString& aLocation)
-      : mLocation(aLocation) {}
+      : mLocation(aLocation), mIsModule(false) {}
 
   nsIIOService* IOService() {
     MOZ_ASSERT(mIOService);
@@ -279,12 +278,15 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
     return mURI->GetSpec(aLocation);
   }
 
+  bool IsModule() const { return mIsModule; }
+
  private:
   const nsACString& mLocation;
   nsCOMPtr<nsIIOService> mIOService;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIChannel> mScriptChannel;
   nsCOMPtr<nsIURI> mResolvedURI;
+  const bool mIsModule;
 };
 
 template <typename... Args>
@@ -832,8 +834,13 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
   aInfo.EnsureResolvedURI();
 
   nsAutoCString cachePath;
-  rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
-                  aInfo.ResolvedURI(), cachePath);
+  if (aInfo.IsModule()) {
+    rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "module"),
+                    aInfo.ResolvedURI(), cachePath);
+  } else {
+    rv = PathifyURI(JS_CACHE_PREFIX("non-syntactic", "script"),
+                    aInfo.ResolvedURI(), cachePath);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::DecodeOptions decodeOptions;
@@ -862,8 +869,10 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
     CompileOptions options(aCx);
     ScriptPreloader::FillCompileOptionsForCachedStencil(options);
     options.setFileAndLine(nativePath.get(), 1);
-    options.setForceStrictMode();
-    options.setNonSyntacticScope(true);
+    if (!aInfo.IsModule()) {
+      options.setForceStrictMode();
+      options.setNonSyntacticScope(true);
+    }
 
     // If we can no longer write to caches, we should stop using lazy sources
     // and instead let normal syntax parsing occur. This can occur in content
@@ -884,7 +893,7 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(aCx, buf.get(), map.size(),
                       JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
+        stencil = CompileStencil(aCx, options, srcBuf, aInfo.IsModule());
       }
     } else {
       nsCString str;
@@ -893,7 +902,7 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
       JS::SourceText<mozilla::Utf8Unit> srcBuf;
       if (srcBuf.init(aCx, str.get(), str.Length(),
                       JS::SourceOwnership::Borrowed)) {
-        stencil = CompileGlobalScriptToStencil(aCx, options, srcBuf);
+        stencil = CompileStencil(aCx, options, srcBuf, aInfo.IsModule());
       }
     }
 
@@ -908,9 +917,7 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
     }
   }
 
-  JS::InstantiateOptions instantiateOptions;
-  aScriptOut.set(
-      JS::InstantiateGlobalStencil(aCx, instantiateOptions, stencil));
+  aScriptOut.set(InstantiateStencil(aCx, stencil, aInfo.IsModule()));
   if (!aScriptOut) {
     return NS_ERROR_FAILURE;
   }
@@ -965,6 +972,36 @@ void mozJSComponentLoader::UnloadModules() {
     iter.Data()->Clear();
     iter.Remove();
   }
+}
+
+/* static */
+already_AddRefed<Stencil> mozJSComponentLoader::CompileStencil(
+    JSContext* aCx, const JS::CompileOptions& aOptions,
+    JS::SourceText<mozilla::Utf8Unit>& aSource, bool aIsModule) {
+  if (aIsModule) {
+    return CompileModuleScriptToStencil(aCx, aOptions, aSource);
+  }
+
+  return CompileGlobalScriptToStencil(aCx, aOptions, aSource);
+}
+
+/* static */
+JSScript* mozJSComponentLoader::InstantiateStencil(JSContext* aCx,
+                                                   JS::Stencil* aStencil,
+                                                   bool aIsModule) {
+  JS::InstantiateOptions instantiateOptions;
+
+  if (aIsModule) {
+    RootedObject module(aCx);
+    module = JS::InstantiateModuleStencil(aCx, instantiateOptions, aStencil);
+    if (!module) {
+      return nullptr;
+    }
+
+    return JS::GetModuleScript(module);
+  }
+
+  return JS::InstantiateGlobalStencil(aCx, instantiateOptions, aStencil);
 }
 
 nsresult mozJSComponentLoader::ImportInto(const nsACString& registryLocation,

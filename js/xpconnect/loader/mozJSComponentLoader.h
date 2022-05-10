@@ -20,6 +20,7 @@
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
 #include "jsapi.h"
+#include "js/experimental/JSStencil.h"
 
 #include "xpcIJSGetFactory.h"
 #include "xpcpublic.h"
@@ -114,6 +115,12 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                                        nsIFile* aComponentFile, bool aUseMemMap,
                                        JS::MutableHandleScript aScriptOut,
                                        char** aLocationOut);
+
+  static already_AddRefed<JS::Stencil> CompileStencil(
+      JSContext* aCx, const JS::CompileOptions& aOptions,
+      JS::SourceText<mozilla::Utf8Unit>& aSource, bool aIsModule);
+  static JSScript* InstantiateStencil(JSContext* aCx, JS::Stencil* aStencil,
+                                      bool aIsModule);
 
   nsresult ImportInto(const nsACString& aLocation, JS::HandleObject targetObj,
                       JSContext* callercx, JS::MutableHandleObject vp);
