@@ -39,6 +39,7 @@ class CalcSnapPoints final {
     return std::abs(
         NSCoordSaturatingSubtract(mSecondBestEdge.y, mBestEdge.y, nscoord_MAX));
   }
+  const nsPoint& Destination() const { return mDestination; }
 
  protected:
   ScrollUnit mUnit;
@@ -207,6 +208,18 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
 static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
                                  const ScrollSnapInfo& aSnapInfo) {
   for (const auto& target : aSnapInfo.mSnapTargets) {
+    nsPoint snapPoint(target.mSnapPositionX ? *target.mSnapPositionX
+                                            : aCalcSnapPoints.Destination().x,
+                      target.mSnapPositionY ? *target.mSnapPositionY
+                                            : aCalcSnapPoints.Destination().y);
+    nsRect snappedPort = nsRect(snapPoint, aSnapInfo.mSnapportSize);
+    // Ignore snap points if snapping to the point would leave the snap area
+    // outside of the snapport.
+    // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
+    if (!snappedPort.Intersects(target.mSnapArea)) {
+      continue;
+    }
+
     if (target.mSnapPositionX) {
       aCalcSnapPoints.AddVerticalEdge(*target.mSnapPositionX);
     }
