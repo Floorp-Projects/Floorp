@@ -521,11 +521,9 @@ def create_parser_puppeteer():
         help="Flag that indicates that tests run in a CI environment.",
     )
     p.add_argument(
-        "--disable-fission",
+        "--enable-fission",
         action="store_true",
-        default=False,
-        dest="disable_fission",
-        help="Disable Fission (site isolation) in Gecko.",
+        help="Enable Fission (site isolation) in Gecko.",
     )
     p.add_argument(
         "--enable-webrender",
@@ -599,7 +597,7 @@ def puppeteer_test(
     command_context,
     binary=None,
     ci=False,
-    disable_fission=False,
+    enable_fission=False,
     enable_webrender=False,
     headless=False,
     extra_prefs=None,
@@ -647,8 +645,9 @@ def puppeteer_test(
             exit(EX_USAGE)
         options[kv[0]] = kv[1].strip()
 
-    prefs.update({"fission.autostart": True})
-    if disable_fission:
+    if enable_fission:
+        prefs.update({"fission.autostart": True})
+    else:
         prefs.update({"fission.autostart": False})
 
     if verbosity == 1:
