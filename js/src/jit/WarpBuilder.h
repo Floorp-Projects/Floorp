@@ -128,25 +128,39 @@ class PendingEdge {
 
     // MGoto successor.
     Goto,
+
+    // MTableSwitch successor.
+    TableSwitch,
   };
 
  private:
   MBasicBlock* block_;
   Kind kind_;
-  JSOp testOp_ = JSOp::Undefined;
+  union {
+    JSOp testOp_;
+    uint32_t tableSwitchSuccessor_;
+  };
 
-  PendingEdge(MBasicBlock* block, Kind kind, JSOp testOp = JSOp::Undefined)
-      : block_(block), kind_(kind), testOp_(testOp) {}
+  PendingEdge(MBasicBlock* block, Kind kind) : block_(block), kind_(kind) {}
 
  public:
   static PendingEdge NewTestTrue(MBasicBlock* block, JSOp op) {
-    return PendingEdge(block, Kind::TestTrue, op);
+    PendingEdge edge(block, Kind::TestTrue);
+    edge.testOp_ = op;
+    return edge;
   }
   static PendingEdge NewTestFalse(MBasicBlock* block, JSOp op) {
-    return PendingEdge(block, Kind::TestFalse, op);
+    PendingEdge edge(block, Kind::TestFalse);
+    edge.testOp_ = op;
+    return edge;
   }
   static PendingEdge NewGoto(MBasicBlock* block) {
     return PendingEdge(block, Kind::Goto);
+  }
+  static PendingEdge NewTableSwitch(MBasicBlock* block, uint32_t successor) {
+    PendingEdge edge(block, Kind::TableSwitch);
+    edge.tableSwitchSuccessor_ = successor;
+    return edge;
   }
 
   MBasicBlock* block() const { return block_; }
@@ -155,6 +169,10 @@ class PendingEdge {
   JSOp testOp() const {
     MOZ_ASSERT(kind_ == Kind::TestTrue || kind_ == Kind::TestFalse);
     return testOp_;
+  }
+  uint32_t tableSwitchSuccessor() const {
+    MOZ_ASSERT(kind_ == Kind::TableSwitch);
+    return tableSwitchSuccessor_;
   }
 };
 
