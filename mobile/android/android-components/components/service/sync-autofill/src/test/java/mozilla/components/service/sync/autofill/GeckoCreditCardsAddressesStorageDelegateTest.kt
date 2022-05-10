@@ -7,6 +7,7 @@ package mozilla.components.service.sync.autofill
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
@@ -77,20 +78,12 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
         }
 
     @Test
-    fun `WHEN onAddressFetch is called THEN the storage is called to get all addresses`() {
-        runTest {
-            delegate.onAddressesFetch()
-            verify(storage, times(1)).getAllAddresses()
-        }
-    }
-
-    @Test
     fun `GIVEN autofill enabled WHEN onCreditCardsFetch is called THEN it returns all stored cards`() =
         runTest {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
             doReturn(storedCards).`when`(storage).getAllCreditCards()
-            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope) { true }
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope, isCreditCardAutofillEnabled = { true })
 
             val result = delegate.onCreditCardsFetch()
 
@@ -104,7 +97,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
             doReturn(storedCards).`when`(storage).getAllCreditCards()
-            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope) { false }
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope, isCreditCardAutofillEnabled = { false })
 
             val result = delegate.onCreditCardsFetch()
 
@@ -192,4 +185,32 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
             )
         }
     }
+
+    @Test
+    fun `GIVEN address autofill is enabled WHEN onAddressesFetch is called THEN it returns all stored addresses`() =
+        runTest {
+            val storage: AutofillCreditCardsAddressesStorage = mock()
+            val storedAddresses = listOf<Address>(mock(), mock())
+            doReturn(storedAddresses).`when`(storage).getAllAddresses()
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope, isAddressAutofillEnabled = { true })
+
+            val result = delegate.onAddressesFetch()
+
+            verify(storage, times(1)).getAllAddresses()
+            assertEquals(storedAddresses, result)
+        }
+
+    @Test
+    fun `GIVEN address autofill is disabled WHEN onAddressesFetch is called THEN it returns an empty list of addresses`() =
+        runTest {
+            val storage: AutofillCreditCardsAddressesStorage = mock()
+            val storedCards = listOf<CreditCard>(mock())
+            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope, isAddressAutofillEnabled = { false })
+
+            val result = delegate.onAddressesFetch()
+
+            verify(storage, never()).getAllAddresses()
+            assertEquals(emptyList<CreditCard>(), result)
+        }
 }

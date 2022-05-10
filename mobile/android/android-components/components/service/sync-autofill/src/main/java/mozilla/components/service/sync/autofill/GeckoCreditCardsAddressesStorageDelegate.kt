@@ -33,7 +33,8 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val storage: Lazy<CreditCardsAddressesStorage>,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val validationDelegate: DefaultCreditCardValidationDelegate = DefaultCreditCardValidationDelegate(storage),
-    private val isCreditCardAutofillEnabled: () -> Boolean = { false }
+    private val isCreditCardAutofillEnabled: () -> Boolean = { false },
+    private val isAddressAutofillEnabled: () -> Boolean = { false }
 ) : CreditCardsAddressesStorageDelegate {
 
     override suspend fun getOrGenerateKey(): ManagedKey {
@@ -50,7 +51,11 @@ class GeckoCreditCardsAddressesStorageDelegate(
     }
 
     override suspend fun onAddressesFetch(): List<Address> = withContext(scope.coroutineContext) {
-        storage.value.getAllAddresses()
+        if (!isAddressAutofillEnabled()) {
+            emptyList()
+        } else {
+            storage.value.getAllAddresses()
+        }
     }
 
     override suspend fun onAddressSave(address: Address) {

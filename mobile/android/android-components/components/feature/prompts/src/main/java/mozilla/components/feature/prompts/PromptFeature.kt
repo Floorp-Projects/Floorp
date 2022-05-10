@@ -118,6 +118,9 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * @property isCreditCardAutofillEnabled A callback invoked when credit card fields are detected in the webpage.
  * If this resolves to `true` a prompt allowing the user to select the credit card details to be autocompleted
  * will be shown.
+ * @property isAddressAutofillEnabled A callback invoked when address fields are detected in the webpage.
+ * If this resolves to `true` a prompt allowing the user to select the address details to be autocompleted
+ * will be shown.
  * @property loginExceptionStorage An implementation of [LoginExceptions] that saves and checks origins
  * the user does not want to see a save login dialog for.
  * @property loginPickerView The [SelectablePromptView] used for [LoginPicker] to display a
@@ -145,6 +148,7 @@ class PromptFeature private constructor(
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
+    private val isAddressAutofillEnabled: () -> Boolean = { false },
     override val loginExceptionStorage: LoginExceptions? = null,
     private val loginPickerView: SelectablePromptView<Login>? = null,
     private val onManageLogins: () -> Unit = {},
@@ -184,6 +188,7 @@ class PromptFeature private constructor(
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
+        isAddressAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
@@ -201,6 +206,7 @@ class PromptFeature private constructor(
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
+        isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
@@ -220,6 +226,7 @@ class PromptFeature private constructor(
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
+        isAddressAutofillEnabled: () -> Boolean = { false },
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
@@ -237,6 +244,7 @@ class PromptFeature private constructor(
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
+        isAddressAutofillEnabled = isAddressAutofillEnabled,
         loginExceptionStorage = loginExceptionStorage,
         onNeedToRequestPermissions = onNeedToRequestPermissions,
         loginPickerView = loginPickerView,
@@ -421,6 +429,10 @@ class PromptFeature private constructor(
                         creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
                     }
                 }
+                is SelectAddress ->
+                    if (isAddressAutofillEnabled() && promptRequest.addresses.isNotEmpty()) {
+                        // Address picker will be implemented in #12061
+                    }
                 is SelectLoginPrompt -> {
                     if (promptRequest.logins.isNotEmpty()) {
                         loginPicker?.handleSelectLoginRequest(promptRequest)
