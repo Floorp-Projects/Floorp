@@ -250,7 +250,8 @@ class ModuleLoaderBase : public nsISupports {
 
   // Evaluate a module in the given context. Does not push an entry to the
   // execution stack.
-  nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest);
+  nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest,
+                                   JS::ModuleErrorBehaviour errorBehaviour);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);
