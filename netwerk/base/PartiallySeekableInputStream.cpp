@@ -291,6 +291,13 @@ PartiallySeekableInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 // nsIIPCSerializableInputStream
 
+void PartiallySeekableInputStream::SerializedComplexity(
+    uint32_t aMaxSize, uint32_t* aSizeUsed, uint32_t* aPipes,
+    uint32_t* aTransferables) {
+  mozilla::ipc::InputStreamHelper::SerializedComplexity(
+      mInputStream, aMaxSize, aSizeUsed, aPipes, aTransferables);
+}
+
 void PartiallySeekableInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,

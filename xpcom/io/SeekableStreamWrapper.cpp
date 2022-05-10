@@ -387,6 +387,16 @@ SeekableStreamWrapper::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
 
 // nsIIPCSerializableInputStream
 
+void SeekableStreamWrapper::SerializedComplexity(uint32_t aMaxSize,
+                                                 uint32_t* aSizeUsed,
+                                                 uint32_t* aPipes,
+                                                 uint32_t* aTransferables) {
+  MOZ_ASSERT(IsIPCSerializableInputStream());
+  nsCOMPtr<nsIInputStream> original = do_QueryInterface(mOriginal);
+  mozilla::ipc::InputStreamHelper::SerializedComplexity(
+      original, aMaxSize, aSizeUsed, aPipes, aTransferables);
+}
+
 void SeekableStreamWrapper::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
