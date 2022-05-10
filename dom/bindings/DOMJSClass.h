@@ -37,8 +37,7 @@ class nsIGlobalObject;
 #define JSCLASS_DOM_GLOBAL JSCLASS_USERBIT1
 #define JSCLASS_IS_DOMIFACEANDPROTOJSCLASS JSCLASS_USERBIT2
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Returns true if code running in the given JSContext is allowed to access
@@ -602,7 +601,6 @@ inline ProtoAndIfaceCache* GetProtoAndIfaceCache(JSObject* global) {
       JS::GetReservedSlot(global, DOM_PROTOTYPE_SLOT).toPrivate());
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_DOMJSClass_h */

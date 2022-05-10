@@ -14,8 +14,7 @@
 
 class nsIInputStream;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Blob;
 class DOMString;
@@ -135,7 +134,6 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
       : XMLHttpRequestEventTarget(aGlobalObject) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XMLHttpRequest_h

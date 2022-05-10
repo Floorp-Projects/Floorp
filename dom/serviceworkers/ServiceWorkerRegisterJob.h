@@ -9,8 +9,7 @@
 
 #include "ServiceWorkerUpdateJob.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // The register job.  This implements the steps in the spec Register algorithm,
 // but then uses ServiceWorkerUpdateJob to implement the Update and Install
@@ -29,7 +28,6 @@ class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob {
   virtual ~ServiceWorkerRegisterJob();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerregisterjob_h

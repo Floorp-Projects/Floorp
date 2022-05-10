@@ -16,8 +16,7 @@ class mozIDOMWindow;
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkerPrivate;
 
@@ -62,7 +61,6 @@ class WorkerDebugger : public nsIWorkerDebugger {
   nsCOMPtr<nsPIDOMWindowInner> DedicatedWorkerWindow();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_workers_WorkerDebugger_h

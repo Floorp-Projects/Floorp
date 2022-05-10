@@ -20,9 +20,7 @@
 
 // See the architecture comment in DOMSVGAnimatedLengthList.h.
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 static SVGAttrTearoffTable<SVGAnimatedLength, DOMSVGLength>
     sBaseSVGLengthTearOffTable, sAnimSVGLengthTearOffTable;
@@ -445,5 +443,4 @@ bool DOMSVGLength::IndexIsValid() {
 }
 #endif
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

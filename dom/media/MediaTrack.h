@@ -9,8 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaTrackList;
 class VideoTrack;
@@ -75,7 +74,6 @@ class MediaTrack : public DOMEventTargetHelper {
   nsString mLanguage;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MediaTrack_h

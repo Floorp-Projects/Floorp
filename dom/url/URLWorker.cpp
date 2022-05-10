@@ -12,8 +12,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This class creates an URL from a DOM Blob on the main thread.
 class CreateURLRunnable : public WorkerMainThreadRunnable {
@@ -158,5 +157,4 @@ bool URLWorker::IsValidURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   return runnable->IsValidURL();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

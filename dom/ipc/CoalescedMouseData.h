@@ -13,8 +13,7 @@
 
 class nsRefreshDriver;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CoalescedMouseData final : public CoalescedInputData<WidgetMouseEvent> {
  public:
@@ -41,7 +40,6 @@ class CoalescedMouseMoveFlusher final : public CoalescedInputFlusher {
   ~CoalescedMouseMoveFlusher() override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CoalescedMouseData_h

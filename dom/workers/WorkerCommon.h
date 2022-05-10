@@ -11,8 +11,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkerPrivate;
 
@@ -53,7 +52,6 @@ bool IsWorkerDebuggerGlobal(JSObject* global);
 
 bool IsWorkerDebuggerSandbox(JSObject* object);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_workers_WorkerCommon_h

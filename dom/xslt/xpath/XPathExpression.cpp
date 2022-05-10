@@ -19,8 +19,7 @@
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EvalContextImpl : public txIEvalContext {
  public:
@@ -208,5 +207,4 @@ uint32_t EvalContextImpl::size() { return mContextSize; }
 
 uint32_t EvalContextImpl::position() { return mContextPosition; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

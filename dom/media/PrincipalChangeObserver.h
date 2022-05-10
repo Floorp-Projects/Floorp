@@ -7,8 +7,7 @@
 #ifndef MOZILLA_PRINCIPALCHANGEOBSERVER_H_
 #define MOZILLA_PRINCIPALCHANGEOBSERVER_H_
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * A PrincipalChangeObserver for any type, but originating from DOMMediaStream,
@@ -23,7 +22,6 @@ class PrincipalChangeObserver {
   virtual void PrincipalChanged(T* aArg) = 0;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* MOZILLA_PRINCIPALCHANGEOBSERVER_H_ */

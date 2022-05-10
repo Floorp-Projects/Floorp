@@ -17,8 +17,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct MediaKeyNeededEventInit;
 
 class MediaEncryptedEvent final : public Event {
@@ -56,7 +55,6 @@ class MediaEncryptedEvent final : public Event {
   nsTArray<uint8_t> mRawInitData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MediaKeyNeededEvent_h__

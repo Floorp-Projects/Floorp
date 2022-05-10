@@ -22,8 +22,7 @@ class ErrorResult;
 namespace ipc {
 class AutoIPCStream;
 }  // namespace ipc
-namespace dom {
-namespace cache {
+namespace dom::cache {
 
 class CacheReadStream;
 class PCacheStreamControlParent;
@@ -109,8 +108,7 @@ class ReadStream final : public nsIInputStream {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ReadStream, NS_DOM_CACHE_READSTREAM_IID);
 
-}  // namespace cache
-}  // namespace dom
+}  // namespace dom::cache
 }  // namespace mozilla
 
 #endif  // mozilla_dom_cache_ReadStream_h

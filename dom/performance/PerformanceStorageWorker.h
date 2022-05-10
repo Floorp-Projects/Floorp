@@ -10,8 +10,7 @@
 #include "mozilla/Mutex.h"
 #include "PerformanceStorage.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WeakWorkerRef;
 class WorkerPrivate;
@@ -44,7 +43,6 @@ class PerformanceStorageWorker final : public PerformanceStorage {
   RefPtr<WeakWorkerRef> mWorkerRef GUARDED_BY(mMutex);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PerformanceStorageWorker_h

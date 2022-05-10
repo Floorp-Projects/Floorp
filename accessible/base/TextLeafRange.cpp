@@ -962,19 +962,31 @@ TextLeafPoint TextLeafPoint::FindParagraphSameAcc(nsDirection aDirection,
   Pivot pivot(nsAccUtils::DocumentFor(mAcc));
   Accessible* prevBlock = pivot.Prev(mAcc, blockRule);
   // Check if we're the first leaf after a block element.
-  if (prevBlock &&
-      // If there's no previous leaf, we must be the first leaf after the block.
-      (!prevLeaf ||
-       // A block can be a leaf; e.g. an empty div or paragraph.
-       prevBlock == prevLeaf ||
-       // If we aren't inside the block, the block must be before us. This
-       // check is important because a block causes a paragraph break both
-       // before and after it.
-       !prevBlock->IsAncestorOf(mAcc) ||
-       // If we are inside the block and the previous leaf isn't, we must be
-       // the first leaf in the block.
-       !prevBlock->IsAncestorOf(prevLeaf))) {
-    return TextLeafPoint(mAcc, 0);
+  if (prevBlock) {
+    if (
+        // If there's no previous leaf, we must be the first leaf after the
+        // block.
+        !prevLeaf ||
+        // A block can be a leaf; e.g. an empty div or paragraph.
+        prevBlock == prevLeaf) {
+      return TextLeafPoint(mAcc, 0);
+    }
+    if (prevBlock->IsAncestorOf(mAcc)) {
+      // We're inside the block.
+      if (!prevBlock->IsAncestorOf(prevLeaf)) {
+        // The previous leaf isn't inside the block. That means we're the first
+        // leaf in the block.
+        return TextLeafPoint(mAcc, 0);
+      }
+    } else {
+      // We aren't inside the block, so the block ends before us.
+      if (prevBlock->IsAncestorOf(prevLeaf)) {
+        // The previous leaf is inside the block. That means we're the first
+        // leaf after the block. This case is necessary because a block causes a
+        // paragraph break both before and after it.
+        return TextLeafPoint(mAcc, 0);
+      }
+    }
   }
   if (!prevLeaf || prevLeaf->IsHTMLBr()) {
     // We're the first leaf after a line break or the start of the document.

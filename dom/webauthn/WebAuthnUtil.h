@@ -16,8 +16,7 @@
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "ipc/IPCMessageUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum class U2FOperation { Register, Sign };
 
@@ -61,8 +60,7 @@ nsresult BuildTransactionHashes(const nsCString& aRpId,
                                 /* out */ CryptoBuffer& aRpIdHash,
                                 /* out */ CryptoBuffer& aClientDataHash);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 namespace IPC {
 

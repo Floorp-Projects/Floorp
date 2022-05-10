@@ -14,8 +14,7 @@
 #include "mozilla/dom/Gamepad.h"
 #include "mozilla/dom/GamepadManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRInputSource, mParent, mTargetRaySpace,
                                       mGripSpace, mGamepad)
@@ -390,5 +389,4 @@ void XRInputSource::CreateGripSpace(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

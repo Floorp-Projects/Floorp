@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/CredentialManagementBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebAuthnManager;
 
@@ -46,7 +45,6 @@ class CredentialsContainer final : public nsISupports, public nsWrapperCache {
   RefPtr<WebAuthnManager> mManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CredentialsContainer_h

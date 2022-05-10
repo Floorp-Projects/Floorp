@@ -10,8 +10,7 @@
 #include "mozilla/dom/JSActor.h"
 #include "nsIDOMProcessChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Placeholder implementation.
 class JSProcessActorChild final : public JSActor {
@@ -51,7 +50,6 @@ class JSProcessActorChild final : public JSActor {
   nsCOMPtr<nsIDOMProcessChild> mManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_JSProcessActorChild_h

@@ -9,8 +9,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebrtcParents;
 
@@ -37,7 +36,6 @@ class WebrtcGlobalParent : public PWebrtcGlobalParent {
   bool IsActive() { return !mShutdown; }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _WEBRTC_GLOBAL_PARENT_H_

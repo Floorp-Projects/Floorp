@@ -9,8 +9,7 @@
 
 #include "AudioNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct ChannelMergerOptions;
@@ -63,7 +62,6 @@ class ChannelMergerNode final : public AudioNode {
   const uint16_t mInputCount;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

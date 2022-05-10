@@ -24,8 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -414,5 +413,4 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(ReportDeliver)
 NS_IMPL_RELEASE(ReportDeliver)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

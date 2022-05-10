@@ -84,7 +84,7 @@ static bool IsRemoteAcceleratedCompositor(
     return true;
   }
 
-  TextureFactoryIdentifier ident =
+  layers::TextureFactoryIdentifier ident =
       aKnowsCompositor->GetTextureFactoryIdentifier();
   return !aKnowsCompositor->UsingSoftwareWebRender() &&
          ident.mParentProcessType == GeckoProcessType_GPU;

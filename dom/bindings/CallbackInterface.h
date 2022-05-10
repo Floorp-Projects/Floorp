@@ -18,8 +18,7 @@
 
 #include "mozilla/dom/CallbackObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CallbackInterface : public CallbackObject {
  public:
@@ -46,7 +45,6 @@ class CallbackInterface : public CallbackObject {
       : CallbackObject(aCallback, aCallbackGlobal, FastCallbackConstructor()) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CallbackFunction_h

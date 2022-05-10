@@ -7,8 +7,7 @@
 #include "XRNativeOriginViewer.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRNativeOriginViewer::XRNativeOriginViewer(gfx::VRDisplayClient* aDisplay)
     : mDisplay(aDisplay) {
@@ -29,5 +28,4 @@ gfx::QuaternionDouble XRNativeOriginViewer::GetOrientation() {
       sensorState.pose.orientation[2], sensorState.pose.orientation[3]);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

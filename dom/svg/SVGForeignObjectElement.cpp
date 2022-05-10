@@ -15,8 +15,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(ForeignObject)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGForeignObjectElement::WrapNode(JSContext* aCx,
                                             JS::Handle<JSObject*> aGivenProto) {
@@ -151,5 +150,4 @@ nsCSSPropertyID SVGForeignObjectElement::GetCSSPropertyIdForAttrEnum(
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

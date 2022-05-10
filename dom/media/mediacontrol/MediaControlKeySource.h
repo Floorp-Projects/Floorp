@@ -12,8 +12,7 @@
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This is used to store seek related properties from MediaSessionActionDetails.
 // However, currently we have no plan to support `seekOffset`.
@@ -118,7 +117,6 @@ class MediaControlKeySource {
   MediaSessionPlaybackState mPlaybackState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

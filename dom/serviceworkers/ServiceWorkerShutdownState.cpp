@@ -23,8 +23,7 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using Progress = ServiceWorkerShutdownState::Progress;
 
@@ -163,5 +162,4 @@ void MaybeReportServiceWorkerShutdownProgress(const ServiceWorkerOpArgs& aArgs,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

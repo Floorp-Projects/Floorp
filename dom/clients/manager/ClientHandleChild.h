@@ -9,8 +9,7 @@
 #include "ClientThing.h"
 #include "mozilla/dom/PClientHandleChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientHandle;
 class ClientInfo;
@@ -43,7 +42,6 @@ class ClientHandleChild final : public PClientHandleChild {
   void MaybeStartTeardown();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientHandleChild_h

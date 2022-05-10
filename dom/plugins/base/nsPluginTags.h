@@ -16,11 +16,9 @@
 
 class nsIURI;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct FakePluginTagInit;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // An interface representing plugin tags internally.
 #define NS_IINTERNALPLUGINTAG_IID                    \

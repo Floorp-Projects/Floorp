@@ -6,8 +6,7 @@
 
 #include "ServiceWorkerUnregisterCallback.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
@@ -33,5 +32,4 @@ UnregisterCallback::UnregisterFailed() {
 
 RefPtr<GenericPromise> UnregisterCallback::Promise() const { return mPromise; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

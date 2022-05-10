@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLSelectElement;
 
@@ -141,7 +140,6 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   bool mIsInSetDefaultSelected;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLOptionElement_h__

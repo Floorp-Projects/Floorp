@@ -10,8 +10,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
@@ -52,5 +51,4 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
   return XMLHttpRequestWorker::Construct(aGlobal, aParams, aRv);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

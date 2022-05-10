@@ -9,11 +9,9 @@
 
 #include "mozilla/Logging.h"
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 extern LazyLogModule webrtcTCPSocketLog;
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #undef LOG
 #define LOG(args) \

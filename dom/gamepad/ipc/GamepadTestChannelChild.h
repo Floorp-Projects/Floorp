@@ -12,8 +12,7 @@
 #include "mozilla/WeakPtr.h"
 #include "nsRefPtrHashtable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadServiceTest;
 
@@ -41,7 +40,6 @@ class GamepadTestChannelChild final : public PGamepadTestChannelChild {
   friend class PGamepadTestChannelChild;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

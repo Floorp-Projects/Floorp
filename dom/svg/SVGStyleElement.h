@@ -15,8 +15,7 @@
 nsresult NS_NewSVGStyleElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGStyleElementBase = SVGElement;
 
@@ -87,7 +86,6 @@ class SVGStyleElement final : public SVGStyleElementBase,
   void ContentChanged(nsIContent* aContent);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGSTYLEELEMENT_H_

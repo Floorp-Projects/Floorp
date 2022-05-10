@@ -14,8 +14,7 @@
 nsresult NS_NewSVGFEGaussianBlurElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFEGaussianBlurElementBase = SVGFE;
 
@@ -66,7 +65,6 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   static StringInfo sStringInfo[2];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFEGAUSSIANBLURELEMENT_H_

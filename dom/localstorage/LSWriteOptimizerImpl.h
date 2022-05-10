@@ -9,8 +9,7 @@
 
 #include "LSWriteOptimizer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename T, typename U>
 void LSWriteOptimizer<T, U>::InsertItem(const nsAString& aKey, const T& aValue,
@@ -58,7 +57,6 @@ void LSWriteOptimizer<T, U>::UpdateItem(const nsAString& aKey, const T& aValue,
   mTotalDelta += aDelta;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSWriteOptimizerImpl_h

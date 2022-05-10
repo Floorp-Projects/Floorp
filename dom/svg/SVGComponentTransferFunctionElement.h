@@ -19,9 +19,7 @@
     }                                                     \
   }
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class DOMSVGAnimatedNumberList;
 
@@ -86,14 +84,12 @@ class SVGComponentTransferFunctionElement
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGComponentTransferFunctionElement,
                               NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewSVGFEFuncRElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGFEFuncRElement : public SVGComponentTransferFunctionElement {
   friend nsresult(::NS_NewSVGFEFuncRElement(
@@ -114,14 +110,12 @@ class SVGFEFuncRElement : public SVGComponentTransferFunctionElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewSVGFEFuncGElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGFEFuncGElement : public SVGComponentTransferFunctionElement {
   friend nsresult(::NS_NewSVGFEFuncGElement(
@@ -142,14 +136,12 @@ class SVGFEFuncGElement : public SVGComponentTransferFunctionElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewSVGFEFuncBElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGFEFuncBElement : public SVGComponentTransferFunctionElement {
   friend nsresult(::NS_NewSVGFEFuncBElement(
@@ -170,14 +162,12 @@ class SVGFEFuncBElement : public SVGComponentTransferFunctionElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 nsresult NS_NewSVGFEFuncAElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGFEFuncAElement : public SVGComponentTransferFunctionElement {
   friend nsresult(::NS_NewSVGFEFuncAElement(
@@ -198,7 +188,6 @@ class SVGFEFuncAElement : public SVGComponentTransferFunctionElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGCOMPONENTTRANSFERFUNCTIONELEMENT_H_

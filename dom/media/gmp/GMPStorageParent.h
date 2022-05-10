@@ -9,8 +9,7 @@
 #include "mozilla/gmp/PGMPStorageParent.h"
 #include "GMPStorage.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPParent;
 
@@ -43,7 +42,6 @@ class GMPStorageParent : public PGMPStorageParent {
   bool mShutdown;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPStorageParent_h_

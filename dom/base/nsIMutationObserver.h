@@ -16,11 +16,9 @@ class nsAtom;
 class nsIContent;
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #define NS_IMUTATION_OBSERVER_IID                    \
   {                                                  \

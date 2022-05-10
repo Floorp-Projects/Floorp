@@ -11,8 +11,7 @@
 #include "gmp-video-frame.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPSharedMemManager;
 class GMPPlaneImpl;
@@ -50,7 +49,6 @@ class GMPVideoHostImpl : public GMPVideoHost {
   nsTArray<GMPVideoEncodedFrameImpl*> mEncodedFrames;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPVideoHost_h_

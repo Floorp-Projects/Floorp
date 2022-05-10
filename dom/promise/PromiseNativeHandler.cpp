@@ -8,8 +8,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS0(DomPromiseListener)
 
@@ -54,5 +53,4 @@ void DomPromiseListener::Clear() {
   mReject = nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

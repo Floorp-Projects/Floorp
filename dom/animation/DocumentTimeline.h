@@ -18,8 +18,7 @@
 
 struct JSContext;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DocumentTimeline final : public AnimationTimeline,
                                public nsARefreshObserver,
@@ -91,7 +90,6 @@ class DocumentTimeline final : public AnimationTimeline,
   TimeDuration mOriginTime;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DocumentTimeline_h

@@ -10,8 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CharacterData.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Comment final : public CharacterData {
  private:
@@ -58,7 +57,6 @@ class Comment final : public CharacterData {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Comment_h

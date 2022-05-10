@@ -21,8 +21,7 @@
 #include "js/Initialization.h"
 #include "XPCSelfHostedShmem.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -462,5 +461,4 @@ WorkletThread::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMPL_ISUPPORTS_INHERITED(WorkletThread, nsThread, nsIObserver)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

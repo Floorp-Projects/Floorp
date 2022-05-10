@@ -25,6 +25,7 @@ class MediaPipelineReceive;
 class MediaSessionConduit;
 class MediaTransportHandler;
 class JsepTransceiver;
+class TransceiverImpl;
 class PeerConnectionImpl;
 
 namespace dom {
@@ -33,7 +34,6 @@ class Promise;
 class RTCDtlsTransport;
 struct RTCRtpContributingSource;
 struct RTCRtpSynchronizationSource;
-class RTCRtpTransceiver;
 
 class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
  public:
@@ -43,7 +43,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
                  JsepTransceiver* aJsepTransceiver, AbstractThread* aCallThread,
                  nsISerialEventTarget* aStsThread,
                  MediaSessionConduit* aConduit,
-                 RTCRtpTransceiver* aTransceiver);
+                 TransceiverImpl* aTransceiverImpl);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -138,7 +138,7 @@ class RTCRtpReceiver : public nsISupports, public nsWrapperCache {
   RefPtr<dom::MediaStreamTrack> mTrack;
   RefPtr<MediaPipelineReceive> mPipeline;
   RefPtr<MediaTransportHandler> mTransportHandler;
-  RefPtr<RTCRtpTransceiver> mTransceiver;
+  RefPtr<TransceiverImpl> mTransceiverImpl;
   // This is [[AssociatedRemoteMediaStreams]], basically. We do not keep the
   // streams themselves here, because that would require this object to know
   // where the stream list for the whole RTCPeerConnection lives..

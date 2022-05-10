@@ -38,8 +38,7 @@ class MessageReader;
 class MessageWriter;
 }  // namespace IPC
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BeforeUnloadEvent;
 class CustomEvent;
@@ -397,8 +396,7 @@ class MOZ_STACK_CLASS WantsPopupControlCheck {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Event, NS_EVENT_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::Event> NS_NewDOMEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

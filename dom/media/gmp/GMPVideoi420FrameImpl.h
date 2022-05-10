@@ -10,8 +10,7 @@
 #include "mozilla/ipc/Shmem.h"
 #include "GMPVideoPlaneImpl.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPVideoi420FrameData;
 
@@ -72,8 +71,6 @@ class GMPVideoi420FrameImpl : public GMPVideoi420Frame {
   uint64_t mDuration;
 };
 
-}  // namespace gmp
-
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPVideoi420FrameImpl_h_

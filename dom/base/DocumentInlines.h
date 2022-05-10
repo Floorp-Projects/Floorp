@@ -14,8 +14,7 @@
 #include "nsPresContext.h"
 #include "nsStyleSheetService.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 inline PresShell* Document::GetObservingPresShell() const {
   return mPresShell && mPresShell->IsObservingDocument() ? mPresShell : nullptr;
@@ -53,7 +52,6 @@ inline void Document::SetServoRestyleRootDirtyBits(uint32_t aDirtyBits) {
   mServoRestyleRootDirtyBits = aDirtyBits;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DocumentInlines_h

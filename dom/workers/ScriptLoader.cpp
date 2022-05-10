@@ -78,10 +78,7 @@
 
 using mozilla::ipc::PrincipalInfo;
 
-namespace mozilla {
-namespace dom {
-
-namespace workerinternals {
+namespace mozilla::dom::workerinternals {
 namespace {
 
 nsresult ConstructURI(const nsAString& aScriptURL, nsIURI* baseURI,
@@ -1288,7 +1285,4 @@ void Load(WorkerPrivate* aWorkerPrivate,
                  aWorkerScriptType, aRv);
 }
 
-}  // namespace workerinternals
-
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::workerinternals

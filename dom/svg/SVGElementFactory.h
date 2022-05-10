@@ -15,8 +15,7 @@
 class nsAtom;
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGElementFactory {
  public:
@@ -28,8 +27,7 @@ using SVGContentCreatorFunction = nsresult (*)(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #define SVG_TAG(_tag, _classname)                           \
   nsresult NS_NewSVG##_classname##Element(                  \

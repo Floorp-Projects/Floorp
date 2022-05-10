@@ -179,7 +179,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/history.svg");
 }
 .icon.icon-trending {
-  background-image: url("chrome://activity-stream/content/data/content/assets/glyph-trending-16.svg");
+  background-image: url("chrome://browser/skin/trending.svg");
   transform: translateY(2px);
 }
 .icon.icon-now {

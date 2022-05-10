@@ -12,8 +12,7 @@
 #include "nsTObserverArray.h"
 #include "mozilla/WeakPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AbortSignal;
 class AbortSignalImpl;
@@ -86,7 +85,6 @@ class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
   bool mAborted;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_AbortFollower_h

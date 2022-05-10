@@ -192,8 +192,7 @@ nsresult NS_NewXMLDocument(Document** aInstancePtrResult, bool aLoadedAsData,
   return NS_OK;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XMLDocument::XMLDocument(const char* aContentType)
     : Document(aContentType),
@@ -335,5 +334,4 @@ JSObject* XMLDocument::WrapNode(JSContext* aCx,
   return XMLDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

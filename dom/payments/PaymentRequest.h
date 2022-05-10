@@ -16,8 +16,7 @@
 #include "nsWrapperCache.h"
 #include "PaymentRequestUpdateEvent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PaymentAddress;
 class PaymentRequestChild;
@@ -276,7 +275,6 @@ class PaymentRequest final : public DOMEventTargetHelper,
 
   PaymentRequestChild* mIPC;
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PaymentRequest_h

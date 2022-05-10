@@ -13,8 +13,7 @@
 #include "nsAttrValueInlines.h"
 #include <algorithm>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLProgressElement final : public nsGenericHTMLElement {
  public:
@@ -55,7 +54,6 @@ class HTMLProgressElement final : public nsGenericHTMLElement {
   static const double kDefaultMax;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLProgressElement_h

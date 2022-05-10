@@ -108,8 +108,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Counts the number of registered ServiceWorkers, and the number that
 // handle Fetch, for reporting in Telemetry
@@ -3384,5 +3383,4 @@ void ServiceWorkerManager::ReportServiceWorkerShutdownProgress(
   mShutdownBlocker->ReportShutdownProgress(aShutdownStateId, aProgress);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

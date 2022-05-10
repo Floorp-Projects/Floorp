@@ -25,8 +25,7 @@
 #include "nsIPrincipal.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1596,5 +1595,4 @@ AllocPBackgroundSessionStorageManagerParent(const uint64_t& aTopContextId) {
   return MakeAndAddRef<SessionStorageManagerParent>(aTopContextId);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

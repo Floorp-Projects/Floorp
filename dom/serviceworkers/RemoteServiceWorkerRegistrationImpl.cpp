@@ -12,8 +12,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 using mozilla::ipc::ResponseRejectReason;
@@ -238,5 +237,4 @@ void RemoteServiceWorkerRegistrationImpl::FireUpdateFound() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

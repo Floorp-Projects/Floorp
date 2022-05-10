@@ -14,8 +14,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsINode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 
@@ -97,7 +96,6 @@ struct MOZ_STACK_CLASS BindContext final {
   const bool mSubtreeRootChanges;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

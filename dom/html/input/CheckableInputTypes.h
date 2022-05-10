@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CheckableInputTypeBase : public InputType {
  public:
@@ -51,7 +50,6 @@ class RadioInputType : public CheckableInputTypeBase {
       : CheckableInputTypeBase(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_CheckableInputTypes_h__ */

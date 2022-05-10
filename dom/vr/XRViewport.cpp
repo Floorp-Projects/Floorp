@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/XRViewport.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRViewport, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(XRViewport, AddRef)
@@ -29,5 +28,4 @@ int32_t XRViewport::Width() { return mRect.Width(); }
 
 int32_t XRViewport::Height() { return mRect.Height(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -12,8 +12,7 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsINode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MutationEvent : public Event {
  public:
@@ -45,8 +44,7 @@ class MutationEvent : public Event {
   ~MutationEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::MutationEvent> NS_NewDOMMutationEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

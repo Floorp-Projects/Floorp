@@ -7,8 +7,7 @@
 #include "mozilla/dom/ReportBody.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ReportBody, mGlobal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReportBody)
@@ -25,5 +24,4 @@ ReportBody::ReportBody(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
 
 ReportBody::~ReportBody() = default;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

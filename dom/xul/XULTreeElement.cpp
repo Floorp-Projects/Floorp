@@ -17,8 +17,7 @@
 #include "mozilla/dom/XULTreeElement.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(XULTreeElement, nsXULElement)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeElement, nsXULElement, mView)
@@ -409,5 +408,4 @@ void XULTreeElement::RemoveImageCacheEntry(int32_t aRowIndex,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

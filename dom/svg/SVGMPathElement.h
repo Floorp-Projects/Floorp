@@ -15,8 +15,7 @@
 nsresult NS_NewSVGMPathElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class SVGGeometryElement;
 
 using SVGMPathElementBase = SVGElement;
@@ -114,7 +113,6 @@ class SVGMPathElement final : public SVGMPathElementBase,
   PathElementTracker mPathTracker;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGMPATHELEMENT_H_

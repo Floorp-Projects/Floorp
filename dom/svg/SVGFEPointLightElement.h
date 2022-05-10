@@ -13,8 +13,7 @@
 nsresult NS_NewSVGFEPointLightElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFEPointLightElementBase = SVGFELightElement;
 
@@ -51,7 +50,6 @@ class SVGFEPointLightElement : public SVGFEPointLightElementBase {
   static NumberInfo sNumberInfo[3];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFEPOINTLIGHTELEMENT_H_

@@ -11,8 +11,7 @@
 #include "mozilla/dom/TextTrack.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Event;
 class HTMLMediaElement;
@@ -75,7 +74,6 @@ class TextTrackList final : public DOMEventTargetHelper {
                                          const nsAString& aEventName);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TextTrackList_h

@@ -15,8 +15,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Mask)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGUnitTypes_Binding;
 
@@ -122,5 +121,4 @@ SVGMaskElement::IsAttributeMapped(const nsAtom* name) const {
          SVGMaskElementBase::IsAttributeMapped(name);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

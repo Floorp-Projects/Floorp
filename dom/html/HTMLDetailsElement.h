@@ -11,8 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // HTMLDetailsElement implements the <details> tag, which is used as a
 // disclosure widget from which the user can obtain additional information or
@@ -66,7 +65,6 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
   RefPtr<AsyncEventDispatcher> mToggleEventDispatcher;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLDetailsElement_h */

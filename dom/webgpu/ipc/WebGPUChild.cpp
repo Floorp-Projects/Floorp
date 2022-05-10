@@ -16,8 +16,7 @@
 #include "DeviceLostInfo.h"
 #include "Sampler.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 NS_IMPL_CYCLE_COLLECTION(WebGPUChild)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGPUChild, AddRef)
@@ -1088,5 +1087,4 @@ void WebGPUChild::ActorDestroy(ActorDestroyReason) {
   }
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

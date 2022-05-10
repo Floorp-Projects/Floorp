@@ -11,8 +11,7 @@
 #  include "MediaSystemResourceTypes.h"
 #  include "mozilla/media/PMediaSystemResourceManagerParent.h"
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 /**
  * Handle MediaSystemResourceManager's IPC
@@ -55,7 +54,6 @@ class MediaSystemResourceManagerParent final
       mResourceRequests;
 };
 
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 #endif

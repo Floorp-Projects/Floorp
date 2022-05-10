@@ -10,8 +10,7 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FocusEvent : public UIEvent {
  public:
@@ -39,8 +38,7 @@ class FocusEvent : public UIEvent {
                       EventTarget* aRelatedTarget);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::FocusEvent> NS_NewDOMFocusEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

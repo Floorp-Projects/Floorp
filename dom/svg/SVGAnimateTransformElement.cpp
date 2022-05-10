@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(AnimateTransform)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGAnimateTransformElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -55,5 +54,4 @@ SMILAnimationFunction& SVGAnimateTransformElement::AnimationFunction() {
   return mAnimationFunction;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

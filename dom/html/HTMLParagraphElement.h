@@ -11,8 +11,7 @@
 
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLParagraphElement final : public nsGenericHTMLElement {
  public:
@@ -51,7 +50,6 @@ class HTMLParagraphElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLParagraphElement_h

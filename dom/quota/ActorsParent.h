@@ -9,9 +9,7 @@
 
 #include "mozilla/dom/quota/Config.h"
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 class PQuotaParent;
 
@@ -23,8 +21,6 @@ bool DeallocPQuotaParent(PQuotaParent* aActor);
 
 bool RecvShutdownQuotaManager();
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota
 
 #endif  // mozilla_dom_quota_ActorsParent_h

@@ -53,8 +53,7 @@ extern mozilla::LazyLogModule sWorkerTelemetryLog;
 #endif
 #define LOG(_args) MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug, _args);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1451,5 +1450,4 @@ ServiceWorkerRegistrar::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_ERROR_UNEXPECTED;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

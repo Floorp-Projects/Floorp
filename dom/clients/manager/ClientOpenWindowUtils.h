@@ -9,8 +9,7 @@
 #include "ClientOpPromise.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using BrowsingContextCallbackReceivedPromise =
     MozPromise<RefPtr<BrowsingContext>, CopyableErrorResult, false>;
@@ -18,7 +17,6 @@ using BrowsingContextCallbackReceivedPromise =
 [[nodiscard]] RefPtr<ClientOpPromise> ClientOpenWindow(
     const ClientOpenWindowArgs& aArgs);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientOpenWindowUtils_h

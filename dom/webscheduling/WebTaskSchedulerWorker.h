@@ -15,8 +15,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WebTaskSchedulingBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebTaskWorkerRunnable : public WorkerSameThreadRunnable {
  public:
@@ -43,6 +42,5 @@ class WebTaskSchedulerWorker final : public WebTaskScheduler {
 
   CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

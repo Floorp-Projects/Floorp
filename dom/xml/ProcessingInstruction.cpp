@@ -42,8 +42,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager* aNodeInfoManager,
   return instance.forget();
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 ProcessingInstruction::ProcessingInstruction(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -105,5 +104,4 @@ void ProcessingInstruction::DumpContent(FILE* out, int32_t aIndent,
                                         bool aDumpAll) const {}
 #endif
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

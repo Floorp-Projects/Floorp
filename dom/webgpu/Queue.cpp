@@ -12,8 +12,7 @@
 #include "ipc/WebGPUChild.h"
 #include "mozilla/ErrorResult.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(Queue, mParent, mBridge)
 GPU_IMPL_JS_WRAP(Queue)
@@ -141,5 +140,4 @@ void Queue::WriteTexture(const dom::GPUImageCopyTexture& aDestination,
   }
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

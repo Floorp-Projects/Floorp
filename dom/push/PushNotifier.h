@@ -15,8 +15,7 @@
 
 #include "mozilla/Maybe.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ContentChild;
 class ContentParent;
@@ -189,7 +188,6 @@ class PushErrorDispatcher final : public PushDispatcher {
   uint32_t mFlags;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PushNotifier_h

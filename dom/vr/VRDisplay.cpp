@@ -30,8 +30,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 VRFieldOfView::VRFieldOfView(nsISupports* aParent, double aUpDegrees,
                              double aRightDegrees, double aDownDegrees,
@@ -804,5 +803,4 @@ bool VRFrameInfo::IsDirty() { return mVRState.timestamp == 0; }
 
 void VRFrameInfo::Clear() { mVRState.Clear(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

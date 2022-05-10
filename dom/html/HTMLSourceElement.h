@@ -13,8 +13,7 @@
 
 class nsAttrValue;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MediaList;
 
@@ -115,7 +114,6 @@ class HTMLSourceElement final : public nsGenericHTMLElement {
   void UpdateMediaList(const nsAttrValue* aValue);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLSourceElement_h
