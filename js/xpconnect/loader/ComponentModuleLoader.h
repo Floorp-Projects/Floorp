@@ -10,6 +10,8 @@
 #include "js/loader/LoadContextBase.h"
 #include "js/loader/ModuleLoaderBase.h"
 
+class mozJSComponentLoader;
+
 namespace mozilla {
 namespace loader {
 
@@ -37,11 +39,14 @@ class ComponentScriptLoader : public JS::loader::ScriptLoaderInterface {
 
 class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
  public:
-  explicit ComponentModuleLoader(ComponentScriptLoader* aScriptLoader,
-                                 nsIGlobalObject* aGlobalObject);
-
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ComponentModuleLoader,
-                                           ModuleLoaderBase)
+                                           JS::loader::ModuleLoaderBase)
+
+  ComponentModuleLoader(ComponentScriptLoader* aScriptLoader,
+                        nsIGlobalObject* aGlobalObject);
+
+  [[nodiscard]] nsresult ProcessRequests();
 
  private:
   // An event target that dispatches runnables by executing them
@@ -54,6 +59,8 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
    private:
     virtual ~SyncEventTarget() = default;
   };
+
+  ~ComponentModuleLoader();
 
   already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) override;
@@ -74,6 +81,8 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::MutableHandle<JSObject*> aModuleScript) override;
 
   void OnModuleLoadComplete(ModuleLoadRequest* aRequest) override;
+
+  JS::loader::ScriptLoadRequestList mLoadRequests;
 };
 
 // Data specific to ComponentModuleLoader that is associated with each load
