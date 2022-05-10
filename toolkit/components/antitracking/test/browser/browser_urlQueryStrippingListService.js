@@ -171,8 +171,8 @@ add_task(async function testRemoteSettings() {
   });
 
   // Add initial empty record.
-  let db = await RemoteSettings(COLLECTION_NAME).db;
-  await db.importChanges({}, 42, []);
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  await db.importChanges({}, Date.now(), []);
 
   // Test if the observer been called when adding to the service.
   let updateEvent = new UpdateEvent();

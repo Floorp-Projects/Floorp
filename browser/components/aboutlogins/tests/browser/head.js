@@ -82,13 +82,13 @@ async function addLogin(login) {
 let EXPECTED_BREACH = null;
 let EXPECTED_ERROR_MESSAGE = null;
 add_setup(async function setup_head() {
-  const db = await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
+  const db = RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
   if (EXPECTED_BREACH) {
     await db.create(EXPECTED_BREACH, {
       useRecordId: true,
     });
   }
-  await db.importChanges({}, 42);
+  await db.importChanges({}, Date.now());
   if (EXPECTED_BREACH) {
     await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).emit(
       "sync",

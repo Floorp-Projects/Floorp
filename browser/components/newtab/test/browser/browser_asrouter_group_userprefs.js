@@ -27,7 +27,7 @@ add_setup(async function() {
     id: `HEARTBEAT_MESSAGE_${Date.now()}`,
   };
   const client = RemoteSettings("cfr");
-  await client.db.importChanges({}, 42, [testMessage], { clear: true });
+  await client.db.importChanges({}, Date.now(), [testMessage], { clear: true });
 
   // Force the CFR provider cache to 0 by modifying updateCycleInMs
   await SpecialPowers.pushPrefEnv({
@@ -83,7 +83,9 @@ add_task(async function test_heartbeat_tactic_2() {
     userPreferences: ["browser.userPreference.messaging-experiments"],
   };
   const client = RemoteSettings("message-groups");
-  await client.db.importChanges({}, 42, [groupConfiguration], { clear: true });
+  await client.db.importChanges({}, Date.now(), [groupConfiguration], {
+    clear: true,
+  });
 
   await SpecialPowers.pushPrefEnv({
     set: [

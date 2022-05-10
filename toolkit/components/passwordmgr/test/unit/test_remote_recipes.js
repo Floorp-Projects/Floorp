@@ -3,7 +3,7 @@
 
 /**
  * Tests retrieving remote LoginRecipes in the parent process.
- * See https://firefox-source-docs.mozilla.org/services/settings/#unit-tests for explanation of db.importChanges({}, 42);
+ * See https://firefox-source-docs.mozilla.org/services/settings/#unit-tests for explanation of db.importChanges({}, Date.now());
  */
 
 "use strict";
@@ -15,7 +15,7 @@ const { RemoteSettings } = ChromeUtils.import(
 const REMOTE_SETTINGS_COLLECTION = "password-recipes";
 
 add_task(async function test_init_remote_recipe() {
-  const db = await RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
+  const db = RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
   await db.clear();
   const record1 = {
     id: "some-fake-ID",
@@ -23,7 +23,7 @@ add_task(async function test_init_remote_recipe() {
     description: "Some description here",
     usernameSelector: "#username",
   };
-  await db.importChanges({}, 42, [record1], { clear: true });
+  await db.importChanges({}, Date.now(), [record1], { clear: true });
   let parent = new LoginRecipesParent({ defaults: true });
 
   let recipesParent = await parent.initializationPromise;
@@ -59,14 +59,14 @@ add_task(async function test_init_remote_recipe() {
 });
 
 add_task(async function test_add_recipe_sync() {
-  const db = await RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
+  const db = RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
   const record1 = {
     id: "some-fake-ID",
     hosts: ["www.testDomain.com"],
     description: "Some description here",
     usernameSelector: "#username",
   };
-  await db.importChanges({}, 42, [record1], { clear: true });
+  await db.importChanges({}, Date.now(), [record1], { clear: true });
   let parent = new LoginRecipesParent({ defaults: true });
   let recipesParent = await parent.initializationPromise;
 
@@ -95,14 +95,14 @@ add_task(async function test_add_recipe_sync() {
 });
 
 add_task(async function test_remove_recipe_sync() {
-  const db = await RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
+  const db = RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
   const record1 = {
     id: "some-fake-ID",
     hosts: ["www.testDomain.com"],
     description: "Some description here",
     usernameSelector: "#username",
   };
-  await db.importChanges({}, 42, [record1], { clear: true });
+  await db.importChanges({}, Date.now(), [record1], { clear: true });
   let parent = new LoginRecipesParent({ defaults: true });
   let recipesParent = await parent.initializationPromise;
 
@@ -124,7 +124,7 @@ add_task(async function test_remove_recipe_sync() {
 });
 
 add_task(async function test_malformed_recipes_in_db() {
-  const db = await RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
+  const db = RemoteSettings(REMOTE_SETTINGS_COLLECTION).db;
   const malformedRecord = {
     id: "some-ID",
     hosts: ["www.testDomain.com"],
@@ -132,7 +132,7 @@ add_task(async function test_malformed_recipes_in_db() {
     usernameSelector: "#username",
     fieldThatDoesNotExist: "value",
   };
-  await db.importChanges({}, 42, [malformedRecord], { clear: true });
+  await db.importChanges({}, Date.now(), [malformedRecord], { clear: true });
   let parent = new LoginRecipesParent({ defaults: true });
   try {
     await parent.initializationPromise;
@@ -149,7 +149,7 @@ add_task(async function test_malformed_recipes_in_db() {
     description: "Some description here",
     usernameSelector: "#username",
   };
-  await db.importChanges({}, 42, [missingHostsRecord], { clear: true });
+  await db.importChanges({}, Date.now(), [missingHostsRecord], { clear: true });
   parent = new LoginRecipesParent({ defaults: true });
   try {
     await parent.initializationPromise;

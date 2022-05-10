@@ -21,7 +21,7 @@ const { ExperimentManager } = ChromeUtils.import(
 
 async function setup(recipes) {
   const client = RemoteSettings("nimbus-desktop-experiments");
-  await client.db.importChanges({}, 42, recipes, {
+  await client.db.importChanges({}, Date.now(), recipes, {
     clear: true,
   });
 
