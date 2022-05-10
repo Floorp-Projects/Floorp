@@ -149,31 +149,14 @@ class StyleEditorUI extends EventEmitter {
     this.selectedEditor = null;
     this.savedLocations = {};
 
-    this._onOptionsButtonClick = this._onOptionsButtonClick.bind(this);
-    this._onOrigSourcesPrefChanged = this._onOrigSourcesPrefChanged.bind(this);
-    this._onMediaPrefChanged = this._onMediaPrefChanged.bind(this);
-    this._updateMediaList = this._updateMediaList.bind(this);
-    this._clear = this._clear.bind(this);
-    this._onError = this._onError.bind(this);
-    this._updateContextMenuItems = this._updateContextMenuItems.bind(this);
-    this._openLinkNewTab = this._openLinkNewTab.bind(this);
-    this._copyUrl = this._copyUrl.bind(this);
-    this._onResourceAvailable = this._onResourceAvailable.bind(this);
-    this._onResourceUpdated = this._onResourceUpdated.bind(this);
-    this._onFilterInputChange = this._onFilterInputChange.bind(this);
-    this._onFocusFilterInputKeyboardShortcut = this._onFocusFilterInputKeyboardShortcut.bind(
-      this
-    );
-    this._onNavKeyDown = this._onNavKeyDown.bind(this);
-
     this.#prefObserver = new PrefObserver("devtools.styleeditor.");
-    this.#prefObserver.on(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
+    this.#prefObserver.on(PREF_MEDIA_SIDEBAR, this.#onMediaPrefChanged);
     this.#sourceMapPrefObserver = new PrefObserver(
       "devtools.source-map.client-service."
     );
     this.#sourceMapPrefObserver.on(
       PREF_ORIG_SOURCES,
-      this._onOrigSourcesPrefChanged
+      this.#onOrigSourcesPrefChanged
     );
   }
 
@@ -202,18 +185,18 @@ class StyleEditorUI extends EventEmitter {
 
     await this.#toolbox.resourceCommand.watchResources(
       [this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
-      { onAvailable: this._onResourceAvailable }
+      { onAvailable: this.#onResourceAvailable }
     );
 
-    this._startLoadingStyleSheets();
+    this.#startLoadingStyleSheets();
     await this.#toolbox.resourceCommand.watchResources(
       [this.#toolbox.resourceCommand.TYPES.STYLESHEET],
       {
-        onAvailable: this._onResourceAvailable,
-        onUpdated: this._onResourceUpdated,
+        onAvailable: this.#onResourceAvailable,
+        onUpdated: this.#onResourceUpdated,
       }
     );
-    await this._waitForLoadingStyleSheets();
+    await this.#waitForLoadingStyleSheets();
   }
 
   /**
@@ -242,7 +225,7 @@ class StyleEditorUI extends EventEmitter {
           "stylesheets"
         );
         stylesheetsFront.addStyleSheet(null);
-        this._clearFilterInput();
+        this.#clearFilterInput();
       },
       eventListenersConfig
     );
@@ -250,8 +233,8 @@ class StyleEditorUI extends EventEmitter {
     this.#root.querySelector(".style-editor-importButton").addEventListener(
       "click",
       () => {
-        this._importFromFile(this._mockImportFile || null, this.#window);
-        this._clearFilterInput();
+        this.#importFromFile(this._mockImportFile || null, this.#window);
+        this.#clearFilterInput();
       },
       eventListenersConfig
     );
@@ -260,19 +243,19 @@ class StyleEditorUI extends EventEmitter {
       .querySelector("#style-editor-options")
       .addEventListener(
         "click",
-        this._onOptionsButtonClick,
+        this.#onOptionsButtonClick,
         eventListenersConfig
       );
 
     this.#filterInput.addEventListener(
       "input",
-      this._onFilterInputChange,
+      this.#onFilterInputChange,
       eventListenersConfig
     );
 
     this.#filterInputClearButton.addEventListener(
       "click",
-      () => this._clearFilterInput(),
+      () => this.#clearFilterInput(),
       eventListenersConfig
     );
 
@@ -289,7 +272,7 @@ class StyleEditorUI extends EventEmitter {
     this.#contextMenu = this.#panelDoc.getElementById("sidebar-context");
     this.#contextMenu.addEventListener(
       "popupshowing",
-      this._updateContextMenuItems,
+      this.#updateContextMenuItems,
       eventListenersConfig
     );
 
@@ -298,21 +281,21 @@ class StyleEditorUI extends EventEmitter {
     );
     this.#openLinkNewTabItem.addEventListener(
       "command",
-      this._openLinkNewTab,
+      this.#openLinkNewTab,
       eventListenersConfig
     );
 
     this.#copyUrlItem = this.#panelDoc.getElementById("context-copyurl");
     this.#copyUrlItem.addEventListener(
       "command",
-      this._copyUrl,
+      this.#copyUrl,
       eventListenersConfig
     );
 
     // items list focus and search-on-type handling
     this.#nav.addEventListener(
       "keydown",
-      this._onNavKeyDown,
+      this.#onNavKeyDown,
       eventListenersConfig
     );
 
@@ -321,19 +304,19 @@ class StyleEditorUI extends EventEmitter {
     });
     this.#shortcuts.on(
       `CmdOrCtrl+${getString("focusFilterInput.commandkey")}`,
-      this._onFocusFilterInputKeyboardShortcut
+      this.#onFocusFilterInputKeyboardShortcut
     );
 
     const nav = this.#panelDoc.querySelector(".splitview-controller");
     nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
   }
 
-  _clearFilterInput() {
+  #clearFilterInput() {
     this.#filterInput.value = "";
-    this._onFilterInputChange();
+    this.#onFilterInputChange();
   }
 
-  _onFilterInputChange() {
+  #onFilterInputChange = () => {
     this.#filter = this.#filterInput.value;
     this.#filterInputClearButton.toggleAttribute("hidden", !this.#filter);
 
@@ -344,7 +327,7 @@ class StyleEditorUI extends EventEmitter {
       });
     }
 
-    this._onFilterStateChange();
+    this.#onFilterStateChange();
 
     if (this.#activeSummary == null) {
       const firstVisibleSummary = Array.from(this.#nav.childNodes).find(
@@ -355,9 +338,9 @@ class StyleEditorUI extends EventEmitter {
         this.setActiveSummary(firstVisibleSummary, { reason: "filter-auto" });
       }
     }
-  }
+  };
 
-  _onFilterStateChange() {
+  #onFilterStateChange() {
     const summaries = Array.from(this.#nav.childNodes);
     const hasVisibleSummary = summaries.some(
       node => !node.classList.contains(FILTERED_CLASSNAME)
@@ -371,16 +354,16 @@ class StyleEditorUI extends EventEmitter {
       .classList.toggle("devtools-searchbox-no-match", !!allFiltered);
   }
 
-  _onFocusFilterInputKeyboardShortcut(e) {
+  #onFocusFilterInputKeyboardShortcut = e => {
     // Prevent the print modal to be displayed.
     if (e) {
       e.stopPropagation();
       e.preventDefault();
     }
     this.#filterInput.select();
-  }
+  };
 
-  _onNavKeyDown(event) {
+  #onNavKeyDown = event => {
     function getFocusedItemWithin(nav) {
       let node = nav.ownerDocument.activeElement;
       while (node && node.parentNode != nav) {
@@ -440,7 +423,7 @@ class StyleEditorUI extends EventEmitter {
     }
 
     return true;
-  }
+  };
 
   /**
    * Opens the Options Popup Menu
@@ -449,10 +432,10 @@ class StyleEditorUI extends EventEmitter {
    * @params {number} screenY
    *   Both obtained from the event object, used to position the popup
    */
-  _onOptionsButtonClick({ screenX, screenY }) {
+  #onOptionsButtonClick = ({ screenX, screenY }) => {
     this.#optionsMenu = optionsPopupMenu(
-      this._toggleOrigSources,
-      this._toggleMediaSidebar
+      this.#toggleOrigSources,
+      this.#toggleMediaSidebar
     );
 
     this.#optionsMenu.once("open", () => {
@@ -463,13 +446,13 @@ class StyleEditorUI extends EventEmitter {
     });
 
     this.#optionsMenu.popup(screenX, screenY, this.#toolbox.doc);
-  }
+  };
 
   /**
    * Be called when changing the original sources pref.
    */
-  async _onOrigSourcesPrefChanged() {
-    this._clear();
+  #onOrigSourcesPrefChanged = async () => {
+    this.#clear();
     // When we toggle the source-map preference, we clear the panel and re-fetch the exact
     // same stylesheet resources from ResourceCommand, but `_addStyleSheet` will trigger
     // or ignore the additional source-map mapping.
@@ -477,18 +460,18 @@ class StyleEditorUI extends EventEmitter {
     for (const resource of this.#toolbox.resourceCommand.getAllResources(
       this.#toolbox.resourceCommand.TYPES.STYLESHEET
     )) {
-      await this._handleStyleSheetResource(resource);
+      await this.#handleStyleSheetResource(resource);
     }
 
     this.#root.classList.remove("loading");
 
     this.emit("stylesheets-refreshed");
-  }
+  };
 
   /**
    * Remove all editors and add loading indicator.
    */
-  _clear() {
+  #clear = () => {
     // remember selected sheet and line number for next load
     if (this.selectedEditor && this.selectedEditor.sourceEditor) {
       const href = this.selectedEditor.styleSheet.href;
@@ -509,7 +492,7 @@ class StyleEditorUI extends EventEmitter {
       }
     }
 
-    this._clearStyleSheetEditors();
+    this.#clearStyleSheetEditors();
     // Clear the left sidebar items and their associated elements.
     while (this.#nav.hasChildNodes()) {
       this.removeSplitViewItem(this.#nav.firstChild);
@@ -521,7 +504,7 @@ class StyleEditorUI extends EventEmitter {
     this.#seenSheets = new Map();
 
     this.emit("stylesheets-clear");
-  }
+  };
 
   /**
    * Add an editor for this stylesheet. Add editors for its original sources
@@ -534,10 +517,10 @@ class StyleEditorUI extends EventEmitter {
    *         been fully loaded.  If the style sheet has a source map, and source mapping
    *         is enabled, then the promise resolves to null.
    */
-  _addStyleSheet(resource) {
+  #addStyleSheet(resource) {
     if (!this.#seenSheets.has(resource)) {
       const promise = (async () => {
-        let editor = await this._addStyleSheetEditor(resource);
+        let editor = await this.#addStyleSheetEditor(resource);
 
         const sourceMapService = this.#toolbox.sourceMapService;
 
@@ -565,7 +548,7 @@ class StyleEditorUI extends EventEmitter {
         // sheets, so make editors for each of them.
         if (sources && sources.length) {
           const parentEditorName = editor.friendlyName;
-          this._removeStyleSheetEditor(editor);
+          this.#removeStyleSheetEditor(editor);
           editor = null;
 
           for (const { id: originalId, url: originalURL } of sources) {
@@ -582,7 +565,7 @@ class StyleEditorUI extends EventEmitter {
             original.resourceId = resource.resourceId;
             original.targetFront = resource.targetFront;
             original.mediaRules = resource.mediaRules;
-            await this._addStyleSheetEditor(original);
+            await this.#addStyleSheetEditor(original);
           }
         }
 
@@ -593,11 +576,11 @@ class StyleEditorUI extends EventEmitter {
     return this.#seenSheets.get(resource);
   }
 
-  _getInlineStyleSheetsCount() {
+  #getInlineStyleSheetsCount() {
     return this.editors.filter(editor => !editor.styleSheet.href).length;
   }
 
-  _getNewStyleSheetsCount() {
+  #getNewStyleSheetsCount() {
     return this.editors.filter(editor => editor.isNew).length;
   }
 
@@ -611,14 +594,14 @@ class StyleEditorUI extends EventEmitter {
    *         Optional Integer representing the index of the current stylesheet
    *         among all stylesheets of its type (inline or user-created)
    */
-  _getNextFriendlyIndex(styleSheet) {
+  #getNextFriendlyIndex(styleSheet) {
     if (styleSheet.href) {
       return undefined;
     }
 
     return styleSheet.isNew
-      ? this._getNewStyleSheetsCount()
-      : this._getInlineStyleSheetsCount();
+      ? this.#getNewStyleSheetsCount()
+      : this.#getInlineStyleSheetsCount();
   }
 
   /**
@@ -629,21 +612,21 @@ class StyleEditorUI extends EventEmitter {
    * @return {Promise} that is resolved with the created StyleSheetEditor when
    *                   the editor is fully initialized or rejected on error.
    */
-  async _addStyleSheetEditor(resource) {
+  async #addStyleSheetEditor(resource) {
     const editor = new StyleSheetEditor(
       resource,
       this.#window,
-      this._getNextFriendlyIndex(resource)
+      this.#getNextFriendlyIndex(resource)
     );
 
-    editor.on("property-change", this._summaryChange.bind(this, editor));
-    editor.on("media-rules-changed", this._updateMediaList.bind(this, editor));
-    editor.on("linked-css-file", this._summaryChange.bind(this, editor));
-    editor.on("linked-css-file-error", this._summaryChange.bind(this, editor));
-    editor.on("error", this._onError);
+    editor.on("property-change", this.#summaryChange.bind(this, editor));
+    editor.on("media-rules-changed", this.#updateMediaList.bind(this, editor));
+    editor.on("linked-css-file", this.#summaryChange.bind(this, editor));
+    editor.on("linked-css-file-error", this.#summaryChange.bind(this, editor));
+    editor.on("error", this.#onError);
     editor.on(
       "filter-input-keyboard-shortcut",
-      this._onFocusFilterInputKeyboardShortcut
+      this.#onFocusFilterInputKeyboardShortcut
     );
 
     // onMediaRulesChanged fires media-rules-changed, so call the function after
@@ -662,7 +645,7 @@ class StyleEditorUI extends EventEmitter {
       throw e;
     }
 
-    this._sourceLoaded(editor);
+    this.#sourceLoaded(editor);
 
     if (resource.fileName) {
       this.emit("test:editor-updated", editor);
@@ -681,7 +664,7 @@ class StyleEditorUI extends EventEmitter {
    * @param {nsIWindow} parentWindow
    *        Optional parent window for the file picker.
    */
-  _importFromFile(file, parentWindow) {
+  #importFromFile(file, parentWindow) {
     const onFileSelected = selectedFile => {
       if (!selectedFile) {
         // nothing selected
@@ -723,14 +706,14 @@ class StyleEditorUI extends EventEmitter {
    * @param  {data} data
    *         The event data
    */
-  _onError(data) {
+  #onError = data => {
     this.emit("error", data);
-  }
+  };
 
   /**
    * Toggle the original sources pref.
    */
-  _toggleOrigSources() {
+  #toggleOrigSources() {
     const isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   }
@@ -738,7 +721,7 @@ class StyleEditorUI extends EventEmitter {
   /**
    * Toggle the pref for showing a @media rules sidebar in each editor.
    */
-  _toggleMediaSidebar() {
+  #toggleMediaSidebar() {
     const isEnabled = Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR);
     Services.prefs.setBoolPref(PREF_MEDIA_SIDEBAR, !isEnabled);
   }
@@ -746,9 +729,9 @@ class StyleEditorUI extends EventEmitter {
   /**
    * Toggle the @media sidebar in each editor depending on the setting.
    */
-  _onMediaPrefChanged() {
-    this.editors.forEach(this._updateMediaList);
-  }
+  #onMediaPrefChanged = () => {
+    this.editors.forEach(this.#updateMediaList);
+  };
 
   /**
    * This method handles the following cases related to the context
@@ -761,7 +744,7 @@ class StyleEditorUI extends EventEmitter {
    * 3) There was no stylesheet clicked on (the right click happened
    * below the list): hide the context menu
    */
-  _updateContextMenuItems() {
+  #updateContextMenuItems = async () => {
     this.#openLinkNewTabItem.hidden = !this.#contextMenuStyleSheet;
     this.#copyUrlItem.hidden = !this.#contextMenuStyleSheet;
 
@@ -775,25 +758,25 @@ class StyleEditorUI extends EventEmitter {
         !this.#contextMenuStyleSheet.href
       );
     }
-  }
+  };
 
   /**
    * Open a particular stylesheet in a new tab.
    */
-  _openLinkNewTab() {
+  #openLinkNewTab = () => {
     if (this.#contextMenuStyleSheet) {
       openContentLink(this.#contextMenuStyleSheet.href);
     }
-  }
+  };
 
   /**
    * Copies a stylesheet's URL.
    */
-  _copyUrl() {
+  #copyUrl = () => {
     if (this.#contextMenuStyleSheet) {
       copyString(this.#contextMenuStyleSheet.href);
     }
-  }
+  };
 
   /**
    * Remove a particular stylesheet editor from the UI
@@ -801,7 +784,7 @@ class StyleEditorUI extends EventEmitter {
    * @param {StyleSheetEditor}  editor
    *        The editor to remove.
    */
-  _removeStyleSheetEditor(editor) {
+  #removeStyleSheetEditor(editor) {
     if (editor.summary) {
       this.removeSplitViewItem(editor.summary);
     } else {
@@ -821,7 +804,7 @@ class StyleEditorUI extends EventEmitter {
   /**
    * Clear all the editors from the UI.
    */
-  _clearStyleSheetEditors() {
+  #clearStyleSheetEditors() {
     for (const editor of this.editors) {
       editor.destroy();
     }
@@ -835,7 +818,7 @@ class StyleEditorUI extends EventEmitter {
    * @param  {StyleSheetEditor} editor
    *         Editor to create UI for.
    */
-  _sourceLoaded(editor) {
+  #sourceLoaded(editor) {
     // Create the detail and summary nodes from the templates node (declared in index.xhtml)
     const details = this.#tplDetails.cloneNode(true);
     details.id = "";
@@ -902,7 +885,7 @@ class StyleEditorUI extends EventEmitter {
       eventListenersConfig
     );
 
-    this._updateSummaryForEditor(createdEditor, summary);
+    this.#updateSummaryForEditor(createdEditor, summary);
 
     summary.addEventListener(
       "contextmenu",
@@ -949,10 +932,10 @@ class StyleEditorUI extends EventEmitter {
 
     // autofocus if it's a new user-created stylesheet
     if (createdEditor.isNew) {
-      this._selectEditor(createdEditor);
+      this.#selectEditor(createdEditor);
     }
 
-    if (this._isEditorToSelect(createdEditor)) {
+    if (this.#isEditorToSelect(createdEditor)) {
       this.switchToSelectedSheet();
     }
 
@@ -964,7 +947,7 @@ class StyleEditorUI extends EventEmitter {
       createdEditor.styleSheet.styleSheetIndex == 0 &&
       !summary.classList.contains(FILTERED_CLASSNAME)
     ) {
-      this._selectEditor(createdEditor);
+      this.#selectEditor(createdEditor);
     }
     this.emit("editor-added", createdEditor);
   }
@@ -979,14 +962,14 @@ class StyleEditorUI extends EventEmitter {
     const toSelect = this.#styleSheetToSelect;
 
     for (const editor of this.editors) {
-      if (this._isEditorToSelect(editor)) {
+      if (this.#isEditorToSelect(editor)) {
         // The _styleSheetBoundToSelect will always hold the latest pending
         // requested style sheet (with line and column) which is not yet
         // selected by the source editor. Only after we select that particular
         // editor and go the required line and column, it will become null.
         this.#styleSheetBoundToSelect = this.#styleSheetToSelect;
         this.#styleSheetToSelect = null;
-        return this._selectEditor(editor, toSelect.line, toSelect.col);
+        return this.#selectEditor(editor, toSelect.line, toSelect.col);
       }
     }
 
@@ -1000,7 +983,7 @@ class StyleEditorUI extends EventEmitter {
    * @param {StyleSheetEditor} editor
    *        The editor to test.
    */
-  _isEditorToSelect(editor) {
+  #isEditorToSelect(editor) {
     const toSelect = this.#styleSheetToSelect;
     if (!toSelect) {
       return false;
@@ -1027,7 +1010,7 @@ class StyleEditorUI extends EventEmitter {
    *         Promise that will resolve when the editor is selected and ready
    *         to be used.
    */
-  _selectEditor(editor, line = null, col = null) {
+  #selectEditor(editor, line = null, col = null) {
     // Don't go further if the editor was destroyed in the meantime
     if (!this.editors.includes(editor)) {
       return null;
@@ -1183,8 +1166,8 @@ class StyleEditorUI extends EventEmitter {
    * @param  {StyleSheetEditor} editor
    *         Editor for which a property has changed
    */
-  _summaryChange(editor) {
-    this._updateSummaryForEditor(editor);
+  #summaryChange(editor) {
+    this.#updateSummaryForEditor(editor);
   }
 
   /**
@@ -1195,7 +1178,7 @@ class StyleEditorUI extends EventEmitter {
    *        Optional item's summary element to update. If none, item
    *        corresponding to passed editor is used.
    */
-  _updateSummaryForEditor(editor, summary) {
+  #updateSummaryForEditor(editor, summary) {
     summary = summary || editor.summary;
     if (!summary) {
       return;
@@ -1248,7 +1231,7 @@ class StyleEditorUI extends EventEmitter {
    * @param  {StyleSheetEditor} editor
    *         Editor to update @media sidebar of
    */
-  _updateMediaList(editor) {
+  #updateMediaList = editor => {
     (async function() {
       const details = await this.getEditorDetails(editor);
       const list = details.querySelector(".stylesheet-media-list");
@@ -1291,7 +1274,7 @@ class StyleEditorUI extends EventEmitter {
         div.className = "media-rule-label";
         div.addEventListener(
           "click",
-          this._jumpToLocation.bind(this, location)
+          this.#jumpToLocation.bind(this, location)
         );
 
         const cond = this.#panelDoc.createElementNS(HTML_NS, "div");
@@ -1300,7 +1283,7 @@ class StyleEditorUI extends EventEmitter {
           cond.classList.add("media-condition-unmatched");
         }
         if (this.#toolbox.descriptorFront.isLocalTab) {
-          this._setConditionContents(cond, rule.conditionText);
+          this.#setConditionContents(cond, rule.conditionText);
         } else {
           cond.textContent = rule.conditionText;
         }
@@ -1322,7 +1305,7 @@ class StyleEditorUI extends EventEmitter {
     }
       .bind(this)()
       .catch(console.error));
-  }
+  };
 
   /**
    * Used to safely inject media query links
@@ -1332,7 +1315,7 @@ class StyleEditorUI extends EventEmitter {
    * @param {String} rawText
    *        The raw condition text to parse
    */
-  _setConditionContents(element, rawText) {
+  #setConditionContents(element, rawText) {
     const minMaxPattern = /(min\-|max\-)(width|height):\s\d+(px)/gi;
 
     let match = minMaxPattern.exec(rawText);
@@ -1348,7 +1331,7 @@ class StyleEditorUI extends EventEmitter {
       link.href = "#";
       link.className = "media-responsive-mode-toggle";
       link.textContent = rawText.substring(match.index, matchEnd);
-      link.addEventListener("click", this._onMediaConditionClick.bind(this));
+      link.addEventListener("click", this.#onMediaConditionClick.bind(this));
       element.appendChild(link);
 
       match = minMaxPattern.exec(rawText);
@@ -1368,13 +1351,13 @@ class StyleEditorUI extends EventEmitter {
    * @param {object} e
    *        Event object
    */
-  _onMediaConditionClick(e) {
+  #onMediaConditionClick(e) {
     const conditionText = e.target.textContent;
     const isWidthCond = conditionText.toLowerCase().indexOf("width") > -1;
     const mediaVal = parseInt(/\d+/.exec(conditionText), 10);
 
     const options = isWidthCond ? { width: mediaVal } : { height: mediaVal };
-    this._launchResponsiveMode(options);
+    this.#launchResponsiveMode(options);
     e.preventDefault();
     e.stopPropagation();
   }
@@ -1385,7 +1368,7 @@ class StyleEditorUI extends EventEmitter {
    * @param  {object} options
    *         Object with width or/and height properties.
    */
-  async _launchResponsiveMode(options = {}) {
+  async #launchResponsiveMode(options = {}) {
     const tab = this.currentTarget.localTab;
     const win = this.currentTarget.localTab.ownerDocument.defaultView;
 
@@ -1403,17 +1386,17 @@ class StyleEditorUI extends EventEmitter {
    * @param  {object} location
    *         Location object with 'line', 'column', and 'source' properties.
    */
-  _jumpToLocation(location) {
+  #jumpToLocation(location) {
     const source = location.styleSheet || location.source;
     this.selectStyleSheet(source, location.line - 1, location.column - 1);
   }
 
-  _startLoadingStyleSheets() {
+  #startLoadingStyleSheets() {
     this.#root.classList.add("loading");
     this.#loadingStyleSheets = [];
   }
 
-  async _waitForLoadingStyleSheets() {
+  async #waitForLoadingStyleSheets() {
     while (this.#loadingStyleSheets?.length > 0) {
       const pending = this.#loadingStyleSheets;
       this.#loadingStyleSheets = [];
@@ -1424,7 +1407,7 @@ class StyleEditorUI extends EventEmitter {
     this.#root.classList.remove("loading");
   }
 
-  async _handleStyleSheetResource(resource) {
+  async #handleStyleSheetResource(resource) {
     try {
       // The fileName is in resource means this stylesheet was imported from file by user.
       const { fileName } = resource;
@@ -1440,20 +1423,20 @@ class StyleEditorUI extends EventEmitter {
       }
       resource.file = file;
 
-      await this._addStyleSheet(resource);
+      await this.#addStyleSheet(resource);
     } catch (e) {
       console.error(e);
       this.emit("error", { key: LOAD_ERROR, level: "warning" });
     }
   }
 
-  async _onResourceAvailable(resources) {
+  #onResourceAvailable = async resources => {
     const promises = [];
     for (const resource of resources) {
       if (
         resource.resourceType === this.#toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
-        const onStyleSheetHandled = this._handleStyleSheetResource(resource);
+        const onStyleSheetHandled = this.#handleStyleSheetResource(resource);
 
         if (this.#loadingStyleSheets) {
           // In case of reloading/navigating and panel's opening
@@ -1468,16 +1451,16 @@ class StyleEditorUI extends EventEmitter {
       }
 
       if (resource.name === "will-navigate") {
-        this._startLoadingStyleSheets();
-        this._clear();
+        this.#startLoadingStyleSheets();
+        this.#clear();
       } else if (resource.name === "dom-complete") {
-        promises.push(this._waitForLoadingStyleSheets());
+        promises.push(this.#waitForLoadingStyleSheets());
       }
     }
     await Promise.all(promises);
-  }
+  };
 
-  async _onResourceUpdated(updates) {
+  #onResourceUpdated = async updates => {
     for (const { resource, update } of updates) {
       if (
         update.resourceType === this.#toolbox.resourceCommand.TYPES.STYLESHEET
@@ -1508,7 +1491,7 @@ class StyleEditorUI extends EventEmitter {
         }
       }
     }
-  }
+  };
 
   /**
    * Set the active item's summary element.
@@ -1617,7 +1600,7 @@ class StyleEditorUI extends EventEmitter {
     }
 
     if (triggerOnFilterStateChange) {
-      this._onFilterStateChange();
+      this.#onFilterStateChange();
     }
   }
 
@@ -1628,8 +1611,8 @@ class StyleEditorUI extends EventEmitter {
         this.#toolbox.resourceCommand.TYPES.STYLESHEET,
       ],
       {
-        onAvailable: this._onResourceAvailable,
-        onUpdated: this._onResourceUpdated,
+        onAvailable: this.#onResourceAvailable,
+        onUpdated: this.#onResourceUpdated,
       }
     );
 
@@ -1637,7 +1620,7 @@ class StyleEditorUI extends EventEmitter {
       this.#uiAbortController.abort();
       this.#uiAbortController = null;
     }
-    this._clearStyleSheetEditors();
+    this.#clearStyleSheetEditors();
 
     this.#seenSheets = null;
     this.#filterInput = null;
@@ -1654,14 +1637,14 @@ class StyleEditorUI extends EventEmitter {
     if (this.#sourceMapPrefObserver) {
       this.#sourceMapPrefObserver.off(
         PREF_ORIG_SOURCES,
-        this._onOrigSourcesPrefChanged
+        this.#onOrigSourcesPrefChanged
       );
       this.#sourceMapPrefObserver.destroy();
       this.#sourceMapPrefObserver = null;
     }
 
     if (this.#prefObserver) {
-      this.#prefObserver.off(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
+      this.#prefObserver.off(PREF_MEDIA_SIDEBAR, this.#onMediaPrefChanged);
       this.#prefObserver.destroy();
       this.#prefObserver = null;
     }
