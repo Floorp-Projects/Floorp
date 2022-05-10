@@ -349,15 +349,6 @@ enum class ColorDepth : uint8_t {
   _Last = COLOR_16,
 };
 
-enum class TransferFunction : uint8_t {
-  SRGB,
-  PQ,
-  HLG,
-  _First = SRGB,
-  _Last = HLG,
-  Default = SRGB,
-};
-
 enum class ColorRange : uint8_t {
   LIMITED,
   FULL,

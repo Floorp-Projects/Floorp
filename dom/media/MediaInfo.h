@@ -244,15 +244,7 @@ class VideoInfo : public TrackInfo {
   // Should be 8, 10 or 12. Default value is 8.
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
 
-  // Matrix coefficients (if specified by the video) imply a colorspace.
   Maybe<gfx::YUVColorSpace> mColorSpace;
-
-  // Color primaries are assumed to match the colorspace.
-
-  // Transfer functions get their own member, since we support different
-  // values for the BT2020 primaries. For other colorspaces, this member
-  // is ignored.
-  Maybe<gfx::TransferFunction> mTransferFunction;
 
   // True indicates no restriction on Y, U, V values (otherwise 16-235 for 8
   // bits etc)
