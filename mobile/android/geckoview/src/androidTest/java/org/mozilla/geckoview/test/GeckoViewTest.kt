@@ -132,7 +132,7 @@ class GeckoViewTest : BaseSessionTest() {
 
             // A tab with priority hint does not get de-prioritized even when
             // the surface is destroyed
-            sessionRule.runtime.webExtensionController.setTabActive(mainSession, true)
+            otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
 
             // This will destroy mainSession's surface and create a surface for otherSession
             it.view.setSession(otherSession)
@@ -146,7 +146,7 @@ class GeckoViewTest : BaseSessionTest() {
             waitUntilContentProcessPriority(high = listOf(mainSession), low = listOf())
 
             // Cleanup
-            sessionRule.runtime.webExtensionController.setTabActive(mainSession, false)
+            otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
         }
     }
 
@@ -158,15 +158,15 @@ class GeckoViewTest : BaseSessionTest() {
 
         val otherSession = setupPriorityTest()
 
-        // Setting tab active raises priority
-        sessionRule.runtime.webExtensionController.setTabActive(otherSession, true)
+        // Setting priorityHint to PRIORITY_HIGH raises priority
+        otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession, otherSession), low = listOf()
         )
 
-        // Unsetting the tab as active should lower priority
-        sessionRule.runtime.webExtensionController.setTabActive(otherSession, false)
+        // Setting the priorityHint to default should lower priority
+        otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
 
         waitUntilContentProcessPriority(
             high = listOf(mainSession), low = listOf(otherSession)
@@ -199,10 +199,33 @@ class GeckoViewTest : BaseSessionTest() {
             waitUntilContentProcessPriority(
                 high = listOf(mainSession), low = listOf(otherSession))
 
-            // Setting the session to active should also raise priority
-            otherSession.setActive(true)
+            // Setting priorityHint to PRIORITY_HIGH raises priority
+            otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
             waitUntilContentProcessPriority(
                 high = listOf(mainSession, otherSession), low = listOf())
         }
+    }
+
+    @Test
+    @NullDelegate(Autofill.Delegate::class)
+    fun setPriorityHint() {
+        // Bug 1767346
+        assumeThat(false, equalTo(true))
+
+        val otherSession = setupPriorityTest()
+
+        // Setting priorityHint to PRIORITY_HIGH raises priority
+        otherSession.setPriorityHint(GeckoSession.PRIORITY_HIGH)
+
+        waitUntilContentProcessPriority(
+            high = listOf(mainSession, otherSession), low = listOf()
+        )
+
+        // Setting priorityHint to PRIORITY_DEFAULT should lower priority
+        otherSession.setPriorityHint(GeckoSession.PRIORITY_DEFAULT)
+
+        waitUntilContentProcessPriority(
+            high = listOf(mainSession), low = listOf(otherSession)
+        )
     }
 }
