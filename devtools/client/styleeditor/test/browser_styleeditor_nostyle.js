@@ -8,16 +8,16 @@
 const TESTCASE_URI = TEST_BASE_HTTP + "nostyle.html";
 
 add_task(async function() {
-  const { panel, ui } = await openStyleEditorForURL(TESTCASE_URI);
+  const { panel } = await openStyleEditorForURL(TESTCASE_URI);
   const { panelWindow } = panel;
 
   ok(
-    !ui._root.classList.contains("loading"),
+    !getRootElement(panel).classList.contains("loading"),
     "style editor root element does not have 'loading' class name anymore"
   );
 
   ok(
-    ui._root.querySelector(".empty.placeholder"),
+    getRootElement(panel).querySelector(".empty.placeholder"),
     "showing 'no style' indicator"
   );
 

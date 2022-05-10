@@ -38,8 +38,10 @@ add_task(async function() {
     "correct number of editors"
   );
 
-  const filterInput = ui._root.querySelector(".devtools-filterinput");
-  const filterInputClearButton = ui._root.querySelector(
+  const doc = panel.panelWindow.document;
+
+  const filterInput = doc.querySelector(".devtools-filterinput");
+  const filterInputClearButton = doc.querySelector(
     ".devtools-searchinput-clear"
   );
   ok(filterInput, "There's a filter input");
@@ -66,7 +68,7 @@ add_task(async function() {
     "The clear button is visible when the input isn't empty"
   );
   Assert.deepEqual(
-    getVisibleStyleSheetsNames(ui._panelDoc),
+    getVisibleStyleSheetsNames(doc),
     ["pretty.css"],
     "Only pretty.css is now displayed"
   );
@@ -93,7 +95,7 @@ add_task(async function() {
     panel.panelWindow
   );
   is(filterInput.value, "", "input was cleared");
-  ok(!isListFiltered(ui._panelDoc), "List isn't filtered anymore");
+  ok(!isListFiltered(doc), "List isn't filtered anymore");
   ok(
     filterInputClearButton.hasAttribute("hidden"),
     "The clear button is hidden after clicking on it"
@@ -103,7 +105,7 @@ add_task(async function() {
   onEditorSelected = ui.once("editor-selected");
   setFilterInputValue("#1");
   Assert.deepEqual(
-    getVisibleStyleSheetsNames(ui._panelDoc),
+    getVisibleStyleSheetsNames(doc),
     [
       "<inline style sheet #1>",
       "<inline style sheet #10>",
@@ -165,9 +167,7 @@ add_task(async function() {
   });
   await onEditorAdded;
   ok(
-    getVisibleStyleSheetsNames(ui._panelDoc).includes(
-      "<inline style sheet #101>"
-    ),
+    getVisibleStyleSheetsNames(doc).includes("<inline style sheet #101>"),
     "New inline stylesheet is visible as it matches the search"
   );
 
@@ -188,7 +188,7 @@ add_task(async function() {
   await onEditorAdded;
 
   ok(
-    !getVisibleStyleSheetsNames(ui._panelDoc).includes("doc_short_string.css"),
+    !getVisibleStyleSheetsNames(doc).includes("doc_short_string.css"),
     "doc_short_string.css is not visible as its name does not match the search"
   );
 
@@ -199,14 +199,14 @@ add_task(async function() {
   await createNewStyleSheet(ui, panel.panelWindow);
   is(filterInput.value, "", "Filter input was cleared");
 
-  ok(!isListFiltered(ui._panelDoc), "List is not filtered anymore");
+  ok(!isListFiltered(doc), "List is not filtered anymore");
   is(ui.selectedEditor, ui.editors.at(-1), "The new stylesheet got selected");
 
   info(
     "Check that when no stylesheet matches the search, a class is added to the nav"
   );
   setFilterInputValue("sync_with_csp");
-  ok(navHasAllFilteredClass(ui), `"splitview-all-filtered" was added`);
+  ok(navHasAllFilteredClass(panel), `"splitview-all-filtered" was added`);
   ok(
     filterInput
       .closest(".devtools-searchbox")
@@ -231,7 +231,7 @@ add_task(async function() {
     }
   );
   await onEditorAdded;
-  ok(!navHasAllFilteredClass(ui), `"splitview-all-filtered" was removed`);
+  ok(!navHasAllFilteredClass(panel), `"splitview-all-filtered" was removed`);
   ok(
     !filterInput
       .closest(".devtools-searchbox")
@@ -243,17 +243,16 @@ add_task(async function() {
     "Check that reloading the page when the filter don't match anything won't select anything"
   );
   setFilterInputValue("XXXDONTMATCHANYTHING");
-  ok(navHasAllFilteredClass(ui), `"splitview-all-filtered" was added`);
+  ok(navHasAllFilteredClass(panel), `"splitview-all-filtered" was added`);
   await reloadPageAndWaitForStyleSheets(
     ui,
     INITIAL_INLINE_STYLE_SHEETS_COUNT + 2
   );
-  ok(navHasAllFilteredClass(ui), `"splitview-all-filtered" is still applied`);
-  is(
-    getVisibleStyleSheets(ui._panelDoc).length,
-    0,
-    "No stylesheets are displayed"
+  ok(
+    navHasAllFilteredClass(panel),
+    `"splitview-all-filtered" is still applied`
   );
+  is(getVisibleStyleSheets(doc).length, 0, "No stylesheets are displayed");
   is(ui.selectedEditor, null, "No editor was selected");
 
   info(
@@ -263,7 +262,7 @@ add_task(async function() {
   setFilterInputValue("pretty");
   await onEditorSelected;
   Assert.deepEqual(
-    getVisibleStyleSheetsNames(ui._panelDoc),
+    getVisibleStyleSheetsNames(doc),
     ["pretty.css"],
     "Only pretty.css is now displayed"
   );
@@ -275,7 +274,7 @@ add_task(async function() {
   );
   await onEditorSelected;
   Assert.deepEqual(
-    getVisibleStyleSheetsNames(ui._panelDoc),
+    getVisibleStyleSheetsNames(doc),
     ["pretty.css"],
     "pretty.css is still the only stylesheet displayed"
   );
@@ -291,7 +290,7 @@ add_task(async function() {
     {},
     panel.panelWindow
   );
-  ok(!isListFiltered(ui._panelDoc), "List is not filtered anymore");
+  ok(!isListFiltered(doc), "List is not filtered anymore");
   is(
     ui.selectedEditor.friendlyName,
     "pretty.css",
@@ -300,11 +299,13 @@ add_task(async function() {
 });
 
 /**
- * @param {StyleEditorUI} ui
+ * @param {StyleEditorPanel} panel
  * @returns Boolean
  */
-function navHasAllFilteredClass(ui) {
-  return ui._nav.classList.contains("splitview-all-filtered");
+function navHasAllFilteredClass(panel) {
+  return panel.panelWindow.document
+    .querySelector(".splitview-nav")
+    .classList.contains("splitview-all-filtered");
 }
 
 /**
