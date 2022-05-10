@@ -76,7 +76,8 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
                                               void* aDocAccParam) {
   RefPtr<DocAccessibleWrap> docAcc(
       dont_AddRef(reinterpret_cast<DocAccessibleWrap*>(aDocAccParam)));
-  if (!docAcc || docAcc->HasShutdown()) {
+  if (!docAcc || docAcc->HasShutdown() ||
+      (IPCAccessibilityActive() && !docAcc->IPCDoc())) {
     return;
   }
 
