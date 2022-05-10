@@ -65,12 +65,12 @@ class IPCFuzzController {
     friend class IPCFuzzController;
 
    public:
+    NS_DECL_NSIRUNNABLE
+
     IPCFuzzLoop();
 
-    NS_INLINE_DECL_REFCOUNTING_INHERITED(IPCFuzzLoop, Runnable)
-
    private:
-    NS_DECL_NSIRUNNABLE
+    ~IPCFuzzLoop() = default;
   };
 
  public:
