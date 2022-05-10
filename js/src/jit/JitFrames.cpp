@@ -2225,7 +2225,7 @@ JSObject* InlineFrameIterator::computeEnvironmentChain(
 
 bool InlineFrameIterator::isFunctionFrame() const { return !!calleeTemplate_; }
 
-bool InlineFrameIterator::isModuleFrame() const { return script()->module(); }
+bool InlineFrameIterator::isModuleFrame() const { return script()->isModule(); }
 
 uintptr_t* MachineState::SafepointState::addressOfRegister(Register reg) const {
   size_t offset = regs.offsetOfPushedRegister(reg);

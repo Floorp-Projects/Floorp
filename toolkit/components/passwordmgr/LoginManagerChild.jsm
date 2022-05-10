@@ -1438,11 +1438,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let acForm = LoginFormFactory.createFromField(acInputField);
     let doc = acForm.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let recipes = LoginRecipesContent.getRecipes(
-      this,
-      formOrigin,
-      doc.defaultView
-    );
+    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
@@ -1994,7 +1990,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // Get the appropriate fields from the form.
-    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
+    let recipes = LoginRecipesContent.getRecipes(origin, win);
     let fields = {
       targetField,
       ...this._getFormFields(form, true, recipes, { ignoreConnect }),
@@ -3051,11 +3047,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let form = LoginFormFactory.createFromField(aField);
     let doc = aField.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
-    let recipes = LoginRecipesContent.getRecipes(
-      this,
-      formOrigin,
-      doc.defaultView
-    );
+    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
     let {
       usernameField,
       newPasswordField,

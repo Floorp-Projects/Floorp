@@ -10,8 +10,7 @@
         "$extend": "OptionalPermissionNoPrompt",
         "choices": [{
           "type": "string",
-          "enum": ["scripting"],
-          "min_manifest_version": 3
+          "enum": ["scripting"]
         }]
       }
     ]
@@ -20,7 +19,6 @@
     "namespace": "scripting",
     "description": "Use the scripting API to execute script in different contexts.",
     "permissions": ["scripting"],
-    "min_manifest_version": 3,
     "types": [
       {
         "id": "ScriptInjection",

@@ -191,6 +191,16 @@ extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
                                          Handle<JSObject*> moduleRecord,
                                          MutableHandleValue rval);
 
+enum ModuleErrorBehaviour {
+  // Report module evaluation errors asynchronously when the evaluation promise
+  // is rejected. This is used for web content.
+  ReportModuleErrorsAsync,
+
+  // Throw module evaluation errors synchronously by setting an exception on the
+  // context. Does not support modules that use top-level await.
+  ThrowModuleErrorsSync
+};
+
 /*
  * If a module evaluation fails, unwrap the resulting evaluation promise
  * and rethrow.
@@ -202,7 +212,8 @@ extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
  * ModuleEvaluate must have completed prior to calling this.
  */
 extern JS_PUBLIC_API bool ThrowOnModuleEvaluationFailure(
-    JSContext* cx, Handle<JSObject*> evaluationPromise);
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
+    ModuleErrorBehaviour errorBehaviour = ReportModuleErrorsAsync);
 
 /*
  * Get a list of the module specifiers used by a source text module
@@ -239,6 +250,17 @@ extern JS_PUBLIC_API JSObject* CreateModuleRequest(
     JSContext* cx, Handle<JSString*> specifierArg);
 extern JS_PUBLIC_API JSString* GetModuleRequestSpecifier(
     JSContext* cx, Handle<JSObject*> moduleRequestArg);
+
+/*
+ * Get the module record for a module script.
+ */
+extern JS_PUBLIC_API JSObject* GetModuleObject(Handle<JSScript*> moduleScript);
+
+/*
+ * Get the namespace object for a module.
+ */
+extern JS_PUBLIC_API JSObject* GetModuleNamespace(
+    JSContext* cx, Handle<JSObject*> moduleRecord);
 
 }  // namespace JS
 

@@ -151,6 +151,8 @@ const F32x4RelaxedMaxCode = 0x10e;
 const F64x2RelaxedMinCode = 0x10f;
 const F64x2RelaxedMaxCode = 0x110;
 const I16x8RelaxedQ15MulrS = 0x111;
+const I16x8DotI8x16I7x16S = 0x112;
+const I32x4DotI8x16I7x16AddS = 0x113;
 
 // SIMD wormhole opcodes.
 const WORMHOLE_SELFTEST = 0;

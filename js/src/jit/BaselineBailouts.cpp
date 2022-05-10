@@ -636,7 +636,7 @@ bool BaselineStackBuilder::buildBaselineFrame() {
     // Get it from the function or script.
     if (fun_) {
       envChain = fun_->environment();
-    } else if (script_->module()) {
+    } else if (script_->isModule()) {
       envChain = script_->module()->environment();
     } else {
       // For global scripts without a non-syntactic env the env

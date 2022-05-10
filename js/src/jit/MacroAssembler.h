@@ -3391,6 +3391,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void widenDotInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                               FloatRegister dest) DEFINED_ON(x86_shared);
 
+  inline void dotInt8x16Int7x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
+
+  inline void dotInt8x16Int7x16ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest)
+      DEFINED_ON(x86_shared);
+
+  inline void dotInt8x16Int7x16ThenAdd(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest, FloatRegister temp)
+      DEFINED_ON(arm64);
+
   // Floating point rounding
 
   inline void ceilFloat32x4(FloatRegister src, FloatRegister dest)

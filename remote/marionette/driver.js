@@ -37,6 +37,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   IdlePromise: "chrome://remote/content/marionette/sync.js",
   l10n: "chrome://remote/content/marionette/l10n.js",
   Log: "chrome://remote/content/shared/Log.jsm",
+  Marionette: "chrome://remote/content/components/Marionette.jsm",
   MarionettePrefs: "chrome://remote/content/marionette/prefs.js",
   modal: "chrome://remote/content/marionette/modal.js",
   navigate: "chrome://remote/content/marionette/navigate.js",
@@ -422,55 +423,66 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       this._currentSession.capabilities.delete("webSocketUrl");
     }
 
-    const win = await windowManager.waitForInitialApplicationWindow();
+    // Don't wait for the initial window when Marionette is in windowless mode
+    if (!this.currentSession.capabilities.get("moz:windowless")) {
+      // Creating a WebDriver session too early can cause issues with
+      // clients in not being able to find any available window handle.
+      // Also when closing the application while it's still starting up can
+      // cause shutdown hangs. As such Marionette will return a new session
+      // once the initial application window has finished initializing.
+      logger.debug(`Waiting for initial application window`);
+      await Marionette.browserStartupFinished;
 
-    if (MarionettePrefs.clickToStart) {
-      Services.prompt.alert(
-        win,
-        "",
-        "Click to start execution of marionette tests"
-      );
+      const appWin = await windowManager.waitForInitialApplicationWindowLoaded();
+
+      if (MarionettePrefs.clickToStart) {
+        Services.prompt.alert(
+          appWin,
+          "",
+          "Click to start execution of marionette tests"
+        );
+      }
+
+      this.addBrowser(appWin);
+      this.mainFrame = appWin;
+
+      // Setup observer for modal dialogs
+      this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
+      this.dialogObserver.add(this.handleModalDialog.bind(this));
+
+      for (let win of windowManager.windows) {
+        const tabBrowser = TabManager.getTabBrowser(win);
+
+        if (tabBrowser) {
+          for (const tab of tabBrowser.tabs) {
+            const contentBrowser = TabManager.getBrowserForTab(tab);
+            this.registerBrowser(contentBrowser);
+          }
+        }
+
+        this.registerListenersForWindow(win);
+      }
+
+      if (this.mainFrame) {
+        this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
+        this.mainFrame.focus();
+      }
+
+      if (this.curBrowser.tab) {
+        const browsingContext = this.curBrowser.contentBrowser.browsingContext;
+        this.currentSession.contentBrowsingContext = browsingContext;
+
+        await waitForInitialNavigationCompleted(browsingContext.webProgress);
+
+        this.curBrowser.contentBrowser.focus();
+      }
+
+      // Check if there is already an open dialog for the selected browser window.
+      this.dialog = modal.findModalDialogs(this.curBrowser);
     }
-
-    this.addBrowser(win);
-    this.mainFrame = win;
 
     registerCommandsActor();
     enableEventsActor();
-
-    // Setup observer for modal dialogs
-    this.dialogObserver = new modal.DialogObserver(() => this.curBrowser);
-    this.dialogObserver.add(this.handleModalDialog.bind(this));
-
-    for (let win of windowManager.windows) {
-      const tabBrowser = TabManager.getTabBrowser(win);
-
-      if (tabBrowser) {
-        for (const tab of tabBrowser.tabs) {
-          const contentBrowser = TabManager.getBrowserForTab(tab);
-          this.registerBrowser(contentBrowser);
-        }
-      }
-
-      this.registerListenersForWindow(win);
-    }
-
-    if (this.mainFrame) {
-      this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
-      this.mainFrame.focus();
-    }
-
-    if (this.curBrowser.tab) {
-      const browsingContext = this.curBrowser.contentBrowser.browsingContext;
-      this.currentSession.contentBrowsingContext = browsingContext;
-
-      await waitForInitialNavigationCompleted(browsingContext.webProgress);
-
-      this.curBrowser.contentBrowser.focus();
-    }
-
-    // Check if there is already an open dialog for the selected browser window.
-    this.dialog = modal.findModalDialogs(this.curBrowser);
 
     Services.obs.addObserver(this, "browser-delayed-startup-finished");
   } catch (e) {
@@ -2053,10 +2065,13 @@ GeckoDriver.prototype.close = async function() {
   assert.open(this.getBrowsingContext({ context: Context.Content, top: true }));
   await this._handleUserPrompts();
 
-  // If there is only one window left, do not close it. Instead return
-  // a faked empty array of window handles.  This will instruct geckodriver
-  // to terminate the application.
-  if (TabManager.getTabCount() === 1) {
+  // If there is only one window left, do not close unless windowless mode is
+  // enabled. Instead return a faked empty array of window handles.
+  // This will instruct geckodriver to terminate the application.
+  if (
+    TabManager.getTabCount() === 1 &&
+    !this.currentSession.capabilities.get("moz:windowless")
+  ) {
     return [];
   }
 
@@ -2090,10 +2105,10 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
     nwins++;
   }
 
-  // If there is only one window left, do not close it.  Instead return
-  // a faked empty array of window handles. This will instruct geckodriver
-  // to terminate the application.
-  if (nwins == 1) {
+  // If there is only one window left, do not close unless windowless mode is
+  // enabled. Instead return a faked empty array of window handles.
+  // This will instruct geckodriver to terminate the application.
+  if (nwins == 1 && !this.currentSession.capabilities.get("moz:windowless")) {
     return [];
   }
 
@@ -2613,6 +2628,19 @@ GeckoDriver.prototype.quit = async function(cmd) {
     throw new error.InvalidArgumentError(
       `"safeMode" only works with restart flag`
     );
+  }
+
+  if (flags.includes("eSilently")) {
+    if (!this.currentSession.capabilities.get("moz:windowless")) {
+      throw new error.UnsupportedOperationError(
+        `Silent restarts only allowed with "moz:windowless" capability set`
+      );
+    }
+    if (!flags.includes("eRestart")) {
+      throw new error.InvalidArgumentError(
+        `"silently" only works with restart flag`
+      );
+    }
   }
 
   let quitSeen;

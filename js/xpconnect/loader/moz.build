@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     "AutoMemMap.cpp",
     "ChromeScriptLoader.cpp",
+    "ComponentModuleLoader.cpp",
     "mozJSLoaderUtils.cpp",
     "mozJSSubScriptLoader.cpp",
     "nsImportModule.cpp",
@@ -40,6 +41,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.loader += [
     "AutoMemMap.h",
+    "ComponentModuleLoader.h",
     "ScriptCacheActors.h",
 ]
 
@@ -54,6 +56,7 @@ LOCAL_INCLUDES += [
     "../src",
     "../wrappers",
     "/dom/base",
+    "/js/loader",
     "/xpcom/base/",
 ]
 
