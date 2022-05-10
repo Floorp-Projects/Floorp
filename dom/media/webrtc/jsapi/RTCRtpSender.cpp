@@ -14,7 +14,7 @@
 #include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "RTCStatsReport.h"
 #include "mozilla/Preferences.h"
-#include "TransceiverImpl.h"
+#include "RTCRtpTransceiver.h"
 #include "PeerConnectionImpl.h"
 #include "libwebrtcglue/AudioConduit.h"
 #include <vector>
@@ -22,7 +22,7 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCRtpSender, mWindow, mPc, mSenderTrack,
-                                      mTransceiverImpl, mStreams, mDtmf)
+                                      mTransceiver, mStreams, mDtmf)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCRtpSender)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCRtpSender)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCRtpSender)
@@ -42,12 +42,12 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
                            nsISerialEventTarget* aStsThread,
                            MediaSessionConduit* aConduit,
                            dom::MediaStreamTrack* aTrack,
-                           TransceiverImpl* aTransceiverImpl)
+                           RTCRtpTransceiver* aTransceiver)
     : mWindow(aWindow),
       mPc(aPc),
       mJsepTransceiver(aJsepTransceiver),
       mSenderTrack(aTrack),
-      mTransceiverImpl(aTransceiverImpl),
+      mTransceiver(aTransceiver),
       INIT_CANONICAL(mSsrcs, Ssrcs()),
       INIT_CANONICAL(mVideoRtxSsrcs, Ssrcs()),
       INIT_CANONICAL(mLocalRtpExtensions, RtpExtList()),
@@ -62,7 +62,7 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
       aConduit->type() == MediaSessionConduit::VIDEO, aConduit);
 
   if (aConduit->type() == MediaSessionConduit::AUDIO) {
-    mDtmf = new RTCDTMFSender(aWindow, mTransceiverImpl);
+    mDtmf = new RTCDTMFSender(aWindow, mTransceiver);
   }
   mPipeline->SetTrack(mSenderTrack);
 }
@@ -77,10 +77,10 @@ JSObject* RTCRtpSender::WrapObject(JSContext* aCx,
 }
 
 RTCDtlsTransport* RTCRtpSender::GetTransport() const {
-  if (!mTransceiverImpl) {
+  if (!mTransceiver) {
     return nullptr;
   }
-  return mTransceiverImpl->GetDtlsTransport();
+  return mTransceiver->GetDtlsTransport();
 }
 
 RTCDTMFSender* RTCRtpSender::GetDtmf() const { return mDtmf; }
@@ -104,8 +104,7 @@ already_AddRefed<Promise> RTCRtpSender::GetStats(ErrorResult& aError) {
     return promise.forget();
   }
 
-  mTransceiverImpl->ChainToDomPromiseWithCodecStats(GetStatsInternal(),
-                                                    promise);
+  mTransceiver->ChainToDomPromiseWithCodecStats(GetStatsInternal(), promise);
   return promise.forget();
 }
 
@@ -405,7 +404,7 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
     return p.forget();
   }
 
-  if (mTransceiverImpl->Stopped()) {
+  if (mTransceiver->Stopped()) {
     p->MaybeRejectWithInvalidStateError("This sender's transceiver is stopped");
     return p.forget();
   }
@@ -520,7 +519,7 @@ void RTCRtpSender::GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams) {
 class ReplaceTrackOperation final : public PeerConnectionImpl::Operation {
  public:
   ReplaceTrackOperation(PeerConnectionImpl* aPc,
-                        const RefPtr<TransceiverImpl>& aTransceiver,
+                        const RefPtr<RTCRtpTransceiver>& aTransceiver,
                         const RefPtr<MediaStreamTrack>& aTrack,
                         ErrorResult& aError);
   NS_DECL_ISUPPORTS_INHERITED
@@ -531,7 +530,7 @@ class ReplaceTrackOperation final : public PeerConnectionImpl::Operation {
   MOZ_CAN_RUN_SCRIPT
   RefPtr<dom::Promise> CallImpl(ErrorResult& aError) override;
   ~ReplaceTrackOperation() = default;
-  RefPtr<TransceiverImpl> mTransceiver;
+  RefPtr<RTCRtpTransceiver> mTransceiver;
   RefPtr<MediaStreamTrack> mNewTrack;
 };
 
@@ -546,7 +545,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReplaceTrackOperation)
 NS_INTERFACE_MAP_END_INHERITING(PeerConnectionImpl::Operation)
 
 ReplaceTrackOperation::ReplaceTrackOperation(
-    PeerConnectionImpl* aPc, const RefPtr<TransceiverImpl>& aTransceiver,
+    PeerConnectionImpl* aPc, const RefPtr<RTCRtpTransceiver>& aTransceiver,
     const RefPtr<MediaStreamTrack>& aTrack, ErrorResult& aError)
     : PeerConnectionImpl::Operation(aPc, aError),
       mTransceiver(aTransceiver),
@@ -607,7 +606,7 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
     nsString newKind;
     aWithTrack->GetKind(newKind);
     nsString oldKind;
-    mTransceiverImpl->GetKind(oldKind);
+    mTransceiver->GetKind(oldKind);
     if (newKind != oldKind) {
       RefPtr<dom::Promise> error = MakePromise(aError);
       if (aError.Failed()) {
@@ -626,7 +625,7 @@ already_AddRefed<dom::Promise> RTCRtpSender::ReplaceTrack(
   // Return the result of chaining the following steps to connection's
   // operations chain:
   RefPtr<PeerConnectionImpl::Operation> op =
-      new ReplaceTrackOperation(mPc, mTransceiverImpl, aWithTrack, aError);
+      new ReplaceTrackOperation(mPc, mTransceiver, aWithTrack, aError);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -650,7 +649,7 @@ bool RTCRtpSender::SeamlessTrackSwitch(
 
   // Let sending be true if transceiver.[[CurrentDirection]] is "sendrecv" or
   // "sendonly", and false otherwise.
-  bool sending = mTransceiverImpl->IsSending();
+  bool sending = mTransceiver->IsSending();
   if (sending && !aWithTrack) {
     // If sending is true, and withTrack is null, have the sender stop sending.
     Stop();
@@ -664,7 +663,7 @@ bool RTCRtpSender::SeamlessTrackSwitch(
     // already-negotiated envelope, and if it cannot, then reject p with a newly
     // created InvalidModificationError, and abort these steps.
 
-    if (mTransceiverImpl->IsVideo()) {
+    if (mTransceiver->IsVideo()) {
       // We update the media conduits here so we can apply different codec
       // settings for different sources (e.g. screensharing as opposed to
       // camera.)
@@ -803,7 +802,7 @@ void RTCRtpSender::UpdateVideoConduit() {
     ConfigureVideoCodecMode();
 
     std::vector<VideoCodecConfig> configs;
-    TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
+    RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
 
     if (configs.empty()) {
       // TODO: Are we supposed to plumb this error back to JS? This does not
@@ -826,7 +825,7 @@ void RTCRtpSender::UpdateAudioConduit() {
       mJsepTransceiver->mSendTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mSendTrack.GetNegotiatedDetails());
     std::vector<AudioCodecConfig> configs;
-    TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
+    RTCRtpTransceiver::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
     if (configs.empty()) {
       // TODO: Are we supposed to plumb this error back to JS? This does not
       // seem like a failure to set an answer, it just means that codec
