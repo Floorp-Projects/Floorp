@@ -249,22 +249,22 @@ class AutoEnterTransaction {
     return mTransaction;
   }
 
-  void ReceivedReply(IPC::Message&& aMessage) {
-    MOZ_RELEASE_ASSERT(aMessage.seqno() == mSeqno);
-    MOZ_RELEASE_ASSERT(aMessage.transaction_id() == mTransaction);
+  void ReceivedReply(UniquePtr<IPC::Message> aMessage) {
+    MOZ_RELEASE_ASSERT(aMessage->seqno() == mSeqno);
+    MOZ_RELEASE_ASSERT(aMessage->transaction_id() == mTransaction);
     MOZ_RELEASE_ASSERT(!mReply);
     IPC_LOG("Reply received on worker thread: seqno=%d", mSeqno);
-    mReply = MakeUnique<IPC::Message>(std::move(aMessage));
+    mReply = std::move(aMessage);
     MOZ_RELEASE_ASSERT(IsComplete());
   }
 
-  void HandleReply(IPC::Message&& aMessage) {
+  void HandleReply(UniquePtr<IPC::Message> aMessage) {
     mChan->mMonitor->AssertCurrentThreadOwns();
     AutoEnterTransaction* cur = mChan->mTransactionStack;
     MOZ_RELEASE_ASSERT(cur == this);
     while (cur) {
       MOZ_RELEASE_ASSERT(cur->mActive);
-      if (aMessage.seqno() == cur->mSeqno) {
+      if (aMessage->seqno() == cur->mSeqno) {
         cur->ReceivedReply(std::move(aMessage));
         break;
       }
@@ -515,7 +515,7 @@ void MessageChannel::AssertMaybeDeferredCountCorrect() {
 
   size_t count = 0;
   for (MessageTask* task : mPending) {
-    if (!IsAlwaysDeferred(task->Msg())) {
+    if (!IsAlwaysDeferred(*task->Msg())) {
       count++;
     }
   }
@@ -994,22 +994,22 @@ bool MessageChannel::ShouldDeferMessage(const Message& aMsg) {
          aMsg.transaction_id() != CurrentNestedInsideSyncTransaction();
 }
 
-void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
+void MessageChannel::OnMessageReceivedFromLink(UniquePtr<Message> aMsg) {
   mMonitor->AssertCurrentThreadOwns();
 
-  if (MaybeInterceptSpecialIOMessage(aMsg)) {
+  if (MaybeInterceptSpecialIOMessage(*aMsg)) {
     return;
   }
 
-  mListener->OnChannelReceivedMessage(aMsg);
+  mListener->OnChannelReceivedMessage(*aMsg);
 
   // If we're awaiting a sync reply, we know that it needs to be immediately
   // handled to unblock us.
-  if (aMsg.is_sync() && aMsg.is_reply()) {
-    IPC_LOG("Received reply seqno=%d xid=%d", aMsg.seqno(),
-            aMsg.transaction_id());
+  if (aMsg->is_sync() && aMsg->is_reply()) {
+    IPC_LOG("Received reply seqno=%d xid=%d", aMsg->seqno(),
+            aMsg->transaction_id());
 
-    if (aMsg.seqno() == mTimedOutMessageSeqno) {
+    if (aMsg->seqno() == mTimedOutMessageSeqno) {
       // Drop the message, but allow future sync messages to be sent.
       IPC_LOG("Received reply to timedout message; igoring; xid=%d",
               mTimedOutMessageSeqno);
@@ -1026,53 +1026,47 @@ void MessageChannel::OnMessageReceivedFromLink(Message&& aMsg) {
   }
 
   // Nested messages cannot be compressed.
-  MOZ_RELEASE_ASSERT(aMsg.compress_type() == IPC::Message::COMPRESSION_NONE ||
-                     aMsg.nested_level() == IPC::Message::NOT_NESTED);
+  MOZ_RELEASE_ASSERT(aMsg->compress_type() == IPC::Message::COMPRESSION_NONE ||
+                     aMsg->nested_level() == IPC::Message::NOT_NESTED);
 
-  bool reuseTask = false;
-  if (aMsg.compress_type() == IPC::Message::COMPRESSION_ENABLED) {
+  if (aMsg->compress_type() == IPC::Message::COMPRESSION_ENABLED) {
     bool compress =
         (!mPending.isEmpty() &&
-         mPending.getLast()->Msg().type() == aMsg.type() &&
-         mPending.getLast()->Msg().routing_id() == aMsg.routing_id());
+         mPending.getLast()->Msg()->type() == aMsg->type() &&
+         mPending.getLast()->Msg()->routing_id() == aMsg->routing_id());
     if (compress) {
       // This message type has compression enabled, and the back of the
       // queue was the same message type and routed to the same destination.
       // Replace it with the newer message.
-      MOZ_RELEASE_ASSERT(mPending.getLast()->Msg().compress_type() ==
+      MOZ_RELEASE_ASSERT(mPending.getLast()->Msg()->compress_type() ==
                          IPC::Message::COMPRESSION_ENABLED);
       mPending.getLast()->Msg() = std::move(aMsg);
-
-      reuseTask = true;
+      return;
     }
-  } else if (aMsg.compress_type() == IPC::Message::COMPRESSION_ALL &&
+  } else if (aMsg->compress_type() == IPC::Message::COMPRESSION_ALL &&
              !mPending.isEmpty()) {
     for (MessageTask* p = mPending.getLast(); p; p = p->getPrevious()) {
-      if (p->Msg().type() == aMsg.type() &&
-          p->Msg().routing_id() == aMsg.routing_id()) {
+      if (p->Msg()->type() == aMsg->type() &&
+          p->Msg()->routing_id() == aMsg->routing_id()) {
         // This message type has compression enabled, and the queue
         // holds a message with the same message type and routed to the
         // same destination. Erase it. Note that, since we always
         // compress these redundancies, There Can Be Only One.
-        MOZ_RELEASE_ASSERT(p->Msg().compress_type() ==
+        MOZ_RELEASE_ASSERT(p->Msg()->compress_type() ==
                            IPC::Message::COMPRESSION_ALL);
-        MOZ_RELEASE_ASSERT(IsAlwaysDeferred(p->Msg()));
+        MOZ_RELEASE_ASSERT(IsAlwaysDeferred(*p->Msg()));
         p->remove();
         break;
       }
     }
   }
 
-  bool alwaysDeferred = IsAlwaysDeferred(aMsg);
+  bool alwaysDeferred = IsAlwaysDeferred(*aMsg);
 
-  bool shouldWakeUp = AwaitingSyncReply() && !ShouldDeferMessage(aMsg);
+  bool shouldWakeUp = AwaitingSyncReply() && !ShouldDeferMessage(*aMsg);
 
-  IPC_LOG("Receive from link; seqno=%d, xid=%d, shouldWakeUp=%d", aMsg.seqno(),
-          aMsg.transaction_id(), shouldWakeUp);
-
-  if (reuseTask) {
-    return;
-  }
+  IPC_LOG("Receive from link; seqno=%d, xid=%d, shouldWakeUp=%d", aMsg->seqno(),
+          aMsg->transaction_id(), shouldWakeUp);
 
   // There are two cases we're concerned about, relating to the state of the
   // worker thread:
@@ -1117,7 +1111,7 @@ void MessageChannel::PeekMessages(
   MonitorAutoLock lock(*mMonitor);
 
   for (MessageTask* it : mPending) {
-    const Message& msg = it->Msg();
+    const Message& msg = *it->Msg();
     if (!aInvoke(msg)) {
       break;
     }
@@ -1147,23 +1141,23 @@ void MessageChannel::ProcessPendingRequests(
       return;
     }
 
-    mozilla::Vector<Message> toProcess;
+    Vector<UniquePtr<Message>> toProcess;
 
     for (MessageTask* p = mPending.getFirst(); p;) {
-      Message& msg = p->Msg();
+      UniquePtr<Message>& msg = p->Msg();
 
       MOZ_RELEASE_ASSERT(!aTransaction.IsCanceled(),
                          "Calling ShouldDeferMessage when cancelled");
-      bool defer = ShouldDeferMessage(msg);
+      bool defer = ShouldDeferMessage(*msg);
 
       // Only log the interesting messages.
-      if (msg.is_sync() ||
-          msg.nested_level() == IPC::Message::NESTED_INSIDE_CPOW) {
-        IPC_LOG("ShouldDeferMessage(seqno=%d) = %d", msg.seqno(), defer);
+      if (msg->is_sync() ||
+          msg->nested_level() == IPC::Message::NESTED_INSIDE_CPOW) {
+        IPC_LOG("ShouldDeferMessage(seqno=%d) = %d", msg->seqno(), defer);
       }
 
       if (!defer) {
-        MOZ_ASSERT(!IsAlwaysDeferred(msg));
+        MOZ_ASSERT(!IsAlwaysDeferred(*msg));
 
         if (!toProcess.append(std::move(msg))) MOZ_CRASH();
 
@@ -1182,15 +1176,15 @@ void MessageChannel::ProcessPendingRequests(
     // Processing these messages could result in more messages, so we
     // loop around to check for more afterwards.
 
-    for (auto it = toProcess.begin(); it != toProcess.end(); it++) {
-      ProcessPendingRequest(aProxy, std::move(*it));
+    for (auto& msg : toProcess) {
+      ProcessPendingRequest(aProxy, std::move(msg));
     }
   }
 
   AssertMaybeDeferredCountCorrect();
 }
 
-bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
+bool MessageChannel::Send(UniquePtr<Message> aMsg, UniquePtr<Message>* aReply) {
   mozilla::TimeStamp start = TimeStamp::Now();
   if (aMsg->size() >= kMinTelemetryMessageSize) {
     Telemetry::Accumulate(Telemetry::IPC_MESSAGE_SIZE2, aMsg->size());
@@ -1393,11 +1387,12 @@ bool MessageChannel::Send(UniquePtr<Message> aMsg, Message* aReply) {
 
   AddProfilerMarker(*reply, MessageDirection::eReceiving);
 
-  *aReply = std::move(*reply);
-  if (aReply->size() >= kMinTelemetryMessageSize) {
+  if (reply->size() >= kMinTelemetryMessageSize) {
     Telemetry::Accumulate(Telemetry::IPC_REPLY_SIZE,
-                          nsDependentCString(msgName), aReply->size());
+                          nsDependentCString(msgName), reply->size());
   }
+
+  *aReply = std::move(reply);
 
   // NOTE: Only collect IPC_SYNC_MAIN_LATENCY_MS on the main thread (bug
   // 1343729)
@@ -1415,15 +1410,15 @@ bool MessageChannel::HasPendingEvents() {
 }
 
 bool MessageChannel::ProcessPendingRequest(ActorLifecycleProxy* aProxy,
-                                           Message&& aUrgent) {
+                                           UniquePtr<Message> aUrgent) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
-  IPC_LOG("Process pending: seqno=%d, xid=%d", aUrgent.seqno(),
-          aUrgent.transaction_id());
+  IPC_LOG("Process pending: seqno=%d, xid=%d", aUrgent->seqno(),
+          aUrgent->transaction_id());
 
   // keep the error relevant information
-  msgid_t msgType = aUrgent.type();
+  msgid_t msgType = aUrgent->type();
 
   DispatchMessage(aProxy, std::move(aUrgent));
   if (!Connected()) {
@@ -1469,10 +1464,10 @@ void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
-  Message& msg = aTask.Msg();
+  UniquePtr<Message>& msg = aTask.Msg();
 
   if (!Connected()) {
-    ReportConnectionError("RunMessage", msg.type());
+    ReportConnectionError("RunMessage", msg->type());
     return;
   }
 
@@ -1484,21 +1479,21 @@ void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
             break;
         }
 
-        MOZ_ASSERT(!ShouldRunMessage(task->Msg()) ||
-                   aTask.Msg().priority() != task->Msg().priority());
+        MOZ_ASSERT(!ShouldRunMessage(*task->Msg()) ||
+                   aTask.Msg()->priority() != task->Msg()->priority());
 
     }
 #  endif
 #endif
 
-  if (!ShouldRunMessage(msg)) {
+  if (!ShouldRunMessage(*msg)) {
     return;
   }
 
   MOZ_RELEASE_ASSERT(aTask.isInList());
   aTask.remove();
 
-  if (!IsAlwaysDeferred(msg)) {
+  if (!IsAlwaysDeferred(*msg)) {
     mMaybeDeferredPendingCount--;
   }
 
@@ -1509,8 +1504,8 @@ NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable,
                             nsIRunnablePriority, nsIRunnableIPCMessageType)
 
 MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
-                                         Message&& aMessage)
-    : CancelableRunnable(aMessage.name()),
+                                         UniquePtr<Message> aMessage)
+    : CancelableRunnable(aMessage->name()),
       mMonitor(aChannel->mMonitor),
       mChannel(aChannel),
       mMessage(std::move(aMessage)),
@@ -1520,9 +1515,9 @@ MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
       mFuzzStopped(false)
 #endif
 {
-
+  MOZ_DIAGNOSTIC_ASSERT(mMessage, "message may not be null");
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage.IsFuzzMsg()) {
+  if (mMessage->IsFuzzMsg()) {
     MOZ_FUZZING_IPC_MT_CTOR();
   }
 #endif
@@ -1533,9 +1528,9 @@ MessageChannel::MessageTask::~MessageTask() {
   // We track fuzzing messages until their run is complete. To make sure
   // that we don't miss messages that are for some reason destroyed without
   // being run (e.g. canceled), we catch this condition in the destructor.
-  if (mMessage.IsFuzzMsg() && !mFuzzStopped) {
+  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
-  } else if (!mMessage.IsFuzzMsg() && !fuzzing::Nyx::instance().started()) {
+  } else if (!mMessage->IsFuzzMsg() && !fuzzing::Nyx::instance().started()) {
     MOZ_FUZZING_IPC_PRE_FUZZ_MT_STOP();
   }
 #endif
@@ -1543,7 +1538,7 @@ MessageChannel::MessageTask::~MessageTask() {
 
 nsresult MessageChannel::MessageTask::Run() {
 #ifdef FUZZING_SNAPSHOT
-  if (!mMessage.IsFuzzMsg()) {
+  if (!mMessage->IsFuzzMsg()) {
     if (fuzzing::Nyx::instance().started()) {
       // Once we started fuzzing, prevent non-fuzzing tasks from being
       // run and potentially blocking worker threads.
@@ -1583,7 +1578,7 @@ nsresult MessageChannel::MessageTask::Run() {
   Channel()->RunMessage(proxy, *this);
 
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage.IsFuzzMsg() && !mFuzzStopped) {
+  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
     mFuzzStopped = true;
   }
@@ -1603,14 +1598,14 @@ nsresult MessageChannel::MessageTask::Cancel() {
 
   Channel()->AssertWorkerThread();
   mMonitor->AssertSameMonitor(*Channel()->mMonitor);
-  if (!IsAlwaysDeferred(Msg())) {
+  if (!IsAlwaysDeferred(*Msg())) {
     Channel()->mMaybeDeferredPendingCount--;
   }
 
   remove();
 
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage.IsFuzzMsg() && !mFuzzStopped) {
+  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
     mFuzzStopped = true;
   }
@@ -1632,7 +1627,11 @@ void MessageChannel::MessageTask::Post() {
 
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
-  switch (mMessage.priority()) {
+  if (!mMessage) {
+    return NS_ERROR_FAILURE;
+  }
+
+  switch (mMessage->priority()) {
     case Message::NORMAL_PRIORITY:
       *aPriority = PRIORITY_NORMAL;
       break;
@@ -1657,18 +1656,18 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
 
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetType(uint32_t* aType) {
-  if (!Msg().is_valid()) {
+  if (!mMessage) {
     // If mMessage has been moved already elsewhere, we can't know what the type
     // has been.
     return NS_ERROR_FAILURE;
   }
 
-  *aType = Msg().type();
+  *aType = mMessage->type();
   return NS_OK;
 }
 
 void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
-                                     Message&& aMsg) {
+                                     UniquePtr<Message> aMsg) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
 
@@ -1679,15 +1678,15 @@ void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
 
   UniquePtr<Message> reply;
 
-  IPC_LOG("DispatchMessage: seqno=%d, xid=%d", aMsg.seqno(),
-          aMsg.transaction_id());
-  AddProfilerMarker(aMsg, MessageDirection::eReceiving);
+  IPC_LOG("DispatchMessage: seqno=%d, xid=%d", aMsg->seqno(),
+          aMsg->transaction_id());
+  AddProfilerMarker(*aMsg, MessageDirection::eReceiving);
 
   {
-    AutoEnterTransaction transaction(this, aMsg);
+    AutoEnterTransaction transaction(this, *aMsg);
 
-    int id = aMsg.transaction_id();
-    MOZ_RELEASE_ASSERT(!aMsg.is_sync() || id == transaction.TransactionID());
+    int id = aMsg->transaction_id();
+    MOZ_RELEASE_ASSERT(!aMsg->is_sync() || id == transaction.TransactionID());
 
     {
       MonitorAutoUnlock unlock(*mMonitor);
@@ -1695,10 +1694,10 @@ void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
 
       mListener->ArtificialSleep();
 
-      if (aMsg.is_sync()) {
-        DispatchSyncMessage(aProxy, aMsg, *getter_Transfers(reply));
+      if (aMsg->is_sync()) {
+        DispatchSyncMessage(aProxy, *aMsg, reply);
       } else {
-        DispatchAsyncMessage(aProxy, aMsg);
+        DispatchAsyncMessage(aProxy, *aMsg);
       }
 
       mListener->ArtificialSleep();
@@ -1707,14 +1706,14 @@ void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
     if (reply && transaction.IsCanceled()) {
       // The transaction has been canceled. Don't send a reply.
       IPC_LOG("Nulling out reply due to cancellation, seqno=%d, xid=%d",
-              aMsg.seqno(), id);
+              aMsg->seqno(), id);
       reply = nullptr;
     }
   }
 
   if (reply && ChannelConnected == mChannelState) {
-    IPC_LOG("Sending reply seqno=%d, xid=%d", aMsg.seqno(),
-            aMsg.transaction_id());
+    IPC_LOG("Sending reply seqno=%d, xid=%d", aMsg->seqno(),
+            aMsg->transaction_id());
     AddProfilerMarker(*reply, MessageDirection::eSending);
 
     mLink->SendMessage(std::move(reply));
@@ -1723,7 +1722,7 @@ void MessageChannel::DispatchMessage(ActorLifecycleProxy* aProxy,
 
 void MessageChannel::DispatchSyncMessage(ActorLifecycleProxy* aProxy,
                                          const Message& aMsg,
-                                         Message*& aReply) {
+                                         UniquePtr<Message>& aReply) {
   AssertWorkerThread();
 
   mozilla::TimeStamp start = TimeStamp::Now();
@@ -2196,8 +2195,8 @@ void MessageChannel::DebugAbort(const char* file, int line, const char* cond,
   MessageQueue pending = std::move(mPending);
   while (!pending.isEmpty()) {
     printf_stderr("    [ %s%s ]\n",
-                  pending.getFirst()->Msg().is_sync() ? "sync" : "async",
-                  pending.getFirst()->Msg().is_reply() ? "reply" : "");
+                  pending.getFirst()->Msg()->is_sync() ? "sync" : "async",
+                  pending.getFirst()->Msg()->is_reply() ? "reply" : "");
     pending.popFirst();
   }
 
@@ -2324,20 +2323,20 @@ void MessageChannel::CancelTransaction(int transaction) {
 
   bool foundSync = false;
   for (MessageTask* p = mPending.getFirst(); p;) {
-    Message& msg = p->Msg();
+    UniquePtr<Message>& msg = p->Msg();
 
     // If there was a race between the parent and the child, then we may
     // have a queued sync message. We want to drop this message from the
     // queue since if will get cancelled along with the transaction being
     // cancelled. This happens if the message in the queue is
     // NESTED_INSIDE_SYNC.
-    if (msg.is_sync() && msg.nested_level() != IPC::Message::NOT_NESTED) {
+    if (msg->is_sync() && msg->nested_level() != IPC::Message::NOT_NESTED) {
       MOZ_RELEASE_ASSERT(!foundSync);
-      MOZ_RELEASE_ASSERT(msg.transaction_id() != transaction);
-      IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg.seqno(),
-              msg.transaction_id());
+      MOZ_RELEASE_ASSERT(msg->transaction_id() != transaction);
+      IPC_LOG("Removing msg from queue seqno=%d xid=%d", msg->seqno(),
+              msg->transaction_id());
       foundSync = true;
-      if (!IsAlwaysDeferred(msg)) {
+      if (!IsAlwaysDeferred(*msg)) {
         mMaybeDeferredPendingCount--;
       }
       p = p->removeAndGetNext();

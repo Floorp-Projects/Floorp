@@ -399,15 +399,15 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       // Try to figure out how big the message is. Size is 0 if we haven't read
       // enough of the header to know the size.
       uint32_t message_length = 0;
-      if (incoming_message_.isSome()) {
-        message_length = incoming_message_.ref().size();
+      if (incoming_message_) {
+        message_length = incoming_message_->size();
       } else {
         message_length = Message::MessageSize(p, end);
       }
 
       if (!message_length) {
         // We haven't seen the full message header.
-        MOZ_ASSERT(incoming_message_.isNothing());
+        MOZ_ASSERT(!incoming_message_);
 
         // Move everything we have to the start of the buffer. We'll finish
         // reading this message when we get more data. For now we leave it in
@@ -421,10 +421,10 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
       input_buf_offset_ = 0;
 
       bool partial;
-      if (incoming_message_.isSome()) {
+      if (incoming_message_) {
         // We already have some data for this message stored in
         // incoming_message_. We want to append the new data there.
-        Message& m = incoming_message_.ref();
+        Message& m = *incoming_message_;
 
         // How much data from this message remains to be added to
         // incoming_message_?
@@ -443,7 +443,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         // How much data from this message is stored in input_buf_?
         uint32_t in_buf = std::min(message_length, uint32_t(end - p));
 
-        incoming_message_.emplace(p, in_buf);
+        incoming_message_ = mozilla::MakeUnique<Message>(p, in_buf);
         p += in_buf;
 
         // Are we done reading this message?
@@ -454,7 +454,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         break;
       }
 
-      Message& m = incoming_message_.ref();
+      Message& m = *incoming_message_;
 
       if (m.header()->num_handles) {
         // the message has file descriptors
@@ -531,10 +531,10 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
           return false;
         }
 #endif
-        listener_->OnMessageReceived(std::move(m));
+        listener_->OnMessageReceived(std::move(incoming_message_));
       }
 
-      incoming_message_.reset();
+      incoming_message_ = nullptr;
     }
 
     input_overflow_fds_ = std::vector<int>(&fds[fds_i], &fds[num_fds]);
@@ -542,14 +542,12 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
     // When the input data buffer is empty, the overflow fds should be too. If
     // this is not the case, we probably have a rogue renderer which is trying
     // to fill our descriptor table.
-    if (incoming_message_.isNothing() && input_buf_offset_ == 0 &&
+    if (!incoming_message_ && input_buf_offset_ == 0 &&
         !input_overflow_fds_.empty()) {
       // We close these descriptors in Close()
       return false;
     }
   }
-
-  return true;
 }
 
 bool Channel::ChannelImpl::ProcessOutgoingMessages() {
