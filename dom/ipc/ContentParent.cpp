@@ -147,7 +147,6 @@
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/TestShellParent.h"
@@ -5012,17 +5011,6 @@ ContentParent::AllocPExtensionsParent() {
   return MakeAndAddRef<extensions::ExtensionsParent>();
 }
 
-PFileDescriptorSetParent* ContentParent::AllocPFileDescriptorSetParent(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetParent(aFD);
-}
-
-bool ContentParent::DeallocPFileDescriptorSetParent(
-    PFileDescriptorSetParent* aActor) {
-  delete static_cast<FileDescriptorSetParent*>(aActor);
-  return true;
-}
-
 void ContentParent::NotifyUpdatedDictionaries() {
   RefPtr<mozSpellChecker> spellChecker(mozSpellChecker::Create());
   MOZ_ASSERT(spellChecker, "No spell checker?");
@@ -7242,12 +7230,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
   mBrowsingContextFieldEpoch = aEpoch;
 
   return aTransaction.CommitFromIPC(aContext, this);
-}
-
-PFileDescriptorSetParent* ContentParent::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PContentParent::SendPFileDescriptorSetConstructor(aFD);
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvBlobURLDataRequest(
