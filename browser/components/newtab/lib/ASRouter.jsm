@@ -1621,14 +1621,26 @@ class _ASRouter {
     return this.loadMessagesFromAllProviders();
   }
 
-  async sendPBNewTabMessage({ tabId }) {
+  async sendPBNewTabMessage({ tabId, hideDefault }) {
     let message = null;
 
     await this.loadMessagesFromAllProviders();
 
+    // If message has hideDefault property set to true
+    // remove from state all pb_newtab messages with type default
+    if (hideDefault) {
+      await this.setState(state => ({
+        messages: state.messages.filter(
+          m => !(m.template === "pb_newtab" && m.type === "default")
+        ),
+      }));
+    }
+
     const telemetryObject = { tabId };
     TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
-    message = await this.handleMessageRequest({ template: "pb_newtab" });
+    message = await this.handleMessageRequest({
+      template: "pb_newtab",
+    });
     TelemetryStopwatch.finish("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
 
     // Format urls if any are defined
