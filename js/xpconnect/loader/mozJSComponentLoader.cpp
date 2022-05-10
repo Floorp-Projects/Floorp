@@ -475,6 +475,11 @@ void mozJSComponentLoader::InitStatics() {
 void mozJSComponentLoader::Unload() {
   if (sSelf) {
     sSelf->UnloadModules();
+
+    if (sSelf->mModuleLoader) {
+      sSelf->mModuleLoader->Shutdown();
+      sSelf->mModuleLoader = nullptr;
+    }
   }
 }
 
