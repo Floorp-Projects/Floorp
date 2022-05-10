@@ -1138,12 +1138,14 @@ void gfxMacPlatformFontList::InitSingleFaceList() {
 
     // Look through the family's faces to see if this one is present.
     const gfxFontEntry* fe = nullptr;
+    family->ReadLock();
     for (const auto& face : family->GetFontList()) {
       if (face->Name().Equals(aliasName)) {
         fe = face;
         break;
       }
     }
+    family->ReadUnlock();
     if (!fe) {
       continue;
     }
