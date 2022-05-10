@@ -444,7 +444,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var searchTermTabGroupsAreEnabled by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_search_term_tab_groups),
-        default = { FxNimbus.features.searchTermGroups.value(appContext).enabled },
+        default = { FxNimbus.features.searchTermGroups.value().enabled },
         featureFlag = FeatureFlags.tabGroupFeature
     )
 
@@ -1203,7 +1203,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     private val homescreenSections: Map<HomeScreenSection, Boolean> by lazy {
-        FxNimbus.features.homescreen.value(appContext).sectionsEnabled
+        FxNimbus.features.homescreen.value().sectionsEnabled
     }
 
     var historyMetadataUIFeature by lazyFeatureFlagPreference(

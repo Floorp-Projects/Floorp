@@ -47,7 +47,7 @@ class NimbusMessagingStorage(
         val nimbusActions = nimbusFeature.actions
 
         val nimbusMessages = nimbusFeature.messages
-        val defaultStyle = StyleData(context)
+        val defaultStyle = StyleData()
         val storageMetadata = metadataStorage.getMetadata()
 
         return nimbusMessages.mapNotNull { (key, value) ->
