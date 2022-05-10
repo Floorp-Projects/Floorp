@@ -1162,8 +1162,7 @@ class [[nodiscard]] GenericErrorResult<mozilla::ipc::IPCResult> {
   operator mozilla::ipc::IPCResult() const { return mErrorValue; }
 };
 
-namespace dom {
-namespace quota {
+namespace dom::quota {
 
 extern const char kQuotaGenericDelimiter;
 
@@ -1603,8 +1602,7 @@ auto ExecuteInitialization(
       });
 }
 
-}  // namespace quota
-}  // namespace dom
+}  // namespace dom::quota
 }  // namespace mozilla
 
 #endif  // mozilla_dom_quota_quotacommon_h__

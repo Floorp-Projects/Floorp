@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class NumericInputTypeBase : public InputType {
  public:
@@ -74,7 +73,6 @@ class RangeInputType : public NumericInputTypeBase {
       : NumericInputTypeBase(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_NumericInputTypes_h__ */

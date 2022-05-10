@@ -14,8 +14,7 @@
 #include "nsAlgorithm.h"
 #include <algorithm>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLMeterElement final : public nsGenericHTMLElement {
  public:
@@ -98,7 +97,6 @@ class HTMLMeterElement final : public nsGenericHTMLElement {
   EventStates GetOptimumState() const;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLMeterElement_h

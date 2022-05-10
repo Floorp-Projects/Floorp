@@ -10,8 +10,7 @@
 #include "mozilla/dom/MessageListenerManager.h"
 #include "nsContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Implementation for the WebIDL MessageBroadcaster interface. Base class for
@@ -46,7 +45,6 @@ class MessageBroadcaster : public MessageListenerManager {
                      MessageManagerFlags aFlags);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MessageBroadcaster_h

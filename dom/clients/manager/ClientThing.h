@@ -8,8 +8,7 @@
 
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Base class representing various Client "things" such as ClientHandle,
 // ClientSource, and ClientManager.  Currently it provides a common set
@@ -134,7 +133,6 @@ class ClientThing {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientThing_h

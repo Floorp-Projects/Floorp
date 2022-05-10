@@ -676,6 +676,13 @@ nsFormFillController::GetUserContextId(uint32_t* aUserContextId) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFormFillController::GetInvalidatePreviousResult(
+    bool* aInvalidatePreviousResult) {
+  *aInvalidatePreviousResult = mInvalidatePreviousResult;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteSearch
 
@@ -784,6 +791,8 @@ void nsFormFillController::RevalidateDataList() {
     return;
   }
 
+  // We cannot use previous result since any items in search target are updated.
+  mInvalidatePreviousResult = true;
   controller->StartSearch(mLastSearchString);
 }
 
@@ -850,6 +859,8 @@ NS_IMETHODIMP
 nsFormFillController::HandleEvent(Event* aEvent) {
   EventTarget* target = aEvent->GetOriginalTarget();
   NS_ENSURE_STATE(target);
+
+  mInvalidatePreviousResult = false;
 
   nsCOMPtr<nsPIDOMWindowInner> inner =
       do_QueryInterface(target->GetOwnerGlobal());

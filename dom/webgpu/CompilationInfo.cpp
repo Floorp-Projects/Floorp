@@ -8,8 +8,7 @@
 #include "ShaderModule.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(CompilationInfo, mParent)
 GPU_IMPL_JS_WRAP(CompilationInfo)
@@ -17,5 +16,4 @@ GPU_IMPL_JS_WRAP(CompilationInfo)
 CompilationInfo::CompilationInfo(ShaderModule* const aParent)
     : ChildOf(aParent) {}
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

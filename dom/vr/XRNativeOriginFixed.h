@@ -10,8 +10,7 @@
 #include "gfxVR.h"
 #include "XRNativeOrigin.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XRNativeOriginFixed : public XRNativeOrigin {
  public:
@@ -26,7 +25,6 @@ class XRNativeOriginFixed : public XRNativeOrigin {
   gfx::PointDouble3D mPosition;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRNativeOriginFixed_h_

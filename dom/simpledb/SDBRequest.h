@@ -19,8 +19,7 @@
 class nsISDBCallback;
 class nsIVariant;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SDBConnection;
 
@@ -58,7 +57,6 @@ class SDBRequest final : public nsISDBRequest {
   NS_DECL_CYCLE_COLLECTION_CLASS(SDBRequest)
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_simpledb_SDBRequest_h

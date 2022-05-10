@@ -11,8 +11,7 @@
 
 #include "mozilla/media/PMediaParent.h"
 
-namespace mozilla {
-namespace media {
+namespace mozilla::media {
 
 // media::Parent implements the chrome-process side of ipc for media::Child APIs
 // A same-process version may also be created to service non-e10s calls.
@@ -87,7 +86,6 @@ inline mozilla::ipc::IPCResult IPCResult(Parent<NonE10s>* aSelf,
 PMediaParent* AllocPMediaParent();
 bool DeallocPMediaParent(PMediaParent* aActor);
 
-}  // namespace media
-}  // namespace mozilla
+}  // namespace mozilla::media
 
 #endif  // mozilla_MediaParent_h

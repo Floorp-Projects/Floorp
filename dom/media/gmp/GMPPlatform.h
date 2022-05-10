@@ -9,14 +9,11 @@
 #include "gmp-platform.h"
 #include <functional>
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 class ByteBuf;
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPChild;
 
@@ -30,7 +27,6 @@ GMPErr SetTimerOnMainThread(GMPTask* aTask, int64_t aTimeoutMS);
 
 void SendFOGData(ipc::ByteBuf&& buf);
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPPlatform_h_

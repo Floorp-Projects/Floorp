@@ -37,8 +37,7 @@ static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
 
 using namespace mozilla::net;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Implementation of ClassInfo is required to serialize/deserialize
 NS_IMPL_CLASSINFO(ReferrerInfo, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -1587,5 +1586,4 @@ void ReferrerInfo::RecordTelemetry(nsIHttpChannel* aChannel) {
                         static_cast<uint32_t>(mPolicy) + telemetryOffset);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

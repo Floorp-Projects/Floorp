@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLLegendElement final : public nsGenericHTMLElement {
  public:
@@ -91,7 +90,6 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
   nsIContent* GetFieldSet() const;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLLegendElement_h */

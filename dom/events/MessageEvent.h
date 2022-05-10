@@ -19,8 +19,7 @@
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BrowsingContext;
 struct MessageEventInit;
@@ -96,7 +95,6 @@ class MessageEvent final : public Event {
   nsTArray<RefPtr<MessagePort>> mPorts;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MessageEvent_h_

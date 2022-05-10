@@ -24,12 +24,10 @@ class nsIContent;
 class nsIParser;
 class nsTextNode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class NodeInfo;
 class ProcessingInstruction;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 enum XMLContentSinkState {
   eXMLContentSinkState_InProlog,

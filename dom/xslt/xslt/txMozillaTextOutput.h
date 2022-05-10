@@ -14,13 +14,11 @@
 class nsITransformObserver;
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
 class DocumentFragment;
 class Element;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class txMozillaTextOutput : public txAOutputXMLEventHandler {
  public:

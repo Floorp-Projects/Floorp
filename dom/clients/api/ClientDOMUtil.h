@@ -13,8 +13,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Utility method to properly execute a ClientManager operation.  It
 // will properly hold a worker thread alive and avoid executing callbacks
@@ -44,7 +43,6 @@ void StartClientManagerOp(Func aFunc, const Arg& aArg, nsIGlobalObject* aGlobal,
       ->Track(*holder);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientDOMUtil_h

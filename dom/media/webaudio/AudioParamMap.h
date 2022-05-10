@@ -10,8 +10,7 @@
 #include "nsWrapperCache.h"
 #include "AudioWorkletNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioParamMap final : public nsWrapperCache {
  public:
@@ -30,7 +29,6 @@ class AudioParamMap final : public nsWrapperCache {
   RefPtr<AudioWorkletNode> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // AudioParamMap_h_

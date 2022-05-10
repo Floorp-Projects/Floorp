@@ -48,8 +48,7 @@
 #  undef DispatchMessage
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerContainer)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -804,5 +803,4 @@ Result<Ok, bool> ServiceWorkerContainer::FillInMessageEventInit(
   return Ok();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

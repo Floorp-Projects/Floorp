@@ -12,8 +12,7 @@
 class nsIChannel;
 class nsISerialEventTarget;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientInfo;
 
@@ -49,7 +48,6 @@ nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
 void CreateReservedSourceIfNeeded(nsIChannel* aChannel,
                                   nsISerialEventTarget* aEventTarget);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientChannelHelper_h

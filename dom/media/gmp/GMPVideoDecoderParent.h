@@ -17,8 +17,7 @@
 #include "VideoUtils.h"
 #include "GMPCrashHelperHolder.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPContentParent;
 
@@ -98,7 +97,6 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   RefPtr<SimpleTimer> mResetCompleteTimeout;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPVideoDecoderParent_h_

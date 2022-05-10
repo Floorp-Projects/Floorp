@@ -13,13 +13,11 @@
 #include "mozilla/dom/XULTextElement.h"
 #include "mozilla/dom/XULTextElementBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* XULTextElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
   return XULTextElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

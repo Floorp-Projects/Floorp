@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEGaussianBlur)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEGaussianBlurElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -114,5 +113,4 @@ SVGElement::StringAttributesInfo SVGFEGaussianBlurElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -14,8 +14,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Monitor.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class nsFakeSynthServices : public nsIObserver {
  public:
@@ -38,7 +37,6 @@ class nsFakeSynthServices : public nsIObserver {
   static StaticRefPtr<nsFakeSynthServices> sSingleton;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

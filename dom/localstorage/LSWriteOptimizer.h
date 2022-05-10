@@ -18,8 +18,7 @@
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Base class for coalescing manipulation queue.
@@ -190,7 +189,6 @@ class LSWriteOptimizer<T, U>::UpdateItemInfo final : public InsertItemInfo {
   WriteInfo::Type GetType() const override { return WriteInfo::UpdateItem; }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSWriteOptimizer_h

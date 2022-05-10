@@ -14,8 +14,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(Script)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGScriptElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -220,5 +219,4 @@ CORSMode SVGScriptElement::GetCORSMode() const {
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

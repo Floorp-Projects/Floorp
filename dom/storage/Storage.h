@@ -20,8 +20,7 @@
 class nsIPrincipal;
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Storage : public nsISupports, public nsWrapperCache {
  public:
@@ -176,7 +175,6 @@ class Storage : public nsISupports, public nsWrapperCache {
   bool mSessionScopedOrLess : 1;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Storage_h

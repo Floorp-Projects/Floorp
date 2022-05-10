@@ -14,8 +14,7 @@
 
 #include "nsSpeechTask.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SpeechSynthesisVoice;
 class SpeechSynthesis;
@@ -105,7 +104,6 @@ class SpeechSynthesisUtterance final : public DOMEventTargetHelper {
   RefPtr<SpeechSynthesisVoice> mVoice;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

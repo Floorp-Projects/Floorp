@@ -15,8 +15,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIServiceWorkerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientInfoAndState;
 class ClientState;
@@ -179,7 +178,6 @@ class ServiceWorkerInfo final : public nsIServiceWorkerInfo {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerinfo_h

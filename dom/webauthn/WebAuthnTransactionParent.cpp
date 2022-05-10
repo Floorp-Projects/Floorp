@@ -13,8 +13,7 @@
 #  include "WinWebAuthnManager.h"
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
     const uint64_t& aTransactionId,
@@ -122,5 +121,4 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

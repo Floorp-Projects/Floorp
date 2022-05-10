@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PPaymentRequestChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PaymentRequest;
 
@@ -53,7 +52,6 @@ class PaymentRequestChild final : public PPaymentRequestChild {
   PaymentRequest* MOZ_NON_OWNING_REF mRequest;
 };
 
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

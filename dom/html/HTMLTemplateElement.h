@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/DocumentFragment.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLTemplateElement final : public nsGenericHTMLElement {
  public:
@@ -40,7 +39,6 @@ class HTMLTemplateElement final : public nsGenericHTMLElement {
   RefPtr<DocumentFragment> mContent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLTemplateElement_h

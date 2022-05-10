@@ -14,8 +14,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsPresContext.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMRect;
 class DOMRectList;
@@ -61,8 +60,7 @@ class NotifyPaintEvent : public Event {
   DOMHighResTimeStamp mTimeStamp;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // This empties aInvalidateRequests.
 already_AddRefed<mozilla::dom::NotifyPaintEvent> NS_NewDOMNotifyPaintEvent(

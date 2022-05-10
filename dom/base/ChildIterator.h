@@ -22,8 +22,7 @@
 
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This class iterates normal DOM child nodes of a given DOM node with
 // <xbl:children> nodes replaced by the elements that have been filtered into
@@ -259,7 +258,6 @@ class MOZ_NEEDS_MEMMOVABLE_MEMBERS StyleChildrenIterator
   using AllChildrenIterator::Seek;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

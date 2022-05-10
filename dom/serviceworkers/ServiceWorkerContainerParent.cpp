@@ -9,8 +9,7 @@
 #include "ServiceWorkerContainerProxy.h"
 #include "mozilla/dom/ClientInfo.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -127,5 +126,4 @@ void ServiceWorkerContainerParent::Init() {
   mProxy = new ServiceWorkerContainerProxy(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

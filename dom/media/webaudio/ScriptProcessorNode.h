@@ -10,8 +10,7 @@
 #include "AudioNode.h"
 #include "mozilla/ErrorResult.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 class SharedBuffers;
@@ -127,7 +126,6 @@ class ScriptProcessorNode final : public AudioNode {
   bool mHasPhantomInput = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

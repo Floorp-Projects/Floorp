@@ -11,8 +11,7 @@
 
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLPreElement final : public nsGenericHTMLElement {
  public:
@@ -49,7 +48,6 @@ class HTMLPreElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLPreElement_h

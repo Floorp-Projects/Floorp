@@ -27,8 +27,7 @@
 // too old. This value should be in sync with what the UI needs.
 #define TIME_MAX_SECS 86400 /* 24 hours */
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static StaticRefPtr<StorageActivityService> gStorageActivityService;
 static bool gStorageActivityShutdown = false;
@@ -321,5 +320,4 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(StorageActivityService)
 NS_IMPL_RELEASE(StorageActivityService)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

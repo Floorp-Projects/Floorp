@@ -14,8 +14,7 @@
 #include "mozilla/EventForwards.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DataTransfer;
 
@@ -50,8 +49,7 @@ class InputEvent : public UIEvent {
   nsString mInputTypeValue;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::InputEvent> NS_NewDOMInputEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

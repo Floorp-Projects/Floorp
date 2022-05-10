@@ -19,8 +19,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Rect)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMSVGAnimatedLength;
 
@@ -278,5 +277,4 @@ nsCSSPropertyID SVGRectElement::GetCSSPropertyIdForAttrEnum(uint8_t aAttrEnum) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -19,8 +19,7 @@
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsXULElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(ChromeObserver, nsIMutationObserver)
 
@@ -234,5 +233,4 @@ nsresult ChromeObserver::HideWindowChrome(bool aShouldHide) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

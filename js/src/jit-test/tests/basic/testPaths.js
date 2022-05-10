@@ -41,13 +41,13 @@ for (let f of ['local.js', '../basic/local.js', 'Y.js']) {
 
 // local.js in the same dir as this script, so should be found by the
 // script-relative calls but not the cwd-relative ones -- unless you happen to
-// be in that directory
+// be in that directory or a sibling directory.
 assertEq(loadRel['local.js'], true);
 assertEq(loadRel['../basic/local.js'], true);
 assertEq(snarfRel['local.js'], true);
 assertEq(snarfRel['../basic/local.js'], true);
 var cwd = os.getenv('PWD');
-if (cwd !== undefined && !(/test.*[\/\\]basic[\/\\]/.test(cwd))) {
+if (cwd !== undefined && !(/test.*[\/\\][^\//]+[\/\\]/.test(cwd))) {
   assertEq(loaded['local.js'], false);
   assertEq(loaded['../basic/local.js'], false);
   assertEq(snarfed['local.js'], false);

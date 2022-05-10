@@ -11,9 +11,7 @@
 #include "nsCOMPtr.h"
 #include "SafeRefPtr.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 class FileInfoBase {
  public:
@@ -66,8 +64,6 @@ class FileInfo final : public FileInfoBase {
   const SafeRefPtr<FileManager> mFileManager;
 };
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // DOM_INDEXEDDB_FILEINFO_H_

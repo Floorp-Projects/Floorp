@@ -9,8 +9,7 @@
 #include "mozilla/dom/PClientNavigateOpChild.h"
 #include "ClientOpPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientNavigateOpChild final : public PClientNavigateOpChild {
   MozPromiseRequestHolder<ClientOpPromise> mPromiseRequestHolder;
@@ -29,7 +28,6 @@ class ClientNavigateOpChild final : public PClientNavigateOpChild {
   void Init(const ClientNavigateOpConstructorArgs& aArgs);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientNavigateOpChild_h

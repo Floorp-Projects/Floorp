@@ -10,8 +10,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "ObjectModel.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 namespace ffi {
 struct WGPURenderBundleEncoder;
 }  // namespace ffi
@@ -73,7 +72,6 @@ class RenderBundleEncoder final : public ObjectBase, public ChildOf<Device> {
       const dom::GPURenderBundleDescriptor& aDesc);
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #endif  // GPU_RenderBundleEncoder_H_

@@ -10,9 +10,7 @@
 #include "nsString.h"
 #include "nsAString.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 struct ViewportMetaData {
   // https://drafts.csswg.org/css-device-adapt/#meta-properties
   nsString mWidth;
@@ -45,7 +43,6 @@ struct ViewportMetaData {
   explicit ViewportMetaData(const nsAString& aViewportInfo);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_VIEWPORT_META_DATA_H_

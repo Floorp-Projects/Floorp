@@ -23,8 +23,7 @@
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 #include "mozilla/dom/WorkerRunnable.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FetchEventOpProxyChild;
 
@@ -189,7 +188,6 @@ class FetchEventOp final : public ExtendableEventOp,
   TimeStamp mFetchHandlerFinish;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerop_h__

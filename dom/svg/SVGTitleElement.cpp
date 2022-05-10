@@ -11,8 +11,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Title)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGTitleElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
@@ -87,5 +86,4 @@ void SVGTitleElement::SendTitleChangeEvent(bool aBound) {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTitleElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

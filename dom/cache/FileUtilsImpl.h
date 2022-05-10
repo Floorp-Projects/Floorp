@@ -11,9 +11,7 @@
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 template <typename Func>
 nsresult BodyTraverseFiles(
@@ -110,8 +108,6 @@ nsresult BodyTraverseFiles(
   return NS_OK;
 }
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_FileUtilsImpl_h

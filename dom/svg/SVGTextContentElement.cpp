@@ -17,8 +17,7 @@
 #include "nsTextNode.h"
 #include "SVGTextFrame.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGTextContentElement_Binding;
 
@@ -188,5 +187,4 @@ int32_t SVGTextContentElement::GetCharNumAtPosition(
   return textFrame ? textFrame->GetCharNumAtPosition(this, aPoint) : -1;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

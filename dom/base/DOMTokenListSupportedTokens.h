@@ -12,8 +12,7 @@
 #ifndef mozilla_dom_DOMTokenListSupportedTokens_h
 #define mozilla_dom_DOMTokenListSupportedTokens_h
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // A single supported token.
 typedef const char* const DOMTokenListSupportedToken;
@@ -25,7 +24,6 @@ typedef const char* const DOMTokenListSupportedToken;
 // or at least outlive the DOMTokenList whose constructor it's passed to.
 typedef DOMTokenListSupportedToken* DOMTokenListSupportedTokenArray;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DOMTokenListSupportedTokens_h

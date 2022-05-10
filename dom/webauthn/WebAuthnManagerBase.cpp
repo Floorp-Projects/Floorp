@@ -13,8 +13,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsPIWindowRoot.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 constexpr auto kDeactivateEvent = u"deactivate"_ns;
 constexpr auto kVisibilityChange = u"visibilitychange"_ns;
@@ -149,5 +148,4 @@ WebAuthnManagerBase::HandleEvent(Event* aEvent) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

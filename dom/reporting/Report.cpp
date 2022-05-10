@@ -9,8 +9,7 @@
 #include "mozilla/dom/ReportingBinding.h"
 #include "nsIGlobalObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Report, mGlobal, mBody)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Report)
@@ -45,5 +44,4 @@ void Report::GetUrl(nsAString& aURL) const { aURL = mURL; }
 
 ReportBody* Report::GetBody() const { return mBody; }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

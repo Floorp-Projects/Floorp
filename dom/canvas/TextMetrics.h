@@ -9,8 +9,7 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TextMetrics final : public NonRefcountedDOMObject {
  public:
@@ -85,7 +84,6 @@ class TextMetrics final : public NonRefcountedDOMObject {
   double ideographicBaseline;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TextMetrics_h

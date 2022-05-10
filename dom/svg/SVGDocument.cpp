@@ -19,8 +19,7 @@
 using namespace mozilla::css;
 using namespace mozilla::dom;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //----------------------------------------------------------------------
 // Implementation
@@ -37,8 +36,7 @@ nsresult SVGDocument::Clone(dom::NodeInfo* aNodeInfo, nsINode** aResult) const {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions

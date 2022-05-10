@@ -10,8 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerJob;
 
@@ -36,7 +35,6 @@ class ServiceWorkerJobQueue final {
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerJobQueue)
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerjobqueue_h

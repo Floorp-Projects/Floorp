@@ -11,8 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // nsISupports implementation
 
@@ -155,5 +154,4 @@ XMLStylesheetProcessingInstruction::CloneDataNode(
                        XMLStylesheetProcessingInstruction(ni.forget(), data));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

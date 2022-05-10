@@ -12,8 +12,7 @@
 // XXX Avoid including this here by moving function bodies to the cpp file
 #include "mozilla/EventListenerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XMLHttpRequestUpload final : public XMLHttpRequestEventTarget {
  public:
@@ -33,7 +32,6 @@ class XMLHttpRequestUpload final : public XMLHttpRequestEventTarget {
   virtual ~XMLHttpRequestUpload() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XMLHttpRequestUpload_h

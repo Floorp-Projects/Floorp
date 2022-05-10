@@ -28,12 +28,10 @@
           JSCLASS_FOREGROUND_FINALIZE,                                        \
       &xpc::XrayExpandoObjectClassOps}
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 extern const JSClass DefaultXrayExpandoObjectClass;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_XrayExpandoClass_h */

@@ -9,8 +9,7 @@
 #include "Device.h"
 #include "ipc/WebGPUChild.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(RenderBundle, mParent)
 GPU_IMPL_JS_WRAP(RenderBundle)
@@ -36,5 +35,4 @@ void RenderBundle::Cleanup() {
   }
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

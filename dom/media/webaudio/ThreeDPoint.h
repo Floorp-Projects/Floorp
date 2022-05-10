@@ -10,9 +10,7 @@
 #include <cmath>
 #include <algorithm>
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 struct ThreeDPoint final {
   ThreeDPoint() : x(0.), y(0.), z(0.) {}
@@ -65,7 +63,6 @@ ThreeDPoint operator*(const ThreeDPoint& lhs, const ThreeDPoint& rhs);
 ThreeDPoint operator*(const ThreeDPoint& lhs, const double rhs);
 bool operator==(const ThreeDPoint& lhs, const ThreeDPoint& rhs);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

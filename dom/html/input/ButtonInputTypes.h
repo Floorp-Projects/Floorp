@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ButtonInputTypeBase : public InputType {
  public:
@@ -69,7 +68,6 @@ class SubmitInputType : public ButtonInputTypeBase {
       : ButtonInputTypeBase(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ButtonInputTypes_h__ */

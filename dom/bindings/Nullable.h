@@ -16,8 +16,7 @@
 
 class nsCycleCollectionTraversalCallback;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Support for nullable types
 template <typename T>
@@ -104,7 +103,6 @@ void ImplCycleCollectionUnlink(Nullable<T>& aNullable) {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_Nullable_h */

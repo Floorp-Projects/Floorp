@@ -14,8 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /*
  * PromiseNativeHandler allows C++ to react to a Promise being
@@ -62,7 +61,6 @@ class DomPromiseListener final : public PromiseNativeHandler {
   CallbackTypeRejected mReject;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PromiseNativeHandler_h

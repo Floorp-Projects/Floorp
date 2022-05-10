@@ -17,8 +17,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEComponentTransfer)
 using namespace mozilla::gfx;
 ;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEComponentTransferElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -99,5 +98,4 @@ nsresult SVGFEComponentTransferElement::BindToTree(BindContext& aCtx,
   return SVGFE::BindToTree(aCtx, aParent);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

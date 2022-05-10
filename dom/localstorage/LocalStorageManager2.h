@@ -13,8 +13,7 @@
 #include "nsILocalStorageManager.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class LSRequestChild;
 class LSRequestChildCallback;
@@ -64,7 +63,6 @@ class LocalStorageManager2 final : public nsIDOMStorageManager,
                               const LSSimpleRequestParams& aParams);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LocalStorageManager2_h

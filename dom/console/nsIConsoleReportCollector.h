@@ -20,11 +20,9 @@
     }                                                \
   }
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 class ConsoleReportCollected;
-}
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 // An interface for saving reports until we can flush them to the correct
 // window at a later time.

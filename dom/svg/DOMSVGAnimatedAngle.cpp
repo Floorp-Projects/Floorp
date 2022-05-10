@@ -9,8 +9,7 @@
 #include "SVGAnimatedOrient.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedAngle, mSVGElement)
 
@@ -30,5 +29,4 @@ already_AddRefed<DOMSVGAngle> DOMSVGAnimatedAngle::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

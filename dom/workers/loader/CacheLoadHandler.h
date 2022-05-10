@@ -29,10 +29,7 @@ using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
-namespace mozilla {
-namespace dom {
-
-namespace workerinternals::loader {
+namespace mozilla::dom::workerinternals::loader {
 
 /*
  * [DOMDOC] CacheLoadHandler for Workers
@@ -212,8 +209,6 @@ class CachePromiseHandler final : public PromiseNativeHandler {
   ScriptLoadInfo& mLoadInfo;
 };
 
-}  // namespace workerinternals::loader
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::workerinternals::loader
 
 #endif /* mozilla_dom_workers_CacheLoadHandler_h__ */

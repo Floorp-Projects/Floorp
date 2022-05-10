@@ -18,8 +18,7 @@
 #include "ServiceWorkerManager.h"
 #include "nsIPrincipal.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(ServiceWorkerInterceptController,
                   nsINetworkInterceptController)
@@ -129,5 +128,4 @@ ServiceWorkerInterceptController::ChannelIntercepted(
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

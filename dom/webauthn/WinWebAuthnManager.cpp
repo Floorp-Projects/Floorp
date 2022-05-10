@@ -14,8 +14,7 @@
 #include "winwebauthn/webauthn.h"
 #include "WinWebAuthnManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 static mozilla::LazyLogModule gWinWebAuthnManagerLog("winwebauthnkeymanager");
@@ -767,5 +766,4 @@ void WinWebAuthnManager::Cancel(PWebAuthnTransactionParent* aParent,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

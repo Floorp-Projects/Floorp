@@ -10,8 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLMetaElement final : public nsGenericHTMLElement {
  public:
@@ -69,7 +68,6 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
                           ChangeKind aChangeKind);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLMetaElement_h

@@ -7,8 +7,7 @@
 
 #include "mozilla/dom/PWebrtcGlobalChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebrtcGlobalChild : public PWebrtcGlobalChild {
   friend class ContentChild;
@@ -36,7 +35,6 @@ class WebrtcGlobalChild : public PWebrtcGlobalChild {
   static WebrtcGlobalChild* Create();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _WEBRTC_GLOBAL_CHILD_H_

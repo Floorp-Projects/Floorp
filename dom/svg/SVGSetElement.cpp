@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Set)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGSetElement::WrapNode(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
@@ -35,5 +34,4 @@ SMILAnimationFunction& SVGSetElement::AnimationFunction() {
   return mAnimationFunction;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

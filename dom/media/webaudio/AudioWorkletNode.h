@@ -9,8 +9,7 @@
 
 #include "AudioNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioParamMap;
 struct AudioWorkletNodeOptions;
@@ -64,7 +63,6 @@ class AudioWorkletNode : public AudioNode {
   uint16_t mOutputCount;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // AudioWorkletNode_h_

@@ -48,8 +48,7 @@
 // Current version of the database schema
 #define CURRENT_SCHEMA_VERSION 2
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace StorageUtils;
 
@@ -1632,5 +1631,4 @@ StorageDBThread::ShutdownRunnable::Run() {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

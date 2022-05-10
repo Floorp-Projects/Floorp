@@ -12,9 +12,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 // IDBSpecialValue represents two special return values, distinct from any other
 // value, used in several places in the IndexedDB spec.
@@ -155,8 +153,6 @@ detail::IDBError<Special> IDBError(detail::SpecialConstant<Special> aResult) {
   return {aResult};
 }
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // mozilla_dom_indexeddb_idbresult_h__

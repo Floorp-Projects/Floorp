@@ -14,8 +14,7 @@
 #include "js/Object.h"  // JS::GetClass
 #include "js/Proxy.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * DOM proxies store the expando object in the private slot.
@@ -165,7 +164,6 @@ inline const DOMProxyHandler* GetDOMProxyHandler(JSObject* obj) {
   return static_cast<const DOMProxyHandler*>(js::GetProxyHandler(obj));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_DOMProxyHandler_h */

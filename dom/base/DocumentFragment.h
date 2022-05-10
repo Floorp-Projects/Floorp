@@ -18,8 +18,7 @@
 class nsAtom;
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class Element;
@@ -98,8 +97,7 @@ class DocumentFragment : public FragmentOrElement {
   RefPtr<Element> mHost;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 inline mozilla::dom::DocumentFragment* nsINode::AsDocumentFragment() {
   MOZ_ASSERT(IsDocumentFragment());

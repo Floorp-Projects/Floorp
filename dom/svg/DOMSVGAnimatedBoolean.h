@@ -12,8 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMSVGAnimatedBoolean final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedBoolean)
@@ -40,7 +39,6 @@ class DOMSVGAnimatedBoolean final : public nsWrapperCache {
   RefPtr<SVGElement> mSVGElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_DOMSVGANIMATEDBOOLEAN_H_

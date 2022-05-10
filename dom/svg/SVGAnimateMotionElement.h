@@ -14,8 +14,7 @@
 nsresult NS_NewSVGAnimateMotionElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SVGAnimateMotionElement final : public SVGAnimationElement {
  protected:
@@ -49,7 +48,6 @@ class SVGAnimateMotionElement final : public SVGAnimationElement {
   void MpathChanged() { mAnimationFunction.MpathChanged(); }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGANIMATEMOTIONELEMENT_H_

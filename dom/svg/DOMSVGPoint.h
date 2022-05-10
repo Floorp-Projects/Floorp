@@ -19,9 +19,7 @@
 
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 30
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 struct DOMMatrix2DInit;
 
 /**
@@ -182,8 +180,7 @@ class DOMSVGPoint final : public nsWrapperCache {
   uint32_t mIsTranslatePoint : 1;  // true iff our owner is a SVGSVGElement
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #undef MOZ_SVG_LIST_INDEX_BIT_COUNT
 

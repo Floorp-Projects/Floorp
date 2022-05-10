@@ -9,8 +9,7 @@
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/PClientHandleOpChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientHandle;
 
@@ -34,7 +33,6 @@ class ClientHandleOpChild final : public PClientHandleOpChild {
   ~ClientHandleOpChild() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientHandleOpChild_h

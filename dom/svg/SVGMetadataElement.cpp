@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Metadata)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGMetadataElement::WrapNode(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
@@ -31,5 +30,4 @@ nsresult SVGMetadataElement::Init() { return NS_OK; }
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMetadataElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
