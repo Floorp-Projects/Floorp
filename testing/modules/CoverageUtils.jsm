@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = ["CoverageCollector"];
 const { addDebuggerToGlobal } = ChromeUtils.import(
   "resource://gre/modules/jsdebugger.jsm"
 );
-addDebuggerToGlobal(Cu.getGlobalForObject(this));
+addDebuggerToGlobal(globalThis);
 
 /**
  * Records coverage for each test by way of the js debugger.
