@@ -36,9 +36,16 @@ class ScrollbarDrawing {
     Win11,
   };
 
- public:
   explicit ScrollbarDrawing(Kind aKind) : mKind(aKind) {}
+
+ public:
   virtual ~ScrollbarDrawing() = default;
+
+  enum class ScrollbarKind : uint8_t {
+    Horizontal,
+    VerticalLeft,
+    VerticalRight,
+  };
 
   static DPIRatio GetDPIRatioForScrollbarPart(nsPresContext*);
 
@@ -78,20 +85,20 @@ class ScrollbarDrawing {
       const Colors&);
 
   virtual bool PaintScrollbarButton(DrawTarget&, StyleAppearance,
-                                    const LayoutDeviceRect&, nsIFrame*,
-                                    const ComputedStyle&,
+                                    const LayoutDeviceRect&, ScrollbarKind,
+                                    nsIFrame*, const ComputedStyle&,
                                     const EventStates& aElementState,
                                     const EventStates& aDocumentState,
                                     const Colors&, const DPIRatio&);
 
   virtual bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
-                                   bool aHorizontal, nsIFrame*,
+                                   ScrollbarKind, nsIFrame*,
                                    const ComputedStyle&,
                                    const EventStates& aElementState,
                                    const EventStates& aDocumentState,
                                    const Colors&, const DPIRatio&) = 0;
   virtual bool PaintScrollbarThumb(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
+                                   const LayoutDeviceRect&, ScrollbarKind,
                                    nsIFrame*, const ComputedStyle&,
                                    const EventStates& aElementState,
                                    const EventStates& aDocumentState,
@@ -99,24 +106,23 @@ class ScrollbarDrawing {
 
   template <typename PaintBackendData>
   bool DoPaintDefaultScrollbar(PaintBackendData&, const LayoutDeviceRect&,
-                               bool aHorizontal, nsIFrame*,
-                               const ComputedStyle&,
+                               ScrollbarKind, nsIFrame*, const ComputedStyle&,
                                const EventStates& aElementState,
                                const EventStates& aDocumentState, const Colors&,
                                const DPIRatio&);
-  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&, bool aHorizontal,
+  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&, ScrollbarKind,
                       nsIFrame*, const ComputedStyle&,
                       const EventStates& aElementState,
                       const EventStates& aDocumentState, const Colors&,
                       const DPIRatio&);
   bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
-                      bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                      ScrollbarKind, nsIFrame*, const ComputedStyle&,
                       const EventStates& aElementState,
                       const EventStates& aDocumentState, const Colors&,
                       const DPIRatio&);
 
   virtual bool PaintScrollbarTrack(DrawTarget&, const LayoutDeviceRect&,
-                                   bool aHorizontal, nsIFrame*,
+                                   ScrollbarKind, nsIFrame*,
                                    const ComputedStyle&,
                                    const EventStates& aDocumentState,
                                    const Colors&, const DPIRatio&) {
@@ -124,7 +130,7 @@ class ScrollbarDrawing {
     return true;
   }
   virtual bool PaintScrollbarTrack(WebRenderBackendData&,
-                                   const LayoutDeviceRect&, bool aHorizontal,
+                                   const LayoutDeviceRect&, ScrollbarKind,
                                    nsIFrame*, const ComputedStyle&,
                                    const EventStates& aDocumentState,
                                    const Colors&, const DPIRatio&) {
@@ -134,15 +140,16 @@ class ScrollbarDrawing {
 
   template <typename PaintBackendData>
   bool DoPaintDefaultScrollCorner(PaintBackendData&, const LayoutDeviceRect&,
-                                  nsIFrame*, const ComputedStyle&,
+                                  ScrollbarKind, nsIFrame*,
+                                  const ComputedStyle&,
                                   const EventStates& aDocumentState,
                                   const Colors&, const DPIRatio&);
   virtual bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
+                                 ScrollbarKind, nsIFrame*, const ComputedStyle&,
                                  const EventStates& aDocumentState,
                                  const Colors&, const DPIRatio&);
   virtual bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect&,
-                                 nsIFrame*, const ComputedStyle&,
+                                 ScrollbarKind, nsIFrame*, const ComputedStyle&,
                                  const EventStates& aDocumentState,
                                  const Colors&, const DPIRatio&);
 

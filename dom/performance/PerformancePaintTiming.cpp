@@ -26,7 +26,7 @@ PerformancePaintTiming::PerformancePaintTiming(Performance* aPerformance,
                                                const TimeStamp& aStartTime)
     : PerformanceEntry(aPerformance->GetParentObject(), aName, u"paint"_ns),
       mPerformance(aPerformance),
-      mRawStarTime(aStartTime) {}
+      mRawStartTime(aStartTime) {}
 
 PerformancePaintTiming::~PerformancePaintTiming() = default;
 
@@ -38,7 +38,7 @@ JSObject* PerformancePaintTiming::WrapObject(
 DOMHighResTimeStamp PerformancePaintTiming::StartTime() const {
   if (mCachedStartTime.isNothing()) {
     DOMHighResTimeStamp rawValue =
-        mPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mRawStarTime);
+        mPerformance->GetDOMTiming()->TimeStampToDOMHighRes(mRawStartTime);
     mCachedStartTime.emplace(nsRFPService::ReduceTimePrecisionAsMSecs(
         rawValue, mPerformance->GetRandomTimelineSeed(),
         mPerformance->IsSystemPrincipal(),

@@ -557,6 +557,12 @@ class BrowserExtensionContent extends EventEmitter {
     super.emit(event, ...args);
   }
 
+  // TODO(Bug 1768471): consider folding this back into emit if we will change it to
+  // return a value as EventEmitter and Extension emit methods do.
+  emitLocalWithResult(event, ...args) {
+    return super.emit(event, ...args);
+  }
+
   receiveMessage({ name, data }) {
     if (name === this.MESSAGE_EMIT_EVENT) {
       super.emit(data.event, ...data.args);
@@ -777,7 +783,7 @@ class ChildAPIManager {
         "AddListener",
         "RemoveListener",
       ],
-      recv: ["CallResult", "RunListener"],
+      recv: ["CallResult", "RunListener", "StreamFilterSuspendCancel"],
     });
 
     this.conduit.sendCreateProxyContext({
@@ -852,6 +858,20 @@ class ChildAPIManager {
         `Unknown listener at childId=${data.childId} path=${data.path} listenerId=${data.listenerId}\n`
       );
     }
+  }
+
+  async recvStreamFilterSuspendCancel() {
+    const promise = this.context.extension.emitLocalWithResult(
+      "internal:stream-filter-suspend-cancel"
+    );
+    // if all listeners throws emitLocalWithResult returns undefined.
+    if (!promise) {
+      return false;
+    }
+
+    return promise.then(results =>
+      results.some(hasActiveStreamFilter => hasActiveStreamFilter === true)
+    );
   }
 
   /**

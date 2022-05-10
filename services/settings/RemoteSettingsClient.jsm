@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
-  PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
   SharedUtils: "resource://services-settings/SharedUtils.jsm",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
@@ -30,13 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const TELEMETRY_COMPONENT = "remotesettings";
 
 XPCOMUtils.defineLazyGetter(this, "console", () => Utils.log);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gTimingEnabled",
-  "services.settings.enablePerformanceCounters",
-  false
-);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -647,22 +639,12 @@ class RemoteSettingsClient extends EventEmitter {
           // Local data is either outdated or tampered.
           // In both cases we will fetch changes from server,
           // and make sure we overwrite local data.
-          const startSyncDB = Cu.now() * 1000;
           syncResult = await this._importChanges(
             localRecords,
             collectionLastModified,
             localMetadata,
             expectedTimestamp
           );
-          if (gTimingEnabled) {
-            const endSyncDB = Cu.now() * 1000;
-            PerformanceCounters.storeExecutionTime(
-              `remotesettings/${this.identifier}`,
-              "syncDB",
-              endSyncDB - startSyncDB,
-              "duration"
-            );
-          }
           if (sendEvents && this.hasListeners("sync")) {
             // If we have listeners for the "sync" event, then compute the lists of changes.
             // The records imported from the dump should be considered as "created" for the
@@ -833,21 +815,10 @@ class RemoteSettingsClient extends EventEmitter {
    */
   async _importJSONDump() {
     console.info(`${this.identifier} try to restore dump`);
-
-    const start = Cu.now() * 1000;
     const result = await RemoteSettingsWorker.importJSONDump(
       this.bucketName,
       this.collectionName
     );
-    if (gTimingEnabled) {
-      const end = Cu.now() * 1000;
-      PerformanceCounters.storeExecutionTime(
-        `remotesettings/${this.identifier}`,
-        "importJSONDump",
-        end - start,
-        "duration"
-      );
-    }
     if (result < 0) {
       console.debug(`${this.identifier} no dump available`);
     } else {
@@ -866,8 +837,6 @@ class RemoteSettingsClient extends EventEmitter {
    * @returns {Promise}
    */
   async _validateCollectionSignature(records, timestamp, metadata) {
-    const start = Cu.now() * 1000;
-
     if (!metadata?.signature) {
       throw new MissingSignatureError(this.identifier);
     }
@@ -897,15 +866,6 @@ class RemoteSettingsClient extends EventEmitter {
       ))
     ) {
       throw new InvalidSignatureError(this.identifier);
-    }
-    if (gTimingEnabled) {
-      const end = Cu.now() * 1000;
-      PerformanceCounters.storeExecutionTime(
-        `remotesettings/${this.identifier}`,
-        "validateCollectionSignature",
-        end - start,
-        "duration"
-      );
     }
   }
 
@@ -960,19 +920,9 @@ class RemoteSettingsClient extends EventEmitter {
       return syncResult;
     }
 
-    const start = Cu.now() * 1000;
     await this.db.importChanges(metadata, remoteTimestamp, remoteRecords, {
       clear: retry,
     });
-    if (gTimingEnabled) {
-      const end = Cu.now() * 1000;
-      PerformanceCounters.storeExecutionTime(
-        `remotesettings/${this.identifier}`,
-        "loadRawData",
-        end - start,
-        "duration"
-      );
-    }
 
     // Read the new local data, after updating.
     const newLocal = await this.db.list();
@@ -1158,19 +1108,9 @@ class RemoteSettingsClient extends EventEmitter {
     if (!this.filterFunc) {
       return data;
     }
-    const start = Cu.now() * 1000;
     const environment = cacheProxy(ClientEnvironmentBase);
     const dataPromises = data.map(e => this.filterFunc(e, environment));
     const results = await Promise.all(dataPromises);
-    if (gTimingEnabled) {
-      const end = Cu.now() * 1000;
-      PerformanceCounters.storeExecutionTime(
-        `remotesettings/${this.identifier}`,
-        "filterEntries",
-        end - start,
-        "duration"
-      );
-    }
     return results.filter(Boolean);
   }
 

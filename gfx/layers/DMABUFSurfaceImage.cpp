@@ -41,6 +41,7 @@ StaticRefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
 
 already_AddRefed<gfx::SourceSurface> DMABUFSurfaceImage::GetAsSourceSurface() {
+  StaticMutexAutoLock lock(sSnapshotContextMutex);
   if (!sSnapshotContext) {
     nsCString discardFailureId;
     sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
@@ -50,7 +51,6 @@ already_AddRefed<gfx::SourceSurface> DMABUFSurfaceImage::GetAsSourceSurface() {
     }
   }
 
-  StaticMutexAutoLock lock(sSnapshotContextMutex);
   sSnapshotContext->MakeCurrent();
 
   auto releaseTextures =

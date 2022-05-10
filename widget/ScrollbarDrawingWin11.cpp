@@ -163,10 +163,10 @@ ScrollbarDrawingWin11::ComputeScrollbarButtonColors(
 
 bool ScrollbarDrawingWin11::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
-    const LayoutDeviceRect& aRect, nsIFrame* aFrame,
-    const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, const Colors& aColors,
-    const DPIRatio& aDpiRatio) {
+    const LayoutDeviceRect& aRect, ScrollbarKind aScrollbarKind,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    const Colors& aColors, const DPIRatio& aDpiRatio) {
   if (!ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame)) {
     return true;
   }
@@ -189,9 +189,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
   float arrowPolygonYHover[] = {3.0f, 3.0f, 1.5f, -4.5f, -4.5f, 1.5f, 3.0f};
   float* arrowX = arrowPolygonX;
   float* arrowY = arrowPolygonY;
-  const bool horizontal =
-      aAppearance == StyleAppearance::ScrollbarbuttonRight ||
-      aAppearance == StyleAppearance::ScrollbarbuttonLeft;
+  const bool horizontal = aScrollbarKind == ScrollbarKind::Horizontal;
 
   const float verticalOffset = [&] {
     if (style != Style::Overlay) {
@@ -210,7 +208,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
     if (horizontal) {
       return -0.5f;
     }
-    return aFrame->GetWritingMode().IsPhysicalLTR() ? 0.5f : -0.5f;
+    return aScrollbarKind == ScrollbarKind::VerticalRight ? 0.5f : -0.5f;
   }();
   const float polygonSize = style == Style::Overlay
                                 ? float(kDefaultWinOverlayScrollbarSize)
@@ -263,7 +261,7 @@ bool ScrollbarDrawingWin11::PaintScrollbarButton(
 template <typename PaintBackendData>
 bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   sRGBColor thumbColor = ComputeScrollbarThumbColor(
@@ -275,13 +273,14 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
   const bool hovered =
       ScrollbarDrawing::IsParentScrollbarHoveredOrActive(aFrame) ||
       (style != Style::Overlay && IsScrollbarWidthThin(aStyle));
+  const bool horizontal = aScrollbarKind == ScrollbarKind::Horizontal;
   if (style == Style::ThickThumb) {
     constexpr float kHoveredThumbRatio =
         (1.0f - (11.0f / kDefaultWinScrollbarSize)) / 2.0f;
     constexpr float kUnhoveredThumbRatio =
         (1.0f - (9.0f / kDefaultWinScrollbarSize)) / 2.0f;
     const float ratio = hovered ? kHoveredThumbRatio : kUnhoveredThumbRatio;
-    if (aHorizontal) {
+    if (horizontal) {
       thumbRect.Deflate(0, thumbRect.height * ratio);
     } else {
       thumbRect.Deflate(thumbRect.width * ratio, 0);
@@ -296,7 +295,7 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
   const float defaultTrackSize = style == Style::Overlay
                                      ? float(kDefaultWinOverlayScrollbarSize)
                                      : float(kDefaultWinScrollbarSize);
-  const float trackSize = aHorizontal ? thumbRect.height : thumbRect.width;
+  const float trackSize = horizontal ? thumbRect.height : thumbRect.width;
   const float thumbSizeInPixels = hovered ? 6.0f : 2.0f;
 
   // The thumb might be a bit off-center, depending on our scrollbar styles.
@@ -316,24 +315,24 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
         // Keep the center intact.
         return (defaultTrackSize - thumbSizeInPixels) / 2.0f;
       }
-      // We want logical pixels from the thumb to the edge. For RTL and
+      // We want logical pixels from the thumb to the edge. For LTR and
       // horizontal scrollbars that means shifting down the scrollbar size minus
       // the thumb.
       constexpr float kSpaceToEdge = 3.0f;
-      if (aHorizontal || aFrame->GetWritingMode().IsPhysicalLTR()) {
+      if (horizontal || aScrollbarKind == ScrollbarKind::VerticalRight) {
         return defaultTrackSize - thumbSizeInPixels - kSpaceToEdge;
       }
       // For rtl is simpler.
       return kSpaceToEdge;
     }
-    if (aHorizontal) {
+    if (horizontal) {
       return hovered ? 5.0f : 7.0f;
     }
-    const bool ltr = aFrame->GetWritingMode().IsPhysicalLTR();
+    const bool ltr = aScrollbarKind == ScrollbarKind::VerticalRight;
     return ltr ? (hovered ? 6.0f : 8.0f) : (hovered ? 5.0f : 7.0f);
   }();
 
-  if (aHorizontal) {
+  if (horizontal) {
     thumbRect.y += shiftInPixels * trackSize / defaultTrackSize;
     thumbRect.height *= thumbSizeInPixels / defaultTrackSize;
   } else {
@@ -343,7 +342,7 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 
   if (style == Style::Overlay || hovered) {
     LayoutDeviceCoord radius =
-        (aHorizontal ? thumbRect.height : thumbRect.width) / 2.0f;
+        (horizontal ? thumbRect.height : thumbRect.width) / 2.0f;
 
     MOZ_ASSERT(aRect.Contains(thumbRect));
     ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, thumbRect, thumbColor,
@@ -357,21 +356,21 @@ bool ScrollbarDrawingWin11::DoPaintScrollbarThumb(
 }
 
 bool ScrollbarDrawingWin11::PaintScrollbarThumb(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aDrawTarget, aRect, aHorizontal, aFrame, aStyle,
-                               aElementState, aDocumentState, aColors,
+  return DoPaintScrollbarThumb(aDrawTarget, aRect, aScrollbarKind, aFrame,
+                               aStyle, aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
 
 bool ScrollbarDrawingWin11::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+  return DoPaintScrollbarThumb(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
