@@ -43,11 +43,8 @@ interface PeerConnectionImpl  {
 
   /* Adds the tracks created by GetUserMedia */
   [Throws]
-  RTCRtpTransceiver addTransceiver(RTCRtpTransceiverInit init,
-                                   DOMString kind,
-                                   MediaStreamTrack? sendTrack);
-  sequence<RTCRtpTransceiver> getTransceivers();
-
+  TransceiverImpl createTransceiverImpl(DOMString kind,
+                                        MediaStreamTrack? track);
   [Throws]
   void closeStreams();
 
