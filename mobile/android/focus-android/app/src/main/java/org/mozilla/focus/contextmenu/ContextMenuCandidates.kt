@@ -6,6 +6,8 @@ package org.mozilla.focus.contextmenu
 
 import android.content.Context
 import android.view.View
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
@@ -23,19 +25,19 @@ object ContextMenuCandidates {
         snackBarParentView: View,
         snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
     ): List<ContextMenuCandidate> {
-        val multiTabsConfig = FocusNimbus.features.tabs.value()
-        return if (multiTabsConfig.isMultiTab) {
-            listOf(
-                ContextMenuCandidate.createOpenInPrivateTabCandidate(
-                    context,
-                    tabsUseCases,
-                    snackBarParentView,
-                    snackbarDelegate
-                )
-            )
-        } else {
-            emptyList()
-        } + listOf(
+        val multiTabsFeature = FocusNimbus.features.tabs
+        val multiTabsConfig = multiTabsFeature.value()
+        return listOf(
+            ContextMenuCandidate.createOpenInPrivateTabCandidate(
+                context,
+                tabsUseCases,
+                snackBarParentView,
+                snackbarDelegate,
+                additionalValidation = { _: SessionState, _: HitResult ->
+                    multiTabsFeature.recordExposure()
+                    multiTabsConfig.isMultiTab
+                }
+            ),
             ContextMenuCandidate.createCopyLinkCandidate(
                 context,
                 snackBarParentView,
@@ -43,19 +45,17 @@ object ContextMenuCandidates {
             ),
             ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createShareLinkCandidate(context),
-            ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases)
-        ) + if (multiTabsConfig.isMultiTab) {
-            listOf(
-                ContextMenuCandidate.createOpenImageInNewTabCandidate(
-                    context,
-                    tabsUseCases,
-                    snackBarParentView,
-                    snackbarDelegate
-                )
-            )
-        } else {
-            emptyList()
-        } + listOf(
+            ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases),
+            ContextMenuCandidate.createOpenImageInNewTabCandidate(
+                context,
+                tabsUseCases,
+                snackBarParentView,
+                snackbarDelegate,
+                additionalValidation = { _: SessionState, _: HitResult ->
+                    multiTabsFeature.recordExposure()
+                    multiTabsConfig.isMultiTab
+                }
+            ),
             ContextMenuCandidate.createSaveImageCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createSaveVideoAudioCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createCopyImageLocationCandidate(
