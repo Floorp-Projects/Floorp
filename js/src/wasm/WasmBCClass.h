@@ -1619,6 +1619,9 @@ struct BaseCompiler final {
 
 #ifdef ENABLE_WASM_SIMD
   void emitVectorAndNot();
+#  ifdef ENABLE_WASM_RELAXED_SIMD
+  void emitDotI8x16I7x16AddS();
+#  endif
 
   void loadSplat(MemoryAccessDesc* access);
   void loadZero(MemoryAccessDesc* access);
@@ -1637,7 +1640,6 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitVectorShiftRightI64x2();
 #  endif
 #endif
-
   [[nodiscard]] bool emitIntrinsic();
 };
 
