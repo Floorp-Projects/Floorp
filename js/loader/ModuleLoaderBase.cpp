@@ -873,6 +873,14 @@ ModuleLoaderBase::~ModuleLoaderBase() {
   LOG(("ModuleLoaderBase::~ModuleLoaderBase %p", this));
 }
 
+void ModuleLoaderBase::Shutdown() {
+  MOZ_ASSERT(mFetchingModules.IsEmpty());
+  mFetchedModules.Clear();
+  mGlobalObject = nullptr;
+  mEventTarget = nullptr;
+  mLoader = nullptr;
+}
+
 bool ModuleLoaderBase::HasPendingDynamicImports() const {
   return !mDynamicImportRequests.isEmpty();
 }

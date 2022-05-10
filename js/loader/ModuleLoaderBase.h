@@ -180,6 +180,9 @@ class ModuleLoaderBase : public nsISupports {
                             nsISerialEventTarget* aEventTarget =
                                 mozilla::GetMainThreadSerialEventTarget());
 
+  // Called to break cycles during shutdown to prevent memory leaks.
+  void Shutdown();
+
   using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
   using ScriptLoadRequest = JS::loader::ScriptLoadRequest;
