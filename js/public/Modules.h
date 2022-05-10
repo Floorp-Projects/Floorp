@@ -191,6 +191,16 @@ extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
                                          Handle<JSObject*> moduleRecord,
                                          MutableHandleValue rval);
 
+enum ModuleErrorBehaviour {
+  // Report module evaluation errors asynchronously when the evaluation promise
+  // is rejected. This is used for web content.
+  ReportModuleErrorsAsync,
+
+  // Throw module evaluation errors synchronously by setting an exception on the
+  // context. Does not support modules that use top-level await.
+  ThrowModuleErrorsSync
+};
+
 /*
  * If a module evaluation fails, unwrap the resulting evaluation promise
  * and rethrow.
@@ -202,7 +212,8 @@ extern JS_PUBLIC_API bool ModuleEvaluate(JSContext* cx,
  * ModuleEvaluate must have completed prior to calling this.
  */
 extern JS_PUBLIC_API bool ThrowOnModuleEvaluationFailure(
-    JSContext* cx, Handle<JSObject*> evaluationPromise);
+    JSContext* cx, Handle<JSObject*> evaluationPromise,
+    ModuleErrorBehaviour errorBehaviour = ReportModuleErrorsAsync);
 
 /*
  * Get a list of the module specifiers used by a source text module
