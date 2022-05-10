@@ -527,6 +527,10 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
     key_val.second.AddPeer();
   }
   // Register new peer for every frame in flight.
+  // It is guaranteed, that no garbadge FrameInFlight objects will stay in
+  // memory because of adding new peer. Even if the new peer won't receive the
+  // frame, the frame will be removed by OnFrameRendered after next frame comes
+  // for the new peer. It is important because FrameInFlight is a large object.
   for (auto& key_val : captured_frames_in_flight_) {
     key_val.second.AddPeer();
   }
