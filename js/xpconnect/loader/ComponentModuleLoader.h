@@ -43,6 +43,17 @@ class ComponentModuleLoader : public JS::loader::ModuleLoaderBase {
                                            ModuleLoaderBase)
 
  private:
+  // An event target that dispatches runnables by executing them
+  // immediately. This is used to drive mozPromise dispatch for
+  // ComponentModuleLoader.
+  class SyncEventTarget : public nsISerialEventTarget {
+   public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIEVENTTARGET_FULL
+   private:
+    virtual ~SyncEventTarget() = default;
+  };
+
   already_AddRefed<ModuleLoadRequest> CreateStaticImport(
       nsIURI* aURI, ModuleLoadRequest* aParent) override;
 
