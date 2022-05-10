@@ -7627,7 +7627,6 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          const nsIFrame* aScrolledFrame,
                                          const nsRect& aScrolledRect,
                                          const nsMargin& aScrollPadding,
-                                         const Maybe<nsRect>& aSnapport,
                                          WritingMode aWritingModeOnScroller,
                                          ScrollSnapInfo& aSnapInfo) {
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
@@ -7638,13 +7637,6 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
   nsMargin scrollMargin = aFrame->StyleMargin()->GetScrollMargin();
   nsRect snapArea =
       InflateByScrollMargin(targetRect, scrollMargin, aScrolledRect);
-
-  // Ignore elements outside of the snapport when we scroll to the given
-  // destination.
-  // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
-  if (aSnapport && !aSnapport->Intersects(snapArea)) {
-    return;
-  }
 
   // These snap range shouldn't be involved with scroll-margin since we just
   // need the visible range of the target element.
@@ -7764,13 +7756,13 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
 /**
  * Collect the scroll positions corresponding to snap positions of frames in the
  * subtree rooted at |aFrame|, relative to |aScrolledFrame|, into |aSnapInfo|.
- * If |aSnapport| is given, elements outside of the range of |aSnapport| will be
- * ignored.
  */
-static void CollectScrollPositionsForSnap(
-    nsIFrame* aFrame, nsIFrame* aScrolledFrame, const nsRect& aScrolledRect,
-    const nsMargin& aScrollPadding, const Maybe<nsRect>& aSnapport,
-    WritingMode aWritingModeOnScroller, ScrollSnapInfo& aSnapInfo) {
+static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
+                                          nsIFrame* aScrolledFrame,
+                                          const nsRect& aScrolledRect,
+                                          const nsMargin& aScrollPadding,
+                                          WritingMode aWritingModeOnScroller,
+                                          ScrollSnapInfo& aSnapInfo) {
   // Snap positions only affect the nearest ancestor scroll container on the
   // element's containing block chain.
   nsIScrollableFrame* sf = do_QueryFrame(aFrame);
@@ -7786,12 +7778,12 @@ static void CollectScrollPositionsForSnap(
           styleDisplay->mScrollSnapAlign.block !=
               StyleScrollSnapAlignKeyword::None) {
         AppendScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
-                                     aScrollPadding, aSnapport,
-                                     aWritingModeOnScroller, aSnapInfo);
+                                     aScrollPadding, aWritingModeOnScroller,
+                                     aSnapInfo);
       }
       CollectScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
-                                    aScrollPadding, aSnapport,
-                                    aWritingModeOnScroller, aSnapInfo);
+                                    aScrollPadding, aWritingModeOnScroller,
+                                    aSnapInfo);
     }
   }
 }
@@ -7867,20 +7859,12 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
   nsRect snapport = GetScrollPortRect();
   nsMargin scrollPadding = GetScrollPadding();
-
-  Maybe<nsRect> snapportOnDestination;
-  if (aDestination) {
-    snapport.MoveTo(aDestination.value());
-    snapport.Deflate(scrollPadding);
-    snapportOnDestination.emplace(snapport);
-  } else {
-    snapport.Deflate(scrollPadding);
-  }
+  snapport.Deflate(scrollPadding);
 
   result.mSnapportSize = snapport.Size();
   CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                GetScrolledRect(), scrollPadding,
-                                snapportOnDestination, writingMode, result);
+                                GetScrolledRect(), scrollPadding, writingMode,
+                                result);
   return result;
 }
 
