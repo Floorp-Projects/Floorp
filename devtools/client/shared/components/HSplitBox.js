@@ -126,7 +126,7 @@ class HSplitBox extends Component {
     /* eslint-disable no-shadow */
     const { start, end, startWidth, minStartWidth, minEndWidth } = this.props;
     assert(
-      startWidth => 0 && startWidth <= 1,
+      startWidth >= 0 && startWidth <= 1,
       "0 <= this.props.startWidth <= 1"
     );
     /* eslint-enable */
