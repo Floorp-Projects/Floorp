@@ -29,8 +29,11 @@ TEST_F(APZCSnappingTesterMock, Bug1265510) {
 
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(0 * AppUnitsPerCSSPixel()), nsRect()));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()), nsRect()));
 
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics&) {
     aSm.SetSnapInfo(ScrollSnapInfo(snap));
@@ -100,8 +103,10 @@ TEST_F(APZCSnappingTesterMock, Snap_After_Pinch) {
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
 
-  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(0 * AppUnitsPerCSSPixel()), nsRect()));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()), nsRect()));
 
   // Save the scroll snap info on the root APZC.
   // Also mark the root APZC as "root content", since APZC only allows
@@ -151,8 +156,10 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithZeroVelocity) {
   // Set up two snap points, 30 and 100.
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapPositionY.AppendElement(30 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(30 * AppUnitsPerCSSPixel()), nsRect()));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()), nsRect()));
 
   // Save the scroll snap info on the root APZC.
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics& aMetrics) {
@@ -220,8 +227,10 @@ TEST_F(APZCSnappingTesterMock, SnapOnPanEndWithPositiveVelocity) {
   // Set up two snap points, 30 and 100.
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
-  snap.mSnapPositionY.AppendElement(30 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(30 * AppUnitsPerCSSPixel()), nsRect()));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()), nsRect()));
 
   // Save the scroll snap info on the root APZC.
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics& aMetrics) {

@@ -28,8 +28,10 @@ TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
   ScrollSnapInfo snap;
   snap.mScrollSnapStrictnessY = StyleScrollSnapStrictness::Mandatory;
 
-  snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
-  snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(0 * AppUnitsPerCSSPixel()), nsRect()));
+  snap.mSnapTargets.AppendElement(ScrollSnapInfo::SnapTarget(
+      Nothing(), Some(100 * AppUnitsPerCSSPixel()), nsRect()));
 
   ModifyFrameMetrics(root, [&](ScrollMetadata& aSm, FrameMetrics&) {
     aSm.SetSnapInfo(ScrollSnapInfo(snap));
