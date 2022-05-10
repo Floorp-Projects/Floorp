@@ -14,6 +14,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
+#include "gfxUtils.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
@@ -138,6 +139,11 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.mDisplay.height = spsdata.display_height;
       mCurrentConfig.mColorDepth = spsdata.ColorDepth();
       mCurrentConfig.mColorSpace = Some(spsdata.ColorSpace());
+      // spsdata.transfer_characteristics has the same values as
+      // gfx::CICP::TransferCharacteristics.
+      mCurrentConfig.mTransferFunction = gfxUtils::CicpToTransferFunction(
+          static_cast<gfx::CICP::TransferCharacteristics>(
+              spsdata.transfer_characteristics));
       mCurrentConfig.mColorRange = spsdata.video_full_range_flag
                                        ? gfx::ColorRange::FULL
                                        : gfx::ColorRange::LIMITED;
@@ -246,6 +252,14 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     }
     mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
     mCurrentConfig.mColorSpace = Some(info.ColorSpace());
+
+    // We don't update the transfer function here, because VPX bitstream
+    // doesn't specify the transfer function. Instead, we keep the transfer
+    // function (if any) that was set in mCurrentConfig when we were created.
+    // If a video changes colorspaces away from BT2020, we won't clear
+    // mTransferFunction, in case the video changes back to BT2020 and we
+    // need the value again.
+
     mCurrentConfig.mColorRange = info.ColorRange();
     if (mCodec == VPXDecoder::Codec::VP9) {
       VPXDecoder::GetVPCCBox(mCurrentConfig.mExtraData, info);
