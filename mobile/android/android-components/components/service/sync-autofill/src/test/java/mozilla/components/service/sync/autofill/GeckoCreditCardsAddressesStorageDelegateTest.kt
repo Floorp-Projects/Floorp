@@ -6,11 +6,11 @@ package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -40,6 +41,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     private lateinit var storage: AutofillCreditCardsAddressesStorage
     private lateinit var securePrefs: SecureAbove22Preferences
     private lateinit var delegate: GeckoCreditCardsAddressesStorageDelegate
+    private val validationDelegate: DefaultCreditCardValidationDelegate = mock()
 
     init {
         testContext.getDatabasePath(AUTOFILL_DB_NAME)!!.parentFile!!.mkdirs()
@@ -49,8 +51,8 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     fun before() {
         // forceInsecure is set in the tests because a keystore wouldn't be configured in the test environment.
         securePrefs = SecureAbove22Preferences(testContext, "autofill", forceInsecure = true)
-        storage = AutofillCreditCardsAddressesStorage(testContext, lazy { securePrefs })
-        delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope)
+        storage = spy(AutofillCreditCardsAddressesStorage(testContext, lazy { securePrefs }))
+        delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, scope, validationDelegate)
     }
 
     @Test
@@ -75,8 +77,8 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
         }
 
     @Test
-    fun `WHEN onAddressFetch is called THEN the storage is called to gett all addresses`() {
-        scope.launch {
+    fun `WHEN onAddressFetch is called THEN the storage is called to get all addresses`() {
+        runTest {
             delegate.onAddressesFetch()
             verify(storage, times(1)).getAllAddresses()
         }
@@ -112,22 +114,24 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
     @Test
     fun `GIVEN a new credit card WHEN onCreditCardSave is called THEN it adds a new credit card in storage`() {
-        scope.launch {
+        runTest {
             val billingName = "Jon Doe"
             val cardNumber = "4111111111111111"
             val expiryMonth = 12L
             val expiryYear = 2028L
             val cardType = "amex"
 
-            delegate.onCreditCardSave(
-                CreditCardEntry(
-                    name = billingName,
-                    number = cardNumber,
-                    expiryMonth = expiryMonth.toString(),
-                    expiryYear = expiryYear.toString(),
-                    cardType = cardType
-                )
+            val creditCardEntry = CreditCardEntry(
+                name = billingName,
+                number = cardNumber,
+                expiryMonth = expiryMonth.toString(),
+                expiryYear = expiryYear.toString(),
+                cardType = cardType
             )
+
+            doReturn(CreditCardValidationDelegate.Result.CanBeCreated).`when`(validationDelegate).shouldCreateOrUpdate(creditCardEntry)
+
+            delegate.onCreditCardSave(creditCardEntry)
 
             verify(storage, times(1)).addCreditCard(
                 creditCardFields = NewCreditCardFields(
@@ -144,16 +148,24 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
     @Test
     fun `GIVEN an existing credit card WHEN onCreditCardSave is called THEN it updates the existing credit card in storage`() {
-        scope.launch {
+        runTest {
             val billingName = "Jon Doe"
             val cardNumber = "4111111111111111"
             val expiryMonth = 12L
             val expiryYear = 2028L
             val cardType = "amex"
 
+            val creditCardEntry = CreditCardEntry(
+                name = billingName,
+                number = cardNumber,
+                expiryMonth = expiryMonth.toString(),
+                expiryYear = expiryYear.toString(),
+                cardType = cardType
+            )
+
             val creditCard = storage.addCreditCard(
                 NewCreditCardFields(
-                    billingName = "Jon Doe",
+                    billingName = billingName,
                     plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
                     cardNumberLast4 = "1111",
                     expiryMonth = expiryMonth,
@@ -161,24 +173,18 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
                     cardType = cardType
                 )
             )
+            doReturn(CreditCardValidationDelegate.Result.CanBeUpdated(creditCard)).`when`(validationDelegate).shouldCreateOrUpdate(creditCardEntry)
 
             delegate.onCreditCardSave(
-                CreditCardEntry(
-                    guid = creditCard.guid,
-                    name = billingName,
-                    number = "4111111111111112",
-                    expiryMonth = expiryMonth.toString(),
-                    expiryYear = expiryYear.toString(),
-                    cardType = cardType
-                )
+                creditCardEntry
             )
 
             verify(storage, times(1)).updateCreditCard(
                 guid = creditCard.guid,
                 creditCardFields = UpdatableCreditCardFields(
                     billingName = billingName,
-                    cardNumber = CreditCardNumber.Plaintext("4111111111111112"),
-                    cardNumberLast4 = "4111111111111112".last4Digits(),
+                    cardNumber = CreditCardNumber.Plaintext("4111111111111111"),
+                    cardNumberLast4 = "4111111111111111".last4Digits(),
                     expiryMonth = expiryMonth,
                     expiryYear = expiryYear,
                     cardType = cardType

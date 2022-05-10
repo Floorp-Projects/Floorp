@@ -26,10 +26,13 @@ import mozilla.components.support.ktx.kotlin.last4Digits
  * @param storage The [CreditCardsAddressesStorage] used for looking up addresses and credit cards to autofill.
  * @param scope [CoroutineScope] for long running operations. Defaults to using the [Dispatchers.IO].
  * @param isCreditCardAutofillEnabled callback allowing to limit [storage] operations if autofill is disabled.
+ * @param validationDelegate The [DefaultCreditCardValidationDelegate] used to check if a credit card
+ * can be saved in [storage] and returns information about why it can or cannot
  */
 class GeckoCreditCardsAddressesStorageDelegate(
     private val storage: Lazy<CreditCardsAddressesStorage>,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val validationDelegate: DefaultCreditCardValidationDelegate = DefaultCreditCardValidationDelegate(storage),
     private val isCreditCardAutofillEnabled: () -> Boolean = { false }
 ) : CreditCardsAddressesStorageDelegate {
 
@@ -64,8 +67,6 @@ class GeckoCreditCardsAddressesStorageDelegate(
         }
 
     override suspend fun onCreditCardSave(creditCard: CreditCardEntry) {
-        val validationDelegate = DefaultCreditCardValidationDelegate(storage)
-
         scope.launch {
             when (val result = validationDelegate.shouldCreateOrUpdate(creditCard)) {
                 is CreditCardValidationDelegate.Result.CanBeCreated -> {
