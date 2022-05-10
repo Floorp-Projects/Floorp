@@ -99,7 +99,7 @@ class WebDriverBiDi {
       // Also when closing the application while it's still starting up can
       // cause shutdown hangs. As such WebDriver BiDi will return a new session
       // once the initial application window has finished initializing.
-      logger.debug(`Waiting for initial application window to be loaded`);
+      logger.debug(`Waiting for initial application window`);
       await this.agent.browserStartupFinished;
 
       this.agent.server.registerPathHandler(session.path, session);
