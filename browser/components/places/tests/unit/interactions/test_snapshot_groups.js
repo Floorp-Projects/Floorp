@@ -817,3 +817,24 @@ add_task(async function test_snapshots_remain_hidden_after_updateUrls() {
     { url: TEST_URL4 },
   ]);
 });
+
+add_task(async function test_similar_snapshot_titles_difference_indication() {
+  await delete_all_groups();
+
+  let group1 = await SnapshotGroups.add(
+    {
+      title: "Test Group 1",
+      builder: "domain",
+    },
+    [TEST_URL1, TEST_URL2]
+  );
+  let snapshots = await SnapshotGroups.getSnapshots({
+    id: group1,
+    sortBy: "last_interaction_at",
+  });
+
+  await assertSnapshotList(snapshots, [
+    { url: TEST_URL2, titleDifferentIndex: 35 },
+    { url: TEST_URL1, titleDifferentIndex: 35 },
+  ]);
+});
