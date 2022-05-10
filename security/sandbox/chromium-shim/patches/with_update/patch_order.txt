@@ -29,3 +29,4 @@ lower_SDK_version_requirement.patch
 add_CET_STRICT_MODE.patch
 broker_complex_line_breaks.patch
 allow_reparse_points.patch
+transfer_mitigations_to_child.patch

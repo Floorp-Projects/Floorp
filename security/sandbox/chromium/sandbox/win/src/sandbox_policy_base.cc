@@ -76,6 +76,7 @@ namespace sandbox {
 
 SANDBOX_INTERCEPT IntegrityLevel g_shared_delayed_integrity_level;
 SANDBOX_INTERCEPT MitigationFlags g_shared_delayed_mitigations;
+SANDBOX_INTERCEPT MitigationFlags g_shared_mitigations;
 
 // Initializes static members. alternate_desktop_handle_ is a desktop on
 // alternate_winstation_handle_, alternate_desktop_local_winstation_handle_ is a
@@ -557,6 +558,14 @@ ResultCode PolicyBase::AddTarget(TargetProcess* target) {
                                  &g_shared_delayed_mitigations,
                                  sizeof(g_shared_delayed_mitigations));
   g_shared_delayed_mitigations = 0;
+  if (SBOX_ALL_OK != ret)
+    return ret;
+
+  // Share mitigations so that they can be used in the child.
+  g_shared_mitigations = mitigations_;
+  ret = target->TransferVariable("g_shared_mitigations", &g_shared_mitigations,
+                                 sizeof(g_shared_mitigations));
+  g_shared_mitigations = 0;
   if (SBOX_ALL_OK != ret)
     return ret;
 
