@@ -731,7 +731,7 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
   // Remove any residual families that have no font entries (i.e., they were
   // not defined at all by the updated set of @font-face rules).
   for (auto it = mUserFontSet->mFontFamilies.Iter(); !it.Done(); it.Next()) {
-    if (it.Data()->GetFontList().IsEmpty()) {
+    if (!it.Data()->FontListLength()) {
       it.Remove();
     }
   }
@@ -1312,6 +1312,7 @@ void FontFaceSet::CacheFontLoadability() {
 
   // TODO(emilio): We could do it a bit more incrementally maybe?
   for (const auto& fontFamily : mUserFontSet->mFontFamilies.Values()) {
+    fontFamily->ReadLock();
     for (const gfxFontEntry* entry : fontFamily->GetFontList()) {
       if (!entry->mIsUserFontContainer) {
         continue;
@@ -1327,6 +1328,7 @@ void FontFaceSet::CacheFontLoadability() {
             &src, [&] { return IsFontLoadAllowed(src); });
       }
     }
+    fontFamily->ReadUnlock();
   }
 }
 
