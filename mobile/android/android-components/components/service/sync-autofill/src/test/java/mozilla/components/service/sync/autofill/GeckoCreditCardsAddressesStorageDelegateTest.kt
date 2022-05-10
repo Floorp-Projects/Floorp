@@ -7,6 +7,7 @@ package mozilla.components.service.sync.autofill
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
@@ -24,6 +25,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -81,8 +83,8 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     }
 
     @Test
-    fun `GIVEN autofill enabled WHEN onCreditCardsFetch is called THEN it returns all stored cards`() {
-        scope.launch {
+    fun `GIVEN autofill enabled WHEN onCreditCardsFetch is called THEN it returns all stored cards`() =
+        runTest {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
             doReturn(storedCards).`when`(storage).getAllCreditCards()
@@ -93,11 +95,10 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
             verify(storage, times(1)).getAllCreditCards()
             assertEquals(storedCards, result)
         }
-    }
 
     @Test
-    fun `GIVEN autofill disabled WHEN onCreditCardsFetch is called THEN it returns an empty list of cards`() {
-        scope.launch {
+    fun `GIVEN autofill disabled WHEN onCreditCardsFetch is called THEN it returns an empty list of cards`() =
+        runTest {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
             doReturn(storedCards).`when`(storage).getAllCreditCards()
@@ -105,10 +106,9 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
             val result = delegate.onCreditCardsFetch()
 
-            verify(storage, times(1)).getAllCreditCards()
+            verify(storage, never()).getAllCreditCards()
             assertEquals(emptyList<CreditCard>(), result)
         }
-    }
 
     @Test
     fun `GIVEN a new credit card WHEN onCreditCardSave is called THEN it adds a new credit card in storage`() {
