@@ -53,6 +53,10 @@ class DecryptingInputStreamBase : public nsIInputStream,
   using nsICloneableInputStream::GetCloneable;
   NS_IMETHOD GetCloneable(bool* aCloneable) final;
 
+  void SerializedComplexity(uint32_t aMaxSize, uint32_t* aSizeUsed,
+                            uint32_t* aPipes,
+                            uint32_t* aTransferables) override;
+
   using nsIIPCSerializableInputStream::Serialize;
   void Serialize(mozilla::ipc::InputStreamParams& aParams,
                  FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
