@@ -2593,7 +2593,7 @@ static bool OnRootModuleRejected(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   HandleValue error = args.get(0);
 
-  js::ReportExceptionClosure reportExn(error);
+  ReportExceptionClosure reportExn(error);
   PrepareScriptEnvironmentAndInvoke(cx, cx->global(), reportExn);
 
   args.rval().setUndefined();
@@ -2601,8 +2601,27 @@ static bool OnRootModuleRejected(JSContext* cx, unsigned argc, Value* vp) {
 };
 
 bool js::OnModuleEvaluationFailure(JSContext* cx,
-                                   HandleObject evaluationPromise) {
+                                   HandleObject evaluationPromise,
+                                   JS::ModuleErrorBehaviour errorBehaviour) {
   if (evaluationPromise == nullptr) {
+    return false;
+  }
+
+  // To allow module evaluation to happen synchronously throw the error
+  // immediately. This assumes that any error will already have caused the
+  // promise to be rejected, and doesn't support top-level await.
+  if (errorBehaviour == JS::ThrowModuleErrorsSync) {
+    JS::PromiseState state = JS::GetPromiseState(evaluationPromise);
+    MOZ_DIAGNOSTIC_ASSERT(state == JS::PromiseState::Rejected ||
+                          state == JS::PromiseState::Fulfilled);
+
+    JS::SetSettledPromiseIsHandled(cx, evaluationPromise);
+    if (state == JS::PromiseState::Fulfilled) {
+      return true;
+    }
+
+    RootedValue error(cx, JS::GetPromiseResult(evaluationPromise));
+    JS_SetPendingException(cx, error);
     return false;
   }
 
