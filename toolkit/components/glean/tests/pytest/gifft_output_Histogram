@@ -8,6 +8,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Tuple.h"
 #include "mozilla/DataMutex.h"
 #include "nsThreadUtils.h"
 
@@ -18,8 +19,38 @@ namespace mozilla::glean {
 
 using Telemetry::HistogramID;
 
-typedef uint64_t TimerId; // Same as in TimingDistribution.h.
-typedef StaticDataMutex<UniquePtr<nsTHashMap<TimerId, TimeStamp>>> TimerToStampMutex;
+
+using MetricId = uint32_t; // Same type as in api/src/private/mod.rs
+using TimerId = uint64_t; // Same as in TimingDistribution.h.
+using MetricTimerTuple = Tuple<MetricId, TimerId>;
+class MetricTimerTupleHashKey : public PLDHashEntryHdr {
+ public:
+  using KeyType = const MetricTimerTuple&;
+  using KeyTypePointer = const MetricTimerTuple*;
+
+  explicit MetricTimerTupleHashKey(KeyTypePointer aKey) : mValue(*aKey) {}
+  MetricTimerTupleHashKey(MetricTimerTupleHashKey&& aOther)
+      : PLDHashEntryHdr(std::move(aOther)),
+        mValue(std::move(aOther.mValue)) {}
+  ~MetricTimerTupleHashKey() = default;
+
+  KeyType GetKey() const { return mValue; }
+  bool KeyEquals(KeyTypePointer aKey) const {
+    return Get<0>(*aKey) == Get<0>(mValue) && Get<1>(*aKey) == Get<1>(mValue);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) {
+    // Chosen because this is how nsIntegralHashKey does it.
+    return HashGeneric(Get<0>(*aKey), Get<1>(*aKey));
+  }
+  enum { ALLOW_MEMMOVE = true };
+
+ private:
+  const MetricTimerTuple mValue;
+};
+
+typedef StaticDataMutex<UniquePtr<nsTHashMap<MetricTimerTupleHashKey, TimeStamp>>> TimerToStampMutex;
 static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
   static TimerToStampMutex sTimerIdToStarts("sTimerIdToStarts");
   auto lock = sTimerIdToStarts.Lock();
@@ -28,7 +59,7 @@ static inline Maybe<TimerToStampMutex::AutoLock> GetTimerIdToStartsLock() {
     return Nothing();
   }
   if (!*lock) {
-    *lock = MakeUnique<nsTHashMap<TimerId, TimeStamp>>();
+    *lock = MakeUnique<nsTHashMap<MetricTimerTupleHashKey, TimeStamp>>();
     RefPtr<nsIRunnable> cleanupFn = NS_NewRunnableFunction(__func__, [&] {
       if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMWillShutdown)) {
         auto lock = sTimerIdToStarts.Lock();
