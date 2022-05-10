@@ -22,7 +22,7 @@ describe("<HelpText>", () => {
     assert.ok(
       shallowWrapper
         .find(Localized)
-        .findWhere(n => n.text === { string_id: "test_id" })
+        .findWhere(n => n.text.string_id === "test_id")
     );
     assert.lengthOf(shallowWrapper.find("p.helptext"), 1);
     assert.lengthOf(shallowWrapper.find("img[data-l10n-name='help-img']"), 1);
