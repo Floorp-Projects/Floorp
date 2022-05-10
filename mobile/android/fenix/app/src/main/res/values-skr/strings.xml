@@ -16,6 +16,8 @@
     <string name="content_description_disable_private_browsing_button">نجی براؤزنگ  غیرفعال کرو</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
     <string name="search_hint">ڳولو یا پتہ درج کرو</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d چُݨیج ڳیا</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">نواں مجموعہ شامل کرو</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -30,6 +32,8 @@
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">حالیہ کتاب نشان</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">حالیہ محفوظ تھیاں نشانیاں</string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">سارے ݙکھاؤ</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
