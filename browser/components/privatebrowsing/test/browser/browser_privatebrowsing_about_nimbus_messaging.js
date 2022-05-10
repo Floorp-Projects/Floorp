@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from head.js */
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 /* Tests that use TelemetryTestUtils.assertEvents (at the very least, those with
  * `{ process: "content" }`) seem to be super flaky and intermittent-prone when they
@@ -15,6 +16,7 @@ add_task(async function test_experiment_messaging_system() {
     id: "PB_NEWTAB_MESSAGING_SYSTEM",
     template: "pb_newtab",
     content: {
+      hideDefault: true,
       promoEnabled: true,
       infoEnabled: true,
       infoBody: "fluent:about-private-browsing-info-title",
@@ -27,22 +29,6 @@ add_task(async function test_experiment_messaging_system() {
     priority: 5,
     targeting: "true",
   });
-
-  await TestUtils.waitForCondition(() => {
-    Services.telemetry.clearEvents();
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    info("waiting for events to clear, but:");
-    info(JSON.stringify(events));
-    return !events || !events.length;
-  }, "Waiting for telemetry events to get cleared");
-  Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-  Services.telemetry.clearEvents();
 
   let { win, tab } = await openTabAndWaitForRender();
 
@@ -80,23 +66,84 @@ add_task(async function test_experiment_messaging_system() {
     );
   });
 
-  await waitForTelemetryEvent("normandy");
+  await BrowserTestUtils.closeWindow(win);
+  await doExperimentCleanup();
+});
 
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        method: "expose",
-        extra: {
-          featureId: "pbNewtab",
+add_task(async function test_experiment_promo_with_spotlight() {
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_SPOTLIGHT",
+    template: "pb_newtab",
+    content: {
+      hideDefault: true,
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/",
+      promoLinkType: "button",
+      promoButton: {
+        action: {
+          type: "SHOW_SPOTLIGHT",
+          data: {
+            content: {},
+          },
         },
       },
-    ],
-    { category: "normandy" },
-    { process: "content" }
+    },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
+  });
+
+  let { win, tab } = await openTabAndWaitForRender();
+  const sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    sandbox.restore();
+    BrowserTestUtils.closeWindow(win);
+  });
+
+  let windowGlobalParent =
+    win.gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+  let aboutPrivateBrowsingActor = windowGlobalParent.getActor(
+    "AboutPrivateBrowsing"
   );
 
-  Services.telemetry.clearEvents();
+  let specialActionStub = sandbox.stub(
+    aboutPrivateBrowsingActor,
+    "receiveMessage"
+  );
 
-  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.spawn(tab, [], async function() {
+    ok(
+      content.document.querySelector(".promo"),
+      "should render the promo experiment message"
+    );
+
+    content.document.querySelector(".promo button").click();
+    info("promo button clicked");
+  });
+
+  Assert.equal(
+    specialActionStub.callCount,
+    1,
+    "Should be called by promo action"
+  );
+
+  let promoAction = specialActionStub.firstCall.args[0].data;
+
+  Assert.equal(
+    promoAction.type,
+    "SHOW_SPOTLIGHT",
+    "Should be called with promo button spotlight action"
+  );
+
+  Assert.equal(
+    promoAction.data.content.metrics,
+    "allow",
+    "Should be called with metrics property set as allow for experiments"
+  );
+
   await doExperimentCleanup();
 });
