@@ -103,7 +103,8 @@ PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
         resolve()
       );
     });
-  }
+  },
+  true
 );
 
 PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
@@ -133,5 +134,6 @@ PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
         resolve()
       );
     });
-  }
+  },
+  true
 );
