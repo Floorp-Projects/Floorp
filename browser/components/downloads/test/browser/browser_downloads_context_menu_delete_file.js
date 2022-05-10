@@ -3,6 +3,9 @@
 
 "use strict";
 
+var { DownloadHistory } = ChromeUtils.import(
+  "resource://gre/modules/DownloadHistory.jsm"
+);
 let gDownloadDir;
 let downloads = [];
 
@@ -30,8 +33,11 @@ async function createDownloadFiles() {
   });
 }
 
+add_setup(startServer);
+
 registerCleanupFunction(async function() {
   await task_resetState();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_download_deleteFile() {
@@ -124,4 +130,125 @@ add_task(async function test_download_deleteFile() {
 
   DownloadsPanel.hidePanel();
   await hiddenPromise;
+});
+
+add_task(async function test_about_downloads_deleteFile_for_history_download() {
+  await task_resetState();
+  await PlacesUtils.history.clear();
+
+  if (!gDownloadDir) {
+    gDownloadDir = await setDownloadDir();
+  }
+
+  let targetFile = await createDownloadedFile(
+    PathUtils.join(gDownloadDir, "test-download.txt"),
+    "blah blah blah"
+  );
+  let endTime;
+  try {
+    endTime = targetFile.creationTime;
+  } catch (e) {
+    endTime = Date.now();
+  }
+  let download = {
+    source: {
+      url: httpUrl(targetFile.leafName),
+      isPrivate: false,
+    },
+    target: {
+      path: targetFile.path,
+      size: targetFile.fileSize,
+    },
+    succeeded: true,
+    stopped: true,
+    endTime,
+    fileSize: targetFile.fileSize,
+    state: 1,
+  };
+
+  function promiseWaitForVisit(aUrl) {
+    return new Promise(resolve => {
+      function listener(aEvents) {
+        Assert.equal(aEvents.length, 1);
+        let event = aEvents[0];
+        Assert.equal(event.type, "page-visited");
+        if (event.url == aUrl) {
+          PlacesObservers.removeListener(["page-visited"], listener);
+          resolve([
+            event.visitTime,
+            event.transitionType,
+            event.lastKnownTitle,
+          ]);
+        }
+      }
+      PlacesObservers.addListener(["page-visited"], listener);
+    });
+  }
+
+  function waitForAnnotation(sourceUriSpec, annotationName) {
+    return TestUtils.waitForCondition(async () => {
+      let pageInfo = await PlacesUtils.history.fetch(sourceUriSpec, {
+        includeAnnotations: true,
+      });
+      return pageInfo && pageInfo.annotations.has(annotationName);
+    }, `Should have found annotation ${annotationName} for ${sourceUriSpec}.`);
+  }
+
+  // Add the download to history using the XPCOM service, then use the
+  // DownloadHistory module to save the associated metadata.
+  let promiseFileAnnotation = waitForAnnotation(
+    download.source.url,
+    "downloads/destinationFileURI"
+  );
+  let promiseMetaAnnotation = waitForAnnotation(
+    download.source.url,
+    "downloads/metaData"
+  );
+  let promiseVisit = promiseWaitForVisit(download.source.url);
+  await DownloadHistory.addDownloadToHistory(download);
+  await promiseVisit;
+  await DownloadHistory.updateMetaData(download);
+  await Promise.all([promiseFileAnnotation, promiseMetaAnnotation]);
+
+  let win = await openLibrary("Downloads");
+  registerCleanupFunction(function() {
+    win?.close();
+  });
+
+  let box = win.document.getElementById("downloadsListBox");
+  ok(box, "Should have list of downloads");
+  is(box.children.length, 1, "Should have 1 download.");
+  let kid = box.firstChild;
+  let desc = kid.querySelector(".downloadTarget");
+  let dl = kid._shell.download;
+  // This would just be an `is` check, but stray temp files
+  // if this test (or another in this dir) ever fails could throw that off.
+  ok(
+    desc.value.includes("test-download"),
+    `Label '${desc.value}' should include 'test-download'`
+  );
+  ok(kid.selected, "First item should be selected.");
+  ok(dl.placesNode, "Download should have history.");
+  ok(targetFile.exists(), "Download target should exist.");
+  let contextMenu = win.document.getElementById("downloadsContextMenu");
+  let popupShownPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    kid,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await popupShownPromise;
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(
+    contextMenu,
+    "popuphidden"
+  );
+  contextMenu.activateItem(
+    contextMenu.querySelector(".downloadDeleteFileMenuItem")
+  );
+  await popupHiddenPromise;
+  await TestUtils.waitForCondition(() => !targetFile.exists());
+  info("History download target deleted.");
 });
