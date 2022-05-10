@@ -80,5 +80,67 @@ nsresult ComponentModuleLoader::CompileFetchedModule(
 
 void ComponentModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {}
 
+//////////////////////////////////////////////////////////////
+// ComponentModuleLoader::SyncEventTarget
+//////////////////////////////////////////////////////////////
+
+NS_IMPL_ADDREF(ComponentModuleLoader::SyncEventTarget)
+NS_IMPL_RELEASE(ComponentModuleLoader::SyncEventTarget)
+
+NS_INTERFACE_MAP_BEGIN(ComponentModuleLoader::SyncEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsISerialEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsIEventTarget)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::DispatchFromScript(
+    nsIRunnable* aRunnable, uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> event(aRunnable);
+  return Dispatch(event.forget(), aFlags);
+}
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::Dispatch(
+    already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) {
+  MOZ_ASSERT(IsOnCurrentThreadInfallible());
+
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  runnable->Run();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::DelayedDispatch(
+    already_AddRefed<nsIRunnable>, uint32_t) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::RegisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::UnregisterShutdownTask(
+    nsITargetShutdownTask* aTask) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+ComponentModuleLoader::SyncEventTarget::IsOnCurrentThread(
+    bool* aIsOnCurrentThread) {
+  MOZ_ASSERT(aIsOnCurrentThread);
+  *aIsOnCurrentThread = IsOnCurrentThreadInfallible();
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(bool)
+ComponentModuleLoader::SyncEventTarget::IsOnCurrentThreadInfallible() {
+  return NS_IsMainThread();
+}
+
 }  // namespace loader
 }  // namespace mozilla
