@@ -687,13 +687,6 @@ struct ParamTraits<mozilla::gfx::ColorDepth>
           mozilla::gfx::ColorDepth::_Last> {};
 
 template <>
-struct ParamTraits<mozilla::gfx::TransferFunction>
-    : public ContiguousEnumSerializerInclusive<
-          mozilla::gfx::TransferFunction,
-          mozilla::gfx::TransferFunction::_First,
-          mozilla::gfx::TransferFunction::_Last> {};
-
-template <>
 struct ParamTraits<mozilla::gfx::ColorRange>
     : public ContiguousEnumSerializerInclusive<
           mozilla::gfx::ColorRange, mozilla::gfx::ColorRange::_First,

@@ -232,9 +232,6 @@ class gfxUtils {
       const mozilla::gfx::CICP::ColourPrimaries,
       mozilla::LazyLogModule& aLogger);
 
-  static mozilla::Maybe<mozilla::gfx::TransferFunction> CicpToTransferFunction(
-      const mozilla::gfx::CICP::TransferCharacteristics);
-
   /**
    * Creates a copy of aSurface, but having the SurfaceFormat aFormat.
    *
