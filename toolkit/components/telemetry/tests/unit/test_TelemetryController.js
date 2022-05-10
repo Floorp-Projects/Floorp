@@ -682,14 +682,8 @@ add_task(async function test_telemetryCleanFHRDatabase() {
 });
 
 add_task(async function test_sendNewProfile() {
-  if (
-    gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
-  ) {
+  if (gIsAndroid) {
     // We don't support the pingsender on Android, yet, see bug 1335917.
-    // We also don't suppor the pingsender testing on Treeherder for
-    // Linux 32 bit (due to missing libraries). So skip it there too.
-    // See bug 1310703 comment 78.
     return;
   }
 
@@ -762,12 +756,12 @@ add_task(async function test_sendNewProfile() {
   // Check that the new-profile ping is sent at shutdown using the pingsender.
   Assert.equal(
     req.getHeader("User-Agent"),
-    "pingsender/1.0",
+    "pingsender/2.0",
     "Should have received the correct user agent string."
   );
   Assert.equal(
     req.getHeader("X-PingSender-Version"),
-    "1.0",
+    "2.0",
     "Should have received the correct PingSender version string."
   );
 
