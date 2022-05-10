@@ -7,6 +7,24 @@ All notable changes to this program are documented in this file.
 
 ### Known problems
 
+- _Firefox running in Linux Sandbox (e.g. Snap package):_
+
+  Using geckodriver to launch Firefox inside a sandbox -- for example
+  a Firefox distribution using Snap or Flatpak -- can fail with a
+  "Profile not found" error if the sandbox restricts Firefox's ability
+  to access the system temporary directory. geckodriver uses the
+  temporary directory to store Firefox profiles created during the run.
+
+  This issue can be worked around by setting the `TMPDIR` environment
+  variable to a location that both Firefox and geckodriver have
+  read/write access to e.g.:
+
+  % mkdir $HOME/tmp
+  % TMPDIR=$HOME/tmp geckodriver
+
+  Alternatively, geckodriver may be used with a Firefox install that
+  is not packaged inside a sandboxed e.g. from [mozilla.org].
+
 - _macOS 10.15 (Catalina) and later:_
 
   Due to the requirement from Apple that all programs must be
@@ -1572,6 +1590,7 @@ and greater.
 [enable remote debugging on the Android device]: https://developers.google.com/web/tools/chrome-devtools/remote-debugging
 [macOS notarization]: https://firefox-source-docs.mozilla.org/testing/geckodriver/Notarization.html
 [Rust]: https://rustup.rs/
+[mozilla.org] https://www.mozilla.org/firefox/
 
 [`CloseWindowResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CloseWindowResponse.html
 [`CookieResponse`]: https://docs.rs/webdriver/newest/webdriver/response/struct.CookieResponse.html
