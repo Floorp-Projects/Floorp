@@ -218,7 +218,9 @@ mozJSComponentLoader::mozJSComponentLoader()
 class MOZ_STACK_CLASS ComponentLoaderInfo {
  public:
   explicit ComponentLoaderInfo(const nsACString& aLocation)
-      : mLocation(aLocation), mIsModule(false) {}
+      : mLocation(&aLocation), mIsModule(false) {}
+  explicit ComponentLoaderInfo(nsIURI* aURI, bool aIsModule)
+      : mLocation(nullptr), mURI(aURI), mIsModule(aIsModule) {}
 
   nsIIOService* IOService() {
     MOZ_ASSERT(mIOService);
@@ -239,7 +241,8 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
   }
   nsresult EnsureURI() {
     BEGIN_ENSURE(URI, IOService);
-    return mIOService->NewURI(mLocation, nullptr, nullptr,
+    MOZ_ASSERT(mLocation);
+    return mIOService->NewURI(*mLocation, nullptr, nullptr,
                               getter_AddRefs(mURI));
   }
 
@@ -270,7 +273,10 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
     return ResolveURI(mURI, getter_AddRefs(mResolvedURI));
   }
 
-  const nsACString& Key() { return mLocation; }
+  const nsACString& Key() {
+    MOZ_ASSERT(mLocation);
+    return *mLocation;
+  }
 
   [[nodiscard]] nsresult GetLocation(nsCString& aLocation) {
     nsresult rv = EnsureURI();
@@ -281,7 +287,7 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
   bool IsModule() const { return mIsModule; }
 
  private:
-  const nsACString& mLocation;
+  const nsACString* mLocation;
   nsCOMPtr<nsIIOService> mIOService;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIChannel> mScriptChannel;
@@ -313,7 +319,6 @@ mozJSComponentLoader::~mozJSComponentLoader() {
   MOZ_ASSERT(!mInitialized,
              "UnloadModules() was not explicitly called before cleaning up "
              "mozJSComponentLoader");
-
   if (mInitialized) {
     UnloadModules();
   }
@@ -626,6 +631,23 @@ JSObject* mozJSComponentLoader::GetSharedGlobal(JSContext* aCx) {
 }
 
 /* static */
+nsresult mozJSComponentLoader::LoadSingleModuleScript(
+    JSContext* aCx, nsIURI* aURI, MutableHandleScript aScriptOut) {
+  ComponentLoaderInfo info(aURI, true);
+  nsresult rv = info.EnsureResolvedURI();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> sourceFile;
+  rv = GetSourceFile(info.ResolvedURI(), getter_AddRefs(sourceFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool realFile = LocationIsRealFile(aURI);
+
+  RootedScript script(aCx);
+  return GetScriptForLocation(aCx, info, sourceFile, realFile, aScriptOut);
+}
+
+/* static */
 nsresult mozJSComponentLoader::GetSourceFile(nsIURI* aResolvedURI,
                                              nsIFile** aSourceFileOut) {
   // Get the JAR if there is one.
@@ -817,6 +839,9 @@ nsresult mozJSComponentLoader::ObjectForLocation(
 nsresult mozJSComponentLoader::GetScriptForLocation(
     JSContext* aCx, ComponentLoaderInfo& aInfo, nsIFile* aComponentFile,
     bool aUseMemMap, MutableHandleScript aScriptOut, char** aLocationOut) {
+  // JS compilation errors are returned via an exception on the context.
+  MOZ_ASSERT(!JS_IsExceptionPending(aCx));
+
   aScriptOut.set(nullptr);
 
   nsAutoCString nativePath;
@@ -869,7 +894,11 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
     CompileOptions options(aCx);
     ScriptPreloader::FillCompileOptionsForCachedStencil(options);
     options.setFileAndLine(nativePath.get(), 1);
-    if (!aInfo.IsModule()) {
+    if (aInfo.IsModule()) {
+      options.setModule();
+      // Top level await is not supported in synchronously loaded modules.
+      options.topLevelAwait = false;
+    } else {
       options.setForceStrictMode();
       options.setNonSyntacticScope(true);
     }
@@ -944,9 +973,11 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
   }
 
   /* Owned by ModuleEntry. Freed when we remove from the table. */
-  *aLocationOut = ToNewCString(nativePath, mozilla::fallible);
-  if (!*aLocationOut) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (aLocationOut) {
+    *aLocationOut = ToNewCString(nativePath, mozilla::fallible);
+    if (!*aLocationOut) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return NS_OK;
