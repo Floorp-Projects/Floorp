@@ -33,10 +33,12 @@
 class nsICacheInfoChannel;
 
 namespace mozilla::dom {
-
 class ScriptLoadContext;
-
 }  // namespace mozilla::dom
+
+namespace mozilla::loader {
+class ComponentLoadContext;
+}  // namespace mozilla::loader
 
 namespace JS {
 class OffThreadToken;
@@ -294,9 +296,12 @@ class ScriptLoadRequest
 
   void DropBytecodeCacheReferences();
 
-  bool HasLoadContext() { return mLoadContext; }
+  bool HasLoadContext() const { return mLoadContext; }
 
+  bool HasScriptLoadContext() const;
   mozilla::dom::ScriptLoadContext* GetScriptLoadContext();
+
+  mozilla::loader::ComponentLoadContext* GetComponentLoadContext();
 
   const ScriptKind mKind;  // Whether this is a classic script or a module
                            // script.
