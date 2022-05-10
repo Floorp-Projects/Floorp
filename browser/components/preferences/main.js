@@ -556,22 +556,21 @@ var gMainPane = {
 
     //themes
       const themeelement = document.getElementsByClassName('themes');
-      for(let i = 0; i < themeelement.length; i++) {
+        for(let i = 0; i < themeelement.length; i++) {
           themeelement[i].addEventListener('click',
-
-          function()
+         function()
           {
             (async() => {
-              let userConfirm = await confirmRestartPrompt(true)
+              let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
                 Services.startup.quit(
                   Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
                 );
               }
-            })
+            })()
           }
-
-          ,false);
+  
+            ,false);
         }
 
         const tabarelement = document.getElementsByClassName('tabbar');
@@ -581,7 +580,7 @@ var gMainPane = {
           function()
           {
             (async() => {
-              let userConfirm = await confirmRestartPrompt()
+              let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
                 Services.startup.quit(
                   Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
@@ -600,7 +599,7 @@ var gMainPane = {
           function()
           {
             (async() => {
-              let userConfirm = await confirmRestartPrompt()
+              let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
                 Services.startup.quit(
                   Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart

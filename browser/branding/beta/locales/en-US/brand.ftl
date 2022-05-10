@@ -16,11 +16,11 @@
 ## For further details, consult:
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
--brand-shorter-name = Legacy
--brand-short-name = Legacy
--brand-full-name = FloorpLegacy
+-brand-shorter-name = Floorp
+-brand-short-name = Floorp
+-brand-full-name = Floorp Daylight
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Nightly, Beta, etc.).
--brand-product-name = Legacy
+-brand-product-name = Floorp
 -vendor-short-name = Ablaze
-trademarkInfo = Legacy and the Floorp logos are trademarks of the Ablaze.
+trademarkInfo = Ablaze and the Floorp logos are trademarks of the Ablaze.

@@ -72,6 +72,7 @@ close-button =
 
 feature-enable-requires-restart = { -brand-short-name } must restart to enable this feature.
 feature-disable-requires-restart = { -brand-short-name } must restart to disable this feature.
+feature-requires-restart = A reboot is required to change the settings
 should-restart-title = Restart { -brand-short-name }
 should-restart-ok = Restart { -brand-short-name } now
 cancel-no-restart-button = Cancel
