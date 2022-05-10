@@ -18,7 +18,7 @@ registerCleanupFunction(() => {
 /**
  * FOG requires a little setup in order to test it
  */
-add_task(function test_setup() {
+add_setup(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 
