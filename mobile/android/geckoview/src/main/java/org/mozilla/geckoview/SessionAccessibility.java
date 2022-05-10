@@ -178,7 +178,7 @@ public class SessionAccessibility {
       AccessibilityNodeInfo node = null;
       if (mAttached) {
         node =
-            mSession.getSettings().getFullAccessibilityTree() || nativeProvider.isCacheEnabled()
+            mSession.getSettings().getFullAccessibilityTree() || isCacheEnabled()
                 ? getNodeFromGecko(virtualDescendantId)
                 : getNodeFromCache(virtualDescendantId);
       }
@@ -839,7 +839,7 @@ public class SessionAccessibility {
     }
 
     final GeckoBundle cachedBundle = getMostRecentBundle(sourceId);
-    if (cachedBundle == null && sourceId != View.NO_ID && !nativeProvider.isCacheEnabled()) {
+    if (cachedBundle == null && sourceId != View.NO_ID && !isCacheEnabled()) {
       // Suppress events from non cached nodes.
       return;
     }
@@ -853,7 +853,7 @@ public class SessionAccessibility {
     if (eventClassName == CLASSNAME_UNKNOWN) {
       if (cachedBundle != null) {
         eventClassName = cachedBundle.getInt("className");
-      } else if (nativeProvider.isCacheEnabled()) {
+      } else if (isCacheEnabled()) {
         eventClassName = nativeProvider.getNodeClassName(sourceId);
       }
     }
@@ -980,7 +980,7 @@ public class SessionAccessibility {
       return false;
     }
 
-    if (nativeProvider.isCacheEnabled()) {
+    if (isCacheEnabled()) {
       return cachedPivot(id, granularity, forward, inclusive);
     }
 
@@ -1016,6 +1016,10 @@ public class SessionAccessibility {
     }
 
     return success;
+  }
+
+  private boolean isCacheEnabled() {
+    return mAttached && nativeProvider.isCacheEnabled();
   }
 
   /* package */ final class NativeProvider extends JNIObject {
