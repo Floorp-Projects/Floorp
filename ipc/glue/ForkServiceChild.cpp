@@ -64,9 +64,9 @@ bool ForkServiceChild::SendForkNewSubprocess(
     // IPC::Channel created by the GeckoChildProcessHost has
     // already send a HELLO.  It is expected to receive a hello
     // message from the fork server too.
-    IPC::Message hello;
+    UniquePtr<IPC::Message> hello;
     mTcver->RecvInfallible(hello, "Fail to receive HELLO message");
-    MOZ_ASSERT(hello.type() == ForkServer::kHELLO_MESSAGE_TYPE);
+    MOZ_ASSERT(hello->type() == ForkServer::kHELLO_MESSAGE_TYPE);
     mWaitForHello = false;
   }
 
@@ -84,7 +84,7 @@ bool ForkServiceChild::SendForkNewSubprocess(
     return false;
   }
 
-  IPC::Message reply;
+  UniquePtr<IPC::Message> reply;
   if (!mTcver->Recv(reply)) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
             ("the pipe to the fork server is closed or having errors"));
@@ -98,13 +98,13 @@ bool ForkServiceChild::SendForkNewSubprocess(
   return true;
 }
 
-void ForkServiceChild::OnMessageReceived(IPC::Message&& message) {
-  if (message.type() != Reply_ForkNewSubprocess__ID) {
+void ForkServiceChild::OnMessageReceived(UniquePtr<IPC::Message> message) {
+  if (message->type() != Reply_ForkNewSubprocess__ID) {
     MOZ_LOG(gForkServiceLog, LogLevel::Verbose,
-            ("unknown reply type %d", message.type()));
+            ("unknown reply type %d", message->type()));
     return;
   }
-  IPC::MessageReader reader(message);
+  IPC::MessageReader reader(*message);
 
   if (!ReadIPDLParam(&reader, nullptr, &mRecvPid)) {
     MOZ_CRASH("Error deserializing 'pid_t'");
