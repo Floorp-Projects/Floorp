@@ -51,7 +51,7 @@ nsIFrame* ScrollbarDrawing::GetParentScrollbarFrame(nsIFrame* aFrame) {
 /*static*/
 bool ScrollbarDrawing::IsParentScrollbarRolledOver(nsIFrame* aFrame) {
   nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-  return nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0
+  return aFrame->PresContext()->UseOverlayScrollbars()
              ? nsNativeTheme::CheckBooleanAttr(scrollbarFrame, nsGkAtoms::hover)
              : nsNativeTheme::GetContentState(scrollbarFrame,
                                               StyleAppearance::None)
@@ -182,7 +182,7 @@ sRGBColor ScrollbarDrawing::ComputeScrollbarThumbColor(
 template <typename PaintBackendData>
 bool ScrollbarDrawing::DoPaintDefaultScrollbar(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
   const bool overlay = aFrame->PresContext()->UseOverlayScrollbars();
@@ -194,7 +194,9 @@ bool ScrollbarDrawing::DoPaintDefaultScrollbar(
       ComputeScrollbarTrackColor(aFrame, aStyle, aDocumentState, aColors);
   if (overlay && mKind == Kind::Win11) {
     LayoutDeviceCoord radius =
-        (aHorizontal ? aRect.height : aRect.width) / 2.0f;
+        (aScrollbarKind == ScrollbarKind::Horizontal ? aRect.height
+                                                     : aRect.width) /
+        2.0f;
     ThemeDrawing::PaintRoundedRectWithRadius(aPaintData, aRect, color,
                                              sRGBColor(), 0, radius / aDpiRatio,
                                              aDpiRatio);
@@ -205,21 +207,21 @@ bool ScrollbarDrawing::DoPaintDefaultScrollbar(
 }
 
 bool ScrollbarDrawing::PaintScrollbar(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintDefaultScrollbar(aDrawTarget, aRect, aHorizontal, aFrame,
+  return DoPaintDefaultScrollbar(aDrawTarget, aRect, aScrollbarKind, aFrame,
                                  aStyle, aElementState, aDocumentState, aColors,
                                  aDpiRatio);
 }
 
 bool ScrollbarDrawing::PaintScrollbar(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
-    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
     const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintDefaultScrollbar(aWrData, aRect, aHorizontal, aFrame, aStyle,
+  return DoPaintDefaultScrollbar(aWrData, aRect, aScrollbarKind, aFrame, aStyle,
                                  aElementState, aDocumentState, aColors,
                                  aDpiRatio);
 }
@@ -227,7 +229,7 @@ bool ScrollbarDrawing::PaintScrollbar(
 template <typename PaintBackendData>
 bool ScrollbarDrawing::DoPaintDefaultScrollCorner(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
-    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, const Colors& aColors,
     const DPIRatio& aDpiRatio) {
   auto scrollbarColor =
@@ -237,22 +239,21 @@ bool ScrollbarDrawing::DoPaintDefaultScrollCorner(
 }
 
 bool ScrollbarDrawing::PaintScrollCorner(
-    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
-    const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    const Colors& aColors, const DPIRatio& aDpiRatio) {
-  return DoPaintDefaultScrollCorner(aDrawTarget, aRect, aFrame, aStyle,
-                                    aDocumentState, aColors, aDpiRatio);
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const Colors& aColors,
+    const DPIRatio& aDpiRatio) {
+  return DoPaintDefaultScrollCorner(aDrawTarget, aRect, aScrollbarKind, aFrame,
+                                    aStyle, aDocumentState, aColors, aDpiRatio);
 }
 
-bool ScrollbarDrawing::PaintScrollCorner(WebRenderBackendData& aWrData,
-                                         const LayoutDeviceRect& aRect,
-                                         nsIFrame* aFrame,
-                                         const ComputedStyle& aStyle,
-                                         const EventStates& aDocumentState,
-                                         const Colors& aColors,
-                                         const DPIRatio& aDpiRatio) {
-  return DoPaintDefaultScrollCorner(aWrData, aRect, aFrame, aStyle,
-                                    aDocumentState, aColors, aDpiRatio);
+bool ScrollbarDrawing::PaintScrollCorner(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    ScrollbarKind aScrollbarKind, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const Colors& aColors,
+    const DPIRatio& aDpiRatio) {
+  return DoPaintDefaultScrollCorner(aWrData, aRect, aScrollbarKind, aFrame,
+                                    aStyle, aDocumentState, aColors, aDpiRatio);
 }
 
 nscolor ScrollbarDrawing::GetScrollbarButtonColor(nscolor aTrackColor,
@@ -358,9 +359,10 @@ std::pair<sRGBColor, sRGBColor> ScrollbarDrawing::ComputeScrollbarButtonColors(
 
 bool ScrollbarDrawing::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
-    const LayoutDeviceRect& aRect, nsIFrame* aFrame,
-    const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, const Colors& aColors, const DPIRatio&) {
+    const LayoutDeviceRect& aRect, ScrollbarKind aScrollbarKind,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    const Colors& aColors, const DPIRatio&) {
   auto [buttonColor, arrowColor] = ComputeScrollbarButtonColors(
       aFrame, aAppearance, aStyle, aElementState, aDocumentState, aColors);
   aDrawTarget.FillRect(aRect.ToUnknownRect(),

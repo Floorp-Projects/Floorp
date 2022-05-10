@@ -304,7 +304,7 @@ def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
         # https://technet.microsoft.com/en-us/library/cc785435.aspx
         try:
             command = ["fsutil", "behavior", "query", "disablelastaccess"]
-            fsutil_output = subprocess.check_output(command)
+            fsutil_output = subprocess.check_output(command, encoding="utf-8")
             disablelastaccess = int(fsutil_output.partition("=")[2][1])
         except subprocess.CalledProcessError:
             return DoctorCheck(

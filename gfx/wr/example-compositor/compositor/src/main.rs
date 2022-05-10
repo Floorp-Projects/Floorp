@@ -206,8 +206,7 @@ impl RenderNotifier for Notifier {
     fn new_frame_ready(&self,
                        _: DocumentId,
                        _scrolled: bool,
-                       _composite_needed: bool,
-                       _render_time: Option<u64>) {
+                       _composite_needed: bool) {
         self.tx.send(()).ok();
     }
 }

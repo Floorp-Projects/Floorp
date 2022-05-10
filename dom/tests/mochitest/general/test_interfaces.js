@@ -630,15 +630,15 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "IDBFactory", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "IDBFileHandle", insecureContext: true },
+  { name: "IDBFileHandle", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "IDBFileRequest", insecureContext: true },
+  { name: "IDBFileRequest", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "IDBIndex", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "IDBKeyRange", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "IDBMutableFile", insecureContext: true },
+  { name: "IDBMutableFile", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "IDBObjectStore", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

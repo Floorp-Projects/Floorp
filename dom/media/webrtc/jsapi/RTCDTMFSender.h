@@ -16,7 +16,6 @@ class nsITimer;
 
 namespace mozilla {
 class AudioSessionConduit;
-class TransceiverImpl;
 
 struct DtmfEvent {
   DtmfEvent(int aPayloadType, int aPayloadFrequency, int aEventCode,
@@ -32,12 +31,13 @@ struct DtmfEvent {
 };
 
 namespace dom {
+class RTCRtpTransceiver;
 
 class RTCDTMFSender : public DOMEventTargetHelper,
                       public nsITimerCallback,
                       public nsINamed {
  public:
-  RTCDTMFSender(nsPIDOMWindowInner* aWindow, TransceiverImpl* aTransceiver);
+  RTCDTMFSender(nsPIDOMWindowInner* aWindow, RTCRtpTransceiver* aTransceiver);
 
   // nsISupports
   NS_DECL_NSITIMERCALLBACK
@@ -63,7 +63,7 @@ class RTCDTMFSender : public DOMEventTargetHelper,
 
   void StartPlayout(uint32_t aDelay);
 
-  RefPtr<TransceiverImpl> mTransceiver;
+  RefPtr<RTCRtpTransceiver> mTransceiver;
   MediaEventProducer<DtmfEvent> mDtmfEvent;
   Maybe<int32_t> mPayloadType;
   Maybe<int32_t> mPayloadFrequency;

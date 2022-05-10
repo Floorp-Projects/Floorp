@@ -1214,6 +1214,58 @@ extensions.updates:
     record_in_processes:
       - main
 
+extensions.startupCache:
+  write_byteLength:
+    bug_numbers:
+      - 1767336
+    description: >
+      The amount of bytes writted into the Extensions StartupCache file.
+    expires: never
+    kind: uint
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  read_errors:
+    bug_numbers:
+      - 1767336
+    description: >
+      The amount of times an unexpected error has been raised while
+      reading the Extensions StartupCache file
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  load_time:
+    bug_numbers:
+      - 1767336
+    description: >
+      Time to load and deserialize the extensions startupCache data.
+      This scalar is mirroring the never expiring Glean metric named
+      extensions.startup_cache_load_time, which is defined in
+      toolkit/components/extensions/metrics.yaml.
+      Unlike the related glean metric, this scalar has an expiring date,
+      set as a deadline to consider removing the mirrored scalar in
+      favor to just use the Glean metric).
+    expires: "109"
+    kind: uint
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+      - lgreco@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 security:
   webauthn_used:
     bug_numbers:

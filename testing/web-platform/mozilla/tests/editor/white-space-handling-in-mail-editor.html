@@ -1,0 +1,371 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="timeout" content="long">
+<meta name="variant" content="?plaintext=true">
+<meta name="variant" content="?plaintext=false">
+<title>Testing white-space handling in mail editor mode</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<div contenteditable></div>
+<script>
+"use strict";
+
+const params = new URLSearchParams(location.search);
+const inPlaintextMode = params.get("plaintext") === "true";
+
+const editingHost = document.querySelector("div[contenteditable]");
+// To show white-spaces as-is, editing host should have "pre-wrap" style.
+// Then, editor does not need to convert white-spaces.
+editingHost.style.whiteSpace = "pre-wrap";
+
+const editor = SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+editor.flags |= SpecialPowers.Ci.nsIEditor.eEditorMailMask;
+if (inPlaintextMode) {
+  editor.flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+}
+
+test(() => {
+  editingHost.innerHTML = "<p><br></p>";
+  getSelection().collapse(editingHost.querySelector("p"), 0);
+  document.execCommand("insertText", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p> </p>",
+      "<p> <br></p>",
+    ]
+  );
+}, "Inserting first white-space into empty paragraph shouldn't convert the inserting white-space to an NBSP");
+
+test(() => {
+  editingHost.innerHTML = "<p> </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertText", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>  </p>",
+      "<p>  <br></p>",
+    ]
+  );
+}, "Inserting second white-space next to a white-space shouldn't convert the inserting white-space nor the existing white-space to NBSP");
+
+test(() => {
+  editingHost.innerHTML = "<p>  </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertText", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>   </p>",
+      "<p>   <br></p>",
+    ]
+  );
+}, "Inserting 3rd white-space into middle of white-spaces shouldn't convert the inserting white-space nor the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>    </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("insertText", false, "a");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>  a  </p>",
+      "<p>  a  <br></p>",
+    ]
+  );
+}, "Inserting a character into middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>  a  </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 3);
+  document.execCommand("delete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>    </p>",
+      "<p>    <br></p>",
+    ]
+  );
+}, "Deleting a character at middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>     </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 3);
+  document.execCommand("delete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>    </p>",
+      "<p>    <br></p>",
+    ]
+  );
+}, "Deleting a white-space at middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>  a  </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("forwardDelete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>    </p>",
+      "<p>    <br></p>",
+    ]
+  );
+}, "Forward deleting a character at middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>     </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("forwardDelete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>    </p>",
+      "<p>    <br></p>",
+    ]
+  );
+}, "Forward deleting at middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p><br></p>";
+  getSelection().collapse(editingHost.querySelector("p"), 0);
+  document.execCommand("insertText", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;</p>",
+      "<p>&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting first NBSP into empty paragraph shouldn't convert the inserting NBSP to a white-space");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertText", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting second NBSP next to an NBSP shouldn't convert the inserting NBSP nor the existing NBSP to white-space");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertText", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting 3rd NBSP into middle of NBSPs shouldn't convert the inserting NBSP nor the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("insertText", false, "a");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;a&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;a&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting a character into middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0a\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 3);
+  document.execCommand("delete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Deleting a character at middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0\xA0\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 3);
+  document.execCommand("delete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Deleting an NBSP at middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0a\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("forwardDelete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Forward deleting a character at middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0\xA0\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("forwardDelete");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Forward deleting at middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p><br></p>";
+  getSelection().collapse(editingHost.querySelector("p"), 0);
+  document.execCommand("insertHTML", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p> </p>",
+      "<p> <br></p>",
+    ]
+  );
+}, "Inserting first white-space with insertHTML command into empty paragraph shouldn't convert the inserting white-space to an NBSP");
+
+test(() => {
+  editingHost.innerHTML = "<p> </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertHTML", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>  </p>",
+      "<p>  <br></p>",
+    ]
+  );
+}, "Inserting second white-space with insertHTML command next to a white-space shouldn't convert the inserting white-space nor the existing white-space to NBSP");
+
+test(() => {
+  editingHost.innerHTML = "<p>  </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertHTML", false, " ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>   </p>",
+      "<p>   <br></p>",
+    ]
+  );
+}, "Inserting 3rd white-space with insertHTML command into middle of white-spaces shouldn't convert the inserting white-space nor the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>    </p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("insertHTML", false, "a");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>  a  </p>",
+      "<p>  a  <br></p>",
+    ]
+  );
+}, "Inserting a character with insertHTML command into middle of white-spaces shouldn't convert the existing white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p><br></p>";
+  getSelection().collapse(editingHost.querySelector("p"), 0);
+  document.execCommand("insertHTML", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;</p>",
+      "<p>&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting first NBSP with insertHTML command into empty paragraph shouldn't convert the inserting NBSP to a white-space");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertHTML", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting second NBSP with insertHTML command next to an NBSP shouldn't convert the inserting NBSP nor the existing NBSP to white-space");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 1);
+  document.execCommand("insertHTML", false, "\xA0");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting 3rd NBSP with insertHTML command into middle of NBSPs shouldn't convert the inserting NBSP nor the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>\xA0\xA0\xA0\xA0</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, 2);
+  document.execCommand("insertHTML", false, "a");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>&nbsp;&nbsp;a&nbsp;&nbsp;</p>",
+      "<p>&nbsp;&nbsp;a&nbsp;&nbsp;<br></p>",
+    ]
+  );
+}, "Inserting a character with insertHTML command into middle of NBSPs shouldn't convert the existing NBSPs to white-spaces");
+
+test(() => {
+  editingHost.innerHTML = "<p>abc</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, "abc".length);
+  document.execCommand("insertHTML", false, "def  ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>abcdef  </p>",
+      "<p>abcdef  <br></p>",
+    ]
+  );
+}, "Inserting multiple white-spaces with insertHTML command shouldn't convert the white-spaces to NBSPs");
+
+test(() => {
+  editingHost.innerHTML = "<p>abc</p>";
+  getSelection().collapse(editingHost.querySelector("p").firstChild, "abc".length);
+  document.execCommand("insertHTML", false, "def  ");
+  assert_in_array(
+    editingHost.innerHTML,
+    [
+      "<p>abcdef  </p>",
+      "<p>abcdef  <br></p>",
+    ]
+  );
+}, "Inserting multiple NBSPs with insertHTML command shouldn't convert the NBSPs to white-spaces");
+
+</script>
+</body>
+</html>

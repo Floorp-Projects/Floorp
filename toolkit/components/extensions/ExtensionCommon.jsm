@@ -59,6 +59,8 @@ function getConsole() {
 
 XPCOMUtils.defineLazyGetter(this, "console", getConsole);
 
+const BACKGROUND_SCRIPTS_VIEW_TYPES = ["background", "background_worker"];
+
 var ExtensionCommon;
 
 // Run a function and report exceptions.
@@ -545,6 +547,10 @@ class BaseContext {
 
   get privateBrowsingAllowed() {
     return this.extension.privateBrowsingAllowed;
+  }
+
+  get isBackgroundContext() {
+    return BACKGROUND_SCRIPTS_VIEW_TYPES.includes(this.viewType);
   }
 
   /**

@@ -744,14 +744,11 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
         // has been scanned to completion (theTokenizerResult should be kEOF).
         // kEOF -> End of buffer.
 
-        // If we're told to block the parser, we disable all further parsing
-        // (and cache any data coming in) until the parser is re-enabled.
+        // If we're told the parser has been blocked, we disable all further
+        // parsing (and cache any data coming in) until the parser is
+        // re-enabled.
         if (NS_ERROR_HTMLPARSER_BLOCK == result) {
           mSink->WillInterrupt();
-          if (!mBlocked) {
-            // If we were blocked by a recursive invocation, don't re-block.
-            BlockParser();
-          }
           return NS_OK;
         }
         if (NS_ERROR_HTMLPARSER_STOPPARSING == result) {
