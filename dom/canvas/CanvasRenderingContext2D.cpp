@@ -5374,6 +5374,16 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
   return MakeAndAddRef<ImageData>(w, h, *array);
 }
 
+static IntRect ClipImageDataTransfer(IntRect& aSrc, const IntPoint& aDestOffset,
+                                     const IntSize& aDestBounds) {
+  IntRect dest = aSrc;
+  dest.SafeMoveBy(aDestOffset);
+  dest = IntRect(IntPoint(0, 0), aDestBounds).SafeIntersect(dest);
+
+  aSrc = aSrc.SafeIntersect(dest - aDestOffset);
+  return aSrc + aDestOffset;
+}
+
 nsresult CanvasRenderingContext2D::GetImageDataArray(
     JSContext* aCx, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
     Maybe<nsIPrincipal*> aSubjectPrincipal, JSObject** aRetval) {
@@ -5403,9 +5413,9 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     return NS_OK;
   }
 
-  IntRect srcRect(0, 0, mWidth, mHeight);
-  IntRect destRect(aX, aY, aWidth, aHeight);
-  IntRect srcReadRect = srcRect.Intersect(destRect);
+  IntRect dstWriteRect(0, 0, aWidth, aHeight);
+  IntRect srcReadRect = ClipImageDataTransfer(dstWriteRect, IntPoint(aX, aY),
+                                              IntSize(mWidth, mHeight));
   if (srcReadRect.IsEmpty()) {
     *aRetval = darray;
     return NS_OK;
@@ -5429,9 +5439,6 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
   if (!readback || !readback->Map(DataSourceSurface::READ, &rawData)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  IntRect dstWriteRect = srcReadRect;
-  dstWriteRect.MoveBy(-aX, -aY);
 
   // Check for site-specific permission.  This check is not needed if the
   // canvas was created with a docshell (that is only done for special
@@ -5585,10 +5592,10 @@ void CanvasRenderingContext2D::PutImageData_explicit(
     dirtyRect = imageDataRect;
   }
 
-  dirtyRect.MoveBy(IntPoint(aX, aY));
-  dirtyRect = IntRect(0, 0, mWidth, mHeight).Intersect(dirtyRect);
-
-  if (dirtyRect.Width() <= 0 || dirtyRect.Height() <= 0) {
+  IntRect srcRect = dirtyRect;
+  dirtyRect = ClipImageDataTransfer(srcRect, IntPoint(aX, aY),
+                                    IntSize(mWidth, mHeight));
+  if (dirtyRect.IsEmpty()) {
     return;
   }
 
@@ -5643,7 +5650,6 @@ void CanvasRenderingContext2D::PutImageData_explicit(
     dstFormat = sourceSurface->GetFormat();
   }
 
-  IntRect srcRect = dirtyRect - IntPoint(aX, aY);
   uint8_t* srcData = arr.Data() + srcRect.y * (width * 4) + srcRect.x * 4;
 
   PremultiplyData(
