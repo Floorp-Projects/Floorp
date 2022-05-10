@@ -836,6 +836,9 @@ class ContentChild final : public PContentChild,
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 
   virtual PContentChild::Result OnMessageReceived(const Message& aMsg) override;
+
+  virtual PContentChild::Result OnMessageReceived(const Message& aMsg,
+                                                  Message*& aReply) override;
 #endif
 
   nsTArray<mozilla::UniquePtr<AlertObserver>> mAlertObservers;

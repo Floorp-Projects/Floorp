@@ -43,8 +43,7 @@ bool ChildProcessHost::CreateChannel() {
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
     : host_(host) {}
 
-void ChildProcessHost::ListenerHook::OnMessageReceived(
-    mozilla::UniquePtr<IPC::Message> msg) {
+void ChildProcessHost::ListenerHook::OnMessageReceived(IPC::Message&& msg) {
   host_->OnMessageReceived(std::move(msg));
 }
 
@@ -60,6 +59,6 @@ void ChildProcessHost::ListenerHook::OnChannelError() {
 }
 
 void ChildProcessHost::ListenerHook::GetQueuedMessages(
-    std::queue<mozilla::UniquePtr<IPC::Message>>& queue) {
+    std::queue<IPC::Message>& queue) {
   host_->GetQueuedMessages(queue);
 }
