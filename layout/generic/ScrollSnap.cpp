@@ -206,11 +206,13 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
 
 static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
                                  const ScrollSnapInfo& aSnapInfo) {
-  for (auto position : aSnapInfo.mSnapPositionX) {
-    aCalcSnapPoints.AddVerticalEdge(position);
-  }
-  for (auto position : aSnapInfo.mSnapPositionY) {
-    aCalcSnapPoints.AddHorizontalEdge(position);
+  for (const auto& target : aSnapInfo.mSnapTargets) {
+    if (target.mSnapPositionX) {
+      aCalcSnapPoints.AddVerticalEdge(*target.mSnapPositionX);
+    }
+    if (target.mSnapPositionY) {
+      aCalcSnapPoints.AddHorizontalEdge(*target.mSnapPositionY);
+    }
   }
 }
 

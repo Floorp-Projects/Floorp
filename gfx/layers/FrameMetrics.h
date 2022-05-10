@@ -693,8 +693,7 @@ struct ScrollSnapInfo {
   bool operator==(const ScrollSnapInfo& aOther) const {
     return mScrollSnapStrictnessX == aOther.mScrollSnapStrictnessX &&
            mScrollSnapStrictnessY == aOther.mScrollSnapStrictnessY &&
-           mSnapPositionX == aOther.mSnapPositionX &&
-           mSnapPositionY == aOther.mSnapPositionY &&
+           mSnapTargets == aOther.mSnapTargets &&
            mXRangeWiderThanSnapport == aOther.mXRangeWiderThanSnapport &&
            mYRangeWiderThanSnapport == aOther.mYRangeWiderThanSnapport &&
            mSnapportSize == aOther.mSnapportSize;
@@ -710,9 +709,30 @@ struct ScrollSnapInfo {
   StyleScrollSnapStrictness mScrollSnapStrictnessX;
   StyleScrollSnapStrictness mScrollSnapStrictnessY;
 
-  // The scroll positions corresponding to scroll-snap-align values.
-  CopyableTArray<nscoord> mSnapPositionX;
-  CopyableTArray<nscoord> mSnapPositionY;
+  struct SnapTarget {
+    // The scroll positions corresponding to scroll-snap-align values.
+    Maybe<nscoord> mSnapPositionX;
+    Maybe<nscoord> mSnapPositionY;
+
+    // https://drafts.csswg.org/css-scroll-snap/#scroll-snap-area
+    nsRect mSnapArea;
+
+    SnapTarget() = default;
+
+    SnapTarget(Maybe<nscoord>&& aSnapPositionX, Maybe<nscoord>&& aSnapPositionY,
+               nsRect&& aSnapArea)
+        : mSnapPositionX(std::move(aSnapPositionX)),
+          mSnapPositionY(std::move(aSnapPositionY)),
+          mSnapArea(std::move(aSnapArea)) {}
+
+    bool operator==(const SnapTarget& aOther) const {
+      return mSnapPositionX == aOther.mSnapPositionX &&
+             mSnapPositionY == aOther.mSnapPositionY &&
+             mSnapArea == aOther.mSnapArea;
+    }
+  };
+
+  CopyableTArray<SnapTarget> mSnapTargets;
 
   struct ScrollSnapRange {
     ScrollSnapRange() = default;
