@@ -1037,7 +1037,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
 
   nsAutoCString profilerLabelString;
-  if (aRequest->HasLoadContext()) {
+  if (aRequest->HasScriptLoadContext()) {
     aRequest->GetScriptLoadContext()->GetProfilerLabel(profilerLabelString);
   }
 
@@ -1048,7 +1048,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
 
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
   MOZ_ASSERT(request->mModuleScript);
-  MOZ_ASSERT_IF(request->HasLoadContext(),
+  MOZ_ASSERT_IF(request->HasScriptLoadContext(),
                 !request->GetScriptLoadContext()->mOffThreadToken);
 
   ModuleScript* moduleScript = request->mModuleScript;
@@ -1074,7 +1074,7 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
   nsresult rv = InitDebuggerDataForModuleGraph(aCx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (request->HasLoadContext()) {
+  if (request->HasScriptLoadContext()) {
     TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                    "scriptloader_evaluate_module");
   }

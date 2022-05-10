@@ -14,6 +14,10 @@ namespace mozilla::dom {
 class ScriptLoadContext;
 }
 
+namespace mozilla::loader {
+class ComponentLoadContext;
+}
+
 namespace JS::loader {
 
 class ScriptLoadRequest;
@@ -34,7 +38,7 @@ class ScriptLoadRequest;
  */
 
 // TODO: implement worker LoadContext
-enum class ContextKind { Window };
+enum class ContextKind { Window, Component };
 
 class LoadContextBase : public nsISupports {
  private:
@@ -44,7 +48,7 @@ class LoadContextBase : public nsISupports {
   virtual ~LoadContextBase() = default;
 
  public:
-  explicit LoadContextBase(ContextKind);
+  explicit LoadContextBase(ContextKind kind);
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(LoadContextBase)
 
@@ -56,6 +60,9 @@ class LoadContextBase : public nsISupports {
   // Casting to the different contexts
   bool IsWindowContext() const { return mKind == ContextKind::Window; }
   mozilla::dom::ScriptLoadContext* AsWindowContext();
+
+  bool IsComponentContext() const { return mKind == ContextKind::Component; }
+  mozilla::loader::ComponentLoadContext* AsComponentContext();
 
   RefPtr<JS::loader::ScriptLoadRequest> mRequest;
 };
