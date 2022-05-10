@@ -50,7 +50,6 @@ class MacIOSurface final
   typedef mozilla::gfx::BackendType BackendType;
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::YUVColorSpace YUVColorSpace;
-  typedef mozilla::gfx::TransferFunction TransferFunction;
   typedef mozilla::gfx::ColorRange ColorRange;
   typedef mozilla::gfx::ColorDepth ColorDepth;
 
@@ -62,8 +61,8 @@ class MacIOSurface final
                                                         bool aHasAlpha = true);
   static already_AddRefed<MacIOSurface> CreateNV12OrP010Surface(
       const IntSize& aYSize, const IntSize& aCbCrSize,
-      YUVColorSpace aColorSpace, TransferFunction aTransferFunction,
-      ColorRange aColorRange, ColorDepth aColorDepth);
+      YUVColorSpace aColorSpace, ColorRange aColorRange,
+      ColorDepth aColorDepth);
   static already_AddRefed<MacIOSurface> CreateYUV422Surface(
       const IntSize& aSize, YUVColorSpace aColorSpace, ColorRange aColorRange);
   static void ReleaseIOSurface(MacIOSurface* aIOSurface);
