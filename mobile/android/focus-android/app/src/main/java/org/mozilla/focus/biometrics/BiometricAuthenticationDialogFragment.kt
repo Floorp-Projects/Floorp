@@ -66,7 +66,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         binding.description.setText(R.string.biometric_auth_description)
         binding.newSessionButton.setText(R.string.biometric_auth_new_session)
         binding.newSessionButton.setOnClickListener {
-            biometricNewSessionButtonClicked()
+            triggerNewSession()
         }
 
         binding.fingerprintIcon.setImageResource(R.drawable.ic_fingerprint)
@@ -77,9 +77,12 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         super.onResume()
 
         resetErrorText()
-
-        handler = BiometricAuthenticationHandler(requireContext(), this)
-        handler?.startAuthentication()
+        if (!Biometrics.hasFingerprintHardware(requireContext())) {
+            triggerNewSession()
+        } else {
+            handler = BiometricAuthenticationHandler(requireContext(), this)
+            handler?.startAuthentication()
+        }
     }
 
     override fun onPause() {
@@ -94,7 +97,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         _binding = null
     }
 
-    private fun biometricNewSessionButtonClicked() {
+    private fun triggerNewSession() {
         requireComponents.tabsUseCases.removePrivateTabs()
         requireComponents.appStore.dispatch(AppAction.ShowHomeScreen)
         if (DELETE_TOP_SITES_WHEN_NEW_SESSION_BUTTON_CLICKED) {
