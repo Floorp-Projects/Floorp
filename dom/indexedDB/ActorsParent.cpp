@@ -78,6 +78,7 @@
 #include "mozilla/RefCountType.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
+#include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/SchedulerGroup.h"
@@ -145,7 +146,6 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/mozalloc.h"
-#include "mozilla/PRemoteLazyInputStreamParent.h"
 #include "mozilla/storage/Variant.h"
 #include "nsBaseHashtable.h"
 #include "nsCOMPtr.h"
@@ -2490,21 +2490,24 @@ class Database::StartTransactionOp final
 class Database::UnmapBlobCallback final
     : public RemoteLazyInputStreamParentCallback {
   SafeRefPtr<Database> mDatabase;
+  nsCOMPtr<nsISerialEventTarget> mBackgroundThread;
 
  public:
   explicit UnmapBlobCallback(SafeRefPtr<Database> aDatabase)
-      : mDatabase(std::move(aDatabase)) {
+      : mDatabase(std::move(aDatabase)),
+        mBackgroundThread(GetCurrentSerialEventTarget()) {
     AssertIsOnBackgroundThread();
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Database::UnmapBlobCallback, override)
 
   void ActorDestroyed(const nsID& aID) override {
-    AssertIsOnBackgroundThread();
     MOZ_ASSERT(mDatabase);
-
-    const SafeRefPtr<Database> database = std::move(mDatabase);
-    database->UnmapBlob(aID);
+    mBackgroundThread->Dispatch(NS_NewRunnableFunction(
+        "UnmapBlobCallback", [aID, database = std::move(mDatabase)] {
+          AssertIsOnBackgroundThread();
+          database->UnmapBlob(aID);
+        }));
   }
 
  private:
@@ -9670,18 +9673,21 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
   AssertIsOnBackgroundThread();
 
   const RemoteLazyStream& stream = aIPCBlob.inputStream();
-  MOZ_ASSERT(stream.type() == RemoteLazyStream::TPRemoteLazyInputStreamParent);
+  MOZ_ASSERT(stream.type() == RemoteLazyStream::TRemoteLazyInputStream);
 
-  RemoteLazyInputStreamParent* actor =
-      static_cast<RemoteLazyInputStreamParent*>(
-          stream.get_PRemoteLazyInputStreamParent());
+  nsID id{};
+  MOZ_ALWAYS_SUCCEEDS(
+      stream.get_RemoteLazyInputStream()->GetInternalStreamID(id));
 
-  MOZ_ASSERT(!mMappedBlobs.Contains(actor->ID()));
-  mMappedBlobs.InsertOrUpdate(actor->ID(), std::move(aFileInfo));
+  MOZ_ASSERT(!mMappedBlobs.Contains(id));
+  mMappedBlobs.InsertOrUpdate(id, std::move(aFileInfo));
 
   RefPtr<UnmapBlobCallback> callback =
       new UnmapBlobCallback(SafeRefPtrFromThis());
-  actor->SetCallback(callback);
+
+  auto storage = RemoteLazyInputStreamStorage::Get();
+  MOZ_ASSERT(storage.isOk());
+  storage.inspect()->StoreCallback(id, callback);
 }
 
 void Database::Stringify(nsACString& aResult) const {
@@ -9722,25 +9728,38 @@ void Database::Stringify(nsACString& aResult) const {
 SafeRefPtr<DatabaseFileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
   AssertIsOnBackgroundThread();
 
-  const RemoteLazyStream& stream = aIPCBlob.inputStream();
-  MOZ_ASSERT(stream.type() == RemoteLazyStream::TIPCStream);
+  RefPtr<RemoteLazyInputStream> lazyStream;
+  switch (aIPCBlob.inputStream().type()) {
+    case RemoteLazyStream::TIPCStream: {
+      const InputStreamParams& inputStreamParams =
+          aIPCBlob.inputStream().get_IPCStream().stream();
+      if (inputStreamParams.type() !=
+          InputStreamParams::TRemoteLazyInputStreamParams) {
+        return nullptr;
+      }
+      lazyStream = inputStreamParams.get_RemoteLazyInputStreamParams().stream();
+      break;
+    }
+    case RemoteLazyStream::TRemoteLazyInputStream:
+      lazyStream = aIPCBlob.inputStream().get_RemoteLazyInputStream();
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown RemoteLazyStream type");
+      return nullptr;
+  }
 
-  const IPCStream& ipcStream = stream.get_IPCStream();
-
-  const InputStreamParams& inputStreamParams = ipcStream.stream();
-  if (inputStreamParams.type() !=
-      InputStreamParams::TRemoteLazyInputStreamParams) {
+  if (!lazyStream) {
+    MOZ_ASSERT_UNREACHABLE("Unexpected null stream");
     return nullptr;
   }
 
-  const RemoteLazyInputStreamParams& ipcBlobInputStreamParams =
-      inputStreamParams.get_RemoteLazyInputStreamParams();
-  if (ipcBlobInputStreamParams.type() !=
-      RemoteLazyInputStreamParams::TRemoteLazyInputStreamRef) {
+  nsID id{};
+  nsresult rv = lazyStream->GetInternalStreamID(id);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Received RemoteLazyInputStream doesn't have an actor connection");
     return nullptr;
   }
-
-  const nsID& id = ipcBlobInputStreamParams.get_RemoteLazyInputStreamRef().id();
 
   const auto fileInfo = mMappedBlobs.Lookup(id);
   return fileInfo ? fileInfo->clonePtr() : nullptr;

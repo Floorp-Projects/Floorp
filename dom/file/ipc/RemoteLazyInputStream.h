@@ -7,6 +7,7 @@
 #ifndef mozilla_RemoteLazyInputStream_h
 #define mozilla_RemoteLazyInputStream_h
 
+#include "chrome/common/ipc_message_utils.h"
 #include "mozilla/Mutex.h"
 #include "mozIRemoteLazyInputStream.h"
 #include "nsIAsyncInputStream.h"
@@ -41,34 +42,56 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
   NS_DECL_NSIINPUTSTREAMLENGTH
   NS_DECL_NSIASYNCINPUTSTREAMLENGTH
 
-  explicit RemoteLazyInputStream(RemoteLazyInputStreamChild* aActor);
-
-  void StreamReady(already_AddRefed<nsIInputStream> aInputStream);
-
-  void LengthReady(int64_t aLength);
+  // Create a new lazy RemoteLazyInputStream, and move the provided aInputStream
+  // into storage as referenced by it. May only be called in processes with
+  // RemoteLazyInputStreamStorage.
+  static already_AddRefed<RemoteLazyInputStream> WrapStream(
+      nsIInputStream* aInputStream);
 
   // mozIRemoteLazyInputStream
-  NS_IMETHOD_(nsIInputStream*) GetInternalStream() override {
-    if (mRemoteStream) {
-      return mRemoteStream;
-    }
-
-    if (mAsyncRemoteStream) {
-      return mAsyncRemoteStream;
-    }
-
-    return nullptr;
-  }
+  NS_IMETHOD TakeInternalStream(nsIInputStream** aStream) override;
+  NS_IMETHOD GetInternalStreamID(nsID& aID) override;
 
  private:
+  friend struct IPC::ParamTraits<mozilla::RemoteLazyInputStream*>;
+
+  // Constructor for an already-closed RemoteLazyInputStream.
+  RemoteLazyInputStream() = default;
+
+  explicit RemoteLazyInputStream(RemoteLazyInputStreamChild* aActor,
+                                 uint64_t aStart = 0,
+                                 uint64_t aLength = UINT64_MAX);
+
+  explicit RemoteLazyInputStream(nsIInputStream* aStream);
+
   ~RemoteLazyInputStream();
 
-  nsresult EnsureAsyncRemoteStream(const MutexAutoLock& aProofOfLock);
+  void StreamNeeded() REQUIRES(mMutex);
 
-  void InitWithExistingRange(uint64_t aStart, uint64_t aLength,
-                             const MutexAutoLock& aProofOfLock);
+  // Upon receiving the stream from our actor, we will not wrap it into an async
+  // stream until needed. This allows callers to get access to the underlying
+  // potentially-sync stream using `TakeInternalStream` before reading.
+  nsresult EnsureAsyncRemoteStream() REQUIRES(mMutex);
 
-  RefPtr<RemoteLazyInputStreamChild> mActor;
+  // Note that data has been read from our input stream, and disconnect from our
+  // remote actor.
+  void MarkConsumed();
+
+  void IPCWrite(IPC::MessageWriter* aWriter);
+  static already_AddRefed<RemoteLazyInputStream> IPCRead(
+      IPC::MessageReader* aReader);
+
+  // Helper method to generate a description of a stream for use in loggging.
+  nsCString Describe() REQUIRES(mMutex);
+
+  // Start and length of the slice to apply on this RemoteLazyInputStream when
+  // fetching the underlying stream with `SendStreamNeeded`.
+  const uint64_t mStart = 0;
+  const uint64_t mLength = UINT64_MAX;
+
+  // Any non-const member of this class is protected by mutex because it is
+  // touched on multiple threads.
+  Mutex mMutex{"RemoteLazyInputStream::mMutex"};
 
   // This is the list of possible states.
   enum {
@@ -81,43 +104,49 @@ class RemoteLazyInputStream final : public nsIAsyncInputStream,
     ePending,
 
     // When the child receives the stream from the parent, we move to this
-    // state. The received stream is stored in mRemoteStream. From now on, any
-    // method call will be forwared to mRemoteStream.
+    // state. The received stream is stored in mInnerStream. From now on, any
+    // method call will be forwared to mInnerStream or mAsyncInnerStream.
     eRunning,
 
     // If Close() or CloseWithStatus() is called, we move to this state.
-    // mRemoveStream is released and any method will return
+    // mInnerStream is released and any method will return
     // NS_BASE_STREAM_CLOSED.
     eClosed,
-  } mState;
+  } mState GUARDED_BY(mMutex) = eClosed;
 
-  uint64_t mStart;
-  uint64_t mLength;
+  // The actor which will be used to provide the underlying stream or length
+  // information when needed, as well as to efficiently allow transferring the
+  // stream over IPC.
+  //
+  // The connection to our actor will be cleared once the stream has been closed
+  // or has started reading, at which point this stream will be serialized and
+  // cloned as-if it was the underlying stream.
+  RefPtr<RemoteLazyInputStreamChild> mActor GUARDED_BY(mMutex);
 
-  // Set to true if the stream is used via Read/ReadSegments or Close.
-  bool mConsumed;
+  nsCOMPtr<nsIInputStream> mInnerStream GUARDED_BY(mMutex);
+  nsCOMPtr<nsIAsyncInputStream> mAsyncInnerStream GUARDED_BY(mMutex);
 
-  nsCOMPtr<nsIInputStream> mRemoteStream;
-  nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
+  // These 2 values are set only if mState is ePending or eRunning.
+  // RefPtr is used instead of nsCOMPtr to avoid invoking QueryInterface when
+  // assigning in debug builds, as `mInputStreamCallback` may not be threadsafe.
+  RefPtr<nsIInputStreamCallback> mInputStreamCallback GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget GUARDED_BY(mMutex);
+  uint32_t mInputStreamCallbackFlags GUARDED_BY(mMutex) = 0;
+  uint32_t mInputStreamCallbackRequestedCount GUARDED_BY(mMutex) = 0;
 
   // These 2 values are set only if mState is ePending.
-  nsCOMPtr<nsIInputStreamCallback> mInputStreamCallback;
-  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget;
-
-  // These 2 values are set only if mState is ePending.
-  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback;
-  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget;
-
-  // These 2 values are set only when nsIAsyncInputStreamLength::asyncWait() is
-  // called.
-  nsCOMPtr<nsIInputStreamLengthCallback> mLengthCallback;
-  nsCOMPtr<nsIEventTarget> mLengthCallbackEventTarget;
-
-  // Any member of this class is protected by mutex because touched on
-  // multiple threads.
-  Mutex mMutex MOZ_UNANNOTATED;
+  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback GUARDED_BY(mMutex);
+  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla
+
+template <>
+struct IPC::ParamTraits<mozilla::RemoteLazyInputStream*> {
+  static void Write(IPC::MessageWriter* aWriter,
+                    mozilla::RemoteLazyInputStream* aParam);
+  static bool Read(IPC::MessageReader* aReader,
+                   RefPtr<mozilla::RemoteLazyInputStream>* aResult);
+};
 
 #endif  // mozilla_RemoteLazyInputStream_h

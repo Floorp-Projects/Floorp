@@ -171,6 +171,8 @@ class AutoIPCStream {
   [[nodiscard]] bool Serialize(nsIInputStream* aStream,
                                net::SocketProcessParent* aManager);
 
+  bool Serialize(nsIInputStream* aStream);
+
   // Get the IPCStream as a non-optional value.  This will
   // assert if a stream has not been serialized or if it has already been taken.
   // This should only be called if the value is being, or has already been, sent
