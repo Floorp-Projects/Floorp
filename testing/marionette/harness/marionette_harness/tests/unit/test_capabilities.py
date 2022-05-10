@@ -127,8 +127,14 @@ class TestCapabilities(MarionetteTestCase):
             "Session ID has {{}} in it: {}".format(self.marionette.session_id),
         )
 
+    def test_windowless_false(self):
+        self.marionette.delete_session()
+        self.marionette.start_session({"moz:windowless": False})
+        caps = self.marionette.session_capabilities
+        self.assertFalse(caps["moz:windowless"])
+
     @unittest.skipUnless(sys.platform.startswith("darwin"), "Only supported on MacOS")
-    def test_windowless(self):
+    def test_windowless_true(self):
         self.marionette.delete_session()
         self.marionette.start_session({"moz:windowless": True})
         caps = self.marionette.session_capabilities
