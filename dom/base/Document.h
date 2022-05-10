@@ -640,10 +640,16 @@ class Document : public nsINode,
     return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
   }
 
+  nsIPrincipal* EffectiveCookiePrincipal() const;
+
   nsIPrincipal* EffectiveStoragePrincipal() const;
 
   // nsIScriptObjectPrincipal
   nsIPrincipal* GetPrincipal() final { return NodePrincipal(); }
+
+  nsIPrincipal* GetEffectiveCookiePrincipal() final {
+    return EffectiveCookiePrincipal();
+  }
 
   nsIPrincipal* GetEffectiveStoragePrincipal() final {
     return EffectiveStoragePrincipal();
@@ -659,7 +665,7 @@ class Document : public nsINode,
   // allowlist.
   nsIPrincipal* GetPrincipalForPrefBasedHacks() const;
 
-  void ClearActiveStoragePrincipal() { mActiveStoragePrincipal = nullptr; }
+  void ClearActiveCookiePrincipal() { mActiveCookiePrincipal = nullptr; }
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
@@ -5274,10 +5280,10 @@ class Document : public nsINode,
   // StoragePrincipalHelper.h to know more.
   nsCOMPtr<nsIPrincipal> mPartitionedPrincipal;
 
-  // The cached storage principal for this document.
-  // This is mutable so that we can keep EffectiveStoragePrincipal() const
+  // The cached cookie principal for this document.
+  // This is mutable so that we can keep EffectiveCookiePrincipal() const
   // which is required due to its CloneDocHelper() call site.  :-(
-  mutable nsCOMPtr<nsIPrincipal> mActiveStoragePrincipal;
+  mutable nsCOMPtr<nsIPrincipal> mActiveCookiePrincipal;
 
   // See GetNextFormNumber and GetNextControlNumber.
   int32_t mNextFormNumber;
