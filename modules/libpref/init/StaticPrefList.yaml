@@ -11707,6 +11707,12 @@
   value: true
   mirror: always
 
+# Always partition web storage APIs except cookies.
+- name: privacy.partition.always_partition_non_cookie_storage
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 - name: privacy.partition.bloburl_per_agent_cluster
   type: RelaxedAtomicBool
   value: false
