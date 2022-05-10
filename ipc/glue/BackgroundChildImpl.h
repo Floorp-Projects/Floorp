@@ -29,8 +29,7 @@ namespace ipc {
 
 // Instances of this class should never be created directly. This class is meant
 // to be inherited in BackgroundImpl.
-class BackgroundChildImpl : public PBackgroundChild,
-                            public ChildToParentStreamActorManager {
+class BackgroundChildImpl : public PBackgroundChild {
  public:
   class ThreadLocal;
 

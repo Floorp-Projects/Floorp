@@ -28,11 +28,6 @@
 #include "nsTArray.h"
 #include "nscore.h"
 
-namespace mozilla::ipc {
-class ChildToParentStreamActorManager;
-class ParentToChildStreamActorManager;
-}  // namespace mozilla::ipc
-
 template <class T>
 class nsCOMPtr;
 
@@ -56,12 +51,6 @@ class DecryptingInputStreamBase : public nsIInputStream,
   void SerializedComplexity(uint32_t aMaxSize, uint32_t* aSizeUsed,
                             uint32_t* aPipes,
                             uint32_t* aTransferables) override;
-
-  using nsIIPCSerializableInputStream::Serialize;
-  void Serialize(mozilla::ipc::InputStreamParams& aParams,
-                 FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-                 uint32_t aMaxSize, uint32_t* aSizeUsed,
-                 mozilla::ipc::ChildToParentStreamActorManager* aManager) final;
 
  protected:
   DecryptingInputStreamBase(MovingNotNull<nsCOMPtr<nsIInputStream>> aBaseStream,
@@ -127,15 +116,10 @@ class DecryptingInputStream final : public DecryptingInputStreamBase {
 
   NS_IMETHOD Clone(nsIInputStream** _retval) override;
 
-  using DecryptingInputStreamBase::Serialize;
-  void Serialize(
-      mozilla::ipc::InputStreamParams& aParams,
-      FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-      uint32_t aMaxSize, uint32_t* aSizeUsed,
-      mozilla::ipc::ParentToChildStreamActorManager* aManager) override;
+  void Serialize(mozilla::ipc::InputStreamParams& aParams, uint32_t aMaxSize,
+                 uint32_t* aSizeUsed) override;
 
-  bool Deserialize(const mozilla::ipc::InputStreamParams& aParams,
-                   const FileDescriptorArray& aFileDescriptors) override;
+  bool Deserialize(const mozilla::ipc::InputStreamParams& aParams) override;
 
  private:
   ~DecryptingInputStream();

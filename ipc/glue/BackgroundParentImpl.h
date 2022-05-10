@@ -15,8 +15,7 @@ namespace mozilla::ipc {
 
 // Instances of this class should never be created directly. This class is meant
 // to be inherited in BackgroundImpl.
-class BackgroundParentImpl : public PBackgroundParent,
-                             public ParentToChildStreamActorManager {
+class BackgroundParentImpl : public PBackgroundParent {
  protected:
   BackgroundParentImpl();
   virtual ~BackgroundParentImpl();
