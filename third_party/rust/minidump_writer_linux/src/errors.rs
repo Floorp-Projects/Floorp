@@ -102,8 +102,8 @@ pub enum DumperError {
     CopyFromProcessError(Pid, usize, usize, usize, #[source] nix::Error),
     #[error("Skipped thread {0} due to it being part of the seccomp sandbox's trusted code")]
     DetachSkippedThread(Pid),
-    #[error("No threads left to suspend")]
-    SuspendNoThreadsLeft,
+    #[error("No threads left to suspend out of {0}")]
+    SuspendNoThreadsLeft(usize),
     #[error("No mapping for stack pointer found")]
     NoStackPointerMapping,
     #[error("Failed slice conversion")]
