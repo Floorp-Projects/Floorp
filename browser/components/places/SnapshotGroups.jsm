@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
@@ -458,7 +459,9 @@ const SnapshotGroups = new (class SnapshotGroups {
     });
 
     let end = Math.min(snapshots.length, count + start);
-    return snapshots.slice(start, end);
+    snapshots = snapshots.slice(start, end);
+    PlacesUIUtils.insertTitleStartDiffs(snapshots);
+    return snapshots;
   }
 
   /**
