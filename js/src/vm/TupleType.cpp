@@ -262,7 +262,7 @@ static TupleType* allocate(JSContext* cx, gc::AllocKind allocKind) {
   TupleType* tup = static_cast<TupleType*>(obj);
   tup->initShape(shape);
   tup->initEmptyDynamicSlots();
-  tup->setFixedElements(0);
+  tup->initFixedElements(allocKind, 0);
   return tup;
 }
 
@@ -273,11 +273,6 @@ TupleType* TupleType::createUninitialized(JSContext* cx, uint32_t length) {
   if (!tup) {
     return nullptr;
   }
-
-  uint32_t capacity =
-      gc::GetGCKindSlots(allocKind) - ObjectElements::VALUES_PER_HEADER;
-
-  new (tup->getElementsHeader()) ObjectElements(capacity, length);
 
   if (!tup->ensureElements(cx, length)) {
     return nullptr;

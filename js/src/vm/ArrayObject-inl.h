@@ -55,11 +55,7 @@ namespace js {
   MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
   cx->realm()->setObjectPendingMetadata(cx, aobj);
 
-  uint32_t capacity =
-      gc::GetGCKindSlots(kind) - ObjectElements::VALUES_PER_HEADER;
-
-  aobj->setFixedElements();
-  new (aobj->getElementsHeader()) ObjectElements(capacity, length);
+  aobj->initFixedElements(kind, length);
 
   if (slotSpan > 0) {
     aobj->initDynamicSlots(slotSpan);
