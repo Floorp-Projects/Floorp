@@ -194,10 +194,15 @@ int dav1d_thread_picture_alloc(Dav1dContext *const c, Dav1dFrameContext *const f
     dav1d_ref_dec(&c->itut_t35_ref);
     c->itut_t35 = NULL;
 
+    // Don't clear these flags from c->frame_flags if the frame is not visible.
+    // This way they will be added to the next visible frame too.
+    const int flags_mask = (f->frame_hdr->show_frame || c->output_invisible_frames)
+                           ? 0 : (PICTURE_FLAG_NEW_SEQUENCE | PICTURE_FLAG_NEW_OP_PARAMS_INFO);
     p->flags = c->frame_flags;
-    c->frame_flags = 0;
+    c->frame_flags &= flags_mask;
 
     p->visible = f->frame_hdr->show_frame;
+    p->showable = f->frame_hdr->showable_frame;
     if (have_frame_mt) {
         atomic_init(&p->progress[0], 0);
         atomic_init(&p->progress[1], 0);
@@ -255,6 +260,7 @@ void dav1d_thread_picture_ref(Dav1dThreadPicture *const dst,
 {
     dav1d_picture_ref(&dst->p, &src->p);
     dst->visible = src->visible;
+    dst->showable = src->showable;
     dst->progress = src->progress;
     dst->flags = src->flags;
 }
@@ -264,6 +270,7 @@ void dav1d_thread_picture_move_ref(Dav1dThreadPicture *const dst,
 {
     dav1d_picture_move_ref(&dst->p, &src->p);
     dst->visible = src->visible;
+    dst->showable = src->showable;
     dst->progress = src->progress;
     dst->flags = src->flags;
     memset(src, 0, sizeof(*src));

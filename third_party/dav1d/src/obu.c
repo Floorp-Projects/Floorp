@@ -396,6 +396,7 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
     if (hdr->show_frame) {
         if (seqhdr->decoder_model_info_present && !seqhdr->equal_picture_interval)
             hdr->frame_presentation_delay = dav1d_get_bits(gb, seqhdr->frame_presentation_delay_length);
+        hdr->showable_frame = hdr->frame_type != DAV1D_FRAME_TYPE_KEY;
     } else
         hdr->showable_frame = dav1d_get_bits(gb, 1);
     hdr->error_resilient_mode =
@@ -454,6 +455,11 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
         if (hdr->refresh_frame_flags != 0xff && hdr->error_resilient_mode && seqhdr->order_hint)
             for (int i = 0; i < 8; i++)
                 dav1d_get_bits(gb, seqhdr->order_hint_n_bits);
+        if (c->strict_std_compliance &&
+            hdr->frame_type == DAV1D_FRAME_TYPE_INTRA && hdr->refresh_frame_flags == 0xff)
+        {
+            goto error;
+        }
         if (read_frame_size(c, gb, 0) < 0) goto error;
         hdr->allow_intrabc = hdr->allow_screen_content_tools &&
                              !hdr->super_res.enabled && dav1d_get_bits(gb, 1);
@@ -1551,6 +1557,11 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
     if (c->seq_hdr && c->frame_hdr) {
         if (c->frame_hdr->show_existing_frame) {
             if (!c->refs[c->frame_hdr->existing_frame_idx].p.p.data[0]) goto error;
+            if (c->strict_std_compliance &&
+                !c->refs[c->frame_hdr->existing_frame_idx].p.showable)
+            {
+                goto error;
+            }
             if (c->n_fc == 1) {
                 dav1d_thread_picture_ref(&c->out,
                                          &c->refs[c->frame_hdr->existing_frame_idx].p);
@@ -1602,6 +1613,7 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, const int globa
             }
             if (c->refs[c->frame_hdr->existing_frame_idx].p.p.frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY) {
                 const int r = c->frame_hdr->existing_frame_idx;
+                c->refs[r].p.showable = 0;
                 for (int i = 0; i < 8; i++) {
                     if (i == r) continue;
 

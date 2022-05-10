@@ -271,9 +271,11 @@ COLD void bitfn(dav1d_itx_dsp_init_x86)(Dav1dInvTxfmDSPContext *const c,
     assign_itx16_bpc_fn(R,  8,  4, 12, avx2);
     assign_itx16_bpc_fn( ,  8,  8, 12, avx2);
     assign_itx16_bpc_fn(R,  8, 16, 12, avx2);
+    assign_itx2_bpc_fn (R,  8, 32, 12, avx2);
     assign_itx16_bpc_fn(R, 16,  4, 12, avx2);
     assign_itx16_bpc_fn(R, 16,  8, 12, avx2);
     assign_itx12_bpc_fn( , 16, 16, 12, avx2);
+    assign_itx2_bpc_fn (R, 32,  8, 12, avx2);
 #endif
 
     if (bpc > 10) return;
