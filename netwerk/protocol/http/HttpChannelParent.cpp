@@ -1456,19 +1456,17 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenOriginalCacheInputStream() {
   if (mIPCClosed) {
     return IPC_OK();
   }
-  AutoIPCStream autoStream;
+  Maybe<IPCStream> ipcStream;
   if (mCacheEntry) {
     nsCOMPtr<nsIInputStream> inputStream;
     nsresult rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
     if (NS_SUCCEEDED(rv)) {
-      PContentParent* pcp = Manager()->Manager();
-      Unused << autoStream.Serialize(inputStream,
-                                     static_cast<ContentParent*>(pcp));
+      Unused << mozilla::ipc::SerializeIPCStream(
+          inputStream.forget(), ipcStream, /* aAllowLazy */ false);
     }
   }
 
-  Unused << SendOriginalCacheInputStreamAvailable(
-      autoStream.TakeOptionalValue());
+  Unused << SendOriginalCacheInputStreamAvailable(ipcStream);
   return IPC_OK();
 }
 

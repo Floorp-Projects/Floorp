@@ -464,17 +464,14 @@ NS_IMETHODIMP DecryptingInputStream<CipherStrategy>::Clone(
 
 template <typename CipherStrategy>
 void DecryptingInputStream<CipherStrategy>::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
+    mozilla::ipc::InputStreamParams& aParams, uint32_t aMaxSize,
+    uint32_t* aSizeUsed) {
   MOZ_ASSERT(mBaseStream);
   MOZ_ASSERT(mBaseIPCSerializableInputStream);
 
   mozilla::ipc::InputStreamParams baseStreamParams;
   (*mBaseIPCSerializableInputStream)
-      ->Serialize(baseStreamParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                  aSizeUsed, aManager);
+      ->Serialize(baseStreamParams, aMaxSize, aSizeUsed);
 
   MOZ_ASSERT(baseStreamParams.type() ==
              mozilla::ipc::InputStreamParams::TFileInputStreamParams);
@@ -491,8 +488,7 @@ void DecryptingInputStream<CipherStrategy>::Serialize(
 
 template <typename CipherStrategy>
 bool DecryptingInputStream<CipherStrategy>::Deserialize(
-    const mozilla::ipc::InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+    const mozilla::ipc::InputStreamParams& aParams) {
   MOZ_ASSERT(aParams.type() ==
              mozilla::ipc::InputStreamParams::TEncryptedFileInputStreamParams);
   const auto& params = aParams.get_EncryptedFileInputStreamParams();
@@ -503,8 +499,8 @@ bool DecryptingInputStream<CipherStrategy>::Deserialize(
   nsCOMPtr<nsIIPCSerializableInputStream> baseSerializable =
       do_QueryInterface(stream);
 
-  if (NS_WARN_IF(!baseSerializable->Deserialize(params.fileInputStreamParams(),
-                                                aFileDescriptors))) {
+  if (NS_WARN_IF(
+          !baseSerializable->Deserialize(params.fileInputStreamParams()))) {
     return false;
   }
 
