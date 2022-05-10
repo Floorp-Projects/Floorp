@@ -457,7 +457,6 @@ class Capabilities extends Map {
       ],
       ["moz:useNonSpecCompliantPointerOrigin", false],
       ["moz:webdriverClick", true],
-      ["moz:windowless", false],
     ]);
   }
 
@@ -587,11 +586,6 @@ class Capabilities extends Map {
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
 
-        // Don't set the value because it's only used to return the address
-        // of the Remote Agent's debugger (HTTP server).
-        case "moz:debuggerAddress":
-          continue;
-
         case "moz:useNonSpecCompliantPointerOrigin":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
@@ -600,16 +594,10 @@ class Capabilities extends Map {
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
           break;
 
-        case "moz:windowless":
-          assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
-
-          // Only supported on MacOS
-          if (v && !AppInfo.isMac) {
-            throw new error.InvalidArgumentError(
-              "moz:windowless only supported on MacOS"
-            );
-          }
-          break;
+        // Don't set the value because it's only used to return the address
+        // of the Remote Agent's debugger (HTTP server).
+        case "moz:debuggerAddress":
+          continue;
       }
 
       matched.set(k, v);
