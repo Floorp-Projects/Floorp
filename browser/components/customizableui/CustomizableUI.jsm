@@ -1797,8 +1797,11 @@ var CustomizableUIInternal = {
         );
       }
     } else {
-      if (aWidget.onBeforeCreated) {
-        aWidget.onBeforeCreated(aDocument);
+      if (
+        aWidget.onBeforeCreated &&
+        aWidget.onBeforeCreated(aDocument) === false
+      ) {
+        return null;
       }
 
       let button = aDocument.createXULElement("toolbarbutton");
@@ -3921,7 +3924,8 @@ var CustomizableUI = {
    *                  constructed, passing the document in which that will happen.
    *                  This is useful especially for 'view' type widgets that need
    *                  to construct their views on the fly (e.g. from bootstrapped
-   *                  add-ons)
+   *                  add-ons). If the function returns `false`, the widget will
+   *                  not be created.
    * - onCreated(aNode): Attached to all widgets; a function that will be invoked
    *                  whenever the widget has a DOM node constructed, passing the
    *                  constructed node as an argument.

@@ -501,14 +501,20 @@ function openLinkIn(url, where, params) {
   if (where == "current") {
     targetBrowser = params.targetBrowser || w.gBrowser.selectedBrowser;
     loadInBackground = false;
-
     try {
       uriObj = Services.io.newURI(url);
     } catch (e) {}
 
-    if (
+    // In certain tabs, we restrict what if anything may replace the loaded
+    // page. If a load request bounces off for the currently selected tab,
+    // we'll open a new tab instead.
+    let tab = w.gBrowser.getTabForBrowser(targetBrowser);
+    if (tab == w.gFirefoxViewTab) {
+      where = "tab";
+      targetBrowser = null;
+    } else if (
       !aAllowPinnedTabHostChange &&
-      w.gBrowser.getTabForBrowser(targetBrowser).pinned &&
+      tab.pinned &&
       url != "about:crashcontent"
     ) {
       try {
@@ -519,15 +525,15 @@ function openLinkIn(url, where, params) {
             targetBrowser.currentURI.host != uriObj.host)
         ) {
           where = "tab";
-          loadInBackground = false;
+          targetBrowser = null;
         }
       } catch (err) {
         where = "tab";
-        loadInBackground = false;
+        targetBrowser = null;
       }
     }
   } else {
-    // 'where' is "tab" or "tabshifted", so we'll load the link in a new tab.
+    // `where` is "tab" or "tabshifted", so we'll load the link in a new tab.
     loadInBackground = aInBackground;
     if (loadInBackground == null) {
       loadInBackground = aFromChrome
