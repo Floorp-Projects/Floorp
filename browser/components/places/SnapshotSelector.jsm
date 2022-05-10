@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
   FilterAdult: "resource://activity-stream/lib/FilterAdult.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
   SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
 });
@@ -237,6 +238,8 @@ class SnapshotSelector extends EventEmitter {
       .map(s => s.snapshot)
       .slice();
 
+    PlacesUIUtils.insertTitleStartDiffs(snapshots);
+
     this.#snapshotsGenerated(snapshots);
   }
 
@@ -285,10 +288,7 @@ class SnapshotSelector extends EventEmitter {
       .slice(0, context.count)
       .map(r => r.snapshot);
 
-    logConsole.debug(
-      "Reduced final candidates:",
-      snapshots.map(s => s.url)
-    );
+    PlacesUIUtils.insertTitleStartDiffs(snapshots);
 
     this.#snapshotsGenerated(snapshots);
   }
