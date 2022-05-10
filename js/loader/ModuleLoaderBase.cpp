@@ -1025,11 +1025,13 @@ nsresult ModuleLoaderBase::EvaluateModule(ModuleLoadRequest* aRequest) {
   mozilla::nsAutoMicroTask mt;
   mozilla::dom::AutoEntryScript aes(mGlobalObject, "EvaluateModule", true);
 
-  return EvaluateModuleInContext(aes.cx(), aRequest);
+  return EvaluateModuleInContext(aes.cx(), aRequest,
+                                 JS::ReportModuleErrorsAsync);
 }
 
 nsresult ModuleLoaderBase::EvaluateModuleInContext(
-    JSContext* aCx, ModuleLoadRequest* aRequest) {
+    JSContext* aCx, ModuleLoadRequest* aRequest,
+    JS::ModuleErrorBehaviour errorBehaviour) {
   MOZ_ASSERT(aRequest->mLoader == this);
 
   AUTO_PROFILER_LABEL("ModuleLoaderBase::EvaluateModule", JS);
@@ -1081,31 +1083,33 @@ nsresult ModuleLoaderBase::EvaluateModuleInContext(
 
   mLoader->MaybePrepareModuleForBytecodeEncodingBeforeExecute(aCx, request);
 
-  if (JS::ModuleEvaluate(aCx, module, &rval)) {
-    // If we have an infinite loop in a module, which is stopped by the
-    // user, the module evaluation will fail, but we will not have an
-    // AutoEntryScript exception.
-    MOZ_ASSERT(!JS_IsExceptionPending(aCx));
-  } else {
+  bool ok = JS::ModuleEvaluate(aCx, module, &rval);
+
+  // ModuleEvaluate will usually set a pending exception if it returns false,
+  // unless the user cancels execution.
+  MOZ_ASSERT_IF(ok, !JS_IsExceptionPending(aCx));
+
+  if (!ok) {
     LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
     // For a dynamic import, the promise is rejected. Otherwise an error is
     // reported by AutoEntryScript.
   }
 
-  JS::Rooted<JSObject*> aEvaluationPromise(aCx);
+  // ModuleEvaluate returns a promise unless the user cancels the execution in
+  // which case rval will be undefined. We should treat it as a failed
+  // evaluation, and reject appropriately.
+  JS::Rooted<JSObject*> evaluationPromise(aCx);
   if (rval.isObject()) {
-    // If the user cancels the evaluation on an infinite loop, we need
-    // to skip this step. In that case, ModuleEvaluate will not return a
-    // promise, rval will be undefined. We should treat it as a failed
-    // evaluation, and reject appropriately.
-    aEvaluationPromise.set(&rval.toObject());
+    evaluationPromise.set(&rval.toObject());
   }
+
   if (request->IsDynamicImport()) {
-    FinishDynamicImport(aCx, request, NS_OK, aEvaluationPromise);
+    FinishDynamicImport(aCx, request, NS_OK, evaluationPromise);
   } else {
     // If this is not a dynamic import, and if the promise is rejected,
     // the value is unwrapped from the promise value.
-    if (!JS::ThrowOnModuleEvaluationFailure(aCx, aEvaluationPromise)) {
+    if (!JS::ThrowOnModuleEvaluationFailure(aCx, evaluationPromise,
+                                            errorBehaviour)) {
       LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
       // For a dynamic import, the promise is rejected. Otherwise an error is
       // reported by AutoEntryScript.
