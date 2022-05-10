@@ -112,30 +112,23 @@ function _initTest() {
   );
 }
 
-function waitForTelemetryEvent(category, value) {
+function waitForTelemetryEvent(category) {
   info("waiting for telemetry event");
   return TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
       false
     ).content;
-
     if (!events) {
       return null;
     }
     events = events.filter(e => e[1] == category);
     info(JSON.stringify(events));
-
-    // Check for experimentId passed as value
-    // if exists return events only for specific experimentId
-    if (value) {
-      events = events.filter(e => e[4].includes(value));
-    }
     if (events.length) {
       return events[0];
     }
     return null;
-  }, "wait and retrieve telemetry event");
+  }, "waiting for telemetry event");
 }
 
 async function setupMSExperimentWithMessage(message) {
@@ -151,6 +144,12 @@ async function setupMSExperimentWithMessage(message) {
   });
   await SpecialPowers.pushPrefEnv({
     set: [
+      // Disable onboarding, so we don't have default stuff showing up on the
+      // private browsing surface.
+      [
+        "browser.newtabpage.activity-stream.asrouter.providers.onboarding",
+        '{"id":"onboarding","type":"local","localProvider":"OnboardingMessageProvider","enabled":false,"exclude":[]}',
+      ],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
         '{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["pbNewtab"],"updateCycleInMs":0}',

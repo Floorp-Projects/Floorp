@@ -11,13 +11,10 @@
 
 add_task(async function test_experiment_messaging_system_impressions() {
   const LOCALE = Services.locale.appLocaleAsBCP47;
-  let experimentId = `pb_newtab_${Math.random()}`;
-
   let doExperimentCleanup = await setupMSExperimentWithMessage({
-    id: experimentId,
+    id: `PB_NEWTAB_MESSAGING_SYSTEM_${Math.random()}`,
     template: "pb_newtab",
     content: {
-      hideDefault: true,
       promoEnabled: true,
       infoEnabled: true,
       infoBody: "fluent:about-private-browsing-info-title",
@@ -46,18 +43,19 @@ add_task(async function test_experiment_messaging_system_impressions() {
     );
   });
 
-  let event = await waitForTelemetryEvent("normandy", experimentId);
-
-  ok(
-    event[1] == "normandy" &&
-      event[2] == "expose" &&
-      event[3] == "nimbus_experiment" &&
-      event[4].includes(experimentId) &&
-      event[5].featureId == "pbNewtab",
-    "recorded telemetry for expose"
+  await waitForTelemetryEvent("normandy");
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        method: "expose",
+        extra: {
+          featureId: "pbNewtab",
+        },
+      },
+    ],
+    { category: "normandy" },
+    { process: "content" }
   );
-
-  Services.telemetry.clearEvents();
 
   let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
 
@@ -69,18 +67,19 @@ add_task(async function test_experiment_messaging_system_impressions() {
     );
   });
 
-  let event2 = await waitForTelemetryEvent("normandy", experimentId);
-
-  ok(
-    event2[1] == "normandy" &&
-      event2[2] == "expose" &&
-      event2[3] == "nimbus_experiment" &&
-      event2[4].includes(experimentId) &&
-      event2[5].featureId == "pbNewtab",
-    "recorded telemetry for expose"
+  await waitForTelemetryEvent("normandy");
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        method: "expose",
+        extra: {
+          featureId: "pbNewtab",
+        },
+      },
+    ],
+    { category: "normandy" },
+    { process: "content" }
   );
-
-  Services.telemetry.clearEvents();
 
   let { win: win3, tab: tab3 } = await openTabAndWaitForRender();
 
@@ -91,15 +90,10 @@ add_task(async function test_experiment_messaging_system_impressions() {
       "should no longer render the experiment message after 2 impressions"
     );
   });
-
-  let event3 = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    false
-  ).content;
-
-  Assert.equal(!!event3, false, "Should not have promo expose");
-
-  Services.telemetry.clearEvents();
+  TelemetryTestUtils.assertNumberOfEvents(0, {
+    category: "normandy",
+    method: "expose",
+  });
 
   await BrowserTestUtils.closeWindow(win1);
   await BrowserTestUtils.closeWindow(win2);
