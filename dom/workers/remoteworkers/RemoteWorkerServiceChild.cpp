@@ -7,12 +7,10 @@
 #include "RemoteWorkerServiceChild.h"
 #include "RemoteWorkerController.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 RemoteWorkerServiceChild::RemoteWorkerServiceChild() = default;
 
 RemoteWorkerServiceChild::~RemoteWorkerServiceChild() = default;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

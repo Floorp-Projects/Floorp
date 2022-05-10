@@ -44,8 +44,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -592,5 +591,4 @@ void FetchEventOpChild::MaybeScheduleRegistrationUpdate() const {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

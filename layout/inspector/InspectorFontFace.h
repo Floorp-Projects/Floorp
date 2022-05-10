@@ -16,8 +16,7 @@
 class gfxFontEntry;
 class gfxFontGroup;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Information on font face usage by a given DOM Range, as returned by
@@ -72,7 +71,6 @@ class InspectorFontFace final : public NonRefcountedDOMObject {
   nsTArray<RefPtr<nsRange>> mRanges;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_InspectorFontFace_h

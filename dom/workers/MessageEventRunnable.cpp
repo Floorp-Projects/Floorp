@@ -14,8 +14,7 @@
 #include "nsQueryObject.h"
 #include "WorkerScope.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 MessageEventRunnable::MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                                            TargetAndBusyBehavior aBehavior)
@@ -155,5 +154,4 @@ void MessageEventRunnable::DispatchError(JSContext* aCx,
   aTarget->DispatchEvent(*event);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

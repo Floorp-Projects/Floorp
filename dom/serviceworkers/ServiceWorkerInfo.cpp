@@ -14,8 +14,7 @@
 #include "mozilla/dom/RemoteWorkerTypes.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::PrincipalInfo;
 
@@ -284,5 +283,4 @@ void ServiceWorkerInfo::SetRegistrationVersion(uint64_t aVersion) {
   mDescriptor.SetRegistrationVersion(aVersion);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

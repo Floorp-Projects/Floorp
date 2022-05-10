@@ -12,8 +12,7 @@
 nsresult NS_NewSVGFEDiffuseLightingElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFEDiffuseLightingElementBase = SVGFELightingElement;
 
@@ -49,7 +48,6 @@ class SVGFEDiffuseLightingElement : public SVGFEDiffuseLightingElementBase {
   already_AddRefed<DOMSVGAnimatedNumber> KernelUnitLengthY();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFEDIFFUSELIGHTINGELEMENT_H_

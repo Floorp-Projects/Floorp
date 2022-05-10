@@ -9,8 +9,7 @@
 
 #include "nsINetworkInterceptController.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerInterceptController final
     : public nsINetworkInterceptController {
@@ -21,7 +20,6 @@ class ServiceWorkerInterceptController final
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerinterceptcontroller_h

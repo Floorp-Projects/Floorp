@@ -10,8 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Text.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CDATASection final : public Text {
  private:
@@ -55,7 +54,6 @@ class CDATASection final : public Text {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CDATASection_h

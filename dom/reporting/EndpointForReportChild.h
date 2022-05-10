@@ -10,8 +10,7 @@
 #include "mozilla/dom/ReportDeliver.h"
 #include "mozilla/dom/PEndpointForReportChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EndpointForReport;
 
@@ -28,7 +27,6 @@ class EndpointForReportChild final : public PEndpointForReportChild {
   ReportDeliver::ReportData mReportData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_EndpointForReportChild_h

@@ -19,8 +19,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ReportBody;
 
@@ -55,7 +54,6 @@ class Report final : public nsISupports, public nsWrapperCache {
   RefPtr<ReportBody> mBody;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_Report_h

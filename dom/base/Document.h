@@ -316,11 +316,9 @@ enum BFCacheStatus {
 }  // namespace dom
 }  // namespace mozilla
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 class ChannelEventQueue;
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_IDOCUMENT_IID                             \
@@ -330,8 +328,7 @@ class ChannelEventQueue;
     }                                                \
   }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class DOMStyleSheetSetList;
@@ -5434,8 +5431,7 @@ class MOZ_RAII IgnoreOpensDuringUnload final {
 
 bool IsInActiveTab(Document* aDoc);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 // XXX These belong somewhere else
 nsresult NS_NewHTMLDocument(mozilla::dom::Document** aInstancePtrResult,

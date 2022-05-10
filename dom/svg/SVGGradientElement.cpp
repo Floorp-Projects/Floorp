@@ -20,8 +20,7 @@
 NS_IMPL_NS_NEW_SVG_ELEMENT(LinearGradient)
 NS_IMPL_NS_NEW_SVG_ELEMENT(RadialGradient)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGGradientElement_Binding;
 using namespace SVGUnitTypes_Binding;
@@ -229,5 +228,4 @@ SVGElement::LengthAttributesInfo SVGRadialGradientElement::GetLengthInfo() {
                               ArrayLength(sLengthInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

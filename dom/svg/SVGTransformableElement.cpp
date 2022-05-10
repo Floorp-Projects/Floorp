@@ -23,8 +23,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 already_AddRefed<DOMSVGAnimatedTransformList>
 SVGTransformableElement::Transform() {
@@ -293,5 +292,4 @@ gfxMatrix SVGTransformableElement::GetUserToParentTransform(
   return result;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

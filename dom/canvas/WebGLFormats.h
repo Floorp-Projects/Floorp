@@ -12,8 +12,7 @@
 #include "mozilla/UniquePtr.h"
 #include "WebGLTypes.h"
 
-namespace mozilla {
-namespace webgl {
+namespace mozilla::webgl {
 
 using EffectiveFormatValueT = uint8_t;
 
@@ -425,7 +424,6 @@ class FormatUsageAuthority {
   const FormatUsageInfo* GetUnsizedTexUsage(const PackingInfo& pi) const;
 };
 
-}  // namespace webgl
-}  // namespace mozilla
+}  // namespace mozilla::webgl
 
 #endif  // WEBGL_FORMATS_H_

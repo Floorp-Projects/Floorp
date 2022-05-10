@@ -11,8 +11,7 @@
 #include "mozilla/dom/GamepadHandle.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadLightIndicator final : public nsISupports, public nsWrapperCache {
  public:
@@ -49,7 +48,6 @@ class GamepadLightIndicator final : public nsISupports, public nsWrapperCache {
   uint32_t mIndex;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_GamepadLightIndicator_h

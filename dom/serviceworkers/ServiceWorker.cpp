@@ -32,8 +32,7 @@
 using mozilla::ErrorResult;
 using namespace mozilla::dom;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj) {
   if (NS_IsMainThread()) {
@@ -254,5 +253,4 @@ void ServiceWorker::MaybeAttachToRegistration(
   mRegistration = aRegistration;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

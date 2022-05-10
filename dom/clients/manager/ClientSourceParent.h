@@ -13,8 +13,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/MozPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientHandleParent;
 class ClientManagerService;
@@ -85,7 +84,6 @@ class ClientSourceParent final : public PClientSourceParent {
   RefPtr<ClientOpPromise> StartOp(ClientOpConstructorArgs&& aArgs);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientSourceParent_h

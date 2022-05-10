@@ -16,8 +16,7 @@
 #include "mozilla/dom/XULMenuElementBinding.h"
 #include "nsXULPopupManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* XULMenuElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -96,5 +95,4 @@ bool XULMenuElement::OpenedWithKey() {
   return false;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -15,8 +15,7 @@ class nsIFrame;
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Switch)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGSwitchElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -155,5 +154,4 @@ nsIContent* SVGSwitchElement::FindActiveChild() const {
   return bestChild ? bestChild : defaultChild;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

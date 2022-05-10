@@ -11,8 +11,7 @@
 #include "mozilla/dom/FetchObserverBinding.h"
 #include "mozilla/dom/AbortSignal.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FetchObserver final : public DOMEventTargetHelper, public AbortFollower {
  public:
@@ -41,7 +40,6 @@ class FetchObserver final : public DOMEventTargetHelper, public AbortFollower {
   FetchState mState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FetchObserver_h

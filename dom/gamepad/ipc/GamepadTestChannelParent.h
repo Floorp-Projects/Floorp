@@ -10,8 +10,7 @@
 #ifndef mozilla_dom_GamepadTestChannelParent_h_
 #  define mozilla_dom_GamepadTestChannelParent_h_
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadTestChannelParent final : public PGamepadTestChannelParent,
                                        public SupportsWeakPtr {
@@ -45,7 +44,6 @@ class GamepadTestChannelParent final : public PGamepadTestChannelParent,
   nsTArray<DeferredGamepadAdded> mDeferredGamepadAdded;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

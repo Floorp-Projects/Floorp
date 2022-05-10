@@ -12,8 +12,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLStyleElement final : public nsGenericHTMLElement,
                                public LinkStyle,
@@ -90,7 +89,6 @@ class HTMLStyleElement final : public nsGenericHTMLElement,
   void ContentChanged(nsIContent* aContent);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

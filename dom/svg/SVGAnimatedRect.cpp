@@ -10,8 +10,7 @@
 #include "mozilla/dom/SVGRect.h"
 #include "SVGAnimatedViewBox.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedRect, mSVGElement)
 
@@ -39,5 +38,4 @@ JSObject* SVGAnimatedRect::WrapObject(JSContext* aCx,
   return SVGAnimatedRect_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

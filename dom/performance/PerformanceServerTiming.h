@@ -16,8 +16,7 @@
 class nsIServerTiming;
 class nsISupports;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PerformanceServerTiming final : public nsISupports,
                                       public nsWrapperCache {
@@ -48,7 +47,6 @@ class PerformanceServerTiming final : public nsISupports,
   nsCOMPtr<nsIServerTiming> mServerTiming;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PerformanceServerTiming_h

@@ -40,10 +40,7 @@ using mozilla::dom::cache::Cache;
 using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
-namespace mozilla {
-namespace dom {
-
-namespace serviceWorkerScriptCache {
+namespace mozilla::dom::serviceWorkerScriptCache {
 
 namespace {
 
@@ -1503,7 +1500,4 @@ nsresult Compare(ServiceWorkerRegistrationInfo* aRegistration,
   return NS_OK;
 }
 
-}  // namespace serviceWorkerScriptCache
-
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::serviceWorkerScriptCache

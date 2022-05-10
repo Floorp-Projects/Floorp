@@ -10,8 +10,7 @@
 #include "mozilla/webgpu/CanvasContext.h"
 #include "Device.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent)
 GPU_IMPL_JS_WRAP(CommandBuffer)
@@ -49,5 +48,4 @@ Maybe<RawId> CommandBuffer::Commit() {
   return Some(mId);
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

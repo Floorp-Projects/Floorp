@@ -18,8 +18,7 @@ namespace mozilla {
 namespace ipc {
 class AutoIPCStream;
 }  // namespace ipc
-namespace dom {
-namespace cache {
+namespace dom::cache {
 
 class CacheReadStream;
 
@@ -76,8 +75,7 @@ class StreamControl {
   ReadStreamList mReadStreamList;
 };
 
-}  // namespace cache
-}  // namespace dom
+}  // namespace dom::cache
 }  // namespace mozilla
 
 #endif  // mozilla_dom_cache_StreamControl_h

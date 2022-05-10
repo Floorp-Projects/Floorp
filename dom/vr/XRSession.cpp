@@ -37,8 +37,7 @@
  */
 const uint32_t kMaxPoolSize = 16;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XRSession)
 
@@ -527,5 +526,4 @@ RefPtr<XRFrame> XRSession::PooledFrame() {
   return frame;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

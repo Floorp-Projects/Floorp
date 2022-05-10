@@ -12,8 +12,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPStorage {
  public:
@@ -35,7 +34,6 @@ already_AddRefed<GMPStorage> CreateGMPMemoryStorage();
 already_AddRefed<GMPStorage> CreateGMPDiskStorage(const nsCString& aNodeId,
                                                   const nsString& aGMPName);
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif

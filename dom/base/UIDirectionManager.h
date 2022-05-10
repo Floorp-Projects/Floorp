@@ -9,8 +9,7 @@
 
 #include "nsIObserver.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class UIDirectionManager final : public nsIObserver {
  public:
@@ -26,7 +25,6 @@ class UIDirectionManager final : public nsIObserver {
   static mozilla::StaticRefPtr<UIDirectionManager> gUIDirectionManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

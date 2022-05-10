@@ -13,8 +13,7 @@
 #include "nsGkAtoms.h"
 #include "nsError.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLEmbedElement final : public nsGenericHTMLElement,
                                public nsObjectLoadingContent {
@@ -139,7 +138,6 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
                                 bool aNotify);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLEmbedElement_h

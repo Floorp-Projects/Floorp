@@ -32,8 +32,7 @@
 #define REPORTING_PURGE_ALL "reporting:purge-all"
 #define REPORTING_PURGE_HOST "reporting:purge-host"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -777,5 +776,4 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(ReportingHeader)
 NS_IMPL_RELEASE(ReportingHeader)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

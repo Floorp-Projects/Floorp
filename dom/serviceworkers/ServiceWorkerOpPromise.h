@@ -14,8 +14,7 @@
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class InternalResponse;
 
@@ -45,7 +44,6 @@ using ServiceWorkerOpPromise =
 using ServiceWorkerFetchEventOpPromise =
     MozPromise<ServiceWorkerFetchEventOpResult, nsresult, true>;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkeroppromise_h__

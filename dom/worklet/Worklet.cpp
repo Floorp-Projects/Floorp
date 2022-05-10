@@ -28,8 +28,7 @@
 #include "xpcprivate.h"
 #include "mozilla/ScopeExit.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ExecutionRunnable final : public Runnable {
  public:
@@ -512,5 +511,4 @@ void Worklet::AddImportFetchHandler(const nsACString& aURI,
   mImportHandlers.InsertOrUpdate(aURI, RefPtr{aHandler});
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

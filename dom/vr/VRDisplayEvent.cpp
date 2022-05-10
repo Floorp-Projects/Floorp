@@ -11,8 +11,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(VRDisplayEvent)
 
@@ -72,5 +71,4 @@ Nullable<VRDisplayEventReason> VRDisplayEvent::GetReason() const {
   return nullptr;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

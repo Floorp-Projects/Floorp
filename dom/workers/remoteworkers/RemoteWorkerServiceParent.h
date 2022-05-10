@@ -10,8 +10,7 @@
 #include "mozilla/dom/PRemoteWorkerServiceParent.h"
 #include "mozilla/dom/RemoteType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class RemoteWorkerManager;
 
@@ -35,7 +34,6 @@ class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent {
   nsCString mRemoteType = NOT_REMOTE_TYPE;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_RemoteWorkerServiceParent_h

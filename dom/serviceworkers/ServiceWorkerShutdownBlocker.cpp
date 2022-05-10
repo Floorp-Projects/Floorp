@@ -20,8 +20,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(ServiceWorkerShutdownBlocker, nsIAsyncShutdownBlocker,
                   nsITimerCallback, nsINamed)
@@ -289,5 +288,4 @@ void ServiceWorkerShutdownBlocker::MaybeInitUnblockShutdownTimer() {
   mTimer->InitWithCallback(this, delay.count(), nsITimer::TYPE_ONE_SHOT);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

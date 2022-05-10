@@ -13,8 +13,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(ClipPath)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGUnitTypes_Binding;
 
@@ -52,5 +51,4 @@ bool SVGClipPathElement::IsUnitsObjectBoundingBox() const {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGClipPathElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

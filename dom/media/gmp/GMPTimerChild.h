@@ -13,8 +13,7 @@
 #include "gmp-errors.h"
 #include "gmp-platform.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPChild;
 
@@ -41,7 +40,6 @@ class GMPTimerChild : public PGMPTimerChild {
   GMPChild* mPlugin;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPTimerChild_h_

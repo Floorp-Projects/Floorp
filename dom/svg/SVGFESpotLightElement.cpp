@@ -12,8 +12,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FESpotLight)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFESpotLightElement::WrapNode(JSContext* aCx,
                                           JS::Handle<JSObject*> aGivenProto) {
@@ -113,5 +112,4 @@ SVGElement::NumberAttributesInfo SVGFESpotLightElement::GetNumberInfo() {
                               ArrayLength(sNumberInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

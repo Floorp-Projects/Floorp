@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDisplacementMap)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEDisplacementMapElement::WrapNode(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -137,5 +136,4 @@ SVGElement::StringAttributesInfo SVGFEDisplacementMapElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

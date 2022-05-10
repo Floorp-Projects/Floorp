@@ -17,8 +17,7 @@
 #include "nsIRunnable.h"
 #include "nsWeakReference.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Blob;
 class FileRequestData;
@@ -249,7 +248,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
   void SendAbort();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_idbfilehandle_h__

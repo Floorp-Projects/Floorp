@@ -30,8 +30,7 @@
 class nsISHEntry;
 class nsISHistory;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BrowsingContext;
 
@@ -145,7 +144,6 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   bool mPendingEpoch = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ChildSHistory_h */

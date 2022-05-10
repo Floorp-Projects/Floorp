@@ -14,8 +14,7 @@
 
 class nsIDOMGeoPositionErrorCallback;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class PositionErrorCallback;
 class Geolocation;
 typedef CallbackObjectHolder<PositionErrorCallback,
@@ -47,7 +46,6 @@ class GeolocationPositionError final : public nsWrapperCache {
   RefPtr<Geolocation> mParent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_GeolocationPositionError_h */

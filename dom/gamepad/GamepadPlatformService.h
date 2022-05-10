@@ -16,8 +16,7 @@
 #include "mozilla/Vector.h"
 #include "mozilla/WeakPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadAdded;
 class GamepadEventChannelParent;
@@ -146,7 +145,6 @@ class GamepadPlatformService final {
   std::map<GamepadHandle, GamepadAdded> mGamepadAdded;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

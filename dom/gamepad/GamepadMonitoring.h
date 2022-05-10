@@ -8,8 +8,7 @@
 #define mozilla_dom_GamepadMonitoring_h_
 #include "mozilla/dom/GamepadHandle.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // These two functions are implemented in the platform specific service files
 // (linux/LinuxGamepad.cpp, cocoa/CocoaGamepad.cpp, etc)
@@ -20,7 +19,6 @@ void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                                    const uint8_t& aRed, const uint8_t& aGreen,
                                    const uint8_t& aBlue);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

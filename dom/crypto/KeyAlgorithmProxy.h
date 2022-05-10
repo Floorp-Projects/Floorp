@@ -25,8 +25,7 @@ struct JSStructuredCloneWriter;
 
 #define KEY_ALGORITHM_SC_VERSION 0x00000001
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // A heap-safe variant of RsaHashedKeyAlgorithm
 // The only difference is that it uses CryptoBuffer instead of Uint8Array
@@ -121,7 +120,6 @@ struct KeyAlgorithmProxy {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_KeyAlgorithmProxy_h

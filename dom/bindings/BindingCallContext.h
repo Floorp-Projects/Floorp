@@ -20,8 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS BindingCallContext {
  public:
@@ -62,7 +61,6 @@ class MOZ_NON_TEMPORARY_CLASS MOZ_STACK_CLASS BindingCallContext {
   const char* const mDescription;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_BindingCallContext_h

@@ -20,8 +20,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(A)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGAElement::WrapNode(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
@@ -296,5 +295,4 @@ SVGElement::StringAttributesInfo SVGAElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

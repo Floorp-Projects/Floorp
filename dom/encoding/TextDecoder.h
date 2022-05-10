@@ -14,8 +14,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/UniquePtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ArrayBufferViewOrArrayBuffer;
 
@@ -106,7 +105,6 @@ class TextDecoder final : public NonRefcountedDOMObject {
   bool mIgnoreBOM;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_textdecoder_h_

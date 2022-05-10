@@ -15,8 +15,7 @@
 #include "mozilla/dom/VTTRegionBinding.h"
 #include "mozilla/Preferences.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GlobalObject;
 class TextTrack;
@@ -134,7 +133,6 @@ class TextTrackRegion final : public nsISupports, public nsWrapperCache {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_TextTrackRegion_h

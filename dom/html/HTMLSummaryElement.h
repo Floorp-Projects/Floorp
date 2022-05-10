@@ -10,8 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class HTMLDetailsElement;
 
 // HTMLSummaryElement implements the <summary> tag, which is used as a summary
@@ -51,7 +50,6 @@ class HTMLSummaryElement final : public nsGenericHTMLElement {
                      JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLSummaryElement_h */

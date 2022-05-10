@@ -12,8 +12,7 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DocumentFragment;
 class Element;
@@ -107,7 +106,6 @@ class L10nOverlays {
   static bool ContainsMarkup(const nsACString& aStr);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

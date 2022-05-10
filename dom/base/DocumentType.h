@@ -17,8 +17,7 @@
 #include "nsIContent.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // XXX DocumentType is currently implemented by inheriting the generic
 // CharacterData object, even though DocumentType is not character
@@ -65,8 +64,7 @@ class DocumentType final : public CharacterData {
   nsString mInternalSubset;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::DocumentType> NS_NewDOMDocumentType(
     nsNodeInfoManager* aNodeInfoManager, nsAtom* aName,

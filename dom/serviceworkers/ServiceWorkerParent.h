@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PServiceWorkerParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCServiceWorkerDescriptor;
 class ServiceWorkerProxy;
@@ -40,7 +39,6 @@ class ServiceWorkerParent final : public PServiceWorkerParent {
   void MaybeSendDelete();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerparent_h__

@@ -17,8 +17,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_media.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 StaticRefPtr<SapiService> SapiService::sSingleton;
 
@@ -433,5 +432,4 @@ already_AddRefed<SapiService> SapiService::GetInstanceForService() {
   return sapiService.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

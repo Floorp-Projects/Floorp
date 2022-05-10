@@ -9,8 +9,7 @@
 #include "mozilla/dom/XRInputSourcesChangeEvent.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(XRInputSourceArray, mParent,
                                       mInputSources)
@@ -165,5 +164,4 @@ XRInputSource* XRInputSourceArray::IndexedGetter(uint32_t aIndex,
   return mInputSources[aIndex];
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

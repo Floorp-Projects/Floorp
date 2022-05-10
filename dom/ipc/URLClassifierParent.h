@@ -13,8 +13,7 @@
 #include "nsIURIClassifier.h"
 #include "nsIUrlClassifierFeature.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCURLClassifierFeature;
 
@@ -83,7 +82,6 @@ class URLClassifierLocalParent : public nsIUrlClassifierFeatureCallback,
   bool mIPCOpen = true;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_URLClassifierParent_h

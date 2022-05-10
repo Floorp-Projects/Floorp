@@ -11,8 +11,7 @@
 #include "nsIPaymentAddress.h"
 #include "nsIPaymentActionResponse.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PaymentRequestParent final : public PPaymentRequestParent {
   friend class PPaymentRequestParent;
@@ -54,7 +53,6 @@ class PaymentRequestParent final : public PPaymentRequestParent {
   nsString mRequestId;
 };
 
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

@@ -12,9 +12,7 @@
 #include "DOMMediaStream.h"
 #include "PrincipalChangeObserver.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct MediaStreamAudioSourceOptions;
@@ -124,7 +122,6 @@ class MediaStreamAudioSourceNode
   RefPtr<MediaStreamTrack> mInputTrack;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

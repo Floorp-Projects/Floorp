@@ -13,8 +13,7 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using TextClauseArray = nsTArray<RefPtr<TextClause>>;
 
@@ -50,8 +49,7 @@ class CompositionEvent : public UIEvent {
   TextClauseArray mRanges;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::CompositionEvent> NS_NewDOMCompositionEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

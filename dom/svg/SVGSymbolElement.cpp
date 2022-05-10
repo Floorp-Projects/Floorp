@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Symbol)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGSymbolElement::WrapNode(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {
@@ -35,5 +34,4 @@ SVGSymbolElement::SVGSymbolElement(
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGSymbolElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -16,8 +16,7 @@
 #include <windows.h>
 #include <sapi.h>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SapiCallback;
 
@@ -49,7 +48,6 @@ class SapiService final : public nsISpeechService, public nsIObserver {
   static StaticRefPtr<SapiService> sSingleton;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

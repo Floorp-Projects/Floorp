@@ -58,8 +58,7 @@
 #include "nscore.h"
 #include "xpcpublic.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -475,5 +474,4 @@ void WorkerErrorReport::CreateAndDispatchGenericErrorRunnableToParent(
   ReportGenericErrorRunnable::CreateAndDispatch(aWorkerPrivate);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

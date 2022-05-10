@@ -16,8 +16,7 @@
 #include "nsStringFwd.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TouchList final : public nsISupports, public nsWrapperCache {
  public:
@@ -113,8 +112,7 @@ class TouchEvent : public UIEvent {
   RefPtr<TouchList> mChangedTouches;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::TouchEvent> NS_NewDOMTouchEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

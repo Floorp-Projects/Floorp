@@ -34,8 +34,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SVGElement::LengthInfo SVGViewportElement::sLengthInfo[4] = {
     {nsGkAtoms::x, 0, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER,
@@ -361,5 +360,4 @@ SVGElement::LengthAttributesInfo SVGViewportElement::GetLengthInfo() {
                               ArrayLength(sLengthInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -8,8 +8,7 @@
 #include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsresult CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
                                 /* out */ CryptoBuffer& aPubKeyObj) {
@@ -126,5 +125,4 @@ nsresult CBOREncodeNoneAttestationObj(const CryptoBuffer& aAuthDataBuf,
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

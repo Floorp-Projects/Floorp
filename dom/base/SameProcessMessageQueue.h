@@ -11,8 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SameProcessMessageQueue {
  public:
@@ -45,7 +44,6 @@ class SameProcessMessageQueue {
   static SameProcessMessageQueue* sSingleton;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SameProcessMessageQueue_h

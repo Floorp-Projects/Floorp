@@ -9,8 +9,7 @@
 #include "MediaEventSource.h"
 #include "nsIObserver.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * MediaControlKeyManager is a wrapper of MediaControlKeySource, which
@@ -69,7 +68,6 @@ class MediaControlKeyManager final : public MediaControlKeySource,
   nsTArray<MediaControlKey> mSupportedKeys;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

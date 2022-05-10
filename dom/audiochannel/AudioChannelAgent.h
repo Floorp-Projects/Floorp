@@ -15,8 +15,7 @@
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioPlaybackConfig;
 
@@ -75,7 +74,6 @@ class AudioChannelAgent : public nsIAudioChannelAgent {
   bool mIsRegToService;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

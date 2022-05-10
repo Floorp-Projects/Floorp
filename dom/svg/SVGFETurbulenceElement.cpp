@@ -14,8 +14,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FETurbulence)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Stitch Options
 static const unsigned short SVG_STITCHTYPE_STITCH = 1;
@@ -192,5 +191,4 @@ SVGElement::StringAttributesInfo SVGFETurbulenceElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -10,8 +10,7 @@
 #include "mozilla/dom/PSpeechSynthesisRequestChild.h"
 #include "nsSpeechTask.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class nsSynthVoiceRegistry;
 class SpeechSynthesisRequestChild;
@@ -103,7 +102,6 @@ class SpeechTaskChild : public nsSpeechTask {
   SpeechSynthesisRequestChild* mActor;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

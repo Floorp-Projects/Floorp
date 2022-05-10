@@ -19,8 +19,7 @@
 
 class nsFrameMessageManager;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace ipc {
 class SharedMap;
@@ -100,7 +99,6 @@ class ContentProcessMessageManager : public nsIMessageSender,
   static bool sWasCreated;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ContentProcessMessageManager_h

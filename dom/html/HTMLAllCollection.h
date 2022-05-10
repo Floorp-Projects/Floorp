@@ -18,8 +18,7 @@
 class nsContentList;
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class Element;
@@ -86,7 +85,6 @@ class HTMLAllCollection final : public nsISupports, public nsWrapperCache {
   nsRefPtrHashtable<nsStringHashKey, nsContentList> mNamedMap;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLAllCollection_h

@@ -16,8 +16,7 @@
 #include "nsProxyRelease.h"
 #include "nsTObserverArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerRegistrationListener;
 
@@ -264,7 +263,6 @@ class ServiceWorkerRegistrationInfo final
   void CheckQuotaUsage();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkerregistrationinfo_h

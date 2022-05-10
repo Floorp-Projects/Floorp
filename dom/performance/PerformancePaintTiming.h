@@ -10,8 +10,7 @@
 #include "mozilla/dom/PerformanceEntry.h"
 #include "mozilla/dom/PerformancePaintTimingBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Performance;
 
@@ -46,7 +45,6 @@ class PerformancePaintTiming final : public PerformanceEntry {
   mutable Maybe<DOMHighResTimeStamp> mCachedStartTime;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_PerformanacePaintTiming_h___ */

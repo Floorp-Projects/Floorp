@@ -19,8 +19,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MessageData;
 class MessagePortChild;
@@ -229,7 +228,6 @@ class MessagePort final : public DOMEventTargetHelper {
   bool mHasBeenTransferredOrClosed;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MessagePort_h

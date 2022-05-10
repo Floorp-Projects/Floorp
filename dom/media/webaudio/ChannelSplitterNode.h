@@ -9,8 +9,7 @@
 
 #include "AudioNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct ChannelSplitterOptions;
@@ -68,7 +67,6 @@ class ChannelSplitterNode final : public AudioNode {
   const uint16_t mOutputCount;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

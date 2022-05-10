@@ -9,8 +9,7 @@
 
 #include "nsXULElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class KeyboardEvent;
 
@@ -31,7 +30,6 @@ class XULMenuElement final : public nsXULElement {
   nsIFrame* GetFrame();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // XULMenuElement_h

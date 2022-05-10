@@ -12,8 +12,7 @@
 #include "mozilla/dom/ServiceWorkerEvents.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorker;
 class ServiceWorkerClient;
@@ -61,7 +60,6 @@ class NotificationEvent final : public ExtendableEvent {
   RefPtr<Notification> mNotification;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_notificationevent_h__ */

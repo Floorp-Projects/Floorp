@@ -901,11 +901,16 @@ nsresult nsAutoCompleteController::BeforeSearches() {
   mSearchStatus = nsIAutoCompleteController::STATUS_SEARCHING;
   mDefaultIndexCompleted = false;
 
-  // ClearResults will clear the mResults array, but we should pass the previous
-  // result to each search to allow reusing it.  So we temporarily cache the
-  // current results until AfterSearches().
-  if (!mResultCache.AppendObjects(mResults)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  bool invalidatePreviousResult = false;
+  mInput->GetInvalidatePreviousResult(&invalidatePreviousResult);
+
+  if (!invalidatePreviousResult) {
+    // ClearResults will clear the mResults array, but we should pass the
+    // previous result to each search to allow reusing it.  So we temporarily
+    // cache the current results until AfterSearches().
+    if (!mResultCache.AppendObjects(mResults)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   ClearResults(true);
   mSearchesOngoing = mSearches.Length();

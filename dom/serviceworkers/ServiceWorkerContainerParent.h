@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/PServiceWorkerContainerParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCServiceWorkerDescriptor;
 class ServiceWorkerContainerProxy;
@@ -51,7 +50,6 @@ class ServiceWorkerContainerParent final
   void Init();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkercontainerparent_h__

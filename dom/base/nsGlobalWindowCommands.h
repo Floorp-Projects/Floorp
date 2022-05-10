@@ -9,11 +9,9 @@
 
 #include "nscore.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 struct KeyboardScrollAction;
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 class nsControllerCommandTable;
 

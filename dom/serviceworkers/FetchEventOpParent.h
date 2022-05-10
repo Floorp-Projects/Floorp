@@ -12,8 +12,7 @@
 #include "mozilla/dom/FetchEventOpProxyParent.h"
 #include "mozilla/dom/PFetchEventOpParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FetchEventOpParent final : public PFetchEventOpParent {
   friend class PFetchEventOpParent;
@@ -64,7 +63,6 @@ class FetchEventOpParent final : public PFetchEventOpParent {
   State mState = AsVariant(Pending());
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_fetcheventopparent_h__

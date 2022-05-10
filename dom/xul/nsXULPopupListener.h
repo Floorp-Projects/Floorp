@@ -17,12 +17,10 @@
 
 class nsIContent;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Element;
 class MouseEvent;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class nsXULPopupListener : public nsIDOMEventListener {
  public:

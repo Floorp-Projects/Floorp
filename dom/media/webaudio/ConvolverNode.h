@@ -11,8 +11,7 @@
 #include "AudioBuffer.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct ConvolverOptions;
@@ -73,7 +72,6 @@ class ConvolverNode final : public AudioNode {
   bool mNormalize;
 };
 
-}  // end namespace dom
-}  // end namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

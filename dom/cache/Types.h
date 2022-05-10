@@ -15,9 +15,7 @@
 #include "nsIInputStream.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 enum Namespace {
   DEFAULT_NAMESPACE,
@@ -56,8 +54,6 @@ using InputStreamResolver = std::function<void(nsCOMPtr<nsIInputStream>&&)>;
 
 enum class OpenMode : uint8_t { Eager, Lazy, NumTypes };
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_Types_h

@@ -12,8 +12,7 @@
 
 nsresult NS_NewSVGFEBlendElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGFEBlendElementBase = SVGFE;
 
@@ -64,7 +63,6 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
   static StringInfo sStringInfo[3];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGFEBLENDELEMENT_H_

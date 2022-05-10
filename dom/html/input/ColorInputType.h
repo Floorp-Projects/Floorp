@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/InputType.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // input type=color
 class ColorInputType : public InputType {
@@ -24,7 +23,6 @@ class ColorInputType : public InputType {
       : InputType(aInputElement) {}
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_ColorInputType_h__ */

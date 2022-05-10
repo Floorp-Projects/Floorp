@@ -65,9 +65,7 @@ struct CloneInfo;
 
 MOZ_DECLARE_RELOCATE_USING_MOVE_CONSTRUCTOR(mozilla::dom::indexedDB::CloneInfo)
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 class BackgroundFactoryChild final : public PBackgroundIDBFactoryChild {
   friend class mozilla::ipc::BackgroundChildImpl;
@@ -814,8 +812,6 @@ class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // mozilla_dom_indexeddb_actorschild_h__

@@ -16,8 +16,7 @@
 #include "nsID.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Event;
 class IDBDatabase;
@@ -60,8 +59,7 @@ void MOZ_FORMAT_PRINTF(1, 3) MOZ_FORMAT_PRINTF(2, 3)
     LoggingHelper(const char* aDetailedFmt, const char* aConciseFmt, ...);
 
 }  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #define IDB_LOG_MARK(_detailedFmt, _conciseFmt, _loggingId, ...)        \
   mozilla::dom::indexedDB::LoggingHelper("IndexedDB %s: " _detailedFmt, \

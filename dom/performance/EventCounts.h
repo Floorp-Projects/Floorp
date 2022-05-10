@@ -10,8 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class EventCounts final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EventCounts)
@@ -28,6 +27,5 @@ class EventCounts final : public nsWrapperCache {
   ~EventCounts() = default;
   nsCOMPtr<nsISupports> mParent;
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

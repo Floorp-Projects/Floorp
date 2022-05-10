@@ -32,8 +32,7 @@
 #include "nsStringFwd.h"
 #include "mozilla/Maybe.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * "mAttributes" and "mMethods" are the cross-origin attributes and methods we
@@ -347,7 +346,6 @@ class MaybeCrossOriginObject : public Base,
                         JS::Handle<JSObject*> proxy) const override = 0;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_MaybeCrossOriginObject_h */

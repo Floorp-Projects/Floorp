@@ -17,8 +17,7 @@
  * content.
  */
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WebAuthnTransactionChild final : public PWebAuthnTransactionChild {
  public:
@@ -56,7 +55,6 @@ class WebAuthnTransactionChild final : public PWebAuthnTransactionChild {
   WebAuthnManagerBase* mManager;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnTransactionChild_h

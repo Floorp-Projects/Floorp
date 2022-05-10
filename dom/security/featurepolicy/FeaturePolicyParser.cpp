@@ -14,8 +14,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -155,5 +154,4 @@ bool FeaturePolicyParser::ParseString(const nsAString& aPolicy,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

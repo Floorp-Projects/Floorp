@@ -13,8 +13,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XRRigidTransform;
 class XRView;
@@ -44,7 +43,6 @@ class XRPose : public nsISupports, public nsWrapperCache {
   bool mEmulatedPosition;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRPose_h_

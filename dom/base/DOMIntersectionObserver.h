@@ -15,8 +15,7 @@
 #include "nsTArray.h"
 #include "nsTHashSet.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMIntersectionObserver;
 
@@ -162,7 +161,6 @@ class DOMIntersectionObserver final : public nsISupports,
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMIntersectionObserver,
                               NS_DOM_INTERSECTION_OBSERVER_IID)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

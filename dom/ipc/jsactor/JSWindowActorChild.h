@@ -36,8 +36,7 @@ class WindowProxyHolder;
 }  // namespace dom
 }  // namespace mozilla
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class JSWindowActorChild final : public JSActor {
  public:
@@ -79,7 +78,6 @@ class JSWindowActorChild final : public JSActor {
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_JSWindowActorChild_h

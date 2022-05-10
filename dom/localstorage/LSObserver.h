@@ -11,8 +11,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class LSObserverChild;
 
@@ -64,7 +63,6 @@ class LSObserver final {
   ~LSObserver();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSObserver_h

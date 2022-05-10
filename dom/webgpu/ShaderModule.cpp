@@ -9,8 +9,7 @@
 
 #include "Device.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(ShaderModule, mParent)
 GPU_IMPL_JS_WRAP(ShaderModule)
@@ -30,5 +29,4 @@ void ShaderModule::Cleanup() {
   }
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

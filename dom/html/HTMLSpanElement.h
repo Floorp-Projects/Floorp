@@ -9,8 +9,7 @@
 
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLSpanElement final : public nsGenericHTMLElement {
  public:
@@ -26,7 +25,6 @@ class HTMLSpanElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLSpanElement_h

@@ -405,6 +405,9 @@ struct vec2_scalar {
   friend vec2_scalar operator-(vec2_scalar a, float b) {
     return vec2_scalar(a.x - b, a.y - b);
   }
+  friend vec2_scalar operator-(float a, vec2_scalar b) {
+    return vec2_scalar(a - b.x, a - b.y);
+  }
   friend vec2_scalar operator+(vec2_scalar a, vec2_scalar b) {
     return vec2_scalar(a.x + b.x, a.y + b.y);
   }
@@ -1741,6 +1744,9 @@ struct vec4_scalar {
   }
   friend vec4_scalar operator*(vec4_scalar a, float b) {
     return vec4_scalar{a.x * b, a.y * b, a.z * b, a.w * b};
+  }
+  friend vec4_scalar operator*(float a, vec4_scalar b) {
+    return vec4_scalar{a * b.x, a * b.y, a * b.z, a * b.w};
   }
   vec4_scalar& operator*=(float a) {
     x *= a;

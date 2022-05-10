@@ -26,8 +26,7 @@
 #  include <unistd.h>  // for getpid()
 #endif                 // defined(XP_WIN)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -569,5 +568,4 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
           });
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

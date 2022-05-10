@@ -11,8 +11,7 @@
 #include "SVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGAnimatedTransformListBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static SVGAttrTearoffTable<SVGAnimatedTransformList,
                            DOMSVGAnimatedTransformList>
@@ -120,5 +119,4 @@ const SVGAnimatedTransformList& DOMSVGAnimatedTransformList::InternalAList()
   return *mElement->GetAnimatedTransformList();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

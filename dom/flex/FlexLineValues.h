@@ -13,8 +13,7 @@
 
 struct ComputedFlexLineInfo;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Flex;
 class FlexItemValues;
@@ -54,7 +53,6 @@ class FlexLineValues : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<FlexItemValues>> mItems;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_FlexLineValues_h */

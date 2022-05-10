@@ -14,8 +14,7 @@
 #include "ServiceWorkerRegistrationParent.h"
 #include "mozilla/dom/WorkerRef.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 void InitServiceWorkerParent(PServiceWorkerParent* aActor,
                              const IPCServiceWorkerDescriptor& aDescriptor) {
@@ -35,5 +34,4 @@ void InitServiceWorkerRegistrationParent(
   actor->Init(aDescriptor);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

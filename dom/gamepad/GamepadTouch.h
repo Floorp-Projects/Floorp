@@ -11,8 +11,7 @@
 #include "mozilla/dom/GamepadTouchState.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GamepadTouch final : public nsWrapperCache {
  public:
@@ -43,7 +42,6 @@ class GamepadTouch final : public nsWrapperCache {
   GamepadTouchState mTouchState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_gamepad_GamepadTouch_h
