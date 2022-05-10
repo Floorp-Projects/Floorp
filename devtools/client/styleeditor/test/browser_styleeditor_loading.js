@@ -21,10 +21,10 @@ add_task(async function() {
 
   const toolbox = await gDevTools.getToolboxForTab(tab);
   const panel = toolbox.getPanel("styleeditor");
-  const { panelWindow, UI: ui } = panel;
+  const { panelWindow } = panel;
 
   ok(
-    !ui._root.classList.contains("loading"),
+    !getRootElement(panel).classList.contains("loading"),
     "style editor root element does not have 'loading' class name anymore"
   );
 
