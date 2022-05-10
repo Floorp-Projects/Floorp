@@ -1439,7 +1439,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let doc = acForm.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let recipes = LoginRecipesContent.getRecipes(
-      this,
       formOrigin,
       doc.defaultView
     );
@@ -1994,7 +1993,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // Get the appropriate fields from the form.
-    let recipes = LoginRecipesContent.getRecipes(this, origin, win);
+    let recipes = LoginRecipesContent.getRecipes(origin, win);
     let fields = {
       targetField,
       ...this._getFormFields(form, true, recipes, { ignoreConnect }),
@@ -3052,7 +3051,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     let doc = aField.ownerDocument;
     let formOrigin = LoginHelper.getLoginOrigin(doc.documentURI);
     let recipes = LoginRecipesContent.getRecipes(
-      this,
       formOrigin,
       doc.defaultView
     );
