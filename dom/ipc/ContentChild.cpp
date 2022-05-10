@@ -3780,6 +3780,20 @@ PContentChild::Result ContentChild::OnMessageReceived(
   return result;
 }
 
+PContentChild::Result ContentChild::OnMessageReceived(
+    const Message& aMsg, UniquePtr<Message>& aReply) {
+  Result result = PContentChild::OnMessageReceived(aMsg, aReply);
+
+  if (aMsg.is_sync()) {
+    // OnMessageReceived shouldn't be called for sync replies.
+    MOZ_ASSERT(!aMsg.is_reply());
+
+    LSObject::OnSyncMessageHandled();
+  }
+
+  return result;
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(
     uint64_t aGroupId, BrowsingContext::IPCInitializer&& aInit) {
   // We can't already have a BrowsingContext with this ID.
