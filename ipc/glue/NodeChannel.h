@@ -130,7 +130,7 @@ class NodeChannel final : public IPC::Channel::Listener {
   void DoSendMessage(UniquePtr<IPC::Message> aMessage);
 
   // IPC::Channel::Listener implementation
-  void OnMessageReceived(IPC::Message&& aMessage) override;
+  void OnMessageReceived(UniquePtr<IPC::Message> aMessage) override;
   void OnChannelConnected(base::ProcessId aPeerPid) override;
   void OnChannelError() override;
 
