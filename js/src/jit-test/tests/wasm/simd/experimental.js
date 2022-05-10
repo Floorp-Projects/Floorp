@@ -365,6 +365,73 @@ for (let [as, bs] of cross([
     }
 }
 
+
+// Check relaxed dot product results.
+var ins = wasmValidateAndEval(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0]),
+    memorySection(1),
+    exportSection([{funcIndex: 0, name: "dot_i8x16_i7x16_s"},
+                    {memIndex: 0, name: "mem"}]),
+    bodySection([
+        funcBody({locals:[],
+                    body: [...V128StoreExpr(0, [...V128Load(16),
+                                                ...V128Load(32),
+                                                SimdPrefix, varU32(I16x8DotI8x16I7x16S)])]})])]));
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+var mem16 = new Int16Array(ins.exports.mem.buffer);
+var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,
+                1, 65, 64, 2, 3, 0, 0, 127, 127, 5, 4];
+var testNeg = test7bit.concat(test7bit.map(i => ~i));
+for (let ai = 0; ai < testNeg.length - 15; ai++)
+    for (let bi = 0; bi < test7bit.length - 15; bi++) {
+        set(mem8, 16, testNeg.slice(ai, ai + 16));
+        set(mem8, 32, test7bit.slice(bi, bi + 16));
+        ins.exports.dot_i8x16_i7x16_s();
+        const result = get(mem16, 0, 8);
+        for (let i = 0; i < 8; i++) {
+            const expected = ((testNeg[ai + i * 2] * test7bit[bi + i * 2]) +
+                            (testNeg[ai + i * 2 + 1] * test7bit[bi + i * 2 + 1])) | 0;
+            assertEq(expected, result[i]);
+        }
+    }
+
+var ins = wasmValidateAndEval(moduleWithSections([
+    sigSection([v2vSig]),
+    declSection([0]),
+    memorySection(1),
+    exportSection([{funcIndex: 0, name: "dot_i8x16_i7x16_add_s"},
+                    {memIndex: 0, name: "mem"}]),
+    bodySection([
+        funcBody({locals:[],
+                    body: [...V128StoreExpr(0, [...V128Load(16),
+                                                ...V128Load(32),
+                                                ...V128Load(48),
+                                                SimdPrefix, varU32(I32x4DotI8x16I7x16AddS)])]})])]));
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,
+                1, 65, 64, 2, 3, 0, 0, 127, 127, 5, 4];
+var testNeg = test7bit.concat(test7bit.map(i => ~i));
+var testAcc = [0, 12, 65336, -1, 0x10000000, -0xffffff];
+for (let ai = 0; ai < testNeg.length - 15; ai++)
+    for (let bi = 0; bi < test7bit.length - 15; bi++)
+        for (let ci = 0; ci < testAcc.length - 3; ci++) {
+            set(mem8, 16, testNeg.slice(ai, ai + 16));
+            set(mem8, 32, test7bit.slice(bi, bi + 16));
+            set(mem32, 48/4, testAcc.slice(ci, ci + 4));
+            ins.exports.dot_i8x16_i7x16_add_s();
+            const result = get(mem32, 0, 4);
+            for (let i = 0; i < 4; i++) {
+                const a1 = (testNeg[ai + i * 4] * test7bit[bi + i * 4]) +
+                           (testNeg[ai + i * 4 + 1] * test7bit[bi + i * 4 + 1]);
+                const a2 = (testNeg[ai + i * 4 + 2] * test7bit[bi + i * 4 + 2]) +
+                           (testNeg[ai + i * 4 + 3] * test7bit[bi + i * 4 + 3]);
+                const expected = (testAcc[ci + i] + a1 + a2) | 0;
+                assertEq(expected, result[i]);
+            }
+        }
+
 // Misc utils.
 function cross(xs) {
     let results = [];

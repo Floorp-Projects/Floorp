@@ -2815,6 +2815,27 @@ void MacroAssembler::widenDotInt16x8(FloatRegister lhs, const SimdConstant& rhs,
                 &MacroAssembler::vpmaddwdSimd128);
 }
 
+void MacroAssembler::dotInt8x16Int7x16(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  if (lhs == dest && !HasAVX()) {
+    moveSimd128Int(lhs, scratch);
+    lhs = scratch;
+  }
+  rhs = moveSimd128IntIfNotAVX(rhs, dest);
+  vpmaddubsw(lhs, rhs, dest);
+}
+
+void MacroAssembler::dotInt8x16Int7x16ThenAdd(FloatRegister lhs,
+                                              FloatRegister rhs,
+                                              FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  rhs = moveSimd128IntIfNotAVX(rhs, scratch);
+  vpmaddubsw(lhs, rhs, scratch);
+  vpmaddwdSimd128(SimdConstant::SplatX8(1), scratch, scratch);
+  vpaddd(Operand(scratch), dest, dest);
+}
+
 // Rounding
 
 void MacroAssembler::ceilFloat32x4(FloatRegister src, FloatRegister dest) {
