@@ -7,6 +7,7 @@
 #ifndef mozJSComponentLoader_h
 #define mozJSComponentLoader_h
 
+#include "ComponentModuleLoader.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FileLocation.h"
 #include "mozilla/MemoryReporting.h"
@@ -197,6 +198,8 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
 
   bool mInitialized;
   JS::PersistentRooted<JSObject*> mLoaderGlobal;
+
+  RefPtr<mozilla::loader::ComponentModuleLoader> mModuleLoader;
 };
 
 #endif
