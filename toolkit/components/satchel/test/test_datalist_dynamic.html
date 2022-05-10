@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<title>Dynamic change datalist</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="satchel_common.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<input list="suggest" type="text" name="field1">
+<datalist id="suggest">
+  <option value="a1">
+  <option value="a2">
+  <option value="ab1">
+  <option value="ab2">
+</datalist>
+<pre id="test">
+<script class="testbody">
+const { TestUtils } = SpecialPowers.Cu.import("resource://testing-common/TestUtils.jsm");
+const input = document.querySelector("input");
+const datalist = document.querySelector("datalist");
+
+const DATALIST_DATA = {
+  "a": ["a1", "a2", "ab1", "ab2"],
+  "ab": ["ab1", "ab2", "abc1", "abc2"],
+  "abc": ["abc1", "abc2", "abcd1", "abcd2"],
+  "abcd": ["abcd1", "abcd2", "abcde1", "abcde2", "abcde3"]
+};
+
+var resolvePopupShownListener;
+registerPopupShownListener(() => resolvePopupShownListener());
+
+function waitPopup() {
+  return new Promise(resolve => { resolvePopupShownListener = resolve; });
+}
+
+add_task(async function() {
+  async function inputHandler() {
+    let options = DATALIST_DATA[input.value] || [];
+
+    await TestUtils.waitForTick();
+
+    while (datalist.firstChild) {
+      datalist.firstChild.remove();
+    }
+
+    for (let option of options) {
+      let element = document.createElement("option");
+      element.setAttribute("value", option);
+      datalist.appendChild(element);
+    }
+  }
+
+  await SimpleTest.promiseFocus();
+
+  input.addEventListener("input", inputHandler);
+
+  input.focus();
+  synthesizeKey("a");
+  synthesizeKey("b");
+  synthesizeKey("c");
+  is(input.value, "abc", "<input>'s value has to be abc for initial data");
+  synthesizeKey("KEY_ArrowDown");
+  await waitPopup();
+
+  let values = getMenuEntries();
+  is(values.length, 4, "expected count of datalist popup");
+  for (let i = 0; i < values.length; i++) {
+    is(values[i], DATALIST_DATA[input.value][i], "expected data #" + i);
+  }
+
+  let promise = notifyMenuChanged(5);
+  synthesizeKey("d");
+  is(input.value, "abcd", "<input>'s value has to be abcd for next test");
+  synthesizeKey("KEY_ArrowDown");
+  await promise;
+
+  values = getMenuEntries();
+  is(values.length, 5, "expected count of datalist popup");
+  for (let i = 0; i < values.length; i++) {
+    is(values[i], DATALIST_DATA[input.value][i], "expected data #" + i);
+  }
+
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+  is(input.value, "abcd1", "<input>'s value has to set abcd1");
+
+  input.removeEventListener("input", inputHandler);
+});
+</script>
+</pre>
+</html>

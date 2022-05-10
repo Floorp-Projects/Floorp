@@ -159,4 +159,9 @@ interface nsIAutoCompleteInput : nsISupports
    * The userContextId of the current browser.
    */
   readonly attribute unsigned long userContextId;
+
+  /**
+   * Since search content is updated, we shouldn't use previous search result.
+   */
+  readonly attribute boolean invalidatePreviousResult;
 };
