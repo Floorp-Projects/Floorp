@@ -656,6 +656,7 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
     dst->as<NativeObject>().setFixedElements();
     js_memcpy(dst->getElementsHeader(), srcAllocatedHeader, allocSize);
     dst->elements_ += numShifted;
+    dst->getElementsHeader()->flags |= ObjectElements::FIXED;
     nursery().setElementsForwardingPointer(srcHeader, dst->getElementsHeader(),
                                            srcHeader->capacity);
     return allocSize;
@@ -677,6 +678,7 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
 
   js_memcpy(dstHeader, srcAllocatedHeader, allocSize);
   dst->elements_ = dstHeader->elements() + numShifted;
+  dst->getElementsHeader()->flags &= ~ObjectElements::FIXED;
   nursery().setElementsForwardingPointer(srcHeader, dst->getElementsHeader(),
                                          srcHeader->capacity);
   return allocSize;
