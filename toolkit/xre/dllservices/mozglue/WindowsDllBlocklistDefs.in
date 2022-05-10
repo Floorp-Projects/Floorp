@@ -304,5 +304,14 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("videocapturer.dll", ALL_VERSIONS),
     DllBlocklistEntry("videocapturerhk32.dll", ALL_VERSIONS),
     DllBlocklistEntry("videocapturerhk64.dll", ALL_VERSIONS),
+
+#if defined(EARLY_BETA_OR_EARLIER)
+    # Causes crashes in the content process with win32k lockdown, bug 1766029
+    # The crash seems to be in the *_m module which has been unloaded.
+    DllBlocklistEntry("safaweb.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb_m.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb64.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb64_m.dll", (3, 0, 21, 3181)),
+#endif
 ]
 
