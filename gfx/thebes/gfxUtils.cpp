@@ -1381,26 +1381,6 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
   }
 }
 
-// Translate from CICP values to the transfer functions we support, or return
-// Nothing() if there is no appropriate match.
-//
-/* static */ Maybe<gfx::TransferFunction> gfxUtils::CicpToTransferFunction(
-    const CICP::TransferCharacteristics aTransferCharacteristics) {
-  switch (aTransferCharacteristics) {
-    case CICP::TransferCharacteristics::TC_SRGB:
-      return Some(gfx::TransferFunction::SRGB);
-
-    case CICP::TransferCharacteristics::TC_SMPTE2084:
-      return Some(gfx::TransferFunction::PQ);
-
-    case CICP::TransferCharacteristics::TC_HLG:
-      return Some(gfx::TransferFunction::HLG);
-
-    default:
-      return {};
-  }
-}
-
 /* static */
 void gfxUtils::WriteAsPNG(SourceSurface* aSurface, const nsAString& aFile) {
   WriteAsPNG(aSurface, NS_ConvertUTF16toUTF8(aFile).get());

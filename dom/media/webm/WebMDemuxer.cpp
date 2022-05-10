@@ -14,7 +14,6 @@
 #include "WebMDemuxer.h"
 #include "WebMBufferedParser.h"
 #include "gfx2DGlue.h"
-#include "gfxUtils.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/SharedThreadPool.h"
 #include "MediaDataDemuxer.h"
@@ -306,15 +305,6 @@ nsresult WebMDemuxer::ReadMetadata() {
           NS_WARNING("Unknown WebM video codec");
           return NS_ERROR_FAILURE;
       }
-
-      // For VPX, this is our only chance to capture the transfer
-      // characteristics, which we can't get from a VPX bitstream later.
-      // We only need this value if the video is using the BT2020
-      // colorspace, which will be determined on a per-frame basis later.
-      mInfo.mVideo.mTransferFunction = gfxUtils::CicpToTransferFunction(
-          static_cast<gfx::CICP::TransferCharacteristics>(
-              params.transfer_characteristics));
-
       // Picture region, taking into account cropping, before scaling
       // to the display size.
       unsigned int cropH = params.crop_right + params.crop_left;
