@@ -217,7 +217,7 @@ MSG_DEF(JSMSG_AS_AFTER_STRING,         0, JSEXN_SYNTAXERR, "missing keyword 'as'
 MSG_DEF(JSMSG_AWAIT_IN_PARAMETER,      0, JSEXN_SYNTAXERR, "await expression can't be used in parameter")
 MSG_DEF(JSMSG_AWAIT_OUTSIDE_ASYNC,     0, JSEXN_SYNTAXERR, "await is only valid in async functions and async generators")
 MSG_DEF(JSMSG_AWAIT_OUTSIDE_ASYNC_OR_MODULE, 0, JSEXN_SYNTAXERR, "await is only valid in async functions, async generators and modules")
-MSG_DEF(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED, 0, JSEXN_SYNTAXERR, "top level await is not currently supported")
+MSG_DEF(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED, 0, JSEXN_SYNTAXERR, "top level await is not supported in this context")
 MSG_DEF(JSMSG_BAD_ARROW_ARGS,          0, JSEXN_SYNTAXERR, "invalid arrow-function arguments (parentheses around the arrow-function may help)")
 MSG_DEF(JSMSG_BAD_BINDING,             1, JSEXN_SYNTAXERR, "redefining {0} is deprecated")
 MSG_DEF(JSMSG_BAD_COALESCE_MIXING,     0, JSEXN_SYNTAXERR, "cannot use `??` unparenthesized within `||` and `&&` expressions")
