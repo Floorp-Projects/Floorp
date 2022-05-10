@@ -105,9 +105,9 @@ class AudioClock {
   // protected by the AudioStream monitor on other platforms.
   const UniquePtr<FrameHistory> mFrameHistory
 #  ifndef XP_MACOSX
-  GUARDED_BY(mMutex)
+      GUARDED_BY(mMutex)
 #  endif
-    ;
+          ;
 #  ifdef XP_MACOSX
   // Enqueued on the audio thread, dequeued from the other thread. The maximum
   // size of this queue has been chosen empirically.

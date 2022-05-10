@@ -253,7 +253,12 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
 
   // default filename
   if (!mDefaultFilename.IsEmpty()) {
-    hr = dialog->SetFileName(mDefaultFilename.get());
+    // Prevent the shell from expanding environment variables by removing
+    // the % characters that are used to delimit them.
+    nsAutoString sanitizedFilename(mDefaultFilename);
+    sanitizedFilename.ReplaceChar('%', '_');
+
+    hr = dialog->SetFileName(sanitizedFilename.get());
     if (FAILED(hr)) {
       return false;
     }

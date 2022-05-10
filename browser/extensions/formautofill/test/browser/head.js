@@ -14,7 +14,7 @@
             clickDoorhangerButton, getAddresses, saveAddress, removeAddresses, saveCreditCard, setStorage,
             getDisplayedPopupItems, getDoorhangerCheckbox, waitForPopupEnabled,
             getNotification, waitForPopupShown, getDoorhangerButton, removeAllRecords, expectWarningText, testDialog,
-            TIMEOUT_ENSURE_PROFILE_NOT_SAVED */
+            TIMEOUT_ENSURE_PROFILE_NOT_SAVED TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED */
 
 "use strict";
 
@@ -197,6 +197,7 @@ const MENU_BUTTON = "menubutton";
  * Collection of timeouts that are used to ensure something should not happen.
  */
 const TIMEOUT_ENSURE_PROFILE_NOT_SAVED = 1000;
+const TIMEOUT_ENSURE_CC_EDIT_DIALOG_NOT_CLOSED = 500;
 
 function getDisplayedPopupItems(
   browser,

@@ -6,7 +6,55 @@
 
 "use strict";
 
+var { ExtensionError } = ExtensionUtils;
+
 this.webRequest = class extends ExtensionAPI {
+  STREAM_FILTER_INACTIVE_STATUSES = ["closed", "disconnected", "failed"];
+
+  hasActiveStreamFilter(filtersWeakSet) {
+    const iter = ChromeUtils.nondeterministicGetWeakSetKeys(filtersWeakSet);
+    for (let filter of iter) {
+      if (!this.STREAM_FILTER_INACTIVE_STATUSES.includes(filter.status)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  watchStreamFilterSuspendCancel({
+    context,
+    filters,
+    onSuspend,
+    onSuspendCanceled,
+  }) {
+    if (
+      !context.isBackgroundContext ||
+      context.extension.persistentBackground !== false
+    ) {
+      return;
+    }
+
+    const { extension } = context;
+    const cancelSuspendOnActiveStreamFilter = () =>
+      this.hasActiveStreamFilter(filters);
+    context.callOnClose({
+      close() {
+        extension.off(
+          "internal:stream-filter-suspend-cancel",
+          cancelSuspendOnActiveStreamFilter
+        );
+        extension.off("background-script-suspend", onSuspend);
+        extension.off("background-script-suspend-canceled", onSuspend);
+      },
+    });
+    extension.on(
+      "internal:stream-filter-suspend-cancel",
+      cancelSuspendOnActiveStreamFilter
+    );
+    extension.on("background-script-suspend", onSuspend);
+    extension.on("background-script-suspend-canceled", onSuspendCanceled);
+  }
+
   getAPI(context) {
     let filters = new WeakSet();
 
@@ -24,9 +72,22 @@ this.webRequest = class extends ExtensionAPI {
       },
     });
 
+    let isSuspending = false;
+    this.watchStreamFilterSuspendCancel({
+      context,
+      filters,
+      onSuspend: () => (isSuspending = true),
+      onSuspendCanceled: () => (isSuspending = false),
+    });
+
     return {
       webRequest: {
         filterResponseData(requestId) {
+          if (isSuspending) {
+            throw new ExtensionError(
+              "filterResponseData method calls forbidden while background extension global is suspending"
+            );
+          }
           requestId = parseInt(requestId, 10);
 
           let streamFilter = context.cloneScope.StreamFilter.create(

@@ -112,9 +112,9 @@ ia2AccessibleText::get_characterExtents(long aOffset,
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
   LayoutDeviceIntRect rect;
-  auto [textAcc, hr] = LocalTextAcc();
+  auto textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   rect = textAcc->CharBounds(aOffset, geckoCoordType);
