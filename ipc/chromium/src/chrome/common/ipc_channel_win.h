@@ -106,7 +106,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
   // buffers of this message.
-  mozilla::Maybe<Message> incoming_message_;
+  mozilla::UniquePtr<Message> incoming_message_;
 
   // In server-mode, we have to wait for the client to connect before we
   // can begin reading.  We make use of the input_state_ when performing
