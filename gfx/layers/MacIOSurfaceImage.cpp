@@ -71,9 +71,9 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
 
   auto ySize = aData.YDataSize();
   auto cbcrSize = aData.CbCrDataSize();
-  RefPtr<MacIOSurface> surf = allocator->Allocate(
-      ySize, cbcrSize, aData.mYUVColorSpace, aData.mTransferFunction,
-      aData.mColorRange, aData.mColorDepth);
+  RefPtr<MacIOSurface> surf =
+      allocator->Allocate(ySize, cbcrSize, aData.mYUVColorSpace,
+                          aData.mColorRange, aData.mColorDepth);
 
   surf->Lock(false);
 
@@ -200,8 +200,8 @@ bool MacIOSurfaceImage::SetData(ImageContainer* aContainer,
 
 already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
     const gfx::IntSize aYSize, const gfx::IntSize& aCbCrSize,
-    gfx::YUVColorSpace aYUVColorSpace, gfx::TransferFunction aTransferFunction,
-    gfx::ColorRange aColorRange, gfx::ColorDepth aColorDepth) {
+    gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange,
+    gfx::ColorDepth aColorDepth) {
   nsTArray<CFTypeRefPtr<IOSurfaceRef>> surfaces = std::move(mSurfaces);
   RefPtr<MacIOSurface> result;
   for (auto& surf : surfaces) {
@@ -224,8 +224,7 @@ already_AddRefed<MacIOSurface> MacIOSurfaceRecycleAllocator::Allocate(
   if (!result) {
     if (StaticPrefs::layers_iosurfaceimage_use_nv12_AtStartup()) {
       result = MacIOSurface::CreateNV12OrP010Surface(
-          aYSize, aCbCrSize, aYUVColorSpace, aTransferFunction, aColorRange,
-          aColorDepth);
+          aYSize, aCbCrSize, aYUVColorSpace, aColorRange, aColorDepth);
     } else {
       result = MacIOSurface::CreateYUV422Surface(aYSize, aYUVColorSpace,
                                                  aColorRange);
