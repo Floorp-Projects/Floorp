@@ -35,6 +35,9 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   void AddChildAt(uint32_t aIdx, Derived* aChild) {
     mChildren.InsertElementAt(aIdx, aChild);
+    if (IsHyperText()) {
+      InvalidateCachedHyperTextOffsets();
+    }
   }
 
   virtual uint32_t ChildCount() const override { return mChildren.Length(); }
@@ -114,7 +117,12 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   /**
    * Remove The given child.
    */
-  void RemoveChild(Derived* aChild) { mChildren.RemoveElement(aChild); }
+  void RemoveChild(Derived* aChild) {
+    mChildren.RemoveElement(aChild);
+    if (IsHyperText()) {
+      InvalidateCachedHyperTextOffsets();
+    }
+  }
 
   /**
    * Return the proxy for the parent of the wrapped accessible.
@@ -245,6 +253,12 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
         mCachedFields = new AccAttributes();
       }
       mCachedFields->Update(aFields);
+      if (IsTextLeaf()) {
+        Derived* parent = RemoteParent();
+        if (parent && parent->IsHyperText()) {
+          parent->InvalidateCachedHyperTextOffsets();
+        }
+      }
     }
   }
 
