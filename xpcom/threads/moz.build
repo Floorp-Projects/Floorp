@@ -52,6 +52,7 @@ EXPORTS.mozilla += [
     "DeadlockDetector.h",
     "DelayedRunnable.h",
     "EventQueue.h",
+    "EventTargetCapability.h",
     "IdlePeriodState.h",
     "IdleTaskRunner.h",
     "InputTaskManager.h",
