@@ -3443,9 +3443,7 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
             pthread_mutex_lock(&f->task_thread.ttd->lock);
             res = dav1d_task_create_tile_sbrow(f, 0, 1);
             if (!res) {
-                const int uses_2pass = f->c->n_fc > 1;
                 while (!f->task_thread.done[0] ||
-                       (uses_2pass && !f->task_thread.done[1]) ||
                        f->task_thread.task_counter > 0)
                 {
                     pthread_cond_wait(&f->task_thread.cond,
@@ -3463,6 +3461,7 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
         }
     }
     dav1d_decode_frame_exit(f, res);
+    f->n_tile_data = 0;
     return res;
 }
 

@@ -9,7 +9,8 @@ an automatic thread management.
 It also adds support for AVX-512 acceleration, and adds speedups to existing x86
 code (from SSE2 to AVX2).
 
-1.0.0 adds new grain API to ease acceleration on the GPU.
+1.0.0 adds new grain API to ease acceleration on the GPU, and adds an API call
+to get information of which frame failed to decode, in error cases.
 
 Finally, 1.0.0 fixes numerous small bugs that were reported since the beginning
 of the project to have a proper release.
