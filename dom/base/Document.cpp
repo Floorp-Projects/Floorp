@@ -6479,7 +6479,7 @@ void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  StorageAccess storageAccess = CookieAllowedForDocument(this);
+  StorageAccess storageAccess = StorageAllowedForDocument(this);
   if (storageAccess == StorageAccess::eDeny) {
     return;
   }
@@ -6518,7 +6518,7 @@ void Document::SetCookie(const nsAString& aCookie, ErrorResult& aRv) {
     return;
   }
 
-  StorageAccess storageAccess = CookieAllowedForDocument(this);
+  StorageAccess storageAccess = StorageAllowedForDocument(this);
   if (storageAccess == StorageAccess::eDeny) {
     return;
   }
@@ -12051,7 +12051,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetDocumentURI(Document::GetDocumentURI());
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
   clone->SetPrincipals(NodePrincipal(), mPartitionedPrincipal);
-  clone->mActiveCookiePrincipal = mActiveCookiePrincipal;
+  clone->mActiveStoragePrincipal = mActiveStoragePrincipal;
   // NOTE(emilio): Intentionally setting this to the GetDocBaseURI rather than
   // just mDocumentBaseURI, so that srcdoc iframes get the right base URI even
   // when printed standalone via window.print() (where there won't be a parent
@@ -17714,32 +17714,14 @@ bool Document::HasStorageAccessPermissionGrantedByAllowList() {
 }
 
 nsIPrincipal* Document::EffectiveStoragePrincipal() const {
-  if (!StaticPrefs::privacy_partition_always_partition_non_cookie_storage()) {
-    return EffectiveCookiePrincipal();
-  }
-
-  nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (!inner || inner->GetExtantDoc() != this) {
-    return NodePrincipal();
-  }
-
-  nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
-  Unused << NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
-      nsGlobalWindowInner::Cast(inner),
-      StoragePrincipalHelper::eForeignPartitionedPrincipal,
-      getter_AddRefs(foreignPartitionedPrincipal))));
-  return foreignPartitionedPrincipal;
-}
-
-nsIPrincipal* Document::EffectiveCookiePrincipal() const {
   nsPIDOMWindowInner* inner = GetInnerWindow();
   if (!inner) {
     return NodePrincipal();
   }
 
   // Return our cached storage principal if one exists.
-  if (mActiveCookiePrincipal) {
-    return mActiveCookiePrincipal;
+  if (mActiveStoragePrincipal) {
+    return mActiveStoragePrincipal;
   }
 
   // We use the lower-level ContentBlocking API here to ensure this
@@ -17747,7 +17729,7 @@ nsIPrincipal* Document::EffectiveCookiePrincipal() const {
   uint32_t rejectedReason = 0;
   if (ContentBlocking::ShouldAllowAccessFor(inner, GetDocumentURI(),
                                             &rejectedReason)) {
-    return mActiveCookiePrincipal = NodePrincipal();
+    return mActiveStoragePrincipal = NodePrincipal();
   }
 
   // Let's use the storage principal only if we need to partition the cookie
@@ -17756,10 +17738,10 @@ nsIPrincipal* Document::EffectiveCookiePrincipal() const {
   if (ShouldPartitionStorage(rejectedReason) &&
       !StoragePartitioningEnabled(
           rejectedReason, const_cast<Document*>(this)->CookieJarSettings())) {
-    return mActiveCookiePrincipal = NodePrincipal();
+    return mActiveStoragePrincipal = NodePrincipal();
   }
 
-  return mActiveCookiePrincipal = mPartitionedPrincipal;
+  return mActiveStoragePrincipal = mPartitionedPrincipal;
 }
 
 nsIPrincipal* Document::GetPrincipalForPrefBasedHacks() const {
