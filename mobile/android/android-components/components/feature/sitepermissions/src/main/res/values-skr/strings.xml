@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Title of a dialog for a microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_microfone_title">%1$s کوں آپݨاں مائیکروفون ورتݨ دی اجازت ݙیندے ہو؟</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">%1$s کوں آپݨاں مقام ورتݨ دی اجازت ݙیندے ہو؟</string>
+    <!-- Title of a dialog for a camera and microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">%1$s کوں آپݨاں کیمرہ تے مائیکروفون ورتݨ دی اجازت ݙیندے ہو؟</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">مائیکروفون ١</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">پچھوں آلا کیمرہ</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">سامھِݨے آلا کیمرہ</string>
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
     <string name="mozac_feature_sitepermissions_allow">اجازت ݙیوو</string>

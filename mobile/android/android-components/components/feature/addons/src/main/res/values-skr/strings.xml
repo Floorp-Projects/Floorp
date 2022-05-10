@@ -32,6 +32,8 @@
     <string name="mozac_feature_addons_permissions_bookmarks_description">کتاب نشان پڑھو تے ترمیم کرو</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">براؤزر ترتیباں پڑھو تے تبدیل کرو</string>
+    <!-- Description for browser_data permission. -->
+    <string name="mozac_feature_addons_permissions_browser_data_description">حالیہ براؤزنگ تاریخ۔ کوکیاں تے متعلقہ ڈیٹا صاف کرو</string>
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ کنوں ڈیٹا گھنو</string>
     <!-- Description for clipboard_write permission. -->
@@ -48,6 +50,8 @@
     <string name="mozac_feature_addons_permissions_proxy_description">براؤزر دیاں پراکسی ترتیباں کوں کنٹرول کرو</string>
     <!-- Description for sessions permission. -->
     <string name="mozac_feature_addons_permissions_sessions_description">حالیہ بند تھیاں ٹیباں تے اپڑو</string>
+    <!-- Description for tab_hide permission. -->
+    <string name="mozac_feature_addons_permissions_tab_hide_description">براؤزر ٹیباں لکاؤ تے ݙکھاؤ</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ تاریخ تے اپڑو</string>
     <!-- The version on of add-on. -->
@@ -94,6 +98,8 @@
     <string name="mozac_feature_addons_remove">ہٹاؤ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کروں؟</string>
+    <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_permissions_dialog_subtitle">ایں وچ تہاݙی اجازت ضروری ہے:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">شامل کرو</string>
     <!-- This is a button to cancel the add-on installation . -->
@@ -164,6 +170,8 @@
     <string name="mozac_feature_addons_updater_status_no_update_available">اڄݨ تائیں کوئی اپ ڈیٹ دستاب کائنی</string>
     <!-- Displayed in the "Status" field for the updater when there was an error during the add-on update. -->
     <string name="mozac_feature_addons_updater_status_error">نقص</string>
+    <!-- Text shown in a dialog that displays information about the last attempt to update an add-on. This is the title of the dialog. -->
+    <string name="mozac_feature_addons_updater_dialog_title">اپڈیٹر ڄاݨکاری</string>
     <!-- Label in the dialog displaying information for the last attempt to update add-ons. It's followed by the date of the last attempt. -->
     <string name="mozac_feature_addons_updater_dialog_last_attempt">چھیکڑی کوشش:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->

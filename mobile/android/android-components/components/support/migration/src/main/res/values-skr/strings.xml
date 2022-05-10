@@ -4,4 +4,6 @@
     <string name="mozac_support_migration_ongoing_notification_title">اپ ڈیٹ تھین٘دی پئی ہے</string>
     <!-- Title of the notification shown the upgrade from Fennec to Fenix is complete. -->
     <string name="mozac_support_migration_complete_notification_title">اپ ڈیٹ مکمل</string>
-    </resources>
+    <!-- Text of the notification shown the upgrade from Fennec to Fenix is complete. -->
+    <string name="mozac_support_migration_complete_notification_text">فائرفوکس اپ ڈیٹ تھی ڳئےــ تے چنگا تھی ڳئے!</string>
+</resources>
