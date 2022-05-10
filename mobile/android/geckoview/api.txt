@@ -924,7 +924,6 @@ package org.mozilla.geckoview {
     method @AnyThread public void setMediaSessionDelegate(@Nullable MediaSession.Delegate);
     method @UiThread public void setNavigationDelegate(@Nullable GeckoSession.NavigationDelegate);
     method @UiThread public void setPermissionDelegate(@Nullable GeckoSession.PermissionDelegate);
-    method @AnyThread public void setPriorityHint(int);
     method @UiThread public void setProgressDelegate(@Nullable GeckoSession.ProgressDelegate);
     method @AnyThread public void setPromptDelegate(@Nullable GeckoSession.PromptDelegate);
     method @UiThread public void setScrollDelegate(@Nullable GeckoSession.ScrollDelegate);
@@ -948,8 +947,6 @@ package org.mozilla.geckoview {
     field public static final int LOAD_FLAGS_FORCE_ALLOW_DATA_URI = 32;
     field public static final int LOAD_FLAGS_NONE = 0;
     field public static final int LOAD_FLAGS_REPLACE_HISTORY = 64;
-    field public static final int PRIORITY_DEFAULT = 0;
-    field public static final int PRIORITY_HIGH = 1;
     field @Nullable protected GeckoSession.Window mWindow;
   }
 
@@ -1168,9 +1165,6 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.PermissionDelegate.MediaSource.Type {
-  }
-
-  @Retention(value=RetentionPolicy.SOURCE) public static interface GeckoSession.Priority {
   }
 
   public static interface GeckoSession.ProgressDelegate {

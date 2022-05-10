@@ -1580,17 +1580,6 @@ public class GeckoSession {
     return mMagnifier;
   }
 
-  // The priority of the GeckoSession, either default or high.
-  @Retention(RetentionPolicy.SOURCE)
-  @IntDef({PRIORITY_DEFAULT, PRIORITY_HIGH})
-  public @interface Priority {}
-
-  /** Value for Priority when it is default. */
-  public static final int PRIORITY_DEFAULT = 0;
-
-  /** Value for Priority when it is high. */
-  public static final int PRIORITY_HIGH = 1;
-
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
@@ -2256,22 +2245,6 @@ public class GeckoSession {
     final GeckoBundle msg = new GeckoBundle(1);
     msg.putBoolean("focused", focused);
     mEventDispatcher.dispatch("GeckoView:SetFocused", msg);
-  }
-
-  /**
-   * Notify GeckoView of the priority for this GeckoSession.
-   *
-   * Set this GeckoSession to high priority (PRIORITY_HIGH) whenever the app wants to signal to
-   * GeckoView that this GeckoSession is important to the app. GeckoView will keep the session state
-   * as long as possible. Set this to default priority (PRIORITY_DEFAULT) in any other case.
-   *
-   * @param priorityHint Priority of the geckosession, either high priority or default.
-   */
-  @AnyThread
-  public void setPriorityHint(final @Priority int priorityHint) {
-    final GeckoBundle msg = new GeckoBundle(1);
-    msg.putInt("priorityHint", priorityHint);
-    mEventDispatcher.dispatch("GeckoView:SetPriorityHint", msg);
   }
 
   /** Class representing a saved session state. */
