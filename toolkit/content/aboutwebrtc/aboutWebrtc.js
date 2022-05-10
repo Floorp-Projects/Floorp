@@ -1144,6 +1144,7 @@ function renderUserPrefs() {
     "media.peerconnection",
     "media.navigator",
     "media.getusermedia",
+    "media.gmp-gmpopenh264.enabled",
   ];
   const renderPref = p => renderText("p", `${p}: ${getPref(p)}`);
   const display = prefs
