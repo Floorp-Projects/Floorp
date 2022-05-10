@@ -112,7 +112,7 @@ fog = { path = "toolkit/components/glean/api" }
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { package = "packed_simd_2", git = "https://github.com/hsivonen/packed_simd", rev="c149d0a519bf878567c7630096737669ec2ff15f" }
 midir = { git = "https://github.com/mozilla/midir.git", rev = "4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852" }
+minidump_writer_linux = { git = "https://github.com/rust-minidump/minidump-writer.git", rev = "75ada456c92a429704691a85e1cb42fef8cafc0d" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
