@@ -452,6 +452,52 @@ const CustomizableWidgets = [
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
     },
   },
+  {
+    id: "firefox-view-button",
+    l10nId: "toolbar-button-firefox-view",
+    onBeforeCreated() {
+      return Services.prefs.getBoolPref("browser.tabs.firefox-view");
+    },
+    onCommand(e) {
+      let button = e.target;
+      if (button.hasAttribute("open")) {
+        return;
+      }
+      let window = button.ownerGlobal;
+      let tabbrowser = window.gBrowser;
+      let tab = window.gFirefoxViewTab;
+      if (!tab) {
+        tab = tabbrowser.addTrustedTab("about:firefoxview", { index: 0 });
+        tabbrowser.hideTab(tab);
+        window.gFirefoxViewTab = tab;
+
+        let onTabSelect = event => {
+          button.toggleAttribute("open", event.target == tab);
+        };
+
+        let onTabClose = () => {
+          window.gFirefoxViewTab = null;
+          tabbrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
+        };
+
+        tabbrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
+        tab.addEventListener("TabClose", onTabClose, { once: true });
+
+        window.addEventListener(
+          "unload",
+          () => {
+            tabbrowser.tabContainer.removeEventListener(
+              "TabSelect",
+              onTabSelect
+            );
+            tab.removeEventListener("TabClose", onTabClose);
+          },
+          { once: true }
+        );
+      }
+      tabbrowser.selectedTab = tab;
+    },
+  },
 ];
 
 if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
@@ -623,52 +669,6 @@ if (PrivateBrowsingUtils.enabled) {
     onCommand(e) {
       let win = e.target.ownerGlobal;
       win.OpenBrowserWindow({ private: true });
-    },
-  });
-}
-
-if (Services.prefs.getBoolPref("browser.tabs.firefox-view")) {
-  CustomizableWidgets.push({
-    id: "firefox-view-button",
-    l10nId: "toolbar-button-firefox-view",
-    onCommand(e) {
-      let button = e.target;
-      if (button.hasAttribute("open")) {
-        return;
-      }
-      let window = button.ownerGlobal;
-      let tabbrowser = window.gBrowser;
-      let tab = window.__firefoxViewTab;
-      if (!tab) {
-        tab = tabbrowser.addTrustedTab("about:firefoxview", { index: 0 });
-        tabbrowser.hideTab(tab);
-        window.__firefoxViewTab = tab;
-
-        let onTabSelect = event => {
-          button.toggleAttribute("open", event.target == tab);
-        };
-
-        let onTabClose = () => {
-          window.__firefoxViewTab = null;
-          tabbrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
-        };
-
-        tabbrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
-        tab.addEventListener("TabClose", onTabClose, { once: true });
-
-        window.addEventListener(
-          "unload",
-          () => {
-            tabbrowser.tabContainer.removeEventListener(
-              "TabSelect",
-              onTabSelect
-            );
-            tab.removeEventListener("TabClose", onTabClose);
-          },
-          { once: true }
-        );
-      }
-      tabbrowser.selectedTab = tab;
     },
   });
 }

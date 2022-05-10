@@ -560,6 +560,7 @@ var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteTabs;
 var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteSubframes;
+var gFirefoxViewTab;
 
 var gBrowserAllowScriptsToCloseInitialTabs = false;
 
