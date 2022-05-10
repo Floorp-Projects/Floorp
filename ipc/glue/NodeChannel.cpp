@@ -89,7 +89,7 @@ void NodeChannel::Start(bool aCallConnect) {
 
   mExistingListener = mChannel->set_listener(this);
 
-  std::queue<UniquePtr<IPC::Message>> pending;
+  std::queue<IPC::Message> pending;
   if (mExistingListener) {
     mExistingListener->GetQueuedMessages(pending);
   }
@@ -230,17 +230,31 @@ void NodeChannel::DoSendMessage(UniquePtr<IPC::Message> aMessage) {
   }
 }
 
-void NodeChannel::OnMessageReceived(UniquePtr<IPC::Message> aMessage) {
+void NodeChannel::OnMessageReceived(IPC::Message&& aMessage) {
   AssertIOThread();
 
+  if (!aMessage.is_valid()) {
+    NS_WARNING("Received an invalid message");
+
 #ifdef FUZZING_SNAPSHOT
-  if (mBlockSendRecv && !aMessage->IsFuzzMsg()) {
+    if (aMessage.IsFuzzMsg()) {
+      MOZ_FUZZING_NYX_PRINT("ERROR: Received invalid fuzzing IPC message?!\n");
+      MOZ_REALLY_CRASH(__LINE__);
+    }
+#endif
+
+    OnChannelError();
+    return;
+  }
+
+#ifdef FUZZING_SNAPSHOT
+  if (mBlockSendRecv && !aMessage.IsFuzzMsg()) {
     return;
   }
 #endif
 
-  IPC::MessageReader reader(*aMessage);
-  switch (aMessage->type()) {
+  IPC::MessageReader reader(aMessage);
+  switch (aMessage.type()) {
     case REQUEST_INTRODUCTION_MESSAGE_TYPE: {
       NodeName name;
       if (IPC::ReadParam(&reader, &name)) {
@@ -258,7 +272,8 @@ void NodeChannel::OnMessageReceived(UniquePtr<IPC::Message> aMessage) {
       break;
     }
     case BROADCAST_MESSAGE_TYPE: {
-      mListener->OnBroadcast(mName, std::move(aMessage));
+      mListener->OnBroadcast(mName,
+                             MakeUnique<IPC::Message>(std::move(aMessage)));
       return;
     }
     case ACCEPT_INVITE_MESSAGE_TYPE: {
@@ -279,13 +294,14 @@ void NodeChannel::OnMessageReceived(UniquePtr<IPC::Message> aMessage) {
     case EVENT_MESSAGE_TYPE:
     default: {
 #ifdef FUZZING_SNAPSHOT
-      if (!fuzzing::IPCFuzzController::instance().ObserveIPCMessage(
-              this, *aMessage)) {
+      if (!fuzzing::IPCFuzzController::instance().ObserveIPCMessage(this,
+                                                                    aMessage)) {
         return;
       }
 #endif
 
-      mListener->OnEventMessage(mName, std::move(aMessage));
+      mListener->OnEventMessage(mName,
+                                MakeUnique<IPC::Message>(std::move(aMessage)));
       return;
     }
   }
