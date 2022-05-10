@@ -4,6 +4,7 @@
 package org.mozilla.focus.settings.permissions
 
 import android.os.Bundle
+import androidx.annotation.VisibleForTesting
 import androidx.preference.Preference
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
@@ -15,6 +16,13 @@ import org.mozilla.focus.state.AppAction
 
 class SitePermissionsFragment : BaseSettingsFragment() {
 
+    @VisibleForTesting
+    internal lateinit var storage: SitePermissionOptionsStorage
+
+    @VisibleForTesting
+    internal fun getPreference(sitePermissionID: Int): Preference =
+        requirePreference(sitePermissionID)
+
     override fun onStart() {
         super.onStart()
         updateTitle(R.string.preference_site_permissions)
@@ -25,7 +33,8 @@ class SitePermissionsFragment : BaseSettingsFragment() {
         bindCategoryPhoneFeatures()
     }
 
-    private fun bindCategoryPhoneFeatures() {
+    @VisibleForTesting
+    internal fun bindCategoryPhoneFeatures() {
         SitePermission.values()
             // Only AUTOPLAY should appear in the list AUTOPLAY_INAUDIBLE and AUTOPLAY_AUDIBLE
             // shouldn't be bound
@@ -33,11 +42,11 @@ class SitePermissionsFragment : BaseSettingsFragment() {
             .forEach(::initPhoneFeature)
     }
 
-    private fun initPhoneFeature(sitePermission: SitePermission) {
-        val storage = SitePermissionOptionsStorage(requireContext())
-        val preferencePhoneFeatures = requirePreference<Preference>(
-            storage.getSitePermissionPreferenceId(sitePermission)
-        )
+    @VisibleForTesting
+    internal fun initPhoneFeature(sitePermission: SitePermission) {
+        storage = SitePermissionOptionsStorage(requireContext())
+        val preferencePhoneFeatures = getPreference(storage.getSitePermissionPreferenceId(sitePermission))
+
         preferencePhoneFeatures.summary = storage.getSitePermissionOptionSelectedLabel(sitePermission)
 
         preferencePhoneFeatures.onPreferenceClickListener = Preference.OnPreferenceClickListener {
@@ -45,8 +54,8 @@ class SitePermissionsFragment : BaseSettingsFragment() {
             true
         }
     }
-
-    private fun navigateToSitePermissionOptionsScreen(sitePermission: SitePermission) {
+    @VisibleForTesting
+    internal fun navigateToSitePermissionOptionsScreen(sitePermission: SitePermission) {
         requireComponents.appStore.dispatch(AppAction.OpenSitePermissionOptionsScreen(sitePermission = sitePermission))
     }
 }

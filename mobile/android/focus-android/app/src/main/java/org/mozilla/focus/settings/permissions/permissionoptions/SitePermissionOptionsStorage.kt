@@ -5,6 +5,7 @@ package org.mozilla.focus.settings.permissions.permissionoptions
 
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import androidx.preference.PreferenceManager
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.ktx.android.content.isPermissionGranted
@@ -79,7 +80,8 @@ class SitePermissionOptionsStorage(private val context: Context) {
     /**
      * Return the default Option for a Site Permission if the user doesn't select nothing
      */
-    private fun getSitePermissionDefaultOption(sitePermission: SitePermission): SitePermissionOption {
+    @VisibleForTesting
+    internal fun getSitePermissionDefaultOption(sitePermission: SitePermission): SitePermissionOption {
         return when (sitePermission) {
             SitePermission.CAMERA -> SitePermissionOption.AskToAllow()
             SitePermission.LOCATION -> SitePermissionOption.AskToAllow()
@@ -95,7 +97,7 @@ class SitePermissionOptionsStorage(private val context: Context) {
      * Return the user selected Option for a Site Permission or the default one if the user doesn't
      * select one
      */
-    fun permissionSelectedOption(sitePermission: SitePermission) =
+    internal fun permissionSelectedOption(sitePermission: SitePermission) =
         when (permissionSelectedOptionByKey(getSitePermissionPreferenceId(sitePermission))) {
             context.getString(R.string.pref_key_allow_autoplay_audio_video) -> AutoplayOption.AllowAudioVideo()
             context.getString(R.string.pref_key_block_autoplay_audio_video) -> AutoplayOption.BlockAudioVideo()
@@ -145,7 +147,8 @@ class SitePermissionOptionsStorage(private val context: Context) {
         }
     }
 
-    private fun permissionSelectedOptionByKey(
+    @VisibleForTesting
+    internal fun permissionSelectedOptionByKey(
         sitePermissionKey: Int
     ): String {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
