@@ -170,7 +170,7 @@ class ReftestRunner(MozbuildObject):
 
         # Disable fission until geckoview supports fission by default.
         # Need fission on Android? Use '--setpref fission.autostart=true'
-        args.fission = False
+        args.disableFission = True
 
         # A symlink and some path manipulations are required so that test
         # manifests can be found both locally and remotely (via a url)
