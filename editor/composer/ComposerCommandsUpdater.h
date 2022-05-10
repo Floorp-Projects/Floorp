@@ -10,10 +10,9 @@
 #include "nsCOMPtr.h"  // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsINamed.h"
-#include "nsISupportsImpl.h"         // for NS_DECL_ISUPPORTS
-#include "nsITimer.h"                // for NS_DECL_NSITIMERCALLBACK, etc
-#include "nsITransactionListener.h"  // for nsITransactionListener
-#include "nscore.h"                  // for NS_IMETHOD, nsresult, etc
+#include "nsISupportsImpl.h"  // for NS_DECL_ISUPPORTS
+#include "nsITimer.h"         // for NS_DECL_NSITIMERCALLBACK, etc
+#include "nscore.h"           // for NS_IMETHOD, nsresult, etc
 
 class nsCommandManager;
 class nsIDocShell;
@@ -23,25 +22,22 @@ class nsPIDOMWindowOuter;
 
 namespace mozilla {
 
-class ComposerCommandsUpdater final : public nsITransactionListener,
-                                      public nsITimerCallback,
-                                      public nsINamed {
+class TransactionManager;
+
+class ComposerCommandsUpdater final : public nsITimerCallback, public nsINamed {
  public:
   ComposerCommandsUpdater();
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ComposerCommandsUpdater,
-                                           nsITransactionListener)
+                                           nsITimerCallback)
 
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK
 
   // nsINamed
   NS_DECL_NSINAMED
-
-  // nsITransactionListener
-  NS_DECL_NSITRANSACTIONLISTENER
 
   void Init(nsPIDOMWindowOuter& aDOMWindow);
 
@@ -86,6 +82,18 @@ class ComposerCommandsUpdater final : public nsITransactionListener,
     UpdateCommandGroup(CommandGroup::Undo);
     mDirtyState = aNowDirty;
   }
+
+  /**
+   * The following methods are called when aTransactionManager did
+   * `DoTransaction`, `UndoTransaction` or `RedoTransaction` of a transaction
+   * instance.
+   */
+  MOZ_CAN_RUN_SCRIPT void DidDoTransaction(
+      TransactionManager& aTransactionManager);
+  MOZ_CAN_RUN_SCRIPT void DidUndoTransaction(
+      TransactionManager& aTransactionManager);
+  MOZ_CAN_RUN_SCRIPT void DidRedoTransaction(
+      TransactionManager& aTransactionManager);
 
  protected:
   virtual ~ComposerCommandsUpdater();

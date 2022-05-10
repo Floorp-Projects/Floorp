@@ -1020,6 +1020,13 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     popBytes(bytesToPop);
   }
 
+  void allocArgArea(size_t argSize) {
+    if (argSize) {
+      BaseStackFrameAllocator::allocArgArea(argSize);
+      maxFramePushed_ = std::max(maxFramePushed_, masm.framePushed());
+    }
+  }
+
  private:
   void store32BitsToStack(int32_t imm, uint32_t destHeight, Register temp) {
     masm.move32(Imm32(imm), temp);

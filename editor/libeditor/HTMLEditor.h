@@ -127,9 +127,12 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * @param aDocument   The document whose content will be editable.
+   * @param aComposerCommandsUpdater     The composer command updater.
    * @param aFlags      Some of nsIEditor::eEditor*Mask flags.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult Init(Document& aDocument, uint32_t aFlags);
+  MOZ_CAN_RUN_SCRIPT nsresult
+  Init(Document& aDocument, ComposerCommandsUpdater& aComposerCommandsUpdater,
+       uint32_t aFlags);
 
   /**
    * PostCreate() should be called after Init, and is the time that the editor
@@ -148,25 +151,6 @@ class HTMLEditor final : public EditorBase,
   }
   static const HTMLEditor* GetFrom(const nsIEditor* aEditor) {
     return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
-  }
-
-  /**
-   * Adds or removes transaction listener to or from the transaction manager.
-   * Note that TransactionManager does not check if the listener is in the
-   * array.  So, caller of AddTransactionListener() needs to manage if it's
-   * already been registered to the transaction manager.
-   */
-  bool AddTransactionListener(nsITransactionListener& aListener) {
-    if (!mTransactionManager) {
-      return false;
-    }
-    return mTransactionManager->AddTransactionListener(aListener);
-  }
-  bool RemoveTransactionListener(nsITransactionListener& aListener) {
-    if (!mTransactionManager) {
-      return false;
-    }
-    return mTransactionManager->RemoveTransactionListener(aListener);
   }
 
   bool GetReturnInParagraphCreatesNewParagraph();
@@ -590,16 +574,9 @@ class HTMLEditor final : public EditorBase,
   GetFontColorState(bool* aIsMixed, nsAString& aColor);
 
   /**
-   * SetComposerCommandsUpdater() sets or unsets mComposerCommandsUpdater.
-   * This will crash in debug build if the editor already has an instance
-   * but called with another instance.
+   * Detach aComposerCommandsUpdater from this.
    */
-  void SetComposerCommandsUpdater(
-      ComposerCommandsUpdater* aComposerCommandsUpdater) {
-    MOZ_ASSERT(!aComposerCommandsUpdater || !mComposerCommandsUpdater ||
-               aComposerCommandsUpdater == mComposerCommandsUpdater);
-    mComposerCommandsUpdater = aComposerCommandsUpdater;
-  }
+  void Detach(const ComposerCommandsUpdater& aComposerCommandsUpdater);
 
   nsStaticAtom& DefaultParagraphSeparatorTagName() const {
     return HTMLEditor::ToParagraphSeparatorTagName(mDefaultParagraphSeparator);
@@ -4447,6 +4424,33 @@ class HTMLEditor final : public EditorBase,
     return do_AddRef(mChangedRangeForTopLevelEditSubAction);
   }
 
+  MOZ_CAN_RUN_SCRIPT void DidDoTransaction(
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
+      nsresult aDoTransactionResult) {
+    if (mComposerCommandsUpdater) {
+      RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
+      updater->DidDoTransaction(aTransactionManager);
+    }
+  }
+
+  MOZ_CAN_RUN_SCRIPT void DidUndoTransaction(
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
+      nsresult aUndoTransactionResult) {
+    if (mComposerCommandsUpdater) {
+      RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
+      updater->DidUndoTransaction(aTransactionManager);
+    }
+  }
+
+  MOZ_CAN_RUN_SCRIPT void DidRedoTransaction(
+      TransactionManager& aTransactionManager, nsITransaction& aTransaction,
+      nsresult aRedoTransactionResult) {
+    if (mComposerCommandsUpdater) {
+      RefPtr<ComposerCommandsUpdater> updater(mComposerCommandsUpdater);
+      updater->DidRedoTransaction(aTransactionManager);
+    }
+  }
+
  protected:
   // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
@@ -4668,6 +4672,8 @@ class HTMLEditor final : public EditorBase,
   friend class SlurpBlobEventListener;  // BlobReader
   friend class SplitNodeResult;         // CollapseSelectionTo
   friend class SplitNodeTransaction;    // DoJoinNodes, DoSplitNode
+  friend class TransactionManager;      // DidDoTransaction, DidRedoTransaction,
+                                        // DidUndoTransaction
   friend class
       WhiteSpaceVisibilityKeeper;  // CanMoveChildren,
                                    // CanMoveOrDeleteSomethingInHardLine,

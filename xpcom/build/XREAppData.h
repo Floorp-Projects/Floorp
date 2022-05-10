@@ -12,6 +12,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
+#include "nsStringFwd.h"
 #include "nsIFile.h"
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
@@ -190,6 +191,10 @@ class XREAppData {
   sandbox::BrokerServices* sandboxBrokerServices = nullptr;
   mozilla::sandboxing::PermissionsService* sandboxPermissionsService;
 #endif
+
+  // Returns a name suitable for DBUS services.
+  static void SanitizeNameForDBus(nsACString&);
+  void GetDBusAppName(nsACString&) const;
 };
 
 /**

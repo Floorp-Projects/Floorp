@@ -56,7 +56,7 @@ const SQL_ADAPTIVE_QUERY = `/* do not warn (bug 487789) */
      SELECT ROUND(MAX(use_count) * (1 + (input = :search_string)), 1) AS rank,
             place_id
      FROM moz_inputhistory
-     WHERE input BETWEEN :search_string AND :search_string || X'FFFF'
+     WHERE input COLLATE NOCASE BETWEEN :search_string AND :search_string || X'FFFF'
      GROUP BY place_id
    ) AS i
    JOIN moz_places h ON h.id = i.place_id

@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsILoadInfo.h"  // nsSecurityFlags
 #include "nsINode.h"      // nsIURI
+#include "nsThreadUtils.h"  // GetMainThreadSerialEventTarget
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/JSExecutionContext.h"
@@ -57,6 +58,8 @@ class ScriptLoaderInterface : public nsISupports {
   using ScriptLoadRequestList = JS::loader::ScriptLoadRequestList;
   using ModuleLoadRequest = JS::loader::ModuleLoadRequest;
 
+  virtual ~ScriptLoaderInterface() = default;
+
   // In some environments, we will need to default to a base URI
   virtual nsIURI* GetBaseURI() const = 0;
 
@@ -74,12 +77,14 @@ class ScriptLoaderInterface : public nsISupports {
       JS::MutableHandle<JSScript*> aIntroductionScript) = 0;
 
   virtual void MaybePrepareModuleForBytecodeEncodingBeforeExecute(
-      JSContext* aCx, ModuleLoadRequest* aRequest) = 0;
+      JSContext* aCx, ModuleLoadRequest* aRequest) {}
 
   virtual nsresult MaybePrepareModuleForBytecodeEncodingAfterExecute(
-      ModuleLoadRequest* aRequest, nsresult aRv) = 0;
+      ModuleLoadRequest* aRequest, nsresult aRv) {
+    return NS_OK;
+  }
 
-  virtual void MaybeTriggerBytecodeEncoding() = 0;
+  virtual void MaybeTriggerBytecodeEncoding() {}
 };
 
 /*
@@ -151,6 +156,10 @@ class ModuleLoaderBase : public nsISupports {
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
 
+  // Event handler used to process MozPromise actions, used internally to wait
+  // for fetches to finish and for imports to become avilable.
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+
   // https://wicg.github.io/import-maps/#document-acquiring-import-maps
   //
   // Each Document has an acquiring import maps boolean. It is initially true.
@@ -167,7 +176,9 @@ class ModuleLoaderBase : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoaderBase)
   explicit ModuleLoaderBase(ScriptLoaderInterface* aLoader,
-                            nsIGlobalObject* aGlobalObject);
+                            nsIGlobalObject* aGlobalObject,
+                            nsISerialEventTarget* aEventTarget =
+                                mozilla::GetMainThreadSerialEventTarget());
 
   using LoadedScript = JS::loader::LoadedScript;
   using ScriptFetchOptions = JS::loader::ScriptFetchOptions;
@@ -236,6 +247,10 @@ class ModuleLoaderBase : public nsISupports {
   // Executes the module.
   // Implements https://html.spec.whatwg.org/#run-a-module-script
   nsresult EvaluateModule(ModuleLoadRequest* aRequest);
+
+  // Evaluate a module in the given context. Does not push an entry to the
+  // execution stack.
+  nsresult EvaluateModuleInContext(JSContext* aCx, ModuleLoadRequest* aRequest);
 
   void StartDynamicImport(ModuleLoadRequest* aRequest);
   void ProcessDynamicImport(ModuleLoadRequest* aRequest);

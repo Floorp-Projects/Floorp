@@ -221,8 +221,8 @@ PortalLocationProvider::Startup() {
   // Call CreateSession of the location portal
   GVariantBuilder builder;
 
-  nsAutoCString appName(gAppData->remotingName);
-  appName.ReplaceChar("+/=-", '_');
+  nsAutoCString appName;
+  gAppData->GetDBusAppName(appName);
   g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
   g_variant_builder_add(&builder, "{sv}", "session_handle_token",
                         g_variant_new_string(appName.get()));

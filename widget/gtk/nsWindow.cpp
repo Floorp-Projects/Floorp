@@ -3789,7 +3789,8 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
 
   // Don't fire configure event for scale changes, we handle that
   // OnScaleChanged event. Skip that for toplevel windows only.
-  if (mWindowType == eWindowType_toplevel) {
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog) {
     MOZ_DIAGNOSTIC_ASSERT(mGdkWindow,
                           "Getting configure for invisible window?");
     if (mWindowScaleFactor != gdk_window_get_scale_factor(mGdkWindow)) {
@@ -4866,6 +4867,7 @@ void nsWindow::OnScaleChanged() {
     mWindowScaleFactorChanged = true;
     return;
   }
+  LOG("OnScaleChanged -> %d\n", gdk_window_get_scale_factor(mGdkWindow));
 
   // Gtk supply us sometimes with doubled events so stay calm in such case.
   if (gdk_window_get_scale_factor(mGdkWindow) == mWindowScaleFactor) {

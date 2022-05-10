@@ -493,6 +493,61 @@ add_test(async function test_waitForInitialNavigation_crossOrigin() {
   run_next_test();
 });
 
+add_test(async function test_ProgressListener_expectNavigation() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress, {
+    expectNavigation: true,
+    unloadTimeout: 10,
+  });
+  const navigated = progressListener.start();
+
+  // Wait for unloadTimeout to finish in case it started
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 30));
+
+  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved yet");
+
+  await webProgress.sendStartState();
+  await webProgress.sendStopState();
+
+  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+  run_next_test();
+});
+
+add_test(
+  async function test_ProgressListener_expectNavigation_initialDocumentFinishedLoading() {
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+
+    const progressListener = new ProgressListener(webProgress, {
+      expectNavigation: true,
+      unloadTimeout: 10,
+    });
+    const navigated = progressListener.start();
+
+    ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved yet");
+
+    await webProgress.sendStartState({ isInitial: true });
+    await webProgress.sendStopState();
+
+    // Wait for unloadTimeout to finish in case it started
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 30));
+
+    ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved yet");
+
+    await webProgress.sendStartState();
+    await webProgress.sendStopState();
+
+    ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+    run_next_test();
+  }
+);
+
 add_test(async function test_ProgressListener_notWaitForExplicitStart() {
   // Create a webprogress and start it before creating the progress listener.
   const browsingContext = new MockTopContext();

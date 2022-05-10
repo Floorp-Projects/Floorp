@@ -29,7 +29,7 @@ add_task(async function test_iframe_autocomplete() {
   );
   let browser = tab.linkedBrowser;
   let iframeBC = browser.browsingContext.children[1];
-  await openPopupForSubframe(browser, iframeBC, "#street-address");
+  await openPopupOnSubframe(browser, iframeBC, "#street-address");
 
   // Highlight the first item in the list. We want to verify
   // that the warning text is correct to ensure that the preview is
@@ -80,14 +80,14 @@ add_task(async function test_iframe_autocomplete() {
   );
 
   // Fill in the details again and then clear the form from the dropdown.
-  await openPopupForSubframe(browser, iframeBC, "#street-address");
+  await openPopupOnSubframe(browser, iframeBC, "#street-address");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
   await waitForAutofill(iframeBC, "#organization", "Example Inc.");
 
   // Open the dropdown and select the Clear Form item.
-  await openPopupForSubframe(browser, iframeBC, "#street-address");
+  await openPopupOnSubframe(browser, iframeBC, "#street-address");
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, iframeBC);
   EventUtils.synthesizeKey("VK_RETURN", {});
 
@@ -117,7 +117,7 @@ add_task(async function test_iframe_autocomplete_preferences() {
   );
   let browser = tab.linkedBrowser;
   let iframeBC = browser.browsingContext.children[1];
-  await openPopupForSubframe(browser, iframeBC, "#organization");
+  await openPopupOnSubframe(browser, iframeBC, "#organization");
 
   await expectWarningText(browser, "Also autofills address, email");
 

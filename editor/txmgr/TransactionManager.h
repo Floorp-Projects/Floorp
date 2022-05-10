@@ -6,6 +6,7 @@
 #ifndef mozilla_TransactionManager_h
 #define mozilla_TransactionManager_h
 
+#include "mozilla/EditorForwards.h"
 #include "mozilla/TransactionStack.h"
 
 #include "nsCOMArray.h"
@@ -17,7 +18,6 @@
 #include "nscore.h"
 
 class nsITransaction;
-class nsITransactionListener;
 
 namespace mozilla {
 
@@ -54,38 +54,15 @@ class TransactionManager final : public nsITransactionManager,
     return true;
   }
 
-  bool AddTransactionListener(nsITransactionListener& aListener) {
-    // XXX Shouldn't we check if aListener has already been in mListeners?
-    return mListeners.AppendObject(&aListener);
-  }
-  bool RemoveTransactionListener(nsITransactionListener& aListener) {
-    return mListeners.RemoveObject(&aListener);
-  }
+  void Attach(HTMLEditor& aHTMLEditor);
+  void Detach(const HTMLEditor& aHTMLEditor);
 
-  // FYI: We don't need to treat the following methods as `MOZ_CAN_RUN_SCRIPT`
-  //      for now because only ComposerCommandUpdater is the listener and it
-  //      does not do something dangerous synchronously.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillDoNotify(nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidDoNotify(nsITransaction* aTransaction,
-                                                   nsresult aExecuteResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillUndoNotify(nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  DidUndoNotify(nsITransaction* aTransaction, nsresult aUndoResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  WillRedoNotify(nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  DidRedoNotify(nsITransaction* aTransaction, nsresult aRedoResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillBeginBatchNotify(bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidBeginBatchNotify(nsresult aResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillEndBatchNotify(bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult DidEndBatchNotify(nsresult aResult);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult WillMergeNotify(
-      nsITransaction* aTop, nsITransaction* aTransaction, bool* aInterrupt);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  DidMergeNotify(nsITransaction* aTop, nsITransaction* aTransaction,
-                 bool aDidMerge, nsresult aMergeResult);
+  MOZ_CAN_RUN_SCRIPT void DidDoNotify(nsITransaction& aTransaction,
+                                      nsresult aDoResult);
+  MOZ_CAN_RUN_SCRIPT void DidUndoNotify(nsITransaction& aTransaction,
+                                        nsresult aUndoResult);
+  MOZ_CAN_RUN_SCRIPT void DidRedoNotify(nsITransaction& aTransaction,
+                                        nsresult aRedoResult);
 
   /**
    * Exposing non-virtual methods of nsITransactionManager methods.
@@ -104,7 +81,7 @@ class TransactionManager final : public nsITransactionManager,
   TransactionStack mDoStack;
   TransactionStack mUndoStack;
   TransactionStack mRedoStack;
-  nsCOMArray<nsITransactionListener> mListeners;
+  RefPtr<HTMLEditor> mHTMLEditor;
 };
 
 }  // namespace mozilla

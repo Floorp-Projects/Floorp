@@ -578,6 +578,11 @@ class Browsertime(Perftest):
             if self.benchmark:
                 output_timeout = BROWSERTIME_BENCHMARK_OUTPUT_TIMEOUT
 
+            # Double the timeouts on live sites
+            if self.config["live_sites"]:
+                output_timeout *= 2
+                proc_timeout *= 2
+
             proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)
             proc.run(timeout=proc_timeout, outputTimeout=output_timeout)
             proc.wait()

@@ -8,6 +8,7 @@
 
 #include "nsDBusRemoteClient.h"
 #include "RemoteUtils.h"
+#include "mozilla/XREAppData.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Base64.h"
 #include "nsPrintfCString.h"
@@ -92,7 +93,8 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char* aProgram,
   nsAutoCString profileName;
   nsresult rv = mozilla::Base64Encode(nsAutoCString(aProfile), profileName);
   NS_ENSURE_SUCCESS(rv, false);
-  profileName.ReplaceChar("+/=-", '_');
+
+  mozilla::XREAppData::SanitizeNameForDBus(profileName);
 
   aDestinationName =
       nsPrintfCString("org.mozilla.%s.%s", aProgram, profileName.get());
@@ -128,7 +130,7 @@ nsresult nsDBusRemoteClient::DoSendDBusCommandLine(const char* aProgram,
   LOG("nsDBusRemoteClient::DoSendDBusCommandLine()");
 
   nsAutoCString appName(aProgram);
-  appName.ReplaceChar("+/=-", '_');
+  mozilla::XREAppData::SanitizeNameForDBus(appName);
 
   nsAutoCString destinationName;
   if (!GetRemoteDestinationName(appName.get(), aProfile, destinationName)) {
