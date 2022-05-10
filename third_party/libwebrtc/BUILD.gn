@@ -562,6 +562,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtc_base:untyped_function_unittest",
       "rtc_base:weak_ptr_unittests",
       "rtc_base/experiments:experiments_unittests",
+      "rtc_base/system:file_wrapper_unittests",
       "rtc_base/task_utils:pending_task_safety_flag_unittests",
       "rtc_base/task_utils:to_queued_task_unittests",
       "sdk:sdk_tests",
