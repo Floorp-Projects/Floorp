@@ -515,6 +515,7 @@ void MessageChannel::AssertMaybeDeferredCountCorrect() {
 
   size_t count = 0;
   for (MessageTask* task : mPending) {
+    task->AssertMonitorHeld(*mMonitor);
     if (!IsAlwaysDeferred(*task->Msg())) {
       count++;
     }
@@ -1029,23 +1030,25 @@ void MessageChannel::OnMessageReceivedFromLink(UniquePtr<Message> aMsg) {
   MOZ_RELEASE_ASSERT(aMsg->compress_type() == IPC::Message::COMPRESSION_NONE ||
                      aMsg->nested_level() == IPC::Message::NOT_NESTED);
 
-  if (aMsg->compress_type() == IPC::Message::COMPRESSION_ENABLED) {
-    bool compress =
-        (!mPending.isEmpty() &&
-         mPending.getLast()->Msg()->type() == aMsg->type() &&
-         mPending.getLast()->Msg()->routing_id() == aMsg->routing_id());
+  if (aMsg->compress_type() == IPC::Message::COMPRESSION_ENABLED &&
+      !mPending.isEmpty()) {
+    auto* last = mPending.getLast();
+    last->AssertMonitorHeld(*mMonitor);
+    bool compress = last->Msg()->type() == aMsg->type() &&
+                    last->Msg()->routing_id() == aMsg->routing_id();
     if (compress) {
       // This message type has compression enabled, and the back of the
       // queue was the same message type and routed to the same destination.
       // Replace it with the newer message.
-      MOZ_RELEASE_ASSERT(mPending.getLast()->Msg()->compress_type() ==
+      MOZ_RELEASE_ASSERT(last->Msg()->compress_type() ==
                          IPC::Message::COMPRESSION_ENABLED);
-      mPending.getLast()->Msg() = std::move(aMsg);
+      last->Msg() = std::move(aMsg);
       return;
     }
   } else if (aMsg->compress_type() == IPC::Message::COMPRESSION_ALL &&
              !mPending.isEmpty()) {
     for (MessageTask* p = mPending.getLast(); p; p = p->getPrevious()) {
+      p->AssertMonitorHeld(*mMonitor);
       if (p->Msg()->type() == aMsg->type() &&
           p->Msg()->routing_id() == aMsg->routing_id()) {
         // This message type has compression enabled, and the queue
@@ -1111,6 +1114,7 @@ void MessageChannel::PeekMessages(
   MonitorAutoLock lock(*mMonitor);
 
   for (MessageTask* it : mPending) {
+    it->AssertMonitorHeld(*mMonitor);
     const Message& msg = *it->Msg();
     if (!aInvoke(msg)) {
       break;
@@ -1144,6 +1148,7 @@ void MessageChannel::ProcessPendingRequests(
     Vector<UniquePtr<Message>> toProcess;
 
     for (MessageTask* p = mPending.getFirst(); p;) {
+      p->AssertMonitorHeld(*mMonitor);
       UniquePtr<Message>& msg = p->Msg();
 
       MOZ_RELEASE_ASSERT(!aTransaction.IsCanceled(),
@@ -1463,6 +1468,7 @@ void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
                                 MessageTask& aTask) {
   AssertWorkerThread();
   mMonitor->AssertCurrentThreadOwns();
+  aTask.AssertMonitorHeld(*mMonitor);
 
   UniquePtr<Message>& msg = aTask.Msg();
 
@@ -1503,12 +1509,31 @@ void MessageChannel::RunMessage(ActorLifecycleProxy* aProxy,
 NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable,
                             nsIRunnablePriority, nsIRunnableIPCMessageType)
 
+static uint32_t ToRunnablePriority(IPC::Message::PriorityValue aPriority) {
+  switch (aPriority) {
+    case IPC::Message::NORMAL_PRIORITY:
+      return nsIRunnablePriority::PRIORITY_NORMAL;
+    case IPC::Message::INPUT_PRIORITY:
+      return nsIRunnablePriority::PRIORITY_INPUT_HIGH;
+    case IPC::Message::VSYNC_PRIORITY:
+      return nsIRunnablePriority::PRIORITY_VSYNC;
+    case IPC::Message::MEDIUMHIGH_PRIORITY:
+      return nsIRunnablePriority::PRIORITY_MEDIUMHIGH;
+    case IPC::Message::CONTROL_PRIORITY:
+      return nsIRunnablePriority::PRIORITY_CONTROL;
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      return nsIRunnablePriority::PRIORITY_NORMAL;
+  }
+}
+
 MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
                                          UniquePtr<Message> aMessage)
     : CancelableRunnable(aMessage->name()),
       mMonitor(aChannel->mMonitor),
       mChannel(aChannel),
       mMessage(std::move(aMessage)),
+      mPriority(ToRunnablePriority(mMessage->priority())),
       mScheduled(false)
 #ifdef FUZZING_SNAPSHOT
       ,
@@ -1537,6 +1562,23 @@ MessageChannel::MessageTask::~MessageTask() {
 }
 
 nsresult MessageChannel::MessageTask::Run() {
+  mMonitor->AssertNotCurrentThreadOwns();
+
+  // Drop the toplevel actor's lifecycle proxy outside of our monitor if we take
+  // it, as destroying our ActorLifecycleProxy reference can acquire the
+  // monitor.
+  RefPtr<ActorLifecycleProxy> proxy;
+
+  MonitorAutoLock lock(*mMonitor);
+
+  // In case we choose not to run this message, we may need to be able to Post
+  // it again.
+  mScheduled = false;
+
+  if (!isInList()) {
+    return NS_OK;
+  }
+
 #ifdef FUZZING_SNAPSHOT
   if (!mMessage->IsFuzzMsg()) {
     if (fuzzing::Nyx::instance().started()) {
@@ -1554,23 +1596,6 @@ nsresult MessageChannel::MessageTask::Run() {
     MOZ_FUZZING_IPC_PRE_FUZZ_MT_RUN();
   }
 #endif
-
-  mMonitor->AssertNotCurrentThreadOwns();
-
-  // Drop the toplevel actor's lifecycle proxy outside of our monitor if we take
-  // it, as destroying our ActorLifecycleProxy reference can acquire the
-  // monitor.
-  RefPtr<ActorLifecycleProxy> proxy;
-
-  MonitorAutoLock lock(*mMonitor);
-
-  // In case we choose not to run this message, we may need to be able to Post
-  // it again.
-  mScheduled = false;
-
-  if (!isInList()) {
-    return NS_OK;
-  }
 
   Channel()->AssertWorkerThread();
   mMonitor->AssertSameMonitor(*Channel()->mMonitor);
@@ -1627,35 +1652,15 @@ void MessageChannel::MessageTask::Post() {
 
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetPriority(uint32_t* aPriority) {
-  if (!mMessage) {
-    return NS_ERROR_FAILURE;
-  }
-
-  switch (mMessage->priority()) {
-    case Message::NORMAL_PRIORITY:
-      *aPriority = PRIORITY_NORMAL;
-      break;
-    case Message::INPUT_PRIORITY:
-      *aPriority = PRIORITY_INPUT_HIGH;
-      break;
-    case Message::VSYNC_PRIORITY:
-      *aPriority = PRIORITY_VSYNC;
-      break;
-    case Message::MEDIUMHIGH_PRIORITY:
-      *aPriority = PRIORITY_MEDIUMHIGH;
-      break;
-    case Message::CONTROL_PRIORITY:
-      *aPriority = PRIORITY_CONTROL;
-      break;
-    default:
-      MOZ_ASSERT(false);
-      break;
-  }
+  *aPriority = mPriority;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 MessageChannel::MessageTask::GetType(uint32_t* aType) {
+  mMonitor->AssertNotCurrentThreadOwns();
+
+  MonitorAutoLock lock(*mMonitor);
   if (!mMessage) {
     // If mMessage has been moved already elsewhere, we can't know what the type
     // has been.
@@ -2194,6 +2199,7 @@ void MessageChannel::DebugAbort(const char* file, int line, const char* cond,
 
   MessageQueue pending = std::move(mPending);
   while (!pending.isEmpty()) {
+    pending.getFirst()->AssertMonitorHeld(*mMonitor);
     printf_stderr("    [ %s%s ]\n",
                   pending.getFirst()->Msg()->is_sync() ? "sync" : "async",
                   pending.getFirst()->Msg()->is_reply() ? "reply" : "");
@@ -2275,9 +2281,10 @@ void MessageChannel::RepostAllMessages() {
   // re-post all messages in the correct order.
   MessageQueue queue = std::move(mPending);
   while (RefPtr<MessageTask> task = queue.popFirst()) {
+    task->AssertMonitorHeld(*mMonitor);
     RefPtr<MessageTask> newTask = new MessageTask(this, std::move(task->Msg()));
-    mPending.insertBack(newTask);
     newTask->AssertMonitorHeld(*mMonitor);
+    mPending.insertBack(newTask);
     newTask->Post();
   }
 
@@ -2323,6 +2330,7 @@ void MessageChannel::CancelTransaction(int transaction) {
 
   bool foundSync = false;
   for (MessageTask* p = mPending.getFirst(); p;) {
+    p->AssertMonitorHeld(*mMonitor);
     UniquePtr<Message>& msg = p->Msg();
 
     // If there was a race between the parent and the child, then we may

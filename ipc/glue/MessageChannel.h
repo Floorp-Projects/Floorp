@@ -527,11 +527,11 @@ class MessageChannel : HasResultCodes {
       return mScheduled;
     }
 
-    UniquePtr<Message>& Msg() {
+    UniquePtr<Message>& Msg() REQUIRES(*mMonitor) {
       MOZ_DIAGNOSTIC_ASSERT(mMessage, "message was moved");
       return mMessage;
     }
-    const UniquePtr<Message>& Msg() const {
+    const UniquePtr<Message>& Msg() const REQUIRES(*mMonitor) {
       MOZ_DIAGNOSTIC_ASSERT(mMessage, "message was moved");
       return mMessage;
     }
@@ -556,7 +556,8 @@ class MessageChannel : HasResultCodes {
     // The channel which this MessageTask is associated with. Only valid while
     // `mMonitor` is held, and this MessageTask `isInList()`.
     MessageChannel* const mChannel;
-    UniquePtr<Message> mMessage;
+    UniquePtr<Message> mMessage GUARDED_BY(*mMonitor);
+    uint32_t const mPriority;
     bool mScheduled : 1 GUARDED_BY(*mMonitor);
 #ifdef FUZZING_SNAPSHOT
     bool mFuzzStopped;
