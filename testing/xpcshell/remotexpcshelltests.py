@@ -479,6 +479,14 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.initDir(self.remoteMinidumpRootDir)
         self.initDir(self.remoteLogFolder)
 
+        eprefs = options.get("extraPrefs") or []
+        if options.get("disableFission"):
+            eprefs.append("fission.autostart=false")
+        else:
+            # should be by default, just in case
+            eprefs.append("fission.autostart=true")
+        options["extraPrefs"] = eprefs
+
         # data that needs to be passed to the RemoteXPCShellTestThread
         self.mobileArgs = {
             "device": self.device,

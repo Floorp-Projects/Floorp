@@ -145,6 +145,15 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                     "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",  # NOQA: E501
                 },
             ],
+            [
+                ["--disable-fission"],
+                {
+                    "action": "store_true",
+                    "dest": "disable_fission",
+                    "default": False,
+                    "help": "Run the browser without fission enabled",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -336,6 +345,10 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
 
         if self.config.get("structured_output"):
             cmd.append("--log-raw=-")
+
+        if self.config["disable_fission"]:
+            cmd.append("--disable-fission")
+            cmd.extend(["--setpref=fission.autostart=false"])
 
         for arg in self.config["suite_definitions"][self.test_suite]["options"]:
             cmd.append(arg % config_fmt_args)
