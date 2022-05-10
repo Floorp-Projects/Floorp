@@ -346,6 +346,23 @@ struct ParamTraits<nsSize> {
 };
 
 template <>
+struct ParamTraits<mozilla::layers::ScrollSnapInfo::SnapTarget> {
+  typedef mozilla::layers::ScrollSnapInfo::SnapTarget paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSnapPositionX);
+    WriteParam(aWriter, aParam.mSnapPositionY);
+    WriteParam(aWriter, aParam.mSnapArea);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mSnapPositionX) &&
+           ReadParam(aReader, &aResult->mSnapPositionY) &&
+           ReadParam(aReader, &aResult->mSnapArea);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollSnapInfo::ScrollSnapRange> {
   typedef mozilla::layers::ScrollSnapInfo::ScrollSnapRange paramType;
 
@@ -367,8 +384,7 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.mScrollSnapStrictnessX);
     WriteParam(aWriter, aParam.mScrollSnapStrictnessY);
-    WriteParam(aWriter, aParam.mSnapPositionX);
-    WriteParam(aWriter, aParam.mSnapPositionY);
+    WriteParam(aWriter, aParam.mSnapTargets);
     WriteParam(aWriter, aParam.mXRangeWiderThanSnapport);
     WriteParam(aWriter, aParam.mYRangeWiderThanSnapport);
     WriteParam(aWriter, aParam.mSnapportSize);
@@ -377,8 +393,7 @@ struct ParamTraits<mozilla::layers::ScrollSnapInfo> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return (ReadParam(aReader, &aResult->mScrollSnapStrictnessX) &&
             ReadParam(aReader, &aResult->mScrollSnapStrictnessY) &&
-            ReadParam(aReader, &aResult->mSnapPositionX) &&
-            ReadParam(aReader, &aResult->mSnapPositionY) &&
+            ReadParam(aReader, &aResult->mSnapTargets) &&
             ReadParam(aReader, &aResult->mXRangeWiderThanSnapport) &&
             ReadParam(aReader, &aResult->mYRangeWiderThanSnapport) &&
             ReadParam(aReader, &aResult->mSnapportSize));

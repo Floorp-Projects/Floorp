@@ -7749,16 +7749,15 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
     }
   }
 
-  if (inlineDirectionPosition) {
-    (aWritingModeOnScroller.IsVertical() ? aSnapInfo.mSnapPositionY
-                                         : aSnapInfo.mSnapPositionX)
-        .AppendElement(inlineDirectionPosition.value());
-  }
-
-  if (blockDirectionPosition) {
-    (aWritingModeOnScroller.IsVertical() ? aSnapInfo.mSnapPositionX
-                                         : aSnapInfo.mSnapPositionY)
-        .AppendElement(blockDirectionPosition.value());
+  if (blockDirectionPosition || inlineDirectionPosition) {
+    aSnapInfo.mSnapTargets.AppendElement(
+        aWritingModeOnScroller.IsVertical()
+            ? ScrollSnapInfo::SnapTarget(std::move(blockDirectionPosition),
+                                         std::move(inlineDirectionPosition),
+                                         std::move(snapArea))
+            : ScrollSnapInfo::SnapTarget(std::move(inlineDirectionPosition),
+                                         std::move(blockDirectionPosition),
+                                         std::move(snapArea)));
   }
 }
 

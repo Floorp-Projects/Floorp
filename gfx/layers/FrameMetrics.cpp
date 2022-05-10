@@ -205,10 +205,19 @@ bool ScrollSnapInfo::HasScrollSnapping() const {
 }
 
 bool ScrollSnapInfo::HasSnapPositions() const {
-  return (!mSnapPositionX.IsEmpty() &&
-          mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) ||
-         (!mSnapPositionY.IsEmpty() &&
-          mScrollSnapStrictnessY != StyleScrollSnapStrictness::None);
+  if (!HasScrollSnapping()) {
+    return false;
+  }
+
+  for (const auto& target : mSnapTargets) {
+    if ((target.mSnapPositionX &&
+         mScrollSnapStrictnessX != StyleScrollSnapStrictness::None) ||
+        (target.mSnapPositionY &&
+         mScrollSnapStrictnessY != StyleScrollSnapStrictness::None)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void ScrollSnapInfo::InitializeScrollSnapStrictness(
