@@ -55,7 +55,6 @@ job-defaults:
                         default:
                             - linux64-chromium
                 default: []
-    run-without-variant: false
     variants: [fission]
 
 raptor-youtube-playback-v9-power-firefox:
@@ -68,7 +67,10 @@ raptor-youtube-playback-v9-power-firefox:
             (linux|windows.*64|macos)(?!.*-qr).*: []
             default: [mozilla-central]
     max-run-time: 2700
-    tier: 2
+    tier:
+        by-variant:
+            fission: 2
+            default: 3
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-v9
@@ -84,7 +86,10 @@ raptor-youtube-playback-h264-power-firefox:
             (linux|windows.*64|macos)(?!.*-qr).*: []
             default: [mozilla-central]
     max-run-time: 2700
-    tier: 2
+    tier:
+        by-variant:
+            fission: 2
+            default: 3
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264
