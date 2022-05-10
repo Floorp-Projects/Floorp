@@ -1,0 +1,75 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1652039133 -3600
+#      Sun May 08 20:45:33 2022 +0100
+# Node ID d176c5f162b23a5610181479897fc189c186afe5
+# Parent  d1b52a6f044cc929ef7be7d0c30335273a07ec46
+Bug 1768014 p1: Transfer mitigations to sandboxed child process. r=gcp!
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox_policy_base.cc
+@@ -71,16 +71,17 @@ bool IsInheritableHandle(HANDLE handle) 
+ }
+ 
+ }  // namespace
+ 
+ namespace sandbox {
+ 
+ SANDBOX_INTERCEPT IntegrityLevel g_shared_delayed_integrity_level;
+ SANDBOX_INTERCEPT MitigationFlags g_shared_delayed_mitigations;
++SANDBOX_INTERCEPT MitigationFlags g_shared_mitigations;
+ 
+ // Initializes static members. alternate_desktop_handle_ is a desktop on
+ // alternate_winstation_handle_, alternate_desktop_local_winstation_handle_ is a
+ // desktop on the same winstation as the parent process.
+ HWINSTA PolicyBase::alternate_winstation_handle_ = nullptr;
+ HDESK PolicyBase::alternate_desktop_handle_ = nullptr;
+ HDESK PolicyBase::alternate_desktop_local_winstation_handle_ = nullptr;
+ IntegrityLevel PolicyBase::alternate_desktop_integrity_level_label_ =
+@@ -555,16 +556,24 @@ ResultCode PolicyBase::AddTarget(TargetP
+ 
+   ret = target->TransferVariable("g_shared_delayed_mitigations",
+                                  &g_shared_delayed_mitigations,
+                                  sizeof(g_shared_delayed_mitigations));
+   g_shared_delayed_mitigations = 0;
+   if (SBOX_ALL_OK != ret)
+     return ret;
+ 
++  // Share mitigations so that they can be used in the child.
++  g_shared_mitigations = mitigations_;
++  ret = target->TransferVariable("g_shared_mitigations", &g_shared_mitigations,
++                                 sizeof(g_shared_mitigations));
++  g_shared_mitigations = 0;
++  if (SBOX_ALL_OK != ret)
++    return ret;
++
+   AutoLock lock(&lock_);
+   targets_.push_back(target);
+   return SBOX_ALL_OK;
+ }
+ 
+ bool PolicyBase::OnJobEmpty(HANDLE job) {
+   AutoLock lock(&lock_);
+   TargetSet::iterator it;
+diff --git a/security/sandbox/chromium/sandbox/win/src/target_services.cc b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/target_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/target_services.cc
+@@ -116,16 +116,17 @@ bool WarmupWindowsLocales() {
+ char g_target_services_memory[sizeof(TargetServicesBase)];
+ TargetServicesBase* g_target_services = nullptr;
+ 
+ }  // namespace
+ 
+ SANDBOX_INTERCEPT IntegrityLevel g_shared_delayed_integrity_level =
+     INTEGRITY_LEVEL_LAST;
+ SANDBOX_INTERCEPT MitigationFlags g_shared_delayed_mitigations = 0;
++SANDBOX_INTERCEPT MitigationFlags g_shared_mitigations = 0;
+ 
+ TargetServicesBase::TargetServicesBase() {}
+ 
+ ResultCode TargetServicesBase::Init() {
+   process_state_.SetInitCalled();
+   return SBOX_ALL_OK;
+ }
+ 
