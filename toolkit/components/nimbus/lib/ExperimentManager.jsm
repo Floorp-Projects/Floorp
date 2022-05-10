@@ -416,6 +416,8 @@ class _ExperimentManager {
     }
 
     TelemetryEnvironment.setExperimentInactive(slug);
+    // We also need to set the experiment inactive in the Glean Experiment API
+    Services.fog.setExperimentInactive(slug);
     this.store.updateExperiment(slug, { active: false });
 
     TelemetryEvents.sendEvent("unenroll", TELEMETRY_EVENT_OBJECT, slug, {
@@ -483,6 +485,12 @@ class _ExperimentManager {
           experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       }
     );
+    // Report the experiment to the Glean Experiment API
+    Services.fog.setExperimentActive(experiment.slug, experiment.branch.slug, {
+      type: `${TELEMETRY_EXPERIMENT_ACTIVE_PREFIX}${experiment.experimentType}`,
+      enrollmentId:
+        experiment.enrollmentId || TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+    });
   }
 
   /**
