@@ -184,7 +184,7 @@ async function setup(experiment) {
     ],
   });
 
-  await client.db.importChanges({}, 42, [experiment], { clear: true });
+  await client.db.importChanges({}, Date.now(), [experiment], { clear: true });
 }
 
 async function cleanup() {

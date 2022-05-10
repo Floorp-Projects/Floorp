@@ -306,8 +306,8 @@ add_task(async function test_setBreachesFromRemoteSettingsSync() {
     "Should be 0 breached login before not-breached-subdomain.host.com is added to fxmonitor-breaches collection and synced: "
   );
   gBrowserGlue.observe(null, "browser-glue-test", "add-breaches-sync-handler");
-  const db = await RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
-  await db.importChanges({}, 42, [nowExampleIsInBreachedRecords[0]]);
+  const db = RemoteSettings(LoginBreaches.REMOTE_SETTINGS_COLLECTION).db;
+  await db.importChanges({}, Date.now(), [nowExampleIsInBreachedRecords[0]]);
   await emitSync();
 
   const breachesByLoginGUID = await LoginBreaches.getPotentialBreachesByLoginGUID(

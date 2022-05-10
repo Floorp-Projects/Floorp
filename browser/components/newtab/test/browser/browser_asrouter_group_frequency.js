@@ -27,7 +27,7 @@ add_setup(async function() {
     id: `HEARTBEAT_MESSAGE_${Date.now()}`,
   };
   const client = RemoteSettings("cfr");
-  await client.db.importChanges({}, 42, [testMessage], {
+  await client.db.importChanges({}, Date.now(), [testMessage], {
     clear: true,
   });
 
@@ -88,7 +88,7 @@ add_task(async function test_heartbeat_tactic_2() {
     frequency: { lifetime: 2 },
   };
   const client = RemoteSettings("message-groups");
-  await client.db.importChanges({}, 42, [groupConfiguration], {
+  await client.db.importChanges({}, Date.now(), [groupConfiguration], {
     clear: true,
   });
 

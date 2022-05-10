@@ -105,7 +105,7 @@ async function setup(configuration) {
   const client = RemoteSettings("nimbus-desktop-experiments");
   await client.db.importChanges(
     {},
-    42,
+    Date.now(),
     configuration || [REMOTE_CONFIGURATION_FOO, REMOTE_CONFIGURATION_BAR],
     {
       clear: true,

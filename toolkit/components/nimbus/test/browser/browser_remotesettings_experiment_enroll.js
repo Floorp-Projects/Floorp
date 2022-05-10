@@ -46,7 +46,7 @@ add_task(async function test_experimentEnrollment() {
       randomizationUnit: "normandy_id",
     },
   });
-  await rsClient.db.importChanges({}, 42, [recipe], {
+  await rsClient.db.importChanges({}, Date.now(), [recipe], {
     clear: true,
   });
 
