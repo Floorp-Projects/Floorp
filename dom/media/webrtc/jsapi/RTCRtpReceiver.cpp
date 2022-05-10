@@ -25,7 +25,7 @@
 #include "RTCStatsReport.h"
 #include "mozilla/Preferences.h"
 #include "PeerConnectionCtx.h"
-#include "TransceiverImpl.h"
+#include "RTCRtpTransceiver.h"
 #include "libwebrtcglue/AudioConduit.h"
 
 namespace mozilla::dom {
@@ -92,14 +92,14 @@ RTCRtpReceiver::RTCRtpReceiver(
     nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded, PeerConnectionImpl* aPc,
     MediaTransportHandler* aTransportHandler, JsepTransceiver* aJsepTransceiver,
     AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
+    MediaSessionConduit* aConduit, RTCRtpTransceiver* aTransceiver)
     : mWindow(aWindow),
       mPc(aPc),
       mJsepTransceiver(aJsepTransceiver),
       mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
-      mTransceiverImpl(aTransceiverImpl),
+      mTransceiver(aTransceiver),
       INIT_CANONICAL(mSsrc, 0),
       INIT_CANONICAL(mVideoRtxSsrc, 0),
       INIT_CANONICAL(mLocalRtpExtensions, RtpExtList()),
@@ -140,10 +140,10 @@ JSObject* RTCRtpReceiver::WrapObject(JSContext* aCx,
 }
 
 RTCDtlsTransport* RTCRtpReceiver::GetTransport() const {
-  if (!mTransceiverImpl) {
+  if (!mTransceiver) {
     return nullptr;
   }
-  return mTransceiverImpl->GetDtlsTransport();
+  return mTransceiver->GetDtlsTransport();
 }
 
 already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {
@@ -153,7 +153,7 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {
     return nullptr;
   }
 
-  if (NS_WARN_IF(!mTransceiverImpl)) {
+  if (NS_WARN_IF(!mTransceiver)) {
     // TODO(bug 1056433): When we stop nulling this out when the PC is closed
     // (or when the transceiver is stopped), we can remove this code. We
     // resolve instead of reject in order to make this eventual change in
@@ -162,8 +162,7 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats(ErrorResult& aError) {
     return promise.forget();
   }
 
-  mTransceiverImpl->ChainToDomPromiseWithCodecStats(GetStatsInternal(),
-                                                    promise);
+  mTransceiver->ChainToDomPromiseWithCodecStats(GetStatsInternal(), promise);
   return promise.forget();
 }
 
@@ -548,7 +547,7 @@ void RTCRtpReceiver::Shutdown() {
     mPipeline->Shutdown();
     mPipeline = nullptr;
   }
-  mTransceiverImpl = nullptr;
+  mTransceiver = nullptr;
   mCallThread = nullptr;
   mRtcpByeListener.DisconnectIfExists();
   mRtcpTimeoutListener.DisconnectIfExists();
@@ -661,7 +660,7 @@ void RTCRtpReceiver::UpdateVideoConduit() {
     }
 
     std::vector<VideoCodecConfig> configs;
-    TransceiverImpl::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
+    RTCRtpTransceiver::NegotiatedDetailsToVideoCodecConfigs(details, &configs);
     if (configs.empty()) {
       // TODO: Are we supposed to plumb this error back to JS? This does not
       // seem like a failure to set an answer, it just means that codec
@@ -707,7 +706,7 @@ void RTCRtpReceiver::UpdateAudioConduit() {
       mJsepTransceiver->mRecvTrack.GetActive()) {
     const auto& details(*mJsepTransceiver->mRecvTrack.GetNegotiatedDetails());
     std::vector<AudioCodecConfig> configs;
-    TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
+    RTCRtpTransceiver::NegotiatedDetailsToAudioCodecConfigs(details, &configs);
     if (configs.empty()) {
       // TODO: Are we supposed to plumb this error back to JS? This does not
       // seem like a failure to set an answer, it just means that codec
