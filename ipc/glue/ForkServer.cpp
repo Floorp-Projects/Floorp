@@ -50,16 +50,16 @@ void ForkServer::InitProcess(int* aArgc, char*** aArgv) {
 bool ForkServer::HandleMessages() {
   // |sClientFd| is created by an instance of |IPC::Channel|.
   // It sends a HELLO automatically.
-  UniquePtr<IPC::Message> hello;
+  IPC::Message hello;
   mTcver->RecvInfallible(
       hello, "Expect to receive a HELLO message from the parent process!");
-  MOZ_ASSERT(hello->type() == kHELLO_MESSAGE_TYPE);
+  MOZ_ASSERT(hello.type() == kHELLO_MESSAGE_TYPE);
 
   // Send it back
-  mTcver->SendInfallible(*hello, "Fail to ack the received HELLO!");
+  mTcver->SendInfallible(hello, "Fail to ack the received HELLO!");
 
   while (true) {
-    UniquePtr<IPC::Message> msg;
+    IPC::Message msg;
     if (!mTcver->Recv(msg)) {
       break;
     }
@@ -196,10 +196,12 @@ inline void SanitizeBuffers(IPC::Message& aMsg, std::vector<std::string>& aArgv,
  * It will return in both the fork server process and the new content
  * process.  |mAppProcBuilder| is null for the fork server.
  */
-void ForkServer::OnMessageReceived(UniquePtr<IPC::Message> message) {
+void ForkServer::OnMessageReceived(IPC::Message&& message) {
+  IPC::Message msg(std::move(message));
+
   std::vector<std::string> argv;
   base::LaunchOptions options;
-  if (!ParseForkNewSubprocess(*message, argv, &options)) {
+  if (!ParseForkNewSubprocess(msg, argv, &options)) {
     return;
   }
 
@@ -231,7 +233,7 @@ void ForkServer::OnMessageReceived(UniquePtr<IPC::Message> message) {
   // Without this, the content processes that is forked later are
   // able to read the content of buffers even the buffers have been
   // released.
-  SanitizeBuffers(*message, argv, options);
+  SanitizeBuffers(msg, argv, options);
 }
 
 /**

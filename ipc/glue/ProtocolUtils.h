@@ -240,9 +240,8 @@ class IProtocol : public HasResultCodes {
 
   virtual Result OnMessageReceived(const Message& aMessage) = 0;
   virtual Result OnMessageReceived(const Message& aMessage,
-                                   UniquePtr<Message>& aReply) = 0;
-  virtual Result OnCallReceived(const Message& aMessage,
-                                UniquePtr<Message>& aReply) = 0;
+                                   Message*& aReply) = 0;
+  virtual Result OnCallReceived(const Message& aMessage, Message*& aReply) = 0;
   bool AllocShmem(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType,
                   Shmem* aOutMem);
   bool AllocUnsafeShmem(size_t aSize,
@@ -274,18 +273,17 @@ class IProtocol : public HasResultCodes {
   void SetManagerAndRegister(IProtocol* aManager, int32_t aId);
 
   // Helpers for calling `Send` on our underlying IPC channel.
-  bool ChannelSend(UniquePtr<IPC::Message> aMsg);
-  bool ChannelSend(UniquePtr<IPC::Message> aMsg,
-                   UniquePtr<IPC::Message>* aReply);
+  bool ChannelSend(IPC::Message* aMsg);
+  bool ChannelSend(IPC::Message* aMsg, IPC::Message* aReply);
   template <typename Value>
-  void ChannelSend(UniquePtr<IPC::Message> aMsg,
-                   ResolveCallback<Value>&& aResolve,
+  void ChannelSend(IPC::Message* aMsg, ResolveCallback<Value>&& aResolve,
                    RejectCallback&& aReject) {
+    UniquePtr<IPC::Message> msg(aMsg);
     if (CanSend()) {
-      GetIPCChannel()->Send(std::move(aMsg), this, std::move(aResolve),
+      GetIPCChannel()->Send(std::move(msg), this, std::move(aResolve),
                             std::move(aReject));
     } else {
-      WarnMessageDiscarded(aMsg.get());
+      WarnMessageDiscarded(msg.get());
       aReject(ResponseRejectReason::SendError);
     }
   }

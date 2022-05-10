@@ -3758,6 +3758,11 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
 
   return PContentChild::OnMessageReceived(aMsg);
 }
+
+PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
+                                                      Message*& aReply) {
+  return PContentChild::OnMessageReceived(aMsg, aReply);
+}
 #endif
 
 mozilla::ipc::IPCResult ContentChild::RecvCreateBrowsingContext(

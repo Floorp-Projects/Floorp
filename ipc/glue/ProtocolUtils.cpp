@@ -479,26 +479,27 @@ void IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId) {
   aManager->RegisterID(this, aId);
 }
 
-bool IProtocol::ChannelSend(UniquePtr<IPC::Message> aMsg) {
+bool IProtocol::ChannelSend(IPC::Message* aMsg) {
+  UniquePtr<IPC::Message> msg(aMsg);
   if (CanSend()) {
     // NOTE: This send call failing can only occur during toplevel channel
     // teardown. As this is an async call, this isn't reasonable to predict or
     // respond to, so just drop the message on the floor silently.
-    GetIPCChannel()->Send(std::move(aMsg));
+    GetIPCChannel()->Send(std::move(msg));
     return true;
   }
 
-  WarnMessageDiscarded(aMsg.get());
+  WarnMessageDiscarded(msg.get());
   return false;
 }
 
-bool IProtocol::ChannelSend(UniquePtr<IPC::Message> aMsg,
-                            UniquePtr<IPC::Message>* aReply) {
+bool IProtocol::ChannelSend(IPC::Message* aMsg, IPC::Message* aReply) {
+  UniquePtr<IPC::Message> msg(aMsg);
   if (CanSend()) {
-    return GetIPCChannel()->Send(std::move(aMsg), aReply);
+    return GetIPCChannel()->Send(std::move(msg), aReply);
   }
 
-  WarnMessageDiscarded(aMsg.get());
+  WarnMessageDiscarded(msg.get());
   return false;
 }
 
@@ -797,7 +798,7 @@ void IPDLResolverInner::ResolveOrReject(
   WriteIPDLParam(&writer, actor, aResolve);
   aWrite(reply.get(), actor);
 
-  actor->ChannelSend(std::move(reply));
+  actor->ChannelSend(reply.release());
 }
 
 void IPDLResolverInner::Destroy() {
