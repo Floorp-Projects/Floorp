@@ -1783,6 +1783,7 @@ class JSScript : public js::BaseScript {
 
   void updateJitCodeRaw(JSRuntime* rt);
 
+  bool isModule() const;
   js::ModuleObject* module() const;
 
   bool isGlobalCode() const;

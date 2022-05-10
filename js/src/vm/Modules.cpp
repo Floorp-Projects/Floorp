@@ -198,6 +198,24 @@ JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {
   return moduleRecord->as<ModuleObject>().script();
 }
 
+JS_PUBLIC_API JSObject* JS::GetModuleObject(HandleScript moduleScript) {
+  AssertHeapIsIdle();
+  MOZ_ASSERT(moduleScript->isModule());
+
+  return moduleScript->module();
+}
+
+JS_PUBLIC_API JSObject* JS::GetModuleNamespace(JSContext* cx,
+                                               HandleObject moduleRecord) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->check(moduleRecord);
+  MOZ_ASSERT(moduleRecord->is<ModuleObject>());
+
+  return ModuleObject::GetOrCreateModuleNamespace(
+      cx, moduleRecord.as<ModuleObject>());
+}
+
 JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
     JSContext* cx, Handle<JSString*> specifierArg) {
   AssertHeapIsIdle();
