@@ -177,9 +177,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSetProcessSandbox(
       const Maybe<FileDescriptor>& aBroker);
 
-  already_AddRefed<PRemoteLazyInputStreamChild>
-  AllocPRemoteLazyInputStreamChild(const nsID& aID, const uint64_t& aSize);
-
   PHalChild* AllocPHalChild();
   bool DeallocPHalChild(PHalChild*);
 
