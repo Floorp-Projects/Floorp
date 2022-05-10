@@ -14,11 +14,7 @@
 
 struct nsID;
 
-namespace mozilla {
-namespace ipc {
-class AutoIPCStream;
-}  // namespace ipc
-namespace dom::cache {
+namespace mozilla::dom::cache {
 
 class CacheReadStream;
 
@@ -30,9 +26,8 @@ class StreamControl {
   // abstract interface that must be implemented by child class
   virtual void SerializeControl(CacheReadStream* aReadStreamOut) = 0;
 
-  virtual void SerializeStream(
-      CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
-      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList) = 0;
+  virtual void SerializeStream(CacheReadStream* aReadStreamOut,
+                               nsIInputStream* aStream) = 0;
 
   virtual void OpenStream(const nsID& aId, InputStreamResolver&& aResolver) = 0;
 
@@ -75,7 +70,6 @@ class StreamControl {
   ReadStreamList mReadStreamList;
 };
 
-}  // namespace dom::cache
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_StreamControl_h
