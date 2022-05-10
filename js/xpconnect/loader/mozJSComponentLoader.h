@@ -74,7 +74,10 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
 
+  // Public methods for use from ComponentModuleLoader.
   static bool IsTrustedScheme(nsIURI* aURI);
+  static nsresult LoadSingleModuleScript(JSContext* aCx, nsIURI* aURI,
+                                         JS::MutableHandleScript aScriptOut);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
@@ -114,7 +117,7 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
                                        ComponentLoaderInfo& aInfo,
                                        nsIFile* aComponentFile, bool aUseMemMap,
                                        JS::MutableHandleScript aScriptOut,
-                                       char** aLocationOut);
+                                       char** aLocationOut = nullptr);
 
   static already_AddRefed<JS::Stencil> CompileStencil(
       JSContext* aCx, const JS::CompileOptions& aOptions,
