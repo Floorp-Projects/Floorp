@@ -664,9 +664,6 @@ struct DIGroup {
       return;
     }
 
-    // Reset mHitInfo, it will get updated inside PaintItemRange
-    mHitInfo = CompositorHitTestInvisibleToHit;
-
     PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
                    rootManager, aResources);
 
@@ -794,16 +791,6 @@ struct DIGroup {
       GP("Trying %s %p-%d %d %d %d %d\n", item->Name(), item->Frame(),
          item->GetPerFrameKey(), bounds.x, bounds.y, bounds.XMost(),
          bounds.YMost());
-
-      if (item->HasHitTestInfo()) {
-        // Accumulate the hit-test info flags. In cases where there are multiple
-        // hittest-info display items with different flags, mHitInfo will have
-        // the union of all those flags. If that is the case, we will
-        // additionally set eIrregularArea (at the site that we use mHitInfo)
-        // so that downstream consumers of this (primarily APZ) will know that
-        // the exact shape of what gets hit with what is unknown.
-        mHitInfo += item->GetHitTestInfo().Info();
-      }
 
       if (item->GetType() == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
         continue;
@@ -1289,6 +1276,16 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
     nsDisplayItem* item = *it;
     MOZ_ASSERT(item);
 
+    if (item->HasHitTestInfo()) {
+      // Accumulate the hit-test info flags. In cases where there are multiple
+      // hittest-info display items with different flags, mHitInfo will have
+      // the union of all those flags. If that is the case, we will
+      // additionally set eIrregularArea (at the site that we use mHitInfo)
+      // so that downstream consumers of this (primarily APZ) will know that
+      // the exact shape of what gets hit with what is unknown.
+      currentGroup->mHitInfo += item->GetHitTestInfo().Info();
+    }
+
     if (startOfCurrentGroup == aList->end()) {
       startOfCurrentGroup = it;
       if (!isFirstGroup) {
@@ -1358,6 +1355,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
               groupData->mFollowingGroup.mLastVisibleRect);
       groupData->mFollowingGroup.mActualBounds = LayerIntRect();
       groupData->mFollowingGroup.mHitTestBounds = LayerIntRect();
+      groupData->mFollowingGroup.mHitInfo = currentGroup->mHitInfo;
 
       currentGroup->EndGroup(aCommandBuilder->mManager, aDisplayListBuilder,
                              aBuilder, aResources, this, startOfCurrentGroup,
@@ -1426,6 +1424,16 @@ bool Grouper::ConstructGroupInsideInactive(
     nsDisplayList* aList, const StackingContextHelper& aSc) {
   bool invalidated = false;
   for (nsDisplayItem* item : *aList) {
+    if (item->HasHitTestInfo()) {
+      // Accumulate the hit-test info flags. In cases where there are multiple
+      // hittest-info display items with different flags, mHitInfo will have
+      // the union of all those flags. If that is the case, we will
+      // additionally set eIrregularArea (at the site that we use mHitInfo)
+      // so that downstream consumers of this (primarily APZ) will know that
+      // the exact shape of what gets hit with what is unknown.
+      aGroup->mHitInfo += item->GetHitTestInfo().Info();
+    }
+
     bool invisible = false;
     invalidated |= ConstructItemInsideInactive(
         aCommandBuilder, aBuilder, aResources, aGroup, item, aSc, &invisible);
