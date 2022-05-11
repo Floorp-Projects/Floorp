@@ -46,7 +46,8 @@ parent:
 #endif
   async PRemoteDecoder(RemoteDecoderInfoIPDL info,
                        OptionSet options,
-                       TextureFactoryIdentifier? identifier);
+                       TextureFactoryIdentifier? identifier,
+                       uint64_t? mediaEngineId);
 
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
 

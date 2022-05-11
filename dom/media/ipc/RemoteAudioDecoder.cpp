@@ -39,8 +39,8 @@ MediaResult RemoteAudioDecoderChild::ProcessOutput(
 }
 
 MediaResult RemoteAudioDecoderChild::InitIPDL(
-    const AudioInfo& aAudioInfo,
-    const CreateDecoderParams::OptionSet& aOptions) {
+    const AudioInfo& aAudioInfo, const CreateDecoderParams::OptionSet& aOptions,
+    const Maybe<uint64_t>& aMediaEngineId) {
   RefPtr<RemoteDecoderManagerChild> manager =
       RemoteDecoderManagerChild::GetSingleton(mLocation);
 
@@ -59,21 +59,24 @@ MediaResult RemoteAudioDecoderChild::InitIPDL(
 
   mIPDLSelfRef = this;
   Unused << manager->SendPRemoteDecoderConstructor(this, aAudioInfo, aOptions,
-                                                   Nothing());
+                                                   Nothing(), aMediaEngineId);
   return NS_OK;
 }
 
 RemoteAudioDecoderParent::RemoteAudioDecoderParent(
     RemoteDecoderManagerParent* aParent, const AudioInfo& aAudioInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue)
-    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue),
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
+    Maybe<uint64_t> aMediaEngineId)
+    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue,
+                          aMediaEngineId),
       mAudioInfo(aAudioInfo) {}
 
 IPCResult RemoteAudioDecoderParent::RecvConstruct(
     ConstructResolver&& aResolver) {
-  auto params = CreateDecoderParams{mAudioInfo, mOptions,
-                                    CreateDecoderParams::NoWrapper(true)};
+  auto params =
+      CreateDecoderParams{mAudioInfo, mOptions,
+                          CreateDecoderParams::NoWrapper(true), mMediaEngineId};
 
   mParent->EnsurePDMFactory().CreateDecoder(params)->Then(
       GetCurrentSerialEventTarget(), __func__,
