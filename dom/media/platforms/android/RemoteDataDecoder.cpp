@@ -365,15 +365,10 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     bool formatHasCSD = false;
     NS_ENSURE_SUCCESS_VOID(aFormat->ContainsKey(u"csd-0"_ns, &formatHasCSD));
 
-    // It would be nice to instead use more specific information here, but
-    // we force a byte buffer for now since this handles arbitrary codecs.
-    // TODO(bug 1768564): implement further type checking for codec data.
-    RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
-        ForceGetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
-    if (!formatHasCSD && audioCodecSpecificBinaryBlob->Length() >= 2) {
+    if (!formatHasCSD && aConfig.mCodecSpecificConfig->Length() >= 2) {
       jni::ByteBuffer::LocalRef buffer(env);
-      buffer = jni::ByteBuffer::New(audioCodecSpecificBinaryBlob->Elements(),
-                                    audioCodecSpecificBinaryBlob->Length());
+      buffer = jni::ByteBuffer::New(aConfig.mCodecSpecificConfig->Elements(),
+                                    aConfig.mCodecSpecificConfig->Length());
       NS_ENSURE_SUCCESS_VOID(aFormat->SetByteBuffer(u"csd-0"_ns, buffer));
     }
   }

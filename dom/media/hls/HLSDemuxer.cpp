@@ -370,11 +370,9 @@ void HLSTrackDemuxer::UpdateMediaInfo(int index) {
     jni::ByteArray::LocalRef csdBytes = audioInfoObj->CodecSpecificData();
     if (csdBytes) {
       auto&& csd = csdBytes->GetElements();
-      AudioCodecSpecificBinaryBlob blob;
-      blob.mBinaryBlob->AppendElements(reinterpret_cast<uint8_t*>(&csd[0]),
-                                       csd.Length());
-      audioInfo->mCodecSpecificConfig =
-          AudioCodecSpecificVariant{std::move(blob)};
+      audioInfo->mCodecSpecificConfig->Clear();
+      audioInfo->mCodecSpecificConfig->AppendElements(
+          reinterpret_cast<uint8_t*>(&csd[0]), csd.Length());
     }
   } else {
     infoObj = mParent->mHLSDemuxerWrapper->GetVideoInfo(index);
