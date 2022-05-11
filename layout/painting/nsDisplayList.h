@@ -6237,7 +6237,6 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
 
   float GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder,
                            const nsPoint& aPoint);
-
   /**
    * TransformRect takes in as parameters a rectangle (in aFrame's coordinate
    * space) and returns the smallest rectangle (in aFrame's coordinate space)
@@ -6264,6 +6263,11 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   static bool UntransformRect(const nsRect& aTransformedBounds,
                               const nsRect& aChildBounds,
                               const nsIFrame* aFrame, nsRect* aOutRect);
+  static bool UntransformRect(const nsRect& aTransformedBounds,
+                              const nsRect& aChildBounds,
+                              const Matrix4x4& aMatrix,
+                              float aAppUnitsPerPixel,
+                              nsRect* aOutRect);
 
   bool UntransformRect(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        nsRect* aOutRect) const;
@@ -6347,6 +6351,8 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
     INCLUDE_PRESERVE3D_ANCESTORS = 1 << 1,
     INCLUDE_PERSPECTIVE = 1 << 2,
   };
+  static constexpr uint32_t kTransformRectFlags =
+      INCLUDE_PERSPECTIVE | OFFSET_BY_ORIGIN | INCLUDE_PRESERVE3D_ANCESTORS;
   static Matrix4x4 GetResultingTransformMatrix(const nsIFrame* aFrame,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
