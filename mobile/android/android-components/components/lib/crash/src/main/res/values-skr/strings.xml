@@ -16,6 +16,9 @@
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">رپورٹ کرو</string>
 
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">%1$s کوں کریش رپوٹ بھیڄیندا پئے</string>
+
     <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
     <string name="mozac_lib_crash_activity_title">کریش رپورٹاں</string>
 

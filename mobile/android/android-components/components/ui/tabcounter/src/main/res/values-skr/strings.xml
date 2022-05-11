@@ -8,4 +8,6 @@
     <string name="mozac_close_tab">ٹیب بند کرو</string>
     <!-- Menu option to duplicate the current tab -->
     <string name="mozac_ui_tabcounter_duplicate_tab">واڳی ٹیب</string>
-    </resources>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">ٹیباں ڳݨݨ آلا ٹولبار بٹݨ۔</string>
+</resources>

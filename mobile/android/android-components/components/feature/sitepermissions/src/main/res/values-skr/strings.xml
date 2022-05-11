@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">%1$s کوں اطلاعاں پٹھݨ دی اجازت ݙیندے ہو؟</string>
+    <!-- Title of a dialog for a camera permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_title">%1$s کوں آپݨاں کیمرہ ورتݨ دی اجازت ݙیندے ہو؟</string>
     <!-- Title of a dialog for a microphone permission request. -->
     <string name="mozac_feature_sitepermissions_microfone_title">%1$s کوں آپݨاں مائیکروفون ورتݨ دی اجازت ݙیندے ہو؟</string>
     <!-- Title of a dialog for a location permission request. -->
