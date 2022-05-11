@@ -334,7 +334,9 @@ bool ADTSTrackDemuxer::Init() {
   // Table 1.3 -- Audio Profile definition, ISO/IEC 14496-3. Eg. 2 == AAC LC
   mInfo->mProfile = mInfo->mExtendedProfile =
       mParser->FirstFrame().Header().mObjectType;
-  InitAudioSpecificConfig(mParser->FirstFrame(), mInfo->mCodecSpecificConfig);
+  AudioCodecSpecificBinaryBlob blob;
+  InitAudioSpecificConfig(mParser->FirstFrame(), blob.mBinaryBlob);
+  mInfo->mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(blob)};
 
   ADTSLOG("Init mInfo={mRate=%u mChannels=%u mBitDepth=%u mDuration=%" PRId64
           "}",
