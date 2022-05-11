@@ -560,7 +560,8 @@ class MessageChannel : HasResultCodes {
     uint32_t const mPriority;
     bool mScheduled : 1 GUARDED_BY(*mMonitor);
 #ifdef FUZZING_SNAPSHOT
-    bool mFuzzStopped;
+    const bool mIsFuzzMsg;
+    bool mFuzzStopped GUARDED_BY(*mMonitor);
 #endif
   };
 
