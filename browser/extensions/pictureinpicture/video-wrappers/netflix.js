@@ -36,17 +36,8 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let textNodeList = container
-          .querySelector(".player-timedtext")
-          ?.querySelectorAll("span > span");
-        if (!textNodeList || textNodeList.length < 1) {
-          updateCaptionsFunction("");
-          return;
-        }
-
-        updateCaptionsFunction(
-          Array.from(textNodeList, x => x.textContent).join("\n")
-        );
+        let text = container.querySelector(".player-timedtext").innerText;
+        updateCaptionsFunction(text);
       };
 
       // immediately invoke the callback function to add subtitles to the PiP window
