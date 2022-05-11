@@ -10022,6 +10022,3646 @@ switch(floorpinterfacenum){
     Tag.innerText = fluentUI;
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
+
+    case 6:
+      var Tag = document.createElement('style');
+      Tag.innerText = `/* Toolbox, a container for all toolbars (toolbox#navigator-toolbox):
+      * - menu bar (toolbar#toolbar-menubar)
+      * - tab bar (toolbar#TabsToolbar)
+      * - header bar (toolbar#nav-bar)
+      * - bookmark bar (toolbar#PersonalToolbar)
+      * - add-ons can add their own toolbars (toolbar) */
+     
+      @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+      /* Toolbox colors */
+      #navigator-toolbox {
+        border: 0 !important;
+        background: none !important;
+      }
+      
+      #nav-bar, #PersonalToolbar, #toolbar-menubar, #TabsToolbar, findbar {
+        border: 0 !important;
+        background: var(--gnome-toolbar-background) !important;
+        border-bottom: 1px solid var(--gnome-toolbar-border-color) !important;
+      }
+      #nav-bar:-moz-window-inactive,
+      #PersonalToolbar:-moz-window-inactive, 
+      #toolbar-menubar:-moz-window-inactive, 
+      #TabsToolbar:-moz-window-inactive, 
+      findbar:-moz-window-inactive,
+      .container.infobar:-moz-window-inactive {
+        background: var(--gnome-inactive-toolbar-background) !important;
+        border-color: var(--gnome-inactive-toolbar-border-color) !important;
+      }
+      
+      #navigator-toolbox:-moz-window-inactive label, #navigator-toolbox:-moz-window-inactive image, 
+      #downloads-indicator-anchor:-moz-window-inactive,
+      findbar:-moz-window-inactive image:not(#hack),
+      findbar:-moz-window-inactive label,
+      findbar:-moz-window-inactive description,
+      #viewButton:-moz-window-inactive dropmarker,
+      .container.infobar:-moz-window-inactive {
+        opacity: 0.7 !important;
+      }
+      
+      #toolbar-menubar:not([inactive=true]) {
+        margin-bottom: 0 !important;
+      }
+      #PersonalToolbar {
+        padding: 2px !important;
+        height: 36px;
+      }
+      
+      /* Overrides: Remove border below the menu bar / above the header bar */
+      #TabsToolbar:not([collapsed="true"]) + #nav-bar {
+        border-top-width: 0 !important;
+      }
+      #navigator-toolbox::after {
+        border-bottom-width: 0 !important;
+      }
+      
+      /* Reorder toolbars */
+      #navigator-toolbox #nav-bar, findbar {
+        -moz-box-ordinal-group: 0;
+      }
+      #navigator-toolbox #PersonalToolbar {
+        -moz-box-ordinal-group: 1;
+      }
+      #navigator-toolbox #titlebar {
+        -moz-box-ordinal-group: 2;
+      }
+      #navigator-toolbox toolbar {
+        -moz-box-ordinal-group: 10;
+      }
+      #navigator-toolbox #TabsToolbar {
+        -moz-box-ordinal-group: 100;
+      }
+      
+      /* Overrides: Don't shift other toolbars on tab drag and drop */
+      #TabsToolbar[movingtab] {
+        padding-bottom: 0 !important;
+      }
+      #TabsToolbar[movingtab] > .tabbrowser-tabs {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+      }
+      #TabsToolbar[movingtab] + #nav-bar {
+        margin-top: 0 !important;
+      }
+      
+      /* Content notifications */
+      .notificationbox-stack notification-message {
+        border: 0 !important;
+        font-size: 1em !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+      }
+      .notificationbox-stack notification-message[style*="margin-top"] {
+        margin-top: -48px !important;
+      }
+      
+      .container.infobar {
+        background: var(--gnome-toolbar-background) !important;
+        box-shadow: none !important;
+        padding: 6px !important;
+        border-radius: 0 !important;
+      }
+      .container.infobar::before {
+        display: none !important;
+      }
+      
+      .container.infobar .icon {
+        height: 16px !important;
+        width: 16px !important;
+      }
+      .notificationbox-stack notification-message[type="warning"] {
+        background: #ffe900 !important;	
+      }
+      .notificationbox-stack notification-message[type="critical"] {
+        background: #d70022 !important;
+      }
+      
+      .notificationbox-stack[notificationside="top"] notification-message {
+        border-bottom: 1px solid var(--gnome-toolbar-border-color) !important;
+      }
+      .notificationbox-stack[notificationside="bottom"] notification-message {
+        border-top: 1px solid var(--gnome-toolbar-border-color) !important;
+      }
+      
+      /* OPTIONAL: Hide WebRTC indicator */
+      @supports -moz-bool-pref("gnomeTheme.hideWebrtcIndicator") {
+        #webrtcIndicator {
+          display: none;
+        }
+      }
+      
+      /* OPTIONAL: Move Bookmarks toolbar under tabs */
+      @supports -moz-bool-pref("gnomeTheme.bookmarksToolbarUnderTabs") {
+        #navigator-toolbox #titlebar {
+          -moz-box-ordinal-group: 1 !important;
+        }
+        #navigator-toolbox #PersonalToolbar {
+          -moz-box-ordinal-group: 2 !important;
+        }
+       }
+       /* Header bar */
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Headerbar */
+     #nav-bar {
+       padding: 6px 3px !important;
+     }
+     
+     /* Headerbar CSD colors */
+     :root[tabsintitlebar] #nav-bar {
+       background: var(--gnome-headerbar-background) !important;
+       border: none !important;
+       border-bottom: 1px solid var(--gnome-headerbar-border-color) !important;
+       box-shadow: var(--gnome-headerbar-box-shadow) !important;
+     }
+     :root[tabsintitlebar] #nav-bar:-moz-window-inactive {
+       background: var(--gnome-inactive-headerbar-background) !important;
+       border-bottom-color: var(--gnome-inactive-headerbar-border-color) !important;
+       box-shadow: var(--gnome-inactive-headerbar-box-shadow) !important;
+     }
+     /* Private window headerbar */
+     
+     @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+     :root[privatebrowsingmode="temporary"] {
+       --gnome-accent: var(--gnome-private-accent) !important;
+       /* Change headerbar colors */
+       --gnome-headerbar-background: var(--gnome-private-headerbar-background) !important;
+       --gnome-headerbar-border-color: var(--gnome-private-headerbar-border-color) !important;
+       --gnome-headerbar-box-shadow: var(--gnome-private-headerbar-box-shadow) !important;
+       --gnome-inactive-headerbar-background: var(--gnome-private-inactive-headerbar-background) !important;
+       --gnome-inactive-headerbar-border-color: var(--gnome-private-inactive-headerbar-border-color) !important;
+       --gnome-inactive-headerbar-box-shadow: var(--gnome-private-inactive-headerbar-box-shadow) !important;
+       /* Change urlbar colors */
+       --gnome-entry-border-color: var(--gnome-private-entry-border-color) !important;
+     }
+     
+     /* Change headerbar buttons colors */
+     :root[privatebrowsingmode="temporary"] #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton),
+     :root[privatebrowsingmode="temporary"][tabsintitlebar] #titlebar .titlebar-button,
+     :root[privatebrowsingmode="temporary"][tabsintitlebar][inFullscreen] #window-controls toolbarbutton {
+       --gnome-button-background: var(--gnome-private-button-background) !important;
+       --gnome-button-border-color: var(--gnome-private-button-border-color) !important;
+       --gnome-button-border-accent-color: var(--gnome-private-button-border-accent-color) !important;
+       --gnome-button-box-shadow: var(--gnome-private-button-box-shadow) !important;
+       --gnome-button-hover-background: var(--gnome-private-button-hover-background) !important;
+       --gnome-button-active-background: var(--gnome-private-button-active-background) !important;
+       --gnome-button-active-border-color: var(--gnome-private-button-active-border-color) !important;
+       --gnome-button-active-border-accent-color: var(--gnome-private-button-active-border-accent-color) !important;
+       --gnome-button-active-box-shadow: var(--gnome-private-button-active-box-shadow) !important;
+       --gnome-button-disabled-background: var(--gnome-private-button-disabled-background) !important;
+       --gnome-button-disabled-border-color: var(--gnome-private-button-disabled-border-color) !important;
+       --gnome-button-disabled-box-shadow: var(--gnome-private-button-disabled-box-shadow) !important;
+       --gnome-inactive-button-background: var(--gnome-private-inactive-button-background) !important;
+       --gnome-inactive-button-border-color: var(--gnome-private-inactive-button-border-color) !important;
+       --gnome-inactive-button-box-shadow: var(--gnome-private-inactive-button-box-shadow) !important;
+     }
+     
+     /* Add private window headerbar indicator */
+     :root[privatebrowsingmode="temporary"] #nav-bar toolbarspring:first-of-type:before {
+       background: url("chrome://browser/skin/gnomeUI/eye-not-looking-symbolic.svg") no-repeat;
+       background-size: 64px 64px;
+       content: "";
+       display: block;	
+       position: absolute;
+       width: 64px;
+       height: 46px;
+       top: 0;
+       transform: translate(15px, 0);
+       fill: var(--gnome-toolbar-color) !important;
+       fill-opacity: 0.2 !important;
+       -moz-context-properties: fill, fill-opacity;
+     }
+     
+     /* Hide tabsbar default private browsing indicator */
+     #TabsToolbar .private-browsing-indicator {
+       display: none !important;
+     }
+     /* GNOME CSD styles for headerbar on Firefox [tabsintitlebar] */
+     
+     @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+     #main-window {
+       -moz-appearance: -moz-window-titlebar !important;
+     }
+     
+     /* Headerbar top border corners rounded */
+     :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #nav-bar {
+       border-radius: 7px 7px 0 0 !important;
+     }
+     
+     /* Window buttons: at least 1 button */
+     @media (-moz-gtk-csd-minimize-button), (-moz-gtk-csd-maximize-button), (-moz-gtk-csd-close-button) {
+       :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+         padding-right: 50px !important;
+       }
+     }
+     /* Window buttons: at least 2 buttons */
+     @media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button),
+            (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-close-button),
+            (-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+       :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+         padding-right: 90px !important;
+       }
+     }
+     /* Window buttons: 3 buttons */
+     @media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+       :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+         padding-right: 130px !important;
+       }
+     }
+     
+     /* Left window buttons */
+     @media (-moz-gtk-csd-reversed-placement) {
+       :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+         padding-right: 3px !important;
+       }
+       
+       /* Window buttons box */
+       :root[tabsintitlebar] #titlebar .titlebar-buttonbox-container {
+         left: 0;
+         right: auto !important;
+       }
+     
+       /* Window controls: at least 1 button */
+       @media (-moz-gtk-csd-minimize-button), (-moz-gtk-csd-maximize-button), (-moz-gtk-csd-close-button) {
+         :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+           padding-left: 50px !important;
+         }
+       }
+       /* Window controls: at least 2 buttons */
+       @media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button),
+              (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-close-button),
+              (-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+         :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+           padding-left: 90px !important;
+         }
+       }
+       /* Window controls: 3 buttons */
+       @media (-moz-gtk-csd-minimize-button) and (-moz-gtk-csd-maximize-button) and (-moz-gtk-csd-close-button) {
+         :root[tabsintitlebar]:not([inFullscreen]) #nav-bar {
+           padding-left: 130px !important;
+         }
+       } 
+     }
+     
+     /* Fullscreen headerbar padding for 1 button */
+     :root[tabsintitlebar][inFullscreen] #nav-bar {
+       padding-right: 50px !important;
+     }
+     
+     /* Remove close and minimize buttons from fullscreen buttons */
+     :root[tabsintitlebar][inFullscreen] #window-controls #close-button,
+     :root[tabsintitlebar][inFullscreen] #window-controls #minimize-button,
+     :root[tabsintitlebar][inFullscreen] #titlebar .titlebar-buttonbox-container {
+       display: none !important;
+     }
+     
+     /* Remove tabsbar titlebar blank spaces */
+     :root[tabsintitlebar] #TabsToolbar .titlebar-placeholder {
+       display: none !important;
+     }
+     
+     /* Prevent menubar from breaking */
+     :root[tabsintitlebar] #toolbar-menubar:not([inactive=true]) {
+       height: 30px !important;
+       margin-bottom: 8px;
+     }
+     
+     /* Remove default style of titlebar */
+     :root[tabsintitlebar] #titlebar {
+       -moz-appearance: none !important;
+     }
+     
+     /* Fix the issue when dragging tabs */
+     :root[tabsintitlebar] #navigator-toolbox[movingtab] #TabsToolbar {
+       padding-bottom: 0 !important;
+     }
+     
+     /* Window buttons box */
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox-container,
+     :root[tabsintitlebar] #titlebar-buttonbox-container,
+     :root[tabsintitlebar][inFullscreen] #window-controls {
+       -moz-appearance: none !important;
+       padding: 6px 3px;
+       position: absolute !important;	
+       right: 0;
+       top: 0;
+       display: block !important;
+     }
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox {
+       -moz-appearance: none !important;
+     }
+     
+     /* Window buttons style */
+     :root[tabsintitlebar] #titlebar .titlebar-button,
+     :root[tabsintitlebar][inFullscreen] #window-controls toolbarbutton {
+       -moz-appearance: none !important;
+       border: 1px solid var(--gnome-button-border-color) !important;
+       border-color: transparent !important;
+       border-radius: 5px !important;	
+       padding: 0 2px !important;
+     }
+     
+     :root[tabsintitlebar] #titlebar .titlebar-button {
+       border-radius: 100% !important;
+       height: 30px !important;
+       margin: 2px 5px !important;
+       width: 30px;
+     }
+     
+     :root[tabsintitlebar][inFullscreen] #window-controls toolbarbutton {
+       border-radius: 5px !important;
+       height: 34px;
+       margin: 0 3px !important;
+       width: 34px;
+     }
+     
+     :root[tabsintitlebar] #titlebar .titlebar-button .toolbarbutton-icon,
+     :root[tabsintitlebar][inFullscreen] #window-controls toolbarbutton .toolbarbutton-icon {
+       width: 16px;
+     }
+     :root[tabsintitlebar] #titlebar:-moz-window-inactive .titlebar-button .toolbarbutton-icon,
+     :root[tabsintitlebar][inFullscreen] #window-controls:-moz-window-inactive toolbarbutton .toolbarbutton-icon {
+       opacity: .3 !important;
+     }
+     :root[tabsintitlebar] #titlebar:not(:-moz-window-inactive) .titlebar-button:not([disabled]):hover,
+     :root[tabsintitlebar][inFullscreen] #window-controls:not(:-moz-window-inactive) toolbarbutton:not([disabled]):hover {
+       background-image: var(--gnome-button-hover-background);
+       border-color: var(--gnome-button-border-color) !important;
+       border-bottom-color: var(--gnome-button-border-accent-color) !important;
+       box-shadow: var(--gnome-button-box-shadow);
+     }
+     :root[tabsintitlebar] #titlebar:not(:-moz-window-inactive) .titlebar-button:not([disabled]):active,
+     :root[tabsintitlebar][inFullscreen] #window-controls:not(:-moz-window-inactive) toolbarbutton:not([disabled]):active {
+       background: var(--gnome-button-active-background);
+       box-shadow: var(--gnome-button-active-box-shadow);
+       border-color: var(--gnome-button-active-border-color) !important;
+     }
+     
+     /* OPTIONAL: Allow draging the window from headerbar buttons */
+     @supports -moz-bool-pref("gnomeTheme.dragWindowHeaderbarButtons") {
+       :root[tabsintitlebar] #nav-bar *,
+       :root[tabsintitlebar] #titlebar .titlebar-button,
+       :root[tabsintitlebar][inFullscreen] #window-controls toolbarbutton {
+         -moz-window-dragging: drag;
+       }
+       
+       /* Avoid window dragging from urlbar */
+       :root[tabsintitlebar] #nav-bar .urlbar-input-box,
+       :root[tabsintitlebar] #nav-bar .urlbar-input-box * {
+         -moz-window-dragging: no-drag !important;
+       }
+     }
+     /* Header bar's URL bar */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     #urlbar {
+       --urlbar-height: 34.00px;
+       --urlbar-toolbar-height: 34.00px !important;
+     }
+     
+     /* Center the URL bar */
+     toolbarspring {
+       max-width: 10000px !important;
+     }
+     
+     /* URL bar */
+     #urlbar {
+       box-shadow: none !important;
+     }
+     #urlbar-background {
+       box-shadow: var(--gnome-entry-box-shadow) !important;
+       border: 0 !important;
+       background: transparent !important;
+     }
+     
+     #urlbar[breakout][breakout-extend] {
+       left: 0 !important;
+       top: 0 !important;
+       width: 100% !important;
+       z-index: 5 !important;
+       padding: 0 !important;
+     }
+     #urlbar[breakout][breakout-extend][open] {
+       height: auto !important;
+       max-height: unset !important;
+     }
+     #urlbar #urlbar-input-container {
+       padding: 0 !important;
+     }
+     #urlbar[breakout][breakout-extend] #urlbar-input-container {
+       height: 32px !important;
+       max-height: 32px !important;
+     }
+     
+     /* URL bar results */
+     .urlbarView {
+       background: transparent !important;
+       color: var(--gnome-toolbar-color) !important;
+       margin: 0 !important;
+       width: 100% !important;
+     }
+     
+     .urlbarView-body-outer {
+       --item-padding-start: 0 !important;
+       --item-padding-end: 0 !important;
+       overflow-x: auto;
+       padding: 0 8px !important;
+     }
+     
+     .urlbarView-body-inner {
+       border: 0 !important;
+     }
+     
+     .urlbarView-row-inner, .urlbarView-no-wrap  {
+       align-items: center !important;
+     }
+     .urlbarView-row-inner {
+       padding-block: 5px !important;
+       border-radius: 5px !important;
+     }
+     
+     .urlbarView-row[selected] .urlbarView-row-inner {
+       background: var(--gnome-accent) !important;
+       color: white;
+     }
+     .urlbarView-row:not([selected]):hover .urlbarView-row-inner {
+       background: var(--gnome-focused-urlbar-item-hover) !important;
+     }
+     
+     .urlbarView-action {
+       background: transparent !important;
+     }
+     
+     /* Search engines buttons */	
+     .search-one-offs {
+       margin-bottom: 2px !important;
+       padding: 8px !important;
+       background: var(--gnome-popover-background) !important;
+       border-top: 1px solid var(--gnome-popover-border-color) !important;
+       border-radius: 0 0 5px 5px !important;
+     }
+     
+     #urlbar-anon-search-settings-compact {
+       border-left-width: 1px !important;
+       border-bottom: 1px solid var(--gnome-button-border-accent-color) !important;
+       border-radius: 5px;	
+       margin-left: 6px !important;
+     }
+     
+     /* URL bar and Search bar */
+     #urlbar[focused] .urlbar-textbox-container {
+       margin: -1px !important;
+     }
+     #searchbar > .searchbar-textbox[focused] .searchbar-search-button {
+       margin-left: -1px !important;
+     }
+     #searchbar > .searchbar-textbox[focused] .search-go-button {
+       margin-right: -1px !important;
+     }
+     
+     /* URL bar and Search bar's icons */
+     .urlbar-icon:hover,
+     .urlbar-icon-wrapper:hover,
+     .urlbar-icon[open],
+     .urlbar-icon-wrapper[open],
+     .urlbar-icon:hover:active,
+     .urlbar-icon-wrapper:hover:active,
+     .searchbar-search-button:hover .searchbar-search-icon,
+     .searchbar-search-button[open] .searchbar-search-icon,
+     .searchbar-search-button:hover:active .searchbar-search-icon {
+       background-color: transparent !important;
+       fill-opacity: 1 !important;
+     }
+     
+     /* Search mode indicator */
+     #urlbar-search-mode-indicator,
+     #urlbar-label-box,
+     #urlbar-zoom-button {
+       background: var(--gnome-popover-background) !important;
+       border: 1px solid var(--gnome-popover-border-color) !important;
+       border-radius: 9px;
+       outline: 0 !important;
+       margin: 4px 0;
+     }
+     #urlbar-search-mode-indicator-title {
+         color: #0060df;
+         padding-inline: 4px !important;
+     }
+     #urlbar-search-mode-indicator-close {
+       background-size: contain !important;
+       border-radius: 0 9px 9px 0;
+       opacity: 0.8;
+     }
+     #urlbar-zoom-button {
+       opacity: 0.8;
+     }
+     #urlbar-zoom-button:hover {
+       opacity: 1;
+     }
+     
+     /* Firefox identity box */
+     #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
+     #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
+     #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
+     #urlbar-label-box {
+       background-color: transparent !important;
+     }
+     
+     #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button:hover:not([open]),
+     #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button:hover:not([open]),
+     #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:hover:not([open]) {
+       background-color: hsla(0,0%,70%,.2) !important;
+     }
+     
+     #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button:hover:active,
+     #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button[open=true],
+     #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button:hover:active,
+     #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button[open=true],
+     #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button:hover:active,
+     #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button[open=true] {
+       background-color: hsla(0,0%,70%,.3) !important;
+     }
+     /* Tabs bar  */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     :root {
+       --space-above-tabbar: 0 !important;
+     }
+     
+     /* Fix tabs bar icon sizes */
+     #TabsToolbar {
+         --toolbarbutton-inner-padding: var(--toolbarbutton-inner-padding) !important;
+       border-bottom: 0 !important;
+     }
+     
+     /* Tabs bar height */
+     #tabbrowser-tabs,
+     #tabbrowser-tabs arrowscrollbox {
+       height: auto !important;
+       min-height: auto !important;
+     }
+     
+     #TabsToolbar {
+       background-color: var(--gnome-tabbar-tab-background) !important;
+     }
+     
+     #TabsToolbar:-moz-window-inactive {
+       background-color: var(--gnome-inactive-tabbar-tab-background) !important;
+     }
+     
+     tab > stack {
+       height: 38px !important;
+       min-height: 38px !important;
+     }
+     
+     /* Remove hover effects on tab bar buttons */
+     #TabsToolbar {
+       --toolbarbutton-active-background: transparent !important;
+       --toolbarbutton-hover-background: transparent !important;
+       padding: 0 3px !important;
+     }
+     
+     /* Tabsbar buttons */
+     #TabsToolbar .toolbarbutton-1:not(#hack) {
+       border-right: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+       border-bottom: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+       border-radius: 0 !important;
+       margin: 0 !important;
+       padding: 0 9px !important;	
+     }
+     #tabbrowser-tabs[overflow=true] + .toolbarbutton-1:first-of-type {
+       border-left: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+     }
+     #TabsToolbar .toolbarbutton-1:not([disabled]):not(:active):not([open]):hover {
+       background-color: var(--gnome-tabbar-tab-active-hover-background) !important;
+     }
+     #TabsToolbar .toolbarbutton-1:active, #TabsToolbar .toolbarbutton-1[open] {
+       background-color: var(--gnome-tabbar-tab-border-color) !important;
+     }
+     
+     /* Remove shadow next to tab scroll buttons */
+     .arrowscrollbox-overflow-start-indicator,
+     .arrowscrollbox-overflow-end-indicator {
+       display: none;
+     }
+     
+     /* Fake tabsbar border */
+     #tabbrowser-arrowscrollbox:after {
+       content: "";
+       display: block;
+       width: 100%;
+       border-bottom: 1px solid var(--gnome-tabbar-tab-border-color);
+       height: 1px;
+       min-height: 1px;
+       position: absolute;
+       bottom: 0;
+       left: 0;
+     }
+     
+     /* Remove tab separators */
+     .tabbrowser-tab::after,
+     .tabbrowser-tab::before {
+       border-color: transparent !important;
+       border-image: none !important;
+       border-width: 0 !important;
+     }
+     
+     /* Space between tabs */
+     .tabbrowser-tab:not([pinned=true]) {
+       margin: 0 !important;
+     }
+     .tabbrowser-tab {
+       border: 0 !important;
+       padding-inline: 0 !important;
+     }
+     #TabsToolbar {
+       padding: 0 !important;
+     }
+     
+     /* Tabs borders */
+     .tabbrowser-tab {
+       border-right: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+       border-bottom: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+     }
+     #TabsToolbar {
+       margin-right: -1px !important;
+     }
+     #tabbrowser-tabs[overflow=true] .tabbrowser-tab[first-visible-unpinned-tab] {
+       border-left: 1px solid var(--gnome-tabbar-tab-border-color) !important;
+     }
+     
+     /* Tab labels */
+     tab {
+       color: var(--gnome-tabbar-tab-color) !important;
+       font-family: Cantarell, inherit;
+       font-weight: normal;
+       font-size: 1em;
+     }
+     tab:hover {
+       color: var(--gnome-tabbar-tab-hover-color) !important;
+     }
+     tab[selected] {
+       color: var(--gnome-tabbar-tab-active-color) !important;
+     }
+     tab:-moz-window-inactive {
+       color: var(--gnome-inactive-tabbar-tab-color) !important;
+     }
+     tab[selected]:-moz-window-inactive {
+       color: var(--gnome-inactive-tabbar-tab-active-color) !important;
+     }
+     
+     /* Reset tab background */
+     .tab-background {
+       border-radius: 0 !important;
+       box-shadow: none !important;
+       margin-block: 0 !important;
+       border: 0 !important;
+     }
+     
+     /* Center all inside tab */
+     .tab-content {
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       margin-top: -1px;
+       min-width: 100% !important;
+       padding: 0 10px !important;
+     }
+     
+     /* Fix custom info tab icon */
+     .tabbrowser-tab[image="chrome://global/skin/icons/info.svg"]:not([pinned]):not([busy]):not([progress]) .tab-icon-stack::before {
+       margin-inline-end: 5.5px;
+     }
+     .tabbrowser-tab[image="chrome://global/skin/icons/info.svg"] .tab-icon-image {
+       display: none !important;
+     }
+     
+     /* Prevent tab icons size breaking */
+     .tab-icon-image, .tab-icon-sound, .tab-throbber, .tab-throbber-fallback, .tab-close-button {
+       min-width: 16px;
+     }
+     
+     /* Adjust tab label width */
+     .tab-label-container {
+       min-width: 0 !important;
+     }
+     
+     /* Put tab close button to the right */
+     .tabbrowser-tab .tab-close-button {
+       margin-left: auto !important;
+     }
+     
+     /* Force tab favicon to the center */
+     .tabbrowser-tab .tab-icon-stack {
+       margin-left: auto !important;
+     }
+     
+     /* Tab icon margin */
+     .tabbrowser-tab:not([pinned]) .tab-icon-stack {
+       margin-right: 2px;
+     }
+     
+     /* Tab buttons */
+     .tab-icon-overlay,
+     .tab-close-button {
+       border: 0px solid transparent;
+       box-sizing: content-box; /* Avoid deformation on flexbox */
+       border-radius: 99px !important;
+       padding: 4px !important;
+       background-size: 24px;
+       transition: all 0.2s ease-out !important;
+     }
+     :root:not(:-moz-window-inactive) .tab-icon-overlay:hover,
+     :root:not(:-moz-window-inactive) .tab-close-button:hover {
+       background-image: var(--gnome-tabbar-close-hover);
+     }
+     
+     .tab-icon-stack:is([soundplaying], [muted], [activemedia-blocked]) image {
+        margin: auto !important;
+     }
+     
+     /* Close tab button */
+     :root {	
+       --gnome-fill-icon: red !important;
+     }
+     .tab-close-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-close-symbolic.svg") !important;
+       fill: var(--gnome-toolbar-color) !important;
+       fill-opacity: 1 !important;
+       -moz-context-properties: fill, fill-opacity !important;
+       height: 16px !important;
+       opacity: 1 !important;
+       width: 16px !important;
+       z-index: 100 !important;
+     }
+     :root:-moz-window-inactive .tab-close-button:not(#hack) {
+       opacity: .18 !important;
+     }
+     :root:not(:-moz-window-inactive) .tab-close-button:active {
+       background-image: var(--gnome-button-active-background) !important;
+       box-shadow: var(--gnome-button-active-box-shadow) !important;
+       border-color: var(--gnome-button-active-border-color) !important;
+       border-bottom-color: var(--gnome-button-active-border-color) !important;
+       border-top-color: var(--gnome-button-active-border-accent-color) !important;
+     }
+     
+     .tab-close-button:active:not(:hover) {
+       background-image: none !important;
+       box-shadow: none !important;
+     }
+       
+     /* Autohide */
+     .tabbrowser-tab:not([selected="true"]) .tab-close-button {
+       visibility: hidden !important;
+       opacity: 0 !important;
+     }
+     .tabbrowser-tab:hover .tab-close-button {
+       visibility: visible !important;
+       opacity: 1 !important;
+     }
+     
+     /* Fix close button position */
+     .tabbrowser-tab:not([pinned]) .tab-label-container {
+       margin-right: -16px;
+     }
+     .tabbrowser-tab:not([pinned]):is([selected="true"], :hover) .tab-label-container[textoverflow="true"] {
+       margin-right: 0;
+     }
+     #tabbrowser-tabs[closebuttons="activetab"] .tabbrowser-tab:not([pinned]) .tab-close-button {
+       display: block !important;
+     }
+     
+     /* Close button overlay */
+     .tabbrowser-tab:not([pinned]) .tab-content::after, .tabbrowser-tab:not([pinned]) .tab-content::before {
+       bottom: 1px;
+       content: "";
+       height: 100%;
+       opacity: 0;
+       position: absolute;
+       right: 0;
+       transition: all 0.2s ease-out;
+       width: 55px;
+     }
+     .tabbrowser-tab:not([pinned]) .tab-content::after {
+       background: transparent;
+       z-index: 90;
+     }
+     .tabbrowser-tab:not([pinned]) .tab-content::before {
+       background: linear-gradient(to left, var(--gnome-tabbar-tab-close-overlay-bg) 50%, transparent);
+       z-index: 99;
+     }
+     .tabbrowser-tab:not([pinned], :-moz-window-inactive):is([selected="true"], :hover) .tab-content::before {
+       opacity: 1;
+     }
+     .tabbrowser-tab:not([pinned])[selected="true"] .tab-content::before {
+       --gnome-tabbar-tab-close-overlay-bg: var(--gnome-tabbar-tab-active-background);
+     }
+     :root:not(:-moz-window-inactive) .tabbrowser-tab:not([pinned])[selected="true"]:hover .tab-content::before {
+       --gnome-tabbar-tab-close-overlay-bg: var(--gnome-tabbar-tab-active-hover-background);
+     }
+     .tabbrowser-tab:not([pinned]):hover .tab-content::before {
+       --gnome-tabbar-tab-close-overlay-bg: var(--gnome-tabbar-tab-hover-background);
+     }
+     .tabbrowser-tab:not([pinned])[selected="true"]:-moz-window-inactive .tab-content::before {
+       --gnome-tabbar-tab-close-overlay-bg: var(--gnome-inactive-tabbar-tab-active-background);
+     }
+     
+     /* Tab close button etc. positioning */
+     .tab-throbber, .tab-icon-image, .tab-sharing-icon-overlay, .tab-icon-sound, .tab-close-button {
+       margin-top: 0 !important;
+     }
+     
+     /* Active tab */
+     .tab-background[selected=true] {
+       background-color: var(--gnome-tabbar-tab-active-background) !important;
+       background-image: none !important;
+       border: 0 !important;
+       border-image: none !important;
+     }
+     .tab-background[selected=true]:-moz-window-inactive {
+       background-color: var(--gnome-inactive-tabbar-tab-active-background) !important;
+       border-bottom-color: var(--gnome-tabbar-tab-border-color) !important; 
+     }
+     
+     /* Tab hover */
+     :root:not(:-moz-window-inactive) .tabbrowser-tab:hover > .tab-stack > .tab-background[selected=true] {
+       background-color: var(--gnome-tabbar-tab-active-hover-background) !important;
+     }
+     .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+     #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
+     #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true]) {
+       background-color: transparent !important;
+     }
+     :root:not(:-moz-window-inactive) .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]) {
+       background-color: var(--gnome-tabbar-tab-hover-background) !important;
+       border-image: none !important;
+     }
+     
+     /* Full width tabs */
+     .tabbrowser-tab:not([style^="max-width"]):not([pinned]),
+     .tabbrowser-tab[style^="max-width: 100px !important;"]:not([pinned]) {
+       max-width: 100% !important;
+     }
+     .tabbrowser-tab:not([style^="max-width"]):not([pinned]):not([fadein]),
+     .tabbrowser-tab[style^="max-width: 100px !important;"]:not([pinned]):not([fadein]) {
+       max-width: .1px !important;
+     }
+     
+     /* Remove blank spaces on tabs start and end */
+     #TabsToolbar .titlebar-spacer {
+       display: none !important;
+     }
+     
+     /* Pinned tab sound indicator */
+     .tab-icon-overlay:is([pinned], [sharing]):not([crashed]) {
+       background: rgba(255, 255, 255, 0.5) !important;
+         stroke: unset !important;
+     }
+     .tab-icon-overlay:is([pinned], [sharing]):not([crashed]):hover {
+       background: rgba(255, 255, 255, 0.8) !important;
+     }
+     .tabbrowser-tab[pinned] {
+       max-width: 37px !important;
+     }
+     
+     /* Remove container bottom line indicator */
+     .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {
+       display: none;
+     }
+     
+     /* Create new container tab indicator */
+     .tabbrowser-tab[class*="identity-color-"] .tab-background:not(#hack)  { /* Normal */
+       background: var(--identity-tab-color) !important;
+       opacity: .2;
+     }
+     :root:not(:-moz-window-inactive) .tabbrowser-tab[class*="identity-color-"]:hover > .tab-stack > .tab-background:not([selected=true]) {  /* Hover */
+         opacity: .2 !important;
+     }
+     .tabbrowser-tab[class*="identity-color-"] .tab-background[selected=true] {  /* Active */
+       opacity: .4 !important;;
+     }
+     :root:not(:-moz-window-inactive) .tabbrowser-tab[class*="identity-color-"]:hover > .tab-stack > .tab-background[selected=true] { /* Active + Hover */
+       opacity: .4 !important;
+     }
+     
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned], :-moz-window-inactive):is([selected="true"], :hover) .tab-content::after {
+       background: linear-gradient(to left, var(--gnome-tabbar-tab-background) 50%, transparent);
+       opacity: 1;
+     }
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"] .tab-content::before,
+     :root:not(:-moz-window-inactive) .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"]:hover .tab-content::before,
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned]):hover .tab-content::before,
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"]:-moz-window-inactive .tab-content::before {
+       --gnome-tabbar-tab-close-overlay-bg: var(--identity-tab-color)  !important;
+     }
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"] .tab-content::before,
+     :root:not(:-moz-window-inactive) .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"]:hover .tab-content::before {
+       opacity: .4;
+     }
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned]):hover .tab-content::before {
+       opacity: .2;
+     }
+     .tabbrowser-tab[class*="identity-color-"]:not([pinned])[selected="true"]:-moz-window-inactive .tab-content::before {
+       opacity: .1;
+     }
+     
+     /* OPTIONAL: GNOME spinner */
+     /* Temporal until I find time to work around the rendering issue */
+     @supports -moz-bool-pref("gnomeTheme.spinner") {
+       /* Tab spinner */
+       .tab-throbber::before {
+         animation: gnome-spinner 1s linear infinite !important;
+         background-image: url("chrome://browser/skin/gnomeUI/process-working-symbolic.svg") !important;
+         width: 16px !important;
+         opacity: 1 !important;
+       }
+       @keyframes gnome-spinner {
+         from {
+           transform: rotate(0deg);
+         }
+         to {
+           transform: rotate(360deg);
+         }
+       }
+     }
+     
+     /* OPTIONAL: Hide single tab */
+     @supports -moz-bool-pref("gnomeTheme.hideSingleTab") {
+       #tabbrowser-tabs tab:only-of-type {
+         display: none !important;
+       }
+     }
+     
+     /* OPTIONAL: Use normal width tabs */
+     @supports -moz-bool-pref("gnomeTheme.normalWidthTabs") {
+       .tabbrowser-tab:not([style^="max-width"]):not([pinned]),
+       .tabbrowser-tab[style^="max-width: 100px !important;"]:not([pinned]) {
+         max-width: 225px !important;
+       }
+     }
+     
+     /* OPTIONAL: Add more contrast to the active tab */
+     @supports -moz-bool-pref("gnomeTheme.activeTabContrast") {
+       .tab-background[selected=true],
+       :root:not(:-moz-window-inactive) .tabbrowser-tab:hover > .tab-stack > .tab-background:not(#hack) {
+         background: var(--gnome-tabbar-tab-active-background-contrast) !important;
+       }
+     }
+     /* Find bar  */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     findbar {
+       padding: 0 !important;
+       position: relative;
+     }
+     
+     findbar label, findbar description {
+       color: var(--gnome-toolbar-color) !important;
+     }
+     
+     .findbar-container {
+       align-items: center;
+       padding: 6px !important;
+       display: flex;
+       justify-content: flex-start;
+       position: relative;
+       flex-direction: row;
+       margin: 0 !important;
+       width: calc(100% - 42px);
+     }
+     
+     hbox[anonid="findbar-textbox-wrapper"] {
+       display: flex !important;
+     }
+     
+     .findbar-entire-word {
+       margin-right: auto !important;
+     }
+     
+     .findbar-find-status, .found-matches {	
+       margin-right: 6px !important;
+     }
+     
+     .findbar-closebutton {
+       margin: 6px 6px 6px 0 !important;
+     }
+     
+     .findbar-container toolbarbutton .toolbarbutton-text {
+       display: none !important;
+     }
+     /* Sidebar */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     #sidebar-box, .sidebar-panel {
+       background: var(--gnome-sidebar-background) !important;
+     }
+     #sidebar-box:-moz-window-inactive, .sidebar-panel:-moz-window-inactive {
+       background: var(--gnome-inactive-sidebar-background) !important;
+     }
+     #sidebar-box:-moz-window-inactive label, #sidebar-box:-moz-window-inactive image,
+     .sidebar-panel:-moz-window-inactive label, .sidebar-panel:-moz-window-inactive image,
+     .sidebar-placesTreechildren:-moz-window-inactive {
+       opacity: 0.7 !important;
+     }
+     #sidebar-splitter {
+       background: var(--gnome-toolbar-border-color) !important;
+       border: 0 !important;
+       width: 1px !important;
+     }
+     #sidebar-splitter:-moz-window-inactive {
+       background: var(--gnome-inactive-toolbar-border-color) !important;
+     }
+     
+     #sidebar-header {
+       padding: 6px !important;
+       border-bottom: 1px solid var(--gnome-toolbar-border-color) !important;
+     }
+     #sidebar-search-container {
+       padding: 6px !important;
+     }
+     
+     /* Lists */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* TODO: create list color vars */
+     /* List container */
+     #permission-popup-permission-list,
+     richlistbox#items {
+       background: var(--gnome-menu-background) !important;
+       border: 1px solid var(--gnome-button-border-color) !important;
+       border-radius: 9px !important;
+       padding: 0 !important;
+       overflow: hidden;
+     }
+     
+     /* List item */
+     .permission-popup-permission-list-anchor,
+     richlistbox#items richlistitem {
+       padding: 6px 6px 1px !important;
+       margin: 0 !important;
+     }
+     .permission-popup-permission-list-anchor:not(:last-child),
+     richlistbox#items richlistitem:not(:last-child) {
+       border-bottom: 1px solid var(--gnome-button-border-color);
+     }
+     
+     /* Fix list buttons on selected state */
+     @media (prefers-color-scheme: light) {
+       richlistbox#items richlistitem[selected=true] button:not(:hover) {
+         filter: invert() brightness(200%) !important;
+       }
+     }
+     /* Buttons */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Hide buttons separator */
+     #nav-bar .toolbaritem-combined-buttons separator {
+       display: none !important;
+     }
+     #appMenu-popup .toolbaritem-combined-buttons toolbarseparator {
+       border: 0 !important;
+     }
+     
+     /* Buttons */
+     menulist,
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton),
+     .subviewbutton.panel-subview-footer,
+     .panel-footer button,
+     #downloadsHistory,
+     #downloadsPanel-mainView .download-state .downloadButton,
+     #overflowMenu-customize-button,
+     #appMenu-popup .panel-banner-item,
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(#appMenu-fxa-label),
+     #context-navigation menuitem,
+     .identity-popup-preferences-button:not(#hack),
+     .findbar-container toolbarbutton,
+     #sidebar-switcher-target,
+     #viewButton,
+     .close-icon:not(.tab-close-button),
+     button.close,
+     .menulist-label-box,
+     .expander-down, .expander-up,
+     .notification-button,
+     .protections-popup-footer-button,
+     #identity-popup-security-expander,
+     #protections-popup-info-button,
+     #PanelUI-panic-view-button,
+     .tracking-protection-button,
+     .dialog-button,
+     .autocomplete-richlistitem[type="loginsFooter"],
+     .dialog-button-box button,
+     .searchbar-engine-one-off-item,
+     .permission-popup-permission-remove-button,
+     #protections-popup-trackers-blocked-counter-box,
+     .button.connect-device,
+     #item-choose button {
+       -moz-appearance: none !important;
+       background: var(--gnome-button-background) !important;
+       box-shadow: var(--gnome-button-box-shadow) !important;
+       border: 1px solid var(--gnome-button-border-color) !important;
+       border-bottom-color: var(--gnome-button-border-accent-color) !important;
+       border-radius: 5px !important;
+       padding: 0 1px !important;
+       height: 34px !important;
+       max-height: 34px !important;
+       min-height: 34px !important;
+       min-width: 34px !important;
+       color: var(--gnome-toolbar-color) !important;
+       outline: 0 !important;
+       font: menu !important;
+       -moz-box-align: center;
+     }
+     .subviewbutton-iconic {
+       -moz-box-pack: center !important;
+     }
+     
+     /* Buttons with margins */
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton),
+     .notification-button,
+     .subviewbutton.panel-subview-footer:not(:only-of-type),
+     .panel-footer button:not(:only-of-type) {
+       margin: 0 3px !important;
+     }
+     .close-icon:not(.tab-close-button) {
+       margin-left: 6px !important;
+     }
+     
+     /* Text buttons */
+     menulist,
+     .subviewbutton.panel-subview-footer,
+     .panel-footer button,
+     #downloadsHistory,
+     #overflowMenu-customize-button,
+     #appMenu-popup .panel-banner-item,
+     #appMenu-popup #appMenu-zoomReset-button2:not(#hack),
+     #tracking-protection-preferences-button:not(#hack),
+     .findbar-container toolbarbutton.findbar-button,
+     .notification-button,
+     .protections-popup-footer-button,
+     #PanelUI-panic-view-button,
+     .tracking-protection-button,
+     .dialog-button,
+     .autocomplete-richlistitem[type="loginsFooter"],
+     .dialog-button-box button,
+     .toolbaritem-combined-buttons:is(:not([cui-areatype="toolbar"]), [overflowedItem="true"]) > #appMenu-fxa-label2:not(#hack),
+     #protections-popup-trackers-blocked-counter-box,
+     .button.connect-device,
+     #item-choose button {
+       padding: 2px 16px !important;
+     }
+     .subviewbutton.panel-subview-footer label,
+     .panel-footer button,
+     #downloadsHistory,
+     #overflowMenu-customize-button,
+     #appMenu-popup .panel-banner-item,
+     #appMenu-popup #appMenu-zoomReset-button2:not(#hack),
+     #tracking-protection-preferences-button:not(#hack),
+     .findbar-container toolbarbutton.findbar-button,
+     .notification-button,
+     .protections-popup-footer-button,
+     #PanelUI-panic-view-button,
+     .tracking-protection-button,
+     .dialog-button,
+     .autocomplete-richlistitem[type="loginsFooter"],
+     .dialog-button-box button,
+     #protections-popup-trackers-blocked-counter-box,
+     .button.connect-device,
+     #item-choose button {
+       text-align: center !important;
+     }
+     
+     /* Drop down buttons */
+     #sidebar-switcher-target,
+     #viewButton {
+       padding: 2px 16px !important;
+       position: relative;
+     }
+     #sidebar-switcher-arrow,
+     #viewButton .button-menu-dropmarker { /* Arrow position, type b */
+       transform: translate(6px, 0)
+     }
+     .menulist-label-box {
+       padding: 2px 26px 2px 16px !important;
+       position: relative;
+     }
+     .menulist-label-box:after { /* Arrow position */
+       position: absolute !important;
+       right: 8px !important;
+       top: 8px !important;
+     }
+     .menulist-label-box:after { /* Create arrow if icon tag no exist */
+       content: "";
+     }
+     
+     /* Hover buttons */
+     menulist:hover,
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([open]):not([disabled]):not([checked]):hover,
+     .subviewbutton.panel-subview-footer:hover,
+     .panel-footer button:hover,
+     #downloadsHistory:hover,
+     #downloadsPanel-mainView .download-state .downloadButton:hover,
+     #overflowMenu-customize-button:hover,
+     #appMenu-popup .panel-banner-item:hover,
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(#appMenu-fxa-label):not([disabled]):hover,
+     #context-navigation menuitem:not([disabled]):hover,
+     .identity-popup-preferences-button:not(#hack):hover,
+     .findbar-container toolbarbutton:hover,
+     .findbar-closebutton .toolbarbutton-icon:hover,
+     #sidebar-switcher-target:hover,
+     #viewButton:hover,
+     .close-icon:not(.tab-close-button):hover,
+     button.close:hover,
+     menulist:hover .menulist-label-box,
+     .expander-down:hover, .expander-up:hover,
+     .notification-button:hover,
+     .protections-popup-footer-button:hover,
+     #identity-popup-security-expander:hover,
+     #protections-popup-info-button:hover,
+     .tracking-protection-button:hover,
+     .dialog-button:hover,
+     .autocomplete-richlistitem[type="loginsFooter"]:hover,
+     .dialog-button-box button:not([disabled]):hover,
+     .searchbar-engine-one-off-item:hover,
+     .permission-popup-permission-remove-button:hover,
+     #protections-popup-trackers-blocked-counter-box:hover,
+     .button.connect-device:hover,
+     #item-choose button:hover {
+       outline: 0 !important;
+       background: var(--gnome-button-hover-background) !important;
+     }
+     
+     /* Active buttons */
+     menulist[open],
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([disabled]):not(#hack):active,
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not(.subviewbutton):not([disabled])[open],
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):not([disabled])[checked],
+     .subviewbutton.panel-subview-footer:active,
+     .panel-footer button:active,
+     #downloadsHistory:active,
+     #downloadsPanel-mainView .download-state .downloadButton:active,
+     #overflowMenu-customize-button:active,
+     #appMenu-popup .panel-banner-item:active,
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not([disabled]):not(#appMenu-fxa-label):active,
+     #context-navigation menuitem:active:not([disabled]),
+     .identity-popup-preferences-button:not(#hack):active,
+     .findbar-container toolbarbutton[checked],
+     .findbar-container toolbarbutton:active,
+     #sidebar-switcher-target:active, #sidebar-switcher-target.active,
+     #viewButton[open],
+     .close-icon:not(.tab-close-button):active,
+     button.close:active,
+     menulist[open] .menulist-label-box,
+     .expander-down:active, .expander-up:active,
+     .notification-button:active,
+     .protections-popup-footer-button:not(#hack):active,
+     #identity-popup-security-expander:active,
+     #protections-popup-info-button:not(#hack):active,
+     #protections-popup-info-button:not(#hack)[checked],
+     .tracking-protection-button:active,
+     .dialog-button:active,
+     .autocomplete-richlistitem[type="loginsFooter"]:active,
+     .dialog-button-box button:not([disabled]):active,
+     .permission-popup-permission-remove-button:active,
+     #protections-popup-trackers-blocked-counter-box:active,
+     .button.connect-device:active,
+     #item-choose button:active {
+       background: var(--gnome-button-active-background) !important;
+       box-shadow: var(--gnome-button-active-box-shadow) !important;
+       border-color: var(--gnome-button-active-border-color) !important;
+       border-bottom-color: var(--gnome-button-active-border-color) !important;
+       border-top-color: var(--gnome-button-active-border-accent-color) !important;
+     }
+     
+     /* Disabled buttons */
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button)[disabled],
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled],
+     #context-navigation menuitem[disabled],
+     .dialog-button-box button[disabled] {
+       background: var(--gnome-button-disabled-background) !important;
+       border-color: var(--gnome-button-disabled-border-color) !important;
+       box-shadow: var(--gnome-button-disabled-box-shadow) !important;
+       opacity: 1 !important;
+     }
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button)[disabled] image,
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled] image,
+     #context-navigation menuitem[disabled] image,
+     .dialog-button-box button[disabled] label {
+       opacity: .4 !important;
+     }
+     
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button)[disabled]:hover,
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton[disabled]:hover {
+       background: var(--gnome-button-disabled-background) !important;
+     }
+     
+     /* Inactive window buttons */
+     #nav-bar toolbarbutton:not(#urlbar-zoom-button):not(.subviewbutton):-moz-window-inactive,
+     .findbar-container toolbarbutton:-moz-window-inactive,
+     #sidebar-switcher-target:-moz-window-inactive,
+     #viewButton:-moz-window-inactive,
+     .notification-button:-moz-window-inactive {
+       background: var(--gnome-inactive-button-background) !important;
+       box-shadow: var(--gnome-inactive-button-box-shadow) !important;
+       border-color: var(--gnome-inactive-button-border-color) !important;
+     }
+     
+     /* Flat buttons */
+     .close-icon:not(.tab-close-button),
+     button.close,
+     #protections-popup-info-button,
+     #protections-popup-trackers-blocked-counter-box {
+       background: transparent !important;
+       box-shadow: none !important;
+       border-color: transparent !important;
+       border-radius: 5px !important;
+     }
+     /* List style */
+     .permission-popup-permission-remove-button,
+     #item-choose button {
+       background: transparent !important;
+       box-shadow: none !important;
+       border-color: var(--gnome-popover-separator-color) !important;
+       border-radius: 5px !important;
+     }
+     .close-icon:not(.tab-close-button):not(:active):hover,
+     button.close:not(:active):hover,
+     #protections-popup-info-button:hover,
+     .permission-popup-permission-remove-button:not(:active):hover,
+     #protections-popup-trackers-blocked-counter-box:not(:active):hover,
+     #item-choose button:not(:active):hover {
+       box-shadow: var(--gnome-button-box-shadow) !important;
+       border-color: var(--gnome-button-border-color) !important;
+       border-bottom-color: var(--gnome-button-border-accent-color) !important;
+     }
+     
+     /* Circle buttons */
+     #downloadsPanel-mainView .download-state .downloadButton,
+     .permission-popup-permission-remove-button:not(#hack) {
+       border-radius: 100% !important;
+     }
+     
+     /* Combined buttons */
+     #nav-bar .toolbaritem-combined-buttons toolbarbutton:not(:last-of-type):not(#hack),
+     #nav-bar #back-button:not(#hack),
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(:last-of-type):not(#appMenu-zoomEnlarge-button),
+     #context-navigation menuitem:not(:last-of-type),
+     .findbar-container toolbarbutton.findbar-find-previous,
+     .findbar-button:not(:last-of-type),
+     .search-panel-one-offs .searchbar-engine-one-off-item:not(:last-child) {
+       border-top-right-radius: 0 !important;
+       border-bottom-right-radius: 0 !important;
+       border-right-width: 0 !important;
+       margin-right: 0 !important;
+     }
+     
+     #nav-bar .toolbaritem-combined-buttons toolbarbutton:not(:first-of-type):not(#hack),
+     #nav-bar #forward-button:not(#hack),
+     #appMenu-popup .toolbaritem-combined-buttons toolbarbutton:not(:first-of-type):not(#appMenu-fullscreen-button),
+     #context-navigation menuitem:not(:first-of-type),
+     .findbar-container toolbarbutton.findbar-find-previous,
+     .findbar-container toolbarbutton.findbar-find-next,
+     .findbar-button:not(:first-of-type),
+     .search-panel-one-offs .searchbar-engine-one-off-item:not(:first-child) {
+       border-top-left-radius: 0 !important;
+       border-bottom-left-radius: 0 !important;
+       margin-left: 0 !important;
+     }
+     
+     #nav-bar .toolbaritem-combined-buttons {
+       margin-left: 0 !important;
+       margin-right: 0 !important;
+     }
+     
+     /* Buttons with suggested action */
+     #appMenu-popup .panel-banner-item[notificationid="update-restart"],
+     button.popup-notification-primary-button,
+     #editBookmarkPanelDoneButton,
+     #tracking-action-block,
+     .button.connect-device {
+       color: white !important;
+       background: var(--gnome-button-suggested-action-background) !important;
+       border-color: var(--gnome-button-suggested-action-border-color) !important;
+       border-bottom-color: var(--gnome-button-suggested-action-border-accent-color) !important;	
+       box-shadow: var(--gnome-button-suggested-action-box-shadow) !important;
+       text-shadow: 0 -1px rgba(0, 0, 0, 0.559216) !important;
+     }
+     
+     #appMenu-popup .panel-banner-item[notificationid="update-restart"]:hover,
+     button.popup-notification-primary-button.popup-notification-button:hover,
+     #editBookmarkPanelDoneButton:hover,
+     #tracking-action-block:hover,
+     .button.connect-device:hover {
+       background: var(--gnome-button-suggested-action-hover-background) !important;
+     }
+     
+     #appMenu-popup .panel-banner-item[notificationid="update-restart"]:active,
+     button.popup-notification-primary-button.popup-notification-button:active,
+     #editBookmarkPanelDoneButton:active,
+     #tracking-action-block:active,
+     .button.connect-device:active {
+       background: var(--gnome-button-suggested-action-active-background) !important;
+       border-color: var(--gnome-button-suggested-action-active-border-color) !important;
+       box-shadow: var(--gnome-button-suggested-action-active-box-shadow) !important;
+       text-shadow: none !important;
+     }
+     
+     /* Buttons with destructive action */
+     #editBookmarkPanelRemoveButton,
+     .identity-popup-permission-remove-button,
+     #PanelUI-panic-view-button {
+       color: white !important;
+       background: var(--gnome-button-destructive-action-background) !important;
+       border-color: var(--gnome-button-destructive-action-border-color) !important;
+       border-bottom-color: var(--gnome-button-destructive-action-border-accent-color) !important;
+       box-shadow: var(--gnome-button-destructive-action-box-shadow) !important;
+       text-shadow: 0 -1px rgba(0, 0, 0, 0.558275) !important;
+     }
+     
+     #editBookmarkPanelRemoveButton:hover,
+     .identity-popup-permission-remove-button:not(#hack):hover,
+     #PanelUI-panic-view-button:hover {
+       background: var(--gnome-button-destructive-action-hover-background) !important;
+     }
+     
+     #editBookmarkPanelRemoveButton:active,
+     .identity-popup-permission-remove-button:not(#hack):active,
+     #PanelUI-panic-view-button:active {
+       background: var(--gnome-button-destructive-action-active-background) !important;
+       border-color: var(--gnome-button-destructive-action-active-border-color) !important;
+       box-shadow: var(--gnome-button-destructive-action-active-box-shadow) !important;
+     }
+     
+     .identity-popup-permission-remove-button:not(#hack):hover { /* Is flat */
+       border-color: var(--gnome-button-destructive-action-border-color) !important;
+       border-bottom-color: var(--gnome-button-destructive-action-border-accent-color) !important;
+       box-shadow: var(--gnome-button-destructive-action-box-shadow) !important;
+     }
+     .identity-popup-permission-remove-button:not(#hack):hover .button-icon {
+       filter: invert(100%) brightness(200%);
+     }
+     
+     /* Buttons Issues/Glitches fixes */
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Fix notification dropmarker */
+     .popup-notification-dropmarker dropmarker {
+       display: none !important;
+     }
+     .popup-notification-dropmarker > .button-box > hbox {
+       display: -moz-box !important;
+     }
+     .panel-footer button.popup-notification-dropmarker {
+       padding: 0 1px 0 4px !important;
+     }
+     
+     /* Fix hover background */
+     .toolbarbutton-badge-stack:not(#hack), .toolbarbutton-icon:not(#hack), .toolbarbutton-text:not(#hack) {
+       background: transparent !important;
+     }
+     
+     /* Fix button box */
+     .panel-footer.panel-footer-menulike > button > .button-box {
+       display: -moz-box !important;
+     }
+     
+     /* menulist */
+     #label-box:not([native]) {
+         font-weight: 400 !important;
+     }
+     
+     /* Overrides: Make the back button the same as other buttons */
+     :root:not([uidensity=compact]) #back-button {
+       border-radius: var(--toolbarbutton-border-radius) !important;
+     }
+     :root:not([uidensity=compact]) #back-button > .toolbarbutton-icon {
+       background-color: unset !important;
+       border: unset !important;
+       width: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
+       height: calc(2 * var(--toolbarbutton-inner-padding) + 16px) !important;
+       padding: var(--toolbarbutton-inner-padding) !important;
+       border-radius: var(--toolbarbutton-border-radius);
+       box-shadow: none !important;
+     }
+     :root:not([uidensity=compact]) #back-button:not([disabled]):not([open]):hover > .toolbarbutton-icon {
+       background-color: var(--toolbarbutton-hover-background) !important;
+       box-shadow: unset;
+       border-color: unset;
+     }
+     :root:not([uidensity=compact]) #back-button[open] > .toolbarbutton-icon,
+     :root:not([uidensity=compact]) #back-button:not([disabled]):hover:active > .toolbarbutton-icon {
+       background-color: var(--toolbarbutton-active-background) !important;
+       border-color: unset;
+     }
+     
+     /* Remove the header bar buttons' hover styles */
+     #nav-bar {
+       --toolbarbutton-active-background: transparent !important;
+       --toolbarbutton-hover-background: transparent !important;
+     }
+     
+     /* Glitch customizing: Cut / Copy / Paste buttons' icons
+      * :not(#hack) is there just to elevate rule priority */
+     :root[customizing] #nav-bar > hbox toolbaritem toolbarbutton image:not(#hack) {
+       opacity: 1 !important;
+     }
+     /* Glitch customizing: Reload and Cut / Copy / Paste buttons */
+     :root:-moz-window-inactive[customizing] #nav-bar #stop-reload-button toolbarbutton,
+     :root:-moz-window-inactive[customizing] #nav-bar #edit-controls toolbarbutton {
+       background-image: var(--gnome-inactive-button-background);
+       box-shadow: var(--gnome-inactive-button-box-shadow);
+     }
+     /* Glitch customizing: Reload and Cut / Copy / Paste buttons' icons */
+     :root:-moz-window-inactive[customizing] #nav-bar #stop-reload-button image.toolbarbutton-icon,
+     :root:-moz-window-inactive[customizing] #nav-bar #edit-controls image.toolbarbutton-icon {
+       opacity: .7 !important;
+     }
+     
+     /* Glitch: Overflow and Burger buttons
+      * :not(#hack) is there just to elevate rule priority */
+     :root[customizing] #nav-bar > toolbarbutton[disabled]:not(#hack),
+     :root[customizing] #nav-bar > toolbaritem > toolbarbutton[disabled]:not(#hack) {
+       opacity: .5 !important;
+     }
+     /* Glitch: Overflow button's icon */
+     :root[customizing] #nav-bar toolbarbutton:not(#urlbar-zoom-button)[disabled] image {
+       fill-opacity: var(--toolbarbutton-icon-fill-opacity) !important;
+     }
+     
+     /* Bookmark buttons */
+     #nav-bar toolbarbutton.bookmark-item {
+       width: auto !important;
+     }
+     #nav-bar toolbarbutton.bookmark-item .toolbarbutton-icon {
+       margin-left: 6px;
+     }
+     #nav-bar toolbarbutton.bookmark-item .toolbarbutton-text {
+       padding-right: 6px;
+     }
+     
+     /* Remove Burger button's left separator */
+     #PanelUI-button {
+       border: 0 !important;
+       margin: 0 !important;
+       padding-inline-start: 0 !important;
+     }
+     
+     /* Space main menu button from other headerbar buttons
+     #nav-bar #PanelUI-menu-button:not(#hack) {
+       margin-left: 10px !important;
+     }*/
+     
+     /* Fix library animation */
+     #library-animatable-box  {
+       --library-button-height: 46px !important;
+       --library-icon-x: 1716px !important;
+       /*--library-icon-x: 1715.9833984375px !important;*/
+     }
+     #library-button[animate] > .toolbarbutton-icon {
+       fill: transparent !important;
+     }
+     
+     /* Fix toolbars close icons */
+     .close-icon:not(.tab-close-button) .toolbarbutton-icon {
+       height: 16px !important;
+       width: 16px !important;
+       margin: 6px !important;
+       padding: 0 !important;
+     }
+     button.close {
+       margin: 0 !important;
+     }
+     
+     /* */
+     #appMenu-popup .panel-banner-item[notificationid="update-restart"]::after {
+       display: none !important;
+     }
+     
+     /* Identity site popover buttons */
+     .identity-popup-preferences-button:not(#hack) {
+       list-style-image: url("chrome://browser/skin/settings.svg") !important;
+     }
+     #tracking-protection-preferences-button > .toolbarbutton-text {
+       padding-inline-end: 0 !important;
+     }
+     .protections-popup-footer-button-label {
+       margin-inline-start: 3px !important;
+     }
+     
+     /* Fix findbar buttons issues */
+     .findbar-container .findbar-find-previous image,
+     .findbar-container .findbar-find-next image {
+       margin: 6px !important;
+       opacity: 1 !important;
+     }
+     .findbar-container toolbarbutton:focus {
+       outline: 0 !important;
+     }
+     
+     /* Sidebar header button reset font size */
+     #sidebar-header {
+       font-size: 1em !important;
+     }
+     
+     /* Sidebar header button arrow opacity */
+     #sidebar-switcher-arrow {
+       opacity: 1 !important;
+     }
+     
+     /* Sidebar history view */
+     #viewButton {
+       margin: 0 !important;
+       margin-inline-start: 6px !important;
+     }
+     
+     /* Menulist */
+     #identity-popup-popup-menulist {
+       margin-right: 0 !important;
+     }
+     
+     /* Auto complete popup button*/
+     .autocomplete-richlistitem[type="loginsFooter"] {
+       margin: 4px 4px 0 4px !important;
+     }
+     
+     /* Bookmarks editor buttons */
+     .expander-down image, .expander-up image {
+       margin: 6px !important;
+     }
+     
+     /* Identity popup tracking protection button */
+     .tracking-protection-button {
+       margin-inline-end: 0 !important;
+     }
+     
+     /* Identity popup delete permission button */
+     .identity-popup-permission-remove-button {
+       opacity: 1 !important;
+     }
+     
+     /* Identity popup expander button */
+     #identity-popup-security {
+       -moz-box-align: center;
+     }
+     #identity-popup-security-expander {
+       width: 34px !important;
+     }
+     #identity-popup-security-expander .button-icon {
+       margin: 0 !important;
+     }
+     
+     /* Protections popup */
+     #protections-popup-info-button {
+       margin: 0 !important;
+       margin-inline-end: 0 !important;
+     }
+     .protections-popup-footer-icon {
+       display: none !important;
+     }
+     .protections-popup-footer-button-label {
+         margin-inline-start: 0 !important;
+     }
+     #protections-popup-footer-protection-type-label {
+         margin-inline-end: 0 !important;
+       margin-block: 0 !important;
+     }
+     
+     /* Close button */
+     .close-icon:not(.tab-close-button) .toolbarbutton-icon {
+       outline:  0 !important;
+     }
+     
+     /* Downloads button */
+     #downloads-indicator-progress-inner {
+       background: conic-gradient(var(--gnome-toolbar-icon-fill) var(--download-progress-pcent), transparent var(--download-progress-pcent)) !important;
+     }
+     #downloads-indicator-progress-outer,
+     #downloads-indicator-start-image,
+     #downloads-indicator-finish-image {
+       border: 0 !important;
+       padding: 0 !important;
+       border-radius: 100% !important;
+     }
+     #downloads-indicator-progress-outer,
+     #downloads-indicator-start-image {
+       background: var(--gnome-toolbar-border-color) !important;
+     }
+     #downloads-indicator-finish-image {
+       background: var(--gnome-toolbar-icon-fill) !important;
+     }
+     #downloads-button .toolbarbutton-animatable-box {
+       top: 8px !important;
+         left: 8px !important;
+     }
+     #downloads-button .toolbarbutton-animatable-box,
+     #downloads-button .toolbarbutton-animatable-image,
+     #downloads-indicator-progress-inner {
+       height: 16px !important;
+       width: 16px !important;
+     }
+     #downloads-button .toolbarbutton-animatable-image {
+       --anim-steps: 1 !important;
+       transform: none !important;
+       list-style-image: none !important;
+     }
+     
+     /* Stop/Reload button */
+     #stop-reload-button  .toolbarbutton-animatable-image:not(#hack) {
+       --anim-steps: 1 !important;
+       transform: none !important;
+       list-style-image: none !important;
+       display: none !important;
+     }
+     #stop-reload-button .toolbarbutton-icon {
+       margin-top: -2px !important;
+     }
+     
+     /* Entries */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Entries */
+     #urlbar,
+     #searchbar,
+     #search-box,
+     .findbar-textbox,
+     #loginTextbox,
+     #password1Textbox,
+     .tabsFilter,
+     #editBMPanel_namePicker,
+     #editBMPanel_tagsField {
+       -moz-appearance: none !important;
+       background: var(--gnome-entry-background) !important;
+       border: 1px solid var(--gnome-entry-border-color) !important;
+       border-radius: 5px !important;
+       box-shadow: var(--gnome-entry-box-shadow) !important;
+       color: var(--gnome-entry-color) !important;
+       height: 34px !important;
+       max-height: 34px !important;
+       margin: 0 !important;
+       padding: 6px !important;
+       box-sizing: border-box;
+     }
+     
+     /* Entries focused */
+     #urlbar[breakout][breakout-extend],
+     #urlbar[focused="true"]:not([suppress-focus-border]),
+     #searchbar:focus-within,
+     #search-box[focused], 
+     .findbar-textbox[focused],
+     .findbar-textbox:focus,
+     #loginTextbox:focus,
+     #password1Textbox:focus,
+     .tabsFilter[focused],
+     #editBMPanel_namePicker:focus-visible,
+     #editBMPanel_tagsField:focus-visible {
+       outline: 2px solid var(--gnome-focused-urlbar-border-color) !important;
+       outline-offset: -2px;
+       -moz-outline-radius: 5px;
+     }
+     @media (prefers-color-scheme: dark) {
+       #urlbar[breakout][breakout-extend],
+       #searchbar:focus-within,
+       #search-box[focused], 
+       .findbar-textbox[focused],
+       .findbar-textbox:focus,
+       #loginTextbox:focus,
+       #password1Textbox:focus,
+       .tabsFilter[focused],
+       #editBMPanel_namePicker:focus-visible,
+       #editBMPanel_tagsField:focus-visible {		
+         outline-width: 1px !important;
+       }
+     }
+     
+     /* Inactive window entries */
+     #urlbar:-moz-window-inactive,
+     #searchbar:-moz-window-inactive,
+     #search-box:-moz-window-inactive,
+     .findbar-textbox:-moz-window-inactive,
+     #loginTextbox:-moz-window-inactive,
+     #password1Textbox:-moz-window-inactive,
+     .tabsFilter:-moz-window-inactive {
+       background: var(--gnome-inactive-entry-background) !important;
+       border-color: var(--gnome-inactive-entry-border-color) !important;
+       box-shadow: var(--gnome-inactive-entry-box-shadow) !important;
+       color: var(--gnome-inactive-entry-color) !important;
+     }
+     
+     /* Entries combined */
+     .findbar-textbox:not(.minimal) {
+       border-top-right-radius: 0 !important;
+       border-bottom-right-radius: 0 !important;
+       border-right-width: 0 !important;
+     }
+     .findbar-textbox:not(.minimal)[focused], .findbar-textbox:not(.minimal):focus {
+       -moz-outline-radius: 5px 0 0 5px !important;
+     }
+     
+     /* Entry button */
+     .identity-box-button,
+     #tracking-protection-icon-container,
+     #notification-popup-box,
+     .urlbar-page-action,
+     .urlbar-icon {
+       fill-opacity: 0.8 !important;
+     }
+     
+     .identity-box-button:hover:not([open="true"]),
+     #tracking-protection-icon-container:hover:not([open="true"]),
+     #notification-popup-box:hover:not([open="true"]),
+     .urlbar-page-action:hover:not([open="true"]),
+     .urlbar-page-action:hover:not([open="true"]) .urlbar-icon,
+     .urlbar-icon:not([disabled]):hover {
+         background: none !important;
+       fill-opacity: 1 !important;	
+     }
+     
+     .identity-box-button:hover:active,
+     .identity-box-button[open=true],
+     #tracking-protection-icon-container:hover:active,
+     #tracking-protection-icon-container[open=true],
+     #notification-popup-box:hover:active,
+     #notification-popup-box[open=true],
+     .urlbar-page-action:hover:active,
+     .urlbar-page-action[open=true],
+     .urlbar-page-action:hover:active .urlbar-icon,
+     .urlbar-page-action[open=true] .urlbar-icon {
+       background: none !important;
+       fill-opacity: 1 !important;	
+     }
+     
+     /* Entries fixes */
+     #urlbar-container, #search-container {
+       padding: 0 !important;
+       margin: 0 3px !important;
+     }
+     #urlbar-input-container {
+       background: transparent !important;
+       border: 0 !important;
+     }
+     #urlbar, #searchbar {
+       margin: 0 3px !important;
+       padding: 0 !important;
+     }
+     .searchbar-textbox {
+       border: 0 !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       min-height: auto !important;
+     }
+     #searchbar > .searchbar-textbox[focused] .searchbar-search-button:not(#hack) {
+       margin: 0 !important;
+     }
+     #urlbar[focused="true"]:not([suppress-focus-border]) > #urlbar-background {
+       outline: 0 !important;
+     }
+     /* Controls */
+     /* Switchers, Checkboxes, etc. */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Switchers */
+     .protections-popup-tp-switch-box {
+       padding: 0 !important;
+       -moz-box-pack: start !important;
+     }
+     #protections-popup-tp-switch:not([enabled])[showdotindicator]::after {
+       display: none !important;
+     }
+     #protections-popup-tp-switch {
+       background: var(--gnome-switch-background) !important;
+       border: 1px solid var(--gnome-switch-border-color) !important;
+       border-radius: 24px !important;
+       min-width: 50px !important;
+       width: 50px !important;
+       min-height: 26px !important;
+       padding: 0 !important;
+       position: relative !important;
+       display: block !important;
+       margin: 0 !important;
+     }
+     #protections-popup-tp-switch:hover {
+       border-color: var(--gnome-switch-border-color) !important;
+     }
+     #protections-popup-tp-switch::before {
+       position: absolute !important;
+       top: 0px;
+       left: 0px;
+       background: var(--gnome-switch-slider-background) !important;
+       border: 1px solid var(--gnome-switch-slider-border-color) !important;
+       box-shadow: var(--gnome-switch-slider-box-shadow);
+       border-radius: 24px !important;
+       height: 24px !important;
+       width: 24px !important;
+       transition: left .2s ease;
+       outline: 0 !important;
+     }
+     #protections-popup-tp-switch[enabled] {
+       background: var(--gnome-switch-active-background) !important;
+       border-color: var(--gnome-switch-active-border-color) !important;
+       padding-inline-start: 24px !important;
+     }
+     #protections-popup-tp-switch[enabled]:hover {
+       border-color: var(--gnome-switch-active-border-color) !important;
+     }
+     #protections-popup-tp-switch[enabled]::before {
+       border-color: var(--gnome-switch-active-slider-border-color) !important;
+       left: 24px;
+     }
+     /* Replace icons */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Icons color */
+     .toolbarbutton-icon,
+     menuitem:not([class*='identity']) .menu-iconic-left .menu-iconic-icon,
+     .urlbar-page-action:not([readeractive]),
+     .button-icon:not(#hack),
+     .bookmark-item[container],
+     .notification-anchor-icon,
+     .protections-popup-category::after,
+     .protections-popup-footer-icon,
+     #identity-popup-mainView .subviewbutton-nav::after,
+     .widget-overflow-list .subviewbutton-nav::after,
+     .PanelUI-subView .subviewbutton-nav::after,
+     #identity-popup[connection^="secure"] .identity-popup-security-connection,
+     .panel-info-button > image,
+     .menu-right,
+     .expander-down > .button-box,
+     #sidebar-switcher-arrow,
+     #sidebar-icon,
+     #viewButton .button-menu-dropmarker,
+     .menulist-label-box:after,
+     .expander-up > .button-box,
+     #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon,
+     .searchbar-search-icon,
+     .textbox-search-sign,
+     treechildren::-moz-tree-twisty,
+     treechildren::-moz-tree-image,
+     .item.client .item-twisty-container,
+     menuitem[type="checkbox"],
+     menuitem[type="checkbox"][checked="true"],
+     menuitem[type="radio"],
+     menuitem[type="radio"][checked="true"],
+     .tab-icon-overlay,
+     .tab-throbber::before,
+     .tab-icon-stack::before,
+     .close-icon:not(.tab-close-button),
+     button.close::before,
+     #urlbar-search-mode-indicator-close,
+     #tracking-protection-icon,
+     #identity-icon,
+     #permissions-granted-icon,
+     #downloads-indicator-icon,
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-close .toolbarbutton-icon,
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-max .toolbarbutton-icon,
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-restore .toolbarbutton-icon,
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-min .toolbarbutton-icon,
+     :root[tabsintitlebar][inFullscreen] #window-controls #restore-button .toolbarbutton-icon {
+       fill: var(--gnome-toolbar-icon-fill) !important;
+       -moz-context-properties: fill, fill-opacity;
+     }
+     .toolbarbutton-icon:-moz-window-inactive {
+       fill: var(--gnome-inactive-toolbar-icon-fill) !important;
+     }
+     
+     /* Fix icons sizes */
+     .permission-popup-permission-remove-button > .button-box > .button-icon,
+     .menu-iconic-icon {
+       height: 16px !important;
+       width: 16px !important;
+     }
+     /* Fix icon color */
+     #sidebar-icon {
+       opacity: 1 !important;
+     }
+     treechildren::-moz-tree-twisty,
+     treechildren::-moz-tree-image {
+       fill-opacity: 1 !important;
+     }
+     
+     /* Icons active color */
+     menu:not([disabled]):not(#PlacesToolbar .bookmark-item):hover > .menu-right,
+     menu:not([disabled]):not(#PlacesToolbar .bookmark-item)[open] > .menu-right,
+     treechildren::-moz-tree-twisty(selected, focus),
+     treechildren::-moz-tree-twisty(selected, focus, open),
+     treechildren::-moz-tree-image(selected, focus),
+     treechildren::-moz-tree-image(selected, focus, open),
+     .item.client:focus .item-twisty-container,
+     .sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-twisty,
+     .sidebar-panel[lwt-sidebar-brighttext] .sidebar-placesTreechildren::-moz-tree-twisty(open),
+     menuitem[type="checkbox"]:not([disabled="true"]):hover .menu-iconic-icon,
+     menuitem[type="radio"]:not([disabled="true"]):hover .menu-iconic-icon {
+       fill: #fff !important;
+     }
+     
+     /* Fix flat buttons icons aproach */
+     button.close::before {
+       content: "";
+       display: block;
+       background-position: center center;
+       background-repeat: no-repeat;
+       height: 100%;
+       width: 100%;
+     }
+     
+     /* Fix main menu zoom controls icons */
+     #appMenu-zoom-controls2 .toolbarbutton-icon {
+       padding: 0 !important;
+       padding-block: 0 !important;
+       padding-inline: 0 !important;
+     }
+     
+     /* Scroll icons */
+     #scrollbutton-up {
+       list-style-image: var(--scrollbutton-icon-name) !important;
+     }
+     #scrollbutton-down {
+       list-style-image: var(--scrollbutton-icon-name) !important;
+     }
+     arrowscrollbox {
+       --scrollbutton-icon-name: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg");
+     }
+     arrowscrollbox[orient="horizontal"] {
+       --scrollbutton-icon-name: url("chrome://browser/skin/gnomeUI/pan-start-symbolic.svg");
+     }
+     
+     /* Popovers subview menu arrow */
+     #identity-popup-mainView .subviewbutton-nav::after,
+     .widget-overflow-list .subviewbutton-nav::after,
+     .PanelUI-subView .subviewbutton-nav::after {
+       content: "" !important;
+       background: url("chrome://browser/skin/gnomeUI/pan-end-symbolic.svg");
+       background-size: contain;
+       height: 16px;
+       width: 16px;
+       margin-top: -2px !important;
+       fill-opacity: 1 !important;
+     }
+     .protections-popup-category::after {
+       content: url("chrome://browser/skin/gnomeUI/pan-end-symbolic.svg") !important;
+     }
+     .identity-popup-content-blocking-category::after {
+       content: url("chrome://browser/skin/gnomeUI/pan-start-symbolic.svg") !important;
+     }
+     #identity-popup-security-expander .button-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-start-symbolic.svg") !important;
+     }
+     
+     /* Popovers subview back button */
+     .subviewbutton-back {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-start-symbolic.svg") !important;
+     }
+     
+     /* Sub menu arrow */
+     .menu-right {
+       -moz-appearance: none !important;
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-end-symbolic.svg") !important;
+       width: 16px !important;
+       height: 16px !important;
+     }
+     menu[disabled] > .menu-right {
+       opacity: 0.3;
+     }
+     
+     /* Arrow down buttons */
+     .expander-down > .button-box,
+     #sidebar-switcher-arrow,
+     #viewButton .button-menu-dropmarker,
+     .popup-notification-dropmarker .button-icon {
+       -moz-appearance: none !important;
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+       width: 16px !important;
+       height: 16px !important;
+     }
+     .menulist-label-box:after {
+       content: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+     }
+     
+     /* Arrow up buttons */
+     .expander-up > .button-box {
+       -moz-appearance: none !important;
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-up-symbolic.svg") !important;
+       width: 16px !important;
+       height: 16px !important;
+     }
+     
+     /* Search entries */
+     #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon,
+     .searchbar-search-icon,
+     .textbox-search-sign {
+       list-style-image: url(chrome://browser/skin/gnomeUI/edit-find-symbolic.svg) !important;
+       opacity: 0.7 !important;
+     }
+     .textbox-search-sign {
+       margin: 2px 0;
+       max-height: 16px !important;
+       width: 16px !important;
+     }
+     
+     /* Findbar */
+     .findbar-find-previous {
+         list-style-image: url("chrome://browser/skin/gnomeUI/go-up-symbolic.svg") !important;
+     }
+     .findbar-find-next {
+         list-style-image: url("chrome://browser/skin/gnomeUI/go-down-symbolic.svg") !important;
+     }
+     
+     /* Tree views */
+     treechildren::-moz-tree-twisty,
+     .item.client .item-twisty-container {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+       width: 16px !important;
+       height: 16px !important;
+     }
+     .item.client .item-twisty-container {
+       background-image: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+     }
+     treechildren::-moz-tree-twisty(open) {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-end-symbolic.svg") !important;
+     }
+     .item.client.closed .item-twisty-container {
+       background-image: url("chrome://browser/skin/gnomeUI/pan-end-symbolic.svg") !important;
+     }
+     
+     treechildren::-moz-tree-image(title, container),
+     treechildren::-moz-tree-image(title, open) {
+       list-style-image: url("chrome://browser/skin/gnomeUI/folder-symbolic.svg") !important;
+     }
+     treechildren::-moz-tree-image(title, query, dayContainer),
+     treechildren::-moz-tree-image(query, OrganizerQuery_history____v) {
+       list-style-image: url("chrome://browser/skin/gnomeUI/preferences-system-time-symbolic.svg") !important;
+     }
+     
+     /* Menu checkbox */
+     menuitem[type="checkbox"] {
+       list-style-image: url("chrome://browser/skin/gnomeUI/checkbox-symbolic.svg") !important;
+     }
+     menuitem[type="checkbox"][checked="true"] {
+       list-style-image: url("chrome://browser/skin/gnomeUI/checkbox-checked-symbolic.svg") !important;
+     }
+     menuitem[type="checkbox"][disabled="true"] .menu-iconic-icon {
+       opacity: 0.5;
+     }
+     
+     /* Menu radio */
+     menuitem[type="radio"] {
+       list-style-image: url("chrome://browser/skin/gnomeUI/radio-symbolic.svg") !important;
+     }
+     menuitem[type="radio"][checked="true"] {
+       list-style-image: url("chrome://browser/skin/gnomeUI/radio-checked-symbolic.svg") !important;
+     }
+     menuitem[type="radio"][disabled="true"] .menu-iconic-icon {
+       opacity: 0.5;
+     }
+     
+     /* Close button */
+     .close-icon:not(.tab-close-button),
+     .identity-popup-permission-remove-button .button-icon,
+     .permission-popup-permission-remove-button > .button-box > .button-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-close-symbolic.svg") !important;
+     }
+     #urlbar-search-mode-indicator-close,
+     button.close::before {
+       background-image: url("chrome://browser/skin/gnomeUI/window-close-symbolic.svg") !important;
+     }
+     @media (prefers-color-scheme: light) {
+       .notificationbox-stack notification[type="critical"] .close-icon:not(.tab-close-button):not(:hover) {
+         fill: #fff !important;
+       }
+     }
+     @media (prefers-color-scheme: dark) {
+       .notificationbox-stack notification[type="warning"] .close-icon:not(.tab-close-button):not(:hover) image {
+         fill: rgb(46, 52, 54) !important;
+       }
+     }
+     
+     /* Window buttons */
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-close .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-close-symbolic.svg") !important;
+     }
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-max .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-maximize-symbolic.svg") !important;
+     }
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-restore .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-restore-symbolic.svg") !important;
+     }
+     :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-min .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-minimize-symbolic.svg") !important;
+     }
+     :root[tabsintitlebar][inFullscreen] #window-controls #restore-button .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/view-restore-symbolic.svg") !important;
+     }
+     
+     /* Sound icons */
+     .tab-icon-overlay[soundplaying] {
+         list-style-image: url("chrome://browser/skin/gnomeUI/audio-playing-symbolic.svg") !important;
+     }
+     .tab-icon-overlay[muted] {
+         list-style-image: url("chrome://browser/skin/gnomeUI/audio-muted-symbolic.svg") !important;
+     }
+     
+     /* Private browsing button */
+     #privatebrowsing-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/eye-not-looking-symbolic.svg") !important;
+     }
+     /* Sidebar button */
+     #sidebar-button:-moz-locale-dir(ltr):not([positionend])  .toolbarbutton-icon, #sidebar-button:-moz-locale-dir(rtl)[positionend]  .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/toggle-sidebar-symbolic.svg") !important;
+     }
+     #sidebar-button .toolbarbutton-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/toggle-right-sidebar-symbolic.svg");
+     }
+     /* Back button */	
+     #nav-bar #back-button,
+     #context-back { 
+       list-style-image: url("chrome://browser/skin/gnomeUI/go-previous-symbolic.svg") !important;
+     }
+     /* Forward button */	
+     #nav-bar #forward-button,
+     #context-forward,
+     #urlbar-go-button,
+     .search-go-button { 
+       list-style-image: url("chrome://browser/skin/gnomeUI/go-next-symbolic.svg") !important;
+     }
+     /* Menu button */
+     #PanelUI-menu-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/open-menu-symbolic.svg") !important;
+     }
+     /* New tab button */
+     #new-tab-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/tab-new-symbolic.svg") !important;
+     }
+     #tabs-newtab-button,
+     #TabsToolbar #new-tab-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/list-add-symbolic.svg") !important;
+     }
+     /* Home button */
+     #home-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/user-home-symbolic.svg") !important;
+     }
+     /* Preferences button */
+     #preferences-button,
+     .search-setting-button-compact > .button-box > .button-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/settings-symbolic.svg") !important;
+     }
+     /* Tabs sync */
+     #sync-button,
+     #sidebar-box[sidebarcommand="viewTabsSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
+     .urlbarView-row[source="tabs"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
+     #urlbar-engine-one-off-item-tabs {
+       list-style-image: url("chrome://browser/skin/gnomeUI/tab-symbolic.svg") !important;
+     }
+     /* Fullscreen button */
+     #fullscreen-button,
+     #appMenu-fullscreen-button2 {
+       list-style-image: url("chrome://browser/skin/gnomeUI/view-fullscreen-symbolic.svg") !important;
+     }
+     /* Zoom out button */
+     #zoom-out-button,
+     #appMenu-zoomReduce-button2 {
+       list-style-image: url("chrome://browser/skin/gnomeUI/zoom-out-symbolic.svg") !important;
+     }
+     /* Zoom in button */
+     #zoom-in-button,
+     #appMenu-zoomEnlarge-button2 {
+       list-style-image: url("chrome://browser/skin/gnomeUI/zoom-in-symbolic.svg") !important;
+     }
+     /* Developer button */
+     #developer-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/applications-engineering-symbolic.svg") !important;
+     }
+     /* Email link button */
+     #email-link-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/mail-unread-symbolic.svg") !important;
+     }
+     /* Print button */
+     #print-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/printer-symbolic.svg") !important;
+     }
+     /* Addons button */
+     #add-ons-button,
+     #addons-notification-icon,
+     .install-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/application-x-addon-symbolic.svg") !important;
+     }
+     /* Find button */
+     #find-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/edit-find-symbolic.svg") !important;
+     }
+     /* New window button */
+     #new-window-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/window-new-symbolic.svg") !important;
+     }
+     /* Bookmarks menu button */
+     #bookmarks-menu-button,
+     #sidebar-box[sidebarcommand="viewBookmarksSidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
+     .urlbarView-row[source="bookmarks"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
+     #urlbar-engine-one-off-item-bookmarks {
+       list-style-image: url("chrome://browser/skin/gnomeUI/starred-symbolic.svg") !important;
+     }
+     #context-bookmarkpage[starred="true"],
+     #star-button[starred] {
+       list-style-image: url("chrome://browser/skin/gnomeUI/starred-symbolic.svg") !important;
+     }
+     #context-bookmarkpage,
+     #star-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/non-starred-symbolic.svg") !important;
+     }
+     #star-button[starred] {
+       fill: orange !important;
+     }
+     
+     /* History button */
+     #history-panelmenu,
+     #sidebar-box[sidebarcommand="viewHistorySidebar"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon,
+     .urlbarView-row[source="history"] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-favicon,
+     #urlbar-engine-one-off-item-history {
+       list-style-image: url("chrome://browser/skin/gnomeUI/preferences-system-time-symbolic.svg") !important;
+     }
+     /* All tabs button */
+     #alltabs-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+     }
+     /* Cut button */
+     #cut-button,
+     #appMenu-cut-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/edit-cut-symbolic.svg") !important;
+     }
+     /* Copy button */
+     #copy-button,
+     #appMenu-copy-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/edit-copy-symbolic.svg") !important;
+     }
+     /* Paste button */
+     #paste-button,
+     #appMenu-paste-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/edit-paste-symbolic.svg") !important;
+     }
+     /* Overflow button */
+     #nav-bar-overflow-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/pan-down-symbolic.svg") !important;
+     }
+     /* Reload */
+     #reload-button,
+     .downloadIconRetry > .button-box > .button-icon,
+     #context-reload {
+       list-style-image: url("chrome://browser/skin/gnomeUI/view-refresh-symbolic.svg") !important;
+     }
+     /* Stop */
+     #stop-button,
+     .downloadIconCancel > .button-box > .button-icon,
+     #context-stop {
+       list-style-image: url("chrome://browser/skin/gnomeUI/process-stop-symbolic.svg") !important;
+     }
+     /* Downlaod */
+     #downloads-button,
+     #downloads-indicator-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/folder-download-symbolic.svg") !important;
+     }
+     /* Info */
+     .panel-info-button > image,
+     #identity-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/info-symbolic.svg") !important;
+     }
+     .tabbrowser-tab[image="chrome://global/skin/icons/info.svg"]:not([busy]):not([progress]) .tab-icon-stack::before {
+       content: "";
+       height: 16px;
+       width: 16px;
+       background-image: url("chrome://browser/skin/gnomeUI/info-symbolic.svg") !important;
+     }
+     /* Password */
+     #password-notification-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/key-symbolic.svg") !important;
+     }
+     
+     /* Url Bar icons */
+     #urlbar:not(.searchButton) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] #identity-icon {
+         list-style-image: url("chrome://browser/skin/gnomeUI/edit-find-symbolic.svg") !important;
+     }
+     #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box > #tracking-protection-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/security-high-symbolic.svg") !important;
+     }
+     #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box[hasException] > #tracking-protection-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/security-low-symbolic.svg") !important;
+     }
+     #urlbar-input-container[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box:not([hasException])[active] > #tracking-protection-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/security-high-symbolic.svg") !important;
+     }
+     #identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,
+     #identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/padlock-symbolic.svg") !important;
+     }
+     #identity-popup[connection^="secure"] .identity-popup-security-connection {
+       background-image: url("chrome://browser/skin/gnomeUI/padlock-symbolic.svg") !important;
+     }
+     #identity-box[pageproxystate="valid"].notSecure #identity-icon,
+     #identity-box[pageproxystate="valid"].mixedActiveContent #identity-icon,
+     #identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon {
+         list-style-image: url("chrome://browser/skin/gnomeUI/padlock-insecure-symbolic.svg") !important;
+     }
+     .identity-popup-security-connection {
+       background-image: url("chrome://browser/skin/gnomeUI/padlock-insecure-symbolic.svg") !important;
+     }
+     #permissions-granted-icon {
+         list-style-image: url("chrome://browser/skin/gnomeUI/general-properties-symbolic.svg") !important;
+     }
+     .popup-notification-icon[popupid="web-notifications"], .desktop-notification-icon {
+         list-style-image: url("chrome://browser/skin/gnomeUI/message-symbolic.svg") !important;
+     }
+     #reader-mode-button {
+       list-style-image: url("chrome://browser/skin/gnomeUI/reader-mode-symbolic.svg") !important;
+     }
+     .urlbar-icon {
+       margin: 2px 0 !important;
+     }
+     
+     /* Fix for extensions icons */
+     @media (prefers-color-scheme: dark) {
+       .webextension-browser-action {
+         list-style-image: var(--webextension-menupanel-image-light, inherit) !important;
+       }
+     }
+     
+     /* Folder icon */
+     .bookmark-item[container],
+     .downloadIconShow > .button-box > .button-icon {
+       list-style-image: url("chrome://browser/skin/gnomeUI/folder-symbolic.svg") !important;
+     }
+     /* Popup menus and context menus */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Style menus */
+     menupopup {
+       -moz-appearance: none !important;
+       background: var(--gnome-menu-background) !important;
+       border: 1px solid var(--gnome-menu-border-color) !important;
+       border-radius: 5px;
+       padding: 4px 0 !important;
+       color: var(--gnome-toolbar-color) !important;
+       box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) !important;
+     }
+     #PlacesToolbar menupopup {
+       background: var(--gnome-popover-background) !important;
+       padding: 4px !important;
+     }
+     .menupopup-arrowscrollbox {
+       background: none !important;
+       box-shadow: none !important;
+       border: 0 !important;
+       padding: 0 !important;
+       margin: 0 !important;
+     }
+     
+     menuitem, menupopup menu {
+       -moz-appearance: none !important;
+       padding: 4px 8px !important;
+       margin: 0 !important;
+     }
+     
+     menuitem[type="checkbox"] image, menuitem[type="radio"] image {
+       visibility: visible !important;
+     }
+     
+     menuitem[disabled="true"]:hover, menupopup menu[disabled="true"]:hover {
+       background: transparent !important;
+     }
+     
+     /* Adjust popovers position */
+     panel[type=arrow] {
+       margin-top: 8px !important;
+     }
+     
+     /* Style popovers */
+     .panel-arrowcontent,
+     .panel-header, .PanelUI-subView,
+     .panel-subview-body, #widget-overflow-mainView, #protections-popup-footer,
+     panelview {
+       border: 0 !important;
+       background: transparent !important;
+     }
+     .panel-arrowcontent {
+       background: var(--arrowpanel-background) !important;
+       border: 1px solid !important;
+       border-color: var(--gnome-popover-border-color) !important;
+       border-radius: 9px !important;
+       color: var(--gnome-toolbar-color) !important;
+     }
+     .panel-arrow {    
+       fill: var(--arrowpanel-background) !important;
+       stroke: var(--gnome-popover-border-color) !important;
+       display: -moz-inline-box !important;
+     }
+     panel:not([remote]), #BMB_bookmarksPopup {
+       --arrowpanel-background: var(--gnome-popover-background) !important;
+     }
+     
+     panel {
+       --panel-padding: 12px !important;
+     }
+     .panel-no-padding panelview, .panel-no-padding > .panel-subview-body, .panel-no-padding > .panel-header {
+       padding: var(--panel-padding) !important;
+     }
+     .panel-no-padding > .panel-header {
+       padding-bottom: 0 !important;
+     }
+     panel[type="arrow"].panel-no-padding::part(content) {
+       padding: var(--panel-padding) !important;
+     }
+     
+     .PanelUI-subView toolbarseparator:not([orient="vertical"]) {
+       margin: 10px 2px !important;
+     }
+     
+     .panel-header {
+       padding: 0 0 10px 0 !important;
+       position: relative !important;
+     }
+     .panel-header + toolbarseparator,
+     #identity-popup-mainView-panel-header + toolbarseparator,
+     #permission-popup-mainView-panel-header + toolbarseparator,
+     #protections-popup-mainView-panel-header-section + toolbarseparator {
+       display: none !important;
+     }
+     .panel-footer {
+       background-color: transparent !important;
+       display: flex;
+       justify-content: flex-end;
+       padding-top: 0px !important;
+     }
+     .panel-footer.panel-footer-menulike {
+       border-top: 0 !important;
+       margin-top: 8px !important;
+     }
+     .panel-footer toolbarseparator {
+       display: none !important;
+     }
+     .proton-zap {
+       border-image: unset !important;
+     }
+     
+     .panel-subview-body {
+       padding: 0 !important;
+     }
+     .panel-subview-footer {
+       margin-top: 10px !important;
+     }
+     
+     /* Style popovers menu buttons */
+     .subviewbutton:not(#appMenu-fxa-label2),
+     .toolbarbutton-1, .protections-popup-category,
+     .identity-popup-content-blocking-category,
+     #PlacesToolbar .bookmark-item {
+       border-radius: 5px !important;	
+       color: var(--gnome-toolbar-color) !important;
+       font: menu !important;
+       width: 100%;
+     }
+     .subviewbutton,
+     .protections-popup-category,
+     .identity-popup-content-blocking-category {	
+       padding: 4px !important;
+       margin: 0 !important;
+     }
+     
+     .subviewbutton[disabled], .toolbarbutton-1[disabled],
+     .protections-popup-category[disabled],
+     .identity-popup-content-blocking-category[disabled] {
+       opacity: 0.5 !important;
+     }
+     
+     .subviewbutton[shortcut]:after {
+       opacity: 0.5 !important;
+     }
+     
+     .bookmark-item .menu-right {
+       fill-opacity: 1 !important;
+     }
+     
+     .subviewbutton:not([disabled]):hover, .toolbarbutton-1:not([disabled]):hover, .protections-popup-category:not([disabled]):hover,
+     .identity-popup-content-blocking-category:not([disabled]):hover, #PlacesToolbar .bookmark-item:hover, #PlacesToolbar .bookmark-item[open], #PlacesToolbar .bookmark-item[_moz-menuactive] {
+       background-color: var(--gnome-popover-button-hover-background) !important;
+     }
+     
+     .subviewbutton-back {
+       width: 100%;
+       -moz-box-align: start !important;
+       -moz-box-pack: start !important;
+       padding: 10px !important;
+     }
+     .subviewbutton-back + h1 {
+       font-weight: normal !important;
+       left: 0 !important;
+       padding: 5px !important;
+       pointer-events: none;
+       position: absolute !important;
+       top: 0 !important;
+       width: 100%;
+     }
+     
+     /* Style popover separators */
+     toolbarseparator, menuseparator {
+       border-color: var(--gnome-popover-separator-color) !important;
+     }
+     toolbarseparator:not([orient="vertical"]) {
+       margin: 8px 0 !important;
+     }
+     toolbarseparator[orient="vertical"] {
+       margin: 0 3px !important;
+     }
+     /* Popups contents syles */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Main menu fxa */
+     #appMenu-fxa-status[fxastatus="signedin"] > #appMenu-fxa-label {
+       padding-left: 22px !important;
+       margin-inline-start: -22px !important;
+     }
+     #appMenu-fxa-status[fxastatus="signedin"] > #appMenu-fxa-avatar {
+       margin-inline-start: 5px !important;
+     }
+     #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 > vbox > #appMenu-header-description, #appMenu-fxa-text {
+         font-weight: 400 !important;
+     }
+     
+     /* Style main context menu & buttons */
+     #context-navigation {
+       padding: 4px 8px 8px;
+     }
+     #context-navigation > menuitem > .menu-iconic-left {
+       margin: auto !important;
+     }
+     #context-navigation menuitem {
+       --toolbarbutton-active-background: transparent !important;
+       --toolbarbutton-hover-background: transparent !important;
+     }
+     
+     /* Main menu */
+     #appMenu-popup .panel-banner-item:after {
+       -moz-box-ordinal-group: 0;
+       margin: 0 8px 0 0 !important;
+     }
+     #appMenu-popup .toolbaritem-combined-buttons {
+       margin-inline-end: 0 !important;
+     }
+     #appMenu-popup .toolbaritem-combined-buttons .before-label {
+       width: 32px !important;
+     }
+     
+     /* User sync account remove avatar */
+     #fxa-menu-avatar {
+       display: none;
+     }
+     
+     /* Add search engine button remove icon */
+     #pageAction-panel-addSearchEngine .toolbarbutton-badge-stack {
+       display: none !important;
+     }
+     
+     /* All tabs popover */
+     .all-tabs-item[selected] {
+       border-left: 3px solid var(--gnome-tabbar-tab-active-border-bottom-color);
+       box-shadow: none !important;
+     }
+     
+     .all-tabs-item > .all-tabs-secondary-button label {
+       margin: 0 !important;
+     }
+     
+     /* Add bookmark */
+     #editBookmarkPanelInfoArea {
+       padding: 0 !important;
+     }
+     #editBookmarkPanelRows,
+     #editBookmarkPanelBottomContent {
+       padding: 6px 1px !important;
+     }
+     #editBookmarkPanelBottomButtons {
+       margin: 12px 0 0 !important;
+     }
+     
+     /* Downloads popover */
+     #downloadsPanel-mainView .download-state {
+       padding: 8px !important;
+       border: 0 !important;
+       border-radius: 5px !important;
+       display: flex;
+       align-items: center;
+     }
+     #downloadsPanel-mainView .download-state:hover {
+       background-color: var(--gnome-popover-button-hover-background) !important;	
+     }
+     #downloadsPanel-mainView .download-state:last-child {
+       margin-bottom: 8px !important;
+     }
+     
+     #downloadsPanel-mainView .downloadMainArea {
+       flex: 1;
+       display: flex;
+     }
+     #downloadsPanel-mainView .downloadMainArea:hover {
+       background: transparent !important;
+     }
+     
+     #downloadsPanel-mainView .downloadTypeIcon {
+       margin: 0 !important;
+       margin-right: 6px !important;
+     }
+     
+     #downloadsPanel-mainView .downloadContainer {
+       margin-inline-end: 0 !important;
+       flex: 1;
+       display: flex;
+       flex-direction: column;
+     }
+     
+     #downloadsPanel-mainView .download-state .downloadButton .button-box {
+       padding: 0 !important;
+       margin: 0 !important;
+     }
+     #downloadsPanel-mainView .download-state toolbarseparator {
+       display: none;
+     }
+     
+     /* Customization overflow menu position */
+     #customization-panel-container {
+       margin-top: 10px;
+       z-index: 10;
+     }
+     
+     /* Confirmation Hint */
+     #confirmation-hint .panel-arrowcontent {
+       background: var(--gnome-button-suggested-action-background) !important;
+       border-color: var(--gnome-button-suggested-action-border-color) !important;
+     }
+     #confirmation-hint .panel-arrow {
+       fill: var(--gnome-button-suggested-action-border-color) !important;
+       stroke: var(--gnome-button-suggested-action-border-color) !important;
+     }
+     #confirmation-hint-message {
+       color: white !important;
+     }
+     
+     /* Url popups */
+     #identity-popup-mainView-panel-header,
+     #permission-popup-mainView-panel-header,
+     #protections-popup-mainView-panel-header,
+     #permission-popup-mainView-panel-header-span,
+     #identity-popup-mainView-panel-header-span,
+     #protections-popup-mainView-panel-header-span,
+     #protections-popup-toast-panel-tp-on-desc,
+     #protections-popup-toast-panel-tp-off-desc,
+     #protections-popup .panel-header > h1 > span,
+     #permission-popup .panel-header > h1 > span,
+     #identity-popup .panel-header > h1 > span {
+       min-width: auto !important;
+       max-width: initial !important;
+     }
+     
+     
+     /* Identity popup */
+     #identity-popup-security,
+     .identity-popup-section,
+     #identity-popup-security-expander .button-box,
+     .identity-popup-security-content {
+       border: 0 !important;
+     }
+     
+     .identity-popup-security-content {
+       padding-inline-end: 0 !important;
+       padding-inline-start: 0 !important;
+     }
+     .identity-popup-security-content {
+       background-position: 0em 0.8em !important;
+       background-size: 24px auto;
+     }
+     .identity-popup-security-content .identity-popup-headline {
+       margin-left: 1.4em !important;
+     }
+     #identity-popup-security-button {
+       padding: 3px 0 !important;
+     }
+     .identity-popup-security-connection.identity-button:not(#hack)  {
+       width: calc(var(--popup-width) - 30px) !important;
+     }
+     
+     /* Permission popup */
+     #permission-popup-permissions-content {
+       padding: 0 !important;
+     }
+     .permission-popup-section {
+       padding: 0 !important;
+     }
+     
+     .permission-popup-permission-item:first-child, #permission-popup-storage-access-permission-list-header {
+         margin-top: 0 !important;
+     }
+     .permission-popup-permission-remove-button {
+       opacity: 1 !important;
+     }
+     .permission-popup-permission-state-label {
+         display: none !important;
+     }
+     
+     #permission-popup-permission-list-default-anchor:empty {
+       padding: 0 !important;
+       border: 0 !important;
+     }
+     .permission-popup-permission-list-anchor[anchorfor="3rdPartyStorage"] {
+       padding: 0 !important;
+     }
+     .permission-popup-permission-list-anchor[anchorfor="3rdPartyStorage"] > vbox:only-child {
+       display: block !important;
+       height: 0 !important;
+       overflow: hidden;
+       visibility: hidden;
+       margin: 0 !important;
+       margin-bottom: -1px !important;
+     }
+     .permission-popup-permission-item-3rdPartyStorage {
+       margin-right: 6px;
+       margin-bottom: 6px !important;
+     }
+     #permission-popup-storage-access-permission-list-header {
+       padding: 6px !important;
+     }
+     
+     /* Protections popup */
+     .protections-popup-section,
+     #protections-popup-not-blocking-section-header {	
+       border: 0 !important;
+     }
+     #protections-popup-mainView-panel-header-section {
+       background: transparent !important;
+     }
+     #protections-popup-mainView toolbarseparator {
+       display: none !important;
+     }
+     
+     #protections-popup-mainView-panel-header {
+       color: var(--gnome-toolbar-color) !important;
+       padding: 0 !important;
+     }
+     #protections-popup[hasException] #protections-popup-mainView-panel-header {
+       background: none !important;
+     }
+     #protections-popup-main-header-label {
+       height: auto !important;
+       margin-inline-start: 6px !important;
+       text-align: left !important;
+     }
+     #protections-popup-mainView-panel-header-span {
+       margin: 0 !important;
+       margin-inline-start: 0 !important
+     }
+     #protections-popup[toast] #protections-popup-mainView-panel-header {
+       border-bottom-width: 1px !important;
+       border-radius: 5px !important;
+       padding: 0px !important;
+     }
+     #protections-popup-info-button {
+       margin: 0 !important;
+     }
+     
+     #messaging-system-message-container {
+         height: 120px !important;
+       border: 0 !important;
+     }
+     #protections-popup #messaging-system-message-container[disabled] {
+         margin-bottom: -120px !important;
+     }
+     #protections-popup-message {
+       background: none !important;
+       border: 0 !important;
+       color: var(--gnome-toolbar-color) !important;
+       height: 100% !important;
+       margin: 0 !important;
+     }
+     #protections-popup-message .text-link {
+       color: var(--gnome-toolbar-color) !important;
+     }
+     
+     #protections-popup-tp-switch-section {
+       background: var(--gnome-menu-background);
+       border: 1px solid var(--gnome-button-border-color) !important;
+       border-radius: 9px;
+       padding: 12px !important;
+       margin: 0 !important;
+     }
+     #protections-popup[hasException] #protections-popup-tp-switch-section {
+       background: var(--gnome-menu-background) !important;
+     }
+     .protections-popup-tp-switch-label-box label {
+       font-weight: normal !important;
+     }
+     
+     #protections-popup-no-trackers-found-description {
+       margin: 12px 0 !important;
+       text-align: left !important;
+     }
+     
+     #protections-popup-blocking-section-header,
+     #protections-popup-not-found-section-header,
+     #protections-popup-not-blocking-section-header{
+       padding: 0px 5px !important;
+       margin-top: 20px !important;
+       height: auto !important;
+     }
+     
+     #protections-popup-category-list {
+       margin: 0 !important;
+     }
+     .protections-popup-category.notFound .protections-popup-category-label {
+       width: calc(var(--popup-width) - 70px) !important;
+     }
+     .protections-popup-category-label {
+       margin-inline-start: 6px !important;
+     }
+     .protections-popup-category-state-label {
+       opacity: 0.7;
+     }
+     
+     #protections-popup-content,
+     #protections-popup-footer  {
+       padding: 0 !important;
+     }
+     
+     #protections-popup-footer  {
+       display: flex;
+       justify-content: flex-start;
+       flex-wrap: wrap;
+       margin-top: 12px;
+     }
+     #protections-popup-show-report-stack {
+       width: 100% !important;
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       margin-top: 10px;
+     }
+     .protections-popup-footer-button {
+       margin: 0 !important;
+     }
+     #protections-popup-footer-protection-type-label {
+       margin-left: 8px !important;
+     }
+     #protections-popup-trackers-blocked-counter-box {
+       margin-inline-end: 0 !important;
+     }
+     .protections-popup-description {
+         border-bottom: 0 !important;
+     }
+     .protections-popup-description > description {
+         margin: 8px !important;
+     }
+     
+     /* Feature recommendation notification, fix width */
+     #contextual-feature-recommendation-notification {
+         width: auto !important;
+     }
+     
+     /* Notification popups */
+     .popup-notification-learnmore-link {
+       margin-top: 40px !important;
+     }
+     
+     /* Extensions sometimes assume a white background */
+     .webextension-popup-browser {
+       background-color: #fff !important;
+     }
+     
+     /* Dialogs */
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     window {
+       padding: 0 !important;
+     }
+     
+     /* Browser dialog prompts center */
+     .content-prompt {
+         display: flex !important;
+         align-items: center;
+         justify-content: center;
+     }
+     
+     /* Dialog */
+     .dialogBox {
+       border-radius: 9px !important;
+       margin-top: 0 !important;
+     }
+     
+     dialog[subdialog] {
+       background: var(--gnome-popover-background) !important;
+       border: 0 !important;
+       box-shadow: var(--gnome-popover-shadow) !important;
+       padding: 0 !important;
+     }
+     dialog {
+       padding: 0 !important;
+     }
+     
+     /* Content */
+     .dialog-content-box {
+       padding: 24px;
+     }
+     #titleContainer {
+       justify-content: center !important;
+     }
+     
+     /* Buttons */
+     .dialog-button-box {
+       display: flex !important;
+     }
+     
+     .dialog-button-box button:not(#hack) {
+       height: auto !important;
+       max-height: unset !important;
+       padding: 10px 14px !important;
+       margin: 0 !important;
+       border-radius: 0 !important;
+       flex: 1;
+       border-bottom: 0 !important;
+     }
+     
+     /* Buttons borders - only suppor for cancel/ok */
+     .dialog-button-box button[dlgtype="accept"] {
+       border-right: 0 !important;
+       border-left: 0 !important;
+     }
+     .dialog-button-box button[dlgtype="cancel"]:not(#hack) {
+       border-left: 0 !important;
+     }
+     
+     /* Hadler dialog */
+     #os-default-handler image {
+       display: none !important;	
+     }
+     #os-default-handler .name {
+       font-weight: normal !important;
+     }
+     /* Removes a white flash after you open or close a tab. Affects all variants,
+      * but it's more visible on dark variants. */
+     
+      @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+      /* Overrides: Change the flash color */
+      #tabbrowser-tabpanels,
+      #tabbrowser-tabpanels[pendingpaint],
+      browser {
+        background-color: var(--gnome-browser-before-load-background) !important;
+      }
+      @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+      /* Variables that start with --gnome- are added by me and are assigned
+       * to elements somewhere in this code. The rest of the variables are
+       * built-in in Firefox, so you need to add an !important if you wanna
+       * override them. */
+      
+      :root {
+        /* Browser area before a page starts loading */
+        --gnome-browser-before-load-background: #d6d6d6;
+        
+        /* Accent */
+        --gnome-accent: #3584e4;
+      
+        /* Toolbars */
+        --gnome-toolbar-background: #e0ddda;
+        --gnome-toolbar-color: rgb(46, 52, 54);
+        --gnome-toolbar-border-color: #b6b6b3;
+        --gnome-toolbar-icon-fill: #2e3436;
+        --gnome-inactive-toolbar-background: #f6f5f4;
+        --gnome-inactive-toolbar-color: #d5d0cc;
+        --gnome-inactive-toolbar-border-color: #d5d0cc;
+        --gnome-inactive-toolbar-icon-fill: #929595;
+      
+        /* Sidebar */
+        --gnome-sidebar-background: #fbfafa;
+        --gnome-inactive-sidebar-background: #f9f9f8;
+      
+        /* Popups */
+        --gnome-menu-background: #ffffff;
+        --gnome-menu-border-color: #cdc7c2;
+        --gnome-popover-background: #f6f5f4;
+        --gnome-popover-border-color: #cdc7c2;
+        --gnome-popover-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --gnome-popover-button-hover-background: #ffffff;
+        --gnome-popover-separator-color: rgba(0, 0, 0, 0.1);
+      
+        /* Header bar */
+        --gnome-headerbar-background: linear-gradient(to top, /*#dad6d2,*/ #cdc9c3, #ddd9d5 2px, #e0ddda);
+        --gnome-headerbar-border-color: #bdb7b0;
+        --gnome-headerbar-box-shadow: 0 -1px rgb(217, 217, 217) inset, 0 1px #fff inset;
+        --gnome-inactive-headerbar-background: linear-gradient(#f6f5f4, #f6f5f4);
+        --gnome-inactive-headerbar-border-color: #d5d0cc;
+        --gnome-inactive-headerbar-box-shadow: 0 1px #fff inset;
+      
+        /* Buttons */
+        --gnome-button-background: linear-gradient(to top, #edebe9 2px, #f6f5f4);
+        --gnome-button-border-color: #cdc7c2;
+        --gnome-button-border-accent-color: #bfb8b1;
+        --gnome-button-box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.07);
+        --gnome-button-hover-background: linear-gradient(to top, #f6f5f4, #f8f8f7 1px);
+        --gnome-button-active-background: linear-gradient(#cfcac4, #cfcac4);
+        --gnome-button-active-border-color: #c6bfb9;
+        --gnome-button-active-border-accent-color: #bab3ab;
+        --gnome-button-active-box-shadow: 0 1px rgba(255, 255, 255, 0) inset;
+        --gnome-button-disabled-background: #faf9f8;
+        --gnome-button-disabled-border-color: #cdc7c2;
+        --gnome-button-disabled-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+        --gnome-inactive-button-background: linear-gradient(#f6f5f4, #f6f5f4);
+        --gnome-inactive-button-border-color: #d5d0cc;
+        --gnome-inactive-button-box-shadow: 0 1px rgba(255, 255, 255, 0) inset, 0 1px rgba(255, 255, 255, 0);
+        --gnome-button-suggested-action-background: linear-gradient(to top, #2379e2 2px, #3584e4);
+        --gnome-button-suggested-action-border-color: #1b6acb;
+        --gnome-button-suggested-action-border-accent-color: #15539e;
+        --gnome-button-suggested-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+        --gnome-button-suggested-action-hover-background: linear-gradient(to top, #3584e4, #3987e5 1px);
+        --gnome-button-suggested-action-active-background: #1961b9;
+        --gnome-button-suggested-action-active-border-color: #1b6acb;
+        --gnome-button-suggested-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+        --gnome-button-destructive-action-background: linear-gradient(to top, #ce1921 2px, #e01b24);
+        --gnome-button-destructive-action-border-color: #b2161d;
+        --gnome-button-destructive-action-border-accent-color: #851015;
+        --gnome-button-destructive-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+        --gnome-button-destructive-action-hover-background: linear-gradient(to top, #e01b24, #e41c26 1px);
+        --gnome-button-destructive-action-active-background: #a0131a;
+        --gnome-button-destructive-action-active-border-color: #b2161d;
+        --gnome-button-destructive-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0);
+      
+        /* Entries */
+        --gnome-entry-background: linear-gradient(#fff, #fff);
+        --gnome-entry-border-color: #b6b6b3;
+        --gnome-entry-box-shadow: none;
+        --gnome-entry-color: #020202;
+        --gnome-inactive-entry-background: linear-gradient(#fcfcfc, #fcfcfc);
+        --gnome-inactive-entry-border-color: #d5d0cc;
+        --gnome-inactive-entry-box-shadow: none;
+        --gnome-inactive-entry-color: #323232;
+        --gnome-focused-urlbar-border-color: var(--gnome-accent);
+        --gnome-focused-urlbar-item-hover: var(--gnome-toolbar-background);
+      
+        /* Switch */
+        --gnome-switch-background: #e1dedb;
+        --gnome-switch-border-color: #cdc7c2;
+        --gnome-switch-slider-background: linear-gradient(to bottom, white 10%, white 90%);
+        --gnome-switch-slider-border-color: #bfb8b1;
+        --gnome-switch-slider-box-shadow: inset 0 1px white, 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+        --gnome-switch-active-background: var(--gnome-accent);
+        --gnome-switch-active-border-color: #185fb4;
+        --gnome-switch-active-slider-border-color: #185fb4;
+      
+        /* Tabs */
+        --gnome-tabbar-tab-color: #2e3436;
+        --gnome-tabbar-tab-background: #dad6d2;
+        --gnome-tabbar-tab-border-color: #bfb8b1;
+        --gnome-tabbar-tab-hover-background: #e1dedb;
+        --gnome-tabbar-tab-hover-color: #2e3436;
+        --gnome-tabbar-tab-active-background: #e8e6e3;
+        --gnome-tabbar-tab-active-background-contrast: #F7F5F3;
+        --gnome-tabbar-tab-active-color: #2e3436;
+        --gnome-tabbar-tab-active-hover-background: #EFEDEC;
+        --gnome-inactive-tabbar-tab-color: #929595;
+        --gnome-inactive-tabbar-tab-background: #eae8e6;
+        --gnome-inactive-tabbar-tab-active-background: #f6f5f4;
+        --gnome-inactive-tabbar-tab-active-color: var(--gnome-inactive-tabbar-tab-color);
+        --gnome-tabbar-close-hover: #d2d1d1;
+      }
+      
+      /* Private window colors */
+      :root {
+        --gnome-private-accent: rgb(132, 77, 179);
+        
+        /* Header bar */
+        --gnome-private-headerbar-background: linear-gradient(to top, rgb(206, 191, 219), rgb(214, 201, 255));
+        --gnome-private-headerbar-border-color: rgb(176, 152, 197);
+        --gnome-private-headerbar-box-shadow: 0 1px rgba(255, 255, 255, .8) inset;
+        --gnome-private-inactive-headerbar-background: #ECE6F1;
+        --gnome-private-inactive-headerbar-border-color: rgb(200, 183, 215);
+        --gnome-private-inactive-headerbar-box-shadow: var(--gnome-private-headerbar-box-shadow);
+      
+        /* Buttons */
+        --gnome-private-button-background: linear-gradient(to top, rgb(226, 217, 234) 2px, rgb(236, 230, 241));
+        --gnome-private-button-border-color: rgb(191, 171, 208);
+        --gnome-private-button-border-accent-color: rgb(179, 152, 197);
+        --gnome-private-button-box-shadow: 0 1px rgba(255, 255, 255, .8) inset, 0 1px 2px rgba(0, 0, 0, .07);
+        --gnome-private-button-hover-background: linear-gradient(to top, rgb(236, 230, 241), rgb(238, 233, 243) 1px);
+        --gnome-private-button-active-background: rgb(194, 174, 210);
+        --gnome-private-button-active-border-color: rgb(184, 161, 203);
+        --gnome-private-button-active-border-accent-color: rgb(171, 145, 194);
+        --gnome-private-button-active-box-shadow: 0 1px rgba(255, 255, 255, 0) inset;
+        --gnome-private-button-disabled-background: #ECE6F1;
+        --gnome-private-button-disabled-border-color: rgb(200, 183, 215);
+        --gnome-private-button-disabled-box-shadow:  0 1px rgba(255, 255, 255, 0) inset;
+        --gnome-private-inactive-button-background: #ECE6F1;
+        --gnome-private-inactive-button-border-color: rgb(200, 183, 215);
+        --gnome-private-inactive-button-box-shadow:  0 1px rgba(255, 255, 255, 0) inset;
+      
+        /* Entries */
+        --gnome-private-entry-border-color: rgb(191, 171, 208);
+      }
+       
+      @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+      /* Variables that start with --gnome- are added by me and are assigned
+       * to elements somewhere in this code. The rest of the variables are
+       * built-in in Firefox, so you need to add an !important if you wanna
+       * override them. */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          /* Browser area before a page starts loading */
+          --gnome-browser-before-load-background: #353535!important;
+          
+          /* Accent */
+          --gnome-accent: #15539e!important;
+      
+          /* Toolbars */
+          --gnome-toolbar-background: #282828!important;
+          --gnome-toolbar-color: #ffffff!important;
+          --gnome-toolbar-border-color: #1b1b1b!important;
+          --gnome-toolbar-icon-fill: #eeeeec!important;
+          --gnome-inactive-toolbar-color: #919190!important;
+          --gnome-inactive-toolbar-background: #353535!important;
+          --gnome-inactive-toolbar-border-color: #202020!important;
+          --gnome-inactive-toolbar-icon-fill: #919190!important;
+      
+          /* Sidebar */
+          --gnome-sidebar-background: #313131!important;
+          --gnome-inactive-sidebar-background: #323232!important;
+      
+          /* Popups */
+          --gnome-menu-background: #2f2f2f!important;
+          --gnome-menu-border-color: #1b1b1b!important;
+          --gnome-popover-background: #353535!important;
+          --gnome-popover-border-color: #1b1b1b!important;
+          --gnome-popover-shadow: 0 1px 2px rgba(0, 0, 0, 0.3)!important;
+          --gnome-popover-button-hover-background: #424242!important;
+          --gnome-popover-separator-color: rgba(0, 0, 0, 0.1)!important;
+      
+          /* Header bar */
+          --gnome-headerbar-background: linear-gradient(to top, #262626, #2b2b2b)!important;
+          --gnome-headerbar-border-color: #070707!important;
+          --gnome-headerbar-box-shadow: inset 0 1px rgba(238, 238, 236, 0.07)!important;
+          --gnome-inactive-headerbar-background: linear-gradient(#353535, #353535)!important;
+          --gnome-inactive-headerbar-border-color: #202020!important;
+          --gnome-inactive-headerbar-box-shadow: inset 0 1px rgba(238, 238, 236, 0.07)!important;
+      
+          /* Buttons */
+          --gnome-button-background: linear-gradient(to top, #323232 2px, #353535)!important;
+          --gnome-button-border-color: #1b1b1b!important;
+          --gnome-button-border-accent-color: #070707!important;
+          --gnome-button-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.07)!important;
+          --gnome-button-hover-background: linear-gradient(to top, #323232, #373737 1px)!important;
+          --gnome-button-active-background: linear-gradient(#1e1e1e, #1e1e1e)!important;
+          --gnome-button-active-border-color: #1b1b1b!important;
+          --gnome-button-active-border-accent-color: #000000!important;
+          --gnome-button-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0)!important;
+          --gnome-button-disabled-background: #323232!important;
+          --gnome-button-disabled-border-color: #202020!important;
+          --gnome-button-disabled-box-shadow: inset 0 1px rgba(255, 255, 255, 0)!important;
+          --gnome-inactive-button-background: linear-gradient(#353535, #353535)!important;
+          --gnome-inactive-button-border-color: #202020!important;
+          --gnome-inactive-button-box-shadow: inset 0 1px rgba(255, 255, 255, 0)!important;
+          --gnome-button-suggested-action-background: linear-gradient(to top, #155099 2px, #15539e)!important;
+          --gnome-button-suggested-action-border-color: #0f3b71!important;
+          --gnome-button-suggested-action-border-accent-color: #092444!important;
+          --gnome-button-suggested-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.07)!important;
+          --gnome-button-suggested-action-hover-background: linear-gradient(to top, #155099, #1655a2 1px)!important;
+          --gnome-button-suggested-action-active-background: #103e75!important;
+          --gnome-button-suggested-action-active-border-color: #0f3b71!important;
+          --gnome-button-suggested-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0)!important;
+          --gnome-button-destructive-action-background: linear-gradient(to top, #ae151c 2px, #b2161d)!important;
+          --gnome-button-destructive-action-border-color: #851015!important;
+          --gnome-button-destructive-action-border-accent-color: #570b0e!important;
+          --gnome-button-destructive-action-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px 2px rgba(0, 0, 0, 0.07)!important;
+          --gnome-button-destructive-action-hover-background: linear-gradient(to top, #ae151c, #b7161d 1px)!important;
+          --gnome-button-destructive-action-active-background: #8a1116!important;
+          --gnome-button-destructive-action-active-border-color: #851015!important;
+          --gnome-button-destructive-action-active-box-shadow: inset 0 1px rgba(255, 255, 255, 0)!important;
+      
+          /* Entries */
+          --gnome-entry-background: linear-gradient(#2d2d2d, #2d2d2d)!important;
+          --gnome-entry-border-color: #1b1b1b!important;
+          --gnome-entry-box-shadow: inset 0 0 0 1px rgba(21, 83, 158, 0)!important;
+          --gnome-entry-color: #ffffff!important;
+          --gnome-inactive-entry-background: linear-gradient(#303030, #303030)!important;
+          --gnome-inactive-entry-border-color: #202020!important;
+          --gnome-inactive-entry-box-shadow: none!important;
+          --gnome-inactive-entry-color: #d6d6d6!important;
+          --gnome-focused-urlbar-border-color: var(--gnome-accent)!important;
+          --gnome-focused-urlbar-item-hover: var(--gnome-popover-button-hover-background)!important;
+      
+          /* Switch */
+          --gnome-switch-background: #282828!important;
+          --gnome-switch-border-color: #1b1b1b!important;
+          --gnome-switch-slider-background: linear-gradient(to bottom, #3c3c3c 20%, #353535 90%)!important;
+          --gnome-switch-slider-border-color: #111111!important;
+          --gnome-switch-slider-box-shadow: inset 0 1px rgba(255, 255, 255, 0.02), 0 1px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07)!important;
+          --gnome-switch-active-background: var(--gnome-accent)!important;
+          --gnome-switch-active-border-color: #030c17!important;
+          --gnome-switch-active-slider-border-color: #030c17!important;
+      
+          /* Tabs */
+          --gnome-tabbar-tab-color: rgb(141, 144, 145)!important;
+          --gnome-tabbar-tab-background: #262626!important;
+          --gnome-tabbar-tab-border-color: #070707!important;
+          --gnome-tabbar-tab-hover-background: #2d2d2d!important;
+          --gnome-tabbar-tab-hover-color: rgb(200, 200, 200)!important;
+          --gnome-tabbar-tab-active-background: #353535!important;
+          --gnome-tabbar-tab-active-background-contrast: #4c4c4c!important;
+          --gnome-tabbar-tab-active-color: #ffffff!important;
+          --gnome-tabbar-tab-active-hover-background: #3c3c3c!important;
+          --gnome-inactive-tabbar-tab-color: rgb(141, 144, 145)!important;
+          --gnome-inactive-tabbar-tab-background: #2e2e2e!important;
+          --gnome-inactive-tabbar-tab-active-background: #353535!important;
+          --gnome-inactive-tabbar-tab-active-color: rgb(141, 144, 145)!important;
+          --gnome-tabbar-close-hover: #565656!important;
+        }
+      
+        /* Private window colors */
+        :root {
+          --gnome-private-accent: rgb(158, 70, 224)!important;
+          
+          /* Header bar */
+          --gnome-private-headerbar-background: linear-gradient(to top, rgb(81, 44, 109), rgb(86, 47, 116))!important;
+          --gnome-private-headerbar-border-color: rgb(49, 27, 66)!important;
+          --gnome-private-headerbar-box-shadow: 0 1px rgba(255, 255, 255, .07) inset!important;
+          --gnome-private-inactive-headerbar-background: #613583!important;
+          --gnome-private-inactive-headerbar-border-color: rgb(77, 41, 102)!important;
+          --gnome-private-inactive-headerbar-box-shadow: var(--gnome-private-headerbar-box-shadow)!important;
+      
+          /* Buttons */
+          --gnome-private-button-background: linear-gradient(to top, rgb(94, 52, 127) 2px, rgb(97, 53, 131))!important;
+          --gnome-private-button-border-color: rgb(70, 38, 95)!important;
+          --gnome-private-button-border-accent-color: rgb(49, 27, 66)!important;
+          --gnome-private-button-box-shadow: 0 1px rgba(255, 255, 255, .02) inset, 0 1px 2px rgba(0, 0, 0, .07)!important;
+          --gnome-private-button-hover-background: linear-gradient(to top, rgb(94, 52, 127), rgb(100, 54, 135) 1px)!important;
+          --gnome-private-button-active-background: rgb(73, 40, 98)!important;
+          --gnome-private-button-active-border-color: rgb(62, 34, 84)!important;
+          --gnome-private-button-active-border-accent-color: rgb(49, 27, 66)!important;
+          --gnome-private-button-active-box-shadow: 0 1px rgba(255, 255, 255, 0) inset!important;
+          --gnome-private-button-disabled-background: #613583!important;
+          --gnome-private-button-disabled-border-color: rgb(74, 41, 102)!important;
+          --gnome-private-button-disabled-box-shadow:  0 1px rgba(255, 255, 255, 0) inset!important;
+          --gnome-private-inactive-button-background: #613583!important;
+          --gnome-private-inactive-button-border-color: rgb(74, 41, 102)!important;
+          --gnome-private-inactive-button-box-shadow:  0 1px rgba(255, 255, 255, 0) inset!important;
+      
+          /* Entries */
+          --gnome-private-entry-border-color: #202020!important;
+        }
+      }
+      @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+      /* Icons light/dark fix coloring hack filters */
+      :root {
+        --gnome-icons-hack-filter: filter: brightness(0) saturate(100%) invert(37%) sepia(8%) saturate(683%) hue-rotate(183deg) brightness(95%) contrast(84%);
+        --gnome-window-icons-hack-filter: filter: brightness(0) saturate(100%) invert(37%) sepia(8%) saturate(683%) hue-rotate(183deg) brightness(95%) contrast(84%);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --gnome-icons-hack-filter: brightness(0) saturate(100%) invert(94%) sepia(11%) saturate(362%) hue-rotate(184deg) brightness(95%) contrast(87%);
+          --gnome-window-icons-hack-filter: brightness(0) saturate(100%) invert(94%) sepia(11%) saturate(362%) hue-rotate(184deg) brightness(95%) contrast(87%);
+        }
+      }
+      
+      /* OPTIONAL: Use system theme icons instead of Adwaita icons included by theme */
+      @supports -moz-bool-pref("gnomeTheme.systemIcons") {
+        /* Window buttons */
+        :root[tabsintitlebar] #titlebar .titlebar-button .toolbarbutton-icon,
+        :root[tabsintitlebar][inFullscreen] #window-controls toolbarbutton .toolbarbutton-icon {
+          filter: var(--gnome-window-icons-hack-filter) !important;
+          width: 16px;
+        }
+        :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-close .toolbarbutton-icon,
+        :root[tabsintitlebar] #titlebar #titlebar-close .toolbarbutton-icon {
+          list-style-image: url("moz-icon://stock/window-close-symbolic?size=dialog") !important;
+        }
+        :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-max .toolbarbutton-icon,
+        :root[tabsintitlebar] #titlebar #titlebar-max .toolbarbutton-icon {
+          list-style-image: url("moz-icon://stock/window-maximize-symbolic?size=dialog") !important;
+        }
+        :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-restore .toolbarbutton-icon {
+          list-style-image: url("moz-icon://stock/window-restore-symbolic?size=dialog") !important;
+        }
+        :root[tabsintitlebar] #titlebar .titlebar-buttonbox .titlebar-min .toolbarbutton-icon,
+        :root[tabsintitlebar] #titlebar #titlebar-min .toolbarbutton-icon {
+          list-style-image: url("moz-icon://stock/window-minimize-symbolic?size=dialog") !important;
+        }
+        :root[tabsintitlebar][inFullscreen] #window-controls #restore-button .toolbarbutton-icon {
+          list-style-image: url("moz-icon://stock/view-restore-symbolic?size=dialog") !important;
+        }
+      
+        /* Toolbars close button */
+        .close-icon:not(.tab-close-button) {	
+          list-style-image: url("moz-icon://stock/window-close-symbolic?size=dialog") !important;
+        }
+        .close-icon:not(.tab-close-button) image {
+          filter: var(--gnome-window-icons-hack-filter) !important;
+        }
+      
+        /* Navbar icons */
+      
+        /* Back button */
+        #nav-bar #back-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/go-previous-symbolic?size=dialog") !important;
+        }
+        /* Forward button */
+        #nav-bar #forward-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/go-next-symbolic?size=dialog") !important;
+        }
+        /* Menu button */
+        #PanelUI-menu-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/open-menu-symbolic?size=dialog") !important;
+        }
+        /* New tab button */
+        #new-tab-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/tab-new-symbolic?size=dialog") !important;
+        }
+        /* Home button */
+        #home-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/user-home-symbolic?size=dialog") !important;
+        }
+        /* Preferences button */
+        #preferences-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/preferences-system-symbolic?size=dialog") !important;
+        }
+        /* Fullscreen button */
+        #fullscreen-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/view-fullscreen-symbolic?size=dialog") !important;
+        }
+        /* Zoom out button */
+        #zoom-out-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/zoom-out-symbolic?size=dialog") !important;
+        }
+        /* Zoom in button */
+        #zoom-in-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/zoom-in-symbolic?size=dialog") !important;
+        }
+        /* Developer button */
+        #developer-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/applications-engineering-symbolic?size=dialog") !important;
+        }
+        /* Email link button */
+        #email-link-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/mail-unread-symbolic?size=dialog") !important;
+        }
+        /* Print button */
+        #print-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/printer-symbolic?size=dialog") !important;
+        }
+        /* Addons button */
+        #add-ons-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/application-x-addon-symbolic?size=dialog") !important;
+        }
+        /* Find button */
+        #find-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-find-symbolic?size=dialog") !important;
+        }
+        /* New window button */
+        #new-window-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/window-new-symbolic?size=dialog") !important;
+        }
+        /* Bookmarks menu button */
+        #bookmarks-menu-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/starred-symbolic?size=dialog") !important;
+        }
+        /* History button */
+        #history-panelmenu .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/preferences-system-time-symbolic?size=dialog") !important;
+        }
+        /* All tabs button */
+        #alltabs-button {
+          list-style-image: url("moz-icon://stock/pan-down-symbolic?size=dialog") !important;
+        }
+        #alltabs-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+        }
+        /* Cut button */
+        #cut-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-cut-symbolic?size=dialog") !important;
+        }
+        /* Copy button */
+        #copy-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-copy-symbolic?size=dialog") !important;
+        }
+        /* Paste button */
+        #paste-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-paste-symbolic?size=dialog") !important;
+        }
+      
+        /* Navbar overflow button */
+        #nav-bar-overflow-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/pan-down-symbolic?size=dialog") !important;
+        }
+      
+        /* Context back button */	
+        #context-back .menu-iconic-icon { 
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/go-previous-symbolic?size=dialog") !important;
+        }
+        /* Context forward button */	
+        #context-forward .menu-iconic-icon { 
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/go-next-symbolic?size=dialog") !important;
+        }
+      
+        /* Main menu buttons icons */
+        #appMenu-zoomReduce-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/zoom-out-symbolic?size=dialog") !important;
+        }
+        #appMenu-zoomEnlarge-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/zoom-in-symbolic?size=dialog") !important;
+        }
+        #appMenu-fullscreen-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/view-fullscreen-symbolic?size=dialog") !important;
+        }
+        #appMenu-cut-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-cut-symbolic?size=dialog") !important;
+        }
+        #appMenu-copy-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-copy-symbolic?size=dialog") !important;
+        }
+        #appMenu-paste-button .toolbarbutton-icon {
+          filter: var(--gnome-icons-hack-filter);
+          list-style-image: url("moz-icon://stock/edit-paste-symbolic?size=dialog") !important;
+        }
+      }
+      
+      @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+     
+      /* Icons light/dark fix coloring hack filters */
+      :root {
+        --gnome-convert-icon-to-symbolic-hack-filter: invert(100%) sepia(100%) grayscale(100%) brightness(200%) brightness(85%) invert(100%);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --gnome-convert-icon-to-symbolic-hack-filter: invert(100%) sepia(100%) grayscale(100%) brightness(200%) brightness(85%);
+        }
+      }
+      
+      /* OPTIONAL: Make all tab icons look kinda like symbolic icons */
+      @supports -moz-bool-pref("gnomeTheme.symbolicTabIcons") {	
+        tab .tab-icon-image {
+          filter: var(--gnome-convert-icon-to-symbolic-hack-filter);
+        }
+      }
+     
+     @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+     
+     /* Set theme version text in customization panel */
+     #customization-footer::before {
+       background: url(chrome://browser/skin/gnomeUI/icon.svg) no-repeat;
+       background-size: contain;
+       content: "Firefox GNOME theme v95";
+       padding: 9px 9px 9px 50px;
+     }
+     `;
+      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+      break;
 }
 
 
