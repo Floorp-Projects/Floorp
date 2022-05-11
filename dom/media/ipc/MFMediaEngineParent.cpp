@@ -4,7 +4,9 @@
 
 #include "MFMediaEngineParent.h"
 
+#include "MFMediaEngineAudioStream.h"
 #include "MFMediaEngineUtils.h"
+#include "MFMediaEngineVideoStream.h"
 #include "RemoteDecoderManagerParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticMutex.h"
@@ -57,6 +59,17 @@ MFMediaEngineParent::MFMediaEngineParent(RemoteDecoderManagerParent* aManager)
 MFMediaEngineParent::~MFMediaEngineParent() {
   LOG("Destoryed MFMediaEngineParent");
   UnregisterMedieEngine(this);
+}
+
+MFMediaEngineStream* MFMediaEngineParent::GetMediaEngineStream(
+    TrackType aType, const CreateDecoderParams& aParam) {
+  LOG("Create a media engine decoder for %s", TrackTypeToStr(aType));
+  // TODO : make those streams associated with their media engine and source.
+  if (aType == TrackType::kAudioTrack) {
+    return new MFMediaEngineAudioStream(aParam);
+  }
+  MOZ_ASSERT(aType == TrackType::kVideoTrack);
+  return new MFMediaEngineVideoStream(aParam);
 }
 
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvInitMediaEngine(
