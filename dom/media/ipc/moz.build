@@ -67,6 +67,9 @@ if CONFIG["MOZ_WMF"]:
         "MFMediaEngineParent.h",
         "MFMediaEngineUtils.h",
     ]
+    LOCAL_INCLUDES += [
+        "../platforms/wmf",
+    ]
 
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
 LOCAL_INCLUDES += [
