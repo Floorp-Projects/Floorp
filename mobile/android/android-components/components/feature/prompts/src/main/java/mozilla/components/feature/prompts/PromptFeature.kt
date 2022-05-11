@@ -13,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -47,6 +46,9 @@ import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
+import mozilla.components.feature.prompts.address.AddressDelegate
+import mozilla.components.feature.prompts.address.AddressPicker
+import mozilla.components.feature.prompts.address.DefaultAddressDelegate
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
 import mozilla.components.feature.prompts.creditcard.CreditCardSaveDialogFragment
@@ -133,6 +135,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * the select credit card prompt.
  * @property onSelectCreditCard A callback invoked when a user selects a credit card from the
  * select credit card prompt.
+ * @property addressDelegate Delegate for address picker.
  * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
@@ -155,6 +158,7 @@ class PromptFeature private constructor(
     private val creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
     private val onManageCreditCards: () -> Unit = {},
     private val onSelectCreditCard: () -> Unit = {},
+    private val addressDelegate: AddressDelegate = DefaultAddressDelegate(),
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature,
     PermissionsFeature,
@@ -195,6 +199,7 @@ class PromptFeature private constructor(
         creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
         onManageCreditCards: () -> Unit = {},
         onSelectCreditCard: () -> Unit = {},
+        addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Activity(activity),
@@ -213,7 +218,8 @@ class PromptFeature private constructor(
         onManageLogins = onManageLogins,
         creditCardPickerView = creditCardPickerView,
         onManageCreditCards = onManageCreditCards,
-        onSelectCreditCard = onSelectCreditCard
+        onSelectCreditCard = onSelectCreditCard,
+        addressDelegate = addressDelegate
     )
 
     constructor(
@@ -233,6 +239,7 @@ class PromptFeature private constructor(
         creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
         onManageCreditCards: () -> Unit = {},
         onSelectCreditCard: () -> Unit = {},
+        addressDelegate: AddressDelegate = DefaultAddressDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
         container = PromptContainer.Fragment(fragment),
@@ -251,7 +258,8 @@ class PromptFeature private constructor(
         onManageLogins = onManageLogins,
         creditCardPickerView = creditCardPickerView,
         onManageCreditCards = onManageCreditCards,
-        onSelectCreditCard = onSelectCreditCard
+        onSelectCreditCard = onSelectCreditCard,
+        addressDelegate = addressDelegate
     )
 
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
@@ -270,6 +278,19 @@ class PromptFeature private constructor(
                 selectCreditCardCallback = onSelectCreditCard,
                 sessionId = customTabId
             )
+        }
+
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal var addressPicker =
+        with(addressDelegate) {
+            addressPickerView?.let {
+                AddressPicker(
+                    store = store,
+                    addressSelectBar = it,
+                    onManageAddresses = onManageAddresses,
+                    sessionId = customTabId
+                )
+            }
         }
 
     override val onNeedToRequestPermissions
@@ -293,16 +314,29 @@ class PromptFeature private constructor(
                         if (content.promptRequests.lastOrNull() != activePromptRequest) {
                             // Dismiss any active select login or credit card prompt if it does
                             // not match the current prompt request for the session.
-                            if (activePromptRequest is SelectLoginPrompt) {
-                                loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
-                            } else if (activePromptRequest is SaveLoginPrompt) {
-                                (activePrompt?.get() as? SaveLoginDialogFragment)?.dismissAllowingStateLoss()
-                            } else if (activePromptRequest is SaveCreditCard) {
-                                (activePrompt?.get() as? CreditCardSaveDialogFragment)?.dismissAllowingStateLoss()
-                            } else if (activePromptRequest is SelectCreditCard) {
-                                creditCardPicker?.dismissSelectCreditCardRequest(
-                                    activePromptRequest as SelectCreditCard
-                                )
+                            when (activePromptRequest) {
+                                is SelectLoginPrompt -> {
+                                    loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
+                                }
+                                is SaveLoginPrompt -> {
+                                    (activePrompt?.get() as? SaveLoginDialogFragment)?.dismissAllowingStateLoss()
+                                }
+                                is SaveCreditCard -> {
+                                    (activePrompt?.get() as? CreditCardSaveDialogFragment)?.dismissAllowingStateLoss()
+                                }
+                                is SelectCreditCard -> {
+                                    creditCardPicker?.dismissSelectCreditCardRequest(
+                                        activePromptRequest as SelectCreditCard
+                                    )
+                                }
+                                is SelectAddress -> {
+                                    addressPicker?.dismissSelectAddressRequest(
+                                        activePromptRequest as SelectAddress
+                                    )
+                                }
+                                else -> {
+                                    // no-op
+                                }
                             }
 
                             onPromptRequested(state)
@@ -429,13 +463,14 @@ class PromptFeature private constructor(
                         creditCardPicker?.handleSelectCreditCardRequest(promptRequest)
                     }
                 }
-                is SelectAddress ->
-                    if (isAddressAutofillEnabled() && promptRequest.addresses.isNotEmpty()) {
-                        // Address picker will be implemented in #12061
-                    }
                 is SelectLoginPrompt -> {
                     if (promptRequest.logins.isNotEmpty()) {
                         loginPicker?.handleSelectLoginRequest(promptRequest)
+                    }
+                }
+                is SelectAddress -> {
+                    if (isAddressAutofillEnabled() && promptRequest.addresses.isNotEmpty()) {
+                        addressPicker?.handleSelectAddressRequest(promptRequest)
                     }
                 }
                 else -> handleDialogsRequest(promptRequest, session)
@@ -851,8 +886,8 @@ class PromptFeature private constructor(
             is SelectLoginPrompt,
             is SelectCreditCard,
             is SaveCreditCard,
+            is SelectAddress,
             is Share -> true
-            is SelectAddress -> false
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
@@ -879,6 +914,15 @@ class PromptFeature private constructor(
             creditCardPicker?.let { creditCardPicker ->
                 if (creditCardPickerView?.asView()?.isVisible == true) {
                     creditCardPicker.dismissSelectCreditCardRequest(selectCreditCardPrompt)
+                    result = true
+                }
+            }
+        }
+
+        (activePromptRequest as? SelectAddress)?.let { selectAddressPrompt ->
+            addressPicker?.let { addressPicker ->
+                if (addressDelegate.addressPickerView?.asView()?.isVisible == true) {
+                    addressPicker.dismissSelectAddressRequest(selectAddressPrompt)
                     result = true
                 }
             }
