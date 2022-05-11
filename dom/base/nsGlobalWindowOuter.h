@@ -250,11 +250,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
 
-  virtual nsIPrincipal* GetEffectiveCookiePrincipal() override;
-
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
-
-  nsIPrincipal* ForeignPartitionedPrincipal();
 
   virtual nsIPrincipal* PartitionedPrincipal() override;
 
@@ -1117,8 +1113,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   RefPtr<mozilla::dom::Storage> mLocalStorage;
 
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentCookiePrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentForeignPartitionedPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentPartitionedPrincipal;
 
 #ifdef DEBUG

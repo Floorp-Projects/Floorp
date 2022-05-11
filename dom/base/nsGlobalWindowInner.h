@@ -277,11 +277,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
 
-  virtual nsIPrincipal* GetEffectiveCookiePrincipal() override;
-
   virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
-
-  nsIPrincipal* ForeignPartitionedPrincipal();
 
   virtual nsIPrincipal* PartitionedPrincipal() override;
 
@@ -1467,8 +1463,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // The document's principals and CSP are only stored if
   // FreeInnerObjects has been called.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentCookiePrincipal;
-  nsCOMPtr<nsIPrincipal> mDocumentForeignPartitionedPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
   nsCOMPtr<nsIPrincipal> mDocumentPartitionedPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mDocumentCsp;
 

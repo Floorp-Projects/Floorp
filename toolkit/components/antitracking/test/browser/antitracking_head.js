@@ -491,7 +491,6 @@ this.AntiTracking = {
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.storage_access.enabled", true],
-        ["privacy.partition.non_cookie_storage", true],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["dom.security.https_first_pbm", false],
