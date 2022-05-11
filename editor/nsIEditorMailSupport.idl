@@ -32,5 +32,18 @@ interface nsIEditorMailSupport : nsISupports
    */
   [can_run_script]
   void rewrap(in boolean aRespectNewlines);
+
+  /**
+   * Inserts a plaintext string at the current location,
+   * with special processing for lines beginning with ">",
+   * which will be treated as mail quotes and inserted
+   * as plaintext quoted blocks.
+   * If the selection is not collapsed, the selection is deleted
+   * and the insertion takes place at the resulting collapsed selection.
+   *
+   * @param aString   the string to be inserted
+   */
+  [can_run_script]
+  void insertTextWithQuotations(in AString aStringToInsert);
 };
 
