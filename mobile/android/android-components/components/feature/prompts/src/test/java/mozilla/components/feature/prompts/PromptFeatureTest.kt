@@ -2044,21 +2044,17 @@ class PromptFeatureTest {
             cardType = ""
         )
 
-        var confirmedCreditCard: CreditCardEntry? = null
         val request = PromptRequest.SaveCreditCard(
             creditCard = creditCardEntry,
-            onConfirm = { creditCard -> confirmedCreditCard = creditCard },
+            onConfirm = {},
             onDismiss = {}
         )
 
         feature.start()
 
-        store
-            .dispatch(ContentAction.UpdatePromptRequestAction(tabId, request))
-            .joinBlocking()
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, request)).joinBlocking()
 
         assertEquals(1, tab()!!.content.promptRequests.size)
-        assertEquals(request, tab()!!.content.promptRequests[0])
 
         feature.onConfirm(
             sessionId = tabId,
@@ -2068,8 +2064,50 @@ class PromptFeatureTest {
 
         store.waitUntilIdle()
 
-        assertEquals(creditCardEntry, confirmedCreditCard)
         assertTrue(tab()!!.content.promptRequests.isEmpty())
+    }
+
+    @Test
+    fun `WHEN a credit card is confirmed to save THEN confirm the prompt request with the selected credit card`() {
+        val creditCardEntry = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = ""
+        )
+        var onDismissCalled = false
+        var onConfirmCalled = false
+        var confirmedCreditCard: CreditCardEntry? = null
+
+        val request = PromptRequest.SaveCreditCard(
+            creditCard = creditCardEntry,
+            onConfirm = {
+                confirmedCreditCard = it
+                onConfirmCalled = true
+            },
+            onDismiss = {
+                onDismissCalled = true
+            }
+        )
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, request)).joinBlocking()
+
+        request.onConfirm(creditCardEntry)
+
+        store.waitUntilIdle()
+
+        assertEquals(creditCardEntry, confirmedCreditCard)
+        assertTrue(onConfirmCalled)
+
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, request)).joinBlocking()
+
+        request.onDismiss()
+
+        store.waitUntilIdle()
+
+        assertTrue(onDismissCalled)
     }
 
     @Test
