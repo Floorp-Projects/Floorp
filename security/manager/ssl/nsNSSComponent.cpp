@@ -1054,63 +1054,65 @@ nsresult LoadLoadableCertsTask::LoadLoadableRoots() {
 typedef struct {
   const char* pref;
   int32_t id;
-  bool enabledByDefault;
+  bool (*prefGetter)();
 } CipherPref;
 
 // Update the switch statement in AccumulateCipherSuite in nsNSSCallbacks.cpp
 // when you add/remove cipher suites here.
 static const CipherPref sCipherPrefs[] = {
     {"security.ssl3.ecdhe_rsa_aes_128_gcm_sha256",
-     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, true},
+     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+     StaticPrefs::security_ssl3_ecdhe_rsa_aes_128_gcm_sha256},
     {"security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256",
-     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, true},
-
+     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+     StaticPrefs::security_ssl3_ecdhe_ecdsa_aes_128_gcm_sha256},
     {"security.ssl3.ecdhe_ecdsa_chacha20_poly1305_sha256",
-     TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, true},
+     TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+     StaticPrefs::security_ssl3_ecdhe_ecdsa_chacha20_poly1305_sha256},
     {"security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256",
-     TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, true},
-
+     TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
+     StaticPrefs::security_ssl3_ecdhe_rsa_chacha20_poly1305_sha256},
     {"security.ssl3.ecdhe_ecdsa_aes_256_gcm_sha384",
-     TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, true},
+     TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+     StaticPrefs::security_ssl3_ecdhe_ecdsa_aes_256_gcm_sha384},
     {"security.ssl3.ecdhe_rsa_aes_256_gcm_sha384",
-     TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, true},
-
+     TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+     StaticPrefs::security_ssl3_ecdhe_rsa_aes_256_gcm_sha384},
     {"security.ssl3.ecdhe_rsa_aes_128_sha", TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-     true},
+     StaticPrefs::security_ssl3_ecdhe_rsa_aes_128_sha},
     {"security.ssl3.ecdhe_ecdsa_aes_128_sha",
-     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, true},
-
+     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+     StaticPrefs::security_ssl3_ecdhe_ecdsa_aes_128_sha},
     {"security.ssl3.ecdhe_rsa_aes_256_sha", TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-     true},
+     StaticPrefs::security_ssl3_ecdhe_rsa_aes_256_sha},
     {"security.ssl3.ecdhe_ecdsa_aes_256_sha",
-     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, true},
-
+     TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+     StaticPrefs::security_ssl3_ecdhe_ecdsa_aes_256_sha},
     {"security.ssl3.dhe_rsa_aes_128_sha", TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
-     false},
-
+     StaticPrefs::security_ssl3_dhe_rsa_aes_128_sha},
     {"security.ssl3.dhe_rsa_aes_256_sha", TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
-     false},
-
-    {"security.tls13.aes_128_gcm_sha256", TLS_AES_128_GCM_SHA256, true},
+     StaticPrefs::security_ssl3_dhe_rsa_aes_256_sha},
+    {"security.tls13.aes_128_gcm_sha256", TLS_AES_128_GCM_SHA256,
+     StaticPrefs::security_tls13_aes_128_gcm_sha256},
     {"security.tls13.chacha20_poly1305_sha256", TLS_CHACHA20_POLY1305_SHA256,
-     true},
-    {"security.tls13.aes_256_gcm_sha384", TLS_AES_256_GCM_SHA384, true},
-
+     StaticPrefs::security_tls13_chacha20_poly1305_sha256},
+    {"security.tls13.aes_256_gcm_sha384", TLS_AES_256_GCM_SHA384,
+     StaticPrefs::security_tls13_aes_256_gcm_sha384},
     {"security.ssl3.rsa_aes_128_gcm_sha256", TLS_RSA_WITH_AES_128_GCM_SHA256,
-     true},  // deprecated (RSA key exchange)
+     StaticPrefs::security_ssl3_rsa_aes_128_gcm_sha256},
     {"security.ssl3.rsa_aes_256_gcm_sha384", TLS_RSA_WITH_AES_256_GCM_SHA384,
-     true},  // deprecated (RSA key exchange)
+     StaticPrefs::security_ssl3_rsa_aes_256_gcm_sha384},
     {"security.ssl3.rsa_aes_128_sha", TLS_RSA_WITH_AES_128_CBC_SHA,
-     true},  // deprecated (RSA key exchange)
+     StaticPrefs::security_ssl3_rsa_aes_128_sha},
     {"security.ssl3.rsa_aes_256_sha", TLS_RSA_WITH_AES_256_CBC_SHA,
-     true},  // deprecated (RSA key exchange)
+     StaticPrefs::security_ssl3_rsa_aes_256_sha},
 };
 
 // These ciphersuites can only be enabled if deprecated versions of TLS are
 // also enabled (via the preference "security.tls.version.enable-deprecated").
 static const CipherPref sDeprecatedTLS1CipherPrefs[] = {
     {"security.ssl3.deprecated.rsa_des_ede3_sha", TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-     true},
+     StaticPrefs::security_ssl3_deprecated_rsa_des_ede3_sha},
 };
 
 // This function will convert from pref values like 1, 2, ...
@@ -1149,17 +1151,9 @@ void nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
   rangeOut.max = (uint16_t)maxFromPrefs;
 }
 
-static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
-static const bool FALSE_START_ENABLED_DEFAULT = true;
-static const bool ALPN_ENABLED_DEFAULT = false;
-static const bool ENABLED_0RTT_DATA_DEFAULT = false;
-static const bool HELLO_DOWNGRADE_CHECK_DEFAULT = true;
-static const bool ENABLED_POST_HANDSHAKE_AUTH_DEFAULT = false;
-static const bool DELEGATED_CREDENTIALS_ENABLED_DEFAULT = false;
-
 static void ConfigureTLSSessionIdentifiers() {
   bool disableSessionIdentifiers =
-      Preferences::GetBool("security.ssl.disable_session_identifiers", false);
+      StaticPrefs::security_ssl_disable_session_identifiers();
   SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, !disableSessionIdentifiers);
   SSL_OptionSetDefault(SSL_NO_CACHE, disableSessionIdentifiers);
 }
@@ -1175,44 +1169,27 @@ nsresult CommonInit() {
 
   ConfigureTLSSessionIdentifiers();
 
-  bool requireSafeNegotiation =
-      Preferences::GetBool("security.ssl.require_safe_negotiation",
-                           REQUIRE_SAFE_NEGOTIATION_DEFAULT);
-  SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
-
+  SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION,
+                       StaticPrefs::security_ssl_require_safe_negotiation());
   SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, SSL_RENEGOTIATE_REQUIRES_XTN);
-
   SSL_OptionSetDefault(SSL_ENABLE_EXTENDED_MASTER_SECRET, true);
-
-  bool enableDowngradeCheck = Preferences::GetBool(
-      "security.tls.hello_downgrade_check", HELLO_DOWNGRADE_CHECK_DEFAULT);
-  SSL_OptionSetDefault(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, enableDowngradeCheck);
-
+  SSL_OptionSetDefault(SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
+                       StaticPrefs::security_tls_hello_downgrade_check());
   SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
-                       Preferences::GetBool("security.ssl.enable_false_start",
-                                            FALSE_START_ENABLED_DEFAULT));
-
+                       StaticPrefs::security_ssl_enable_false_start());
   // SSL_ENABLE_ALPN also requires calling SSL_SetNextProtoNego in order for
   // the extensions to be negotiated.
   // WebRTC does not do that so it will not use ALPN even when this preference
   // is true.
-  SSL_OptionSetDefault(
-      SSL_ENABLE_ALPN,
-      Preferences::GetBool("security.ssl.enable_alpn", ALPN_ENABLED_DEFAULT));
-
+  SSL_OptionSetDefault(SSL_ENABLE_ALPN,
+                       StaticPrefs::security_ssl_enable_alpn());
   SSL_OptionSetDefault(SSL_ENABLE_0RTT_DATA,
-                       Preferences::GetBool("security.tls.enable_0rtt_data",
-                                            ENABLED_0RTT_DATA_DEFAULT));
-
-  SSL_OptionSetDefault(
-      SSL_ENABLE_POST_HANDSHAKE_AUTH,
-      Preferences::GetBool("security.tls.enable_post_handshake_auth",
-                           ENABLED_POST_HANDSHAKE_AUTH_DEFAULT));
-
+                       StaticPrefs::security_tls_enable_0rtt_data());
+  SSL_OptionSetDefault(SSL_ENABLE_POST_HANDSHAKE_AUTH,
+                       StaticPrefs::security_tls_enable_post_handshake_auth());
   SSL_OptionSetDefault(
       SSL_ENABLE_DELEGATED_CREDENTIALS,
-      Preferences::GetBool("security.tls.enable_delegated_credentials",
-                           DELEGATED_CREDENTIALS_ENABLED_DEFAULT));
+      StaticPrefs::security_tls_enable_delegated_credentials());
 
   rv = InitializeCipherSuite();
   if (NS_FAILED(rv)) {
@@ -1246,41 +1223,32 @@ bool HandleTLSPrefChange(const nsCString& prefName) {
   if (prefName.EqualsLiteral("security.tls.version.min") ||
       prefName.EqualsLiteral("security.tls.version.max") ||
       prefName.EqualsLiteral("security.tls.version.enable-deprecated")) {
-    (void)nsNSSComponent::SetEnabledTLSVersions();
+    Unused << nsNSSComponent::SetEnabledTLSVersions();
   } else if (prefName.EqualsLiteral("security.tls.hello_downgrade_check")) {
-    bool enableDowngradeCheck = Preferences::GetBool(
-        "security.tls.hello_downgrade_check", HELLO_DOWNGRADE_CHECK_DEFAULT);
     SSL_OptionSetDefault(SSL_ENABLE_HELLO_DOWNGRADE_CHECK,
-                         enableDowngradeCheck);
+                         StaticPrefs::security_tls_hello_downgrade_check());
   } else if (prefName.EqualsLiteral("security.ssl.require_safe_negotiation")) {
-    bool requireSafeNegotiation =
-        Preferences::GetBool("security.ssl.require_safe_negotiation",
-                             REQUIRE_SAFE_NEGOTIATION_DEFAULT);
-    SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION, requireSafeNegotiation);
+    SSL_OptionSetDefault(SSL_REQUIRE_SAFE_NEGOTIATION,
+                         StaticPrefs::security_ssl_require_safe_negotiation());
   } else if (prefName.EqualsLiteral("security.ssl.enable_false_start")) {
     SSL_OptionSetDefault(SSL_ENABLE_FALSE_START,
-                         Preferences::GetBool("security.ssl.enable_false_start",
-                                              FALSE_START_ENABLED_DEFAULT));
+                         StaticPrefs::security_ssl_enable_false_start());
   } else if (prefName.EqualsLiteral("security.ssl.enable_alpn")) {
-    SSL_OptionSetDefault(
-        SSL_ENABLE_ALPN,
-        Preferences::GetBool("security.ssl.enable_alpn", ALPN_ENABLED_DEFAULT));
+    SSL_OptionSetDefault(SSL_ENABLE_ALPN,
+                         StaticPrefs::security_ssl_enable_alpn());
   } else if (prefName.EqualsLiteral("security.tls.enable_0rtt_data")) {
     SSL_OptionSetDefault(SSL_ENABLE_0RTT_DATA,
-                         Preferences::GetBool("security.tls.enable_0rtt_data",
-                                              ENABLED_0RTT_DATA_DEFAULT));
+                         StaticPrefs::security_tls_enable_0rtt_data());
   } else if (prefName.EqualsLiteral(
                  "security.tls.enable_post_handshake_auth")) {
     SSL_OptionSetDefault(
         SSL_ENABLE_POST_HANDSHAKE_AUTH,
-        Preferences::GetBool("security.tls.enable_post_handshake_auth",
-                             ENABLED_POST_HANDSHAKE_AUTH_DEFAULT));
+        StaticPrefs::security_tls_enable_post_handshake_auth());
   } else if (prefName.EqualsLiteral(
                  "security.tls.enable_delegated_credentials")) {
     SSL_OptionSetDefault(
         SSL_ENABLE_DELEGATED_CREDENTIALS,
-        Preferences::GetBool("security.tls.enable_delegated_credentials",
-                             DELEGATED_CREDENTIALS_ENABLED_DEFAULT));
+        StaticPrefs::security_tls_enable_delegated_credentials());
   } else if (prefName.EqualsLiteral(
                  "security.ssl.disable_session_identifiers")) {
     ConfigureTLSSessionIdentifiers();
@@ -1373,12 +1341,10 @@ nsresult CipherSuiteChangeObserver::StartObserve() {
 // ciphersuites may be enabled, if the corresponding preference is true.
 // Otherwise, these ciphersuites will be disabled.
 void SetDeprecatedTLS1CipherPrefs() {
-  if (Preferences::GetBool("security.tls.version.enable-deprecated", false)) {
+  if (StaticPrefs::security_tls_version_enable_deprecated()) {
     for (const auto& deprecatedTLS1CipherPref : sDeprecatedTLS1CipherPrefs) {
-      bool cipherEnabled =
-          Preferences::GetBool(deprecatedTLS1CipherPref.pref,
-                               deprecatedTLS1CipherPref.enabledByDefault);
-      SSL_CipherPrefSetDefault(deprecatedTLS1CipherPref.id, cipherEnabled);
+      SSL_CipherPrefSetDefault(deprecatedTLS1CipherPref.id,
+                               deprecatedTLS1CipherPref.prefGetter());
     }
   } else {
     for (const auto& deprecatedTLS1CipherPref : sDeprecatedTLS1CipherPrefs) {
@@ -1398,9 +1364,7 @@ nsresult CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
     // Look through the cipher table and set according to pref setting
     for (const auto& cipherPref : sCipherPrefs) {
       if (prefName.Equals(cipherPref.pref)) {
-        bool cipherEnabled =
-            Preferences::GetBool(cipherPref.pref, cipherPref.enabledByDefault);
-        SSL_CipherPrefSetDefault(cipherPref.id, cipherEnabled);
+        SSL_CipherPrefSetDefault(cipherPref.id, cipherPref.prefGetter());
         break;
       }
     }
@@ -1549,15 +1513,12 @@ nsresult nsNSSComponent::SetEnabledTLSVersions() {
   static const uint32_t PSM_DEFAULT_MAX_TLS_VERSION = 4;
   static const uint32_t PSM_DEPRECATED_TLS_VERSION = 1;
 
-  uint32_t minFromPrefs = Preferences::GetUint("security.tls.version.min",
-                                               PSM_DEFAULT_MIN_TLS_VERSION);
-  uint32_t maxFromPrefs = Preferences::GetUint("security.tls.version.max",
-                                               PSM_DEFAULT_MAX_TLS_VERSION);
+  uint32_t minFromPrefs = StaticPrefs::security_tls_version_min();
+  uint32_t maxFromPrefs = StaticPrefs::security_tls_version_max();
 
   // This override should be removed some time after
   // PSM_DEFAULT_MIN_TLS_VERSION is increased to 3.
-  bool enableDeprecated =
-      Preferences::GetBool("security.tls.version.enable-deprecated", false);
+  bool enableDeprecated = StaticPrefs::security_tls_version_enable_deprecated();
   if (enableDeprecated) {
     minFromPrefs = std::min(minFromPrefs, PSM_DEPRECATED_TLS_VERSION);
   }
@@ -2845,9 +2806,7 @@ nsresult InitializeCipherSuite() {
 
   // Now only set SSL/TLS ciphers we knew about at compile time
   for (const auto& cipherPref : sCipherPrefs) {
-    bool cipherEnabled =
-        Preferences::GetBool(cipherPref.pref, cipherPref.enabledByDefault);
-    SSL_CipherPrefSetDefault(cipherPref.id, cipherEnabled);
+    SSL_CipherPrefSetDefault(cipherPref.id, cipherPref.prefGetter());
   }
 
   SetDeprecatedTLS1CipherPrefs();
