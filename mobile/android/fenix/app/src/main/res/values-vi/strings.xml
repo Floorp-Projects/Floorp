@@ -331,7 +331,7 @@
     <!-- Option for the https only setting -->
     <string name="preferences_https_only_in_private_tabs">Chỉ bật trong thẻ riêng tư</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
-    <string name="errorpage_httpsonly_title">Trang web an toàn không có sẵn</string>
+    <string name="errorpage_httpsonly_title">Trang web an toàn không khả dụng</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Rất có thể, trang web chỉ đơn giản là không hỗ trợ HTTPs.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->

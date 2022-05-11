@@ -67,8 +67,6 @@
     <string name="cfr_neg_button_text">Teu, nuhun</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Anjeun tiasa nyetél Firefox pikeun otomatis muka tutumbu dina aplikasi.</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Anjeun bisa nyetél %1$s pikeun otomatis muka tutumbu dina aplikasi.</string>
     <!-- Text for the positive action button -->
@@ -97,8 +95,6 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Tutup langsung sanggeus sabulan?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox bisa nutup tab anu geus teu dibuka leuwih ti sabulan.</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s bisa nutup tab anu ku anjeun teu dibuka leuwih ti sabulan.</string>
@@ -250,15 +246,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Paluruh langsung tina bilah alamat</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Setélan pamaluruhan</string>
+
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Anu anyar di Firefox</string>
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">Nu anyar di %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Ayeuna leuwih babari nyokot cadangan nalika anjeun ninggalkeun.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Tepas Firefox pribadi</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">Tepas %1$s pribadi</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -276,8 +271,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tepas Firefox pribadi kiwari mantuan anjeun nyokot ti anu ditinggalkeun. Néangan tab anu can lila, markah, jeung hasil nyungsi.</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Buka tab Firefox anyar</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Buka dina tab %1$s anyar</string>
     <!-- Text preview for smaller sized widgets -->
@@ -451,11 +444,7 @@
     <string name="wallpaper_updated_snackbar_action">Témbong</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">Toél logo pikeun ngarobah latar</string>
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">Ganti latar ku cara noél logo tepas Firefox</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">Daurkeun sarta anyarkeun gambar tanpa ninggalkeun tepas.</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">Logo Firefox - ganti latar, tombol</string>
@@ -682,8 +671,6 @@
     <string name="studies_remove">Piceun</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktip</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox bisa masang jeung ngajalankeun studi ti mangsa ka mangsa.</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s bisa masang jeung ngajalankeun studi iraha baé.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -768,8 +755,6 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">Asupkeun istilah pamaluruhan</string>
-    <!-- Text for the button to search all history -->
     <string name="history_search_1">Asupkeun istilah pamaluruhan</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Hapus jujutan</string>
@@ -796,6 +781,11 @@
     <string name="history_older">Lawas</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Teu aya jujutan di dieu</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Disingkronkeun ti séjén alat</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Ti séjén alat</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -1184,6 +1174,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Mupus data sungsian…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Ieu bakal ngahapus sadaya item.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Bolay</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Hapus</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Grup dihapus</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Sawangan téh ayeuna Firefox Nightly</string>
@@ -1227,8 +1226,6 @@
 
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Pripasi salawasna</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox otomatis megat maskapé rerencepan nunutur anjeun ngalanglang raramat.</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s otomatis megat maskapé rerencepan nunutur anjeun ngalanglang raramat.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1540,7 +1537,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Runtuykeun menu login</string>
 
-    <!-- Credit Cards Autofill -->
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Eusi otomatis</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Alamat</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kartu kiridit</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1556,6 +1557,10 @@
 
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kokolakeun kartu anu diteundeun</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Tambah alamat</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Kokolakeun alamat</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Tambah kartu</string>
     <!-- Title of the "Edit card" screen -->
@@ -1605,6 +1610,37 @@
     <string name="credit_cards_biometric_prompt_message_pin">Buka konci paranti anjeun</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Buka konci pikeun nganggo inpormasi kartu kiridit anu disimpen</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Tambah alamat</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Kokolakeun alamat</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Ngaran Lengkep</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Ngaran Hareup</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Ngaran Tengah</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Ngaran Tukang</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Alamat Jalan</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Kota</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Nagara</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Kode Pos</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telepon</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Surélék</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Teundeun</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Bolay</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Hapus alamat</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Tambah mesin pamaluruh</string>
@@ -1817,25 +1853,6 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Nutup otomatis dihurungkeun</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Bantuan ngaronjatkeun Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Naha anjeun mareuman tab nganggur?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Kami teu ngarti kumaha gawéna</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Kami milih mupusan tab heubeul ku sorangan</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Jangka dua minggu mah lila teuing</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Jangka waktu dua minggu mah sakeudeung teuing</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Kirim</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Tutup</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Setél tutumbu ti raramatloka, surélék, jeung surat pikeun muka otomatis dina Firefox.</string>

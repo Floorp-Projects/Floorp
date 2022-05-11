@@ -774,7 +774,7 @@
     <string name="history_delete_item">刪除</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">已選擇 %1$d 筆書籤</string>
+    <string name="history_multi_select_title">已選擇 %1$d 筆瀏覽紀錄</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">今天</string>
     <!-- Text for the header that groups the history for yesterday -->

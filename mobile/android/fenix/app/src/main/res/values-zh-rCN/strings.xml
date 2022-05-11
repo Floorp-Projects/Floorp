@@ -782,9 +782,6 @@
     <string name="history_delete_single_item_snackbar">已删除 %1$s</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">删除</string>
-    <!-- History multi select title in app bar
-    The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">已选择 %1$d 条书签</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">今天</string>
     <!-- Text for the header that groups the history for yesterday -->
