@@ -10,9 +10,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-startUtilityProcess();
-
 add_task(async () => {
+  const utilityPid = await startUtilityProcess();
+
   info("Start the profiler");
   startProfiler();
 
@@ -65,6 +65,6 @@ add_task(async () => {
   );
 
   Services.profiler.StopProfiler();
-});
 
-cleanUtilityProcessShutdown();
+  await cleanUtilityProcessShutdown(utilityPid);
+});

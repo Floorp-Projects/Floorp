@@ -3,15 +3,15 @@
 
 "use strict";
 
-var utilityReports = [];
-
-startUtilityProcess();
-
 add_task(async () => {
+  const utilityPid = await startUtilityProcess();
+
   const gMgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
     Ci.nsIMemoryReporterManager
   );
-  ok(utilityPid !== undefined, "Utility process is running");
+  ok(utilityPid !== undefined, `Utility process is running as ${utilityPid}`);
+
+  var utilityReports = [];
 
   const performCollection = new Promise((resolve, reject) => {
     // Record the reports from the live memory reporters then process them.
@@ -46,7 +46,9 @@ add_task(async () => {
 
   await performCollection;
 
-  info("Collected", utilityReports.length, "reports from utility process");
+  info(
+    `Collected ${utilityReports.length} reports from utility process ${utilityPid}`
+  );
   ok(!!utilityReports.length, "Collected some reports");
   ok(
     utilityReports.filter(r => r.path === "vsize" && r.amount > 0).length === 1,
@@ -63,6 +65,6 @@ add_task(async () => {
     ).length,
     "Collected some explicit/ report"
   );
-});
 
-cleanUtilityProcessShutdown();
+  await cleanUtilityProcessShutdown(utilityPid);
+});
