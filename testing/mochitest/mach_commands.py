@@ -189,7 +189,7 @@ class MochitestRunner(MozbuildObject):
         options = Namespace(**kwargs)
 
         # Disable fission until geckoview supports fission by default.
-        setattr(options, 'disable_fission', True)
+        setattr(options, "disable_fission", True)
 
         return runjunit.run_test_harness(parser, options)
 
