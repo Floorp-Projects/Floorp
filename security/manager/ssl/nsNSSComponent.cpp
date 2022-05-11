@@ -31,6 +31,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
@@ -231,9 +232,7 @@ bool EnsureNSSInitializedChromeOrContent() {
   return true;
 }
 
-static const uint32_t OCSP_TIMEOUT_MILLISECONDS_SOFT_DEFAULT = 2000;
 static const uint32_t OCSP_TIMEOUT_MILLISECONDS_SOFT_MAX = 5000;
-static const uint32_t OCSP_TIMEOUT_MILLISECONDS_HARD_DEFAULT = 10000;
 static const uint32_t OCSP_TIMEOUT_MILLISECONDS_HARD_MAX = 20000;
 
 void nsNSSComponent::GetRevocationBehaviorFromPrefs(
@@ -241,7 +240,7 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
     /*out*/ CertVerifier::OcspStrictConfig* osc,
     /*out*/ uint32_t* certShortLifetimeInDays,
     /*out*/ TimeDuration& softTimeout,
-    /*out*/ TimeDuration& hardTimeout, const MutexAutoLock& /*proofOfLock*/) {
+    /*out*/ TimeDuration& hardTimeout) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(odc);
   MOZ_ASSERT(osc);
@@ -250,7 +249,7 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
   // 0 = disabled
   // 1 = enabled for everything (default)
   // 2 = enabled for EV certificates only
-  int32_t ocspLevel = Preferences::GetInt("security.OCSP.enabled", 1);
+  uint32_t ocspLevel = StaticPrefs::security_OCSP_enabled();
   switch (ocspLevel) {
     case 0:
       *odc = CertVerifier::ocspOff;
@@ -263,9 +262,8 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
       break;
   }
 
-  *osc = Preferences::GetBool("security.OCSP.require", false)
-             ? CertVerifier::ocspStrict
-             : CertVerifier::ocspRelaxed;
+  *osc = StaticPrefs::security_OCSP_require() ? CertVerifier::ocspStrict
+                                              : CertVerifier::ocspRelaxed;
 
   // If we pass in just 0 as the second argument to Preferences::GetUint, there
   // are two function signatures that match (given that 0 can be intepreted as
@@ -274,15 +272,13 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
       "security.pki.cert_short_lifetime_in_days", static_cast<uint32_t>(0));
 
   uint32_t softTimeoutMillis =
-      Preferences::GetUint("security.OCSP.timeoutMilliseconds.soft",
-                           OCSP_TIMEOUT_MILLISECONDS_SOFT_DEFAULT);
+      StaticPrefs::security_OCSP_timeoutMilliseconds_soft();
   softTimeoutMillis =
       std::min(softTimeoutMillis, OCSP_TIMEOUT_MILLISECONDS_SOFT_MAX);
   softTimeout = TimeDuration::FromMilliseconds(softTimeoutMillis);
 
   uint32_t hardTimeoutMillis =
-      Preferences::GetUint("security.OCSP.timeoutMilliseconds.hard",
-                           OCSP_TIMEOUT_MILLISECONDS_HARD_DEFAULT);
+      StaticPrefs::security_OCSP_timeoutMilliseconds_hard();
   hardTimeoutMillis =
       std::min(hardTimeoutMillis, OCSP_TIMEOUT_MILLISECONDS_HARD_MAX);
   hardTimeout = TimeDuration::FromMilliseconds(hardTimeoutMillis);
@@ -1168,7 +1164,6 @@ void nsNSSComponent::FillTLSVersionRange(SSLVersionRange& rangeOut,
   rangeOut.max = (uint16_t)maxFromPrefs;
 }
 
-static const int32_t OCSP_ENABLED_DEFAULT = 1;
 static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
 static const bool FALSE_START_ENABLED_DEFAULT = true;
 static const bool ALPN_ENABLED_DEFAULT = false;
@@ -1313,13 +1308,12 @@ bool HandleTLSPrefChange(const nsCString& prefName) {
 void SetValidationOptionsCommon() {
   // Note that the code in this function should be kept in sync with
   // gCallbackSecurityPrefs in nsIOService.cpp.
-  bool ocspStaplingEnabled =
-      Preferences::GetBool("security.ssl.enable_ocsp_stapling", true);
+  bool ocspStaplingEnabled = StaticPrefs::security_ssl_enable_ocsp_stapling();
   PublicSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
   PrivateSSLState()->SetOCSPStaplingEnabled(ocspStaplingEnabled);
 
   bool ocspMustStapleEnabled =
-      Preferences::GetBool("security.ssl.enable_ocsp_must_staple", true);
+      StaticPrefs::security_ssl_enable_ocsp_must_staple();
   PublicSSLState()->SetOCSPMustStapleEnabled(ocspMustStapleEnabled);
   PrivateSSLState()->SetOCSPMustStapleEnabled(ocspMustStapleEnabled);
 
@@ -1467,12 +1461,10 @@ void nsNSSComponent::setValidationOptions(
 
   // This preference controls whether we do OCSP fetching and does not affect
   // OCSP stapling.
-  // 0 = disabled, 1 = enabled
-  int32_t ocspEnabled =
-      Preferences::GetInt("security.OCSP.enabled", OCSP_ENABLED_DEFAULT);
+  // 0 = disabled, 1 = enabled, 2 = only enabled for EV
+  uint32_t ocspEnabled = StaticPrefs::security_OCSP_enabled();
 
-  bool ocspRequired =
-      ocspEnabled && Preferences::GetBool("security.OCSP.require", false);
+  bool ocspRequired = ocspEnabled > 0 && StaticPrefs::security_OCSP_require();
 
   // We measure the setting of the pref at startup only to minimize noise by
   // addons that may muck with the settings, though it probably doesn't matter.
@@ -1538,7 +1530,7 @@ void nsNSSComponent::setValidationOptions(
   TimeDuration hardTimeout;
 
   GetRevocationBehaviorFromPrefs(&odc, &osc, &certShortLifetimeInDays,
-                                 softTimeout, hardTimeout, proofOfLock);
+                                 softTimeout, hardTimeout);
 
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
