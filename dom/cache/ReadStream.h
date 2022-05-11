@@ -19,6 +19,9 @@
 namespace mozilla {
 class ErrorResult;
 
+namespace ipc {
+class AutoIPCStream;
+}  // namespace ipc
 namespace dom::cache {
 
 class CacheReadStream;
@@ -74,8 +77,14 @@ class ReadStream final : public nsIInputStream {
       PCacheStreamControlParent* aControl, const nsID& aId,
       nsIInputStream* aStream);
 
-  void Serialize(Maybe<CacheReadStream>* aReadStreamOut, ErrorResult& aRv);
-  void Serialize(CacheReadStream* aReadStreamOut, ErrorResult& aRv);
+  void Serialize(
+      Maybe<CacheReadStream>* aReadStreamOut,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+      ErrorResult& aRv);
+  void Serialize(
+      CacheReadStream* aReadStreamOut,
+      nsTArray<UniquePtr<mozilla::ipc::AutoIPCStream>>& aStreamCleanupList,
+      ErrorResult& aRv);
 
  private:
   class Inner;

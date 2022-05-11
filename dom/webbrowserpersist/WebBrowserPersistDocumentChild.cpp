@@ -76,12 +76,12 @@ void WebBrowserPersistDocumentChild::Start(
   ENSURE(aDocument->GetPostData(getter_AddRefs(postDataStream)));
 #undef ENSURE
 
-  Maybe<mozilla::ipc::IPCStream> stream;
-  mozilla::ipc::SerializeIPCStream(postDataStream.forget(), stream,
-                                   /* aAllowLazy */ false);
+  mozilla::ipc::AutoIPCStream autoStream;
+  autoStream.Serialize(postDataStream,
+                       static_cast<mozilla::dom::ContentChild*>(Manager()));
 
   mDocument = aDocument;
-  SendAttributes(attrs, stream);
+  SendAttributes(attrs, autoStream.TakeOptionalValue());
 }
 
 mozilla::ipc::IPCResult WebBrowserPersistDocumentChild::RecvSetPersistFlags(

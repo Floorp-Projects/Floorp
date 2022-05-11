@@ -540,18 +540,30 @@ nsFileInputStream::Available(uint64_t* aResult) {
   return nsFileStreamBase::Available(aResult);
 }
 
-void nsFileInputStream::SerializedComplexity(uint32_t aMaxSize,
-                                             uint32_t* aSizeUsed,
-                                             uint32_t* aPipes,
-                                             uint32_t* aTransferables) {
-  *aTransferables = 1;
-}
-
-void nsFileInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed) {
+void nsFileInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
+                                  ParentToChildStreamActorManager* aManager) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::Serialize(InputStreamParams& aParams,
+                                  FileDescriptorArray& aFileDescriptors,
+                                  bool aDelayedStart, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed,
+                                  ChildToParentStreamActorManager* aManager) {
+  MOZ_ASSERT(aSizeUsed);
+  *aSizeUsed = 0;
+
+  SerializeInternal(aParams, aFileDescriptors);
+}
+
+void nsFileInputStream::SerializeInternal(
+    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors) {
   FileInputStreamParams params;
 
   if (NS_SUCCEEDED(DoPendingOpen())) {
@@ -559,7 +571,10 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
     FileHandleType fd = FileHandleType(PR_FileDesc2NativeHandle(mFD));
     NS_ASSERTION(fd, "This should never be null!");
 
-    params.fileDescriptor() = FileDescriptor(fd);
+    DebugOnly dbgFD = aFileDescriptors.AppendElement(fd);
+    NS_ASSERTION(dbgFD->IsValid(), "Sending an invalid file descriptor!");
+
+    params.fileDescriptorIndex() = aFileDescriptors.Length() - 1;
 
     Close();
   } else {
@@ -567,7 +582,7 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
         "This file has not been opened (or could not be opened). "
         "Sending an invalid file descriptor to the other process!");
 
-    params.fileDescriptor() = FileDescriptor();
+    params.fileDescriptorIndex() = UINT32_MAX;
   }
 
   int32_t behaviorFlags = mBehaviorFlags;
@@ -582,7 +597,9 @@ void nsFileInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
   aParams = params;
 }
 
-bool nsFileInputStream::Deserialize(const InputStreamParams& aParams) {
+bool nsFileInputStream::Deserialize(
+    const InputStreamParams& aParams,
+    const FileDescriptorArray& aFileDescriptors) {
   NS_ASSERTION(!mFD, "Already have a file descriptor?!");
   NS_ASSERTION(mState == nsFileStreamBase::eUnitialized, "Deferring open?!");
   NS_ASSERTION(!mFile, "Should never have a file here!");
@@ -595,7 +612,15 @@ bool nsFileInputStream::Deserialize(const InputStreamParams& aParams) {
 
   const FileInputStreamParams& params = aParams.get_FileInputStreamParams();
 
-  const FileDescriptor& fd = params.fileDescriptor();
+  uint32_t fileDescriptorIndex = params.fileDescriptorIndex();
+
+  FileDescriptor fd;
+  if (fileDescriptorIndex < aFileDescriptors.Length()) {
+    fd = aFileDescriptors[fileDescriptorIndex];
+    NS_WARNING_ASSERTION(fd.IsValid(), "Received an invalid file descriptor!");
+  } else {
+    NS_WARNING("Received a bad file descriptor index!");
+  }
 
   if (fd.IsValid()) {
     auto rawFD = fd.ClonePlatformHandle();
@@ -607,7 +632,6 @@ bool nsFileInputStream::Deserialize(const InputStreamParams& aParams) {
     mFD = fileDesc;
     mState = eOpened;
   } else {
-    NS_WARNING("Received an invalid file descriptor!");
     mState = eError;
     mErrorValue = NS_ERROR_FILE_NOT_FOUND;
   }

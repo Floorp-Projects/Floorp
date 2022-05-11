@@ -140,8 +140,7 @@ NS_IMETHODIMP BlobURLInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
   }
 
   // Pre-empting a valid callback with another is not allowed.
-  if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
-                 mAsyncWaitCallback != aCallback)) {
+  if (NS_WARN_IF(mAsyncWaitCallback && aCallback)) {
     return NS_ERROR_FAILURE;
   }
 
