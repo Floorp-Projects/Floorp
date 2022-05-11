@@ -1,0 +1,89 @@
+<!DOCTYPE>
+<html>
+<head>
+  <title>Test for nsIEditorMailSupport.insertTextWithQuotations()</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<div contenteditable></div>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  (function testStyleOfPlaintextMode() {
+    getEditor().flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+
+    (function testInDiv() {
+      const editor = document.querySelector("div[contenteditable]");
+      editor.innerHTML = "";
+      editor.focus();
+      getEditorMailSupport().insertTextWithQuotations(
+        "This is Text\n\n> This is a quote."
+      );
+      verify(editor, "TestInDiv");
+    })();
+
+    try {
+      document.body.contentEditable = true;
+      (function testInBody() {
+        getSelection().collapse(document.body, 0);
+        getEditorMailSupport().insertTextWithQuotations(
+          "This is Text\n\n> This is a quote."
+        );
+        verify(document.body, "TestInBody");
+      })();
+    } finally {
+      document.body.contentEditable = false;
+    }
+  })();
+
+  SimpleTest.finish();
+});
+
+function getEditor() {
+  var editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+  return editingSession.getEditorForWindow(window);
+}
+
+function getEditorMailSupport() {
+  return getEditor().QueryInterface(SpecialPowers.Ci.nsIEditorMailSupport);
+}
+
+function verify(editor, logHint) {
+  is(
+    editor.childNodes[0].textContent,
+    "This is Text",
+    `${logHint}: insertTextWithQuotations should insert the text directly`
+  );
+  is(
+    editor.childNodes[1].tagName,
+    "BR",
+    `${logHint}: insertTextWithQuotations should insert a BR tag`
+  );
+  is(
+    editor.childNodes[2].tagName,
+    "BR",
+    `${logHint}: insertTextWithQuotations should insert a second BR tag`
+  );
+  is(
+    editor.childNodes[3].tagName,
+    "SPAN",
+    `${logHint}: insertTextWithQuotations should insert a SPAN tag`
+  );
+  is(
+    editor.childNodes[3].getAttribute("_moz_quote"),
+    "true",
+    `${logHint}: insertTextWithQuotations should insert SPAN tag with _moz_quote = true`
+  )
+  is(
+    editor.childNodes[3].textContent,
+    "> This is a quote.",
+    `${logHint}: insertTextWithQuotations should insert SPAN tag with the quoted text`
+  )
+}
+</script>
+</body>
+
+</html>

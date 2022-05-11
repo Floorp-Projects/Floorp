@@ -29,6 +29,7 @@
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/MatrixMessage.h"
+#include "mozilla/layers/OverlayInfo.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "nsSize.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
@@ -839,6 +840,34 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
            ReadParam(aReader, &aResult->mAllowSoftwareWebRenderOGL) &&
            ReadParam(aReader, &aResult->mInitiallyPaused) &&
            ReadParam(aReader, &aResult->mNeedFastSnaphot);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::OverlaySupportType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::layers::OverlaySupportType,
+          mozilla::layers::OverlaySupportType::None,
+          mozilla::layers::OverlaySupportType::MAX> {};
+
+template <>
+struct ParamTraits<mozilla::layers::OverlayInfo> {
+  typedef mozilla::layers::OverlayInfo paramType;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mSupportsOverlays);
+    WriteParam(aWriter, aParam.mNv12Overlay);
+    WriteParam(aWriter, aParam.mYuy2Overlay);
+    WriteParam(aWriter, aParam.mBgra8Overlay);
+    WriteParam(aWriter, aParam.mRgb10a2Overlay);
+  }
+
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mSupportsOverlays) &&
+           ReadParam(aReader, &aResult->mNv12Overlay) &&
+           ReadParam(aReader, &aResult->mYuy2Overlay) &&
+           ReadParam(aReader, &aResult->mBgra8Overlay) &&
+           ReadParam(aReader, &aResult->mRgb10a2Overlay);
   }
 };
 

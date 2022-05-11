@@ -5380,6 +5380,13 @@
   value: 0
   mirror: once
 
+# Rate by which the frame rate is divided. I.e. at a number higher than 1 we
+# will only refresh every <x> frames.
+- name: gfx.display.frame-rate-divisor
+  type: RelaxedAtomicInt32
+  value: 1
+  mirror: always
+
 # Whether to preserve color bitmap tables in fonts (bypassing OTS).
 # Currently these are supported only on platforms where we use Freetype
 # to render fonts (Linux/Gtk and Android).
@@ -10351,6 +10358,12 @@
 - name: network.preload
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# Enable 103 Early Hint status code (RFC 8297)
+- name: network.early-hints.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Whether to use the network process or not

@@ -145,6 +145,7 @@ class VsyncDispatcher final {
   };
 
   DataMutex<State> mState;
+  int32_t mVsyncSkipCounter = 0;
 };
 
 }  // namespace mozilla
