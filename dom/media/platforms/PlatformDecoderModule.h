@@ -108,6 +108,7 @@ struct CreateDecoderParamsForAsync {
       mOnWaitingForKeyEvent;
   const OptionSet mOptions = OptionSet(Option::Default);
   const media::VideoFrameRate mRate;
+  const Maybe<uint64_t> mMediaEngineId;
 };
 
 struct MOZ_STACK_CLASS CreateDecoderParams final {
@@ -130,7 +131,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
         mType(aParams.mType),
         mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
         mOptions(aParams.mOptions),
-        mRate(aParams.mRate) {}
+        mRate(aParams.mRate),
+        mMediaEngineId(aParams.mMediaEngineId) {}
 
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -176,6 +178,8 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
       mOnWaitingForKeyEvent;
   OptionSet mOptions = OptionSet(Option::Default);
   media::VideoFrameRate mRate;
+  // Used on Windows when the MF media engine playback is enabled.
+  Maybe<uint64_t> mMediaEngineId;
 
  private:
   void Set(layers::ImageContainer* aImageContainer) {
@@ -204,6 +208,9 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
                aOnWaitingForKey) {
     mOnWaitingForKeyEvent = aOnWaitingForKey;
   }
+  void Set(const Maybe<uint64_t>& aMediaEngineId) {
+    mMediaEngineId = aMediaEngineId;
+  }
   void Set(const CreateDecoderParams& aParams) {
     // Set all but mTrackInfo;
     mImageContainer = aParams.mImageContainer;
@@ -216,6 +223,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final {
     mOnWaitingForKeyEvent = aParams.mOnWaitingForKeyEvent;
     mOptions = aParams.mOptions;
     mRate = aParams.mRate;
+    mMediaEngineId = aParams.mMediaEngineId;
   }
   template <typename T1, typename T2, typename... Ts>
   void Set(T1&& a1, T2&& a2, Ts&&... args) {
@@ -240,7 +248,8 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
         mUseNullDecoder(aParams.mUseNullDecoder),
         mNoWrapper(aParams.mNoWrapper),
         mOptions(aParams.mOptions),
-        mRate(aParams.mRate) {}
+        mRate(aParams.mRate),
+        mMediaEngineId(aParams.mMediaEngineId) {}
 
   template <typename T1, typename... Ts>
   SupportDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
@@ -258,6 +267,7 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
   NoWrapper mNoWrapper;
   OptionSet mOptions = OptionSet(Option::Default);
   VideoFrameRate mRate;
+  Maybe<uint64_t> mMediaEngineId;
 
  private:
   void Set(DecoderDoctorDiagnostics* aDiagnostics) {
@@ -275,6 +285,9 @@ struct MOZ_STACK_CLASS SupportDecoderParams final {
       mKnowsCompositor = aKnowsCompositor;
       MOZ_ASSERT(aKnowsCompositor->IsThreadSafe());
     }
+  }
+  void Set(const Maybe<uint64_t>& aMediaEngineId) {
+    mMediaEngineId = aMediaEngineId;
   }
 
   template <typename T1, typename T2, typename... Ts>

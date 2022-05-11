@@ -196,4 +196,14 @@ void ReaderProxy::SetCanonicalDuration(
   Unused << rv;
 }
 
+void ReaderProxy::UpdateMediaEngineId(uint64_t aMediaEngineId) {
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<uint64_t>(
+      "MediaFormatReader::UpdateMediaEngineId", mReader,
+      &MediaFormatReader::UpdateMediaEngineId, aMediaEngineId);
+  nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+}
+
 }  // namespace mozilla
