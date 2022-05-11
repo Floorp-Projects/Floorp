@@ -797,11 +797,11 @@ void gfxSingleFaceMacFontFamily::LocalizedName(nsACString& aLocalizedName) {
 }
 
 void gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList* aPlatformFontList) {
+  AutoWriteLock lock(mLock);
   if (mOtherFamilyNamesInitialized) {
     return;
   }
 
-  AutoWriteLock lock(mLock);
   gfxFontEntry* fe = mAvailableFonts[0];
   if (!fe) {
     return;
