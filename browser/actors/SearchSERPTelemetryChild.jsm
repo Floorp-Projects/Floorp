@@ -188,6 +188,15 @@ class SearchSERPTelemetryChild extends JSWindowActorChild {
         check();
         break;
       }
+      case "load": {
+        // We check both DOMContentLoaded and load in case the page has
+        // taken a long time to load and the ad is only detected on load.
+        // We still check at DOMContentLoaded because if the page hasn't
+        // finished loading and the user navigates away, we still want to know
+        // if there were ads on the page or not at that time.
+        check();
+        break;
+      }
       case "unload": {
         cancelCheck();
         break;
