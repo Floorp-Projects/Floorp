@@ -82,9 +82,6 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
 
   if (aState & states::BUSY) {
     sessionAcc->SendWindowStateChangedEvent(aTarget);
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-      sessionAcc->SendWindowContentChangedEvent();
-    }
   }
 }
 

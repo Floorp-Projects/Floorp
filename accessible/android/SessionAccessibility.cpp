@@ -385,6 +385,10 @@ void SessionAccessibility::SendWindowStateChangedEvent(
       java::sdk::AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED,
       AccessibleWrap::GetVirtualViewID(aAccessible),
       AccessibleWrap::AndroidClass(aAccessible), nullptr);
+
+  if (IsCacheEnabled()) {
+    SendWindowContentChangedEvent();
+  }
 }
 
 void SessionAccessibility::SendTextSelectionChangedEvent(
