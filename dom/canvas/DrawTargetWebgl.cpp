@@ -293,6 +293,7 @@ void DrawTargetWebgl::SharedContext::ClearCachesIfNecessary() {
   if (!mShouldClearCaches.exchange(false)) {
     return;
   }
+  mZeroBuffer = nullptr;
   ClearAllTextures();
   if (mEmptyTextureMemory) {
     ClearEmptyTextureMemory();
@@ -1219,7 +1220,7 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
                                                    SurfaceFormat aFormat,
                                                    const IntRect& aSrcRect,
                                                    const IntPoint& aDstOffset,
-                                                   bool aInit) {
+                                                   bool aInit, bool aZero) {
   webgl::TexUnpackBlobDesc texDesc = {
       LOCAL_GL_TEXTURE_2D,
       {uint32_t(aSrcRect.width), uint32_t(aSrcRect.height), 1}};
@@ -1246,6 +1247,24 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
     texDesc.unpacking.alignmentInTypeElems = stride % 4 ? 1 : 4;
     texDesc.unpacking.rowLength = stride / bpp;
     texDesc.unpacking.imageHeight = aSrcRect.height;
+  } else if (aZero) {
+    // Create a PBO filled with zero data to initialize the texture data and
+    // avoid slow initialization inside WebGL.
+    MOZ_ASSERT(aSrcRect.TopLeft() == IntPoint(0, 0));
+    if (!mZeroBuffer || mZeroSize.width < aSrcRect.width ||
+        mZeroSize.height < aSrcRect.height) {
+      mZeroBuffer = mWebgl->CreateBuffer();
+      mZeroSize = aSrcRect.Size();
+      mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
+      size_t size = 4 * mZeroSize.width * mZeroSize.height;
+      void* data = calloc(1, size);
+      mWebgl->RawBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                            {(const uint8_t*)data, size}, LOCAL_GL_STATIC_DRAW);
+      free(data);
+    } else {
+      mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
+    }
+    texDesc.pboOffset = Some(0);
   }
   // Upload as RGBA8 to avoid swizzling during upload. Surfaces provide
   // data as BGRA, but we manually swizzle that in the shader. An A8
@@ -1260,6 +1279,9 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
   mWebgl->RawTexImage(0, aInit ? intFormat : 0,
                       {uint32_t(aDstOffset.x), uint32_t(aDstOffset.y), 0},
                       texPI, texDesc);
+  if (!aData && aZero) {
+    mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  }
   return true;
 }
 
@@ -1601,7 +1623,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           // larger than it, then we need to allocate the texture page to the
           // full backing size before we can do a partial upload of the surface.
           UploadSurface(nullptr, format, IntRect(IntPoint(), backingSize),
-                        IntPoint(), true);
+                        IntPoint(), true, true);
         }
       }
 
