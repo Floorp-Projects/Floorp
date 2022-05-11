@@ -372,13 +372,11 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   update(resourceId, text, transition, cause = "") {
     if (this._hasStyleSheetWatcherSupport()) {
       const styleSheetsManager = this._getStyleSheetsManager();
-      return styleSheetsManager.update(
-        resourceId,
-        text,
+      return styleSheetsManager.setStyleSheetText(resourceId, text, {
         transition,
-        UPDATE_GENERAL,
-        cause
-      );
+        kind: UPDATE_GENERAL,
+        cause,
+      });
     }
 
     // Following code can be removed once we enable STYLESHEET resource on the watcher/server
