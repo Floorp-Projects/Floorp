@@ -765,7 +765,8 @@ void MemoryTracker::swapGCMemory(Cell* a, Cell* b, MemoryUse use) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  if ((sa && !gcMap.put(kb, sa)) || (sb && !gcMap.put(ka, sb))) {
+  if ((sa && b->isTenured() && !gcMap.put(kb, sa)) ||
+      (sb && a->isTenured() && !gcMap.put(ka, sb))) {
     oomUnsafe.crash("MemoryTracker::swapGCMemory");
   }
 }
