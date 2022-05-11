@@ -61,10 +61,9 @@ class ProxyObject : public JSObject {
   }
 
   // For use from JSObject::swap.
-  [[nodiscard]] bool copyAndFreeValuesBeforeSwap(
-      JSContext* cx, MutableHandleValueVector values);
-  [[nodiscard]] bool fillInValuesAfterSwap(JSContext* cx,
-                                           HandleValueVector values);
+  [[nodiscard]] bool prepareForSwap(JSContext* cx,
+                                    MutableHandleValueVector valuesOut);
+  [[nodiscard]] bool fixupAfterSwap(JSContext* cx, HandleValueVector values);
 
   const Value& private_() const { return GetProxyPrivate(this); }
   const Value& expando() const { return GetProxyExpando(this); }

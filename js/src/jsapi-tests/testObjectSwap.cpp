@@ -23,6 +23,7 @@ using namespace js;
 
 struct NativeConfig {
   uint32_t propCount;
+  uint32_t elementCount;
   bool inDictionaryMode;
 };
 
@@ -59,6 +60,8 @@ static const JSClass TestDOMClasses[] = {
 
 static const uint32_t TestPropertyCounts[] = {0, 1, 2, 7, 8, 20};
 
+static const uint32_t TestElementCounts[] = {0, 20};
+
 static bool Verbose = false;
 
 class TenuredProxyHandler final : public Wrapper {
@@ -86,26 +89,28 @@ BEGIN_TEST(testObjectSwap) {
 
   for (const ObjectConfig& config1 : objectConfigs) {
     for (const ObjectConfig& config2 : objectConfigs) {
-      uint32_t id1;
-      RootedObject obj1(cx, CreateObject(config1, &id1));
-      CHECK(obj1);
-
-      uint32_t id2;
-      RootedObject obj2(cx, CreateObject(config2, &id2));
-      CHECK(obj2);
-
-      if (Verbose) {
-        fprintf(stderr, "Swap %p (%s) and %p (%s)\n", obj1.get(),
-                GetLocation(obj1), obj2.get(), GetLocation(obj2));
-      }
-
       {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        JSObject::swap(cx, obj1, obj2, oomUnsafe);
-      }
+        uint32_t id1;
+        RootedObject obj1(cx, CreateObject(config1, &id1));
+        CHECK(obj1);
 
-      CHECK(CheckObject(obj1, config2, id2));
-      CHECK(CheckObject(obj2, config1, id1));
+        uint32_t id2;
+        RootedObject obj2(cx, CreateObject(config2, &id2));
+        CHECK(obj2);
+
+        if (Verbose) {
+          fprintf(stderr, "Swap %p (%s) and %p (%s)\n", obj1.get(),
+                  GetLocation(obj1), obj2.get(), GetLocation(obj2));
+        }
+
+        {
+          AutoEnterOOMUnsafeRegion oomUnsafe;
+          JSObject::swap(cx, obj1, obj2, oomUnsafe);
+        }
+
+        CHECK(CheckObject(obj1, config2, id2));
+        CHECK(CheckObject(obj2, config1, id1));
+      }
 
       if (Verbose) {
         fprintf(stderr, "\n");
@@ -132,16 +137,20 @@ ObjectConfigVector CreateObjectConfigs() {
     for (uint32_t propCount : TestPropertyCounts) {
       config.native.propCount = propCount;
 
-      for (bool nurseryAllocated : {false, true}) {
-        config.nurseryAllocated = nurseryAllocated;
+      for (uint32_t elementCount : TestElementCounts) {
+        config.native.elementCount = elementCount;
 
-        for (bool inDictionaryMode : {false, true}) {
-          if (inDictionaryMode && propCount == 0) {
-            continue;
+        for (bool nurseryAllocated : {false, true}) {
+          config.nurseryAllocated = nurseryAllocated;
+
+          for (bool inDictionaryMode : {false, true}) {
+            if (inDictionaryMode && propCount == 0) {
+              continue;
+            }
+
+            config.native.inDictionaryMode = inDictionaryMode;
+            MOZ_RELEASE_ASSERT(configs.append(config));
           }
-
-          config.native.inDictionaryMode = inDictionaryMode;
-          MOZ_RELEASE_ASSERT(configs.append(config));
         }
       }
     }
@@ -211,6 +220,17 @@ JSObject* CreateNativeObject(const ObjectConfig& config) {
     if (!JS_DefinePropertyById(cx, obj, name, nextId++, JSPROP_ENUMERATE)) {
       return nullptr;
     }
+  }
+
+  if (config.native.elementCount) {
+    if (!obj->ensureElements(cx, config.native.elementCount)) {
+      return nullptr;
+    }
+    for (uint32_t i = 0; i < config.native.elementCount; i++) {
+      obj->setDenseInitializedLength(i + 1);
+      obj->initDenseElement(i, Int32Value(nextId++));
+    }
+    MOZ_ASSERT(obj->hasDynamicElements());
   }
 
   if (config.native.inDictionaryMode) {
@@ -289,8 +309,9 @@ bool CheckObject(HandleObject obj, const ObjectConfig& config, uint32_t id) {
     fprintf(stderr, "Check %p is a %s object with %u reserved slots", obj.get(),
             config.isNative ? "native" : "proxy", reservedSlots);
     if (config.isNative) {
-      fprintf(stderr, ", %u properties and %s in dictionary mode\n",
-              config.native.propCount,
+      fprintf(stderr,
+              ", %u properties, %u elements and %s in dictionary mode\n",
+              config.native.propCount, config.native.elementCount,
               config.native.inDictionaryMode ? "is" : "is not");
     } else {
       fprintf(stderr, " with %s values\n",
@@ -315,7 +336,7 @@ bool CheckObject(HandleObject obj, const ObjectConfig& config, uint32_t id) {
   }
 
   if (config.isNative) {
-    NativeObject* nobj = &obj->as<NativeObject>();
+    RootedNativeObject nobj(cx, &obj->as<NativeObject>());
     uint32_t propCount = GetPropertyCount(nobj);
 
     CHECK(propCount == config.native.propCount);
@@ -326,6 +347,12 @@ bool CheckObject(HandleObject obj, const ObjectConfig& config, uint32_t id) {
 
       RootedValue value(cx);
       CHECK(JS_GetPropertyById(cx, obj, name, &value));
+      CHECK(value == Int32Value(id++));
+    }
+
+    CHECK(nobj->getDenseInitializedLength() == config.native.elementCount);
+    for (uint32_t i = 0; i < config.native.elementCount; i++) {
+      Value value = nobj->getDenseElement(i);
       CHECK(value == Int32Value(id++));
     }
   }
