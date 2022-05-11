@@ -146,6 +146,7 @@ class SettingsAddonsTest {
         }
     }
 
+    @Ignore("Failing, see: https://github.com/mozilla-mobile/fenix/issues/23749")
     @SmokeTest
     @Test
     fun useAddonsInPrivateModeTest() {
