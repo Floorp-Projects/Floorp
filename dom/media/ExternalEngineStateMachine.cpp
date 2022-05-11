@@ -5,6 +5,9 @@
 #include "ExternalEngineStateMachine.h"
 
 #include "PerformanceRecorder.h"
+#ifdef MOZ_WMF
+#  include "mozilla/MFMediaEngineChild.h"
+#endif
 #include "mozilla/ProfilerLabels.h"
 
 namespace mozilla {
@@ -78,7 +81,9 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
     : MediaDecoderStateMachineBase(aDecoder, aReader),
       mState(State::InitEngine) {
   LOG("Created ExternalEngineStateMachine");
-  // TODO : create the engine in following patch.
+#ifdef MOZ_WMF
+  mEngine.reset(new MFMediaEngineWrapper(this));
+#endif
   if (mEngine) {
     mEngine->Init(!mMinimizePreroll)
         ->Then(OwnerThread(), __func__, this,
