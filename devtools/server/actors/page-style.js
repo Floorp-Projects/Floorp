@@ -1206,7 +1206,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       const resourceId = this.styleSheetsManager.getStyleSheetResourceId(sheet);
       let authoredText = await this.styleSheetsManager.getText(resourceId);
       authoredText += "\n" + selector + " {\n" + "}";
-      await this.styleSheetsManager.update(resourceId, authoredText, false);
+      await this.styleSheetsManager.setStyleSheetText(resourceId, authoredText);
     } else {
       // If inserting the rule succeeded, go ahead and edit the source
       // text if requested.
