@@ -9,6 +9,7 @@ import {
   getThreadContext,
 } from "../../selectors";
 
+import { waitForSourceToBeRegisteredInStore } from "../../client/firefox/create";
 import { mapFrames, fetchFrames } from ".";
 import { removeBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
@@ -55,6 +56,7 @@ export function paused(pauseInfo) {
     // and highlight the paused line
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
+      await waitForSourceToBeRegisteredInStore(selectedFrame.location.sourceId);
       await dispatch(selectSpecificLocation(cx, selectedFrame.location));
     }
 
