@@ -115,5 +115,5 @@
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">Update card expiration date?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Card number will be encrypted. Security coded won\'t be saved.</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Card number will be encrypted. Security code won’t be saved.</string>
 </resources>
