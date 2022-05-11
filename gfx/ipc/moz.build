@@ -28,6 +28,7 @@ EXPORTS.mozilla.layers += [
     "CompositorOptions.h",
     "CompositorSession.h",
     "InProcessCompositorSession.h",
+    "OverlayInfo.h",
     "RemoteCompositorSession.h",
 ]
 

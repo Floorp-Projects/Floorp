@@ -226,6 +226,17 @@ void GPUParent::NotifyDeviceReset() {
   Unused << SendNotifyDeviceReset(data);
 }
 
+void GPUParent::NotifyOverlayInfo(layers::OverlayInfo aInfo) {
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "gfx::GPUParent::NotifyOverlayInfo", [aInfo]() -> void {
+          GPUParent::GetSingleton()->NotifyOverlayInfo(aInfo);
+        }));
+    return;
+  }
+  Unused << SendNotifyOverlayInfo(aInfo);
+}
+
 mozilla::ipc::IPCResult GPUParent::RecvInit(
     nsTArray<GfxVarUpdate>&& vars, const DevicePrefs& devicePrefs,
     nsTArray<LayerTreeIdMapping>&& aMappings,
