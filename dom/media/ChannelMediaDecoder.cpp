@@ -200,7 +200,7 @@ already_AddRefed<ChannelMediaDecoder> ChannelMediaDecoder::Clone(
   return decoder.forget();
 }
 
-MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine() {
+MediaDecoderStateMachineBase* ChannelMediaDecoder::CreateStateMachine() {
   MOZ_ASSERT(NS_IsMainThread());
   MediaFormatReaderInit init;
   init.mVideoFrameContainer = GetVideoFrameContainer();
