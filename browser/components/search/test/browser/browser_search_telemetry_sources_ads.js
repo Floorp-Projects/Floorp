@@ -24,6 +24,15 @@ const TEST_PROVIDER_INFO = [
     followOnParamNames: ["a"],
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
+  {
+    telemetryId: "slow-page-load",
+    searchPageRegexp: /^http:\/\/mochi.test:.+\/browser\/browser\/components\/search\/test\/browser\/slow_loading_page_with_ads(_on_load_event)?.html/,
+    queryParamName: "s",
+    codeParamName: "abc",
+    taggedCodes: ["ff"],
+    followOnParamNames: ["a"],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
+  },
 ];
 
 function getPageUrl(useExample = false, useAdPage = false) {
@@ -150,6 +159,70 @@ add_task(async function test_track_ad() {
       "browser.search.content.unknown": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_ad_on_DOMContentLoaded() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://mochi.test:8888"
+    ) + "slow_loading_page_with_ads.html";
+
+  let observeAdPreviouslyRecorded = TestUtils.consoleMessageObserved(msg => {
+    return msg.wrappedJSObject.arguments[0].includes(
+      "Ad was previously reported for browser with URI"
+    );
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(url)
+  );
+
+  // Observe ad was counted on DOMContentLoaded.
+  // We do not count the ad again on load.
+  await observeAdPreviouslyRecorded;
+
+  await assertSearchSourcesTelemetry(
+    { "slow-page-load.in-content:sap:ff": 1 },
+    {
+      "browser.search.content.unknown": { "slow-page-load:tagged:ff": 1 },
+      "browser.search.with_ads": { "slow-page-load:sap": 1 },
+      "browser.search.withads.unknown": { "slow-page-load:tagged": 1 },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_track_ad_on_load_event() {
+  Services.telemetry.clearScalars();
+  searchCounts.clear();
+
+  let url =
+    getRootDirectory(gTestPath).replace(
+      "chrome://mochitests/content",
+      "http://mochi.test:8888"
+    ) + "slow_loading_page_with_ads_on_load_event.html";
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    getSERPUrl(url)
+  );
+
+  await assertSearchSourcesTelemetry(
+    { "slow-page-load.in-content:sap:ff": 1 },
+    {
+      "browser.search.content.unknown": { "slow-page-load:tagged:ff": 1 },
+      "browser.search.with_ads": { "slow-page-load:sap": 1 },
+      "browser.search.withads.unknown": { "slow-page-load:tagged": 1 },
     }
   );
 

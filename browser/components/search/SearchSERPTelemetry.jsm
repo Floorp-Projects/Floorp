@@ -61,14 +61,14 @@ class TelemetryHandler {
   // _browserInfoByURL is a map of tracked search urls to objects containing:
   // * {object} info
   //   the search provider information associated with the url.
-  // * {WeakSet} browsers
-  //   a weak set of browsers that have the url loaded.
+  // * {WeakMap} browsers
+  //   a weak map of browsers that have the url loaded and their ad report state.
   // * {integer} count
   //   a manual count of browsers logged.
-  // We keep a weak set of browsers, in case we miss something on our counts
+  // We keep a weak map of browsers, in case we miss something on our counts
   // and cause a memory leak - worst case our map is slightly bigger than it
   // needs to be.
-  // The manual count is because WeakSet doesn't give us size/length
+  // The manual count is because WeakMap doesn't give us size/length
   // information, but we want to know when we can clean up our associated
   // entry.
   _browserInfoByURL = new Map();
@@ -199,8 +199,8 @@ class TelemetryHandler {
     });
   }
 
-  reportPageWithAds(info) {
-    this._contentHandler._reportPageWithAds(info);
+  reportPageWithAds(info, browser) {
+    this._contentHandler._reportPageWithAds(info, browser);
   }
 
   /**
@@ -240,13 +240,14 @@ class TelemetryHandler {
     this._reportSerpPage(info, source, url);
 
     let item = this._browserInfoByURL.get(url);
+
     if (item) {
-      item.browsers.add(browser);
+      item.browsers.set(browser, "no ads reported");
       item.count++;
       item.source = source;
     } else {
-      this._browserInfoByURL.set(url, {
-        browsers: new WeakSet([browser]),
+      item = this._browserInfoByURL.set(url, {
+        browsers: new WeakMap().set(browser, "no ads reported"),
         info,
         count: 1,
         source,
@@ -282,13 +283,13 @@ class TelemetryHandler {
    *
    * @param {string} url URL to fetch the tracking data for.
    * @returns {object} Map containing the following members:
-   *   - {WeakSet} browsers
-   *     Set of browser elements that belong to `url`.
+   *   - {WeakMap} browsers
+   *     Map of browser elements that belong to `url` and their ad report state.
    *   - {object} info
    *     Info dictionary as returned by `_checkURLForSerpMatch`.
    *   - {number} count
    *     The number of browser element we can most accurately tell we're
-   *     tracking, since they're inside a WeakSet.
+   *     tracking, since they're inside a WeakMap.
    */
   _findBrowserItemForURL(url) {
     try {
@@ -776,16 +777,29 @@ class ContentHandler {
    * provider pages that we're tracking.
    *
    * @param {object} info
-   * @param {boolean} info.hasAds Whether or not the page has adverts.
-   * @param {string} info.url The url of the page.
+   * @param {boolean} info.hasAds
+   *     Whether or not the page has adverts.
+   * @param {string} info.url
+   *     The url of the page.
+   * @param {object} browser
+   *     The browser associated with the page.
    */
-  _reportPageWithAds(info) {
+  _reportPageWithAds(info, browser) {
     let item = this._findBrowserItemForURL(info.url);
     if (!item) {
       logConsole.warn(
         "Expected to report URI for",
         info.url,
         "with ads but couldn't find the information"
+      );
+      return;
+    }
+
+    let adReportState = item.browsers.get(browser);
+    if (adReportState == "ad reported") {
+      logConsole.debug(
+        "Ad was previously reported for browser with URI",
+        info.url
       );
       return;
     }
@@ -807,6 +821,8 @@ class ContentHandler {
       `${item.info.provider}:${item.info.type}`,
       1
     );
+
+    item.browsers.set(browser, "ad reported");
   }
 }
 

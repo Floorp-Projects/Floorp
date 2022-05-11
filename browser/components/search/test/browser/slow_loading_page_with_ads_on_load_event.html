@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body id='body'>
+</body>
+  <img src="http://mochi.test:8888/browser/browser/components/search/test/browser/slow_loading_page_with_ads.sjs">
+  <script>
+    setTimeout(() => {
+      let body = document.getElementById('body');
+      let ad1 = document.createElement('a');
+      ad1.setAttribute('id', 'ad1');
+      ad1.setAttribute('href', 'https://example.com/ad');
+      ad1.innerHTML = 'Ad link'
+
+      let ad2 = document.createElement('a');
+      ad2.setAttribute('id', 'ad2');
+      ad2.setAttribute('href', 'https://example.com/ad2');
+      ad2.innerHTML = 'Second Ad link'
+
+      let frame = document.createElement('iframe');
+      frame.setAttribute('src', 'searchTelemetry.html');
+
+      body.appendChild(ad1);
+      body.appendChild(ad2);
+      body.appendChild(frame);
+    }, 2000);
+  </script>
+</html>

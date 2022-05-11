@@ -13,8 +13,10 @@ ChromeUtils.defineModuleGetter(
 
 class SearchSERPTelemetryParent extends JSWindowActorParent {
   receiveMessage(msg) {
+    let browser = this.browsingContext.top.embedderElement;
+
     if (msg.name == "SearchTelemetry:PageInfo") {
-      SearchSERPTelemetry.reportPageWithAds(msg.data);
+      SearchSERPTelemetry.reportPageWithAds(msg.data, browser);
     }
   }
 }
