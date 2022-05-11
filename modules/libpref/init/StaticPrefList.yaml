@@ -5139,6 +5139,11 @@
   value: 256
   mirror: always
 
+- name: gfx.canvas.accelerated.reserve-empty-cache
+  type: RelaxedAtomicUint32
+  value: 36
+  mirror: always
+
 - name: gfx.canvas.accelerated.max-size
   type: RelaxedAtomicInt32
   value: 0

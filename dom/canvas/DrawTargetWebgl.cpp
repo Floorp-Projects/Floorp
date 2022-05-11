@@ -1436,8 +1436,14 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           // from that if possible.
           for (auto& shared : mSharedTextures) {
             if (shared->GetFormat() == format) {
+              bool wasEmpty = !shared->HasAllocatedHandles();
               handle = shared->Allocate(texSize);
               if (handle) {
+                if (wasEmpty) {
+                  // If the page was previously empty, then deduct it from the
+                  // empty memory reserves.
+                  mEmptyTextureMemory -= shared->UsedBytes();
+                }
                 break;
               }
             }
@@ -1621,9 +1627,19 @@ bool DrawTargetWebgl::SharedContext::RemoveSharedTexture(
   if (pos == mSharedTextures.end()) {
     return false;
   }
-  mTotalTextureMemory -= aTexture->UsedBytes();
-  mSharedTextures.erase(pos);
-  ClearLastTexture();
+  // Keep around a reserve of empty pages to avoid initialization costs from
+  // allocating shared pages. If still below the limit of reserved pages, then
+  // just add it to the reserve. Otherwise, erase the empty texture page.
+  size_t maxBytes = StaticPrefs::gfx_canvas_accelerated_reserve_empty_cache()
+                    << 20;
+  size_t usedBytes = aTexture->UsedBytes();
+  if (mEmptyTextureMemory + usedBytes <= maxBytes) {
+    mEmptyTextureMemory += usedBytes;
+  } else {
+    mTotalTextureMemory -= usedBytes;
+    mSharedTextures.erase(pos);
+    ClearLastTexture();
+  }
   return true;
 }
 
