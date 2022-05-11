@@ -210,9 +210,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
 
       if (state & states::BUSY) {
         sessionAcc->SendWindowStateChangedEvent(accessible);
-        if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-          sessionAcc->SendWindowContentChangedEvent();
-        }
       }
       break;
     }
