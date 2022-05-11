@@ -133,10 +133,6 @@ class MediaFormatReader final
   // mBuffered should be recalculated and updated accordingly.
   void NotifyDataArrived();
 
-  // Update ID for the external playback engine. Currently it's only used on
-  // Windows when the media engine playback is enabled.
-  void UpdateMediaEngineId(uint64_t aMediaEngineId);
-
  protected:
   // Recomputes mBuffered.
   void UpdateBuffered();
@@ -834,9 +830,6 @@ class MediaFormatReader final
   bool IsDecoderWaitingForCDM(TrackType aTrack);
 
   void GetDebugInfo(dom::MediaFormatReaderDebugInfo& aInfo);
-
-  // Only be used on Windows when the media engine playback is enabled.
-  Maybe<uint64_t> mMediaEngineId;
 };
 
 }  // namespace mozilla
