@@ -6969,6 +6969,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
     if (this._needsImpressionStats(cards)) {
       props.dispatch(actionCreators.DiscoveryStreamImpressionStats({
         source: props.source.toUpperCase(),
+        window_inner_width: window.innerWidth,
+        window_inner_height: window.innerHeight,
         tiles: cards.map(link => ({
           id: link.id,
           pos: link.pos,
@@ -7619,6 +7621,8 @@ class _DSCard extends (external_React_default()).PureComponent {
       this.props.dispatch(actionCreators.ImpressionStats({
         source: this.props.is_video ? "CARDGRID_VIDEO" : this.props.type.toUpperCase(),
         click: 0,
+        window_inner_width: this.props.windowObj.innerWidth,
+        window_inner_height: this.props.windowObj.innerHeight,
         tiles: [{
           id: this.props.id,
           pos: this.props.pos,

@@ -97,6 +97,37 @@ static COLD size_t get_stack_size_internal(const pthread_attr_t *const thread_at
     return 0;
 }
 
+static COLD void get_num_threads(Dav1dContext *const c, const Dav1dSettings *const s,
+                                 unsigned *n_tc, unsigned *n_fc)
+{
+    /* ceil(sqrt(n)) */
+    static const uint8_t fc_lut[49] = {
+        1,                                     /*     1 */
+        2, 2, 2,                               /*  2- 4 */
+        3, 3, 3, 3, 3,                         /*  5- 9 */
+        4, 4, 4, 4, 4, 4, 4,                   /* 10-16 */
+        5, 5, 5, 5, 5, 5, 5, 5, 5,             /* 17-25 */
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,       /* 26-36 */
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, /* 37-49 */
+    };
+    *n_tc = s->n_threads ? s->n_threads :
+        iclip(dav1d_num_logical_processors(c), 1, DAV1D_MAX_THREADS);
+    *n_fc = s->max_frame_delay ? umin(s->max_frame_delay, *n_tc) :
+            *n_tc < 50 ? fc_lut[*n_tc - 1] : 8; // min(8, ceil(sqrt(n)))
+}
+
+COLD int dav1d_get_frame_delay(const Dav1dSettings *const s) {
+    unsigned n_tc, n_fc;
+    validate_input_or_ret(s != NULL, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(s->n_threads >= 0 &&
+                          s->n_threads <= DAV1D_MAX_THREADS, DAV1D_ERR(EINVAL));
+    validate_input_or_ret(s->max_frame_delay >= 0 &&
+                          s->max_frame_delay <= DAV1D_MAX_FRAME_DELAY, DAV1D_ERR(EINVAL));
+
+    get_num_threads(NULL, s, &n_tc, &n_fc);
+    return n_fc;
+}
+
 COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     static pthread_once_t initted = PTHREAD_ONCE_INIT;
     pthread_once(&initted, init_internal);
@@ -171,20 +202,7 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     c->flush = &c->flush_mem;
     atomic_init(c->flush, 0);
 
-    c->n_tc = s->n_threads ? s->n_threads :
-        iclip(dav1d_num_logical_processors(c), 1, DAV1D_MAX_THREADS);
-    /* ceil(sqrt(n)) */
-    static const uint8_t fc_lut[49] = {
-        1,                                     /*     1 */
-        2, 2, 2,                               /*  2- 4 */
-        3, 3, 3, 3, 3,                         /*  5- 9 */
-        4, 4, 4, 4, 4, 4, 4,                   /* 10-16 */
-        5, 5, 5, 5, 5, 5, 5, 5, 5,             /* 17-25 */
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,       /* 26-36 */
-        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, /* 37-49 */
-    };
-    c->n_fc = s->max_frame_delay ? umin(s->max_frame_delay, c->n_tc) :
-              c->n_tc < 50 ? fc_lut[c->n_tc - 1] : 8; // min(8, ceil(sqrt(n)))
+    get_num_threads(c, s, &c->n_tc, &c->n_fc);
 
     c->fc = dav1d_alloc_aligned(sizeof(*c->fc) * c->n_fc, 32);
     if (!c->fc) goto error;

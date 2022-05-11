@@ -447,6 +447,7 @@ class DynamicToolbarTest : BaseSessionTest() {
 
         mainSession.loadTestPath(BaseSessionTest.BODY_FULLY_COVERED_BY_GREEN_ELEMENT)
         mainSession.waitForPageStop()
+        mainSession.flushApzRepaints()
 
         // Scrolling down by touch events.
         var downTime = SystemClock.uptimeMillis();

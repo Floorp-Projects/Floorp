@@ -465,9 +465,14 @@ this.TelemetryFeed = class TelemetryFeed {
     }
 
     Object.keys(impressionSets).forEach(source => {
+      const { tiles, window_inner_width, window_inner_height } = impressionSets[
+        source
+      ];
       const payload = this.createImpressionStats(port, {
         source,
-        tiles: impressionSets[source],
+        tiles,
+        window_inner_width,
+        window_inner_height,
       });
       this.sendStructuredIngestionEvent(
         payload,
@@ -1044,17 +1049,22 @@ this.TelemetryFeed = class TelemetryFeed {
       throw new Error("Session does not exist.");
     }
 
+    const { window_inner_width, window_inner_height, source, tiles } = data;
     const impressionSets = session.impressionSets || {};
-    const impressions = impressionSets[data.source] || [];
+    const impressions = impressionSets[source] || {
+      tiles: [],
+      window_inner_width,
+      window_inner_height,
+    };
     // The payload might contain other properties, we need `id`, `pos` and potentially `shim` here.
-    data.tiles.forEach(tile =>
-      impressions.push({
+    tiles.forEach(tile =>
+      impressions.tiles.push({
         id: tile.id,
         pos: tile.pos,
         ...(tile.shim ? { shim: tile.shim } : {}),
       })
     );
-    impressionSets[data.source] = impressions;
+    impressionSets[source] = impressions;
     session.impressionSets = impressionSets;
   }
 

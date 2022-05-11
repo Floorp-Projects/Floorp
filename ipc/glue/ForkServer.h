@@ -24,7 +24,7 @@ class ForkServer {
   bool HandleMessages();
 
   // Called when a message is received.
-  void OnMessageReceived(IPC::Message&& message);
+  void OnMessageReceived(UniquePtr<IPC::Message> message);
 
   static bool RunForkServer(int* aArgc, char*** aArgv);
 

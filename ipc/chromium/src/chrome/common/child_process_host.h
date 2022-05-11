@@ -39,7 +39,8 @@ class ChildProcessHost : public IPC::Channel::Listener {
   bool CreateChannel();
 
   // IPC::Channel::Listener implementation:
-  virtual void OnMessageReceived(IPC::Message&& msg) override {}
+  virtual void OnMessageReceived(
+      mozilla::UniquePtr<IPC::Message> msg) override {}
   virtual void OnChannelConnected(base::ProcessId peer_pid) override {}
   virtual void OnChannelError() override {}
 
@@ -56,10 +57,12 @@ class ChildProcessHost : public IPC::Channel::Listener {
   class ListenerHook : public IPC::Channel::Listener {
    public:
     explicit ListenerHook(ChildProcessHost* host);
-    virtual void OnMessageReceived(IPC::Message&& msg) override;
+    virtual void OnMessageReceived(
+        mozilla::UniquePtr<IPC::Message> msg) override;
     virtual void OnChannelConnected(base::ProcessId peer_pid) override;
     virtual void OnChannelError() override;
-    virtual void GetQueuedMessages(std::queue<IPC::Message>& queue) override;
+    virtual void GetQueuedMessages(
+        std::queue<mozilla::UniquePtr<IPC::Message>>& queue) override;
 
    private:
     ChildProcessHost* host_;

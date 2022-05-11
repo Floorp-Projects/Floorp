@@ -99,6 +99,7 @@ COLD int dav1d_num_logical_processors(Dav1dContext *const c) {
 #elif defined(_SC_NPROCESSORS_ONLN)
     return (int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
-    dav1d_log(c, "Unable to detect thread count, defaulting to single-threaded mode\n");
+    if (c)
+        dav1d_log(c, "Unable to detect thread count, defaulting to single-threaded mode\n");
     return 1;
 }

@@ -123,6 +123,20 @@ describe("<DSCard>", () => {
   });
 
   describe("onLinkClick", () => {
+    let fakeWindow;
+
+    beforeEach(() => {
+      fakeWindow = {
+        requestIdleCallback: sinon.stub().returns(1),
+        cancelIdleCallback: sinon.stub(),
+        innerWidth: 1000,
+        innerHeight: 900,
+      };
+      wrapper = mount(
+        <DSCard {...DEFAULT_PROPS} dispatch={dispatch} windowObj={fakeWindow} />
+      );
+    });
+
     it("should call dispatch with the correct events", () => {
       wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
 
@@ -144,6 +158,8 @@ describe("<DSCard>", () => {
           click: 0,
           source: "FOO",
           tiles: [{ id: "fooidx", pos: 1 }],
+          window_inner_width: 1000,
+          window_inner_height: 900,
         })
       );
     });
@@ -169,6 +185,8 @@ describe("<DSCard>", () => {
           click: 0,
           source: "FOO",
           tiles: [{ id: "fooidx", pos: 1 }],
+          window_inner_width: 1000,
+          window_inner_height: 900,
         })
       );
     });
@@ -201,6 +219,8 @@ describe("<DSCard>", () => {
           click: 0,
           source: "FOO",
           tiles: [{ id: "fooidx", pos: 1, shim: "click shim" }],
+          window_inner_width: 1000,
+          window_inner_height: 900,
         })
       );
     });
