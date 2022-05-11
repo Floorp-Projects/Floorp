@@ -12211,6 +12211,51 @@
   value: true
   mirror: always
 
+- name: security.pki.cert_short_lifetime_in_days
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
+# NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+# See the comment in CertVerifier.cpp.
+# 1 = forbid sha1 in certificate signatures, even for imported roots
+- name: security.pki.sha1_enforcement_level
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
+# security.pki.netscape_step_up_policy controls how the platform handles the
+# id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
+# 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
+# 1: it is considered equivalent when the notBefore is before 23 August 2016
+# 2: similarly, but for 23 August 2015
+# 3: it is never considered equivalent
+- name: security.pki.netscape_step_up_policy
+  type: RelaxedAtomicUint32
+#ifdef RELEASE_OR_BETA
+  value: 1
+#else
+  value: 2
+#endif
+  mirror: always
+
+# Configures Certificate Transparency support mode:
+# 0: Fully disabled.
+# 1: Only collect telemetry. CT qualification checks are not performed.
+- name: security.pki.certificate_transparency.mode
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
+# 0: Disable CRLite entirely.
+# 1: Consult CRLite but only collect telemetry.
+# 2: Consult CRLite and enforce both "Revoked" and "Not Revoked" results.
+# 3: Consult CRLite and enforce "Not Revoked" results, but defer to OCSP for "Revoked".
+- name: security.pki.crlite_mode
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
 - name: security.tls.version.min
   type: RelaxedAtomicUint32
   value: 3
