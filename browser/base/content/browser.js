@@ -9983,51 +9983,45 @@ var ConfirmationHint = {
 
 let floorpinterfacenum = Services.prefs.getIntPref("floorp.browser.user.interface")
 
+const ProtonfixUI = `@import url(chrome://browser/skin/protonfix/protonfix.css);`
+const PhotonUI = `@import url(chrome://browser/skin/photon/photonChrome.css);
+                  @import url(chrome://browser/skin/photon/photonContent.css);`
+const MaterialUI = `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`
+const fluentUI = `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`
+
 switch(floorpinterfacenum){
 
+//ProtonUI 
   case 1 :
      Services.prefs.setIntPref("browser.uidensity", 0);
      break;
 
-
+//ProtonUIFix
   case 2 : 
    var Tag = document.createElement('style');
-     Tag.innerText = `
-     @import url(chrome://browser/skin/protonfix/protonfix.css);
-     `;
+     Tag.innerText = ProtonfixUI;
      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
      Services.prefs.setIntPref("browser.uidensity", 1);
     break;
-
    
   case 3:
    var Tag = document.createElement('style');
-   Tag.innerText = `
-   @import url(chrome://browser/skin/photon/photonChrome.css);
-   @import url(chrome://browser/skin/photon/photonContent.css);
-   `;
+   Tag.innerText = PhotonUI;
    document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
    Services.prefs.setIntPref("browser.uidensity", 0);
    break;
 
-
   case 4:
     var Tag = document.createElement('style');
-    Tag.innerText = `
-    @import url(chrome://browser/skin/floorplegacy/floorplegacy.css);
-    `;
+    Tag.innerText = MaterialUI;
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
-
 
   case 5:
     var Tag = document.createElement('style');
-    Tag.innerText = `
-    @import url(chrome://browser/skin/fluentUI/fluentUI.css);
-    `;
+    Tag.innerText = fluentUI;
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
-
 }
 
 
