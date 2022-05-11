@@ -23,6 +23,10 @@
 #include "nsIObserver.h"
 #include "mozilla/StaticPrefs_media.h"
 
+#ifdef MOZ_WMF
+#  include "MFMediaEngineChild.h"
+#endif
+
 namespace mozilla {
 
 using namespace layers;
@@ -557,6 +561,21 @@ bool RemoteDecoderManagerChild::DeallocPRemoteDecoderChild(
     PRemoteDecoderChild* actor) {
   RemoteDecoderChild* child = static_cast<RemoteDecoderChild*>(actor);
   child->IPDLActorDestroyed();
+  return true;
+}
+
+PMFMediaEngineChild* RemoteDecoderManagerChild::AllocPMFMediaEngineChild() {
+  MOZ_ASSERT_UNREACHABLE(
+      "RemoteDecoderManagerChild cannot create MFMediaEngineChild classes");
+  return nullptr;
+}
+
+bool RemoteDecoderManagerChild::DeallocPMFMediaEngineChild(
+    PMFMediaEngineChild* actor) {
+#ifdef MOZ_WMF
+  MFMediaEngineChild* child = static_cast<MFMediaEngineChild*>(actor);
+  child->IPDLActorDestroyed();
+#endif
   return true;
 }
 
