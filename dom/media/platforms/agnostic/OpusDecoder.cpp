@@ -51,30 +51,23 @@ RefPtr<ShutdownPromise> OpusDataDecoder::Shutdown() {
   return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
-void OpusDataDecoder::AppendCodecDelay(MediaByteBuffer* config,
-                                       uint64_t codecDelayUS) {
-  uint8_t buffer[sizeof(uint64_t)];
-  BigEndian::writeUint64(buffer, codecDelayUS);
-  config->AppendElements(buffer, sizeof(uint64_t));
-}
-
 RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
   mThread = GetCurrentSerialEventTarget();
-  RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
-      ForceGetAudioCodecSpecificBlob(mInfo.mCodecSpecificConfig);
-  size_t length = audioCodecSpecificBinaryBlob->Length();
-  uint8_t* p = audioCodecSpecificBinaryBlob->Elements();
-  if (length < sizeof(uint64_t)) {
-    OPUS_DEBUG("CodecSpecificConfig too short to read codecDelay!");
+  if (!mInfo.mCodecSpecificConfig.is<OpusCodecSpecificData>()) {
+    MOZ_ASSERT_UNREACHABLE();
+    OPUS_DEBUG("Opus decoder got non-opus codec specific data");
     return InitPromise::CreateAndReject(
         MediaResult(
             NS_ERROR_DOM_MEDIA_FATAL_ERR,
-            RESULT_DETAIL("CodecSpecificConfig too short to read codecDelay!")),
+            RESULT_DETAIL("Opus decoder got non-opus codec specific data!")),
         __func__);
   }
-  int64_t codecDelay = BigEndian::readUint64(p);
-  length -= sizeof(uint64_t);
-  p += sizeof(uint64_t);
+  const OpusCodecSpecificData opusCodecSpecificData =
+      mInfo.mCodecSpecificConfig.as<OpusCodecSpecificData>();
+  RefPtr<MediaByteBuffer> opusHeaderBlob =
+      opusCodecSpecificData.mHeadersBinaryBlob;
+  size_t length = opusHeaderBlob->Length();
+  uint8_t* p = opusHeaderBlob->Elements();
   if (NS_FAILED(DecodeHeader(p, length))) {
     OPUS_DEBUG("Error decoding header!");
     return InitPromise::CreateAndReject(
@@ -110,7 +103,7 @@ RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
   mSkip = mOpusParser->mPreSkip;
   mPaddingDiscarded = false;
 
-  if (codecDelay !=
+  if (opusCodecSpecificData.mContainerCodecDelayMicroSeconds !=
       FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate).value()) {
     NS_WARNING(
         "Invalid Opus header: container CodecDelay and Opus pre-skip do not "
