@@ -104,6 +104,7 @@ class ExternalEngineStateMachine final
       InitEngine() = default;
       ~InitEngine() { mEngineInitRequest.DisconnectIfExists(); }
       MozPromiseRequestHolder<GenericNonExclusivePromise> mEngineInitRequest;
+      RefPtr<GenericNonExclusivePromise> mInitPromise;
     };
     struct ReadingMetadata {
       ReadingMetadata() = default;
@@ -253,17 +254,20 @@ class ExternalPlaybackEngine {
 
   // Init the engine and specify the preload request.
   virtual RefPtr<GenericNonExclusivePromise> Init(bool aShouldPreload);
+  virtual void Shutdown() = 0;
+  virtual uint64_t Id() const = 0;
+
+  // Following methods should only be called after successfully initialize the
+  // external engine.
   virtual void Play() = 0;
   virtual void Pause() = 0;
   virtual void Seek(const media::TimeUnit& aTargetTime) = 0;
-  virtual void Shutdown() = 0;
   virtual void SetPlaybackRate(double aPlaybackRate) = 0;
   virtual void SetVolume(double aVolume) = 0;
   virtual void SetLooping(bool aLooping);
   virtual void SetPreservesPitch(bool aPreservesPitch) = 0;
   virtual media::TimeUnit GetCurrentPosition() = 0;
   virtual void NotifyEndOfStream(TrackInfo::TrackType aType) = 0;
-  virtual uint64_t Id() const = 0;
   virtual void SetMediaInfo(const MediaInfo& aInfo) = 0;
 
   ExternalEngineStateMachine* const MOZ_NON_OWNING_REF mOwner;
