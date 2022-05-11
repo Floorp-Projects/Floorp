@@ -31,6 +31,9 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   static MFMediaEngineParent* GetMediaEngineById(uint64_t aId);
 
+  MFMediaEngineStream* GetMediaEngineStream(TrackType aType,
+                                            const CreateDecoderParams& aParam);
+
   uint64_t Id() const { return mMediaEngineId; }
 
   // Methods for PMFMediaEngineParent

@@ -6,6 +6,10 @@
 
 EXPORTS += [
     "DXVA2Manager.h",
+    "MFMediaEngineAudioStream.h",
+    "MFMediaEngineDecoderModule.h",
+    "MFMediaEngineStream.h",
+    "MFMediaEngineVideoStream.h",
     "MFTDecoder.h",
     "WMF.h",
     "WMFAudioMFTManager.h",
@@ -16,8 +20,13 @@ EXPORTS += [
     "WMFUtils.h",
     "WMFVideoMFTManager.h",
 ]
+
 UNIFIED_SOURCES += [
     "DXVA2Manager.cpp",
+    "MFMediaEngineAudioStream.cpp",
+    "MFMediaEngineDecoderModule.cpp",
+    "MFMediaEngineStream.cpp",
+    "MFMediaEngineVideoStream.cpp",
     "MFTDecoder.cpp",
     "MFTEncoder.cpp",
     "WMFAudioMFTManager.cpp",
