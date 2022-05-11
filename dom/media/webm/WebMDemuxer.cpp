@@ -397,10 +397,10 @@ nsresult WebMDemuxer::ReadMetadata() {
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         uint64_t codecDelayUs = params.codec_delay / 1000;
         mInfo.mAudio.mMimeType = "audio/opus";
-        AudioCodecSpecificBinaryBlob blob;
-        OpusDataDecoder::AppendCodecDelay(blob.mBinaryBlob, codecDelayUs);
+        OpusCodecSpecificData opusCodecSpecificData;
+        opusCodecSpecificData.mContainerCodecDelayMicroSeconds = codecDelayUs;
         mInfo.mAudio.mCodecSpecificConfig =
-            AudioCodecSpecificVariant{std::move(blob)};
+            AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = params.rate;

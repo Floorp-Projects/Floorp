@@ -156,9 +156,9 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   Mp4parseByteData extraData = audio->sample_info[0].extra_data;
   MOZ_ASSERT(mCodecSpecificConfig.is<NoCodecSpecificData>(),
              "Should have no codec specific data yet");
-  AudioCodecSpecificBinaryBlob codecSpecificBinaryBlob;
   if (codecType == MP4PARSE_CODEC_OPUS) {
     mMimeType = "audio/opus"_ns;
+    OpusCodecSpecificData opusCodecSpecificData{};
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
     // start of the codec-specific config blob.
@@ -166,14 +166,16 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
         mp4ParseSampleCodecSpecific.length >= 12) {
       uint16_t preskip = mozilla::LittleEndian::readUint16(
           mp4ParseSampleCodecSpecific.data + 10);
-      mozilla::OpusDataDecoder::AppendCodecDelay(
-          codecSpecificBinaryBlob.mBinaryBlob,
-          mozilla::FramesToUsecs(preskip, 48000).value());
+      opusCodecSpecificData.mContainerCodecDelayMicroSeconds =
+          mozilla::FramesToUsecs(preskip, 48000).value();
     } else {
       // This file will error later as it will be rejected by the opus decoder.
-      mozilla::OpusDataDecoder::AppendCodecDelay(
-          codecSpecificBinaryBlob.mBinaryBlob, 0);
+      opusCodecSpecificData.mContainerCodecDelayMicroSeconds = 0;
     }
+    opusCodecSpecificData.mHeadersBinaryBlob->AppendElements(
+        mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
+    mCodecSpecificConfig =
+        AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
   } else if (codecType == MP4PARSE_CODEC_AAC) {
     mMimeType = "audio/mp4a-latm"_ns;
     AacCodecSpecificData aacCodecSpecificData{};
@@ -216,9 +218,12 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
     mProfile = audio->sample_info[0].profile;
   }
 
-  // If length is 0 we append nothing
-  mExtraData->AppendElements(extraData.data, extraData.length);
   if (mCodecSpecificConfig.is<NoCodecSpecificData>()) {
+    // Handle codecs that are not explicitly handled above.
+    MOZ_ASSERT(
+        extraData.length == 0,
+        "Codecs that use extra data should be explicitly handled already");
+    AudioCodecSpecificBinaryBlob codecSpecificBinaryBlob;
     // No codec specific metadata set, use the generic form.
     codecSpecificBinaryBlob.mBinaryBlob->AppendElements(
         mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
