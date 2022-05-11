@@ -262,7 +262,6 @@ mochitest-browser-chrome:
             default: []  # we don't run linux opt/debug/asan only with M-swr, now with fission this isn't needed
     tier:
         by-variant:
-            fission(-xorigin)?: default
             webrender-sw:
                 by-test-platform:
                     linux.*64(-asan|-shippable)?-qr/(opt|debug): 1
@@ -376,7 +375,8 @@ browser-screenshots:
     treeherder-symbol: M(ss)
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
-    variants: ["fission"]
+    run-without-variant: false
+    variants: ["fission", "no-fission"]
     run-on-projects:
         by-test-platform:
             linux1804-64.*/opt: ['trunk']
@@ -637,10 +637,7 @@ mochitest-chrome-gpu:
                     .*-tsan-qr/opt: ['trunk']
                     android.*/.*: []
                     default: built-projects
-    tier:
-        by-variant:
-            fission: 2
-            default: default
+    tier: default
     mozharness:
         mochitest-flavor: chrome
         extra-options:

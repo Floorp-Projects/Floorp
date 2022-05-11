@@ -68,6 +68,8 @@ export class ImpressionStats extends React.PureComponent {
       props.dispatch(
         ac.DiscoveryStreamImpressionStats({
           source: props.source.toUpperCase(),
+          window_inner_width: window.innerWidth,
+          window_inner_height: window.innerHeight,
           tiles: cards.map(link => ({
             id: link.id,
             pos: link.pos,

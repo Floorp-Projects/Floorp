@@ -88,6 +88,7 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
             '../../../third_party/dav1d/src/x86/cdef_avx2.asm',
             '../../../third_party/dav1d/src/x86/cdef_avx512.asm',
             '../../../third_party/dav1d/src/x86/filmgrain16_avx2.asm',
+            '../../../third_party/dav1d/src/x86/filmgrain16_avx512.asm',
             '../../../third_party/dav1d/src/x86/filmgrain_avx2.asm',
             '../../../third_party/dav1d/src/x86/filmgrain_avx512.asm',
             # '../../../third_party/dav1d/src/x86/filmgrain_common.asm',

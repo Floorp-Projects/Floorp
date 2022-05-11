@@ -2460,24 +2460,21 @@ var gPrivacyPane = {
       safeBrowsingPhishingPref.value = enableSafeBrowsing.checked;
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
 
-      if (enableSafeBrowsing.checked) {
-        blockDownloads.removeAttribute("disabled");
-        if (blockDownloads.checked) {
-          blockUncommonUnwanted.removeAttribute("disabled");
-        }
-      } else {
-        blockDownloads.setAttribute("disabled", "true");
-        blockUncommonUnwanted.setAttribute("disabled", "true");
-      }
+      blockDownloads.disabled =
+        !enableSafeBrowsing.checked || blockDownloadsPref.locked;
+      blockUncommonUnwanted.disabled =
+        !blockDownloads.checked ||
+        !enableSafeBrowsing.checked ||
+        blockUnwantedPref.locked ||
+        blockUncommonPref.locked;
     });
 
     blockDownloads.addEventListener("command", function() {
       blockDownloadsPref.value = blockDownloads.checked;
-      if (blockDownloads.checked) {
-        blockUncommonUnwanted.removeAttribute("disabled");
-      } else {
-        blockUncommonUnwanted.setAttribute("disabled", "true");
-      }
+      blockUncommonUnwanted.disabled =
+        !blockDownloads.checked ||
+        blockUnwantedPref.locked ||
+        blockUncommonPref.locked;
     });
 
     blockUncommonUnwanted.addEventListener("command", function() {
@@ -2527,6 +2524,16 @@ var gPrivacyPane = {
     }
     blockUncommonUnwanted.checked =
       blockUnwantedPref.value && blockUncommonPref.value;
+
+    if (safeBrowsingPhishingPref.locked || safeBrowsingMalwarePref.locked) {
+      enableSafeBrowsing.disabled = true;
+    }
+    if (blockDownloadsPref.locked) {
+      blockDownloads.disabled = true;
+    }
+    if (blockUnwantedPref.locked || blockUncommonPref.locked) {
+      blockUncommonUnwanted.disabled = true;
+    }
   },
 
   /**

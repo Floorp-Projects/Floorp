@@ -782,8 +782,9 @@ void FFmpegVideoDecoder<LIBAV_VER>::UpdateDecodeTimes(TimeStamp aDecodeStart) {
   mAverangeDecodeTime =
       (mAverangeDecodeTime * (mDecodedFrames - 1) + decodeTime) /
       mDecodedFrames;
-  FFMPEG_LOG("  averange frame decode time %.2f ms decoded frames %d\n",
-             mAverangeDecodeTime, mDecodedFrames);
+  FFMPEG_LOG(
+      "  decode time %.2f ms averange decode time %.2f ms decoded frames %d\n",
+      decodeTime, mAverangeDecodeTime, mDecodedFrames);
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   int frameDuration = mFrame->pkt_duration;
   if (frameDuration > 0 && frameDuration / 1000.0 < decodeTime) {

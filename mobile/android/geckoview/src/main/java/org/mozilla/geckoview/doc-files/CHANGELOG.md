@@ -17,11 +17,13 @@ exclude: true
 - Added [`DateTimePrompt.stepValue`][102.1] to export [`step`][102.2] attribute of input element.
   ([bug 1499635]({{bugzilla}}1499635))
 - Deprecated [`onLocationChange(2)`][102.3], please use [`onLocationChange(3)`][102.4].
+- Added [`GeckoSession.setPriorityHint`][102.5] function to set the session to either high priority or default.
 
 [102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
 [102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
 [102.3]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String)
 [102.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
+[102.5]: {{javadoc_uri}}/GeckoSession.html#setPriorityHint(int)
 
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
@@ -1176,4 +1178,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 036203b3b292abd94071762009cf965908e40f04
+[api-version]: 2f401dd976431a7a150b8743f3949a50adbeeb4b

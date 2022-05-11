@@ -248,6 +248,14 @@ void TaskController::RunPoolThread() {
         task->mIterator = mThreadableTasks.end();
         task->mInProgress = true;
 
+        if (!mThreadableTasks.empty()) {
+          // Ensure at least one additional thread is woken up if there are
+          // more threadable tasks to process. Notifying all threads at once
+          // isn't actually better for performance since they all need the
+          // GraphMutex to proceed anyway.
+          mThreadPoolCV.Notify();
+        }
+
         bool taskCompleted = false;
         {
           MutexAutoUnlock unlock(mGraphMutex);
@@ -812,12 +820,10 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
         task->mDependencies.clear();
 
         if (!mThreadableTasks.empty()) {
-          // Since this could have multiple dependencies thare are not
-          // restricted to the main thread. Let's wake up our thread pool.
-          // There is a cost to this, it's possible we will want to wake up
-          // only as many threads as we have unblocked tasks, but we currently
-          // have no way to determine that easily.
-          mThreadPoolCV.NotifyAll();
+          // We're going to wake up a single thread in our pool. This thread
+          // is responsible for waking up additional threads in the situation
+          // where more than one task became available.
+          mThreadPoolCV.Notify();
         }
       }
 

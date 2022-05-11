@@ -57,7 +57,7 @@ class Channel {
     virtual ~Listener() = default;
 
     // Called when a message is received.
-    virtual void OnMessageReceived(Message&& message) = 0;
+    virtual void OnMessageReceived(mozilla::UniquePtr<Message> message) = 0;
 
     // Called when the channel is connected and we have received the internal
     // Hello message from the peer.
@@ -69,7 +69,8 @@ class Channel {
 
     // If the listener has queued messages, swap them for |queue| like so
     //   swap(impl->my_queued_messages, queue);
-    virtual void GetQueuedMessages(std::queue<Message>& queue) {}
+    virtual void GetQueuedMessages(
+        std::queue<mozilla::UniquePtr<Message>>& queue) {}
   };
 
   enum Mode { MODE_SERVER, MODE_CLIENT };
