@@ -3,6 +3,38 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#if !defined(MediaDecoderStateMachine_h__)
+#  define MediaDecoderStateMachine_h__
+
+#  include "AudioDeviceInfo.h"
+#  include "ImageContainer.h"
+#  include "MediaDecoder.h"
+#  include "MediaDecoderOwner.h"
+#  include "MediaDecoderStateMachineBase.h"
+#  include "MediaFormatReader.h"
+#  include "MediaQueue.h"
+#  include "MediaSink.h"
+#  include "MediaStatistics.h"
+#  include "MediaTimer.h"
+#  include "SeekJob.h"
+#  include "mozilla/Attributes.h"
+#  include "mozilla/ReentrantMonitor.h"
+#  include "mozilla/StateMirroring.h"
+#  include "nsThreadUtils.h"
+
+namespace mozilla {
+
+class AbstractThread;
+class AudioSegment;
+class DecodedStream;
+class DOMMediaStream;
+class ReaderProxy;
+class TaskQueue;
+
+extern LazyLogModule gMediaDecoderLog;
+
+DDLoggedTypeDeclName(MediaDecoderStateMachine);
+
 /*
 
 Each media element for a media file has one thread called the "audio thread".
@@ -79,92 +111,18 @@ audio data off the queue and plays it with a blocking write to the audio
 hardware (via AudioStream).
 
 */
-#if !defined(MediaDecoderStateMachine_h__)
-#  define MediaDecoderStateMachine_h__
-
-#  include "AudioDeviceInfo.h"
-#  include "ImageContainer.h"
-#  include "MediaDecoder.h"
-#  include "MediaDecoderOwner.h"
-#  include "MediaEventSource.h"
-#  include "MediaFormatReader.h"
-#  include "MediaMetadataManager.h"
-#  include "MediaQueue.h"
-#  include "MediaSink.h"
-#  include "MediaStatistics.h"
-#  include "MediaTimer.h"
-#  include "SeekJob.h"
-#  include "mozilla/Attributes.h"
-#  include "mozilla/ReentrantMonitor.h"
-#  include "mozilla/StateMirroring.h"
-#  include "mozilla/dom/MediaDebugInfoBinding.h"
-#  include "nsThreadUtils.h"
-
-namespace mozilla {
-
-class AbstractThread;
-class AudioSegment;
-class DecodedStream;
-class DOMMediaStream;
-class ReaderProxy;
-class TaskQueue;
-
-extern LazyLogModule gMediaDecoderLog;
-
-struct MediaPlaybackEvent {
-  enum EventType {
-    PlaybackStarted,
-    PlaybackStopped,
-    PlaybackProgressed,
-    PlaybackEnded,
-    SeekStarted,
-    Invalidate,
-    EnterVideoSuspend,
-    ExitVideoSuspend,
-    StartVideoSuspendTimer,
-    CancelVideoSuspendTimer,
-    VideoOnlySeekBegin,
-    VideoOnlySeekCompleted,
-  } mType;
-
-  using DataType = Variant<Nothing, int64_t>;
-  DataType mData;
-
-  MOZ_IMPLICIT MediaPlaybackEvent(EventType aType)
-      : mType(aType), mData(Nothing{}) {}
-
-  template <typename T>
-  MediaPlaybackEvent(EventType aType, T&& aArg)
-      : mType(aType), mData(std::forward<T>(aArg)) {}
-};
-
-enum class VideoDecodeMode : uint8_t { Normal, Suspend };
-
-DDLoggedTypeDeclName(MediaDecoderStateMachine);
-
-/*
-  The state machine class. This manages the decoding and seeking in the
-  MediaDecoderReader on the decode task queue, and A/V sync on the shared
-  state machine thread, and controls the audio "push" thread.
-
-  All internal state is synchronised via the decoder monitor. State changes
-  are propagated by scheduling the state machine to run another cycle on the
-  shared state machine thread.
-
-  See MediaDecoder.h for more details.
-*/
 class MediaDecoderStateMachine
-    : public DecoderDoctorLifeLogger<MediaDecoderStateMachine> {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
+    : public MediaDecoderStateMachineBase,
+      public DecoderDoctorLifeLogger<MediaDecoderStateMachine> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine, override)
 
   using TrackSet = MediaFormatReader::TrackSet;
 
  public:
-  typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
   typedef mozilla::layers::ImageContainer::FrameID FrameID;
   MediaDecoderStateMachine(MediaDecoder* aDecoder, MediaFormatReader* aReader);
 
-  nsresult Init(MediaDecoder* aDecoder);
+  nsresult Init(MediaDecoder* aDecoder) override;
 
   // Enumeration for the valid decoding states
   enum State {
@@ -182,103 +140,21 @@ class MediaDecoderStateMachine
     DECODER_STATE_SHUTDOWN
   };
 
-  // Returns the state machine task queue.
-  TaskQueue* OwnerThread() const { return mTaskQueue; }
-
   RefPtr<GenericPromise> RequestDebugInfo(
-      dom::MediaDecoderStateMachineDebugInfo& aInfo);
+      dom::MediaDecoderStateMachineDebugInfo& aInfo) override;
 
-  // Seeks to the decoder to aTarget asynchronously.
-  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(const SeekTarget& aTarget);
+  size_t SizeOfVideoQueue() const override;
 
-  void DispatchSetPlaybackRate(double aPlaybackRate) {
-    OwnerThread()->DispatchStateChange(NewRunnableMethod<double>(
-        "MediaDecoderStateMachine::SetPlaybackRate", this,
-        &MediaDecoderStateMachine::SetPlaybackRate, aPlaybackRate));
-  }
-
-  RefPtr<ShutdownPromise> BeginShutdown();
-
-  // Set the media fragment end time.
-  void DispatchSetFragmentEndTime(const media::TimeUnit& aEndTime) {
-    RefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "MediaDecoderStateMachine::DispatchSetFragmentEndTime",
-        [self, aEndTime]() {
-          // A negative number means we don't have a fragment end time at all.
-          self->mFragmentEndTime = aEndTime >= media::TimeUnit::Zero()
-                                       ? aEndTime
-                                       : media::TimeUnit::Invalid();
-        });
-    nsresult rv = OwnerThread()->Dispatch(r.forget());
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
-  }
-
-  void DispatchCanPlayThrough(bool aCanPlayThrough) {
-    RefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "MediaDecoderStateMachine::DispatchCanPlayThrough",
-        [self, aCanPlayThrough]() { self->mCanPlayThrough = aCanPlayThrough; });
-    OwnerThread()->DispatchStateChange(r.forget());
-  }
-
-  void DispatchIsLiveStream(bool aIsLiveStream) {
-    RefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "MediaDecoderStateMachine::DispatchIsLiveStream",
-        [self, aIsLiveStream]() { self->mIsLiveStream = aIsLiveStream; });
-    OwnerThread()->DispatchStateChange(r.forget());
-  }
-
-  TimedMetadataEventSource& TimedMetadataEvent() {
-    return mMetadataManager.TimedMetadataEvent();
-  }
-
-  MediaEventSource<void>& OnMediaNotSeekable() const;
-
-  MediaEventSourceExc<UniquePtr<MediaInfo>, UniquePtr<MetadataTags>,
-                      MediaDecoderEventVisibility>&
-  MetadataLoadedEvent() {
-    return mMetadataLoadedEvent;
-  }
-
-  MediaEventSourceExc<UniquePtr<MediaInfo>, MediaDecoderEventVisibility>&
-  FirstFrameLoadedEvent() {
-    return mFirstFrameLoadedEvent;
-  }
-
-  MediaEventSource<MediaPlaybackEvent>& OnPlaybackEvent() {
-    return mOnPlaybackEvent;
-  }
-  MediaEventSource<MediaResult>& OnPlaybackErrorEvent() {
-    return mOnPlaybackErrorEvent;
-  }
-
-  MediaEventSource<DecoderDoctorEvent>& OnDecoderDoctorEvent() {
-    return mOnDecoderDoctorEvent;
-  }
-
-  MediaEventSource<NextFrameStatus>& OnNextFrameStatus() {
-    return mOnNextFrameStatus;
-  }
-
-  MediaEventSourceExc<RefPtr<VideoFrameContainer>>&
-  OnSecondaryVideoContainerInstalled() {
-    return mOnSecondaryVideoContainerInstalled;
-  }
-
-  size_t SizeOfVideoQueue() const;
-
-  size_t SizeOfAudioQueue() const;
+  size_t SizeOfAudioQueue() const override;
 
   // Sets the video decode mode. Used by the suspend-video-decoder feature.
-  void SetVideoDecodeMode(VideoDecodeMode aMode);
+  void SetVideoDecodeMode(VideoDecodeMode aMode) override;
 
-  RefPtr<GenericPromise> InvokeSetSink(const RefPtr<AudioDeviceInfo>& aSink);
+  RefPtr<GenericPromise> InvokeSetSink(
+      const RefPtr<AudioDeviceInfo>& aSink) override;
 
-  void InvokeSuspendMediaSink();
-  void InvokeResumeMediaSink();
+  void InvokeSuspendMediaSink() override;
+  void InvokeResumeMediaSink() override;
 
  private:
   class StateObject;
@@ -301,18 +177,14 @@ class MediaDecoderStateMachine
 
   void GetDebugInfo(dom::MediaDecoderStateMachineDebugInfo& aInfo);
 
-  // Functions used by assertions to ensure we're calling things
-  // on the appropriate threads.
-  bool OnTaskQueue() const;
-
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
   // constructor immediately after the task queue is created.
-  void InitializationTask(MediaDecoder* aDecoder);
+  void InitializationTask(MediaDecoder* aDecoder) override;
 
-  RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget);
+  RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget) override;
 
-  RefPtr<ShutdownPromise> Shutdown();
+  RefPtr<ShutdownPromise> Shutdown() override;
 
   RefPtr<ShutdownPromise> FinishShutdown();
 
@@ -322,10 +194,6 @@ class MediaDecoderStateMachine
   // Only called on the decoder thread. Must be called with
   // the decode monitor held.
   void UpdatePlaybackPosition(const media::TimeUnit& aTime);
-
-  bool HasAudio() const { return mInfo.ref().HasAudio(); }
-  bool HasVideo() const { return mInfo.ref().HasVideo(); }
-  const MediaInfo& Info() const { return mInfo.ref(); }
 
   // Schedules the shared state machine thread to run the state machine.
   void ScheduleStateMachine();
@@ -374,7 +242,11 @@ class MediaDecoderStateMachine
  protected:
   virtual ~MediaDecoderStateMachine();
 
-  void BufferedRangeUpdated();
+  void BufferedRangeUpdated() override;
+  void VolumeChanged() override;
+  void PreservesPitchChanged() override;
+  void PlayStateChanged() override;
+  void LoopingChanged() override;
 
   void ReaderSuspendedChanged();
 
@@ -388,10 +260,20 @@ class MediaDecoderStateMachine
 
   void AudioAudibleChanged(bool aAudible);
 
-  void VolumeChanged();
-  void SetPlaybackRate(double aPlaybackRate);
-  void PreservesPitchChanged();
-  void LoopingChanged();
+  void SetPlaybackRate(double aPlaybackRate) override;
+  void SetIsLiveStream(bool aIsLiveStream) override {
+    mIsLiveStream = aIsLiveStream;
+  }
+  void SetCanPlayThrough(bool aCanPlayThrough) override {
+    mCanPlayThrough = aCanPlayThrough;
+  }
+  void SetFragmentEndTime(const media::TimeUnit& aEndTime) override {
+    // A negative number means we don't have a fragment end time at all.
+    mFragmentEndTime = aEndTime >= media::TimeUnit::Zero()
+                           ? aEndTime
+                           : media::TimeUnit::Invalid();
+  }
+
   void StreamNameChanged();
   void UpdateSecondaryVideoContainer();
   void UpdateOutputCaptured();
@@ -459,9 +341,6 @@ class MediaDecoderStateMachine
   // If start fails an NS_ERROR_FAILURE is returned.
   nsresult StartMediaSink();
 
-  // Notification method invoked when mPlayState changes.
-  void PlayStateChanged();
-
   // Notification method invoked when mIsVisible changes.
   void VisibilityChanged();
 
@@ -473,12 +352,6 @@ class MediaDecoderStateMachine
   // of media to begin or resume.
   // Must be called with the decode monitor held.
   void MaybeStartPlayback();
-
-  // Moves the decoder into the shutdown state, and dispatches an error
-  // event to the media element. This begins shutting down the decoder.
-  // The decoder monitor must be held. This is only called on the
-  // decode thread.
-  void DecodeError(const MediaResult& aError);
 
   void EnqueueFirstFrameLoadedEvent();
 
@@ -493,11 +366,6 @@ class MediaDecoderStateMachine
                         bool aRequestNextKeyFrame = false);
 
   void WaitForData(MediaData::Type aType);
-
-  bool IsRequestingAudioData() const { return mAudioDataRequest.Exists(); }
-  bool IsRequestingVideoData() const { return mVideoDataRequest.Exists(); }
-  bool IsWaitingAudioData() const { return mAudioWaitRequest.Exists(); }
-  bool IsWaitingVideoData() const { return mVideoWaitRequest.Exists(); }
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -540,14 +408,6 @@ class MediaDecoderStateMachine
   void OnMediaSinkAudioError(nsresult aResult);
   void OnMediaSinkVideoError();
 
-  void* const mDecoderID;
-  const RefPtr<AbstractThread> mAbstractMainThread;
-  const RefPtr<FrameStatistics> mFrameStats;
-  const RefPtr<VideoFrameContainer> mVideoFrameContainer;
-
-  // Task queue for running the state machine.
-  RefPtr<TaskQueue> mTaskQueue;
-
   // State-watching manager.
   WatchManager<MediaDecoderStateMachine> mWatchManager;
 
@@ -581,8 +441,6 @@ class MediaDecoderStateMachine
   // The media sink resource.  Used on the state machine thread.
   RefPtr<MediaSink> mMediaSink;
 
-  const RefPtr<ReaderProxy> mReader;
-
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
   // of the audio stream, unless another frame is pushed to the hardware.
@@ -600,9 +458,6 @@ class MediaDecoderStateMachine
   // on decoded video data.
   media::TimeUnit mDecodedVideoEndTime;
 
-  // Playback rate. 1.0 : normal speed, 0.5 : two times slower.
-  double mPlaybackRate;
-
   // If we've got more than this number of decoded video frames waiting in
   // the video queue, we will not decode any more video frames until some have
   // been consumed by the play state machine thread.
@@ -612,16 +467,6 @@ class MediaDecoderStateMachine
   // Our "ample" audio threshold. Once we've this much audio decoded, we
   // pause decoding.
   media::TimeUnit mAmpleAudioThreshold;
-
-  // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
-  // should exist at any given moment.
-  using AudioDataPromise = MediaFormatReader::AudioDataPromise;
-  using VideoDataPromise = MediaFormatReader::VideoDataPromise;
-  using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
-  MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
-  MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
-  MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
-  MozPromiseRequestHolder<WaitForDataPromise> mVideoWaitRequest;
 
   const char* AudioRequestStatus() const;
   const char* VideoRequestStatus() const;
@@ -641,37 +486,8 @@ class MediaDecoderStateMachine
   // True if all video frames are already rendered.
   bool mVideoCompleted = false;
 
-  // True if we should not decode/preroll unnecessary samples, unless we're
-  // played. "Prerolling" in this context refers to when we decode and
-  // buffer decoded samples in advance of when they're needed for playback.
-  // This flag is set for preload=metadata media, and means we won't
-  // decode more than the first video frame and first block of audio samples
-  // for that media when we startup, or after a seek. When Play() is called,
-  // we reset this flag, as we assume the user is playing the media, so
-  // prerolling is appropriate then. This flag is used to reduce the overhead
-  // of prerolling samples for media elements that may not play, both
-  // memory and CPU overhead.
-  bool mMinimizePreroll;
-
-  // Stores presentation info required for playback.
-  Maybe<MediaInfo> mInfo;
-
-  mozilla::MediaMetadataManager mMetadataManager;
-
-  // True if we've decoded first frames (thus having the start time) and
-  // notified the FirstFrameLoaded event. Note we can't initiate seek until the
-  // start time is known which happens when the first frames are decoded or we
-  // are playing an MSE stream (the start time is always assumed 0).
-  bool mSentFirstFrameLoadedEvent;
-
   // True if video decoding is suspended.
   bool mVideoDecodeSuspended;
-
-  // True if the media is seekable (i.e. supports random access).
-  bool mMediaSeekable = true;
-
-  // True if the media is seekable only in buffered ranges.
-  bool mMediaSeekableOnlyInBufferedRanges = false;
 
   // Track enabling video decode suspension via timer
   DelayedScheduler mVideoDecodeSuspendTimer;
@@ -688,22 +504,6 @@ class MediaDecoderStateMachine
   MediaEventListener mAudibleListener;
   MediaEventListener mOnMediaNotSeekable;
 
-  MediaEventProducerExc<UniquePtr<MediaInfo>, UniquePtr<MetadataTags>,
-                        MediaDecoderEventVisibility>
-      mMetadataLoadedEvent;
-  MediaEventProducerExc<UniquePtr<MediaInfo>, MediaDecoderEventVisibility>
-      mFirstFrameLoadedEvent;
-
-  MediaEventProducer<MediaPlaybackEvent> mOnPlaybackEvent;
-  MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
-
-  MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;
-
-  MediaEventProducer<NextFrameStatus> mOnNextFrameStatus;
-
-  MediaEventProducerExc<RefPtr<VideoFrameContainer>>
-      mOnSecondaryVideoContainerInstalled;
-
   const bool mIsMSE;
 
   bool mSeamlessLoopingAllowed;
@@ -717,22 +517,6 @@ class MediaDecoderStateMachine
   int64_t mPlaybackOffset = 0;
 
  private:
-  // The buffered range. Mirrored from the decoder thread.
-  Mirror<media::TimeIntervals> mBuffered;
-
-  // The current play state, mirrored from the main thread.
-  Mirror<MediaDecoder::PlayState> mPlayState;
-
-  // Volume of playback. 0.0 = muted. 1.0 = full volume.
-  Mirror<double> mVolume;
-
-  // Pitch preservation for the playback rate.
-  Mirror<bool> mPreservesPitch;
-
-  // Whether to seek back to the start of the media resource
-  // upon reaching the end.
-  Mirror<bool> mLooping;
-
   // Audio stream name
   Mirror<nsAutoString> mStreamName;
 
@@ -761,41 +545,18 @@ class MediaDecoderStateMachine
   Canonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>> mCanonicalOutputTracks;
   Canonical<PrincipalHandle> mCanonicalOutputPrincipal;
 
-  // Duration of the media. This is guaranteed to be non-null after we finish
-  // decoding the first frame.
-  Canonical<media::NullableTimeUnit> mDuration;
-
-  // The time of the current frame, corresponding to the "current
-  // playback position" in HTML5. This is referenced from 0, which is the
-  // initial playback position.
-  Canonical<media::TimeUnit> mCurrentPosition;
-
-  // Used to distinguish whether the audio is producing sound.
-  Canonical<bool> mIsAudioDataAudible;
-
   // Track when MediaSink is supsended. When that happens some actions are
   // restricted like starting the sink or changing sink id. The flag is valid
   // after Initialization. TaskQueue thread only.
   bool mIsMediaSinkSuspended = false;
 
  public:
-  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() const;
-
   AbstractCanonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>*
   CanonicalOutputTracks() {
     return &mCanonicalOutputTracks;
   }
   AbstractCanonical<PrincipalHandle>* CanonicalOutputPrincipal() {
     return &mCanonicalOutputPrincipal;
-  }
-  AbstractCanonical<media::NullableTimeUnit>* CanonicalDuration() {
-    return &mDuration;
-  }
-  AbstractCanonical<media::TimeUnit>* CanonicalCurrentPosition() {
-    return &mCurrentPosition;
-  }
-  AbstractCanonical<bool>* CanonicalIsAudioDataAudible() {
-    return &mIsAudioDataAudible;
   }
 };
 
