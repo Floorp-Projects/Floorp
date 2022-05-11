@@ -114,11 +114,13 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
   mEngine.reset(new MFMediaEngineWrapper(this));
 #endif
   if (mEngine) {
-    mEngine->Init(!mMinimizePreroll)
+    auto* state = mState.AsInitEngine();
+    state->mInitPromise = mEngine->Init(!mMinimizePreroll);
+    state->mInitPromise
         ->Then(OwnerThread(), __func__, this,
                &ExternalEngineStateMachine::OnEngineInitSuccess,
                &ExternalEngineStateMachine::OnEngineInitFailure)
-        ->Track(mState.AsInitEngine()->mEngineInitRequest);
+        ->Track(state->mEngineInitRequest);
   } else {
     ShutdownInternal();
   }
@@ -132,8 +134,10 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   LOG("Initialized the external playback engine %" PRIu64
       ", start reading metadata",
       mEngine->Id());
-  mState.AsInitEngine()->mEngineInitRequest.Complete();
+  auto* state = mState.AsInitEngine();
+  state->mEngineInitRequest.Complete();
   mReader->UpdateMediaEngineId(mEngine->Id());
+  state->mInitPromise = nullptr;
   ChangeStateTo(State::ReadingMetadata);
   ReadMetadata();
 }
@@ -142,7 +146,9 @@ void ExternalEngineStateMachine::OnEngineInitFailure() {
   AssertOnTaskQueue();
   MOZ_ASSERT(mState.IsInitEngine());
   LOGE("Failed to initialize the external playback engine");
-  mState.AsInitEngine()->mEngineInitRequest.Complete();
+  auto* state = mState.AsInitEngine();
+  state->mEngineInitRequest.Complete();
+  state->mInitPromise = nullptr;
   // TODO : Should fallback to the normal playback with media engine.
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
   ShutdownInternal();
@@ -441,18 +447,40 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
   }
 }
 
+#define PERFORM_WHEN_ALLOW(Func)                                              \
+  do {                                                                        \
+    /* Initialzation is not done yet, posepone the operation */               \
+    if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {       \
+      LOG("%s is called before init", __func__);                              \
+      mState.AsInitEngine()->mInitPromise->Then(                              \
+          OwnerThread(), __func__,                                            \
+          [self = RefPtr{this}](                                              \
+              const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) { \
+            if (aVal.IsResolve()) {                                           \
+              self->Func();                                                   \
+            }                                                                 \
+          });                                                                 \
+      return;                                                                 \
+    } else if (mState.IsShutdownEngine()) {                                   \
+      return;                                                                 \
+    }                                                                         \
+  } while (false)
+
 void ExternalEngineStateMachine::VolumeChanged() {
   AssertOnTaskQueue();
+  PERFORM_WHEN_ALLOW(VolumeChanged);
   mEngine->SetVolume(mVolume);
 }
 
 void ExternalEngineStateMachine::PreservesPitchChanged() {
   AssertOnTaskQueue();
+  PERFORM_WHEN_ALLOW(PreservesPitchChanged);
   mEngine->SetPreservesPitch(mPreservesPitch);
 }
 
 void ExternalEngineStateMachine::PlayStateChanged() {
   AssertOnTaskQueue();
+  PERFORM_WHEN_ALLOW(PlayStateChanged);
   if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
     mEngine->Play();
   } else if (mPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
@@ -462,8 +490,11 @@ void ExternalEngineStateMachine::PlayStateChanged() {
 
 void ExternalEngineStateMachine::LoopingChanged() {
   AssertOnTaskQueue();
+  PERFORM_WHEN_ALLOW(LoopingChanged);
   mEngine->SetLooping(mLooping);
 }
+
+#undef PERFORM_WHEN_ALLOW
 
 void ExternalEngineStateMachine::EndOfStream(MediaData::Type aType) {
   AssertOnTaskQueue();
