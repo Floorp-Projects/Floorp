@@ -27,12 +27,6 @@ pref("security.content.signature.root_hash",
 pref("security.default_personal_cert",   "Ask Every Time");
 pref("security.remember_cert_checkbox_default_setting", true);
 
-pref("security.pki.cert_short_lifetime_in_days", 10);
-// NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
-// See the comment in CertVerifier.cpp.
-// 1 = forbid sha1 in certificate signatures, even for imported roots
-pref("security.pki.sha1_enforcement_level", 1);
-
 // This preference controls what signature algorithms are accepted for signed
 // apps (i.e. add-ons). The number is interpreted as a bit mask with the
 // following semantic:
@@ -45,23 +39,6 @@ pref("security.pki.sha1_enforcement_level", 1);
 // x_10_x: COSE is required, PKCS#7 must verify if present
 // x_11_x: COSE is required, PKCS#7 disabled (fail when present)
 pref("security.signed_app_signatures.policy", 2);
-
-// security.pki.netscape_step_up_policy controls how the platform handles the
-// id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
-// 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
-// 1: it is considered equivalent when the notBefore is before 23 August 2016
-// 2: similarly, but for 23 August 2015
-// 3: it is never considered equivalent
-#ifdef RELEASE_OR_BETA
-  pref("security.pki.netscape_step_up_policy", 1);
-#else
-  pref("security.pki.netscape_step_up_policy", 2);
-#endif
-
-// Configures Certificate Transparency support mode:
-// 0: Fully disabled.
-// 1: Only collect telemetry. CT qualification checks are not performed.
-pref("security.pki.certificate_transparency.mode", 0);
 
 // Only one of ["enable_softtoken", "enable_usbtoken",
 // "webauthn_enable_android_fido2"] should be true at a time, as the
@@ -78,12 +55,6 @@ pref("security.webauth.webauthn_enable_softtoken", false);
 
 pref("security.xfocsp.errorReporting.enabled", true);
 pref("security.xfocsp.errorReporting.automatic", false);
-
-// 0: Disable CRLite entirely.
-// 1: Consult CRLite but only collect telemetry.
-// 2: Consult CRLite and enforce both "Revoked" and "Not Revoked" results.
-// 3: Consult CRLite and enforce "Not Revoked" results, but defer to OCSP for "Revoked".
-pref("security.pki.crlite_mode", 3);
 
 // Issuer we use to detect MitM proxies. Set to the issuer of the cert of the
 // Firefox update service. The string format is whatever NSS uses to print a DN.

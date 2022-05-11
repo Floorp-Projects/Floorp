@@ -265,11 +265,8 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
   *osc = StaticPrefs::security_OCSP_require() ? CertVerifier::ocspStrict
                                               : CertVerifier::ocspRelaxed;
 
-  // If we pass in just 0 as the second argument to Preferences::GetUint, there
-  // are two function signatures that match (given that 0 can be intepreted as
-  // a null pointer). Thus the compiler will complain without the cast.
-  *certShortLifetimeInDays = Preferences::GetUint(
-      "security.pki.cert_short_lifetime_in_days", static_cast<uint32_t>(0));
+  *certShortLifetimeInDays =
+      StaticPrefs::security_pki_cert_short_lifetime_in_days();
 
   uint32_t softTimeoutMillis =
       StaticPrefs::security_OCSP_timeoutMilliseconds_soft();
@@ -1274,8 +1271,7 @@ void SetValidationOptionsCommon() {
       CertVerifier::CertificateTransparencyMode::TelemetryOnly;
   CertVerifier::CertificateTransparencyMode ctMode =
       static_cast<CertVerifier::CertificateTransparencyMode>(
-          Preferences::GetInt("security.pki.certificate_transparency.mode",
-                              static_cast<int32_t>(defaultCTMode)));
+          StaticPrefs::security_pki_certificate_transparency_mode());
   switch (ctMode) {
     case CertVerifier::CertificateTransparencyMode::Disabled:
     case CertVerifier::CertificateTransparencyMode::TelemetryOnly:
@@ -1397,8 +1393,7 @@ void nsNSSComponent::setValidationOptions(
       CertVerifier::CertificateTransparencyMode::TelemetryOnly;
   CertVerifier::CertificateTransparencyMode ctMode =
       static_cast<CertVerifier::CertificateTransparencyMode>(
-          Preferences::GetInt("security.pki.certificate_transparency.mode",
-                              static_cast<int32_t>(defaultCTMode)));
+          StaticPrefs::security_pki_certificate_transparency_mode());
   switch (ctMode) {
     case CertVerifier::CertificateTransparencyMode::Disabled:
     case CertVerifier::CertificateTransparencyMode::TelemetryOnly:
@@ -1422,10 +1417,8 @@ void nsNSSComponent::setValidationOptions(
     Telemetry::Accumulate(Telemetry::CERT_OCSP_REQUIRED, ocspRequired);
   }
 
-  CertVerifier::SHA1Mode sha1Mode =
-      static_cast<CertVerifier::SHA1Mode>(Preferences::GetInt(
-          "security.pki.sha1_enforcement_level",
-          static_cast<int32_t>(CertVerifier::SHA1Mode::Allowed)));
+  CertVerifier::SHA1Mode sha1Mode = static_cast<CertVerifier::SHA1Mode>(
+      StaticPrefs::security_pki_sha1_enforcement_level());
   switch (sha1Mode) {
     case CertVerifier::SHA1Mode::Allowed:
     case CertVerifier::SHA1Mode::Forbidden:
@@ -1443,10 +1436,8 @@ void nsNSSComponent::setValidationOptions(
     sha1Mode = CertVerifier::SHA1Mode::Forbidden;
   }
 
-  NetscapeStepUpPolicy netscapeStepUpPolicy =
-      static_cast<NetscapeStepUpPolicy>(Preferences::GetUint(
-          "security.pki.netscape_step_up_policy",
-          static_cast<uint32_t>(NetscapeStepUpPolicy::AlwaysMatch)));
+  NetscapeStepUpPolicy netscapeStepUpPolicy = static_cast<NetscapeStepUpPolicy>(
+      StaticPrefs::security_pki_netscape_step_up_policy());
   switch (netscapeStepUpPolicy) {
     case NetscapeStepUpPolicy::AlwaysMatch:
     case NetscapeStepUpPolicy::MatchBefore23August2016:
@@ -1459,8 +1450,8 @@ void nsNSSComponent::setValidationOptions(
   }
 
   CRLiteMode defaultCRLiteMode = CRLiteMode::Disabled;
-  CRLiteMode crliteMode = static_cast<CRLiteMode>(Preferences::GetUint(
-      "security.pki.crlite_mode", static_cast<uint32_t>(defaultCRLiteMode)));
+  CRLiteMode crliteMode =
+      static_cast<CRLiteMode>(StaticPrefs::security_pki_crlite_mode());
   switch (crliteMode) {
     case CRLiteMode::Disabled:
     case CRLiteMode::TelemetryOnly:
