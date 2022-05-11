@@ -58,7 +58,8 @@ class RemoteDecoderManagerParent final
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier);
+      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
+      const Maybe<uint64_t>& aMediaEngineId);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 
   PMFMediaEngineParent* AllocPMFMediaEngineParent();

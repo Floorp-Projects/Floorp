@@ -26,7 +26,8 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
   RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
                       const CreateDecoderParams::OptionSet& aOptions,
                       nsISerialEventTarget* aManagerThread,
-                      TaskQueue* aDecodeTaskQueue);
+                      TaskQueue* aDecodeTaskQueue,
+                      Maybe<uint64_t> aMediaEngineId);
 
   void Destroy();
 
@@ -54,6 +55,9 @@ class RemoteDecoderParent : public ShmemRecycleAllocator<RemoteDecoderParent>,
   const CreateDecoderParams::OptionSet mOptions;
   const RefPtr<TaskQueue> mDecodeTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
+
+  // Only be used on Windows when the media engine playback is enabled.
+  const Maybe<uint64_t> mMediaEngineId;
 
  private:
   void DecodeNextSample(const RefPtr<ArrayOfRemoteMediaRawData>& aData,
