@@ -3,9 +3,9 @@
 
 "use strict";
 
-startUtilityProcess();
-
 add_task(async () => {
+  const utilityPid = await startUtilityProcess();
+
   SimpleTest.expectChildProcessCrash();
 
   const utilityProcessGone = TestUtils.topicObserved("ipc:utility-shutdown");
