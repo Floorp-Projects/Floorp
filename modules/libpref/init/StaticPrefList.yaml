@@ -12211,6 +12211,174 @@
   value: true
   mirror: always
 
+- name: security.tls.version.min
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
+- name: security.tls.version.max
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+- name: security.tls.version.enable-deprecated
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.tls.version.fallback-limit
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+# Turn off post-handshake authentication for TLS 1.3 by default,
+# until the incompatibility with HTTP/2 is resolved:
+# https://tools.ietf.org/html/draft-davidben-http2-tls13-00
+- name: security.tls.enable_post_handshake_auth
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.tls.hello_downgrade_check
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls.enable_delegated_credentials
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls.enable_0rtt_data
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.treat_unsafe_negotiation_as_broken
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl.require_safe_negotiation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl.enable_false_start
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.enable_alpn
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.disable_session_identifiers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.dhe_rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.dhe_rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.deprecated.rsa_des_ede3_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "signon."
 #---------------------------------------------------------------------------
