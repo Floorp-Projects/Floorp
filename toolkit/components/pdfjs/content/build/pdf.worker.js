@@ -117,7 +117,7 @@ class WorkerMessageHandler {
     const WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.14.224';
+    const workerVersion = '2.14.290';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -1732,7 +1732,7 @@ Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
 exports.isNodeJS = void 0;
-const isNodeJS = typeof process === "object" && process + "" === "[object process]" && !process.versions.nw && !(process.versions.electron && process.type && process.type !== "browser");
+const isNodeJS = false;
 exports.isNodeJS = isNodeJS;
 
 /***/ }),
@@ -2492,7 +2492,7 @@ class ChunkedStream extends _stream.Stream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length, forceClamped = false) {
+  getBytes(length) {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;
@@ -2502,8 +2502,7 @@ class ChunkedStream extends _stream.Stream {
         this.ensureRange(pos, strEnd);
       }
 
-      const subarray = bytes.subarray(pos, strEnd);
-      return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
+      return bytes.subarray(pos, strEnd);
     }
 
     let end = pos + length;
@@ -2517,8 +2516,7 @@ class ChunkedStream extends _stream.Stream {
     }
 
     this.pos = end;
-    const subarray = bytes.subarray(pos, end);
-    return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
+    return bytes.subarray(pos, end);
   }
 
   getByteRange(begin, end) {
@@ -3430,7 +3428,7 @@ class BaseStream {
     (0, _util.unreachable)("Abstract method `getByte` called");
   }
 
-  getBytes(length, forceClamped = false) {
+  getBytes(length) {
     (0, _util.unreachable)("Abstract method `getBytes` called");
   }
 
@@ -3444,8 +3442,8 @@ class BaseStream {
     return peekedByte;
   }
 
-  peekBytes(length, forceClamped = false) {
-    const bytes = this.getBytes(length, forceClamped);
+  peekBytes(length) {
+    const bytes = this.getBytes(length);
     this.pos -= bytes.length;
     return bytes;
   }
@@ -3474,7 +3472,7 @@ class BaseStream {
   }
 
   getString(length) {
-    return (0, _util.bytesToString)(this.getBytes(length, false));
+    return (0, _util.bytesToString)(this.getBytes(length));
   }
 
   skip(n) {
@@ -3542,14 +3540,13 @@ class Stream extends _base_stream.BaseStream {
     return this.bytes[this.pos++];
   }
 
-  getBytes(length, forceClamped = false) {
+  getBytes(length) {
     const bytes = this.bytes;
     const pos = this.pos;
     const strEnd = this.end;
 
     if (!length) {
-      const subarray = bytes.subarray(pos, strEnd);
-      return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
+      return bytes.subarray(pos, strEnd);
     }
 
     let end = pos + length;
@@ -3559,8 +3556,7 @@ class Stream extends _base_stream.BaseStream {
     }
 
     this.pos = end;
-    const subarray = bytes.subarray(pos, end);
-    return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
+    return bytes.subarray(pos, end);
   }
 
   getByteRange(begin, end) {
@@ -7374,7 +7370,7 @@ class WidgetAnnotation extends Annotation {
     }
 
     const storageEntry = annotationStorage ? annotationStorage.get(this.data.id) : undefined;
-    let value = storageEntry && storageEntry.value;
+    let value = storageEntry && (storageEntry.formattedValue || storageEntry.value);
 
     if (value === undefined) {
       if (!this._hasValueFromXFA || this.appearance) {
@@ -7388,6 +7384,7 @@ class WidgetAnnotation extends Annotation {
       }
     }
 
+    (0, _util.assert)(typeof value === "string", "Expected `value` to be a string.");
     value = value.trim();
 
     if (value === "") {
@@ -7733,7 +7730,7 @@ class TextWidgetAnnotation extends WidgetAnnotation {
     return {
       id: this.data.id,
       value: this.data.fieldValue,
-      defaultValue: this.data.defaultFieldValue,
+      defaultValue: this.data.defaultFieldValue || "",
       multiline: this.data.multiLine,
       password: this.hasFieldFlag(_util.AnnotationFieldFlag.PASSWORD),
       charLimit: this.data.maxLen,
@@ -10656,7 +10653,7 @@ class PartialEvaluator {
     if (imageMask) {
       const interpolate = dict.get("I", "Interpolate");
       const bitStrideLength = w + 7 >> 3;
-      const imgArray = image.getBytes(bitStrideLength * h, true);
+      const imgArray = image.getBytes(bitStrideLength * h);
       const decode = dict.getArray("D", "Decode");
 
       if (this.parsingType3Font) {
@@ -17133,7 +17130,7 @@ class DecodeStream extends _base_stream.BaseStream {
     return this.buffer[this.pos++];
   }
 
-  getBytes(length, forceClamped = false) {
+  getBytes(length) {
     const pos = this.pos;
     let end;
 
@@ -17159,8 +17156,7 @@ class DecodeStream extends _base_stream.BaseStream {
     }
 
     this.pos = end;
-    const subarray = this.buffer.subarray(pos, end);
-    return forceClamped && !(subarray instanceof Uint8ClampedArray) ? new Uint8ClampedArray(subarray) : subarray;
+    return this.buffer.subarray(pos, end);
   }
 
   reset() {
@@ -26450,12 +26446,13 @@ class Font {
       }
 
       const format = file.getUint16();
-      file.skip(2 + 2);
       let hasShortCmap = false;
       const mappings = [];
       let j, glyphId;
 
       if (format === 0) {
+        file.skip(2 + 2);
+
         for (j = 0; j < 256; j++) {
           const index = file.getByte();
 
@@ -26471,6 +26468,7 @@ class Font {
 
         hasShortCmap = true;
       } else if (format === 2) {
+        file.skip(2 + 2);
         const subHeaderKeys = [];
         let maxSubHeaderKey = 0;
 
@@ -26519,6 +26517,7 @@ class Font {
           }
         }
       } else if (format === 4) {
+        file.skip(2 + 2);
         const segCount = file.getUint16() >> 1;
         file.skip(6);
         const segments = [];
@@ -26584,6 +26583,7 @@ class Font {
           }
         }
       } else if (format === 6) {
+        file.skip(2 + 2);
         const firstCode = file.getUint16();
         const entryCount = file.getUint16();
 
@@ -26594,6 +26594,22 @@ class Font {
             charCode,
             glyphId
           });
+        }
+      } else if (format === 12) {
+        file.skip(2 + 4 + 4);
+        const nGroups = file.getInt32() >>> 0;
+
+        for (j = 0; j < nGroups; j++) {
+          const startCharCode = file.getInt32() >>> 0;
+          const endCharCode = file.getInt32() >>> 0;
+          let glyphCode = file.getInt32() >>> 0;
+
+          for (let charCode = startCharCode; charCode <= endCharCode; charCode++) {
+            mappings.push({
+              charCode,
+              glyphId: glyphCode++
+            });
+          }
         }
       } else {
         (0, _util.warn)("cmap table has unsupported format: " + format);
@@ -40368,7 +40384,7 @@ addState(InitialState, [_util.OPS.save, _util.OPS.transform, _util.OPS.paintInli
 
   const imgWidth = Math.max(maxX, currentX) + IMAGE_PADDING;
   const imgHeight = currentY + maxLineHeight + IMAGE_PADDING;
-  const imgData = new Uint8ClampedArray(imgWidth * imgHeight * 4);
+  const imgData = new Uint8Array(imgWidth * imgHeight * 4);
   const imgRowSize = imgWidth << 2;
 
   for (let q = 0; q < count; q++) {
@@ -40885,7 +40901,6 @@ class OperatorList {
         case _util.OPS.paintInlineImageXObjectGroup:
         case _util.OPS.paintImageMaskXObject:
           const arg = argsArray[i][0];
-          ;
 
           if (!arg.cached && arg.data && arg.data.buffer instanceof ArrayBuffer) {
             transfers.push(arg.data.buffer);
@@ -41208,15 +41223,11 @@ class PDFImage {
     if (imageIsFromDecodeStream && (!inverseDecode || haveFullData)) {
       data = imgArray;
     } else if (!inverseDecode) {
-      data = new Uint8ClampedArray(actualLength);
-      data.set(imgArray);
+      data = new Uint8Array(imgArray);
     } else {
-      data = new Uint8ClampedArray(computedLength);
+      data = new Uint8Array(computedLength);
       data.set(imgArray);
-
-      for (i = actualLength; i < computedLength; i++) {
-        data[i] = 0xff;
-      }
+      data.fill(0xff, actualLength);
     }
 
     if (inverseDecode) {
@@ -41516,7 +41527,6 @@ class PDFImage {
     const originalHeight = this.height;
     const bpc = this.bpc;
     const rowBytes = originalWidth * numComps * bpc + 7 >> 3;
-    let imgArray;
 
     if (!forceRGBA) {
       let kind;
@@ -41529,15 +41539,7 @@ class PDFImage {
 
       if (kind && !this.smask && !this.mask && drawWidth === originalWidth && drawHeight === originalHeight) {
         imgData.kind = kind;
-        imgArray = this.getImageBytes(originalHeight * rowBytes);
-
-        if (this.image instanceof _decode_stream.DecodeStream) {
-          imgData.data = imgArray;
-        } else {
-          const newArray = new Uint8ClampedArray(imgArray.length);
-          newArray.set(imgArray);
-          imgData.data = newArray;
-        }
+        imgData.data = this.getImageBytes(originalHeight * rowBytes, {});
 
         if (this.needsDecode) {
           (0, _util.assert)(kind === _util.ImageKind.GRAYSCALE_1BPP, "PDFImage.createImageData: The image must be grayscale.");
@@ -41561,13 +41563,19 @@ class PDFImage {
           case "DeviceRGB":
           case "DeviceCMYK":
             imgData.kind = _util.ImageKind.RGB_24BPP;
-            imgData.data = this.getImageBytes(imageLength, drawWidth, drawHeight, true);
+            imgData.data = this.getImageBytes(imageLength, {
+              drawWidth,
+              drawHeight,
+              forceRGB: true
+            });
             return imgData;
         }
       }
     }
 
-    imgArray = this.getImageBytes(originalHeight * rowBytes);
+    const imgArray = this.getImageBytes(originalHeight * rowBytes, {
+      internal: true
+    });
     const actualHeight = 0 | imgArray.length / rowBytes * drawHeight / originalHeight;
     const comps = this.getComponents(imgArray);
     let alpha01, maybeUndoPreblend;
@@ -41609,7 +41617,9 @@ class PDFImage {
     const height = this.height;
     const bpc = this.bpc;
     const rowBytes = width * numComps * bpc + 7 >> 3;
-    const imgArray = this.getImageBytes(height * rowBytes);
+    const imgArray = this.getImageBytes(height * rowBytes, {
+      internal: true
+    });
     const comps = this.getComponents(imgArray);
     let i, length;
 
@@ -41641,12 +41651,24 @@ class PDFImage {
     }
   }
 
-  getImageBytes(length, drawWidth, drawHeight, forceRGB = false) {
+  getImageBytes(length, {
+    drawWidth,
+    drawHeight,
+    forceRGB = false,
+    internal = false
+  }) {
     this.image.reset();
     this.image.drawWidth = drawWidth || this.width;
     this.image.drawHeight = drawHeight || this.height;
     this.image.forceRGB = !!forceRGB;
-    return this.image.getBytes(length, true);
+    const imageBytes = this.image.getBytes(length);
+
+    if (internal || this.image instanceof _decode_stream.DecodeStream) {
+      return imageBytes;
+    }
+
+    (0, _util.assert)(imageBytes instanceof Uint8Array, 'PDFImage.getImageBytes: Unsupported "imageBytes" type.');
+    return new Uint8Array(imageBytes);
   }
 
 }
@@ -42295,7 +42317,7 @@ class Catalog {
         const dest = fetchDestination(value);
 
         if (dest) {
-          dests[key] = dest;
+          dests[(0, _util.stringToPDFString)(key)] = dest;
         }
       }
     } else if (obj instanceof _primitives.Dict) {
@@ -42722,7 +42744,7 @@ class Catalog {
           xfaImages = new _primitives.Dict(this.xref);
         }
 
-        xfaImages.set(key, value);
+        xfaImages.set((0, _util.stringToPDFString)(key), value);
       }
     }
 
@@ -42762,7 +42784,7 @@ class Catalog {
       const nameTree = new _name_number_tree.NameTree(obj.getRaw("JavaScript"), this.xref);
 
       for (const [key, value] of nameTree.getAll()) {
-        appendIfJavaScriptDict(key, value);
+        appendIfJavaScriptDict((0, _util.stringToPDFString)(key), value);
       }
     }
 
@@ -43355,7 +43377,9 @@ class Catalog {
         dest = dest.name;
       }
 
-      if (typeof dest === "string" || Array.isArray(dest)) {
+      if (typeof dest === "string") {
+        resultObj.dest = (0, _util.stringToPDFString)(dest);
+      } else if (Array.isArray(dest)) {
         resultObj.dest = dest;
       }
     }
@@ -43413,9 +43437,11 @@ class NameOrNumberTree {
       if (obj.has("Kids")) {
         const kids = obj.get("Kids");
 
-        for (let i = 0, ii = kids.length; i < ii; i++) {
-          const kid = kids[i];
+        if (!Array.isArray(kids)) {
+          continue;
+        }
 
+        for (const kid of kids) {
           if (processed.has(kid)) {
             throw new _util.FormatError(`Duplicate entry in "${this._type}" tree.`);
           }
@@ -43476,7 +43502,7 @@ class NameOrNumberTree {
         } else if (key > xref.fetchIfRef(limits[1])) {
           l = m + 1;
         } else {
-          kidsOrEntries = xref.fetchIfRef(kids[m]);
+          kidsOrEntries = kid;
           break;
         }
       }
@@ -62407,8 +62433,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
 
 var _worker = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.224';
-const pdfjsBuild = '2be19e828';
+const pdfjsVersion = '2.14.290';
+const pdfjsBuild = '38c82357b';
 })();
 
 /******/ 	return __webpack_exports__;
