@@ -221,6 +221,12 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifyDeviceReset(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUChild::RecvNotifyOverlayInfo(
+    const OverlayInfo aInfo) {
+  gfxPlatform::GetPlatform()->SetOverlayInfo(aInfo);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult GPUChild::RecvFlushMemory(const nsString& aReason) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

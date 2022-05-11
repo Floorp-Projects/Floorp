@@ -47,14 +47,9 @@ module.exports = {
         browser: false,
         "mozilla/jsm": true,
       },
-      files: ["**/*.jsm", "**/*.jsm.js"],
-      globals: {
-        // Intl is defined in the browser environment, but that's disabled
-        // for jsms, add it here manually.
-        Intl: false,
-      },
+      files: ["**/*.mjs", "**/*.jsm", "**/*.jsm.js"],
       rules: {
-        "mozilla/mark-exported-symbols-as-used": "error",
+        "mozilla/reject-top-level-await": "error",
         // Bug 1703953: We don't have a good way to check a file runs in a
         // privilieged context. Apply this for jsm files as we know those are
         // privilieged, and then include more directories elsewhere.
@@ -71,6 +66,12 @@ module.exports = {
             vars: "all",
           },
         ],
+      },
+    },
+    {
+      files: ["**/*.jsm", "**/*.jsm.js"],
+      rules: {
+        "mozilla/mark-exported-symbols-as-used": "error",
       },
     },
     {

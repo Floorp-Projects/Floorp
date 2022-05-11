@@ -26,7 +26,7 @@
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #ifdef NS_PRINTING
-#include "mozilla/layout/RemotePrintJobParent.h"
+#  include "mozilla/layout/RemotePrintJobParent.h"
 #endif
 #include "mozilla/net/DocumentLoadListener.h"
 #include "mozilla/NullPrincipal.h"
@@ -1262,6 +1262,10 @@ void CanonicalBrowsingContext::AddFinalDiscardListener(
     return;
   }
   mFullyDiscardedListeners.AppendElement(std::move(aListener));
+}
+
+net::EarlyHintsService* CanonicalBrowsingContext::GetEarlyHintsService() {
+  return &mEarlyHintsService;
 }
 
 void CanonicalBrowsingContext::AdjustPrivateBrowsingCount(
