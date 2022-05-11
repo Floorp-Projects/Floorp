@@ -90,8 +90,26 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
             rootKey
         )
 
+        updateSaveAndAutofillCardsSwitch()
+        updateSaveAndAutofillAddressesSwitch()
+    }
+
+    /**
+     * Updates save and autofill cards preference switch state depending on the saved user preference.
+     */
+    internal fun updateSaveAndAutofillCardsSwitch() {
         requirePreference<SwitchPreference>(R.string.pref_key_credit_cards_save_and_autofill_cards).apply {
             isChecked = context.settings().shouldAutofillCreditCardDetails
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+    }
+
+    /**
+     * Updates save and autofill addresses preference switch state depending on the saved user preference.
+     */
+    internal fun updateSaveAndAutofillAddressesSwitch() {
+        requirePreference<SwitchPreference>(R.string.pref_key_addresses_save_and_autofill_addresses).apply {
+            isChecked = context.settings().shouldAutofillAddressDetails
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

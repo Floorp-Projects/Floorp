@@ -8,6 +8,12 @@
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_addresses">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_addresses_save_and_autofill_addresses"
+            android:summary="@string/preferences_addresses_save_and_autofill_addresses_summary"
+            android:title="@string/preferences_addresses_save_and_autofill_addresses" />
         <Preference
             android:key="@string/pref_key_addresses_manage_addresses"
             android:title="@string/preferences_addresses_manage_addresses" />

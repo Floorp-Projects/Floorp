@@ -183,6 +183,8 @@
     <string name="pref_key_credit_cards_manage_cards" translatable="false">pref_key_credit_cards_manage_cards</string>
     <!-- Key for the "Manage addresses" preference in the "Autofill" fragment -->
     <string name="pref_key_addresses_manage_addresses" translatable="false">pref_key_addresses_manage_addresses</string>
+    <!-- Key for the "Save and autofill addresses" preference in the "Autofill" fragment -->
+    <string name="pref_key_addresses_save_and_autofill_addresses" translatable="false">pref_key_addresses_save_and_autofill_addresses</string>
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>

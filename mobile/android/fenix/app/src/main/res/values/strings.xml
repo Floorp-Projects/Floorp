@@ -1496,6 +1496,11 @@
     <string name="preferences_addresses_add_address">Add address</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Manage addresses</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Save and autofill addresses</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Include information like numbers, email and shipping addresses</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Add card</string>
     <!-- Title of the "Edit card" screen -->

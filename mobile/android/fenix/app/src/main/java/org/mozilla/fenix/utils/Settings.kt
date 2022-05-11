@@ -1257,6 +1257,17 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = true
     )
 
+    /**
+     * Stores the user choice from the "Autofill Addresses" settings for whether
+     * save and autofill addresses should be enabled or not.
+     * If set to `true` when the user focuses on address fields in a webpage an Android prompt is shown,
+     * allowing the selection of an address details to be automatically filled in the webpage fields.
+     */
+    var shouldAutofillAddressDetails by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_addresses_save_and_autofill_addresses),
+        default = true
+    )
+
     var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
         featureFlag = FeatureFlags.isPocketRecommendationsFeatureEnabled(appContext),

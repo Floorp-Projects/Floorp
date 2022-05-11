@@ -597,6 +597,9 @@ abstract class BaseBrowserFragment :
                 isCreditCardAutofillEnabled = {
                     context.settings().shouldAutofillCreditCardDetails
                 },
+                isAddressAutofillEnabled = {
+                    context.settings().shouldAutofillAddressDetails && FeatureFlags.addressesFeature
+                },
                 loginExceptionStorage = context.components.core.loginExceptionStorage,
                 shareDelegate = object : ShareDelegate {
                     override fun showShareSheet(

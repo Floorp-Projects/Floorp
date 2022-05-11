@@ -95,9 +95,11 @@ object GeckoProvider {
         val geckoRuntime = GeckoRuntime.create(context, runtimeSettings)
 
         geckoRuntime.autocompleteStorageDelegate = GeckoAutocompleteStorageDelegate(
-            GeckoCreditCardsAddressesStorageDelegate(autofillStorage) {
-                context.settings().shouldAutofillCreditCardDetails
-            },
+            GeckoCreditCardsAddressesStorageDelegate(
+                storage = autofillStorage,
+                isCreditCardAutofillEnabled = { context.settings().shouldAutofillCreditCardDetails },
+                isAddressAutofillEnabled = { context.settings().shouldAutofillAddressDetails }
+            ),
             GeckoLoginStorageDelegate(loginStorage)
         )
 
