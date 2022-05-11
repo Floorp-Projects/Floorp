@@ -112,7 +112,8 @@ class GeckoChildProcessHost : public ChildProcessHost,
   virtual void OnChannelConnected(base::ProcessId peer_pid) override;
   virtual void OnMessageReceived(UniquePtr<IPC::Message> aMsg) override;
   virtual void OnChannelError() override;
-  virtual void GetQueuedMessages(std::queue<UniquePtr<IPC::Message>>& queue) override;
+  virtual void GetQueuedMessages(
+      std::queue<UniquePtr<IPC::Message>>& queue) override;
 
   // Resolves to the process handle when it's available (see
   // LaunchAndWaitForProcessHandle); use with AsyncLaunch.
