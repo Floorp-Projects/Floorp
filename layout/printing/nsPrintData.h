@@ -60,7 +60,6 @@ class nsPrintData {
   // mKids (and their mKids, etc.)
   nsTArray<nsPrintObject*> mPrintDocList;
 
-  bool mIsParentAFrameSet;
   bool mOnStartSent;
   bool mIsAborted;          // tells us the document is being aborted
   bool mPreparingForPrint;  // see comments above
