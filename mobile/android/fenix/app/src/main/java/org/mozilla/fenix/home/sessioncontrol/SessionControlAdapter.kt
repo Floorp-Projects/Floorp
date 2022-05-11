@@ -130,6 +130,10 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     ) : AdapterItem(TabInCollectionViewHolder.LAYOUT_ID) {
         override fun sameAs(other: AdapterItem) =
             other is TabInCollectionItem && tab.id == other.tab.id
+
+        override fun contentsSameAs(other: AdapterItem): Boolean {
+            return other is TabInCollectionItem && this.isLastTab == other.isLastTab
+        }
     }
 
     object OnboardingHeader : AdapterItem(OnboardingHeaderViewHolder.LAYOUT_ID)
