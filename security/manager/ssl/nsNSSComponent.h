@@ -100,8 +100,7 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
       /*out*/ mozilla::psm::CertVerifier::OcspStrictConfig* osc,
       /*out*/ uint32_t* certShortLifetimeInDays,
       /*out*/ TimeDuration& softTimeout,
-      /*out*/ TimeDuration& hardTimeout,
-      const mozilla::MutexAutoLock& proofOfLock);
+      /*out*/ TimeDuration& hardTimeout);
   void UpdateCertVerifierWithEnterpriseRoots();
   nsresult RegisterObservers();
 
