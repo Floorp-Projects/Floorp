@@ -667,19 +667,6 @@ class HTMLEditor final : public EditorBase,
       nsresult
       InsertAsQuotation(const nsAString& aQuotedText, nsINode** aNodeInserted);
 
-  /**
-   * Inserts a plaintext string at the current location,
-   * with special processing for lines beginning with ">",
-   * which will be treated as mail quotes and inserted
-   * as plaintext quoted blocks.
-   * If the selection is not collapsed, the selection is deleted
-   * and the insertion takes place at the resulting collapsed selection.
-   *
-   * @param aString   the string to be inserted
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult
-  InsertTextWithQuotations(const nsAString& aStringToInsert);
-
   MOZ_CAN_RUN_SCRIPT nsresult InsertHTMLAsAction(
       const nsAString& aInString, nsIPrincipal* aPrincipal = nullptr);
 

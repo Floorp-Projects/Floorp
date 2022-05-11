@@ -70,8 +70,19 @@ static const char* kObservedPrefs[] = {PREF_SHISTORY_SIZE,
                                        PREF_FISSION_BFCACHEINPARENT, nullptr};
 
 static int32_t gHistoryMaxSize = 50;
-// List of all SHistory objects, used for content viewer cache eviction
-static LinkedList<nsSHistory> gSHistoryList;
+
+// List of all SHistory objects, used for content viewer cache eviction.
+// When being destroyed, this helper removes everything from the list to avoid
+// assertions when we leak.
+struct ListHelper {
+#ifdef DEBUG
+  ~ListHelper() { mList.clear(); }
+#endif  // DEBUG
+
+  LinkedList<nsSHistory> mList;
+};
+
+static ListHelper gSHistoryList;
 // Max viewers allowed total, across all SHistory objects - negative default
 // means we will calculate how many viewers to cache based on total memory
 int32_t nsSHistory::sHistoryMaxTotalViewers = -1;
@@ -248,7 +259,7 @@ nsSHistory::nsSHistory(BrowsingContext* aRootBC)
   }
 
   // Add this new SHistory object to the list
-  gSHistoryList.insertBack(this);
+  gSHistoryList.mList.insertBack(this);
 
   // Init mHistoryTracker on setting mRootBC so we can bind its event
   // target to the tabGroup.
@@ -1595,7 +1606,7 @@ void nsSHistory::GloballyEvictContentViewers() {
 
   nsTArray<EntryAndDistance> entries;
 
-  for (auto shist : gSHistoryList) {
+  for (auto shist : gSHistoryList.mList) {
     // Maintain a list of the entries which have viewers and belong to
     // this particular shist object.  We'll add this list to the global list,
     // |entries|, eventually.

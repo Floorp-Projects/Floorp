@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/XREAppData.h"
 #include "mozilla/Base64.h"
+#include "mozilla/ScopeExit.h"
 #include "nsPrintfCString.h"
 
 #include "nsGTKToolkit.h"
@@ -139,6 +140,8 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
   if (!mConnection) {
     return NS_ERROR_FAILURE;
   }
+  auto releaseDBusConnection =
+      mozilla::MakeScopeExit([&] { mConnection = nullptr; });
   dbus_connection_set_exit_on_disconnect(mConnection, false);
   dbus_connection_setup_with_g_main(mConnection, nullptr);
 
@@ -180,7 +183,6 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
   // instance already running.
   if (dbus_error_is_set(&err)) {
     dbus_error_free(&err);
-    mConnection = nullptr;
     return NS_ERROR_FAILURE;
   }
 
@@ -189,15 +191,14 @@ nsresult nsDBusRemoteServer::Startup(const char* aAppName,
       RTLD_DEFAULT, "dbus_validate_path");
   if (!sDBusValidatePathName ||
       !sDBusValidatePathName(mPathName.get(), nullptr)) {
-    mConnection = nullptr;
     return NS_ERROR_FAILURE;
   }
   if (!dbus_connection_register_object_path(mConnection, mPathName.get(),
                                             &remoteHandlersTable, this)) {
-    mConnection = nullptr;
     return NS_ERROR_FAILURE;
   }
 
+  releaseDBusConnection.release();
   return NS_OK;
 }
 

@@ -39,6 +39,7 @@ class GPUParent final : public PGPUParent {
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
             mozilla::ipc::ScopedPort aPort);
   void NotifyDeviceReset();
+  void NotifyOverlayInfo(layers::OverlayInfo aInfo);
 
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,

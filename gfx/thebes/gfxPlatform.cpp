@@ -442,6 +442,7 @@ gfxPlatform::gfxPlatform()
       mFrameStatsCollector(this, &gfxPlatform::GetFrameStats),
       mCMSInfoCollector(this, &gfxPlatform::GetCMSSupportInfo),
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
+      mOverlayInfoCollector(this, &gfxPlatform::GetOverlayInfo),
       mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
       mScreenDepth(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -3224,6 +3225,36 @@ void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
   if (XRE_IsParentProcess()) {
     GetPlatformDisplayInfo(aObj);
   }
+}
+
+void gfxPlatform::GetOverlayInfo(mozilla::widget::InfoObject& aObj) {
+  if (mOverlayInfo.isNothing()) {
+    return;
+  }
+
+  auto toString = [](mozilla::layers::OverlaySupportType aType) -> const char* {
+    switch (aType) {
+      case mozilla::layers::OverlaySupportType::None:
+        return "None";
+      case mozilla::layers::OverlaySupportType::Software:
+        return "Software";
+      case mozilla::layers::OverlaySupportType::Direct:
+        return "Direct";
+      case mozilla::layers::OverlaySupportType::Scaling:
+        return "Scaling";
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected to be called");
+    }
+    MOZ_CRASH("Incomplete switch");
+  };
+
+  nsPrintfCString value("NV12=%s YUV2=%s BGRA8=%s RGB10A2=%s",
+                        toString(mOverlayInfo.ref().mNv12Overlay),
+                        toString(mOverlayInfo.ref().mYuy2Overlay),
+                        toString(mOverlayInfo.ref().mBgra8Overlay),
+                        toString(mOverlayInfo.ref().mRgb10a2Overlay));
+
+  aObj.DefineProperty("OverlaySupport", NS_ConvertUTF8toUTF16(value));
 }
 
 class FrameStatsComparator {
