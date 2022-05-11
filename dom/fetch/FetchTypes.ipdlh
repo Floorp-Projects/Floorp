@@ -7,6 +7,8 @@ include IPCChannelInfo;
 include PBackgroundSharedTypes;
 include PerformanceTimingTypes;
 
+include protocol PRemoteLazyInputStream;
+
 include "mozilla/dom/FetchIPCTypes.h";
 
 using HeadersGuardEnum from "mozilla/dom/HeadersBinding.h";
@@ -17,7 +19,6 @@ using RequestMode from "mozilla/dom/RequestBinding.h";
 using RequestRedirect from "mozilla/dom/RequestBinding.h";
 using ResponseType from "mozilla/dom/ResponseBinding.h";
 using struct nsID from "nsID.h";
-[RefCounted] using class mozilla::RemoteLazyInputStream from "mozilla/RemoteLazyInputStream.h";
 
 namespace mozilla {
 namespace dom {
@@ -33,7 +34,7 @@ struct ParentToParentStream {
 };
 
 struct ParentToChildStream {
-  RemoteLazyInputStream stream;
+  PRemoteLazyInputStream actor;
 };
 
 struct ChildToParentStream {
