@@ -302,7 +302,9 @@ def fix_lastaccess_win():
 
 
 @check
-def fs_lastaccess(topsrcdir: str, topobjdir: str, **kwargs) -> Union[DoctorCheck, List[DoctorCheck]]:
+def fs_lastaccess(
+    topsrcdir: str, topobjdir: str, **kwargs
+) -> Union[DoctorCheck, List[DoctorCheck]]:
     """Check for the `lastaccess` behaviour on the filsystem, which can slow
     down filesystem operations."""
     if sys.platform.startswith("win"):
