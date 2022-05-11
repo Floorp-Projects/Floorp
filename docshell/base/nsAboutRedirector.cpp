@@ -158,10 +158,10 @@ static const RedirEntry kRedirMap[] = {
 #endif
 #ifndef MOZ_GLEAN_ANDROID
     {"glean", "chrome://global/content/aboutGlean.html",
-#if !defined(NIGHTLY_BUILD) || defined(MOZILLA_OFFICIAL)
+#  if !defined(NIGHTLY_BUILD) || defined(MOZILLA_OFFICIAL)
      nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-#endif
-     nsIAboutModule::ALLOW_SCRIPT},
+#  endif
+         nsIAboutModule::ALLOW_SCRIPT},
 #endif
     {"telemetry", "chrome://global/content/aboutTelemetry.xhtml",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
