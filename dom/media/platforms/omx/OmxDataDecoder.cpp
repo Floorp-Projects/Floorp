@@ -580,7 +580,11 @@ void OmxDataDecoder::FillCodecConfigDataToOmx() {
   RefPtr<BufferData> inbuf = FindAvailableBuffer(OMX_DirInput);
   RefPtr<MediaByteBuffer> csc;
   if (mTrackInfo->IsAudio()) {
-    csc = mTrackInfo->GetAsAudioInfo()->mCodecSpecificConfig;
+    // It would be nice to instead use more specific information here, but
+    // we force a byte buffer for now since this handles arbitrary codecs.
+    // TODO(bug 1768566): implement further type checking for codec data.
+    csc = ForceGetAudioCodecSpecificBlob(
+        mTrackInfo->GetAsAudioInfo()->mCodecSpecificConfig);
   } else if (mTrackInfo->IsVideo()) {
     csc = mTrackInfo->GetAsVideoInfo()->mExtraData;
   }

@@ -151,21 +151,27 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   // the entire track. This code will need to be updated should this assumption
   // ever not hold. E.g. if we need to handle different codecs in a single
   // track, or if we have different numbers or channels in a single track.
-  Mp4parseByteData codecSpecificConfig =
+  Mp4parseByteData mp4ParseSampleCodecSpecific =
       audio->sample_info[0].codec_specific_config;
+  MOZ_ASSERT(mCodecSpecificConfig.is<NoCodecSpecificData>(),
+             "Should have no codec specific data yet");
+  AudioCodecSpecificBinaryBlob codecSpecificBinaryBlob;
   if (codecType == MP4PARSE_CODEC_OPUS) {
     mMimeType = "audio/opus"_ns;
     // The Opus decoder expects the container's codec delay or
     // pre-skip value, in microseconds, as a 64-bit int at the
     // start of the codec-specific config blob.
-    if (codecSpecificConfig.data && codecSpecificConfig.length >= 12) {
-      uint16_t preskip =
-          mozilla::LittleEndian::readUint16(codecSpecificConfig.data + 10);
+    if (mp4ParseSampleCodecSpecific.data &&
+        mp4ParseSampleCodecSpecific.length >= 12) {
+      uint16_t preskip = mozilla::LittleEndian::readUint16(
+          mp4ParseSampleCodecSpecific.data + 10);
       mozilla::OpusDataDecoder::AppendCodecDelay(
-          mCodecSpecificConfig, mozilla::FramesToUsecs(preskip, 48000).value());
+          codecSpecificBinaryBlob.mBinaryBlob,
+          mozilla::FramesToUsecs(preskip, 48000).value());
     } else {
       // This file will error later as it will be rejected by the opus decoder.
-      mozilla::OpusDataDecoder::AppendCodecDelay(mCodecSpecificConfig, 0);
+      mozilla::OpusDataDecoder::AppendCodecDelay(
+          codecSpecificBinaryBlob.mBinaryBlob, 0);
     }
   } else if (codecType == MP4PARSE_CODEC_AAC) {
     mMimeType = "audio/mp4a-latm"_ns;
@@ -191,8 +197,10 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   Mp4parseByteData extraData = audio->sample_info[0].extra_data;
   // If length is 0 we append nothing
   mExtraData->AppendElements(extraData.data, extraData.length);
-  mCodecSpecificConfig->AppendElements(codecSpecificConfig.data,
-                                       codecSpecificConfig.length);
+  codecSpecificBinaryBlob.mBinaryBlob->AppendElements(
+      mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
+  mCodecSpecificConfig =
+      AudioCodecSpecificVariant{std::move(codecSpecificBinaryBlob)};
   return NS_OK;
 }
 
