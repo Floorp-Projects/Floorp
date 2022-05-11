@@ -184,6 +184,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     std::vector<RefPtr<StandaloneTexture>> mStandaloneTextures;
     size_t mUsedTextureMemory = 0;
     size_t mTotalTextureMemory = 0;
+    // The total reserved memory for empty texture pages that are kept around
+    // for future allocations.
+    size_t mEmptyTextureMemory = 0;
 
     const Matrix& GetTransform() const { return mCurrentTarget->mTransform; }
 
