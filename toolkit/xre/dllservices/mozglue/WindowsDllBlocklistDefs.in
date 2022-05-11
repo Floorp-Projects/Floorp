@@ -248,6 +248,10 @@ ALL_PROCESSES += [
     # InfoWatch Device Monitor causes crashes, bug 1704276
     DllBlocklistEntry("iwprn.dll", (6, 9, 11, 360)),
     DllBlocklistEntry("iwprn_x86.dll", (6, 9, 11, 360)),
+
+    # Forcepoint DLLs causing crashes, bug 1767993
+    DllBlocklistEntry("qipcap.dll", (7, 7, 819, 1)),
+    DllBlocklistEntry("qipcap64.dll", (7, 7, 819, 1)),
 ]
 
 ALL_PROCESSES_TESTS += [
