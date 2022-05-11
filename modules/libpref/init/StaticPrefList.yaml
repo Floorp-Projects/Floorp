@@ -12164,6 +12164,53 @@
   value: true
   mirror: always
 
+# This is checked at startup to see if NSS should be initialized without the
+# user's certificate and key databases.
+- name: security.nocertdb
+  type: bool
+  value: false
+  mirror: once
+
+# On Windows 8.1, if the following preference is 2, we will attempt to detect
+# if the Family Safety TLS interception feature has been enabled. If so, we
+# will behave as if the enterprise roots feature has been enabled (i.e. import
+# and trust third party root certificates from the OS).
+# With any other value of the pref or on any other platform, this does nothing.
+# This preference takes precedence over "security.enterprise_roots.enabled".
+- name: security.family_safety.mode
+  type: RelaxedAtomicUint32
+  value: 2
+  mirror: always
+
+# Whether or not to import and trust third party root certificates from the OS.
+- name: security.enterprise_roots.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.intermediate_preloading_healer.enabled
+  type: RelaxedAtomicBool
+#if defined(EARLY_BETA_OR_EARLIER) && !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+- name: security.intermediate_preloading_healer.timer_interval_ms
+  type: RelaxedAtomicUint32
+  value: 300000
+  mirror: always
+
+# If true, attempt to load the osclientcerts PKCS#11 module at startup on a
+# background thread. This module allows Firefox to use client certificates
+# stored in OS certificate storage. Currently only available for Windows and
+# macOS.
+- name: security.osclientcerts.autoload
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "signon."
 #---------------------------------------------------------------------------

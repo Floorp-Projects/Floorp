@@ -532,15 +532,6 @@ static nsresult AccountHasFamilySafetyEnabled(bool& enabled) {
 }
 #endif  // XP_WIN
 
-// On Windows 8.1, if the following preference is 2, we will attempt to detect
-// if the Family Safety TLS interception feature has been enabled. If so, we
-// will behave as if the enterprise roots feature has been enabled (i.e. import
-// and trust third party root certificates from the OS).
-// With any other value of the pref or on any other platform, this does nothing.
-// This preference takes precedence over "security.enterprise_roots.enabled".
-const char* kFamilySafetyModePref = "security.family_safety.mode";
-const uint32_t kFamilySafetyModeDefault = 0;
-
 bool nsNSSComponent::ShouldEnableEnterpriseRootsForFamilySafety(
     uint32_t familySafetyMode) {
 #ifdef XP_WIN
@@ -573,10 +564,6 @@ void nsNSSComponent::UnloadEnterpriseRoots() {
   ClearSSLExternalAndInternalSessionCache();
 }
 
-static const char* kEnterpriseRootModePref =
-    "security.enterprise_roots.enabled";
-static const char* kOSClientCertsModulePref = "security.osclientcerts.autoload";
-
 class BackgroundImportEnterpriseCertsTask final : public CryptoTask {
  public:
   explicit BackgroundImportEnterpriseCertsTask(nsNSSComponent* nssComponent)
@@ -606,10 +593,8 @@ void nsNSSComponent::MaybeImportEnterpriseRoots() {
   if (!NS_IsMainThread()) {
     return;
   }
-  bool importEnterpriseRoots =
-      Preferences::GetBool(kEnterpriseRootModePref, false);
-  uint32_t familySafetyMode =
-      Preferences::GetUint(kFamilySafetyModePref, kFamilySafetyModeDefault);
+  bool importEnterpriseRoots = StaticPrefs::security_enterprise_roots_enabled();
+  uint32_t familySafetyMode = StaticPrefs::security_family_safety_mode();
   // If we've been configured to detect the Family Safety TLS interception
   // feature, see if it's enabled. If so, we want to import enterprise roots.
   if (ShouldEnableEnterpriseRootsForFamilySafety(familySafetyMode)) {
@@ -1960,7 +1945,7 @@ nsresult nsNSSComponent::InitializeNSS() {
   SetNSSDatabaseCacheModeAsAppropriate();
 #endif
 
-  bool nocertdb = Preferences::GetBool("security.nocertdb", false);
+  bool nocertdb = StaticPrefs::security_nocertdb_AtStartup();
   bool inSafeMode = true;
   nsCOMPtr<nsIXULRuntime> runtime(do_GetService("@mozilla.org/xre/runtime;1"));
   // There might not be an nsIXULRuntime in embedded situations. This will
@@ -2027,9 +2012,8 @@ nsresult nsNSSComponent::InitializeNSS() {
     setValidationOptions(true, lock);
 
     bool importEnterpriseRoots =
-        Preferences::GetBool(kEnterpriseRootModePref, false);
-    uint32_t familySafetyMode =
-        Preferences::GetUint(kFamilySafetyModePref, kFamilySafetyModeDefault);
+        StaticPrefs::security_enterprise_roots_enabled();
+    uint32_t familySafetyMode = StaticPrefs::security_family_safety_mode();
     Vector<nsCString> possibleLoadableRootsLocations;
     rv = ListPossibleLoadableRootsLocations(possibleLoadableRootsLocations);
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -2038,7 +2022,7 @@ nsresult nsNSSComponent::InitializeNSS() {
     }
 
     bool loadOSClientCertsModule =
-        Preferences::GetBool(kOSClientCertsModulePref, false);
+        StaticPrefs::security_osclientcerts_autoload();
     Maybe<nsCString> maybeOSClientCertsModuleLocation;
     if (loadOSClientCertsModule) {
       nsAutoCString libraryDir;
@@ -2295,8 +2279,7 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
     mIntermediatePreloadingHealerTimer = nullptr;
   }
 
-  if (!Preferences::GetBool("security.intermediate_preloading_healer.enabled",
-                            false)) {
+  if (!StaticPrefs::security_intermediate_preloading_healer_enabled()) {
     return NS_OK;
   }
 
@@ -2310,9 +2293,8 @@ nsresult nsNSSComponent::MaybeEnableIntermediatePreloadingHealer() {
       return rv;
     }
   }
-  uint32_t timerDelayMS = Preferences::GetUint(
-      "security.intermediate_preloading_healer.timer_interval_ms",
-      5 * 60 * 1000);
+  uint32_t timerDelayMS =
+      StaticPrefs::security_intermediate_preloading_healer_timer_interval_ms();
   nsresult rv = NS_NewTimerWithFuncCallback(
       getter_AddRefs(mIntermediatePreloadingHealerTimer),
       IntermediatePreloadingHealerCallback, nullptr, timerDelayMS,
@@ -2378,13 +2360,13 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       mContentSigningRootHash.Truncate();
       Preferences::GetCString("security.content.signature.root_hash",
                               mContentSigningRootHash);
-    } else if (prefName.Equals(kEnterpriseRootModePref) ||
-               prefName.Equals(kFamilySafetyModePref)) {
+    } else if (prefName.Equals("security.enterprise_roots.enabled") ||
+               prefName.Equals("security.family_safety.mode")) {
       UnloadEnterpriseRoots();
       MaybeImportEnterpriseRoots();
-    } else if (prefName.Equals(kOSClientCertsModulePref)) {
+    } else if (prefName.Equals("security.osclientcerts.autoload")) {
       bool loadOSClientCertsModule =
-          Preferences::GetBool(kOSClientCertsModulePref, false);
+          StaticPrefs::security_osclientcerts_autoload();
       AsyncLoadOrUnloadOSClientCertsModule(loadOSClientCertsModule);
     } else if (prefName.EqualsLiteral("security.pki.mitm_canary_issuer")) {
       MutexAutoLock lock(mMutex);
