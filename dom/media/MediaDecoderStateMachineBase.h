@@ -6,9 +6,13 @@
 #define DOM_MEDIA_MEDIADECODERSTATEMACHINEBASE_H_
 
 #include "DecoderDoctorDiagnostics.h"
+#include "MediaDecoder.h"
+#include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaMetadataManager.h"
+#include "ReaderProxy.h"
+#include "VideoFrameContainer.h"
 #include "mozilla/dom/MediaDebugInfoBinding.h"
 #include "mozilla/Variant.h"
 #include "nsISupportsImpl.h"
@@ -19,11 +23,8 @@ namespace mozilla {
 
 class AbstractThread;
 class FrameStatistics;
-class MediaDecoder;
 class MediaFormatReader;
-class ReaderProxy;
 class TaskQueue;
-class VideoFrameContainer;
 
 struct MediaPlaybackEvent {
   enum EventType {
