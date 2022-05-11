@@ -499,8 +499,19 @@ MediaResult AppleATDecoder::SetupDecoder(MediaRawData* aSample) {
 
   LOG("Initializing Apple AudioToolbox decoder");
 
+  // Should we try and use magic cookie data from the AAC data? We do this if
+  // - We have an AAC config &
+  // - We do not aleady have magic cookie data.
+  // Otherwise we just use the existing cookie (which may be empty).
+  bool shouldUseAacMagicCookie =
+      mConfig.mCodecSpecificConfig.is<AacCodecSpecificData>() &&
+      mMagicCookie.IsEmpty();
+
   nsTArray<uint8_t>& magicCookie =
-      mMagicCookie.Length() ? mMagicCookie : *mConfig.mExtraData;
+      shouldUseAacMagicCookie
+          ? *mConfig.mCodecSpecificConfig.as<AacCodecSpecificData>()
+                 .mEsDescriptorBinaryBlob
+          : mMagicCookie;
   AudioStreamBasicDescription inputFormat;
   PodZero(&inputFormat);
 
