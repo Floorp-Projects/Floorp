@@ -8,32 +8,97 @@
 #define mozilla_RemoteLazyInputStreamChild_h
 
 #include "mozilla/PRemoteLazyInputStreamChild.h"
+#include "mozilla/RemoteLazyInputStream.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
 class RemoteLazyInputStream;
 
+namespace dom {
+class ThreadSafeWorkerRef;
+}
+
 class RemoteLazyInputStreamChild final : public PRemoteLazyInputStreamChild {
  public:
+  enum ActorState {
+    // The actor is connected via IPDL to the parent.
+    eActive,
+
+    // The actor is disconnected.
+    eInactive,
+
+    // The actor is waiting to be disconnected. Once it has been disconnected,
+    // it will be reactivated on the DOM-File thread.
+    eActiveMigrating,
+
+    // The actor has been disconnected and it's waiting to be connected on the
+    // DOM-File thread.
+    eInactiveMigrating,
+  };
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteLazyInputStreamChild, final)
 
-  explicit RemoteLazyInputStreamChild(const nsID& aID);
+  RemoteLazyInputStreamChild(const nsID& aID, uint64_t aSize);
 
-  const nsID& StreamID() const { return mID; }
+  void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
-  // Manage the count of streams registered on this actor. When the count
-  // reaches 0 the connection to our remote process will be closed.
-  void StreamCreated();
-  void StreamConsumed();
+  ActorState State();
 
-  void ActorDestroy(ActorDestroyReason aReason) override;
+  already_AddRefed<RemoteLazyInputStream> CreateStream();
+
+  void ForgetStream(RemoteLazyInputStream* aStream);
+
+  const nsID& ID() const { return mID; }
+
+  uint64_t Size() const { return mSize; }
+
+  void StreamNeeded(RemoteLazyInputStream* aStream,
+                    nsIEventTarget* aEventTarget);
+
+  mozilla::ipc::IPCResult RecvStreamReady(const Maybe<IPCStream>& aStream);
+
+  void LengthNeeded(RemoteLazyInputStream* aStream,
+                    nsIEventTarget* aEventTarget);
+
+  mozilla::ipc::IPCResult RecvLengthReady(const int64_t& aLength);
+
+  void Shutdown();
+
+  void Migrated();
 
  private:
   ~RemoteLazyInputStreamChild() override;
 
-  const nsID mID;
+  // Raw pointers because these streams keep this actor alive. When the last
+  // stream is unregister, the actor will be deleted. This list is protected by
+  // mutex.
+  nsTArray<RemoteLazyInputStream*> mStreams;
 
-  std::atomic<size_t> mStreamCount{0};
+  // This mutex protects mStreams because that can be touched in any thread.
+  Mutex mMutex MOZ_UNANNOTATED;
+
+  const nsID mID;
+  const uint64_t mSize;
+
+  ActorState mState;
+
+  // This struct and the array are used for creating streams when needed.
+  struct PendingOperation {
+    RefPtr<RemoteLazyInputStream> mStream;
+    nsCOMPtr<nsIEventTarget> mEventTarget;
+    enum {
+      eStreamNeeded,
+      eLengthNeeded,
+    } mOp;
+  };
+  nsTArray<PendingOperation> mPendingOperations;
+
+  nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
+
+  RefPtr<dom::ThreadSafeWorkerRef> mWorkerRef;
 };
 
 }  // namespace mozilla
