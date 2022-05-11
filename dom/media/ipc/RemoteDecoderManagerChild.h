@@ -15,6 +15,7 @@
 
 namespace mozilla {
 
+class PMFMediaEngineChild;
 class RemoteDecoderChild;
 
 enum class RemoteDecodeIn {
@@ -103,6 +104,9 @@ class RemoteDecoderManagerChild final
       const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
+
+  PMFMediaEngineChild* AllocPMFMediaEngineChild();
+  bool DeallocPMFMediaEngineChild(PMFMediaEngineChild* actor);
 
  private:
   explicit RemoteDecoderManagerChild(RemoteDecodeIn aLocation);
