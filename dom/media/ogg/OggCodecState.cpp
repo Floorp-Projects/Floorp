@@ -751,9 +751,8 @@ bool VorbisState::Init() {
     headerLens.AppendElement(mHeaders[i]->bytes);
   }
   // Save header packets for the decoder
-  VorbisCodecSpecificData vorbisCodecSpecificData{};
-  if (!XiphHeadersToExtradata(vorbisCodecSpecificData.mHeadersBinaryBlob,
-                              headers, headerLens)) {
+  if (!XiphHeadersToExtradata(mInfo.mCodecSpecificConfig, headers,
+                              headerLens)) {
     return mActive = false;
   }
   mHeaders.Erase();
@@ -761,8 +760,6 @@ bool VorbisState::Init() {
   mInfo.mRate = mVorbisInfo.rate;
   mInfo.mChannels = mVorbisInfo.channels;
   mInfo.mBitDepth = 16;
-  mInfo.mCodecSpecificConfig =
-      AudioCodecSpecificVariant{std::move(vorbisCodecSpecificData)};
 
   return true;
 }
@@ -1024,16 +1021,13 @@ bool OpusState::Init(void) {
   mInfo.mChannels = mParser->mChannels;
   mInfo.mBitDepth = 16;
   // Save preskip & the first header packet for the Opus decoder
-  OpusCodecSpecificData opusData;
-  opusData.mContainerCodecDelayMicroSeconds = Time(0, mParser->mPreSkip);
-
+  OpusDataDecoder::AppendCodecDelay(mInfo.mCodecSpecificConfig,
+                                    Time(0, mParser->mPreSkip));
   if (!mHeaders.PeekFront()) {
     return false;
   }
-  opusData.mHeadersBinaryBlob->AppendElements(mHeaders.PeekFront()->packet,
-                                              mHeaders.PeekFront()->bytes);
-  mInfo.mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(opusData)};
-
+  mInfo.mCodecSpecificConfig->AppendElements(mHeaders.PeekFront()->packet,
+                                             mHeaders.PeekFront()->bytes);
   mHeaders.Erase();
   LOG(LogLevel::Debug, ("Opus decoder init"));
 
