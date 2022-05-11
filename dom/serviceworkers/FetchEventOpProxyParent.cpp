@@ -118,18 +118,16 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aReal);
 
-  ParentToChildServiceWorkerFetchEventOpArgs copyArgs(aArgs.common(),
+  ParentToChildServiceWorkerFetchEventOpArgs copyArgs(aArgs.common(), Nothing(),
                                                       Nothing());
   if (aArgs.preloadResponse().isSome()) {
-    // Convert the preload response to ParentToChildResponseWithTiming.
-    ParentToChildResponseWithTiming response;
-    response.response() =
-        ToParentToChild(aArgs.preloadResponse().ref().response(),
-                        WrapNotNull(aManager->Manager()));
-    response.timingData() = aArgs.preloadResponse().ref().timingData();
-    response.initiatorType() = aArgs.preloadResponse().ref().initiatorType();
-    response.entryName() = aArgs.preloadResponse().ref().entryName();
-    copyArgs.preloadResponse() = Some(response);
+    // Convert the preload response to ParentToChildInternalResponse.
+    copyArgs.preloadResponse() = Some(ToParentToChild(
+        aArgs.preloadResponse().ref(), WrapNotNull(aManager->Manager())));
+  }
+
+  if (aArgs.preloadResponseEndArgs().isSome()) {
+    copyArgs.preloadResponseEndArgs() = aArgs.preloadResponseEndArgs();
   }
 
   FetchEventOpProxyParent* actor =
@@ -141,16 +139,17 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   // need to add it to the arguments. Note that we have to make sure that the
   // arguments don't contain the preload response already, otherwise we'll end
   // up overwriting it with a Nothing.
-  Maybe<ParentToParentResponseWithTiming> preloadResponse =
+  Maybe<ParentToParentInternalResponse> preloadResponse;
+  Maybe<ResponseEndArgs> preloadResponseEndArgs;
+  Tie(preloadResponse, preloadResponseEndArgs) =
       actor->mReal->OnStart(WrapNotNull(actor));
   if (copyArgs.preloadResponse().isNothing() && preloadResponse.isSome()) {
-    ParentToChildResponseWithTiming response;
-    response.response() = ToParentToChild(preloadResponse.ref().response(),
-                                          WrapNotNull(aManager->Manager()));
-    response.timingData() = preloadResponse.ref().timingData();
-    response.initiatorType() = preloadResponse.ref().initiatorType();
-    response.entryName() = preloadResponse.ref().entryName();
-    copyArgs.preloadResponse() = Some(response);
+    copyArgs.preloadResponse() = Some(ToParentToChild(
+        preloadResponse.ref(), WrapNotNull(aManager->Manager())));
+  }
+  if (copyArgs.preloadResponseEndArgs().isNothing() &&
+      preloadResponseEndArgs.isSome()) {
+    copyArgs.preloadResponseEndArgs() = preloadResponseEndArgs;
   }
 
   IPCInternalRequest& copyRequest = copyArgs.common().internalRequest();
@@ -202,7 +201,6 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvRespondWith(
   auto manager = WrapNotNull(mReal->Manager());
   auto backgroundParent = WrapNotNull(manager->Manager());
   Unused << mReal->SendRespondWith(ToParentToParent(aResult, backgroundParent));
-  mReal->OnFinish();
   return IPC_OK();
 }
 
@@ -211,7 +209,7 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::Recv__delete__(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mLifetimePromise);
   MOZ_ASSERT(mReal);
-
+  mReal->OnFinish();
   if (mLifetimePromise) {
     mLifetimePromise->Resolve(aResult, __func__);
     mLifetimePromise = nullptr;

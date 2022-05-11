@@ -12,6 +12,7 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/ResponseBinding.h"
+#include "mozilla/dom/FetchDriver.h"
 
 namespace IPC {
 template <>
@@ -51,6 +52,12 @@ struct ParamTraits<mozilla::dom::ResponseType>
     : public ContiguousEnumSerializer<mozilla::dom::ResponseType,
                                       mozilla::dom::ResponseType::Basic,
                                       mozilla::dom::ResponseType::EndGuard_> {};
+template <>
+struct ParamTraits<mozilla::dom::FetchDriverObserver::EndReason>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::dom::FetchDriverObserver::EndReason,
+          mozilla::dom::FetchDriverObserver::eAborted,
+          mozilla::dom::FetchDriverObserver::eByNetworking> {};
 }  // namespace IPC
 
 #endif  // mozilla_dom_fetch_IPCUtils_h
