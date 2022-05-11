@@ -678,6 +678,7 @@ let JSWINDOWACTORS = {
         // The 'unload' event is only used to clean up state, and should not
         // force actor creation.
         unload: { createActor: false },
+        load: { mozSystemGroup: true, capture: true },
       },
     },
   },
