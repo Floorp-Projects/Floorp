@@ -17,6 +17,61 @@ job-defaults:
     attributes:
         retrigger: true
     description: Test Fenix
+    extra:
+        notify:
+            slackBlocks: | 
+                [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
+                    }
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                     "type": "section",
+                     "text": {
+                         "type": "mrkdwn",
+                         "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                    }
+                  },                  
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Owner*: ${task.metadata.owner}"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/test/testDebugUnitTest/index.html|Results> :debug:"
+                    }
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
+                        }
+                    ]
+                  }
+                ]
     fetches:
         toolchain:
             - android-sdk-linux
@@ -25,6 +80,11 @@ job-defaults:
     run:
         using: gradlew
         use-caches: false
+    routes:
+        - notify.slack-channel.G016BC5FUHJ.on-failed
+    scopes:
+        - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+        - notify:slack-channel:G016BC5FUHJ
     treeherder:
         kind: test
         tier: 2
