@@ -8,6 +8,7 @@
 $break-point-small: 570px;
 $break-point-medium: 610px;
 $break-point-large: 866px;
+$container-min-width: 700px;
 $logo-size: 80px;
 $main-section-width: 504px;
 $noodle-buffer: 106px;
@@ -54,6 +55,14 @@ body {
         }
       }
     }
+  }
+}
+
+// Styling for about:welcome background container
+.welcome-container {
+  .onboardingContainer {
+    min-width: $container-min-width;
+    min-height: $break-point-medium;
   }
 }
 
@@ -1043,7 +1052,7 @@ body {
 
   [pos='corner'] {
     background-color: transparent;
-    min-width: 700px;
+    min-width: $container-min-width;
 
     .section-left {
       display: flex;
