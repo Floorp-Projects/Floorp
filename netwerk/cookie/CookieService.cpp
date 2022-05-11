@@ -322,7 +322,7 @@ CookieService::GetCookieStringFromDocument(Document* aDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveCookiePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
   if (!CookieCommons::IsSchemeSupported(principal)) {
     return NS_OK;

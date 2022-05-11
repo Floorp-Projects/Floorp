@@ -51,7 +51,6 @@
 #include "mozilla/dom/WindowFeatures.h"  // WindowFeatures
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/StoragePrincipalHelper.h"
 #include "nsBaseCommandController.h"
 #include "nsError.h"
 #include "nsICookieService.h"
@@ -1576,8 +1575,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDocs)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCookiePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentForeignPartitionedPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
 
@@ -1609,8 +1607,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDocs)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentCookiePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentForeignPartitionedPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
 
@@ -2071,12 +2068,11 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
                                              WindowGlobalChild* aActor) {
   MOZ_ASSERT(mDocumentPrincipal == nullptr,
              "mDocumentPrincipal prematurely set!");
-  MOZ_ASSERT(mDocumentCookiePrincipal == nullptr,
-             "mDocumentCookiePrincipal prematurely set!");
+  MOZ_ASSERT(mDocumentStoragePrincipal == nullptr,
+             "mDocumentStoragePrincipal prematurely set!");
   MOZ_ASSERT(mDocumentPartitionedPrincipal == nullptr,
              "mDocumentPartitionedPrincipal prematurely set!");
   MOZ_ASSERT(aDocument);
-  mDocumentForeignPartitionedPrincipal = nullptr;
 
   // Bail out early if we're in process of closing down the window.
   NS_ENSURE_STATE(!mCleanedUp);
@@ -2711,7 +2707,7 @@ void nsGlobalWindowOuter::DetachFromDocShell(bool aIsBeingDiscarded) {
 
     // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
-    mDocumentCookiePrincipal = mDoc->EffectiveCookiePrincipal();
+    mDocumentStoragePrincipal = mDoc->EffectiveStoragePrincipal();
     mDocumentPartitionedPrincipal = mDoc->PartitionedPrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
 
@@ -2945,14 +2941,14 @@ nsIPrincipal* nsGlobalWindowOuter::GetPrincipal() {
   return nullptr;
 }
 
-nsIPrincipal* nsGlobalWindowOuter::GetEffectiveCookiePrincipal() {
+nsIPrincipal* nsGlobalWindowOuter::GetEffectiveStoragePrincipal() {
   if (mDoc) {
     // If we have a document, get the principal from the document
-    return mDoc->EffectiveCookiePrincipal();
+    return mDoc->EffectiveStoragePrincipal();
   }
 
-  if (mDocumentCookiePrincipal) {
-    return mDocumentCookiePrincipal;
+  if (mDocumentStoragePrincipal) {
+    return mDocumentStoragePrincipal;
   }
 
   // If we don't have a storage principal and we don't have a document we ask
@@ -2962,31 +2958,10 @@ nsIPrincipal* nsGlobalWindowOuter::GetEffectiveCookiePrincipal() {
       do_QueryInterface(GetInProcessParentInternal());
 
   if (objPrincipal) {
-    return objPrincipal->GetEffectiveCookiePrincipal();
+    return objPrincipal->GetEffectiveStoragePrincipal();
   }
 
   return nullptr;
-}
-
-nsIPrincipal* nsGlobalWindowOuter::GetEffectiveStoragePrincipal() {
-  if (StaticPrefs::privacy_partition_always_partition_non_cookie_storage()) {
-    return ForeignPartitionedPrincipal();
-  }
-
-  return GetEffectiveCookiePrincipal();
-}
-
-nsIPrincipal* nsGlobalWindowOuter::ForeignPartitionedPrincipal() {
-  if (!mDocumentForeignPartitionedPrincipal) {
-    RefPtr<nsGlobalWindowInner> inner = GetCurrentInnerWindowInternal();
-    if (!NS_WARN_IF(!inner)) {
-      Unused << NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
-          inner, StoragePrincipalHelper::eForeignPartitionedPrincipal,
-          getter_AddRefs(mDocumentForeignPartitionedPrincipal))));
-    }
-  }
-
-  return mDocumentForeignPartitionedPrincipal;
 }
 
 nsIPrincipal* nsGlobalWindowOuter::PartitionedPrincipal() {

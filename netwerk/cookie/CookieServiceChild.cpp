@@ -339,7 +339,7 @@ CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
 
   aCookieString.Truncate();
 
-  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveCookiePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveStoragePrincipal();
 
   if (!CookieCommons::IsSchemeSupported(principal)) {
     return NS_OK;

@@ -456,10 +456,6 @@ class nsGlobalWindowObserver final : public nsIObserver,
     }
   }
 
-  nsIPrincipal* GetEffectiveCookiePrincipal() const override {
-    return mWindow ? mWindow->GetEffectiveCookiePrincipal() : nullptr;
-  }
-
   nsIPrincipal* GetEffectiveStoragePrincipal() const override {
     return mWindow ? mWindow->GetEffectiveStoragePrincipal() : nullptr;
   }
@@ -1181,7 +1177,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
   if (mDoc) {
     // Remember the document's principal, URI, and CSP.
     mDocumentPrincipal = mDoc->NodePrincipal();
-    mDocumentCookiePrincipal = mDoc->EffectiveCookiePrincipal();
+    mDocumentStoragePrincipal = mDoc->EffectiveStoragePrincipal();
     mDocumentPartitionedPrincipal = mDoc->PartitionedPrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
     mDocBaseURI = mDoc->GetDocBaseURI();
@@ -1426,8 +1422,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIndexedDB)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCookiePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentForeignPartitionedPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentCsp)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserChild)
@@ -1545,8 +1540,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mIndexedDB)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentCookiePrincipal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentForeignPartitionedPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPartitionedPrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentCsp)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserChild)
@@ -2273,14 +2267,14 @@ nsIPrincipal* nsGlobalWindowInner::GetPrincipal() {
   return nullptr;
 }
 
-nsIPrincipal* nsGlobalWindowInner::GetEffectiveCookiePrincipal() {
+nsIPrincipal* nsGlobalWindowInner::GetEffectiveStoragePrincipal() {
   if (mDoc) {
     // If we have a document, get the principal from the document
-    return mDoc->EffectiveCookiePrincipal();
+    return mDoc->EffectiveStoragePrincipal();
   }
 
-  if (mDocumentCookiePrincipal) {
-    return mDocumentCookiePrincipal;
+  if (mDocumentStoragePrincipal) {
+    return mDocumentStoragePrincipal;
   }
 
   // If we don't have a storage principal and we don't have a document we ask
@@ -2290,28 +2284,10 @@ nsIPrincipal* nsGlobalWindowInner::GetEffectiveCookiePrincipal() {
       do_QueryInterface(GetInProcessParentInternal());
 
   if (objPrincipal) {
-    return objPrincipal->GetEffectiveCookiePrincipal();
+    return objPrincipal->GetEffectiveStoragePrincipal();
   }
 
   return nullptr;
-}
-
-nsIPrincipal* nsGlobalWindowInner::GetEffectiveStoragePrincipal() {
-  if (StaticPrefs::privacy_partition_always_partition_non_cookie_storage()) {
-    return ForeignPartitionedPrincipal();
-  }
-
-  return GetEffectiveCookiePrincipal();
-}
-
-nsIPrincipal* nsGlobalWindowInner::ForeignPartitionedPrincipal() {
-  if (!mDocumentForeignPartitionedPrincipal) {
-    Unused << NS_WARN_IF(NS_FAILED(StoragePrincipalHelper::GetPrincipal(
-        this, StoragePrincipalHelper::eForeignPartitionedPrincipal,
-        getter_AddRefs(mDocumentForeignPartitionedPrincipal))));
-  }
-
-  return mDocumentForeignPartitionedPrincipal;
 }
 
 nsIPrincipal* nsGlobalWindowInner::PartitionedPrincipal() {
@@ -7778,11 +7754,11 @@ void nsGlobalWindowInner::StorageAccessPermissionGranted() {
   // Reset DOM Cache
   mCacheStorage = nullptr;
 
-  // Reset the active cookie principal
+  // Reset the active storage principal
   if (mDoc) {
-    mDoc->ClearActiveCookiePrincipal();
+    mDoc->ClearActiveStoragePrincipal();
     if (mWindowGlobalChild) {
-      // XXX(farre): This is a bit backwards, but clearing the cookie
+      // XXX(farre): This is a bit backwards, but clearing the storage
       // principal might make us end up with a new effective storage
       // principal on the child side than on the parent side, which
       // means that we need to sync it. See bug 1705359.
