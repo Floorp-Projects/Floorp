@@ -19,6 +19,7 @@ using RequestMode from "mozilla/dom/RequestBinding.h";
 using RequestRedirect from "mozilla/dom/RequestBinding.h";
 using ResponseType from "mozilla/dom/ResponseBinding.h";
 using struct nsID from "nsID.h";
+using FetchDriverObserver::EndReason from "mozilla/dom/FetchDriver.h";
 
 namespace mozilla {
 namespace dom {
@@ -101,18 +102,15 @@ struct ChildToParentInternalResponse {
   ChildToParentStream? alternativeBody;
 };
 
-struct ParentToParentResponseWithTiming {
-  ParentToParentInternalResponse response;
+struct ResponseTiming {
   IPCPerformanceTimingData timingData;
   nsString initiatorType;
   nsString entryName;
 };
 
-struct ParentToChildResponseWithTiming {
-  ParentToChildInternalResponse response;
-  IPCPerformanceTimingData timingData;
-  nsString initiatorType;
-  nsString entryName;
+struct ResponseEndArgs {
+  EndReason endReason;
+  ResponseTiming? timing;
 };
 
 } // namespace ipc
