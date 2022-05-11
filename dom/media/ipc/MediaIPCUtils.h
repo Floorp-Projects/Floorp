@@ -176,7 +176,7 @@ struct ParamTraits<mozilla::AudioInfo> {
     WriteParam(aWriter, aParam.mBitDepth);
     WriteParam(aWriter, aParam.mProfile);
     WriteParam(aWriter, aParam.mExtendedProfile);
-    WriteParam(aWriter, *aParam.mCodecSpecificConfig);
+    WriteParam(aWriter, aParam.mCodecSpecificConfig);
     WriteParam(aWriter, *aParam.mExtraData);
   }
 
@@ -188,7 +188,7 @@ struct ParamTraits<mozilla::AudioInfo> {
         ReadParam(aReader, &aResult->mBitDepth) &&
         ReadParam(aReader, &aResult->mProfile) &&
         ReadParam(aReader, &aResult->mExtendedProfile) &&
-        ReadParam(aReader, aResult->mCodecSpecificConfig.get()) &&
+        ReadParam(aReader, &aResult->mCodecSpecificConfig) &&
         ReadParam(aReader, aResult->mExtraData.get())) {
       return true;
     }

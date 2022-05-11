@@ -130,7 +130,9 @@ bool MP3TrackDemuxer::Init() {
     MOZ_ALWAYS_TRUE(ok);
     ok = writer.WriteU32(mEncoderPadding);
     MOZ_ALWAYS_TRUE(ok);
-    mInfo->mCodecSpecificConfig->AppendElements(trimInfo);
+    AudioCodecSpecificBinaryBlob blob;
+    blob.mBinaryBlob->AppendElements(trimInfo);
+    mInfo->mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(blob)};
   }
 
   MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%" PRId64

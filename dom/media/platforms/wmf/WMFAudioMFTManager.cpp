@@ -90,9 +90,11 @@ WMFAudioMFTManager::WMFAudioMFTManager(const AudioInfo& aConfig)
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
   if (mStreamType == WMFStreamType::AAC) {
+    RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
+        ForceGetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
     AACAudioSpecificConfigToUserData(
-        aConfig.mExtendedProfile, aConfig.mCodecSpecificConfig->Elements(),
-        aConfig.mCodecSpecificConfig->Length(), mUserData);
+        aConfig.mExtendedProfile, audioCodecSpecificBinaryBlob->Elements(),
+        audioCodecSpecificBinaryBlob->Length(), mUserData);
   }
 }
 

@@ -60,8 +60,10 @@ void OpusDataDecoder::AppendCodecDelay(MediaByteBuffer* config,
 
 RefPtr<MediaDataDecoder::InitPromise> OpusDataDecoder::Init() {
   mThread = GetCurrentSerialEventTarget();
-  size_t length = mInfo.mCodecSpecificConfig->Length();
-  uint8_t* p = mInfo.mCodecSpecificConfig->Elements();
+  RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
+      ForceGetAudioCodecSpecificBlob(mInfo.mCodecSpecificConfig);
+  size_t length = audioCodecSpecificBinaryBlob->Length();
+  uint8_t* p = audioCodecSpecificBinaryBlob->Elements();
   if (length < sizeof(uint64_t)) {
     OPUS_DEBUG("CodecSpecificConfig too short to read codecDelay!");
     return InitPromise::CreateAndReject(
