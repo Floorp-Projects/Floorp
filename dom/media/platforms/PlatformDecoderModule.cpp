@@ -22,8 +22,7 @@ CreateDecoderParamsForAsync::CreateDecoderParamsForAsync(
       mType(aParams.mType),
       mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent),
       mOptions(aParams.mOptions),
-      mRate(aParams.mRate),
-      mMediaEngineId(aParams.mMediaEngineId) {}
+      mRate(aParams.mRate) {}
 
 CreateDecoderParamsForAsync::CreateDecoderParamsForAsync(
     CreateDecoderParamsForAsync&& aParams) = default;

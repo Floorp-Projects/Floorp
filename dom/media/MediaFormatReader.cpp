@@ -376,8 +376,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
       p = platform->CreateDecoder(
           {*ownerData.GetCurrentInfo()->GetAsAudioInfo(), mOwner->mCrashHelper,
            CreateDecoderParams::UseNullDecoder(ownerData.mIsNullDecode),
-           TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent),
-           mOwner->mMediaEngineId});
+           TrackInfo::kAudioTrack, std::move(onWaitingForKeyEvent)});
       break;
     }
 
@@ -396,8 +395,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
            CreateDecoderParams::VideoFrameRate(ownerData.mMeanRate.Mean()),
            OptionSet(ownerData.mHardwareDecodingDisabled
                          ? Option::HardwareDecoderNotAllowed
-                         : Option::Default),
-           mOwner->mMediaEngineId});
+                         : Option::Default)});
       break;
     }
 
@@ -3052,12 +3050,6 @@ void MediaFormatReader::NotifyDataArrived() {
           },
           [self]() { self->mNotifyDataArrivedPromise.Complete(); })
       ->Track(mNotifyDataArrivedPromise);
-}
-
-void MediaFormatReader::UpdateMediaEngineId(uint64_t aMediaEngineId) {
-  MOZ_ASSERT(OnTaskQueue());
-  LOG("Update external media engine Id %" PRIu64, aMediaEngineId);
-  mMediaEngineId = Some(aMediaEngineId);
 }
 
 void MediaFormatReader::UpdateBuffered() {

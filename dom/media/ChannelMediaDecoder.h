@@ -102,7 +102,7 @@ class ChannelMediaDecoder
   void DownloadProgressed();
 
   // Create a new state machine to run this decoder.
-  MediaDecoderStateMachineBase* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine();
 
   nsresult Load(BaseMediaResource* aOriginal);
 

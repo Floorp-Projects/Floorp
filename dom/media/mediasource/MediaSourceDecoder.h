@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class MediaDecoderStateMachineBase;
+class MediaDecoderStateMachine;
 class MediaSourceDemuxer;
 
 namespace dom {
@@ -73,7 +73,7 @@ class MediaSourceDecoder : public MediaDecoder,
   void NotifyDataArrived();
 
  private:
-  MediaDecoderStateMachineBase* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine();
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);
   bool CanPlayThroughImpl() override;

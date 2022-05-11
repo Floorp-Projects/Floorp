@@ -23,10 +23,6 @@
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 
-#ifdef MOZ_WMF
-#  include "MFMediaEngineParent.h"
-#endif
-
 namespace mozilla {
 
 using namespace ipc;
@@ -191,8 +187,7 @@ void RemoteDecoderManagerParent::ActorDestroy(
 PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
     const CreateDecoderParams::OptionSet& aOptions,
-    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    const Maybe<uint64_t>& aMediaEngineId) {
+    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier) {
   RefPtr<TaskQueue> decodeTaskQueue =
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                         "RemoteVideoDecoderParent::mDecodeTaskQueue");
@@ -203,14 +198,13 @@ PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
         aRemoteDecoderInfo.get_VideoDecoderInfoIPDL();
     return new RemoteVideoDecoderParent(
         this, decoderInfo.videoInfo(), decoderInfo.framerate(), aOptions,
-        aIdentifier, sRemoteDecoderManagerParentThread, decodeTaskQueue,
-        aMediaEngineId);
+        aIdentifier, sRemoteDecoderManagerParentThread, decodeTaskQueue);
   }
 
   if (aRemoteDecoderInfo.type() == RemoteDecoderInfoIPDL::TAudioInfo) {
     return new RemoteAudioDecoderParent(
         this, aRemoteDecoderInfo.get_AudioInfo(), aOptions,
-        sRemoteDecoderManagerParentThread, decodeTaskQueue, aMediaEngineId);
+        sRemoteDecoderManagerParentThread, decodeTaskQueue);
   }
 
   MOZ_CRASH("unrecognized type of RemoteDecoderInfoIPDL union");
@@ -221,23 +215,6 @@ bool RemoteDecoderManagerParent::DeallocPRemoteDecoderParent(
     PRemoteDecoderParent* actor) {
   RemoteDecoderParent* parent = static_cast<RemoteDecoderParent*>(actor);
   parent->Destroy();
-  return true;
-}
-
-PMFMediaEngineParent* RemoteDecoderManagerParent::AllocPMFMediaEngineParent() {
-#ifdef MOZ_WMF
-  return new MFMediaEngineParent(this);
-#else
-  return nullptr;
-#endif
-}
-
-bool RemoteDecoderManagerParent::DeallocPMFMediaEngineParent(
-    PMFMediaEngineParent* actor) {
-#ifdef MOZ_WMF
-  MFMediaEngineParent* parent = static_cast<MFMediaEngineParent*>(actor);
-  parent->Destroy();
-#endif
   return true;
 }
 

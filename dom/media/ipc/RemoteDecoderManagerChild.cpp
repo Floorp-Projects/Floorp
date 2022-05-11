@@ -23,10 +23,6 @@
 #include "nsIObserver.h"
 #include "mozilla/StaticPrefs_media.h"
 
-#ifdef MOZ_WMF
-#  include "MFMediaEngineChild.h"
-#endif
-
 namespace mozilla {
 
 using namespace layers;
@@ -269,26 +265,18 @@ RemoteDecoderManagerChild::CreateAudioDecoder(
     return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
-
-  bool useUtilityAudioDecoding = StaticPrefs::media_utility_process_enabled() &&
-                                 aLocation == RemoteDecodeIn::UtilityProcess;
-#ifdef MOZ_WMF
-  // If the media engine Id is specified, using the media engine in the RDD
-  // process instead.
-  useUtilityAudioDecoding = useUtilityAudioDecoding &&
-                            !(aParams.mMediaEngineId &&
-                              StaticPrefs::media_wmf_media_engine_enabled());
-#endif
   RefPtr<GenericNonExclusivePromise> launchPromise =
-      useUtilityAudioDecoding ? LaunchUtilityProcessIfNeeded()
-                              : LaunchRDDProcessIfNeeded();
+      (StaticPrefs::media_utility_process_enabled() &&
+       aLocation == RemoteDecodeIn::UtilityProcess)
+          ? LaunchUtilityProcessIfNeeded()
+          : LaunchRDDProcessIfNeeded();
 
   return launchPromise->Then(
       managerThread, __func__,
       [params = CreateDecoderParamsForAsync(aParams), aLocation](bool) {
         auto child = MakeRefPtr<RemoteAudioDecoderChild>();
-        MediaResult result = child->InitIPDL(
-            params.AudioConfig(), params.mOptions, params.mMediaEngineId);
+        MediaResult result =
+            child->InitIPDL(params.AudioConfig(), params.mOptions);
         if (NS_FAILED(result)) {
           return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
               result, __func__);
@@ -340,8 +328,7 @@ RemoteDecoderManagerChild::CreateVideoDecoder(
             params.VideoConfig(), params.mRate.mValue, params.mOptions,
             params.mKnowsCompositor
                 ? Some(params.mKnowsCompositor->GetTextureFactoryIdentifier())
-                : Nothing(),
-            params.mMediaEngineId);
+                : Nothing());
         if (NS_FAILED(result)) {
           return PlatformDecoderModule::CreateDecoderPromise::CreateAndReject(
               result, __func__);
@@ -557,8 +544,7 @@ RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded() {
 PRemoteDecoderChild* RemoteDecoderManagerChild::AllocPRemoteDecoderChild(
     const RemoteDecoderInfoIPDL& /* not used */,
     const CreateDecoderParams::OptionSet& aOptions,
-    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    const Maybe<uint64_t>& aMediaEngineId) {
+    const Maybe<layers::TextureFactoryIdentifier>& aIdentifier) {
   // RemoteDecoderModule is responsible for creating RemoteDecoderChild
   // classes.
   MOZ_ASSERT(false,
@@ -571,21 +557,6 @@ bool RemoteDecoderManagerChild::DeallocPRemoteDecoderChild(
     PRemoteDecoderChild* actor) {
   RemoteDecoderChild* child = static_cast<RemoteDecoderChild*>(actor);
   child->IPDLActorDestroyed();
-  return true;
-}
-
-PMFMediaEngineChild* RemoteDecoderManagerChild::AllocPMFMediaEngineChild() {
-  MOZ_ASSERT_UNREACHABLE(
-      "RemoteDecoderManagerChild cannot create MFMediaEngineChild classes");
-  return nullptr;
-}
-
-bool RemoteDecoderManagerChild::DeallocPMFMediaEngineChild(
-    PMFMediaEngineChild* actor) {
-#ifdef MOZ_WMF
-  MFMediaEngineChild* child = static_cast<MFMediaEngineChild*>(actor);
-  child->IPDLActorDestroyed();
-#endif
   return true;
 }
 
