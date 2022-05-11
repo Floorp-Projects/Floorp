@@ -7238,13 +7238,11 @@ nsRect nsDisplayTransform::TransformRect(const nsRect& aUntransformedBounds,
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  uint32_t flags =
-      INCLUDE_PERSPECTIVE | OFFSET_BY_ORIGIN | INCLUDE_PRESERVE3D_ANCESTORS;
   FrameTransformProperties props(aFrame, aRefBox, factor);
   return nsLayoutUtils::MatrixTransformRect(
       aUntransformedBounds,
-      GetResultingTransformMatrixInternal(props, aRefBox, nsPoint(0, 0), factor,
-                                          flags),
+      GetResultingTransformMatrixInternal(props, aRefBox, nsPoint(), factor,
+                                          kTransformRectFlags),
       factor);
 }
 
@@ -7255,29 +7253,36 @@ bool nsDisplayTransform::UntransformRect(const nsRect& aTransformedBounds,
   MOZ_ASSERT(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
+  Matrix4x4 transform = GetResultingTransformMatrix(aFrame, nsPoint(), factor,
+                                                    kTransformRectFlags);
+  return UntransformRect(aTransformedBounds, aChildBounds, transform, factor,
+                         aOutRect);
+}
 
-  uint32_t flags =
-      INCLUDE_PERSPECTIVE | OFFSET_BY_ORIGIN | INCLUDE_PRESERVE3D_ANCESTORS;
-
-  Matrix4x4 transform =
-      GetResultingTransformMatrix(aFrame, nsPoint(0, 0), factor, flags);
-  if (transform.IsSingular()) {
+bool nsDisplayTransform::UntransformRect(const nsRect& aTransformedBounds,
+                                         const nsRect& aChildBounds,
+                                         const Matrix4x4& aMatrix,
+                                         float aAppUnitsPerPixel,
+                                         nsRect* aOutRect) {
+  if (aMatrix.IsSingular()) {
     return false;
   }
 
-  RectDouble result(NSAppUnitsToFloatPixels(aTransformedBounds.x, factor),
-                    NSAppUnitsToFloatPixels(aTransformedBounds.y, factor),
-                    NSAppUnitsToFloatPixels(aTransformedBounds.width, factor),
-                    NSAppUnitsToFloatPixels(aTransformedBounds.height, factor));
+  RectDouble result(
+      NSAppUnitsToFloatPixels(aTransformedBounds.x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aTransformedBounds.y, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aTransformedBounds.width, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aTransformedBounds.height, aAppUnitsPerPixel));
 
   RectDouble childGfxBounds(
-      NSAppUnitsToFloatPixels(aChildBounds.x, factor),
-      NSAppUnitsToFloatPixels(aChildBounds.y, factor),
-      NSAppUnitsToFloatPixels(aChildBounds.width, factor),
-      NSAppUnitsToFloatPixels(aChildBounds.height, factor));
+      NSAppUnitsToFloatPixels(aChildBounds.x, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aChildBounds.y, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aChildBounds.width, aAppUnitsPerPixel),
+      NSAppUnitsToFloatPixels(aChildBounds.height, aAppUnitsPerPixel));
 
-  result = transform.Inverse().ProjectRectBounds(result, childGfxBounds);
-  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
+  result = aMatrix.Inverse().ProjectRectBounds(result, childGfxBounds);
+  *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result),
+                                                   aAppUnitsPerPixel);
   return true;
 }
 
