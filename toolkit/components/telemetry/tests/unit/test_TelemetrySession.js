@@ -1235,14 +1235,8 @@ add_task(async function test_savedPingsOnShutdown() {
 });
 
 add_task(async function test_sendShutdownPing() {
-  if (
-    gIsAndroid ||
-    (AppConstants.platform == "linux" && OS.Constants.Sys.bits == 32)
-  ) {
+  if (gIsAndroid) {
     // We don't support the pingsender on Android, yet, see bug 1335917.
-    // We also don't suppor the pingsender testing on Treeherder for
-    // Linux 32 bit (due to missing libraries). So skip it there too.
-    // See bug 1310703 comment 78.
     return;
   }
 

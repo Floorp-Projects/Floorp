@@ -206,7 +206,7 @@ bool MiniTransceiver::RecvData(char* aDataBuf, size_t aBufSize,
   return true;
 }
 
-bool MiniTransceiver::Recv(IPC::Message& aMsg) {
+bool MiniTransceiver::Recv(UniquePtr<IPC::Message>& aMsg) {
 #ifdef DEBUG
   if (mState == STATE_RECEIVING) {
     MOZ_CRASH(
@@ -244,7 +244,7 @@ bool MiniTransceiver::Recv(IPC::Message& aMsg) {
              "The number of file descriptors in the header is different from"
              " the number actually received");
 
-  aMsg = std::move(*msg);
+  aMsg = std::move(msg);
   return true;
 }
 

@@ -31,6 +31,10 @@ import {
 import { getSourceTextContent } from "./sources-content";
 import { getAllThreads } from "./threads";
 
+export function hasSource(state, id) {
+  return state.sources.sources.has(id);
+}
+
 export function getSource(state, id) {
   return state.sources.sources.get(id);
 }

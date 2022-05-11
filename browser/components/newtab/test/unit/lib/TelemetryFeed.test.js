@@ -1711,34 +1711,56 @@ describe("TelemetryFeed", () => {
       instance.handleDiscoveryStreamImpressionStats("new_session", {
         source: "foo",
         tiles: [{ id: 1, pos: 0 }],
+        window_inner_width: 1000,
+        window_inner_height: 900,
       });
 
       assert.equal(Object.keys(session.impressionSets).length, 1);
-      assert.deepEqual(session.impressionSets.foo, [{ id: 1, pos: 0 }]);
+      assert.deepEqual(session.impressionSets.foo, {
+        tiles: [{ id: 1, pos: 0 }],
+        window_inner_width: 1000,
+        window_inner_height: 900,
+      });
 
       // Add another ping with the same source
       instance.handleDiscoveryStreamImpressionStats("new_session", {
         source: "foo",
         tiles: [{ id: 2, pos: 1 }],
+        window_inner_width: 1000,
+        window_inner_height: 900,
       });
 
-      assert.deepEqual(session.impressionSets.foo, [
-        { id: 1, pos: 0 },
-        { id: 2, pos: 1 },
-      ]);
+      assert.deepEqual(session.impressionSets.foo, {
+        tiles: [
+          { id: 1, pos: 0 },
+          { id: 2, pos: 1 },
+        ],
+        window_inner_width: 1000,
+        window_inner_height: 900,
+      });
 
       // Add another ping with a different source
       instance.handleDiscoveryStreamImpressionStats("new_session", {
         source: "bar",
         tiles: [{ id: 3, pos: 2 }],
+        window_inner_width: 1000,
+        window_inner_height: 900,
       });
 
       assert.equal(Object.keys(session.impressionSets).length, 2);
-      assert.deepEqual(session.impressionSets.foo, [
-        { id: 1, pos: 0 },
-        { id: 2, pos: 1 },
-      ]);
-      assert.deepEqual(session.impressionSets.bar, [{ id: 3, pos: 2 }]);
+      assert.deepEqual(session.impressionSets.foo, {
+        tiles: [
+          { id: 1, pos: 0 },
+          { id: 2, pos: 1 },
+        ],
+        window_inner_width: 1000,
+        window_inner_height: 900,
+      });
+      assert.deepEqual(session.impressionSets.bar, {
+        tiles: [{ id: 3, pos: 2 }],
+        window_inner_width: 1000,
+        window_inner_height: 900,
+      });
     });
   });
   describe("#handleDiscoveryStreamLoadedContent", () => {

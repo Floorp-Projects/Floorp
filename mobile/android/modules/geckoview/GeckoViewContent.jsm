@@ -29,6 +29,7 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:ScrollTo",
       "GeckoView:SetActive",
       "GeckoView:SetFocused",
+      "GeckoView:SetPriorityHint",
       "GeckoView:UpdateInitData",
       "GeckoView:ZoomToInput",
     ]);
@@ -160,6 +161,14 @@ class GeckoViewContent extends GeckoViewModule {
         } else {
           this.browser.removeAttribute("primary");
           this.browser.blur();
+        }
+        break;
+      case "GeckoView:SetPriorityHint":
+        if (this.browser.isRemoteBrowser) {
+          const remoteTab = this.browser.frameLoader?.remoteTab;
+          if (remoteTab) {
+            remoteTab.priorityHint = aData.priorityHint;
+          }
         }
         break;
       case "GeckoView:RestoreState":

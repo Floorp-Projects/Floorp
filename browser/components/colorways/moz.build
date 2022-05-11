@@ -10,3 +10,5 @@ JAR_MANIFESTS += ["jar.mn"]
 EXTRA_JS_MODULES += [
     "ColorwayClosetOpener.jsm",
 ]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]

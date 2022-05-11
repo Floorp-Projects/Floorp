@@ -296,10 +296,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
         aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
-      if (proxy->IsHyperText()) {
-        // Invalidate the HyperText offset cache.
-        proxy->InvalidateCachedHyperTextOffsets();
-      }
       for (RemoteAccessible* child = proxy->RemoteFirstChild(); child;
            child = child->RemoteNextSibling()) {
         child->InvalidateGroupInfo();
@@ -578,13 +574,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     }
 
     remote->ApplyCache(aUpdateType, entry.Fields());
-    if (aUpdateType == CacheUpdateType::Update && remote->IsTextLeaf()) {
-      // Invalidate the HyperText offset cache.
-      RemoteAccessible* parent = remote->RemoteParent();
-      if (parent && parent->IsHyperText()) {
-        parent->InvalidateCachedHyperTextOffsets();
-      }
-    }
   }
 
   if (nsCOMPtr<nsIObserverService> obsService =
