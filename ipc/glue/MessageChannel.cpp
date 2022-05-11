@@ -1537,12 +1537,13 @@ MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel,
       mScheduled(false)
 #ifdef FUZZING_SNAPSHOT
       ,
+      mIsFuzzMsg(mMessage->IsFuzzMsg()),
       mFuzzStopped(false)
 #endif
 {
   MOZ_DIAGNOSTIC_ASSERT(mMessage, "message may not be null");
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage->IsFuzzMsg()) {
+  if (mIsFuzzMsg) {
     MOZ_FUZZING_IPC_MT_CTOR();
   }
 #endif
@@ -1553,9 +1554,9 @@ MessageChannel::MessageTask::~MessageTask() {
   // We track fuzzing messages until their run is complete. To make sure
   // that we don't miss messages that are for some reason destroyed without
   // being run (e.g. canceled), we catch this condition in the destructor.
-  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
+  if (mIsFuzzMsg && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
-  } else if (!mMessage->IsFuzzMsg() && !fuzzing::Nyx::instance().started()) {
+  } else if (!mIsFuzzMsg && !fuzzing::Nyx::instance().started()) {
     MOZ_FUZZING_IPC_PRE_FUZZ_MT_STOP();
   }
 #endif
@@ -1580,8 +1581,7 @@ nsresult MessageChannel::MessageTask::Run() {
   }
 
 #ifdef FUZZING_SNAPSHOT
-  bool isFuzzMsg = mMessage->IsFuzzMsg();
-  if (!isFuzzMsg) {
+  if (!mIsFuzzMsg) {
     if (fuzzing::Nyx::instance().started()) {
       // Once we started fuzzing, prevent non-fuzzing tasks from being
       // run and potentially blocking worker threads.
@@ -1604,7 +1604,7 @@ nsresult MessageChannel::MessageTask::Run() {
   Channel()->RunMessage(proxy, *this);
 
 #ifdef FUZZING_SNAPSHOT
-  if (isFuzzMsg && !mFuzzStopped) {
+  if (mIsFuzzMsg && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
     mFuzzStopped = true;
   }
@@ -1631,7 +1631,7 @@ nsresult MessageChannel::MessageTask::Cancel() {
   remove();
 
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
+  if (mIsFuzzMsg && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
     mFuzzStopped = true;
   }
