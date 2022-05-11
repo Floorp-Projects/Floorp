@@ -63,6 +63,11 @@ body[lwt-newtab-brighttext] {
   transform: unset;
 }
 
+.welcome-container .onboardingContainer {
+  min-width: 700px;
+  min-height: 610px;
+}
+
 .onboardingContainer {
   text-align: center;
   height: 100vh;
