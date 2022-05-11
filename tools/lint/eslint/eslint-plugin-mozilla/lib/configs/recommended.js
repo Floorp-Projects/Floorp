@@ -49,6 +49,7 @@ module.exports = {
       },
       files: ["**/*.mjs", "**/*.jsm", "**/*.jsm.js"],
       rules: {
+        "mozilla/reject-top-level-await": "error",
         // Bug 1703953: We don't have a good way to check a file runs in a
         // privilieged context. Apply this for jsm files as we know those are
         // privilieged, and then include more directories elsewhere.
