@@ -63,6 +63,7 @@ servo_atoms = {path = "../atoms", optional = true}
 servo_config = {path = "../config", optional = true}
 smallbitvec = "2.3.0"
 smallvec = "1.0"
+static_assertions = "1.1"
 static_prefs = { path = "../../../modules/libpref/init/static_prefs" }
 string_cache = { version = "0.8", optional = true }
 style_derive = {path = "../style_derive"}
