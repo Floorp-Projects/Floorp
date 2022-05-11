@@ -5,7 +5,6 @@
 #include "MediaDecoderStateMachineBase.h"
 
 #include "MediaDecoder.h"
-#include "ReaderProxy.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
