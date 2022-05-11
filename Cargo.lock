@@ -4750,10 +4750,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba1eead9e94aa5a2e02de9e7839f96a007f686ae7a1d57c7797774810d24908a"
 
 [[package]]
-name = "size_of_test"
-version = "0.0.1"
-
-[[package]]
 name = "slab"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4959,22 +4955,8 @@ dependencies = [
 name = "stylo_tests"
 version = "0.0.1"
 dependencies = [
- "atomic_refcell",
- "cssparser",
- "cstr",
- "env_logger",
  "euclid",
- "geckoservo",
- "libc",
- "log",
- "malloc_size_of",
- "num-traits",
- "selectors",
- "size_of_test",
- "smallvec",
  "style",
- "style_traits",
- "to_shmem",
 ]
 
 [[package]]
