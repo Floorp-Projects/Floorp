@@ -881,6 +881,10 @@ class gfxFontFamily {
   }
 
   void AddFontEntryLocked(RefPtr<gfxFontEntry> aFontEntry) REQUIRES(mLock) {
+    // Avoid potentially duplicating entries.
+    if (mAvailableFonts.Contains(aFontEntry)) {
+      return;
+    }
     // bug 589682 - set the IgnoreGDEF flag on entries for Italic faces
     // of Times New Roman, because of buggy table in those fonts
     if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
@@ -905,8 +909,12 @@ class gfxFontFamily {
   }
 
   // note that the styles for this family have been added
-  bool HasStyles() { return mHasStyles; }
+  bool HasStyles() const { return mHasStyles; }
   void SetHasStyles(bool aHasStyles) { mHasStyles = aHasStyles; }
+
+  void SetCheckedForLegacyFamilyNames(bool aChecked) {
+    mCheckedForLegacyFamilyNames = aChecked;
+  }
 
   // choose a specific face to match a style using CSS font matching
   // rules (weight matching occurs here).  may return a face that doesn't
