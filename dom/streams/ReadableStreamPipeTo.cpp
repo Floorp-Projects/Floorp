@@ -602,8 +602,9 @@ void PipeToPump::OnReadFulfilled(JSContext* aCx, JS::Handle<JS::Value> aChunk,
     return;
   }
 
-  mLastWritePromise = WritableStreamDefaultWriterWrite(
-      aCx, MOZ_KnownLive(mWriter), aChunk, aRv);
+  RefPtr<WritableStreamDefaultWriter> writer = mWriter;
+  mLastWritePromise =
+      WritableStreamDefaultWriterWrite(aCx, writer, aChunk, aRv);
   if (aRv.Failed()) {
     mLastWritePromise = nullptr;
     return;
@@ -698,9 +699,10 @@ void PipeToPump::Read(JSContext* aCx) {
     return;
   }
 
+  RefPtr<ReadableStreamDefaultReader> reader = mReader;
   RefPtr<ReadRequest> request = new PipeToReadRequest(this);
   ErrorResult rv;
-  ReadableStreamDefaultReaderRead(aCx, MOZ_KnownLive(mReader), request, rv);
+  ReadableStreamDefaultReaderRead(aCx, reader, request, rv);
   if (rv.MaybeSetPendingException(aCx)) {
     // XXX It's actually not quite obvious what we should do here.
     // We've got an error during reading, so on the surface it seems logical
