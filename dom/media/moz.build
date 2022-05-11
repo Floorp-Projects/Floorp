@@ -280,7 +280,6 @@ UNIFIED_SOURCES += [
     "ImageToI420.cpp",
     "MediaCache.cpp",
     "MediaContainerType.cpp",
-    "MediaData.cpp",
     "MediaDecoder.cpp",
     "MediaDecoderStateMachine.cpp",
     "MediaDecoderStateMachineBase.cpp",
@@ -325,9 +324,11 @@ else:
 # CubebUtils.cpp needs to be built separately due to what appears to be some kind
 # of compiler bug on Android 4.2 x86 opt. See bug 1408459.
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+# MediaData.cpp : ambiguous compilation error caused by Mac OS X headers.
 SOURCES += [
     "CubebUtils.cpp",
     "DecoderTraits.cpp",
+    "MediaData.cpp",
 ]
 
 # Some codec-related code uses multi-character constants, which GCC and clang
