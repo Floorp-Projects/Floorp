@@ -1580,7 +1580,8 @@ nsresult MessageChannel::MessageTask::Run() {
   }
 
 #ifdef FUZZING_SNAPSHOT
-  if (!mMessage->IsFuzzMsg()) {
+  bool isFuzzMsg = mMessage->IsFuzzMsg();
+  if (!isFuzzMsg) {
     if (fuzzing::Nyx::instance().started()) {
       // Once we started fuzzing, prevent non-fuzzing tasks from being
       // run and potentially blocking worker threads.
@@ -1603,7 +1604,7 @@ nsresult MessageChannel::MessageTask::Run() {
   Channel()->RunMessage(proxy, *this);
 
 #ifdef FUZZING_SNAPSHOT
-  if (mMessage->IsFuzzMsg() && !mFuzzStopped) {
+  if (isFuzzMsg && !mFuzzStopped) {
     MOZ_FUZZING_IPC_MT_STOP();
     mFuzzStopped = true;
   }
