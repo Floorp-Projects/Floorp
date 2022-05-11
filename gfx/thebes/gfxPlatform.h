@@ -22,9 +22,11 @@
 #include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/MemoryPressureObserver.h"
+#include "mozilla/layers/OverlayInfo.h"
 
 class gfxASurface;
 class gfxFont;
@@ -318,6 +320,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   void GetFrameStats(mozilla::widget::InfoObject& aObj);
   void GetCMSSupportInfo(mozilla::widget::InfoObject& aObj);
   void GetDisplayInfo(mozilla::widget::InfoObject& aObj);
+  void GetOverlayInfo(mozilla::widget::InfoObject& aObj);
 
   // Get the default content backend that will be used with the default
   // compositor. If the compositor is known when calling this function,
@@ -768,6 +771,10 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
    */
   virtual void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData);
 
+  void SetOverlayInfo(const mozilla::layers::OverlayInfo& aInfo) {
+    mOverlayInfo = mozilla::Some(aInfo);
+  }
+
   bool HasVariationFontSupport() const { return mHasVariationFontSupport; }
 
   bool HasNativeColrFontSupport() const { return mHasNativeColrFontSupport; }
@@ -1016,6 +1023,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   mozilla::widget::GfxInfoCollector<gfxPlatform> mFrameStatsCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mCMSInfoCollector;
   mozilla::widget::GfxInfoCollector<gfxPlatform> mDisplayInfoCollector;
+  mozilla::widget::GfxInfoCollector<gfxPlatform> mOverlayInfoCollector;
 
   nsTArray<mozilla::layers::FrameStats> mFrameStats;
 
@@ -1025,6 +1033,8 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   int32_t mScreenDepth;
   mozilla::gfx::IntSize mScreenSize;
+
+  mozilla::Maybe<mozilla::layers::OverlayInfo> mOverlayInfo;
 
   // An instance of gfxSkipChars which is empty. It is used as the
   // basis for error-case iterators.
