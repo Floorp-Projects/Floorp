@@ -55,13 +55,13 @@ const char* ExternalEngineEventToStr(ExternalEngineEvent aEvent) {
 }
 
 /* static */
-const char* ExternalEngineStateMachine::StateToStr(State aState) {
+const char* ExternalEngineStateMachine::StateToStr(State aNextState) {
 #define STATE_TO_STR(state) \
   case State::state:        \
     return #state
-  switch (aState) {
+  switch (aNextState) {
     STATE_TO_STR(InitEngine);
-    STATE_TO_STR(WaitingMetadata);
+    STATE_TO_STR(ReadingMetadata);
     STATE_TO_STR(RunningEngine);
     STATE_TO_STR(SeekingData);
     STATE_TO_STR(ShutdownEngine);
@@ -73,14 +73,43 @@ const char* ExternalEngineStateMachine::StateToStr(State aState) {
 }
 
 const char* ExternalEngineStateMachine::GetStateStr() const {
-  return StateToStr(mState);
+  return StateToStr(mState.mName);
+}
+
+void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
+  LOG("Change state : '%s' -> '%s'", StateToStr(mState.mName),
+      StateToStr(aNextState));
+  // Assert the possible state transitions.
+  MOZ_ASSERT_IF(mState.IsInitEngine(), aNextState == State::ReadingMetadata ||
+                                           aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsReadingMetadata(),
+                aNextState == State::RunningEngine ||
+                    aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(
+      mState.IsRunningEngine(),
+      aNextState == State::SeekingData || aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsSeekingData(),
+                aNextState == State::RunningEngine ||
+                    aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsShutdownEngine(), aNextState == State::ShutdownEngine);
+  if (aNextState == State::SeekingData) {
+    mState = StateObject({StateObject::SeekingData()});
+  } else if (aNextState == State::ReadingMetadata) {
+    mState = StateObject({StateObject::ReadingMetadata()});
+  } else if (aNextState == State::RunningEngine) {
+    mState = StateObject({StateObject::RunningEngine()});
+  } else if (aNextState == State::ShutdownEngine) {
+    mState = StateObject({StateObject::ShutdownEngine()});
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Wrong state!");
+  }
 }
 
 ExternalEngineStateMachine::ExternalEngineStateMachine(
     MediaDecoder* aDecoder, MediaFormatReader* aReader)
-    : MediaDecoderStateMachineBase(aDecoder, aReader),
-      mState(State::InitEngine) {
+    : MediaDecoderStateMachineBase(aDecoder, aReader) {
   LOG("Created ExternalEngineStateMachine");
+  MOZ_ASSERT(mState.IsInitEngine());
 #ifdef MOZ_WMF
   mEngine.reset(new MFMediaEngineWrapper(this));
 #endif
@@ -89,7 +118,7 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
         ->Then(OwnerThread(), __func__, this,
                &ExternalEngineStateMachine::OnEngineInitSuccess,
                &ExternalEngineStateMachine::OnEngineInitFailure)
-        ->Track(mEngineInitRequest);
+        ->Track(mState.AsInitEngine()->mEngineInitRequest);
   } else {
     ShutdownInternal();
   }
@@ -99,57 +128,44 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   AssertOnTaskQueue();
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnEngineInitSuccess",
                       MEDIA_PLAYBACK);
+  MOZ_ASSERT(mState.IsInitEngine());
   LOG("Initialized the external playback engine %" PRIu64
       ", start reading metadata",
       mEngine->Id());
-  mEngineInitRequest.Complete();
-  ChangeStateTo(State::WaitingMetadata);
+  mState.AsInitEngine()->mEngineInitRequest.Complete();
   mReader->UpdateMediaEngineId(mEngine->Id());
-  mReader->ReadMetadata()
-      ->Then(OwnerThread(), __func__, this,
-             &ExternalEngineStateMachine::OnMetadataRead,
-             &ExternalEngineStateMachine::OnMetadataNotRead)
-      ->Track(mMetadataRequest);
+  ChangeStateTo(State::ReadingMetadata);
+  ReadMetadata();
 }
 
 void ExternalEngineStateMachine::OnEngineInitFailure() {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsInitEngine());
   LOGE("Failed to initialize the external playback engine");
-  mEngineInitRequest.Complete();
+  mState.AsInitEngine()->mEngineInitRequest.Complete();
   // TODO : Should fallback to the normal playback with media engine.
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__));
   ShutdownInternal();
 }
 
-void ExternalEngineStateMachine::ChangeStateTo(State aState) {
-  LOG("Change state : '%s' -> '%s'", StateToStr(mState), StateToStr(aState));
-  // Assert the possible state transitions.
-  MOZ_ASSERT_IF(
-      mState == State::InitEngine,
-      aState == State::WaitingMetadata || aState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(
-      mState == State::WaitingMetadata,
-      aState == State::RunningEngine || aState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(
-      mState == State::RunningEngine,
-      aState == State::SeekingData || aState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(mState == State::SeekingData,
-                aState == State::SeekingData ||
-                    aState == State::RunningEngine ||
-                    aState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(mState == State::ShutdownEngine,
-                aState == State::ShutdownEngine);
-  mState = aState;
+void ExternalEngineStateMachine::ReadMetadata() {
+  AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsReadingMetadata());
+  mReader->ReadMetadata()
+      ->Then(OwnerThread(), __func__, this,
+             &ExternalEngineStateMachine::OnMetadataRead,
+             &ExternalEngineStateMachine::OnMetadataNotRead)
+      ->Track(mState.AsReadingMetadata()->mMetadataRequest);
 }
 
 void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   AssertOnTaskQueue();
-  LOG("OnMetadataRead");
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnMetadataRead",
                       MEDIA_PLAYBACK);
-  MOZ_ASSERT(mState == State::WaitingMetadata);
+  MOZ_ASSERT(mState.IsReadingMetadata());
+  LOG("OnMetadataRead");
 
-  mMetadataRequest.Complete();
+  mState.AsReadingMetadata()->mMetadataRequest.Complete();
   mInfo.emplace(*aMetadata.mInfo);
   mMediaSeekable = Info().mMediaSeekable;
   mMediaSeekableOnlyInBufferedRanges =
@@ -170,7 +186,6 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   if (mDuration.Ref().isNothing()) {
     mDuration = Some(media::TimeUnit::FromInfinity());
   }
-
   MOZ_ASSERT(mDuration.Ref().isSome());
 
   mMetadataLoadedEvent.Notify(std::move(aMetadata.mInfo),
@@ -181,16 +196,16 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
 
 void ExternalEngineStateMachine::OnMetadataNotRead(const MediaResult& aError) {
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState == State::WaitingMetadata);
+  MOZ_ASSERT(mState.IsReadingMetadata());
   LOGE("Decode metadata failed, shutting down decoder");
-  mMetadataRequest.Complete();
+  mState.AsReadingMetadata()->mMetadataRequest.Complete();
   DecodeError(aError);
 }
 
 RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
     const SeekTarget& aTarget) {
   AssertOnTaskQueue();
-  if (mState != State::RunningEngine && mState != State::SeekingData) {
+  if (!mState.IsRunningEngine() && !mState.IsSeekingData()) {
     MOZ_ASSERT(false, "Can't seek due to unsupported state.");
     return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
@@ -200,16 +215,14 @@ RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
     return MediaDecoder::SeekPromise::CreateAndReject(true, __func__);
   }
 
-  // If there is any promise for previous seeking, reject it first.
-  if (mSeekJob) {
-    mSeekJob->RejectIfExists(__func__);
-    mSeekRequest.DisconnectIfExists();
-  }
-  mSeekJob = Some(SeekJob());
-  mSeekJob->mTarget = Some(aTarget);
-
   LOG("Start seeking to %" PRId64, aTarget.GetTime().ToMicroseconds());
-  ChangeStateTo(State::SeekingData);
+  auto* state = mState.AsSeekingData();
+  if (!state) {
+    // We're in the running engine state, and change the state to seeking.
+    ChangeStateTo(State::SeekingData);
+    state = mState.AsSeekingData();
+  }
+  state->SetTarget(aTarget);
 
   // Update related status.
   mSentPlaybackEndedEvent = false;
@@ -219,33 +232,38 @@ RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
   // Notify the external playback engine about seeking. After the engine changes
   // its current time, it would send `seeked` event.
   mEngine->Seek(aTarget.GetTime());
-  mWaitingEngineSeekedEvent = true;
+  state->mWaitingEngineSeeked = true;
   SeekReader();
-  return mSeekJob->mPromise.Ensure(__func__);
+  return state->mSeekJob.mPromise.Ensure(__func__);
 }
 
 void ExternalEngineStateMachine::SeekReader() {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsSeekingData());
+  auto* state = mState.AsSeekingData();
+
   // Reset the reader first and ask it to perform a demuxer seek.
   ResetDecode();
-  mIsReaderSeekingCompleted = false;
-  LOG("Seek reader to %" PRId64, mSeekJob->mTarget->GetTime().ToMicroseconds());
-  mReader->Seek(mSeekJob->mTarget.ref())
+  state->mWaitingReaderSeeked = true;
+  LOG("Seek reader to %" PRId64,
+      state->mSeekJob.mTarget->GetTime().ToMicroseconds());
+  mReader->Seek(state->mSeekJob.mTarget.ref())
       ->Then(OwnerThread(), __func__, this,
              &ExternalEngineStateMachine::OnSeekResolved,
              &ExternalEngineStateMachine::OnSeekRejected)
-      ->Track(mSeekRequest);
+      ->Track(state->mSeekRequest);
 }
 
 void ExternalEngineStateMachine::OnSeekResolved(const media::TimeUnit& aUnit) {
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnSeekResolved",
                       MEDIA_PLAYBACK);
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState == State::SeekingData);
+  MOZ_ASSERT(mState.IsSeekingData());
+  auto* state = mState.AsSeekingData();
 
   LOG("OnSeekResolved");
-  mSeekRequest.Complete();
-  mIsReaderSeekingCompleted = true;
+  state->mSeekRequest.Complete();
+  state->mWaitingReaderSeeked = false;
 
   // Start sending new data to the external playback engine.
   if (HasAudio()) {
@@ -264,10 +282,11 @@ void ExternalEngineStateMachine::OnSeekRejected(
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnSeekRejected",
                       MEDIA_PLAYBACK);
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState == State::SeekingData);
+  MOZ_ASSERT(mState.IsSeekingData());
+  auto* state = mState.AsSeekingData();
 
   LOG("OnSeekRejected");
-  mSeekRequest.Complete();
+  state->mSeekRequest.Complete();
   if (aReject.mError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
     LOG("OnSeekRejected reason=WAITING_FOR_DATA type=%s",
         MediaData::TypeToStr(aReject.mType));
@@ -294,27 +313,29 @@ void ExternalEngineStateMachine::OnSeekRejected(
 
   MOZ_ASSERT(NS_FAILED(aReject.mError),
              "Cancels should also disconnect mSeekRequest");
-  MOZ_ASSERT(mSeekJob && mSeekJob->Exists(),
-             "Reject seeking without a seek job?");
-  mSeekJob->RejectIfExists(__func__);
+  state->RejectIfExists(__func__);
   DecodeError(aReject.mError);
+}
+
+bool ExternalEngineStateMachine::IsSeeking() {
+  AssertOnTaskQueue();
+  const auto* state = mState.AsSeekingData();
+  return state && state->IsSeeking();
 }
 
 void ExternalEngineStateMachine::CheckIfSeekCompleted() {
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState == State::SeekingData);
-
-  if (mWaitingEngineSeekedEvent || !mIsReaderSeekingCompleted) {
+  MOZ_ASSERT(mState.IsSeekingData());
+  auto* state = mState.AsSeekingData();
+  if (state->mWaitingEngineSeeked || state->mWaitingReaderSeeked) {
     LOG("Seek hasn't been completed yet, waitEngineSeeked=%d, "
         "waitReaderSeeked=%d",
-        mWaitingEngineSeekedEvent, !mIsReaderSeekingCompleted);
+        state->mWaitingEngineSeeked, state->mWaitingReaderSeeked);
     return;
   }
 
-  MOZ_ASSERT(mSeekJob && mSeekJob->Exists(),
-             "Completed seeking without a seek job?");
   LOG("Seek completed");
-  mSeekJob->Resolve(__func__);
+  state->Resolve(__func__);
   mOnPlaybackEvent.Notify(MediaPlaybackEvent::Invalidate);
   mOnNextFrameStatus.Notify(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
   StartRunningEngine();
@@ -361,9 +382,6 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::ShutdownInternal() {
   ChangeStateTo(State::ShutdownEngine);
   ResetDecode();
 
-  mEngineInitRequest.DisconnectIfExists();
-  mMetadataRequest.DisconnectIfExists();
-  mSeekRequest.DisconnectIfExists();
   mAudioDataRequest.DisconnectIfExists();
   mVideoDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
@@ -464,6 +482,7 @@ void ExternalEngineStateMachine::EndOfStream(MediaData::Type aType) {
 
 void ExternalEngineStateMachine::WaitForData(MediaData::Type aType) {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
   AUTO_PROFILER_LABEL("ExternalEngineStateMachine::WaitForData",
                       MEDIA_PLAYBACK);
   MOZ_ASSERT(aType == MediaData::Type::AUDIO_DATA ||
@@ -520,6 +539,8 @@ void ExternalEngineStateMachine::WaitForData(MediaData::Type aType) {
 
 void ExternalEngineStateMachine::MaybeFinishWaitForData() {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
+
   bool isWaitingForAudio = HasAudio() && mAudioWaitRequest.Exists();
   bool isWaitingForVideo = HasVideo() && mVideoWaitRequest.Exists();
   if (isWaitingForAudio || isWaitingForVideo) {
@@ -529,12 +550,10 @@ void ExternalEngineStateMachine::MaybeFinishWaitForData() {
   }
 
   LOG("Finished waiting for data");
-  if (mState == State::SeekingData) {
+  if (mState.IsSeekingData()) {
     SeekReader();
     return;
   }
-
-  MOZ_ASSERT(mState == State::RunningEngine);
   if (HasAudio()) {
     RunningEngineUpdate(MediaData::Type::AUDIO_DATA);
   }
@@ -555,7 +574,7 @@ void ExternalEngineStateMachine::StartRunningEngine() {
 
 void ExternalEngineStateMachine::RunningEngineUpdate(MediaData::Type aType) {
   AssertOnTaskQueue();
-  MOZ_ASSERT(mState == State::RunningEngine || mState == State::SeekingData);
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
   LOG("RunningEngineUpdate");
   if (aType == MediaData::Type::AUDIO_DATA && !mHasEnoughAudio) {
     OnRequestAudio();
@@ -567,22 +586,18 @@ void ExternalEngineStateMachine::RunningEngineUpdate(MediaData::Type aType) {
 
 void ExternalEngineStateMachine::OnRequestAudio() {
   AssertOnTaskQueue();
-  AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnRequestAudio",
-                      MEDIA_PLAYBACK);
-  MOZ_ASSERT(mState == State::RunningEngine || mState == State::SeekingData);
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
   LOGV("OnRequestAudio");
 
   if (!HasAudio()) {
     return;
   }
 
-  if (IsRequestingAudioData() || mAudioWaitRequest.Exists() ||
-      mSeekRequest.Exists()) {
+  if (IsRequestingAudioData() || mAudioWaitRequest.Exists() || IsSeeking()) {
     LOGV(
         "No need to request audio, isRequesting=%d, waitingAudio=%d, "
         "isSeeking=%d",
-        IsRequestingAudioData(), mAudioWaitRequest.Exists(),
-        mSeekRequest.Exists());
+        IsRequestingAudioData(), mAudioWaitRequest.Exists(), IsSeeking());
     return;
   }
 
@@ -631,22 +646,18 @@ void ExternalEngineStateMachine::OnRequestAudio() {
 
 void ExternalEngineStateMachine::OnRequestVideo() {
   AssertOnTaskQueue();
-  AUTO_PROFILER_LABEL("ExternalEngineStateMachine::OnRequestVideo",
-                      MEDIA_PLAYBACK);
-  MOZ_ASSERT(mState == State::RunningEngine || mState == State::SeekingData);
+  MOZ_ASSERT(mState.IsRunningEngine() || mState.IsSeekingData());
   LOGV("OnRequestVideo");
 
   if (!HasVideo()) {
     return;
   }
 
-  if (IsRequestingVideoData() || mVideoWaitRequest.Exists() ||
-      mSeekRequest.Exists()) {
+  if (IsRequestingVideoData() || mVideoWaitRequest.Exists() || IsSeeking()) {
     LOGV(
         "No need to request video, isRequesting=%d, waitingVideo=%d, "
         "isSeeking=%d",
-        IsRequestingVideoData(), mVideoWaitRequest.Exists(),
-        mSeekRequest.Exists());
+        IsRequestingVideoData(), mVideoWaitRequest.Exists(), IsSeeking());
     return;
   }
 
@@ -729,8 +740,10 @@ void ExternalEngineStateMachine::OnPlaying() {
 
 void ExternalEngineStateMachine::OnSeeked() {
   AssertOnTaskQueue();
+  MOZ_ASSERT(mState.IsSeekingData());
+  auto* state = mState.AsSeekingData();
   // Engine's event could arrive before finishing reader's seeking.
-  mWaitingEngineSeekedEvent = false;
+  state->mWaitingEngineSeeked = false;
   CheckIfSeekCompleted();
 }
 
