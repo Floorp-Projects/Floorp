@@ -187,6 +187,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     // The total reserved memory for empty texture pages that are kept around
     // for future allocations.
     size_t mEmptyTextureMemory = 0;
+    // A memory pressure event may signal from another thread that caches should
+    // be cleared if possible.
+    Atomic<bool> mShouldClearCaches;
 
     const Matrix& GetTransform() const { return mCurrentTarget->mTransform; }
 
@@ -255,6 +258,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void UnlinkSurfaceTextures();
     void UnlinkSurfaceTexture(const RefPtr<TextureHandle>& aHandle);
     void UnlinkGlyphCaches();
+
+    void OnMemoryPressure();
+    void ClearAllTextures();
+    void ClearEmptyTextureMemory();
+    void ClearCachesIfNecessary();
   };
 
   RefPtr<SharedContext> mSharedContext;
@@ -384,6 +392,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer();
 
   bool CopySnapshotTo(DrawTarget* aDT);
+
+  void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
 
   operator std::string() const {
     std::stringstream stream;

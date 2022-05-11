@@ -220,10 +220,7 @@ DrawTargetWebgl::SharedContext::~SharedContext() {
   if (sSharedContext.init() && sSharedContext.get() == this) {
     sSharedContext.set(nullptr);
   }
-  while (!mTextureHandles.isEmpty()) {
-    PruneTextureHandle(mTextureHandles.popLast());
-    --mNumTextureHandles;
-  }
+  ClearAllTextures();
   UnlinkSurfaceTextures();
   UnlinkGlyphCaches();
 }
@@ -259,6 +256,48 @@ void DrawTargetWebgl::SharedContext::UnlinkGlyphCaches() {
     cache = cache->getNext();
     font->RemoveUserData(&mGlyphCacheKey);
   }
+}
+
+void DrawTargetWebgl::SharedContext::OnMemoryPressure() {
+  mShouldClearCaches = true;
+}
+
+// Clear out the entire list of texture handles from any source.
+void DrawTargetWebgl::SharedContext::ClearAllTextures() {
+  while (!mTextureHandles.isEmpty()) {
+    PruneTextureHandle(mTextureHandles.popLast());
+    --mNumTextureHandles;
+  }
+}
+
+// Scan through the shared texture pages looking for any that are empty and
+// delete them.
+void DrawTargetWebgl::SharedContext::ClearEmptyTextureMemory() {
+  for (auto pos = mSharedTextures.begin(); pos != mSharedTextures.end();) {
+    if (!(*pos)->HasAllocatedHandles()) {
+      RefPtr<SharedTexture> shared = *pos;
+      size_t usedBytes = shared->UsedBytes();
+      mEmptyTextureMemory -= usedBytes;
+      mTotalTextureMemory -= usedBytes;
+      pos = mSharedTextures.erase(pos);
+    } else {
+      ++pos;
+    }
+  }
+}
+
+// If there is a request to clear out the caches because of memory pressure,
+// then first clear out all the texture handles in the texture cache. If there
+// are still empty texture pages being kept around, then clear those too.
+void DrawTargetWebgl::SharedContext::ClearCachesIfNecessary() {
+  if (!mShouldClearCaches.exchange(false)) {
+    return;
+  }
+  ClearAllTextures();
+  if (mEmptyTextureMemory) {
+    ClearEmptyTextureMemory();
+  }
+  ClearLastTexture();
 }
 
 MOZ_THREAD_LOCAL(DrawTargetWebgl::SharedContext*)
@@ -2651,16 +2690,20 @@ void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
       }
     }
   }
+  // Check if we need to clear out any cached because of memory pressure.
+  mSharedContext->ClearCachesIfNecessary();
   mProfile.BeginFrame();
 }
 
 // For use within CanvasRenderingContext2D, called on ReturnDrawTarget.
 void DrawTargetWebgl::EndFrame() {
   mProfile.EndFrame();
-  //  Ensure we're not somehow using more than the allowed texture memory.
+  // Ensure we're not somehow using more than the allowed texture memory.
   mSharedContext->PruneTextureMemory();
   // Signal that we're done rendering the frame in case no present occurs.
   mSharedContext->mWebgl->EndOfFrame();
+  // Check if we need to clear out any cached because of memory pressure.
+  mSharedContext->ClearCachesIfNecessary();
   // The framebuffer is dirty, so it needs to be copied to the swapchain.
   mNeedsPresent = true;
 }
