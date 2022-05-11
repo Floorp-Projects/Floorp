@@ -550,7 +550,8 @@ void Animation::Cancel(PostRestyleMode aPostRestyle) {
 
     if (mFinished) {
       mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      mFinished->SetSettledPromiseIsHandled();
+      // mFinished can already be resolved.
+      MOZ_ALWAYS_TRUE(mFinished->SetAnyPromiseIsHandled());
     }
     ResetFinishedPromise();
 
@@ -1710,7 +1711,7 @@ void Animation::ResetPendingTasks() {
 
   if (mReady) {
     mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    mReady->SetSettledPromiseIsHandled();
+    MOZ_ALWAYS_TRUE(mReady->SetAnyPromiseIsHandled());
     mReady = nullptr;
   }
 }
