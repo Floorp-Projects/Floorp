@@ -7,6 +7,7 @@
 
 #include "MediaDecoderStateMachineBase.h"
 #include "SeekJob.h"
+#include "mozilla/Variant.h"
 
 namespace mozilla {
 
@@ -88,14 +89,96 @@ class ExternalEngineStateMachine final
 
   void AssertOnTaskQueue() const { MOZ_ASSERT(OnTaskQueue()); }
 
-  // Only modify on the task queue.
-  enum class State {
-    InitEngine,
-    WaitingMetadata,
-    RunningEngine,
-    SeekingData,
-    ShutdownEngine,
+  // A light-weight state object that helps to store some variables which would
+  // only be used in a certain state. Also be able to do the cleaning for the
+  // state transition. Only modify on the task queue.
+  struct StateObject final {
+    enum class State {
+      InitEngine,
+      ReadingMetadata,
+      RunningEngine,
+      SeekingData,
+      ShutdownEngine,
+    };
+    struct InitEngine {
+      InitEngine() = default;
+      ~InitEngine() { mEngineInitRequest.DisconnectIfExists(); }
+      MozPromiseRequestHolder<GenericNonExclusivePromise> mEngineInitRequest;
+    };
+    struct ReadingMetadata {
+      ReadingMetadata() = default;
+      ~ReadingMetadata() { mMetadataRequest.DisconnectIfExists(); }
+      MozPromiseRequestHolder<MediaFormatReader::MetadataPromise>
+          mMetadataRequest;
+    };
+    struct RunningEngine {};
+    struct SeekingData {
+      SeekingData() = default;
+      SeekingData(SeekingData&&) = default;
+      SeekingData(const SeekingData&) = delete;
+      SeekingData& operator=(const SeekingData&) = delete;
+      ~SeekingData() {
+        mSeekJob.RejectIfExists(__func__);
+        mSeekRequest.DisconnectIfExists();
+      }
+      void SetTarget(const SeekTarget& aTarget) {
+        // If there is any promise for previous seeking, reject it first.
+        mSeekJob.RejectIfExists(__func__);
+        mSeekRequest.DisconnectIfExists();
+        // Then create a new seek job.
+        mSeekJob = SeekJob();
+        mSeekJob.mTarget = Some(aTarget);
+      }
+      void Resolve(const char* aCallSite) {
+        MOZ_ASSERT(mSeekJob.Exists());
+        mSeekJob.Resolve(aCallSite);
+        mSeekJob = SeekJob();
+      }
+      void RejectIfExists(const char* aCallSite) {
+        mSeekJob.RejectIfExists(aCallSite);
+      }
+      bool IsSeeking() const { return mSeekRequest.Exists(); }
+      // Set it to true when starting seeking, and would be set to false after
+      // receiving engine's `seeked` event. Used on thhe task queue only.
+      bool mWaitingEngineSeeked = false;
+      bool mWaitingReaderSeeked = false;
+      MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mSeekRequest;
+      SeekJob mSeekJob;
+    };
+    struct ShutdownEngine {};
+
+    StateObject() : mData(InitEngine()), mName(State::InitEngine){};
+    explicit StateObject(ReadingMetadata&& aArg)
+        : mData(std::move(aArg)), mName(State::ReadingMetadata){};
+    explicit StateObject(RunningEngine&& aArg)
+        : mData(std::move(aArg)), mName(State::RunningEngine){};
+    explicit StateObject(SeekingData&& aArg)
+        : mData(std::move(aArg)), mName(State::SeekingData){};
+    explicit StateObject(ShutdownEngine&& aArg)
+        : mData(std::move(aArg)), mName(State::ShutdownEngine){};
+
+    bool IsInitEngine() const { return mData.is<InitEngine>(); }
+    bool IsReadingMetadata() const { return mData.is<ReadingMetadata>(); }
+    bool IsRunningEngine() const { return mData.is<RunningEngine>(); }
+    bool IsSeekingData() const { return mData.is<SeekingData>(); }
+    bool IsShutdownEngine() const { return mData.is<ShutdownEngine>(); }
+
+    InitEngine* AsInitEngine() {
+      return IsInitEngine() ? &mData.as<InitEngine>() : nullptr;
+    }
+    ReadingMetadata* AsReadingMetadata() {
+      return IsReadingMetadata() ? &mData.as<ReadingMetadata>() : nullptr;
+    }
+    SeekingData* AsSeekingData() {
+      return IsSeekingData() ? &mData.as<SeekingData>() : nullptr;
+    }
+
+    Variant<InitEngine, ReadingMetadata, RunningEngine, SeekingData,
+            ShutdownEngine>
+        mData;
+    State mName;
   } mState;
+  using State = StateObject::State;
 
   void NotifyEventInternal(ExternalEngineEvent aEvent);
 
@@ -117,6 +200,7 @@ class ExternalEngineStateMachine final
   void OnEngineInitSuccess();
   void OnEngineInitFailure();
 
+  void ReadMetadata();
   void OnMetadataRead(MetadataHolder&& aMetadata);
   void OnMetadataNotRead(const MediaResult& aError);
 
@@ -126,15 +210,12 @@ class ExternalEngineStateMachine final
   void OnWaiting();
   void OnPlaying();
   void OnSeeked();
-  void CheckIfSeekCompleted();
   void OnBufferingStarted();
   void OnBufferingEnded();
   void OnTimeupdate();
   void OnEnded();
   void OnRequestAudio();
   void OnRequestVideo();
-
-  void ChangeStateTo(State aState);
 
   void ResetDecode();
 
@@ -144,27 +225,19 @@ class ExternalEngineStateMachine final
   void StartRunningEngine();
   void RunningEngineUpdate(MediaData::Type aType);
 
+  void ChangeStateTo(State aNextState);
   static const char* StateToStr(State aState);
 
   RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget) override;
   void SeekReader();
   void OnSeekResolved(const media::TimeUnit& aUnit);
   void OnSeekRejected(const SeekRejectValue& aReject);
+  bool IsSeeking();
+  void CheckIfSeekCompleted();
 
   void MaybeFinishWaitForData();
 
   UniquePtr<ExternalPlaybackEngine> mEngine;
-
-  MozPromiseRequestHolder<GenericNonExclusivePromise> mEngineInitRequest;
-  MozPromiseRequestHolder<MediaFormatReader::MetadataPromise> mMetadataRequest;
-  MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mSeekRequest;
-
-  Maybe<SeekJob> mSeekJob;
-
-  // Set it to true when starting seeking, and would be set to false after
-  // receiving engine's `seeked` event. Used on thhe task queue only.
-  bool mWaitingEngineSeekedEvent = false;
-  bool mIsReaderSeekingCompleted = false;
 
   bool mHasEnoughAudio = false;
   bool mHasEnoughVideo = false;
