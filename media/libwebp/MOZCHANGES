@@ -1,5 +1,7 @@
 Changes made to pristine libwebp source by mozilla.org developers.
 
+2022/05/06  -- Cherry-pick upstream crash fix (bug 1761275).
+
 2022/02/03  -- Enabled automatic updates via Updatebot (meta bug #1618282). For
                further updates to the library please review the mercurial
                history for /media/libwebp/moz.yaml (bug #1753050).
