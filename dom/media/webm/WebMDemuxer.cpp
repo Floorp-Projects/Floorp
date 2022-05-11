@@ -392,7 +392,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       mAudioCodec = nestegg_track_codec_id(context, track);
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
         mInfo.mAudio.mCodecSpecificConfig =
-            AudioCodecSpecificVariant{AudioCodecSpecificBinaryBlob{}};
+            AudioCodecSpecificVariant{VorbisCodecSpecificData{}};
         mInfo.mAudio.mMimeType = "audio/vorbis";
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         uint64_t codecDelayUs = params.codec_delay / 1000;
@@ -431,7 +431,7 @@ nsresult WebMDemuxer::ReadMetadata() {
       // to avoid having libnestegg split them only for us to pack them again,
       // but libnestegg does not give us an API to access this data directly.
       RefPtr<MediaByteBuffer> audioCodecSpecificBlob =
-          ForceGetAudioCodecSpecificBlob(mInfo.mAudio.mCodecSpecificConfig);
+          GetAudioCodecSpecificBlob(mInfo.mAudio.mCodecSpecificConfig);
       if (nheaders > 1) {
         if (!XiphHeadersToExtradata(audioCodecSpecificBlob, headers,
                                     headerLens)) {
