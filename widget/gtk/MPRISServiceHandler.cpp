@@ -371,12 +371,12 @@ void MPRISServiceHandler::InitIdentity() {
 }
 
 const char* MPRISServiceHandler::Identity() const {
-  MOZ_ASSERT(mInitialized);
+  NS_WARNING_ASSERTION(mInitialized, "MPRISServiceHandler should have been initialized.");
   return mIdentity.get();
 }
 
 const char* MPRISServiceHandler::DesktopEntry() const {
-  MOZ_ASSERT(mInitialized);
+  NS_WARNING_ASSERTION(mInitialized, "MPRISServiceHandler should have been initialized.");
   return mDesktopEntry.get();
 }
 
