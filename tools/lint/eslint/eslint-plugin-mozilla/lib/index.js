@@ -59,6 +59,7 @@ module.exports = {
     "reject-scriptableunicodeconverter": require("../lib/rules/reject-scriptableunicodeconverter"),
     "reject-relative-requires": require("../lib/rules/reject-relative-requires"),
     "reject-some-requires": require("../lib/rules/reject-some-requires"),
+    "reject-top-level-await": require("../lib/rules/reject-top-level-await"),
     "rejects-requires-await": require("../lib/rules/rejects-requires-await"),
     "use-cc-etc": require("../lib/rules/use-cc-etc"),
     "use-chromeutils-generateqi": require("../lib/rules/use-chromeutils-generateqi"),
