@@ -2757,32 +2757,17 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::ShutdownState::Enter() {
 
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaFormatReader* aReader)
-    : mDecoderID(aDecoder),
-      mAbstractMainThread(aDecoder->AbstractMainThread()),
-      mFrameStats(&aDecoder->GetFrameStatistics()),
-      mVideoFrameContainer(aDecoder->GetVideoFrameContainer()),
-      mTaskQueue(TaskQueue::Create(GetMediaThreadPool(MediaThreadType::MDSM),
-                                   "MDSM::mTaskQueue",
-                                   /* aSupportsTailDispatch = */ true)),
+    : MediaDecoderStateMachineBase(aDecoder, aReader),
       mWatchManager(this, mTaskQueue),
       mDispatchedStateMachine(false),
       mDelayedScheduler(mTaskQueue, true /*aFuzzy*/),
       mCurrentFrameID(0),
-      mReader(new ReaderProxy(mTaskQueue, aReader)),
-      mPlaybackRate(1.0),
       mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
-      mMinimizePreroll(aDecoder->GetMinimizePreroll()),
-      mSentFirstFrameLoadedEvent(false),
       mVideoDecodeSuspended(false),
       mVideoDecodeSuspendTimer(mTaskQueue),
       mVideoDecodeMode(VideoDecodeMode::Normal),
       mIsMSE(aDecoder->IsMSE()),
       mSeamlessLoopingAllowed(false),
-      INIT_MIRROR(mBuffered, TimeIntervals()),
-      INIT_MIRROR(mPlayState, MediaDecoder::PLAY_STATE_LOADING),
-      INIT_MIRROR(mVolume, 1.0),
-      INIT_MIRROR(mPreservesPitch, true),
-      INIT_MIRROR(mLooping, false),
       INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
       INIT_MIRROR(mSecondaryVideoContainer, nullptr),
@@ -2792,10 +2777,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       INIT_MIRROR(mOutputPrincipal, PRINCIPAL_HANDLE_NONE),
       INIT_CANONICAL(mCanonicalOutputTracks,
                      nsTArray<RefPtr<ProcessedMediaTrack>>()),
-      INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE),
-      INIT_CANONICAL(mDuration, NullableTimeUnit()),
-      INIT_CANONICAL(mCurrentPosition, TimeUnit::Zero()),
-      INIT_CANONICAL(mIsAudioDataAudible, false) {
+      INIT_CANONICAL(mCanonicalOutputPrincipal, PRINCIPAL_HANDLE_NONE) {
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -2818,13 +2800,9 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
                       MEDIA_PLAYBACK);
   MOZ_ASSERT(OnTaskQueue());
 
+  MediaDecoderStateMachineBase::InitializationTask(aDecoder);
+
   // Connect mirrors.
-  mBuffered.Connect(mReader->CanonicalBuffered());
-  mPlayState.Connect(aDecoder->CanonicalPlayState());
-  mVolume.Connect(aDecoder->CanonicalVolume());
-  mPreservesPitch.Connect(aDecoder->CanonicalPreservesPitch());
-  mLooping.Connect(aDecoder->CanonicalLooping());
-  mStreamName.Connect(aDecoder->CanonicalStreamName());
   mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
   mSecondaryVideoContainer.Connect(
       aDecoder->CanonicalSecondaryVideoContainer());
@@ -2834,13 +2812,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
   mOutputPrincipal.Connect(aDecoder->CanonicalOutputPrincipal());
 
   // Initialize watchers.
-  mWatchManager.Watch(mBuffered,
-                      &MediaDecoderStateMachine::BufferedRangeUpdated);
-  mWatchManager.Watch(mVolume, &MediaDecoderStateMachine::VolumeChanged);
-  mWatchManager.Watch(mPreservesPitch,
-                      &MediaDecoderStateMachine::PreservesPitchChanged);
-  mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
-  mWatchManager.Watch(mLooping, &MediaDecoderStateMachine::LoopingChanged);
   mWatchManager.Watch(mStreamName,
                       &MediaDecoderStateMachine::StreamNameChanged);
   mWatchManager.Watch(mSecondaryVideoContainer,
@@ -3006,26 +2977,17 @@ void MediaDecoderStateMachine::SetMediaNotSeekable() { mMediaSeekable = false; }
 nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Dispatch initialization that needs to happen on that task queue.
-  nsCOMPtr<nsIRunnable> r = NewRunnableMethod<RefPtr<MediaDecoder>>(
-      "MediaDecoderStateMachine::InitializationTask", this,
-      &MediaDecoderStateMachine::InitializationTask, aDecoder);
-  mTaskQueue->DispatchStateChange(r.forget());
+  nsresult rv = MediaDecoderStateMachineBase::Init(aDecoder);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   mAudioQueueListener = AudioQueue().PopFrontEvent().Connect(
       mTaskQueue, this, &MediaDecoderStateMachine::OnAudioPopped);
   mVideoQueueListener = VideoQueue().PopFrontEvent().Connect(
       mTaskQueue, this, &MediaDecoderStateMachine::OnVideoPopped);
-
-  mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
-
   mOnMediaNotSeekable = mReader->OnMediaNotSeekable().Connect(
       OwnerThread(), this, &MediaDecoderStateMachine::SetMediaNotSeekable);
-
-  nsresult rv = mReader->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mReader->SetCanonicalDuration(&mDuration);
 
   return NS_OK;
 }
@@ -3283,12 +3245,6 @@ RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::Seek(
   MOZ_ASSERT(mDuration.Ref().isSome(), "We should have got duration already");
 
   return mStateObj->HandleSeek(aTarget);
-}
-
-RefPtr<MediaDecoder::SeekPromise> MediaDecoderStateMachine::InvokeSeek(
-    const SeekTarget& aTarget) {
-  return InvokeAsync(OwnerThread(), this, __func__,
-                     &MediaDecoderStateMachine::Seek, aTarget);
 }
 
 void MediaDecoderStateMachine::StopMediaSink() {
@@ -3582,15 +3538,6 @@ bool MediaDecoderStateMachine::HasLowBufferedData(const TimeUnit& aThreshold) {
   return !mBuffered.Ref().Contains(interval);
 }
 
-void MediaDecoderStateMachine::DecodeError(const MediaResult& aError) {
-  MOZ_ASSERT(OnTaskQueue());
-  LOGE("Decode error: %s", aError.Description().get());
-  PROFILER_MARKER_TEXT("MDSM::DecodeError", MEDIA_PLAYBACK, {},
-                       aError.Description());
-  // Notify the decode error and MediaDecoder will shut down MDSM.
-  mOnPlaybackErrorEvent.Notify(aError);
-}
-
 void MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent() {
   MOZ_ASSERT(OnTaskQueue());
   // Track value of mSentFirstFrameLoadedEvent from before updating it
@@ -3617,12 +3564,6 @@ void MediaDecoderStateMachine::FinishDecodeFirstFrame() {
   mReader->ReadUpdatedMetadata(mInfo.ptr());
 
   EnqueueFirstFrameLoadedEvent();
-}
-
-RefPtr<ShutdownPromise> MediaDecoderStateMachine::BeginShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return InvokeAsync(OwnerThread(), this, __func__,
-                     &MediaDecoderStateMachine::Shutdown);
 }
 
 RefPtr<ShutdownPromise> MediaDecoderStateMachine::FinishShutdown() {
@@ -3766,10 +3707,6 @@ void MediaDecoderStateMachine::ScheduleStateMachineIn(const TimeUnit& aTime) {
         self->RunStateMachine();
       },
       []() { MOZ_DIAGNOSTIC_ASSERT(false); });
-}
-
-bool MediaDecoderStateMachine::OnTaskQueue() const {
-  return OwnerThread()->IsCurrentThreadIn();
 }
 
 bool MediaDecoderStateMachine::IsStateMachineScheduled() const {
@@ -4135,15 +4072,6 @@ size_t MediaDecoderStateMachine::SizeOfAudioQueue() const {
   AudioQueueMemoryFunctor functor;
   mAudioQueue.LockedForEach(functor);
   return functor.mSize;
-}
-
-AbstractCanonical<media::TimeIntervals>*
-MediaDecoderStateMachine::CanonicalBuffered() const {
-  return mReader->CanonicalBuffered();
-}
-
-MediaEventSource<void>& MediaDecoderStateMachine::OnMediaNotSeekable() const {
-  return mReader->OnMediaNotSeekable();
 }
 
 const char* MediaDecoderStateMachine::AudioRequestStatus() const {
