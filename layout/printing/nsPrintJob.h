@@ -116,7 +116,6 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   bool IsDoingPrint() const { return mIsDoingPrinting; }
   bool CreatedForPrintPreview() const { return mCreatedForPrintPreview; }
-  bool HasEverPrinted() const { return mHasEverPrinted; }
   /// If the returned value is not greater than zero, an error occurred.
   int32_t GetRawNumPages() const;
   // Returns whether the preview is empty due to page range exclusion.
@@ -283,7 +282,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   bool mCreatedForPrintPreview = false;
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
-  bool mHasEverPrinted = false;
   bool mDidLoadDataForPrinting = false;
   bool mDoingInitialReflow = false;
   bool mIsDestroying = false;
