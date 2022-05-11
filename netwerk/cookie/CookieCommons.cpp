@@ -352,7 +352,7 @@ already_AddRefed<Cookie> CookieCommons::CreateCookieFromDocument(
         aHasExistingCookiesLambda,
     nsIURI** aDocumentURI, nsACString& aBaseDomain, OriginAttributes& aAttrs) {
   nsCOMPtr<nsIPrincipal> storagePrincipal =
-      aDocument->EffectiveCookiePrincipal();
+      aDocument->EffectiveStoragePrincipal();
   MOZ_ASSERT(storagePrincipal);
 
   nsCOMPtr<nsIURI> principalURI;
