@@ -26,6 +26,7 @@ extern mozilla::LazyLogModule gPrintingLog;
 nsPrintData::nsPrintData(ePrintDataType aType)
     : mType(aType),
       mPrintDocList(0),
+      mIsParentAFrameSet(false),
       mOnStartSent(false),
       mIsAborted(false),
       mPreparingForPrint(false),
