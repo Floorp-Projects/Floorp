@@ -11,7 +11,7 @@
 #include "DecoderBenchmark.h"
 #include "ImageContainer.h"
 #include "Layers.h"
-#include "MediaDecoderStateMachineBase.h"
+#include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
@@ -1188,7 +1188,7 @@ void MediaDecoder::SetStreamName(const nsAutoString& aStreamName) {
   mStreamName = aStreamName;
 }
 
-void MediaDecoder::ConnectMirrors(MediaDecoderStateMachineBase* aObject) {
+void MediaDecoder::ConnectMirrors(MediaDecoderStateMachine* aObject) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aObject);
   mStateMachineDuration.Connect(aObject->CanonicalDuration());
@@ -1205,17 +1205,16 @@ void MediaDecoder::DisconnectMirrors() {
   mIsAudioDataAudible.DisconnectIfConnected();
 }
 
-void MediaDecoder::SetStateMachine(
-    MediaDecoderStateMachineBase* aStateMachine) {
+void MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT_IF(aStateMachine, !mDecoderStateMachine);
   if (aStateMachine) {
     mDecoderStateMachine = aStateMachine;
-    LOG("set state machine %p", mDecoderStateMachine.get());
+    DDLINKCHILD("decoder state machine", mDecoderStateMachine.get());
     ConnectMirrors(aStateMachine);
     UpdateVideoDecodeMode();
   } else if (mDecoderStateMachine) {
-    LOG("null out state machine %p", mDecoderStateMachine.get());
+    DDUNLINKCHILD(mDecoderStateMachine.get());
     mDecoderStateMachine = nullptr;
     DisconnectMirrors();
   }
@@ -1283,7 +1282,7 @@ void MediaDecoder::NotifyReaderDataArrived() {
 }
 
 // Provide access to the state machine object
-MediaDecoderStateMachineBase* MediaDecoder::GetStateMachine() const {
+MediaDecoderStateMachine* MediaDecoder::GetStateMachine() const {
   MOZ_ASSERT(NS_IsMainThread());
   return mDecoderStateMachine;
 }

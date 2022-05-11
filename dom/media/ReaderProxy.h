@@ -84,8 +84,6 @@ class ReaderProxy {
   void SetCanonicalDuration(
       AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
-  void UpdateMediaEngineId(uint64_t aMediaEngineId);
-
  private:
   ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
