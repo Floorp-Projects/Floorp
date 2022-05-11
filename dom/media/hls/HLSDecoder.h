@@ -52,7 +52,7 @@ class HLSDecoder final : public MediaDecoder {
 
   explicit HLSDecoder(MediaDecoderInit& aInit);
   ~HLSDecoder();
-  MediaDecoderStateMachine* CreateStateMachine();
+  MediaDecoderStateMachineBase* CreateStateMachine();
 
   bool CanPlayThroughImpl() final {
     // TODO: We don't know how to estimate 'canplaythrough' for this decoder.
