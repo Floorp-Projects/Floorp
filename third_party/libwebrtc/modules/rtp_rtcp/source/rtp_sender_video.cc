@@ -447,6 +447,11 @@ void RTPSenderVideo::AddRtpHeaderExtensions(
         send_allocation_ == SendVideoLayersAllocation::kSendWithResolution;
     packet->SetExtension<RtpVideoLayersAllocationExtension>(allocation);
   }
+
+  if (first_packet && video_header.video_frame_tracking_id) {
+    packet->SetExtension<VideoFrameTrackingIdExtension>(
+        *video_header.video_frame_tracking_id);
+  }
 }
 
 bool RTPSenderVideo::SendVideo(

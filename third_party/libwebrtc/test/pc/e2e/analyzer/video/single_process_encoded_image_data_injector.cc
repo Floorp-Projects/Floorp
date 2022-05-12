@@ -51,6 +51,7 @@ EncodedImage SingleProcessEncodedImageDataInjector::InjectData(
   buffer->data()[insertion_pos + 2] = info.sub_id;
 
   EncodedImage out = source;
+  out.SetVideoFrameTrackingId(id);
   out.SetEncodedData(buffer);
   return out;
 }
