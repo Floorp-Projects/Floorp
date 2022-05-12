@@ -3086,30 +3086,6 @@ struct AutoCheckBuilder {
 };
 
 /**
- * Helper class to track container creation. Stores the first tracked container.
- * Used to find the innermost container for hit test information, and to notify
- * callers whether a container item was created or not.
- */
-struct ContainerTracker {
-  void TrackContainer(nsDisplayItem* aContainer) {
-    if (!aContainer) {
-      return;
-    }
-
-    if (!mContainer) {
-      mContainer = aContainer;
-    }
-
-    mCreatedContainer = true;
-  }
-
-  void ResetCreatedContainer() { mCreatedContainer = false; }
-
-  nsDisplayItem* mContainer = nullptr;
-  bool mCreatedContainer = false;
-};
-
-/**
  * Tries to reuse a top-level stacking context item from the previous paint.
  * Returns true if an item was reused, otherwise false.
  */
@@ -3579,7 +3555,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // Get the ASR to use for the container items that we create here.
   const ActiveScrolledRoot* containerItemASR = contASRTracker.GetContainerASR();
 
-  ContainerTracker ct;
+  bool createdContainer = false;
 
   /* If adding both a nsDisplayBlendContainer and a nsDisplayBlendMode to the
    * same list, the nsDisplayBlendContainer should be added first. This only
@@ -3592,7 +3568,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     DisplayListClipState::AutoSaveRestore blendContainerClipState(aBuilder);
     resultList.AppendToTop(nsDisplayBlendContainer::CreateForMixBlendMode(
         aBuilder, this, &resultList, containerItemASR));
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   if (insertBackdropRoot) {
@@ -3600,7 +3576,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder);
     resultList.AppendNewToTop<nsDisplayBackdropRootContainer>(
         aBuilder, this, &resultList, containerItemASR);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   if (usingBackdropFilter) {
@@ -3609,7 +3585,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
     resultList.AppendNewToTop<nsDisplayBackdropFilters>(
         aBuilder, this, &resultList, backdropRect);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   /* If there are any SVG effects, wrap the list up in an SVG effects item
@@ -3631,7 +3607,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayFilters>(aBuilder, this, &resultList);
-      ct.TrackContainer(resultList.GetTop());
+      createdContainer = true;
     }
 
     if (usingMask) {
@@ -3651,12 +3627,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
           aBuilder, this, &resultList, maskASR);
-      ct.TrackContainer(resultList.GetTop());
+      createdContainer = true;
     }
 
     // TODO(miko): We could probably create a wraplist here and avoid creating
     // it later in |BuildDisplayListForChild()|.
-    ct.ResetCreatedContainer();
+    createdContainer = false;
 
     // Also add the hoisted scroll info items. We need those for APZ scrolling
     // because nsDisplayMasksAndClipPaths items can't build active layers.
@@ -3678,7 +3654,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     resultList.AppendNewToTop<nsDisplayOpacity>(
         aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
         needsActiveOpacityLayer);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   /* If we're going to apply a transformation and don't have preserve-3d set,
@@ -3726,7 +3702,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                            index++, &separator);
 
     if (separator) {
-      ct.TrackContainer(separator);
+      createdContainer = true;
     }
 
     resultList.AppendToTop(&participants);
@@ -3775,7 +3751,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder, this, &resultList, visibleRect, prerenderInfo.mDecision);
     if (transformItem) {
       resultList.AppendToTop(transformItem);
-      ct.TrackContainer(transformItem);
+      createdContainer = true;
     }
 
     if (hasPerspective) {
@@ -3786,7 +3762,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
       }
       resultList.AppendNewToTop<nsDisplayPerspective>(aBuilder, this,
                                                       &resultList);
-      ct.TrackContainer(resultList.GetTop());
+      createdContainer = true;
     }
   }
 
@@ -3799,7 +3775,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         &resultList, aBuilder->CurrentActiveScrolledRoot(),
         nsDisplayOwnLayerFlags::None, ScrollbarData{},
         /* aForceActive = */ false, false);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   /* If we have sticky positioning, wrap it in a sticky position item.
@@ -3820,7 +3796,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
         containerItemASR, aBuilder->CurrentActiveScrolledRoot());
     resultList.AppendNewToTop<nsDisplayFixedPosition>(
         aBuilder, this, &resultList, fixedASR, containerItemASR);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   } else if (useStickyPosition) {
     // For position:sticky, the clip needs to be applied both to the sticky
     // container item and to the contents. The container item needs the clip
@@ -3855,7 +3831,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     stickyItem->SetShouldFlatten(shouldFlatten);
 
     resultList.AppendToTop(stickyItem);
-    ct.TrackContainer(stickyItem);
+    createdContainer = true;
 
     // If the sticky element is inside a filter, annotate the scroll frame that
     // scrolls the filter as having out-of-flow content inside a filter (this
@@ -3876,7 +3852,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     resultList.AppendNewToTop<nsDisplayBlendMode>(aBuilder, this, &resultList,
                                                   effects->mMixBlendMode,
                                                   containerItemASR, false);
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   bool createdOwnLayer = false;
@@ -3885,7 +3861,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                          &createdOwnLayer);
 
   if (createdOwnLayer) {
-    ct.TrackContainer(resultList.GetTop());
+    createdContainer = true;
   }
 
   if (aBuilder->IsReusingStackingContextItems()) {
@@ -3909,13 +3885,13 @@ void nsIFrame::BuildDisplayListForStackingContext(
       container->SetReusable();
     }
     aList->AppendToTop(container);
-    ct.TrackContainer(container);
+    createdContainer = true;
   } else {
     aList->AppendToTop(&resultList);
   }
 
   if (aCreatedContainerItem) {
-    *aCreatedContainerItem = ct.mCreatedContainer;
+    *aCreatedContainerItem = createdContainer;
   }
 }
 
