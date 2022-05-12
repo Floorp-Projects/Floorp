@@ -207,7 +207,7 @@ nsresult nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
         scrollbarFrame->SetIncrementToWhole(direction);
         if (mediator) {
           mediator->ScrollByWhole(scrollbarFrame, direction,
-                                  nsIScrollbarMediator::ENABLE_SNAP);
+                                  ScrollSnapFlags::IntendedEndPosition);
         }
       }
       // 'this' might be destroyed here
@@ -1569,7 +1569,9 @@ void nsSliderFrame::PageScroll(nscoord aChange) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     sb->SetIncrementToPage(aChange);
     if (m) {
-      m->ScrollByPage(sb, aChange, nsIScrollbarMediator::ENABLE_SNAP);
+      m->ScrollByPage(sb, aChange,
+                      ScrollSnapFlags::IntendedDirection |
+                          ScrollSnapFlags::IntendedEndPosition);
       return;
     }
   }
