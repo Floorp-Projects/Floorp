@@ -451,6 +451,8 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
   return promise.forget();
 }
 
+const size_t MAX_ALLOWED_CREDENTIALS = 20;
+
 already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     const PublicKeyCredentialRequestOptions& aOptions,
     const Optional<OwningNonNull<AbortSignal>>& aSignal) {
@@ -521,6 +523,12 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
   CryptoBuffer rpIdHash;
   if (!rpIdHash.SetLength(SHA256_LENGTH, fallible)) {
     promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+    return promise.forget();
+  }
+
+  // Abort the request if the allowCredentials set is too large
+  if (aOptions.mAllowCredentials.Length() > MAX_ALLOWED_CREDENTIALS) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
 

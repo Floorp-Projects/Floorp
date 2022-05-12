@@ -54,6 +54,10 @@
       ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError, got " + aResult);
     }
 
+    function expectSecurityError(aResult) {
+      ok(aResult.toString().startsWith("SecurityError"), "Expecting a SecurityError, got " + aResult);
+    }
+
     function expectAbortError(aResult) {
       is(aResult.code, DOMException.ABORT_ERR, "Expecting an AbortError");
     }
@@ -170,6 +174,19 @@
       await requestGetAssertion({publicKey})
         .then(arrivingHereIsBad)
         .catch(expectInvalidStateError);
+    });
+
+    // Test with too many credentials
+    add_task(async () => {
+      let tooManyCredentials = Array(21).fill(validCred);
+      let publicKey = {
+        challenge: gAssertionChallenge,
+        allowCredentials: tooManyCredentials,
+      };
+
+      await requestGetAssertion({publicKey})
+        .then(arrivingHereIsBad)
+        .catch(expectSecurityError);
     });
 
     // Test with an unexpected option and an invalid credential
