@@ -25,12 +25,15 @@ class nsIPrefBranch;
 //-----------------------------------------------------------------------------
 
 class nsIDNService final : public nsIIDNService,
-                           public nsSupportsWeakReference {
+                           public nsSupportsWeakReference,
+                           public mozilla::SingleWriterLockOwner {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIIDNSERVICE
 
   nsIDNService();
+
+  bool OnWritingThread() const override { return NS_IsMainThread(); }
 
   nsresult Init();
 
@@ -101,7 +104,7 @@ class nsIDNService final : public nsIIDNService,
 
   static void PrefChanged(const char* aPref, void* aSelf) {
     auto* self = static_cast<nsIDNService*>(aSelf);
-    mozilla::MutexAutoLock lock(self->mLock);
+    mozilla::MutexSingleWriterAutoLock lock(self->mLock);
     self->prefsChanged(aPref);
   }
 
@@ -165,15 +168,15 @@ class nsIDNService final : public nsIIDNService,
 
   // We use this mutex to guard access to:
   // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|,
-  // |mIDNUseWhitelist|.
+  // |mIDNUseWhitelist|, |mIDNWhitelistPrefBranch|.
   //
   // These members can only be updated on the main thread and
   // read on any thread. Therefore, acquiring the mutex is required
   // only for threads other than the main thread.
-  mozilla::Mutex mLock MOZ_UNANNOTATED{"IDNService"};
+  mozilla::MutexSingleWriter mLock;
 
   // guarded by mLock
-  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist;
+  nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist GUARDED_BY(mLock);
 
   /**
    * Flag set by the pref network.IDN_show_punycode. When it is true,
@@ -182,7 +185,7 @@ class nsIDNService final : public nsIIDNService,
    *
    * guarded by mLock
    */
-  bool mShowPunycode = false;
+  bool mShowPunycode GUARDED_BY(mLock) = false;
 
   /**
    * Restriction-level Detection profiles defined in UTR 39
@@ -195,11 +198,11 @@ class nsIDNService final : public nsIIDNService,
     eModeratelyRestrictiveProfile
   };
   // guarded by mLock;
-  restrictionProfile mRestrictionProfile{eASCIIOnlyProfile};
+  restrictionProfile mRestrictionProfile GUARDED_BY(mLock){eASCIIOnlyProfile};
   // guarded by mLock;
-  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch;
+  nsCOMPtr<nsIPrefBranch> mIDNWhitelistPrefBranch GUARDED_BY(mLock);
   // guarded by mLock
-  bool mIDNUseWhitelist = false;
+  bool mIDNUseWhitelist GUARDED_BY(mLock) = false;
 };
 
 #endif  // nsIDNService_h__
