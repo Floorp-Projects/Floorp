@@ -15,7 +15,7 @@
     async function runTests() {
       await MIDITestUtils.permissionSetup(true);
       const access = await navigator.requestMIDIAccess({ sysex: true });
-      const output = access.outputs.get(MIDITestUtils.stateTestOutputInfo.id);
+      const output = access.outputs.get(await MIDITestUtils.stateTestOutputInfo.id);
 
 
       // Note on(off).
