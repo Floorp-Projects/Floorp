@@ -72,17 +72,17 @@ function test_gestureListener(evt) {
   );
   is(
     evt.target,
-    test_utils.elementFromPoint(20, 20, false, false),
+    test_utils.elementFromPoint(60, 60, false, false),
     "evt.target (" + evt.target + ") does not match expected value"
   );
   is(
     evt.clientX,
-    20,
+    60,
     "evt.clientX (" + evt.clientX + ") does not match expected value"
   );
   is(
     evt.clientY,
-    20,
+    60,
     "evt.clientY (" + evt.clientY + ") does not match expected value"
   );
   isnot(
@@ -149,7 +149,7 @@ function test_helper1(type, direction, delta, modifiers) {
   let expectedEventCount = test_eventCount + 1;
 
   document.addEventListener(type, test_gestureListener, true);
-  test_utils.sendSimpleGestureEvent(type, 20, 20, direction, delta, modifiers);
+  test_utils.sendSimpleGestureEvent(type, 60, 60, direction, delta, modifiers);
   document.removeEventListener(type, test_gestureListener, true);
 
   is(
@@ -170,7 +170,7 @@ function test_clicks(type, clicks) {
   let expectedEventCount = test_eventCount + 1;
 
   document.addEventListener(type, test_gestureListener, true);
-  test_utils.sendSimpleGestureEvent(type, 20, 20, 0, 0, 0, clicks);
+  test_utils.sendSimpleGestureEvent(type, 60, 60, 0, 0, 0, clicks);
   document.removeEventListener(type, test_gestureListener, true);
 
   is(
