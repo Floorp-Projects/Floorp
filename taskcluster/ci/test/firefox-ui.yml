@@ -9,15 +9,10 @@ job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
     variants:
         - fission
-        - no-fission
     run-without-variant: false
     run-on-projects:
         by-variant:
             fission: built-projects
-            no-fission:
-                by-test-platform:
-                    linux.*: ['trunk']
-                    default: []
     mozharness:
         script: firefox_ui_tests.py
         config:
