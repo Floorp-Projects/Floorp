@@ -104,15 +104,19 @@
                   }
                 },
                 "required": ["type"],
-                "additionalProperties": false
+                "additionalProperties": true
+              },
+              "supportPage": {
+                "type": "string",
+                "description": "A page title on SUMO to link to"
               }
             },
-            "required": ["label", "action", "accessKey"],
-            "additionalProperties": false
+            "required": ["label", "action"],
+            "additionalProperties": true
           }
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": ["text", "buttons"]
     },
     "frequency": {
