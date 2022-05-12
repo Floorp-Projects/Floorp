@@ -269,7 +269,6 @@ class BrowserToolbarIntegration(
                             onDismiss = ::onDismissTrackingProtectionCfr
                         ).apply {
                             show()
-                            fragment.components?.appStore?.dispatch(AppAction.ShowTrackingProtectionCfrChange(false))
                         }
                     }
                 }
@@ -277,6 +276,7 @@ class BrowserToolbarIntegration(
     }
 
     private fun onDismissTrackingProtectionCfr() {
+        fragment.components?.appStore?.dispatch(AppAction.ShowTrackingProtectionCfrChange(false))
         fragment.requireContext().settings.shouldShowCfrForTrackingProtection = false
     }
 
