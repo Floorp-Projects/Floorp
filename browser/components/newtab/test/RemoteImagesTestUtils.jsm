@@ -7,7 +7,7 @@ const { BrowserUtils } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 );
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { RemoteImages, REMOTE_IMAGES_PATH } = ChromeUtils.import(
+const { RemoteImages } = ChromeUtils.import(
   "resource://activity-stream/lib/RemoteImages.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -20,14 +20,14 @@ const RemoteImagesTestUtils = {
   /**
    * Serve a mock Remote Settings server with content for Remote Images
    *
-   * @param imageInfo An entry describing the image. Should be one of
-   *        |RemoteImagesTestUtils.images|.
+   * @params imageInfo An entry describing the image. Should be one of
+   *         |RemoteImagesTestUtils.images|.
    *
    * @returns A promise yielding a cleanup function. This function will stop the
    *          internal HTTP server and clean up all Remote Images state.
    */
   async serveRemoteImages(imageInfo) {
-    const { filename, recordId, mimetype, hash, url, size } = imageInfo;
+    const { imageId, recordId, mimetype, hash, url, size } = imageInfo;
 
     const server = new HttpServer();
     server.start(-1);
@@ -60,8 +60,8 @@ const RemoteImagesTestUtils = {
           JSON.stringify({
             data: {
               attachment: {
-                filename,
-                location: `main/ms-images/${recordId}`,
+                filename: imageId,
+                location: `main/ms-images/${imageId}`,
                 hash,
                 mimetype,
                 size,
@@ -78,7 +78,7 @@ const RemoteImagesTestUtils = {
     );
 
     server.registerPathHandler(
-      `/cdn/main/ms-images/${recordId}`,
+      `/cdn/main/ms-images/${imageId}`,
       async (request, response) => {
         const stream = Cc[
           "@mozilla.org/io/arraybuffer-input-stream;1"
@@ -104,9 +104,7 @@ const RemoteImagesTestUtils = {
    * Wipe the Remote Images cache.
    */
   async wipeCache() {
-    await RemoteImages.reset();
-
-    const children = await IOUtils.getChildren(REMOTE_IMAGES_PATH);
+    const children = await IOUtils.getChildren(RemoteImages.imagesDir);
     for (const child of children) {
       await IOUtils.remove(child);
     }
@@ -124,53 +122,11 @@ const RemoteImagesTestUtils = {
   },
 
   /**
-   * Write an image into the remote images directory.
-   *
-   * @param imageInfo An entry describing the image. Should be one of
-   *                 |RemoteImagesTestUtils.images|.
-   *
-   * @param filename An optional filename to save as inside the directory. If
-   *                 not provided, |imageInfo.recordId| will be used.
-   */
-  async writeImage(imageInfo, filename = undefined) {
-    const data = new Uint8Array(
-      await fetch(imageInfo.url, { credentials: "omit" }).then(rsp =>
-        rsp.arrayBuffer()
-      )
-    );
-
-    await IOUtils.write(
-      PathUtils.join(REMOTE_IMAGES_PATH, filename ?? imageInfo.recordId),
-      data
-    );
-  },
-
-  /**
-   * Return a RemoteImages database entry for the given image info.
-   *
-   * @param imageInfo An entry describing the image. Should be one of
-   *                 |RemoteImagesTestUtils.images|.
-   *
-   * @param lastLoaded The timestamp to use for when the image was last loaded
-   *                   (in UTC). If not provided, the current time is used.
-   */
-  dbEntryFor(imageInfo, lastLoaded = undefined) {
-    return {
-      [imageInfo.recordId]: {
-        recordId: imageInfo.recordId,
-        hash: imageInfo.hash,
-        mimetype: imageInfo.mimetype,
-        lastLoaded: lastLoaded ?? Date.UTC(),
-      },
-    };
-  },
-
-  /**
    * Remote Image entries.
    */
   images: {
     AboutRobots: {
-      filename: "about-robots.png",
+      imageId: "about-robots.png",
       recordId: "about-robots",
       mimetype: "image/png",
       hash: "29f1fe2cb5181152d2c01c0b2f12e5d9bb3379a61b94fb96de0f734eb360da62",
