@@ -1187,13 +1187,20 @@ webgl::ReadPixelsResult WebGLContext::ReadPixelsImpl(
     desc2.srcOffset = {readX, readY};
     desc2.size = {rwSize.x, 1};
 
-    auto row = dest + writeX * explicitPacking.metrics.bytesPerPixel;
-    row += writeY * rowStride;
-    for (const auto j : IntegerRange(size.y)) {
+    const auto skipBytes = writeX * explicitPacking.metrics.bytesPerPixel;
+    const auto usedRowBytes = rwSize.x * explicitPacking.metrics.bytesPerPixel;
+    for (const auto j : IntegerRange(rwSize.y)) {
       desc2.srcOffset.y = readY + j;
-      DoReadPixelsAndConvert(srcFormat->format, desc2, row, bytesNeeded,
-                             rowStride);
-      row += rowStride;
+      const auto destWriteBegin = dest + skipBytes + (writeY + j) * rowStride;
+      MOZ_RELEASE_ASSERT(dest <= destWriteBegin);
+      MOZ_RELEASE_ASSERT(destWriteBegin <= dest + availBytes);
+
+      const auto destWriteEnd = destWriteBegin + usedRowBytes;
+      MOZ_RELEASE_ASSERT(dest <= destWriteEnd);
+      MOZ_RELEASE_ASSERT(destWriteEnd <= dest + availBytes);
+
+      DoReadPixelsAndConvert(srcFormat->format, desc2, destWriteBegin,
+                             destWriteEnd - destWriteBegin, rowStride);
     }
   }
 
