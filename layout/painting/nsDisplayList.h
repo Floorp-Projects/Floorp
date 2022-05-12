@@ -6265,8 +6265,7 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
                               const nsIFrame* aFrame, nsRect* aOutRect);
   static bool UntransformRect(const nsRect& aTransformedBounds,
                               const nsRect& aChildBounds,
-                              const Matrix4x4& aMatrix,
-                              float aAppUnitsPerPixel,
+                              const Matrix4x4& aMatrix, float aAppUnitsPerPixel,
                               nsRect* aOutRect);
 
   bool UntransformRect(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
