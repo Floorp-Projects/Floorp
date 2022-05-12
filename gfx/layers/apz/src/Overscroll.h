@@ -59,11 +59,9 @@ class OverscrollAnimation : public AsyncPanZoomAnimation {
       // done in a deferred task, otherwise the state change to NOTHING caused
       // by the overscroll animation ending would clobber a possible state
       // change to SMOOTH_SCROLL in ScrollSnap().
-      mDeferredTasks.AppendElement(NewRunnableMethod<ScrollSnapFlags>(
-          "layers::AsyncPanZoomController::ScrollSnap", &mApzc,
-          &AsyncPanZoomController::ScrollSnap,
-          ScrollSnapFlags::IntendedDirection |
-              ScrollSnapFlags::IntendedEndPosition));
+      mDeferredTasks.AppendElement(
+          NewRunnableMethod("layers::AsyncPanZoomController::ScrollSnap",
+                            &mApzc, &AsyncPanZoomController::ScrollSnap));
       return false;
     }
     return true;

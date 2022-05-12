@@ -259,7 +259,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsPoint aScrollPosition, ScrollMode aMode,
       ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
       const nsRect* aRange = nullptr,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
+      nsIScrollbarMediator::ScrollSnapMode aSnap =
+          nsIScrollbarMediator::DISABLE_SNAP,
       ScrollTriggeredByScript aTriggeredByScript = ScrollTriggeredByScript::No);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -283,20 +284,15 @@ class ScrollFrameHelper : public nsIReflowCallback {
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollBy(
-      nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
-      nsIntPoint* aOverflow, ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-      nsIScrollableFrame::ScrollMomentum aMomentum =
-          nsIScrollableFrame::NOT_MOMENTUM,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled);
+  void ScrollBy(nsIntPoint aDelta, mozilla::ScrollUnit aUnit, ScrollMode aMode,
+                nsIntPoint* aOverflow,
+                ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
+                nsIScrollableFrame::ScrollMomentum aMomentum =
+                    nsIScrollableFrame::NOT_MOMENTUM,
+                nsIScrollbarMediator::ScrollSnapMode aSnap =
+                    nsIScrollbarMediator::DISABLE_SNAP);
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                         ScrollMode aMode = ScrollMode::Instant,
-                         // This ScrollByCSSPixels is mainly used for
-                         // Element.scrollBy and Window.scrollBy. An exception
-                         // is the transmogirification of ScrollToCSSPixels.
-                         mozilla::ScrollSnapFlags aSnapFlags =
-                             mozilla::ScrollSnapFlags::IntendedDirection |
-                             mozilla::ScrollSnapFlags::IntendedEndPosition);
+                         ScrollMode aMode = ScrollMode::Instant);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -315,7 +311,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
    * been updated to a valid snapping position.
    */
   bool GetSnapPointForDestination(mozilla::ScrollUnit aUnit,
-                                  mozilla::ScrollSnapFlags aFlags,
                                   const nsPoint& aStartPos,
                                   nsPoint& aDestination);
 
@@ -523,19 +518,19 @@ class ScrollFrameHelper : public nsIReflowCallback {
       WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
       const nsPoint& aOffsetToReferenceFrame) const;
   // nsIScrollbarMediator
-  void ScrollByPage(
-      nsScrollbarFrame* aScrollbar, int32_t aDirection,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled);
-  void ScrollByWhole(
-      nsScrollbarFrame* aScrollbar, int32_t aDirection,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled);
-  void ScrollByLine(
-      nsScrollbarFrame* aScrollbar, int32_t aDirection,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled);
-  void ScrollByUnit(
-      nsScrollbarFrame* aScrollbar, ScrollMode aMode, int32_t aDirection,
-      ScrollUnit aUnit,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled);
+  void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                     nsIScrollbarMediator::ScrollSnapMode aSnap =
+                         nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByUnit(nsScrollbarFrame* aScrollbar, ScrollMode aMode,
+                    int32_t aDirection, ScrollUnit aUnit,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP);
   void RepeatButtonScroll(nsScrollbarFrame* aScrollbar);
   void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
                   nscoord aNewPos);
@@ -811,7 +806,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void ScrollToWithOrigin(
       nsPoint aScrollPosition, ScrollMode aMode, ScrollOrigin aOrigin,
       const nsRect* aRange,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
+      nsIScrollbarMediator::ScrollSnapMode aSnap =
+          nsIScrollbarMediator::DISABLE_SNAP,
       ScrollTriggeredByScript aTriggeredByScript = ScrollTriggeredByScript::No);
 
   void CompleteAsyncScroll(const nsRect& aRange,
@@ -1031,13 +1027,14 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollTo(
-      nsPoint aScrollPosition, ScrollMode aMode, const nsRect* aRange = nullptr,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
-      mozilla::ScrollTriggeredByScript aTriggeredByScript =
-          mozilla::ScrollTriggeredByScript::No) final {
+  void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
+                const nsRect* aRange = nullptr,
+                nsIScrollbarMediator::ScrollSnapMode aSnap =
+                    nsIScrollbarMediator::DISABLE_SNAP,
+                mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                    mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
-                     aSnapFlags);
+                     aSnap);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -1063,10 +1060,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
-                mozilla::ScrollSnapFlags aSnapFlags =
-                    mozilla::ScrollSnapFlags::Disabled) final {
+                nsIScrollbarMediator::ScrollSnapMode aSnap =
+                    nsIScrollbarMediator::DISABLE_SNAP) final {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
-                     aSnapFlags);
+                     aSnap);
   }
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                          ScrollMode aMode = ScrollMode::Instant) final {
@@ -1177,25 +1174,24 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByPage(aScrollbar, aDirection, aSnapFlags);
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByPage(aScrollbar, aDirection, aSnap);
   }
   void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                     mozilla::ScrollSnapFlags aSnapFlags =
-                         mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnapFlags);
+                     nsIScrollbarMediator::ScrollSnapMode aSnap =
+                         nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnap);
   }
   void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByLine(aScrollbar, aDirection, aSnapFlags);
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByLine(aScrollbar, aDirection, aSnap);
   }
   void ScrollByUnit(nsScrollbarFrame* aScrollbar, ScrollMode aMode,
                     int32_t aDirection, mozilla::ScrollUnit aUnit,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByUnit(aScrollbar, aMode, aDirection, aUnit, aSnapFlags);
+                    ScrollSnapMode aSnap = DISABLE_SNAP) final {
+    mHelper.ScrollByUnit(aScrollbar, aMode, aDirection, aUnit, aSnap);
   }
   void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) final {
     mHelper.RepeatButtonScroll(aScrollbar);
@@ -1500,13 +1496,13 @@ class nsXULScrollFrame final : public nsBoxFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollTo(
-      nsPoint aScrollPosition, ScrollMode aMode, const nsRect* aRange = nullptr,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
-      mozilla::ScrollTriggeredByScript aTriggeredByScript =
-          mozilla::ScrollTriggeredByScript::No) final {
+  void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
+                const nsRect* aRange = nullptr,
+                ScrollSnapMode aSnap = nsIScrollbarMediator::DISABLE_SNAP,
+                mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                    mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
-                     aSnapFlags);
+                     aSnap);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -1529,10 +1525,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
                 ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                 nsIScrollableFrame::ScrollMomentum aMomentum =
                     nsIScrollableFrame::NOT_MOMENTUM,
-                mozilla::ScrollSnapFlags aSnapFlags =
-                    mozilla::ScrollSnapFlags::Disabled) final {
+                nsIScrollbarMediator::ScrollSnapMode aSnap =
+                    nsIScrollbarMediator::DISABLE_SNAP) final {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
-                     aSnapFlags);
+                     aSnap);
   }
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                          ScrollMode aMode = ScrollMode::Instant) final {
@@ -1630,25 +1626,24 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
 
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByPage(aScrollbar, aDirection, aSnapFlags);
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByPage(aScrollbar, aDirection, aSnap);
   }
   void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                     mozilla::ScrollSnapFlags aSnapFlags =
-                         mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnapFlags);
+                     nsIScrollbarMediator::ScrollSnapMode aSnap =
+                         nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnap);
   }
   void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByLine(aScrollbar, aDirection, aSnapFlags);
+                    nsIScrollbarMediator::ScrollSnapMode aSnap =
+                        nsIScrollbarMediator::DISABLE_SNAP) final {
+    mHelper.ScrollByLine(aScrollbar, aDirection, aSnap);
   }
   void ScrollByUnit(nsScrollbarFrame* aScrollbar, ScrollMode aMode,
                     int32_t aDirection, mozilla::ScrollUnit aUnit,
-                    mozilla::ScrollSnapFlags aSnapFlags =
-                        mozilla::ScrollSnapFlags::Disabled) final {
-    mHelper.ScrollByUnit(aScrollbar, aMode, aDirection, aUnit, aSnapFlags);
+                    ScrollSnapMode aSnap = DISABLE_SNAP) final {
+    mHelper.ScrollByUnit(aScrollbar, aMode, aDirection, aUnit, aSnap);
   }
   void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) final {
     mHelper.RepeatButtonScroll(aScrollbar);
