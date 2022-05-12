@@ -106,13 +106,13 @@ function reallyHandleRequest(request, response) {
     authHeader = request.getHeader("Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2) {
-      throw "Couldn't parse auth header: " + authHeader;
+      throw Error("Couldn't parse auth header: " + authHeader);
     }
 
-    let userpass = base64ToString(match[1]); // no atob() :-(
+    let userpass = atob(match[1]);
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
-      throw "Couldn't decode auth header: " + userpass;
+      throw Error("Couldn't decode auth header: " + userpass);
     }
     actual_user = match[1];
     actual_pass = match[2];
@@ -124,13 +124,13 @@ function reallyHandleRequest(request, response) {
     authHeader = request.getHeader("Proxy-Authorization");
     match = /Basic (.+)/.exec(authHeader);
     if (match.length != 2) {
-      throw "Couldn't parse auth header: " + authHeader;
+      throw Error("Couldn't parse auth header: " + authHeader);
     }
 
-    let userpass = base64ToString(match[1]); // no atob() :-(
+    let userpass = atob(match[1]);
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
-      throw "Couldn't decode auth header: " + userpass;
+      throw Error("Couldn't decode auth header: " + userpass);
     }
     proxy_actual_user = match[1];
     proxy_actual_pass = match[2];
@@ -160,7 +160,7 @@ function reallyHandleRequest(request, response) {
     }
   } else if (requestProxyAuth) {
     response.setStatusLine("1.0", 407, "Proxy authentication required");
-    for (i = 0; i < authHeaderCount; ++i) {
+    for (let i = 0; i < authHeaderCount; ++i) {
       response.setHeader(
         "Proxy-Authenticate",
         'basic realm="' + proxy_realm + '"',
@@ -169,7 +169,7 @@ function reallyHandleRequest(request, response) {
     }
   } else if (requestAuth) {
     response.setStatusLine("1.0", 401, "Authentication required");
-    for (i = 0; i < authHeaderCount; ++i) {
+    for (let i = 0; i < authHeaderCount; ++i) {
       response.setHeader(
         "WWW-Authenticate",
         'basic realm="' + realm + '"',
@@ -198,7 +198,7 @@ function reallyHandleRequest(request, response) {
 
   if (huge) {
     response.write("<div style='display: none'>");
-    for (i = 0; i < 100000; i++) {
+    for (let i = 0; i < 100000; i++) {
       response.write("123456789\n");
     }
     response.write("</div>");
@@ -215,60 +215,4 @@ function reallyHandleRequest(request, response) {
   }
 
   response.write("</html>");
-}
-
-// base64 decoder
-//
-// Yoinked from extensions/xml-rpc/src/nsXmlRpcClient.js because btoa()
-// doesn't seem to exist. :-(
-/* Convert Base64 data to a string */
-/* eslint-disable prettier/prettier */
-const toBinaryTable = [
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
-    52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1,
-    -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
-    15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
-    -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-    41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
-];
-/* eslint-enable prettier/prettier */
-const base64Pad = "=";
-
-function base64ToString(data) {
-  let result = "";
-  let leftbits = 0; // number of bits decoded, but yet to be appended
-  let leftdata = 0; // bits decoded, but yet to be appended
-
-  // Convert one by one.
-  for (let i = 0; i < data.length; i++) {
-    let c = toBinaryTable[data.charCodeAt(i) & 0x7f];
-    let padding = data[i] == base64Pad;
-    // Skip illegal characters and whitespace
-    if (c == -1) {
-      continue;
-    }
-
-    // Collect data into leftdata, update bitcount
-    leftdata = (leftdata << 6) | c;
-    leftbits += 6;
-
-    // If we have 8 or more bits, append 8 bits to the result
-    if (leftbits >= 8) {
-      leftbits -= 8;
-      // Append if not padding.
-      if (!padding) {
-        result += String.fromCharCode((leftdata >> leftbits) & 0xff);
-      }
-      leftdata &= (1 << leftbits) - 1;
-    }
-  }
-
-  // If there are any bits left, the base64 string was corrupted
-  if (leftbits) {
-    throw Components.Exception("Corrupted base64 string");
-  }
-
-  return result;
 }
