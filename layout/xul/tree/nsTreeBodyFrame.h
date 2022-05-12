@@ -126,19 +126,18 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   // nsIScrollbarMediator
   virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
+                            nsIScrollbarMediator::ScrollSnapMode aSnap =
+                                nsIScrollbarMediator::DISABLE_SNAP) override;
   virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                             mozilla::ScrollSnapFlags aSnapFlags =
-                                 mozilla::ScrollSnapFlags::Disabled) override;
+                             nsIScrollbarMediator::ScrollSnapMode aSnap =
+                                 nsIScrollbarMediator::DISABLE_SNAP) override;
   virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
+                            nsIScrollbarMediator::ScrollSnapMode aSnap =
+                                nsIScrollbarMediator::DISABLE_SNAP) override;
   virtual void ScrollByUnit(nsScrollbarFrame* aScrollbar,
                             mozilla::ScrollMode aMode, int32_t aDirection,
                             mozilla::ScrollUnit aUnit,
-                            mozilla::ScrollSnapFlags aSnapFlags =
-                                mozilla::ScrollSnapFlags::Disabled) override;
+                            ScrollSnapMode aSnap = DISABLE_SNAP) override;
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar, nscoord aOldPos,
                           nscoord aNewPos) override;

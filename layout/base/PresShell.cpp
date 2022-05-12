@@ -2387,12 +2387,10 @@ PresShell::ScrollPage(bool aForward) {
       GetScrollableFrameToScroll(VerticalScrollDirection);
   ScrollMode scrollMode = apz::GetScrollModeForOrigin(ScrollOrigin::Pages);
   if (scrollFrame) {
-    scrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES,
-                          scrollMode, nullptr,
-                          mozilla::ScrollOrigin::NotSpecified,
-                          nsIScrollableFrame::NOT_MOMENTUM,
-                          ScrollSnapFlags::IntendedDirection |
-                              ScrollSnapFlags::IntendedEndPosition);
+    scrollFrame->ScrollBy(
+        nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::PAGES, scrollMode,
+        nullptr, mozilla::ScrollOrigin::NotSpecified,
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2409,7 +2407,7 @@ PresShell::ScrollLine(bool aForward) {
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? lineCount : -lineCount), ScrollUnit::LINES,
         scrollMode, nullptr, mozilla::ScrollOrigin::NotSpecified,
-        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedDirection);
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2426,7 +2424,7 @@ PresShell::ScrollCharacter(bool aRight) {
     scrollFrame->ScrollBy(
         nsIntPoint(aRight ? h : -h, 0), ScrollUnit::LINES, scrollMode, nullptr,
         mozilla::ScrollOrigin::NotSpecified, nsIScrollableFrame::NOT_MOMENTUM,
-        ScrollSnapFlags::IntendedDirection);
+        nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -2440,7 +2438,7 @@ PresShell::CompleteScroll(bool aForward) {
     scrollFrame->ScrollBy(
         nsIntPoint(0, aForward ? 1 : -1), ScrollUnit::WHOLE, scrollMode,
         nullptr, mozilla::ScrollOrigin::NotSpecified,
-        nsIScrollableFrame::NOT_MOMENTUM, ScrollSnapFlags::IntendedEndPosition);
+        nsIScrollableFrame::NOT_MOMENTUM, nsIScrollableFrame::ENABLE_SNAP);
   }
   return NS_OK;
 }
@@ -3572,8 +3570,8 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   AutoWeakFrame weakFrame(frame);
   aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
                                aScrollFlags & ScrollFlags::ScrollSnap
-                                   ? ScrollSnapFlags::IntendedEndPosition
-                                   : ScrollSnapFlags::Disabled,
+                                   ? nsIScrollbarMediator::ENABLE_SNAP
+                                   : nsIScrollbarMediator::DISABLE_SNAP,
                                aScrollFlags & ScrollFlags::TriggeredByScript
                                    ? ScrollTriggeredByScript::Yes
                                    : ScrollTriggeredByScript::No);
