@@ -397,6 +397,17 @@ TEST_F(WebRtcVideoEngineTestWithVideoLayersAllocation,
   ExpectRtpCapabilitySupport(RtpExtension::kVideoLayersAllocationUri, true);
 }
 
+class WebRtcVideoFrameTrackingId : public WebRtcVideoEngineTest {
+ public:
+  WebRtcVideoFrameTrackingId()
+      : WebRtcVideoEngineTest(
+            "WebRTC-VideoFrameTrackingIdAdvertised/Enabled/") {}
+};
+
+TEST_F(WebRtcVideoFrameTrackingId, AdvertiseVideoFrameTrackingId) {
+  ExpectRtpCapabilitySupport(RtpExtension::kVideoFrameTrackingIdUri, true);
+}
+
 TEST_F(WebRtcVideoEngineTest, CVOSetHeaderExtensionBeforeCapturer) {
   // Allocate the source first to prevent early destruction before channel's
   // dtor is called.

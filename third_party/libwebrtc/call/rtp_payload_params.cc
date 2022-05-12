@@ -165,6 +165,7 @@ RTPVideoHeader RtpPayloadParams::GetRtpVideoHeader(
   rtp_video_header.color_space = image.ColorSpace()
                                      ? absl::make_optional(*image.ColorSpace())
                                      : absl::nullopt;
+  rtp_video_header.video_frame_tracking_id = image.VideoFrameTrackingId();
   SetVideoTiming(image, &rtp_video_header.video_timing);
 
   const bool is_keyframe = image._frameType == VideoFrameType::kVideoFrameKey;

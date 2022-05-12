@@ -564,6 +564,8 @@ void RtpVideoStreamReceiver::OnReceivedPayloadData(
       video_header.color_space = last_color_space_;
     }
   }
+  video_header.video_frame_tracking_id =
+      rtp_packet.GetExtension<VideoFrameTrackingIdExtension>();
 
   if (loss_notification_controller_) {
     if (rtp_packet.recovered()) {
