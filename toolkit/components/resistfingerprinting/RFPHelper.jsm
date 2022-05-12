@@ -147,7 +147,7 @@ class _RFPHelper {
 
   _removeRFPObservers() {
     try {
-      Services.pref.removeObserver(kPrefSpoofEnglish, this);
+      Services.prefs.removeObserver(kPrefSpoofEnglish, this);
     } catch (e) {
       // do nothing
     }
