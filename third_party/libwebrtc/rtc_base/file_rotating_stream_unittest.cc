@@ -72,7 +72,7 @@ class MAYBE_FileRotatingStreamTest : public ::testing::Test {
 
   // Writes the data to the stream and flushes it.
   void WriteAndFlush(const void* data, const size_t data_len) {
-    EXPECT_EQ(SR_SUCCESS, stream_->Write(data, data_len));
+    EXPECT_TRUE(stream_->Write(data, data_len));
     EXPECT_TRUE(stream_->Flush());
   }
 
@@ -334,7 +334,7 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadLarge) {
   std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
   for (int i = 0; i < 8; i++) {
     memset(buffer.get(), i, buffer_size);
-    EXPECT_EQ(SR_SUCCESS, stream_->Write(buffer.get(), buffer_size));
+    EXPECT_TRUE(stream_->Write(buffer.get(), buffer_size));
   }
 
   const int expected_vals[] = {0, 1, 2, 6, 7};
@@ -368,7 +368,7 @@ TEST_F(MAYBE_CallSessionFileRotatingStreamTest, WriteAndReadFirstHalf) {
   std::unique_ptr<uint8_t[]> buffer(new uint8_t[buffer_size]);
   for (int i = 0; i < 2; i++) {
     memset(buffer.get(), i, buffer_size);
-    EXPECT_EQ(SR_SUCCESS, stream_->Write(buffer.get(), buffer_size));
+    EXPECT_TRUE(stream_->Write(buffer.get(), buffer_size));
   }
 
   const int expected_vals[] = {0, 1};
