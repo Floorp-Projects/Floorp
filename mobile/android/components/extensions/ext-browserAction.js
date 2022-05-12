@@ -143,7 +143,7 @@ this.browserAction = class extends ExtensionAPIPersistent {
         onClicked: new EventManager({
           context,
           // module name is "browserAction" because it the name used in the
-          // ext-browser.json, indipendently from the manifest version.
+          // ext-browser.json, independently from the manifest version.
           module: "browserAction",
           event: "onClicked",
           // NOTE: Firefox Desktop event has inputHandling set to true here.

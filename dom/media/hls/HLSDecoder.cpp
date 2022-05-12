@@ -131,7 +131,7 @@ HLSDecoder::~HLSDecoder() {
   HLS_DEBUG("HLSDecoder", "~HLSDecoder(): allocated=%zu", sAllocatedInstances);
 }
 
-MediaDecoderStateMachine* HLSDecoder::CreateStateMachine() {
+MediaDecoderStateMachineBase* HLSDecoder::CreateStateMachine() {
   MOZ_ASSERT(NS_IsMainThread());
 
   MediaFormatReaderInit init;

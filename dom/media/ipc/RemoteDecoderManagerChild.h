@@ -15,6 +15,7 @@
 
 namespace mozilla {
 
+class PMFMediaEngineChild;
 class RemoteDecoderChild;
 
 enum class RemoteDecodeIn {
@@ -91,6 +92,9 @@ class RemoteDecoderManagerChild final
   RemoteDecodeIn Location() const { return mLocation; }
   layers::VideoBridgeSource GetSource() const;
 
+  // A thread-safe method to launch the RDD process if it hasn't launched yet.
+  static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
+
  protected:
   void InitIPDL();
 
@@ -101,8 +105,12 @@ class RemoteDecoderManagerChild final
   PRemoteDecoderChild* AllocPRemoteDecoderChild(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier);
+      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
+      const Maybe<uint64_t>& aMediaEngineId);
   bool DeallocPRemoteDecoderChild(PRemoteDecoderChild* actor);
+
+  PMFMediaEngineChild* AllocPMFMediaEngineChild();
+  bool DeallocPMFMediaEngineChild(PMFMediaEngineChild* actor);
 
  private:
   explicit RemoteDecoderManagerChild(RemoteDecodeIn aLocation);
@@ -116,7 +124,6 @@ class RemoteDecoderManagerChild final
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
   static void OpenForUtilityProcess(
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
-  static RefPtr<GenericNonExclusivePromise> LaunchRDDProcessIfNeeded();
   static RefPtr<GenericNonExclusivePromise> LaunchUtilityProcessIfNeeded();
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;

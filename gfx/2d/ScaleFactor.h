@@ -25,69 +25,69 @@ namespace gfx {
  * both the x and y axes. For cases where two diferent scales apply, use
  * ScaleFactors2D.
  */
-template <class src, class dst>
+template <class Src, class Dst>
 struct ScaleFactor {
   float scale;
 
   constexpr ScaleFactor() : scale(1.0) {}
-  constexpr ScaleFactor(const ScaleFactor<src, dst>& aCopy)
+  constexpr ScaleFactor(const ScaleFactor<Src, Dst>& aCopy)
       : scale(aCopy.scale) {}
   explicit constexpr ScaleFactor(float aScale) : scale(aScale) {}
 
-  ScaleFactor<dst, src> Inverse() { return ScaleFactor<dst, src>(1 / scale); }
+  ScaleFactor<Dst, Src> Inverse() { return ScaleFactor<Dst, Src>(1 / scale); }
 
-  ScaleFactor<src, dst>& operator=(const ScaleFactor<src, dst>&) = default;
+  ScaleFactor<Src, Dst>& operator=(const ScaleFactor<Src, Dst>&) = default;
 
-  bool operator==(const ScaleFactor<src, dst>& aOther) const {
+  bool operator==(const ScaleFactor<Src, Dst>& aOther) const {
     return scale == aOther.scale;
   }
 
-  bool operator!=(const ScaleFactor<src, dst>& aOther) const {
+  bool operator!=(const ScaleFactor<Src, Dst>& aOther) const {
     return !(*this == aOther);
   }
 
-  bool operator<(const ScaleFactor<src, dst>& aOther) const {
+  bool operator<(const ScaleFactor<Src, Dst>& aOther) const {
     return scale < aOther.scale;
   }
 
-  bool operator<=(const ScaleFactor<src, dst>& aOther) const {
+  bool operator<=(const ScaleFactor<Src, Dst>& aOther) const {
     return scale <= aOther.scale;
   }
 
-  bool operator>(const ScaleFactor<src, dst>& aOther) const {
+  bool operator>(const ScaleFactor<Src, Dst>& aOther) const {
     return scale > aOther.scale;
   }
 
-  bool operator>=(const ScaleFactor<src, dst>& aOther) const {
+  bool operator>=(const ScaleFactor<Src, Dst>& aOther) const {
     return scale >= aOther.scale;
   }
 
-  template <class other>
-  ScaleFactor<other, dst> operator/(
-      const ScaleFactor<src, other>& aOther) const {
-    return ScaleFactor<other, dst>(scale / aOther.scale);
+  template <class Other>
+  ScaleFactor<Other, Dst> operator/(
+      const ScaleFactor<Src, Other>& aOther) const {
+    return ScaleFactor<Other, Dst>(scale / aOther.scale);
   }
 
-  template <class other>
-  ScaleFactor<src, other> operator/(
-      const ScaleFactor<other, dst>& aOther) const {
-    return ScaleFactor<src, other>(scale / aOther.scale);
+  template <class Other>
+  ScaleFactor<Src, Other> operator/(
+      const ScaleFactor<Other, Dst>& aOther) const {
+    return ScaleFactor<Src, Other>(scale / aOther.scale);
   }
 
-  template <class other>
-  ScaleFactor<src, other> operator*(
-      const ScaleFactor<dst, other>& aOther) const {
-    return ScaleFactor<src, other>(scale * aOther.scale);
+  template <class Other>
+  ScaleFactor<Src, Other> operator*(
+      const ScaleFactor<Dst, Other>& aOther) const {
+    return ScaleFactor<Src, Other>(scale * aOther.scale);
   }
 
-  template <class other>
-  ScaleFactor<other, dst> operator*(
-      const ScaleFactor<other, src>& aOther) const {
-    return ScaleFactor<other, dst>(scale * aOther.scale);
+  template <class Other>
+  ScaleFactor<Other, Dst> operator*(
+      const ScaleFactor<Other, Src>& aOther) const {
+    return ScaleFactor<Other, Dst>(scale * aOther.scale);
   }
 
   friend std::ostream& operator<<(std::ostream& aStream,
-                                  const ScaleFactor<src, dst>& aSF) {
+                                  const ScaleFactor<Src, Dst>& aSF) {
     return aStream << aSF.scale;
   }
 };

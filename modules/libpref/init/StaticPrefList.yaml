@@ -5139,6 +5139,11 @@
   value: 256
   mirror: always
 
+- name: gfx.canvas.accelerated.reserve-empty-cache
+  type: RelaxedAtomicUint32
+  value: 36
+  mirror: always
+
 - name: gfx.canvas.accelerated.max-size
   type: RelaxedAtomicInt32
   value: 0
@@ -9159,6 +9164,12 @@
     value: true
     mirror: always
 
+# Using Windows Media Foundation Media Engine for encrypted playback
+-   name: media.wmf.media-engine.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 #endif  # MOZ_WMF
 
 - name: media.decoder-doctor.testing
@@ -12096,10 +12107,322 @@
 
 # Disable preloaded static key pins by default.
 - name: security.cert_pinning.enforcement_level
-  type: ReleaseAcquireAtomicUint32
+  type: RelaxedAtomicUint32
   value: 0
   mirror: always
   do_not_use_directly: true
+
+# OCSP fetching behavior:
+# 0: do not fetch OCSP
+# 1: fetch OCSP for DV and EV certificates
+# 2: fetch OCSP only for EV certificates
+- name: security.OCSP.enabled
+  type: RelaxedAtomicUint32
+#ifdef ANDROID
+  value: 2
+#else
+  value: 1
+#endif
+  mirror: always
+
+# Whether or not OCSP is required.
+# true => hard-fail (if an OCSP request times out, stop the connection)
+# false => soft-fail (if an OCSP request times out, continue the connection)
+- name: security.OCSP.require
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# How many milliseconds to wait for an OCSP response before assuming it failed
+# (when fetching for soft-fail).
+- name: security.OCSP.timeoutMilliseconds.soft
+  type: RelaxedAtomicUint32
+#ifdef RELEASE_OR_BETA
+  value: 2000
+#else
+  value: 1000
+#endif
+  mirror: always
+
+# How many milliseconds to wait for an OCSP response before assuming it failed
+# (when fetching for hard-fail).
+- name: security.OCSP.timeoutMilliseconds.hard
+  type: RelaxedAtomicUint32
+  value: 10000
+  mirror: always
+
+# Whether or not to enable OCSP must-staple (in other words, TLS-feature with
+# status request).
+- name: security.ssl.enable_ocsp_must_staple
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether or not to enable OCSP stapling.
+- name: security.ssl.enable_ocsp_stapling
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# This is checked at startup to see if NSS should be initialized without the
+# user's certificate and key databases.
+- name: security.nocertdb
+  type: bool
+  value: false
+  mirror: once
+
+# On Windows 8.1, if the following preference is 2, we will attempt to detect
+# if the Family Safety TLS interception feature has been enabled. If so, we
+# will behave as if the enterprise roots feature has been enabled (i.e. import
+# and trust third party root certificates from the OS).
+# With any other value of the pref or on any other platform, this does nothing.
+# This preference takes precedence over "security.enterprise_roots.enabled".
+- name: security.family_safety.mode
+  type: RelaxedAtomicUint32
+  value: 2
+  mirror: always
+
+# Whether or not to import and trust third party root certificates from the OS.
+- name: security.enterprise_roots.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.intermediate_preloading_healer.enabled
+  type: RelaxedAtomicBool
+#if defined(EARLY_BETA_OR_EARLIER) && !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+- name: security.intermediate_preloading_healer.timer_interval_ms
+  type: RelaxedAtomicUint32
+  value: 300000
+  mirror: always
+
+# If true, attempt to load the osclientcerts PKCS#11 module at startup on a
+# background thread. This module allows Firefox to use client certificates
+# stored in OS certificate storage. Currently only available for Windows and
+# macOS.
+- name: security.osclientcerts.autoload
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.pki.cert_short_lifetime_in_days
+  type: RelaxedAtomicUint32
+  value: 10
+  mirror: always
+
+# NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
+# See the comment in CertVerifier.cpp.
+# 1 = forbid sha1 in certificate signatures, even for imported roots
+- name: security.pki.sha1_enforcement_level
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+
+# security.pki.netscape_step_up_policy controls how the platform handles the
+# id-Netscape-stepUp OID in extended key usage extensions of CA certificates.
+# 0: id-Netscape-stepUp is always considered equivalent to id-kp-serverAuth
+# 1: it is considered equivalent when the notBefore is before 23 August 2016
+# 2: similarly, but for 23 August 2015
+# 3: it is never considered equivalent
+- name: security.pki.netscape_step_up_policy
+  type: RelaxedAtomicUint32
+#ifdef RELEASE_OR_BETA
+  value: 1
+#else
+  value: 2
+#endif
+  mirror: always
+
+# Configures Certificate Transparency support mode:
+# 0: Fully disabled.
+# 1: Only collect telemetry. CT qualification checks are not performed.
+- name: security.pki.certificate_transparency.mode
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
+# 0: Disable CRLite entirely.
+# 1: Consult CRLite but only collect telemetry.
+# 2: Consult CRLite and enforce both "Revoked" and "Not Revoked" results.
+# 3: Consult CRLite and enforce "Not Revoked" results, but defer to OCSP for "Revoked".
+- name: security.pki.crlite_mode
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
+- name: security.tls.version.min
+  type: RelaxedAtomicUint32
+  value: 3
+  mirror: always
+
+- name: security.tls.version.max
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+- name: security.tls.version.enable-deprecated
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.tls.version.fallback-limit
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+# Turn off post-handshake authentication for TLS 1.3 by default,
+# until the incompatibility with HTTP/2 is resolved:
+# https://tools.ietf.org/html/draft-davidben-http2-tls13-00
+- name: security.tls.enable_post_handshake_auth
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.tls.hello_downgrade_check
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls.enable_delegated_credentials
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls.enable_0rtt_data
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.treat_unsafe_negotiation_as_broken
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl.require_safe_negotiation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl.enable_false_start
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.enable_alpn
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl.disable_session_identifiers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.ecdhe_ecdsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.dhe_rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.dhe_rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: security.ssl3.rsa_aes_128_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_256_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.rsa_aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.ssl3.deprecated.rsa_des_ede3_sha
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.aes_128_gcm_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.chacha20_poly1305_sha256
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: security.tls13.aes_256_gcm_sha384
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "signon."
@@ -13314,7 +13637,7 @@
 
 - name: widget.windows.window_occlusion_tracking_session_lock.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: widget.windows.hide_cursor_when_typing

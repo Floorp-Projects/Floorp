@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.executeScript() and activeTab</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+
+"use strict";
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["activeTab", "scripting"],
+      action: {},
+      ...manifestProps,
+    },
+    ...otherProps,
+  });
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_executeScript_activeTab() {
+  let extension = makeExtension({
+    background() {
+      browser.action.onClicked.addListener(async tab => {
+        const results = await browser.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: () => document.title,
+        });
+
+        browser.test.assertEq(
+          1,
+          results.length,
+          "got expected number of results"
+        );
+        browser.test.assertEq(
+          "file sample",
+          results[0].result,
+          "got the expected title"
+        );
+        browser.test.assertEq(
+          0,
+          results[0].frameId,
+          "got the expected frameId"
+        );
+
+        browser.test.sendMessage("execute-script");
+      });
+
+      browser.test.onMessage.addListener(async msg => {
+        switch (msg) {
+          case "reload-and-execute":
+            const tabs = await browser.tabs.query({ active: true });
+            const tabId = tabs[0].id;
+
+            let promiseTabLoad = new Promise(resolve => {
+              browser.tabs.onUpdated.addListener(function listener(updatedTabId, changeInfo) {
+                browser.test.assertEq(tabId, updatedTabId, "got expected tabId");
+
+                if (tabId === updatedTabId && changeInfo.status === "complete") {
+                  browser.tabs.onUpdated.removeListener(listener);
+                  resolve();
+                }
+              });
+            });
+
+            await browser.tabs.reload();
+            await promiseTabLoad;
+
+            await browser.test.assertRejects(
+              browser.scripting.executeScript({
+                target: { tabId },
+                func: () => {
+                  browser.test.fail("Unexpected execution");
+                },
+              }),
+              "Missing host permission for the tab",
+              "expected host permission error"
+            );
+
+            browser.test.sendMessage("execute-script-after-reload");
+
+            break;
+          default:
+            browser.test.fail(`invalid message received: ${msg}`);
+        }
+      });
+
+      browser.test.sendMessage("background-ready");
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_sample.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await AppTestDelegate.clickBrowserAction(window, extension);
+  await extension.awaitMessage("execute-script");
+  await AppTestDelegate.closeBrowserAction(window, extension);
+
+  extension.sendMessage("reload-and-execute");
+  await extension.awaitMessage("execute-script-after-reload");
+
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+</script>
+
+</body>
+</html>

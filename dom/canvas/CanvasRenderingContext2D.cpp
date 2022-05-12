@@ -5703,6 +5703,12 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::CreateImageData(
                               aImagedata.Height(), aError);
 }
 
+void CanvasRenderingContext2D::OnMemoryPressure() {
+  if (mBufferProvider) {
+    mBufferProvider->OnMemoryPressure();
+  }
+}
+
 void CanvasRenderingContext2D::OnBeforePaintTransaction() {
   if (!mTarget) return;
   OnStableState();

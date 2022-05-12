@@ -3291,12 +3291,17 @@ void nsIFrame::BuildDisplayListForStackingContext(
           visibleRect = dirtyRect = aBuilder->GetPreserves3DRect();
         }
 
+        float appPerDev = PresContext()->AppUnitsPerDevPixel();
+        auto transform = nsDisplayTransform::GetResultingTransformMatrix(
+            this, nsPoint(), appPerDev,
+            nsDisplayTransform::kTransformRectFlags);
         nsRect untransformedDirtyRect;
-        if (nsDisplayTransform::UntransformRect(dirtyRect, overflow, this,
+        if (nsDisplayTransform::UntransformRect(dirtyRect, overflow, transform,
+                                                appPerDev,
                                                 &untransformedDirtyRect)) {
           dirtyRect = untransformedDirtyRect;
-          nsDisplayTransform::UntransformRect(visibleRect, overflow, this,
-                                              &visibleRect);
+          nsDisplayTransform::UntransformRect(visibleRect, overflow, transform,
+                                              appPerDev, &visibleRect);
         } else {
           // This should only happen if the transform is singular, in which case
           // nothing is visible anyway
