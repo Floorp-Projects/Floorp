@@ -26,35 +26,19 @@ job-defaults:
             default: 2
     variants:
         - fission
-        - no-fission
-        - webrender-sw+no-fission
         - webrender-sw+fission
-        - headless+no-fission
         - headless+fission
     run-without-variant: false
     run-on-projects:
         by-variant:
             fission: built-projects
-            headless+no-fission:
-                by-test-platform:
-                    linux.*(tsan|ccov).*: []
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    default: []
             headless+fission:
                 by-test-platform:
                     (linux.*64)(-shippable)?-qr/opt: built-projects
                     default: []
-            webrender-sw+no-fission:
-                by-test-platform:
-                    linux.*/debug: ['trunk']
-                    default: []
             webrender-sw+fission:
                 by-test-platform:
                     .*/debug: built-projects
-                    default: []
-            no-fission:
-                by-test-platform:
-                    linux.*: ['trunk']
                     default: []
     virtualization: virtual
 
