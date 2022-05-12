@@ -55,9 +55,7 @@ class PerftestResultsHandler(object):
         self.page_timeout_list = []
         self.images = []
         self.supporting_data = None
-        self.fission_enabled = kwargs.get("extra_prefs", {}).get(
-            "fission.autostart", False
-        )
+        self.fission_enabled = kwargs.get("fission", True)
         self.browser_version = None
         self.browser_name = None
         self.cold = cold

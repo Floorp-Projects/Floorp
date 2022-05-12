@@ -394,6 +394,11 @@ class Perftest(object):
             self.profile.merge(path)
 
         if self.config["extra_prefs"].get("fission.autostart", True):
+            self.config["extra_prefs"].update(
+                {
+                    "fission.autostart": True,
+                }
+            )
             LOG.info("Enabling fission via browser preferences")
             LOG.info("Browser preferences: {}".format(self.config["extra_prefs"]))
         self.profile.set_preferences(self.config["extra_prefs"])
