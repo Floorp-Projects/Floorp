@@ -986,11 +986,6 @@ var Policies = {
     },
   },
 
-  ExemptDomainFileTypePairsFromFileTypeDownloadWarnings: {
-    // This policy is handled directly in EnterprisePoliciesParent.jsm
-    // and requires no validation (It's done by the schema).
-  },
-
   ExtensionSettings: {
     onBeforeAddons(manager, param) {
       try {
