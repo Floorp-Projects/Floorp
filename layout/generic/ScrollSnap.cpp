@@ -23,8 +23,8 @@ using layers::ScrollSnapInfo;
  */
 class CalcSnapPoints final {
  public:
-  CalcSnapPoints(ScrollUnit aUnit, const nsPoint& aDestination,
-                 const nsPoint& aStartPos);
+  CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
+                 const nsPoint& aDestination, const nsPoint& aStartPos);
   void AddHorizontalEdge(nscoord aEdge);
   void AddVerticalEdge(nscoord aEdge);
   void AddEdge(nscoord aEdge, nscoord aDestination, nscoord aStartPos,
@@ -43,6 +43,7 @@ class CalcSnapPoints final {
 
  protected:
   ScrollUnit mUnit;
+  ScrollSnapFlags mSnapFlags;
   nsPoint mDestination;  // gives the position after scrolling but before
                          // snapping
   nsPoint mStartPos;     // gives the position before scrolling
@@ -57,9 +58,13 @@ class CalcSnapPoints final {
                               // edge
 };
 
-CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, const nsPoint& aDestination,
+CalcSnapPoints::CalcSnapPoints(ScrollUnit aUnit, ScrollSnapFlags aSnapFlags,
+                               const nsPoint& aDestination,
                                const nsPoint& aStartPos) {
+  MOZ_ASSERT(aSnapFlags != ScrollSnapFlags::Disabled);
+
   mUnit = aUnit;
+  mSnapFlags = aSnapFlags;
   mDestination = aDestination;
   mStartPos = aStartPos;
 
@@ -218,8 +223,8 @@ static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
 
 Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
-    const nsRect& aScrollRange, const nsPoint& aStartPos,
-    const nsPoint& aDestination) {
+    ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
+    const nsPoint& aStartPos, const nsPoint& aDestination) {
   if (aSnapInfo.mScrollSnapStrictnessY == StyleScrollSnapStrictness::None &&
       aSnapInfo.mScrollSnapStrictnessX == StyleScrollSnapStrictness::None) {
     return Nothing();
@@ -229,7 +234,7 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     return Nothing();
   }
 
-  CalcSnapPoints calcSnapPoints(aUnit, aDestination, aStartPos);
+  CalcSnapPoints calcSnapPoints(aUnit, aSnapFlags, aDestination, aStartPos);
 
   ProcessSnapPositions(calcSnapPoints, aSnapInfo);
 
