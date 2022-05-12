@@ -5,6 +5,8 @@
 #ifndef mozilla_ScrollTypes_h
 #define mozilla_ScrollTypes_h
 
+#include "mozilla/TypedEnumBits.h"
+
 // Types used in main-thread scrolling interfaces such as nsIScrollableFrame.
 
 namespace mozilla {
@@ -55,6 +57,16 @@ enum class APZScrollAnimationType {
   TriggeredByScript,    // Animation triggered by script.
   TriggeredByUserInput  // Animation triggered by user input.
 };
+
+enum class ScrollSnapFlags : uint8_t {
+  Disabled = 0,
+  // https://drafts.csswg.org/css-scroll-snap/#intended-end-position
+  IntendedEndPosition = 1 << 0,
+  // https://drafts.csswg.org/css-scroll-snap/#intended-direction
+  IntendedDirection = 1 << 1
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollSnapFlags);
 
 }  // namespace mozilla
 

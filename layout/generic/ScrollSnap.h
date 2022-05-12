@@ -36,8 +36,8 @@ struct ScrollSnapUtils {
    */
   static mozilla::Maybe<nsPoint> GetSnapPointForDestination(
       const layers::ScrollSnapInfo& aSnapInfo, ScrollUnit aUnit,
-      const nsRect& aScrollRange, const nsPoint& aStartPos,
-      const nsPoint& aDestination);
+      ScrollSnapFlags aSnapFlags, const nsRect& aScrollRange,
+      const nsPoint& aStartPos, const nsPoint& aDestination);
 };
 
 }  // namespace mozilla
