@@ -46,6 +46,9 @@
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Hemû hilpekînên tomarkirî nîşan bide</string>
 
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Rake</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s berhemeke Mozillayê ye.</string>
 
@@ -67,8 +70,8 @@
     <string name="cfr_neg_button_text">Na, spas</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">Tu dikarî Firefoxê saz bike ku girêdanan bi otomatîkî di sepanan de veke.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Tu dikarî  %1$s`ê wisa eyar bikî ku girêdank xweber di appan de vebin.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Here sazkariyan</string>
     <!-- Text for the negative action button -->
@@ -97,8 +100,9 @@
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Bila piştî mehekê xweber bigire?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox dikare hilpekînên te meha borî venekirine bigire.</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2"> %1$s dikare hilpekînên te di meha borî de venekirine bigire.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Bigire</string>
 
@@ -126,6 +130,14 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d malper</string>
+
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Hemû hilpekînên senkronîzekirî bibîne</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Alava senkronîzekirî</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Rake</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -236,13 +248,16 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Lêgerînê rasterast ji darikê navnîşanan bike</string>
 
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Eyarên lêgerînê</string>
+
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">Tiştên di Firefoxê de nê</string>
+    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_title_3">Tiştên nû yên  %1$s`ê</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Niha hêsantir e ku vegerî ciyê lê mayî.</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">Serûpela Firefoxê ya Taybetkirî</string>
+    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
+    <string name="onboarding_home_screen_section_home_title_3">Serûpela  %1$s `ê ya şexsîkirî</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
     <string name="onboarding_home_screen_section_home_description_2">Here hilpekînên xwe yên vekirî, bijareyan û mêjûya lêgerînê.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -255,9 +270,12 @@
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_description_2">Vegere lêgerînên xwe yên dawiyê yên ji serûpel û hilpekînan.</string>
 
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Serûpela te ya Firefoxê ya şexsîkirî niha hêsantir dike ku tu li ciyê lê mayî dewam bikî. Hilpekîn, bijare û encamên dawiyê yên lêgerînên xwe bibîne.</string>
+
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Hilpekîna nû ya Firefoxê veke</string>
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Hilpekînek nû ya  %1$s `ê veke</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Lêgerîn</string>
     <!-- Text preview for larger sized widgets -->
@@ -303,6 +321,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Heke destûr bê dayîn, dema ku gelek sepan vekirî bin jî ew ê hilpekînên veşartî xuya bibin</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Kurterêya gerîna veşartî tevlî bike</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Moda Tenê-HTTPS</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Ji bo ewlekariya zêdetir hewlê bide ku bi protokola şîfrekirî ya HTTPSê bi awayekî xweber têkeve malperan.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Vekirî</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Girtî</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Agahiyên zêdetir</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Di hemû hilpekînan de çalak bike</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Tenê di hilpekînên şexsî de çalak bike</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Malpera ewle ne berdest e</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Bi îhtîmaleke zêde ev malper HTPPSê destek nake.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Lê îhtîmal heye ku sedem êrîşek be jî. Heke tu têkevî vê malperê, agahiyên xwe yên girîng pê re parve neke. Heke dewam bikî moda Tenê-HTTPS dê ji bo vê malperê bi awayê demdemî girtî be.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Gihînbarî</string>
     <!-- Preference to override the Firefox Account server -->
@@ -391,6 +429,24 @@
     <string name="customize_toggle_recently_visited">Seredanên dawî</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
+
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Wêneyên dîwêr</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Kurteriyên bi sponsor</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Wêneyê dîwêr: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Wêneyê dîwêr hat venûkirin!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Nîşan bide</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Ji bo guhertina wêneyê dîwêr pêlî logoya Firefoxê ya serûpelê bike</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Logoya Firefoxê - wêneyê dîwêr biguherîne, bişkok</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -614,8 +670,8 @@
     <string name="studies_remove">Rake</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Çalak</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Carinan dibe ku Firefox lêkolînan saz bike û wan bixebitîne.</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s dikare carê lêkolînan bar bike û bide xebitandin.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Zêdetir bizane</string>
     <!-- Dialog message shown after removing a study -->
@@ -697,6 +753,9 @@
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Hilpekînên din</string>
 
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Peyva lêgerînê binivîse</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Raboriyê jê bibe</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -722,6 +781,11 @@
     <string name="history_older">Kevntir</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Raborî tune</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Ji alavên din hatiye senkronîzekirin</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Ji alavên din</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -753,6 +817,8 @@
     <string name="bookmark_delete_folder_confirmation_dialog">Tu bi rastî jî dixwazî vê peldankê jê bibî?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s ew ê hêmanên bijartî jê bibe.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Betal</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Peldankê tevlî bike</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -810,6 +876,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">VEGERÎNE</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Peyva lêgerînê binivîse</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Here sazkariyan</string>
@@ -821,8 +890,16 @@
     <string name="phone_feature_recommended">Tê pêşniyarkirin</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Destûran paqij bike</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">BAŞ E</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Betal</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Destûrê paqij bike</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">BAŞ E</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Betal</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Destûran ji hemû malperan paqij bike</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -921,6 +998,11 @@
     <!-- Snackbar action to view the collection the user just created or updated -->
     <string name="create_collection_view">Bibîne</string>
 
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">BAŞ E</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Betal</string>
+
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
     <string name="create_collection_default_name">Koleksiyona %d</string>
 
@@ -936,6 +1018,10 @@
     <string name="share_link_all_apps_subheader">Hemû çalakî</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Bikaranînên herî dawî</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Li panoyê kopî bike</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Li panoyê hat kopîkirin</string>
     <!-- An option from the three dot menu to into sync -->
     <string name="sync_menu_sign_in">Ji bo senkronîzekirinê têkevê</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -991,6 +1077,8 @@
     <string name="snackbar_message_bookmarks_saved">Favorî hatin tomarkirin!</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Tevlî malperên sereke bû!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Li bijareyan hat zêdekirin!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Hilpekîna veşartî hate girtin</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1080,6 +1168,15 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Daneyên gerînê tên jêbirin…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">Ev ê hemû hêmanan jê bibe.</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Betal</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Jê bibe</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Kom hat jêbirin</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview niha bûye Firefox Nightly</string>
@@ -1115,14 +1212,18 @@
     <string name="onboarding_header">Tu bi xêr hatî %s’ê!</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Firefoxê di navbera amûran de senkronîze bike</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">%1$s`ê di navbera alavan de senkronîze bike</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Bijareyan, raboriyê û şîfreyan bîne nav %1$s`ê.</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Xwe tomar bike</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync vekirî ye</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Her car -nepen</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox bixweber rê li şirketan digire ku bi dizî li dora te tevnegerin.</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s bi awayekî xweber asteng dike ku şirket we li ser webê bi dizî bişopînin.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (jixweber)</string>
     <!-- text for standard blocking option button description -->
@@ -1426,6 +1527,11 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menûya rêzkirina hesaban</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Dagirtina xweber</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Navnîşan</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards">Kartên krediyê</string>
     <!-- Preference for saving and autofilling credit cards -->
@@ -1441,6 +1547,10 @@
     <string name="preferences_credit_cards_add_credit_card">Kredîkartekê lê zêde bike</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">Kartên tomarkirî bi rê ve bibe</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Navnîşanekê lê zêde bike</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Navnîşanan bi rê ve bibe</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kartê lê zêde bike</string>
     <!-- Title of the "Edit card" screen -->
@@ -1459,6 +1569,10 @@
     <string name="credit_cards_menu_delete_card">Kartê jê bibe</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kartê jê bibe</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Tu ji dil dixwazî vê karta krediyê jê bibî?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Jê bibe</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
     <string name="credit_cards_menu_save">Tomar bike</string>
     <!-- The text for the "Save" button for saving a credit card -->
@@ -1486,6 +1600,37 @@
     <string name="credit_cards_biometric_prompt_message_pin">Kilîda amûra xwe veke</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message">Kilîdê rake ku dikaribî agahiyên kartên krediyê yên tomarkirî bi kar bînî</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Navnîşanekê lê zêde bike</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Navnîşanan bi rê ve bibe</string>
+    <!-- The header for the full name of an address -->
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">Nav û paşnav</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Nav</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Navê duyemîn</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Paşnav</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Navnîşana Cadeyê</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Bajar</string>
+    <!-- The header for the state of an address -->
+    <string name="addresses_state">Eyalet</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Postkod</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Telefon</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Emaîl</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Qeyd bike</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Betal</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Navnîşanê jê bibe</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Motora lêgerînê tevlî bike</string>
@@ -1570,6 +1715,12 @@
     <string name="bookmark_deletion_confirmation">Tu ji dil dixwazî vê favoriyê jê bibî?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">Tevlî malperên sereke bike</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string moz:RemovedIn="101" name="browser_menu_remove_from_top_sites" tools:ignore="UnusedResources">Ji nav malperên girîng bibe</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Li bijareyan zêde bike</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Ji nav bijareyan bibe</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Piştrastkirin ji aliyê: %1$s</string>
@@ -1582,6 +1733,8 @@
     <string name="login_deletion_confirmation">Tu bi rastî jî dixwazî vî hesabî jê bibî?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Jê bibe</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Betal</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">Vebijarkên hesêb</string>
     <!--  The editable text field for a login's web address. -->
@@ -1625,6 +1778,8 @@
     <string name="synced_tabs_enable_tab_syncing">Ji kerema xwe, senkronîzekirina hilpekînê veke.</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Di Firefoxên li ser cîhazên te yên din de ti hilpekîneke vekirî tune ye.</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">Di %1$s`a te ya alavên din de hilpekînên vekirî nîn in.</string>
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">Lîsteyeke hilpekînan a ji cîhazên xwe yên din bibîne.</string>
     <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
@@ -1632,22 +1787,42 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Hilpekînên vekirî tune</string>
 
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Koma hilpekînan ya senkronîzekirî berfireh bike</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Koma hilpekînan ya senkronîzekirî berteng bike</string>
+
     <!-- Top Sites -->
     <!-- Title text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">Gihîşte sînorê malperên sereke</string>
 
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Tu gihîştî sînorê kurteriyan</string>
     <!-- Content description text displayed in the dialog when top sites limit is reached. -->
     <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">Ji bo malpereke din a sereke lê zêde bikî, yekê jê bibe. Li malperê bitikîne û li ser bihêle, piştre rakirinê hilbijêre.</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Ji bo dikaribî kurteriyeke din lê zêde bikî, yekê jê bibe. Pêl malperê bike, li ser bigire û rakirinê hilbijêre.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Baş e</string>
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Kurterê</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nav</string>
 	<!-- Hint for renaming title of a top site -->
 	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">Navê malpera favorî</string>
-    <!-- Button caption to confirm the renaming of the top site. -->
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Navê kurteriyê</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">Baş e</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Betal bike</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Eyar</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Sponsorên me û nepeniya te</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Sponsorkirî</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -1664,26 +1839,6 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">GIRTINA BIXWEBER VEKE</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Girtina bixweber çalak bû</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">Alîkariya pêşxistina Firefoxê bike</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Te çima hilpekînên nelaçak neçalak kirin?</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">Min jê fêm nekir</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">Ez dixwazim hilpekînên kevn bixwe bigirim</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">Maweya duhefteyî gelekî dirêj e</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">Maweya duhefteyî gelekî kin e</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Bişîne</string>
-
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Bigire</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Bila lînkên ji malperan, e-posteyan û peyaman xweber di Firefoxê de bên vekirin.</string>
@@ -1714,4 +1869,8 @@
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">Agahiyên zêdetir</string>
 
-    </resources>
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Ji bo şandina daneyan telementriyê hilbijêre.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Here eyaran</string>
+</resources>
