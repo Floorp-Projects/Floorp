@@ -101,7 +101,7 @@ let gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
 // Only allow input elements (can be extended later) to avoid false negatives.
 class WeakFieldSet extends WeakSet {
   add(value) {
-    if (!(value instanceof HTMLInputElement)) {
+    if (!HTMLInputElement.isInstance(value)) {
       throw new Error("Non-field type added to a WeakFieldSet");
     }
     super.add(value);
@@ -328,15 +328,14 @@ const observer = {
         );
 
         if (field.hasBeenTypePassword) {
-          let triggeredByFillingGenerated = docState.generatedPasswordFields.has(field);
+          let triggeredByFillingGenerated = docState.generatedPasswordFields.has(
+            field
+          );
           // Autosave generated password initial fills and subsequent edits
           if (triggeredByFillingGenerated) {
-            loginManagerChild._passwordEditedOrGenerated(
-              field,
-              {
-                triggeredByFillingGenerated,
-              }
-            );
+            loginManagerChild._passwordEditedOrGenerated(field, {
+              triggeredByFillingGenerated,
+            });
           } else {
             // Send a notification that we are not saving the edit to the password field.
             // This is used only for testing.
@@ -399,8 +398,10 @@ const observer = {
         // Keep track of the modified formless password field to trigger form submission
         // when it is removed from DOM.
         let alreadyModifiedFormLessField = true;
-        if (!(formLikeRoot instanceof HTMLFormElement)) {
-          alreadyModifiedFormLessField = docState.formlessModifiedPasswordFields.has(field);
+        if (!HTMLFormElement.isInstance(formLikeRoot)) {
+          alreadyModifiedFormLessField = docState.formlessModifiedPasswordFields.has(
+            field
+          );
           if (!alreadyModifiedFormLessField) {
             docState.formlessModifiedPasswordFields.add(field);
           }
@@ -440,7 +441,8 @@ const observer = {
           let form = LoginFormFactory.createFromField(field);
           if (
             docState.generatedPasswordFields.has(field) &&
-            loginManagerChild._getFormFields(form).confirmPasswordField === field
+            loginManagerChild._getFormFields(form).confirmPasswordField ===
+              field
           ) {
             break;
           }
@@ -448,19 +450,16 @@ const observer = {
           // a field marked as a generated password field on every "input" event
           loginManagerChild._passwordEditedOrGenerated(field);
         } else {
-          let [usernameField, passwordField] = loginManagerChild.getUserNameAndPasswordFields(field);
-          if (
-            field == usernameField &&
-            passwordField?.value
-          ) {
-            loginManagerChild._passwordEditedOrGenerated(
-              passwordField,
-              {
-                triggeredByFillingGenerated: docState.generatedPasswordFields.has(
-                  passwordField
-                ),
-              }
-            );
+          let [
+            usernameField,
+            passwordField,
+          ] = loginManagerChild.getUserNameAndPasswordFields(field);
+          if (field == usernameField && passwordField?.value) {
+            loginManagerChild._passwordEditedOrGenerated(passwordField, {
+              triggeredByFillingGenerated: docState.generatedPasswordFields.has(
+                passwordField
+              ),
+            });
           }
         }
         break;
@@ -522,7 +521,6 @@ const observer = {
 Services.obs.addObserver(observer, "autocomplete-did-enter-text");
 
 this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
-
   /**
    * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
    *
@@ -583,7 +581,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     triggeredByFillingGenerated = false
   ) {
     let state = this.stateForDocument(formLikeRoot.ownerDocument);
-    const lastSentValues = state.lastSubmittedValuesByRootElement.get(formLikeRoot);
+    const lastSentValues = state.lastSubmittedValuesByRootElement.get(
+      formLikeRoot
+    );
     if (lastSentValues) {
       if (dismissed && !lastSentValues.dismissed) {
         // preserve previous dismissed value if it was false (i.e. shown/open)
@@ -593,7 +593,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         lastSentValues.username == usernameValue &&
         lastSentValues.password == passwordValue &&
         lastSentValues.dismissed == dismissed &&
-        lastSentValues.triggeredByFillingGenerated == triggeredByFillingGenerated
+        lastSentValues.triggeredByFillingGenerated ==
+          triggeredByFillingGenerated
       ) {
         log(
           "_compareAndUpdatePreviouslySentValues: values are equivalent, returning true"
@@ -821,7 +822,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     );
 
     for (let rootElement of weakModificationsRootElements) {
-      if (rootElement instanceof HTMLFormElement) {
+      if (HTMLFormElement.isInstance(rootElement)) {
         // If we create formLike when it is removed, we might not have the
         // right elements at that point, so create formLike object now.
         let formLike = LoginFormFactory.createFromForm(rootElement);
@@ -1241,7 +1242,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     if (!originMatches) {
       if (
         LoginHelper.getLoginOrigin(inputElement.ownerDocument.documentURI) !=
-          loginFormOrigin
+        loginFormOrigin
       ) {
         log(
           "fillForm: The requested origin doesn't match the one from the",
@@ -1333,9 +1334,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     // This is probably a bit over-conservatative.
-    if (
-      !(acInputField.ownerDocument instanceof Document)
-    ) {
+    if (!Document.isInstance(acInputField.ownerDocument)) {
       return;
     }
 
@@ -1434,7 +1433,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     for (let i = 0; i < form.elements.length; i++) {
       let element = form.elements[i];
       if (
-        !(element instanceof HTMLInputElement) ||
+        !HTMLInputElement.isInstance(element) ||
         !element.hasBeenTypePassword ||
         (!element.isConnected && !ignoreConnect)
       ) {
@@ -2469,7 +2468,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       style = null,
     } = {}
   ) {
-    if (form instanceof HTMLFormElement) {
+    if (HTMLFormElement.isInstance(form)) {
       throw new Error("_fillForm should only be called with LoginForm objects");
     }
 
@@ -2950,7 +2949,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    */
   getUserNameAndPasswordFields(aField) {
     let noResult = [null, null, null];
-    if (!(aField instanceof HTMLInputElement)) {
+    if (!HTMLInputElement.isInstance(aField)) {
       throw new Error("getUserNameAndPasswordFields: input element required");
     }
 
@@ -2993,7 +2992,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   getFieldContext(aField) {
     // If the element is not a proper form field, return null.
     if (
-      !(aField instanceof HTMLInputElement) ||
+      !HTMLInputElement.isInstance(aField) ||
       (!aField.hasBeenTypePassword &&
         !LoginHelper.isUsernameFieldType(aField)) ||
       aField.nodePrincipal.isNullPrincipal ||
@@ -3056,7 +3055,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    *                    username-only form).
    */
   getUsernameFieldFromUsernameOnlyForm(formElement, recipe = null) {
-    if (!(formElement instanceof HTMLFormElement)) {
+    if (!HTMLFormElement.isInstance(formElement)) {
       return null;
     }
 
