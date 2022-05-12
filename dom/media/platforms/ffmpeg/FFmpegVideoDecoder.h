@@ -148,6 +148,11 @@ class FFmpegVideoDecoder<LIBAV_VER>
   int mDecodedFrames;
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   int mDecodedFramesLate;
+  // Tracks when decode time of recent frame and averange decode time of
+  // previous frames is bigger than frame interval,
+  // i.e. we fail to decode in time.
+  // We switch to SW decode when we hit HW_DECODE_LATE_FRAMES treshold.
+  int mMissedDecodeInAverangeTime;
 #endif
   float mAverangeDecodeTime;
 

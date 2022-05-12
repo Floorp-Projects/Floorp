@@ -11482,6 +11482,7 @@ void Document::Destroy() {
   }
 
   if (IsStaticDocument()) {
+    RemoveProperty(nsGkAtoms::printisfocuseddoc);
     RemoveProperty(nsGkAtoms::printselectionranges);
   }
 
@@ -13118,11 +13119,39 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
 static void CachePrintSelectionRanges(const Document& aSourceDoc,
                                       Document& aStaticClone) {
   MOZ_ASSERT(aStaticClone.IsStaticDocument());
+  MOZ_ASSERT(!aStaticClone.GetProperty(nsGkAtoms::printisfocuseddoc));
   MOZ_ASSERT(!aStaticClone.GetProperty(nsGkAtoms::printselectionranges));
+
+  bool sourceDocIsStatic = aSourceDoc.IsStaticDocument();
+
+  // When the user opts to "Print Selection Only", the print code prefers any
+  // selection in the static clone corresponding to the focused frame. If this
+  // is that static clone, flag it for the printing code:
+  const bool isFocusedDoc = [&] {
+    if (sourceDocIsStatic) {
+      return bool(aSourceDoc.GetProperty(nsGkAtoms::printisfocuseddoc));
+    }
+    nsPIDOMWindowOuter* window = aSourceDoc.GetWindow();
+    if (!window) {
+      return false;
+    }
+    nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
+    if (!rootWindow) {
+      return false;
+    }
+    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+    nsFocusManager::GetFocusedDescendant(rootWindow,
+                                         nsFocusManager::eIncludeAllDescendants,
+                                         getter_AddRefs(focusedWindow));
+    return focusedWindow && focusedWindow->GetExtantDoc() == &aSourceDoc;
+  }();
+  if (isFocusedDoc) {
+    aStaticClone.SetProperty(nsGkAtoms::printisfocuseddoc,
+                             reinterpret_cast<void*>(true));
+  }
 
   const Selection* origSelection = nullptr;
   const nsTArray<RefPtr<nsRange>>* origRanges = nullptr;
-  bool sourceDocIsStatic = aSourceDoc.IsStaticDocument();
 
   if (sourceDocIsStatic) {
     origRanges = static_cast<nsTArray<RefPtr<nsRange>>*>(

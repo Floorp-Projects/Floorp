@@ -206,15 +206,14 @@ static bool IsParentAFrameSet(nsIDocShell* aParent) {
  * @param aPrintData nsPrintData for the current print, must not be null.
  */
 static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
-                                    const RefPtr<Document>& aFocusedDoc,
                                     RefPtr<nsPrintData>& aPrintData) {
   MOZ_ASSERT(aParentPO);
   MOZ_ASSERT(aPrintData);
 
-  // If aParentPO is for an iframe and its original document is focusedDoc then
-  // always set as the selection root.
+  // If aParentPO is for an iframe and its original document was the document
+  // that had focus then always set as the selection root.
   if (aParentPO->mFrameType == eIFrame &&
-      aParentPO->mDocument->GetOriginalDocument() == aFocusedDoc) {
+      aParentPO->mDocument->GetProperty(nsGkAtoms::printisfocuseddoc)) {
     aPrintData->mSelectionRoot = aParentPO.get();
   } else if (!aPrintData->mSelectionRoot && aParentPO->HasSelection()) {
     // If there is no focused iframe but there is a selection in one or more
@@ -255,7 +254,7 @@ static void BuildNestedPrintObjects(const UniquePtr<nsPrintObject>& aParentPO,
     }
 
     aPrintData->mPrintDocList.AppendElement(childPO.get());
-    BuildNestedPrintObjects(childPO, aFocusedDoc, aPrintData);
+    BuildNestedPrintObjects(childPO, aPrintData);
     aParentPO->mKids.AppendElement(std::move(childPO));
   }
 }
@@ -496,9 +495,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintProgressListeners.AppendObject(aWebProgressListener);
   }
 
-  // Get the document from the currently focused window.
-  RefPtr<Document> focusedDoc = FindFocusedDocument(aDoc);
-
   // Get the docshell for this documentviewer
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -522,7 +518,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     printData->mPrintObject->mFrameType =
         printData->mIsParentAFrameSet ? eFrameSet : eDoc;
 
-    BuildNestedPrintObjects(printData->mPrintObject, focusedDoc, printData);
+    BuildNestedPrintObjects(printData->mPrintObject, printData);
   }
 
   // The nsAutoScriptBlocker above will now have been destroyed, which may
@@ -2072,47 +2068,6 @@ void nsPrintJob::SetIsPrintPreview(bool aIsPrintPreview) {
   if (mDocViewerPrint) {
     mDocViewerPrint->SetIsPrintPreview(aIsPrintPreview);
   }
-}
-
-Document* nsPrintJob::FindFocusedDocument(Document* aDoc) const {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE(fm, nullptr);
-
-  nsPIDOMWindowOuter* window = aDoc->GetOriginalDocument()->GetWindow();
-  NS_ENSURE_TRUE(window, nullptr);
-
-  nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
-  NS_ENSURE_TRUE(rootWindow, nullptr);
-
-  nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  nsFocusManager::GetFocusedDescendant(rootWindow,
-                                       nsFocusManager::eIncludeAllDescendants,
-                                       getter_AddRefs(focusedWindow));
-  NS_ENSURE_TRUE(focusedWindow, nullptr);
-
-  if (IsWindowsInOurSubTree(focusedWindow)) {
-    return focusedWindow->GetDoc();
-  }
-
-  return nullptr;
-}
-
-//---------------------------------------------------------------------
-bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
-  if (window) {
-    nsCOMPtr<nsIDocShell> ourDocShell(do_QueryReferent(mDocShell));
-    if (ourDocShell) {
-      BrowsingContext* ourBC = ourDocShell->GetBrowsingContext();
-      BrowsingContext* bc = window->GetBrowsingContext();
-      while (bc) {
-        if (bc == ourBC) {
-          return true;
-        }
-        bc = bc->GetParent();
-      }
-    }
-  }
-  return false;
 }
 
 //-------------------------------------------------------
