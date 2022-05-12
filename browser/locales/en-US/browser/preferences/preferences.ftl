@@ -1444,10 +1444,10 @@ move-tabbar-position =
  .label = Move the tab bar position to below the bookmark
 
 enable-classic-menu = 
- .label = Menu button to classic view
+ .label = classic menu button (Not compatible with Linux Gnome UI)
 
 treestyletabSettings-l10 = Tree Style vertical tab settings
-treestyletab-Settings = Change the behavior of tree-type tabs so that they expand when the focus is on them.
+treestyletab-Settings = Expand when mouse focus
 
 bookmarks-bar-settings = Bookmark Bar Settings
 bookmarks-focus-mode = Show the bookmark bar when the mouse is focused on the toolbar
@@ -1478,7 +1478,7 @@ system-theme-light =
  .label = Enforce light mode
  
 system-theme-auto =  
- .label = Follow the system
+ .label = Default mode
 
 ## user interface prefernces
 
@@ -1500,3 +1500,6 @@ floorp-legacy =
 
 floorp-fluentUI =
  .label = fluentUI
+
+floorp-gnomeUI =
+ .label = Gnome Theme

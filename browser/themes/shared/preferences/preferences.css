@@ -15,6 +15,29 @@
   content: url("chrome://mozapps/content/extensions/default-theme/preview.svg");
 }
 
+@media (-moz-platform: linux) {
+  #noUpdatesFound,
+  #floorp-update-latest,
+  #update-settings,
+  #floorp-updater,
+  #updateSettingsContainer,
+  #updateAllowDescription,
+  #updateBox,
+  #showUpdatePrompts,
+  #setDefaultPane,
+  #Windows-only,
+  .update-settings
+  {
+    display: none !important;
+  }
+}
+
+@media (-moz-platform: win){
+  #Linux-only{
+    display: none !important;
+  }
+}
+
 #floorplegacy {
   display: block;
   margin: 0 auto;
