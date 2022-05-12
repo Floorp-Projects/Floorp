@@ -49,10 +49,10 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys();
     }                                                \
   }
 
-extern bool EnsureNSSInitializedChromeOrContent();
-extern bool HandleTLSPrefChange(const nsCString& aPref);
-extern void SetValidationOptionsCommon();
-extern void NSSShutdownForSocketProcess();
+bool EnsureNSSInitializedChromeOrContent();
+bool HandleTLSPrefChange(const nsCString& aPref);
+void SetValidationOptionsCommon();
+void NSSShutdownForSocketProcess();
 
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsINSSComponent, public nsIObserver {

@@ -43,9 +43,9 @@
        let access_sysex = await navigator.requestMIDIAccess({ "sysex": true });
        ok(true, "MIDI Access Request successful");
        ok(true, "Check for sysex message drop");
-       input = access_regular.inputs.get(MIDITestUtils.inputInfo.id);
-       output = access_sysex.outputs.get(MIDITestUtils.outputInfo.id);
-       input_sysex = access_sysex.inputs.get(MIDITestUtils.inputInfo.id);
+       input = access_regular.inputs.get(await MIDITestUtils.inputInfo.id);
+       output = access_sysex.outputs.get(await MIDITestUtils.outputInfo.id);
+       input_sysex = access_sysex.inputs.get(await MIDITestUtils.inputInfo.id);
        input_sysex.onmidimessage = checkSysexReceive;
        input.onmidimessage = checkNoSysexReceive;
        output.send([0xF0, 0x00, 0xF7]);

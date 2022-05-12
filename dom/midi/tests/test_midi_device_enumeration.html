@@ -11,9 +11,9 @@
     <script class="testbody" type="application/javascript">
      SimpleTest.waitForExplicitFinish();
 
-     let objectCompare = (type, props, obj) => {
+     let objectCompare = async (type, props, obj) => {
        for (var prop in props) {
-         is(props[prop], obj[prop], type + " property value " + prop + " is " + props[prop]);
+         is(await props[prop], obj[prop], type + " property value " + prop + " is " + props[prop]);
        }
      };
      let failOnCall = (event) => {
@@ -26,8 +26,8 @@
        ok(true, "MIDI Access Request successful");
        is(access.sysexEnabled, false, "Sysex should be false");
        access.addEventListener("statechange", failOnCall);
-       var input_id = MIDITestUtils.inputInfo.id;
-       var output_id = MIDITestUtils.outputInfo.id;
+       var input_id = await MIDITestUtils.inputInfo.id;
+       var output_id = await MIDITestUtils.outputInfo.id;
        var inputs = access.inputs;
        var outputs = access.outputs;
        is(inputs.size, 1, "Should have one input");
@@ -36,8 +36,8 @@
        ok(outputs.has(output_id), "output list should contain output id");
        var input = access.inputs.get(input_id);
        var output = access.outputs.get(output_id);
-       objectCompare("input", MIDITestUtils.inputInfo, input);
-       objectCompare("output", MIDITestUtils.outputInfo, output);
+       await objectCompare("input", MIDITestUtils.inputInfo, input);
+       await objectCompare("output", MIDITestUtils.outputInfo, output);
        access.removeEventListener("statechange", failOnCall);
        SimpleTest.finish();
      };
