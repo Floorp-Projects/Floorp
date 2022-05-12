@@ -141,21 +141,19 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
       case 0:
         sb->SetIncrementToLine(direction);
         if (m) {
-          m->ScrollByLine(sb, direction, ScrollSnapFlags::IntendedDirection);
+          m->ScrollByLine(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
         }
         break;
       case 1:
         sb->SetIncrementToPage(direction);
         if (m) {
-          m->ScrollByPage(sb, direction,
-                          ScrollSnapFlags::IntendedDirection |
-                              ScrollSnapFlags::IntendedEndPosition);
+          m->ScrollByPage(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
         }
         break;
       case 2:
         sb->SetIncrementToWhole(direction);
         if (m) {
-          m->ScrollByWhole(sb, direction, ScrollSnapFlags::IntendedEndPosition);
+          m->ScrollByWhole(sb, direction, nsIScrollbarMediator::ENABLE_SNAP);
         }
         break;
       case 3:

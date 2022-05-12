@@ -689,11 +689,6 @@ class AsyncPanZoomController {
 
   CSSPoint GetKeyboardDestination(const KeyboardScrollAction& aAction) const;
 
-  // Returns the corresponding ScrollSnapFlags for the given |aAction|.
-  // See https://drafts.csswg.org/css-scroll-snap/#scroll-types
-  ScrollSnapFlags GetScrollSnapFlagsForKeyboardAction(
-      const KeyboardScrollAction& aAction) const;
-
   /**
    * Helper methods for long press gestures.
    */
@@ -1790,7 +1785,6 @@ class AsyncPanZoomController {
   // GetSnapPointForDestination).
   // Returns true iff. a target snap point was found.
   bool MaybeAdjustDeltaForScrollSnapping(ScrollUnit aUnit,
-                                         ScrollSnapFlags aFlags,
                                          ParentLayerPoint& aDelta,
                                          CSSPoint& aStartPosition);
 
@@ -1801,18 +1795,17 @@ class AsyncPanZoomController {
       CSSPoint& aStartPosition);
 
   bool MaybeAdjustDestinationForScrollSnapping(const KeyboardInput& aEvent,
-                                               CSSPoint& aDestination,
-                                               ScrollSnapFlags aSnapFlags);
+                                               CSSPoint& aDestination);
 
   // Snap to a snap position nearby the current scroll position, if appropriate.
-  void ScrollSnap(ScrollSnapFlags aSnapFlags);
+  void ScrollSnap();
 
   // Snap to a snap position nearby the destination predicted based on the
   // current velocity, if appropriate.
   void ScrollSnapToDestination();
 
   // Snap to a snap position nearby the provided destination, if appropriate.
-  void ScrollSnapNear(const CSSPoint& aDestination, ScrollSnapFlags aSnapFlags);
+  void ScrollSnapNear(const CSSPoint& aDestination);
 
   // Find a snap point near |aDestination| that we should snap to.
   // Returns the snap point if one was found, or an empty Maybe otherwise.
@@ -1820,8 +1813,7 @@ class AsyncPanZoomController {
   // GetSnapPointForDestination). It should generally be determined by the
   // type of event that's triggering the scroll.
   Maybe<CSSPoint> FindSnapPointNear(const CSSPoint& aDestination,
-                                    ScrollUnit aUnit,
-                                    ScrollSnapFlags aSnapFlags);
+                                    ScrollUnit aUnit);
 
   friend std::ostream& operator<<(
       std::ostream& aOut, const AsyncPanZoomController::PanZoomState& aState);

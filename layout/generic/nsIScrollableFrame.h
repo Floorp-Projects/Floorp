@@ -261,11 +261,12 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Any point within this area can be chosen.
    * The choosen point will be as close as possible to aScrollPosition.
    */
-  virtual void ScrollTo(
-      nsPoint aScrollPosition, ScrollMode aMode, const nsRect* aRange = nullptr,
-      mozilla::ScrollSnapFlags aSnapFlags = mozilla::ScrollSnapFlags::Disabled,
-      mozilla::ScrollTriggeredByScript aTriggeredByScript =
-          mozilla::ScrollTriggeredByScript::No) = 0;
+  virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
+                        const nsRect* aRange = nullptr,
+                        nsIScrollbarMediator::ScrollSnapMode aSnap =
+                            nsIScrollbarMediator::DISABLE_SNAP,
+                        mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                            mozilla::ScrollTriggeredByScript::No) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in integer CSS pixels.
@@ -315,8 +316,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
                         ScrollMode aMode, nsIntPoint* aOverflow = nullptr,
                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
                         ScrollMomentum aMomentum = NOT_MOMENTUM,
-                        mozilla::ScrollSnapFlags aSnapFlags =
-                            mozilla::ScrollSnapFlags::Disabled) = 0;
+                        nsIScrollbarMediator::ScrollSnapMode aSnap =
+                            nsIScrollbarMediator::DISABLE_SNAP) = 0;
 
   virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                                  ScrollMode aMode = ScrollMode::Instant) = 0;
