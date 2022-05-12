@@ -111,27 +111,17 @@ void CalcSnapPoints::AddEdge(nscoord aEdge, nscoord aDestination,
                              nscoord aStartPos, nscoord aScrollingDirection,
                              nscoord* aBestEdge, nscoord* aSecondBestEdge,
                              bool* aEdgeFound) {
-  // ScrollUnit::DEVICE_PIXELS indicates that we are releasing a drag
-  // gesture or any other user input event that sets an absolute scroll
-  // position.  In this case, scroll snapping is expected to travel in any
-  // direction.  Otherwise, we will restrict the direction of the scroll
-  // snapping movement based on aScrollingDirection.
-  if (mUnit != ScrollUnit::DEVICE_PIXELS) {
-    // Unless DEVICE_PIXELS, we only want to snap to points ahead of the
-    // direction we are scrolling
-    if (aScrollingDirection == 0) {
-      // The scroll direction is neutral - will not hit a snap point.
-      return;
-    }
-
-    // Direction of the edge from the current position (before scrolling) in
-    // the direction of scrolling
-    nscoord direction = (aEdge - aStartPos) * aScrollingDirection;
-    if (direction <= 0) {
-      // The edge is not in the direction we are scrolling, skip it.
+  if (mSnapFlags & ScrollSnapFlags::IntendedDirection) {
+    // In the case of intended direction, we only want to snap to points ahead
+    // of the direction we are scrolling.
+    if (aScrollingDirection == 0 ||
+        (aEdge - aStartPos) * aScrollingDirection <= 0) {
+      // The scroll direction is neutral - will not hit a snap point, or the
+      // edge is not in the direction we are scrolling, skip it.
       return;
     }
   }
+
   if (!*aEdgeFound) {
     *aBestEdge = aEdge;
     *aEdgeFound = true;
