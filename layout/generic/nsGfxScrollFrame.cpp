@@ -4758,11 +4758,18 @@ nsRect ScrollFrameHelper::GetVisualOptimalViewingRect() const {
   return rect;
 }
 
-static void AdjustForWholeDelta(int32_t aDelta, nscoord* aCoord) {
-  if (aDelta < 0) {
-    *aCoord = nscoord_MIN;
-  } else if (aDelta > 0) {
-    *aCoord = nscoord_MAX;
+static void AdjustDestinationForWholeDelta(const nsIntPoint& aDelta,
+                                           const nsRect& aScrollRange,
+                                           nsPoint& aPoint) {
+  if (aDelta.x < 0) {
+    aPoint.x = aScrollRange.X();
+  } else if (aDelta.x > 0) {
+    aPoint.x = aScrollRange.XMost();
+  }
+  if (aDelta.y < 0) {
+    aPoint.y = aScrollRange.Y();
+  } else if (aDelta.y > 0) {
+    aPoint.y = aScrollRange.YMost();
   }
 }
 
@@ -4869,8 +4876,7 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
         break;
       } else {
         nsPoint pos = GetScrollPosition();
-        AdjustForWholeDelta(aDelta.x, &pos.x);
-        AdjustForWholeDelta(aDelta.y, &pos.y);
+        AdjustDestinationForWholeDelta(aDelta, GetLayoutScrollRange(), pos);
         if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
           GetSnapPointForDestination(aUnit, mDestination, pos);
         }
