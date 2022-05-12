@@ -9989,6 +9989,7 @@ const PhotonUI = `@import url(chrome://browser/skin/photon/photonChrome.css);
 const MaterialUI = `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`
 const fluentUI = `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`
 const gnomeUI = `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`
+const WebkitUI = `@import url(chrome://browser/skin/webkitUI/webkitUI.css);`
 
 switch(floorpinterfacenum){
 
@@ -10024,13 +10025,20 @@ switch(floorpinterfacenum){
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
 
-    case 6:
-      if (AppConstants.platform == "linux"){
-      var Tag = document.createElement('style');
-      Tag.innerText = gnomeUI;
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
-      }
-      break;
+  case 6:
+     if (AppConstants.platform == "linux"){
+     var Tag = document.createElement('style');
+     Tag.innerText = gnomeUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     }
+    break;
+
+  case 7:
+     var Tag = document.createElement('style');
+     Tag.innerText = WebkitUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+  break;
+  
 }
 
 
