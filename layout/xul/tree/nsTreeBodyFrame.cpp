@@ -3873,15 +3873,15 @@ nsresult nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts,
 
 void nsTreeBodyFrame::ScrollByPage(nsScrollbarFrame* aScrollbar,
                                    int32_t aDirection,
-                                   nsIScrollbarMediator::ScrollSnapMode aSnap) {
+                                   ScrollSnapFlags aSnapFlags) {
   // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr);
   ScrollByPages(aDirection);
 }
 
-void nsTreeBodyFrame::ScrollByWhole(
-    nsScrollbarFrame* aScrollbar, int32_t aDirection,
-    nsIScrollbarMediator::ScrollSnapMode aSnap) {
+void nsTreeBodyFrame::ScrollByWhole(nsScrollbarFrame* aScrollbar,
+                                    int32_t aDirection,
+                                    ScrollSnapFlags aSnapFlags) {
   // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr);
   int32_t newIndex = aDirection < 0 ? 0 : mTopRowIndex;
@@ -3890,16 +3890,15 @@ void nsTreeBodyFrame::ScrollByWhole(
 
 void nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
                                    int32_t aDirection,
-                                   nsIScrollbarMediator::ScrollSnapMode aSnap) {
+                                   ScrollSnapFlags aSnapFlags) {
   // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr);
   ScrollByLines(aDirection);
 }
 
-void nsTreeBodyFrame::ScrollByUnit(nsScrollbarFrame* aScrollbar,
-                                   ScrollMode aMode, int32_t aDirection,
-                                   ScrollUnit aUnit,
-                                   ScrollSnapMode aSnap /* = DISABLE_SNAP */) {
+void nsTreeBodyFrame::ScrollByUnit(
+    nsScrollbarFrame* aScrollbar, ScrollMode aMode, int32_t aDirection,
+    ScrollUnit aUnit, ScrollSnapFlags aSnapFlags /* = Disabled */) {
   MOZ_ASSERT_UNREACHABLE("Can't get here, we pass false to MoveToNewPosition");
 }
 
