@@ -549,6 +549,10 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           RTC_LOG(WARNING) << "Inband comfort noise extension unsupported by "
                               "rtp header parser.";
           break;
+        case kRtpExtensionVideoFrameTrackingId:
+          RTC_LOG(WARNING)
+              << "VideoFrameTrackingId unsupported by rtp header parser.";
+          break;
         case kRtpExtensionCsrcAudioLevel: {
           auto& levels = header->extension.csrcAudioLevels;
           levels.numAudioLevels = static_cast<uint8_t>(len + 1);

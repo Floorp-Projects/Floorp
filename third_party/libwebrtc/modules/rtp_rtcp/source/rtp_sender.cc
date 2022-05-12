@@ -121,6 +121,7 @@ bool IsNonVolatile(RTPExtensionType type) {
     case kRtpExtensionVideoTiming:
     case kRtpExtensionRepairedRtpStreamId:
     case kRtpExtensionColorSpace:
+    case kRtpExtensionVideoFrameTrackingId:
       return false;
     case kRtpExtensionNone:
     case kRtpExtensionNumberOfExtensions:
