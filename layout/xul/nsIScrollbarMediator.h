@@ -31,7 +31,6 @@ class nsIScrollbarMediator : public nsQueryFrame {
    * In case of DEFAULT, it means ENABLE_SNAP for CSS scroll snap v1,
    * DISABLE_SNAP for the old scroll snap.
    */
-  enum ScrollSnapMode { DEFAULT, DISABLE_SNAP, ENABLE_SNAP };
 
   /**
    * One of the following three methods is called when the scrollbar's button is
@@ -39,17 +38,21 @@ class nsIScrollbarMediator : public nsQueryFrame {
    * @note These methods might destroy the frame, pres shell, and other objects.
    */
   virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+                            mozilla::ScrollSnapFlags aSnapFlags =
+                                mozilla::ScrollSnapFlags::Disabled) = 0;
   virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                             ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+                             mozilla::ScrollSnapFlags aSnapFlags =
+                                 mozilla::ScrollSnapFlags::Disabled) = 0;
   virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
-                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+                            mozilla::ScrollSnapFlags aSnapFlags =
+                                mozilla::ScrollSnapFlags::Disabled) = 0;
 
   // Only implemented for nsGfxScrollFrame, not nsTreeBodyFrame.
   virtual void ScrollByUnit(nsScrollbarFrame* aScrollbar,
                             mozilla::ScrollMode aMode, int32_t aDirection,
                             mozilla::ScrollUnit aUnit,
-                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+                            mozilla::ScrollSnapFlags aSnapFlags =
+                                mozilla::ScrollSnapFlags::Disabled) = 0;
 
   /**
    * RepeatButtonScroll is called when the scrollbar's button is held down. When
