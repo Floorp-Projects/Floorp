@@ -7356,6 +7356,171 @@ credit_cards:
       tags:
         - Autofill
 
+addresses:
+  saved:
+    type: counter
+    description: |
+      A counter of the number of addresses that have been saved
+      manually by the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  updated:
+    type: counter
+    description: |
+      A counter of the number of addresses that have been updated
+      manually by the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  deleted:
+    type: counter
+    description: |
+      A counter of the number of addresses that have been deleted by
+      the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  form_detected:
+    type: event
+    description: |
+      A address form was detected.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18711
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  autofilled:
+    type: event
+    description: |
+      User has autofilled an address.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18711
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  autofill_prompt_shown:
+    type: event
+    description: |
+      Address autofill prompt was shown.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  autofill_prompt_expanded:
+    type: event
+    description: |
+      Address autofill prompt was expanded.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  autofill_prompt_dismissed:
+    type: event
+    description: |
+      Address autofill prompt was dismissed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  management_add_tapped:
+    type: event
+    description: |
+      User has tapped the add button through address management settings.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/20909
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+  management_address_tapped:
+    type: event
+    description: |
+      User has tapped on a saved address through address management settings.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24857
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/25216
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 105
+    metadata:
+      tags:
+        - Autofill
+
 search_terms:
   number_of_search_term_group:
     type: event
