@@ -124,8 +124,9 @@ async function handlePopup() {
 
     // Check that the English dictionary is loaded and that the spell check has worked.
     is(currentDictionaries.length, 2, "expected two dictionaries");
-    is(currentDictionaries[0], "de-DE", "expected de-DE");
-    is(currentDictionaries[1], "en-US", "expected en-US");
+    let dictionaryArray = Array.from(currentDictionaries);
+    ok(dictionaryArray.includes("de-DE"), "expected de-DE");
+    ok(dictionaryArray.includes("en-US"), "expected en-US");
     is(getMisspelledWords(editor_de), "", "No misspelled words expected");
 
     // Remove the fake de_DE dictionary again.
