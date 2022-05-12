@@ -33,6 +33,13 @@ class AboutPrivateBrowsingChild extends RemotePageChild {
       defineAs: "PrivateBrowsingRecordClick",
     });
     Cu.exportFunction(
+      this.PrivateBrowsingShouldHideDefault.bind(this),
+      window,
+      {
+        defineAs: "PrivateBrowsingShouldHideDefault",
+      }
+    );
+    Cu.exportFunction(
       this.PrivateBrowsingExposureTelemetry.bind(this),
       window,
       { defineAs: "PrivateBrowsingExposureTelemetry" }
@@ -47,6 +54,12 @@ class AboutPrivateBrowsingChild extends RemotePageChild {
     if (experiment) {
       Services.telemetry.recordEvent("aboutprivatebrowsing", "click", source);
     }
+    return experiment;
+  }
+
+  PrivateBrowsingShouldHideDefault() {
+    const config = NimbusFeatures.pbNewtab.getAllVariables() || {};
+    return config?.content?.hideDefault;
   }
 
   PrivateBrowsingExposureTelemetry() {
