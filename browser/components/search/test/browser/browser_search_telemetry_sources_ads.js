@@ -175,10 +175,17 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
       "http://mochi.test:8888"
     ) + "slow_loading_page_with_ads.html";
 
-  let observeAdPreviouslyRecorded = TestUtils.consoleMessageObserved(msg => {
-    return msg.wrappedJSObject.arguments[0].includes(
-      "Ad was previously reported for browser with URI"
-    );
+  let observeAdPreviouslyRecorded = new Promise(resolve => {
+    Services.obs.addObserver(function onRemove(subj, topic, data) {
+      let msg = subj.wrappedJSObject;
+      let msgContents = msg.arguments[0]?.message || msg.arguments[0];
+
+      if (msgContents == "Ad was previously reported for browser with URI") {
+        Assert.ok(true, "Expected console message: " + msgContents);
+        Services.obs.removeObserver(onRemove, "console-api-log-event");
+        resolve();
+      }
+    }, "console-api-log-event");
   });
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
