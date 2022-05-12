@@ -28,16 +28,12 @@ function KeyBundle() {
   this._encryptB64 = null;
   this._hmac = null;
   this._hmacB64 = null;
-  this._hmacObj = null;
-  this._sha256HMACHasher = null;
 }
 KeyBundle.prototype = {
   _encrypt: null,
   _encryptB64: null,
   _hmac: null,
   _hmacB64: null,
-  _hmacObj: null,
-  _sha256HMACHasher: null,
 
   equals: function equals(bundle) {
     return (
@@ -86,22 +82,10 @@ KeyBundle.prototype = {
 
     this._hmac = value;
     this._hmacB64 = btoa(value);
-    this._hmacObj = value ? Utils.makeHMACKey(value) : null;
-    this._sha256HMACHasher = value
-      ? Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, this._hmacObj)
-      : null;
   },
 
   get hmacKeyB64() {
     return this._hmacB64;
-  },
-
-  get hmacKeyObject() {
-    return this._hmacObj;
-  },
-
-  get sha256HMACHasher() {
-    return this._sha256HMACHasher;
   },
 
   /**
