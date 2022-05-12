@@ -49,7 +49,7 @@ function handleRequest(request, response) {
       throw new Error("Couldn't parse auth header: " + authHeader);
     }
     /* eslint-disable-next-line no-use-before-define */
-    let userpass = base64ToString(match[1]); // no atob() :-(
+    let userpass = atob(match[1]);
     match = /(.*):(.*)/.exec(userpass);
     if (match.length != 3) {
       throw new Error("Couldn't decode auth header: " + userpass);
@@ -103,39 +103,3 @@ const toBinaryTable = [
 /* eslint-enable prettier/prettier */
 const base64Pad = "=";
 
-function base64ToString(data) {
-  let result = "";
-  let leftbits = 0; // number of bits decoded, but yet to be appended
-  let leftdata = 0; // bits decoded, but yet to be appended
-
-  // Convert one by one.
-  for (let i = 0; i < data.length; i++) {
-    let c = toBinaryTable[data.charCodeAt(i) & 0x7f];
-    let padding = data[i] == base64Pad;
-    // Skip illegal characters and whitespace
-    if (c == -1) {
-      continue;
-    }
-
-    // Collect data into leftdata, update bitcount
-    leftdata = (leftdata << 6) | c;
-    leftbits += 6;
-
-    // If we have 8 or more bits, append 8 bits to the result
-    if (leftbits >= 8) {
-      leftbits -= 8;
-      // Append if not padding.
-      if (!padding) {
-        result += String.fromCharCode((leftdata >> leftbits) & 0xff);
-      }
-      leftdata &= (1 << leftbits) - 1;
-    }
-  }
-
-  // If there are any bits left, the base64 string was corrupted
-  if (leftbits) {
-    throw Components.Exception("Corrupted base64 string");
-  }
-
-  return result;
-}
