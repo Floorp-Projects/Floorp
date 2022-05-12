@@ -17,6 +17,7 @@
 
 # gnomeUI
 
+ skin/classic/browser/gnomeUI/gnomeUI.css                                                      (../shared/theme/gnomeUI/gnomeUI.css)
  skin/classic/browser/gnomeUI/icon.svg                                                         (../shared/theme/gnomeUI/icon.svg)
  skin/classic/browser/gnomeUI/window-maximize-symbolic.svg                                     (../shared/theme/gnomeUI/window-maximize-symbolic.svg)
  skin/classic/browser/gnomeUI/window-minimize-symbolic.svg                                     (../shared/theme/gnomeUI/window-minimize-symbolic.svg)

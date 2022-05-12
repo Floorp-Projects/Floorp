@@ -503,14 +503,14 @@
       </description>
       <description id="distribution" class="text-blurb" hidden="true"/>
       <description id="distributionId" class="text-blurb" hidden="true"/>
-      <label><html:h2 id="treestyletab" data-l10n-id="floorp-updater"/></label>
-  <hbox align="center" data-subcategory="cfrfeatures">
-    <description class="text-blurb"  data-l10n-id="enable-floorp-updater"></description>
+      <label><html:h2 id="treestyletab" class="update-settings" data-l10n-id="floorp-updater"/></label>
+  <hbox align="center" id="floorp-updater" data-subcategory="cfrfeatures">
+    <description class="text-blurb"  data-l10n-id="enable-floorp-updater" id="update-settings"></description>
     <checkbox id="treestyletabSettings" 
              preference="enable.floorp.update"/>
   </hbox>
-  <hbox align="center" data-subcategory="cfrfeatures">
-    <description class="text-blurb" data-l10n-id="floorp-update-latest"></description>
+  <hbox align="center" data-subcategory="cfrfeatures" id="floorp-updater">
+    <description class="text-blurb"  data-l10n-id="floorp-update-latest"></description>
     <checkbox id="MoveLevelTabBar" 
               preference="enable.floorp.updater.latest"/>
   </hbox>
@@ -935,11 +935,22 @@
         <div id="floorplegacy"></div>  
       </label>
 
+      
+      <div id="Windows-only">
       <radio value="5" class="themes" data-l10n-id="floorp-fluentUI"/>
       <label>
         <div id="fluentui"></div> 
       </label>
-    
+      </div>
+
+      <div id="Linux-only">
+ <!--only linux-->
+      <radio value="6" class="themes" data-l10n-id="floorp-gnomeUI"/>
+      <label>
+        <div id="gnomeUI"></div> 
+      </label>
+      </div>
+
     </radiogroup>
  </groupbox>
  
