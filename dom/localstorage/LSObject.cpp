@@ -149,7 +149,6 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   State mState;
   // Control flag for the nested event loop; once set to false, the loop ends.
   bool mWaiting;
-  bool mCancelled;
 
  public:
   RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
@@ -160,8 +159,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
         mParams(aParams),
         mResultCode(NS_OK),
         mState(State::Initial),
-        mWaiting(true),
-        mCancelled(false) {}
+        mWaiting(true) {}
 
   bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
@@ -1113,72 +1111,55 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
 
       nsCOMPtr<nsITimer> timer = NS_NewTimer();
 
-      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(mNestedEventTarget));
+      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(domFileThread));
+
       MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
           [](nsITimer* aTimer, void* aClosure) {
+            // The request is taking too much time. At this point we don't care
+            // about the result anymore so we can cancel the request.
+
+            // However, we don't abort the event loop spinning before the
+            // request is actually finished because that would cause races
+            // between the current thread and DOM File thread. Instead, we send
+            // the cancel message to the parent and wait for the request to
+            // finish like in the normal case when the request is successfully
+            // finished on time. OnResponse is called as the final step in both
+            // cases.
+
             auto helper = static_cast<RequestHelper*>(aClosure);
 
-            helper->mCancelled = true;
+            LSRequestChild* actor = helper->mActor;
+
+            // Start() could fail or OnResponse was already called, so we need
+            // to check if actor is not null. The actor can also be in the
+            // final (finishing) state, in that case we are not allowed to send
+            // the cancel message and it wouldn't make any sense because the
+            // request is about to be destroyed anyway.
+            if (actor && !actor->Finishing()) {
+              actor->SendCancel();
+            }
           },
           this, FAILSAFE_CANCEL_SYNC_OP_MS, nsITimer::TYPE_ONE_SHOT,
           "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
 
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
           "RequestHelper::StartAndReturnResponse"_ns,
-          [&]() {
-            if (mCancelled) {
-              return true;
-            }
-
-            if (!mWaiting) {
-              return true;
-            }
-
-            return false;
-          },
-          thread));
+          [&]() { return !mWaiting; }, thread));
 
       MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
     }
 
-    // If mWaiting is still set to true, it means that the event loop spinning
-    // was aborted and we need to cancel the request in the parent since we
-    // don't care about the result anymore.
-    // We can check mWaiting here because it's only ever touched on the main
-    // thread.
-    if (NS_WARN_IF(mWaiting)) {
-      // Don't touch mResponse, mResultCode or mState here! The
-      // RemoteLazyInputStream Thread may be accessing them at the same moment.
+    // We can touch all member variables (including mResponse, mResultCode or
+    // mState) here because the request must have been finished.
+    MOZ_ASSERT(mState == State::Complete);
 
-      RefPtr<RequestHelper> self = this;
+    // Additionally, mWaiting is only ever touched on the owning thread.
+    MOZ_ASSERT(!mWaiting);
 
-      RefPtr<Runnable> runnable =
-          NS_NewRunnableFunction("RequestHelper::SendCancelRunnable", [self]() {
-            LSRequestChild* actor = self->mActor;
-
-            // Start() could fail or it hasn't had a chance to run yet, so we
-            // need to check if actor is not null.
-            // The actor can also be in the final (finishing) state, in that
-            // case we are not allowed to send the cancel message and it
-            // wouldn't make sense because the request is about to be destroyed
-            // anyway.
-            if (actor && !actor->Finishing()) {
-              actor->SendCancel();
-            }
-          });
-
-      rv = domFileThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      return NS_ERROR_FAILURE;
-    }
-
-    // localExecution will be destructed when we leave this scope. If the event
-    // loop spinning was aborted and other threads dispatched new runnables to
-    // the nested event queue, they will be moved to the main event queue here
-    // and later asynchronusly processed.  So nothing will be lost.
+    // localExecution will be destructed when we leave this scope. We need to
+    // clear the nested event target before that happens, so we will know if
+    // something still tries to incorrectly dispatch runnables to it.
+    mNestedEventTarget = nullptr;
   }
 
   if (NS_WARN_IF(NS_FAILED(mResultCode))) {
