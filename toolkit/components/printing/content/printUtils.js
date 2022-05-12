@@ -72,6 +72,19 @@ var PrintUtils = {
     ));
   },
 
+  async checkForSelection(browsingContext) {
+    try {
+      let sourceActor = browsingContext.currentWindowGlobal.getActor(
+        "PrintingSelection"
+      );
+      // Need the await for the try to trigger...
+      return await sourceActor.sendQuery("PrintingSelection:HasSelection", {});
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return false;
+  },
+
   /**
    * Updates the hidden state of the "Page Setup" menu items in the File menu,
    * depending on the value of the `print.show_page_setup_menu` pref.
@@ -314,6 +327,11 @@ var PrintUtils = {
       }
 
       if (useSystemDialog) {
+        const hasSelection = await PrintUtils.checkForSelection(
+          browsingContext
+        );
+        settings.isPrintSelectionRBEnabled = hasSelection;
+
         // Prompt the user to choose a printer and make any desired print
         // settings changes.
         try {
