@@ -3055,7 +3055,6 @@ void MediaFormatReader::NotifyDataArrived() {
 }
 
 void MediaFormatReader::UpdateMediaEngineId(uint64_t aMediaEngineId) {
-  MOZ_ASSERT(OnTaskQueue());
   LOG("Update external media engine Id %" PRIu64, aMediaEngineId);
   mMediaEngineId = Some(aMediaEngineId);
 }
