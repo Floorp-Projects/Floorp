@@ -15,6 +15,7 @@ add_task(async function test_experiment_messaging_system() {
     id: "PB_NEWTAB_MESSAGING_SYSTEM",
     template: "pb_newtab",
     content: {
+      hideDefault: true,
       promoEnabled: true,
       infoEnabled: true,
       infoBody: "fluent:about-private-browsing-info-title",
@@ -27,22 +28,6 @@ add_task(async function test_experiment_messaging_system() {
     priority: 5,
     targeting: "true",
   });
-
-  await TestUtils.waitForCondition(() => {
-    Services.telemetry.clearEvents();
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).content;
-    info("waiting for events to clear, but:");
-    info(JSON.stringify(events));
-    return !events || !events.length;
-  }, "Waiting for telemetry events to get cleared");
-  Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    true
-  );
-  Services.telemetry.clearEvents();
 
   let { win, tab } = await openTabAndWaitForRender();
 
@@ -79,23 +64,6 @@ add_task(async function test_experiment_messaging_system() {
       "should open promo url in new tab"
     );
   });
-
-  await waitForTelemetryEvent("normandy");
-
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        method: "expose",
-        extra: {
-          featureId: "pbNewtab",
-        },
-      },
-    ],
-    { category: "normandy" },
-    { process: "content" }
-  );
-
-  Services.telemetry.clearEvents();
 
   await BrowserTestUtils.closeWindow(win);
   await doExperimentCleanup();
