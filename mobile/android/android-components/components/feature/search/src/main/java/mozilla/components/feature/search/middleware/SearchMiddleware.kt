@@ -28,10 +28,15 @@ import kotlin.coroutines.CoroutineContext
 /**
  * [Middleware] implementation for loading and saving [SearchEngine]s whenever the state changes.
  *
- * @param context The application context.
  * @param additionalBundledSearchEngineIds List of (bundled) search engine IDs that will be loaded
  * in addition to the search engines for the user's region and made available through
  * [SearchState.additionalSearchEngines] and [SearchState.additionalSearchEngines].
+ * @param migration Interface for a class that can provide data from a legacy system to be imported into the
+ * storage used by the middleware.
+ * @param customStorage A storage for custom search engines of the user.
+ * @param bundleStorage A storage for loading bundled search engines.
+ * @param metadataStorage A storage for saving additional metadata related to search.
+ * @param ioDispatcher The coroutine dispatcher to be used when loading.
  */
 @Suppress("LongParameterList")
 class SearchMiddleware(
@@ -41,7 +46,7 @@ class SearchMiddleware(
     private val customStorage: CustomStorage = CustomSearchEngineStorage(context),
     private val bundleStorage: BundleStorage = BundledSearchEnginesStorage(context),
     private val metadataStorage: MetadataStorage = SearchMetadataStorage(context),
-    private val ioDispatcher: CoroutineContext = Dispatchers.IO
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO,
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("SearchMiddleware")
     private val scope = CoroutineScope(ioDispatcher)

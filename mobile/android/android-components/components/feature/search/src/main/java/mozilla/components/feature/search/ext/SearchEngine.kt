@@ -42,6 +42,26 @@ fun createSearchEngine(
 }
 
 /**
+ * Creates an application [SearchEngine].
+ */
+fun createApplicationSearchEngine(
+    id: String? = null,
+    name: String,
+    url: String,
+    icon: Bitmap,
+    suggestUrl: String? = null,
+): SearchEngine {
+    return SearchEngine(
+        id = id ?: UUID.randomUUID().toString(),
+        name = name,
+        icon = icon,
+        type = SearchEngine.Type.APPLICATION,
+        resultUrls = listOf(url),
+        suggestUrl = suggestUrl,
+    )
+}
+
+/**
  * Whether this [SearchEngine] has a [SearchEngine.suggestUrl] set and can provide search
  * suggestions.
  */

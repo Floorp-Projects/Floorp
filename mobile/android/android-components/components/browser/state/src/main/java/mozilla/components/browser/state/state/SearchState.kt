@@ -13,6 +13,7 @@ import mozilla.components.browser.state.search.SearchEngine
  * @property region The region of the user.
  * @property regionSearchEngines The list of bundled [SearchEngine]s for the "home" region of the user.
  * @property customSearchEngines The list of custom [SearchEngine]s, added by the user.
+ * @property applicationSearchEngines The list of optional [SearchEngine]s, added by application.
  * @property additionalSearchEngines Additional [SearchEngine]s that the application decided to load
  * and that the user explicitly added to their list of search engines.
  * @property additionalAvailableSearchEngines Additional [SearchEngine]s that the application decided
@@ -33,6 +34,7 @@ data class SearchState(
     val region: RegionState? = null,
     val regionSearchEngines: List<SearchEngine> = emptyList(),
     val customSearchEngines: List<SearchEngine> = emptyList(),
+    val applicationSearchEngines: List<SearchEngine> = emptyList(),
     val additionalSearchEngines: List<SearchEngine> = emptyList(),
     val additionalAvailableSearchEngines: List<SearchEngine> = emptyList(),
     val hiddenSearchEngines: List<SearchEngine> = emptyList(),
@@ -47,7 +49,7 @@ data class SearchState(
  * The list of search engines to be used for searches (bundled and custom search engines).
  */
 val SearchState.searchEngines: List<SearchEngine>
-    get() = (regionSearchEngines + additionalSearchEngines + customSearchEngines)
+    get() = (regionSearchEngines + additionalSearchEngines + customSearchEngines + applicationSearchEngines)
 
 /**
  * The list of search engines that are available for the user to be added to their list of search

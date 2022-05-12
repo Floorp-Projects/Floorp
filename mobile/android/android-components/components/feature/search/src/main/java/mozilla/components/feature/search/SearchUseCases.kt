@@ -180,6 +180,8 @@ class SearchUseCases(
                 SearchEngine.Type.CUSTOM -> store.dispatch(
                     SearchAction.UpdateCustomSearchEngineAction(searchEngine)
                 )
+
+                SearchEngine.Type.APPLICATION -> { /* Do nothing */ }
             }
         }
     }
@@ -209,6 +211,8 @@ class SearchUseCases(
                 SearchEngine.Type.CUSTOM -> store.dispatch(
                     SearchAction.RemoveCustomSearchEngineAction(searchEngine.id)
                 )
+
+                SearchEngine.Type.APPLICATION -> { /* Do nothing */ }
             }
         }
     }

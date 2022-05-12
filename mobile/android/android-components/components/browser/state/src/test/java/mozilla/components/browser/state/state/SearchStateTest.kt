@@ -26,6 +26,9 @@ class SearchStateTest {
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
             ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
+            ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
             ),
@@ -59,6 +62,9 @@ class SearchStateTest {
             customSearchEngines = listOf(
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
+            ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
             ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
@@ -94,6 +100,9 @@ class SearchStateTest {
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
             ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
+            ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
             ),
@@ -127,6 +136,9 @@ class SearchStateTest {
             customSearchEngines = listOf(
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
+            ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
             ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
@@ -168,6 +180,9 @@ class SearchStateTest {
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
             ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
+            ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
             ),
@@ -184,7 +199,7 @@ class SearchStateTest {
         )
 
         val searchEngines = state.searchEngines
-        assertEquals(6, searchEngines.size)
+        assertEquals(7, searchEngines.size)
         assertEquals("engine-a", searchEngines[0].id)
         assertEquals("engine-b", searchEngines[1].id)
         assertEquals("engine-c", searchEngines[2].id)
@@ -205,6 +220,9 @@ class SearchStateTest {
             customSearchEngines = listOf(
                 SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                 SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
+            ),
+            applicationSearchEngines = listOf(
+                SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION),
             ),
             additionalSearchEngines = listOf(
                 SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)

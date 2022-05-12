@@ -46,6 +46,11 @@ data class SearchEngine(
          * A custom search engine added by the user.
          */
         CUSTOM,
+
+        /**
+         * A search engine add by the application.
+         */
+        APPLICATION,
     }
 
     // Cache these parameters to avoid repeated parsing.

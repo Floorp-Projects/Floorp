@@ -41,7 +41,7 @@ class HistoryStorageSuggestionProvider(
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icons: BrowserIcons? = null,
     internal val engine: Engine? = null,
-    @VisibleForTesting internal val maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
+    @VisibleForTesting internal var maxNumberOfSuggestions: Int = DEFAULT_HISTORY_SUGGESTION_LIMIT,
     private val showEditSuggestion: Boolean = true,
 ) : AwesomeBar.SuggestionProvider {
 
@@ -62,6 +62,24 @@ class HistoryStorageSuggestionProvider(
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
 
         return suggestions.into(this, icons, loadUrlUseCase, showEditSuggestion)
+    }
+
+    /**
+     * Set maximum number of suggestions.
+     */
+    fun setMaxNumberOfSuggestions(maxNumber: Int) {
+        if (maxNumber <= 0) {
+            return
+        }
+
+        maxNumberOfSuggestions = maxNumber
+    }
+
+    /**
+     * Reset maximum number of suggestions to default.
+     */
+    fun resetToDefaultMaxSuggestions() {
+        maxNumberOfSuggestions = DEFAULT_HISTORY_SUGGESTION_LIMIT
     }
 }
 

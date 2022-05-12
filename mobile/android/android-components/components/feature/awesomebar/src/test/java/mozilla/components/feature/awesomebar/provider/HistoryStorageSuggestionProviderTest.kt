@@ -120,6 +120,64 @@ class HistoryStorageSuggestionProviderTest {
     }
 
     @Test
+    fun `WHEN provider max number of suggestions is changed THEN the number of return suggestions is updated`() = runTest {
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history, loadUrlUseCase = mock()
+        )
+
+        var suggestions = provider.onInputChanged("moz")
+        assertEquals(20, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(2)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(2, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(22)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(22, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(45)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(45, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(0)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(45, suggestions.size)
+    }
+
+    @Test
+    fun `WHEN reset provider max number of suggestions THEN the number of return suggestions is reset to default`() = runTest {
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+
+        val provider = HistoryStorageSuggestionProvider(
+            historyStorage = history, loadUrlUseCase = mock()
+        )
+
+        var suggestions = provider.onInputChanged("moz")
+        assertEquals(20, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(45)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(45, suggestions.size)
+
+        provider.resetToDefaultMaxSuggestions()
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(20, suggestions.size)
+    }
+
+    @Test
     fun `Provider dedupes suggestions`() = runTest {
         val storage: HistoryStorage = mock()
 

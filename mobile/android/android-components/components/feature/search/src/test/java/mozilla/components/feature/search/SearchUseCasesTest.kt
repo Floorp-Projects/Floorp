@@ -206,6 +206,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -268,6 +271,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -287,7 +293,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.addSearchEngine.invoke(
@@ -296,7 +302,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(7, store.state.search.searchEngines.size)
+        assertEquals(8, store.state.search.searchEngines.size)
         assertEquals(2, store.state.search.availableSearchEngines.size)
 
         assertEquals(4, store.state.search.regionSearchEngines.size)
@@ -321,6 +327,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -340,7 +349,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.addSearchEngine.invoke(
@@ -349,7 +358,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(7, store.state.search.searchEngines.size)
+        assertEquals(8, store.state.search.searchEngines.size)
         assertEquals(2, store.state.search.availableSearchEngines.size)
 
         assertEquals(1, store.state.search.additionalAvailableSearchEngines.size)
@@ -374,6 +383,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -393,7 +405,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.addSearchEngine.invoke(
@@ -406,7 +418,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(7, store.state.search.searchEngines.size)
+        assertEquals(8, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         assertEquals(3, store.state.search.customSearchEngines.size)
@@ -432,6 +444,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -451,7 +466,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.removeSearchEngine.invoke(
@@ -460,7 +475,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(5, store.state.search.searchEngines.size)
+        assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(4, store.state.search.availableSearchEngines.size)
 
         assertEquals(2, store.state.search.regionSearchEngines.size)
@@ -485,6 +500,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -504,7 +522,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.removeSearchEngine.invoke(
@@ -513,7 +531,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(5, store.state.search.searchEngines.size)
+        assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(4, store.state.search.availableSearchEngines.size)
 
         assertEquals(0, store.state.search.additionalSearchEngines.size)
@@ -538,6 +556,9 @@ class SearchUseCasesTest {
                         SearchEngine("engine-d", "Engine D", mock(), type = SearchEngine.Type.CUSTOM),
                         SearchEngine("engine-e", "Engine E", mock(), type = SearchEngine.Type.CUSTOM)
                     ),
+                    applicationSearchEngines = listOf(
+                        SearchEngine("engine-j", "Engine J", mock(), type = SearchEngine.Type.APPLICATION)
+                    ),
                     additionalSearchEngines = listOf(
                         SearchEngine("engine-f", "Engine F", mock(), type = SearchEngine.Type.BUNDLED_ADDITIONAL)
                     ),
@@ -557,7 +578,7 @@ class SearchUseCasesTest {
 
         val useCases = SearchUseCases(store, mock(), mock())
 
-        assertEquals(6, store.state.search.searchEngines.size)
+        assertEquals(7, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         useCases.removeSearchEngine.invoke(
@@ -566,7 +587,7 @@ class SearchUseCasesTest {
 
         store.waitUntilIdle()
 
-        assertEquals(5, store.state.search.searchEngines.size)
+        assertEquals(6, store.state.search.searchEngines.size)
         assertEquals(3, store.state.search.availableSearchEngines.size)
 
         assertEquals(1, store.state.search.customSearchEngines.size)

@@ -176,4 +176,59 @@ class CombinedHistorySuggestionProviderTest {
         assertEquals("http://www.mozilla.com/firefox/", result[0].description)
         assertNull(result[0].editSuggestion)
     }
+
+    @Test
+    fun `WHEN provider max number of suggestions is changed THEN the number of return suggestions is updated`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
+        doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), showEditSuggestion = false)
+
+        provider.setMaxNumberOfSuggestions(2)
+        var suggestions = provider.onInputChanged("moz")
+        assertEquals(2, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(22)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(22, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(0)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(22, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(45)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(45, suggestions.size)
+    }
+
+    @Test
+    fun `WHEN reset provider max number of suggestions THEN the number of return suggestions is reset to default`() = runTest {
+        val history: HistoryStorage = mock()
+        val metadata: HistoryMetadataStorage = mock()
+        doReturn(emptyList<HistoryMetadata>()).`when`(metadata).queryHistoryMetadata(eq("moz"), anyInt())
+        doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), anyInt())
+
+        val provider = CombinedHistorySuggestionProvider(history, metadata, mock(), showEditSuggestion = false)
+
+        var suggestions = provider.onInputChanged("moz")
+        assertEquals(5, suggestions.size)
+
+        provider.setMaxNumberOfSuggestions(45)
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(45, suggestions.size)
+
+        provider.resetToDefaultMaxSuggestions()
+        suggestions = provider.onInputChanged("moz")
+        assertEquals(5, suggestions.size)
+    }
 }
