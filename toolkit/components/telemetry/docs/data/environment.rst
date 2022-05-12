@@ -423,10 +423,6 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``media.gmp-gmpopenh264.enabled``: Whether OpenH264 is enabled.
 
-- ``media.gmp-gmpopenh264.lastDownload``: When OpenH264 was last download.
-
-- ``media.gmp-gmpopenh264.lastInstallStart``: When OpenH264 installation was last started.
-
 - ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated.
 
 - ``media.gmp-gmpopenh264.visible``: Whether OpenH264 is visible.

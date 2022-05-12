@@ -726,8 +726,6 @@ GMPDownloader.prototype = {
    */
   start() {
     let log = getScopedLogger("GMPDownloader");
-    let now = Math.round(Date.now() / 1000);
-    GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_INSTALL_START, now, gmpAddon.id);
     let gmpAddon = this._gmpAddon;
 
     if (!gmpAddon.isValid) {
@@ -745,8 +743,6 @@ GMPDownloader.prototype = {
     };
     return ProductAddonChecker.downloadAddon(gmpAddon, downloadOptions).then(
       zipPath => {
-        let now = Math.round(Date.now() / 1000);
-        GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD, now, gmpAddon.id);
         log.info(
           `install to directory path: ${gmpAddon.id}/${gmpAddon.version}`
         );
