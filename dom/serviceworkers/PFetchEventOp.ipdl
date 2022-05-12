@@ -15,7 +15,9 @@ protocol PFetchEventOp {
   manager PRemoteWorkerController;
 
  parent:
-  async PreloadResponse(ParentToParentResponseWithTiming aResponse);
+  async PreloadResponse(ParentToParentInternalResponse aResponse);
+
+  async PreloadResponseEnd(ResponseEndArgs aArgs);
 
  child:
   async AsyncLog(nsCString aScriptSpec, uint32_t aLineNumber,

@@ -158,6 +158,9 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     // Scratch framebuffer used to wrap textures for miscellaneous utility ops.
     RefPtr<WebGLFramebufferJS> mScratchFramebuffer;
+    // Buffer filled with zero data for initializing textures.
+    RefPtr<WebGLBufferJS> mZeroBuffer;
+    IntSize mZeroSize;
 
     uint32_t mMaxTextureSize = 0;
 
@@ -184,6 +187,12 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     std::vector<RefPtr<StandaloneTexture>> mStandaloneTextures;
     size_t mUsedTextureMemory = 0;
     size_t mTotalTextureMemory = 0;
+    // The total reserved memory for empty texture pages that are kept around
+    // for future allocations.
+    size_t mEmptyTextureMemory = 0;
+    // A memory pressure event may signal from another thread that caches should
+    // be cleared if possible.
+    Atomic<bool> mShouldClearCaches;
 
     const Matrix& GetTransform() const { return mCurrentTarget->mTransform; }
 
@@ -224,7 +233,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
 
     bool UploadSurface(DataSourceSurface* aData, SurfaceFormat aFormat,
                        const IntRect& aSrcRect, const IntPoint& aDstOffset,
-                       bool aInit);
+                       bool aInit, bool aZero = false);
     bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
                        const DrawOptions& aOptions,
                        Maybe<DeviceColor> aMaskColor = Nothing(),
@@ -252,6 +261,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     void UnlinkSurfaceTextures();
     void UnlinkSurfaceTexture(const RefPtr<TextureHandle>& aHandle);
     void UnlinkGlyphCaches();
+
+    void OnMemoryPressure();
+    void ClearAllTextures();
+    void ClearEmptyTextureMemory();
+    void ClearCachesIfNecessary();
   };
 
   RefPtr<SharedContext> mSharedContext;
@@ -381,6 +395,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer();
 
   bool CopySnapshotTo(DrawTarget* aDT);
+
+  void OnMemoryPressure() { mSharedContext->OnMemoryPressure(); }
 
   operator std::string() const {
     std::stringstream stream;

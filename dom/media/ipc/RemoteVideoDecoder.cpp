@@ -91,7 +91,8 @@ MediaResult RemoteVideoDecoderChild::ProcessOutput(
 MediaResult RemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
     const CreateDecoderParams::OptionSet& aOptions,
-    Maybe<layers::TextureFactoryIdentifier> aIdentifier) {
+    Maybe<layers::TextureFactoryIdentifier> aIdentifier,
+    const Maybe<uint64_t>& aMediaEngineId) {
   MOZ_ASSERT_IF(mLocation == RemoteDecodeIn::GpuProcess, aIdentifier);
 
   RefPtr<RemoteDecoderManagerChild> manager =
@@ -123,7 +124,7 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   mIPDLSelfRef = this;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
   Unused << manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
-                                                   aIdentifier);
+                                                   aIdentifier, aMediaEngineId);
 
   return NS_OK;
 }
@@ -132,8 +133,10 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
     RemoteDecoderManagerParent* aParent, const VideoInfo& aVideoInfo,
     float aFramerate, const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue)
-    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue),
+    nsISerialEventTarget* aManagerThread, TaskQueue* aDecodeTaskQueue,
+    Maybe<uint64_t> aMediaEngineId)
+    : RemoteDecoderParent(aParent, aOptions, aManagerThread, aDecodeTaskQueue,
+                          aMediaEngineId),
       mVideoInfo(aVideoInfo),
       mFramerate(aFramerate) {
   if (aIdentifier) {
@@ -157,6 +160,7 @@ IPCResult RemoteVideoDecoderParent::RecvConstruct(
       mVideoInfo,     mKnowsCompositor,
       imageContainer, CreateDecoderParams::VideoFrameRate(mFramerate),
       mOptions,       CreateDecoderParams::NoWrapper(true),
+      mMediaEngineId,
   };
 
   mParent->EnsurePDMFactory().CreateDecoder(params)->Then(

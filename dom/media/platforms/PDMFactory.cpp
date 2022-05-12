@@ -37,6 +37,7 @@
 #include "nsPrintfCString.h"
 
 #ifdef XP_WIN
+#  include "MFMediaEngineDecoderModule.h"
 #  include "WMFDecoderModule.h"
 #  include "mozilla/WindowsVersion.h"
 #endif
@@ -86,6 +87,10 @@ class PDMInitializer final {
 #ifdef XP_WIN
     if (!IsWin7AndPre2000Compatible()) {
       WMFDecoderModule::Init();
+    }
+
+    if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
+      MFMediaEngineDecoderModule::Init();
     }
 #endif
 #ifdef MOZ_APPLEMEDIA
@@ -507,6 +512,9 @@ static DecoderDoctorDiagnostics::Flags GetFailureFlagBasedOnFFmpegStatus(
 
 void PDMFactory::CreateRddPDMs() {
 #ifdef XP_WIN
+  if (IsWin8OrLater() && StaticPrefs::media_wmf_media_engine_enabled()) {
+    CreateAndStartupPDM<MFMediaEngineDecoderModule>();
+  }
   if (StaticPrefs::media_wmf_enabled() &&
       StaticPrefs::media_rdd_wmf_enabled()) {
     CreateAndStartupPDM<WMFDecoderModule>();

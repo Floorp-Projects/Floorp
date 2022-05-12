@@ -19,11 +19,16 @@ add_setup(async function() {
 
 function assertFirefoxViewTab(w = window) {
   ok(w.gFirefoxViewTab, "Firefox View tab exists");
-  ok(w.gFirefoxViewTab.hidden, "Firefox View tab is hidden");
+  ok(w.gFirefoxViewTab?.hidden, "Firefox View tab is hidden");
   is(
-    w.gFirefoxViewTab,
-    w.gBrowser.tabs[0],
+    w.gBrowser.tabs.indexOf(w.gFirefoxViewTab),
+    0,
     "Firefox View tab is the first tab"
+  );
+  is(
+    w.gBrowser.visibleTabs.indexOf(w.gFirefoxViewTab),
+    -1,
+    "Firefox View tab is not in the list of visible tabs"
   );
 }
 
@@ -35,11 +40,12 @@ async function openFirefoxViewTab(w = window) {
   info("Clicking the Firefox View button");
   await EventUtils.synthesizeMouseAtCenter(
     w.document.getElementById("firefox-view-button"),
-    {}
+    {},
+    w
   );
   assertFirefoxViewTab(w);
-  is(w.gFirefoxViewTab, w.gBrowser.selectedTab, "Firefox View tab is selected");
-  await BrowserTestUtils.browserLoaded(gFirefoxViewTab.linkedBrowser);
+  is(w.gBrowser.tabContainer.selectedIndex, 0, "Firefox View tab is selected");
+  await BrowserTestUtils.browserLoaded(w.gFirefoxViewTab.linkedBrowser);
 }
 
 function closeFirefoxViewTab(w = window) {
@@ -50,7 +56,7 @@ function closeFirefoxViewTab(w = window) {
   );
 }
 
-add_task(async function openLinkIn() {
+add_task(async function load_opens_new_tab() {
   await openFirefoxViewTab();
   gURLBar.focus();
   gURLBar.value = "https://example.com";
@@ -58,17 +64,46 @@ add_task(async function openLinkIn() {
     gBrowser.tabContainer,
     "TabOpen"
   );
-  await EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Enter");
   info(
     "Waiting for new tab to open from the address bar in the Firefox View tab"
   );
   await newTabOpened;
   assertFirefoxViewTab();
   isnot(
-    gFirefoxViewTab,
-    gBrowser.selectedTab,
+    gBrowser.tabContainer.selectedIndex,
+    0,
     "Firefox View tab is not selected anymore (new tab opened in the foreground)"
   );
   gBrowser.removeCurrentTab();
   closeFirefoxViewTab();
+});
+
+add_task(async function number_tab_select_shortcut() {
+  await openFirefoxViewTab();
+  EventUtils.synthesizeKey(
+    "1",
+    AppConstants.MOZ_WIDGET_GTK ? { altKey: true } : { accelKey: true }
+  );
+  is(
+    gBrowser.tabContainer.selectedIndex,
+    1,
+    "Number shortcut to select the first tab skipped the Firefox View tab"
+  );
+  closeFirefoxViewTab();
+});
+
+add_task(async function accel_w_behavior() {
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await openFirefoxViewTab(win);
+  EventUtils.synthesizeKey("w", { accelKey: true }, win);
+  ok(!win.gFirefoxViewTab, "Accel+w closed the Firefox View tab");
+  await openFirefoxViewTab(win);
+  win.gBrowser.selectedTab = win.gBrowser.visibleTabs[0];
+  info(
+    "Waiting for Accel+W in the only visible tab to close the window, ignoring the presence of the hidden Firefox View tab"
+  );
+  let windowClosed = BrowserTestUtils.windowClosed(win);
+  EventUtils.synthesizeKey("w", { accelKey: true }, win);
+  await windowClosed;
 });

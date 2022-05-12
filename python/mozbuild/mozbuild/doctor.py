@@ -11,6 +11,12 @@ import socket
 import subprocess
 import sys
 
+from typing import (
+    Callable,
+    List,
+    Union,
+)
+
 import attr
 import psutil
 import requests
@@ -40,7 +46,7 @@ https://technet.microsoft.com/en-us/library/cc785435.aspx
 """
 
 
-def get_mount_point(path):
+def get_mount_point(path: str) -> str:
     """Return the mount point for a given path."""
     while path != "/" and not os.path.ismount(path):
         path = mozpath.abspath(mozpath.join(path, os.pardir))
@@ -73,7 +79,7 @@ class DoctorCheck:
 CHECKS = {}
 
 
-def check(func):
+def check(func: Callable):
     """Decorator that registers a function as a doctor check.
 
     The function should return a `DoctorCheck` or be an iterator of
@@ -83,7 +89,7 @@ def check(func):
 
 
 @check
-def dns(**kwargs):
+def dns(**kwargs) -> DoctorCheck:
     """Check DNS is queryable."""
     try:
         socket.getaddrinfo("mozilla.org", 80)
@@ -102,7 +108,7 @@ def dns(**kwargs):
 
 
 @check
-def internet(**kwargs):
+def internet(**kwargs) -> DoctorCheck:
     """Check the internet is reachable via HTTPS."""
     try:
         resp = requests.get("https://mozilla.org")
@@ -123,7 +129,7 @@ def internet(**kwargs):
 
 
 @check
-def ssh(**kwargs):
+def ssh(**kwargs) -> DoctorCheck:
     """Check the status of `ssh hg.mozilla.org` for common errors."""
     try:
         # We expect this command to return exit code 1 even when we hit
@@ -144,7 +150,7 @@ def ssh(**kwargs):
             )
 
         if "Permission denied" in proc.stdout:
-            # Parse thproc.stdout for username, which looks like:
+            # Parse proc.stdout for username, which looks like:
             # `<username>@hg.mozilla.org: Permission denied (reason)`
             login_string = proc.stdout.split()[0]
             username, _host = login_string.split("@hg.mozilla.org")
@@ -199,7 +205,7 @@ def ssh(**kwargs):
 
 
 @check
-def cpu(**kwargs):
+def cpu(**kwargs) -> DoctorCheck:
     """Check the host machine has the recommended processing power to develop Firefox."""
     cpu_count = psutil.cpu_count()
     if cpu_count < PROCESSORS_THRESHOLD:
@@ -216,7 +222,7 @@ def cpu(**kwargs):
 
 
 @check
-def memory(**kwargs):
+def memory(**kwargs) -> DoctorCheck:
     """Check the host machine has the recommended memory to develop Firefox."""
     memory = psutil.virtual_memory().total
     # Convert to gigabytes.
@@ -228,11 +234,11 @@ def memory(**kwargs):
         status = CheckStatus.OK
         desc = "%.1fGB of physical memory, >%.1fGB" % (memory_GB, MEMORY_THRESHOLD)
 
-    return DoctorCheck(name="memory", status=status, display_text=[desc])
+    return DoctorCheck(name="memory", display_text=[desc], status=status)
 
 
 @check
-def storage_freespace(topsrcdir, topobjdir, **kwargs):
+def storage_freespace(topsrcdir: str, topobjdir: str, **kwargs) -> List[DoctorCheck]:
     """Check the host machine has the recommended disk space to develop Firefox."""
     topsrcdir_mount = get_mount_point(topsrcdir)
     topobjdir_mount = get_mount_point(topobjdir)
@@ -296,7 +302,9 @@ def fix_lastaccess_win():
 
 
 @check
-def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
+def fs_lastaccess(
+    topsrcdir: str, topobjdir: str, **kwargs
+) -> Union[DoctorCheck, List[DoctorCheck]]:
     """Check for the `lastaccess` behaviour on the filsystem, which can slow
     down filesystem operations."""
     if sys.platform.startswith("win"):
@@ -308,19 +316,31 @@ def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
             disablelastaccess = int(fsutil_output.partition("=")[2][1])
         except subprocess.CalledProcessError:
             return DoctorCheck(
-                status=CheckStatus.WARNING, desc=["unable to check lastaccess behavior"]
+                name="lastaccess",
+                status=CheckStatus.WARNING,
+                display_text=["unable to check lastaccess behavior"],
             )
 
-        if disablelastaccess == 1:
+        if disablelastaccess in {1, 3}:
             return DoctorCheck(
-                status=CheckStatus.OK, display_text=["lastaccess disabled systemwide"]
+                name="lastaccess",
+                status=CheckStatus.OK,
+                display_text=["lastaccess disabled systemwide"],
             )
-        elif disablelastaccess == 0:
+        elif disablelastaccess in {0, 2}:
             return DoctorCheck(
+                name="lastaccess",
                 status=CheckStatus.WARNING,
                 display_text=["lastaccess enabled"],
                 fix=fix_lastaccess_win,
             )
+
+        # `disablelastaccess` should be a value between 0-3.
+        return DoctorCheck(
+            name="lastaccess",
+            status=CheckStatus.WARNING,
+            display_text=["Could not parse `fsutil` for lastaccess behavior."],
+        )
 
     elif any(
         sys.platform.startswith(prefix) for prefix in ["freebsd", "linux", "openbsd"]
@@ -342,8 +362,15 @@ def fs_lastaccess(topsrcdir, topobjdir, **kwargs):
 
         return mount_checks
 
+    # Return "SKIPPED" if this test is not relevant.
+    return DoctorCheck(
+        name="lastaccess",
+        display_text=["lastaccess not relevant for this platform."],
+        status=CheckStatus.SKIPPED,
+    )
 
-def check_mount_lastaccess(mount):
+
+def check_mount_lastaccess(mount: str) -> DoctorCheck:
     """Check `lastaccess` behaviour for a Linux mount."""
     partitions = psutil.disk_partitions(all=True)
     atime_opts = {"atime", "noatime", "relatime", "norelatime"}
@@ -381,7 +408,7 @@ def check_mount_lastaccess(mount):
 
 
 @check
-def mozillabuild(**kwargs):
+def mozillabuild(**kwargs) -> DoctorCheck:
     """Check that MozillaBuild is the latest version."""
     if not sys.platform.startswith("win"):
         return DoctorCheck(
@@ -428,7 +455,7 @@ def mozillabuild(**kwargs):
 
 
 @check
-def bad_locale_utf8(**kwargs):
+def bad_locale_utf8(**kwargs) -> DoctorCheck:
     """Check to detect the invalid locale `UTF-8` on pre-3.8 Python."""
     if sys.version_info >= (3, 8):
         return DoctorCheck(
@@ -460,7 +487,7 @@ def bad_locale_utf8(**kwargs):
         )
 
 
-def run_doctor(fix=False, verbose=False, **kwargs):
+def run_doctor(fix: bool = False, verbose: bool = False, **kwargs) -> int:
     """Run the doctor checks.
 
     If `fix` is `True`, run fixing functions for issues that can be resolved
@@ -508,8 +535,12 @@ def run_doctor(fix=False, verbose=False, **kwargs):
         return 1
 
     # Attempt to run the fix functions.
-    for fix in fixes:
+    fixer_fail = 0
+    for fixer in fixes:
         try:
-            fix()
+            fixer()
         except Exception:
+            fixer_fail = 1
             pass
+
+    return fixer_fail

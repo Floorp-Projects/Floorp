@@ -22076,19 +22076,20 @@ def getObservableArrayBackingObject(descriptor, attr, errorReturn="return false;
     assert attr.isAttr()
     assert attr.type.isObservableArray()
 
+    # GetObservableArrayBackingObject may return a wrapped object for Xrays, so
+    # when we create it we need to unwrap it to store the interface in the
+    # reserved slot.
     return fill(
         """
         JS::Rooted<JSObject*> backingObj(cx);
         bool created = false;
         if (!GetObservableArrayBackingObject(cx, obj, ${slot},
-                &backingObj, &created, ${namespace}::ObservableArrayProxyHandler::getInstance())) {
+                &backingObj, &created, ${namespace}::ObservableArrayProxyHandler::getInstance(),
+                self)) {
           $*{errorReturn}
         }
         if (created) {
           PreserveWrapper(self);
-          js::SetProxyReservedSlot(backingObj,
-                                   OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT,
-                                   JS::PrivateValue(self));
         }
         """,
         namespace=toBindingNamespace(MakeNativeName(attr.identifier.name)),
@@ -22105,10 +22106,6 @@ def getObservableArrayGetterBody(descriptor, attr):
     assert attr.type.isObservableArray()
     return fill(
         """
-        if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
-          JS_ReportErrorASCII(cx, "Accessing from Xray wrapper is not supported.");
-          return false;
-        }
         $*{getBackingObj}
         MOZ_ASSERT(!JS_IsExceptionPending(cx));
         args.rval().setObject(*backingObj);
