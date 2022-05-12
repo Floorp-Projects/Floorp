@@ -102,8 +102,6 @@ policy-EnableTrackingProtection = Enable or disable Content Blocking and optiona
 # “lock” means that the user won’t be able to change this setting
 policy-EncryptedMediaExtensions = Enable or disable Encrypted Media Extensions and optionally lock it.
 
-policy-ExemptDomainFileTypePairsFromFileTypeDownloadWarnings = Disable warnings based on file extension for specific file types on domains.
-
 # A “locked” extension can’t be disabled or removed by the user. This policy
 # takes 3 keys (“Install”, ”Uninstall”, ”Locked”), you can either keep them in
 # English or translate them as verbs.

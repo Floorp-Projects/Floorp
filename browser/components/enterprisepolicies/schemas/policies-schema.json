@@ -461,24 +461,6 @@
       }
     },
 
-    "ExemptDomainFileTypePairsFromFileTypeDownloadWarnings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "file_extension": {
-            "type": "string"
-          },
-          "domains": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-
     "Extensions": {
       "type": "object",
       "properties": {
