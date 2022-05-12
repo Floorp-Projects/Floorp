@@ -1083,8 +1083,6 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
 
   MOZ_ASSERT(!edges.empty());
 
-  MBasicBlock* joinBlock = nullptr;
-
   // Create join block if there's fall-through from the previous bytecode op.
   if (!hasTerminatedBlock()) {
     MBasicBlock* pred = current;
@@ -1092,39 +1090,29 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
       return false;
     }
     pred->end(MGoto::New(alloc(), current));
-    joinBlock = current;
-    setTerminatedBlock();
   }
 
   for (const PendingEdge& edge : edges) {
     MBasicBlock* source = edge.block();
     uint32_t numToPop = edge.numToPop();
 
-    if (joinBlock) {
-      MOZ_ASSERT(source->stackDepth() - numToPop == joinBlock->stackDepth());
-      if (!joinBlock->addPredecessorPopN(alloc(), source, numToPop)) {
-        return false;
-      }
-    } else {
+    if (hasTerminatedBlock()) {
       if (!startNewBlock(source, loc, numToPop)) {
         return false;
       }
-      joinBlock = current;
-      setTerminatedBlock();
+    } else {
+      MOZ_ASSERT(source->stackDepth() - numToPop == current->stackDepth());
+      if (!current->addPredecessorPopN(alloc(), source, numToPop)) {
+        return false;
+      }
     }
 
     MOZ_ASSERT(source->lastIns()->isTest() || source->lastIns()->isGoto() ||
                source->lastIns()->isTableSwitch());
-    source->lastIns()->initSuccessor(edge.successor(), joinBlock);
+    source->lastIns()->initSuccessor(edge.successor(), current);
   }
 
-  // Start traversing the join block. Make sure it comes after predecessor
-  // blocks created by createEmptyBlockForTest.
-  MOZ_ASSERT(hasTerminatedBlock());
-  MOZ_ASSERT(joinBlock);
-  graph().moveBlockToEnd(joinBlock);
-  current = joinBlock;
-
+  MOZ_ASSERT(!hasTerminatedBlock());
   return true;
 }
 
