@@ -67,6 +67,7 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
+import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
 import mozilla.components.feature.prompts.login.LoginExceptions
@@ -469,6 +470,7 @@ class PromptFeature private constructor(
                     }
                 }
                 is SelectAddress -> {
+                    emitSuccessfulAddressAutofillFormDetectedFact()
                     if (isAddressAutofillEnabled() && promptRequest.addresses.isNotEmpty()) {
                         addressPicker?.handleSelectAddressRequest(promptRequest)
                     }

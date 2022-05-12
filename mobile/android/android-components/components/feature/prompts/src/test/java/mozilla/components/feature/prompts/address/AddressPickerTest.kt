@@ -12,6 +12,12 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.Address
+import mozilla.components.feature.prompts.facts.AddressAutofillDialogFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -82,7 +88,23 @@ class AddressPickerTest {
 
     @Test
     fun `GIVEN a prompt request WHEN handleSelectAddressRequest is called THEN the prompt is shown with the provided addresses`() {
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
+
+        assertEquals(0, facts.size)
+
         addressPicker.handleSelectAddressRequest(promptRequest)
+
+        assertEquals(1, facts.size)
+        facts[0].apply {
+            assertEquals(Component.FEATURE_PROMPTS, component)
+            assertEquals(Action.INTERACTION, action)
+            assertEquals(AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_SHOWN, item)
+        }
 
         verify(addressSelectBar).showPrompt(promptRequest.addresses)
     }
@@ -97,5 +119,28 @@ class AddressPickerTest {
         addressPicker.handleSelectAddressRequest(promptRequest)
 
         verify(addressSelectBar).showPrompt(promptRequest.addresses)
+    }
+
+    @Test
+    fun `WHEN onManageOptions is called THEN onManageAddresses is invoked and prompt is hidden`() {
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
+
+        assertEquals(0, facts.size)
+
+        addressPicker.onManageOptions()
+
+        assertEquals(1, facts.size)
+        facts[0].apply {
+            assertEquals(Component.FEATURE_PROMPTS, component)
+            assertEquals(Action.INTERACTION, action)
+            assertEquals(AddressAutofillDialogFacts.Items.AUTOFILL_ADDRESS_PROMPT_DISMISSED, item)
+        }
+
+        verify(addressSelectBar).hidePrompt()
     }
 }

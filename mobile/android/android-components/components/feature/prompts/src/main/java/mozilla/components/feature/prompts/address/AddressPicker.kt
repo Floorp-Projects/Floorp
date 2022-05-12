@@ -10,6 +10,8 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.storage.Address
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.consumePromptFrom
+import mozilla.components.feature.prompts.facts.emitAddressAutofillDismissedFact
+import mozilla.components.feature.prompts.facts.emitAddressAutofillShownFact
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -40,6 +42,7 @@ class AddressPicker(
      * @param request The [PromptRequest] containing the the address request data to be shown.
      */
     internal fun handleSelectAddressRequest(request: PromptRequest.SelectAddress) {
+        emitAddressAutofillShownFact()
         addressSelectBar.showPrompt(request.addresses)
     }
 
@@ -51,6 +54,7 @@ class AddressPicker(
      */
     @Suppress("TooGenericExceptionCaught")
     fun dismissSelectAddressRequest(promptRequest: PromptRequest.SelectAddress? = null) {
+        emitAddressAutofillDismissedFact()
         addressSelectBar.hidePrompt()
 
         try {

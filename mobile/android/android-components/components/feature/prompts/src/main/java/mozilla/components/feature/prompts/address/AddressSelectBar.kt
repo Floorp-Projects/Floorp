@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.Address
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
+import mozilla.components.feature.prompts.facts.emitAddressAutofillExpandedFact
+import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillSuccessFact
 import mozilla.components.support.ktx.android.view.hideKeyboard
 
 /**
@@ -41,6 +43,7 @@ class AddressSelectBar @JvmOverloads constructor(
     private val listAdapter = AddressAdapter { address ->
         listener?.apply {
             onOptionSelect(address)
+            emitSuccessfulAddressAutofillSuccessFact()
         }
     }
 
@@ -128,6 +131,7 @@ class AddressSelectBar @JvmOverloads constructor(
         manageAddressesView?.isVisible = shouldExpand
 
         if (shouldExpand) {
+            emitAddressAutofillExpandedFact()
             view?.hideKeyboard()
             expanderView?.rotation = ROTATE_180
             headerView?.contentDescription =
