@@ -324,6 +324,8 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.prefer-opengl", { what: RECORD_PREF_VALUE }],
   ["layout.css.devPixelsPerPx", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.enabled", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastInstallStart", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastDownload", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.lastUpdate", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.visible", { what: RECORD_PREF_VALUE }],
   ["media.gmp-manager.lastCheck", { what: RECORD_PREF_VALUE }],
