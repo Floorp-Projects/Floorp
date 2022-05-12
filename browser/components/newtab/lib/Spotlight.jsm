@@ -15,16 +15,31 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(
+  this,
+  "AWTelemetry",
+  () => new AboutWelcomeTelemetry()
+);
+
 const Spotlight = {
   sendUserEventTelemetry(event, message, dispatch) {
+    const message_id =
+      message.template === "multistage" ? message.content.id : message.id;
     const ping = {
-      message_id: message.id,
+      message_id,
       event,
     };
     dispatch({
       type: "SPOTLIGHT_TELEMETRY",
       data: { action: "spotlight_user_event", ...ping },
     });
+  },
+
+  defaultDispatch(message) {
+    if (message.type === "SPOTLIGHT_TELEMETRY") {
+      const { message_id, event } = message.data;
+      AWTelemetry.sendTelemetry({ message_id, event });
+    }
   },
 
   /**
@@ -34,7 +49,7 @@ const Spotlight = {
    * @param dispatchCFRAction   A function to dispatch resulting actions
    * @return                    boolean value capturing if spotlight was displayed
    */
-  async showSpotlightDialog(browser, message, dispatch) {
+  async showSpotlightDialog(browser, message, dispatch = this.defaultDispatch) {
     const win = browser.ownerGlobal;
     if (win.gDialogBox.isOpen) {
       return false;
@@ -43,9 +58,7 @@ const Spotlight = {
 
     const dispatchCFRAction =
       // This also blocks CFR impressions, which is fine for current use cases.
-      message.content?.metrics === "block"
-        ? () => {}
-        : dispatch ?? (msg => new AboutWelcomeTelemetry().sendTelemetry(msg));
+      message.content?.metrics === "block" ? () => {} : dispatch;
     let params = { primaryBtn: false, secondaryBtn: false };
 
     // There are two events named `IMPRESSION` the first one refers to telemetry

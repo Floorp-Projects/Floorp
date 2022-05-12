@@ -1020,6 +1020,7 @@ STATIC_ATOMS = [
     Atom("previewDiv", "preview-div"),
     Atom("primary", "primary"),
     Atom("print", "print"),
+    Atom("printisfocuseddoc", "printisfocuseddoc"),
     Atom("printselectionranges", "printselectionranges"),
     Atom("priority", "priority"),
     Atom("processingInstruction", "processing-instruction"),

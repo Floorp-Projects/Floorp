@@ -64,7 +64,6 @@ web-platform-tests:
             android-em.*/.*: 10800
             default: 7200
     variants:
-        - dynamic-first-party-isolation+fission
         - fission
         - no-fission
         - webrender-sw+no-fission
@@ -72,10 +71,6 @@ web-platform-tests:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
-                    default: []
             fission:
                 by-test-platform:
                     android.*: []
@@ -159,7 +154,6 @@ web-platform-tests-reftest:
             android.*: 6
             default: 4
     variants:
-        - dynamic-first-party-isolation+fission
         - fission
         - no-fission
         - webrender-sw+no-fission
@@ -167,10 +161,6 @@ web-platform-tests-reftest:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
-                    default: []
             fission:
                 by-test-platform:
                     android.*: []
@@ -246,7 +236,6 @@ web-platform-tests-wdspec:
         extra-options:
             - --test-type=wdspec
     variants:
-        - dynamic-first-party-isolation+fission
         - fission
         - no-fission
         - webrender-sw+no-fission
@@ -256,10 +245,6 @@ web-platform-tests-wdspec:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
-                    default: []
             fission:
                 by-test-platform:
                     android.*: []
@@ -342,7 +327,6 @@ web-platform-tests-crashtest:
         extra-options:
             - --test-type=crashtest
     variants:
-        - dynamic-first-party-isolation+fission
         - fission
         - no-fission
         - webrender-sw+fission
@@ -350,10 +334,6 @@ web-platform-tests-crashtest:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
-                    default: []
             fission:
                 by-test-platform:
                     android.*: []
@@ -388,7 +368,6 @@ web-platform-tests-print-reftest:
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: default
     variants:
-        - dynamic-first-party-isolation+fission
         - fission
         - no-fission
         - webrender-sw+fission
@@ -396,10 +375,6 @@ web-platform-tests-print-reftest:
     run-without-variant: false
     run-on-projects:
         by-variant:
-            dynamic-first-party-isolation+fission:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
-                    default: []
             fission:
                 by-test-platform:
                     android.*: []

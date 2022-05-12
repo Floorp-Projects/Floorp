@@ -176,16 +176,6 @@ class nsPrintJob final : public nsIWebProgressListener,
 
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow) const;
-
-  /**
-   * @return The document from the focused windows for a document viewer.
-   *
-   * FIXME: This is somewhat unsound, this looks at the original document, which
-   * could've mutated after print was initiated.
-   */
-  Document* FindFocusedDocument(Document* aDoc) const;
-
   /// Customizes the behaviour of GetDisplayTitleAndURL.
   enum class DocTitleDefault : uint32_t { eDocURLElseFallback, eFallback };
 
@@ -242,13 +232,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   void FirePrintPreviewUpdateEvent();
 
   void PageDone(nsresult aResult);
-
-  // The document that we were originally created for in order to print it or
-  // create a print preview of it.  This may belong to mDocViewerPrint or may
-  // belong to a different docViewer in a different docShell.  In reality, this
-  // also may not be the original document that the user selected to print (see
-  // the comment documenting Initialize() above).
-  RefPtr<Document> mOriginalDoc;
 
   // The docViewer that owns us, and its docShell.
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;

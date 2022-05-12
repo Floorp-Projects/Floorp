@@ -112,68 +112,27 @@ enum class CacheKind : uint8_t;
 // Baseline does not attempt OSR into Warp at loops that are only reachable via
 // catch/finally blocks.
 //
-// Finally-blocks are currently not supported by WarpBuilder.
+// Finally-blocks are compiled by WarpBuilder, but when we have to enter a
+// finally-block from the exception handler, we bail out to the Baseline
+// Interpreter.
 
 // PendingEdge is used whenever a block is terminated with a forward branch in
 // the bytecode. When we reach the jump target we use this information to link
 // the block to the jump target's block.
 class PendingEdge {
- public:
-  enum class Kind : uint8_t {
-    // MTest true-successor.
-    TestTrue,
-
-    // MTest false-successor.
-    TestFalse,
-
-    // MGoto successor.
-    Goto,
-
-    // MTableSwitch successor.
-    TableSwitch,
-  };
-
- private:
   MBasicBlock* block_;
-  Kind kind_;
-  union {
-    JSOp testOp_;
-    uint32_t tableSwitchSuccessor_;
-  };
-
-  PendingEdge(MBasicBlock* block, Kind kind) : block_(block), kind_(kind) {}
+  uint32_t successor_;
+  uint8_t numToPop_;
 
  public:
-  static PendingEdge NewTestTrue(MBasicBlock* block, JSOp op) {
-    PendingEdge edge(block, Kind::TestTrue);
-    edge.testOp_ = op;
-    return edge;
-  }
-  static PendingEdge NewTestFalse(MBasicBlock* block, JSOp op) {
-    PendingEdge edge(block, Kind::TestFalse);
-    edge.testOp_ = op;
-    return edge;
-  }
-  static PendingEdge NewGoto(MBasicBlock* block) {
-    return PendingEdge(block, Kind::Goto);
-  }
-  static PendingEdge NewTableSwitch(MBasicBlock* block, uint32_t successor) {
-    PendingEdge edge(block, Kind::TableSwitch);
-    edge.tableSwitchSuccessor_ = successor;
-    return edge;
+  PendingEdge(MBasicBlock* block, uint32_t successor, uint32_t numToPop)
+      : block_(block), successor_(successor), numToPop_(numToPop) {
+    MOZ_ASSERT(numToPop_ == numToPop, "value must fit in field");
   }
 
   MBasicBlock* block() const { return block_; }
-  Kind kind() const { return kind_; }
-
-  JSOp testOp() const {
-    MOZ_ASSERT(kind_ == Kind::TestTrue || kind_ == Kind::TestFalse);
-    return testOp_;
-  }
-  uint32_t tableSwitchSuccessor() const {
-    MOZ_ASSERT(kind_ == Kind::TableSwitch);
-    return tableSwitchSuccessor_;
-  }
+  uint32_t successor() const { return successor_; }
+  uint8_t numToPop() const { return numToPop_; }
 };
 
 // PendingEdgesMap maps a bytecode instruction to a Vector of PendingEdges
@@ -278,8 +237,8 @@ class MOZ_STACK_CLASS WarpBuilder : public WarpBuilderShared {
   bool hasTerminatedBlock() const { return current == nullptr; }
   void setTerminatedBlock() { current = nullptr; }
 
-  [[nodiscard]] bool addPendingEdge(const PendingEdge& edge,
-                                    BytecodeLocation target);
+  [[nodiscard]] bool addPendingEdge(BytecodeLocation target, MBasicBlock* block,
+                                    uint32_t successor, uint32_t numToPop = 0);
   [[nodiscard]] bool buildForwardGoto(BytecodeLocation target);
   [[nodiscard]] bool buildBackedge();
   [[nodiscard]] bool buildTestBackedge(BytecodeLocation loc);

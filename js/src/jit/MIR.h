@@ -1708,7 +1708,7 @@ class MVariadicControlInstruction : public MVariadicT<MControlInstruction> {
 // Jump to the start of another basic block.
 class MGoto : public MAryControlInstruction<0, 1>, public NoTypePolicy::Data {
   explicit MGoto(MBasicBlock* target) : MAryControlInstruction(classOpcode) {
-    setSuccessor(0, target);
+    setSuccessor(TargetIndex, target);
   }
 
  public:
@@ -1719,9 +1719,9 @@ class MGoto : public MAryControlInstruction<0, 1>, public NoTypePolicy::Data {
   // Variant that may patch the target later.
   static MGoto* New(TempAllocator& alloc);
 
-  static const size_t TargetIndex = 0;
+  static constexpr size_t TargetIndex = 0;
 
-  MBasicBlock* target() { return getSuccessor(0); }
+  MBasicBlock* target() { return getSuccessor(TargetIndex); }
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
@@ -1731,8 +1731,8 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   MTest(MDefinition* ins, MBasicBlock* trueBranch, MBasicBlock* falseBranch)
       : MAryControlInstruction(classOpcode) {
     initOperand(0, ins);
-    setSuccessor(0, trueBranch);
-    setSuccessor(1, falseBranch);
+    setSuccessor(TrueBranchIndex, trueBranch);
+    setSuccessor(FalseBranchIndex, falseBranch);
   }
 
   // Variant which may patch the ifTrue branch later.
@@ -1751,10 +1751,11 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
     observedTypes_ = observed;
   }
 
-  static const size_t TrueBranchIndex = 0;
+  static constexpr size_t TrueBranchIndex = 0;
+  static constexpr size_t FalseBranchIndex = 1;
 
-  MBasicBlock* ifTrue() const { return getSuccessor(0); }
-  MBasicBlock* ifFalse() const { return getSuccessor(1); }
+  MBasicBlock* ifTrue() const { return getSuccessor(TrueBranchIndex); }
+  MBasicBlock* ifFalse() const { return getSuccessor(FalseBranchIndex); }
   MBasicBlock* branchSuccessor(BranchDirection dir) const {
     return (dir == TRUE_BRANCH) ? ifTrue() : ifFalse();
   }
