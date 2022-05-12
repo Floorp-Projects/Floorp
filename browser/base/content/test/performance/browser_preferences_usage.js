@@ -251,11 +251,11 @@ add_task(async function navigate_around() {
       // The following 2 graphics prefs are covered by
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1639497
       knownProblematicPrefs["gfx.canvas.azure.backends"] = {
-        min: 100,
+        min: 90,
         max: 110,
       };
       knownProblematicPrefs["gfx.content.azure.backends"] = {
-        min: 100,
+        min: 90,
         max: 110,
       };
       // The following 2 sandbox prefs are covered by

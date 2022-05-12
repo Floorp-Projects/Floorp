@@ -16,6 +16,9 @@
 #if LIBAVCODEC_VERSION_MAJOR >= 57
 #  include "mozilla/layers/TextureClient.h"
 #endif
+#if LIBAVCODEC_VERSION_MAJOR >= 58
+#  include "mozilla/ProfilerMarkers.h"
+#endif
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
@@ -58,9 +61,10 @@ typedef int VAStatus;
 #  define VA_EXPORT_SURFACE_SEPARATE_LAYERS 0x0004
 #  define VA_STATUS_SUCCESS 0x00000000
 #endif
-
 // Use some extra HW frames for potential rendering lags.
 #define EXTRA_HW_FRAMES 6
+// Defines number of delayed frames until we switch back to SW decode.
+#define HW_DECODE_LATE_FRAMES 15
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
 #  define CUSTOMIZED_BUFFER_ALLOCATION 1
@@ -388,6 +392,7 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
       mDecodedFrames(0),
 #if LIBAVCODEC_VERSION_MAJOR >= 58
       mDecodedFramesLate(0),
+      mMissedDecodeInAverangeTime(0),
 #endif
       mAverangeDecodeTime(0),
       mLowLatency(aLowLatency) {
@@ -783,18 +788,28 @@ void FFmpegVideoDecoder<LIBAV_VER>::UpdateDecodeTimes(TimeStamp aDecodeStart) {
       (mAverangeDecodeTime * (mDecodedFrames - 1) + decodeTime) /
       mDecodedFrames;
   FFMPEG_LOG(
-      "  decode time %.2f ms averange decode time %.2f ms decoded frames %d\n",
+      "Frame decode finished, time %.2f ms averange decode time %.2f ms "
+      "decoded %d frames\n",
       decodeTime, mAverangeDecodeTime, mDecodedFrames);
 #if LIBAVCODEC_VERSION_MAJOR >= 58
-  int frameDuration = mFrame->pkt_duration;
-  if (frameDuration > 0 && frameDuration / 1000.0 < decodeTime) {
-    mDecodedFramesLate++;
-    FFMPEG_LOG(
-        "  slow decode: failed to decode in time, frame duration %.2f ms, "
-        "decode time %.2f\n",
-        frameDuration / 1000.0, decodeTime);
-    FFMPEG_LOG("  all decoded frames / late decoded frames %d/%d\n",
-               mDecodedFrames, mDecodedFramesLate);
+  if (mFrame->pkt_duration > 0) {
+    // Switch frame duration to ms
+    float frameDuration = mFrame->pkt_duration / 1000.0f;
+    if (frameDuration < decodeTime) {
+      PROFILER_MARKER_TEXT("FFmpegVideoDecoder::DoDecode", MEDIA_PLAYBACK, {},
+                           "frame decode takes too long");
+      mDecodedFramesLate++;
+      if (frameDuration < mAverangeDecodeTime) {
+        mMissedDecodeInAverangeTime++;
+      }
+      FFMPEG_LOG(
+          "  slow decode: failed to decode in time, frame duration %.2f ms, "
+          "decode time %.2f\n",
+          frameDuration, decodeTime);
+      FFMPEG_LOG("  frames: all decoded %d late decoded %d over averange %d\n",
+                 mDecodedFrames, mDecodedFramesLate,
+                 mMissedDecodeInAverangeTime);
+    }
   }
 #endif
 }
@@ -868,6 +883,14 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
     if (IsHardwareAccelerated()) {
+      if (mMissedDecodeInAverangeTime > HW_DECODE_LATE_FRAMES) {
+        PROFILER_MARKER_TEXT("FFmpegVideoDecoder::DoDecode", MEDIA_PLAYBACK, {},
+                             "Fallback to SW decode");
+        FFMPEG_LOG("  HW decoding is slow, switch back to SW decode");
+        return MediaResult(
+            NS_ERROR_DOM_MEDIA_DECODE_ERR,
+            RESULT_DETAIL("HW decoding is slow, switch back to SW decode"));
+      }
       rv = CreateImageVAAPI(mFrame->pkt_pos, GetFramePts(mFrame),
                             mFrame->pkt_duration, aResults);
       // If VA-API playback failed, just quit. Decoder is going to be restarted
@@ -1131,7 +1154,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::GetVAAPISurfaceDescriptor(
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
     int64_t aOffset, int64_t aPts, int64_t aDuration,
     MediaDataDecoder::DecodedData& aResults) {
-  FFMPEG_LOG("VA-API Got one frame output with pts=%" PRId64 "dts=%" PRId64
+  FFMPEG_LOG("VA-API Got one frame output with pts=%" PRId64 " dts=%" PRId64
              " duration=%" PRId64 " opaque=%" PRId64,
              aPts, mFrame->pkt_dts, aDuration, mCodecContext->reordered_opaque);
 

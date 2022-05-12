@@ -622,7 +622,7 @@
 }
 
 #urlbar-zoom-button:focus-visible {
-  outline: var(--toolbarbutton-focus-outline);
+  outline: var(--focus-outline);
   outline-offset: var(--focus-outline-inset);
 }
 

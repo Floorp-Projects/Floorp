@@ -266,18 +266,21 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
   return true;
 }
 
-bool WarpBuilder::addPendingEdge(const PendingEdge& edge,
-                                 BytecodeLocation target) {
+bool WarpBuilder::addPendingEdge(BytecodeLocation target, MBasicBlock* block,
+                                 uint32_t successor, uint32_t numToPop) {
+  MOZ_ASSERT(successor < block->lastIns()->numSuccessors());
+  MOZ_ASSERT(numToPop <= block->stackDepth());
+
   jsbytecode* targetPC = target.toRawBytecode();
   PendingEdgesMap::AddPtr p = pendingEdges_.lookupForAdd(targetPC);
   if (p) {
-    return p->value().append(edge);
+    return p->value().emplaceBack(block, successor, numToPop);
   }
 
   PendingEdges edges;
   static_assert(PendingEdges::InlineLength >= 1,
                 "Appending one element should be infallible");
-  MOZ_ALWAYS_TRUE(edges.append(edge));
+  MOZ_ALWAYS_TRUE(edges.emplaceBack(block, successor, numToPop));
 
   return pendingEdges_.add(p, targetPC, std::move(edges));
 }
@@ -1080,8 +1083,6 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
 
   MOZ_ASSERT(!edges.empty());
 
-  MBasicBlock* joinBlock = nullptr;
-
   // Create join block if there's fall-through from the previous bytecode op.
   if (!hasTerminatedBlock()) {
     MBasicBlock* pred = current;
@@ -1089,75 +1090,29 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
       return false;
     }
     pred->end(MGoto::New(alloc(), current));
-    joinBlock = current;
-    setTerminatedBlock();
   }
-
-  auto addEdge = [&](MBasicBlock* pred, size_t numToPop) -> bool {
-    if (joinBlock) {
-      MOZ_ASSERT(pred->stackDepth() - numToPop == joinBlock->stackDepth());
-      return joinBlock->addPredecessorPopN(alloc(), pred, numToPop);
-    }
-    if (!startNewBlock(pred, loc, numToPop)) {
-      return false;
-    }
-    joinBlock = current;
-    setTerminatedBlock();
-    return true;
-  };
 
   for (const PendingEdge& edge : edges) {
     MBasicBlock* source = edge.block();
-    MControlInstruction* lastIns = source->lastIns();
-    switch (edge.kind()) {
-      case PendingEdge::Kind::TestTrue: {
-        // JSOp::Case must pop the value when branching to the true-target.
-        const size_t numToPop = (edge.testOp() == JSOp::Case) ? 1 : 0;
+    uint32_t numToPop = edge.numToPop();
 
-        const size_t successor = 0;  // true-branch
-        if (!addEdge(source, numToPop)) {
-          return false;
-        }
-        lastIns->toTest()->initSuccessor(successor, joinBlock);
-        continue;
+    if (hasTerminatedBlock()) {
+      if (!startNewBlock(source, loc, numToPop)) {
+        return false;
       }
-
-      case PendingEdge::Kind::TestFalse: {
-        const size_t numToPop = 0;
-        const size_t successor = 1;  // false-branch
-        if (!addEdge(source, numToPop)) {
-          return false;
-        }
-        lastIns->toTest()->initSuccessor(successor, joinBlock);
-        continue;
-      }
-
-      case PendingEdge::Kind::Goto:
-        if (!addEdge(source, /* numToPop = */ 0)) {
-          return false;
-        }
-        lastIns->toGoto()->initSuccessor(0, joinBlock);
-        continue;
-
-      case PendingEdge::Kind::TableSwitch: {
-        if (!addEdge(source, /* numToPop = */ 0)) {
-          return false;
-        }
-        uint32_t successor = edge.tableSwitchSuccessor();
-        lastIns->toTableSwitch()->initSuccessor(successor, joinBlock);
-        continue;
+    } else {
+      MOZ_ASSERT(source->stackDepth() - numToPop == current->stackDepth());
+      if (!current->addPredecessorPopN(alloc(), source, numToPop)) {
+        return false;
       }
     }
-    MOZ_CRASH("Invalid kind");
+
+    MOZ_ASSERT(source->lastIns()->isTest() || source->lastIns()->isGoto() ||
+               source->lastIns()->isTableSwitch());
+    source->lastIns()->initSuccessor(edge.successor(), current);
   }
 
-  // Start traversing the join block. Make sure it comes after predecessor
-  // blocks created by createEmptyBlockForTest.
-  MOZ_ASSERT(hasTerminatedBlock());
-  MOZ_ASSERT(joinBlock);
-  graph().moveBlockToEnd(joinBlock);
-  current = joinBlock;
-
+  MOZ_ASSERT(!hasTerminatedBlock());
   return true;
 }
 
@@ -1295,10 +1250,7 @@ bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
 
   // JSOp::And and JSOp::Or leave the top stack value unchanged.  The
   // top stack value may have been converted to bool by a transpiled
-  // ToBool IC, so we push the original value. Also note that
-  // JSOp::Case must pop a second value on the true-branch (the input
-  // to the switch-statement). This conditional pop happens in
-  // build_JumpTarget.
+  // ToBool IC, so we push the original value.
   bool mustKeepCondition = (op == JSOp::And || op == JSOp::Or);
   if (mustKeepCondition) {
     current->push(originalValue);
@@ -1315,10 +1267,14 @@ bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
                            /* ifFalse = */ nullptr);
   current->end(test);
 
-  if (!addPendingEdge(PendingEdge::NewTestTrue(current, op), target1)) {
+  // JSOp::Case must pop a second value on the true-branch (the input to the
+  // switch-statement).
+  uint32_t numToPop = (loc.getOp() == JSOp::Case) ? 1 : 0;
+
+  if (!addPendingEdge(target1, current, MTest::TrueBranchIndex, numToPop)) {
     return false;
   }
-  if (!addPendingEdge(PendingEdge::NewTestFalse(current, op), target2)) {
+  if (!addPendingEdge(target2, current, MTest::FalseBranchIndex)) {
     return false;
   }
 
@@ -1331,8 +1287,7 @@ bool WarpBuilder::buildTestOp(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
-  JSOp op = loc.getOp();
-  MOZ_ASSERT(op == JSOp::JumpIfTrue);
+  MOZ_ASSERT(loc.is(JSOp::JumpIfTrue));
   MOZ_ASSERT(loopDepth() > 0);
 
   MDefinition* value = current->pop();
@@ -1358,7 +1313,7 @@ bool WarpBuilder::buildTestBackedge(BytecodeLocation loc) {
     test->setObservedTypes(typesSnapshot->list());
   }
 
-  if (!addPendingEdge(PendingEdge::NewTestFalse(pred, op), successor)) {
+  if (!addPendingEdge(successor, pred, MTest::FalseBranchIndex)) {
     return false;
   }
 
@@ -1397,12 +1352,10 @@ bool WarpBuilder::build_Coalesce(BytecodeLocation loc) {
   current->end(MTest::New(alloc(), isNullOrUndefined, /* ifTrue = */ nullptr,
                           /* ifFalse = */ nullptr));
 
-  if (!addPendingEdge(PendingEdge::NewTestTrue(current, JSOp::Coalesce),
-                      target1)) {
+  if (!addPendingEdge(target1, current, MTest::TrueBranchIndex)) {
     return false;
   }
-  if (!addPendingEdge(PendingEdge::NewTestFalse(current, JSOp::Coalesce),
-                      target2)) {
+  if (!addPendingEdge(target2, current, MTest::FalseBranchIndex)) {
     return false;
   }
 
@@ -1427,7 +1380,7 @@ bool WarpBuilder::buildBackedge() {
 bool WarpBuilder::buildForwardGoto(BytecodeLocation target) {
   current->end(MGoto::New(alloc(), nullptr));
 
-  if (!addPendingEdge(PendingEdge::NewGoto(current), target)) {
+  if (!addPendingEdge(target, current, MGoto::TargetIndex)) {
     return false;
   }
 
@@ -2862,8 +2815,7 @@ bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
     if (!tableswitch->addDefault(nullptr, &index)) {
       return false;
     }
-    if (!addPendingEdge(PendingEdge::NewTableSwitch(current, index),
-                        defaultLoc)) {
+    if (!addPendingEdge(defaultLoc, current, index)) {
       return false;
     }
     if (!targetToSuccessor.put(defaultOffset, index)) {
@@ -2883,8 +2835,7 @@ bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
       if (!tableswitch->addSuccessor(nullptr, &index)) {
         return false;
       }
-      if (!addPendingEdge(PendingEdge::NewTableSwitch(current, index),
-                          caseLoc)) {
+      if (!addPendingEdge(caseLoc, current, index)) {
         return false;
       }
       if (!targetToSuccessor.add(p, caseOffset, index)) {

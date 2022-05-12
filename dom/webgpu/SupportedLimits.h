@@ -36,9 +36,18 @@ class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
   uint32_t MaxUniformBuffersPerShaderStage() const;
   uint32_t MaxUniformBufferBindingSize() const;
   uint32_t MaxStorageBufferBindingSize() const;
+  uint32_t MinUniformBufferOffsetAlignment() const;
+  uint32_t MinStorageBufferOffsetAlignment() const;
   uint32_t MaxVertexBuffers() const;
   uint32_t MaxVertexAttributes() const;
   uint32_t MaxVertexBufferArrayStride() const;
+  uint32_t MaxInterStageShaderComponents() const;
+  uint32_t MaxComputeWorkgroupStorageSize() const;
+  uint32_t MaxComputeInvocationsPerWorkgroup() const;
+  uint32_t MaxComputeWorkgroupSizeX() const;
+  uint32_t MaxComputeWorkgroupSizeY() const;
+  uint32_t MaxComputeWorkgroupSizeZ() const;
+  uint32_t MaxComputeWorkgroupsPerDimension() const;
 
   SupportedLimits(Adapter* const aParent, UniquePtr<ffi::WGPULimits>&& aLimits);
 

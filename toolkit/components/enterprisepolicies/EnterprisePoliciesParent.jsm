@@ -427,6 +427,25 @@ EnterprisePoliciesManager.prototype = {
   allowedInstallSource(uri) {
     return InstallSources ? InstallSources.matches(uri) : true;
   },
+
+  isExemptExecutableExtension(origin, extension) {
+    let hostname = new URL(origin)?.hostname;
+    let exemptArray = this.getActivePolicies()
+      ?.ExemptDomainFileTypePairsFromFileTypeDownloadWarnings;
+    if (!hostname || !extension || !exemptArray) {
+      return false;
+    }
+    let domains = exemptArray
+      .filter(item => item.file_extension == extension)
+      .map(item => item.domains)
+      .flat();
+    for (let domain of domains) {
+      if (Services.eTLD.hasRootDomain(hostname, domain)) {
+        return true;
+      }
+    }
+    return false;
+  },
 };
 
 let DisallowedFeatures = {};
