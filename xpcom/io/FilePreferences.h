@@ -10,7 +10,7 @@ namespace mozilla {
 namespace FilePreferences {
 
 void InitPrefs();
-void InitDirectoriesAllowlist();
+void InitDirectoriesWhitelist();
 bool IsBlockedUNCPath(const nsAString& aFilePath);
 
 #ifdef XP_WIN
@@ -31,7 +31,7 @@ extern const nsLiteralString kDevicePathSpecifier;
 namespace testing {
 
 void SetBlockUNCPaths(bool aBlock);
-void AddDirectoryToAllowlist(nsAString const& aPath);
+void AddDirectoryToWhitelist(nsAString const& aPath);
 bool NormalizePath(nsAString const& aPath, nsAString& aNormalized);
 
 }  // namespace testing

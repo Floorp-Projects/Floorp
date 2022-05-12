@@ -27,12 +27,12 @@ bool AnnotationFromString(Annotation& aResult, const char* aValue) {
   return true;
 }
 
-bool IsAnnotationAllowlistedForPing(Annotation aAnnotation) {
+bool IsAnnotationWhitelistedForPing(Annotation aAnnotation) {
   auto elem = find_if(
-      begin(kCrashPingAllowlist), end(kCrashPingAllowlist),
+      begin(kCrashPingWhitelist), end(kCrashPingWhitelist),
       [&aAnnotation](Annotation aElement) { return aElement == aAnnotation; });
 
-  return elem != end(kCrashPingAllowlist);
+  return elem != end(kCrashPingWhitelist);
 }
 
 }  // namespace CrashReporter

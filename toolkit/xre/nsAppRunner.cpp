@@ -1887,15 +1887,15 @@ nsXULAppInfo::RemoveCrashReportAnnotation(const nsACString& key) {
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::IsAnnotationAllowlistedForPing(const nsACString& aValue,
-                                             bool* aIsAllowlisted) {
+nsXULAppInfo::IsAnnotationWhitelistedForPing(const nsACString& aValue,
+                                             bool* aIsWhitelisted) {
   CrashReporter::Annotation annotation;
 
   if (!AnnotationFromString(annotation, PromiseFlatCString(aValue).get())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  *aIsAllowlisted = CrashReporter::IsAnnotationAllowlistedForPing(annotation);
+  *aIsWhitelisted = CrashReporter::IsAnnotationWhitelistedForPing(annotation);
 
   return NS_OK;
 }
@@ -5490,7 +5490,7 @@ nsresult XREMain::XRE_mainRun() {
 
     // As FilePreferences need the profile directory, we must initialize right
     // here.
-    mozilla::FilePreferences::InitDirectoriesAllowlist();
+    mozilla::FilePreferences::InitDirectoriesWhitelist();
     mozilla::FilePreferences::InitPrefs();
 
     OverrideDefaultLocaleIfNeeded();

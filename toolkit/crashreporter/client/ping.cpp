@@ -123,7 +123,7 @@ static Json::Value CreateMetadataNode(const Json::Value& aExtra) {
     Annotation annotation;
 
     if (AnnotationFromString(annotation, iter.memberName())) {
-      if (IsAnnotationAllowlistedForPing(annotation)) {
+      if (IsAnnotationWhitelistedForPing(annotation)) {
         node[iter.memberName()] = *iter;
       }
     }
