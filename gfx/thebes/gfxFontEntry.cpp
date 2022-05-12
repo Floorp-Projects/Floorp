@@ -326,6 +326,11 @@ bool gfxFontEntry::TryGetSVGData(const gfxFont* aFont) {
     return false;
   }
 
+  // We don't support SVG-in-OT glyphs in offscreen-canvas worker threads.
+  if (!NS_IsMainThread()) {
+    return false;
+  }
+
   if (!mSVGInitialized) {
     // If UnitsPerEm is not known/valid, we can't use SVG glyphs
     if (UnitsPerEm() == kInvalidUPEM) {
