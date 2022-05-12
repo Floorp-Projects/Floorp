@@ -242,6 +242,14 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
           state = IN_CERT;
         } else if (line.startsWith(BEGIN_PUB_KEY)) {
           state = IN_PUB_KEY;
+        } else if (
+          chromeName == "PinsListTimestamp" &&
+          line.match(/^[0-9]+$/)
+        ) {
+          // If the name of this entry is "PinsListTimestamp", this line should
+          // be the pins list timestamp. It should consist solely of digits.
+          // Ignore it and expect other entries to come.
+          state = PRE_NAME;
         } else {
           throw new Error(
             "ERROR: couldn't parse Chrome certificate file line: " + line
