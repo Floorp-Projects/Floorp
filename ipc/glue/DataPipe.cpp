@@ -572,15 +572,17 @@ NS_IMETHODIMP DataPipeSender::AsyncWait(nsIOutputStreamCallback* aCallback,
                                         uint32_t aFlags,
                                         uint32_t aRequestedCount,
                                         nsIEventTarget* aTarget) {
-  AsyncWaitInternal(NS_NewRunnableFunction(
-                        "DataPipeReceiver::AsyncWait",
-                        [self = RefPtr{this}, callback = RefPtr{aCallback}] {
-                          MOZ_LOG(gDataPipeLog, LogLevel::Debug,
-                                  ("Calling OnOutputStreamReady(%p, %p)",
-                                   callback.get(), self.get()));
-                          callback->OnOutputStreamReady(self);
-                        }),
-                    do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
+  AsyncWaitInternal(
+      aCallback ? NS_NewRunnableFunction(
+                      "DataPipeReceiver::AsyncWait",
+                      [self = RefPtr{this}, callback = RefPtr{aCallback}] {
+                        MOZ_LOG(gDataPipeLog, LogLevel::Debug,
+                                ("Calling OnOutputStreamReady(%p, %p)",
+                                 callback.get(), self.get()));
+                        callback->OnOutputStreamReady(self);
+                      })
+                : nullptr,
+      do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
   return NS_OK;
 }
 
@@ -641,15 +643,17 @@ NS_IMETHODIMP DataPipeReceiver::AsyncWait(nsIInputStreamCallback* aCallback,
                                           uint32_t aFlags,
                                           uint32_t aRequestedCount,
                                           nsIEventTarget* aTarget) {
-  AsyncWaitInternal(NS_NewRunnableFunction(
-                        "DataPipeReceiver::AsyncWait",
-                        [self = RefPtr{this}, callback = RefPtr{aCallback}] {
-                          MOZ_LOG(gDataPipeLog, LogLevel::Debug,
-                                  ("Calling OnInputStreamReady(%p, %p)",
-                                   callback.get(), self.get()));
-                          callback->OnInputStreamReady(self);
-                        }),
-                    do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
+  AsyncWaitInternal(
+      aCallback ? NS_NewRunnableFunction(
+                      "DataPipeReceiver::AsyncWait",
+                      [self = RefPtr{this}, callback = RefPtr{aCallback}] {
+                        MOZ_LOG(gDataPipeLog, LogLevel::Debug,
+                                ("Calling OnInputStreamReady(%p, %p)",
+                                 callback.get(), self.get()));
+                        callback->OnInputStreamReady(self);
+                      })
+                : nullptr,
+      do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
   return NS_OK;
 }
 
