@@ -2084,6 +2084,8 @@ const PROXIED_EVENTS = new Set([
   "test-harness-message",
   "add-permissions",
   "remove-permissions",
+  "background-script-suspend",
+  "background-script-suspend-canceled",
   "background-script-suspend-ignored",
 ]);
 
@@ -2411,6 +2413,18 @@ class Extension extends ExtensionData {
       }
     }
     return frameLoader || ExtensionParent.DebugUtils.getFrameLoader(this.id);
+  }
+
+  get backgroundContext() {
+    for (let view of this.views) {
+      if (
+        view.viewType === "background" ||
+        view.viewType === "background_worker"
+      ) {
+        return view;
+      }
+    }
+    return undefined;
   }
 
   on(hook, f) {

@@ -180,3 +180,23 @@ function createNewStyleSheet(ui, panelWindow) {
     }, panelWindow);
   });
 }
+
+/**
+ * Returns the panel root element (StyleEditorUI._root)
+ *
+ * @param {StyleEditorPanel} panel
+ * @returns {Element}
+ */
+function getRootElement(panel) {
+  return panel.panelWindow.document.getElementById("style-editor-chrome");
+}
+
+/**
+ * Returns the panel context menu element
+ *
+ * @param {StyleEditorPanel} panel
+ * @returns {Element}
+ */
+function getContextMenuElement(panel) {
+  return panel.panelWindow.document.getElementById("sidebar-context");
+}

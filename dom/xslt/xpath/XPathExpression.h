@@ -18,8 +18,7 @@ class Expr;
 class nsINode;
 class txResultRecycler;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class XPathResult;
@@ -64,7 +63,6 @@ class XPathExpression final : public NonRefcountedDOMObject {
   bool mCheckDocument;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_XPathExpression_h */

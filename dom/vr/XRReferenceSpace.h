@@ -13,8 +13,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum class XRReferenceSpaceType : uint8_t;
 class XRRigidTransform;
@@ -43,7 +42,6 @@ class XRReferenceSpace : public XRSpace {
   XRReferenceSpaceType mType;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRReferenceSpace_h_

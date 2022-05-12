@@ -16,8 +16,7 @@
 #include "nsIURL.h"
 #include "nsPrintfCString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 bool ServiceWorkerRegistrationDataIsValid(
     const ServiceWorkerRegistrationData& aData) {
@@ -144,5 +143,4 @@ void ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

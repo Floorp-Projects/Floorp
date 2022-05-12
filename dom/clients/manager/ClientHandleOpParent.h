@@ -10,8 +10,7 @@
 #include "mozilla/dom/PClientHandleOpParent.h"
 #include "ClientHandleParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientSourceParent;
 
@@ -31,7 +30,6 @@ class ClientHandleOpParent final : public PClientHandleOpParent {
   void Init(ClientOpConstructorArgs&& aArgs);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientHandleOpParent_h

@@ -9,6 +9,8 @@ const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const IFRAME_URL = URL_ROOT_ORG_SSL + "fission_iframe.html";
 const SECOND_PAGE_URL = "https://example.org/document-builder.sjs?html=org";
 
+const PID_REGEXP = /^\d+$/;
+
 add_task(async function() {
   // Disable bfcache for Fission for now.
   // If Fission is disabled, the pref is no-op.
@@ -241,6 +243,10 @@ async function testBrowserFrames() {
         : !targetFront.isTopLevel,
       "isTopLevel property is correct"
     );
+    ok(
+      PID_REGEXP.test(targetFront.processID),
+      `Target has processID of expected shape (${targetFront.processID})`
+    );
     targets.push(targetFront);
   };
   await targetCommand.watchTargets({ types: [TYPES.FRAME], onAvailable });
@@ -397,6 +403,10 @@ async function testTabFrames(mainRoot) {
       targetFront.targetType,
       TYPES.FRAME,
       "We are only notified about frame targets"
+    );
+    ok(
+      PID_REGEXP.test(targetFront.processID),
+      `Target has processID of expected shape (${targetFront.processID})`
     );
     targets.push({ targetFront, isTargetSwitching });
   };

@@ -17,8 +17,7 @@ class nsINode;
 class nsIURI;
 class nsIReferrerInfo;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Document;
 class DocumentOrShadowRoot;
@@ -190,7 +189,6 @@ inline void ImplCycleCollectionTraverse(
   aField.Traverse(&aCallback);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_IDTracker_h_ */

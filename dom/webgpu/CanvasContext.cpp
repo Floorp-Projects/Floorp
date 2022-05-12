@@ -17,8 +17,7 @@
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "ipc/WebGPUChild.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasContext)
@@ -196,5 +195,4 @@ already_AddRefed<mozilla::gfx::SourceSurface> CanvasContext::GetSurfaceSnapshot(
                          /* aPremultiply */ false, /* aYFlip */ false);
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

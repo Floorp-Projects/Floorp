@@ -14,8 +14,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileSystemEntriesCallback;
 
@@ -114,7 +113,6 @@ class ErrorCallbackHelper {
                    nsresult aError);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CallbackRunnables_h

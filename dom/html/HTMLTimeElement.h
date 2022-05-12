@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLTimeElement final : public nsGenericHTMLElement {
  public:
@@ -36,7 +35,6 @@ class HTMLTimeElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLTimeElement_h

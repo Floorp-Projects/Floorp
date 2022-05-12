@@ -199,6 +199,7 @@ class LinuxDumper {
     return crash_exception_info_;
   }
 
+  pid_t pid() const { return pid_; }
   pid_t crash_thread() const { return crash_thread_; }
   void set_crash_thread(pid_t crash_thread) { crash_thread_ = crash_thread; }
 

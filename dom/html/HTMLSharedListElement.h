@@ -11,8 +11,7 @@
 
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLSharedListElement final : public nsGenericHTMLElement {
  public:
@@ -62,7 +61,6 @@ class HTMLSharedListElement final : public nsGenericHTMLElement {
                                       MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLSharedListElement_h

@@ -54,8 +54,7 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
 class Feature;
 template <typename T>
@@ -200,7 +199,6 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIPrincipal> mSrcOrigin;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FeaturePolicy_h

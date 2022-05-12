@@ -9,8 +9,7 @@
 #include "ClientThing.h"
 #include "mozilla/dom/PClientManagerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCWorkerRef;
 class WorkerPrivate;
@@ -62,7 +61,6 @@ class ClientManagerChild final : public PClientManagerChild {
   mozilla::dom::WorkerPrivate* GetWorkerPrivate() const;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientManagerChild_h

@@ -17,8 +17,7 @@
 #  include "mozilla/Sandbox.h"
 #endif
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class SandboxStarter {
  public:
@@ -76,7 +75,6 @@ class GMPLoader {
   UniquePtr<GMPAdapter> mAdapter;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMP_LOADER_H__

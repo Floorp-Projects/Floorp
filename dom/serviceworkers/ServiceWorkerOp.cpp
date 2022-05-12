@@ -65,8 +65,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/MozURL.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -1271,7 +1270,8 @@ void FetchEventOp::MaybeFinished() {
 
     mHandled = nullptr;
     mPreloadResponse = nullptr;
-    mPreloadResponsePromiseRequestHolder.DisconnectIfExists();
+    mPreloadResponseAvailablePromiseRequestHolder.DisconnectIfExists();
+    mPreloadResponseEndPromiseRequestHolder.DisconnectIfExists();
 
     ServiceWorkerFetchEventOpResult result(
         mResult.value() == Resolved ? NS_OK : NS_ERROR_FAILURE);
@@ -1673,42 +1673,55 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   mPreloadResponse = fetchEvent->PreloadResponse();
 
   if (args.common().preloadNavigation()) {
-    RefPtr<FetchEventPreloadResponsePromise> preloadResponsePromise =
-        mActor->GetPreloadResponsePromise();
+    RefPtr<FetchEventPreloadResponseAvailablePromise> preloadResponsePromise =
+        mActor->GetPreloadResponseAvailablePromise();
     MOZ_ASSERT(preloadResponsePromise);
 
     // If preloadResponsePromise has already settled then this callback will get
     // run synchronously here.
     RefPtr<FetchEventOp> self = this;
-    RefPtr<PerformanceStorage> performanceStorage =
-        aWorkerPrivate->GetPerformanceStorage();
     preloadResponsePromise
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [self, performanceStorage,
-             globalObjectAsSupports = std::move(globalObjectAsSupports)](
-                FetchEventPreloadResponseArgs&& aArgs) {
-              SafeRefPtr<InternalResponse> preloadResponse;
-              IPCPerformanceTimingData timingData;
-              nsString initiatorType;
-              nsString entryName;
-              Tie(preloadResponse, timingData, initiatorType, entryName) =
-                  std::move(aArgs);
-              if (performanceStorage &&
-                  NS_SUCCEEDED(preloadResponse->GetErrorCode())) {
-                performanceStorage->AddEntry(
-                    entryName, initiatorType,
-                    MakeUnique<PerformanceTimingData>(timingData));
-              }
-
-              self->mPreloadResponse->MaybeResolve(MakeRefPtr<Response>(
-                  globalObjectAsSupports, std::move(preloadResponse), nullptr));
-              self->mPreloadResponsePromiseRequestHolder.Complete();
+            [self, globalObjectAsSupports](
+                SafeRefPtr<InternalResponse>&& aPreloadResponse) {
+              self->mPreloadResponse->MaybeResolve(
+                  MakeRefPtr<Response>(globalObjectAsSupports,
+                                       std::move(aPreloadResponse), nullptr));
+              self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
             },
             [self](int) {
-              self->mPreloadResponsePromiseRequestHolder.Complete();
+              self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
             })
-        ->Track(mPreloadResponsePromiseRequestHolder);
+        ->Track(mPreloadResponseAvailablePromiseRequestHolder);
+
+    RefPtr<PerformanceStorage> performanceStorage =
+        aWorkerPrivate->GetPerformanceStorage();
+
+    RefPtr<FetchEventPreloadResponseEndPromise> preloadResponseEndPromise =
+        mActor->GetPreloadResponseEndPromise();
+    MOZ_ASSERT(preloadResponseEndPromise);
+    preloadResponseEndPromise
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self, performanceStorage,
+             globalObjectAsSupports](ResponseEndArgs&& aArgs) {
+              if (aArgs.timing().isSome() && performanceStorage) {
+                performanceStorage->AddEntry(
+                    aArgs.timing().ref().entryName(),
+                    aArgs.timing().ref().initiatorType(),
+                    MakeUnique<PerformanceTimingData>(
+                        aArgs.timing().ref().timingData()));
+              }
+              if (aArgs.endReason() == FetchDriverObserver::eAborted) {
+                self->mPreloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+              }
+              self->mPreloadResponseEndPromiseRequestHolder.Complete();
+            },
+            [self](int) {
+              self->mPreloadResponseEndPromiseRequestHolder.Complete();
+            })
+        ->Track(mPreloadResponseEndPromiseRequestHolder);
   } else {
     // preload navigation is disabled, resolved preload response promise with
     // undefined as default behavior.
@@ -1897,5 +1910,4 @@ class ExtensionAPIEventOp final : public ServiceWorkerOp {
   return op.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

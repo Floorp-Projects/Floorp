@@ -9,8 +9,7 @@
 
 #include "nsISupportsImpl.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Natives for DOM classes that aren't refcounted need to inherit from this
 // class.
@@ -33,7 +32,6 @@ class NonRefcountedDOMObject {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_NonRefcountedDOMObject_h__ */

@@ -19,8 +19,7 @@
 #include <stdint.h>     // uint8_t, uint32_t
 #include <type_traits>  // std::is_same
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename Unit>
 struct ScriptDecoding {
@@ -84,7 +83,6 @@ struct ScriptDecoding<Utf8Unit> {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ScriptDecoding_h

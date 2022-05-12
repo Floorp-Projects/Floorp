@@ -10,8 +10,7 @@
 #include "mozilla/dom/GridBinding.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GridTracks;
 
@@ -46,7 +45,6 @@ class GridTrack : public nsISupports, public nsWrapperCache {
   GridTrackState mState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_GridTrack_h */

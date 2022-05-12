@@ -11,6 +11,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/FetchDriver.h"
+#include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/PerformanceTimingTypes.h"
 #include "mozilla/dom/SafeRefPtr.h"
 
@@ -24,12 +25,36 @@ namespace mozilla::dom {
 class InternalRequest;
 class InternalResponse;
 
-using FetchServiceResponse =
-    Tuple<SafeRefPtr<InternalResponse>, IPCPerformanceTimingData, nsString,
-          nsString>;
-
-using FetchServiceResponsePromise =
+using FetchServiceResponse = SafeRefPtr<InternalResponse>;
+using FetchServiceResponseAvailablePromise =
     MozPromise<FetchServiceResponse, CopyableErrorResult, true>;
+using FetchServiceResponseEndPromise =
+    MozPromise<ResponseEndArgs, CopyableErrorResult, true>;
+
+class FetchServicePromises final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchServicePromises);
+
+ public:
+  FetchServicePromises();
+
+  RefPtr<FetchServiceResponseAvailablePromise> GetResponseAvailablePromise();
+  RefPtr<FetchServiceResponseEndPromise> GetResponseEndPromise();
+
+  void ResolveResponseAvailablePromise(FetchServiceResponse&& aResponse,
+                                       const char* aMethodName);
+  void RejectResponseAvailablePromise(const CopyableErrorResult&& aError,
+                                      const char* aMethodName);
+  void ResolveResponseEndPromise(ResponseEndArgs&& aArgs,
+                                 const char* aMethodName);
+  void RejectResponseEndPromise(const CopyableErrorResult&& aError,
+                                const char* aMethodName);
+
+ private:
+  ~FetchServicePromises() = default;
+
+  RefPtr<FetchServiceResponseAvailablePromise::Private> mAvailablePromise;
+  RefPtr<FetchServiceResponseEndPromise::Private> mEndPromise;
+};
 
 /**
  * FetchService is a singleton object which designed to be used in parent
@@ -37,9 +62,9 @@ using FetchServiceResponsePromise =
  * from ServiceWorkers(by Navigation Preload) and PFetch.
  *
  * FetchService creates FetchInstance internally to represent each Fetch
- * request. It supports an asynchronous fetching, FetchServiceResponsePromise is
+ * request. It supports an asynchronous fetching, FetchServicePromises is
  * created when a Fetch starts, once the response is ready or any error happens,
- * the FetchServiceResponsePromise would be resolved or rejected. The promise
+ * the FetchServicePromises would be resolved or rejected. The promises
  * consumers can set callbacks to handle the Fetch result.
  */
 class FetchService final : public nsIObserver {
@@ -49,29 +74,29 @@ class FetchService final : public nsIObserver {
 
   static already_AddRefed<FetchService> GetInstance();
 
-  static RefPtr<FetchServiceResponsePromise> NetworkErrorResponse(nsresult aRv);
+  static RefPtr<FetchServicePromises> NetworkErrorResponse(nsresult aRv);
 
   FetchService();
 
   // This method creates a FetchInstance to trigger fetch.
   // The created FetchInstance is saved in mFetchInstanceTable
-  RefPtr<FetchServiceResponsePromise> Fetch(
-      SafeRefPtr<InternalRequest> aRequest, nsIChannel* aChannel = nullptr);
+  RefPtr<FetchServicePromises> Fetch(SafeRefPtr<InternalRequest> aRequest,
+                                     nsIChannel* aChannel = nullptr);
 
-  void CancelFetch(RefPtr<FetchServiceResponsePromise>&& aResponsePromise);
+  void CancelFetch(RefPtr<FetchServicePromises>&& aPromises);
 
  private:
   /**
    * FetchInstance is an internal representation for each Fetch created by
    * FetchService.
    * FetchInstance is also a FetchDriverObserver which has responsibility to
-   * resolve/reject the FetchServiceResponsePromise.
+   * resolve/reject the FetchServicePromises.
    * FetchInstance triggers fetch by instancing a FetchDriver with proper
    * initialization. The general usage flow of FetchInstance is as follows
    *
    * RefPtr<FetchInstance> fetch = MakeRefPtr<FetchInstance>(aResquest);
    * fetch->Initialize();
-   * RefPtr<FetchServiceResponsePromise> fetch->Fetch();
+   * RefPtr<FetchServicePromises> fetch->Fetch();
    */
   class FetchInstance final : public FetchDriverObserver {
    public:
@@ -86,7 +111,7 @@ class FetchService final : public nsIObserver {
     // mRequest
     nsresult Initialize(nsIChannel* aChannel = nullptr);
 
-    RefPtr<FetchServiceResponsePromise> Fetch();
+    RefPtr<FetchServicePromises> Fetch();
 
     void Cancel();
 
@@ -109,7 +134,7 @@ class FetchService final : public nsIObserver {
     RefPtr<FetchDriver> mFetchDriver;
     SafeRefPtr<InternalResponse> mResponse;
 
-    MozPromiseHolder<FetchServiceResponsePromise> mResponsePromiseHolder;
+    RefPtr<FetchServicePromises> mPromises;
   };
 
   ~FetchService();
@@ -118,8 +143,7 @@ class FetchService final : public nsIObserver {
   nsresult UnregisterNetworkObserver();
 
   // This is a container to manage the generated fetches.
-  nsTHashMap<nsRefPtrHashKey<FetchServiceResponsePromise>,
-             RefPtr<FetchInstance> >
+  nsTHashMap<nsRefPtrHashKey<FetchServicePromises>, RefPtr<FetchInstance> >
       mFetchInstanceTable;
   bool mObservingNetwork{false};
   bool mOffline{false};

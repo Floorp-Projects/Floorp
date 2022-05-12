@@ -9,8 +9,7 @@
 
 #include "js/StructuredClone.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // CHANGING THE ORDER/PLACEMENT OF EXISTING ENUM VALUES MAY BREAK INDEXEDDB.
 // PROCEED WITH EXTREME CAUTION.
@@ -145,7 +144,6 @@ enum StructuredCloneTags : uint32_t {
   // "less stable" tags!
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // StructuredCloneTags_h__

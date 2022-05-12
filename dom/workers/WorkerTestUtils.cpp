@@ -8,8 +8,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerTestUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 uint32_t WorkerTestUtils::CurrentTimerNestingLevel(const GlobalObject& aGlobal,
                                                    ErrorResult& aErr) {
@@ -19,5 +18,4 @@ uint32_t WorkerTestUtils::CurrentTimerNestingLevel(const GlobalObject& aGlobal,
   return worker->GetCurrentTimerNestingLevel();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

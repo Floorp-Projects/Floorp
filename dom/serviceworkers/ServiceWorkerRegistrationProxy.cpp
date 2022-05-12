@@ -13,8 +13,7 @@
 #include "ServiceWorkerRegistrationParent.h"
 #include "ServiceWorkerUnregisterCallback.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
@@ -487,5 +486,4 @@ ServiceWorkerRegistrationProxy::GetNavigationPreloadState() {
   return promise;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

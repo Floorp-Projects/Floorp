@@ -12,8 +12,7 @@
 
 class nsAtom;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Grid;
 
@@ -51,7 +50,6 @@ class GridArea : public nsISupports, public nsWrapperCache {
   const uint32_t mColumnEnd;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_GridTrack_h */

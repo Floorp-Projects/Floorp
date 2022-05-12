@@ -1,0 +1,50 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/MediaIPCUtils.h";
+
+include protocol PRemoteDecoderManager;
+
+using mozilla::AudioInfo from "MediaInfo.h";
+using mozilla::VideoInfo from "MediaInfo.h";
+using mozilla::MediaResult from "MediaResult.h";
+using mozilla::TrackInfo::TrackType from "MediaInfo.h";
+
+namespace mozilla {
+
+struct MediaEngineInfoIPDL
+{
+  bool preload;
+};
+
+struct MediaInfoIPDL
+{
+  AudioInfo? audioInfo;
+  VideoInfo? videoInfo;
+};
+
+[ManualDealloc]
+async protocol PMFMediaEngine
+{
+  manager PRemoteDecoderManager;
+parent:
+  // Return 0 if media engine can't be created.
+  async InitMediaEngine(MediaEngineInfoIPDL info) returns (uint64_t id);
+  async NotifyMediaInfo(MediaInfoIPDL info);
+  async Play();
+  async Pause();
+  async Seek(double targetTimeInSecond);
+  async SetVolume(double volume);
+  async SetPlaybackRate(double playbackRate);
+  async SetLooping(bool looping);
+  async NotifyEndOfStream(TrackType type);
+  async Shutdown();
+  async __delete__();
+
+child:
+  async UpdateCurrentTime(double currentTimeInSecond);
+  async RequestSample(TrackType type);
+};
+
+} // namespace mozilla

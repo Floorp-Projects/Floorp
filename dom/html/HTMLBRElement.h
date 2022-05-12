@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #define BR_ELEMENT_FLAG_BIT(n_) \
   NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
@@ -71,7 +70,6 @@ class HTMLBRElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

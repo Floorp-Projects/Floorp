@@ -12,8 +12,7 @@
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class nsSynthVoiceRegistry;
 class SpeechSynthesis;
@@ -51,7 +50,6 @@ class SpeechSynthesisVoice final : public nsISupports, public nsWrapperCache {
   nsString mUri;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

@@ -66,7 +66,7 @@ class ForkServiceChild {
 
  private:
   // Called when a message is received.
-  void OnMessageReceived(IPC::Message&& message);
+  void OnMessageReceived(UniquePtr<IPC::Message> message);
   void OnError();
 
   UniquePtr<MiniTransceiver> mTcver;

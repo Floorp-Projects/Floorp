@@ -15,8 +15,7 @@
 #include "nsDOMString.h"
 #include "nsAtom.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * A class for representing string return values.  This can be either passed to
@@ -328,7 +327,6 @@ class MOZ_STACK_CLASS DOMString {
   State mState;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DOMString_h

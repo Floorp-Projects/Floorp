@@ -9,8 +9,8 @@
 <window title="Basic Properties Test"
         onload="setTimeout(test_props, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <command id="cmd_nothing"/>
 <command id="cmd_action"/>
@@ -73,6 +73,7 @@ function test_props_forelement(element, label, value)
   synthesizeMouseExpectEvent(element, 4, 4, { }, $("cmd_action"), "command", "element");
 
   // check that clicks on disabled items don't fire a command event
+  // eslint-disable-next-line no-constant-binary-expression
   ok((element.disabled = true) === true, "element disabled setter return");
   ok(element.disabled === true, "element disabled after set");
   synthesizeMouseExpectEvent(element, 4, 4, { }, $("cmd_action"), "!command", "element");

@@ -1488,7 +1488,7 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
     jg %%loop_y
 
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
@@ -1647,7 +1647,7 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
     jg %%loop_y_h_overlap
 
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
@@ -1852,7 +1852,7 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
 
 %%end_y_v_overlap:
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
@@ -2081,20 +2081,20 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 15, 16, dst, src, stride, fg_data, w, scaling,
 
 %%end_y_hv_overlap:
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r14+wq*(1+%2)]
     add            srcq, wq
     add            dstq, wq
     jmp %%loop_x_hv_overlap
-%%end:
-    RET
 %endmacro
 
     %%FGUV_32x32xN_LOOP 1, %2, %3
 .csfl:
     %%FGUV_32x32xN_LOOP 0, %2, %3
+.end:
+    RET
 %endmacro
 
 GEN_GRAIN_UV_FN 420, 1, 1

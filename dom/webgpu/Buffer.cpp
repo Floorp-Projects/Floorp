@@ -17,8 +17,7 @@
 #include "nsWrapperCache.h"
 #include "Device.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_JS_WRAP(Buffer)
 
@@ -177,5 +176,4 @@ void Buffer::Destroy() {
   // examples
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

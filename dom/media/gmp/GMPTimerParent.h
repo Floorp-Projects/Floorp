@@ -12,8 +12,7 @@
 #include "nsTHashSet.h"
 #include "mozilla/Monitor.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPTimerParent : public PGMPTimerParent {
   friend class PGMPTimerParent;
@@ -52,7 +51,6 @@ class GMPTimerParent : public PGMPTimerParent {
   bool mIsOpen;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPTimerParent_h_

@@ -14,9 +14,7 @@
 #include "WebGLContext.h"
 #include "WebGLTypes.h"
 
-namespace mozilla {
-
-namespace webgl {
+namespace mozilla::webgl {
 template <typename T>
 struct QueueParamTraits;
 
@@ -264,7 +262,6 @@ struct QueueParamTraits<gfxAlphaType>
     : public ContiguousEnumSerializerInclusive<
           gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
 
-}  // namespace webgl
-}  // namespace mozilla
+}  // namespace mozilla::webgl
 
 #endif  // WEBGLQUEUEPARAMTRAITS_H_

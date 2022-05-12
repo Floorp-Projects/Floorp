@@ -14,9 +14,7 @@
 
 class nsIInputStream;
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 class CacheStreamControlParent;
 class Manager;
@@ -67,8 +65,6 @@ class StreamList final : public Context::Activity,
   MOZ_DECLARE_REFCOUNTED_TYPENAME(cache::StreamList)
 };
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_StreamList_h

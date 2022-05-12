@@ -14,8 +14,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FileSystemDirectoryEntry;
 class FileSystemEntry;
@@ -48,7 +47,6 @@ class FileSystem final : public nsISupports, public nsWrapperCache {
   nsString mName;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileSystem_h

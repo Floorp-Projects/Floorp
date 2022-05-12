@@ -11,8 +11,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SessionStorageCache;
 
@@ -60,7 +59,6 @@ class PartitionedLocalStorage final : public Storage {
   RefPtr<SessionStorageCache> mCache;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PartitionedLocalStorage_h

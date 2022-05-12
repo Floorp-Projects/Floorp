@@ -14,8 +14,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "js/TypeDecls.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class GeolocationCoordinates final : public nsISupports, public nsWrapperCache {
   ~GeolocationCoordinates();
@@ -52,7 +51,6 @@ class GeolocationCoordinates final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIDOMGeoPositionCoords> mCoords;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_GeolocationCoordinates_h */

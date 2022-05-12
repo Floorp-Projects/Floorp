@@ -14,8 +14,7 @@
 #include "nsIURIMutator.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mCString;
@@ -63,5 +62,4 @@ bool CrashReport::Deliver(nsIPrincipal* aPrincipal, bool aIsOOM) {
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

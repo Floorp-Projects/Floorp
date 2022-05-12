@@ -15,8 +15,7 @@
 class nsIChannel;
 class nsIConsoleReportCollector;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SRIMetadata;
 
@@ -101,7 +100,6 @@ class SRICheckDataVerifier final {
                       nsIConsoleReportCollector* aReporter);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SRICheck_h

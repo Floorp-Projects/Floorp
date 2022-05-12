@@ -1202,8 +1202,13 @@ class LayerViewSupport final
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
     mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
-    mSurfaceControl =
-        java::sdk::SurfaceControl::GlobalRef::From(aSurfaceControl);
+    // Disable the SurfaceControl compositing path for now, until we have a
+    // solution to bug 1767128. This means users on Android 12 will be unable to
+    // recover from a GPU process crash (due to bug 1762025), and the parent
+    // process will crash as a result (which is no worse than not using the GPU
+    // process in the first place).
+    mSurfaceControl = nullptr;
+
     if (mSurfaceControl) {
       // Setting the SurfaceControl's buffer size here ensures child Surfaces
       // created by the compositor have the correct size.

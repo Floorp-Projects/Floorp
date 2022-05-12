@@ -632,21 +632,17 @@ LoginTestUtils.remoteSettings = {
   async setupWebsitesWithSharedCredentials(
     relatedRealms = [["other-example.com", "example.com", "example.co.uk"]]
   ) {
-    let db = await RemoteSettings(this.relatedRealmsCollection).db;
+    let db = RemoteSettings(this.relatedRealmsCollection).db;
     await db.clear();
     await db.create({
       id: "some-fake-ID-abc",
       relatedRealms,
     });
-    await db.importChanges({}, 9999999999999);
+    await db.importChanges({}, Date.now());
   },
   async cleanWebsitesWithSharedCredentials() {
-    let db = await RemoteSettings(this.relatedRealmsCollection).db;
-    await db.importChanges({}, 9999999999999, [], { clear: true });
-  },
-  async updateTimestamp() {
-    let db = await RemoteSettings(this.relatedRealmsCollection).db;
-    await db.importChanges({}, 9999999999999 + 1);
+    let db = RemoteSettings(this.relatedRealmsCollection).db;
+    await db.importChanges({}, Date.now(), [], { clear: true });
   },
   improvedPasswordRulesCollection: "password-rules",
 
@@ -654,7 +650,7 @@ LoginTestUtils.remoteSettings = {
     origin = "example.com",
     rules = "minlength: 6; maxlength: 16; required: lower, upper; required: digit; required: [&<>'\"!#$%(),:;=?[^`{|}~]]; max-consecutive: 2;"
   ) {
-    let db = await RemoteSettings(this.improvedPasswordRulesCollection).db;
+    let db = RemoteSettings(this.improvedPasswordRulesCollection).db;
     await db.clear();
     await db.create({
       id: "some-fake-ID",
@@ -666,10 +662,10 @@ LoginTestUtils.remoteSettings = {
       Domain: origin,
       "password-rules": rules,
     });
-    await db.importChanges({}, 9999999999999);
+    await db.importChanges({}, Date.now());
   },
   async cleanImprovedPasswordRules() {
-    let db = await RemoteSettings(this.improvedPasswordRulesCollection).db;
-    await db.importChanges({}, 9999999999999, [], { clear: true });
+    let db = RemoteSettings(this.improvedPasswordRulesCollection).db;
+    await db.importChanges({}, Date.now(), [], { clear: true });
   },
 };

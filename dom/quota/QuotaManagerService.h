@@ -35,8 +35,7 @@ namespace hal {
 class BatteryInformation;
 }
 
-namespace dom {
-namespace quota {
+namespace dom::quota {
 
 class QuotaChild;
 class QuotaManager;
@@ -97,8 +96,7 @@ class QuotaManagerService final : public nsIQuotaManagerService,
   void Notify(const hal::BatteryInformation& aBatteryInfo) override;
 };
 
-}  // namespace quota
-}  // namespace dom
+}  // namespace dom::quota
 }  // namespace mozilla
 
 #endif /* mozilla_dom_quota_QuotaManagerService_h */

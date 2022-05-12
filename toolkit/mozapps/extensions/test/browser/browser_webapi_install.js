@@ -462,9 +462,7 @@ add_task(async function test_permissions_and_policy() {
     },
   });
 
-  popupPromise = promisePopupNotificationShown(
-    "addon-install-webapi-blocked-policy"
-  );
+  popupPromise = promisePopupNotificationShown("addon-install-policy-blocked");
 
   await testBadUrl(
     XPI_URL,

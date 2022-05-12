@@ -13,8 +13,7 @@
 
 class nsIVariant;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DataTransfer;
 class DataTransferItem;
@@ -121,7 +120,6 @@ class DataTransferItemList final : public nsISupports, public nsWrapperCache {
   nsTArray<nsTArray<RefPtr<DataTransferItem>>> mIndexedItems;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_DataTransferItemList_h

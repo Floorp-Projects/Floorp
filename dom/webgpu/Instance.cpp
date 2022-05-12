@@ -14,8 +14,7 @@
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(Instance, mOwner)
 
@@ -83,5 +82,4 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   return promise.forget();
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

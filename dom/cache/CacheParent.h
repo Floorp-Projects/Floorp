@@ -11,9 +11,7 @@
 #include "mozilla/dom/cache/PCacheParent.h"
 #include "mozilla/dom/cache/Types.h"
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 class Manager;
 
@@ -41,8 +39,6 @@ class CacheParent final : public PCacheParent {
   const CacheId mCacheId;
 };
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_CacheParent_h

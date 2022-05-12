@@ -15,8 +15,7 @@
 
 typedef uint32_t SuspendTypes;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLMediaElement;
 /**
@@ -80,7 +79,6 @@ class MediaPlaybackDelayPolicy {
       const HTMLMediaElement* aElement, bool aIsAudible);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

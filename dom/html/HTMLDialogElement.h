@@ -12,8 +12,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLDialogElement final : public nsGenericHTMLElement {
  public:
@@ -64,7 +63,6 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
   nsWeakPtr mPreviouslyFocusedElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

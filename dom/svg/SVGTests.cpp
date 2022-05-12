@@ -13,8 +13,7 @@
 #include "nsStyleUtil.h"
 #include "mozilla/Preferences.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 nsStaticAtom* const SVGTests::sStringListNames[2] = {
     nsGkAtoms::requiredExtensions,
@@ -200,5 +199,4 @@ void SVGTests::MaybeInvalidate() {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

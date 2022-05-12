@@ -10,8 +10,7 @@
 
 class nsGlobalWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * This class is used to provide an ability for GeckoView (GV) to allow its
@@ -82,7 +81,6 @@ class GVAutoplayPermissionRequestor final {
                                  GVAutoplayRequestType aType);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

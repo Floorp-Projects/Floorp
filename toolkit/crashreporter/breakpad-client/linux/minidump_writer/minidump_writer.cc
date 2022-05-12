@@ -807,7 +807,7 @@ class MinidumpWriter {
     ElfW(Addr) dyn_addr = 0;
     for (; phnum >= 0; phnum--, phdr++) {
       ElfW(Phdr) ph;
-      if (!dumper_->CopyFromProcess(&ph, GetCrashThread(), phdr, sizeof(ph)))
+      if (!dumper_->CopyFromProcess(&ph, dumper_->pid(), phdr, sizeof(ph)))
         return false;
 
       // Adjust base address with the virtual address of the PT_LOAD segment
@@ -833,8 +833,7 @@ class MinidumpWriter {
     for (int i = 0; ; ++i) {
       ElfW(Dyn) dyn;
       dynamic_length += sizeof(dyn);
-      if (!dumper_->CopyFromProcess(&dyn, GetCrashThread(), dynamic + i,
-                                    sizeof(dyn))) {
+      if (!dumper_->CopyFromProcess(&dyn, dumper_->pid(), dynamic + i, sizeof(dyn))) {
         return false;
       }
 
@@ -862,13 +861,13 @@ class MinidumpWriter {
     // Count the number of loaded DSOs
     int dso_count = 0;
     struct r_debug debug_entry;
-    if (!dumper_->CopyFromProcess(&debug_entry, GetCrashThread(), r_debug,
+    if (!dumper_->CopyFromProcess(&debug_entry, dumper_->pid(), r_debug,
                                   sizeof(debug_entry))) {
       return false;
     }
     for (struct link_map* ptr = debug_entry.r_map; ptr; ) {
       struct link_map map;
-      if (!dumper_->CopyFromProcess(&map, GetCrashThread(), ptr, sizeof(map)))
+      if (!dumper_->CopyFromProcess(&map, dumper_->pid(), ptr, sizeof(map)))
         return false;
 
       ptr = map.l_next;
@@ -888,13 +887,13 @@ class MinidumpWriter {
       // Iterate over DSOs and write their information to mini dump
       for (struct link_map* ptr = debug_entry.r_map; ptr; ) {
         struct link_map map;
-        if (!dumper_->CopyFromProcess(&map, GetCrashThread(), ptr, sizeof(map)))
+        if (!dumper_->CopyFromProcess(&map, dumper_->pid(), ptr, sizeof(map)))
           return  false;
 
         ptr = map.l_next;
         char filename[257] = { 0 };
         if (map.l_name) {
-          dumper_->CopyFromProcess(filename, GetCrashThread(), map.l_name,
+          dumper_->CopyFromProcess(filename, dumper_->pid(), map.l_name,
                                    sizeof(filename) - 1);
         }
         MDLocationDescriptor location;
@@ -927,7 +926,7 @@ class MinidumpWriter {
     // The passed-in size to the constructor (above) is only a hint.
     // Must call .resize() to do actual initialization of the elements.
     dso_debug_data.resize(dynamic_length);
-    dumper_->CopyFromProcess(&dso_debug_data[0], GetCrashThread(), dynamic,
+    dumper_->CopyFromProcess(&dso_debug_data[0], dumper_->pid(), dynamic,
                              dynamic_length);
     debug.CopyIndexAfterObject(0, &dso_debug_data[0], dynamic_length);
 

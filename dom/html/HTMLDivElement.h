@@ -9,8 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLDivElement final : public nsGenericHTMLElement {
  public:
@@ -45,7 +44,6 @@ class HTMLDivElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* HTMLDivElement_h___ */

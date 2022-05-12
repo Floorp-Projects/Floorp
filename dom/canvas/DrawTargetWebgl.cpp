@@ -220,10 +220,7 @@ DrawTargetWebgl::SharedContext::~SharedContext() {
   if (sSharedContext.init() && sSharedContext.get() == this) {
     sSharedContext.set(nullptr);
   }
-  while (!mTextureHandles.isEmpty()) {
-    PruneTextureHandle(mTextureHandles.popLast());
-    --mNumTextureHandles;
-  }
+  ClearAllTextures();
   UnlinkSurfaceTextures();
   UnlinkGlyphCaches();
 }
@@ -259,6 +256,49 @@ void DrawTargetWebgl::SharedContext::UnlinkGlyphCaches() {
     cache = cache->getNext();
     font->RemoveUserData(&mGlyphCacheKey);
   }
+}
+
+void DrawTargetWebgl::SharedContext::OnMemoryPressure() {
+  mShouldClearCaches = true;
+}
+
+// Clear out the entire list of texture handles from any source.
+void DrawTargetWebgl::SharedContext::ClearAllTextures() {
+  while (!mTextureHandles.isEmpty()) {
+    PruneTextureHandle(mTextureHandles.popLast());
+    --mNumTextureHandles;
+  }
+}
+
+// Scan through the shared texture pages looking for any that are empty and
+// delete them.
+void DrawTargetWebgl::SharedContext::ClearEmptyTextureMemory() {
+  for (auto pos = mSharedTextures.begin(); pos != mSharedTextures.end();) {
+    if (!(*pos)->HasAllocatedHandles()) {
+      RefPtr<SharedTexture> shared = *pos;
+      size_t usedBytes = shared->UsedBytes();
+      mEmptyTextureMemory -= usedBytes;
+      mTotalTextureMemory -= usedBytes;
+      pos = mSharedTextures.erase(pos);
+    } else {
+      ++pos;
+    }
+  }
+}
+
+// If there is a request to clear out the caches because of memory pressure,
+// then first clear out all the texture handles in the texture cache. If there
+// are still empty texture pages being kept around, then clear those too.
+void DrawTargetWebgl::SharedContext::ClearCachesIfNecessary() {
+  if (!mShouldClearCaches.exchange(false)) {
+    return;
+  }
+  mZeroBuffer = nullptr;
+  ClearAllTextures();
+  if (mEmptyTextureMemory) {
+    ClearEmptyTextureMemory();
+  }
+  ClearLastTexture();
 }
 
 MOZ_THREAD_LOCAL(DrawTargetWebgl::SharedContext*)
@@ -1180,7 +1220,7 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
                                                    SurfaceFormat aFormat,
                                                    const IntRect& aSrcRect,
                                                    const IntPoint& aDstOffset,
-                                                   bool aInit) {
+                                                   bool aInit, bool aZero) {
   webgl::TexUnpackBlobDesc texDesc = {
       LOCAL_GL_TEXTURE_2D,
       {uint32_t(aSrcRect.width), uint32_t(aSrcRect.height), 1}};
@@ -1207,6 +1247,24 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
     texDesc.unpacking.alignmentInTypeElems = stride % 4 ? 1 : 4;
     texDesc.unpacking.rowLength = stride / bpp;
     texDesc.unpacking.imageHeight = aSrcRect.height;
+  } else if (aZero) {
+    // Create a PBO filled with zero data to initialize the texture data and
+    // avoid slow initialization inside WebGL.
+    MOZ_ASSERT(aSrcRect.TopLeft() == IntPoint(0, 0));
+    if (!mZeroBuffer || mZeroSize.width < aSrcRect.width ||
+        mZeroSize.height < aSrcRect.height) {
+      mZeroBuffer = mWebgl->CreateBuffer();
+      mZeroSize = aSrcRect.Size();
+      mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
+      size_t size = 4 * mZeroSize.width * mZeroSize.height;
+      void* data = calloc(1, size);
+      mWebgl->RawBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                            {(const uint8_t*)data, size}, LOCAL_GL_STATIC_DRAW);
+      free(data);
+    } else {
+      mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mZeroBuffer);
+    }
+    texDesc.pboOffset = Some(0);
   }
   // Upload as RGBA8 to avoid swizzling during upload. Surfaces provide
   // data as BGRA, but we manually swizzle that in the shader. An A8
@@ -1221,6 +1279,9 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
   mWebgl->RawTexImage(0, aInit ? intFormat : 0,
                       {uint32_t(aDstOffset.x), uint32_t(aDstOffset.y), 0},
                       texPI, texDesc);
+  if (!aData && aZero) {
+    mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  }
   return true;
 }
 
@@ -1436,8 +1497,14 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           // from that if possible.
           for (auto& shared : mSharedTextures) {
             if (shared->GetFormat() == format) {
+              bool wasEmpty = !shared->HasAllocatedHandles();
               handle = shared->Allocate(texSize);
               if (handle) {
+                if (wasEmpty) {
+                  // If the page was previously empty, then deduct it from the
+                  // empty memory reserves.
+                  mEmptyTextureMemory -= shared->UsedBytes();
+                }
                 break;
               }
             }
@@ -1556,7 +1623,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
           // larger than it, then we need to allocate the texture page to the
           // full backing size before we can do a partial upload of the surface.
           UploadSurface(nullptr, format, IntRect(IntPoint(), backingSize),
-                        IntPoint(), true);
+                        IntPoint(), true, true);
         }
       }
 
@@ -1621,9 +1688,19 @@ bool DrawTargetWebgl::SharedContext::RemoveSharedTexture(
   if (pos == mSharedTextures.end()) {
     return false;
   }
-  mTotalTextureMemory -= aTexture->UsedBytes();
-  mSharedTextures.erase(pos);
-  ClearLastTexture();
+  // Keep around a reserve of empty pages to avoid initialization costs from
+  // allocating shared pages. If still below the limit of reserved pages, then
+  // just add it to the reserve. Otherwise, erase the empty texture page.
+  size_t maxBytes = StaticPrefs::gfx_canvas_accelerated_reserve_empty_cache()
+                    << 20;
+  size_t usedBytes = aTexture->UsedBytes();
+  if (mEmptyTextureMemory + usedBytes <= maxBytes) {
+    mEmptyTextureMemory += usedBytes;
+  } else {
+    mTotalTextureMemory -= usedBytes;
+    mSharedTextures.erase(pos);
+    ClearLastTexture();
+  }
   return true;
 }
 
@@ -2635,16 +2712,20 @@ void DrawTargetWebgl::BeginFrame(const IntRect& aPersistedRect) {
       }
     }
   }
+  // Check if we need to clear out any cached because of memory pressure.
+  mSharedContext->ClearCachesIfNecessary();
   mProfile.BeginFrame();
 }
 
 // For use within CanvasRenderingContext2D, called on ReturnDrawTarget.
 void DrawTargetWebgl::EndFrame() {
   mProfile.EndFrame();
-  //  Ensure we're not somehow using more than the allowed texture memory.
+  // Ensure we're not somehow using more than the allowed texture memory.
   mSharedContext->PruneTextureMemory();
   // Signal that we're done rendering the frame in case no present occurs.
   mSharedContext->mWebgl->EndOfFrame();
+  // Check if we need to clear out any cached because of memory pressure.
+  mSharedContext->ClearCachesIfNecessary();
   // The framebuffer is dirty, so it needs to be copied to the swapchain.
   mNeedsPresent = true;
 }

@@ -16,8 +16,7 @@
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // static
 already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
@@ -314,5 +313,4 @@ SharedWorkerManagerWrapper::~SharedWorkerManagerWrapper() {
                          mHolder.forget());
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

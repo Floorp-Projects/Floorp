@@ -384,7 +384,7 @@ C/C++ practices
    `DebugOnly<T> <https://developer.mozilla.org/docs/Mozilla/Debugging/DebugOnly%3CT%3E>`__
    helper when declaring them.
 -  You should `use the static preference
-   API <https://developer.mozilla.org/docs/Mozilla/Preferences/Using_preferences_from_application_code>`__ for
+   API <https://firefox-source-docs.mozilla.org/modules/libpref/index.html>`__ for
    working with preferences.
 -  One-argument constructors, that are not copy or move constructors,
    should generally be marked explicit. Exceptions should be annotated

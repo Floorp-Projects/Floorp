@@ -7,13 +7,11 @@
 #include "Device.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(OutOfMemoryError, mParent)
 GPU_IMPL_JS_WRAP(OutOfMemoryError)
 
 OutOfMemoryError::~OutOfMemoryError() = default;
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

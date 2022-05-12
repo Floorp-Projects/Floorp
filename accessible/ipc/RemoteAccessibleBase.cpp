@@ -377,11 +377,26 @@ void RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
 }
 
 template <class Derived>
-LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
+nsRect RemoteAccessibleBase<Derived>::GetBoundsInAppUnits() const {
+  dom::CanonicalBrowsingContext* cbc =
+      static_cast<dom::BrowserParent*>(mDoc->Manager())
+          ->GetBrowsingContext()
+          ->Top();
+  dom::BrowserParent* bp = cbc->GetBrowserParent();
+  nsPresContext* presContext =
+      bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
+  return LayoutDeviceIntRect::ToAppUnits(Bounds(),
+                                         presContext->AppUnitsPerDevPixel());
+}
+
+template <class Derived>
+LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
+    Maybe<nsRect> aOffset) const {
   if (mCachedFields) {
     Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
     if (maybeBounds) {
       nsRect bounds = *maybeBounds;
+#if !defined(ANDROID)
       dom::CanonicalBrowsingContext* cbc =
           static_cast<dom::BrowserParent*>(mDoc->Manager())
               ->GetBrowsingContext()
@@ -389,35 +404,30 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
       dom::BrowserParent* bp = cbc->GetBrowserParent();
       nsPresContext* presContext =
           bp->GetOwnerElement()->OwnerDoc()->GetPresContext();
+      float fullZoom = cbc->GetFullZoom();
+#else
+      // In Android the FullZoom is always 1.0 since we use APZ/resolution zoom.
+      float fullZoom = 1.0;
+#endif
+
+      if (aOffset.isSome()) {
+        // The rect we've passed in is in app units, so no conversion needed.
+        nsRect internalRect = *aOffset;
+        // XXX: Right now this is exclusively used for
+        // text bounds, which already have their zoom level
+        // applied. Remove it, because we'll multiply it back
+        // in later on.
+        internalRect.ScaleRoundOut(1 / fullZoom);
+        bounds.SetRectX(bounds.x + internalRect.x, internalRect.width);
+        bounds.SetRectY(bounds.y + internalRect.y, internalRect.height);
+      }
 
       Unused << ApplyTransform(bounds);
 
       LayoutDeviceIntRect devPxBounds;
       const Accessible* acc = Parent();
 
-      while (acc) {
-        if (LocalAccessible* localAcc =
-                const_cast<Accessible*>(acc)->AsLocal()) {
-          // LocalAccessible::Bounds returns screen-relative bounds in
-          // dev pixels.
-          LayoutDeviceIntRect localBounds = localAcc->Bounds();
-
-          // Convert our existing `bounds` rect from app units to dev pixels
-          devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
-              bounds, presContext->AppUnitsPerDevPixel());
-
-          // We factor in our zoom level before offsetting by
-          // `localBounds`, which has already taken zoom into account.
-          devPxBounds.ScaleRoundOut(cbc->GetFullZoom());
-
-          // The root document will always have an APZ resolution of 1,
-          // so we don't factor in its scale here. We also don't scale
-          // by GetFullZoom because LocalAccessible::Bounds already does
-          // that.
-          devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
-          break;
-        }
-
+      while (acc && acc->IsRemote()) {
         RemoteAccessible* remoteAcc = const_cast<Accessible*>(acc)->AsRemote();
 
         if (Maybe<nsRect> maybeRemoteBounds =
@@ -458,21 +468,42 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
         acc = acc->Parent();
       }
 
-      PresShell* presShell = presContext->PresShell();
+#if !defined(ANDROID)
+      // This block is not thread safe because it queries a LocalAccessible,
+      // the BrowsingContext, PresContext, etc. It is also not needed in
+      // Android since the only local accessible is the outer doc browser that
+      // has an offset of 0 and a FullZoom value of 1.0.
+      if (LocalAccessible* localAcc = const_cast<Accessible*>(acc)->AsLocal()) {
+        // LocalAccessible::Bounds returns screen-relative bounds in
+        // dev pixels.
+        LayoutDeviceIntRect localBounds = localAcc->Bounds();
 
-      // Our relative bounds are pulled from the coordinate space of the layout
-      // viewport, but we need them to be in the coordinate space of the visual
-      // viewport. We calculate the difference and translate our bounds here.
-      nsPoint viewportOffset = presShell->GetVisualViewportOffset() -
-                               presShell->GetLayoutViewportOffset();
-      devPxBounds.MoveBy(-(LayoutDeviceIntPoint::FromAppUnitsToNearest(
-          viewportOffset, presContext->AppUnitsPerDevPixel())));
+        // Convert our existing `bounds` rect from app units to dev pixels
+        devPxBounds = LayoutDeviceIntRect::FromAppUnitsToNearest(
+            bounds, presContext->AppUnitsPerDevPixel());
+
+        // We factor in our zoom level before offsetting by
+        // `localBounds`, which has already taken zoom into account.
+        devPxBounds.ScaleRoundOut(fullZoom);
+
+        // The root document will always have an APZ resolution of 1,
+        // so we don't factor in its scale here. We also don't scale
+        // by GetFullZoom because LocalAccessible::Bounds already does
+        // that.
+        devPxBounds.MoveBy(localBounds.X(), localBounds.Y());
+      }
+#endif
 
       return devPxBounds;
     }
   }
 
   return LayoutDeviceIntRect();
+}
+
+template <class Derived>
+LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
+  return BoundsWithOffset(Nothing());
 }
 
 template <class Derived>
@@ -507,7 +538,7 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
 
 template <class Derived>
 uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
-  MOZ_ASSERT(IsText());
+  MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {
     return 0;
   }
@@ -528,6 +559,28 @@ RemoteAccessibleBase<Derived>::GetCachedTextLines() {
   }
   VERIFY_CACHE(CacheDomain::Text);
   return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
+}
+
+template <class Derived>
+Maybe<nsTArray<nsRect>> RemoteAccessibleBase<Derived>::GetCachedCharData() {
+  MOZ_ASSERT(IsText());
+  if (!mCachedFields) {
+    return Nothing();
+  }
+
+  if (Maybe<const nsTArray<int32_t>&> maybeCharData =
+          mCachedFields->GetAttribute<nsTArray<int32_t>>(
+              nsGkAtoms::characterData)) {
+    const nsTArray<int32_t>& charData = *maybeCharData;
+    nsTArray<nsRect> rects;
+    for (int i = 0; i < static_cast<int32_t>(charData.Length()); i += 4) {
+      nsRect r(charData[i], charData[i + 1], charData[i + 2], charData[i + 3]);
+      rects.AppendElement(r);
+    }
+    return Some(std::move(rects));
+  }
+
+  return Nothing();
 }
 
 template <class Derived>

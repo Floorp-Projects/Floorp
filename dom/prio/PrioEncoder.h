@@ -14,8 +14,7 @@ class nsIGlobalObject;
 using SECKEYPublicKey = struct SECKEYPublicKeyStr;
 using PublicKey = SECKEYPublicKey*;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PrioEncoder {
  public:
@@ -54,7 +53,6 @@ class PrioEncoder {
   static nsresult LazyInitSingleton();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PrioEncoder_h

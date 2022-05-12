@@ -15,13 +15,11 @@
 #include "nsStreamUtils.h"
 #include "mozilla/StaticPrefs_browser.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkerPrivate;
 
-namespace workerinternals {
-namespace loader {
+namespace workerinternals::loader {
 
 /* ScriptResponseHeaderProcessor
  *
@@ -73,10 +71,8 @@ class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
   const bool mIsMainScript;
 };
 
-}  // namespace loader
-}  // namespace workerinternals
+}  // namespace workerinternals::loader
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_ScriptResponseHeaderProcessor_h__ */

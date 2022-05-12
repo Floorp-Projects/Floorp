@@ -10,8 +10,7 @@
 #include "gfxVR.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XRNativeOrigin {
  public:
@@ -28,7 +27,6 @@ class XRNativeOrigin {
   virtual ~XRNativeOrigin() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRNativeOrigin_h_

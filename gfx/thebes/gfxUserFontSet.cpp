@@ -989,27 +989,27 @@ gfxUserFontEntry* gfxUserFontSet::FindExistingUserFontEntry(
     StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
     float aAscentOverride, float aDescentOverride, float aLineGapOverride,
     float aSizeAdjust) {
-  nsTArray<RefPtr<gfxFontEntry>>& fontList = aFamily->GetFontList();
+  aFamily->ReadLock();
+  const auto& fontList = aFamily->GetFontList();
+  gfxUserFontEntry* result = nullptr;
 
-  for (size_t i = 0, count = fontList.Length(); i < count; i++) {
-    if (!fontList[i]->mIsUserFontContainer) {
+  for (const auto& font : fontList) {
+    if (!font->mIsUserFontContainer) {
       continue;
     }
 
-    gfxUserFontEntry* existingUserFontEntry =
-        static_cast<gfxUserFontEntry*>(fontList[i].get());
-    if (!existingUserFontEntry->Matches(
-            aFontFaceSrcList, aWeight, aStretch, aStyle, aFeatureSettings,
-            aVariationSettings, aLanguageOverride, aUnicodeRanges, aFontDisplay,
-            aRangeFlags, aAscentOverride, aDescentOverride, aLineGapOverride,
-            aSizeAdjust)) {
-      continue;
+    gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(font.get());
+    if (ufe->Matches(aFontFaceSrcList, aWeight, aStretch, aStyle,
+                     aFeatureSettings, aVariationSettings, aLanguageOverride,
+                     aUnicodeRanges, aFontDisplay, aRangeFlags, aAscentOverride,
+                     aDescentOverride, aLineGapOverride, aSizeAdjust)) {
+      result = ufe;
+      break;
     }
-
-    return existingUserFontEntry;
   }
+  aFamily->ReadUnlock();
 
-  return nullptr;
+  return result;
 }
 
 void gfxUserFontSet::AddUserFontEntry(const nsCString& aFamilyName,
@@ -1068,6 +1068,7 @@ gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
 
 void gfxUserFontSet::ForgetLocalFaces() {
   for (const auto& fam : mFontFamilies.Values()) {
+    fam->ReadLock();
     const auto& fonts = fam->GetFontList();
     for (const auto& f : fonts) {
       auto ufe = static_cast<gfxUserFontEntry*>(f.get());
@@ -1084,6 +1085,7 @@ void gfxUserFontSet::ForgetLocalFaces() {
         ufe->LoadCanceled();
       }
     }
+    fam->ReadUnlock();
   }
 }
 

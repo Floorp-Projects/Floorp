@@ -19,8 +19,7 @@
 
 #define PREF_U2F_NSSTOKEN_COUNTER "security.webauth.softtoken_counter"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace mozilla;
 using mozilla::dom::CreateECParamsForCurve;
@@ -984,5 +983,4 @@ void U2FSoftTokenManager::Cancel() {
   // This implementation is sync, requests can't be aborted.
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

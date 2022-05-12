@@ -17,9 +17,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 class ManagerId final : public AtomicSafeRefCounted<ManagerId> {
  public:
@@ -53,8 +51,6 @@ class ManagerId final : public AtomicSafeRefCounted<ManagerId> {
   MOZ_DECLARE_REFCOUNTED_TYPENAME(mozilla::dom::cache::ManagerId)
 };
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_ManagerId_h

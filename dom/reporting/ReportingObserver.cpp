@@ -11,8 +11,7 @@
 #include "nsIGlobalObject.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReportingObserver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReportingObserver)
@@ -154,5 +153,4 @@ void ReportingObserver::MaybeNotify() {
 
 void ReportingObserver::ForgetReports() { mReports.Clear(); }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

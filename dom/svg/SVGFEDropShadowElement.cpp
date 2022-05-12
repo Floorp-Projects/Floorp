@@ -13,8 +13,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEDropShadow)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEDropShadowElement::WrapNode(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {
@@ -147,5 +146,4 @@ SVGElement::StringAttributesInfo SVGFEDropShadowElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

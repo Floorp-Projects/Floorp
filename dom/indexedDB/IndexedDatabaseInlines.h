@@ -18,9 +18,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/File.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 inline StructuredCloneFileChild::StructuredCloneFileChild(
@@ -188,8 +186,6 @@ bool WrapAsJSObject(JSContext* const aCx, T& aBaseObject,
   return true;
 }
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // IndexedDatabaseInlines_h

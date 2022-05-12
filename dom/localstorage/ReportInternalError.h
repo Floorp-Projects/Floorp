@@ -19,15 +19,11 @@
     NS_WARNING(s.get());                                                \
   } while (0)
 
-namespace mozilla {
-namespace dom {
-namespace localstorage {
+namespace mozilla::dom::localstorage {
 
 MOZ_COLD void ReportInternalError(const char* aFile, uint32_t aLine,
                                   const char* aStr);
 
-}  // namespace localstorage
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::localstorage
 
 #endif  // mozilla_dom_localstorage_ReportInternalError_h

@@ -14,8 +14,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(TextPath)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGTextContentElement_Binding;
 using namespace SVGTextPathElement_Binding;
@@ -136,5 +135,4 @@ SVGElement::StringAttributesInfo SVGTextPathElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

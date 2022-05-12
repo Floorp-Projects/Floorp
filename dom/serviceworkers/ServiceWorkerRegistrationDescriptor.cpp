@@ -10,8 +10,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "ServiceWorkerInfo.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::PrincipalInfo;
 using mozilla::ipc::PrincipalInfoToPrincipal;
@@ -272,5 +271,4 @@ ServiceWorkerRegistrationDescriptor::ToIPC() const {
   return *mData;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

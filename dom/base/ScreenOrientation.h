@@ -15,8 +15,7 @@
 
 class nsScreen;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 
@@ -111,7 +110,6 @@ class ScreenOrientation final : public DOMEventTargetHelper {
   bool mTriedToLockDeviceOrientation = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ScreenOrientation_h

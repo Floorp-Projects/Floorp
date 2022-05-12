@@ -29,8 +29,7 @@
     }                                                                \
   }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMArena {
  public:
@@ -51,6 +50,5 @@ class DOMArena {
   ~DOMArena() { moz_dispose_arena(mArenaId); }
   arena_id_t mArenaId;
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

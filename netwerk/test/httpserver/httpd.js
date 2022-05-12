@@ -49,8 +49,6 @@ var DEBUG = false; // non-const *only* so tweakable in server tests
 /** True if debugging output should be timestamped. */
 var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
 
-var gGlobalObject = Cu.getGlobalForObject(this);
-
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
@@ -2879,7 +2877,7 @@ ServerHandler.prototype = {
         // If you update the list of imports, please update the list in
         // tools/lint/eslint/eslint-plugin-mozilla/lib/environments/sjs.js
         // as well.
-        var s = Cu.Sandbox(gGlobalObject);
+        var s = Cu.Sandbox(globalThis);
         s.importFunction(dump, "dump");
         s.importFunction(atob, "atob");
         s.importFunction(btoa, "btoa");

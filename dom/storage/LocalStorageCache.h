@@ -16,8 +16,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Atomics.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class LocalStorage;
 class LocalStorageCacheChild;
@@ -302,7 +301,6 @@ class StorageUsage : public StorageUsageBridge {
   int64_t mUsage[LocalStorageCache::kDataSetCount];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_LocalStorageCache_h

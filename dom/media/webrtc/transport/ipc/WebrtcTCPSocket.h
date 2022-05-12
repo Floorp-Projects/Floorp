@@ -23,8 +23,7 @@
 
 class nsISocketTransport;
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 class WebrtcTCPSocketCallback;
 class WebrtcTCPData;
@@ -105,7 +104,6 @@ class WebrtcTCPSocket : public nsIHttpUpgradeListener,
   nsCOMPtr<nsICancelable> mProxyRequest;
 };
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
 
 #endif  // webrtc_tcp_socket_h__

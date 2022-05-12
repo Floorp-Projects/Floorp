@@ -86,8 +86,7 @@ class nsISerialEventTarget;
 class nsITimer;
 class nsRange;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Number of milliseconds between timeupdate events as defined by spec
 #define TIMEUPDATE_MS 250
@@ -1935,7 +1934,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 // Check if the context is chrome or has the debugger or tabs permission
 bool HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLMediaElement_h

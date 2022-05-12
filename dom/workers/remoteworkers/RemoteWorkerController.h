@@ -16,8 +16,7 @@
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 #include "mozilla/dom/ServiceWorkerOpPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* Here's a graph about this remote workers are spawned.
  *
@@ -315,7 +314,6 @@ class RemoteWorkerController final {
   nsTArray<UniquePtr<PendingOp>> mPendingOps;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_RemoteWorkerController_h

@@ -13,8 +13,7 @@
 
 #include "gfxVR.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMPointReadOnly;
 class XRSession;
@@ -38,7 +37,6 @@ class XRBoundedReferenceSpace final : public XRReferenceSpace {
   virtual ~XRBoundedReferenceSpace() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XRBoundedReferenceSpace_h_

@@ -1,8 +1,8 @@
 [
   {
-    "size": 8481901,
+    "size": 8168718,
     "visibility": "public",
-    "digest": "f0461303b9773430393e720f538945add9333cc5e0a3efcb107afc58777bea1271dbd0e1e143ca229a5832c0ee6f6671aab208bc44d81d1832787162242d5f3b",
+    "digest": "a3d622feca8085a2eef969e0866e4dbb6eb31571446db61108dcb66a7e0c0c4ae2b3b1ab200c36fcbdbd19ac0e44ceba97630b251282dbf6406009b446168793",
     "algorithm": "sha512",
     "filename": "mitm7-linux-firefox-imdb.zip"
   }

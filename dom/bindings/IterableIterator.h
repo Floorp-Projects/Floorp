@@ -34,8 +34,7 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ToJSValue.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IterableIteratorBase : public nsISupports {
  public:
@@ -228,7 +227,6 @@ class IterableIterator final : public IterableIteratorBase {
   uint32_t mIndex;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_IterableIterator_h

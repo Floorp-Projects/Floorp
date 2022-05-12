@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/MessageBroadcaster.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Implementation for the WebIDL ParentProcessMessageManager interface.
@@ -45,7 +44,6 @@ class ParentProcessMessageManager final : public MessageBroadcaster {
   virtual ~ParentProcessMessageManager();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ParentProcessMessageManager_h

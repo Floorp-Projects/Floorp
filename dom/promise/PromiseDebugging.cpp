@@ -20,8 +20,7 @@
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/PromiseDebuggingBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class FlushRejections : public DiscardableRunnable {
  public:
@@ -294,5 +293,4 @@ void PromiseDebugging::FlushUncaughtRejectionsInternal() {
   storage->mConsumedRejections.clear();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -14,8 +14,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge, mFeatures, mLimits)
 GPU_IMPL_JS_WRAP(Adapter)
@@ -132,5 +131,4 @@ already_AddRefed<dom::Promise> Adapter::RequestDevice(
   return promise.forget();
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

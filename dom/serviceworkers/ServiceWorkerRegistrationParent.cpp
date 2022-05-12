@@ -10,8 +10,7 @@
 
 #include "ServiceWorkerRegistrationProxy.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::IPCResult;
 
@@ -150,5 +149,4 @@ void ServiceWorkerRegistrationParent::MaybeSendDelete() {
   Unused << Send__delete__(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

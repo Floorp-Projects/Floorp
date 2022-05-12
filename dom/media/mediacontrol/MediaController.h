@@ -17,8 +17,7 @@
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class BrowsingContext;
 
@@ -210,7 +209,6 @@ class MediaController final : public DOMEventTargetHelper,
   nsCOMPtr<nsITimer> mDeactivationTimer;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

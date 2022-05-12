@@ -12,8 +12,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/RefPtr.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class EventCallbackDebuggerNotification : public CallbackDebuggerNotification {
  public:
@@ -90,7 +89,6 @@ class MOZ_RAII EventCallbackDebuggerNotificationGuard final {
   mozilla::dom::Event* mEvent;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_EventCallbackDebuggerNotification_h

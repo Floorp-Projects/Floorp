@@ -314,7 +314,7 @@ decorate_task(
 
     const db = await RecipeRunner._remoteSettingsClientForTesting.db;
     const fakeSig = { signature: "abc" };
-    await db.importChanges({}, 42, [
+    await db.importChanges({}, Date.now(), [
       { id: "match", recipe: matchRecipe, signature: fakeSig },
       {
         id: "noMatch",
@@ -391,7 +391,7 @@ decorate_task(
     const fakeSig = { signature: "abc" };
     await db.importChanges(
       {},
-      42,
+      Date.now(),
       [
         {
           id: "match",

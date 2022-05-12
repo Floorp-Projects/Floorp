@@ -8,8 +8,7 @@
 #include "mozilla/dom/AuthenticatorAssertionResponse.h"
 #include "mozilla/HoldDropJSObjects.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AuthenticatorAssertionResponse)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AuthenticatorAssertionResponse,
@@ -108,5 +107,4 @@ nsresult AuthenticatorAssertionResponse::SetUserHandle(CryptoBuffer& aBuffer) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

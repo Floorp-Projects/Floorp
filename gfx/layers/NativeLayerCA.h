@@ -134,7 +134,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
                 bool aWindowIsFullscreen, bool aMouseMovedRecently);
     CALayer* FindVideoLayerToIsolate(
         WhichRepresentation aRepresentation,
-        const nsTArray<RefPtr<NativeLayerCA>>& aSublayers);
+        const nsTArray<NativeLayerCA*>& aSublayers);
     CALayer* mRootCALayer = nullptr;  // strong
     bool mIsIsolatingVideo = false;
     bool mMutatedLayerStructure = false;
@@ -319,6 +319,8 @@ class NativeLayerCA : public NativeLayer {
   bool IsVideo();
   bool IsVideoAndLocked(const MutexAutoLock& aProofOfLock);
   bool ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock);
+  bool HasExtent() const { return mHasExtent; }
+  void SetHasExtent(bool aHasExtent) { mHasExtent = aHasExtent; }
 
   // Wraps one CALayer representation of this NativeLayer.
   struct Representation {
@@ -448,6 +450,7 @@ class NativeLayerCA : public NativeLayer {
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
   bool mSpecializeVideo = false;
+  bool mHasExtent = false;
 };
 
 }  // namespace layers

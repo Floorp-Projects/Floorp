@@ -186,7 +186,7 @@ void PortLink::OnPortStatusChanged() {
       return;
     }
 
-    mChan->OnMessageReceivedFromLink(std::move(*message));
+    mChan->OnMessageReceivedFromLink(std::move(message));
   }
 }
 

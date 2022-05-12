@@ -640,6 +640,8 @@ This reports all the Pocket recommended articles (a list of `id`s) when the user
   "source": "pocket",
   "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
   "user_prefs": 7,
+  "window_inner_width": 1000,
+  "window_inner_height" 900,
   "experiments": {
     "experiment_1": {"branch": "control"},
     "experiment_2": {"branch": "treatment"}
@@ -664,6 +666,8 @@ This reports the user's interaction with those Pocket tiles.
     "experiment_2": {"branch": "treatment"}
   },
   "user_prefs": 7,
+  "window_inner_width": 1000,
+  "window_inner_height" 900,
 
   // "pos" is the 0-based index to record the tile's position in the Pocket section.
   // "shim" is a base64 encoded shim attached to spocs, unique to the impression from the Ad server.

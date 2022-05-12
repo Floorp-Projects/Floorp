@@ -634,6 +634,7 @@
 }
 
 :root {
+  --viewer-container-height: 0;
   --pdfViewer-padding-bottom: 0;
   --page-margin: 1px auto -8px;
   --page-border: 9px solid transparent;
@@ -674,7 +675,7 @@
 .pdfViewer .dummyPage {
   position: relative;
   width: 0;
-  /* The height is set via JS, see `BaseViewer.#ensurePageViewVisible`. */
+  height: var(--viewer-container-height);
 }
 
 .pdfViewer.removePageBorders .page {
@@ -836,7 +837,6 @@
   --toolbarButton-zoomIn-icon: url(images/toolbarButton-zoomIn.svg);
   --toolbarButton-presentationMode-icon: url(images/toolbarButton-presentationMode.svg);
   --toolbarButton-print-icon: url(images/toolbarButton-print.svg);
-  --toolbarButton-openFile-icon: url(images/toolbarButton-openFile.svg);
   --toolbarButton-download-icon: url(images/toolbarButton-download.svg);
   --toolbarButton-bookmark-icon: url(images/toolbarButton-bookmark.svg);
   --toolbarButton-viewThumbnail-icon: url(images/toolbarButton-viewThumbnail.svg);
@@ -1237,7 +1237,8 @@ select {
 
 #secondaryToolbarButtonContainer {
   max-width: 220px;
-  max-height: 400px;
+  min-height: 26px;
+  max-height: calc(var(--viewer-container-height) - 40px);
   overflow-y: auto;
   margin-bottom: -4px;
 }
@@ -1380,11 +1381,8 @@ select {
 
 .splitToolbarButton > .toolbarButton:hover,
 .splitToolbarButton > .toolbarButton:focus-visible,
-.dropdownToolbarButton:hover,
-.toolbarButton.textButton:hover,
-.toolbarButton.textButton:focus-visible {
+.dropdownToolbarButton:hover {
   background-color: var(--button-hover-color);
-  z-index: 199;
 }
 .splitToolbarButton > .toolbarButton {
   position: relative;
@@ -1396,12 +1394,10 @@ select {
 
 .splitToolbarButtonSeparator {
   float: inline-start;
-  padding: 10px 0;
-  width: 1px;
-  background-color: var(--separator-color);
-  z-index: 99;
-  display: inline-block;
   margin: 4px 0;
+  width: 1px;
+  height: 20px;
+  background-color: var(--separator-color);
 }
 
 .toolbarButton,
@@ -1532,102 +1528,98 @@ select {
   inset-inline-start: 12px;
 }
 
-.toolbarButton#sidebarToggle::before {
+#sidebarToggle::before {
   mask-image: var(--toolbarButton-sidebarToggle-icon);
   transform: scaleX(var(--dir-factor));
 }
 
-.toolbarButton#secondaryToolbarToggle::before {
+#secondaryToolbarToggle::before {
   mask-image: var(--toolbarButton-secondaryToolbarToggle-icon);
   transform: scaleX(var(--dir-factor));
 }
 
-#findPrevious.toolbarButton::before {
+#findPrevious::before {
   mask-image: var(--findbarButton-previous-icon);
 }
 
-#findNext.toolbarButton::before {
+#findNext::before {
   mask-image: var(--findbarButton-next-icon);
 }
 
-.toolbarButton.pageUp::before {
+#previous::before {
   mask-image: var(--toolbarButton-pageUp-icon);
 }
 
-.toolbarButton.pageDown::before {
+#next::before {
   mask-image: var(--toolbarButton-pageDown-icon);
 }
 
-.toolbarButton.zoomOut::before {
+#zoomOut::before {
   mask-image: var(--toolbarButton-zoomOut-icon);
 }
 
-.toolbarButton.zoomIn::before {
+#zoomIn::before {
   mask-image: var(--toolbarButton-zoomIn-icon);
 }
 
-.toolbarButton.presentationMode::before,
-.secondaryToolbarButton.presentationMode::before {
+#presentationMode::before,
+#secondaryPresentationMode::before {
   mask-image: var(--toolbarButton-presentationMode-icon);
 }
 
-.toolbarButton.print::before,
-.secondaryToolbarButton.print::before {
+#print::before,
+#secondaryPrint::before {
   mask-image: var(--toolbarButton-print-icon);
 }
 
-.toolbarButton.openFile::before,
-.secondaryToolbarButton.openFile::before {
-  mask-image: var(--toolbarButton-openFile-icon);
-}
 
-.toolbarButton.download::before,
-.secondaryToolbarButton.download::before {
+#download::before,
+#secondaryDownload::before {
   mask-image: var(--toolbarButton-download-icon);
 }
 
-.secondaryToolbarButton.bookmark {
+a.secondaryToolbarButton {
   padding-top: 6px;
   text-decoration: none;
 }
-
-.bookmark[href="#"] {
+a.toolbarButton[href="#"],
+a.secondaryToolbarButton[href="#"] {
   opacity: 0.5;
   pointer-events: none;
 }
 
-.toolbarButton.bookmark::before,
-.secondaryToolbarButton.bookmark::before {
+#viewBookmark::before,
+#secondaryViewBookmark::before {
   mask-image: var(--toolbarButton-bookmark-icon);
 }
 
-#viewThumbnail.toolbarButton::before {
+#viewThumbnail::before {
   mask-image: var(--toolbarButton-viewThumbnail-icon);
 }
 
-#viewOutline.toolbarButton::before {
+#viewOutline::before {
   mask-image: var(--toolbarButton-viewOutline-icon);
   transform: scaleX(var(--dir-factor));
 }
 
-#viewAttachments.toolbarButton::before {
+#viewAttachments::before {
   mask-image: var(--toolbarButton-viewAttachments-icon);
 }
 
-#viewLayers.toolbarButton::before {
+#viewLayers::before {
   mask-image: var(--toolbarButton-viewLayers-icon);
 }
 
-#currentOutlineItem.toolbarButton::before {
+#currentOutlineItem::before {
   mask-image: var(--toolbarButton-currentOutlineItem-icon);
   transform: scaleX(var(--dir-factor));
 }
 
-#viewFind.toolbarButton::before {
+#viewFind::before {
   mask-image: var(--toolbarButton-search-icon);
 }
 
-.toolbarButton.pdfSidebarNotification::after {
+.pdfSidebarNotification::after {
   position: absolute;
   display: inline-block;
   top: 1px;
@@ -1658,76 +1650,75 @@ select {
   padding-inline-end: 4px;
 }
 
-.secondaryToolbarButton.firstPage::before {
+#firstPage::before {
   mask-image: var(--secondaryToolbarButton-firstPage-icon);
 }
 
-.secondaryToolbarButton.lastPage::before {
+#lastPage::before {
   mask-image: var(--secondaryToolbarButton-lastPage-icon);
 }
 
-.secondaryToolbarButton.rotateCcw::before {
+#pageRotateCcw::before {
   mask-image: var(--secondaryToolbarButton-rotateCcw-icon);
 }
 
-.secondaryToolbarButton.rotateCw::before {
+#pageRotateCw::before {
   mask-image: var(--secondaryToolbarButton-rotateCw-icon);
 }
 
-.secondaryToolbarButton.selectTool::before {
+#cursorSelectTool::before {
   mask-image: var(--secondaryToolbarButton-selectTool-icon);
 }
 
-.secondaryToolbarButton.handTool::before {
+#cursorHandTool::before {
   mask-image: var(--secondaryToolbarButton-handTool-icon);
 }
 
-.secondaryToolbarButton.scrollPage::before {
+#scrollPage::before {
   mask-image: var(--secondaryToolbarButton-scrollPage-icon);
 }
 
-.secondaryToolbarButton.scrollVertical::before {
+#scrollVertical::before {
   mask-image: var(--secondaryToolbarButton-scrollVertical-icon);
 }
 
-.secondaryToolbarButton.scrollHorizontal::before {
+#scrollHorizontal::before {
   mask-image: var(--secondaryToolbarButton-scrollHorizontal-icon);
 }
 
-.secondaryToolbarButton.scrollWrapped::before {
+#scrollWrapped::before {
   mask-image: var(--secondaryToolbarButton-scrollWrapped-icon);
 }
 
-.secondaryToolbarButton.spreadNone::before {
+#spreadNone::before {
   mask-image: var(--secondaryToolbarButton-spreadNone-icon);
 }
 
-.secondaryToolbarButton.spreadOdd::before {
+#spreadOdd::before {
   mask-image: var(--secondaryToolbarButton-spreadOdd-icon);
 }
 
-.secondaryToolbarButton.spreadEven::before {
+#spreadEven::before {
   mask-image: var(--secondaryToolbarButton-spreadEven-icon);
 }
 
-.secondaryToolbarButton.documentProperties::before {
+#documentProperties::before {
   mask-image: var(--secondaryToolbarButton-documentProperties-icon);
 }
 
 .verticalToolbarSeparator {
   display: block;
-  padding: 11px 0;
   margin: 5px 2px;
   width: 1px;
+  height: 22px;
   background-color: var(--separator-color);
 }
-
 .horizontalToolbarSeparator {
   display: block;
-  margin: 6px 0 5px;
+  margin: 6px 0;
   height: 1px;
   width: 100%;
-  border-top: 1px solid var(--doorhanger-separator-color);
+  background-color: var(--doorhanger-separator-color);
 }
 
 .toolbarField {
@@ -1736,9 +1727,7 @@ select {
   border-radius: 2px;
   background-color: var(--field-bg-color);
   background-clip: padding-box;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--field-border-color);
+  border: 1px solid var(--field-border-color);
   box-shadow: none;
   color: var(--field-color);
   font-size: 12px;
@@ -1754,13 +1743,12 @@ select {
   margin-inline-start: 7px;
 }
 
-.toolbarField.pageNumber {
+#pageNumber {
   -moz-appearance: textfield; /* hides the spinner in moz */
   text-align: right;
   width: 40px;
 }
-
-.toolbarField.pageNumber.visiblePageIsLoading {
+#pageNumber.visiblePageIsLoading {
   background-image: var(--loading-icon);
   background-repeat: no-repeat;
   background-position: 3px;
@@ -1932,6 +1920,7 @@ a:focus > .thumbnail > .thumbnailSelectionRing,
 ::selection {
   background: rgba(0, 0, 255, 0.3);
 }
+
 
 .dialogButton {
   width: auto;

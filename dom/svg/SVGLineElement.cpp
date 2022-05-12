@@ -13,8 +13,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Line)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGLineElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -233,5 +232,4 @@ bool SVGLineElement::GetGeometryBounds(Rect* aBounds,
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

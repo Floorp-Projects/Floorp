@@ -193,12 +193,12 @@ menubar > menu:-moz-lwtheme {
 }
 
 menubar > menu:-moz-lwtheme:not([disabled="true"]) {
-  color: inherit !important;
+  color: inherit;
 }
 
 menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
   background-color: SelectedItem;
-  color: SelectedItemText !important;
+  color: SelectedItemText;
   text-shadow: none;
 }
 

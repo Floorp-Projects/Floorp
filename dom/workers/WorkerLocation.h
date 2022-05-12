@@ -11,8 +11,7 @@
 #include "WorkerPrivate.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkerLocation final : public nsWrapperCache {
   nsString mHref;
@@ -68,7 +67,6 @@ class WorkerLocation final : public nsWrapperCache {
   void GetOrigin(nsString& aOrigin) const { aOrigin = mOrigin; }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_location_h__

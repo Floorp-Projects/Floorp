@@ -18,8 +18,7 @@
 #include "nsContentUtils.h"
 #include "nsIAppWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static bool IsRootElement(Element* aElement) {
   return aElement->OwnerDoc()->GetRootElement() == aElement;
@@ -318,5 +317,4 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -3766,8 +3766,8 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
 }
 #endif
 
-PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
-                                                      Message*& aReply) {
+PContentChild::Result ContentChild::OnMessageReceived(
+    const Message& aMsg, UniquePtr<Message>& aReply) {
   Result result = PContentChild::OnMessageReceived(aMsg, aReply);
 
   if (aMsg.is_sync()) {

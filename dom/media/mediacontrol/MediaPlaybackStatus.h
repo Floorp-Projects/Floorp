@@ -11,8 +11,7 @@
 #include "nsTArray.h"
 #include "nsTHashMap.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * This enum is used to update controlled media state to the media controller in
@@ -135,7 +134,6 @@ class MediaPlaybackStatus final {
   Maybe<uint64_t> mOwningAudioFocusContextId;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  //  DOM_MEDIA_MEDIACONTROL_MEDIAPLAYBACKSTATUS_H_

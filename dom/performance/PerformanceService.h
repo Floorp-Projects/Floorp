@@ -11,8 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMNavigationTiming.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // This class is thread-safe.
 
@@ -39,7 +38,6 @@ class PerformanceService {
   PRTime mCreationEpochTime;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // dom_performance_PerformanceService_h

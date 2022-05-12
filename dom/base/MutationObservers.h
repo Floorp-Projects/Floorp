@@ -15,8 +15,7 @@
 class nsAtom;
 class nsAttrValue;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Animation;
 class Element;
 
@@ -148,7 +147,6 @@ class MutationObservers {
   static void NotifyAnimationMutated(mozilla::dom::Animation* aAnimation,
                                      AnimationMutationType aMutatedType);
 };
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_BASE_MUTATIONOBSERVERS_H_

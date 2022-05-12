@@ -13,8 +13,7 @@
 
 class nsScreen;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ScreenLuminance final : public nsWrapperCache {
  public:
@@ -45,7 +44,6 @@ class ScreenLuminance final : public nsWrapperCache {
   double mMaxAverage;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ScreenLuminance_h

@@ -12,8 +12,7 @@
 #include "DOMSVGAnimatedNumberList.h"
 #include "SVGContentUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SVGElement::LengthListInfo SVGTextPositioningElement::sLengthListInfo[4] = {
     {nsGkAtoms::x, SVGContentUtils::X, false},
@@ -63,5 +62,4 @@ already_AddRefed<DOMSVGAnimatedNumberList> SVGTextPositioningElement::Rotate() {
                                                  this, ROTATE);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

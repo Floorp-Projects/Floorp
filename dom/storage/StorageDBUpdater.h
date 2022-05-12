@@ -7,10 +7,7 @@
 #ifndef mozilla_dom_StorageDBUpdater_h
 #define mozilla_dom_StorageDBUpdater_h
 
-namespace mozilla {
-namespace dom {
-
-namespace StorageDBUpdater {
+namespace mozilla::dom::StorageDBUpdater {
 
 // Must only be called on an empty database.
 nsresult CreateCurrentSchema(mozIStorageConnection* aWorkerConnection);
@@ -18,9 +15,6 @@ nsresult CreateCurrentSchema(mozIStorageConnection* aWorkerConnection);
 // XXX Rename to MaybeUpdate or EnsureCurrentSchemaVersion.
 nsresult Update(mozIStorageConnection* aWorkerConnection);
 
-}  // namespace StorageDBUpdater
-
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::StorageDBUpdater
 
 #endif  // mozilla_dom_StorageDBUpdater_h

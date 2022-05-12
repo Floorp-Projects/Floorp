@@ -123,9 +123,19 @@ void ScriptLoadRequest::DropBytecodeCacheReferences() {
   DropJSObjects(this);
 }
 
+bool ScriptLoadRequest::HasScriptLoadContext() const {
+  return HasLoadContext() && mLoadContext->IsWindowContext();
+}
+
 mozilla::dom::ScriptLoadContext* ScriptLoadRequest::GetScriptLoadContext() {
   MOZ_ASSERT(mLoadContext);
   return mLoadContext->AsWindowContext();
+}
+
+mozilla::loader::ComponentLoadContext*
+ScriptLoadRequest::GetComponentLoadContext() {
+  MOZ_ASSERT(mLoadContext);
+  return mLoadContext->AsComponentContext();
 }
 
 ModuleLoadRequest* ScriptLoadRequest::AsModuleRequest() {

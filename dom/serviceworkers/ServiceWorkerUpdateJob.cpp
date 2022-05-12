@@ -17,8 +17,7 @@
 #include "ServiceWorkerScriptCache.h"
 #include "mozilla/dom/WorkerCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using serviceWorkerScriptCache::OnFailure;
 
@@ -539,5 +538,4 @@ void ServiceWorkerUpdateJob::ContinueAfterInstallEvent(
   mRegistration->TryToActivateAsync();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

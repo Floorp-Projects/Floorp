@@ -209,10 +209,10 @@ add_task(async function test_selector_config_update() {
 add_task(async function test_selector_db_modification() {
   const engineSelector = new SearchEngineSelector();
   // Fill the database with some values that we can use to test that it is cleared.
-  const db = await RemoteSettings(SearchUtils.SETTINGS_KEY).db;
+  const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(
     {},
-    42,
+    Date.now(),
     [
       {
         id: "85e1f268-9ca5-4b52-a4ac-922df5c07264",
@@ -258,7 +258,7 @@ add_task(async function test_selector_db_modification_never_succeeds() {
   const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(
     {},
-    42,
+    Date.now(),
     [
       {
         id: "b70edfdd-1c3f-4b7b-ab55-38cb048636c0",
@@ -299,10 +299,10 @@ add_task(async function test_empty_results() {
   // Check that returning an empty result re-tries.
   const engineSelector = new SearchEngineSelector();
   // Fill the database with some values that we can use to test that it is cleared.
-  const db = await RemoteSettings(SearchUtils.SETTINGS_KEY).db;
+  const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(
     {},
-    42,
+    Date.now(),
     [
       {
         id: "df5655ca-e045-4f8c-a7ee-047eeb654722",

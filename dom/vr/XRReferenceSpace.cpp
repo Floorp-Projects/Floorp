@@ -8,8 +8,7 @@
 #include "mozilla/dom/XRRigidTransform.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRReferenceSpace::XRReferenceSpace(nsIGlobalObject* aParent,
                                    XRSession* aSession,
@@ -43,5 +42,4 @@ JSObject* XRReferenceSpace::WrapObject(JSContext* aCx,
   return XRReferenceSpace_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

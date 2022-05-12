@@ -840,8 +840,8 @@ class ContentChild final : public PContentChild,
   using PContentChild::OnMessageReceived;
 #endif
 
-  virtual PContentChild::Result OnMessageReceived(const Message& aMsg,
-                                                  Message*& aReply) override;
+  virtual PContentChild::Result OnMessageReceived(
+      const Message& aMsg, UniquePtr<Message>& aReply) override;
 
   nsTArray<mozilla::UniquePtr<AlertObserver>> mAlertObservers;
   RefPtr<ConsoleListener> mConsoleListener;

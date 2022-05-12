@@ -25,8 +25,7 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(FEImage)
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGFEImageElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -359,5 +358,4 @@ void SVGFEImageElement::Notify(imgIRequest* aRequest, int32_t aType,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

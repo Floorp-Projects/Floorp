@@ -20,8 +20,7 @@
 #include "VRDisplayClient.h"
 #include "VRManagerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace gfx;
 
@@ -707,5 +706,4 @@ NS_IMPL_CYCLE_COLLECTION(RequestSessionRequest, mPromise)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RequestSessionRequest, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RequestSessionRequest, Release)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

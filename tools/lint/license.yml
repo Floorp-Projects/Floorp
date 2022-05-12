@@ -71,6 +71,7 @@ license:
         - .ftl
         - .h
         - .html
+        - .java
         - .js
         - .jsm
         - .jsx

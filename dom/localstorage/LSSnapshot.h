@@ -24,8 +24,7 @@
 
 class nsITimer;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class LSDatabase;
 class LSNotifyInfo;
@@ -189,7 +188,6 @@ class LSSnapshot final : public nsIRunnable {
   NS_DECL_NSIRUNNABLE
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_localstorage_LSSnapshot_h

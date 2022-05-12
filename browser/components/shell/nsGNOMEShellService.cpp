@@ -22,7 +22,9 @@
 #include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "mozilla/Components.h"
 #include "mozilla/GRefPtr.h"
+#include "mozilla/GUniquePtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/WidgetUtils.h"
 #include "mozilla/WidgetUtilsGtk.h"
@@ -66,11 +68,8 @@ static const MimeTypeAssociation appTypes[] = {
     // clang-format on
 };
 
-#define kDesktopBGSchema "org.gnome.desktop.background"
-#define kDesktopImageGSKey "picture-uri"
-#define kDesktopOptionGSKey "picture-options"
-#define kDesktopDrawBGGSKey "draw-background"
-#define kDesktopColorGSKey "primary-color"
+#define kDesktopBGSchema "org.gnome.desktop.background"_ns
+#define kDesktopColorGSKey "primary-color"_ns
 
 nsresult nsGNOMEShellService::Init() {
   nsresult rv;
@@ -283,7 +282,7 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers) {
   if (giovfs) {
     nsresult rv;
     nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        components::StringBundle::Service(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStringBundle> brandBundle;
@@ -371,19 +370,23 @@ NS_IMETHODIMP
 nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
                                           int32_t aPosition,
                                           const nsACString& aImageName) {
-  nsresult rv;
-  nsCOMPtr<nsIImageLoadingContent> imageContent =
-      do_QueryInterface(aElement, &rv);
-  if (!imageContent) return rv;
+  nsCOMPtr<nsIImageLoadingContent> imageContent = do_QueryInterface(aElement);
+  if (!imageContent) {
+    return NS_ERROR_FAILURE;
+  }
 
   // get the image container
   nsCOMPtr<imgIRequest> request;
-  rv = imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                                getter_AddRefs(request));
-  if (!request) return rv;
+  imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                           getter_AddRefs(request));
+  if (!request) {
+    return NS_ERROR_FAILURE;
+  }
   nsCOMPtr<imgIContainer> container;
-  rv = request->GetImage(getter_AddRefs(container));
-  if (!container) return rv;
+  request->GetImage(getter_AddRefs(container));
+  if (!container) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Set desktop wallpaper filling style
   nsAutoCString options;
@@ -402,18 +405,15 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
 
   // Write the background file to the home directory.
   nsAutoCString filePath(PR_GetEnv("HOME"));
+  nsAutoString brandName;
 
   // get the product brand name from localized strings
-  nsAutoString brandName;
-  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
-  if (bundleService) {
+  if (nsCOMPtr<nsIStringBundleService> bundleService =
+          components::StringBundle::Service()) {
     nsCOMPtr<nsIStringBundle> brandBundle;
-    rv = bundleService->CreateBundle(BRAND_PROPERTIES,
-                                     getter_AddRefs(brandBundle));
-    if (NS_SUCCEEDED(rv) && brandBundle) {
-      rv = brandBundle->GetStringFromName("brandShortName", brandName);
-      NS_ENSURE_SUCCESS(rv, rv);
+    bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
+    if (bundleService) {
+      brandBundle->GetStringFromName("brandShortName", brandName);
     }
   }
 
@@ -423,32 +423,33 @@ nsGNOMEShellService::SetDesktopBackground(dom::Element* aElement,
   filePath.AppendLiteral("_wallpaper.png");
 
   // write the image to a file in the home dir
-  rv = WriteImage(filePath, container);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(WriteImage(filePath, container));
 
   nsCOMPtr<nsIGSettingsService> gsettings =
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
-  if (gsettings) {
-    nsCOMPtr<nsIGSettingsCollection> background_settings;
-    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
-                                      getter_AddRefs(background_settings));
-    if (background_settings) {
-      gchar* file_uri = g_filename_to_uri(filePath.get(), nullptr, nullptr);
-      if (!file_uri) return NS_ERROR_FAILURE;
-
-      background_settings->SetString(nsLiteralCString(kDesktopOptionGSKey),
-                                     options);
-
-      background_settings->SetString(nsLiteralCString(kDesktopImageGSKey),
-                                     nsDependentCString(file_uri));
-      g_free(file_uri);
-      background_settings->SetBoolean(nsLiteralCString(kDesktopDrawBGGSKey),
-                                      true);
-      return rv;
-    }
+  if (!gsettings) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIGSettingsCollection> backgroundSettings;
+  gsettings->GetCollectionForSchema(kDesktopBGSchema,
+                                    getter_AddRefs(backgroundSettings));
+  if (!backgroundSettings) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  GUniquePtr<gchar> fileURI(
+      g_filename_to_uri(filePath.get(), nullptr, nullptr));
+  if (!fileURI) {
+    return NS_ERROR_FAILURE;
+  }
+
+  backgroundSettings->SetString("picture-options"_ns, options);
+  backgroundSettings->SetString("picture-uri"_ns,
+                                nsDependentCString(fileURI.get()));
+  backgroundSettings->SetString("picture-uri-dark"_ns,
+                                nsDependentCString(fileURI.get()));
+  backgroundSettings->SetBoolean("draw-background"_ns, true);
+  return NS_OK;
 }
 
 #define COLOR_16_TO_8_BIT(_c) ((_c) >> 8)
@@ -462,11 +463,10 @@ nsGNOMEShellService::GetDesktopBackgroundColor(uint32_t* aColor) {
   nsAutoCString background;
 
   if (gsettings) {
-    gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
+    gsettings->GetCollectionForSchema(kDesktopBGSchema,
                                       getter_AddRefs(background_settings));
     if (background_settings) {
-      background_settings->GetString(nsLiteralCString(kDesktopColorGSKey),
-                                     background);
+      background_settings->GetString(kDesktopColorGSKey, background);
     }
   }
 
@@ -511,8 +511,7 @@ nsGNOMEShellService::SetDesktopBackgroundColor(uint32_t aColor) {
     gsettings->GetCollectionForSchema(nsLiteralCString(kDesktopBGSchema),
                                       getter_AddRefs(background_settings));
     if (background_settings) {
-      background_settings->SetString(nsLiteralCString(kDesktopColorGSKey),
-                                     colorString);
+      background_settings->SetString(kDesktopColorGSKey, colorString);
       return NS_OK;
     }
   }

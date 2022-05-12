@@ -357,7 +357,7 @@ add_task(async function test_apiScript_method_got_param_with_methods() {
           );
           browser.test.assertEq(
             undefined,
-            typeof objWithMethods && objWithMethods.objMethod,
+            objWithMethods?.objMethod,
             "XrayWrapper should deny access to a callable property"
           );
 

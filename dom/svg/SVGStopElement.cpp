@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Stop)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGStopElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -57,5 +56,4 @@ SVGStopElement::IsAttributeMapped(const nsAtom* name) const {
          SVGStopElementBase::IsAttributeMapped(name);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

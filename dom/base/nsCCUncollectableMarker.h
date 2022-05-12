@@ -39,10 +39,8 @@ class nsCCUncollectableMarker final : public nsIObserver {
   ~nsCCUncollectableMarker() = default;
 };
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 void TraceBlackJS(JSTracer* aTrc);
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

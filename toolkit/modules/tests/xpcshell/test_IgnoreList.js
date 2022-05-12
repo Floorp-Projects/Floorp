@@ -160,8 +160,8 @@ add_task(async function test_ignoreList_updates() {
 
 add_task(async function test_ignoreList_db_modification() {
   // Fill the database with some values that we can use to test that it is cleared.
-  const db = await RemoteSettings(IGNORELIST_KEY).db;
-  await db.importChanges({}, 42, IGNORELIST_TEST_DATA, { clear: true });
+  const db = RemoteSettings(IGNORELIST_KEY).db;
+  await db.importChanges({}, Date.now(), IGNORELIST_TEST_DATA, { clear: true });
 
   // Stub the get() so that the first call simulates a signature error, and
   // the second simulates success reading from the dump.
@@ -190,8 +190,8 @@ add_task(async function test_ignoreList_db_modification() {
 
 add_task(async function test_ignoreList_db_modification_never_succeeds() {
   // Fill the database with some values that we can use to test that it is cleared.
-  const db = await RemoteSettings(IGNORELIST_KEY).db;
-  await db.importChanges({}, 42, IGNORELIST_TEST_DATA, { clear: true });
+  const db = RemoteSettings(IGNORELIST_KEY).db;
+  await db.importChanges({}, Date.now(), IGNORELIST_TEST_DATA, { clear: true });
 
   // Now simulate the condition where for some reason we never get a
   // valid result.

@@ -423,6 +423,22 @@ this.backgroundPage = class extends ExtensionAPI {
         return;
       }
 
+      const childId = extension.backgroundContext?.childId;
+      if (childId !== undefined) {
+        // Ask to the background page context in the child process to check if there are
+        // StreamFilter instances active (e.g. ones with status "transferringdata" or "suspended",
+        // see StreamFilterStatus enum defined in StreamFilter.webidl).
+        // TODO(Bug 1748533): consider additional changes to prevent a StreamFilter that never gets to an
+        // inactive state from preventing an even page from being ever suspended.
+        const hasActiveStreamFilter = await ExtensionParent.ParentAPIManager.queryStreamFilterSuspendCancel(
+          extension.backgroundContext.childId
+        );
+        if (hasActiveStreamFilter) {
+          extension.emit("background-script-reset-idle");
+          return;
+        }
+      }
+
       extension.backgroundState = BACKGROUND_STATE.SUSPENDING;
       this.clearIdleTimer();
       // call runtime.onSuspend

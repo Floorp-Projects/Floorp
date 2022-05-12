@@ -12,8 +12,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsITimer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PaymentAddress;
 class PaymentRequest;
@@ -176,7 +175,6 @@ class PaymentResponse final : public DOMEventTargetHelper,
   RefPtr<Promise> mRetryPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PaymentResponse_h

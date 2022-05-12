@@ -10,8 +10,7 @@
 #include "AudioNode.h"
 #include "AudioParam.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct DynamicsCompressorOptions;
@@ -87,7 +86,6 @@ class DynamicsCompressorNode final : public AudioNode {
   RefPtr<AudioParam> mRelease;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

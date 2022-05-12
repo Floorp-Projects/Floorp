@@ -6464,7 +6464,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::I8x16RelaxedLaneSelect):
           case uint32_t(SimdOp::I16x8RelaxedLaneSelect):
           case uint32_t(SimdOp::I32x4RelaxedLaneSelect):
-          case uint32_t(SimdOp::I64x2RelaxedLaneSelect): {
+          case uint32_t(SimdOp::I64x2RelaxedLaneSelect):
+          case uint32_t(SimdOp::I32x4DotI8x16I7x16AddS): {
             if (!f.moduleEnv().v128RelaxedEnabled()) {
               return f.iter().unrecognizedOpcode(&op);
             }
@@ -6489,7 +6490,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             }
             CHECK(EmitUnarySimd128(f, SimdOp(op.b1)));
           }
-          case uint32_t(SimdOp::I8x16RelaxedSwizzle): {
+          case uint32_t(SimdOp::I8x16RelaxedSwizzle):
+          case uint32_t(SimdOp::I16x8DotI8x16I7x16S): {
             if (!f.moduleEnv().v128RelaxedEnabled()) {
               return f.iter().unrecognizedOpcode(&op);
             }

@@ -10,8 +10,7 @@
 #include "DebuggerNotification.h"
 #include "DebuggerNotificationManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class CallbackDebuggerNotification : public DebuggerNotification {
  public:
@@ -73,7 +72,6 @@ class MOZ_RAII CallbackDebuggerNotificationGuard final {
   DebuggerNotificationType mType;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CallbackDebuggerNotification_h

@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_serviceworkeractors_h__
 #define mozilla_dom_serviceworkeractors_h__
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // PServiceWorker
 
@@ -33,7 +32,6 @@ void InitServiceWorkerRegistrationParent(
     PServiceWorkerRegistrationParent* aActor,
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_serviceworkeractors_h__

@@ -11,8 +11,7 @@
 #include "nsContentPermissionHelper.h"
 #include "nsISupports.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * Handles permission dialog management when requesting XR device access.
@@ -35,7 +34,6 @@ class XRPermissionRequest final : public ContentPermissionRequestBase {
   uint64_t mWindowId;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XR_h_

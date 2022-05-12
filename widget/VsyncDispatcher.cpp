@@ -10,6 +10,7 @@
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
 using namespace mozilla::layers;
 
@@ -125,6 +126,11 @@ TimeDuration VsyncDispatcher::GetVsyncRate() {
 }
 
 void VsyncDispatcher::NotifyVsync(const VsyncEvent& aVsync) {
+  if (++mVsyncSkipCounter < StaticPrefs::gfx_display_frame_rate_divisor()) {
+    return;
+  }
+  mVsyncSkipCounter = 0;
+
   nsTArray<RefPtr<VsyncObserver>> observers;
   bool shouldDispatchToMainThread = false;
   {

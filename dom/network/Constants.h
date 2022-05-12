@@ -10,16 +10,12 @@
 /**
  * A set of constants to be used by network backends.
  */
-namespace mozilla {
-namespace dom {
-namespace network {
+namespace mozilla::dom::network {
 
 static const uint32_t kDefaultType = 5;  // ConnectionType::None
 static const bool kDefaultIsWifi = false;
 static const uint32_t kDefaultDHCPGateway = 0;
 
-}  // namespace network
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::network
 
 #endif  // mozilla_dom_network_Constants_h__

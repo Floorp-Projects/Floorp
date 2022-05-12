@@ -12,8 +12,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Attributes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // The union type has an enum to keep track of which of its UnionMembers has
 // been constructed.
@@ -48,7 +47,6 @@ class UnionMember {
   void Destroy() { mStorage.addr()->~T(); }
 } MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_UnionMember_h

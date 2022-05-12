@@ -21,8 +21,7 @@
 #  undef PostMessage
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 already_AddRefed<Worker> Worker::Constructor(const GlobalObject& aGlobal,
@@ -198,5 +197,4 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(Worker, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Worker, DOMEventTargetHelper)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

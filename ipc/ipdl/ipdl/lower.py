@@ -1811,7 +1811,7 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         FunctionDecl(
             clsname,
             params=[Decl(Type("int32_t"), routingId.name)],
-            ret=Type("IPC::Message", ptr=True),
+            ret=Type("mozilla::UniquePtr<IPC::Message>"),
         )
     )
 
@@ -1878,29 +1878,21 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     )
 
     segmentSize = int(segmentSize)
-    if segmentSize:
-        func.addstmt(
-            StmtReturn(
-                ExprNew(
-                    Type("IPC::Message"),
-                    args=[
-                        routingId,
-                        ExprVar(msgid),
-                        ExprLiteral.Int(int(segmentSize)),
-                        flags,
-                    ],
-                )
+    if not segmentSize:
+        segmentSize = 0
+    func.addstmt(
+        StmtReturn(
+            ExprCall(
+                ExprVar("IPC::Message::IPDLMessage"),
+                args=[
+                    routingId,
+                    ExprVar(msgid),
+                    ExprLiteral.Int(int(segmentSize)),
+                    flags,
+                ],
             )
         )
-    else:
-        func.addstmt(
-            StmtReturn(
-                ExprCall(
-                    ExprVar("IPC::Message::IPDLMessage"),
-                    args=[routingId, ExprVar(msgid), flags],
-                )
-            )
-        )
+    )
 
     return func
 
@@ -4120,7 +4112,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         def makeHandlerMethod(name, switch, hasReply, dispatches=False):
             params = [Decl(Type("Message", const=True, ref=True), msgvar.name)]
             if hasReply:
-                params.append(Decl(Type("Message", ref=True, ptr=True), replyvar.name))
+                params.append(Decl(Type("UniquePtr<Message>", ref=True), replyvar.name))
 
             method = MethodDefn(
                 MethodDecl(
@@ -4711,7 +4703,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
         replystmts = self.deserializeReply(
             md,
-            ExprAddrOf(replyvar),
+            replyvar,
             self.side,
             errfnSendCtor,
             errfnSentinel(ExprLiteral.NULL),
@@ -4727,7 +4719,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             // Synchronously send the constructor message to the other side. If
             // the send fails, e.g. due to the remote side shutting down, the
             // actor will be destroyed and potentially freed.
-            Message ${replyvar};
+            UniquePtr<Message> ${replyvar};
             $*{sendstmts}
 
             if (!(${sendok})) {
@@ -4838,12 +4830,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar, actorvar)
         method.addstmts(
             stmts
-            + [Whitespace.NL, StmtDecl(Decl(Type("Message"), replyvar.name))]
+            + [Whitespace.NL, StmtDecl(Decl(Type("UniquePtr<Message>"), replyvar.name))]
             + sendstmts
         )
 
         destmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side, errfnSend, errfnSentinel(), actorvar
+            md, replyvar, self.side, errfnSend, errfnSentinel(), actorvar
         )
         ifsendok = StmtIf(ExprLiteral.FALSE)
         ifsendok.addifstmts(destmts)
@@ -4976,12 +4968,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         failif.addifstmt(StmtReturn.FALSE)
 
         desstmts = self.deserializeReply(
-            md, ExprAddrOf(replyvar), self.side, errfnSend, errfnSentinel()
+            md, replyvar, self.side, errfnSend, errfnSentinel()
         )
 
         method.addstmts(
             serstmts
-            + [Whitespace.NL, StmtDecl(Decl(Type("Message"), replyvar.name))]
+            + [Whitespace.NL, StmtDecl(Decl(Type("UniquePtr<Message>"), replyvar.name))]
             + sendstmts
             + [failif]
             + desstmts
@@ -5088,7 +5080,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         stmts = (
             [
                 StmtDecl(
-                    Decl(Type("IPC::Message", ptr=True), msgvar.name),
+                    Decl(Type("UniquePtr<IPC::Message>"), msgvar.name),
                     init=ExprCall(ExprVar(md.pqMsgCtorFunc()), args=[routingId]),
                 ),
                 StmtDecl(
@@ -5417,7 +5409,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 Whitespace.NL,
                 StmtDecl(
                     Decl(Type("IPC::MessageReader"), readervar.name),
-                    initargs=[self.replyvar, ExprVar.THIS],
+                    initargs=[ExprDeref(self.replyvar), ExprVar.THIS],
                 ),
             ]
             + declstmts
@@ -5459,7 +5451,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             stmts.append(
                 StmtExpr(
                     ExprCall(
-                        send, args=[msgexpr, ExprMove(resolvefn), ExprMove(rejectfn)]
+                        send,
+                        args=[
+                            ExprMove(msgexpr),
+                            ExprMove(resolvefn),
+                            ExprMove(rejectfn),
+                        ],
                     )
                 )
             )
@@ -5467,7 +5464,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         else:
             stmts.append(
                 StmtDecl(
-                    Decl(Type.BOOL, sendok.name), init=ExprCall(send, args=[msgexpr])
+                    Decl(Type.BOOL, sendok.name),
+                    init=ExprCall(send, args=[ExprMove(msgexpr)]),
                 )
             )
             retvar = sendok
@@ -5514,7 +5512,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                 ExprAssn(
                                     sendok,
                                     ExprCall(
-                                        send, args=[msgexpr, ExprAddrOf(replyexpr)]
+                                        send,
+                                        args=[ExprMove(msgexpr), ExprAddrOf(replyexpr)],
                                     ),
                                 )
                             ),

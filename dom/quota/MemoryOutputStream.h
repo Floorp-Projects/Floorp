@@ -15,9 +15,7 @@
 
 class nsIInputStream;
 
-namespace mozilla {
-namespace dom {
-namespace quota {
+namespace mozilla::dom::quota {
 
 // An output stream so you can read your potentially-async input stream into
 // a contiguous buffer in the form of an nsCString using NS_AsyncCopy.
@@ -47,8 +45,6 @@ class MemoryOutputStream final : public nsIOutputStream {
   NS_DECL_NSIOUTPUTSTREAM
 };
 
-}  // namespace quota
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::quota
 
 #endif /* mozilla_dom_quota_MemoryOutputStream_h */

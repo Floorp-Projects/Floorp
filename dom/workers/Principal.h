@@ -9,8 +9,7 @@
 
 #include "js/Principals.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 struct MOZ_HEAP_CLASS WorkerPrincipal final : public JSPrincipals {
   explicit WorkerPrincipal(bool aIsSystemOrAddonPrincipal);
@@ -30,7 +29,6 @@ struct MOZ_HEAP_CLASS WorkerPrincipal final : public JSPrincipals {
   bool mIsSystemOrAddonPrincipal;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_workers_principal_h__ */

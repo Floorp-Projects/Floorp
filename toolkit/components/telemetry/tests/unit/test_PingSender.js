@@ -89,6 +89,8 @@ add_task(async function setup() {
 });
 
 add_task(async function test_pingSender() {
+  let count = 10;
+
   // Generate a new ping and save it among the pending pings.
   const data = generateTestPingData();
   await TelemetryStorage.savePing(data, true);
@@ -97,8 +99,8 @@ add_task(async function test_pingSender() {
   const pingPath = OS.Path.join(TelemetryStorage.pingDirectoryPath, data.id);
 
   // Spawn an HTTP server that returns an error. We will be running the
-  // PingSender twice, trying to send the ping to this server. After the
-  // second time, we will resolve |deferred404Hit|.
+  // PingSender multiple times, trying to send the ping to this server. After the
+  // last time, we will resolve |deferred404Hit|.
   let failingServer = new HttpServer();
   let deferred404Hit = PromiseUtils.defer();
   let hitCount = 0;
@@ -106,21 +108,23 @@ add_task(async function test_pingSender() {
     response.setStatusLine("1.1", 404, "Not Found");
     hitCount++;
 
-    if (hitCount >= 2) {
+    if (hitCount >= count) {
       // Resolve the promise on the next tick.
       Services.tm.dispatchToMainThread(() => deferred404Hit.resolve());
     }
   });
   failingServer.start(-1);
 
-  // Try to send the ping twice using the pingsender (we expect 404 both times).
+  // Try to send the ping multiple times using the pingsender (we expect 404 every time).
   const errorUrl =
     "http://localhost:" + failingServer.identity.primaryPort + "/lookup_fail";
-  TelemetrySend.testRunPingSender([{ url: errorUrl, path: pingPath }]);
-  TelemetrySend.testRunPingSender([{ url: errorUrl, path: pingPath }]);
 
-  // Wait until we hit the 404 server twice. After that, make sure that the ping
-  // still exists locally.
+  for (let i = 0; i < count; i++) {
+    TelemetrySend.testRunPingSender([{ url: errorUrl, path: pingPath }]);
+  }
+
+  // Wait until we hit the 404 server enough times. After that, make sure that the pings
+  // still exist locally.
   await deferred404Hit.promise;
   Assert.ok(
     await OS.File.exists(pingPath),
@@ -135,12 +139,12 @@ add_task(async function test_pingSender() {
 
   Assert.equal(
     req.getHeader("User-Agent"),
-    "pingsender/1.0",
+    "pingsender/2.0",
     "Should have received the correct user agent string."
   );
   Assert.equal(
     req.getHeader("X-PingSender-Version"),
-    "1.0",
+    "2.0",
     "Should have received the correct PingSender version string."
   );
   Assert.equal(

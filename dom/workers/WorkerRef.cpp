@@ -10,8 +10,7 @@
 #include "WorkerRunnable.h"
 #include "WorkerPrivate.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -243,5 +242,4 @@ WorkerPrivate* IPCWorkerRef::Private() const {
   return mWorkerPrivate;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

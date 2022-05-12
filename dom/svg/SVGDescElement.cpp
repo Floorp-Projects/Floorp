@@ -9,8 +9,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Desc)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGDescElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -29,5 +28,4 @@ SVGDescElement::SVGDescElement(
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGDescElement)
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

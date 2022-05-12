@@ -518,6 +518,29 @@ add_task(function testObservableArray_object() {
     isDeeply(values[i], b[i], `check index ${i}`);
   }
 });
+
+add_task(function testObservableArray_xrays() {
+  let m = new TestInterfaceObservableArray({
+    setObjectCallback(value, index) {
+      ok(false, "Shouldn't reach setObjectCallback");
+    },
+    deleteObjectCallback(value, index) {
+      ok(false, "Shouldn't reach deleteObjectCallback");
+    },
+  });
+
+  let wrapper = SpecialPowers.wrap(m);
+  ok(SpecialPowers.Cu.isXrayWrapper(wrapper), "Should be a wrapper");
+  let observableArray = wrapper.observableArrayBoolean;
+  ok(!!observableArray, "Should not throw");
+  is("length" in observableArray, false, "Should be opaque");
+
+  try {
+    wrapper.observableArrayBoolean = [true, false, false];
+    ok(false, "Expected to throw, for now");
+  } catch (ex) {}
+});
+
 </script>
 </body>
 </html>

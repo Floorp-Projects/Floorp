@@ -10,8 +10,7 @@
 #include "mozilla/Mutex.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ArrayBufferBuilder;
 class BlobImpl;
@@ -147,7 +146,6 @@ class MOZ_STACK_CLASS XMLHttpRequestStringSnapshotReaderHelper final {
   MutexAutoLock mLock;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XMLHttpRequestString_h

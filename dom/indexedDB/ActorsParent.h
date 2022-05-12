@@ -14,8 +14,7 @@
 
 class nsIPrincipal;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Element;
 class FileHandleThreadPool;
@@ -69,7 +68,6 @@ class PermissionRequestHelper final : public PermissionRequestBase {
 };
 
 }  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_indexeddb_actorsparent_h__

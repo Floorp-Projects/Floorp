@@ -15,8 +15,7 @@
 class nsIURI;
 class nsIChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XMLDocument : public Document {
  public:
@@ -82,7 +81,6 @@ class XMLDocument : public Document {
   bool mSuppressParserErrorConsoleMessages;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XMLDocument_h

@@ -172,7 +172,10 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool allowHTMLComments = true;
   bool nonSyntacticScope = false;
 
+  // Top-level await is enabled by default but is not supported for chrome
+  // modules loaded with ChromeUtils.importModule.
   bool topLevelAwait = true;
+
   bool useFdlibmForSinCosTan = false;
 
   bool importAssertions = false;

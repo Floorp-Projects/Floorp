@@ -11,8 +11,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SDBResult : public nsISDBResult {
   nsCString mData;
@@ -27,7 +26,6 @@ class SDBResult : public nsISDBResult {
   NS_DECL_NSISDBRESULT
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_simpledb_SDBResults_h

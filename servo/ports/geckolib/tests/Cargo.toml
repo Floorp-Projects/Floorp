@@ -10,19 +10,5 @@ path = "lib.rs"
 doctest = false
 
 [dependencies]
-atomic_refcell = "0.1"
-cssparser = "0.29"
-cstr = "0.2"
-env_logger = { version = "0.8", default-features = false }
-geckoservo = {path = "../../../ports/geckolib"}
-libc = "0.2"
-log = {version = "0.4", features = ["release_max_level_info"]}
-malloc_size_of = {path = "../../../components/malloc_size_of"}
-num-traits = "0.2"
-selectors = {path = "../../../components/selectors"}
-size_of_test = {path = "../../../components/size_of_test"}
-smallvec = "1.0"
-style_traits = {path = "../../../components/style_traits"}
 style = {path = "../../../components/style", features = ["gecko"]}
-to_shmem = {path = "../../../components/to_shmem"}
 euclid = "0.22"

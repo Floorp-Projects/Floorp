@@ -60,8 +60,7 @@ static bool CanBroadcast(int32_t aNameSpaceID, nsAtom* aAttribute) {
   return true;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 static LazyLogModule sXULBroadCastManager("XULBroadcastManager");
 
 class XULBroadcastManager::nsDelayedBroadcastUpdate {
@@ -590,5 +589,4 @@ nsresult XULBroadcastManager::RemoveListener(Element* aElement) {
   return UpdateListenerHookup(aElement, eHookupRemove);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -9,8 +9,7 @@
 #include "mozilla/dom/DOMPoint.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRBoundedReferenceSpace::XRBoundedReferenceSpace(nsIGlobalObject* aParent,
                                                  XRSession* aSession,
@@ -71,5 +70,4 @@ XRBoundedReferenceSpace::GetOffsetReferenceSpace(
   return offsetReferenceSpace.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

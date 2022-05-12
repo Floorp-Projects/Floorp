@@ -10,8 +10,7 @@
 #include "mozilla/dom/XRRigidTransform.h"
 #include "mozilla/dom/Pose.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XRView)
 
@@ -93,5 +92,4 @@ already_AddRefed<XRRigidTransform> XRView::GetTransform(ErrorResult& aRv) {
   return transform.forget();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

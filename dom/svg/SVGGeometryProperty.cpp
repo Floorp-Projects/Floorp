@@ -13,9 +13,7 @@
 #include "SVGUseElement.h"
 #include "nsCSSValue.h"
 
-namespace mozilla {
-namespace dom {
-namespace SVGGeometryProperty {
+namespace mozilla::dom::SVGGeometryProperty {
 
 nsCSSUnit SpecifiedUnitTypeToCSSUnit(uint8_t aSpecifiedUnit) {
   switch (aSpecifiedUnit) {
@@ -90,6 +88,4 @@ bool ElementMapsLengthsToStyle(SVGElement const* aElement) {
                                       nsGkAtoms::foreignObject, nsGkAtoms::use);
 }
 
-}  // namespace SVGGeometryProperty
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::SVGGeometryProperty

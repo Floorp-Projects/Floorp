@@ -75,17 +75,21 @@ void FetchEventOpProxyChild::Initialize(
     // We use synchronous task dispatch here to make sure that if the preload
     // response arrived before we dispatch the fetch event, then the JS preload
     // response promise will get resolved immediately.
-    mPreloadResponsePromise =
-        MakeRefPtr<FetchEventPreloadResponsePromise::Private>(__func__);
-    mPreloadResponsePromise->UseSynchronousTaskDispatch(__func__);
-    if (aArgs.preloadResponse().isSome()) {
-      FetchEventPreloadResponseArgs response = MakeTuple(
-          InternalResponse::FromIPC(aArgs.preloadResponse().ref().response()),
-          aArgs.preloadResponse().ref().timingData(),
-          aArgs.preloadResponse().ref().initiatorType(),
-          aArgs.preloadResponse().ref().entryName());
+    mPreloadResponseAvailablePromise =
+        MakeRefPtr<FetchEventPreloadResponseAvailablePromise::Private>(
+            __func__);
+    mPreloadResponseAvailablePromise->UseSynchronousTaskDispatch(__func__);
 
-      mPreloadResponsePromise->Resolve(std::move(response), __func__);
+    if (aArgs.preloadResponse().isSome()) {
+      mPreloadResponseAvailablePromise->Resolve(
+          InternalResponse::FromIPC(aArgs.preloadResponse().ref()), __func__);
+    }
+    mPreloadResponseEndPromise =
+        MakeRefPtr<FetchEventPreloadResponseEndPromise::Private>(__func__);
+    mPreloadResponseEndPromise->UseSynchronousTaskDispatch(__func__);
+    if (aArgs.preloadResponseEndArgs().isSome()) {
+      mPreloadResponseEndPromise->Resolve(aArgs.preloadResponseEndArgs().ref(),
+                                          __func__);
     }
   }
 
@@ -95,6 +99,16 @@ void FetchEventOpProxyChild::Initialize(
   RefPtr<FetchEventOpProxyChild> self = this;
 
   auto callback = [self](const ServiceWorkerOpResult& aResult) {
+    // FetchEventOp could finish before NavigationPreload fetch finishes.
+    // If NavigationPreload is available in FetchEvent, caching FetchEventOp
+    // result until RecvPreloadResponseEnd is called, such that the response's
+    // ResourceTiming could be recorded in worker's performanceStorage.
+    if (self->mPreloadResponseEndPromise &&
+        !self->mPreloadResponseEndPromise->IsResolved() &&
+        self->mPreloadResponseAvailablePromise->IsResolved()) {
+      self->mCachedOpResult = Some(aResult);
+      return;
+    }
     if (!self->CanSend()) {
       return;
     }
@@ -178,22 +192,55 @@ SafeRefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
   return std::move(mInternalRequest);
 }
 
-RefPtr<FetchEventPreloadResponsePromise>
-FetchEventOpProxyChild::GetPreloadResponsePromise() {
-  return mPreloadResponsePromise;
+RefPtr<FetchEventPreloadResponseAvailablePromise>
+FetchEventOpProxyChild::GetPreloadResponseAvailablePromise() {
+  return mPreloadResponseAvailablePromise;
+}
+
+RefPtr<FetchEventPreloadResponseEndPromise>
+FetchEventOpProxyChild::GetPreloadResponseEndPromise() {
+  return mPreloadResponseEndPromise;
 }
 
 mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
-    ParentToChildResponseWithTiming&& aResponse) {
+    ParentToChildInternalResponse&& aResponse) {
   // Receiving this message implies that navigation preload is enabled, so
   // Initialize() should have created this promise.
-  MOZ_ASSERT(mPreloadResponsePromise);
+  MOZ_ASSERT(mPreloadResponseAvailablePromise);
 
-  FetchEventPreloadResponseArgs response = MakeTuple(
-      InternalResponse::FromIPC(aResponse.response()), aResponse.timingData(),
-      aResponse.initiatorType(), aResponse.entryName());
+  mPreloadResponseAvailablePromise->Resolve(
+      InternalResponse::FromIPC(aResponse), __func__);
 
-  mPreloadResponsePromise->Resolve(std::move(response), __func__);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponseEnd(
+    ResponseEndArgs&& aArgs) {
+  // Receiving this message implies that navigation preload is enabled, so
+  // Initialize() should have created this promise.
+  MOZ_ASSERT(mPreloadResponseEndPromise);
+
+  mPreloadResponseEndPromise->Resolve(std::move(aArgs), __func__);
+  // If mCachedOpResult is not nothing, it means FetchEventOp had already done
+  // and the operation result is cached. Continue closing IPC here.
+  if (mCachedOpResult.isNothing()) {
+    return IPC_OK();
+  }
+
+  if (!CanSend()) {
+    return IPC_OK();
+  }
+
+  if (NS_WARN_IF(mCachedOpResult.ref().type() ==
+                 ServiceWorkerOpResult::Tnsresult)) {
+    Unused << Send__delete__(this, mCachedOpResult.ref().get_nsresult());
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mCachedOpResult.ref().type() ==
+             ServiceWorkerOpResult::TServiceWorkerFetchEventOpResult);
+
+  Unused << Send__delete__(this, mCachedOpResult.ref());
 
   return IPC_OK();
 }
@@ -202,16 +249,18 @@ void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
   Unused << NS_WARN_IF(mRespondWithPromiseRequestHolder.Exists());
   mRespondWithPromiseRequestHolder.DisconnectIfExists();
 
-  // If mPreloadResponsePromise exists, navigation preloading response will not
-  // be valid anymore since it is too late to respond to the FetchEvent.
-  // Resolve the preload response promise with NS_ERROR_DOM_ABORT_ERR.
-  if (mPreloadResponsePromise) {
-    IPCPerformanceTimingData timingData;
-    FetchEventPreloadResponseArgs response =
-        MakeTuple(InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR),
-                  timingData, EmptyString(), EmptyString());
+  // If mPreloadResponseAvailablePromise exists, navigation preloading response
+  // will not be valid anymore since it is too late to respond to the
+  // FetchEvent. Resolve the preload response promise with
+  // NS_ERROR_DOM_ABORT_ERR.
+  if (mPreloadResponseAvailablePromise) {
+    mPreloadResponseAvailablePromise->Resolve(
+        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+  }
 
-    mPreloadResponsePromise->Resolve(std::move(response), __func__);
+  if (mPreloadResponseEndPromise) {
+    ResponseEndArgs args(FetchDriverObserver::eAborted, Nothing());
+    mPreloadResponseEndPromise->Resolve(args, __func__);
   }
 
   mOp->RevokeActor(this);

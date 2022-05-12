@@ -11,8 +11,7 @@
 #include "mozilla/dom/HTMLTableCaptionElement.h"
 #include "mozilla/dom/HTMLTableSectionElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TableRowsCollection;
 
@@ -205,7 +204,6 @@ class HTMLTableElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_HTMLTableElement_h */

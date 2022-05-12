@@ -55,19 +55,8 @@ using namespace mozilla::layers;
 #define BUFFER_FLAGS 0
 
 static RefPtr<GLContext> sSnapshotContext;
+static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
 static Atomic<int> gNewSurfaceUID(1);
-
-bool EnsureSnapshotGLContext() {
-  if (!sSnapshotContext) {
-    nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
-    if (!sSnapshotContext) {
-      NS_WARNING("Failed to create snapshot GLContext");
-      return false;
-    }
-  }
-  return true;
-}
 
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
@@ -1265,9 +1254,14 @@ void DMABufSurfaceYUV::ReleaseTextures() {
 bool DMABufSurfaceYUV::VerifyTextureCreation() {
   LOGDMABUF(("DMABufSurfaceYUV::VerifyTextureCreation() UID %d", mUID));
 
-  if (!EnsureSnapshotGLContext()) {
-    LOGDMABUF(("  failed to create GL context!"));
-    return false;
+  StaticMutexAutoLock lock(sSnapshotContextMutex);
+  if (!sSnapshotContext) {
+    nsCString discardFailureId;
+    sSnapshotContext = GLContextProvider::CreateHeadless({}, &discardFailureId);
+    if (!sSnapshotContext) {
+      NS_WARNING("Failed to create snapshot GLContext");
+      return false;
+    }
   }
 
   auto release = MakeScopeExit([&] { ReleaseEGLImages(sSnapshotContext); });
