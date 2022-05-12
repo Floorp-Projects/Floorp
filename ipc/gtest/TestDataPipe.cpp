@@ -263,6 +263,79 @@ TEST(DataPipe, Read_AsyncWait)
   ConsumeAndValidateStream(reader, inputData);
 }
 
+TEST(DataPipe, Write_AsyncWait_Cancel)
+{
+  RefPtr<DataPipeReceiver> reader;
+  RefPtr<DataPipeSender> writer;
+
+  const uint32_t segmentSize = 1024;
+
+  nsresult rv =
+      NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCString inputData;
+  CreateData(segmentSize, inputData);
+
+  uint32_t numWritten = 0;
+  rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_EQ(numWritten, segmentSize);
+
+  rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
+  ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
+
+  RefPtr<OutputStreamCallback> cb = new OutputStreamCallback();
+
+  // Register a callback and immediately cancel it.
+  rv = writer->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  rv = writer->AsyncWait(nullptr, 0, 0, nullptr);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Even after consuming the stream and processing pending events, the callback
+  // shouldn't be called as it was cancelled.
+  ConsumeAndValidateStream(reader, inputData);
+  NS_ProcessPendingEvents(nullptr);
+  ASSERT_FALSE(cb->Called());
+}
+
+TEST(DataPipe, Read_AsyncWait_Cancel)
+{
+  RefPtr<DataPipeReceiver> reader;
+  RefPtr<DataPipeSender> writer;
+
+  const uint32_t segmentSize = 1024;
+
+  nsresult rv =
+      NewDataPipe(segmentSize, getter_AddRefs(writer), getter_AddRefs(reader));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  nsCString inputData;
+  CreateData(segmentSize, inputData);
+
+  RefPtr<InputStreamCallback> cb = new InputStreamCallback();
+
+  // Register a callback and immediately cancel it.
+  rv = reader->AsyncWait(cb, 0, 0, GetCurrentSerialEventTarget());
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  rv = reader->AsyncWait(nullptr, 0, 0, nullptr);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write data into the pipe to make the callback become ready.
+  uint32_t numWritten = 0;
+  rv = writer->Write(inputData.BeginReading(), inputData.Length(), &numWritten);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Even after processing pending events, the callback shouldn't be called as
+  // it was cancelled.
+  NS_ProcessPendingEvents(nullptr);
+  ASSERT_FALSE(cb->Called());
+
+  ConsumeAndValidateStream(reader, inputData);
+}
+
 TEST(DataPipe, SerializeReader)
 {
   RefPtr<DataPipeReceiver> reader;
