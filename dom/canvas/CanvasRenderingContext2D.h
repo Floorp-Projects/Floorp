@@ -93,6 +93,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     return mCanvasElement->GetOriginalCanvas();
   }
 
+  void OnMemoryPressure() override;
   void OnBeforePaintTransaction() override;
   void OnDidPaintTransaction() override;
   layers::PersistentBufferProvider* GetBufferProvider() override {

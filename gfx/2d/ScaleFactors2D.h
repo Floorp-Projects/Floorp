@@ -23,7 +23,7 @@ namespace gfx {
  * This class is like ScaleFactor, but allows different scales on the x and
  * y axes.
  */
-template <class src, class dst, class T>
+template <class Src, class Dst, class T>
 struct BaseScaleFactors2D {
   T xScale;
   T yScale;
@@ -41,7 +41,7 @@ struct BaseScaleFactors2D {
   // This is deliberately 'explicit' so that the treatment of a single scale
   // number as both the x- and y-scale in a context where they are allowed to
   // be different, is more visible.
-  explicit constexpr BaseScaleFactors2D(const ScaleFactor<src, dst>& aScale)
+  explicit constexpr BaseScaleFactors2D(const ScaleFactor<Src, Dst>& aScale)
       : xScale(aScale.scale), yScale(aScale.scale) {}
 
   bool AreScalesSame() const {
@@ -51,17 +51,17 @@ struct BaseScaleFactors2D {
   // Convert the underlying floating point type storing the scale factors
   // to that of NewT.
   template <typename NewT>
-  BaseScaleFactors2D<src, dst, NewT> ConvertTo() const {
-    return BaseScaleFactors2D<src, dst, NewT>(NewT(xScale), NewT(yScale));
+  BaseScaleFactors2D<Src, Dst, NewT> ConvertTo() const {
+    return BaseScaleFactors2D<Src, Dst, NewT>(NewT(xScale), NewT(yScale));
   }
 
   // Convert to a ScaleFactor. Asserts that the scales are, in fact, equal.
-  ScaleFactor<src, dst> ToScaleFactor() const {
+  ScaleFactor<Src, Dst> ToScaleFactor() const {
     // Avoid implicit narrowing from double to float. An explicit conversion
     // may be done with `scales.ConvertTo<float>().ToScaleFactor()` if desired.
     static_assert(std::is_same_v<T, float>);
     MOZ_ASSERT(AreScalesSame());
-    return ScaleFactor<src, dst>(xScale);
+    return ScaleFactor<Src, Dst>(xScale);
   }
 
   // Convert to a SizeTyped. Eventually, we should replace all uses of SizeTyped
@@ -89,87 +89,87 @@ struct BaseScaleFactors2D {
     }
   }
 
-  template <class other>
-  BaseScaleFactors2D<other, dst, T> operator/(
-      const BaseScaleFactors2D<src, other, T>& aOther) const {
-    return BaseScaleFactors2D<other, dst, T>(xScale / aOther.xScale,
+  template <class Other>
+  BaseScaleFactors2D<Other, Dst, T> operator/(
+      const BaseScaleFactors2D<Src, Other, T>& aOther) const {
+    return BaseScaleFactors2D<Other, Dst, T>(xScale / aOther.xScale,
                                              yScale / aOther.yScale);
   }
 
-  template <class other>
-  BaseScaleFactors2D<src, other, T> operator/(
-      const BaseScaleFactors2D<other, dst, T>& aOther) const {
-    return BaseScaleFactors2D<src, other, T>(xScale / aOther.xScale,
+  template <class Other>
+  BaseScaleFactors2D<Src, Other, T> operator/(
+      const BaseScaleFactors2D<Other, Dst, T>& aOther) const {
+    return BaseScaleFactors2D<Src, Other, T>(xScale / aOther.xScale,
                                              yScale / aOther.yScale);
   }
 
-  template <class other>
-  BaseScaleFactors2D<src, other, T> operator*(
-      const BaseScaleFactors2D<dst, other, T>& aOther) const {
-    return BaseScaleFactors2D<src, other, T>(xScale * aOther.xScale,
+  template <class Other>
+  BaseScaleFactors2D<Src, Other, T> operator*(
+      const BaseScaleFactors2D<Dst, Other, T>& aOther) const {
+    return BaseScaleFactors2D<Src, Other, T>(xScale * aOther.xScale,
                                              yScale * aOther.yScale);
   }
 
-  template <class other>
-  BaseScaleFactors2D<other, dst, T> operator*(
-      const BaseScaleFactors2D<other, src, T>& aOther) const {
-    return BaseScaleFactors2D<other, dst, T>(xScale * aOther.xScale,
+  template <class Other>
+  BaseScaleFactors2D<Other, Dst, T> operator*(
+      const BaseScaleFactors2D<Other, Src, T>& aOther) const {
+    return BaseScaleFactors2D<Other, Dst, T>(xScale * aOther.xScale,
                                              yScale * aOther.yScale);
   }
 
-  BaseScaleFactors2D<src, src, T> operator*(
-      const BaseScaleFactors2D<dst, src, T>& aOther) const {
-    return BaseScaleFactors2D<src, src, T>(xScale * aOther.xScale,
+  BaseScaleFactors2D<Src, Src, T> operator*(
+      const BaseScaleFactors2D<Dst, Src, T>& aOther) const {
+    return BaseScaleFactors2D<Src, Src, T>(xScale * aOther.xScale,
                                            yScale * aOther.yScale);
   }
 
-  template <class other>
-  BaseScaleFactors2D<src, other, T> operator*(
-      const ScaleFactor<dst, other>& aOther) const {
-    return *this * BaseScaleFactors2D<dst, other, T>(aOther);
+  template <class Other>
+  BaseScaleFactors2D<Src, Other, T> operator*(
+      const ScaleFactor<Dst, Other>& aOther) const {
+    return *this * BaseScaleFactors2D<Dst, Other, T>(aOther);
   }
 
-  template <class other>
-  BaseScaleFactors2D<other, dst, T> operator*(
-      const ScaleFactor<other, src>& aOther) const {
-    return *this * BaseScaleFactors2D<other, src, T>(aOther);
+  template <class Other>
+  BaseScaleFactors2D<Other, Dst, T> operator*(
+      const ScaleFactor<Other, Src>& aOther) const {
+    return *this * BaseScaleFactors2D<Other, Src, T>(aOther);
   }
 
-  BaseScaleFactors2D<src, src, T> operator*(
-      const ScaleFactor<dst, src>& aOther) const {
-    return *this * BaseScaleFactors2D<dst, src, T>(aOther);
+  BaseScaleFactors2D<Src, Src, T> operator*(
+      const ScaleFactor<Dst, Src>& aOther) const {
+    return *this * BaseScaleFactors2D<Dst, Src, T>(aOther);
   }
 
-  template <class other>
-  BaseScaleFactors2D<src, other, T> operator/(
-      const ScaleFactor<other, dst>& aOther) const {
-    return *this / BaseScaleFactors2D<other, dst, T>(aOther);
+  template <class Other>
+  BaseScaleFactors2D<Src, Other, T> operator/(
+      const ScaleFactor<Other, Dst>& aOther) const {
+    return *this / BaseScaleFactors2D<Other, Dst, T>(aOther);
   }
 
-  template <class other>
-  BaseScaleFactors2D<other, dst, T> operator/(
-      const ScaleFactor<src, other>& aOther) const {
-    return *this / BaseScaleFactors2D<src, other, T>(aOther);
+  template <class Other>
+  BaseScaleFactors2D<Other, Dst, T> operator/(
+      const ScaleFactor<Src, Other>& aOther) const {
+    return *this / BaseScaleFactors2D<Src, Other, T>(aOther);
   }
 
-  template <class other>
-  friend BaseScaleFactors2D<other, dst, T> operator*(
-      const ScaleFactor<other, src>& aA, const BaseScaleFactors2D& aB) {
-    return BaseScaleFactors2D<other, src, T>(aA) * aB;
+  template <class Other>
+  friend BaseScaleFactors2D<Other, Dst, T> operator*(
+      const ScaleFactor<Other, Src>& aA, const BaseScaleFactors2D& aB) {
+    return BaseScaleFactors2D<Other, Src, T>(aA) * aB;
   }
 
-  template <class other>
-  friend BaseScaleFactors2D<other, src, T> operator/(
-      const ScaleFactor<other, dst>& aA, const BaseScaleFactors2D& aB) {
-    return BaseScaleFactors2D<other, src, T>(aA) / aB;
+  template <class Other>
+  friend BaseScaleFactors2D<Other, Src, T> operator/(
+      const ScaleFactor<Other, Dst>& aA, const BaseScaleFactors2D& aB) {
+    return BaseScaleFactors2D<Other, Src, T>(aA) / aB;
   }
 };
 
-template <class src, class dst>
-using ScaleFactors2D = BaseScaleFactors2D<src, dst, float>;
+template <class Src, class Dst>
+using ScaleFactors2D = BaseScaleFactors2D<Src, Dst, float>;
 
-template <class src, class dst>
-using ScaleFactors2DDouble = BaseScaleFactors2D<src, dst, double>;
+template <class Src, class Dst>
+using ScaleFactors2DDouble = BaseScaleFactors2D<Src, Dst, double>;
 
 }  // namespace gfx
 }  // namespace mozilla

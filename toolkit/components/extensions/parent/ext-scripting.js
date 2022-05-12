@@ -44,7 +44,6 @@ const execute = (context, details, kind, method) => {
   const { tabId, frameIds, allFrames } = details.target;
   const tab = tabManager.get(tabId);
 
-  // TODO: Bug 1750765 - Add test coverage for this option.
   options.hasActiveTabPermission = tab.hasActiveTabPermission;
   options.matches = tab.extension.allowedOrigins.patterns.map(
     host => host.pattern

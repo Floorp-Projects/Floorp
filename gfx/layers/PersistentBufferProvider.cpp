@@ -140,6 +140,10 @@ bool PersistentBufferProviderAccelerated::RequiresRefresh() const {
   return GetDrawTargetWebgl()->RequiresRefresh();
 }
 
+void PersistentBufferProviderAccelerated::OnMemoryPressure() {
+  GetDrawTargetWebgl()->OnMemoryPressure();
+}
+
 static already_AddRefed<TextureClient> CreateTexture(
     KnowsCompositor* aKnowsCompositor, gfx::SurfaceFormat aFormat,
     gfx::IntSize aSize) {

@@ -148,6 +148,7 @@ EXPORTS += [
     "DOMMediaStream.h",
     "DriftCompensation.h",
     "DynamicResampler.h",
+    "ExternalEngineStateMachine.h",
     "FileBlockCache.h",
     "ForwardedInputTrack.h",
     "FrameStatistics.h",
@@ -160,6 +161,7 @@ EXPORTS += [
     "MediaDecoder.h",
     "MediaDecoderOwner.h",
     "MediaDecoderStateMachine.h",
+    "MediaDecoderStateMachineBase.h",
     "MediaEventSource.h",
     "MediaFormatReader.h",
     "MediaInfo.h",
@@ -188,6 +190,7 @@ EXPORTS += [
     "PrincipalChangeObserver.h",
     "PrincipalHandle.h",
     "QueueObject.h",
+    "ReaderProxy.h",
     "SeekJob.h",
     "SeekTarget.h",
     "SelfRef.h",
@@ -267,6 +270,7 @@ UNIFIED_SOURCES += [
     "DeviceInputTrack.cpp",
     "DOMMediaStream.cpp",
     "DynamicResampler.cpp",
+    "ExternalEngineStateMachine.cpp",
     "FileBlockCache.cpp",
     "FileMediaResource.cpp",
     "ForwardedInputTrack.cpp",
@@ -276,9 +280,9 @@ UNIFIED_SOURCES += [
     "ImageToI420.cpp",
     "MediaCache.cpp",
     "MediaContainerType.cpp",
-    "MediaData.cpp",
     "MediaDecoder.cpp",
     "MediaDecoderStateMachine.cpp",
+    "MediaDecoderStateMachineBase.cpp",
     "MediaDeviceInfo.cpp",
     "MediaDevices.cpp",
     "MediaFormatReader.cpp",
@@ -320,9 +324,11 @@ else:
 # CubebUtils.cpp needs to be built separately due to what appears to be some kind
 # of compiler bug on Android 4.2 x86 opt. See bug 1408459.
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+# MediaData.cpp : ambiguous compilation error caused by Mac OS X headers.
 SOURCES += [
     "CubebUtils.cpp",
     "DecoderTraits.cpp",
+    "MediaData.cpp",
 ]
 
 # Some codec-related code uses multi-character constants, which GCC and clang

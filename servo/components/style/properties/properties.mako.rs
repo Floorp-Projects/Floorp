@@ -267,6 +267,9 @@ pub enum PropertyDeclaration {
     % endfor
 }
 
+// There's one of these for each parsed declaration so it better be small.
+size_of_test!(PropertyDeclaration, 32);
+
 #[repr(C)]
 struct PropertyDeclarationVariantRepr<T> {
     tag: u16,
@@ -2599,6 +2602,10 @@ pub struct SourcePropertyDeclaration {
     all_shorthand: AllShorthand,
 }
 
+// This is huge, but we allocate it on the stack and then never move it,
+// we only pass `&mut SourcePropertyDeclaration` references around.
+size_of_test!(SourcePropertyDeclaration, 600);
+
 impl SourcePropertyDeclaration {
     /// Create one. It’s big, try not to move it around.
     #[inline]
@@ -4209,21 +4216,45 @@ macro_rules! css_properties_accessors {
 /// Call the given macro with tokens like this for each longhand properties:
 ///
 /// ```
-/// { snake_case_ident, true }
+/// { snake_case_ident }
 /// ```
-///
-/// … where the boolean indicates whether the property value type
-/// is wrapped in a `Box<_>` in the corresponding `PropertyDeclaration` variant.
 #[macro_export]
 macro_rules! longhand_properties_idents {
     ($macro_name: ident) => {
         $macro_name! {
             % for property in data.longhands:
-                { ${property.ident}, ${"true" if property.boxed else "false"} }
+                { ${property.ident} }
             % endfor
         }
     }
 }
+
+// Large pages generate tens of thousands of ComputedValues.
+size_of_test!(ComputedValues, 232);
+// FFI relies on this.
+size_of_test!(Option<Arc<ComputedValues>>, 8);
+
+// There are two reasons for this test to fail:
+//
+//   * Your changes made a specified value type for a given property go
+//     over the threshold. In that case, you should try to shrink it again
+//     or, if not possible, mark the property as boxed in the property
+//     definition.
+//
+//   * Your changes made a specified value type smaller, so that it no
+//     longer needs to be boxed. In this case you just need to remove
+//     boxed=True from the property definition. Nice job!
+#[cfg(target_pointer_width = "64")]
+#[allow(dead_code)] // https://github.com/rust-lang/rust/issues/96952
+const BOX_THRESHOLD: usize = 24;
+% for longhand in data.longhands:
+#[cfg(target_pointer_width = "64")]
+% if longhand.boxed:
+const_assert!(std::mem::size_of::<longhands::${longhand.ident}::SpecifiedValue>() > BOX_THRESHOLD);
+% else:
+const_assert!(std::mem::size_of::<longhands::${longhand.ident}::SpecifiedValue>() <= BOX_THRESHOLD);
+% endif
+% endfor
 
 % if engine in ["servo-2013", "servo-2020"]:
 % for effect_name in ["repaint", "reflow_out_of_flow", "reflow", "rebuild_and_reflow_inline", "rebuild_and_reflow"]:

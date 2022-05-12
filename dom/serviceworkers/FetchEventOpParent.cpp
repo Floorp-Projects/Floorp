@@ -25,12 +25,15 @@ using namespace ipc;
 
 namespace dom {
 
-Maybe<ParentToParentResponseWithTiming> FetchEventOpParent::OnStart(
+Tuple<Maybe<ParentToParentInternalResponse>, Maybe<ResponseEndArgs>>
+FetchEventOpParent::OnStart(
     MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent) {
-  Maybe<ParentToParentResponseWithTiming> preloadResponse =
+  Maybe<ParentToParentInternalResponse> preloadResponse =
       std::move(mState.as<Pending>().mPreloadResponse);
+  Maybe<ResponseEndArgs> preloadResponseEndArgs =
+      std::move(mState.as<Pending>().mEndArgs);
   mState = AsVariant(Started{std::move(aFetchEventOpProxyParent)});
-  return preloadResponse;
+  return MakeTuple(preloadResponse, preloadResponseEndArgs);
 }
 
 void FetchEventOpParent::OnFinish() {
@@ -39,7 +42,7 @@ void FetchEventOpParent::OnFinish() {
 }
 
 mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
-    ParentToParentResponseWithTiming&& aResponse) {
+    ParentToParentInternalResponse&& aResponse) {
   AssertIsOnBackgroundThread();
 
   mState.match(
@@ -48,17 +51,29 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
         aPending.mPreloadResponse = Some(std::move(aResponse));
       },
       [&aResponse](Started& aStarted) {
-        ParentToChildResponseWithTiming response;
         auto backgroundParent = WrapNotNull(
             WrapNotNull(aStarted.mFetchEventOpProxyParent->Manager())
                 ->Manager());
-        response.response() =
-            ToParentToChild(aResponse.response(), backgroundParent);
-        response.timingData() = aResponse.timingData();
-        response.initiatorType() = aResponse.initiatorType();
-        response.entryName() = aResponse.entryName();
         Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
-            response);
+            ToParentToChild(aResponse, backgroundParent));
+      },
+      [](const Finished&) {});
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponseEnd(
+    ResponseEndArgs&& aArgs) {
+  AssertIsOnBackgroundThread();
+
+  mState.match(
+      [&aArgs](Pending& aPending) {
+        MOZ_ASSERT(aPending.mEndArgs.isNothing());
+        aPending.mEndArgs = Some(std::move(aArgs));
+      },
+      [&aArgs](Started& aStarted) {
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponseEnd(
+            std::move(aArgs));
       },
       [](const Finished&) {});
 

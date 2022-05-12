@@ -538,7 +538,7 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
 
 template <class Derived>
 uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
-  MOZ_ASSERT(IsText());
+  MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {
     return 0;
   }

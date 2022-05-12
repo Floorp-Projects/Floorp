@@ -23,17 +23,17 @@ struct IsPixel;
 
 namespace gfx {
 
-template <class units, class F>
+template <class Units, class F>
 struct RectTyped;
 
-template <class units>
+template <class Units>
 struct MOZ_EMPTY_BASES IntMarginTyped
-    : public BaseMargin<int32_t, IntMarginTyped<units> >,
-      public units {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+    : public BaseMargin<int32_t, IntMarginTyped<Units> >,
+      public Units {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  typedef BaseMargin<int32_t, IntMarginTyped<units> > Super;
+  typedef BaseMargin<int32_t, IntMarginTyped<Units> > Super;
 
   IntMarginTyped() : Super() {
     static_assert(sizeof(IntMarginTyped) == sizeof(int32_t) * 4,
@@ -45,9 +45,9 @@ struct MOZ_EMPTY_BASES IntMarginTyped
   // XXX When all of the code is ported, the following functions to convert
   // to and from unknown types should be removed.
 
-  static IntMarginTyped<units> FromUnknownMargin(
+  static IntMarginTyped<Units> FromUnknownMargin(
       const IntMarginTyped<UnknownUnits>& aMargin) {
-    return IntMarginTyped<units>(aMargin.top, aMargin.right, aMargin.bottom,
+    return IntMarginTyped<Units>(aMargin.top, aMargin.right, aMargin.bottom,
                                  aMargin.left);
   }
 
@@ -58,18 +58,18 @@ struct MOZ_EMPTY_BASES IntMarginTyped
 };
 typedef IntMarginTyped<UnknownUnits> IntMargin;
 
-template <class units, class F = Float>
-struct MarginTyped : public BaseMargin<F, MarginTyped<units, F> >,
-                     public units {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+template <class Units, class F = Float>
+struct MarginTyped : public BaseMargin<F, MarginTyped<Units, F> >,
+                     public Units {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  typedef BaseMargin<F, MarginTyped<units, F> > Super;
+  typedef BaseMargin<F, MarginTyped<Units, F> > Super;
 
   MarginTyped() : Super() {}
   MarginTyped(F aTop, F aRight, F aBottom, F aLeft)
       : Super(aTop, aRight, aBottom, aLeft) {}
-  explicit MarginTyped(const IntMarginTyped<units>& aMargin)
+  explicit MarginTyped(const IntMarginTyped<Units>& aMargin)
       : Super(F(aMargin.top), F(aMargin.right), F(aMargin.bottom),
               F(aMargin.left)) {}
 
@@ -80,8 +80,8 @@ struct MarginTyped : public BaseMargin<F, MarginTyped<units, F> >,
            fabs(this->bottom - aOther.bottom) < aEpsilon;
   }
 
-  IntMarginTyped<units> Rounded() const {
-    return IntMarginTyped<units>(int32_t(std::floor(this->top + 0.5f)),
+  IntMarginTyped<Units> Rounded() const {
+    return IntMarginTyped<Units>(int32_t(std::floor(this->top + 0.5f)),
                                  int32_t(std::floor(this->right + 0.5f)),
                                  int32_t(std::floor(this->bottom + 0.5f)),
                                  int32_t(std::floor(this->left + 0.5f)));
@@ -90,77 +90,77 @@ struct MarginTyped : public BaseMargin<F, MarginTyped<units, F> >,
 typedef MarginTyped<UnknownUnits> Margin;
 typedef MarginTyped<UnknownUnits, double> MarginDouble;
 
-template <class units>
-IntMarginTyped<units> RoundedToInt(const MarginTyped<units>& aMargin) {
+template <class Units>
+IntMarginTyped<Units> RoundedToInt(const MarginTyped<Units>& aMargin) {
   return aMargin.Rounded();
 }
 
-template <class units>
+template <class Units>
 struct MOZ_EMPTY_BASES IntRectTyped
-    : public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>,
-                      IntSizeTyped<units>, IntMarginTyped<units> >,
-      public units {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+    : public BaseRect<int32_t, IntRectTyped<Units>, IntPointTyped<Units>,
+                      IntSizeTyped<Units>, IntMarginTyped<Units> >,
+      public Units {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>,
-                   IntSizeTyped<units>, IntMarginTyped<units> >
+  typedef BaseRect<int32_t, IntRectTyped<Units>, IntPointTyped<Units>,
+                   IntSizeTyped<Units>, IntMarginTyped<Units> >
       Super;
-  typedef IntRectTyped<units> Self;
+  typedef IntRectTyped<Units> Self;
   typedef IntParam<int32_t> ToInt;
 
   IntRectTyped() : Super() {
     static_assert(sizeof(IntRectTyped) == sizeof(int32_t) * 4,
                   "Would be unfortunate otherwise!");
   }
-  IntRectTyped(const IntPointTyped<units>& aPos,
-               const IntSizeTyped<units>& aSize)
+  IntRectTyped(const IntPointTyped<Units>& aPos,
+               const IntSizeTyped<Units>& aSize)
       : Super(aPos, aSize) {}
 
   IntRectTyped(ToInt aX, ToInt aY, ToInt aWidth, ToInt aHeight)
       : Super(aX.value, aY.value, aWidth.value, aHeight.value) {}
 
-  static IntRectTyped<units> RoundIn(float aX, float aY, float aW, float aH) {
-    return IntRectTyped<units>::RoundIn(
-        RectTyped<units, float>(aX, aY, aW, aH));
+  static IntRectTyped<Units> RoundIn(float aX, float aY, float aW, float aH) {
+    return IntRectTyped<Units>::RoundIn(
+        RectTyped<Units, float>(aX, aY, aW, aH));
   }
 
-  static IntRectTyped<units> RoundOut(float aX, float aY, float aW, float aH) {
-    return IntRectTyped<units>::RoundOut(
-        RectTyped<units, float>(aX, aY, aW, aH));
+  static IntRectTyped<Units> RoundOut(float aX, float aY, float aW, float aH) {
+    return IntRectTyped<Units>::RoundOut(
+        RectTyped<Units, float>(aX, aY, aW, aH));
   }
 
-  static IntRectTyped<units> Round(float aX, float aY, float aW, float aH) {
-    return IntRectTyped<units>::Round(RectTyped<units, float>(aX, aY, aW, aH));
+  static IntRectTyped<Units> Round(float aX, float aY, float aW, float aH) {
+    return IntRectTyped<Units>::Round(RectTyped<Units, float>(aX, aY, aW, aH));
   }
 
-  static IntRectTyped<units> Truncate(float aX, float aY, float aW, float aH) {
-    return IntRectTyped<units>(IntPointTyped<units>::Truncate(aX, aY),
-                               IntSizeTyped<units>::Truncate(aW, aH));
+  static IntRectTyped<Units> Truncate(float aX, float aY, float aW, float aH) {
+    return IntRectTyped<Units>(IntPointTyped<Units>::Truncate(aX, aY),
+                               IntSizeTyped<Units>::Truncate(aW, aH));
   }
 
-  static IntRectTyped<units> RoundIn(const RectTyped<units, float>& aRect) {
+  static IntRectTyped<Units> RoundIn(const RectTyped<Units, float>& aRect) {
     auto tmp(aRect);
     tmp.RoundIn();
     return IntRectTyped(int32_t(tmp.X()), int32_t(tmp.Y()),
                         int32_t(tmp.Width()), int32_t(tmp.Height()));
   }
 
-  static IntRectTyped<units> RoundOut(const RectTyped<units, float>& aRect) {
+  static IntRectTyped<Units> RoundOut(const RectTyped<Units, float>& aRect) {
     auto tmp(aRect);
     tmp.RoundOut();
     return IntRectTyped(int32_t(tmp.X()), int32_t(tmp.Y()),
                         int32_t(tmp.Width()), int32_t(tmp.Height()));
   }
 
-  static IntRectTyped<units> Round(const RectTyped<units, float>& aRect) {
+  static IntRectTyped<Units> Round(const RectTyped<Units, float>& aRect) {
     auto tmp(aRect);
     tmp.Round();
     return IntRectTyped(int32_t(tmp.X()), int32_t(tmp.Y()),
                         int32_t(tmp.Width()), int32_t(tmp.Height()));
   }
 
-  static IntRectTyped<units> Truncate(const RectTyped<units, float>& aRect) {
+  static IntRectTyped<Units> Truncate(const RectTyped<Units, float>& aRect) {
     return IntRectTyped::Truncate(aRect.X(), aRect.Y(), aRect.Width(),
                                   aRect.Height());
   }
@@ -173,9 +173,9 @@ struct MOZ_EMPTY_BASES IntRectTyped
   // XXX When all of the code is ported, the following functions to convert
   // to and from unknown types should be removed.
 
-  static IntRectTyped<units> FromUnknownRect(
+  static IntRectTyped<Units> FromUnknownRect(
       const IntRectTyped<UnknownUnits>& rect) {
-    return IntRectTyped<units>(rect.X(), rect.Y(), rect.Width(), rect.Height());
+    return IntRectTyped<Units>(rect.X(), rect.Y(), rect.Width(), rect.Height());
   }
 
   IntRectTyped<UnknownUnits> ToUnknownRect() const {
@@ -225,11 +225,11 @@ struct MOZ_EMPTY_BASES IntRectTyped
   }
 
   // This is here only to keep IPDL-generated code happy. DO NOT USE.
-  bool operator==(const IntRectTyped<units>& aRect) const {
-    return IntRectTyped<units>::IsEqualEdges(aRect);
+  bool operator==(const IntRectTyped<Units>& aRect) const {
+    return IntRectTyped<Units>::IsEqualEdges(aRect);
   }
 
-  void InflateToMultiple(const IntSizeTyped<units>& aTileSize) {
+  void InflateToMultiple(const IntSizeTyped<Units>& aTileSize) {
     if (this->IsEmpty()) {
       return;
     }
@@ -248,26 +248,26 @@ struct MOZ_EMPTY_BASES IntRectTyped
 };
 typedef IntRectTyped<UnknownUnits> IntRect;
 
-template <class units, class F = Float>
+template <class Units, class F = Float>
 struct MOZ_EMPTY_BASES RectTyped
-    : public BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
-                      SizeTyped<units, F>, MarginTyped<units, F> >,
-      public units {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+    : public BaseRect<F, RectTyped<Units, F>, PointTyped<Units, F>,
+                      SizeTyped<Units, F>, MarginTyped<Units, F> >,
+      public Units {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  typedef BaseRect<F, RectTyped<units, F>, PointTyped<units, F>,
-                   SizeTyped<units, F>, MarginTyped<units, F> >
+  typedef BaseRect<F, RectTyped<Units, F>, PointTyped<Units, F>,
+                   SizeTyped<Units, F>, MarginTyped<Units, F> >
       Super;
 
   RectTyped() : Super() {
     static_assert(sizeof(RectTyped) == sizeof(F) * 4,
                   "Would be unfortunate otherwise!");
   }
-  RectTyped(const PointTyped<units, F>& aPos, const SizeTyped<units, F>& aSize)
+  RectTyped(const PointTyped<Units, F>& aPos, const SizeTyped<Units, F>& aSize)
       : Super(aPos, aSize) {}
   RectTyped(F _x, F _y, F _width, F _height) : Super(_x, _y, _width, _height) {}
-  explicit RectTyped(const IntRectTyped<units>& rect)
+  explicit RectTyped(const IntRectTyped<Units>& rect)
       : Super(F(rect.X()), F(rect.Y()), F(rect.Width()), F(rect.Height())) {}
 
   void NudgeToIntegers() {
@@ -277,11 +277,11 @@ struct MOZ_EMPTY_BASES RectTyped
     NudgeToInteger(&(this->height));
   }
 
-  bool ToIntRect(IntRectTyped<units>* aOut) const {
+  bool ToIntRect(IntRectTyped<Units>* aOut) const {
     *aOut =
-        IntRectTyped<units>(int32_t(this->X()), int32_t(this->Y()),
+        IntRectTyped<Units>(int32_t(this->X()), int32_t(this->Y()),
                             int32_t(this->Width()), int32_t(this->Height()));
-    return RectTyped<units, F>(F(aOut->X()), F(aOut->Y()), F(aOut->Width()),
+    return RectTyped<Units, F>(F(aOut->X()), F(aOut->Y()), F(aOut->Width()),
                                F(aOut->Height()))
         .IsEqualEdges(*this);
   }
@@ -289,9 +289,9 @@ struct MOZ_EMPTY_BASES RectTyped
   // XXX When all of the code is ported, the following functions to convert to
   // and from unknown types should be removed.
 
-  static RectTyped<units, F> FromUnknownRect(
+  static RectTyped<Units, F> FromUnknownRect(
       const RectTyped<UnknownUnits, F>& rect) {
-    return RectTyped<units, F>(rect.X(), rect.Y(), rect.Width(), rect.Height());
+    return RectTyped<Units, F>(rect.X(), rect.Y(), rect.Width(), rect.Height());
   }
 
   RectTyped<UnknownUnits, F> ToUnknownRect() const {
@@ -300,8 +300,8 @@ struct MOZ_EMPTY_BASES RectTyped
   }
 
   // This is here only to keep IPDL-generated code happy. DO NOT USE.
-  bool operator==(const RectTyped<units, F>& aRect) const {
-    return RectTyped<units, F>::IsEqualEdges(aRect);
+  bool operator==(const RectTyped<Units, F>& aRect) const {
+    return RectTyped<Units, F>::IsEqualEdges(aRect);
   }
 
   bool WithinEpsilonOf(const RectTyped& aOther, F aEpsilon) const {
@@ -314,40 +314,40 @@ struct MOZ_EMPTY_BASES RectTyped
 typedef RectTyped<UnknownUnits> Rect;
 typedef RectTyped<UnknownUnits, double> RectDouble;
 
-template <class units>
-IntRectTyped<units> RoundedToInt(const RectTyped<units>& aRect) {
-  RectTyped<units> copy(aRect);
+template <class Units>
+IntRectTyped<Units> RoundedToInt(const RectTyped<Units>& aRect) {
+  RectTyped<Units> copy(aRect);
   copy.Round();
-  return IntRectTyped<units>(int32_t(copy.X()), int32_t(copy.Y()),
+  return IntRectTyped<Units>(int32_t(copy.X()), int32_t(copy.Y()),
                              int32_t(copy.Width()), int32_t(copy.Height()));
 }
 
-template <class units>
-bool RectIsInt32Safe(const RectTyped<units>& aRect) {
+template <class Units>
+bool RectIsInt32Safe(const RectTyped<Units>& aRect) {
   float min = (float)std::numeric_limits<std::int32_t>::min();
   float max = (float)std::numeric_limits<std::int32_t>::max();
   return aRect.x > min && aRect.y > min && aRect.width < max &&
          aRect.height < max && aRect.XMost() < max && aRect.YMost() < max;
 }
 
-template <class units>
-IntRectTyped<units> RoundedIn(const RectTyped<units>& aRect) {
-  return IntRectTyped<units>::RoundIn(aRect);
+template <class Units>
+IntRectTyped<Units> RoundedIn(const RectTyped<Units>& aRect) {
+  return IntRectTyped<Units>::RoundIn(aRect);
 }
 
-template <class units>
-IntRectTyped<units> RoundedOut(const RectTyped<units>& aRect) {
-  return IntRectTyped<units>::RoundOut(aRect);
+template <class Units>
+IntRectTyped<Units> RoundedOut(const RectTyped<Units>& aRect) {
+  return IntRectTyped<Units>::RoundOut(aRect);
 }
 
-template <class units>
-IntRectTyped<units> TruncatedToInt(const RectTyped<units>& aRect) {
-  return IntRectTyped<units>::Truncate(aRect);
+template <class Units>
+IntRectTyped<Units> TruncatedToInt(const RectTyped<Units>& aRect) {
+  return IntRectTyped<Units>::Truncate(aRect);
 }
 
-template <class units>
-RectTyped<units> IntRectToRect(const IntRectTyped<units>& aRect) {
-  return RectTyped<units>(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+template <class Units>
+RectTyped<Units> IntRectToRect(const IntRectTyped<Units>& aRect) {
+  return RectTyped<Units>(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 // Convenience functions for intersecting and unioning two rectangles wrapped in

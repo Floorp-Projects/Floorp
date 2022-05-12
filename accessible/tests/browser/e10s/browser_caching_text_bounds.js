@@ -234,3 +234,61 @@ addAccessibleTask(
     iframe: !isWinNoCache,
   }
 );
+
+/**
+ * Test simple vertical text in rl and lr layouts
+ */
+addAccessibleTask(
+  `
+  <div style="writing-mode: vertical-rl;">
+    <p id='p1'>你好世界</p>
+    <p id='p2'>hello world</p>
+    <br>
+    <p id='p3'>こんにちは世界</p>
+  </div>
+  <div style="writing-mode: vertical-lr;">
+    <p id='p4'>你好世界</p>
+    <p id='p5'>hello world</p>
+    <br>
+    <p id='p6'>こんにちは世界</p>
+  </div>
+  `,
+  async function(browser, accDoc) {
+    info("Testing vertical-rl");
+    await testTextNode(accDoc, browser, "p1");
+    await testTextNode(accDoc, browser, "p2");
+    await testTextNode(accDoc, browser, "p3");
+    info("Testing vertical-lr");
+    await testTextNode(accDoc, browser, "p4");
+    await testTextNode(accDoc, browser, "p5");
+    await testTextNode(accDoc, browser, "p6");
+  },
+  {
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+  }
+);
+
+/**
+ * Test multiline vertical-rl text
+ */
+addAccessibleTask(
+  `
+  <p id='p1' style='writing-mode: vertical-rl;'>你好世界<br>你好世界</p>
+  <p id='p2' style='writing-mode: vertical-rl;'>hello world<br>hello world</p>
+  <br>
+  <p id='p3' style='writing-mode: vertical-rl;'>你好世界<br> 你好世界 你好世界</p>
+  <p id='p4' style='writing-mode: vertical-rl;'>hello world<br> hello world hello world</p>
+  `,
+  async function(browser, accDoc) {
+    info("Testing vertical-rl multiline");
+    await testTextNode(accDoc, browser, "p1");
+    await testTextNode(accDoc, browser, "p2");
+    await testTextNode(accDoc, browser, "p3");
+    // await testTextNode(accDoc, browser, "p4"); // off by 4 with caching, iframe
+  },
+  {
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+  }
+);

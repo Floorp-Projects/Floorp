@@ -8,11 +8,11 @@
 IPDL_SOURCES += [
     "PMediaDecoderParams.ipdlh",
     "PRemoteDecoder.ipdl",
-    "PRemoteDecoderManager.ipdl",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
     "PRDD.ipdl",
+    "PRemoteDecoderManager.ipdl",
 ]
 
 EXPORTS.mozilla += [
@@ -53,6 +53,23 @@ SOURCES += [
     "RemoteMediaDataDecoder.cpp",
     "RemoteVideoDecoder.cpp",
 ]
+
+if CONFIG["MOZ_WMF"]:
+    IPDL_SOURCES += [
+        "PMFMediaEngine.ipdl",
+    ]
+    SOURCES += [
+        "MFMediaEngineChild.cpp",
+        "MFMediaEngineParent.cpp",
+    ]
+    EXPORTS.mozilla += [
+        "MFMediaEngineChild.h",
+        "MFMediaEngineParent.h",
+        "MFMediaEngineUtils.h",
+    ]
+    LOCAL_INCLUDES += [
+        "../platforms/wmf",
+    ]
 
 # so we can include nsMacUtilsImpl.h in RDDParent.cpp for sandboxing
 LOCAL_INCLUDES += [
