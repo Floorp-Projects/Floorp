@@ -3127,7 +3127,7 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
 bool GetObservableArrayBackingObject(
     JSContext* aCx, JS::Handle<JSObject*> aObj, size_t aSlotIndex,
     JS::MutableHandle<JSObject*> aBackingObj, bool* aBackingObjCreated,
-    const ObservableArrayProxyHandler* aHandler);
+    const ObservableArrayProxyHandler* aHandler, void* aOwner);
 
 // Get the desired prototype object for an object construction from the given
 // CallArgs.  The CallArgs must be for a constructor call.  The

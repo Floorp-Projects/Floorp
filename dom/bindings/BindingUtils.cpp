@@ -3530,22 +3530,29 @@ bool GetSetlikeBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
 }
 
 static inline JSObject* NewObservableArrayProxyObject(
-    JSContext* aCx, const ObservableArrayProxyHandler* aHandler) {
+    JSContext* aCx, const ObservableArrayProxyHandler* aHandler, void* aOwner) {
   JS::RootedObject target(aCx, JS::NewArrayObject(aCx, 0));
   if (NS_WARN_IF(!target)) {
     return nullptr;
   }
 
   JS::RootedValue targetValue(aCx, JS::ObjectValue(*target));
-  return js::NewProxyObject(aCx, aHandler, targetValue, nullptr);
+  JS::RootedObject proxy(
+      aCx, js::NewProxyObject(aCx, aHandler, targetValue, nullptr));
+  if (!proxy) {
+    return nullptr;
+  }
+  js::SetProxyReservedSlot(proxy, OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT,
+                           JS::PrivateValue(aOwner));
+  return proxy;
 }
 
 bool GetObservableArrayBackingObject(
     JSContext* aCx, JS::Handle<JSObject*> aObj, size_t aSlotIndex,
     JS::MutableHandle<JSObject*> aBackingObj, bool* aBackingObjCreated,
-    const ObservableArrayProxyHandler* aHandler) {
+    const ObservableArrayProxyHandler* aHandler, void* aOwner) {
   return GetBackingObject<NewObservableArrayProxyObject>(
-      aCx, aObj, aSlotIndex, aBackingObj, aBackingObjCreated, aHandler);
+      aCx, aObj, aSlotIndex, aBackingObj, aBackingObjCreated, aHandler, aOwner);
 }
 
 bool ForEachHandler(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
