@@ -360,6 +360,8 @@ class DocAccessibleParent : public RemoteAccessible,
   [[nodiscard]] bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(RemoteAccessible* aProxy);
 
+  void FireEvent(RemoteAccessible* aAcc, const uint32_t& aType);
+
   /**
    * If this Accessible is being moved, prepare it for reuse. Otherwise, it is
    * being removed, so shut it down.
