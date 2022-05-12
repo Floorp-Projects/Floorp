@@ -121,11 +121,19 @@ add_task(async function test_startupCache_read_errors() {
   restoreStartupCacheFile();
 });
 
-add_task(async function test_startupCache_load_timestamps() {
+async function test_startupCache_load_timestamps() {
   const { StartupCache } = ExtensionParent;
 
-  // Clear any pre-existing keyed scalar.
+  // Clear any pre-existing keyed scalar and Glean metrics data.
   TelemetryTestUtils.getProcessScalars("parent", false, true);
+  Services.fog.testResetFOG();
+
+  let gleanMetric = Glean.extensions.startupCacheLoadTime.testGetValue();
+  equal(
+    typeof gleanMetric,
+    "undefined",
+    "Expect extensions.startup_cache_load_time Glean metric to be initially undefined"
+  );
 
   // Make sure the _readData has been called and we can expect
   // the startupCache load telemetry timestamps to have been
@@ -136,16 +144,11 @@ add_task(async function test_startupCache_load_timestamps() {
     "Verify telemetry recorded for the 'extensions.startup_cache_load_time' Glean metric"
   );
 
-  const gleanMetric = Glean.extensions.startupCacheLoadTime.testGetValue();
+  gleanMetric = Glean.extensions.startupCacheLoadTime.testGetValue();
   equal(
     typeof gleanMetric,
     "number",
     "Expect extensions.startup_cache_load_time Glean metric to be set to a number"
-  );
-
-  ok(
-    gleanMetric > 0,
-    "Expect extensions.startup_cache_load_time Glean metric to be set to a non-zero value"
   );
 
   info(
@@ -160,14 +163,16 @@ add_task(async function test_startupCache_load_timestamps() {
     "Expect extensions.startupCache.load_time mirrored scalar to be set to a number"
   );
 
-  ok(
-    scalars["extensions.startupCache.load_time"] > 0,
-    "Expect extensions.startupCache.load_time mirrored scalar to be set to a non-zero value"
-  );
-
   equal(
     scalars["extensions.startupCache.load_time"],
     gleanMetric,
     "Expect the glean metric and mirrored scalar to be set to the same value"
   );
-});
+}
+
+add_task(
+  // Bug 1752139: this test can be re-enabled once Services.fog.testResetFOG()
+  // is implemented also on Android.
+  { skip_if: () => AppConstants.platform === "android" },
+  test_startupCache_load_timestamps
+);
