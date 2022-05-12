@@ -18,7 +18,7 @@
             android:id="@+id/browserLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/creditCardSelectBar"
+            app:layout_constraintBottom_toTopOf="@+id/addressSelectBar"
             app:layout_constraintTop_toTopOf="parent"
             tools:context="browser.BrowserFragment">
 
@@ -68,13 +68,21 @@
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
+        <mozilla.components.feature.prompts.address.AddressSelectBar
+            android:visibility="gone"
+            android:id="@+id/addressSelectBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/creditCardSelectBar"
+            app:layout_constraintTop_toBottomOf="@id/browserLayout" />
+
         <mozilla.components.feature.prompts.creditcard.CreditCardSelectBar
             android:visibility="gone"
             android:id="@+id/creditCardSelectBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@id/loginSelectBar"
-            app:layout_constraintTop_toBottomOf="@id/browserLayout" />
+            app:layout_constraintTop_toBottomOf="@id/addressSelectBar" />
 
         <mozilla.components.feature.prompts.login.LoginSelectBar
             android:visibility="gone"
