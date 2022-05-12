@@ -4,7 +4,7 @@
 /*---
 description: >
   Creating TypedArray from other TypedArrays doesn't look up Symbol.species.
-features: [Symbol.species]
+features: [TypedArray, ArrayBuffer, Symbol.species]
 ---*/
 
 let throwOnGrossBufferConstruction = false;

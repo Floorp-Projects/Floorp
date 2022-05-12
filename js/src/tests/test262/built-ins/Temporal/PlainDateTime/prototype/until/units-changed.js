@@ -32,13 +32,13 @@ TemporalHelpers.assertDuration(
 
 TemporalHelpers.assertDuration(
   feb20.until(feb21, { largestUnit: "hours" }),
-  0, 0, 0, 0, 8784, 0, 0,0, 0, 0,
+  0, 0, 0, 0, 8784, 0, 0, 0, 0, 0,
   "can return lower or higher units (hours)"
 );
 
 TemporalHelpers.assertDuration(
   feb20.until(feb21, { largestUnit: "minutes" }),
-  0, 0, 0, 0, 0, 527040, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 527040, 0, 0, 0, 0,
   "can return lower or higher units (minutes)"
 );
 

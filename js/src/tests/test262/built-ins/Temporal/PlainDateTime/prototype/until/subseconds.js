@@ -4,34 +4,28 @@
 
 /*---
 esid: sec-temporal.plaindatetime.prototype.until
-description: Largest unit is respected
+description: Returned granularity may be finer than seconds
 includes: [temporalHelpers.js]
 features: [Temporal]
 ---*/
 
 const feb20 = new Temporal.PlainDateTime(2020, 2, 1, 0, 0);
-
-const later = feb20.add({
-  days: 1,
-  milliseconds: 250,
-  microseconds: 250,
-  nanoseconds: 250
-});
+const feb21 = new Temporal.PlainDateTime(2020, 2, 2, 0, 0, 0, 250, 250, 250);
 
 TemporalHelpers.assertDuration(
-  feb20.until(later, { largestUnit: "milliseconds" }),
+  feb20.until(feb21, { largestUnit: "milliseconds" }),
   0, 0, 0, 0, 0, 0, 0, 86400250, 250, 250,
   "can return subseconds (millisecond precision)"
 );
 
 TemporalHelpers.assertDuration(
-  feb20.until(later, { largestUnit: "microseconds" }),
+  feb20.until(feb21, { largestUnit: "microseconds" }),
   0, 0, 0, 0, 0, 0, 0, 0, 86400250250, 250,
   "can return subseconds (microsecond precision)"
 );
 
 TemporalHelpers.assertDuration(
-  feb20.until(later, { largestUnit: "nanoseconds" }),
+  feb20.until(feb21, { largestUnit: "nanoseconds" }),
   0, 0, 0, 0, 0, 0, 0, 0, 0, 86400250250250,
   "can return subseconds (nanosecond precision)"
 );

@@ -56,7 +56,7 @@ const instance = new Temporal.PlainTime(12, 34, 56, 987, 654, 321);
 for (const arg of invalidStrings) {
   assert.throws(
     RangeError,
-    () => instance.toZonedDateTime({ plainDate: arg }),
+    () => instance.toZonedDateTime({ plainDate: arg, timeZone: "UTC" }),
     `"${arg}" should not be a valid ISO string for a PlainDate`
   );
 }
