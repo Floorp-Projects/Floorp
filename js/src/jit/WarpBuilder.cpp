@@ -1096,25 +1096,21 @@ bool WarpBuilder::build_JumpTarget(BytecodeLocation loc) {
     setTerminatedBlock();
   }
 
-  auto addEdge = [&](MBasicBlock* pred, size_t numToPop) -> bool {
-    if (joinBlock) {
-      MOZ_ASSERT(pred->stackDepth() - numToPop == joinBlock->stackDepth());
-      return joinBlock->addPredecessorPopN(alloc(), pred, numToPop);
-    }
-    if (!startNewBlock(pred, loc, numToPop)) {
-      return false;
-    }
-    joinBlock = current;
-    setTerminatedBlock();
-    return true;
-  };
-
   for (const PendingEdge& edge : edges) {
     MBasicBlock* source = edge.block();
     uint32_t numToPop = edge.numToPop();
 
-    if (!addEdge(source, numToPop)) {
-      return false;
+    if (joinBlock) {
+      MOZ_ASSERT(source->stackDepth() - numToPop == joinBlock->stackDepth());
+      if (!joinBlock->addPredecessorPopN(alloc(), source, numToPop)) {
+        return false;
+      }
+    } else {
+      if (!startNewBlock(source, loc, numToPop)) {
+        return false;
+      }
+      joinBlock = current;
+      setTerminatedBlock();
     }
 
     MOZ_ASSERT(source->lastIns()->isTest() || source->lastIns()->isGoto() ||
