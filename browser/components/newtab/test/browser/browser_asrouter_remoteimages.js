@@ -3,122 +3,100 @@
 
 "use strict";
 
-const {
-  RemoteImages,
-  REMOTE_IMAGES_PATH,
-  REMOTE_IMAGES_DB_PATH,
-} = ChromeUtils.import("resource://activity-stream/lib/RemoteImages.jsm");
+const { ObjectUtils } = ChromeUtils.import(
+  "resource://gre/modules/ObjectUtils.jsm"
+);
+const { RemoteImages } = ChromeUtils.import(
+  "resource://activity-stream/lib/RemoteImages.jsm"
+);
 const { RemoteImagesTestUtils } = ChromeUtils.import(
   "resource://testing-common/RemoteImagesTestUtils.jsm"
 );
 
 add_task(async function test_remoteImages_load() {
   const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
+  const cleanup = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
 
-  registerCleanupFunction(
-    await RemoteImagesTestUtils.serveRemoteImages(imageInfo)
+  registerCleanupFunction(cleanup);
+
+  const url = await RemoteImages.load(imageInfo.imageId);
+  ok(url.startsWith("blob:"), "RemoteImages.load() returns blob URL");
+  ok(
+    await IOUtils.exists(
+      PathUtils.join(RemoteImages.imagesDir, imageInfo.imageId)
+    ),
+    "RemoteImages caches the image"
   );
 
-  async function runLoadTest(imageId) {
-    const url = await RemoteImages.load(imageId);
-    Assert.ok(url.startsWith("blob:"), "RemoteImages.load() returns blob URL");
-    Assert.ok(
-      await IOUtils.exists(
-        PathUtils.join(REMOTE_IMAGES_PATH, imageInfo.recordId)
-      ),
-      "RemoteImages caches the image"
-    );
+  const data = new Uint8Array(
+    await fetch(url, { credentials: "omit" }).then(rsp => rsp.arrayBuffer())
+  );
+  const expected = new Uint8Array(
+    await fetch(imageInfo.url, { credentials: "omit" }).then(rsp =>
+      rsp.arrayBuffer()
+    )
+  );
 
-    const data = new Uint8Array(
-      await fetch(url, { credentials: "omit" }).then(rsp => rsp.arrayBuffer())
-    );
-    const expected = new Uint8Array(
-      await fetch(imageInfo.url, { credentials: "omit" }).then(rsp =>
-        rsp.arrayBuffer()
-      )
-    );
+  is(
+    data.length,
+    expected.length,
+    "Data read from blob: URL has correct length"
+  );
+  ok(
+    ObjectUtils.deepEqual(data, expected),
+    "Data read from blob: URL matches expected"
+  );
 
-    Assert.equal(
-      data.length,
-      expected.length,
-      "Data read from blob: URL has correct length"
-    );
-    Assert.deepEqual(
-      data,
-      expected,
-      "Data read from blob: URL matches expected"
-    );
-
-    RemoteImages.unload(url);
-  }
-
-  info("Loading a RemoteImage with a record ID");
-  await runLoadTest(imageInfo.recordId);
-
-  info("Loading a RemoteImage with a legacy image ID (record ID + extension)");
-  await runLoadTest(`${imageInfo.recordId}.png`);
+  RemoteImages.unload(url);
 });
 
 add_task(async function test_remoteImages_expire() {
   const THIRTY_ONE_DAYS = 31 * 24 * 60 * 60;
-  const IMAGE_INFO = RemoteImagesTestUtils.images.AboutRobots;
 
-  await RemoteImages.reset();
+  const imageInfo = RemoteImagesTestUtils.images.AboutRobots;
 
-  await RemoteImagesTestUtils.writeImage(IMAGE_INFO);
-  await IOUtils.writeJSON(REMOTE_IMAGES_DB_PATH, {
-    version: 1,
-    images: {
-      ...RemoteImagesTestUtils.dbEntryFor(
-        IMAGE_INFO,
-        Date.now() - THIRTY_ONE_DAYS
-      ),
-    },
-  });
+  const cleanup = await RemoteImagesTestUtils.serveRemoteImages(imageInfo);
+  registerCleanupFunction(cleanup);
 
-  await RemoteImagesTestUtils.triggerCleanup();
-  await RemoteImages.withDb(async db => {
-    Assert.deepEqual(db.data.images, [], "RemoteImages should have no images");
-    Assert.ok(
-      !(await IOUtils.exists(
-        PathUtils.join(REMOTE_IMAGES_PATH, IMAGE_INFO.recordId)
-      )),
-      "Image should have been deleted during cleanup"
-    );
-  });
-});
+  const path = PathUtils.join(RemoteImages.imagesDir, imageInfo.imageId);
 
-add_task(async function test_remoteImages_migrate() {
-  await RemoteImages.reset();
+  info("Doing initial load() of image");
+  {
+    const url = await RemoteImages.load(imageInfo.imageId);
+    RemoteImages.unload(url);
+  }
 
-  await IOUtils.remove(REMOTE_IMAGES_DB_PATH);
-  await RemoteImagesTestUtils.writeImage(
-    RemoteImagesTestUtils.images.AboutRobots,
-    RemoteImagesTestUtils.images.AboutRobots.filename
+  ok(
+    await IOUtils.exists(path),
+    "Remote image exists after load() and unload()"
   );
 
-  await RemoteImages.withDb(async db => {
-    const children = await IOUtils.getChildren(REMOTE_IMAGES_PATH);
-    Assert.deepEqual(
-      children,
-      [],
-      "RemoteImages migration should delete all images."
-    );
+  await RemoteImagesTestUtils.triggerCleanup();
+  ok(
+    await IOUtils.exists(path),
+    "Remote image cache still exists after cleanup because it has not expired"
+  );
 
-    await db._save();
-    const fromDisk = await IOUtils.readJSON(REMOTE_IMAGES_DB_PATH);
+  info("Setting last modified time beyond expiration date and reloading");
+  {
+    await IOUtils.setModificationTime(path, Date.now() - THIRTY_ONE_DAYS);
 
-    Assert.deepEqual(
-      fromDisk,
-      db.data,
-      "RemoteImages DB data should match on-disk contents"
-    );
+    const url = await RemoteImages.load(imageInfo.imageId);
+    RemoteImages.unload(url);
+  }
 
-    Assert.equal(db.data.version, 1, "RemoteImages DB version should be 1");
-    Assert.deepEqual(
-      db.data.images,
-      {},
-      "RemoteImages DB should have no entries"
-    );
-  });
+  await RemoteImagesTestUtils.triggerCleanup();
+  ok(
+    await IOUtils.exists(path),
+    "Remote image cache still exists after cleanup becuase load() refreshes the expiry"
+  );
+
+  info("Setting last mofieid time beyond expiration");
+  await IOUtils.setModificationTime(path, Date.now() - THIRTY_ONE_DAYS);
+
+  await RemoteImagesTestUtils.triggerCleanup();
+  ok(
+    !(await IOUtils.exists(path)),
+    "Remote image cache no longer exists after clenaup beyond expiry"
+  );
 });
