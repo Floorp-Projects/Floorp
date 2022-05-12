@@ -168,14 +168,3 @@ devtools-no-eft:
         mozharness:
             extra-options:
                 - "--setpref=devtools.every-frame-target.enabled=false"
-
-dynamic-first-party-isolation:
-    description: "{description} with dFPI enabled"
-    component: "Core::Privacy: Anti-Tracking"
-    suffix: "dfpi"
-    replace:
-        tier: 3
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=network.cookie.cookieBehavior=5"
