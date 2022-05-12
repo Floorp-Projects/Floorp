@@ -58,7 +58,7 @@
        access.addEventListener("statechange", accessStateChangeHandler);
 
        // Part 2: open test device, make sure it connects, attach event handler to device object
-       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       output = access.outputs.get(await MIDITestUtils.outputInfo.id);
        resetPromises();
        output.send([0x90, 0x01, 0x00]);
        let accessEvent = await accessPromise;
