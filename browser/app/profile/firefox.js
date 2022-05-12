@@ -1586,6 +1586,14 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", tru
 
 pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
 
+// URLs from the user's history that contain this search param will be hidden
+// from the top sites. The value is a string with one of the following forms:
+// - "" (empty) - Disable this feature
+// - "key" - Search param named "key" with any or no value
+// - "key=" - Search param named "key" with no value
+// - "key=value" - Search param named "key" with value "value"
+pref("browser.newtabpage.activity-stream.hideTopSitesWithSearchParam", "");
+
 // Used to display triplet cards on newtab
 pref("trailhead.firstrun.newtab.triplets", "");
 // Separate about welcome
