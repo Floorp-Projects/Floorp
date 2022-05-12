@@ -32,7 +32,7 @@
 #define DOM_INTERFACE_PROTO_SLOTS_BASE 0
 
 // The slot index of raw pointer of dom object stored in observable array exotic
-// object. We nedd this in order to call the OnSet* and OnDelete* callbacks.
+// object. We need this in order to call the OnSet* and OnDelete* callbacks.
 #define OBSERVABLE_ARRAY_DOM_INTERFACE_SLOT 0
 
 // The slot index of backing list stored in observable array exotic object.
