@@ -21,7 +21,13 @@
     "about:reader*"
   ],
 
-
+	"browser_action": {
+		"default_icon":  "icons/floorp.png",
+		"default_title": "__MSG_action__",
+		"browser_style":  true,
+    "default_popup": "test.html"
+	},
+  
   "page_action": {
     "browser_style": true,
     "default_icon": "icons/icon.png",
