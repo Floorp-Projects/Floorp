@@ -1,8 +1,5 @@
-commit d7c0a2076c2b0c1531aef7069d4abe70eec44ee3
-Author: Shu-yu Guo <syg@chromium.org>
-Date:   Mon Apr 4 16:36:56 2022 -0700
+commit 2e7cdfbe18eae4309677033673bb4b5ac6b1de40
+Author: legendecas <legendecas@gmail.com>
+Date:   Mon May 2 22:56:46 2022 +0800
 
-    Remove check for per-comparator call detach check in TypedArray.prototype.sort
-    
-    This updates tests in line with the normative change in
-    https://github.com/tc39/ecma262/pull/2723
+    Fix generator clean fail on .DS_Store
