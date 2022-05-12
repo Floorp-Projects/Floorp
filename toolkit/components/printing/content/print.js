@@ -182,7 +182,9 @@ var PrintEventHandler = {
     this.printFrameOnly = args.getProperty("printFrameOnly");
     this.printSelectionOnly = args.getProperty("printSelectionOnly");
     this.isArticle = args.getProperty("isArticle");
-    this.hasSelection = await this.checkForSelection(sourceBrowsingContext);
+    this.hasSelection = await PrintUtils.checkForSelection(
+      sourceBrowsingContext
+    );
 
     let sourcePrincipal =
       sourceBrowsingContext.currentWindowGlobal.documentPrincipal;
@@ -357,19 +359,6 @@ var PrintEventHandler = {
     fm.setFocus(document.getElementById("printer-picker"), fm.FLAG_SHOWRING);
 
     await initialPreviewDone;
-  },
-
-  async checkForSelection(browsingContext) {
-    try {
-      let sourceActor = browsingContext.currentWindowGlobal.getActor(
-        "PrintingSelection"
-      );
-      // Need the await for the try to trigger...
-      return await sourceActor.sendQuery("PrintingSelection:HasSelection", {});
-    } catch (e) {
-      Cu.reportError(e);
-    }
-    return false;
   },
 
   async print(systemDialogSettings) {
