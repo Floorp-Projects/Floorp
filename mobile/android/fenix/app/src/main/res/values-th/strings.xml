@@ -67,8 +67,6 @@
     <string name="cfr_neg_button_text">ไม่ ขอบคุณ</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">คุณสามารถตั้งค่าให้ Firefox เปิดลิงก์ในแอปโดยอัตโนมัติได้</string>
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">คุณสามารถตั้งค่าให้ %1$s เปิดลิงก์ในแอปโดยอัตโนมัติได้</string>
     <!-- Text for the positive action button -->
@@ -96,8 +94,6 @@
     <string name="tab_tray_inactive_onboarding_button_text">ปิดในการตั้งค่า</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">ปิดอัตโนมัติหลังจากหนึ่งเดือน?</string>
-    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string moz:RemovedIn="99" name="tab_tray_inactive_auto_close_body" tools:ignore="UnusedResources">Firefox สามารถปิดแท็บที่คุณไม่ได้ดูในช่วงเดือนที่ผ่านมาได้</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s สามารถปิดแท็บที่คุณไม่ได้ดูในช่วงเดือนที่ผ่านมาได้</string>
@@ -253,15 +249,10 @@
     <string name="search_settings_menu_item">ตั้งค่าการค้นหา</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
-    <string moz:removedIn="99" name="onboarding_home_screen_title_2" tools:ignore="UnusedResources">มีอะไรใหม่ใน Firefox</string>
-
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">มีอะไรใหม่ใน %1$s</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว</string>
-    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="99" name="onboarding_home_screen_section_home_title_2" tools:ignore="UnusedResources">หน้าแรกของ Firefox ที่ปรับแต่งแบบส่วนตัว</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">หน้าแรกของ %1$s ที่ปรับแต่งแบบส่วนตัว</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -280,8 +271,6 @@
     <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ขณะนี้หน้าแรกของ Firefox ที่ปรับแต่งแบบคุณได้รับการปรับปรุงให้คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว ค้นหาแท็บ ที่คั่นหน้า และผลการค้นหาล่าสุดของคุณ</string>
 
     <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">เปิดแท็บ Firefox ใหม่</string>
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">เปิดแท็บ %1$s ใหม่</string>
     <!-- Text preview for smaller sized widgets -->
@@ -454,12 +443,7 @@
     <string name="wallpaper_updated_snackbar_action">ดู</string>
 
     <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_label" tools:ignore="UnusedResources">แตะโลโก้เพื่อเปลี่ยนรูปพื้นหลัง</string>
-
-    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
     <string name="wallpaper_tap_to_change_switch_label_1">เปลี่ยนวอลเปเปอร์โดยแตะโลโก้หน้าแรกของ Firefox</string>
-    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
-    <string moz:removedIn="99" name="wallpaper_tap_to_change_switch_description" tools:ignore="UnusedResources">เปลี่ยนภาพวนไปเรื่อย ๆ โดยไม่ออกจากหน้าแรก</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">โลโก้ Firefox - เปลี่ยนวอลเปเปอร์, ปุ่ม</string>
@@ -680,8 +664,6 @@
     <string name="studies_remove">เอาออก</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ใช้งานอยู่</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox อาจติดตั้งและเรียกใช้การศึกษาเป็นครั้งคราว</string>
     <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
     <string name="studies_description_2">%1$s อาจติดตั้งและเรียกใช้การศึกษาเป็นครั้งคราว</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
@@ -769,8 +751,6 @@
     <string name="tab_tray_header_title_1">แท็บอื่น ๆ</string>
 
     <!-- History -->
-    <!-- Text for the button to search all history -->
-    <string moz:removedIn="99" name="history_search" tools:ignore="UnusedResources">ป้อนคำค้นหา</string>
     <!-- Text for the button to search all history -->
     <string name="history_search_1">ป้อนคำค้นหา</string>
     <!-- Text for the button to clear all history -->
@@ -1188,6 +1168,9 @@
     <!-- Text for the allow button for the history group dialog -->
     <string name="delete_history_group_prompt_allow">ลบ</string>
 
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">ลบกลุ่มแล้ว</string>
+
     <!-- Tips -->
     <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
     <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">ตอนนี้ Firefox Preview เป็น Firefox Nightly แล้ว</string>
@@ -1230,8 +1213,6 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync เปิดอยู่</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ความเป็นส่วนตัวตลอดเวลา</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox จะหยุดบริษัทต่าง ๆ ไม่ให้ติดตามคุณอย่างลับ ๆ ขณะที่คุณท่องเว็บโดยอัตโนมัติ</string>
     <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_4">%1$s จะหยุดบริษัทต่าง ๆ ไม่ให้ติดตามคุณอย่างลับ ๆ ขณะที่คุณท่องเว็บโดยอัตโนมัติ</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1561,6 +1542,8 @@
     <string name="preferences_credit_cards_manage_saved_cards">จัดการบัตรที่บันทึกไว้</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">เพิ่มที่อยู่</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">จัดการที่อยู่</string>
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">เพิ่มบัตร</string>
     <!-- Title of the "Edit card" screen -->
@@ -1614,10 +1597,18 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">เพิ่มที่อยู่</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">แก้ไขที่อยู่</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">จัดการที่อยู่</string>
     <!-- The header for the full name of an address -->
-    <string name="addresses_full_name">ชื่อเต็ม</string>
+    <string moz:removedIn="102" name="addresses_full_name" tools:ignore="UnusedResources">ชื่อเต็ม</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">ชื่อจริง</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">ชื่อกลาง</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">นามสกุล</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">ที่อยู่ถนน</string>
     <!-- The header for the city of an address -->
@@ -1636,6 +1627,17 @@
     <string name="addresses_cancel_button">ยกเลิก</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">ลบที่อยู่</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">คุณแน่ใจหรือไม่ว่าต้องการลบที่อยู่นี้?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">ลบ</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">ยกเลิก</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">บันทึกที่อยู่</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">ลบที่อยู่</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">เพิ่มเครื่องมือค้นหา</string>
@@ -1846,25 +1848,6 @@
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">เปิดการปิดอัตโนมัติ</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">เปิดใช้งานการปิดอัตโนมัติแล้ว</string>
-
-    <!-- Inactive tabs survey -->
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_header_1" tools:ignore="UnusedResources">ช่วยปรับปรุง Firefox</string>
-
-    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_content" tools:ignore="UnusedResources">เหตุใดคุณจึงปิดใช้งานแท็บที่ไม่ได้ใช้งาน</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_not_understand" tools:ignore="UnusedResources">ฉันไม่เข้าใจว่ามันทำงานอย่างไร</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_do_it_myself" tools:ignore="UnusedResources">ฉันชอบล้างแท็บเก่าด้วยตัวเอง</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_long_option_1" tools:ignore="UnusedResources">ระยะเวลา 2 สัปดาห์ยาวเกินไป</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_time_too_short_option_1" tools:ignore="UnusedResources">ระยะเวลา 2 สัปดาห์สั้นเกินไป</string>
-    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">ส่ง</string>
-    <!-- Content description for inactive tabs survey close button -->
-    <string moz:RemovedIn="99" name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">ปิด</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ตั้งลิงก์จากเว็บไซต์ อีเมล และข้อความให้เปิดโดยอัตโนมัติใน Firefox</string>

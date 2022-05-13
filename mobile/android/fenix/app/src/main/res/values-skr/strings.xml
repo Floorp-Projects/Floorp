@@ -156,6 +156,8 @@
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by2">%1$s ولوں تکڑا تھیا</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">قاری نظارہ</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">قاری نظارہ بند کرو</string>
     <!-- Browser menu button to open the current page in an external app -->
@@ -458,6 +460,9 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">ٹول بار لُکاوݨ کیتے سکرول کرو</string>
 
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">ٹیباں کھولݨ کیتے ٹول بار کوں سوائپ کرو</string>
+
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">ڈاؤن لوڈاں</string>
@@ -557,6 +562,8 @@
     <string name="studies_active">فعال</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ٻیا سِکھو</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">تبدیلیاں لاگو کرݨ کیتے ایپ چھوڑ ݙتی ویسی</string>
     <!-- Dialog button to confirm the removing a study. -->
     <string name="studies_restart_dialog_ok">ٹھیک ہے</string>
     <!-- Dialog button text for canceling removing a study. -->
@@ -803,6 +810,10 @@
     <string name="preference_option_autoplay_allowed2">آڈیو تے وڈیو دی اجازت ݙیوو</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
     <string name="quick_setting_option_autoplay_allowed">آڈیو تے وڈیو دی اجازت ݙیوو</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">صرف سیلولر ڈیٹا تے آڈیو تے وڈیو بلاک کرو</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">آڈیو تے وڈیو وائی فائی تے چلسن</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">صرف آڈیو بلاک کرو</string>
     <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
@@ -942,6 +953,9 @@
     <string name="snackbar_deleted_undo">اݨ کیتا کرو</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">سائٹ ہٹا ݙتی ڳئی</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s کوں %2$s کھولݨ دی اجازت ݙیوو</string>
     <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
     <string name="qr_scanner_dialog_positive">اجازت ڈیوو</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
@@ -1108,6 +1122,8 @@
     <string name="etp_settings">حفاظتی ترتیباں</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">بہتر ٹریکنگ حفاظت</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">بغیر فالو تھئے براؤز کرو</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ٻیا سِکھو</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1162,6 +1178,8 @@
     <string name="etp_back_button_content_description">واپس ون٘ڄو</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s وچ کیا نواں ہے؟</string>
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">ریڈائرکٹ ٹریکرز</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ٻیا سِکھو</string>
 
@@ -1215,6 +1233,8 @@
     <string name="preferences_passwords_save_logins_never_save">کݙاہیں وی محفوظ نہ کرو</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">%1$s وچ خود بخود بھرو</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">ٻیاں ایپاں وچ آٹوفل کرو</string>
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">لاگ ان  شامل کرو</string>
 
@@ -1222,6 +1242,8 @@
     <string name="preferences_passwords_saved_logins">محفوظ تھئے لاگ ان</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">استثنیات</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">انہاں سائٹاں کیتے لاگ تے پاس ورڈ محفوظ کائناں تھیسن۔</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">سارے استثناء مٹاؤ</string>
     <!-- Hint for search box in logins list -->
@@ -1254,6 +1276,10 @@
 
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">پاس ورڈ لکاؤ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">آپݨے محفوظ کیتے لاگ اناں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">لاگ ان تے پاس ورڈ دی محفوظ بݨاؤ</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">بعد وچ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1329,8 +1355,12 @@
     <string name="credit_cards_warning_dialog_later">بعد وچ</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">آپݨی ڈیوائس اݨ لاک کرو</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ذخیرہ تھئی کریڈٹ کارڈ ڄاݨکاری کوں ورتݨ کیتے اݨ لاک کرو</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">پتہ شامل کرو</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">پتے وچ تبدیلی کرو</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">پتے منیج کرو</string>
     <!-- The header for the full name of an address -->
@@ -1362,6 +1392,17 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">پتہ مٹاؤ</string>
 
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">بھلا تہاکوں پک ہے جو تساں ایہ پتہ مٹاوݨ چاہندے ہو؟</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">مٹاؤ</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">منسوخ کرو</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">پتہ محفوظ کرو</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">پتہ مٹاؤ</string>
+
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ڳولݨ انجݨ شامل کرو</string>
     <!-- Title of the Edit search engine screen -->
@@ -1380,6 +1421,11 @@
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ناں</string>
 
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">ورتݨ کیتے تند ڳولو</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">من پسند ڳولݨ انجݨ  تفصیلاں</string>
+
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ڳولݨ انجݨ دا ناں درج کرو</string>
     <!-- Text shown when a user leaves the search string field empty -->
@@ -1397,6 +1443,8 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">مٹ ڳیا %s</string>
 
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">اصلوں نویں %s وچ ست بسم اللہ</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s اپ ڈیٹ کریندا پئے۔۔۔</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -1404,12 +1452,23 @@
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">پاس ورڈز</string>
 
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ایں کوں اجازت ݙیوݨ کیتے:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">١۔ اینڈرائیڈ ترتیباں تے ون٘ڄو</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[٢. <b>اجازتاں</b> تے دباؤ]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> کوں چالو کرݨ  کیتے  ٹوگل کرو]]></string>
+
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection_2">کنکشن محفوظ ہے۔</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">کنکشن محفوظ کائنی۔</string>
     <!-- Label to clear site data -->
     <string name="clear_site_data">کوکیاں تے سائٹ ڈیٹا صاف کرو </string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">کوئی سائٹ استثنات کائنی</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">بھلا تہاکوں پک ہے جو تساں ایہ نشانی مٹاوݨ چاہندے ہو؟</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1464,6 +1523,9 @@
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">ہک ٻئی ڈیوائس نال کنکٹ کرو۔</string>
+
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">سوہݨا، ولدا تصدیق کرو۔</string>
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے، سمنجھ گھدے</string>

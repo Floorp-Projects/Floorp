@@ -1646,6 +1646,8 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">주소 추가</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">주소 편집</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">주소 관리</string>
     <!-- The header for the full name of an address -->
@@ -1674,6 +1676,17 @@
     <string name="addresses_cancel_button">취소</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">주소 삭제</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">이 주소를 삭제하시겠습니까?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">삭제</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">취소</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">주소 저장</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">주소 삭제</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">검색 엔진 추가</string>

@@ -1616,6 +1616,8 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Lägg till adress</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Redigera adress</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Hantera adresser</string>
     <!-- The header for the full name of an address -->
@@ -1644,6 +1646,17 @@
     <string name="addresses_cancel_button">Avbryt</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Ta bort adress</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">Är du säker på att du vill ta bort den här adressen?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Ta bort</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Avbryt</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Spara adress</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Ta bort adress</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lägg till sökmotor</string>

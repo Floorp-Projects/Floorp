@@ -803,7 +803,7 @@
     <string name="tab_crash_title_2">Мутаассифона, %1$s ин саҳифаро бор карда наметавонад.</string>
 
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">Фиристодани гузориш дар бораи садама ба Mozilla</string>
+    <string name="tab_crash_send_report">Фиристодани гузориш дар бораи вайронӣ ба Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">Пӯшидани варақа</string>
     <!-- Restore tab button text on the tab crash page -->
@@ -1397,7 +1397,7 @@
     <!-- About page link text to open support link -->
     <string name="about_support">Дастгирӣ</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
-    <string name="about_crashes">Садамот</string>
+    <string name="about_crashes">Вайрониҳо</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Огоҳиномаи махфият</string>
     <!-- About page link text to open know your rights link -->
