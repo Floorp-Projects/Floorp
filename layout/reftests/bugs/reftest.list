@@ -639,7 +639,6 @@ fuzzy-if(!nativeThemePref,0-1,0-4) == 370422-1.html 370422-1-ref.html
 == 370586-1.xhtml 370586-1-ref.xhtml
 == 370629-1.html 370629-1-ref.html
 == 370629-2.html 370629-2-ref.html
-pref(layout.css.line-height.normal-as-resolved-value.enabled,false) == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test

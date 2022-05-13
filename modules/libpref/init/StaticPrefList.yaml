@@ -8217,21 +8217,6 @@
   value: true
   mirror: always
 
-# Whether the computed value of line-height: normal returns the `normal`
-# keyword rather than a pixel value based on the first available font.
-#
-# Only enabled on Nightly and early beta, at least for now.
-#
-# It'd be nice to make numbers compute also to themselves, but it looks like
-# everybody agrees on turning them into pixels, see the discussion starting
-# from [1].
-#
-# [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
-- name: layout.css.line-height.normal-as-resolved-value.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Is 'content:none' supported on (non-pseudo) elements?
 - name: layout.css.element-content-none.enabled
   type: RelaxedAtomicBool
