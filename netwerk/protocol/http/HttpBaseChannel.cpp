@@ -93,7 +93,6 @@
 #include "nsThreadUtils.h"
 #include "nsURLHelper.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
-#include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/net/SFVService.h"
 #include "mozilla/dom/ContentChild.h"
 #include "nsQueryObject.h"
@@ -4340,15 +4339,8 @@ HttpBaseChannel::ReplacementChannelConfig::ReplacementChannelConfig(
   method = aInit.method();
   referrerInfo = aInit.referrerInfo();
   timedChannelInfo = aInit.timedChannelInfo();
-  if (RemoteLazyInputStreamChild* actor =
-          static_cast<RemoteLazyInputStreamChild*>(aInit.uploadStreamChild())) {
-    uploadStreamLength = actor->Size();
-    uploadStream = actor->CreateStream();
-    // actor can be deleted by CreateStream, so don't touch it
-    // after this.
-  } else {
-    uploadStreamLength = 0;
-  }
+  uploadStream = aInit.uploadStream();
+  uploadStreamLength = aInit.uploadStreamLength();
   uploadStreamHasHeaders = aInit.uploadStreamHasHeaders();
   contentType = aInit.contentType();
   contentLength = aInit.contentLength();
@@ -4364,12 +4356,9 @@ HttpBaseChannel::ReplacementChannelConfig::Serialize(
   config.method() = method;
   config.referrerInfo() = referrerInfo;
   config.timedChannelInfo() = timedChannelInfo;
-  if (uploadStream) {
-    RemoteLazyStream ipdlStream;
-    RemoteLazyInputStreamUtils::SerializeInputStream(
-        uploadStream, uploadStreamLength, ipdlStream, aParent);
-    config.uploadStreamParent() = ipdlStream;
-  }
+  config.uploadStream() =
+      uploadStream ? RemoteLazyInputStream::WrapStream(uploadStream) : nullptr;
+  config.uploadStreamLength() = uploadStreamLength;
   config.uploadStreamHasHeaders() = uploadStreamHasHeaders;
   config.contentType() = contentType;
   config.contentLength() = contentLength;

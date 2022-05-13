@@ -171,9 +171,7 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
   // (constructed on the child side).
   if (body) {
     MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
-    mBodyStream = static_cast<RemoteLazyInputStreamChild*>(
-                      body->get_ParentToChildStream().actorChild())
-                      ->CreateStream();
+    mBodyStream = body->get_ParentToChildStream().stream();
   }
 }
 

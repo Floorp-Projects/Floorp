@@ -51,7 +51,6 @@ void SerializeInputStreamInternal(nsIInputStream* aInputStream,
                                   bool aDelayedStart, uint32_t aMaxSize,
                                   uint32_t* aSizeUsed, M* aManager) {
   MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aManager);
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
       do_QueryInterface(aInputStream);
@@ -72,7 +71,6 @@ void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
                                         InputStreamParams& aParams,
                                         bool aDelayedStart, M* aManager) {
   MOZ_ASSERT(aInputStream);
-  MOZ_ASSERT(aManager);
 
   // Let's try to take the length using InputStreamLengthHelper. If the length
   // cannot be taken synchronously, and its length is needed, the stream needs
@@ -164,31 +162,17 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
     const RemoteLazyInputStreamParams& params =
         aParams.get_RemoteLazyInputStreamParams();
 
-    // RemoteLazyInputStreamRefs are not deserializable on the parent side,
-    // because the parent is the only one that has a copy of the original stream
-    // in the RemoteLazyInputStreamStorage.
-    if (params.type() ==
-        RemoteLazyInputStreamParams::TRemoteLazyInputStreamRef) {
-      MOZ_ASSERT(XRE_IsParentProcess());
-      const RemoteLazyInputStreamRef& ref =
-          params.get_RemoteLazyInputStreamRef();
-
-      auto storage = RemoteLazyInputStreamStorage::Get().unwrapOr(nullptr);
-      MOZ_ASSERT(storage);
-      nsCOMPtr<nsIInputStream> stream;
-      storage->GetStream(ref.id(), ref.start(), ref.length(),
-                         getter_AddRefs(stream));
-      return stream.forget();
+    // If the RemoteLazyInputStream already has an internal stream, unwrap it.
+    // This is required as some code unfortunately depends on the precise
+    // topology of received streams, and cannot handle being passed a
+    // `RemoteLazyInputStream` in the parent process.
+    nsCOMPtr<nsIInputStream> innerStream;
+    if (XRE_IsParentProcess() &&
+        NS_SUCCEEDED(
+            params.stream()->TakeInternalStream(getter_AddRefs(innerStream)))) {
+      return innerStream.forget();
     }
-
-    // parent -> child serializations receive an RemoteLazyInputStream actor.
-    MOZ_ASSERT(params.type() ==
-               RemoteLazyInputStreamParams::TPRemoteLazyInputStreamChild);
-    RemoteLazyInputStreamChild* actor =
-        static_cast<RemoteLazyInputStreamChild*>(
-            params.get_PRemoteLazyInputStreamChild());
-    nsCOMPtr<nsIInputStream> stream = actor->CreateStream();
-    return stream.forget();
+    return do_AddRef(params.stream());
   }
 
   if (aParams.type() == InputStreamParams::TDataPipeReceiverStreamParams) {

@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackground;
-include protocol PRemoteLazyInputStream;
 
 include IPCBlob;
 
@@ -37,5 +36,5 @@ parent:
   async OperationDone(nsCString aContentType, FileDescriptor aFD);
 };
 
-} // namespace dom 
+} // namespace dom
 } // namespace mozilla

@@ -17,6 +17,8 @@ namespace mozilla {
 
 using namespace hal;
 
+extern mozilla::LazyLogModule gRemoteLazyStreamLog;
+
 namespace {
 StaticMutex gMutex;
 StaticRefPtr<RemoteLazyInputStreamStorage> gStorage;
@@ -49,61 +51,40 @@ void RemoteLazyInputStreamStorage::Initialize() {
 
   gStorage = new RemoteLazyInputStreamStorage();
 
+  MOZ_ALWAYS_SUCCEEDS(NS_CreateBackgroundTaskQueue(
+      "RemoteLazyInputStreamStorage", getter_AddRefs(gStorage->mTaskQueue)));
+
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
     obs->AddObserver(gStorage, "xpcom-shutdown", false);
-    obs->AddObserver(gStorage, "ipc:content-shutdown", false);
   }
 }
 
 NS_IMETHODIMP
 RemoteLazyInputStreamStorage::Observe(nsISupports* aSubject, const char* aTopic,
                                       const char16_t* aData) {
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "xpcom-shutdown");
-      obs->RemoveObserver(this, "ipc:content-shutdown");
-    }
+  MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
 
-    mozilla::StaticMutexAutoLock lock(gMutex);
-    gStorage = nullptr;
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(!strcmp(aTopic, "ipc:content-shutdown"));
-
-  nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
-  if (NS_WARN_IF(!props)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint64_t childID = CONTENT_PROCESS_ID_UNKNOWN;
-  props->GetPropertyAsUint64(u"childID"_ns, &childID);
-  if (NS_WARN_IF(childID == CONTENT_PROCESS_ID_UNKNOWN)) {
-    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "xpcom-shutdown");
   }
 
   mozilla::StaticMutexAutoLock lock(gMutex);
-
-  for (auto iter = mStorage.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.Data()->mChildID == childID) {
-      iter.Remove();
-    }
-  }
-
+  gStorage = nullptr;
   return NS_OK;
 }
 
 void RemoteLazyInputStreamStorage::AddStream(nsIInputStream* aInputStream,
-                                             const nsID& aID, uint64_t aSize,
-                                             uint64_t aChildID) {
+                                             const nsID& aID) {
   MOZ_ASSERT(aInputStream);
+
+  MOZ_LOG(
+      gRemoteLazyStreamLog, LogLevel::Verbose,
+      ("Storage::AddStream(%s) = %p", nsIDToCString(aID).get(), aInputStream));
 
   UniquePtr<StreamData> data = MakeUnique<StreamData>();
   data->mInputStream = aInputStream;
-  data->mChildID = aChildID;
-  data->mSize = aSize;
 
   mozilla::StaticMutexAutoLock lock(gMutex);
   mStorage.InsertOrUpdate(aID, std::move(data));
@@ -111,6 +92,9 @@ void RemoteLazyInputStreamStorage::AddStream(nsIInputStream* aInputStream,
 
 nsCOMPtr<nsIInputStream> RemoteLazyInputStreamStorage::ForgetStream(
     const nsID& aID) {
+  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
+          ("Storage::ForgetStream(%s)", nsIDToCString(aID).get()));
+
   UniquePtr<StreamData> entry;
 
   mozilla::StaticMutexAutoLock lock(gMutex);
@@ -134,8 +118,11 @@ void RemoteLazyInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
                                              nsIInputStream** aInputStream) {
   *aInputStream = nullptr;
 
+  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
+          ("Storage::GetStream(%s, %" PRIu64 " %" PRIu64 ")",
+           nsIDToCString(aID).get(), aStart, aLength));
+
   nsCOMPtr<nsIInputStream> inputStream;
-  uint64_t size;
 
   // NS_CloneInputStream cannot be called when the mutex is locked because it
   // can, recursively call GetStream() in case the child actor lives on the
@@ -148,7 +135,6 @@ void RemoteLazyInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
     }
 
     inputStream = data->mInputStream;
-    size = data->mSize;
   }
 
   MOZ_ASSERT(inputStream);
@@ -177,7 +163,7 @@ void RemoteLazyInputStreamStorage::GetStream(const nsID& aID, uint64_t aStart,
   }
 
   // Now it's the right time to apply a slice if needed.
-  if (aStart > 0 || aLength < size) {
+  if (aStart > 0 || aLength < UINT64_MAX) {
     clonedStream =
         new SlicedInputStream(clonedStream.forget(), aStart, aLength);
   }
@@ -189,6 +175,10 @@ void RemoteLazyInputStreamStorage::StoreCallback(
     const nsID& aID, RemoteLazyInputStreamParentCallback* aCallback) {
   MOZ_ASSERT(aCallback);
 
+  MOZ_LOG(
+      gRemoteLazyStreamLog, LogLevel::Verbose,
+      ("Storage::StoreCallback(%s, %p)", nsIDToCString(aID).get(), aCallback));
+
   mozilla::StaticMutexAutoLock lock(gMutex);
   StreamData* data = mStorage.Get(aID);
   if (data) {
@@ -199,6 +189,9 @@ void RemoteLazyInputStreamStorage::StoreCallback(
 
 already_AddRefed<RemoteLazyInputStreamParentCallback>
 RemoteLazyInputStreamStorage::TakeCallback(const nsID& aID) {
+  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
+          ("Storage::TakeCallback(%s)", nsIDToCString(aID).get()));
+
   mozilla::StaticMutexAutoLock lock(gMutex);
   StreamData* data = mStorage.Get(aID);
   if (!data) {
@@ -208,6 +201,43 @@ RemoteLazyInputStreamStorage::TakeCallback(const nsID& aID) {
   RefPtr<RemoteLazyInputStreamParentCallback> callback;
   data->mCallback.swap(callback);
   return callback.forget();
+}
+
+void RemoteLazyInputStreamStorage::ActorCreated(const nsID& aID) {
+  mozilla::StaticMutexAutoLock lock(gMutex);
+  StreamData* data = mStorage.Get(aID);
+  if (!data) {
+    return;
+  }
+
+  size_t count = ++data->mActorCount;
+
+  MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
+          ("Storage::ActorCreated(%s) = %zu", nsIDToCString(aID).get(), count));
+}
+
+void RemoteLazyInputStreamStorage::ActorDestroyed(const nsID& aID) {
+  UniquePtr<StreamData> entry;
+  {
+    mozilla::StaticMutexAutoLock lock(gMutex);
+    StreamData* data = mStorage.Get(aID);
+    if (!data) {
+      return;
+    }
+
+    auto newCount = --data->mActorCount;
+    MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
+            ("Storage::ActorDestroyed(%s) = %zu (cb=%p)",
+             nsIDToCString(aID).get(), newCount, data->mCallback.get()));
+
+    if (newCount == 0) {
+      mStorage.Remove(aID, &entry);
+    }
+  }
+
+  if (entry && entry->mCallback) {
+    entry->mCallback->ActorDestroyed(aID);
+  }
 }
 
 }  // namespace mozilla

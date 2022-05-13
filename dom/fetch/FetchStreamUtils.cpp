@@ -7,7 +7,6 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
-#include "mozilla/RemoteLazyInputStreamUtils.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "nsContentUtils.h"
@@ -35,9 +34,7 @@ NotNull<nsCOMPtr<nsIInputStream>> ToInputStream(
 NotNull<nsCOMPtr<nsIInputStream>> ToInputStream(
     const ParentToChildStream& aStream) {
   MOZ_ASSERT(XRE_IsContentProcess());
-  nsCOMPtr<nsIInputStream> result =
-      static_cast<RemoteLazyInputStreamChild*>(aStream.actorChild())
-          ->CreateStream();
+  nsCOMPtr<nsIInputStream> result = aStream.stream();
   return WrapNotNull(result);
 }
 
@@ -47,8 +44,7 @@ ParentToParentStream ToParentToParentStream(
 
   ParentToParentStream stream;
   stream.uuid() = nsID::GenerateUUID();
-  GetRemoteLazyInputStreamStorage()->AddStream(aStream.get(), stream.uuid(),
-                                               aStreamSize, 0);
+  GetRemoteLazyInputStreamStorage()->AddStream(aStream.get(), stream.uuid());
   return stream;
 }
 
@@ -58,10 +54,7 @@ ParentToChildStream ToParentToChildStream(
   MOZ_ASSERT(XRE_IsParentProcess());
 
   ParentToChildStream result;
-  RemoteLazyStream remoteLazyStream;
-  MOZ_ALWAYS_SUCCEEDS(RemoteLazyInputStreamUtils::SerializeInputStream(
-      aStream.get(), aStreamSize, remoteLazyStream, aBackgroundParent));
-  result.actorParent() = remoteLazyStream;
+  result.stream() = RemoteLazyInputStream::WrapStream(aStream.get());
   return result;
 }
 
