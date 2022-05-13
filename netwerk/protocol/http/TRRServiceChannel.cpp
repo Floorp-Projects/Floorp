@@ -177,12 +177,12 @@ TRRServiceChannel::AsyncOpen(nsIStreamListener* aListener) {
     return mStatus;
   }
 
-  // HttpBaseChannel::MaybeWaitForUploadStreamLength can only be used on main
-  // thread, so we can only return an error here.
+  // HttpBaseChannel::MaybeWaitForUploadStreamNormalization can only be used on
+  // main thread, so we can only return an error here.
 #ifdef NIGHTLY_BUILD
-  MOZ_ASSERT(!LoadPendingInputStreamLengthOperation());
+  MOZ_ASSERT(!LoadPendingUploadStreamNormalization());
 #endif
-  if (LoadPendingInputStreamLengthOperation()) {
+  if (LoadPendingUploadStreamNormalization()) {
     return NS_ERROR_FAILURE;
   }
 
