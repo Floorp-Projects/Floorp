@@ -592,7 +592,6 @@ VideoStreamEncoder::VideoStreamEncoder(
     BitrateAllocationCallbackType allocation_cb_type)
     : main_queue_(TaskQueueBase::Current()),
       number_of_cores_(number_of_cores),
-      quality_scaling_experiment_enabled_(QualityScalingExperiment::Enabled()),
       sink_(nullptr),
       settings_(settings),
       allocation_cb_type_(allocation_cb_type),
@@ -913,11 +912,11 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   crop_width_ = last_frame_info_->width - highest_stream_width;
   crop_height_ = last_frame_info_->height - highest_stream_height;
 
-  encoder_bitrate_limits_ =
+  absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits =
       encoder_->GetEncoderInfo().GetEncoderBitrateLimitsForResolution(
           last_frame_info_->width * last_frame_info_->height);
 
-  if (encoder_bitrate_limits_) {
+  if (encoder_bitrate_limits) {
     if (streams.size() == 1 && encoder_config_.simulcast_layers.size() == 1) {
       // Bitrate limits can be set by app (in SDP or RtpEncodingParameters)
       // or/and can be provided by encoder. In presence of both set of limits,
@@ -925,9 +924,9 @@ void VideoStreamEncoder::ReconfigureEncoder() {
       int min_bitrate_bps;
       if (encoder_config_.simulcast_layers.empty() ||
           encoder_config_.simulcast_layers[0].min_bitrate_bps <= 0) {
-        min_bitrate_bps = encoder_bitrate_limits_->min_bitrate_bps;
+        min_bitrate_bps = encoder_bitrate_limits->min_bitrate_bps;
       } else {
-        min_bitrate_bps = std::max(encoder_bitrate_limits_->min_bitrate_bps,
+        min_bitrate_bps = std::max(encoder_bitrate_limits->min_bitrate_bps,
                                    streams.back().min_bitrate_bps);
       }
 
@@ -936,9 +935,9 @@ void VideoStreamEncoder::ReconfigureEncoder() {
       // here since encoder_config_.max_bitrate_bps is derived from it (as
       // well as from other inputs).
       if (encoder_config_.max_bitrate_bps <= 0) {
-        max_bitrate_bps = encoder_bitrate_limits_->max_bitrate_bps;
+        max_bitrate_bps = encoder_bitrate_limits->max_bitrate_bps;
       } else {
-        max_bitrate_bps = std::min(encoder_bitrate_limits_->max_bitrate_bps,
+        max_bitrate_bps = std::min(encoder_bitrate_limits->max_bitrate_bps,
                                    streams.back().max_bitrate_bps);
       }
 
@@ -947,12 +946,12 @@ void VideoStreamEncoder::ReconfigureEncoder() {
         streams.back().max_bitrate_bps = max_bitrate_bps;
         streams.back().target_bitrate_bps =
             std::min(streams.back().target_bitrate_bps,
-                     encoder_bitrate_limits_->max_bitrate_bps);
+                     encoder_bitrate_limits->max_bitrate_bps);
       } else {
         RTC_LOG(LS_WARNING)
             << "Bitrate limits provided by encoder"
-            << " (min=" << encoder_bitrate_limits_->min_bitrate_bps
-            << ", max=" << encoder_bitrate_limits_->min_bitrate_bps
+            << " (min=" << encoder_bitrate_limits->min_bitrate_bps
+            << ", max=" << encoder_bitrate_limits->max_bitrate_bps
             << ") do not intersect with limits set by app"
             << " (min=" << streams.back().min_bitrate_bps
             << ", max=" << encoder_config_.max_bitrate_bps
@@ -1298,7 +1297,7 @@ void VideoStreamEncoder::OnFrame(const VideoFrame& video_frame) {
           MaybeEncodeVideoFrame(incoming_frame, post_time_us);
         } else {
           if (cwnd_frame_drop) {
-            // Frame drop by congestion window pusback. Do not encode this
+            // Frame drop by congestion window pushback. Do not encode this
             // frame.
             ++dropped_frame_cwnd_pushback_count_;
             encoder_stats_observer_->OnFrameDropped(
@@ -1435,7 +1434,7 @@ void VideoStreamEncoder::SetEncoderRates(
   // |bitrate_allocation| is 0 it means that the network is down or the send
   // pacer is full. We currently only report this if the encoder has an internal
   // source. If the encoder does not have an internal source, higher levels
-  // are expected to not call AddVideoFrame. We do this since its unclear
+  // are expected to not call AddVideoFrame. We do this since it is unclear
   // how current encoder implementations behave when given a zero target
   // bitrate.
   // TODO(perkj): Make sure all known encoder implementations handle zero
@@ -1496,7 +1495,7 @@ void VideoStreamEncoder::MaybeEncodeVideoFrame(const VideoFrame& video_frame,
         VideoFrame::UpdateRect{0, 0, video_frame.width(), video_frame.height()};
   }
 
-  // We have to create then encoder before the frame drop logic,
+  // We have to create the encoder before the frame drop logic,
   // because the latter depends on encoder_->GetScalingSettings.
   // According to the testcase
   // InitialFrameDropOffWhenEncoderDisabledScaling, the return value

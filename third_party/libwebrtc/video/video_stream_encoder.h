@@ -182,7 +182,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
 
   void EncodeVideoFrame(const VideoFrame& frame,
                         int64_t time_when_posted_in_ms);
-  // Indicates wether frame should be dropped because the pixel count is too
+  // Indicates whether frame should be dropped because the pixel count is too
   // large for the current bitrate configuration.
   bool DropDueToSize(uint32_t pixel_count) const RTC_RUN_ON(&encoder_queue_);
 
@@ -229,8 +229,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   TaskQueueBase* const main_queue_;
 
   const uint32_t number_of_cores_;
-
-  const bool quality_scaling_experiment_enabled_;
 
   EncoderSink* sink_;
   const VideoStreamEncoderSettings settings_;
@@ -315,8 +313,6 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   absl::optional<int64_t> last_encode_info_ms_ RTC_GUARDED_BY(&encoder_queue_);
 
   VideoEncoder::EncoderInfo encoder_info_ RTC_GUARDED_BY(&encoder_queue_);
-  absl::optional<VideoEncoder::ResolutionBitrateLimits> encoder_bitrate_limits_
-      RTC_GUARDED_BY(&encoder_queue_);
   VideoEncoderFactory::CodecInfo codec_info_ RTC_GUARDED_BY(&encoder_queue_);
   VideoCodec send_codec_ RTC_GUARDED_BY(&encoder_queue_);
 
@@ -373,7 +369,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
   AutomaticAnimationDetectionExperiment
       automatic_animation_detection_experiment_ RTC_GUARDED_BY(&encoder_queue_);
 
-  // Provies video stream input states: current resolution and frame rate.
+  // Provides video stream input states: current resolution and frame rate.
   VideoStreamInputStateProvider input_state_provider_;
 
   std::unique_ptr<VideoStreamAdapter> video_stream_adapter_
@@ -389,7 +385,7 @@ class VideoStreamEncoder : public VideoStreamEncoderInterface,
       RTC_GUARDED_BY(&encoder_queue_);
   // Handles input, output and stats reporting related to VideoStreamEncoder
   // specific resources, such as "encode usage percent" measurements and "QP
-  // scaling". Also involved with various mitigations such as inital frame
+  // scaling". Also involved with various mitigations such as initial frame
   // dropping.
   // The manager primarily operates on the |encoder_queue_| but its lifetime is
   // tied to the VideoStreamEncoder (which is destroyed off the encoder queue)
