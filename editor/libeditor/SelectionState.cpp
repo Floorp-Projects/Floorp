@@ -554,7 +554,7 @@ void RangeItem::StoreRange(const nsRange& aRange) {
   mEndOffset = aRange.EndOffset();
 }
 
-already_AddRefed<nsRange> RangeItem::GetRange() {
+already_AddRefed<nsRange> RangeItem::GetRange() const {
   RefPtr<nsRange> range = nsRange::Create(
       mStartContainer, mStartOffset, mEndContainer, mEndOffset, IgnoreErrors());
   NS_WARNING_ASSERTION(range, "nsRange::Create() failed");

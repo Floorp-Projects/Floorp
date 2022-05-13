@@ -1021,7 +1021,7 @@ nsresult HTMLEditor::SetShadowPosition(Element& aShadowElement,
 }
 
 int32_t HTMLEditor::GetNewResizingIncrement(int32_t aX, int32_t aY,
-                                            ResizeAt aResizeAt) {
+                                            ResizeAt aResizeAt) const {
   int32_t result = 0;
   if (!mPreserveRatio) {
     switch (aResizeAt) {
