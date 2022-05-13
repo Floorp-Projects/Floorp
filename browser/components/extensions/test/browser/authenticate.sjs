@@ -83,5 +83,3 @@ function handleRequest(request, response) {
   response.write("<p>Pass: <span id='pass'>" + actual_pass + "</span></p>\n");
   response.write("</html>");
 }
-
-
