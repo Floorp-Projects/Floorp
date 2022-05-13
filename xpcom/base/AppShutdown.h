@@ -90,6 +90,11 @@ class AppShutdown {
   static const char* GetObserverKey(ShutdownPhase aPhase);
 
   /**
+   * Map shutdown phase to readable name
+   */
+  static const char* GetShutdownPhaseName(ShutdownPhase aPhase);
+
+  /**
    * Map observer topic key to shutdown phase
    */
   static ShutdownPhase GetShutdownPhaseFromTopic(const char* aTopic);
