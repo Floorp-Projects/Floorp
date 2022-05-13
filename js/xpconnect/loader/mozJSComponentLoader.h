@@ -41,7 +41,15 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
+  // Returns the list of all JSMs.
   void GetLoadedModules(nsTArray<nsCString>& aLoadedModules);
+
+  // Returns the list of all ESMs.
+  nsresult GetLoadedESModules(nsTArray<nsCString>& aLoadedModules);
+
+  // Returns the list of all JSMs and ESMs.
+  nsresult GetLoadedJSAndESModules(nsTArray<nsCString>& aLoadedModules);
+
   void GetLoadedComponents(nsTArray<nsCString>& aLoadedComponents);
   nsresult GetModuleImportStack(const nsACString& aLocation,
                                 nsACString& aRetval);

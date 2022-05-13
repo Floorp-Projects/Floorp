@@ -114,6 +114,19 @@ static bool IsJSM(const nsACString& aLocation) {
   return ext == ".jsm";
 }
 
+static bool IsMJS(const nsACString& aLocation) {
+  if (aLocation.Length() < 4) {
+    return false;
+  }
+  const auto ext = Substring(aLocation, aLocation.Length() - 4);
+  return ext == ".mjs";
+}
+
+static void ToJSM(const nsACString& aLocation, nsAutoCString& aOut) {
+  aOut = Substring(aLocation, 0, aLocation.Length() - 4);
+  aOut += ".jsm";
+}
+
 static void ToMJS(const nsACString& aLocation, nsAutoCString& aOut) {
   aOut = Substring(aLocation, 0, aLocation.Length() - 4);
   aOut += ".mjs";
@@ -1130,6 +1143,30 @@ void mozJSComponentLoader::GetLoadedModules(
   for (const auto& data : mImports.Values()) {
     aLoadedModules.AppendElement(data->location);
   }
+}
+
+nsresult mozJSComponentLoader::GetLoadedESModules(
+    nsTArray<nsCString>& aLoadedModules) {
+  return mModuleLoader->GetFetchedModuleURLs(aLoadedModules);
+}
+
+nsresult mozJSComponentLoader::GetLoadedJSAndESModules(
+    nsTArray<nsCString>& aLoadedModules) {
+  GetLoadedModules(aLoadedModules);
+
+  nsTArray<nsCString> modules;
+  nsresult rv = GetLoadedESModules(modules);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (const auto& location : modules) {
+    if (IsMJS(location)) {
+      nsAutoCString jsmLocation;
+      ToJSM(location, jsmLocation);
+      aLoadedModules.AppendElement(jsmLocation);
+    }
+  }
+
+  return NS_OK;
 }
 
 void mozJSComponentLoader::GetLoadedComponents(
