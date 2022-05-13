@@ -175,7 +175,7 @@ nsHostResolver::nsHostResolver(uint32_t maxCacheEntries,
 
 nsHostResolver::~nsHostResolver() = default;
 
-nsresult nsHostResolver::Init() {
+nsresult nsHostResolver::Init() NO_THREAD_SAFETY_ANALYSIS {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_FAILED(GetAddrInfoInit())) {
     return NS_ERROR_FAILURE;
@@ -1076,6 +1076,7 @@ void nsHostResolver::ComputeEffectiveTRRMode(nsHostRecord* aRec) {
 nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
                                     const mozilla::MutexAutoLock& aLock) {
   LOG(("NameLookup host:%s af:%" PRId16, rec->host.get(), rec->af));
+  mLock.AssertCurrentThreadOwns();
 
   if (rec->flags & RES_IP_HINT) {
     LOG(("Skip lookup if RES_IP_HINT is set\n"));

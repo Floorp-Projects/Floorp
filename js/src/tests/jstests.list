@@ -671,6 +671,12 @@ fails-if(!xulRuntime.shell) script test262/built-ins/SharedArrayBuffer/prototype
 skip script test262/intl402/NumberFormat/prototype/format/format-rounding-priority-more-precision.js
 
 
+# Update required for https://github.com/tc39/ecma262/pull/2550
+# See bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1769088
+skip script test262/built-ins/Date/year-zero.js
+skip script test262/built-ins/Date/parse/year-zero.js
+
+
 ##############################################
 # Enable Iterator Helpers tests in the shell #
 ##############################################

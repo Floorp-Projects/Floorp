@@ -106,6 +106,7 @@ void QuicSocketControl::SetInfo(uint16_t aCipherSuite,
 }
 
 NS_IMETHODIMP QuicSocketControl::GetPeerId(nsACString& aResult) {
+  MutexAutoLock lock(mMutex);
   if (!mPeerId.IsEmpty()) {
     aResult.Assign(mPeerId);
     return NS_OK;
@@ -122,11 +123,11 @@ NS_IMETHODIMP QuicSocketControl::GetPeerId(nsACString& aResult) {
     mPeerId.AppendLiteral("beConservative:");
   }
 
-  mPeerId.Append(GetHostName());
+  mPeerId.Append(mHostName);
   mPeerId.Append(':');
   mPeerId.AppendInt(GetPort());
   nsAutoCString suffix;
-  GetOriginAttributes().CreateSuffix(suffix);
+  mOriginAttributes.CreateSuffix(suffix);
   mPeerId.Append(suffix);
 
   aResult.Assign(mPeerId);

@@ -335,7 +335,7 @@ function encryptPayload(cleartext) {
   return {
     ciphertext: cleartext, // ciphertext == cleartext with fake crypto
     IV: "irrelevant",
-    hmac: fakeSHA256HMAC(cleartext, CryptoUtils.makeHMACKey("")),
+    hmac: fakeSHA256HMAC(cleartext),
   };
 }
 

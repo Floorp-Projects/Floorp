@@ -510,6 +510,34 @@ async function promiseNativeTouchpadPanEventAndWaitForObserver(
   });
 }
 
+async function synthesizeSimpleGestureEvent(
+  aElement,
+  aType,
+  aX,
+  aY,
+  aDirection,
+  aDelta,
+  aModifiers,
+  aClickCount
+) {
+  let pt = await coordinatesRelativeToScreen({
+    offsetX: aX,
+    offsetY: aY,
+    target: aElement,
+  });
+
+  let utils = utilsForTarget(aElement);
+  utils.sendSimpleGestureEvent(
+    aType,
+    pt.x,
+    pt.y,
+    aDirection,
+    aDelta,
+    aModifiers,
+    aClickCount
+  );
+}
+
 // Synthesizes a native pan gesture event and resolve the returned promise once the
 // request has been successfully made to the OS.
 function promiseNativePanGestureEventAndWaitForObserver(

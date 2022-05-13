@@ -245,7 +245,8 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
   gfx::D3D11DeviceStatus status;
   dm->ExportDeviceInfo(&status);
 
-  if (sequenceNum == static_cast<uint32_t>(status.sequenceNumber()) && !dm->HasDeviceReset()) {
+  if (sequenceNum == static_cast<uint32_t>(status.sequenceNumber()) &&
+      !dm->HasDeviceReset()) {
     *isContentOnlyTDR = true;
   }
 

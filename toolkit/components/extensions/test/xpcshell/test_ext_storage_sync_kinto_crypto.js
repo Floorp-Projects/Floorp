@@ -72,10 +72,7 @@ add_task(async function setup() {
     2 * 32
   );
   const KEY_BUNDLE = {
-    sha256HMACHasher: Utils.makeHMACHasher(
-      Ci.nsICryptoHMAC.SHA256,
-      Utils.makeHMACKey(STRETCHED_KEY.slice(0, 32))
-    ),
+    hmacKey: STRETCHED_KEY.slice(0, 32),
     encryptionKeyB64: btoa(STRETCHED_KEY.slice(32, 64)),
   };
   transformer = new StaticKeyEncryptionRemoteTransformer(KEY_BUNDLE);

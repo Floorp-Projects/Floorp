@@ -49,10 +49,10 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys();
     }                                                \
   }
 
-extern bool EnsureNSSInitializedChromeOrContent();
-extern bool HandleTLSPrefChange(const nsCString& aPref);
-extern void SetValidationOptionsCommon();
-extern void NSSShutdownForSocketProcess();
+bool EnsureNSSInitializedChromeOrContent();
+bool HandleTLSPrefChange(const nsCString& aPref);
+void SetValidationOptionsCommon();
+void NSSShutdownForSocketProcess();
 
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
@@ -115,23 +115,24 @@ class nsNSSComponent final : public nsINSSComponent, public nsIObserver {
   nsresult MaybeEnableIntermediatePreloadingHealer();
 
   // mLoadableCertsLoadedMonitor protects mLoadableCertsLoaded.
-  mozilla::Monitor mLoadableCertsLoadedMonitor MOZ_UNANNOTATED;
-  bool mLoadableCertsLoaded;
-  nsresult mLoadableCertsLoadedResult;
+  mozilla::Monitor mLoadableCertsLoadedMonitor;
+  bool mLoadableCertsLoaded GUARDED_BY(mLoadableCertsLoadedMonitor);
+  nsresult mLoadableCertsLoadedResult GUARDED_BY(mLoadableCertsLoadedMonitor);
 
   // mMutex protects all members that are accessed from more than one thread.
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
+  mozilla::Mutex mMutex;
 
   // The following members are accessed from more than one thread:
 
 #ifdef DEBUG
-  nsCString mTestBuiltInRootHash;
+  nsCString mTestBuiltInRootHash GUARDED_BY(mMutex);
 #endif
-  nsCString mContentSigningRootHash;
-  RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
-  nsString mMitmCanaryIssuer;
-  bool mMitmDetecionEnabled;
-  mozilla::Vector<EnterpriseCert> mEnterpriseCerts;
+  nsCString mContentSigningRootHash GUARDED_BY(mMutex);
+  RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier
+      GUARDED_BY(mMutex);
+  nsString mMitmCanaryIssuer GUARDED_BY(mMutex);
+  bool mMitmDetecionEnabled GUARDED_BY(mMutex);
+  mozilla::Vector<EnterpriseCert> mEnterpriseCerts GUARDED_BY(mMutex);
 
   // The following members are accessed only on the main thread:
   static int mInstanceCount;

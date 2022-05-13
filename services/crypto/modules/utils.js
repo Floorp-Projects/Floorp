@@ -56,22 +56,18 @@ var CryptoUtils = {
 
   /**
    * UTF8-encode a message and hash it with the given hasher. Returns a
-   * string containing bytes. The hasher is reset if it's an HMAC hasher.
+   * string containing bytes.
    */
   digestUTF8(message, hasher) {
     let data = this._utf8Converter.convertToByteArray(message, {});
     hasher.update(data, data.length);
     let result = hasher.finish(false);
-    if (hasher instanceof Ci.nsICryptoHMAC) {
-      hasher.reset();
-    }
     return result;
   },
 
   /**
    * Treat the given message as a bytes string (if necessary) and hash it with
    * the given hasher. Returns a string containing bytes.
-   * The hasher is reset if it's an HMAC hasher.
    */
   digestBytes(bytes, hasher) {
     if (typeof bytes == "string" || bytes instanceof String) {
@@ -83,9 +79,6 @@ var CryptoUtils = {
   digestBytesArray(bytes, hasher) {
     hasher.update(bytes, bytes.length);
     let result = hasher.finish(false);
-    if (hasher instanceof Ci.nsICryptoHMAC) {
-      hasher.reset();
-    }
     return result;
   },
 
@@ -116,24 +109,6 @@ var CryptoUtils = {
     hasher.init(hasher.SHA256);
     hasher.update(data, data.length);
     return hasher.finish(true);
-  },
-
-  /**
-   * Produce an HMAC key object from a key string.
-   */
-  makeHMACKey: function makeHMACKey(str) {
-    return Svc.KeyFactory.keyFromString(Ci.nsIKeyObject.HMAC, str);
-  },
-
-  /**
-   * Produce an HMAC hasher and initialize it with the given HMAC key.
-   */
-  makeHMACHasher: function makeHMACHasher(type, key) {
-    let hasher = Cc["@mozilla.org/security/hmac;1"].createInstance(
-      Ci.nsICryptoHMAC
-    );
-    hasher.init(type, key);
-    return hasher;
   },
 
   /**
@@ -570,13 +545,6 @@ XPCOMUtils.defineLazyGetter(CryptoUtils, "_utf8Converter", function() {
 });
 
 var Svc = {};
-
-XPCOMUtils.defineLazyServiceGetter(
-  Svc,
-  "KeyFactory",
-  "@mozilla.org/security/keyobjectfactory;1",
-  "nsIKeyObjectFactory"
-);
 
 Observers.add("xpcom-shutdown", function unloadServices() {
   Observers.remove("xpcom-shutdown", unloadServices);
