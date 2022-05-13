@@ -24,7 +24,7 @@
 #include "js/CompileOptions.h"         // JS::CompileOptions
 #include "js/friend/JSMEnvironment.h"  // JS::ExecuteInJSMEnvironment, JS::GetJSMEnvironmentOfScriptedCaller, JS::NewJSMEnvironment
 #include "js/loader/ModuleLoadRequest.h"
-#include "js/Object.h"                 // JS::GetCompartment
+#include "js/Object.h"  // JS::GetCompartment
 #include "js/Printf.h"
 #include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperty, JS_Enumerate, JS_GetElement, JS_GetProperty, JS_GetPropertyById, JS_HasOwnProperty, JS_HasOwnPropertyById, JS_SetProperty, JS_SetPropertyById
 #include "js/PropertySpec.h"
@@ -49,6 +49,7 @@
 #include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 #include "WrapperFactory.h"
+#include "ModuleEnvironmentProxy.h"
 
 #include "AutoMemMap.h"
 #include "ScriptPreloader-inl.h"
@@ -103,6 +104,19 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 #define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
 #define ERROR_UNINITIALIZED_SYMBOL \
   "%s - Symbol '%s' accessed before initialization. Cyclic import?"
+
+static bool IsJSM(const nsACString& aLocation) {
+  if (aLocation.Length() < 4) {
+    return false;
+  }
+  const auto ext = Substring(aLocation, aLocation.Length() - 4);
+  return ext == ".jsm";
+}
+
+static void ToMJS(const nsACString& aLocation, nsAutoCString& aOut) {
+  aOut = Substring(aLocation, 0, aLocation.Length() - 4);
+  aOut += ".mjs";
+}
 
 static bool Dump(JSContext* cx, unsigned argc, Value* vp) {
   if (!nsJSUtils::DumpEnabled()) {
@@ -905,6 +919,9 @@ nsresult mozJSComponentLoader::GetScriptForLocation(
       options.setModule();
       // Top level await is not supported in synchronously loaded modules.
       options.topLevelAwait = false;
+
+      // Make all top-level `vars` available in `ModuleEnvironmentObject`.
+      options.deoptimizeModuleGlobalVars = true;
     } else {
       options.setForceStrictMode();
       options.setNonSyntacticScope(true);
@@ -1102,6 +1119,13 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
   mInitialized = true;
   ComponentLoaderInfo info(aLocation);
   *retval = !!mImports.Get(info.Key());
+
+  if (!*retval && IsJSM(aLocation)) {
+    nsAutoCString mjsLocation;
+    ToMJS(aLocation, mjsLocation);
+    return IsModuleLoaded(mjsLocation, retval);
+  }
+
   return NS_OK;
 }
 
@@ -1411,6 +1435,11 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
         return NS_ERROR_FAILURE;
       }
 
+      if (rv == NS_ERROR_FILE_NOT_FOUND) {
+        return TryFallbackToImportModule(aCx, aLocation, aModuleGlobal,
+                                         aModuleExports, aIgnoreExports);
+      }
+
       // Something failed, but we don't know what it is, guess.
       return NS_ERROR_FILE_NOT_FOUND;
     }
@@ -1441,6 +1470,52 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   // Cache this module for later
   if (newEntry) {
     mImports.InsertOrUpdate(info.Key(), std::move(newEntry));
+  }
+
+  return NS_OK;
+}
+
+nsresult mozJSComponentLoader::TryFallbackToImportModule(
+    JSContext* aCx, const nsACString& aLocation,
+    JS::MutableHandleObject aModuleGlobal,
+    JS::MutableHandleObject aModuleExports, bool aIgnoreExports) {
+  if (!IsJSM(aLocation)) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  nsAutoCString mjsLocation;
+  ToMJS(aLocation, mjsLocation);
+
+  JS::RootedObject moduleNamespace(aCx);
+  nsresult rv = ImportModule(aCx, mjsLocation, &moduleNamespace);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JS::RootedObject globalProxy(aCx);
+  {
+    JSAutoRealm ar(aCx, moduleNamespace);
+
+    JS::RootedObject moduleObject(
+        aCx, JS::GetModuleForNamespace(aCx, moduleNamespace));
+    if (!moduleObject) {
+      return NS_ERROR_FAILURE;
+    }
+
+    globalProxy = CreateModuleEnvironmentProxy(aCx, moduleObject);
+    if (!globalProxy) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  if (!JS_WrapObject(aCx, &globalProxy)) {
+    return NS_ERROR_FAILURE;
+  }
+  aModuleGlobal.set(globalProxy);
+
+  if (!aIgnoreExports) {
+    JS::RootedObject exports(aCx, moduleNamespace);
+    if (!JS_WrapObject(aCx, &exports)) {
+      return NS_ERROR_FAILURE;
+    }
+    aModuleExports.set(exports);
   }
 
   return NS_OK;
