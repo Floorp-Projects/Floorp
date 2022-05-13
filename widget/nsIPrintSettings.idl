@@ -257,10 +257,6 @@ interface nsIPrintSettings : nsISupports
   /** Whether to draw guidelines showing the margin settings */
   [infallible] attribute boolean showMarginGuides;
 
-  /** Whether whether the "print selection" radio button should be enabled
-   *  in the UI (i.e. whether there is an active selection) */
-  [infallible] attribute boolean isPrintSelectionRBEnabled;
-
   /** Whether to only print the selected nodes */
   [infallible] attribute boolean printSelectionOnly;
 
