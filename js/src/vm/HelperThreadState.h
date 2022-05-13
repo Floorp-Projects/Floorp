@@ -673,14 +673,6 @@ struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
   // Record any errors happening while parsing or generating bytecode.
   OffThreadFrontendErrors errors_;
 
-  // Create a new DelazifyTask and initialize it.
-  static UniquePtr<DelazifyTask> Create(
-      JSContext* cx,
-      JSRuntime* runtime,
-      const JS::ContextOptions& contextOptions,
-      const JS::ReadOnlyCompileOptions& options,
-      const frontend::CompilationStencil& stencil);
-
   DelazifyTask(JSRuntime* runtime, const JS::ContextOptions& options);
 
   [[nodiscard]] bool init(
