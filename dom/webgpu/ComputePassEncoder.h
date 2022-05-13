@@ -58,9 +58,9 @@ class ComputePassEncoder final : public ObjectBase,
   // self
   void SetPipeline(const ComputePipeline& aPipeline);
 
-  void Dispatch(uint32_t x, uint32_t y, uint32_t z);
-  void DispatchIndirect(const Buffer& aIndirectBuffer,
-                        uint64_t aIndirectOffset);
+  void DispatchWorkgroups(uint32_t x, uint32_t y, uint32_t z);
+  void DispatchWorkgroupsIndirect(const Buffer& aIndirectBuffer,
+                                  uint64_t aIndirectOffset);
 
   void PushDebugGroup(const nsAString& aString);
   void PopDebugGroup();
