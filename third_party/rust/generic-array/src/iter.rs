@@ -1,8 +1,9 @@
 //! `GenericArray` iterator implementation.
 
 use super::{ArrayLength, GenericArray};
-use core::{cmp, ptr, fmt, mem};
+use core::iter::FusedIterator;
 use core::mem::ManuallyDrop;
+use core::{cmp, fmt, ptr, mem};
 
 /// An iterator that moves out of a `GenericArray`
 pub struct GenericArrayIter<T, N: ArrayLength<T>> {
@@ -54,7 +55,7 @@ where
         GenericArrayIter {
             array: ManuallyDrop::new(self),
             index: 0,
-            index_back: N::to_usize(),
+            index_back: N::USIZE,
         }
     }
 }
@@ -77,10 +78,12 @@ where
 {
     #[inline]
     fn drop(&mut self) {
-        // Drop values that are still alive.
-        for p in self.as_mut_slice() {
-            unsafe {
-                ptr::drop_in_place(p);
+        if mem::needs_drop::<T>() {
+            // Drop values that are still alive.
+            for p in self.as_mut_slice() {
+                unsafe {
+                    ptr::drop_in_place(p);
+                }
             }
         }
     }
@@ -95,19 +98,19 @@ where
         // This places all cloned elements at the start of the new array iterator,
         // not at their original indices.
         unsafe {
-            let mut iter = GenericArrayIter {
-                array: ManuallyDrop::new(mem::uninitialized()),
-                index: 0,
-                index_back: 0,
-            };
+            let mut array = ptr::read(&self.array);
+            let mut index_back = 0;
 
-            for (dst, src) in iter.array.iter_mut().zip(self.as_slice()) {
+            for (dst, src) in array.as_mut_slice().into_iter().zip(self.as_slice()) {
                 ptr::write(dst, src.clone());
-
-                iter.index_back += 1;
+                index_back += 1;
             }
 
-            iter
+            GenericArrayIter {
+                array,
+                index: 0,
+                index_back
+            }
         }
     }
 }
@@ -129,6 +132,34 @@ where
         } else {
             None
         }
+    }
+
+    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        let ret = unsafe {
+            let GenericArrayIter {
+                ref array,
+                ref mut index,
+                index_back,
+            } = self;
+
+            let remaining = &array[*index..index_back];
+
+            remaining.iter().fold(init, |acc, src| {
+                let value = ptr::read(src);
+
+                *index += 1;
+
+                f(acc, value)
+            })
+        };
+
+        // ensure the drop happens here after iteration
+        drop(self);
+
+        ret
     }
 
     #[inline]
@@ -157,6 +188,7 @@ where
         self.next()
     }
 
+    #[inline]
     fn last(mut self) -> Option<T> {
         // Note, everything else will correctly drop first as `self` leaves scope.
         self.next_back()
@@ -176,6 +208,34 @@ where
             None
         }
     }
+
+    fn rfold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        F: FnMut(B, Self::Item) -> B,
+    {
+        let ret = unsafe {
+            let GenericArrayIter {
+                ref array,
+                index,
+                ref mut index_back,
+            } = self;
+
+            let remaining = &array[index..*index_back];
+
+            remaining.iter().rfold(init, |acc, src| {
+                let value = ptr::read(src);
+
+                *index_back -= 1;
+
+                f(acc, value)
+            })
+        };
+
+        // ensure the drop happens here after iteration
+        drop(self);
+
+        ret
+    }
 }
 
 impl<T, N> ExactSizeIterator for GenericArrayIter<T, N>
@@ -187,4 +247,10 @@ where
     }
 }
 
-// TODO: Implement `FusedIterator` and `TrustedLen` when stabilized
+impl<T, N> FusedIterator for GenericArrayIter<T, N>
+where
+    N: ArrayLength<T>,
+{
+}
+
+// TODO: Implement `TrustedLen` when stabilized

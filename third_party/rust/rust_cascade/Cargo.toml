@@ -11,8 +11,8 @@
 
 [package]
 name = "rust_cascade"
-version = "1.2.0"
-authors = ["Mark Goodwin <mgoodwin@mozilla.com>", "Dana Keeler <dkeeler@mozilla.com>", "J.C. Jones <jc@mozilla.com>"]
+version = "1.4.0"
+authors = ["Mark Goodwin <mgoodwin@mozilla.com>", "Dana Keeler <dkeeler@mozilla.com>", "J.C. Jones <jc@mozilla.com>", "John Schanck <jschanck@mozilla.com>"]
 description = "A simple bloom filter cascade implementation in Rust."
 homepage = "https://github.com/mozilla/rust-cascade"
 documentation = "https://docs.rs/rust_cascade/"
@@ -21,11 +21,14 @@ repository = "https://github.com/mozilla/rust-cascade"
 [dependencies.byteorder]
 version = "1.3.1"
 
-[dependencies.digest]
-version = "0.8.0"
-
 [dependencies.murmurhash3]
 version = "0.0.5"
 
+[dependencies.rand]
+version = "0.7.3"
+
 [dependencies.sha2]
-version = "^0.8"
+version = "0.10.2"
+
+[features]
+builder = []

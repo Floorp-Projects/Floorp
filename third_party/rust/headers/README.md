@@ -1,5 +1,5 @@
 # rust http headers
 
-[![Build Status](https://travis-ci.org/hyperium/headers.svg?branch=master)](https://travis-ci.org/hyperium/header)
+[![Build Status](https://github.com/hyperium/headers/workflows/CI/badge.svg)](https://github.com/hyperium/headers/actions?query=workflow%3ACI)
 
 Typed HTTP headers.

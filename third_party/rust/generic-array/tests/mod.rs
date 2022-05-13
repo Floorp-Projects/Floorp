@@ -4,10 +4,10 @@
 extern crate generic_array;
 use core::cell::Cell;
 use core::ops::{Add, Drop};
-use generic_array::GenericArray;
 use generic_array::functional::*;
 use generic_array::sequence::*;
-use generic_array::typenum::{U1, U3, U4, U97};
+use generic_array::typenum::{U0, U3, U4, U97};
+use generic_array::GenericArray;
 
 #[test]
 fn test() {
@@ -88,8 +88,8 @@ fn test_from_mut_slice() {
 
 #[test]
 fn test_default() {
-    let arr = GenericArray::<u8, U1>::default();
-    assert_eq!(arr[0], 0);
+    let arr = GenericArray::<u8, U4>::default();
+    assert_eq!(arr.as_slice(), &[0, 0, 0, 0]);
 }
 
 #[test]
@@ -112,7 +112,7 @@ fn test_empty_macro() {
 
 #[test]
 fn test_cmp() {
-    arr![u8; 0x00].cmp(&arr![u8; 0x00]);
+    let _ = arr![u8; 0x00].cmp(&arr![u8; 0x00]);
 }
 
 /// This test should cause a helpful compile error if uncommented.
@@ -124,8 +124,8 @@ fn test_cmp() {
 mod impl_serde {
     extern crate serde_json;
 
-    use generic_array::GenericArray;
     use generic_array::typenum::U6;
+    use generic_array::GenericArray;
 
     #[test]
     fn test_serde_implementation() {
@@ -175,29 +175,55 @@ fn test_from_iter() {
     assert_eq!(a, arr![i32; 11, 11, 11, 0]);
 }
 
+#[allow(unused)]
+#[derive(Debug, Copy, Clone)]
+enum E {
+    V,
+    V2(i32),
+    V3 { h: bool, i: i32 },
+}
+
+#[allow(unused)]
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+#[repr(packed)]
+struct Test {
+    t: u16,
+    s: u32,
+    mm: bool,
+    r: u16,
+    f: u16,
+    p: (),
+    o: u32,
+    ff: *const extern "C" fn(*const char) -> *const core::ffi::c_void,
+    l: *const core::ffi::c_void,
+    w: bool,
+    q: bool,
+    v: E,
+}
+
 #[test]
 fn test_sizes() {
-    #![allow(dead_code)]
     use core::mem::{size_of, size_of_val};
 
-    #[derive(Debug, Copy, Clone)]
-    #[repr(C)]
-    #[repr(packed)]
-    struct Test {
-        t: u16,
-        s: u32,
-        r: u16,
-        f: u16,
-        o: u32,
-    }
+    assert_eq!(size_of::<E>(), 8);
 
-    assert_eq!(size_of::<Test>(), 14);
+    assert_eq!(size_of::<Test>(), 25 + size_of::<usize>() * 2);
 
     assert_eq!(size_of_val(&arr![u8; 1, 2, 3]), size_of::<u8>() * 3);
     assert_eq!(size_of_val(&arr![u32; 1]), size_of::<u32>() * 1);
     assert_eq!(size_of_val(&arr![u64; 1, 2, 3, 4]), size_of::<u64>() * 4);
 
     assert_eq!(size_of::<GenericArray<Test, U97>>(), size_of::<Test>() * 97);
+}
+
+#[test]
+fn test_alignment() {
+    use core::mem::align_of;
+
+    assert_eq!(align_of::<GenericArray::<u32, U0>>(), align_of::<[u32; 0]>());
+    assert_eq!(align_of::<GenericArray::<u32, U3>>(), align_of::<[u32; 3]>());
+    assert_eq!(align_of::<GenericArray::<Test, U3>>(), align_of::<[Test; 3]>());
 }
 
 #[test]
@@ -249,18 +275,50 @@ fn test_split() {
 }
 
 #[test]
+fn test_split_ref() {
+    let a = arr![i32; 1, 2, 3, 4];
+    let a_ref = &a;
+
+    let (b_ref, c_ref) = a_ref.split();
+
+    assert_eq!(b_ref, &arr![i32; 1]);
+    assert_eq!(c_ref, &arr![i32; 2, 3, 4]);
+
+    let (e_ref, f_ref) = a_ref.split();
+
+    assert_eq!(e_ref, &arr![i32; 1, 2]);
+    assert_eq!(f_ref, &arr![i32; 3, 4]);
+}
+
+#[test]
+fn test_split_mut() {
+    let mut a = arr![i32; 1, 2, 3, 4];
+    let a_ref = &mut a;
+
+    let (b_ref, c_ref) = a_ref.split();
+
+    assert_eq!(b_ref, &mut arr![i32; 1]);
+    assert_eq!(c_ref, &mut arr![i32; 2, 3, 4]);
+
+    let (e_ref, f_ref) = a_ref.split();
+
+    assert_eq!(e_ref, &mut arr![i32; 1, 2]);
+    assert_eq!(f_ref, &mut arr![i32; 3, 4]);
+}
+
+#[test]
 fn test_concat() {
     let a = arr![i32; 1, 2];
-    let b = arr![i32; 3, 4];
+    let b = arr![i32; 3, 4, 5];
 
     let c = a.concat(b);
 
-    assert_eq!(c, arr![i32; 1, 2, 3, 4]);
+    assert_eq!(c, arr![i32; 1, 2, 3, 4, 5]);
 
     let (d, e) = c.split();
 
-    assert_eq!(d, arr![i32; 1]);
-    assert_eq!(e, arr![i32; 2, 3, 4]);
+    assert_eq!(d, arr![i32; 1, 2]);
+    assert_eq!(e, arr![i32; 3, 4, 5]);
 }
 
 #[test]
@@ -284,4 +342,38 @@ fn test_sum() {
     let a = sum_generic(arr![i32; 1, 2, 3, 4]);
 
     assert_eq!(a, 10);
+}
+
+#[test]
+fn test_as_ref() {
+    let a = arr![i32; 1, 2, 3, 4];
+    let a_ref: &[i32; 4] = a.as_ref();
+    assert_eq!(a_ref, &[1, 2, 3, 4]);
+}
+
+#[test]
+fn test_as_mut() {
+    let mut a = arr![i32; 1, 2, 3, 4];
+    let a_mut: &mut [i32; 4] = a.as_mut();
+    assert_eq!(a_mut, &mut [1, 2, 3, 4]);
+    a_mut[2] = 0;
+    assert_eq!(a_mut, &mut [1, 2, 0, 4]);
+    assert_eq!(a, arr![i32; 1, 2, 0, 4]);
+}
+
+#[test]
+fn test_from_array_ref() {
+    let a = arr![i32; 1, 2, 3, 4];
+    let a_ref: &[i32; 4] = a.as_ref();
+    let a_from: &GenericArray<i32, U4> = a_ref.into();
+    assert_eq!(&a, a_from);
+}
+
+#[test]
+fn test_from_array_mut() {
+    let mut a = arr![i32; 1, 2, 3, 4];
+    let mut a_copy = a;
+    let a_mut: &mut [i32; 4] = a.as_mut();
+    let a_from: &mut GenericArray<i32, U4> = a_mut.into();
+    assert_eq!(&mut a_copy, a_from);
 }
