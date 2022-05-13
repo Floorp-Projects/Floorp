@@ -80,6 +80,152 @@ class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final {
   }
 };
 
+/******************************************************************************
+ * HTMLEditor::CellIndexes
+ ******************************************************************************/
+
+void HTMLEditor::CellIndexes::Update(HTMLEditor& aHTMLEditor,
+                                     Selection& aSelection, ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
+
+  // Guarantee the life time of the cell element since Init() will access
+  // layout methods.
+  RefPtr<Element> cellElement =
+      aHTMLEditor.GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td);
+  if (!cellElement) {
+    NS_WARNING(
+        "HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(nsGkAtoms::td) "
+        "failed");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  RefPtr<PresShell> presShell{aHTMLEditor.GetPresShell()};
+  Update(*cellElement, presShell, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "CellIndexes::Update() failed");
+}
+
+void HTMLEditor::CellIndexes::Update(Element& aCellElement,
+                                     PresShell* aPresShell, ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
+
+  // If the table cell is created immediately before this call, e.g., using
+  // innerHTML, frames have not been created yet. Hence, flush layout to create
+  // them.
+  if (NS_WARN_IF(!aPresShell)) {
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return;
+  }
+
+  aPresShell->FlushPendingNotifications(FlushType::Frames);
+
+  nsIFrame* frameOfCell = aCellElement.GetPrimaryFrame();
+  if (!frameOfCell) {
+    NS_WARNING("There was no layout information of aCellElement");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsITableCellLayout* tableCellLayout = do_QueryFrame(frameOfCell);
+  if (!tableCellLayout) {
+    NS_WARNING("aCellElement was not a table cell");
+    aRv.Throw(NS_ERROR_FAILURE);  // not a cell element.
+    return;
+  }
+
+  aRv = tableCellLayout->GetCellIndexes(mRow, mColumn);
+  NS_WARNING_ASSERTION(!aRv.Failed(),
+                       "nsITableCellLayout::GetCellIndexes() failed");
+}
+
+/******************************************************************************
+ * HTMLEditor::CellData
+ ******************************************************************************/
+
+void HTMLEditor::CellData::Update(HTMLEditor& aHTMLEditor,
+                                  Element& aTableElement, ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
+
+  mElement = nullptr;
+  mIsSelected = false;
+  mFirst.mRow = -1;
+  mFirst.mColumn = -1;
+  mRowSpan = -1;
+  mColSpan = -1;
+  mEffectiveRowSpan = -1;
+  mEffectiveColSpan = -1;
+
+  nsTableWrapperFrame* tableFrame = HTMLEditor::GetTableFrame(&aTableElement);
+  if (!tableFrame) {
+    NS_WARNING("There was no layout information of the table");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // If there is no cell at the indexes.  Don't return error.
+  // XXX If we have pending layout and that causes the cell frame hasn't been
+  //     created, we should return error, but how can we do it?
+  nsTableCellFrame* cellFrame =
+      tableFrame->GetCellFrameAt(mCurrent.mRow, mCurrent.mColumn);
+  if (!cellFrame) {
+    return;
+  }
+
+  mElement = cellFrame->GetContent()->AsElement();
+  if (!mElement) {
+    NS_WARNING("The cell frame didn't have cell element");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  mIsSelected = cellFrame->IsSelected();
+  mFirst.mRow = cellFrame->RowIndex();
+  mFirst.mColumn = cellFrame->ColIndex();
+  mRowSpan = cellFrame->GetRowSpan();
+  mColSpan = cellFrame->GetColSpan();
+  mEffectiveRowSpan =
+      tableFrame->GetEffectiveRowSpanAt(mCurrent.mRow, mCurrent.mColumn);
+  mEffectiveColSpan =
+      tableFrame->GetEffectiveColSpanAt(mCurrent.mRow, mCurrent.mColumn);
+}
+
+/******************************************************************************
+ * HTMLEditor::TableSize
+ ******************************************************************************/
+
+void HTMLEditor::TableSize::Update(HTMLEditor& aHTMLEditor,
+                                   Element& aTableOrElementInTable,
+                                   ErrorResult& aRv) {
+  MOZ_ASSERT(!aRv.Failed());
+
+  // Currently, nsTableWrapperFrame::GetRowCount() and
+  // nsTableWrapperFrame::GetColCount() are safe to use without grabbing
+  // <table> element.  However, editor developers may not watch layout API
+  // changes.  So, for keeping us safer, we should use RefPtr here.
+  RefPtr<Element> tableElement =
+      aHTMLEditor.GetInclusiveAncestorByTagNameInternal(*nsGkAtoms::table,
+                                                        aTableOrElementInTable);
+  if (!tableElement) {
+    NS_WARNING(
+        "HTMLEditor::GetInclusiveAncestorByTagNameInternal(nsGkAtoms::table) "
+        "failed");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  nsTableWrapperFrame* tableFrame =
+      do_QueryFrame(tableElement->GetPrimaryFrame());
+  if (!tableFrame) {
+    NS_WARNING("There was no layout information of the <table> element");
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+  mRowCount = tableFrame->GetRowCount();
+  mColumnCount = tableFrame->GetColCount();
+}
+
+/******************************************************************************
+ * HTMLEditor
+ ******************************************************************************/
+
 nsresult HTMLEditor::InsertCell(Element* aCell, int32_t aRowSpan,
                                 int32_t aColSpan, bool aAfter, bool aIsHeader,
                                 Element** aNewCell) {
@@ -3514,60 +3660,6 @@ NS_IMETHODIMP HTMLEditor::GetCellIndexes(Element* aCellElement,
   return NS_OK;
 }
 
-void HTMLEditor::CellIndexes::Update(HTMLEditor& aHTMLEditor,
-                                     Selection& aSelection, ErrorResult& aRv) {
-  MOZ_ASSERT(!aRv.Failed());
-
-  // Guarantee the life time of the cell element since Init() will access
-  // layout methods.
-  RefPtr<Element> cellElement =
-      aHTMLEditor.GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td);
-  if (!cellElement) {
-    NS_WARNING(
-        "HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(nsGkAtoms::td) "
-        "failed");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<PresShell> presShell{aHTMLEditor.GetPresShell()};
-  Update(*cellElement, presShell, aRv);
-  NS_WARNING_ASSERTION(!aRv.Failed(), "CellIndexes::Update() failed");
-}
-
-void HTMLEditor::CellIndexes::Update(Element& aCellElement,
-                                     PresShell* aPresShell, ErrorResult& aRv) {
-  MOZ_ASSERT(!aRv.Failed());
-
-  // If the table cell is created immediately before this call, e.g., using
-  // innerHTML, frames have not been created yet. Hence, flush layout to create
-  // them.
-  if (NS_WARN_IF(!aPresShell)) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return;
-  }
-
-  aPresShell->FlushPendingNotifications(FlushType::Frames);
-
-  nsIFrame* frameOfCell = aCellElement.GetPrimaryFrame();
-  if (!frameOfCell) {
-    NS_WARNING("There was no layout information of aCellElement");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsITableCellLayout* tableCellLayout = do_QueryFrame(frameOfCell);
-  if (!tableCellLayout) {
-    NS_WARNING("aCellElement was not a table cell");
-    aRv.Throw(NS_ERROR_FAILURE);  // not a cell element.
-    return;
-  }
-
-  aRv = tableCellLayout->GetCellIndexes(mRow, mColumn);
-  NS_WARNING_ASSERTION(!aRv.Failed(),
-                       "nsITableCellLayout::GetCellIndexes() failed");
-}
-
 // static
 nsTableWrapperFrame* HTMLEditor::GetTableFrame(Element* aTableElement) {
   if (NS_WARN_IF(!aTableElement)) {
@@ -3647,36 +3739,6 @@ NS_IMETHODIMP HTMLEditor::GetTableSize(Element* aTableOrElementInTable,
   return NS_OK;
 }
 
-void HTMLEditor::TableSize::Update(HTMLEditor& aHTMLEditor,
-                                   Element& aTableOrElementInTable,
-                                   ErrorResult& aRv) {
-  MOZ_ASSERT(!aRv.Failed());
-
-  // Currently, nsTableWrapperFrame::GetRowCount() and
-  // nsTableWrapperFrame::GetColCount() are safe to use without grabbing
-  // <table> element.  However, editor developers may not watch layout API
-  // changes.  So, for keeping us safer, we should use RefPtr here.
-  RefPtr<Element> tableElement =
-      aHTMLEditor.GetInclusiveAncestorByTagNameInternal(*nsGkAtoms::table,
-                                                        aTableOrElementInTable);
-  if (!tableElement) {
-    NS_WARNING(
-        "HTMLEditor::GetInclusiveAncestorByTagNameInternal(nsGkAtoms::table) "
-        "failed");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  nsTableWrapperFrame* tableFrame =
-      do_QueryFrame(tableElement->GetPrimaryFrame());
-  if (!tableFrame) {
-    NS_WARNING("There was no layout information of the <table> element");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  mRowCount = tableFrame->GetRowCount();
-  mColumnCount = tableFrame->GetColCount();
-}
-
 NS_IMETHODIMP HTMLEditor::GetCellDataAt(
     Element* aTableElement, int32_t aRowIndex, int32_t aColumnIndex,
     Element** aCellElement, int32_t* aStartRowIndex, int32_t* aStartColumnIndex,
@@ -3733,52 +3795,6 @@ NS_IMETHODIMP HTMLEditor::GetCellDataAt(
   *aEffectiveRowSpan = cellData.mEffectiveRowSpan;
   *aEffectiveColSpan = cellData.mEffectiveColSpan;
   return NS_OK;
-}
-
-void HTMLEditor::CellData::Update(HTMLEditor& aHTMLEditor,
-                                  Element& aTableElement, ErrorResult& aRv) {
-  MOZ_ASSERT(!aRv.Failed());
-
-  mElement = nullptr;
-  mIsSelected = false;
-  mFirst.mRow = -1;
-  mFirst.mColumn = -1;
-  mRowSpan = -1;
-  mColSpan = -1;
-  mEffectiveRowSpan = -1;
-  mEffectiveColSpan = -1;
-
-  nsTableWrapperFrame* tableFrame = HTMLEditor::GetTableFrame(&aTableElement);
-  if (!tableFrame) {
-    NS_WARNING("There was no layout information of the table");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // If there is no cell at the indexes.  Don't return error.
-  // XXX If we have pending layout and that causes the cell frame hasn't been
-  //     created, we should return error, but how can we do it?
-  nsTableCellFrame* cellFrame =
-      tableFrame->GetCellFrameAt(mCurrent.mRow, mCurrent.mColumn);
-  if (!cellFrame) {
-    return;
-  }
-
-  mElement = cellFrame->GetContent()->AsElement();
-  if (!mElement) {
-    NS_WARNING("The cell frame didn't have cell element");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  mIsSelected = cellFrame->IsSelected();
-  mFirst.mRow = cellFrame->RowIndex();
-  mFirst.mColumn = cellFrame->ColIndex();
-  mRowSpan = cellFrame->GetRowSpan();
-  mColSpan = cellFrame->GetColSpan();
-  mEffectiveRowSpan =
-      tableFrame->GetEffectiveRowSpanAt(mCurrent.mRow, mCurrent.mColumn);
-  mEffectiveColSpan =
-      tableFrame->GetEffectiveColSpanAt(mCurrent.mRow, mCurrent.mColumn);
 }
 
 NS_IMETHODIMP HTMLEditor::GetCellAt(Element* aTableElement, int32_t aRowIndex,
