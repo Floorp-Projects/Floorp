@@ -42,7 +42,6 @@ class nsIClipboard;
 class nsRange;
 class nsStaticAtom;
 class nsStyledElement;
-class nsTableCellFrame;
 class nsTableWrapperFrame;
 
 namespace mozilla {
@@ -2971,10 +2970,14 @@ class HTMLEditor final : public EditorBase,
      * aCellElement.
      *
      * @param aCellElement      An <td> or <th> element.
+     * @param aRv               Returns error if layout information is not
+     *                          available or given element is not a table cell.
      */
-    MOZ_CAN_RUN_SCRIPT CellIndexes(Element& aCellElement, PresShell* aPresShell)
+    MOZ_CAN_RUN_SCRIPT CellIndexes(Element& aCellElement, PresShell* aPresShell,
+                                   ErrorResult& aRv)
         : mRow(-1), mColumn(-1) {
-      Update(aCellElement, aPresShell);
+      MOZ_ASSERT(!aRv.Failed());
+      Update(aCellElement, aPresShell, aRv);
     }
 
     /**
@@ -2982,8 +2985,8 @@ class HTMLEditor final : public EditorBase,
      *
      * @param                   See above.
      */
-    MOZ_CAN_RUN_SCRIPT void Update(Element& aCellElement,
-                                   PresShell* aPresShell);
+    MOZ_CAN_RUN_SCRIPT void Update(Element& aCellElement, PresShell* aPresShell,
+                                   ErrorResult& aRv);
 
     /**
      * This constructor initializes mRowIndex and mColumnIndex with indexes of
@@ -2991,11 +2994,14 @@ class HTMLEditor final : public EditorBase,
      *
      * @param aHTMLEditor       The editor which creates the instance.
      * @param aSelection        The Selection for the editor.
+     * @param aRv               Returns error if there is no cell element
+     *                          which contains anchor of Selection, or layout
+     *                          information is not available.
      */
     MOZ_CAN_RUN_SCRIPT CellIndexes(HTMLEditor& aHTMLEditor,
-                                   Selection& aSelection)
+                                   Selection& aSelection, ErrorResult& aRv)
         : mRow(-1), mColumn(-1) {
-      Update(aHTMLEditor, aSelection);
+      Update(aHTMLEditor, aSelection, aRv);
     }
 
     /**
@@ -3005,7 +3011,7 @@ class HTMLEditor final : public EditorBase,
      * @param                   See above.
      */
     MOZ_CAN_RUN_SCRIPT void Update(HTMLEditor& aHTMLEditor,
-                                   Selection& aSelection);
+                                   Selection& aSelection, ErrorResult& aRv);
 
     bool operator==(const CellIndexes& aOther) const {
       return mRow == aOther.mRow && mColumn == aOther.mColumn;
@@ -3014,12 +3020,8 @@ class HTMLEditor final : public EditorBase,
       return mRow != aOther.mRow || mColumn != aOther.mColumn;
     }
 
-    [[nodiscard]] bool isErr() const { return mRow < 0 || mColumn < 0; }
-
    private:
     CellIndexes() : mRow(-1), mColumn(-1) {}
-    CellIndexes(int32_t aRowIndex, int32_t aColumnIndex)
-        : mRow(aRowIndex), mColumn(aColumnIndex) {}
 
     friend struct CellData;
   };
@@ -3034,55 +3036,78 @@ class HTMLEditor final : public EditorBase,
     // Computed rowspan/colspan values which are specified to the cell.
     // Note that if the cell has larger rowspan/colspan value than actual
     // table size, these values are the larger values.
-    int32_t mRowSpan = -1;
-    int32_t mColSpan = -1;
+    int32_t mRowSpan;
+    int32_t mColSpan;
     // Effective rowspan/colspan value at the index.  For example, if first
     // cell element in first row has rowspan="3", then, if this is initialized
     // with 0-0 indexes, effective rowspan is 3.  However, if this is
     // initialized with 1-0 indexes, effective rowspan is 2.
-    int32_t mEffectiveRowSpan = -1;
-    int32_t mEffectiveColSpan = -1;
+    int32_t mEffectiveRowSpan;
+    int32_t mEffectiveColSpan;
     // mIsSelected is set to true if mElement itself or its parent <tr> or
     // <table> is selected.  Otherwise, e.g., the cell just contains selection
     // range, this is set to false.
-    bool mIsSelected = false;
+    bool mIsSelected;
 
-    CellData() = delete;
+    CellData()
+        : mRowSpan(-1),
+          mColSpan(-1),
+          mEffectiveRowSpan(-1),
+          mEffectiveColSpan(-1),
+          mIsSelected(false) {}
 
     /**
-     * This returns an instance which is initialized with a <table> element and
+     * Those constructors initializes the members with a <table> element and
      * both row and column index to specify a cell element.
      */
-    [[nodiscard]] static CellData AtIndexInTableElement(
-        const HTMLEditor& aHTMLEditor, const Element& aTableElement,
-        int32_t aRowIndex, int32_t aColumnIndex);
+    CellData(HTMLEditor& aHTMLEditor, Element& aTableElement, int32_t aRowIndex,
+             int32_t aColumnIndex, ErrorResult& aRv) {
+      Update(aHTMLEditor, aTableElement, aRowIndex, aColumnIndex, aRv);
+    }
+
+    CellData(HTMLEditor& aHTMLEditor, Element& aTableElement,
+             const CellIndexes& aIndexes, ErrorResult& aRv) {
+      Update(aHTMLEditor, aTableElement, aIndexes, aRv);
+    }
 
     /**
-     * Treated as error if fails to compute current index or first index of the
-     * cell.  Note that even if the cell is not found due to no corresponding
-     * frame at current index, it's not an error situation.
+     * Those Update() methods updates the members with a <table> element and
+     * both row and column index to specify a cell element.
      */
-    [[nodiscard]] bool isOk() const { return !isErr(); }
-    [[nodiscard]] bool isErr() const { return mFirst.isErr(); }
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
+                int32_t aRowIndex, int32_t aColumnIndex, ErrorResult& aRv) {
+      mCurrent.mRow = aRowIndex;
+      mCurrent.mColumn = aColumnIndex;
+      Update(aHTMLEditor, aTableElement, aRv);
+    }
+
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
+                const CellIndexes& aIndexes, ErrorResult& aRv) {
+      mCurrent = aIndexes;
+      Update(aHTMLEditor, aTableElement, aRv);
+    }
+
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
+                ErrorResult& aRv);
 
     /**
      * FailedOrNotFound() returns true if this failed to initialize/update
      * or succeeded but found no cell element.
      */
-    [[nodiscard]] bool FailedOrNotFound() const { return isErr() || !mElement; }
+    bool FailedOrNotFound() const { return !mElement; }
 
     /**
      * IsSpannedFromOtherRowOrColumn(), IsSpannedFromOtherColumn and
      * IsSpannedFromOtherRow() return true if there is no cell element
      * at the index because of spanning from other row and/or column.
      */
-    [[nodiscard]] bool IsSpannedFromOtherRowOrColumn() const {
+    bool IsSpannedFromOtherRowOrColumn() const {
       return mElement && mCurrent != mFirst;
     }
-    [[nodiscard]] bool IsSpannedFromOtherColumn() const {
+    bool IsSpannedFromOtherColumn() const {
       return mElement && mCurrent.mColumn != mFirst.mColumn;
     }
-    [[nodiscard]] bool IsSpannedFromOtherRow() const {
+    bool IsSpannedFromOtherRow() const {
       return mElement && mCurrent.mRow != mFirst.mRow;
     }
 
@@ -3091,13 +3116,13 @@ class HTMLEditor final : public EditorBase,
      * next cell.  Note that this does not check whether there is next
      * cell or not actually.
      */
-    [[nodiscard]] int32_t NextColumnIndex() const {
+    int32_t NextColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn + mEffectiveColSpan;
     }
-    [[nodiscard]] int32_t NextRowIndex() const {
+    int32_t NextRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3108,13 +3133,13 @@ class HTMLEditor final : public EditorBase,
      * LastColumnIndex() and LastRowIndex() return column/row index of
      * column/row which is spanned by the cell.
      */
-    [[nodiscard]] int32_t LastColumnIndex() const {
+    int32_t LastColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return NextColumnIndex() - 1;
     }
-    [[nodiscard]] int32_t LastRowIndex() const {
+    int32_t LastRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3127,13 +3152,13 @@ class HTMLEditor final : public EditorBase,
      * Otherwise, i.e., current point is not spanned form other column/row,
      * returns 0.
      */
-    [[nodiscard]] int32_t NumberOfPrecedingColmuns() const {
+    int32_t NumberOfPrecedingColmuns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn - mFirst.mColumn;
     }
-    [[nodiscard]] int32_t NumberOfPrecedingRows() const {
+    int32_t NumberOfPrecedingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3145,35 +3170,17 @@ class HTMLEditor final : public EditorBase,
      * number of remaining columns/rows if the cell spans to other
      * column/row.
      */
-    [[nodiscard]] int32_t NumberOfFollowingColumns() const {
+    int32_t NumberOfFollowingColumns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mEffectiveColSpan - 1;
     }
-    [[nodiscard]] int32_t NumberOfFollowingRows() const {
+    int32_t NumberOfFollowingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mEffectiveRowSpan - 1;
-    }
-
-   private:
-    explicit CellData(int32_t aCurrentRowIndex, int32_t aCurrentColumnIndex,
-                      int32_t aFirstRowIndex, int32_t aFirstColumnIndex)
-        : mCurrent(aCurrentRowIndex, aCurrentColumnIndex),
-          mFirst(aFirstRowIndex, aFirstColumnIndex) {}
-    explicit CellData(Element& aElement, int32_t aRowIndex,
-                      int32_t aColumnIndex, nsTableCellFrame& aTableCellFrame,
-                      nsTableWrapperFrame& aTableWrapperFrame);
-
-    [[nodiscard]] static CellData Error(int32_t aRowIndex,
-                                        int32_t aColumnIndex) {
-      return CellData(aRowIndex, aColumnIndex, -1, -1);
-    }
-    [[nodiscard]] static CellData NotFound(int32_t aRowIndex,
-                                           int32_t aColumnIndex) {
-      return CellData(aRowIndex, aColumnIndex, aRowIndex, aColumnIndex);
     }
   };
 
@@ -3185,8 +3192,6 @@ class HTMLEditor final : public EditorBase,
     int32_t mRowCount;
     int32_t mColumnCount;
 
-    TableSize() = delete;
-
     /**
      * @param aHTMLEditor               The editor which creates the instance.
      * @param aTableOrElementInTable    If a <table> element, computes number
@@ -3196,15 +3201,25 @@ class HTMLEditor final : public EditorBase,
      *                                  of nearest ancestor <table> element.
      *                                  Otherwise, i.e., non-<table> element
      *                                  not in <table>, returns error.
+     * @param aRv                       Returns error if the element is not
+     *                                  in <table> or layout information is
+     *                                  not available.
      */
-    [[nodiscard]] static Result<TableSize, nsresult> Create(
-        HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable);
+    TableSize(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+              ErrorResult& aRv)
+        : mRowCount(-1), mColumnCount(-1) {
+      MOZ_ASSERT(!aRv.Failed());
+      Update(aHTMLEditor, aTableOrElementInTable, aRv);
+    }
 
-    [[nodiscard]] bool IsEmpty() const { return !mRowCount || !mColumnCount; }
+    /**
+     * Update mRowCount and mColumnCount for aTableOrElementInTable.
+     * See above for the detail.
+     */
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
+                ErrorResult& aRv);
 
-   private:
-    TableSize(int32_t aRowCount, int32_t aColumCount)
-        : mRowCount(aRowCount), mColumnCount(aColumCount) {}
+    bool IsEmpty() const { return !mRowCount || !mColumnCount; }
   };
 
   /**
@@ -3757,7 +3772,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * Helper used to get nsTableWrapperFrame for a table.
    */
-  static nsTableWrapperFrame* GetTableFrame(const Element* aTable);
+  static nsTableWrapperFrame* GetTableFrame(Element* aTable);
 
   /**
    * GetNumberOfCellsInRow() returns number of actual cell elements in the row.
