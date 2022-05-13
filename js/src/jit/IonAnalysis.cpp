@@ -1255,7 +1255,11 @@ static bool MaybeFoldTestBlock(MIRGraph& graph, MBasicBlock* initialBlock) {
     if (lastIns->isGoto() && !newTestBlock) {
       newTestBlock = pred;
       newTestInput = operand;
-    } else if (!lastIns->isTest()) {
+    } else if (lastIns->isTest()) {
+      if (!IsTestInputMaybeToBool(lastIns->toTest(), operand)) {
+        return true;
+      }
+    } else {
       return true;
     }
 

@@ -53,3 +53,28 @@ var g = wasmEvalText(`(module
 )`).exports[""];
 
 assertEq(g(), 200);
+
+var h = wasmEvalText(`(module
+  (func (param i32) (result i32)
+    block (result i32)
+      local.get 0 ;; This must flow into the if below.
+      local.get 0
+      br_if 0
+      drop
+      i32.const 0 ;; This must flow into the if below
+      i32.const 1
+      br_if 0
+      drop
+      i32.const 1
+    end
+    if
+      i32.const 100
+      return
+    end
+    i32.const 200
+  )
+  (export "" (func 0))
+)`).exports[""];
+
+assertEq(h(0), 200);
+assertEq(h(1), 100);
