@@ -562,10 +562,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
     }
   }
 
-  // Now determine how to set up the Frame print UI
-  printData->mPrintSettings->SetIsPrintSelectionRBEnabled(
-      !mDisallowSelectionPrint && printData->mSelectionRoot);
-
   bool printingViaParent =
       XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
   nsCOMPtr<nsIDeviceContextSpec> devspec;
