@@ -33,8 +33,7 @@ NS_IMETHODIMP
 nsPrintDialogServiceX::Init() { return NS_OK; }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSelection,
-                                       nsIPrintSettings* aSettings) {
+nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, nsIPrintSettings* aSettings) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aSettings, "aSettings must not be null");
@@ -88,8 +87,6 @@ nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSe
                     NSPrintPanelShowsScaling];
   PrintPanelAccessoryController* viewController =
       [[PrintPanelAccessoryController alloc] initWithSettings:aSettings];
-  // Note this checkbox is only created after the initWithSettings call above.
-  [mPrintSelectionOnlyCheckbox setEnabled:aHaveSelection];
   [panel addAccessoryController:viewController];
   [viewController release];
 
@@ -343,6 +340,9 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
   // "Print Selection Only"
   mPrintSelectionOnlyCheckbox = [self checkboxWithLabel:"selectionOnly"
                                                andFrame:NSMakeRect(156, 155, 0, 0)];
+
+  bool canPrintSelection = mSettings->GetIsPrintSelectionRBEnabled();
+  [mPrintSelectionOnlyCheckbox setEnabled:canPrintSelection];
 
   if (mSettings->GetPrintSelectionOnly()) {
     [mPrintSelectionOnlyCheckbox setState:NSOnState];
