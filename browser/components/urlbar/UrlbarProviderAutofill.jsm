@@ -615,11 +615,12 @@ class ProviderAutofill extends UrlbarProvider {
    */
   _processRow(row, queryContext) {
     let queryType = row.getResultByName("query_type");
-    let autofilledValue, finalCompleteValue;
+    let autofilledValue, finalCompleteValue, autofilledType;
     switch (queryType) {
       case QUERYTYPE.AUTOFILL_ORIGIN:
         autofilledValue = row.getResultByName("host_fixed");
         finalCompleteValue = row.getResultByName("url");
+        autofilledType = "origin";
         break;
       case QUERYTYPE.AUTOFILL_URL:
         let url = row.getResultByName("url");
@@ -650,10 +651,12 @@ class ProviderAutofill extends UrlbarProvider {
           autofilledValue = url.substring(strippedURLIndex, nextSlashIndex + 1);
         }
         finalCompleteValue = strippedPrefix + autofilledValue;
+        autofilledType = "url";
         break;
       case QUERYTYPE.AUTOFILL_ADAPTIVE:
         autofilledValue = row.getResultByName("fixed_url");
         finalCompleteValue = row.getResultByName("url");
+        autofilledType = "adaptive";
         break;
     }
 
@@ -678,6 +681,7 @@ class ProviderAutofill extends UrlbarProvider {
       value: autofilledValue,
       selectionStart: queryContext.searchString.length,
       selectionEnd: autofilledValue.length,
+      type: autofilledType,
     };
     return result;
   }
