@@ -639,14 +639,10 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
     gXPCOMThreadsShutDown = true;
     NS_ProcessPendingEvents(thread);
 
-    // Shutdown the timer thread and all timers that might still be alive before
-    // shutting down the component manager
+    // Shutdown the timer thread and all timers that might still be alive
     nsTimerImpl::Shutdown();
 
     NS_ProcessPendingEvents(thread);
-
-    mozilla::KillClearOnShutdown(ShutdownPhase::XPCOMShutdownLoaders);
-    // XXX: Why don't we try a MaybeFastShutdown for XPCOMShutdownLoaders ?
 
     // Shutdown all remaining threads.  This method does not return until
     // all threads created using the thread manager (with the exception of
