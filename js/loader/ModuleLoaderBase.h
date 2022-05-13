@@ -277,6 +277,8 @@ class ModuleLoaderBase : public nsISupports {
   // Returns true if the module for given URL is already fetched.
   bool IsModuleFetched(nsIURI* aURL) const;
 
+  nsresult GetFetchedModuleURLs(nsTArray<nsCString>& aURLs);
+
   // Internal methods.
 
  private:
