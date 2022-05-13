@@ -1600,6 +1600,7 @@ var Policies = {
         "widget.",
       ];
       const allowedSecurityPrefs = [
+        "security.block_fileuri_script_with_wrong_mime",
         "security.default_personal_cert",
         "security.insecure_connection_text.enabled",
         "security.insecure_connection_text.pbmode.enabled",
