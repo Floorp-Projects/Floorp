@@ -11,7 +11,7 @@ import os
 from abc import ABCMeta, abstractmethod
 
 from manifestparser import TestManifest
-from manifestparser.filters import chunk_by_runtime, tags
+from manifestparser.filters import chunk_by_runtime
 from mozbuild.util import memoize
 from moztest.resolve import (
     TEST_SUITES,
@@ -56,7 +56,6 @@ def guess_mozinfo_from_task(task):
             for key in setting["runtime"].keys()
         ),
         "headless": "-headless" in task["test-name"],
-        "condprof": "conditioned_profile" in setting["runtime"].keys(),
         "tsan": setting["build"].get("tsan", False),
         "xorigin": any("xorigin" in key for key in setting["runtime"].keys()),
         "socketprocess_networking": "socketprocess_networking"
@@ -228,14 +227,10 @@ class DefaultLoader(BaseManifestLoader):
 
         manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
 
-        filters = None
-        if mozinfo["condprof"]:
-            filters = [tags(["condprof"])]
-
         # Compute  the active tests.
         m = TestManifest()
         m.tests = tests
-        tests = m.active_tests(disabled=False, exists=False, filters=filters, **mozinfo)
+        tests = m.active_tests(disabled=False, exists=False, **mozinfo)
         active = {chunk_by_runtime.get_manifest(t) for t in tests}
         skipped = manifests - active
         return {"active": list(active), "skipped": list(skipped)}
