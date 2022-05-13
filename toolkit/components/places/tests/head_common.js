@@ -36,7 +36,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   PlacesTransactions: "resource://gre/modules/PlacesTransactions.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
@@ -923,19 +922,29 @@ const DB_FILENAME = "places.sqlite";
  * Sets the database to use for the given test.  This should be the very first
  * thing in the test, otherwise this database will not be used!
  *
- * @param aFileName
- *        The filename of the database to use.  This database must exist in
- *        the test folder.
+ * @param {string|string[]} path
+ *        A filename or path to a database. The database must exist.
+ *        If this is a string, then this is assumed to be a filename in the
+ *        directory where the test calling this is located.
+ *        If this is an array, this is assumed to be a path relative to the
+ *        directory that this file, head_common.js, is located.
+ * @param {string} destFileName
+ *        The destination filename to copy the database to.
  * @return {Promise} the final path to the database
  */
-async function setupPlacesDatabase(aFileName, aDestFileName = DB_FILENAME) {
+async function setupPlacesDatabase(path, destFileName = DB_FILENAME) {
   let currentDir = do_get_cwd().path;
 
-  let src = OS.Path.join(currentDir, aFileName);
+  if (typeof path == "string") {
+    path = [path];
+  } else {
+    currentDir = PathUtils.parent(currentDir);
+  }
+  let src = PathUtils.join(currentDir, ...path);
   Assert.ok(await IOUtils.exists(src), "Database file found");
 
   // Ensure that our database doesn't already exist.
-  let dest = OS.Path.join(OS.Constants.Path.profileDir, aDestFileName);
+  let dest = PathUtils.join(PathUtils.profileDir, destFileName);
   Assert.ok(
     !(await IOUtils.exists(dest)),
     "Database file should not exist yet"

@@ -43,7 +43,7 @@ add_task(async function test_json_backup_in_future() {
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
   Assert.notEqual(mostRecentBackupFile, null);
   Assert.ok(
-    PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile))
+    PlacesBackups.filenamesRegex.test(PathUtils.filename(mostRecentBackupFile))
   );
 
   // Check that future backup has been removed.

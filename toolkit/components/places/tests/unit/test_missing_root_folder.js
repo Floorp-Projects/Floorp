@@ -21,7 +21,7 @@ add_task(async function setup() {
   await setupPlacesDatabase("noRoot.sqlite");
 
   // Check database contents to be migrated.
-  let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+  let path = PathUtils.join(PathUtils.profileDir, DB_FILENAME);
   let db = await Sqlite.openConnection({ path });
 
   let rows = await db.execute(

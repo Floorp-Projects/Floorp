@@ -13,7 +13,7 @@ async function countChildren(path) {
   let lastBackupPath = null;
   for (let entry of children) {
     count++;
-    if (PlacesBackups.filenamesRegex.test(OS.Path.basename(entry))) {
+    if (PlacesBackups.filenamesRegex.test(PathUtils.filename(entry))) {
       lastBackupPath = entry;
     }
   }
@@ -25,11 +25,11 @@ add_task(async function check_max_backups_is_respected() {
   let backupFolder = await PlacesBackups.getBackupFolder();
 
   // Create 2 json dummy backups in the past.
-  let oldJsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-01.json");
+  let oldJsonPath = PathUtils.join(backupFolder, "bookmarks-2008-01-01.json");
   await IOUtils.writeUTF8(oldJsonPath, "");
   Assert.ok(await IOUtils.exists(oldJsonPath));
 
-  let jsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-31.json");
+  let jsonPath = PathUtils.join(backupFolder, "bookmarks-2008-01-31.json");
   await IOUtils.writeUTF8(jsonPath, "");
   Assert.ok(await IOUtils.exists(jsonPath));
 
