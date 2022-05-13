@@ -305,15 +305,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     "help": "do not run tests with fission enabled.",
                 },
             ],
-            [
-                ["--conditioned-profile"],
-                {
-                    "action": "store_true",
-                    "default": False,
-                    "dest": "conditioned_profile",
-                    "help": "run tests with a conditioned profile",
-                },
-            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -653,9 +644,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c["crash_as_pass"]:
                 base_cmd.append("--crash-as-pass")
-
-            if c["conditioned_profile"]:
-                base_cmd.append("--conditioned-profile")
 
             # set pluginsPath
             abs_res_plugins_dir = os.path.join(abs_res_dir, "plugins")
