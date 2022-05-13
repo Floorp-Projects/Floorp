@@ -27,8 +27,6 @@ include protocol PStreamFilter;
 include protocol PGMPContent;
 include protocol PGMPService;
 include protocol PGMP;
-include protocol PChildToParentStream;
-include protocol PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
 include protocol PSpeechSynthesis;
 #endif
@@ -471,8 +469,6 @@ sync protocol PContent
     manages PRemotePrintJob;
     manages PMedia;
     manages PNecko;
-    manages PChildToParentStream;
-    manages PParentToChildStream;
 #ifdef MOZ_WEBSPEECH
     manages PSpeechSynthesis;
 #endif
@@ -863,8 +859,6 @@ child:
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
 
-    async PParentToChildStream();
-
     async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
 
     async SetPermissionsWithKey(nsCString aPermissionKey, Permission[] aPermissions);
@@ -1089,8 +1083,6 @@ parent:
     async PHeapSnapshotTempFileHelper();
 
     async PNecko();
-
-    async PChildToParentStream();
 
 #ifdef MOZ_WEBSPEECH
     async PSpeechSynthesis();

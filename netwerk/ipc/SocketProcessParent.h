@@ -74,13 +74,6 @@ class SocketProcessParent final
       const FileDescriptor& fd);
   bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor);
 
-  PChildToParentStreamParent* AllocPChildToParentStreamParent();
-  bool DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor);
-  PParentToChildStreamParent* AllocPParentToChildStreamParent();
-  bool DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor);
-
-  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) override;
   PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 

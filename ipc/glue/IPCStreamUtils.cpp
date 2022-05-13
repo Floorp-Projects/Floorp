@@ -289,10 +289,6 @@ void ActivateAndCleanupIPCStream(IPCStream& aValue, bool aConsumedByIPC,
       Unused << FileDescriptorSetParent::Send__delete__(fdSetActor);
     }
   }
-
-  // Activate IPCRemoteStreamParams.
-  InputStreamHelper::PostSerializationActivation(aValue.stream(),
-                                                 aConsumedByIPC, aDelayedStart);
 }
 
 void ActivateAndCleanupIPCStream(Maybe<IPCStream>& aValue, bool aConsumedByIPC,
@@ -325,10 +321,6 @@ bool NormalizeOptionalValue(nsIInputStream* aStream, IPCStream* aValue,
 }  // anonymous namespace
 
 already_AddRefed<nsIInputStream> DeserializeIPCStream(const IPCStream& aValue) {
-  // Note, we explicitly do not support deserializing the PChildToParentStream
-  // actor on the child side nor the PParentToChildStream actor on the parent
-  // side.
-
   AutoTArray<FileDescriptor, 4> fds;
   if (aValue.optionalFds().type() ==
       OptionalFileDescriptorSet::TPFileDescriptorSetParent) {

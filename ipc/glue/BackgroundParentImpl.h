@@ -18,8 +18,6 @@ namespace mozilla::ipc {
 class BackgroundParentImpl : public PBackgroundParent,
                              public ParentToChildStreamActorManager {
  public:
-  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) override;
   PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
@@ -240,16 +238,6 @@ class BackgroundParentImpl : public PBackgroundParent,
       const nsCString& origin, const nsString& channel) override;
 
   bool DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) override;
-
-  PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
-
-  bool DeallocPChildToParentStreamParent(
-      PChildToParentStreamParent* aActor) override;
-
-  PParentToChildStreamParent* AllocPParentToChildStreamParent() override;
-
-  bool DeallocPParentToChildStreamParent(
-      PParentToChildStreamParent* aActor) override;
 
   PServiceWorkerManagerParent* AllocPServiceWorkerManagerParent() override;
 

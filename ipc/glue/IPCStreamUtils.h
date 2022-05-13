@@ -36,8 +36,7 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
     const Maybe<IPCStream>& aValue);
 
 // RAII helper class that serializes an nsIInputStream into an IPCStream struct.
-// Any file descriptor or PChildToParentStream actors are automatically managed
-// correctly.
+// Any file descriptor actors are automatically managed correctly.
 //
 // Here is a simple example:
 //
@@ -64,8 +63,7 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 //    nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aIPCStream);
 //    // Do something with stream...
 //
-//    // You can also serialize streams from parent-to-child as long as
-//    // they don't require PChildToParentStream actor support.
+//    // You can also serialize streams from parent-to-child.
 //    AutoIPCStream anotherStream;
 //    anotherStream.Serialize(mFileStream, Manager());
 //    SendStuffDone(anotherStream.TakeValue());
@@ -114,9 +112,7 @@ already_AddRefed<nsIInputStream> DeserializeIPCStream(
 // TakeOptionalValue() instead.
 //
 // The AutoIPCStream class can also be used to serialize nsIInputStream objects
-// on the parent side to send to the child.  Currently, however, this only
-// works for directly serializable stream types.  The PChildToParentStream actor
-// mechanism is not supported in this direction yet.
+// on the parent side to send to the child.
 //
 // Like SerializeInputStream(), the AutoIPCStream will crash if
 // serialization cannot be completed.
