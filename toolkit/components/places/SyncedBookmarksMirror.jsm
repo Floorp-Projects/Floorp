@@ -60,7 +60,6 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
   Log: "resource://gre/modules/Log.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
@@ -312,7 +311,12 @@ class SyncedBookmarksMirror {
     if (!db) {
       throw new TypeError("Can't open mirror without Places connection");
     }
-    let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
+    let path;
+    if (PathUtils.isAbsolute(options.path)) {
+      path = options.path;
+    } else {
+      path = PathUtils.join(PathUtils.profileDir, options.path);
+    }
     let wasCorrupt = false;
     try {
       await attachAndInitMirrorDatabase(db, path);

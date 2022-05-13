@@ -47,11 +47,11 @@ function checkItemHasAnnotation(guid, name) {
 }
 
 var createCorruptDB = async function() {
-  let dbPath = OS.Path.join(OS.Constants.Path.profileDir, "places.sqlite");
+  let dbPath = PathUtils.join(PathUtils.profileDir, "places.sqlite");
   await IOUtils.remove(dbPath);
 
   // Create a corrupt database.
-  let src = OS.Path.join(do_get_cwd().path, "corruptDB.sqlite");
+  let src = PathUtils.join(do_get_cwd().path, "corruptDB.sqlite");
   await IOUtils.copy(src, dbPath);
 
   // Check there's a DB now.

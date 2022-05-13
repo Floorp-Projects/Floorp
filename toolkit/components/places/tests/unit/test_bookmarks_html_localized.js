@@ -30,7 +30,7 @@ bookmarks-html-localized-bookmark = Localized Bookmark
 });
 
 add_task(async function test_bookmarks_html_localized() {
-  let bookmarksFile = OS.Path.join(
+  let bookmarksFile = PathUtils.join(
     do_get_cwd().path,
     "bookmarks_html_localized.html"
   );
