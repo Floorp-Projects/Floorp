@@ -79,7 +79,7 @@ COMPILE_FLAGS["OS_CXXFLAGS"] = [
     "-verify",
     "-ferror-limit=0",
     "-Wno-invalid-noreturn",
-    "-Wno-invalid-offsetof" # For js headers included in JSHandleRootedTypedefChecker.cpp
+    "-Wno-invalid-offsetof",  # For js headers included in JSHandleRootedTypedefChecker.cpp
 ]
 COMPILE_FLAGS["OS_CFLAGS"] = [
     f for f in COMPILE_FLAGS.get("OS_CFLAGS", []) if not f.startswith("-W")
