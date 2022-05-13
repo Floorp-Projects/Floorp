@@ -27,6 +27,8 @@ class nsTString : public nsTSubstring<T> {
  public:
   typedef nsTString<T> self_type;
 
+  using repr_type = mozilla::detail::nsTStringRepr<T>;
+
 #ifdef __clang__
   // bindgen w/ clang 3.9 at least chokes on a typedef, but using is okay.
   using typename nsTSubstring<T>::substring_type;
@@ -176,165 +178,14 @@ class nsTString : public nsTSubstring<T> {
 
   char_type operator[](index_type aIndex) const { return CharAt(aIndex); }
 
-  /**
-   *  Search for the given substring within this string.
-   *
-   *  @param   aString is substring to be sought in this
-   *  @param   aIgnoreCase selects case sensitivity
-   *  @param   aOffset tells us where in this string to start searching
-   *  @param   aCount tells us how far from the offset we are to search. Use
-   *           -1 to search the whole string.
-   *  @return  offset in string, or kNotFound
-   */
-
-  int32_t Find(const nsTString<char>& aString, bool aIgnoreCase = false,
-               int32_t aOffset = 0, int32_t aCount = -1) const;
-  int32_t Find(const char* aString, bool aIgnoreCase = false,
-               int32_t aOffset = 0, int32_t aCount = -1) const;
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t Find(const self_type& aString, int32_t aOffset = 0,
-               int32_t aCount = -1) const;
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t Find(const char_type* aString, int32_t aOffset = 0,
-               int32_t aCount = -1) const;
-#ifdef MOZ_USE_CHAR16_WRAPPER
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t Find(char16ptr_t aString, int32_t aOffset = 0,
-               int32_t aCount = -1) const {
-    return Find(static_cast<const char16_t*>(aString), aOffset, aCount);
-  }
-#endif
-
-  /**
-   * This methods scans the string backwards, looking for the given string
-   *
-   * @param   aString is substring to be sought in this
-   * @param   aIgnoreCase tells us whether or not to do caseless compare
-   * @param   aOffset tells us where in this string to start searching.
-   *          Use -1 to search from the end of the string.
-   * @param   aCount tells us how many iterations to make starting at the
-   *          given offset.
-   * @return  offset in string, or kNotFound
-   */
-
-  // Case aIgnoreCase option only with char versions
-  int32_t RFind(const nsTString<char>& aString, bool aIgnoreCase = false,
-                int32_t aOffset = -1, int32_t aCount = -1) const;
-  int32_t RFind(const char* aCString, bool aIgnoreCase = false,
-                int32_t aOffset = -1, int32_t aCount = -1) const;
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t RFind(const self_type& aString, int32_t aOffset = -1,
-                int32_t aCount = -1) const;
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t RFind(const char_type* aString, int32_t aOffset = -1,
-                int32_t aCount = -1) const;
-
-  /**
-   *  Search for given char within this string
-   *
-   *  @param   aChar is the character to search for
-   *  @param   aOffset tells us where in this string to start searching
-   *  @param   aCount tells us how far from the offset we are to search.
-   *           Use -1 to search the whole string.
-   *  @return  offset in string, or kNotFound
-   */
-
-  // int32_t FindChar( char16_t aChar, int32_t aOffset=0,
-  //                   int32_t aCount=-1 ) const;
-  int32_t RFindChar(char16_t aChar, int32_t aOffset = -1,
-                    int32_t aCount = -1) const;
-
-  /**
-   * This method searches this string for the first character found in
-   * the given string.
-   *
-   * @param aString contains set of chars to be found
-   * @param aOffset tells us where in this string to start searching
-   *        (counting from left)
-   * @return offset in string, or kNotFound
-   */
-
-  int32_t FindCharInSet(const char_type* aString, int32_t aOffset = 0) const;
-  int32_t FindCharInSet(const self_type& aString, int32_t aOffset = 0) const {
-    return FindCharInSet(aString.get(), aOffset);
-  }
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  int32_t FindCharInSet(const char* aSet, int32_t aOffset = 0) const;
-
-  /**
-   * This method searches this string for the last character found in
-   * the given string.
-   *
-   * @param aString contains set of chars to be found
-   * @param aOffset tells us where in this string to start searching
-   *        (counting from left)
-   * @return offset in string, or kNotFound
-   */
-
-  int32_t RFindCharInSet(const char_type* aString, int32_t aOffset = -1) const;
   int32_t RFindCharInSet(const self_type& aString, int32_t aOffset = -1) const {
-    return RFindCharInSet(aString.get(), aOffset);
+    return repr_type::RFindCharInSet(aString.get(), aOffset);
   }
-
-  /**
-   * Perform string to double-precision float conversion.
-   *
-   * @param   aErrorCode will contain error if one occurs
-   * @return  double-precision float rep of string value
-   */
-  double ToDouble(nsresult* aErrorCode) const;
-
-  /**
-   * Perform string to single-precision float conversion.
-   *
-   * @param   aErrorCode will contain error if one occurs
-   * @return  single-precision float rep of string value
-   */
-  float ToFloat(nsresult* aErrorCode) const;
-
-  /**
-   * Similar to above ToDouble and ToFloat but allows trailing characters that
-   * are not converted.
-   */
-  double ToDoubleAllowTrailingChars(nsresult* aErrorCode) const;
-  float ToFloatAllowTrailingChars(nsresult* aErrorCode) const;
-
-  /**
-   * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
-   * any _other_ way than they are now.  Consider these alternatives
-   *
-   * // ...a member function that returns a |Substring|
-   * aWritable = aReadable.Left(17);
-   * // ...a global function that returns a |Substring|
-   * aWritable = Left(aReadable, 17);
-   * // ...a global function that does the assignment
-   * Left(aReadable, 17, aWritable);
-   *
-   * as opposed to the current signature
-   *
-   * // ...a member function that does the assignment
-   * aReadable.Left(aWritable, 17);
-   *
-   * or maybe just stamping them out in favor of |Substring|, they are just
-   * duplicate functionality
-   *
-   * aWritable = Substring(aReadable, 0, 17);
-   */
-
-  size_type Mid(self_type& aResult, index_type aStartPos,
-                size_type aCount) const;
-
-  size_type Left(self_type& aResult, size_type aCount) const {
-    return Mid(aResult, 0, aCount);
+  using repr_type::RFindCharInSet;
+  int32_t FindCharInSet(const self_type& aString, int32_t aOffset = 0) const {
+    return repr_type::FindCharInSet(aString.get(), aOffset);
   }
-
-  size_type Right(self_type& aResult, size_type aCount) const {
-    aCount = XPCOM_MIN(this->Length(), aCount);
-    return Mid(aResult, this->mLength - aCount, aCount);
-  }
+  using repr_type::FindCharInSet;
 
   /**
    * Set a char inside this string at given index
@@ -343,76 +194,7 @@ class nsTString : public nsTSubstring<T> {
    * @param anIndex is the ofs where you want to write the given char
    * @return TRUE if successful
    */
-
   bool SetCharAt(char16_t aChar, index_type aIndex);
-
-  /**
-   *  These methods are used to remove all occurrences of the
-   *  characters found in aSet from this string.
-   *
-   *  @param  aSet -- characters to be cut from this
-   */
-  void StripChars(const char_type* aSet);
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  bool StripChars(const incompatible_char_type* aSet, const fallible_t&);
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  void StripChars(const incompatible_char_type* aSet);
-
-  /**
-   *  This method strips whitespace throughout the string.
-   */
-  void StripWhitespace();
-  bool StripWhitespace(const fallible_t&);
-
-  /**
-   *  swaps occurence of 1 string for another
-   */
-
-  void ReplaceChar(char_type aOldChar, char_type aNewChar);
-  void ReplaceChar(const char_type* aSet, char_type aNewChar);
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  void ReplaceChar(const char* aSet, char16_t aNewChar);
-
-  /**
-   * Replace all occurrences of aTarget with aNewValue.
-   * The complexity of this function is O(n+m), n being the length of the string
-   * and m being the length of aNewValue.
-   */
-  void ReplaceSubstring(const self_type& aTarget, const self_type& aNewValue);
-  void ReplaceSubstring(const char_type* aTarget, const char_type* aNewValue);
-  [[nodiscard]] bool ReplaceSubstring(const self_type& aTarget,
-                                      const self_type& aNewValue,
-                                      const fallible_t&);
-  [[nodiscard]] bool ReplaceSubstring(const char_type* aTarget,
-                                      const char_type* aNewValue,
-                                      const fallible_t&);
-
-  /**
-   *  This method trims characters found in aTrimSet from
-   *  either end of the underlying string.
-   *
-   *  @param   aSet -- contains chars to be trimmed from both ends
-   *  @param   aEliminateLeading
-   *  @param   aEliminateTrailing
-   *  @param   aIgnoreQuotes -- if true, causes surrounding quotes to be ignored
-   *  @return  this
-   */
-  void Trim(const char* aSet, bool aEliminateLeading = true,
-            bool aEliminateTrailing = true, bool aIgnoreQuotes = false);
-
-  /**
-   *  This method strips whitespace from string.
-   *  You can control whether whitespace is yanked from start and end of
-   *  string as well.
-   *
-   *  @param   aEliminateLeading controls stripping of leading ws
-   *  @param   aEliminateTrailing controls stripping of trailing ws
-   */
-  void CompressWhitespace(bool aEliminateLeading = true,
-                          bool aEliminateTrailing = true);
 
   /**
    * Allow this string to be bound to a character buffer
@@ -447,26 +229,10 @@ class nsTString : public nsTSubstring<T> {
       : substring_type(char_traits::sEmptyBuffer, 0,
                        aDataFlags | DataFlags::TERMINATED,
                        ClassFlags::NULL_TERMINATED) {}
-
-  enum class TrailingCharsPolicy {
-    Disallow,
-    Allow,
-  };
-  // Utility function for ToDouble and ToDoubleAllowTrailingChars.
-  double ToDouble(TrailingCharsPolicy aTrailingCharsPolicy,
-                  nsresult* aErrorCode) const;
-
-  struct Segment {
-    uint32_t mBegin, mLength;
-    Segment(uint32_t aBegin, uint32_t aLength)
-        : mBegin(aBegin), mLength(aLength) {}
-  };
 };
 
-// TODO(erahm): Do something with ToDouble so that we can extern the
-// nsTString templates.
-// extern template class nsTString<char>;
-// extern template class nsTString<char16_t>;
+extern template class nsTString<char>;
+extern template class nsTString<char16_t>;
 
 /**
  * nsTAutoStringN
