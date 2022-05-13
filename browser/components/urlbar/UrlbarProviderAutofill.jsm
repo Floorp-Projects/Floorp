@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const QUERYTYPE = {
   AUTOFILL_ORIGIN: 1,
   AUTOFILL_URL: 2,
+  AUTOFILL_ADAPTIVE: 3,
 };
 
 // `WITH` clause for the autofill queries.  autofill_frecency_threshold.value is
@@ -557,6 +558,54 @@ class ProviderAutofill extends UrlbarProvider {
     throw new Error("Either history or bookmark behavior expected");
   }
 
+  _getAdaptiveHistoryQuery(queryContext) {
+    let additionalCondition;
+    if (
+      queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY) &&
+      queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
+    ) {
+      // No additional condition needed.
+    } else if (
+      queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.HISTORY)
+    ) {
+      additionalCondition = "(h.foreign_count = 0 OR h.visit_count > 0)";
+    } else if (
+      queryContext.sources.includes(UrlbarUtils.RESULT_SOURCE.BOOKMARKS)
+    ) {
+      additionalCondition = "h.foreign_count > 0";
+    } else {
+      return [];
+    }
+
+    const params = {
+      queryType: QUERYTYPE.AUTOFILL_ADAPTIVE,
+      searchString: queryContext.searchString.toLowerCase(),
+      useCountThreshold: UrlbarPrefs.get(
+        "autoFill.adaptiveHistory.useCountThreshold"
+      ),
+    };
+
+    const query = `
+      SELECT
+        :queryType AS query_type,
+        h.url AS url,
+        fixup_url(h.url) AS fixed_url,
+        fixup_url(h.url) COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF' AS fixed_url_match
+      FROM moz_places h
+      JOIN moz_inputhistory i ON i.place_id = h.id
+      WHERE i.input COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF'
+      AND (
+        fixed_url_match OR (h.url COLLATE NOCASE BETWEEN :searchString AND :searchString || X'FFFF')
+      )
+      AND i.use_count >= :useCountThreshold
+      ${additionalCondition ? `AND ${additionalCondition}` : ""}
+      ORDER BY i.use_count DESC, fixed_url_match DESC, h.frecency DESC, h.id DESC
+      LIMIT 1
+    `;
+
+    return [query, params];
+  }
+
   /**
    * Processes a matched row in the Places database.
    * @param {object} row
@@ -601,6 +650,10 @@ class ProviderAutofill extends UrlbarProvider {
           autofilledValue = url.substring(strippedURLIndex, nextSlashIndex + 1);
         }
         finalCompleteValue = strippedPrefix + autofilledValue;
+        break;
+      case QUERYTYPE.AUTOFILL_ADAPTIVE:
+        autofilledValue = row.getResultByName("fixed_url");
+        finalCompleteValue = row.getResultByName("url");
         break;
     }
 
@@ -693,6 +746,18 @@ class ProviderAutofill extends UrlbarProvider {
     if (!conn) {
       return null;
     }
+
+    // We try to autofill with adaptive history first.
+    if (UrlbarPrefs.get("autoFill.adaptiveHistory.enabled")) {
+      const [query, params] = this._getAdaptiveHistoryQuery(queryContext);
+      if (query) {
+        const resultSet = await conn.executeCached(query, params);
+        if (resultSet.length) {
+          return this._processRow(resultSet[0], queryContext);
+        }
+      }
+    }
+
     // If search string looks like an origin, try to autofill against origins.
     // Otherwise treat it as a possible URL.  When the string has only one slash
     // at the end, we still treat it as an URL.
