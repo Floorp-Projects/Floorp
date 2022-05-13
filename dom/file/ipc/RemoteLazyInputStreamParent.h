@@ -13,96 +13,30 @@ class nsIInputStream;
 
 namespace mozilla {
 
-namespace dom {
-class ContentParent;
-}
-
-namespace net {
-class SocketProcessParent;
-}
-
-class NS_NO_VTABLE RemoteLazyInputStreamParentCallback {
- public:
-  virtual void ActorDestroyed(const nsID& aID) = 0;
-
-  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
-
- protected:
-  virtual ~RemoteLazyInputStreamParentCallback() = default;
-};
-
 class RemoteLazyInputStreamParent final : public PRemoteLazyInputStreamParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteLazyInputStreamParent, final)
 
-  // The size of the inputStream must be passed as argument in order to avoid
-  // the use of nsIInputStream::Available() which could open a fileDescriptor in
-  // case the stream is a nsFileStream.
-  static already_AddRefed<RemoteLazyInputStreamParent> Create(
-      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-      nsresult* aRv, mozilla::dom::ContentParent* aManager);
-
-  static already_AddRefed<RemoteLazyInputStreamParent> Create(
-      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-      nsresult* aRv, mozilla::ipc::PBackgroundParent* aManager);
-
-  static already_AddRefed<RemoteLazyInputStreamParent> Create(
-      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-      nsresult* aRv, mozilla::net::SocketProcessParent* aManager);
-
-  static already_AddRefed<RemoteLazyInputStreamParent> Create(
-      const nsID& aID, uint64_t aSize,
-      mozilla::ipc::PBackgroundParent* aManager);
-
-  static already_AddRefed<RemoteLazyInputStreamParent> Create(
-      const nsID& aID, uint64_t aSize,
-      mozilla::net::SocketProcessParent* aManager);
-
-  void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
+  explicit RemoteLazyInputStreamParent(const nsID& aID);
 
   const nsID& ID() const { return mID; }
 
-  uint64_t Size() const { return mSize; }
+  mozilla::ipc::IPCResult RecvClone(
+      mozilla::ipc::Endpoint<PRemoteLazyInputStreamParent>&& aCloneEndpoint);
 
-  void SetCallback(RemoteLazyInputStreamParentCallback* aCallback);
+  mozilla::ipc::IPCResult RecvStreamNeeded(uint64_t aStart, uint64_t aLength,
+                                           StreamNeededResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvStreamNeeded();
+  mozilla::ipc::IPCResult RecvLengthNeeded(LengthNeededResolver&& aResolver);
 
-  mozilla::ipc::IPCResult RecvLengthNeeded();
+  mozilla::ipc::IPCResult RecvGoodbye();
 
-  mozilla::ipc::IPCResult RecvClose();
-
-  mozilla::ipc::IPCResult Recv__delete__() override;
+  void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
  private:
-  template <typename M>
-  static already_AddRefed<RemoteLazyInputStreamParent> CreateCommon(
-      nsIInputStream* aInputStream, uint64_t aSize, uint64_t aChildID,
-      nsresult* aRv, M* aManager);
-
-  RemoteLazyInputStreamParent(const nsID& aID, uint64_t aSize,
-                              mozilla::dom::ContentParent* aManager);
-
-  RemoteLazyInputStreamParent(const nsID& aID, uint64_t aSize,
-                              mozilla::ipc::PBackgroundParent* aManager);
-
-  RemoteLazyInputStreamParent(const nsID& aID, uint64_t aSize,
-                              mozilla::net::SocketProcessParent* aManager);
-
   ~RemoteLazyInputStreamParent() override = default;
 
   const nsID mID;
-  const uint64_t mSize;
-
-  // Only 1 of these is set. Raw pointer because these managers are keeping
-  // the parent actor alive. The pointers will be nullified in ActorDestroyed.
-  mozilla::dom::ContentParent* mContentManager;
-  mozilla::ipc::PBackgroundParent* mPBackgroundManager;
-  mozilla::net::SocketProcessParent* mSocketProcessManager;
-
-  RefPtr<RemoteLazyInputStreamParentCallback> mCallback;
-
-  bool mMigrating;
 };
 
 }  // namespace mozilla

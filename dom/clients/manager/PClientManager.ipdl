@@ -7,7 +7,6 @@ include protocol PClientHandle;
 include protocol PClientManagerOp;
 include protocol PClientNavigateOp;
 include protocol PClientSource;
-include protocol PRemoteLazyInputStream;
 include ClientIPCTypes;
 
 namespace mozilla {

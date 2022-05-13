@@ -654,20 +654,6 @@ bool BackgroundParentImpl::DeallocPTemporaryIPCBlobParent(
   return true;
 }
 
-already_AddRefed<PRemoteLazyInputStreamParent>
-BackgroundParentImpl::AllocPRemoteLazyInputStreamParent(const nsID& aID,
-                                                        const uint64_t& aSize) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-
-  // There is nothing to construct here, so we do not implement
-  // RecvPRemoteLazyInputStreamConstructor.
-
-  RefPtr<RemoteLazyInputStreamParent> actor =
-      RemoteLazyInputStreamParent::Create(aID, aSize, this);
-  return actor.forget();
-}
-
 already_AddRefed<BackgroundParentImpl::PVsyncParent>
 BackgroundParentImpl::AllocPVsyncParent() {
   AssertIsInMainOrSocketProcess();

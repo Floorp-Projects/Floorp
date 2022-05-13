@@ -5,7 +5,6 @@
 include protocol PBackgroundIDBTransaction;
 include protocol PBackgroundIDBVersionChangeTransaction;
 include protocol PBackgroundMutableFile;
-include protocol PRemoteLazyInputStream; // FIXME: bug 792908
 
 include PBackgroundIDBSharedTypes;
 
