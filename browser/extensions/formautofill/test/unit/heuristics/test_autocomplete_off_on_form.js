@@ -1,26 +1,19 @@
-/* global runHeuristicsTest */
+/* Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
+/* global runHeuristicsTest */
+
+// Ensures that fields are identified correctly even when the containing form
+// has its autocomplete attribute set to off.
 runHeuristicsTest(
   [
     {
-      fixturePath: "ShippingAddress.html",
+      fixturePath: "autocomplete_off_on_form.html",
       expectedResult: [
         [
           [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
             {
               section: "",
               addressType: "",
@@ -31,19 +24,7 @@ runHeuristicsTest(
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "address-line1",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "address-line2",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "postal-code",
+              fieldName: "street-address",
             },
             {
               section: "",
@@ -56,33 +37,20 @@ runHeuristicsTest(
               addressType: "",
               contactType: "",
               fieldName: "address-level1",
-            }, // state
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-area-code",
             },
             {
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "tel-local-prefix",
+              fieldName: "postal-code",
             },
             {
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "tel-local-suffix",
+              fieldName: "country",
             },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-extension",
-            },
-
+            { section: "", addressType: "", contactType: "", fieldName: "tel" },
             {
               section: "",
               addressType: "",
@@ -91,26 +59,8 @@ runHeuristicsTest(
             },
           ],
         ],
-        [],
-      ],
-    },
-    {
-      fixturePath: "Payment.html",
-      expectedResult: [
         [
           [
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "given-name",
-            },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "family-name",
-            },
             {
               section: "",
               addressType: "",
@@ -133,7 +83,7 @@ runHeuristicsTest(
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "postal-code",
+              fieldName: "address-line3",
             },
             {
               section: "",
@@ -146,33 +96,20 @@ runHeuristicsTest(
               addressType: "",
               contactType: "",
               fieldName: "address-level1",
-            }, // state
-
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-area-code",
             },
             {
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "tel-local-prefix",
+              fieldName: "postal-code",
             },
             {
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "tel-local-suffix",
+              fieldName: "country",
             },
-            {
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "tel-extension",
-            },
-
+            { section: "", addressType: "", contactType: "", fieldName: "tel" },
             {
               section: "",
               addressType: "",
@@ -181,6 +118,18 @@ runHeuristicsTest(
             },
           ],
           [
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "cc-number",
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "cc-name",
+            },
             {
               section: "",
               addressType: "",
@@ -193,35 +142,44 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "cc-exp-year",
             },
-            // FIXME: bug 1392950 - the membership number should not be detected
-            // as cc-number.
+          ],
+        ],
+        [
+          [
             {
               section: "",
               addressType: "",
               contactType: "",
-              fieldName: "cc-number",
+              fieldName: "address-line1",
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-level2",
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line2",
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "organization",
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line3",
             },
           ],
         ],
       ],
     },
-    {
-      fixturePath: "SignIn.html",
-      expectedResult: [
-        [
-          // ac-off
-          [
-            { 
-              section: "",
-              addressType: "",
-              contactType: "",
-              fieldName: "email"
-            },
-          ]
-          
-        ],
-      ],
-    },
   ],
-  "../../../fixtures/third_party/OfficeDepot/"
+  "../../fixtures/"
 );
