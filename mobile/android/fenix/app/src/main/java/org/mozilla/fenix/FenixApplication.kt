@@ -72,6 +72,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.isCustomEngine
 import org.mozilla.fenix.ext.isKnownSearchDomain
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
@@ -393,7 +394,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     private fun setupMegazord(): Deferred<Unit> {
         // Note: Megazord.init() must be called as soon as possible ...
         Megazord.init()
-
+        // Give the generated FxNimbus a closure to lazily get the Nimbus object
+        FxNimbus.initialize { components.analytics.experiments }
         return GlobalScope.async(Dispatchers.IO) {
             // ... but RustHttpConfig.setClient() and RustLog.enable() can be called later.
             RustHttpConfig.setClient(lazy { components.core.client })

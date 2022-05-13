@@ -124,9 +124,7 @@ class Analytics(
     }
 
     val experiments: NimbusApi by lazyMonitored {
-        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT).also { api ->
-            FxNimbus.api = api
-        }
+        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT)
     }
 
     val messagingStorage by lazyMonitored {
