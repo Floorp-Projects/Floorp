@@ -33,7 +33,7 @@ impl CascadeFilter {
     xpcom_method!(set_filter_data => SetFilterData(data: *const ThinVec<u8>));
 
     fn set_filter_data(&self, data: &ThinVec<u8>) -> Result<(), nsresult> {
-        let filter = *Cascade::from_bytes(data.to_vec())
+        let filter = Cascade::from_bytes(data.to_vec())
             .unwrap_or(None)
             .ok_or(NS_ERROR_INVALID_ARG)?;
         self.filter.borrow_mut().replace(filter);
@@ -45,7 +45,7 @@ impl CascadeFilter {
     fn has(&self, key: &nsACString) -> Result<bool, nsresult> {
         match self.filter.borrow().as_ref() {
             None => Err(NS_ERROR_NOT_INITIALIZED),
-            Some(filter) => Ok(filter.has(&*key)),
+            Some(filter) => Ok(filter.has(key.to_vec())),
         }
     }
 }
