@@ -2,8 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-browser.jar:
-    content/browser/colorwaycloset.html
-    content/browser/ColorwayClosetSelector.js
-    content/browser/colorwaycloset.css
-    content/browser/colorwaycloset.js
+colorway-collection-life-in-color = Life In Color
+colorway-collection-true-colors = True Colors
