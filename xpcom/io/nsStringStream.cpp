@@ -450,6 +450,19 @@ nsStringInputStream::Tell(int64_t* aOutWhere) {
 // nsIIPCSerializableInputStream implementation
 /////////
 
+void nsStringInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                               uint32_t* aSizeUsed,
+                                               uint32_t* aPipes,
+                                               uint32_t* aTransferables) {
+  ReentrantMonitorAutoEnter lock(mMon);
+
+  if (Length() >= aMaxSize) {
+    *aPipes = 1;
+  } else {
+    *aSizeUsed = Length();
+  }
+}
+
 void nsStringInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& /* aFDs */,
     bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
