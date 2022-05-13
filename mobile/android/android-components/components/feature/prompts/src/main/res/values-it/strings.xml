@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Non salvare</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Non salvare mai</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Non adesso</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Salva</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Espandi l’elenco delle carte di credito suggerite</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Comprimi l’elenco delle carte di credito suggerite</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Gestisci carte di credito</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Salvare questa carta in modo sicuro?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Aggiornare la data di scadenza della carta?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Il numero della carta sarà crittato. Il codice di sicurezza non verrà salvato.</string>
 </resources>

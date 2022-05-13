@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">저장 안 함</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">저장 안 함</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">나중에</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">저장</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">제안된 신용 카드 펼치기</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">제안된 신용 카드 접기</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">신용 카드 관리</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">이 카드를 안전하게 저장하시겠습니까?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">카드 유효 기간을 업데이트하시겠습니까?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">카드 번호는 암호화됩니다. 보안 코드는 저장되지 않습니다.</string>
 </resources>

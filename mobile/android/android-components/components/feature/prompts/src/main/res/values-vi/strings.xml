@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Không lưu</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Không bao giờ lưu</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Không phải bây giờ</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Lưu</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Mở rộng thẻ tín dụng được đề xuất</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Thu gọn thẻ tín dụng được đề xuất</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Quản lý thẻ tín dụng</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Lưu thẻ này một cách an toàn?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Cập nhật ngày hết hạn thẻ?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Số thẻ sẽ được mã hóa. Mã bảo mật sẽ không được lưu.</string>
 </resources>

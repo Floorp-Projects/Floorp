@@ -38,6 +38,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">کلپ بورڈ کنوں ڈیٹا گھنو</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">کلپ بورڈ وچ ڈیٹا پاؤ</string>
+    <!-- Description for downloads permission. -->
+    <string name="mozac_feature_addons_permissions_downloads_description">فائلاں ڈاؤن لوڈ کرو تے براؤزر دی ڈاؤن لوڈ تاریخ پڑھو تے تجدید کرو</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">آپݨے ڈیوائس تے ڈاؤن لوڈ تھیاں فائلاں کھولو</string>
     <!-- Description for find permission. -->
@@ -46,6 +48,14 @@
     <string name="mozac_feature_addons_permissions_geolocation_description">آپݨے مقام تائیں اپڑو</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">براؤزنگ تاریخ تے اپڑو</string>
+    <!-- Description for management permission. -->
+    <string name="mozac_feature_addons_permissions_management_description">ایکسٹنشن ورتاوے دی نگرانی کرو تے تھیم منیج کرو</string>
+    <!-- Description for native_messaging permission. -->
+    <string name="mozac_feature_addons_permissions_native_messaging_description">ایں ایپ دے علاوہ کہیں ٻئی ایپ نال سنیہاں دا تبادلہ کرو</string>
+    <!-- Description for notifications permission. -->
+    <string name="mozac_feature_addons_permissions_notifications_description">تہاݙے کیتے اطلاع نامیاں دی نمائش تھیوے</string>
+    <!-- Description for pkcs11 permission. -->
+    <string name="mozac_feature_addons_permissions_pkcs11_description">کریپٹو گرافک تصدیق دیاں خدمات فراہم کرو</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">براؤزر دیاں پراکسی ترتیباں کوں کنٹرول کرو</string>
     <!-- Description for sessions permission. -->
@@ -138,6 +148,10 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s تے %2$s کوں %3$s وچ جوڑو</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">اُنہاں کوں %1$s وچ شامل کرو</string>
+    <!-- This is the caption for the add-on installation progress overlay -->
+    <string name="mozac_add_on_install_progress_caption">ایڈ ــ آن کوں ڈاؤن لوڈ تے تصدیق کریندا پئے۔۔۔</string>
+    <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
+    <string name="mozac_feature_addons_failed_to_query_add_ons">ایڈ ــ آن دریافت کرݨ وچ ناکام!</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s کامیابی نال انسٹال تھی ڳیا</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->

@@ -216,6 +216,14 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">Protokola Nenas</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Navnîşan protokolekê destnîşan dike (mînak, <q>wxyz://</q>) ku gerok wê nas nake, loma gerok nikare bi asayî bi malperê ve bê girîdan.</p>
+      <ul>
+        <li>Tu dixwazî xwe bigihînî multîmedyayekê yan jî xizmeteke din ya ne nivîskî? Malperê ji bo pêdiviyên zêdek kontrol bike.</li>
+        <li>Dibe ku ji bo hin protokolan beriya gerok wan nas bike, nermalav yan jî pêvekên partiya sêyemîn bivên.</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">Rûpel nehate dîtin</string>
 

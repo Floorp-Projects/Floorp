@@ -33,6 +33,10 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">ودھایا۔۔۔</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>تھی  سڳدا ہے جو کوئی سائٹ دی نقل بݨیندا پیا ہے تے تساں جاری نہ رکھو۔</label>
+        <br><br>
+        <label>ویب سائٹساں سرٹیفکیٹ دے ذریعہ آپݨی سُن٘ڄاݨ ثابت کریندیاں ہن۔ %1$s، ایں <b>%2$s</b> تے  بھروسہ کائنی کریندا کیوں جو سرٹیفکیٹ جاری کرݨ آلا نامعلوم ہے، سرٹیفکیٹ تے  خود آپ دستخط کیتے ہوئے ہن یا سرور صحیح درمیانی سرٹیفیکیٹ کائنی پٹھیندا پیا۔</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">واپس ون٘ڄو(سفارش کیتی ویندی ہے)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

@@ -19,6 +19,9 @@
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">قايتىش (تەۋسىيە)</string>
 
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">خەتەرنى قوبۇل قىلىپ داۋاملاشتۇرۇش</string>
+
     <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_title">ئۇلىنىش ئۈزۈلۈپ قالدى</string>
 
@@ -31,10 +34,27 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">تورغا ئۇلانمىغان</string>
 
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">قايتا يۈكلە</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">ئىناۋەتسىز ئادرېس</string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ئادرېس ئىناۋەتسىز</string>
 
     <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">نامەلۇم كېلىشىم</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">ھۆججەت تېپىلمىدى</string>
+
+    <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">ھۆججەتنى زىيارەت قىلىش رەت قىلىندى</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ۋاكالەتچى مۇلازىمېتىر ئۇلىنىشنى رەت قىلدى</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ۋاكالەتچى مۇلازىمېتىر تېپىلمىدى</string>
 
     </resources>
