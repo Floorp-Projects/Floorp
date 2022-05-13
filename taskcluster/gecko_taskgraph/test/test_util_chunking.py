@@ -159,6 +159,7 @@ def mock_mozinfo():
             "headless": headless,
             "tsan": tsan,
             "appname": "firefox",
+            "condprof": False,
         }
 
     return inner

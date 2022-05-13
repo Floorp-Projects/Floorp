@@ -114,6 +114,7 @@ def generate_package_data(args):
         if pkg_name is None:
             continue
         harness_requirements[harness].append(pkg_name)
+        harness_requirements[harness].append("target.condprof.tests.tar.gz")
     return harness_requirements
 
 
