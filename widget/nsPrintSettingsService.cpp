@@ -84,7 +84,6 @@ static const char kPrintBGColors[] = "print_bgcolor";
 static const char kPrintBGImages[] = "print_bgimages";
 static const char kPrintShrinkToFit[] = "print_shrink_to_fit";
 static const char kPrintScaling[] = "print_scaling";
-static const char kPrintResolution[] = "print_resolution";
 static const char kPrintDuplex[] = "print_duplex";
 
 static const char kJustLeft[] = "left";
@@ -570,15 +569,6 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSaveResolution) {
-    // DPI. Again, an arbitrary range mainly to purge bad values that have made
-    // their way into user prefs.
-    if (GETINTPREF(kPrintResolution, &iVal) && iVal >= 50 && iVal <= 12000) {
-      aPS->SetResolution(iVal);
-      noValidPrefsFound = false;
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveDuplex) {
     if (GETINTPREF(kPrintDuplex, &iVal)) {
       aPS->SetDuplex(iVal);
@@ -588,6 +578,7 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
 
   // Not Reading In:
   //   Number of Copies
+  //   Print Resolution
 
   return noValidPrefsFound ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
@@ -769,12 +760,6 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSaveResolution) {
-    if (NS_SUCCEEDED(aPS->GetResolution(&iVal))) {
-      Preferences::SetInt(GetPrefName(kPrintResolution, aPrinterName), iVal);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveDuplex) {
     if (NS_SUCCEEDED(aPS->GetDuplex(&iVal))) {
       Preferences::SetInt(GetPrefName(kPrintDuplex, aPrinterName), iVal);
@@ -783,6 +768,7 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
 
   // Not Writing Out:
   //   Number of Copies
+  //   Print Resolution
 
   return NS_OK;
 }
