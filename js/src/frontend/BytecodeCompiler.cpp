@@ -1235,7 +1235,8 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
       .setColumn(lazy->column())
       .setScriptSourceOffset(lazy->sourceStart())
       .setNoScriptRval(false)
-      .setSelfHostingMode(false);
+      .setSelfHostingMode(false)
+      .setEagerDelazificationStrategy(lazy->delazificationMode());
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   input.get().initFromLazy(cx, lazy, ss);
