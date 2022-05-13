@@ -49,6 +49,7 @@
 #include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 #include "WrapperFactory.h"
+#include "JSMEnvironmentProxy.h"
 #include "ModuleEnvironmentProxy.h"
 
 #include "AutoMemMap.h"
@@ -343,25 +344,6 @@ mozJSComponentLoader::~mozJSComponentLoader() {
 }
 
 StaticRefPtr<mozJSComponentLoader> mozJSComponentLoader::sSelf;
-
-// For terrible compatibility reasons, we need to consider both the global
-// lexical environment and the global of modules when searching for exported
-// symbols.
-static JSObject* ResolveModuleObjectProperty(JSContext* aCx,
-                                             HandleObject aModObj,
-                                             const char* name) {
-  if (JS_HasExtensibleLexicalEnvironment(aModObj)) {
-    RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
-    bool found;
-    if (!JS_HasOwnProperty(aCx, lexical, name, &found)) {
-      return nullptr;
-    }
-    if (found) {
-      return lexical;
-    }
-  }
-  return aModObj;
-}
 
 const mozilla::Module* mozJSComponentLoader::LoadModule(FileLocation& aFile) {
   if (!NS_IsMainThread()) {
@@ -1187,22 +1169,6 @@ nsresult mozJSComponentLoader::GetComponentLoadStack(
 #endif
 }
 
-static JSObject* ResolveModuleObjectPropertyById(JSContext* aCx,
-                                                 HandleObject aModObj,
-                                                 HandleId id) {
-  if (JS_HasExtensibleLexicalEnvironment(aModObj)) {
-    RootedObject lexical(aCx, JS_ExtensibleLexicalEnvironment(aModObj));
-    bool found;
-    if (!JS_HasOwnPropertyById(aCx, lexical, id, &found)) {
-      return nullptr;
-    }
-    if (found) {
-      return lexical;
-    }
-  }
-  return aModObj;
-}
-
 nsresult mozJSComponentLoader::ImportInto(const nsACString& aLocation,
                                           HandleObject targetObj, JSContext* cx,
                                           MutableHandleObject vp) {
@@ -1454,7 +1420,19 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
   }
 
   MOZ_ASSERT(mod->obj, "Import table contains entry with no object");
-  aModuleGlobal.set(mod->obj);
+  JS::RootedObject globalProxy(aCx);
+  {
+    JSAutoRealm ar(aCx, mod->obj);
+
+    globalProxy = CreateJSMEnvironmentProxy(aCx, mod->obj);
+    if (!globalProxy) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  if (!JS_WrapObject(aCx, &globalProxy)) {
+    return NS_ERROR_FAILURE;
+  }
+  aModuleGlobal.set(globalProxy);
 
   JS::RootedObject exports(aCx, mod->exports);
   if (!exports && !aIgnoreExports) {
