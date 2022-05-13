@@ -42,7 +42,7 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveBGColors       = 0x00000080;
   const unsigned long kInitSaveBGImages       = 0x00000100;
   const unsigned long kInitSavePaperSize      = 0x00000200;
-  const unsigned long kInitSaveResolution     = 0x00000400;
+  /* Flag 0x00000400 is unused */
   const unsigned long kInitSaveDuplex         = 0x00000800;
   /* Flag 0x00001000 is unused */
   /* Flag 0x00002000 is unused */
