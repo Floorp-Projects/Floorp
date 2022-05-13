@@ -738,11 +738,10 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         newText +
         cssText.substring(offset + text.length);
 
-      await this.pageStyle.styleSheetsManager.update(
+      await this.pageStyle.styleSheetsManager.setStyleSheetText(
         resourceId,
         cssText,
-        false,
-        UPDATE_PRESERVING_RULES
+        { kind: UPDATE_PRESERVING_RULES }
       );
     } else {
       // For stylesheet rules, set the text in the stylesheet.
@@ -870,11 +869,10 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           value +
           authoredText.substring(endOffset);
 
-        await this.pageStyle.styleSheetsManager.update(
+        await this.pageStyle.styleSheetsManager.setStyleSheetText(
           resourceId,
           authoredText,
-          false,
-          UPDATE_PRESERVING_RULES
+          { kind: UPDATE_PRESERVING_RULES }
         );
       } else {
         const sheetActor = this.pageStyle._sheetRef(parentStyleSheet);

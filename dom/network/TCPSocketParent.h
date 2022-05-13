@@ -20,8 +20,7 @@
     }                                                \
   }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TCPSocket;
 
@@ -78,7 +77,6 @@ class TCPSocketParent : public mozilla::net::PTCPSocketParent,
                  TCPReadyState aReadyState);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

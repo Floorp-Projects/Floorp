@@ -12,9 +12,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/PaymentRequestParent.h"
 
-namespace mozilla {
-namespace dom {
-namespace payments {
+namespace mozilla::dom::payments {
 
 class PaymentMethodData final : public nsIPaymentMethodData {
  public:
@@ -254,8 +252,6 @@ class PaymentAddress final : public nsIPaymentAddress {
   nsString mPhone;
 };
 
-}  // namespace payments
-}  // end of namespace dom
-}  // end of namespace mozilla
+}  // namespace mozilla::dom::payments
 
 #endif

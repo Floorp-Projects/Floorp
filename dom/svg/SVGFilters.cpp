@@ -40,8 +40,7 @@
 
 using namespace mozilla::gfx;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 //--------------------Filter Element Base Class-----------------------
 
@@ -310,13 +309,11 @@ JSObject* SVGFEFuncRElement::WrapNode(JSContext* aCx,
   return SVGFEFuncRElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncR)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncRElement)
 
@@ -326,13 +323,11 @@ JSObject* SVGFEFuncGElement::WrapNode(JSContext* aCx,
   return SVGFEFuncGElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncG)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncGElement)
 
@@ -342,13 +337,11 @@ JSObject* SVGFEFuncBElement::WrapNode(JSContext* aCx,
   return SVGFEFuncBElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncB)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncBElement)
 
@@ -358,13 +351,11 @@ JSObject* SVGFEFuncAElement::WrapNode(JSContext* aCx,
   return SVGFEFuncAElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(FEFuncA)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEFuncAElement)
 
@@ -476,5 +467,4 @@ SVGElement::StringAttributesInfo SVGFELightingElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

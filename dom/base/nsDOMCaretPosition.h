@@ -12,11 +12,9 @@
 #include "nsINode.h"
 #include "nsWrapperCache.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class DOMRect;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 /**
  * Implementation of a DOM Caret Position, which is a node and offset within

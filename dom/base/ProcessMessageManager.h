@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/MessageSender.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ParentProcessMessageManager;
 
@@ -52,7 +51,6 @@ class ProcessMessageManager final : public MessageSender {
   bool mInProcess;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ProcessMessageManager_h

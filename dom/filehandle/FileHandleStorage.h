@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_FileHandleStorage_h
 #define mozilla_dom_FileHandleStorage_h
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum FileHandleStorage {
   FILE_HANDLE_STORAGE_IDB = 0,
@@ -17,7 +16,6 @@ enum FileHandleStorage {
   FILE_HANDLE_STORAGE_MAX
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_FileHandleStorage_h

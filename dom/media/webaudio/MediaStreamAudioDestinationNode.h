@@ -9,8 +9,7 @@
 
 #include "AudioNode.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct AudioNodeOptions;
@@ -54,7 +53,6 @@ class MediaStreamAudioDestinationNode final : public AudioNode {
   RefPtr<DOMMediaStream> mDOMStream;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

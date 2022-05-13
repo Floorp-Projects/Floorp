@@ -12,8 +12,7 @@
 
 class nsPIDOMWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 #ifdef XP_WIN
 #  undef GetLocaleInfo
@@ -48,6 +47,5 @@ class IntlUtils final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif

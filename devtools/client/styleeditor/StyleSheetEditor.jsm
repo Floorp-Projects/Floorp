@@ -94,12 +94,6 @@ function StyleSheetEditor(resource, win, styleSheetFriendlyIndex) {
   this._isNew = this.styleSheet.isNew;
   this.styleSheetFriendlyIndex = styleSheetFriendlyIndex;
 
-  // True when we've called update() on the style sheet.
-  // @backward-compat { version 86 } Starting 86, onStyleApplied will be able to know
-  // if the style was applied because of a change in the StyleEditor (via the `event.cause`
-  // property inside the resource update). `this._isUpdating` can be dropped when 86
-  // reaches release.
-  this._isUpdating = false;
   // True when we've just set the editor text based on a style-applied
   // event from the StyleSheetActor.
   this._justSetText = false;
@@ -403,13 +397,8 @@ StyleSheetEditor.prototype = {
     const updateIsFromSyleSheetEditor =
       update?.event?.cause === STYLE_SHEET_UPDATE_CAUSED_BY_STYLE_EDITOR;
 
-    // @backward-compat { version 86 } this._isUpdating can be removed.
-    // See property declaration for more information.
-    if (this._isUpdating || updateIsFromSyleSheetEditor) {
-      // We just applied an edit in the editor, so we can drop this
-      // notification.
-      // @backward-compat { version 86 } this._isUpdating can be removed.
-      this._isUpdating = false;
+    if (updateIsFromSyleSheetEditor) {
+      // We just applied an edit in the editor, so we can drop this notification.
       this.emit("style-applied");
       return;
     }
@@ -618,9 +607,6 @@ StyleSheetEditor.prototype = {
     if (this.sourceEditor) {
       this._state.text = this.sourceEditor.getText();
     }
-
-    // @backward-compat { version 86 } See property declaration for more information.
-    this._isUpdating = true;
 
     try {
       const styleSheetsFront = await this._getStyleSheetsFront();
@@ -884,9 +870,6 @@ StyleSheetEditor.prototype = {
 
       // Ensure we don't re-fetch the text from the original source
       // actor when we're notified that the style sheet changed.
-      // @backward-compat { version 86 } See property declaration for more information.
-      this._isUpdating = true;
-
       const styleSheetsFront = await this._getStyleSheetsFront();
 
       await styleSheetsFront.update(

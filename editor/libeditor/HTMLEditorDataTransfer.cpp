@@ -2814,7 +2814,7 @@ nsresult HTMLEditor::InsertWithQuotationsAsSubAction(
   return rv;
 }
 
-nsresult HTMLEditor::InsertTextWithQuotations(
+NS_IMETHODIMP HTMLEditor::InsertTextWithQuotations(
     const nsAString& aStringToInsert) {
   AutoEditActionDataSetter editActionData(*this, EditAction::eInsertText);
   MOZ_ASSERT(!aStringToInsert.IsVoid());

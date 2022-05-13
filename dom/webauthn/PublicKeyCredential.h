@@ -15,8 +15,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/dom/CryptoBuffer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class PublicKeyCredential final : public Credential {
  public:
@@ -62,7 +61,6 @@ class PublicKeyCredential final : public Credential {
   AuthenticationExtensionsClientOutputs mClientExtensionOutputs;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_PublicKeyCredential_h

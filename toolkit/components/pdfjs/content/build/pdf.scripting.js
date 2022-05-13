@@ -156,13 +156,12 @@ function initSandbox(params) {
       }
 
       const wrapped = new Proxy(field, proxyHandler);
-
-      doc._addField(name, wrapped);
-
       const _object = {
         obj: field,
         wrapped
       };
+
+      doc._addField(name, _object);
 
       for (const object of objs) {
         appObjects[object.id] = _object;
@@ -492,7 +491,6 @@ class Field extends _pdf_object.PDFObject {
     this._siblings = data.siblings || null;
     this._globalEval = data.globalEval;
     this._appObjects = data.appObjects;
-    this.valueAsString = data.valueAsString || this._value;
   }
 
   get currentValueIndices() {
@@ -664,16 +662,10 @@ class Field extends _pdf_object.PDFObject {
   }
 
   get valueAsString() {
-    if (this._valueAsString === undefined) {
-      this._valueAsString = this._value ? this._value.toString() : "";
-    }
-
-    return this._valueAsString;
+    return (this._value ?? "").toString();
   }
 
-  set valueAsString(val) {
-    this._valueAsString = val ? val.toString() : "";
-  }
+  set valueAsString(_) {}
 
   browseForFileToSubmit() {
     if (this._browseForFileToSubmit) {
@@ -795,7 +787,7 @@ class Field extends _pdf_object.PDFObject {
     }
 
     if (this._children === null) {
-      this._children = this._document.obj._getChildren(this._fieldPath);
+      this._children = this._document.obj._getChildren(this._fieldPath).map(child => child.wrapped);
     }
 
     return this._children;
@@ -933,7 +925,7 @@ class Field extends _pdf_object.PDFObject {
   }
 
   _reset() {
-    this.value = this.valueAsString = this.defaultValue;
+    this.value = this.defaultValue;
   }
 
   _runActions(event) {
@@ -2401,7 +2393,7 @@ class App extends _pdf_object.PDFObject {
   addToolButton() {}
 
   alert(cMsg, nIcon = 0, nType = 0, cTitle = "PDF.js", oDoc = null, oCheckbox = null) {
-    if (typeof cMsg === "object") {
+    if (cMsg && typeof cMsg === "object") {
       nType = cMsg.nType;
       cMsg = cMsg.cMsg;
     }
@@ -2509,7 +2501,7 @@ class App extends _pdf_object.PDFObject {
   removeToolButton() {}
 
   response(cQuestion, cTitle = "", cDefault = "", bPassword = "", cLabel = "") {
-    if (typeof cQuestion === "object") {
+    if (cQuestion && typeof cQuestion === "object") {
       cDefault = cQuestion.cDefault;
       cQuestion = cQuestion.cQuestion;
     }
@@ -2520,7 +2512,7 @@ class App extends _pdf_object.PDFObject {
   }
 
   setInterval(cExpr, nMilliseconds = 0) {
-    if (typeof cExpr === "object") {
+    if (cExpr && typeof cExpr === "object") {
       nMilliseconds = cExpr.nMilliseconds || 0;
       cExpr = cExpr.cExpr;
     }
@@ -2541,7 +2533,7 @@ class App extends _pdf_object.PDFObject {
   }
 
   setTimeOut(cExpr, nMilliseconds = 0) {
-    if (typeof cExpr === "object") {
+    if (cExpr && typeof cExpr === "object") {
       nMilliseconds = cExpr.nMilliseconds || 0;
       cExpr = cExpr.cExpr;
     }
@@ -2614,6 +2606,7 @@ class EventDispatcher {
     this._calculationOrder = calculationOrder;
     this._objects = objects;
     this._document.obj._eventDispatcher = this;
+    this._isCalculating = false;
   }
 
   mergeChange(event) {
@@ -2701,58 +2694,79 @@ class EventDispatcher {
 
       case "Action":
         this.runActions(source, source, event, name);
-
-        if (this._document.obj.calculate) {
-          this.runCalculate(source, event);
-        }
-
+        this.runCalculate(source, event);
         return;
     }
 
     this.runActions(source, source, event, name);
 
-    if (name === "Keystroke") {
-      if (event.rc) {
-        if (event.willCommit) {
-          this.runValidation(source, event);
-        } else if (event.change !== savedChange.change || event.selStart !== savedChange.selStart || event.selEnd !== savedChange.selEnd) {
-          source.wrapped.value = this.mergeChange(event);
-        }
-      } else if (!event.willCommit) {
-        source.obj._send({
-          id: source.obj._id,
-          value: savedChange.value,
-          selRange: [savedChange.selStart, savedChange.selEnd]
-        });
+    if (name !== "Keystroke") {
+      return;
+    }
+
+    if (event.rc) {
+      if (event.willCommit) {
+        this.runValidation(source, event);
       } else {
+        const value = source.obj.value = this.mergeChange(event);
+        let selStart, selEnd;
+
+        if (event.selStart !== savedChange.selStart || event.selEnd !== savedChange.selEnd) {
+          selStart = event.selStart;
+          selEnd = event.selEnd;
+        } else {
+          selEnd = selStart = savedChange.selStart + event.change.length;
+        }
+
         source.obj._send({
           id: source.obj._id,
-          value: "",
-          selRange: [0, 0]
+          value,
+          selRange: [selStart, selEnd]
         });
       }
+    } else if (!event.willCommit) {
+      source.obj._send({
+        id: source.obj._id,
+        value: savedChange.value,
+        selRange: [savedChange.selStart, savedChange.selEnd]
+      });
+    } else {
+      source.obj._send({
+        id: source.obj._id,
+        value: "",
+        formattedValue: null,
+        selRange: [0, 0]
+      });
     }
   }
 
   runValidation(source, event) {
-    const hasRan = this.runActions(source, source, event, "Validate");
+    const didValidateRun = this.runActions(source, source, event, "Validate");
 
     if (event.rc) {
-      if (hasRan) {
-        source.wrapped.value = event.value;
-        source.wrapped.valueAsString = event.value;
-      } else {
-        source.obj.value = event.value;
-        source.obj.valueAsString = event.value;
+      source.obj.value = event.value;
+      this.runCalculate(source, event);
+      const savedValue = event.value = source.obj.value;
+      let formattedValue = null;
+
+      if (this.runActions(source, source, event, "Format")) {
+        formattedValue = event.value?.toString?.();
       }
 
-      if (this._document.obj.calculate) {
-        this.runCalculate(source, event);
-      }
+      source.obj._send({
+        id: source.obj._id,
+        value: savedValue,
+        formattedValue
+      });
 
-      event.value = source.obj.value;
-      this.runActions(source, source, event, "Format");
-      source.wrapped.valueAsString = event.value;
+      event.value = savedValue;
+    } else if (didValidateRun) {
+      source.obj._send({
+        id: source.obj._id,
+        value: "",
+        formattedValue: null,
+        selRange: [0, 0]
+      });
     }
   }
 
@@ -2766,18 +2780,27 @@ class EventDispatcher {
   }
 
   calculateNow() {
-    if (!this._calculationOrder) {
+    if (!this._calculationOrder || this._isCalculating || !this._document.obj.calculate) {
       return;
     }
 
+    this._isCalculating = true;
     const first = this._calculationOrder[0];
     const source = this._objects[first];
     globalThis.event = new Event({});
-    this.runCalculate(source, globalThis.event);
+
+    try {
+      this.runCalculate(source, globalThis.event);
+    } catch (error) {
+      this._isCalculating = false;
+      throw error;
+    }
+
+    this._isCalculating = false;
   }
 
   runCalculate(source, event) {
-    if (!this._calculationOrder) {
+    if (!this._calculationOrder || !this._document.obj.calculate) {
       return;
     }
 
@@ -2787,11 +2810,12 @@ class EventDispatcher {
       }
 
       if (!this._document.obj.calculate) {
-        continue;
+        break;
       }
 
       event.value = null;
       const target = this._objects[targetId];
+      let savedValue = target.obj.value;
       this.runActions(source, target, event, "Calculate");
 
       if (!event.rc) {
@@ -2799,22 +2823,32 @@ class EventDispatcher {
       }
 
       if (event.value !== null) {
-        target.wrapped.value = event.value;
+        target.obj.value = event.value;
       }
 
       event.value = target.obj.value;
       this.runActions(target, target, event, "Validate");
 
       if (!event.rc) {
+        if (target.obj.value !== savedValue) {
+          target.wrapped.value = savedValue;
+        }
+
         continue;
       }
 
-      event.value = target.obj.value;
-      this.runActions(target, target, event, "Format");
+      savedValue = event.value = target.obj.value;
+      let formattedValue = null;
 
-      if (event.value !== null) {
-        target.wrapped.valueAsString = event.value;
+      if (this.runActions(target, target, event, "Format")) {
+        formattedValue = event.value?.toString?.();
       }
+
+      target.obj._send({
+        id: target.obj._id,
+        value: savedValue,
+        formattedValue
+      });
     }
   }
 
@@ -3788,8 +3822,8 @@ class Doc extends _pdf_object.PDFObject {
 
   getDataObjectContents() {}
 
-  getField(cName) {
-    if (typeof cName === "object") {
+  _getField(cName) {
+    if (cName && typeof cName === "object") {
       cName = cName.cName;
     }
 
@@ -3836,6 +3870,16 @@ class Doc extends _pdf_object.PDFObject {
     return null;
   }
 
+  getField(cName) {
+    const field = this._getField(cName);
+
+    if (!field) {
+      return null;
+    }
+
+    return field.wrapped;
+  }
+
   _getChildren(fieldName) {
     const len = fieldName.length;
     const children = [];
@@ -3861,7 +3905,7 @@ class Doc extends _pdf_object.PDFObject {
   getLinks() {}
 
   getNthFieldName(nIndex) {
-    if (typeof nIndex === "object") {
+    if (nIndex && typeof nIndex === "object") {
       nIndex = nIndex.nIndex;
     }
 
@@ -3943,7 +3987,7 @@ class Doc extends _pdf_object.PDFObject {
   openDataObject() {}
 
   print(bUI = true, nStart = 0, nEnd = -1, bSilent = false, bShrinkToFit = false, bPrintAsImage = false, bReverse = false, bAnnotations = true, printParams = null) {
-    if (typeof bUI === "object") {
+    if (bUI && typeof bUI === "object") {
       nStart = bUI.nStart;
       nEnd = bUI.nEnd;
       bSilent = bUI.bSilent;
@@ -4000,35 +4044,55 @@ class Doc extends _pdf_object.PDFObject {
   replacePages() {}
 
   resetForm(aFields = null) {
-    if (aFields && !Array.isArray(aFields) && typeof aFields === "object") {
+    if (aFields && typeof aFields === "object") {
       aFields = aFields.aFields;
     }
 
+    if (aFields && !Array.isArray(aFields)) {
+      aFields = [aFields];
+    }
+
     let mustCalculate = false;
+    let fieldsToReset;
 
     if (aFields) {
+      fieldsToReset = [];
+
       for (const fieldName of aFields) {
         if (!fieldName) {
           continue;
         }
 
-        const field = this.getField(fieldName);
+        if (typeof fieldName !== "string") {
+          fieldsToReset = null;
+          break;
+        }
+
+        const field = this._getField(fieldName);
 
         if (!field) {
           continue;
         }
 
-        field.value = field.defaultValue;
-        field.valueAsString = field.value;
+        fieldsToReset.push(field);
         mustCalculate = true;
       }
-    } else {
-      mustCalculate = this._fields.size !== 0;
+    }
 
-      for (const field of this._fields.values()) {
-        field.value = field.defaultValue;
-        field.valueAsString = field.value;
-      }
+    if (!fieldsToReset) {
+      fieldsToReset = this._fields.values();
+      mustCalculate = this._fields.size !== 0;
+    }
+
+    for (const field of fieldsToReset) {
+      field.obj.value = field.obj.defaultValue;
+
+      this._send({
+        id: field.obj._id,
+        value: field.obj.defaultValue,
+        formattedValue: null,
+        selRange: [0, 0]
+      });
     }
 
     if (mustCalculate) {
@@ -4956,8 +5020,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.14.224';
-const pdfjsBuild = '2be19e828';
+const pdfjsVersion = '2.14.290';
+const pdfjsBuild = '38c82357b';
 })();
 
 /******/ 	return __webpack_exports__;

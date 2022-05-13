@@ -11,8 +11,7 @@
 
 class nsIWidget;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
 
 class ChromeObserver final : public nsStubMutationObserver {
@@ -39,7 +38,6 @@ class ChromeObserver final : public nsStubMutationObserver {
   Document* MOZ_NON_OWNING_REF mDocument;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ChromeObserver_h

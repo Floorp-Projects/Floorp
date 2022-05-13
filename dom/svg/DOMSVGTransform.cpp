@@ -22,8 +22,7 @@ namespace {
 const double kRadPerDegree = 2.0 * M_PI / 360.0;
 }  // namespace
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGTransform_Binding;
 
@@ -307,5 +306,4 @@ void DOMSVGTransform::SetMatrix(const gfxMatrix& aMatrix) {
   Transform().SetMatrix(aMatrix);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

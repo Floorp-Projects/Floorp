@@ -226,7 +226,8 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   return aFunction(mCubebStream.get(), std::forward<Args>(aArgs)...);
 }
 
-nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo) NO_THREAD_SAFETY_ANALYSIS {
+nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
+    NO_THREAD_SAFETY_ANALYSIS {
   auto startTime = TimeStamp::Now();
   TRACE("AudioStream::Init");
 

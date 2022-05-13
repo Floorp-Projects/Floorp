@@ -11,8 +11,7 @@
 #include "mozilla/dom/AnimationEventBinding.h"
 #include "nsStringFwd.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AnimationEvent : public Event {
  public:
@@ -40,8 +39,7 @@ class AnimationEvent : public Event {
   ~AnimationEvent() = default;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::AnimationEvent> NS_NewDOMAnimationEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

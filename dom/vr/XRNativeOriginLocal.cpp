@@ -7,8 +7,7 @@
 #include "XRNativeOriginLocal.h"
 #include "VRDisplayClient.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRNativeOriginLocal::XRNativeOriginLocal(gfx::VRDisplayClient* aDisplay)
     : mDisplay(aDisplay), mInitialPositionValid(false) {
@@ -32,5 +31,4 @@ gfx::PointDouble3D XRNativeOriginLocal::GetPosition() {
   return mInitialPosition;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

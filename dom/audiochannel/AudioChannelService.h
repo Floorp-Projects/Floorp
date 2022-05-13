@@ -21,8 +21,7 @@
 class nsPIDOMWindowOuter;
 struct PRLogModuleInfo;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioPlaybackConfig {
  public:
@@ -241,7 +240,6 @@ const char* AudibleStateToStr(
 const char* AudibleChangedReasonToStr(
     const AudioChannelService::AudibleChangedReasons& aReason);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

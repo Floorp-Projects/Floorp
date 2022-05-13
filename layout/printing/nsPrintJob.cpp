@@ -2060,9 +2060,6 @@ void nsPrintJob::PageDone(nsresult aResult) {
 //---------------------------------------------------------------------
 void nsPrintJob::SetIsPrinting(bool aIsPrinting) {
   mIsDoingPrinting = aIsPrinting;
-  if (aIsPrinting) {
-    mHasEverPrinted = true;
-  }
   if (mPrt && aIsPrinting) {
     mPrt->mPreparingForPrint = true;
   }

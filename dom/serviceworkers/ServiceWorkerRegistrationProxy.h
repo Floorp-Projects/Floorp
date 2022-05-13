@@ -13,8 +13,7 @@
 #include "ServiceWorkerRegistrationListener.h"
 #include "ServiceWorkerUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerRegistrationInfo;
 class ServiceWorkerRegistrationParent;
@@ -88,7 +87,6 @@ class ServiceWorkerRegistrationProxy final
                                         override);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // moz_dom_ServiceWorkerRegistrationProxy_h

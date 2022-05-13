@@ -52,6 +52,10 @@ enum PictureFlags {
 typedef struct Dav1dThreadPicture {
     Dav1dPicture p;
     int visible;
+    // This can be set for inter frames, non-key intra frames, or for invisible
+    // keyframes that have not yet been made visible using the show-existing-frame
+    // mechanism.
+    int showable;
     enum PictureFlags flags;
     // [0] block data (including segmentation map and motion vectors)
     // [1] pixel data

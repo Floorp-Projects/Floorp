@@ -10,8 +10,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "jsapi.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 template <typename T>
 class MOZ_RAII RootedDictionary final : public T, private JS::CustomAutoRooter {
@@ -37,7 +36,6 @@ class MOZ_RAII NullableRootedDictionary final : public Nullable<T>,
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_RootedDictionary_h__ */

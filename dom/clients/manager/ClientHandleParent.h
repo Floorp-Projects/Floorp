@@ -8,8 +8,7 @@
 
 #include "mozilla/dom/PClientHandleParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientManagerService;
 class ClientSourceParent;
@@ -59,7 +58,6 @@ class ClientHandleParent final : public PClientHandleParent {
   RefPtr<SourcePromise> EnsureSource();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientHandleParent_h

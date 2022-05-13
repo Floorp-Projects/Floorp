@@ -21,9 +21,7 @@
 
 #include "base/thread.h"
 
-namespace mozilla {
-
-namespace camera {
+namespace mozilla::camera {
 
 class CamerasParent;
 
@@ -175,7 +173,6 @@ class CamerasParent final : public PCamerasParent,
 
 PCamerasParent* CreateCamerasParent();
 
-}  // namespace camera
-}  // namespace mozilla
+}  // namespace mozilla::camera
 
 #endif  // mozilla_CameraParent_h

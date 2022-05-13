@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 WebAuthnTransactionChild::WebAuthnTransactionChild(
     WebAuthnManagerBase* aManager)
@@ -85,5 +84,4 @@ void WebAuthnTransactionChild::Disconnect() {
   SendDestroyMe();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

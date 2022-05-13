@@ -44,8 +44,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrationInfo.h"
 #include "mozilla/net/NeckoChannelParams.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -185,7 +184,7 @@ NS_IMPL_ISUPPORTS(SynthesizeResponseWatcher, nsIInterceptedBodyCallback)
     ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
     RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
-    RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
+    RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises,
     RefPtr<KeepAliveToken>&& aKeepAliveToken) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aManager);
@@ -194,7 +193,7 @@ NS_IMPL_ISUPPORTS(SynthesizeResponseWatcher, nsIInterceptedBodyCallback)
 
   FetchEventOpChild* actor = new FetchEventOpChild(
       std::move(aArgs), std::move(aInterceptedChannel),
-      std::move(aRegistration), std::move(aPreloadResponseReadyPromise),
+      std::move(aRegistration), std::move(aPreloadResponseReadyPromises),
       std::move(aKeepAliveToken));
 
   actor->mWasSent = true;
@@ -213,53 +212,63 @@ FetchEventOpChild::FetchEventOpChild(
     ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-    RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
+    RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises,
     RefPtr<KeepAliveToken>&& aKeepAliveToken)
     : mArgs(std::move(aArgs)),
       mInterceptedChannel(std::move(aInterceptedChannel)),
       mRegistration(std::move(aRegistration)),
       mKeepAliveToken(std::move(aKeepAliveToken)),
-      mPreloadResponseReadyPromise(std::move(aPreloadResponseReadyPromise)) {
-  if (mPreloadResponseReadyPromise) {
+      mPreloadResponseReadyPromises(std::move(aPreloadResponseReadyPromises)) {
+  if (mPreloadResponseReadyPromises) {
     // This promise should be configured to use synchronous dispatch, so if it's
     // already resolved when we run this code then the callback will be called
     // synchronously and pass the preload response with the constructor message.
     //
     // Note that it's fine to capture the this pointer in the callbacks because
     // we disconnect the request in Recv__delete__().
-    mPreloadResponseReadyPromise
+    mPreloadResponseReadyPromises->GetResponseAvailablePromise()
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [this](FetchServiceResponse&& aResponse) {
-              SafeRefPtr<InternalResponse> preloadResponse;
-              IPCPerformanceTimingData timingData;
-              nsString initiatorType;
-              nsString entryName;
-              Tie(preloadResponse, timingData, initiatorType, entryName) =
-                  std::move(aResponse);
-              ParentToParentResponseWithTiming response;
-              response.response() =
-                  preloadResponse->ToParentToParentInternalResponse();
-              response.timingData() = timingData;
-              response.initiatorType() = initiatorType;
-              response.entryName() = entryName;
               if (!mWasSent) {
                 // The actor wasn't sent yet, we can still send the preload
                 // response with it.
-                mArgs.preloadResponse() = Some(std::move(response));
+                mArgs.preloadResponse() =
+                    Some(aResponse->ToParentToParentInternalResponse());
               } else {
                 // It's too late to send the preload response with the actor, we
                 // have to send it in a separate message.
-                SendPreloadResponse(response);
+                SendPreloadResponse(
+                    aResponse->ToParentToParentInternalResponse());
               }
-              mPreloadResponseReadyPromise = nullptr;
-              mPreloadResponseReadyPromiseRequestHolder.Complete();
+              mPreloadResponseAvailablePromiseRequestHolder.Complete();
             },
             [this](const CopyableErrorResult&) {
-              mPreloadResponseReadyPromise = nullptr;
-              mPreloadResponseReadyPromiseRequestHolder.Complete();
+              mPreloadResponseAvailablePromiseRequestHolder.Complete();
             })
-        ->Track(mPreloadResponseReadyPromiseRequestHolder);
+        ->Track(mPreloadResponseAvailablePromiseRequestHolder);
+
+    mPreloadResponseReadyPromises->GetResponseEndPromise()
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [this](ResponseEndArgs&& aResponse) {
+              if (!mWasSent) {
+                // The actor wasn't sent yet, we can still send the preload
+                // response end args with it.
+                mArgs.preloadResponseEndArgs() = Some(std::move(aResponse));
+              } else {
+                // It's too late to send the preload response end with the
+                // actor, we have to send it in a separate message.
+                SendPreloadResponseEnd(aResponse);
+              }
+              mPreloadResponseReadyPromises = nullptr;
+              mPreloadResponseEndPromiseRequestHolder.Complete();
+            },
+            [this](const CopyableErrorResult&) {
+              mPreloadResponseReadyPromises = nullptr;
+              mPreloadResponseEndPromiseRequestHolder.Complete();
+            })
+        ->Track(mPreloadResponseEndPromiseRequestHolder);
   }
 }
 
@@ -279,14 +288,6 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvAsyncLog(
 mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
     ParentToParentFetchEventRespondWithResult&& aResult) {
   AssertIsOnMainThread();
-
-  // Preload response is too late to be ready after we receive RespondWith, so
-  // disconnect the promise.
-  mPreloadResponseReadyPromiseRequestHolder.DisconnectIfExists();
-  if (mPreloadResponseReadyPromise) {
-    RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    fetchService->CancelFetch(std::move(mPreloadResponseReadyPromise));
-  }
 
   switch (aResult.type()) {
     case ParentToParentFetchEventRespondWithResult::
@@ -327,6 +328,22 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
       break;
   }
 
+  // Preload response is too late to be ready after we receive RespondWith, so
+  // disconnect the promise.
+  // Notice that if mPreloadResponseAvailablePromiseRequestHolder does not
+  // exist. We don't disconnect mPreloadResponseEndPromiseRequestHolder and
+  // cancel the navigation preload fetch here. Since ServiceWorker script could
+  // call FetchEvent.respondWith(FetchEvent.preloadResponse), then we get here
+  // but the navigation preload is not yet finished.
+  if (mPreloadResponseAvailablePromiseRequestHolder.Exists()) {
+    mPreloadResponseAvailablePromiseRequestHolder.Disconnect();
+    mPreloadResponseEndPromiseRequestHolder.Disconnect();
+    if (mPreloadResponseReadyPromises) {
+      RefPtr<FetchService> fetchService = FetchService::GetInstance();
+      fetchService->CancelFetch(std::move(mPreloadResponseReadyPromises));
+    }
+  }
+
   return IPC_OK();
 }
 
@@ -345,10 +362,11 @@ mozilla::ipc::IPCResult FetchEventOpChild::Recv__delete__(
   }
 
   mPromiseHolder.ResolveIfExists(true, __func__);
-  mPreloadResponseReadyPromiseRequestHolder.DisconnectIfExists();
-  if (mPreloadResponseReadyPromise) {
+  mPreloadResponseAvailablePromiseRequestHolder.DisconnectIfExists();
+  mPreloadResponseEndPromiseRequestHolder.DisconnectIfExists();
+  if (mPreloadResponseReadyPromises) {
     RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    fetchService->CancelFetch(std::move(mPreloadResponseReadyPromise));
+    fetchService->CancelFetch(std::move(mPreloadResponseReadyPromises));
   }
 
   /**
@@ -592,5 +610,4 @@ void FetchEventOpChild::MaybeScheduleRegistrationUpdate() const {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

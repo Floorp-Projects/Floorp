@@ -10,8 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Telemetry.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // Decorates a DOM Promise to report telemetry as to whether it was resolved
 // or rejected and why.
@@ -33,7 +32,6 @@ class PlayPromise : public Promise {
   bool mFulfilled = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // __PlayPromise_h__

@@ -188,7 +188,8 @@ extern bool ArraySetLength(JSContext* cx, Handle<ArrayObject*> obj, HandleId id,
 class ObjectElements {
  public:
   enum Flags : uint16_t {
-    // (0x1 is unused)
+    // Elements are stored inline in the object allocation.
+    FIXED = 0x1,
 
     // Present only if these elements correspond to an array with
     // non-writable length; never present for non-arrays.
@@ -997,12 +998,13 @@ class NativeObject : public JSObject {
                                            HandleNativeObject obj,
                                            uint32_t nfixed);
 
-  [[nodiscard]] bool copyAndFreeSlotsBeforeSwap(
-      JSContext* cx, MutableHandleValueVector values);
-  [[nodiscard]] static bool fillInSlotsAfterSwap(JSContext* cx,
-                                                 HandleNativeObject obj,
-                                                 gc::AllocKind kind,
-                                                 HandleValueVector values);
+  // For use from JSObject::swap.
+  [[nodiscard]] bool prepareForSwap(JSContext* cx,
+                                    MutableHandleValueVector slotValuesOut);
+  [[nodiscard]] static bool fixupAfterSwap(JSContext* cx,
+                                           HandleNativeObject obj,
+                                           gc::AllocKind kind,
+                                           HandleValueVector slotValues);
 
  public:
   // Return true if this object has been converted from shared-immutable
@@ -1487,6 +1489,11 @@ class NativeObject : public JSObject {
 
   void setEmptyElements() { elements_ = emptyObjectElements; }
 
+  void initFixedElements(gc::AllocKind kind, uint32_t length);
+
+  // Update the elements pointer to use the fixed elements storage. The caller
+  // is responsible for initializing the elements themselves and setting the
+  // FIXED flag.
   void setFixedElements(uint32_t numShifted = 0) {
     MOZ_ASSERT(canHaveNonEmptyElements());
     elements_ = fixedElements() + numShifted;
@@ -1504,7 +1511,9 @@ class NativeObject : public JSObject {
   }
 
   inline bool hasFixedElements() const {
-    return unshiftedElements() == fixedElements();
+    bool fixed = getElementsHeader()->flags & ObjectElements::FIXED;
+    MOZ_ASSERT_IF(fixed, unshiftedElements() == fixedElements());
+    return fixed;
   }
 
   inline bool hasEmptyElements() const {

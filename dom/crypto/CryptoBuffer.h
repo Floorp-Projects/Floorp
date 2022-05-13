@@ -11,8 +11,7 @@
 #include "seccomon.h"
 #include "mozilla/dom/TypedArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ArrayBufferViewOrArrayBuffer;
 class OwningArrayBufferViewOrArrayBuffer;
@@ -51,7 +50,6 @@ class CryptoBuffer : public FallibleTArray<uint8_t> {
   }
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_CryptoBuffer_h

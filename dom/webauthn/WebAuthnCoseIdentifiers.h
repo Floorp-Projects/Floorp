@@ -9,8 +9,7 @@
 
 #include "mozilla/dom/WebCryptoCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 // From https://www.iana.org/assignments/cose/cose.xhtml#algorithms
 enum class CoseAlgorithmIdentifier : int32_t {
@@ -18,7 +17,6 @@ enum class CoseAlgorithmIdentifier : int32_t {
   RS256 = -257,
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnCoseIdentifiers_h

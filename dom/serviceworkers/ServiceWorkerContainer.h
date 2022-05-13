@@ -13,8 +13,7 @@
 
 class nsIGlobalWindow;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientPostMessageArgs;
 struct MessageEventInit;
@@ -166,7 +165,6 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
   nsTArray<RefPtr<ReceivedMessage>> mPendingMessages;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_serviceworkercontainer_h__ */

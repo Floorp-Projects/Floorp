@@ -11,8 +11,7 @@
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLHRElement final : public nsGenericHTMLElement {
  public:
@@ -75,7 +74,6 @@ class HTMLHRElement final : public nsGenericHTMLElement {
                                     MappedDeclarations&);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLHRElement_h

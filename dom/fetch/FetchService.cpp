@@ -29,10 +29,52 @@ namespace mozilla::dom {
 
 mozilla::LazyLogModule gFetchLog("Fetch");
 
-FetchServiceResponse CreateErrorResponse(nsresult aRv) {
-  IPCPerformanceTimingData ipcTimingData;
-  return MakeTuple(InternalResponse::NetworkError(aRv), ipcTimingData,
-                   EmptyString(), EmptyString());
+// FetchServicePromises
+
+FetchServicePromises::FetchServicePromises()
+    : mAvailablePromise(
+          new FetchServiceResponseAvailablePromise::Private(__func__)),
+      mEndPromise(new FetchServiceResponseEndPromise::Private(__func__)) {
+  mAvailablePromise->UseSynchronousTaskDispatch(__func__);
+  mEndPromise->UseSynchronousTaskDispatch(__func__);
+}
+
+RefPtr<FetchServiceResponseAvailablePromise>
+FetchServicePromises::GetResponseAvailablePromise() {
+  return mAvailablePromise;
+}
+
+RefPtr<FetchServiceResponseEndPromise>
+FetchServicePromises::GetResponseEndPromise() {
+  return mEndPromise;
+}
+
+void FetchServicePromises::ResolveResponseAvailablePromise(
+    FetchServiceResponse&& aResponse, const char* aMethodName) {
+  if (mAvailablePromise) {
+    mAvailablePromise->Resolve(std::move(aResponse), aMethodName);
+  }
+}
+
+void FetchServicePromises::RejectResponseAvailablePromise(
+    const CopyableErrorResult&& aError, const char* aMethodName) {
+  if (mAvailablePromise) {
+    mAvailablePromise->Reject(aError, aMethodName);
+  }
+}
+
+void FetchServicePromises::ResolveResponseEndPromise(ResponseEndArgs&& aArgs,
+                                                     const char* aMethodName) {
+  if (mEndPromise) {
+    mEndPromise->Resolve(std::move(aArgs), aMethodName);
+  }
+}
+
+void FetchServicePromises::RejectResponseEndPromise(
+    const CopyableErrorResult&& aError, const char* aMethodName) {
+  if (mEndPromise) {
+    mEndPromise->Reject(aError, aMethodName);
+  }
 }
 
 // FetchInstance
@@ -101,7 +143,7 @@ nsresult FetchService::FetchInstance::Initialize(nsIChannel* aChannel) {
   return NS_OK;
 }
 
-RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
+RefPtr<FetchServicePromises> FetchService::FetchInstance::Fetch() {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -140,7 +182,9 @@ RefPtr<FetchServiceResponsePromise> FetchService::FetchInstance::Fetch() {
     return FetchService::NetworkErrorResponse(rv);
   }
 
-  return mResponsePromiseHolder.Ensure(__func__);
+  mPromises = MakeRefPtr<FetchServicePromises>();
+
+  return mPromises;
 }
 
 void FetchService::FetchInstance::Cancel() {
@@ -153,8 +197,14 @@ void FetchService::FetchInstance::Cancel() {
     mFetchDriver->RunAbortAlgorithm();
   }
 
-  mResponsePromiseHolder.ResolveIfExists(
-      CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
+  if (mPromises) {
+    mPromises->ResolveResponseAvailablePromise(
+        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+
+    mPromises->ResolveResponseEndPromise(
+        ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+    mPromises = nullptr;
+  }
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -162,47 +212,50 @@ void FetchService::FetchInstance::OnResponseEnd(
   FETCH_LOG(("FetchInstance::OnResponseEnd [%p]", this));
   if (aReason == eAborted) {
     FETCH_LOG(("FetchInstance::OnResponseEnd end with eAborted"));
-    mResponsePromiseHolder.ResolveIfExists(
-        CreateErrorResponse(NS_ERROR_DOM_ABORT_ERR), __func__);
+    if (mPromises) {
+      mPromises->ResolveResponseEndPromise(
+          ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+    }
     return;
   }
-  if (!mResponsePromiseHolder.IsEmpty()) {
+  if (mPromises) {
     // Remove the FetchInstance from FetchInstanceTable
-    RefPtr<FetchServiceResponsePromise> responsePromise =
-        mResponsePromiseHolder.Ensure(__func__);
     RefPtr<FetchService> fetchService = FetchService::GetInstance();
     MOZ_ASSERT(fetchService);
-    auto entry = fetchService->mFetchInstanceTable.Lookup(responsePromise);
+    auto entry = fetchService->mFetchInstanceTable.Lookup(mPromises);
     MOZ_ASSERT(entry);
     entry.Remove();
     FETCH_LOG(
-        ("FetchInstance::OnResponseEnd entry of responsePromise[%p] is removed",
-         responsePromise.get()));
+        ("FetchInstance::OnResponseEnd entry[%p] of FetchInstance[%p] is "
+         "removed",
+         mPromises.get(), this));
+
+    // Get PerformanceTimingData from FetchDriver.
+    ResponseTiming timing;
+    UniquePtr<PerformanceTimingData> performanceTiming(
+        mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
+                                               timing.entryName()));
+    if (performanceTiming != nullptr) {
+      timing.timingData() = performanceTiming->ToIPC();
+    }
+
+    timing.initiatorType() = u"navigation"_ns;
+
+    // Resolve the ResponseEndPromise
+    mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason, Some(timing)),
+                                         __func__);
+    // Release promises
+    mPromises = nullptr;
   }
-
-  // Get PerformanceTimingData from FetchDriver.
-  IPCPerformanceTimingData ipcPerformanceTiming;
-  nsString initiatorType;
-  nsString entryName;
-  UniquePtr<PerformanceTimingData> performanceTiming(
-      mFetchDriver->GetPerformanceTimingData(initiatorType, entryName));
-  if (performanceTiming != nullptr) {
-    ipcPerformanceTiming = performanceTiming->ToIPC();
-  }
-
-  initiatorType = u"navigation"_ns;
-
-  FetchServiceResponse response = MakeTuple(
-      std::move(mResponse), ipcPerformanceTiming, initiatorType, entryName);
-
-  // Resolve the FetchServiceResponsePromise
-  mResponsePromiseHolder.ResolveIfExists(std::move(response), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseAvailableInternal(
     SafeRefPtr<InternalResponse> aResponse) {
   FETCH_LOG(("FetchInstance::OnResponseAvailableInternal [%p]", this));
-  mResponse = std::move(aResponse);
+  if (mPromises) {
+    // Resolve the ResponseAvailablePromise
+    mPromises->ResolveResponseAvailablePromise(std::move(aResponse), __func__);
+  }
 }
 
 // TODO:
@@ -237,10 +290,13 @@ already_AddRefed<FetchService> FetchService::GetInstance() {
 }
 
 /*static*/
-RefPtr<FetchServiceResponsePromise> FetchService::NetworkErrorResponse(
-    nsresult aRv) {
-  return FetchServiceResponsePromise::CreateAndResolve(CreateErrorResponse(aRv),
-                                                       __func__);
+RefPtr<FetchServicePromises> FetchService::NetworkErrorResponse(nsresult aRv) {
+  RefPtr<FetchServicePromises> promises = MakeRefPtr<FetchServicePromises>();
+  promises->ResolveResponseAvailablePromise(InternalResponse::NetworkError(aRv),
+                                            __func__);
+  promises->ResolveResponseEndPromise(
+      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+  return promises;
 }
 
 FetchService::FetchService() {
@@ -325,7 +381,7 @@ NS_IMETHODIMP FetchService::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-RefPtr<FetchServiceResponsePromise> FetchService::Fetch(
+RefPtr<FetchServicePromises> FetchService::Fetch(
     SafeRefPtr<InternalRequest> aRequest, nsIChannel* aChannel) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
@@ -349,45 +405,42 @@ RefPtr<FetchServiceResponsePromise> FetchService::Fetch(
   }
 
   // Call FetchInstance::Fetch() to start an asynchronous fetching.
-  RefPtr<FetchServiceResponsePromise> responsePromise = fetch->Fetch();
+  RefPtr<FetchServicePromises> promises = fetch->Fetch();
 
-  if (!responsePromise->IsResolved()) {
+  if (!promises->GetResponseAvailablePromise()->IsResolved()) {
     // Insert the created FetchInstance into FetchInstanceTable.
-    if (!mFetchInstanceTable.WithEntryHandle(responsePromise,
-                                             [&](auto&& entry) {
-                                               if (entry.HasEntry()) {
-                                                 return false;
-                                               }
-                                               entry.Insert(fetch);
-                                               return true;
-                                             })) {
-      FETCH_LOG(("FetchService::Fetch entry of responsePromise[%p] exists",
-                 responsePromise.get()));
+    if (!mFetchInstanceTable.WithEntryHandle(promises, [&](auto&& entry) {
+          if (entry.HasEntry()) {
+            return false;
+          }
+          entry.Insert(fetch);
+          return true;
+        })) {
+      FETCH_LOG(
+          ("FetchService::Fetch entry[%p] already exists", promises.get()));
       return NetworkErrorResponse(NS_ERROR_UNEXPECTED);
     }
-    FETCH_LOG(("FetchService::Fetch responsePromise[%p], fetchInstance[%p]",
-               responsePromise.get(), fetch.get()));
+    FETCH_LOG(("FetchService::Fetch entry[%p] of FetchInstance[%p] added",
+               promises.get(), fetch.get()));
   }
-  return responsePromise;
+  return promises;
 }
 
-void FetchService::CancelFetch(
-    RefPtr<FetchServiceResponsePromise>&& aResponsePromise) {
+void FetchService::CancelFetch(RefPtr<FetchServicePromises>&& aPromises) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aResponsePromise);
-  FETCH_LOG(("FetchService::CancelFetch aResponsePromise[%p]",
-             aResponsePromise.get()));
+  MOZ_ASSERT(aPromises);
+  FETCH_LOG(("FetchService::CancelFetch aPromises[%p]", aPromises.get()));
 
-  auto entry = mFetchInstanceTable.Lookup(aResponsePromise);
+  auto entry = mFetchInstanceTable.Lookup(aPromises);
   if (entry) {
     // Notice any modifications here before entry.Remove() probably should be
     // reflected to Observe() offline case.
     entry.Data()->Cancel();
 
     entry.Remove();
-    FETCH_LOG(("FetchService::CancelFetch aResponsePromise[%p] is removed",
-               aResponsePromise.get()));
+    FETCH_LOG(
+        ("FetchService::CancelFetch entry [%p] removed", aPromises.get()));
   }
 }
 

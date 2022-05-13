@@ -16,9 +16,7 @@
 #include "FileInfo.h"
 #include "FlippedOnce.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 class FileInfoManagerBase {
  public:
@@ -135,8 +133,6 @@ class FileInfoManager : public FileInfoManagerBase {
   nsTHashMap<nsUint64HashKey, NotNull<FileInfoType*>> mFileInfos;
 };
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // DOM_INDEXEDDB_FILEINFOMANAGER_H_

@@ -71,13 +71,11 @@ COLD void bitfn(dav1d_film_grain_dsp_init_x86)(Dav1dFilmGrainDSPContext *const c
         c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_fguv_32x32xn_i444, avx2);
     }
 
-#if BITDEPTH == 8
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
 
     c->fgy_32x32xn = BF(dav1d_fgy_32x32xn, avx512icl);
     c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I420 - 1] = BF(dav1d_fguv_32x32xn_i420, avx512icl);
     c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I422 - 1] = BF(dav1d_fguv_32x32xn_i422, avx512icl);
     c->fguv_32x32xn[DAV1D_PIXEL_LAYOUT_I444 - 1] = BF(dav1d_fguv_32x32xn_i444, avx512icl);
-#endif
 #endif
 }

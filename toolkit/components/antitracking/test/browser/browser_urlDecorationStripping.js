@@ -53,8 +53,8 @@ add_task(async _ => {
       data: { current: records },
     });
   }
-  let db = await RemoteSettings(COLLECTION_NAME).db;
-  await db.importChanges({}, 42, [records[0]]);
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  await db.importChanges({}, Date.now(), [records[0]]);
   await emitSync();
 
   await uds.ensureUpdated();

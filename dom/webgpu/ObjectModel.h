@@ -11,8 +11,7 @@
 
 class nsIGlobalObject;
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 class WebGPUChild;
 
 template <typename T>
@@ -56,8 +55,7 @@ class ObjectBase : public nsWrapperCache {
   void SetLabel(const nsAString& aLabel);
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #define GPU_DECL_JS_WRAP(T)                                             \
   JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) \

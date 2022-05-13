@@ -22,8 +22,7 @@
 #include "nsIFile.h"
 #include "mozilla/MozPromise.h"
 
-namespace mozilla {
-namespace gmp {
+namespace mozilla::gmp {
 
 class GMPCapability {
  public:
@@ -243,7 +242,6 @@ class GMPParent final
   const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
 
-}  // namespace gmp
-}  // namespace mozilla
+}  // namespace mozilla::gmp
 
 #endif  // GMPParent_h_

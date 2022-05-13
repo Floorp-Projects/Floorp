@@ -17,8 +17,7 @@
 
 class nsIInterceptedChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class KeepAliveToken;
 class PRemoteWorkerControllerChild;
@@ -36,7 +35,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
       ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
       RefPtr<ServiceWorkerRegistrationInfo> aRegistrationInfo,
-      RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
+      RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises,
       RefPtr<KeepAliveToken>&& aKeepAliveToken);
 
   ~FetchEventOpChild();
@@ -46,7 +45,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
       ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistrationInfo,
-      RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
+      RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises,
       RefPtr<KeepAliveToken>&& aKeepAliveToken);
 
   mozilla::ipc::IPCResult RecvAsyncLog(const nsCString& aScriptSpec,
@@ -81,12 +80,13 @@ class FetchEventOpChild final : public PFetchEventOpChild {
   bool mInterceptedChannelHandled = false;
   MozPromiseHolder<GenericPromise> mPromiseHolder;
   bool mWasSent = false;
-  MozPromiseRequestHolder<FetchServiceResponsePromise>
-      mPreloadResponseReadyPromiseRequestHolder;
-  RefPtr<FetchServiceResponsePromise> mPreloadResponseReadyPromise;
+  MozPromiseRequestHolder<FetchServiceResponseAvailablePromise>
+      mPreloadResponseAvailablePromiseRequestHolder;
+  MozPromiseRequestHolder<FetchServiceResponseEndPromise>
+      mPreloadResponseEndPromiseRequestHolder;
+  RefPtr<FetchServicePromises> mPreloadResponseReadyPromises;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_fetcheventopchild_h__

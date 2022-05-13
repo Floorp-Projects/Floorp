@@ -11,8 +11,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLModElement final : public nsGenericHTMLElement {
  public:
@@ -38,7 +37,6 @@ class HTMLModElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_HTMLModElement_h

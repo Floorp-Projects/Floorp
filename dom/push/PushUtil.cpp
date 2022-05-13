@@ -7,8 +7,7 @@
 #include "mozilla/dom/PushUtil.h"
 #include "mozilla/dom/UnionTypes.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 bool PushUtil::CopyArrayBufferToArray(const ArrayBuffer& aBuffer,
@@ -59,5 +58,4 @@ void PushUtil::CopyArrayToArrayBuffer(JSContext* aCx,
   aValue.set(buffer);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -13,6 +13,7 @@
 namespace mozilla {
 
 class PDMFactory;
+class PMFMediaEngineParent;
 
 class RemoteDecoderManagerParent final
     : public PRemoteDecoderManagerParent,
@@ -57,8 +58,12 @@ class RemoteDecoderManagerParent final
   PRemoteDecoderParent* AllocPRemoteDecoderParent(
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
-      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier);
+      const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
+      const Maybe<uint64_t>& aMediaEngineId);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
+
+  PMFMediaEngineParent* AllocPMFMediaEngineParent();
+  bool DeallocPMFMediaEngineParent(PMFMediaEngineParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,
                                        SurfaceDescriptor* aResult);

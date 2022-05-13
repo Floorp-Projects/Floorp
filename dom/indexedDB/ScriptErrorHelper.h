@@ -10,9 +10,7 @@
 #include <inttypes.h>
 #include "nsStringFwd.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+namespace mozilla::dom::indexedDB {
 
 // Helper to report a script error to the main thread.
 class ScriptErrorHelper {
@@ -29,8 +27,6 @@ class ScriptErrorHelper {
       bool aIsChrome, uint64_t aInnerWindowID);
 };
 
-}  // namespace indexedDB
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::indexedDB
 
 #endif  // mozilla_dom_indexeddb_scripterrorhelper_h__

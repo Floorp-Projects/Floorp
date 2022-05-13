@@ -19,8 +19,7 @@
 #  include "mozilla/java/WebAuthnTokenManagerWrappers.h"
 #endif
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(PublicKeyCredential)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PublicKeyCredential, Credential)
@@ -155,5 +154,4 @@ void PublicKeyCredential::SetClientExtensionResultHmacSecret(
   mClientExtensionOutputs.mHmacCreateSecret.Value() = aHmacCreateSecret;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

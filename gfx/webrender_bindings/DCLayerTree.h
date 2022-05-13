@@ -14,6 +14,7 @@
 
 #include "GLTypes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/layers/OverlayInfo.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -59,6 +60,7 @@ struct GpuOverlayInfo {
   DXGI_FORMAT mOverlayFormatUsedHdr = DXGI_FORMAT_R10G10B10A2_UNORM;
   UINT mNv12OverlaySupportFlags = 0;
   UINT mYuy2OverlaySupportFlags = 0;
+  UINT mBgra8OverlaySupportFlags = 0;
   UINT mRgb10a2OverlaySupportFlags = 0;
 };
 
@@ -139,6 +141,7 @@ class DCLayerTree {
       RefPtr<IDCompositionSurface> aCompositionSurface,
       wr::DeviceIntPoint aSurfaceOffset);
   void ReleaseNativeCompositorResources();
+  layers::OverlayInfo GetOverlayInfo();
 
   RefPtr<gl::GLContext> mGL;
   EGLConfig mEGLConfig;

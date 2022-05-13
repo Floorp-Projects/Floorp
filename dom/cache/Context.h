@@ -19,8 +19,7 @@
 class nsIEventTarget;
 class nsIThread;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace quota {
 
@@ -220,7 +219,6 @@ class Context final : public SafeRefCounted<Context> {
 };
 
 }  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_cache_Context_h

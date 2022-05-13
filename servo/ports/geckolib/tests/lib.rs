@@ -11,25 +11,7 @@
 // as they’re not used in any code called from this crate.
 #![cfg(any(linking_with_gecko, not(windows)))]
 
-extern crate atomic_refcell;
-extern crate cssparser;
-extern crate cstr;
-extern crate geckoservo;
-extern crate log;
-extern crate malloc_size_of;
-extern crate num_traits;
-extern crate selectors;
-extern crate smallvec;
-#[cfg(target_pointer_width = "64")]
-#[macro_use]
-extern crate size_of_test;
-#[cfg_attr(target_pointer_width = "64", macro_use)]
-extern crate style;
-extern crate style_traits;
-extern crate to_shmem;
 extern crate euclid;
+extern crate style;
 
-#[cfg(target_pointer_width = "64")]
-mod size_of;
-mod specified_values;
 mod piecewise_linear;

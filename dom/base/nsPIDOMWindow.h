@@ -50,8 +50,7 @@ class nsPIWindowRoot;
 
 using SuspendTypes = uint32_t;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class AudioContext;
 class BrowsingContext;
 class BrowsingContextGroup;
@@ -75,8 +74,7 @@ class WindowContext;
 class WindowGlobalChild;
 class CustomElementRegistry;
 enum class CallerType : uint32_t;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 enum UIStateChangeType {
   UIStateChangeType_NoChange,

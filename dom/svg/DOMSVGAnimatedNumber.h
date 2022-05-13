@@ -11,8 +11,7 @@
 
 #include "SVGElement.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class DOMSVGAnimatedNumber : public nsWrapperCache {
  public:
@@ -35,7 +34,6 @@ class DOMSVGAnimatedNumber : public nsWrapperCache {
   RefPtr<SVGElement> mSVGElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_DOMSVGANIMATEDNUMBER_H_

@@ -402,6 +402,12 @@ struct vec2_scalar {
   friend vec2_scalar operator-(vec2_scalar a, vec2_scalar b) {
     return vec2_scalar(a.x - b.x, a.y - b.y);
   }
+  friend vec2_scalar operator-(vec2_scalar a, float b) {
+    return vec2_scalar(a.x - b, a.y - b);
+  }
+  friend vec2_scalar operator-(float a, vec2_scalar b) {
+    return vec2_scalar(a - b.x, a - b.y);
+  }
   friend vec2_scalar operator+(vec2_scalar a, vec2_scalar b) {
     return vec2_scalar(a.x + b.x, a.y + b.y);
   }
@@ -866,9 +872,15 @@ struct ivec2_scalar {
   friend ivec2_scalar operator+(ivec2_scalar a, ivec2_scalar b) {
     return ivec2_scalar{a.x + b.x, a.y + b.y};
   }
+  friend ivec2_scalar operator+(ivec2_scalar a, int b) {
+    return ivec2_scalar{a.x + b, a.y + b};
+  }
 
   friend ivec2_scalar operator-(ivec2_scalar a, ivec2_scalar b) {
     return ivec2_scalar{a.x - b.x, a.y - b.y};
+  }
+  friend ivec2_scalar operator-(ivec2_scalar a, int b) {
+    return ivec2_scalar{a.x - b, a.y - b};
   }
 
   friend bool operator==(const ivec2_scalar& l, const ivec2_scalar& r) {
@@ -1424,10 +1436,19 @@ struct vec3_scalar {
   friend vec3_scalar operator-(vec3_scalar a, vec3_scalar b) {
     return vec3_scalar{a.x - b.x, a.y - b.y, a.z - b.z};
   }
+  friend vec3_scalar operator-(vec3_scalar a, float b) {
+    return vec3_scalar{a.x - b, a.y - b, a.z - b};
+  }
   friend vec3_scalar operator+(vec3_scalar a, vec3_scalar b) {
     return vec3_scalar{a.x + b.x, a.y + b.y, a.z + b.z};
   }
+  friend vec3_scalar operator+(vec3_scalar a, float b) {
+    return vec3_scalar{a.x + b, a.y + b, a.z + b};
+  }
 
+  friend vec3_scalar operator/(vec3_scalar a, vec3_scalar b) {
+    return vec3_scalar{a.x / b.x, a.y / b.y, a.z / b.z};
+  }
   friend vec3_scalar operator/(vec3_scalar a, float b) {
     return vec3_scalar{a.x / b, a.y / b, a.z / b};
   }
@@ -1724,6 +1745,9 @@ struct vec4_scalar {
   friend vec4_scalar operator*(vec4_scalar a, float b) {
     return vec4_scalar{a.x * b, a.y * b, a.z * b, a.w * b};
   }
+  friend vec4_scalar operator*(float a, vec4_scalar b) {
+    return vec4_scalar{a * b.x, a * b.y, a * b.z, a * b.w};
+  }
   vec4_scalar& operator*=(float a) {
     x *= a;
     y *= a;
@@ -1735,12 +1759,21 @@ struct vec4_scalar {
   friend vec4_scalar operator-(vec4_scalar a, vec4_scalar b) {
     return vec4_scalar{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
   }
+  friend vec4_scalar operator-(vec4_scalar a, float b) {
+    return vec4_scalar{a.x - b, a.y - b, a.z - b, a.w - b};
+  }
   friend vec4_scalar operator+(vec4_scalar a, vec4_scalar b) {
     return vec4_scalar{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+  }
+  friend vec4_scalar operator+(vec4_scalar a, float b) {
+    return vec4_scalar{a.x + b, a.y + b, a.z + b, a.w + b};
   }
 
   friend vec4_scalar operator/(vec4_scalar a, vec4_scalar b) {
     return vec4_scalar{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w};
+  }
+  friend vec4_scalar operator/(vec4_scalar a, float b) {
+    return vec4_scalar{a.x / b, a.y / b, a.z / b, a.w / b};
   }
 
   vec4_scalar& operator+=(vec4_scalar a) {

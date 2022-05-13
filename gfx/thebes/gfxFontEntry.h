@@ -861,9 +861,16 @@ class gfxFontFamily {
   // Note that the caller must already hold the gfxPlatformFontList lock.
   bool CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList);
 
-  nsTArray<RefPtr<gfxFontEntry>>& GetFontList() {
-    mozilla::AutoReadLock lock(mLock);
+  // Callers must hold a read-lock for as long as they're using the list.
+  const nsTArray<RefPtr<gfxFontEntry>>& GetFontList() REQUIRES_SHARED(mLock) {
     return mAvailableFonts;
+  }
+  void ReadLock() ACQUIRE_SHARED(mLock) { mLock.ReadLock(); }
+  void ReadUnlock() RELEASE_SHARED(mLock) { mLock.ReadUnlock(); }
+
+  uint32_t FontListLength() const {
+    mozilla::AutoReadLock lock(mLock);
+    return mAvailableFonts.Length();
   }
 
   void AddFontEntry(RefPtr<gfxFontEntry> aFontEntry) {
@@ -872,6 +879,10 @@ class gfxFontFamily {
   }
 
   void AddFontEntryLocked(RefPtr<gfxFontEntry> aFontEntry) REQUIRES(mLock) {
+    // Avoid potentially duplicating entries.
+    if (mAvailableFonts.Contains(aFontEntry)) {
+      return;
+    }
     // bug 589682 - set the IgnoreGDEF flag on entries for Italic faces
     // of Times New Roman, because of buggy table in those fonts
     if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
@@ -896,8 +907,12 @@ class gfxFontFamily {
   }
 
   // note that the styles for this family have been added
-  bool HasStyles() { return mHasStyles; }
+  bool HasStyles() const { return mHasStyles; }
   void SetHasStyles(bool aHasStyles) { mHasStyles = aHasStyles; }
+
+  void SetCheckedForLegacyFamilyNames(bool aChecked) {
+    mCheckedForLegacyFamilyNames = aChecked;
+  }
 
   // choose a specific face to match a style using CSS font matching
   // rules (weight matching occurs here).  may return a face that doesn't
@@ -946,7 +961,8 @@ class gfxFontFamily {
   }
 
   // search for a specific face using the Postscript name
-  gfxFontEntry* FindFont(const nsACString& aPostscriptName);
+  gfxFontEntry* FindFont(const nsACString& aFontName,
+                         const nsCStringComparator& aCmp) const;
 
   // Read in cmaps for all the faces.
   // Note that when this is called, the caller must already be holding the

@@ -86,8 +86,7 @@ nsresult NS_NewSVGElement(
   return rv;
 }
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 using namespace SVGUnitTypes_Binding;
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGElement)
@@ -2464,5 +2463,4 @@ void SVGElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

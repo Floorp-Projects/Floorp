@@ -34,8 +34,7 @@ void UpdateListIndicesFromIndex(
 
 }  // namespace
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static inline SVGAttrTearoffTable<void, DOMSVGPointList>&
 SVGPointListTearoffTable() {
@@ -412,5 +411,4 @@ void DOMSVGPointList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex) {
   UpdateListIndicesFromIndex(animVal->mItems, aIndex);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

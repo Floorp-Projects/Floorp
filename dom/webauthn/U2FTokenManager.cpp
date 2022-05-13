@@ -38,8 +38,7 @@
   "security.webauth.webauthn_testing_allow_direct_attestation"
 #define PREF_WEBAUTHN_ANDROID_FIDO2_ENABLED \
   "security.webauth.webauthn_enable_android_fido2"
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /***********************************************************************
  * Statics
@@ -546,5 +545,4 @@ void U2FTokenManager::RunCancel(uint64_t aTransactionId) {
   AbortTransaction(aTransactionId, NS_ERROR_DOM_ABORT_ERR);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

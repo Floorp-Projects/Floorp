@@ -44,9 +44,7 @@
 
 #include "mozilla/UniquePtr.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 /**
  *  XMLHttpRequest in workers
@@ -2247,5 +2245,4 @@ void XMLHttpRequestWorker::ResetResponseData() {
   mResponseJSONValue.setUndefined();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

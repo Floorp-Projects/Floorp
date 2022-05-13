@@ -16,8 +16,7 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using namespace SVGUnitTypes_Binding;
 
@@ -130,5 +129,4 @@ SVGElement::StringAttributesInfo SVGFilterElement::GetStringInfo() {
                               ArrayLength(sStringInfo));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

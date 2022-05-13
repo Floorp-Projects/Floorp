@@ -23,12 +23,10 @@
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class Document;
 class Element;
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference {

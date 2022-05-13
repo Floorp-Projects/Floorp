@@ -142,6 +142,7 @@ class nsFormFillController final : public nsIFormFillController,
   bool mSuppressOnInput;
   bool mPasswordPopupAutomaticallyOpened;
   bool mAutoCompleteActive = false;
+  bool mInvalidatePreviousResult = false;
 };
 
 #endif  // __nsFormFillController__

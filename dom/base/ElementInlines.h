@@ -12,8 +12,7 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 inline void Element::RegisterActivityObserver() {
   OwnerDoc()->RegisterActivityObserver(this);
@@ -23,8 +22,7 @@ inline void Element::UnregisterActivityObserver() {
   OwnerDoc()->UnregisterActivityObserver(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 inline mozilla::dom::Element* nsINode::GetFlattenedTreeParentElement() const {
   nsINode* parentNode = GetFlattenedTreeParentNode();

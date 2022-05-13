@@ -11,8 +11,7 @@
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 class BindGroupLayout;
 class Device;
@@ -37,7 +36,6 @@ class RenderPipeline final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #endif  // GPU_RenderPipeline_H_

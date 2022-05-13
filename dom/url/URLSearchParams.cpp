@@ -35,8 +35,7 @@
 #include "nsStringStream.h"
 #include "nsURLHelper.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(URLSearchParams, mParent, mObserver)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(URLSearchParams)
@@ -232,5 +231,4 @@ nsresult URLSearchParams::GetSendInfo(nsIInputStream** aBody,
   return NS_NewCStringInputStream(aBody, std::move(converted));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

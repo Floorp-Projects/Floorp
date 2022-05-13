@@ -32,6 +32,8 @@ async function runFirefox(args) {
     environment: {
       ASAN_OPTIONS:
         "detect_leaks=0:quarantine_size=50331648:malloc_context_size=5",
+      // Don't enable Marionette.
+      MOZ_MARIONETTE: null,
     },
   });
   let stdout;

@@ -21,80 +21,80 @@ struct IsPixel;
 
 namespace gfx {
 
-template <class units, class Rep = int32_t>
+template <class Units, class Rep = int32_t>
 struct IntCoordTyped;
-template <class units, class F = Float>
+template <class Units, class F = Float>
 struct CoordTyped;
 
-// CommonType<coord, primitive> is a metafunction that returns the type of the
+// CommonType<Coord, Primitive> is a metafunction that returns the type of the
 // result of an arithmetic operation on the underlying type of a strongly-typed
-// coordinate type 'coord', and a primitive type 'primitive'. C++ rules for
+// coordinate type 'Coord', and a primitive type 'Primitive'. C++ rules for
 // arithmetic conversions are designed to avoid losing information - for
 // example, the result of adding an int and a float is a float - and we want
 // the same behaviour when mixing our coordinate types with primitive types.
 // We get C++ to compute the desired result type using 'decltype'.
 
-template <class coord, class primitive>
+template <class Coord, class Primitive>
 struct CommonType;
 
-template <class units, class Rep, class primitive>
-struct CommonType<IntCoordTyped<units, Rep>, primitive> {
-  using type = decltype(Rep() + primitive());
+template <class Units, class Rep, class Primitive>
+struct CommonType<IntCoordTyped<Units, Rep>, Primitive> {
+  using type = decltype(Rep() + Primitive());
 };
 
-template <class units, class F, class primitive>
-struct CommonType<CoordTyped<units, F>, primitive> {
-  using type = decltype(F() + primitive());
+template <class Units, class F, class Primitive>
+struct CommonType<CoordTyped<Units, F>, Primitive> {
+  using type = decltype(F() + Primitive());
 };
 
 // This is a base class that provides mixed-type operator overloads between
-// a strongly-typed Coord and a primitive value. It is needed to avoid
+// a strongly-typed Coord and a Primitive value. It is needed to avoid
 // ambiguities at mixed-type call sites, because Coord classes are implicitly
 // convertible to their underlying value type. As we transition more of our code
 // to strongly-typed classes, we may be able to remove some or all of these
 // overloads.
 
-template <bool B, class coord, class primitive>
+template <bool B, class Coord, class Primitive>
 struct CoordOperatorsHelper {
   // Using SFINAE (Substitution Failure Is Not An Error) to suppress redundant
   // operators
 };
 
-template <class coord, class primitive>
-struct CoordOperatorsHelper<true, coord, primitive> {
-  friend bool operator==(coord aA, primitive aB) { return aA.value == aB; }
-  friend bool operator==(primitive aA, coord aB) { return aA == aB.value; }
-  friend bool operator!=(coord aA, primitive aB) { return aA.value != aB; }
-  friend bool operator!=(primitive aA, coord aB) { return aA != aB.value; }
+template <class Coord, class Primitive>
+struct CoordOperatorsHelper<true, Coord, Primitive> {
+  friend bool operator==(Coord aA, Primitive aB) { return aA.value == aB; }
+  friend bool operator==(Primitive aA, Coord aB) { return aA == aB.value; }
+  friend bool operator!=(Coord aA, Primitive aB) { return aA.value != aB; }
+  friend bool operator!=(Primitive aA, Coord aB) { return aA != aB.value; }
 
-  using result_type = typename CommonType<coord, primitive>::type;
+  using result_type = typename CommonType<Coord, Primitive>::type;
 
-  friend result_type operator+(coord aA, primitive aB) { return aA.value + aB; }
-  friend result_type operator+(primitive aA, coord aB) { return aA + aB.value; }
-  friend result_type operator-(coord aA, primitive aB) { return aA.value - aB; }
-  friend result_type operator-(primitive aA, coord aB) { return aA - aB.value; }
-  friend result_type operator*(coord aCoord, primitive aScale) {
+  friend result_type operator+(Coord aA, Primitive aB) { return aA.value + aB; }
+  friend result_type operator+(Primitive aA, Coord aB) { return aA + aB.value; }
+  friend result_type operator-(Coord aA, Primitive aB) { return aA.value - aB; }
+  friend result_type operator-(Primitive aA, Coord aB) { return aA - aB.value; }
+  friend result_type operator*(Coord aCoord, Primitive aScale) {
     return aCoord.value * aScale;
   }
-  friend result_type operator*(primitive aScale, coord aCoord) {
+  friend result_type operator*(Primitive aScale, Coord aCoord) {
     return aScale * aCoord.value;
   }
-  friend result_type operator/(coord aCoord, primitive aScale) {
+  friend result_type operator/(Coord aCoord, Primitive aScale) {
     return aCoord.value / aScale;
   }
   // 'scale / coord' is intentionally omitted because it doesn't make sense.
 };
 
-template <class units, class Rep>
+template <class Units, class Rep>
 struct MOZ_EMPTY_BASES IntCoordTyped
-    : public BaseCoord<Rep, IntCoordTyped<units, Rep>>,
-      public units,
-      public CoordOperatorsHelper<true, IntCoordTyped<units, Rep>, float>,
-      public CoordOperatorsHelper<true, IntCoordTyped<units, Rep>, double> {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+    : public BaseCoord<Rep, IntCoordTyped<Units, Rep>>,
+      public Units,
+      public CoordOperatorsHelper<true, IntCoordTyped<Units, Rep>, float>,
+      public CoordOperatorsHelper<true, IntCoordTyped<Units, Rep>, double> {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  using Super = BaseCoord<Rep, IntCoordTyped<units, Rep>>;
+  using Super = BaseCoord<Rep, IntCoordTyped<Units, Rep>>;
 
   constexpr IntCoordTyped() : Super() {
     static_assert(sizeof(IntCoordTyped) == sizeof(Rep),
@@ -106,22 +106,22 @@ struct MOZ_EMPTY_BASES IntCoordTyped
   }
 };
 
-template <class units, class F>
+template <class Units, class F>
 struct MOZ_EMPTY_BASES CoordTyped
-    : public BaseCoord<F, CoordTyped<units, F>>,
-      public units,
+    : public BaseCoord<F, CoordTyped<Units, F>>,
+      public Units,
       public CoordOperatorsHelper<!std::is_same_v<F, int32_t>,
-                                  CoordTyped<units, F>, int32_t>,
+                                  CoordTyped<Units, F>, int32_t>,
       public CoordOperatorsHelper<!std::is_same_v<F, uint32_t>,
-                                  CoordTyped<units, F>, uint32_t>,
+                                  CoordTyped<Units, F>, uint32_t>,
       public CoordOperatorsHelper<!std::is_same_v<F, double>,
-                                  CoordTyped<units, F>, double>,
+                                  CoordTyped<Units, F>, double>,
       public CoordOperatorsHelper<!std::is_same_v<F, float>,
-                                  CoordTyped<units, F>, float> {
-  static_assert(IsPixel<units>::value,
-                "'units' must be a coordinate system tag");
+                                  CoordTyped<Units, F>, float> {
+  static_assert(IsPixel<Units>::value,
+                "'Units' must be a coordinate system tag");
 
-  using Super = BaseCoord<F, CoordTyped<units, F>>;
+  using Super = BaseCoord<F, CoordTyped<Units, F>>;
 
   constexpr CoordTyped() : Super() {
     static_assert(sizeof(CoordTyped) == sizeof(F),
@@ -131,7 +131,7 @@ struct MOZ_EMPTY_BASES CoordTyped
     static_assert(sizeof(CoordTyped) == sizeof(F),
                   "Would be unfortunate otherwise!");
   }
-  explicit constexpr CoordTyped(const IntCoordTyped<units>& aCoord)
+  explicit constexpr CoordTyped(const IntCoordTyped<Units>& aCoord)
       : Super(F(aCoord.value)) {
     static_assert(sizeof(CoordTyped) == sizeof(F),
                   "Would be unfortunate otherwise!");
@@ -140,11 +140,11 @@ struct MOZ_EMPTY_BASES CoordTyped
   void Round() { this->value = floor(this->value + 0.5); }
   void Truncate() { this->value = int32_t(this->value); }
 
-  IntCoordTyped<units> Rounded() const {
-    return IntCoordTyped<units>(int32_t(floor(this->value + 0.5)));
+  IntCoordTyped<Units> Rounded() const {
+    return IntCoordTyped<Units>(int32_t(floor(this->value + 0.5)));
   }
-  IntCoordTyped<units> Truncated() const {
-    return IntCoordTyped<units>(int32_t(this->value));
+  IntCoordTyped<Units> Truncated() const {
+    return IntCoordTyped<Units>(int32_t(this->value));
   }
 };
 

@@ -12,8 +12,7 @@
 #include "nsThreadUtils.h"
 #include "ServiceWorkerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ServiceWorkerUnregisterJob::PushUnsubscribeCallback final
     : public nsIUnsubscribeResultCallback {
@@ -135,5 +134,4 @@ void ServiceWorkerUnregisterJob::Unregister() {
   Finish(NS_OK);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

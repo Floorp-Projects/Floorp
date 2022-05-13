@@ -12,8 +12,7 @@
 #include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::dom::ipc::StructuredCloneData;
 using mozilla::ipc::IPCResult;
@@ -60,5 +59,4 @@ void ServiceWorkerParent::MaybeSendDelete() {
   Unused << Send__delete__(this);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

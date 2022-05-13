@@ -14,9 +14,7 @@
 class mozIStorageConnection;
 class nsIFile;
 
-namespace mozilla {
-namespace dom {
-namespace cache {
+namespace mozilla::dom::cache {
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
     const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile& aDBFile);
@@ -69,8 +67,6 @@ class SyncDBAction : public DBAction {
       mozIStorageConnection* aConn) override;
 };
 
-}  // namespace cache
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::cache
 
 #endif  // mozilla_dom_cache_DBAction_h

@@ -17,8 +17,7 @@
 
 class nsINode;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class NodeIterator final : public nsStubMutationObserver, public nsTraversal {
  public:
@@ -79,8 +78,6 @@ class NodeIterator final : public nsStubMutationObserver, public nsTraversal {
   NodePointer mWorkingPointer;
 };
 
-}  // namespace dom
-
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_NodeIterator_h

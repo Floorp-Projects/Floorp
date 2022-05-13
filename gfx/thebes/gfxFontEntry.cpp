@@ -1547,7 +1547,6 @@ void gfxFontFamily::SortAvailableFonts() {
 bool gfxFontFamily::HasOtherFamilyNames() {
   // need to read in other family names to determine this
   if (!mOtherFamilyNamesInitialized) {
-    AutoWriteLock lock(mLock);
     ReadOtherFamilyNames(
         gfxPlatformFontList::PlatformFontList());  // sets mHasOtherFamilyNames
   }
@@ -1936,10 +1935,6 @@ bool gfxFontFamily::ReadOtherFamilyNamesForFace(
 
 void gfxFontFamily::ReadOtherFamilyNames(
     gfxPlatformFontList* aPlatformFontList) {
-  if (mOtherFamilyNamesInitialized) {
-    return;
-  }
-
   AutoWriteLock lock(mLock);
   if (mOtherFamilyNamesInitialized) {
     return;
@@ -2020,8 +2015,10 @@ static bool LookForLegacyFamilyName(const nsACString& aCanonicalName,
           aNameData + stringsBase + nameOff, nameLen,
           uint32_t(nameRecord->platformID), uint32_t(nameRecord->encodingID),
           uint32_t(nameRecord->languageID), aLegacyName);
-      // it's only a legacy name if it differs from the canonical name
-      if (ok && aLegacyName != aCanonicalName) {
+      // It's only a legacy name if it case-insensitively differs from the
+      // canonical name (otherwise it would map to the same key).
+      if (ok && !aLegacyName.Equals(aCanonicalName,
+                                    nsCaseInsensitiveCStringComparator)) {
         return true;
       }
     }
@@ -2030,19 +2027,16 @@ static bool LookForLegacyFamilyName(const nsACString& aCanonicalName,
 }
 
 bool gfxFontFamily::CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList) {
+  aFontList->mLock.AssertCurrentThreadIn();
   if (mCheckedForLegacyFamilyNames) {
     // we already did this, so there's nothing more to add
     return false;
   }
-  aFontList->mLock.AssertCurrentThreadIn();
-  AutoWriteLock lock(mLock);
   mCheckedForLegacyFamilyNames = true;
   bool added = false;
   const uint32_t kNAME = TRUETYPE_TAG('n', 'a', 'm', 'e');
-  // Make a local copy of the array of font faces, in case of changes
-  // during the iteration.
-  for (auto& fe :
-       CopyableAutoTArray<RefPtr<gfxFontEntry>, 8>(mAvailableFonts)) {
+  AutoReadLock lock(mLock);
+  for (const auto& fe : mAvailableFonts) {
     if (!fe) {
       continue;
     }
@@ -2170,13 +2164,14 @@ void gfxFontFamily::ReadFaceNames(gfxPlatformFontList* aPlatformFontList,
   mOtherFamilyNamesInitialized = true;
 }
 
-gfxFontEntry* gfxFontFamily::FindFont(const nsACString& aPostscriptName) {
+gfxFontEntry* gfxFontFamily::FindFont(const nsACString& aFontName,
+                                      const nsCStringComparator& aCmp) const {
   // find the font using a simple linear search
   AutoReadLock lock(mLock);
   uint32_t numFonts = mAvailableFonts.Length();
   for (uint32_t i = 0; i < numFonts; i++) {
     gfxFontEntry* fe = mAvailableFonts[i].get();
-    if (fe && fe->Name() == aPostscriptName) {
+    if (fe && fe->Name().Equals(aFontName, aCmp)) {
       return fe;
     }
   }

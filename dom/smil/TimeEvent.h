@@ -15,8 +15,7 @@
 
 class nsGlobalWindowInner;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class TimeEvent final : public Event {
  public:
@@ -53,8 +52,7 @@ class TimeEvent final : public Event {
   int32_t mDetail;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::TimeEvent> NS_NewDOMTimeEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

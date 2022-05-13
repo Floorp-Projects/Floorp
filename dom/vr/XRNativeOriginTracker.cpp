@@ -6,8 +6,7 @@
 
 #include "XRNativeOriginTracker.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 XRNativeOriginTracker::XRNativeOriginTracker(const gfx::VRPose* aPose)
     : mPose(aPose) {
@@ -28,5 +27,4 @@ gfx::QuaternionDouble XRNativeOriginTracker::GetOrientation() {
   return orientation;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

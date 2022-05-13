@@ -21,8 +21,7 @@
  * yield the outgoing edges in a DOM node graph for reporting.
  */
 
-namespace JS {
-namespace ubi {
+namespace JS::ubi {
 
 // The DOM node base class.
 // This is an abstract class and therefore does not require a concreteTypeName.
@@ -85,7 +84,6 @@ class Concrete<mozilla::dom::Attr> : public Concrete<nsINode> {
   static const char16_t concreteTypeName[];
 };
 
-}  // namespace ubi
-}  // namespace JS
+}  // namespace JS::ubi
 
 #endif

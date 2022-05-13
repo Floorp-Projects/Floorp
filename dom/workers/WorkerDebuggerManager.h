@@ -26,8 +26,7 @@
 #define WORKERDEBUGGERMANAGER_CONTRACTID \
   "@mozilla.org/dom/workers/workerdebuggermanager;1"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WorkerDebugger;
 class WorkerPrivate;
@@ -112,7 +111,6 @@ inline nsresult UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_workers_workerdebuggermanager_h

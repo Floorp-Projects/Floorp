@@ -444,7 +444,8 @@ bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
                                    HandleValue specifier, HandleValue options);
 
-bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise);
+bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise,
+                               JS::ModuleErrorBehaviour errorBehaviour);
 
 bool FinishDynamicModuleImport(JSContext* cx, HandleObject evaluationPromise,
                                HandleValue referencingPrivate,

@@ -3,46 +3,37 @@
 
 "use strict";
 
-var utilityPid = undefined;
 const utilityProcessTest = Cc[
   "@mozilla.org/utility-process-test;1"
 ].createInstance(Ci.nsIUtilityProcessTest);
 
 const kGenericUtility = 0x0;
 
-function startUtilityProcess() {
-  add_task(async () => {
-    info("Start a UtilityProcess");
-    await utilityProcessTest
-      .startProcess()
-      .then(async pid => {
-        utilityPid = pid;
-        ok(true, "Could start Utility process: " + pid);
-      })
-      .catch(async () => {
-        ok(false, "Cannot start Utility process?");
-      });
-  });
+async function startUtilityProcess() {
+  info("Start a UtilityProcess");
+  return utilityProcessTest.startProcess();
 }
 
-function cleanUtilityProcessShutdown() {
-  add_task(async () => {
-    const utilityProcessGone = TestUtils.topicObserved("ipc:utility-shutdown");
+async function cleanUtilityProcessShutdown(utilityPid) {
+  info(`CleanShutdown Utility Process ${utilityPid}`);
+  ok(utilityPid !== undefined, "Utility needs to be defined");
 
-    info("CleanShutdown Utility Process");
-    await utilityProcessTest.stopProcess();
+  const utilityProcessGone = TestUtils.topicObserved(
+    "ipc:utility-shutdown",
+    (subject, data) => parseInt(data, 10) === utilityPid
+  );
+  await utilityProcessTest.stopProcess();
 
-    let [subject, data] = await utilityProcessGone;
-    ok(
-      subject instanceof Ci.nsIPropertyBag2,
-      "Subject needs to be a nsIPropertyBag2 to clean up properly"
-    );
-    is(
-      parseInt(data, 10),
-      utilityPid,
-      `Should match the crashed PID ${utilityPid} with ${data}`
-    );
+  let [subject, data] = await utilityProcessGone;
+  ok(
+    subject instanceof Ci.nsIPropertyBag2,
+    "Subject needs to be a nsIPropertyBag2 to clean up properly"
+  );
+  is(
+    parseInt(data, 10),
+    utilityPid,
+    `Should match the crashed PID ${utilityPid} with ${data}`
+  );
 
-    ok(!subject.hasKey("dumpID"), "There should be no dumpID");
-  });
+  ok(!subject.hasKey("dumpID"), "There should be no dumpID");
 }

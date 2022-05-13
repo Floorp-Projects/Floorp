@@ -255,7 +255,8 @@ WarpEnvironment WarpScriptOracle::createEnvironment() {
     return WarpEnvironment(NoEnvironment());
   }
 
-  if (ModuleObject* module = script_->module()) {
+  if (script_->isModule()) {
+    ModuleObject* module = script_->module();
     JSObject* obj = &module->initialEnvironment();
     return WarpEnvironment(ConstantObjectEnvironment(obj));
   }

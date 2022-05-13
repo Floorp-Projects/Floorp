@@ -18,8 +18,7 @@
 #include "nsIObserverService.h"
 #include "nsPIDOMWindow.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 static const char kStorageEnabled[] = "dom.storage.enabled";
 
@@ -155,5 +154,4 @@ void Storage::NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

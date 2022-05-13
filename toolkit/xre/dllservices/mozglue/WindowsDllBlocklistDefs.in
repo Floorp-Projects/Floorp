@@ -248,6 +248,10 @@ ALL_PROCESSES += [
     # InfoWatch Device Monitor causes crashes, bug 1704276
     DllBlocklistEntry("iwprn.dll", (6, 9, 11, 360)),
     DllBlocklistEntry("iwprn_x86.dll", (6, 9, 11, 360)),
+
+    # Forcepoint DLLs causing crashes, bug 1767993
+    DllBlocklistEntry("qipcap.dll", (7, 7, 819, 1)),
+    DllBlocklistEntry("qipcap64.dll", (7, 7, 819, 1)),
 ]
 
 ALL_PROCESSES_TESTS += [
@@ -300,5 +304,12 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("videocapturer.dll", ALL_VERSIONS),
     DllBlocklistEntry("videocapturerhk32.dll", ALL_VERSIONS),
     DllBlocklistEntry("videocapturerhk64.dll", ALL_VERSIONS),
+
+    # Causes crashes in the content process with win32k lockdown, bug 1766029
+    # The crash seems to be in the *_m module which has been unloaded.
+    DllBlocklistEntry("safaweb.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb_m.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb64.dll", (3, 0, 21, 3181)),
+    DllBlocklistEntry("safaweb64_m.dll", (3, 0, 21, 3181)),
 ]
 

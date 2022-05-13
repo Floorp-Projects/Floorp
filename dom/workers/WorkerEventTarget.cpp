@@ -10,8 +10,7 @@
 
 #include "mozilla/dom/ReferrerInfo.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 namespace {
 
@@ -147,5 +146,4 @@ WorkerEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   return NS_OK;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

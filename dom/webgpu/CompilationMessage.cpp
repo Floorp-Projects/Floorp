@@ -7,8 +7,7 @@
 #include "CompilationInfo.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(CompilationMessage, mParent)
 GPU_IMPL_JS_WRAP(CompilationMessage)
@@ -16,5 +15,4 @@ GPU_IMPL_JS_WRAP(CompilationMessage)
 CompilationMessage::CompilationMessage(CompilationInfo* const aParent)
     : ChildOf(aParent) {}
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

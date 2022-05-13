@@ -7,8 +7,7 @@
 #include "XMLHttpRequestUpload.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_INTERFACE_MAP_BEGIN(XMLHttpRequestUpload)
 NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
@@ -22,5 +21,4 @@ JSObject* XMLHttpRequestUpload::WrapObject(JSContext* aCx,
   return XMLHttpRequestUpload_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

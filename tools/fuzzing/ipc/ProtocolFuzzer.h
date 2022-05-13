@@ -94,7 +94,7 @@ void FuzzProtocol(T* aProtocol, const uint8_t* aData, size_t aSize,
 
     if (m.is_sync()) {
       UniquePtr<IPC::Message> reply;
-      aProtocol->OnMessageReceived(m, *getter_Transfers(reply));
+      aProtocol->OnMessageReceived(m, reply);
     } else {
       aProtocol->OnMessageReceived(m);
     }

@@ -178,11 +178,13 @@ function handleHelperResult(response) {
   return async ({ dispatch, hud, toolbox, webConsoleUI, getState }) => {
     const { result, helperResult } = response;
     const helperHasRawOutput = !!helperResult?.rawOutput;
+    let networkFront = null;
+
+    // We still don't have support for network event everywhere (e.g. it's missing in
+    // non-multiprocess Browser Toolboxes).
     const hasNetworkResourceCommandSupport = hud.resourceCommand.hasResourceCommandSupport(
       hud.resourceCommand.TYPES.NETWORK_EVENT
     );
-    let networkFront = null;
-    // @backward-compat { version 86 } default network events watcher support
     if (hasNetworkResourceCommandSupport) {
       networkFront = await hud.resourceCommand.watcherFront.getNetworkParentActor();
     }
@@ -286,8 +288,7 @@ function handleHelperResult(response) {
           // process, while the request has to be blocked from the parent process.
           // Then, calling the Netmonitor action will only update the visual state of the Netmonitor,
           // but we also have to block the request via the NetworkParentActor.
-          // @backward-compat { version 86 } default network events watcher support
-          if (hasNetworkResourceCommandSupport && networkFront) {
+          if (networkFront) {
             await networkFront.blockRequest({ url: blockURL });
           }
           toolbox
@@ -310,8 +311,7 @@ function handleHelperResult(response) {
           break;
         case "unblockURL":
           const unblockURL = helperResult.args.url;
-          // @backward-compat { version 86 } see related comments in block url above
-          if (hasNetworkResourceCommandSupport && networkFront) {
+          if (networkFront) {
             await networkFront.unblockRequest({ url: unblockURL });
           }
           toolbox

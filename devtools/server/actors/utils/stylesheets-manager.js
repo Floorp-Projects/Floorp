@@ -306,20 +306,19 @@ class StyleSheetsManager extends EventEmitter {
    * @param  {String} resourceId
    * @param  {String} text
    *         New text.
-   * @param  {Boolean} transition
-   *         Whether to do CSS transition for change.
-   * @param  {Number} kind
-   *         Either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
-   * @param {String} cause
+   * @param  {Object} options
+   * @param  {Boolean} options.transition
+   *         Whether to do CSS transition for change. Defaults to false.
+   * @param  {Number} options.kind
+   *         Either UPDATE_PRESERVING_RULES or UPDATE_GENERAL. Defaults to UPDATE_GENERAL.
+   * @param {String} options.cause
    *         Indicates the cause of this update (e.g. "styleeditor") if this was called
    *         from the stylesheet to be edited by the user from the StyleEditor.
    */
-  async update(
+  async setStyleSheetText(
     resourceId,
     text,
-    transition,
-    kind = UPDATE_GENERAL,
-    cause = ""
+    { transition = false, kind = UPDATE_GENERAL, cause = "" } = {}
   ) {
     const styleSheet = this._styleSheetMap.get(resourceId);
     InspectorUtils.parseStyleSheet(styleSheet, text);

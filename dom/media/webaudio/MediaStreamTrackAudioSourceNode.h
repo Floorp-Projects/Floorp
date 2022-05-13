@@ -13,9 +13,7 @@
 #include "mozilla/WeakPtr.h"
 #include "PrincipalChangeObserver.h"
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 struct MediaStreamTrackAudioSourceOptions;
@@ -110,7 +108,6 @@ class MediaStreamTrackAudioSourceNode
   TrackListener mTrackListener;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

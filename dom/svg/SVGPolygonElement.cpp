@@ -13,8 +13,7 @@ using namespace mozilla::gfx;
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Polygon)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 JSObject* SVGPolygonElement::WrapNode(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -75,5 +74,4 @@ already_AddRefed<Path> SVGPolygonElement::BuildPath(PathBuilder* aBuilder) {
   return aBuilder->Finish();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

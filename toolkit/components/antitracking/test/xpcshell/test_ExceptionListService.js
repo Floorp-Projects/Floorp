@@ -45,8 +45,8 @@ add_task(async _ => {
   ];
 
   // Add some initial data
-  let db = await RemoteSettings(COLLECTION_NAME).db;
-  await db.importChanges({}, 42, records);
+  let db = RemoteSettings(COLLECTION_NAME).db;
+  await db.importChanges({}, Date.now(), records);
 
   let promise = waitForEvent(updateEvent, "update");
   let obs = data => {

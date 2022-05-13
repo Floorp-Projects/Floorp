@@ -43,8 +43,7 @@
  *
  */
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Credential;
 
@@ -140,7 +139,6 @@ inline void ImplCycleCollectionUnlink(WebAuthnTransaction& aTransaction) {
   ImplCycleCollectionUnlink(aTransaction.mPromise);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_WebAuthnManager_h

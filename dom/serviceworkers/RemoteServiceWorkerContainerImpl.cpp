@@ -12,8 +12,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "ServiceWorkerContainerChild.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using mozilla::ipc::BackgroundChild;
 using mozilla::ipc::PBackgroundChild;
@@ -234,5 +233,4 @@ void RemoteServiceWorkerContainerImpl::RevokeActor(
   mShutdown = true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

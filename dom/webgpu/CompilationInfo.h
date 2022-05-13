@@ -9,8 +9,7 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 class ShaderModule;
 
 class CompilationInfo final : public nsWrapperCache,
@@ -25,7 +24,6 @@ class CompilationInfo final : public nsWrapperCache,
   void Cleanup() {}
 };
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu
 
 #endif  // GPU_CompilationInfo_H_

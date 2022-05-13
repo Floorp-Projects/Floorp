@@ -560,6 +560,7 @@ var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteTabs;
 var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteSubframes;
+var gFirefoxViewTab;
 
 var gBrowserAllowScriptsToCloseInitialTabs = false;
 
@@ -1911,7 +1912,7 @@ var gBrowserInit = {
     );
     Services.obs.addObserver(
       gXPInstallObserver,
-      "addon-install-webapi-blocked-policy"
+      "addon-install-policy-blocked"
     );
     Services.obs.addObserver(
       gXPInstallObserver,
@@ -2540,7 +2541,7 @@ var gBrowserInit = {
       );
       Services.obs.removeObserver(
         gXPInstallObserver,
-        "addon-install-webapi-blocked-policy"
+        "addon-install-policy-blocked"
       );
       Services.obs.removeObserver(
         gXPInstallObserver,
@@ -8403,6 +8404,16 @@ const gRemoteControl = {
   },
 
   updateVisualCue() {
+    // Disable updating the remote control cue for performance tests,
+    // because these could fail due to an early initialization of Marionette.
+    const disableRemoteControlCue = Services.prefs.getBoolPref(
+      "browser.chrome.disableRemoteControlCueForTests",
+      false
+    );
+    if (disableRemoteControlCue && Cu.isInAutomation) {
+      return;
+    }
+
     const mainWindow = document.documentElement;
     const remoteControlComponent = this.getRemoteControlComponent();
     if (remoteControlComponent) {
@@ -9989,6 +10000,7 @@ const PhotonUI = `@import url(chrome://browser/skin/photon/photonChrome.css);
 const MaterialUI = `@import url(chrome://browser/skin/floorplegacy/floorplegacy.css);`
 const fluentUI = `@import url(chrome://browser/skin/fluentUI/fluentUI.css);`
 const gnomeUI = `@import url(chrome://browser/skin/gnomeUI/gnomeUI.css);`
+const WebkitUI = `@import url(chrome://browser/skin/webkitUI/webkitUI.css);`
 
 switch(floorpinterfacenum){
 
@@ -10024,13 +10036,20 @@ switch(floorpinterfacenum){
     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
     break;
 
-    case 6:
-      if (AppConstants.platform == "linux"){
-      var Tag = document.createElement('style');
-      Tag.innerText = gnomeUI;
-      document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
-      }
-      break;
+  case 6:
+     if (AppConstants.platform == "linux"){
+     var Tag = document.createElement('style');
+     Tag.innerText = gnomeUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+     }
+    break;
+
+  case 7:
+     var Tag = document.createElement('style');
+     Tag.innerText = WebkitUI;
+     document.getElementsByTagName('head')[0].insertAdjacentElement('beforeend',Tag);
+  break;
+  
 }
 
 

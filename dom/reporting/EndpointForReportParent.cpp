@@ -11,8 +11,7 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 EndpointForReportParent::EndpointForReportParent()
     : mPBackgroundThread(NS_GetCurrentThread()), mActive(true) {}
@@ -41,5 +40,4 @@ void EndpointForReportParent::Run(
       }));
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

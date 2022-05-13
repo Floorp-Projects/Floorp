@@ -10,8 +10,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsContentList.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class HTMLDataListElement final : public nsGenericHTMLElement {
  public:
@@ -50,7 +49,6 @@ class HTMLDataListElement final : public nsGenericHTMLElement {
   RefPtr<nsContentList> mOptions;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* HTMLDataListElement_h___ */

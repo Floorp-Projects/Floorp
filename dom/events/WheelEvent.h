@@ -11,8 +11,7 @@
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/EventForwards.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class WheelEvent : public MouseEvent {
  public:
@@ -74,8 +73,7 @@ class WheelEvent : public MouseEvent {
   int32_t mAppUnitsPerDevPixel;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 already_AddRefed<mozilla::dom::WheelEvent> NS_NewDOMWheelEvent(
     mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,

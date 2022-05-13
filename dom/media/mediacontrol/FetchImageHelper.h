@@ -10,8 +10,7 @@
 #include "mozilla/dom/MediaSessionBinding.h"
 #include "mozilla/MozPromise.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 /**
  * FetchImageHelper is used to fetch image data from MediaImage, and the fetched
  * image data would be used to show on the virtual control inferface. The URL of
@@ -78,7 +77,6 @@ class FetchImageHelper final {
   RefPtr<ImageFetchListener> mListener;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_MEDIA_MEDIACONTROL_FETCHIMAGEHELPER_H_

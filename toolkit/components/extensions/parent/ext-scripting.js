@@ -44,7 +44,6 @@ const execute = (context, details, kind, method) => {
   const { tabId, frameIds, allFrames } = details.target;
   const tab = tabManager.get(tabId);
 
-  // TODO: Bug 1750765 - Add test coverage for this option.
   options.hasActiveTabPermission = tab.hasActiveTabPermission;
   options.matches = tab.extension.allowedOrigins.patterns.map(
     host => host.pattern
@@ -117,14 +116,18 @@ const makeInternalContentScript = details => {
     scriptId: getUniqueId(),
     options: {
       allFrames: details.allFrames || false,
+      // Although this flag defaults to true with MV3, it is not with MV2.
+      // Check permissions at runtime since we aren't checking permissions
+      // upfront.
+      checkPermissions: true,
       cssPaths: details.css || [],
       excludeMatches: details.excludeMatches,
       jsPaths: details.js || [],
       matchAboutBlank: true,
       matches: details.matches,
       originAttributesPatterns: null,
-      runAt: details.runAt || "document_idle",
       persistAcrossSessions: details.persistAcrossSessions,
+      runAt: details.runAt || "document_idle",
     },
   };
 };

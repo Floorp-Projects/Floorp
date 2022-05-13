@@ -9,12 +9,10 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 extern const char* kPrefSimpleDBEnabled;
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_simpledb_SimpledbCommon_h

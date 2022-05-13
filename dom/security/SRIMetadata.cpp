@@ -20,8 +20,7 @@ static mozilla::LogModule* GetSriMetadataLog() {
 #define SRIMETADATAERROR(args) \
   MOZ_LOG(GetSriMetadataLog(), mozilla::LogLevel::Error, args)
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 SRIMetadata::SRIMetadata(const nsACString& aToken)
     : mAlgorithmType(SRIMetadata::UNKNOWN_ALGORITHM), mEmpty(false) {
@@ -186,5 +185,4 @@ bool SRIMetadata::CanTrustBeDelegatedTo(const SRIMetadata& aOther) const {
   return true;
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -10,10 +10,7 @@
 #include "nsIStreamLoader.h"
 #include "mozilla/dom/ScriptLoadInfo.h"
 
-namespace mozilla {
-namespace dom {
-
-namespace workerinternals::loader {
+namespace mozilla::dom::workerinternals::loader {
 
 class WorkerScriptLoader;
 
@@ -73,9 +70,6 @@ class NetworkLoadHandler final : public nsIStreamLoaderObserver,
   ScriptLoadInfo& mLoadInfo;
 };
 
-}  // namespace workerinternals::loader
-
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom::workerinternals::loader
 
 #endif /* mozilla_dom_workers_NetworkLoadHandler_h__ */

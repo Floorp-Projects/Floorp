@@ -17,6 +17,12 @@ class PictureInPictureVideoWrapper {
     }
     this.player = netflixPlayerAPI.getVideoPlayerBySessionId(sessionId);
   }
+  getCurrentTime(video) {
+    return this.player.getCurrentTime();
+  }
+  getDuration(video) {
+    return this.player.getDuration();
+  }
   play() {
     this.player.play();
   }
@@ -30,17 +36,8 @@ class PictureInPictureVideoWrapper {
     if (container) {
       updateCaptionsFunction("");
       const callback = function(mutationsList, observer) {
-        let textNodeList = container
-          .querySelector(".player-timedtext")
-          ?.querySelectorAll("span > span");
-        if (!textNodeList || textNodeList.length < 1) {
-          updateCaptionsFunction("");
-          return;
-        }
-
-        updateCaptionsFunction(
-          Array.from(textNodeList, x => x.textContent).join("\n")
-        );
+        let text = container.querySelector(".player-timedtext").innerText;
+        updateCaptionsFunction(text);
       };
 
       // immediately invoke the callback function to add subtitles to the PiP window
@@ -54,6 +51,31 @@ class PictureInPictureVideoWrapper {
         subtree: true,
       });
     }
+  }
+
+  setCurrentTime(video, position) {
+    let oldTime = this.player.getCurrentTime();
+    let duration = this.player.getDuration();
+    let isHome = position == 0;
+    let isEnd = position >= duration;
+    // Read pipChild's expected seek result to determine if we want
+    // to move forward/backwards, or go to the start/end
+    let seekDirection = position - oldTime;
+    // But ignore pipChild's proposed seek forward/backward time for a better viewing
+    // experience. 10 seconds (10000ms) seems to be the best value for compatibility.
+    // The new currentTime will not always be 10 seconds forward/backward though, since Netflix
+    // adjusts the new currentTime when seek() is called, according to the current timestamp.
+    let seekTimeMS = 10000;
+    let newTime = 0;
+
+    if (isHome || isEnd) {
+      newTime = position;
+    } else if (seekDirection < 0) {
+      newTime = Math.max(oldTime - seekTimeMS, 0);
+    } else if (seekDirection > 0) {
+      newTime = Math.min(oldTime + seekTimeMS, duration);
+    }
+    this.player.seek(newTime);
   }
 }
 

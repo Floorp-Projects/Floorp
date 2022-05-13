@@ -8,8 +8,7 @@
 #include "mozilla/dom/ReportingBinding.h"
 #include "mozilla/JSONWriter.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 DeprecationReportBody::DeprecationReportBody(
     nsIGlobalObject* aGlobal, const nsAString& aId,
@@ -79,5 +78,4 @@ void DeprecationReportBody::ToJSON(JSONWriter& aWriter) const {
   }
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

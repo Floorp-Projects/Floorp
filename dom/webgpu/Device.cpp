@@ -29,8 +29,7 @@
 #include "ValidationError.h"
 #include "ipc/WebGPUChild.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 mozilla::LazyLogModule gWebGPULog("WebGPU");
 
@@ -456,5 +455,4 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
   return promise.forget();
 }
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

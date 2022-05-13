@@ -12,8 +12,7 @@
 nsresult NS_NewSVGPolylineElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGPolylineElementBase = SVGPolyElement;
 
@@ -35,7 +34,6 @@ class SVGPolylineElement final : public SVGPolylineElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGPOLYLINEELEMENT_H_

@@ -15,8 +15,7 @@
 #include <limits>
 #include <set>
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class AudioContext;
 class AudioBufferSourceNode;
@@ -217,7 +216,6 @@ class PannerNode final : public AudioNode {
   double mConeOuterGain;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

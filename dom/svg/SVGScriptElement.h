@@ -16,8 +16,7 @@ nsresult NS_NewSVGScriptElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     mozilla::dom::FromParser aFromParser);
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 using SVGScriptElementBase = SVGElement;
 
@@ -84,7 +83,6 @@ class SVGScriptElement final : public SVGScriptElementBase,
   static StringInfo sStringInfo[2];
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // DOM_SVG_SVGSCRIPTELEMENT_H_

@@ -10,8 +10,7 @@
 #include "SVGAnimatedLength.h"
 #include "DOMSVGLength.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedLength,
                                                mSVGElement)
@@ -32,5 +31,4 @@ already_AddRefed<DOMSVGLength> DOMSVGAnimatedLength::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

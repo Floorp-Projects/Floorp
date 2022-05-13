@@ -5,11 +5,9 @@
 
 #include "DeviceLostInfo.h"
 
-namespace mozilla {
-namespace webgpu {
+namespace mozilla::webgpu {
 
 GPU_IMPL_CYCLE_COLLECTION(DeviceLostInfo, mGlobal)
 GPU_IMPL_JS_WRAP(DeviceLostInfo)
 
-}  // namespace webgpu
-}  // namespace mozilla
+}  // namespace mozilla::webgpu

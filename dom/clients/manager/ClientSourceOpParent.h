@@ -9,8 +9,7 @@
 #include "mozilla/dom/ClientOpPromise.h"
 #include "mozilla/dom/PClientSourceOpParent.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class ClientSourceOpParent final : public PClientSourceOpParent {
   const ClientOpConstructorArgs mArgs;
@@ -31,7 +30,6 @@ class ClientSourceOpParent final : public PClientSourceOpParent {
   ~ClientSourceOpParent();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // _mozilla_dom_ClientSourceOpParent_h

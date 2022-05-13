@@ -14,8 +14,7 @@
 #include "nsIObserver.h"
 #include "nsTArray.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /**
  * MediaControlService is an interface to access controllers by providing
@@ -177,7 +176,6 @@ class MediaControlService final : public nsIObserver {
   bool mHasEverEnabledMediaControl = false;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

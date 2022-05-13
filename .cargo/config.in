@@ -7,10 +7,10 @@ git = "https://github.com/smol-rs/async-task"
 replace-with = "vendored-sources"
 rev = "f6488e35beccb26eb6e85847b02aa78a42cd3d0e"
 
-[source."https://github.com/msirringhaus/minidump_writer_linux.git"]
-git = "https://github.com/msirringhaus/minidump_writer_linux.git"
+[source."https://github.com/rust-minidump/minidump-writer.git"]
+git = "https://github.com/rust-minidump/minidump-writer.git"
 replace-with = "vendored-sources"
-rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852"
+rev = "75ada456c92a429704691a85e1cb42fef8cafc0d"
 
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"

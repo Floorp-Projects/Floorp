@@ -23,7 +23,9 @@ protocol PFetchEventOpProxy {
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
 
  child:
-  async PreloadResponse(ParentToChildResponseWithTiming aResponse);
+  async PreloadResponse(ParentToChildInternalResponse aResponse);
+
+  async PreloadResponseEnd(ResponseEndArgs aArgs);
 };
 
 }  // namespace dom

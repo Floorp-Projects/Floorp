@@ -766,9 +766,10 @@ enum class SimdOp {
   F64x2RelaxedMin = 0x10f,
   F64x2RelaxedMax = 0x110,
   I16x8RelaxedQ15MulrS = 0x111,
-// Dot product = 0x112-0x115
-// bfloat16 dot product = 0x116
-// Reserved for Relaxed SIMD = 0x117-0x12f
+  I16x8DotI8x16I7x16S = 0x112,
+  I32x4DotI8x16I7x16AddS = 0x113,
+// bfloat16 dot product = 0x114
+// Reserved for Relaxed SIMD = 0x115-0x12f
 
 // Unused = 0x130 and up
 

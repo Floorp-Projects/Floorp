@@ -16,8 +16,7 @@ class nsIXULStore;
 template <typename T>
 class nsCOMArray;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class XULPersist final : public nsStubDocumentObserver {
  public:
@@ -48,7 +47,6 @@ class XULPersist final : public nsStubDocumentObserver {
   Document* MOZ_NON_OWNING_REF mDocument;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_XULPersist_h

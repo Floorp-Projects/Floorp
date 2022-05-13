@@ -11,15 +11,13 @@
 #include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/Maybe.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 const nsLiteralCString& PermissionNameToType(PermissionName aName);
 Maybe<PermissionName> TypeToPermissionName(const nsACString& aType);
 
 PermissionState ActionToPermissionState(uint32_t aAction);
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif

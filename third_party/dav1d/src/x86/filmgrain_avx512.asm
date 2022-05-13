@@ -119,34 +119,9 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 22, dst, src, stride, fg_data, w, scaling, \
     mov      grain_lutq, grain_lutmp
     mov              hd, hm
 .loop_y:
-    mova           ym18, [srcq+strideq*0]
-    vinserti32x8    m18, [srcq+strideq*1], 1
     movu           ym21, [grain_lutq+offxyq-82]
     vinserti32x8    m21, [grain_lutq+offxyq+ 0], 1
-    mova            m19, m0
-    vpmovb2m         k2, m18
-    punpcklbw       m16, m18, m5
-    punpckhbw       m17, m18, m5
-    vpermt2b        m19, m18, m1 ; scaling[  0..127]
-    vpermi2b        m18, m2, m3  ; scaling[128..255]
-    punpcklbw       m20, m5, m21 ; grain
-    punpckhbw       m21, m5
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    pshufb          m19, m4
-    pmaddubsw       m18, m19, m20
-    pmaddubsw       m19, m21
-    add      grain_lutq, 82*2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    paddw           m16, m18
-    paddw           m17, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-    mova    [dstq+srcq], ym16
-    add            srcq, strideq
-    vextracti32x8 [dstq+srcq], m16, 1
-    add            srcq, strideq
+    call .add_noise
     sub              hb, 2
     jg .loop_y
     add              wq, 32
@@ -182,38 +157,15 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 22, dst, src, stride, fg_data, w, scaling, \
 .loop_y_h_overlap:
     movu           ym20, [grain_lutq+offxyq-82]
     vinserti32x8    m20, [grain_lutq+offxyq+ 0], 1
-    movd           xm21, [grain_lutq+left_offxyq-50]
-    vinserti32x4    m21, [grain_lutq+left_offxyq+32], 2
-    mova           ym18, [srcq+strideq*0]
-    vinserti32x8    m18, [srcq+strideq*1], 1
-    mova            m19, m0
-    punpcklbw       m21, m20
-    vpmovb2m         k2, m18
-    punpcklbw       m16, m18, m5
-    punpckhbw       m17, m18, m5
-    pmaddubsw       m21, m10, m21
-    vpermt2b        m19, m18, m1
-    vpermi2b        m18, m2, m3
-    pmulhrsw        m21, m9
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    punpckhbw       m18, m20, m5
-    pshufb          m19, m4
-    packsswb    m20{k1}, m21, m21
-    punpcklbw       m20, m5, m20 ; grain
-    pmaddubsw       m18, m19, m18
-    pmaddubsw       m19, m20
-    add      grain_lutq, 82*2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    paddw           m17, m18
-    paddw           m16, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-    mova    [dstq+srcq], ym16
-    add            srcq, strideq
-    vextracti32x8 [dstq+srcq], m16, 1
-    add            srcq, strideq
+    movd           xm19, [grain_lutq+left_offxyq-50]
+    vinserti32x4    m19, [grain_lutq+left_offxyq+32], 2
+    punpcklbw       m19, m20
+    pmaddubsw       m19, m10, m19
+    pmulhrsw        m19, m9
+    punpckhbw       m21, m20, m5
+    packsswb    m20{k1}, m19, m19
+    punpcklbw       m20, m5, m20
+    call .add_noise_h
     sub              hb, 2
     jg .loop_y_h_overlap
     add              wq, 32
@@ -272,43 +224,13 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 22, dst, src, stride, fg_data, w, scaling, \
     mov              hd, hm
     movzx    top_offxyd, offxyw
     shr          offxyd, 16
-    movu           ym16, [grain_lutq+offxyq-82]
-    vinserti32x8    m16, [grain_lutq+offxyq+ 0], 1
+    movu           ym19, [grain_lutq+offxyq-82]
+    vinserti32x8    m19, [grain_lutq+offxyq+ 0], 1
     movu           ym21, [grain_lutq+top_offxyq-82]
     vinserti32x8    m21, [grain_lutq+top_offxyq+ 0], 1
-    mova           ym18, [srcq+strideq*0]
-    vinserti32x8    m18, [srcq+strideq*1], 1
-    mova            m19, m0
-    punpcklbw       m20, m21, m16
-    punpckhbw       m21, m16
-    vpmovb2m         k2, m18
-    pmaddubsw       m20, m12, m20
-    pmaddubsw       m21, m12, m21
-    punpcklbw       m16, m18, m5
-    punpckhbw       m17, m18, m5
-    vpermt2b        m19, m18, m1
-    vpermi2b        m18, m2, m3
-    pmulhrsw        m20, m9
-    pmulhrsw        m21, m9
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    pshufb          m19, m4
-    packsswb        m20, m21
-    punpcklbw       m18, m5, m20 ; grain
-    punpckhbw       m20, m5
-    pmaddubsw       m18, m19, m18
-    pmaddubsw       m19, m20
-    add      grain_lutq, 82*2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    paddw           m16, m18
-    paddw           m17, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-    mova    [dstq+srcq], ym16
-    add            srcq, strideq
-    vextracti32x8 [dstq+srcq], m16, 1
-    add            srcq, strideq
+    punpckhbw       m20, m21, m19
+    punpcklbw       m21, m19
+    call .add_noise_v
     sub              hb, 2
     jg .loop_y
     add              wq, 32
@@ -359,35 +281,47 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 22, dst, src, stride, fg_data, w, scaling, \
     vinserti32x8    m21, [grain_lutq+top_offxyq+ 0], 1
     movd           xm17, [grain_lutq+topleft_offxyq-50]
     vinserti32x4    m17, [grain_lutq+topleft_offxyq+32], 2
-    mova           ym18, [srcq+strideq*0]
-    vinserti32x8    m18, [srcq+strideq*1], 1
     ; do h interpolation first (so top | top/left -> top, left | cur -> cur)
     punpcklbw       m16, m19
-    punpcklbw       m17, m21
     pmaddubsw       m16, m10, m16
+    punpcklbw       m17, m21
     pmaddubsw       m17, m10, m17
     punpckhbw       m20, m21, m19
-    vpmovb2m         k2, m18
     pmulhrsw        m16, m9
     pmulhrsw        m17, m9
     packsswb    m19{k1}, m16, m16
     packsswb    m21{k1}, m17, m17
     ; followed by v interpolation (top | cur -> cur)
     punpcklbw       m21, m19
-    mova            m19, m0
+    call .add_noise_v
+    sub              hb, 2
+    jg .loop_y_h_overlap
+    add              wq, 32
+    lea            srcq, [src_bakq+wq]
+    jl .hv_overlap
+.end:
+    RET
+ALIGN function_align
+.add_noise_v:
     pmaddubsw       m20, m12, m20
     pmaddubsw       m21, m12, m21
-    punpcklbw       m16, m18, m5
-    punpckhbw       m17, m18, m5
-    vpermt2b        m19, m18, m1 ; scaling[  0..127]
-    vpermi2b        m18, m2, m3  ; scaling[128..255]
     pmulhrsw        m20, m9
     pmulhrsw        m21, m9
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    pshufb          m19, m4
     packsswb        m21, m20
+.add_noise:
     punpcklbw       m20, m5, m21
     punpckhbw       m21, m5
+.add_noise_h:
+    mova           ym18, [srcq+strideq*0]
+    vinserti32x8    m18, [srcq+strideq*1], 1
+    mova            m19, m0
+    punpcklbw       m16, m18, m5
+    vpermt2b        m19, m18, m1 ; scaling[  0..127]
+    vpmovb2m         k2, m18
+    punpckhbw       m17, m18, m5
+    vpermi2b        m18, m2, m3  ; scaling[128..255]
+    vmovdqu8    m19{k2}, m18     ; scaling[src]
+    pshufb          m19, m4
     pmaddubsw       m18, m19, m20
     pmaddubsw       m19, m21
     add      grain_lutq, 82*2
@@ -402,13 +336,7 @@ cglobal fgy_32x32xn_8bpc, 6, 13, 22, dst, src, stride, fg_data, w, scaling, \
     add            srcq, strideq
     vextracti32x8 [dstq+srcq], m16, 1
     add            srcq, strideq
-    sub              hb, 2
-    jg .loop_y_h_overlap
-    add              wq, 32
-    lea            srcq, [src_bakq+wq]
-    jl .hv_overlap
-.end:
-    RET
+    ret
 
 %macro FGUV_FN 3 ; name, ss_hor, ss_ver
 cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
@@ -496,77 +424,20 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     mov      grain_lutq, grain_lutmp
     mov              hd, hm
 %%loop_y:
-    mova           ym18, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m18, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
 %if %2
-    mova           ym20, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m20, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
-    mova           xm17, [srcq+strideq*0]
     movu           xm21, [grain_lutq+offxyq+82*0]
-    vinserti128    ym17, [srcq+strideq*1], 1
     vinserti128    ym21, [grain_lutq+offxyq+82*1], 1
-    mova            m19, m11
-    vpermi2b        m19, m18, m20
-    vpermt2b        m18, m12, m20
-    vinserti32x4    m17, [srcq+strideq*2], 2
     vinserti32x4    m21, [grain_lutq+offxyq+82*2], 2
-    pavgb           m18, m19
-    vinserti32x4    m17, [srcq+stride3q ], 3
     vinserti32x4    m21, [grain_lutq+offxyq+82*3], 3
 %else
-    mova           ym17, [srcq+strideq*0]
-    vinserti32x8    m17, [srcq+strideq*1], 1
     movu           ym21, [grain_lutq+offxyq+82*0]
     vinserti32x8    m21, [grain_lutq+offxyq+82*1], 1
 %endif
-    lea            srcq, [srcq+strideq*(2<<%2)]
-%if %1
-    punpckhbw       m19, m18, m17
-    punpcklbw       m18, m17     ; { luma, chroma }
-    pmaddubsw       m19, m14
-    pmaddubsw       m18, m14
-    psraw           m19, 6
-    psraw           m18, 6
-    paddw           m19, m15
-    paddw           m18, m15
-    packuswb        m18, m19
-%endif
-    mova            m19, m0
-    vpmovb2m         k2, m18
-    vpermt2b        m19, m18, m1 ; scaling[  0..127]
-    vpermi2b        m18, m2, m3  ; scaling[128..255]
-    punpcklbw       m20, m5, m21 ; grain
-    punpckhbw       m21, m5
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    pshufb          m19, m4
-    pmaddubsw       m18, m19, m20
-    pmaddubsw       m19, m21
-    add      grain_lutq, 82*2<<%2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    punpcklbw       m16, m17, m5 ; chroma
-    punpckhbw       m17, m5
-    paddw           m16, m18
-    paddw           m17, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-%if %2
-    mova          [dstq+strideq*0], xm16
-    vextracti128  [dstq+strideq*1], ym16, 1
-    vextracti32x4 [dstq+strideq*2], m16, 2
-    vextracti32x4 [dstq+stride3q ], m16, 3
-%else
-    mova          [dstq+strideq*0], ym16
-    vextracti32x8 [dstq+strideq*1], m16, 1
-%endif
-    lea            dstq, [dstq+strideq*(2<<%2)]
+    call %%add_noise
     sub              hb, 2<<%2
     jg %%loop_y
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r13+wq*(1<<%2)]
@@ -601,94 +472,32 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     mov      grain_lutq, grain_lutmp
     mov              hd, hm
 %%loop_y_h_overlap:
-    ; src
-%if %2
-    mova           ym18, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m18, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
-    mova           ym20, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m20, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
-    mova           xm17, [srcq+strideq*0]
-    vinserti128    ym17, [srcq+strideq*1], 1
-    mova            m19, m11
-    vpermi2b        m19, m18, m20
-    vpermt2b        m18, m12, m20
-    vinserti32x4    m17, [srcq+strideq*2], 2
-    pavgb           m18, m19
-    vinserti32x4    m17, [srcq+stride3q ], 3
-%else
-    mova           ym18, [lumaq+lstrideq*0]
-    vinserti32x8    m18, [lumaq+lstrideq*1], 1
-    mova           ym17, [srcq+strideq*0]
-    vinserti32x8    m17, [srcq+strideq*1], 1
-    lea           lumaq, [lumaq+lstrideq*2]
-%endif
-    lea            srcq, [srcq+strideq*(2<<%2)]
-%if %1
-    punpckhbw       m19, m18, m17
-    punpcklbw       m18, m17     ; { luma, chroma }
-    pmaddubsw       m19, m14
-    pmaddubsw       m18, m14
-    psraw           m19, 6
-    psraw           m18, 6
-    paddw           m19, m15
-    paddw           m18, m15
-    packuswb        m18, m19
-%endif
-    mova            m19, m0
-    vpmovb2m         k2, m18
-    vpermt2b        m19, m18, m1 ; scaling[  0..127]
-    vpermi2b        m18, m2, m3  ; scaling[128..255]
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
 %if %2
     movu           xm20, [grain_lutq+offxyq     +82*0]
-    movd           xm18, [grain_lutq+left_offxyq+82*0]
+    movd           xm19, [grain_lutq+left_offxyq+82*0]
     vinserti32x4   ym20, [grain_lutq+offxyq     +82*1], 1
-    vinserti32x4   ym18, [grain_lutq+left_offxyq+82*1], 1
+    vinserti32x4   ym19, [grain_lutq+left_offxyq+82*1], 1
     vinserti32x4    m20, [grain_lutq+offxyq     +82*2], 2
-    vinserti32x4    m18, [grain_lutq+left_offxyq+82*2], 2
+    vinserti32x4    m19, [grain_lutq+left_offxyq+82*2], 2
     vinserti32x4    m20, [grain_lutq+offxyq     +82*3], 3
-    vinserti32x4    m18, [grain_lutq+left_offxyq+82*3], 3
+    vinserti32x4    m19, [grain_lutq+left_offxyq+82*3], 3
 %else
     movu           ym20, [grain_lutq+offxyq     + 0]
-    movd           xm18, [grain_lutq+left_offxyq+ 0]
+    movd           xm19, [grain_lutq+left_offxyq+ 0]
     vinserti32x8    m20, [grain_lutq+offxyq     +82], 1
-    vinserti32x4    m18, [grain_lutq+left_offxyq+82], 2
+    vinserti32x4    m19, [grain_lutq+left_offxyq+82], 2
 %endif
-    punpcklbw       m18, m20
-    pmaddubsw       m18, m10, m18
+    punpcklbw       m19, m20
+    pmaddubsw       m19, m10, m19
     punpckhbw       m21, m20, m5
-    pshufb          m19, m4
-    pmulhrsw        m18, m9
-    vpacksswb   m20{k1}, m18, m18
+    pmulhrsw        m19, m9
+    vpacksswb   m20{k1}, m19, m19
     punpcklbw       m20, m5, m20
-    pmaddubsw       m18, m19, m20
-    pmaddubsw       m19, m21
-    add      grain_lutq, 82*2<<%2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    punpcklbw       m16, m17, m5 ; chroma
-    punpckhbw       m17, m5
-    paddw           m16, m18
-    paddw           m17, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-%if %2
-    mova          [dstq+strideq*0], xm16
-    vextracti128  [dstq+strideq*1], ym16, 1
-    vextracti32x4 [dstq+strideq*2], m16, 2
-    vextracti32x4 [dstq+stride3q ], m16, 3
-%else
-    mova          [dstq+strideq*0], ym16
-    vextracti32x8 [dstq+strideq*1], m16, 1
-%endif
-    lea            dstq, [dstq+strideq*(2<<%2)]
+    call %%add_noise_h
     sub              hb, 2<<%2
     jg %%loop_y_h_overlap
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r13+wq*(1<<%2)]
@@ -765,115 +574,35 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     movzx    top_offxyd, offxyw
     shr          offxyd, 16
 
-%if %2
-    mova           ym18, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m18, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
-    mova           ym20, [lumaq+lstrideq*(0<<%3)]
-    vinserti32x8    m20, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
-    mova           xm17, [srcq+strideq*0]
-    vinserti128    ym17, [srcq+strideq*1], 1
-    mova            m19, m11
-    vpermi2b        m19, m18, m20
-    vpermt2b        m18, m12, m20
-    vinserti32x4    m17, [srcq+strideq*2], 2
-    pavgb           m18, m19
-    vinserti32x4    m17, [srcq+stride3q ], 3
-%else
-    mova           ym18, [lumaq+lstrideq*0]
-    vinserti32x8    m18, [lumaq+lstrideq*1], 1
-    mova           ym17, [srcq+strideq*0]
-    vinserti32x8    m17, [srcq+strideq*1], 1
-    lea           lumaq, [lumaq+lstrideq*2]
-%endif
-    lea            srcq, [srcq+strideq*(2<<%2)]
-%if %1
-    punpckhbw       m19, m18, m17
-    punpcklbw       m18, m17     ; { luma, chroma }
-    pmaddubsw       m19, m14
-    pmaddubsw       m18, m14
-    psraw           m19, 6
-    psraw           m18, 6
-    paddw           m19, m15
-    paddw           m18, m15
-    packuswb        m18, m19
-%endif
-    mova            m19, m0
-    vpmovb2m         k2, m18
-    vpermt2b        m19, m18, m1 ; scaling[  0..127]
-    vpermi2b        m18, m2, m3  ; scaling[128..255]
 %if %3
-    movu           xm21, [grain_lutq+offxyq+82*0]
-    movu           xm16, [grain_lutq+top_offxyq+82*0]
-    punpcklbw      xm20, xm16, xm21
-    punpckhbw      xm16, xm21
-    pmaddubsw      xm20, xm13, xm20
-    pmaddubsw      xm16, xm13, xm16
+    movu           xm18, [grain_lutq+offxyq+82*0]
+    movu           xm20, [grain_lutq+top_offxyq+82*0]
     ; only interpolate first line, insert remaining line unmodified
     vbroadcasti128 ym21, [grain_lutq+offxyq+82*1]
     vinserti32x4    m21, [grain_lutq+offxyq+82*2], 2
     vinserti32x4    m21, [grain_lutq+offxyq+82*3], 3
-    pmulhrsw       xm20, xm9
-    pmulhrsw       xm16, xm9
-    vpacksswb   m21{k3}, m20, m16
+    punpcklbw      xm19, xm20, xm18
+    punpckhbw      xm20, xm18
 %elif %2
-    movu           xm21, [grain_lutq+offxyq+82*0]
-    vinserti128    ym21, [grain_lutq+offxyq+82*1], 1
-    movu           xm16, [grain_lutq+top_offxyq+82*0]
-    vinserti32x4   ym16, [grain_lutq+top_offxyq+82*1], 1
-    punpcklbw      ym20, ym16, ym21
-    punpckhbw      ym16, ym21
-    pmaddubsw      ym20, ym13, ym20
-    pmaddubsw      ym16, ym13, ym16
+    movu           xm18, [grain_lutq+offxyq+82*0]
+    vinserti128    ym18, [grain_lutq+offxyq+82*1], 1
+    movu           xm20, [grain_lutq+top_offxyq+82*0]
+    vinserti32x4   ym20, [grain_lutq+top_offxyq+82*1], 1
     vbroadcasti32x4 m21, [grain_lutq+offxyq+82*2]
     vinserti32x4    m21, [grain_lutq+offxyq+82*3], 3
-    pmulhrsw       ym20, ym9
-    pmulhrsw       ym16, ym9
-    packsswb    m21{k3}, m20, m16
+    punpcklbw      ym19, ym20, ym18
+    punpckhbw      ym20, ym18
 %else
-    movu           ym16, [grain_lutq+offxyq+82*0]
-    vinserti32x8    m16, [grain_lutq+offxyq+82*1], 1
+    movu           ym21, [grain_lutq+offxyq+82*0]
+    vinserti32x8    m21, [grain_lutq+offxyq+82*1], 1
     movu           ym20, [grain_lutq+top_offxyq+82*0]
     vinserti32x8    m20, [grain_lutq+top_offxyq+82*1], 1
-    punpcklbw       m21, m20, m16
-    punpckhbw       m20, m16
-    pmaddubsw       m21, m13, m21
-    pmaddubsw       m20, m13, m20
-    pmulhrsw        m21, m9
-    pmulhrsw        m20, m9
-    packsswb        m21, m20
 %endif
-    vmovdqu8    m19{k2}, m18     ; scaling[src]
-    pshufb          m19, m4
-    punpcklbw       m20, m5, m21
-    punpckhbw       m21, m5
-    pmaddubsw       m18, m19, m20
-    pmaddubsw       m19, m21
-    add      grain_lutq, 82*2<<%2
-    pmulhrsw        m18, m6      ; noise
-    pmulhrsw        m19, m6
-    punpcklbw       m16, m17, m5 ; chroma
-    punpckhbw       m17, m5
-    paddw           m16, m18
-    paddw           m17, m19
-    packuswb        m16, m17
-    pmaxub          m16, m7
-    pminub          m16, m8
-%if %2
-    mova          [dstq+strideq*0], xm16
-    vextracti128  [dstq+strideq*1], ym16, 1
-    vextracti32x4 [dstq+strideq*2], m16, 2
-    vextracti32x4 [dstq+stride3q ], m16, 3
-%else
-    mova          [dstq+strideq*0], ym16
-    vextracti32x8 [dstq+strideq*1], m16, 1
-%endif
-    lea            dstq, [dstq+strideq*(2<<%2)]
+    call %%add_noise_v
     sub              hb, 2<<%2
     jg %%loop_y
     add              wq, 32>>%2
-    jge %%end
+    jge .end
     mov            srcq, r11mp
     mov            dstq, r12mp
     lea           lumaq, [r13+wq*(1<<%2)]
@@ -939,12 +668,16 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     pmaddubsw       m16, m10, m16
     pmulhrsw        m16, m9
     packsswb        m16, m16
+    vmovdqu8    m21{k1}, m16
 %if %3
     vpalignr   xm20{k1}, xm16, xm16, 4
+    punpcklbw      xm19, xm20, xm21
+    punpckhbw      xm20, xm21
 %else
     vpalignr   ym20{k1}, ym16, ym16, 4
+    punpcklbw      ym19, ym20, ym21
+    punpckhbw      ym20, ym21
 %endif
-    vmovdqu8    m21{k1}, m16
 %else
     movu           ym21, [grain_lutq+offxyq+82*0]
     vinserti32x8    m21, [grain_lutq+offxyq+82*1], 1
@@ -963,29 +696,62 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     vpalignr    m20{k1}, m16, m16, 4
     vmovdqu8    m21{k1}, m16
 %endif
-%if %2
+    call %%add_noise_v
+    sub              hb, 2<<%2
+    jg %%loop_y_h_overlap
+    add              wq, 32>>%2
+    jge .end
+    mov            srcq, r11mp
+    mov            dstq, r12mp
+    lea           lumaq, [r13+wq*(1<<%2)]
+    add            srcq, wq
+    add            dstq, wq
+    jmp %%hv_overlap
+ALIGN function_align
+%%add_noise_v:
+%if %3
+    pmaddubsw      xm19, xm13, xm19
+    pmaddubsw      xm20, xm13, xm20
+    pmulhrsw       xm19, xm9
+    pmulhrsw       xm20, xm9
+    vpacksswb   m21{k3}, m19, m20
+%elif %2
+    pmaddubsw      ym19, ym13, ym19
+    pmaddubsw      ym20, ym13, ym20
+    pmulhrsw       ym19, ym9
+    pmulhrsw       ym20, ym9
+    vpacksswb   m21{k3}, m19, m20
+%else
+    punpcklbw       m19, m20, m21
+    punpckhbw       m20, m21
+    pmaddubsw       m19, m13, m19
+    pmaddubsw       m20, m13, m20
+    pmulhrsw        m19, m9
+    pmulhrsw        m20, m9
+    packsswb        m21, m19, m20
+%endif
+%%add_noise:
+    punpcklbw       m20, m5, m21
+    punpckhbw       m21, m5
+%%add_noise_h:
     mova           ym18, [lumaq+lstrideq*(0<<%3)]
     vinserti32x8    m18, [lumaq+lstrideq*(1<<%3)], 1
+%if %2
     lea           lumaq, [lumaq+lstrideq*(2<<%3)]
     mova           ym16, [lumaq+lstrideq*(0<<%3)]
     vinserti32x8    m16, [lumaq+lstrideq*(1<<%3)], 1
-    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
     mova           xm17, [srcq+strideq*0]
-    vinserti128    ym17, [srcq+strideq*1], 1
     mova            m19, m11
     vpermi2b        m19, m18, m16
+    vinserti128    ym17, [srcq+strideq*1], 1
     vpermt2b        m18, m12, m16
     vinserti32x4    m17, [srcq+strideq*2], 2
     pavgb           m18, m19
     vinserti32x4    m17, [srcq+stride3q ], 3
 %else
-    mova           ym18, [lumaq+lstrideq*0]
-    vinserti32x8    m18, [lumaq+lstrideq*1], 1
     mova           ym17, [srcq+strideq*0]
     vinserti32x8    m17, [srcq+strideq*1], 1
-    lea           lumaq, [lumaq+lstrideq*2]
 %endif
-    lea            srcq, [srcq+strideq*(2<<%2)]
 %if %1
     punpckhbw       m19, m18, m17
     punpcklbw       m18, m17     ; { luma, chroma }
@@ -996,45 +762,19 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     paddw           m19, m15
     paddw           m18, m15
     packuswb        m18, m19
-%endif
+.add_noise_main:
     mova            m19, m0
-    vpmovb2m         k2, m18
     vpermt2b        m19, m18, m1 ; scaling[  0..127]
+    vpmovb2m         k2, m18
     vpermi2b        m18, m2, m3  ; scaling[128..255]
-    ; followed by v interpolation (top | cur -> cur)
-%if %3
-    punpcklbw      xm16, xm20, xm21
-    punpckhbw      xm20, xm21
-    pmaddubsw      xm16, xm13, xm16
-    pmaddubsw      xm20, xm13, xm20
-    pmulhrsw       xm16, xm9
-    pmulhrsw       xm20, xm9
-    vpacksswb   m21{k3}, m16, m20
-%elif %2
-    punpcklbw      ym16, ym20, ym21
-    punpckhbw      ym20, ym21
-    pmaddubsw      ym16, ym13, ym16
-    pmaddubsw      ym20, ym13, ym20
-    pmulhrsw       ym16, ym9
-    pmulhrsw       ym20, ym9
-    vpacksswb   m21{k3}, m16, m20
-%else
-    punpcklbw       m16, m20, m21
-    punpckhbw       m20, m21
-    pmaddubsw       m16, m13, m16
-    pmaddubsw       m20, m13, m20
-    pmulhrsw        m16, m9
-    pmulhrsw        m20, m9
-    packsswb        m21, m16, m20
-%endif
     vmovdqu8    m19{k2}, m18     ; scaling[src]
     pshufb          m19, m4
-    punpcklbw       m20, m5, m21
-    punpckhbw       m21, m5
     pmaddubsw       m18, m19, m20
     pmaddubsw       m19, m21
     add      grain_lutq, 82*2<<%2
-    pmulhrsw        m18, m6      ; grain
+    lea           lumaq, [lumaq+lstrideq*(2<<%3)]
+    lea            srcq, [srcq+strideq*(2<<%2)]
+    pmulhrsw        m18, m6      ; noise
     pmulhrsw        m19, m6
     punpcklbw       m16, m17, m5 ; chroma
     punpckhbw       m17, m5
@@ -1053,23 +793,17 @@ cglobal fguv_32x32xn_i%1_8bpc, 6, 14+%2, 22, dst, src, stride, fg_data, w, \
     vextracti32x8 [dstq+strideq*1], m16, 1
 %endif
     lea            dstq, [dstq+strideq*(2<<%2)]
-    sub              hb, 2<<%2
-    jg %%loop_y_h_overlap
-    add              wq, 32>>%2
-    jge %%end
-    mov            srcq, r11mp
-    mov            dstq, r12mp
-    lea           lumaq, [r13+wq*(1<<%2)]
-    add            srcq, wq
-    add            dstq, wq
-    jmp %%hv_overlap
-%%end:
-    RET
+    ret
+%else
+    jmp .add_noise_main
+%endif
 %endmacro
 
     %%FGUV_32x32xN_LOOP 1, %2, %3
 .csfl:
     %%FGUV_32x32xN_LOOP 0, %2, %3
+.end:
+    RET
 %endmacro
 
 FGUV_FN 420, 1, 1

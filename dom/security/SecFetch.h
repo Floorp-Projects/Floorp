@@ -9,8 +9,7 @@
 
 class nsIHttpChannel;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class SecFetch final {
  public:
@@ -23,7 +22,6 @@ class SecFetch final {
   static void AddSecFetchUser(nsIHttpChannel* aHTTPChannel);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_SecFetch_h

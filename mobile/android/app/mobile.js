@@ -348,9 +348,6 @@ pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
-// Only fetch OCSP for EV certificates
-pref("security.OCSP.enabled", 2);
-
 /* prefs used by the update timer system (including blocklist pings) */
 pref("app.update.timerFirstInterval", 30000); // milliseconds
 pref("app.update.timerMinimumDelay", 30); // seconds

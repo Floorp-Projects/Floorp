@@ -24,8 +24,7 @@ inline mozilla::Decimal NS_floorModulo(mozilla::Decimal x, mozilla::Decimal y) {
 
 class nsIFrame;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class HTMLInputElement;
 
 /**
@@ -239,7 +238,6 @@ class InputType {
   HTMLInputElement* mInputElement;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* mozilla_dom_InputType_h__ */

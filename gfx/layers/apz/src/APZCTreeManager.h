@@ -1000,8 +1000,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    */
   ScreenMargin mGeckoFixedLayerMargins;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
-   * pref). */
-  gfx::TreeLog<gfx::LOG_DEFAULT> mApzcTreeLog;
+   * pref). The purpose of using LOG_CRITICAL is so that you don't also need to
+   * change the gfx.logging.level pref to see the output. */
+  gfx::TreeLog<gfx::LOG_CRITICAL> mApzcTreeLog;
 
   class CheckerboardFlushObserver;
   friend class CheckerboardFlushObserver;

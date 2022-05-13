@@ -11,8 +11,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsIServiceWorkerManager.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback {
  public:
@@ -37,7 +36,6 @@ class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback {
   RefPtr<GenericPromise::Private> mPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ServiceWorkerUnregisterCallback_h

@@ -12,8 +12,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/dom/DataTransfer.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 enum ClipboardReadType {
   eRead,
@@ -79,6 +78,5 @@ class Clipboard : public DOMEventTargetHelper {
   ~Clipboard();
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 #endif  // mozilla_dom_Clipboard_h_

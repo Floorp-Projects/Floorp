@@ -78,6 +78,8 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual TextureClient* GetTextureClient() { return nullptr; }
 
+  virtual void OnMemoryPressure() {}
+
   virtual void OnShutdown() {}
 
   virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) {
@@ -163,6 +165,8 @@ class PersistentBufferProviderAccelerated
   bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
   bool RequiresRefresh() const override;
+
+  void OnMemoryPressure() override;
 
  protected:
   ~PersistentBufferProviderAccelerated() override;

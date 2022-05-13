@@ -286,6 +286,12 @@ already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
 LayoutDeviceIntRect RemoteAccessible::TextBounds(int32_t aStartOffset,
                                                  int32_t aEndOffset,
                                                  uint32_t aCoordType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    return RemoteAccessibleBase<RemoteAccessible>::TextBounds(
+        aStartOffset, aEndOffset, aCoordType);
+  }
+
   LayoutDeviceIntRect rect;
   Unused << mDoc->SendTextBounds(mID, aStartOffset, aEndOffset, aCoordType,
                                  &rect);
@@ -294,6 +300,12 @@ LayoutDeviceIntRect RemoteAccessible::TextBounds(int32_t aStartOffset,
 
 LayoutDeviceIntRect RemoteAccessible::CharBounds(int32_t aOffset,
                                                  uint32_t aCoordType) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    MOZ_ASSERT(IsHyperText(), "is not hypertext?");
+    return RemoteAccessibleBase<RemoteAccessible>::CharBounds(aOffset,
+                                                              aCoordType);
+  }
+
   LayoutDeviceIntRect rect;
   Unused << mDoc->SendCharBounds(mID, aOffset, aCoordType, &rect);
   return rect;
