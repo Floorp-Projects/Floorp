@@ -212,7 +212,17 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite) {
   }
 }
 
-DrawTargetWebgl::~DrawTargetWebgl() { ClearSnapshot(false); }
+DrawTargetWebgl::~DrawTargetWebgl() {
+  ClearSnapshot(false);
+  if (mSharedContext) {
+    if (mFramebuffer) {
+      mSharedContext->mWebgl->DeleteFramebuffer(mFramebuffer);
+    }
+    if (mTex) {
+      mSharedContext->mWebgl->DeleteTexture(mTex);
+    }
+  }
+}
 
 DrawTargetWebgl::SharedContext::SharedContext() = default;
 
@@ -280,6 +290,7 @@ void DrawTargetWebgl::SharedContext::ClearEmptyTextureMemory() {
       mEmptyTextureMemory -= usedBytes;
       mTotalTextureMemory -= usedBytes;
       pos = mSharedTextures.erase(pos);
+      mWebgl->DeleteTexture(shared->GetWebGLTexture());
     } else {
       ++pos;
     }
@@ -1700,6 +1711,7 @@ bool DrawTargetWebgl::SharedContext::RemoveSharedTexture(
     mTotalTextureMemory -= usedBytes;
     mSharedTextures.erase(pos);
     ClearLastTexture();
+    mWebgl->DeleteTexture(aTexture->GetWebGLTexture());
   }
   return true;
 }
@@ -1724,6 +1736,7 @@ bool DrawTargetWebgl::SharedContext::RemoveStandaloneTexture(
   mTotalTextureMemory -= aTexture->UsedBytes();
   mStandaloneTextures.erase(pos);
   ClearLastTexture();
+  mWebgl->DeleteTexture(aTexture->GetWebGLTexture());
   return true;
 }
 
