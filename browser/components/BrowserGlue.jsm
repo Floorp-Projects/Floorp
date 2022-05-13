@@ -4164,20 +4164,9 @@ BrowserGlue.prototype = {
       }
     }
 
-    if (currentUIVersion < 127) {
-      // Bug 1767440 - Clean up rollout search param prefs.
-
-      let prefsToClear = {
-        "browser.search.param.google_channel_us": "tus7",
-        "browser.search.param.google_channel_row": "trow7",
-        "browser.search.param.bing_ptag": "MOZZ0000000031",
-      };
-      Object.entries(prefsToClear).forEach(([key, value]) => {
-        if (Services.prefs.getStringPref(key, null) == value) {
-          Services.prefs.clearUserPref(key);
-        }
-      });
-    }
+    // Bug 1769071: The UI Version 127 was used for a clean up code that is not
+    // necessary anymore. Please do not use 127 because this number is probably
+    // set in Nightly and Beta channel.
 
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
