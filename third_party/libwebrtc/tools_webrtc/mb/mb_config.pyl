@@ -44,7 +44,6 @@
       'Linux64 Builder': 'pure_release_bot_x64',
       'Linux64 Debug (ARM)': 'debug_bot_arm64',
       'Linux64 Release (ARM)': 'release_bot_arm64',
-      'Linux64 Release (GCC)': 'gcc_release_bot_x64',
       'Linux Asan': 'asan_lsan_clang_release_bot_x64',
       'Linux MSan': 'msan_clang_release_bot_x64',
       'Linux Tsan v2': 'tsan_clang_release_bot_x64',
@@ -173,7 +172,6 @@
       'linux_compile_arm_rel': 'release_bot_arm',
       'linux_compile_arm64_dbg': 'debug_bot_arm64',
       'linux_compile_arm64_rel': 'release_bot_arm64',
-      'linux_compile_gcc_rel': 'gcc_release_bot_x64',
       'linux_dbg': 'debug_bot_x64',
       'linux_rel': 'release_bot_x64',
       'linux_x86_rel': 'release_bot_x86',
@@ -253,9 +251,6 @@
   # we might have mac, win, and linux bots all using the 'release_bot' config).
   'configs': {
     # Linux, Mac and Windows
-    'gcc_release_bot_x64': [
-      'gcc', 'release_bot_no_goma', 'x64', 'no_rtc_tests'
-    ],
     # TODO(kjellander): Restore Goma for this when crbug.com/726706 is fixed.
     'debug_bot_arm': [
       'openh264', 'debug', 'arm'
@@ -504,11 +499,6 @@
       'gn_args': 'symbol_level=2',
     },
 
-    'gcc': {
-      'gn_args': ('is_clang=false use_sysroot=false '
-                  'treat_warnings_as_errors=false'),
-    },
-
     'goma': {
       'gn_args': 'use_goma=true',
     },
@@ -555,10 +545,6 @@
 
     'no_lld': {
       'gn_args': 'use_lld=false',
-    },
-
-    'no_rtc_tests': {
-      'gn_args': 'rtc_include_tests=false',
     },
 
     'openh264': {
