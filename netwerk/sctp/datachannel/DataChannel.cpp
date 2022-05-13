@@ -3339,7 +3339,7 @@ dom::Nullable<uint16_t> DataChannel::GetMaxRetransmits() const {
   return dom::Nullable<uint16_t>();
 }
 
-uint32_t DataChannel::GetBufferedAmountLowThreshold() {
+uint32_t DataChannel::GetBufferedAmountLowThreshold() const {
   return mBufferedThreshold;
 }
 
