@@ -16,6 +16,7 @@ include_rules = [
   "-infra",
   "-logging",
   "-media",
+  "-net",
   "-modules",
   "-out",
   "-p2p",

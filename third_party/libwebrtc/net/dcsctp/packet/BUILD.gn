@@ -1,0 +1,45 @@
+# Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+group("packet") {
+  deps = [ ":bounded_io" ]
+}
+
+rtc_source_set("bounded_io") {
+  deps = [
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "bounded_byte_reader.h",
+    "bounded_byte_writer.h",
+  ]
+}
+
+if (rtc_include_tests) {
+  rtc_library("dcsctp_packet_unittests") {
+    testonly = true
+
+    deps = [
+      ":bounded_io",
+      "../../../api:array_view",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
+    ]
+    sources = [
+      "bounded_byte_reader_test.cc",
+      "bounded_byte_writer_test.cc",
+    ]
+  }
+}
