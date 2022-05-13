@@ -18,3 +18,14 @@ DIRS += [
     "undo-closed-tab",
     "official-site-ua",
 ]
+
+
+if CONFIG["OS_TARGET"] == "Linux":
+  DIRS += [
+    "floorp-system-linux",
+]
+
+else:
+ DIRS += [
+    "floorp-system",
+]
