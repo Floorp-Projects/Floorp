@@ -599,26 +599,8 @@ void nsBufferedInputStream::SerializedComplexity(uint32_t aMaxSize,
   }
 }
 
-void nsBufferedInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-void nsBufferedInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
-  SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                    aSizeUsed, aManager);
-}
-
-template <typename M>
-void nsBufferedInputStream::SerializeInternal(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed, M* aManager) {
+void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
+                                      uint32_t aMaxSize, uint32_t* aSizeUsed) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
@@ -629,9 +611,8 @@ void nsBufferedInputStream::SerializeInternal(
     MOZ_ASSERT(stream);
 
     InputStreamParams wrappedParams;
-    InputStreamHelper::SerializeInputStream(stream, wrappedParams,
-                                            aFileDescriptors, aDelayedStart,
-                                            aMaxSize, aSizeUsed, aManager);
+    InputStreamHelper::SerializeInputStream(stream, wrappedParams, aMaxSize,
+                                            aSizeUsed);
 
     params.optionalStream().emplace(wrappedParams);
   }
@@ -641,9 +622,7 @@ void nsBufferedInputStream::SerializeInternal(
   aParams = params;
 }
 
-bool nsBufferedInputStream::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool nsBufferedInputStream::Deserialize(const InputStreamParams& aParams) {
   if (aParams.type() != InputStreamParams::TBufferedInputStreamParams) {
     NS_ERROR("Received unknown parameters from the other process!");
     return false;
@@ -655,8 +634,7 @@ bool nsBufferedInputStream::Deserialize(
 
   nsCOMPtr<nsIInputStream> stream;
   if (wrappedParams.isSome()) {
-    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
-                                                       aFileDescriptors);
+    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref());
     if (!stream) {
       NS_WARNING("Failed to deserialize wrapped stream!");
       return false;

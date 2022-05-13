@@ -66,41 +66,15 @@ mozilla::ipc::IPCResult RemoteLazyInputStreamParent::RecvStreamNeeded(
     return IPC_OK();
   }
 
-  // XXX: This should be much cleaner once the API for serializing IPCStream has
-  // been simplified.
-  ipc::InputStreamParams params;
-  if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-          do_QueryInterface(stream)) {
-    nsTArray<FileDescriptor> unused;
-    uint32_t sizeUsed = 0;
-    serializable->Serialize(
-        params, unused, false, 128 * 1024, &sizeUsed,
-        (mozilla::ipc::ParentToChildStreamActorManager*)nullptr);
-    MOZ_ASSERT(unused.IsEmpty());
-  } else {
-    RefPtr<ipc::DataPipeSender> sender;
-    RefPtr<ipc::DataPipeReceiver> receiver;
-    nsresult rv = NewDataPipe(ipc::kDefaultDataPipeCapacity,
-                              getter_AddRefs(sender), getter_AddRefs(receiver));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return IPC_FAIL(this, "NewDataPipe failed");
-    }
-
-    nsCOMPtr<nsIEventTarget> target =
-        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-
-    rv = NS_AsyncCopy(stream, sender, target, NS_ASYNCCOPY_VIA_WRITESEGMENTS,
-                      ipc::kDefaultDataPipeCapacity, nullptr, nullptr);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return IPC_FAIL(this, "NS_AsyncCopy failed");
-    }
-
-    params = ipc::DataPipeReceiverStreamParams(receiver);
+  Maybe<IPCStream> ipcStream;
+  if (NS_WARN_IF(!SerializeIPCStream(stream.forget(), ipcStream,
+                                     /* aAllowLazy */ false))) {
+    return IPC_FAIL(this, "IPCStream serialization failed!");
   }
 
   MOZ_LOG(gRemoteLazyStreamLog, LogLevel::Verbose,
           ("Parent::RecvStreamNeeded resolve %s", nsIDToCString(mID).get()));
-  aResolver(Some(IPCStream(params)));
+  aResolver(ipcStream);
   return IPC_OK();
 }
 

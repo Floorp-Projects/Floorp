@@ -669,27 +669,13 @@ void DataPipeReceiver::SerializedComplexity(uint32_t aMaxSize,
   *aTransferables = 1;
 }
 
-void DataPipeReceiver::Serialize(InputStreamParams& aParams,
-                                 FileDescriptorArray& aFileDescriptors,
-                                 bool aDelayedStart, uint32_t aMaxSize,
-                                 uint32_t* aSizeUsed,
-                                 ParentToChildStreamActorManager* aManager) {
+void DataPipeReceiver::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
+                                 uint32_t* aSizeUsed) {
   *aSizeUsed = 0;
   aParams = DataPipeReceiverStreamParams(this);
 }
 
-void DataPipeReceiver::Serialize(InputStreamParams& aParams,
-                                 FileDescriptorArray& aFileDescriptors,
-                                 bool aDelayedStart, uint32_t aMaxSize,
-                                 uint32_t* aSizeUsed,
-                                 ChildToParentStreamActorManager* aManager) {
-  *aSizeUsed = 0;
-  aParams = DataPipeReceiverStreamParams(this);
-}
-
-bool DataPipeReceiver::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool DataPipeReceiver::Deserialize(const InputStreamParams& aParams) {
   MOZ_CRASH("Handled directly in `DeserializeInputStream`");
 }
 

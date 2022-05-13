@@ -885,27 +885,14 @@ void RemoteLazyInputStream::SerializedComplexity(uint32_t aMaxSize,
   *aTransferables = 1;
 }
 
-void RemoteLazyInputStream::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ParentToChildStreamActorManager* aManager) {
-  *aSizeUsed = 0;
-  aParams = mozilla::ipc::RemoteLazyInputStreamParams(this);
-}
-
-void RemoteLazyInputStream::Serialize(
-    mozilla::ipc::InputStreamParams& aParams,
-    FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::ipc::ChildToParentStreamActorManager* aManager) {
+void RemoteLazyInputStream::Serialize(mozilla::ipc::InputStreamParams& aParams,
+                                      uint32_t aMaxSize, uint32_t* aSizeUsed) {
   *aSizeUsed = 0;
   aParams = mozilla::ipc::RemoteLazyInputStreamParams(this);
 }
 
 bool RemoteLazyInputStream::Deserialize(
-    const mozilla::ipc::InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+    const mozilla::ipc::InputStreamParams& aParams) {
   MOZ_CRASH("This should never be called.");
   return false;
 }

@@ -112,12 +112,6 @@ class nsBufferedInputStream final : public nsBufferedStream,
  protected:
   virtual ~nsBufferedInputStream() = default;
 
-  template <typename M>
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
-
   NS_IMETHOD Fill() override;
   NS_IMETHOD Flush() override { return NS_OK; }  // no-op for input streams
 

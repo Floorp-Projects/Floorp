@@ -547,29 +547,11 @@ void nsFileInputStream::SerializedComplexity(uint32_t aMaxSize,
   *aTransferables = 1;
 }
 
-void nsFileInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed,
-                                  ParentToChildStreamActorManager* aManager) {
+void nsFileInputStream::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
+                                  uint32_t* aSizeUsed) {
   MOZ_ASSERT(aSizeUsed);
   *aSizeUsed = 0;
 
-  SerializeInternal(aParams);
-}
-
-void nsFileInputStream::Serialize(InputStreamParams& aParams,
-                                  FileDescriptorArray& aFileDescriptors,
-                                  bool aDelayedStart, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed,
-                                  ChildToParentStreamActorManager* aManager) {
-  MOZ_ASSERT(aSizeUsed);
-  *aSizeUsed = 0;
-
-  SerializeInternal(aParams);
-}
-
-void nsFileInputStream::SerializeInternal(InputStreamParams& aParams) {
   FileInputStreamParams params;
 
   if (NS_SUCCEEDED(DoPendingOpen())) {
@@ -600,9 +582,7 @@ void nsFileInputStream::SerializeInternal(InputStreamParams& aParams) {
   aParams = params;
 }
 
-bool nsFileInputStream::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool nsFileInputStream::Deserialize(const InputStreamParams& aParams) {
   NS_ASSERTION(!mFD, "Already have a file descriptor?!");
   NS_ASSERTION(mState == nsFileStreamBase::eUnitialized, "Deferring open?!");
   NS_ASSERTION(!mFile, "Should never have a file here!");
