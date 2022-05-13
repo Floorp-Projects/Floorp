@@ -71,6 +71,7 @@ EXPORTS.mozilla = [
     "MaybeStorageBase.h",
     "MemoryChecking.h",
     "MemoryReporting.h",
+    "MoveOnlyFunction.h",
     "NonDereferenceable.h",
     "NotNull.h",
     "Opaque.h",
@@ -131,6 +132,10 @@ EXPORTS["double-conversion"] = [
     "double-conversion/double-conversion/double-to-string.h",
     "double-conversion/double-conversion/string-to-double.h",
     "double-conversion/double-conversion/utils.h",
+]
+
+EXPORTS.function2 += [
+    "/third_party/function2/include/function2/function2.hpp",
 ]
 
 LOCAL_INCLUDES += [
