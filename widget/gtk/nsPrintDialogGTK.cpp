@@ -495,12 +495,13 @@ NS_IMETHODIMP
 nsPrintDialogServiceGTK::Init() { return NS_OK; }
 
 NS_IMETHODIMP
-nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter* aParent,
-                              nsIPrintSettings* aSettings) {
+nsPrintDialogServiceGTK::ShowPrintDialog(mozIDOMWindowProxy* aParent,
+                                         nsIPrintSettings* aSettings) {
   MOZ_ASSERT(aParent, "aParent must not be null");
   MOZ_ASSERT(aSettings, "aSettings must not be null");
 
-  nsPrintDialogWidgetGTK printDialog(aParent, aSettings);
+  nsPrintDialogWidgetGTK printDialog(nsPIDOMWindowOuter::From(aParent),
+                                     aSettings);
   nsresult rv = printDialog.ImportSettings(aSettings);
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -529,13 +530,14 @@ nsPrintDialogServiceGTK::Show(nsPIDOMWindowOuter* aParent,
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceGTK::ShowPageSetup(nsPIDOMWindowOuter* aParent,
-                                       nsIPrintSettings* aNSSettings) {
+nsPrintDialogServiceGTK::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
+                                             nsIPrintSettings* aNSSettings) {
   MOZ_ASSERT(aParent, "aParent must not be null");
   MOZ_ASSERT(aNSSettings, "aSettings must not be null");
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
+  nsCOMPtr<nsIWidget> widget =
+      WidgetUtils::DOMWindowToWidget(nsPIDOMWindowOuter::From(aParent));
   NS_ASSERTION(widget, "Need a widget for dialog to be modal.");
   GtkWindow* gtkParent = get_gtk_window_for_nsiwidget(widget);
   NS_ASSERTION(gtkParent, "Need a GTK window for dialog to be modal.");
