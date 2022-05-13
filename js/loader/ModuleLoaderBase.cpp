@@ -344,13 +344,15 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
 }
 
 bool ModuleLoaderBase::ModuleMapContainsURL(nsIURI* aURL) const {
-  // Returns whether we have fetched, or are currently fetching, a module script
-  // for a URL.
-  return mFetchingModules.Contains(aURL) || mFetchedModules.Contains(aURL);
+  return IsModuleFetching(aURL) || IsModuleFetched(aURL);
 }
 
 bool ModuleLoaderBase::IsModuleFetching(nsIURI* aURL) const {
   return mFetchingModules.Contains(aURL);
+}
+
+bool ModuleLoaderBase::IsModuleFetched(nsIURI* aURL) const {
+  return mFetchedModules.Contains(aURL);
 }
 
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
