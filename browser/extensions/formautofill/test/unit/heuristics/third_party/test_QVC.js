@@ -9,16 +9,16 @@ runHeuristicsTest(
       expectedResult: [
         [
           [
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"}, // ac-off
+            {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"}, // ac-off
             {
               section: "",
               addressType: "",
               contactType: "",
               fieldName: "email",
             },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"}, // select
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"}, // select
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"}, // select
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
           ],
           [
             {
@@ -67,7 +67,12 @@ runHeuristicsTest(
       expectedResult: [
         [
           [
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"}, // ac-off
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel"
+            }, // ac-off
             {
               section: "",
               addressType: "",
