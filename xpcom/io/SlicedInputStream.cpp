@@ -307,7 +307,8 @@ SlicedInputStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
   {
     MutexAutoLock lock(mMutex);
 
-    if (mAsyncWaitCallback && aCallback) {
+    if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
+                   mAsyncWaitCallback != aCallback)) {
       return NS_ERROR_FAILURE;
     }
 
