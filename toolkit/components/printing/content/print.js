@@ -693,31 +693,51 @@ var PrintEventHandler = {
             ? paperWidthInInches
             : paperHeightInInches;
 
-        if (
-          parseFloat(this.viewSettings.customMargins.marginTop) +
-            parseFloat(this.viewSettings.customMargins.marginBottom) >
+        function verticalMarginsInvalid(margins) {
+          return (
+            parseFloat(margins.marginTop) + parseFloat(margins.marginBottom) >
             height -
               paperWrapper.unwriteableMarginTop -
-              paperWrapper.unwriteableMarginBottom ||
+              paperWrapper.unwriteableMarginBottom
+          );
+        }
+
+        function horizontalMarginsInvalid(margins) {
+          return (
+            parseFloat(margins.marginRight) + parseFloat(margins.marginLeft) >
+            width -
+              paperWrapper.unwriteableMarginRight -
+              paperWrapper.unwriteableMarginLeft
+          );
+        }
+
+        if (
+          verticalMarginsInvalid(this.viewSettings.customMargins) ||
           this.viewSettings.customMargins.marginTop < 0 ||
           this.viewSettings.customMargins.marginBottom < 0
         ) {
           let { marginTop, marginBottom } = this.viewSettings.defaultMargins;
+          if (verticalMarginsInvalid(this.viewSettings.defaultMargins)) {
+            let marginsNone = this.getMarginPresets("none");
+            marginTop = marginsNone.marginTop;
+            marginBottom = marginsNone.marginBottom;
+          }
           changedSettings.marginTop = changedSettings.customMarginTop = marginTop;
           changedSettings.marginBottom = changedSettings.customMarginBottom = marginBottom;
           delete this._userChangedSettings.customMargins;
         }
 
         if (
-          parseFloat(this.viewSettings.customMargins.marginRight) +
-            parseFloat(this.viewSettings.customMargins.marginLeft) >
-            width -
-              paperWrapper.unwriteableMarginRight -
-              paperWrapper.unwriteableMarginLeft ||
+          horizontalMarginsInvalid(this.viewSettings.customMargins) ||
           this.viewSettings.customMargins.marginLeft < 0 ||
           this.viewSettings.customMargins.marginRight < 0
         ) {
           let { marginLeft, marginRight } = this.viewSettings.defaultMargins;
+          if (horizontalMarginsInvalid(this.viewSettings.defaultMargins)) {
+            let marginsNone = this.getMarginPresets("none");
+            marginLeft = marginsNone.marginLeft;
+            marginRight = marginsNone.marginRight;
+          }
           changedSettings.marginLeft = changedSettings.customMarginLeft = marginLeft;
           changedSettings.marginRight = changedSettings.customMarginRight = marginRight;
           delete this._userChangedSettings.customMargins;
@@ -2464,7 +2484,6 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
         settings.unwriteableMarginLeft -
         settings.unwriteableMarginRight;
 
-      this._defaultPresets = settings.defaultMargins;
       // The values in custom fields should be initialized to custom margin values
       // and must be overriden if they are no longer valid.
       this.setAllMarginValues(settings);
