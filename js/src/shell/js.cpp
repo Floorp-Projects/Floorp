@@ -597,6 +597,8 @@ bool shell::encodeSelfHostedCode = false;
 bool shell::enableCodeCoverage = false;
 bool shell::enableDisassemblyDumps = false;
 bool shell::offthreadCompilation = false;
+JS::DelazificationOption shell::defaultDelazificationMode =
+    JS::DelazificationOption::OnDemandOnly;
 bool shell::enableAsmJS = false;
 bool shell::enableWasm = false;
 bool shell::enableSharedMemory = SHARED_MEMORY_DEFAULT;
@@ -1015,7 +1017,8 @@ enum class CompileUtf8 {
     options.setIntroductionType("js shell file")
         .setFileAndLine(filename, 1)
         .setIsRunOnce(true)
-        .setNoScriptRval(true);
+        .setNoScriptRval(true)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
 
     if (compileMethod == CompileUtf8::DontInflate) {
       script = JS::CompileUtf8File(cx, options, file);
@@ -1491,7 +1494,8 @@ static bool AddIntlExtras(JSContext* cx, unsigned argc, Value* vp) {
   JS::CompileOptions options(cx);
   options.setIntroductionType("js shell interactive")
       .setIsRunOnce(true)
-      .setFileAndLine("typein", lineno);
+      .setFileAndLine("typein", lineno)
+      .setEagerDelazificationStrategy(defaultDelazificationMode);
 
   JS::SourceText<Utf8Unit> srcBuf;
   if (!srcBuf.init(cx, bytes, length, JS::SourceOwnership::Borrowed)) {
@@ -1964,7 +1968,8 @@ static bool LoadScript(JSContext* cx, unsigned argc, Value* vp,
     CompileOptions opts(cx);
     opts.setIntroductionType("js shell load")
         .setIsRunOnce(true)
-        .setNoScriptRval(true);
+        .setNoScriptRval(true)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
 
     RootedValue unused(cx);
     if (!(compileOnly
@@ -2658,7 +2663,8 @@ static bool Run(JSContext* cx, unsigned argc, Value* vp) {
     options.setIntroductionType("js shell run")
         .setFileAndLine(filename.get(), 1)
         .setIsRunOnce(true)
-        .setNoScriptRval(true);
+        .setNoScriptRval(true)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
 
     script = JS::Compile(cx, options, srcBuf);
     if (!script) {
@@ -3718,7 +3724,8 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
     options.setIntroductionType("js shell disFile")
         .setFileAndLine(filename.get(), 1)
         .setIsRunOnce(true)
-        .setNoScriptRval(true);
+        .setNoScriptRval(true)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
 
     script = JS::CompileUtf8Path(cx, options, filename.get());
     if (!script) {
@@ -3985,7 +3992,8 @@ static bool FuzzilliReprlGetAndRun(JSContext* cx) {
   options.setIntroductionType("reprl")
       .setFileAndLine("reprl", 1)
       .setIsRunOnce(true)
-      .setNoScriptRval(true);
+      .setNoScriptRval(true)
+      .setEagerDelazificationStrategy(defaultDelazificationMode);
 
   char* scriptSrc = static_cast<char*>(js_malloc(scriptSize));
 
@@ -4391,7 +4399,8 @@ static bool EvalInContext(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     JS::CompileOptions opts(cx);
-    opts.setFileAndLine(filename.get(), lineno);
+    opts.setFileAndLine(filename.get(), lineno)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
 
     JS::SourceText<char16_t> srcBuf;
     if (!srcBuf.init(cx, src, srclen, JS::SourceOwnership::Borrowed) ||
@@ -4518,7 +4527,11 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
     }
 
     JS::CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1).setIsRunOnce(true);
+    options
+        .setFileAndLine("<string>", 1)
+        .setIsRunOnce(true)
+        .setEagerDelazificationStrategy(defaultDelazificationMode);
+
 
     AutoReportException are(cx);
     JS::SourceText<char16_t> srcBuf;
@@ -10799,6 +10812,24 @@ static bool OptionFailure(const char* option, const char* str) {
   }
 #endif
 
+  if (const char* mode = op->getStringOption("delazification-mode")) {
+    if (strcmp(mode, "on-demand") == 0) {
+      defaultDelazificationMode = JS::DelazificationOption::OnDemandOnly;
+    } else if (strcmp(mode, "concurrent-df") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::ConcurrentDepthFirst;
+    } else if (strcmp(mode, "eager") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::ParseEverythingEagerly;
+    } else if (strcmp(mode, "concurrent-df+on-demand") == 0 ||
+               strcmp(mode, "on-demand+concurrent-df") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::CheckConcurrentWithOnDemand;
+    } else {
+      return OptionFailure("delazification-mode", mode);
+    }
+  }
+
   /* |scriptArgs| gets bound on the global before any code is run. */
   if (!BindScriptArgs(cx, op)) {
     return false;
@@ -10884,7 +10915,8 @@ static bool OptionFailure(const char* option, const char* str) {
       const char* code = codeChunks.front();
 
       JS::CompileOptions opts(cx);
-      opts.setFileAndLine("-e", 1);
+      opts.setFileAndLine("-e", 1)
+          .setEagerDelazificationStrategy(defaultDelazificationMode);
 
       JS::SourceText<Utf8Unit> srcBuf;
       if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed)) {
@@ -12265,6 +12297,13 @@ int main(int argc, char** argv) {
                           "Track NotImplemented errors in the new frontend") ||
 #else
       !op.addBoolOption('\0', "smoosh", "No-op") ||
+      !op.addStringOption(
+        '\0', "delazification-mode", "[option]",
+        "Select one of the delazification mode for scripts given on the "
+        "command line, valid options are: "
+        "'on-demand', 'concurrent-df', 'eager', 'concurrent-df+on-demand'. "
+        "Choosing 'concurrent-df+on-demand' will run both concurrent-df and "
+        "on-demand delazification mode, and compare compilation outcome. ") ||
 #endif
       !op.addBoolOption('\0', "wasm-compile-and-serialize",
                         "Compile the wasm bytecode from stdin and serialize "
@@ -12432,6 +12471,8 @@ int main(int argc, char** argv) {
   enableCodeCoverage = op.getBoolOption("code-coverage");
   if (enableCodeCoverage) {
     js::EnableCodeCoverage();
+    defaultDelazificationMode =
+        JS::DelazificationOption::ParseEverythingEagerly;
   }
 
   if (const char* xdr = op.getStringOption("selfhosted-xdr-path")) {
