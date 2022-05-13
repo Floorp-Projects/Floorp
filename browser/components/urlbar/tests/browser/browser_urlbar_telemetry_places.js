@@ -294,35 +294,116 @@ add_task(async function test_visitURL() {
 });
 
 add_task(async function test_autofill() {
-  const histograms = snapshotHistograms();
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:blank"
-  );
-
-  await PlacesTestUtils.addVisits([
+  const testData = [
     {
-      uri: "http://example.com/mypage",
-      title: "example",
-      transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "e",
+      expected: "autofill_adaptive",
     },
-  ]);
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "exa",
+      expected: "autofill_adaptive",
+    },
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "exam",
+      expected: "autofill_origin",
+    },
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "example.com",
+      expected: "autofill_origin",
+    },
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "example.com/",
+      expected: "autofill_url",
+    },
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "example.com/test",
+      expected: "autofill_url",
+    },
+    {
+      adaptiveHistoryPref: true,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [
+        { uri: "http://example.com/test", input: "http://example.com/test" },
+      ],
+      userInput: "http://example.com/test",
+      expected: "autofill_adaptive",
+    },
+    {
+      adaptiveHistoryPref: false,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "example",
+      expected: "autofill_origin",
+    },
+    {
+      adaptiveHistoryPref: false,
+      visitHistory: [{ uri: "http://example.com/test" }],
+      inputHistory: [{ uri: "http://example.com/test", input: "exa" }],
+      userInput: "example.com/te",
+      expected: "autofill_url",
+    },
+  ];
 
-  Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
+  for (const {
+    adaptiveHistoryPref,
+    visitHistory,
+    inputHistory,
+    userInput,
+    expected,
+  } of testData) {
+    const histograms = snapshotHistograms();
+    await PlacesUtils.history.clear();
 
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await searchInAwesomebar("example.com/my");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await p;
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      "about:blank"
+    );
 
-  assertSearchTelemetryEmpty(histograms.search_hist);
-  assertTelemetryResults(
-    histograms,
-    "autofill",
-    0,
-    UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
-  );
+    await PlacesTestUtils.addVisits(visitHistory);
+    for (const { uri, input } of inputHistory) {
+      await UrlbarUtils.addToInputHistory(uri, input);
+    }
 
-  BrowserTestUtils.removeTab(tab);
+    Services.prefs.setBoolPref("browser.urlbar.autoFill", true);
+    Services.prefs.setBoolPref(
+      "browser.urlbar.autoFill.adaptiveHistory.enabled",
+      adaptiveHistoryPref
+    );
+
+    let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    await searchInAwesomebar(userInput);
+    EventUtils.synthesizeKey("KEY_Enter");
+    await p;
+
+    assertSearchTelemetryEmpty(histograms.search_hist);
+    assertTelemetryResults(
+      histograms,
+      expected,
+      0,
+      UrlbarTestUtils.SELECTED_RESULT_METHODS.enter
+    );
+
+    BrowserTestUtils.removeTab(tab);
+    Services.prefs.clearUserPref(
+      "browser.urlbar.autoFill.adaptiveHistory.enabled"
+    );
+  }
 });
