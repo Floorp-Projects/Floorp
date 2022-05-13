@@ -2157,9 +2157,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
 bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
   const auto& lh = StyleText()->mLineHeight;
-
-  if (lh.IsNormal() &&
-      StaticPrefs::layout_css_line_height_normal_as_resolved_value_enabled()) {
+  if (lh.IsNormal()) {
     return false;
   }
 
