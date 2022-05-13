@@ -7,12 +7,11 @@
 #ifndef GFX_WEBRENDERCANVASRENDERER_H
 #define GFX_WEBRENDERCANVASRENDERER_H
 
+#include "mozilla/layers/RenderRootStateManager.h"
 #include "ShareableCanvasRenderer.h"
 
 namespace mozilla {
 namespace layers {
-
-class RenderRootStateManager;
 
 class WebRenderCanvasRenderer : public ShareableCanvasRenderer {
  public:
@@ -20,9 +19,10 @@ class WebRenderCanvasRenderer : public ShareableCanvasRenderer {
       : mManager(aManager) {}
 
   CompositableForwarder* GetForwarder() override;
+  RenderRootStateManager* GetRenderRootStateManager() { return mManager; }
 
  protected:
-  RenderRootStateManager* mManager;
+  RefPtr<RenderRootStateManager> mManager;
 };
 
 class WebRenderCanvasRendererAsync final : public WebRenderCanvasRenderer {
