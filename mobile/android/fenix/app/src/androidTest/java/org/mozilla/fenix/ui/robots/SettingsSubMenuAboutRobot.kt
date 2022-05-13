@@ -12,7 +12,6 @@ import androidx.core.content.pm.PackageInfoCompat
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
@@ -20,25 +19,28 @@ import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withSubstring
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
+import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.containsString
+import org.junit.Assert.assertTrue
+import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.settings.SupportUtils
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.Calendar
 import java.util.Date
-import org.hamcrest.CoreMatchers
-import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.containsString
-import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.appName
-import org.mozilla.fenix.helpers.isVisibleForUser
-import org.mozilla.fenix.settings.SupportUtils
 
 /**
  * Implementation of Robot Pattern for the settings search sub menu.
@@ -129,10 +131,7 @@ private fun assertCurrentTimestamp() {
 }
 
 private fun assertWhatIsNewInFirefoxPreview() {
-
-    if (!onView(withText("What’s new in $appName")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("What’s new in $appName"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -140,9 +139,7 @@ private fun assertWhatIsNewInFirefoxPreview() {
 }
 
 private fun assertSupport() {
-    if (!onView(withText("Support")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Support"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -159,19 +156,19 @@ private fun assertCrashes() {
     navigationToolbar {
     }.openThreeDotMenu {
     }.openSettings {
-    }.openAboutFirefoxPreview {
-    }
+    }.openAboutFirefoxPreview {}
 
-    if (!onView(withText("Crashes")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Crashes"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 
-    onView(withSubstring("No crash reports have been submitted"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    assertTrue(
+        mDevice.findObject(
+            UiSelector().textContains("No crash reports have been submitted.")
+        ).waitForExists(waitingTime)
+    )
 
     for (i in 1..3) {
         Espresso.pressBack()
@@ -179,9 +176,7 @@ private fun assertCrashes() {
 }
 
 private fun assertPrivacyNotice() {
-    if (!onView(withText("Privacy notice")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Privacy notice"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -195,9 +190,7 @@ private fun assertPrivacyNotice() {
 }
 
 private fun assertKnowYourRights() {
-    if (!onView(withText("Know your rights")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Know your rights"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -211,9 +204,7 @@ private fun assertKnowYourRights() {
 }
 
 private fun assertLicensingInformation() {
-    if (!onView(withText("Licensing information")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Licensing information"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -227,9 +218,7 @@ private fun assertLicensingInformation() {
 }
 
 private fun assertLibrariesUsed() {
-    if (!onView(withText("Libraries that we use")).isVisibleForUser()) {
-        onView(withId(R.id.about_layout)).perform(ViewActions.swipeUp())
-    }
+    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
 
     onView(withText("Libraries that we use"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -239,8 +228,10 @@ private fun assertLibrariesUsed() {
     Espresso.pressBack()
 }
 
+private val aboutMenuList = UiScrollable(UiSelector().resourceId("$packageName:id/about_layout"))
+
 private fun goBackButton() =
-    onView(CoreMatchers.allOf(withContentDescription("Navigate up")))
+    onView(withContentDescription("Navigate up"))
 
 class BuildDateAssertion {
     // When the app is built on firebase, there are times where the BuildDate is off by a few seconds or a few minutes.

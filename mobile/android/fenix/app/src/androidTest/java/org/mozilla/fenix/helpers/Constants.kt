@@ -17,4 +17,5 @@ object Constants {
     }
 
     const val LONG_CLICK_DURATION: Long = 5000
+    const val LISTS_MAXSWIPES: Int = 3
 }

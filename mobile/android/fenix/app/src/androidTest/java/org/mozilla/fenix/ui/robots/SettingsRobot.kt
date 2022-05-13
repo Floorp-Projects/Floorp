@@ -40,6 +40,7 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -554,31 +555,22 @@ private fun assertLeakCanaryButton() {
 
 // ABOUT SECTION
 private fun assertAboutHeading(): ViewInteraction {
-    scrollToElementByText("About")
+    settingsList().scrollToEnd(LISTS_MAXSWIPES)
     return onView(withText("About"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun rateOnGooglePlayHeading(): UiObject {
     val rateOnGooglePlay = mDevice.findObject(UiSelector().text("Rate on Google Play"))
-    scrollToElementByText("Rate on Google Play")
-    if (!rateOnGooglePlay.exists()) {
-        settingsList().swipeUp(2)
-        rateOnGooglePlay.waitForExists(waitingTime)
-    }
+    settingsList().scrollToEnd(LISTS_MAXSWIPES)
+    rateOnGooglePlay.waitForExists(waitingTime)
 
     return rateOnGooglePlay
 }
 
 private fun aboutFirefoxHeading(): UiObject {
-    val aboutFirefoxHeading = mDevice.findObject(UiSelector().text("About $appName"))
-    scrollToElementByText("About $appName")
-    if (!aboutFirefoxHeading.exists()) {
-        settingsList().swipeUp(2)
-        aboutFirefoxHeading.waitForExists(waitingTime)
-    }
-
-    return aboutFirefoxHeading
+    settingsList().scrollToEnd(LISTS_MAXSWIPES)
+    return mDevice.findObject(UiSelector().text("About $appName"))
 }
 
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
