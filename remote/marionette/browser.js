@@ -249,17 +249,8 @@ browser.Context = class {
     switch (AppInfo.name) {
       case "Firefox":
         const opened = new EventPromise(this.window, "TabOpen");
-        this.window.BrowserOpenTab();
+        tab = TabManager.addTab({ focus, window: this.window });
         await opened;
-
-        tab = this.tabBrowser.selectedTab;
-
-        // The new tab is always selected by default. If focus is not wanted,
-        // the previously tab needs to be selected again.
-        if (!focus) {
-          this.tabBrowser.selectedTab = this.tab;
-        }
-
         break;
 
       default:
