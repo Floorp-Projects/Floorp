@@ -6044,7 +6044,7 @@ nsresult HTMLEditor::SetReturnInParagraphCreatesNewParagraph(
   return NS_OK;
 }
 
-bool HTMLEditor::GetReturnInParagraphCreatesNewParagraph() {
+bool HTMLEditor::GetReturnInParagraphCreatesNewParagraph() const {
   return mCRInParagraphCreatesParagraph;
 }
 

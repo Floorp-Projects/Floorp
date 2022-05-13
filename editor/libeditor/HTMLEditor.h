@@ -154,7 +154,7 @@ class HTMLEditor final : public EditorBase,
     return aEditor ? aEditor->GetAsHTMLEditor() : nullptr;
   }
 
-  bool GetReturnInParagraphCreatesNewParagraph();
+  [[nodiscard]] bool GetReturnInParagraphCreatesNewParagraph() const;
 
   // EditorBase overrides
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD BeginningOfDocument() final;
@@ -2380,7 +2380,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
   ComputeTargetRanges(nsIEditor::EDirection aDirectionAndAmount,
-                      AutoRangeArray& aRangesToDelete);
+                      AutoRangeArray& aRangesToDelete) const;
 
   /**
    * This method handles "delete selection" commands.
@@ -4215,7 +4215,8 @@ class HTMLEditor final : public EditorBase,
     eWidth,
     eHeight,
   };
-  int32_t GetNewResizingIncrement(int32_t aX, int32_t aY, ResizeAt aResizeAt);
+  [[nodiscard]] int32_t GetNewResizingIncrement(int32_t aX, int32_t aY,
+                                                ResizeAt aResizeAt) const;
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult StartResizing(Element& aHandle);
   int32_t GetNewResizingX(int32_t aX, int32_t aY);
@@ -4281,7 +4282,7 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult StartMoving();
   MOZ_CAN_RUN_SCRIPT nsresult SetFinalPosition(int32_t aX, int32_t aY);
   void AddPositioningOffset(int32_t& aX, int32_t& aY);
-  void SnapToGrid(int32_t& newX, int32_t& newY);
+  void SnapToGrid(int32_t& newX, int32_t& newY) const;
   nsresult GrabberClicked();
   MOZ_CAN_RUN_SCRIPT nsresult EndMoving();
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult

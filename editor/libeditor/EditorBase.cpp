@@ -806,7 +806,7 @@ NS_IMETHODIMP EditorBase::GetDocument(Document** aDocument) {
   return NS_WARN_IF(!*aDocument) ? NS_ERROR_NOT_INITIALIZED : NS_OK;
 }
 
-already_AddRefed<nsIWidget> EditorBase::GetWidget() {
+already_AddRefed<nsIWidget> EditorBase::GetWidget() const {
   nsPresContext* presContext = GetPresContext();
   if (NS_WARN_IF(!presContext)) {
     return nullptr;
@@ -1931,7 +1931,7 @@ nsresult EditorBase::RemoveAttributeWithTransaction(Element& aElement,
   return rv;
 }
 
-nsresult EditorBase::MarkElementDirty(Element& aElement) {
+nsresult EditorBase::MarkElementDirty(Element& aElement) const {
   // Mark the node dirty, but not for webpages (bug 599983)
   if (!OutputsMozDirty()) {
     return NS_OK;
@@ -2710,7 +2710,7 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   }
 }
 
-nsresult EditorBase::ScrollSelectionFocusIntoView() {
+nsresult EditorBase::ScrollSelectionFocusIntoView() const {
   nsISelectionController* selectionController = GetSelectionController();
   if (!selectionController) {
     return NS_OK;
@@ -4864,7 +4864,8 @@ nsresult EditorBase::DeleteRangesWithTransaction(
   return rv;
 }
 
-already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
+already_AddRefed<Element> EditorBase::CreateHTMLContent(
+    const nsAtom* aTag) const {
   MOZ_ASSERT(aTag);
 
   RefPtr<Document> document = GetDocument();
@@ -4886,7 +4887,7 @@ already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
 }
 
 already_AddRefed<nsTextNode> EditorBase::CreateTextNode(
-    const nsAString& aData) {
+    const nsAString& aData) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   Document* document = GetDocument();

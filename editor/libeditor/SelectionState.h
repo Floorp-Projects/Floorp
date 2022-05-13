@@ -51,7 +51,7 @@ struct RangeItem final {
     mStartContainer = mEndContainer = nullptr;
     mStartOffset = mEndOffset = 0;
   }
-  already_AddRefed<nsRange> GetRange();
+  already_AddRefed<nsRange> GetRange() const;
 
   // Same as the API of dom::AbstractRange
   [[nodiscard]] nsINode* GetRoot() const;
