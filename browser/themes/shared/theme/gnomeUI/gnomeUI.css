@@ -2477,10 +2477,7 @@
      /* Style menus */
      menupopup {
        -moz-appearance: none !important;
-       background: var(--gnome-menu-background) !important;
-       border: 1px solid var(--gnome-menu-border-color) !important;
        border-radius: 5px;
-       padding: 4px 0 !important;
        color: var(--gnome-toolbar-color) !important;
        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1) !important;
      }
