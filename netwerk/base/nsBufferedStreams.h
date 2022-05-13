@@ -58,6 +58,7 @@ class nsBufferedStream : public nsISeekableStream {
 
   bool mBufferDisabled{false};
   bool mEOF{false};  // True if mStream is at EOF
+  bool mSeekable{true};
   uint8_t mGetBufferCount{0};
 };
 
