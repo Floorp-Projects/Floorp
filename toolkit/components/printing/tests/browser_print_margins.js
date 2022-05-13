@@ -1070,3 +1070,44 @@ add_task(async function testHonorPageRuleMargins() {
     helper.assertSettingsMatch({ honorPageRuleMargins: true });
   });
 });
+
+add_task(async function testDefaultMarginsInvalidStartup() {
+  await PrintHelper.withTestPage(async helper => {
+    let paperList = [
+      PrintHelper.createMockPaper({
+        id: "smallestPaper",
+        name: "Default Margins Invalid",
+        width: 50,
+        height: 50,
+        unwriteableMargin: {
+          top: 10,
+          bottom: 10,
+          left: 10,
+          right: 10,
+          QueryInterface: ChromeUtils.generateQI([Ci.nsIPaperMargin]),
+        },
+      }),
+    ];
+
+    let mockPrinterName = "Mock printer";
+    helper.addMockPrinter({ name: mockPrinterName, paperList });
+    Services.prefs.setStringPref("print_printer", mockPrinterName);
+
+    await helper.startPrint();
+
+    helper.assertSettingsMatch({
+      marginTop: 0,
+      marginRight: 0,
+      marginBottom: 0,
+      marginLeft: 0,
+    });
+
+    let marginSelect = helper.get("margins-picker");
+    is(marginSelect.value, "none", "Margins picker set to 'None'");
+
+    let printForm = helper.get("print");
+    ok(printForm.checkValidity(), "The print form is valid");
+
+    await helper.closeDialog();
+  });
+});
