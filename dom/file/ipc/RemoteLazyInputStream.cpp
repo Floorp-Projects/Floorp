@@ -422,7 +422,8 @@ RemoteLazyInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
 
       // We are still waiting for the remote inputStream
       case ePending: {
-        if (mInputStreamCallback && aCallback) {
+        if (NS_WARN_IF(mInputStreamCallback && aCallback &&
+                       mInputStreamCallback != aCallback)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -434,7 +435,8 @@ RemoteLazyInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
       // We have the remote inputStream, let's check if we can execute the
       // callback.
       case eRunning: {
-        if (mInputStreamCallback && aCallback) {
+        if (NS_WARN_IF(mInputStreamCallback && aCallback &&
+                       mInputStreamCallback != aCallback)) {
           return NS_ERROR_FAILURE;
         }
 
@@ -454,7 +456,8 @@ RemoteLazyInputStream::AsyncWait(nsIInputStreamCallback* aCallback,
         [[fallthrough]];
       default:
         MOZ_ASSERT(mState == eClosed);
-        if (mInputStreamCallback && aCallback) {
+        if (NS_WARN_IF(mInputStreamCallback && aCallback &&
+                       mInputStreamCallback != aCallback)) {
           return NS_ERROR_FAILURE;
         }
         break;
