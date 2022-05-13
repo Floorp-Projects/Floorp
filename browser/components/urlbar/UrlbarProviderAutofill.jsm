@@ -752,7 +752,7 @@ class ProviderAutofill extends UrlbarProvider {
     }
 
     // We try to autofill with adaptive history first.
-    if (UrlbarPrefs.get("autoFill.adaptiveHistory.enabled")) {
+    if (UrlbarPrefs.get("autoFillAdaptiveHistoryEnabled")) {
       const [query, params] = this._getAdaptiveHistoryQuery(queryContext);
       if (query) {
         const resultSet = await conn.executeCached(query, params);
