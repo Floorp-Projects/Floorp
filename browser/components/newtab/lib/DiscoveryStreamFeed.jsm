@@ -167,7 +167,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 
   get personalized() {
-    // If both spocs and recs are not personalized, we might as well return false here.
+    // If stories are not displayed, no point in trying to personalize them.
+    if (!this.showStories) {
+      return false;
+    }
     const spocsPersonalized = this.store.getState().Prefs.values?.pocketConfig
       ?.spocsPersonalized;
     const recsPersonalized = this.store.getState().Prefs.values?.pocketConfig
