@@ -896,7 +896,8 @@ bool DepthFirstDelazification::add(JSContext* cx,
 
     ScriptIndex innerScriptIndex = index.toFunction();
     ScriptStencilRef innerScriptRef{stencil, innerScriptIndex};
-    if (innerScriptRef.scriptData().isGhost()) {
+    if (innerScriptRef.scriptData().isGhost() ||
+        !innerScriptRef.scriptData().functionFlags.isInterpreted()) {
       continue;
     }
     if (innerScriptRef.scriptData().hasSharedData()) {
