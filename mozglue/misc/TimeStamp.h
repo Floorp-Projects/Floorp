@@ -429,6 +429,17 @@ class TimeStamp {
   static MFBT_API TimeStamp ProcessCreation();
 
   /**
+   * Return the very first timestamp that was taken. This can be used instead
+   * of TimeStamp::ProcessCreation() by code that might not allow running the
+   * complex logic required to compute the real process creation. This will
+   * necessarily have been recorded sometimes after TimeStamp::ProcessCreation()
+   * or at best should be equal to it.
+   *
+   * @returns The first tiemstamp that was taken by this process
+   */
+  static MFBT_API TimeStamp FirstTimeStamp();
+
+  /**
    * Records a process restart. After this call ProcessCreation() will return
    * the time when the browser was restarted instead of the actual time when
    * the process was created.
