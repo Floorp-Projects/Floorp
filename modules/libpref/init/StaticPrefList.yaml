@@ -6756,22 +6756,6 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Streams API. This only applies to JS Streams
-- name: javascript.options.streams
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Writable Streams API.  (The pref above must also be set to expose this.)
-#
-# Writable streams are still EXTRAORDINARILY BETA and it is well-known that
-# things are likely pretty broken if you poke much at all, so if you flip this
-# preference, don't report bugs against it just yet.
-- name: javascript.options.writable_streams
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: javascript.options.main_thread_stack_quota_cap
   type: uint32_t
 #if defined(MOZ_ASAN)
