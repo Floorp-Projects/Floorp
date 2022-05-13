@@ -316,8 +316,15 @@ const tests = [
 
   async function(win) {
     info("Type something, click on bookmark entry.");
+    // Add a clean bookmark.
+    const bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: "http://example.com/bookmark",
+      title: "bookmark",
+    });
+
     win.gURLBar.select();
-    let url = "http://example.com/?q=%s";
+    let url = "http://example.com/bookmark";
     let promise = BrowserTestUtils.browserLoaded(
       win.gBrowser.selectedBrowser,
       false,
@@ -325,7 +332,7 @@ const tests = [
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      value: "exa",
+      value: "boo",
       fireInputEvent: true,
     });
     while (win.gURLBar.untrimmedValue != url) {
@@ -334,6 +341,7 @@ const tests = [
     let element = UrlbarTestUtils.getSelectedRow(win);
     EventUtils.synthesizeMouseAtCenter(element, {}, win);
     await promise;
+    await PlacesUtils.bookmarks.remove(bookmark);
     return {
       category: "urlbar",
       method: "engagement",
@@ -374,7 +382,7 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: "0",
-        selType: "autofill",
+        selType: "autofill_origin",
         provider: "Autofill",
       },
     };
@@ -382,18 +390,32 @@ const tests = [
 
   async function(win) {
     info("Type something, select bookmark entry, Enter.");
+
+    // Add a clean bookmark and the input history in order to detect in InputHistory
+    // provider and to not show adaptive history autofill.
+    const bookmark = await PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: "http://example.com/bookmark",
+      title: "bookmark",
+    });
+    await UrlbarUtils.addToInputHistory(
+      "http://example.com/bookmark",
+      "bookmark"
+    );
+
     win.gURLBar.select();
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window: win,
-      value: "exa",
+      value: "boo",
       fireInputEvent: true,
     });
-    while (win.gURLBar.untrimmedValue != "http://example.com/?q=%s") {
+    while (win.gURLBar.untrimmedValue != "http://example.com/bookmark") {
       EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     }
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
+    await PlacesUtils.bookmarks.remove(bookmark);
     return {
       category: "urlbar",
       method: "engagement",
@@ -774,7 +796,7 @@ const tests = [
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
         numWords: "1",
-        selType: "autofill",
+        selType: "autofill_origin",
         selIndex: "0",
         provider: "Autofill",
       },
@@ -804,7 +826,7 @@ const tests = [
         elapsed: val => parseInt(val) > 0,
         numChars: "11",
         numWords: "1",
-        selType: "autofill",
+        selType: "autofill_origin",
         selIndex: "0",
         provider: "Autofill",
       },
