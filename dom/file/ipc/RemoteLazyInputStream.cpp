@@ -598,6 +598,13 @@ RemoteLazyInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 // nsIIPCSerializableInputStream
 
+void RemoteLazyInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                                 uint32_t* aSizeUsed,
+                                                 uint32_t* aNewPipes,
+                                                 uint32_t* aTransferables) {
+  *aTransferables = 1;
+}
+
 void RemoteLazyInputStream::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
