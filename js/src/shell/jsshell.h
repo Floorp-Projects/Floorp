@@ -12,6 +12,7 @@
 #include "mozilla/TimeStamp.h"
 
 #include "builtin/MapObject.h"
+#include "js/CompileOptions.h"
 #include "js/GCVector.h"
 #include "shell/ModuleLoader.h"
 #include "threading/ConditionVariable.h"
@@ -105,6 +106,7 @@ extern bool encodeSelfHostedCode;
 extern bool enableCodeCoverage;
 extern bool enableDisassemblyDumps;
 extern bool offthreadCompilation;
+extern JS::DelazificationOption defaultDelazificationMode;
 extern bool enableAsmJS;
 extern bool enableWasm;
 extern bool enableSharedMemory;
