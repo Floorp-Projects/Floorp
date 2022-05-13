@@ -728,7 +728,8 @@ class Marionette(object):
                 crash_count = self.check_for_crash()
 
                 if crash_count > 0:
-                    if returncode == 0:
+                    # SIGUSR1 indicates a forced shutdown due to a content process crash
+                    if returncode == 245:
                         message = "Content process crashed"
                     else:
                         message = "Process crashed (Exit code: {returncode})"
