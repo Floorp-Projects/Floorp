@@ -1,15 +1,17 @@
 return {
   theme = {
-    '@builtins/theme/ng.md'
+    '@builtins/theme/ng.md',
     -- We don't want to have more than h3 headings in the Table Of Content.
-    --toc_level = 3,
+    toc_level = 3,
   },
 
   site = {
     name = 'WebRTC C++ library',
-    home = '/g3doc/index.md',
-    logo = '/g3doc/logo.svg',
-    map  = '/g3doc/sitemap.md',
+    home = this.dirname..'index.md',
+    logo = this.dirname..'logo.svg',
+    map  = this.dirname..'sitemap.md',
+    -- Ensure absolute links are rewritten correctly.
+    root = this.dirname..'..'
   },
 
   visibility = { '/...' },
