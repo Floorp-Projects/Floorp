@@ -62,8 +62,8 @@ nsPrintDialogServiceWin::Init() {
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceWin::Show(nsPIDOMWindowOuter* aParent,
-                              nsIPrintSettings* aSettings) {
+nsPrintDialogServiceWin::ShowPrintDialog(mozIDOMWindowProxy* aParent,
+                                         nsIPrintSettings* aSettings) {
   NS_ENSURE_ARG(aParent);
   HWND hWnd = GetHWNDForDOMWindow(aParent);
   NS_ASSERTION(hWnd, "Couldn't get native window for PRint Dialog!");
@@ -72,8 +72,8 @@ nsPrintDialogServiceWin::Show(nsPIDOMWindowOuter* aParent,
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceWin::ShowPageSetup(nsPIDOMWindowOuter* aParent,
-                                       nsIPrintSettings* aNSSettings) {
+nsPrintDialogServiceWin::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
+                                             nsIPrintSettings* aNSSettings) {
   NS_ENSURE_ARG(aParent);
   NS_ENSURE_ARG(aNSSettings);
 

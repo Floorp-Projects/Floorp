@@ -305,15 +305,15 @@ var PrintEventHandler = {
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
       settings.title = this.activeTitle;
-      const PRINTPROMPTSVC = Cc[
-        "@mozilla.org/embedcomp/printingprompt-service;1"
-      ].getService(Ci.nsIPrintingPromptService);
+      const PRINTDIALOGSVC = Cc[
+        "@mozilla.org/widget/printdialog-service;1"
+      ].getService(Ci.nsIPrintDialogService);
       try {
         Services.telemetry.scalarAdd(
           "printing.dialog_opened_via_preview_tm",
           1
         );
-        await this._showPrintDialog(PRINTPROMPTSVC, window, settings);
+        await this._showPrintDialog(PRINTDIALOGSVC, window, settings);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_ABORT) {
           Services.telemetry.scalarAdd(
@@ -1007,8 +1007,8 @@ var PrintEventHandler = {
    * testing purposes. The showPrintDialog() call blocks until the dialog is
    * closed, so we mark it as async to allow us to reject from the test.
    */
-  async _showPrintDialog(aPrintingPromptService, aWindow, aSettings) {
-    return aPrintingPromptService.showPrintDialog(aWindow, aSettings);
+  async _showPrintDialog(aPrintDialogService, aWindow, aSettings) {
+    return aPrintDialogService.showPrintDialog(aWindow, aSettings);
   },
 };
 
