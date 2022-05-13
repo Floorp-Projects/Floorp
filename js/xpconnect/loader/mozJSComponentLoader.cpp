@@ -1100,14 +1100,27 @@ nsresult mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
 
   mInitialized = true;
   ComponentLoaderInfo info(aLocation);
-  *retval = !!mImports.Get(info.Key());
-
-  if (!*retval && IsJSM(aLocation)) {
-    nsAutoCString mjsLocation;
-    ToMJS(aLocation, mjsLocation);
-    return IsModuleLoaded(mjsLocation, retval);
+  if (mImports.Get(info.Key())) {
+    *retval = true;
+    return NS_OK;
   }
 
+  if (IsJSM(aLocation) && mModuleLoader) {
+    nsAutoCString mjsLocation;
+    ToMJS(aLocation, mjsLocation);
+
+    ComponentLoaderInfo mjsInfo(mjsLocation);
+
+    nsresult rv = mjsInfo.EnsureURI();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mModuleLoader->IsModuleFetched(mjsInfo.URI())) {
+      *retval = true;
+      return NS_OK;
+    }
+  }
+
+  *retval = false;
   return NS_OK;
 }
 
