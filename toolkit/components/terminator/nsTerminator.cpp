@@ -91,9 +91,10 @@ static ShutdownStep sShutdownSteps[] = {
     ShutdownStep(mozilla::ShutdownPhase::AppShutdownQM),
     ShutdownStep(mozilla::ShutdownPhase::XPCOMWillShutdown),
     ShutdownStep(mozilla::ShutdownPhase::XPCOMShutdown),
+    ShutdownStep(mozilla::ShutdownPhase::XPCOMShutdownThreads),
+    ShutdownStep(mozilla::ShutdownPhase::XPCOMShutdownFinal),
+    ShutdownStep(mozilla::ShutdownPhase::CCPostLastCycleCollection),
 };
-
-Atomic<bool> sShutdownNotified;
 
 int GetStepForPhase(mozilla::ShutdownPhase aPhase) {
   for (size_t i = 0; i < std::size(sShutdownSteps); i++) {
@@ -190,6 +191,7 @@ void RunWatchdog(void* arg) {
       continue;
     }
 
+    // Arrived here we know we will crash in a way or another.
     NoteIntentionalCrash(XRE_GetProcessTypeString());
 
     // Until we have general log output for crash annotations in treeherder
@@ -201,54 +203,45 @@ void RunWatchdog(void* arg) {
         "RunWatchdog: Mainthread nested event loops during hang: \n --- %s\n",
         stack.get());
 
-    // The shutdown steps are not completed yet. Let's report the last one.
-    if (!sShutdownNotified) {
-      mozilla::ShutdownPhase lastStep = mozilla::ShutdownPhase::NotInShutdown;
-      // Looping inverse here to make the search more robust in case
-      // the observer that triggers UpdateHeartbeat was not called
-      // at all or in the expected order on some step. This should
-      // give us always the last known ShutdownStep.
-      for (int i = ArrayLength(sShutdownSteps) - 1; i >= 0; --i) {
-        if (sShutdownSteps[i].mTicks > -1) {
-          lastStep = sShutdownSteps[i].mPhase;
-          break;
-        }
+    // Let's find the last known shutdown phase.
+    mozilla::ShutdownPhase lastPhase = mozilla::ShutdownPhase::NotInShutdown;
+    // Looping inverse here to make the search more robust in case
+    // the observer that triggers UpdateHeartbeat was not called
+    // at all or in the expected order on some step. This should
+    // give us always the last known ShutdownStep.
+    for (int i = ArrayLength(sShutdownSteps) - 1; i >= 0; --i) {
+      if (sShutdownSteps[i].mTicks > -1) {
+        lastPhase = sShutdownSteps[i].mPhase;
+        break;
       }
+    }
 
-      if (lastStep != mozilla::ShutdownPhase::NotInShutdown) {
-        nsCString msg;
-        msg.AppendPrintf(
-            "Shutdown hanging at step %s. "
-            "Something is blocking the main-thread.",
-            mozilla::AppShutdown::GetObserverKey(lastStep));
-        // This string will be leaked.
-        MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
-      }
-
+    if (lastPhase == mozilla::ShutdownPhase::NotInShutdown) {
+      // This is not something we expect to ever happen, but still.
+      CrashReporter::SetMinidumpAnalysisAllThreads();
       MOZ_CRASH("Shutdown hanging before starting any known phase.");
     }
 
-    // Maybe some workers are blocking the shutdown.
+    // First check if worker shutdown started and is incomplete, in case
+    // report running workers.
     mozilla::dom::workerinternals::RuntimeService* runtimeService =
         mozilla::dom::workerinternals::RuntimeService::GetService();
     if (runtimeService) {
+      // CrashIfHanging will check if we actually ever asked for worker
+      // shutdown, so calling it before is a no-op.
       runtimeService->CrashIfHanging();
     }
 
-    // If we get here, we know that all shutdown phases have been
-    // finished successfully and no worker is hanging.
-    // Therefore there should be nothing left worth waiting for.
-    // We give us a short extra time in case we have a late race
-    // and are about to have a clean shutdown anyway.
-#if defined(XP_WIN)
-    Sleep(1000 /* ms */);
-#else
-    usleep(1000000 /* usec */);
-#endif
+    // Otherwise just report our shutdown phase.
+    // This string will be leaked.
+    nsCString msg;
+    msg.AppendPrintf(
+        "Shutdown hanging at step %s. "
+        "Something is blocking the main-thread.",
+        mozilla::AppShutdown::GetShutdownPhaseName(lastPhase));
 
-    // If we are still alive then we just crash.
     CrashReporter::SetMinidumpAnalysisAllThreads();
-    MOZ_CRASH("Shutdown hanging after all known phases and workers finished.");
+    MOZ_CRASH_UNSAFE(strdup(msg.BeginReading()));
   }
 }
 
@@ -384,7 +377,7 @@ nsTerminator::nsTerminator() : mInitialized(false), mCurrentStep(-1) {}
 // shutdown.
 void nsTerminator::Start() {
   MOZ_ASSERT(!mInitialized);
-  sShutdownNotified = false;
+
   StartWatchdog();
 #if !defined(NS_FREE_PERMANENT_DATA)
   // Only allow nsTerminator to write on non-leak-checked builds so we don't
@@ -417,6 +410,12 @@ nsTerminator::Observe(nsISupports*, const char* aTopic, const char16_t*) {
     AdvancePhase(mozilla::ShutdownPhase::XPCOMWillShutdown);
   } else if (strcmp(aTopic, "terminator-test-xpcom-shutdown") == 0) {
     AdvancePhase(mozilla::ShutdownPhase::XPCOMShutdown);
+  } else if (strcmp(aTopic, "terminator-test-xpcom-shutdown-threads") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::XPCOMShutdownThreads);
+  } else if (strcmp(aTopic, "terminator-test-XPCOMShutdownFinal") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::XPCOMShutdownFinal);
+  } else if (strcmp(aTopic, "terminator-test-CCPostLastCycleCollection") == 0) {
+    AdvancePhase(mozilla::ShutdownPhase::CCPostLastCycleCollection);
   }
 
   return NS_OK;
@@ -506,11 +505,24 @@ void nsTerminator::StartWriter() {
   }
 }
 
+// This helper is here to preserve the existing crash reporting behavior
+// based on observer topic names, using the shutdown phase name only for
+// phases without associated topic.
+const char* GetReadableNameForPhase(mozilla::ShutdownPhase aPhase) {
+  const char* readableName = mozilla::AppShutdown::GetObserverKey(aPhase);
+  if (!readableName) {
+    readableName = mozilla::AppShutdown::GetShutdownPhaseName(aPhase);
+  }
+  return readableName;
+}
+
 void nsTerminator::AdvancePhase(mozilla::ShutdownPhase aPhase) {
-  // If we are done, do nothing
-  if (sShutdownNotified) {
+  // If the phase is unknown, just ignore it.
+  auto step = GetStepForPhase(aPhase);
+  if (step < 0) {
     return;
   }
+
   // As we have seen examples in the wild of shutdown notifications
   // not being sent (or not being sent in the expected order), we do
   // not assume a specific order.
@@ -518,14 +530,14 @@ void nsTerminator::AdvancePhase(mozilla::ShutdownPhase aPhase) {
     Start();
   }
 
-  UpdateHeartbeat(GetStepForPhase(aPhase));
+  UpdateHeartbeat(step);
 #if !defined(NS_FREE_PERMANENT_DATA)
   // Only allow nsTerminator to write on non-leak checked builds so we don't get
   // leak warnings on shutdown for intentional leaks (see bug 1242084). This
   // will be enabled again by bug 1255484 when 1255478 lands.
   UpdateTelemetry();
 #endif  // !defined(NS_FREE_PERMANENT_DATA)
-  UpdateCrashReport(mozilla::AppShutdown::GetObserverKey(aPhase));
+  UpdateCrashReport(GetReadableNameForPhase(aPhase));
 }
 
 void nsTerminator::UpdateHeartbeat(int32_t aStep) {
@@ -569,8 +581,7 @@ void nsTerminator::UpdateTelemetry() {
       telemetryData->AppendLiteral(", ");
     }
     telemetryData->AppendLiteral(R"(")");
-    telemetryData->Append(
-        mozilla::AppShutdown::GetObserverKey(shutdownStep.mPhase));
+    telemetryData->Append(GetReadableNameForPhase(shutdownStep.mPhase));
     telemetryData->AppendLiteral(R"(": )");
     telemetryData->AppendInt(shutdownStep.mTicks);
   }
@@ -600,10 +611,4 @@ void nsTerminator::UpdateCrashReport(const char* aTopic) {
   Unused << CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::ShutdownProgress, report);
 }
-
-void XPCOMShutdownNotified() {
-  MOZ_DIAGNOSTIC_ASSERT(sShutdownNotified == false);
-  sShutdownNotified = true;
-}
-
 }  // namespace mozilla

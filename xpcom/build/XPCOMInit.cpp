@@ -625,10 +625,6 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
           do_QueryInterface(mgr));
     }
 
-#ifndef ANDROID
-    mozilla::XPCOMShutdownNotified();
-#endif
-
     // This must happen after the shutdown of media and widgets, which
     // are triggered by the NS_XPCOM_SHUTDOWN_OBSERVER_ID notification.
     NS_ProcessPendingEvents(thread);
