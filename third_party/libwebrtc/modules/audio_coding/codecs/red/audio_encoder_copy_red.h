@@ -50,21 +50,33 @@ class AudioEncoderCopyRed final : public AudioEncoder {
   size_t Num10MsFramesInNextPacket() const override;
   size_t Max10MsFramesInAPacket() const override;
   int GetTargetBitrate() const override;
+
   void Reset() override;
   bool SetFec(bool enable) override;
+
   bool SetDtx(bool enable) override;
+  bool GetDtx() const override;
+
   bool SetApplication(Application application) override;
   void SetMaxPlaybackRate(int frequency_hz) override;
-  rtc::ArrayView<std::unique_ptr<AudioEncoder>> ReclaimContainedEncoders()
-      override;
+  bool EnableAudioNetworkAdaptor(const std::string& config_string,
+                                 RtcEventLog* event_log) override;
+  void DisableAudioNetworkAdaptor() override;
   void OnReceivedUplinkPacketLossFraction(
       float uplink_packet_loss_fraction) override;
   void OnReceivedUplinkBandwidth(
       int target_audio_bitrate_bps,
       absl::optional<int64_t> bwe_period_ms) override;
+  void OnReceivedUplinkAllocation(BitrateAllocationUpdate update) override;
+  void OnReceivedRtt(int rtt_ms) override;
   void OnReceivedOverhead(size_t overhead_bytes_per_packet) override;
+  void SetReceiverFrameLengthRange(int min_frame_length_ms,
+                                   int max_frame_length_ms) override;
+  ANAStats GetANAStats() const override;
   absl::optional<std::pair<TimeDelta, TimeDelta>> GetFrameLengthRange()
       const override;
+  rtc::ArrayView<std::unique_ptr<AudioEncoder>> ReclaimContainedEncoders()
+      override;
 
  protected:
   EncodedInfo EncodeImpl(uint32_t rtp_timestamp,

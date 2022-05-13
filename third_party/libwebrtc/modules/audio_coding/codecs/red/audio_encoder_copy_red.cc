@@ -182,6 +182,10 @@ bool AudioEncoderCopyRed::SetDtx(bool enable) {
   return speech_encoder_->SetDtx(enable);
 }
 
+bool AudioEncoderCopyRed::GetDtx() const {
+  return speech_encoder_->GetDtx();
+}
+
 bool AudioEncoderCopyRed::SetApplication(Application application) {
   return speech_encoder_->SetApplication(application);
 }
@@ -190,9 +194,14 @@ void AudioEncoderCopyRed::SetMaxPlaybackRate(int frequency_hz) {
   speech_encoder_->SetMaxPlaybackRate(frequency_hz);
 }
 
-rtc::ArrayView<std::unique_ptr<AudioEncoder>>
-AudioEncoderCopyRed::ReclaimContainedEncoders() {
-  return rtc::ArrayView<std::unique_ptr<AudioEncoder>>(&speech_encoder_, 1);
+bool AudioEncoderCopyRed::EnableAudioNetworkAdaptor(
+    const std::string& config_string,
+    RtcEventLog* event_log) {
+  return speech_encoder_->EnableAudioNetworkAdaptor(config_string, event_log);
+}
+
+void AudioEncoderCopyRed::DisableAudioNetworkAdaptor() {
+  speech_encoder_->DisableAudioNetworkAdaptor();
 }
 
 void AudioEncoderCopyRed::OnReceivedUplinkPacketLossFraction(
@@ -208,14 +217,38 @@ void AudioEncoderCopyRed::OnReceivedUplinkBandwidth(
                                              bwe_period_ms);
 }
 
+void AudioEncoderCopyRed::OnReceivedUplinkAllocation(
+    BitrateAllocationUpdate update) {
+  speech_encoder_->OnReceivedUplinkAllocation(update);
+}
+
 absl::optional<std::pair<TimeDelta, TimeDelta>>
 AudioEncoderCopyRed::GetFrameLengthRange() const {
   return speech_encoder_->GetFrameLengthRange();
 }
 
+void AudioEncoderCopyRed::OnReceivedRtt(int rtt_ms) {
+  speech_encoder_->OnReceivedRtt(rtt_ms);
+}
+
 void AudioEncoderCopyRed::OnReceivedOverhead(size_t overhead_bytes_per_packet) {
   max_packet_length_ = kAudioMaxRtpPacketLen - overhead_bytes_per_packet;
   return speech_encoder_->OnReceivedOverhead(overhead_bytes_per_packet);
+}
+
+void AudioEncoderCopyRed::SetReceiverFrameLengthRange(int min_frame_length_ms,
+                                                      int max_frame_length_ms) {
+  return speech_encoder_->SetReceiverFrameLengthRange(min_frame_length_ms,
+                                                      max_frame_length_ms);
+}
+
+ANAStats AudioEncoderCopyRed::GetANAStats() const {
+  return speech_encoder_->GetANAStats();
+}
+
+rtc::ArrayView<std::unique_ptr<AudioEncoder>>
+AudioEncoderCopyRed::ReclaimContainedEncoders() {
+  return rtc::ArrayView<std::unique_ptr<AudioEncoder>>(&speech_encoder_, 1);
 }
 
 }  // namespace webrtc
