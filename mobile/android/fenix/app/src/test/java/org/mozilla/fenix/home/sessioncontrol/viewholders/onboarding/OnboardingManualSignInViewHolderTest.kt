@@ -73,8 +73,8 @@ class OnboardingManualSignInViewHolderTest {
 
         verify { navController.navigate(HomeFragmentDirections.actionGlobalTurnOnSync()) }
         // Check if the event was recorded
-        Assert.assertTrue(Onboarding.fxaManualSignin.testHasValue())
-        assertEquals(1, Onboarding.fxaManualSignin.testGetValue().size)
-        Assert.assertNull(Onboarding.fxaManualSignin.testGetValue().single().extra)
+        Assert.assertNotNull(Onboarding.fxaManualSignin.testGetValue())
+        assertEquals(1, Onboarding.fxaManualSignin.testGetValue()!!.size)
+        Assert.assertNull(Onboarding.fxaManualSignin.testGetValue()!!.single().extra)
     }
 }

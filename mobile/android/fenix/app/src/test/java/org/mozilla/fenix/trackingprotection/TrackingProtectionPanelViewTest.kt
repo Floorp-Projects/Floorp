@@ -14,6 +14,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -118,11 +120,11 @@ class TrackingProtectionPanelViewTest {
     @Test
     fun testCrossSiteTrackerClick() {
         every { testContext.components.analytics } returns mockk(relaxed = true)
-        assertFalse(TrackingProtection.etpTrackerList.testHasValue())
+        assertNull(TrackingProtection.etpTrackerList.testGetValue())
 
         view.binding.crossSiteTracking.performClick()
 
-        assertTrue(TrackingProtection.etpTrackerList.testHasValue())
+        assertNotNull(TrackingProtection.etpTrackerList.testGetValue())
         verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true) }
 
         view.binding.crossSiteTrackingLoaded.performClick()

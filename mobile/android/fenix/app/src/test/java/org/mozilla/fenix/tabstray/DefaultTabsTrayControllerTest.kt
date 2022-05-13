@@ -28,6 +28,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -78,11 +80,11 @@ class DefaultTabsTrayControllerTest {
             every { getProfilerTime() } returns Double.MAX_VALUE
         }
 
-        assertFalse(TabsTray.newPrivateTabTapped.testHasValue())
+        assertNull(TabsTray.newPrivateTabTapped.testGetValue())
 
         createController().handleOpeningNewTab(true)
 
-        assertTrue(TabsTray.newPrivateTabTapped.testHasValue())
+        assertNotNull(TabsTray.newPrivateTabTapped.testGetValue())
 
         verifyOrder {
             profiler.getProfilerTime()
@@ -120,26 +122,26 @@ class DefaultTabsTrayControllerTest {
 
     @Test
     fun `GIVEN private mode WHEN handleOpeningNewTab is called THEN Event#NewPrivateTabTapped is added to telemetry`() {
-        assertFalse(TabsTray.newPrivateTabTapped.testHasValue())
+        assertNull(TabsTray.newPrivateTabTapped.testGetValue())
 
         createController().handleOpeningNewTab(true)
 
-        assertTrue(TabsTray.newPrivateTabTapped.testHasValue())
+        assertNotNull(TabsTray.newPrivateTabTapped.testGetValue())
     }
 
     @Test
     fun `GIVEN private mode WHEN handleOpeningNewTab is called THEN Event#NewTabTapped is added to telemetry`() {
-        assertFalse(TabsTray.newTabTapped.testHasValue())
+        assertNull(TabsTray.newTabTapped.testGetValue())
 
         createController().handleOpeningNewTab(false)
 
-        assertTrue(TabsTray.newTabTapped.testHasValue())
+        assertNotNull(TabsTray.newTabTapped.testGetValue())
     }
 
     @Test
     fun `WHEN handleTabDeletion is called THEN Event#ClosedExistingTab is added to telemetry`() {
         val tab: TabSessionState = mockk { every { content.private } returns true }
-        assertFalse(TabsTray.closedExistingTab.testHasValue())
+        assertNull(TabsTray.closedExistingTab.testGetValue())
 
         every { browserStore.state } returns mockk()
         try {
@@ -148,7 +150,7 @@ class DefaultTabsTrayControllerTest {
             every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
 
             createController().handleTabDeletion("testTabId", "unknown")
-            assertTrue(TabsTray.closedExistingTab.testHasValue())
+            assertNotNull(TabsTray.closedExistingTab.testGetValue())
         } finally {
             unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
         }
@@ -342,8 +344,8 @@ class DefaultTabsTrayControllerTest {
 
             controller.handleMultipleTabsDeletion(listOf(privateTab, mockk()))
 
-            assertTrue(TabsTray.closeSelectedTabs.testHasValue())
-            val snapshot = TabsTray.closeSelectedTabs.testGetValue()
+            assertNotNull(TabsTray.closeSelectedTabs.testGetValue())
+            val snapshot = TabsTray.closeSelectedTabs.testGetValue()!!
             assertEquals(1, snapshot.size)
             assertEquals("2", snapshot.single().extra?.getValue("tab_count"))
 
@@ -376,8 +378,8 @@ class DefaultTabsTrayControllerTest {
 
             controller.handleMultipleTabsDeletion(listOf(normalTab, normalTab))
 
-            assertTrue(TabsTray.closeSelectedTabs.testHasValue())
-            val snapshot = TabsTray.closeSelectedTabs.testGetValue()
+            assertNotNull(TabsTray.closeSelectedTabs.testGetValue())
+            val snapshot = TabsTray.closeSelectedTabs.testGetValue()!!
             assertEquals(1, snapshot.size)
             assertEquals("2", snapshot.single().extra?.getValue("tab_count"))
 
@@ -402,8 +404,8 @@ class DefaultTabsTrayControllerTest {
 
             controller.handleMultipleTabsDeletion(listOf(privateTab))
 
-            assertTrue(TabsTray.closeSelectedTabs.testHasValue())
-            val snapshot = TabsTray.closeSelectedTabs.testGetValue()
+            assertNotNull(TabsTray.closeSelectedTabs.testGetValue())
+            val snapshot = TabsTray.closeSelectedTabs.testGetValue()!!
             assertEquals(1, snapshot.size)
             assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
 
@@ -428,8 +430,8 @@ class DefaultTabsTrayControllerTest {
 
             controller.handleMultipleTabsDeletion(listOf(privateTab))
 
-            assertTrue(TabsTray.closeSelectedTabs.testHasValue())
-            val snapshot = TabsTray.closeSelectedTabs.testGetValue()
+            assertNotNull(TabsTray.closeSelectedTabs.testGetValue())
+            val snapshot = TabsTray.closeSelectedTabs.testGetValue()!!
             assertEquals(1, snapshot.size)
             assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
 
@@ -445,16 +447,16 @@ class DefaultTabsTrayControllerTest {
     fun `GIVEN private mode selected WHEN sendNewTabEvent is called THEN NewPrivateTabTapped is tracked in telemetry`() {
         createController().sendNewTabEvent(true)
 
-        assertTrue(TabsTray.newPrivateTabTapped.testHasValue())
+        assertNotNull(TabsTray.newPrivateTabTapped.testGetValue())
     }
 
     @Test
     fun `GIVEN normal mode selected WHEN sendNewTabEvent is called THEN NewTabTapped is tracked in telemetry`() {
-        assertFalse(TabsTray.newTabTapped.testHasValue())
+        assertNull(TabsTray.newTabTapped.testGetValue())
 
         createController().sendNewTabEvent(false)
 
-        assertTrue(TabsTray.newTabTapped.testHasValue())
+        assertNotNull(TabsTray.newTabTapped.testGetValue())
     }
 
     @Test
@@ -518,7 +520,7 @@ class DefaultTabsTrayControllerTest {
             }
         }
         every { browserStore.state } returns mockk()
-        assertFalse(TabsTray.closeAllInactiveTabs.testHasValue())
+        assertNull(TabsTray.closeAllInactiveTabs.testGetValue())
 
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
@@ -526,7 +528,7 @@ class DefaultTabsTrayControllerTest {
 
             createController().handleDeleteAllInactiveTabs()
 
-            assertTrue(TabsTray.closeAllInactiveTabs.testHasValue())
+            assertNotNull(TabsTray.closeAllInactiveTabs.testGetValue())
         } finally {
             unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
         }

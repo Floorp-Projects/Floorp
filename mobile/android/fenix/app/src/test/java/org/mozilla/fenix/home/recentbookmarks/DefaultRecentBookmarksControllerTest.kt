@@ -19,8 +19,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -70,7 +70,7 @@ class DefaultRecentBookmarksControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
         }
-        assertFalse(RecentBookmarks.bookmarkClicked.testHasValue())
+        assertNull(RecentBookmarks.bookmarkClicked.testGetValue())
 
         val bookmark = RecentBookmark(
             title = null,
@@ -88,7 +88,7 @@ class DefaultRecentBookmarksControllerTest {
                 from = BrowserDirection.FromHome
             )
         }
-        assertTrue(RecentBookmarks.bookmarkClicked.testHasValue())
+        assertNotNull(RecentBookmarks.bookmarkClicked.testGetValue())
         verify(exactly = 0) {
             navController.navigateUp()
         }
@@ -99,7 +99,7 @@ class DefaultRecentBookmarksControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
         }
-        assertFalse(RecentBookmarks.showAllBookmarks.testHasValue())
+        assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()
 
@@ -107,7 +107,7 @@ class DefaultRecentBookmarksControllerTest {
         verify {
             navController.navigate(directions)
         }
-        assertTrue(RecentBookmarks.showAllBookmarks.testHasValue())
+        assertNotNull(RecentBookmarks.showAllBookmarks.testGetValue())
         verify(exactly = 0) {
             navController.navigateUp()
         }
@@ -118,7 +118,7 @@ class DefaultRecentBookmarksControllerTest {
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
-        assertFalse(RecentBookmarks.showAllBookmarks.testHasValue())
+        assertNull(RecentBookmarks.showAllBookmarks.testGetValue())
 
         controller.handleShowAllBookmarksClicked()
 
@@ -129,6 +129,6 @@ class DefaultRecentBookmarksControllerTest {
             navController.navigateUp()
             navController.navigate(directions)
         }
-        assertTrue(RecentBookmarks.showAllBookmarks.testHasValue())
+        assertNotNull(RecentBookmarks.showAllBookmarks.testGetValue())
     }
 }

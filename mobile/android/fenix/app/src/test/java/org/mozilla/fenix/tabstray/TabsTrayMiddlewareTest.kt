@@ -12,8 +12,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,39 +43,39 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the average tabs per group`() {
-        assertFalse(SearchTerms.averageTabsPerGroup.testHasValue())
+        assertNull(SearchTerms.averageTabsPerGroup.testGetValue())
 
         store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForAverage()))
         store.waitUntilIdle()
 
-        assertTrue(SearchTerms.averageTabsPerGroup.testHasValue())
-        val event = SearchTerms.averageTabsPerGroup.testGetValue()
+        assertNotNull(SearchTerms.averageTabsPerGroup.testGetValue())
+        val event = SearchTerms.averageTabsPerGroup.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals("5.0", event.single().extra!!["count"])
     }
 
     @Test
     fun `WHEN search term groups are updated AND there is at least one group THEN report the distribution of tab sizes`() {
-        assertFalse(SearchTerms.groupSizeDistribution.testHasValue())
+        assertNull(SearchTerms.groupSizeDistribution.testGetValue())
 
         store.dispatch(TabsTrayAction.UpdateTabPartitions(generateSearchTermTabGroupsForDistribution()))
         store.waitUntilIdle()
 
-        assertTrue(SearchTerms.groupSizeDistribution.testHasValue())
-        val event = SearchTerms.groupSizeDistribution.testGetValue().values
+        assertNotNull(SearchTerms.groupSizeDistribution.testGetValue())
+        val event = SearchTerms.groupSizeDistribution.testGetValue()!!.values
         // Verify the distribution correctly describes the tab group sizes
         assertEquals(mapOf(0L to 0L, 1L to 1L, 2L to 1L, 3L to 1L, 4L to 1L), event)
     }
 
     @Test
     fun `WHEN search term groups are updated THEN report the count of search term tab groups`() {
-        assertFalse(SearchTerms.numberOfSearchTermGroup.testHasValue())
+        assertNull(SearchTerms.numberOfSearchTermGroup.testGetValue())
 
         store.dispatch(TabsTrayAction.UpdateTabPartitions(null))
         store.waitUntilIdle()
 
-        assertTrue(SearchTerms.numberOfSearchTermGroup.testHasValue())
-        val event = SearchTerms.numberOfSearchTermGroup.testGetValue()
+        assertNotNull(SearchTerms.numberOfSearchTermGroup.testGetValue())
+        val event = SearchTerms.numberOfSearchTermGroup.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals("0", event.single().extra!!["count"])
     }
@@ -83,14 +83,14 @@ class TabsTrayMiddlewareTest {
     @Test
     fun `WHEN inactive tabs are updated THEN report the count of inactive tabs`() {
 
-        assertFalse(TabsTray.hasInactiveTabs.testHasValue())
-        assertFalse(Metrics.inactiveTabsCount.testHasValue())
+        assertNull(TabsTray.hasInactiveTabs.testGetValue())
+        assertNull(Metrics.inactiveTabsCount.testGetValue())
 
         store.dispatch(TabsTrayAction.UpdateInactiveTabs(emptyList()))
         store.waitUntilIdle()
-        assertTrue(TabsTray.hasInactiveTabs.testHasValue())
-        assertTrue(Metrics.inactiveTabsCount.testHasValue())
-        assertEquals(0, Metrics.inactiveTabsCount.testGetValue())
+        assertNotNull(TabsTray.hasInactiveTabs.testGetValue())
+        assertNotNull(Metrics.inactiveTabsCount.testGetValue())
+        assertEquals(0L, Metrics.inactiveTabsCount.testGetValue())
     }
 
     @Test
@@ -112,13 +112,13 @@ class TabsTrayMiddlewareTest {
 
     @Test
     fun `WHEN multi select mode from menu is entered THEN relevant metrics are collected`() {
-        assertFalse(TabsTray.enterMultiselectMode.testHasValue())
+        assertNull(TabsTray.enterMultiselectMode.testGetValue())
 
         store.dispatch(TabsTrayAction.EnterSelectMode)
         store.waitUntilIdle()
 
-        assertTrue(TabsTray.enterMultiselectMode.testHasValue())
-        val snapshot = TabsTray.enterMultiselectMode.testGetValue()
+        assertNotNull(TabsTray.enterMultiselectMode.testGetValue())
+        val snapshot = TabsTray.enterMultiselectMode.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("false", snapshot.single().extra?.getValue("tab_selected"))
     }
@@ -128,8 +128,8 @@ class TabsTrayMiddlewareTest {
         store.dispatch(TabsTrayAction.AddSelectTab(mockk()))
         store.waitUntilIdle()
 
-        assertTrue(TabsTray.enterMultiselectMode.testHasValue())
-        val snapshot = TabsTray.enterMultiselectMode.testGetValue()
+        assertNotNull(TabsTray.enterMultiselectMode.testGetValue())
+        val snapshot = TabsTray.enterMultiselectMode.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("true", snapshot.single().extra?.getValue("tab_selected"))
     }

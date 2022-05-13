@@ -14,7 +14,7 @@ import io.mockk.impl.annotations.RelaxedMockK
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -48,14 +48,14 @@ class StorageStatsMetricsTest {
 
         StorageStatsMetrics.reportSync(mockContext)
 
-        assertEquals(100, Metrics.appBytes.testGetValue().sum)
-        assertEquals(200, Metrics.cacheBytes.testGetValue().sum)
-        assertEquals(800, Metrics.dataDirBytes.testGetValue().sum)
+        assertEquals(100, Metrics.appBytes.testGetValue()!!.sum)
+        assertEquals(200, Metrics.cacheBytes.testGetValue()!!.sum)
+        assertEquals(800, Metrics.dataDirBytes.testGetValue()!!.sum)
     }
 
     @Test
     fun `WHEN reporting THEN the query duration is measured`() {
         StorageStatsMetrics.reportSync(mockContext)
-        assertTrue(Metrics.queryStatsDuration.testHasValue())
+        assertNotNull(Metrics.queryStatsDuration.testGetValue())
     }
 }

@@ -13,7 +13,8 @@ import io.mockk.verify
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,14 +52,14 @@ class DefaultBrowserIntentProcessorTest {
         every { activity.startActivity(any()) } returns Unit
         every { activity.applicationContext } returns testContext
 
-        assertFalse(Events.defaultBrowserNotifTapped.testHasValue())
+        assertNull(Events.defaultBrowserNotifTapped.testGetValue())
 
         val result = DefaultBrowserIntentProcessor(activity)
             .process(intent, navController, out)
 
         assert(result)
 
-        assertTrue(Events.defaultBrowserNotifTapped.testHasValue())
+        assertNotNull(Events.defaultBrowserNotifTapped.testGetValue())
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }

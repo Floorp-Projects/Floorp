@@ -10,8 +10,8 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,12 +32,12 @@ class SelectTabUseCaseWrapperTest {
         val onSelect: (String) -> Unit = { invoked = it }
         val wrapper = SelectTabUseCaseWrapper(selectUseCase, onSelect)
 
-        assertFalse(TabsTray.openedExistingTab.testHasValue())
+        assertNull(TabsTray.openedExistingTab.testGetValue())
 
         wrapper("123")
 
-        assertTrue(TabsTray.openedExistingTab.testHasValue())
-        val snapshot = TabsTray.openedExistingTab.testGetValue()
+        assertNotNull(TabsTray.openedExistingTab.testGetValue())
+        val snapshot = TabsTray.openedExistingTab.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("unknown", snapshot.single().extra?.getValue("source"))
 
@@ -51,12 +51,12 @@ class SelectTabUseCaseWrapperTest {
         val onSelect: (String) -> Unit = { invoked = it }
         val wrapper = SelectTabUseCaseWrapper(selectUseCase, onSelect)
 
-        assertFalse(TabsTray.openedExistingTab.testHasValue())
+        assertNull(TabsTray.openedExistingTab.testGetValue())
 
         wrapper("123", "Test")
 
-        assertTrue(TabsTray.openedExistingTab.testHasValue())
-        val snapshot = TabsTray.openedExistingTab.testGetValue()
+        assertNotNull(TabsTray.openedExistingTab.testGetValue())
+        val snapshot = TabsTray.openedExistingTab.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("Test", snapshot.single().extra?.getValue("source"))
 

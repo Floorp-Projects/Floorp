@@ -23,6 +23,8 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -69,31 +71,29 @@ class TelemetryMiddlewareTest {
     @Test
     fun `WHEN a tab is added THEN the open tab count is updated`() {
         assertEquals(0, settings.openTabsCount)
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org"))).joinBlocking()
         assertEquals(1, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN a private tab is added THEN the open tab count is not updated`() {
         assertEquals(0, settings.openTabsCount)
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(TabListAction.AddTabAction(createTab("https://mozilla.org", private = true))).joinBlocking()
         assertEquals(0, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertFalse(Metrics.hasOpenTabs.testGetValue())
+        assertFalse(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN multiple tabs are added THEN the open tab count is updated`() {
         assertEquals(0, settings.openTabsCount)
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(
             TabListAction.AddMultipleTabsAction(
@@ -106,13 +106,12 @@ class TelemetryMiddlewareTest {
 
         assertEquals(2, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN a tab is removed THEN the open tab count is updated`() {
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(
             TabListAction.AddMultipleTabsAction(
@@ -127,13 +126,12 @@ class TelemetryMiddlewareTest {
         store.dispatch(TabListAction.RemoveTabAction("1")).joinBlocking()
         assertEquals(1, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN all tabs are removed THEN the open tab count is updated`() {
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(
             TabListAction.AddMultipleTabsAction(
@@ -145,19 +143,17 @@ class TelemetryMiddlewareTest {
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
 
         store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
         assertEquals(0, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertFalse(Metrics.hasOpenTabs.testGetValue())
+        assertFalse(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN all normal tabs are removed THEN the open tab count is updated`() {
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         store.dispatch(
             TabListAction.AddMultipleTabsAction(
@@ -169,19 +165,17 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
 
         store.dispatch(TabListAction.RemoveAllNormalTabsAction).joinBlocking()
         assertEquals(0, settings.openTabsCount)
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertFalse(Metrics.hasOpenTabs.testGetValue())
+        assertFalse(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `WHEN tabs are restored THEN the open tab count is updated`() {
         assertEquals(0, settings.openTabsCount)
-        assertFalse(Metrics.hasOpenTabs.testHasValue())
+        assertNull(Metrics.hasOpenTabs.testGetValue())
 
         val tabsToRestore = listOf(
             RecoverableTab(null, TabState(url = "https://mozilla.org", id = "1")),
@@ -196,36 +190,34 @@ class TelemetryMiddlewareTest {
         ).joinBlocking()
         assertEquals(2, settings.openTabsCount)
 
-        assertTrue(Metrics.hasOpenTabs.testHasValue())
-        assertTrue(Metrics.hasOpenTabs.testGetValue())
+        assertTrue(Metrics.hasOpenTabs.testGetValue()!!)
     }
 
     @Test
     fun `GIVEN a normal page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org")
-        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        assertTrue(Events.normalAndPrivateUriCount.testHasValue())
-        val count = Events.normalAndPrivateUriCount.testGetValue()
+        val count = Events.normalAndPrivateUriCount.testGetValue()!!
         assertEquals(1, count)
     }
 
     @Test
     fun `GIVEN a private page is loading WHEN loading is complete THEN we record a UriOpened event`() {
         val tab = createTab(id = "1", url = "https://mozilla.org", private = true)
-        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
 
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
-        assertFalse(Events.normalAndPrivateUriCount.testHasValue())
+        assertNull(Events.normalAndPrivateUriCount.testGetValue())
 
         store.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, false)).joinBlocking()
-        val count = Events.normalAndPrivateUriCount.testGetValue()
+        val count = Events.normalAndPrivateUriCount.testGetValue()!!
         assertEquals(1, count)
     }
 
@@ -243,14 +235,14 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
 
-        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
-        assertFalse(EngineMetrics.kills["background"].testHasValue())
+        assertNull(EngineMetrics.kills["foreground"].testGetValue())
+        assertNull(EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("foreground")
         ).joinBlocking()
 
-        assertTrue(EngineMetrics.kills["foreground"].testHasValue())
+        assertNotNull(EngineMetrics.kills["foreground"].testGetValue())
     }
 
     @Test
@@ -267,23 +259,21 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
 
-        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
-        assertFalse(EngineMetrics.kills["background"].testHasValue())
+        assertNull(EngineMetrics.kills["foreground"].testGetValue())
+        assertNull(EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_pocket")
         ).joinBlocking()
 
-        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
-        assertTrue(EngineMetrics.kills["background"].testHasValue())
+        assertNull(EngineMetrics.kills["foreground"].testGetValue())
         assertEquals(1, EngineMetrics.kills["background"].testGetValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_verge")
         ).joinBlocking()
 
-        assertFalse(EngineMetrics.kills["foreground"].testHasValue())
-        assertTrue(EngineMetrics.kills["background"].testHasValue())
+        assertNull(EngineMetrics.kills["foreground"].testGetValue())
         assertEquals(2, EngineMetrics.kills["background"].testGetValue())
     }
 
@@ -310,8 +300,8 @@ class TelemetryMiddlewareTest {
             )
         ).joinBlocking()
 
-        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
+        assertNull(EngineMetrics.killForegroundAge.testGetValue())
+        assertNull(EngineMetrics.killBackgroundAge.testGetValue())
 
         clock.elapsedTime = 500
 
@@ -319,9 +309,8 @@ class TelemetryMiddlewareTest {
             EngineAction.KillEngineSessionAction("foreground")
         ).joinBlocking()
 
-        assertTrue(EngineMetrics.killForegroundAge.testHasValue())
-        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
-        assertEquals(400_000_000, EngineMetrics.killForegroundAge.testGetValue().sum)
+        assertNull(EngineMetrics.killBackgroundAge.testGetValue())
+        assertEquals(400_000_000, EngineMetrics.killForegroundAge.testGetValue()!!.sum)
     }
 
     @Test
@@ -349,16 +338,15 @@ class TelemetryMiddlewareTest {
 
         clock.elapsedTime = 700
 
-        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        assertFalse(EngineMetrics.killBackgroundAge.testHasValue())
+        assertNull(EngineMetrics.killForegroundAge.testGetValue())
+        assertNull(EngineMetrics.killBackgroundAge.testGetValue())
 
         store.dispatch(
             EngineAction.KillEngineSessionAction("background_pocket")
         ).joinBlocking()
 
-        assertTrue(EngineMetrics.killBackgroundAge.testHasValue())
-        assertFalse(EngineMetrics.killForegroundAge.testHasValue())
-        assertEquals(600_000_000, EngineMetrics.killBackgroundAge.testGetValue().sum)
+        assertNull(EngineMetrics.killForegroundAge.testGetValue())
+        assertEquals(600_000_000, EngineMetrics.killBackgroundAge.testGetValue()!!.sum)
     }
 }
 

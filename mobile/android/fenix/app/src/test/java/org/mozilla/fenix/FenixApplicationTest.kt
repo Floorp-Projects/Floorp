@@ -21,7 +21,8 @@ import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -146,7 +147,7 @@ class FenixApplicationTest {
         every { settings.inactiveTabsAreEnabled } returns true
 
         assertTrue(settings.contileContextId.isEmpty())
-        assertFalse(TopSites.contextId.testHasValue())
+        assertNull(TopSites.contextId.testGetValue())
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
@@ -187,20 +188,20 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.inactiveTabsEnabled.testGetValue())
         assertEquals(expectedAppInstallSource, Metrics.installSource.testGetValue())
 
-        val contextId = TopSites.contextId.testGetValue().toString()
+        val contextId = TopSites.contextId.testGetValue()!!.toString()
 
-        assertTrue(TopSites.contextId.testHasValue())
+        assertNotNull(TopSites.contextId.testGetValue())
         assertEquals(contextId, settings.contileContextId)
 
         // Verify that search engine defaults are NOT set. This test does
         // not mock most of the objects telemetry is collected from.
-        assertFalse(SearchDefaultEngine.code.testHasValue())
-        assertFalse(SearchDefaultEngine.name.testHasValue())
-        assertFalse(SearchDefaultEngine.searchUrl.testHasValue())
+        assertNull(SearchDefaultEngine.code.testGetValue())
+        assertNull(SearchDefaultEngine.name.testGetValue())
+        assertNull(SearchDefaultEngine.searchUrl.testGetValue())
 
         application.setStartupMetrics(browserStore, settings, browsersCache, mozillaProductDetector)
 
-        assertEquals(contextId, TopSites.contextId.testGetValue().toString())
+        assertEquals(contextId, TopSites.contextId.testGetValue()!!.toString())
         assertEquals(contextId, settings.contileContextId)
     }
 }

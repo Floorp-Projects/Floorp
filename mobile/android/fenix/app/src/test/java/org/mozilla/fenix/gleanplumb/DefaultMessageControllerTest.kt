@@ -12,8 +12,8 @@ import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -54,12 +54,12 @@ class DefaultMessageControllerTest {
         val message = mockMessage()
         every { customController.handleAction(any()) } returns mockk()
         every { storageNimbus.getMessageAction(message) } returns Pair("uuid", message.id)
-        assertFalse(Messaging.messageClicked.testHasValue())
+        assertNull(Messaging.messageClicked.testGetValue())
 
         customController.onMessagePressed(message)
 
-        assertTrue(Messaging.messageClicked.testHasValue())
-        val event = Messaging.messageClicked.testGetValue()
+        assertNotNull(Messaging.messageClicked.testGetValue())
+        val event = Messaging.messageClicked.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals(message.id, event.single().extra!!["message_key"])
         assertEquals("uuid", event.single().extra!!["action_uuid"])
@@ -92,12 +92,12 @@ class DefaultMessageControllerTest {
     @Test
     fun `WHEN calling onMessageDismissed THEN report to the messageManager`() {
         val message = mockMessage()
-        assertFalse(Messaging.messageDismissed.testHasValue())
+        assertNull(Messaging.messageDismissed.testGetValue())
 
         controller.onMessageDismissed(message)
 
-        assertTrue(Messaging.messageDismissed.testHasValue())
-        val event = Messaging.messageDismissed.testGetValue()
+        assertNotNull(Messaging.messageDismissed.testGetValue())
+        val event = Messaging.messageDismissed.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals(message.id, event.single().extra!!["message_key"])
         verify { store.dispatch(AppAction.MessagingAction.MessageDismissed(message)) }
@@ -107,18 +107,18 @@ class DefaultMessageControllerTest {
     fun `WHEN calling onMessageDisplayed THEN report to the messageManager`() {
         val data = MessageData()
         val message = mockMessage(data)
-        assertFalse(Messaging.messageExpired.testHasValue())
-        assertFalse(Messaging.messageShown.testHasValue())
+        assertNull(Messaging.messageExpired.testGetValue())
+        assertNull(Messaging.messageShown.testGetValue())
 
         controller.onMessageDisplayed(message)
 
-        assertTrue(Messaging.messageExpired.testHasValue())
-        val messageExpiredEvent = Messaging.messageExpired.testGetValue()
+        assertNotNull(Messaging.messageExpired.testGetValue())
+        val messageExpiredEvent = Messaging.messageExpired.testGetValue()!!
         assertEquals(1, messageExpiredEvent.size)
         assertEquals(message.id, messageExpiredEvent.single().extra!!["message_key"])
 
-        assertTrue(Messaging.messageShown.testHasValue())
-        val event = Messaging.messageShown.testGetValue()
+        assertNotNull(Messaging.messageShown.testGetValue())
+        val event = Messaging.messageShown.testGetValue()!!
         assertEquals(1, event.size)
         assertEquals(message.id, event.single().extra!!["message_key"])
 

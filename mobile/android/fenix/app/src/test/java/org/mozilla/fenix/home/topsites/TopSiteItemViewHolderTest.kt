@@ -14,7 +14,6 @@ import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -129,17 +128,17 @@ class TopSiteItemViewHolderTest {
             createdAt = 3
         )
         val position = 0
-        assertFalse(TopSites.contileImpression.testHasValue())
+        assertNull(TopSites.contileImpression.testGetValue())
 
         var topSiteImpressionSubmitted = false
         Pings.topsitesImpression.testBeforeNextSubmit {
-            assertTrue(TopSites.contileTileId.testHasValue())
-            assertEquals(3, TopSites.contileTileId.testGetValue())
+            assertNotNull(TopSites.contileTileId.testGetValue())
+            assertEquals(3L, TopSites.contileTileId.testGetValue())
 
-            assertTrue(TopSites.contileAdvertiser.testHasValue())
+            assertNotNull(TopSites.contileAdvertiser.testGetValue())
             assertEquals("mozilla", TopSites.contileAdvertiser.testGetValue())
 
-            assertTrue(TopSites.contileReportingUrl.testHasValue())
+            assertNotNull(TopSites.contileReportingUrl.testGetValue())
             assertEquals(topSite.impressionUrl, TopSites.contileReportingUrl.testGetValue())
 
             topSiteImpressionSubmitted = true
@@ -147,9 +146,9 @@ class TopSiteItemViewHolderTest {
 
         TopSiteItemViewHolder(binding.root, lifecycleOwner, interactor).submitTopSitesImpressionPing(topSite, position)
 
-        assertTrue(TopSites.contileImpression.testHasValue())
+        assertNotNull(TopSites.contileImpression.testGetValue())
 
-        val event = TopSites.contileImpression.testGetValue()
+        val event = TopSites.contileImpression.testGetValue()!!
 
         assertEquals(1, event.size)
         assertEquals("top_sites", event[0].category)

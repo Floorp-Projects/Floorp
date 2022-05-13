@@ -16,9 +16,8 @@ import mozilla.components.support.base.android.Clock
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -49,7 +48,7 @@ class TelemetryLifecycleObserverTest {
         val observer = TelemetryLifecycleObserver(store)
         observer.onResume(mockk())
 
-        assertFalse(EngineMetrics.foregroundMetrics.testHasValue())
+        assertNull(EngineMetrics.foregroundMetrics.testGetValue())
     }
 
     @Test
@@ -63,9 +62,9 @@ class TelemetryLifecycleObserverTest {
 
         observer.onResume(mockk())
 
-        assertTrue(EngineMetrics.foregroundMetrics.testHasValue())
+        assertNotNull(EngineMetrics.foregroundMetrics.testGetValue())
 
-        val metrics = EngineMetrics.foregroundMetrics.testGetValue()
+        val metrics = EngineMetrics.foregroundMetrics.testGetValue()!!
         assertEquals(1, metrics.size)
 
         val metric = metrics[0]
@@ -106,9 +105,9 @@ class TelemetryLifecycleObserverTest {
 
         observer.onResume(mockk())
 
-        assertTrue(EngineMetrics.foregroundMetrics.testHasValue())
+        assertNotNull(EngineMetrics.foregroundMetrics.testGetValue())
 
-        val metrics = EngineMetrics.foregroundMetrics.testGetValue()
+        val metrics = EngineMetrics.foregroundMetrics.testGetValue()!!
         assertEquals(1, metrics.size)
 
         val metric = metrics[0]

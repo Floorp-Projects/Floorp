@@ -27,7 +27,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -76,7 +77,7 @@ class NavigationInteractorTest {
     fun `onTabTrayDismissed calls dismissTabTray on DefaultNavigationInteractor`() {
         var dismissTabTrayInvoked = false
 
-        assertFalse(TabsTray.closed.testHasValue())
+        assertNull(TabsTray.closed.testGetValue())
 
         createInteractor(
             dismissTabTray = {
@@ -85,7 +86,7 @@ class NavigationInteractorTest {
         ).onTabTrayDismissed()
 
         assertTrue(dismissTabTrayInvoked)
-        assertTrue(TabsTray.closed.testHasValue())
+        assertNotNull(TabsTray.closed.testGetValue())
     }
 
     @Test
@@ -114,12 +115,12 @@ class NavigationInteractorTest {
 
     @Test
     fun `onOpenRecentlyClosedClicked calls navigation on DefaultNavigationInteractor`() {
-        assertFalse(Events.recentlyClosedTabsOpened.testHasValue())
+        assertNull(Events.recentlyClosedTabsOpened.testGetValue())
 
         createInteractor().onOpenRecentlyClosedClicked()
 
         verify(exactly = 1) { navController.navigate(TabsTrayFragmentDirections.actionGlobalRecentlyClosed()) }
-        assertTrue(Events.recentlyClosedTabsOpened.testHasValue())
+        assertNotNull(Events.recentlyClosedTabsOpened.testGetValue())
     }
 
     @Test
@@ -182,8 +183,8 @@ class NavigationInteractorTest {
 
         verify(exactly = 1) { navController.navigate(any<NavDirections>()) }
 
-        assertTrue(TabsTray.shareSelectedTabs.testHasValue())
-        val snapshot = TabsTray.shareSelectedTabs.testGetValue()
+        assertNotNull(TabsTray.shareSelectedTabs.testGetValue())
+        val snapshot = TabsTray.shareSelectedTabs.testGetValue()!!
         Assert.assertEquals(1, snapshot.size)
         Assert.assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
@@ -193,11 +194,11 @@ class NavigationInteractorTest {
         mockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
 
         every { any<CollectionsDialog>().show(any()) } answers { }
-        assertFalse(TabsTray.saveToCollection.testHasValue())
+        assertNull(TabsTray.saveToCollection.testGetValue())
 
         createInteractor().onSaveToCollections(listOf(testTab))
 
-        assertTrue(TabsTray.saveToCollection.testHasValue())
+        assertNotNull(TabsTray.saveToCollection.testGetValue())
 
         unmockkStatic("org.mozilla.fenix.collections.CollectionsDialogKt")
     }
@@ -214,8 +215,8 @@ class NavigationInteractorTest {
         coVerify(exactly = 1) { bookmarksUseCase.addBookmark(any(), any(), any()) }
         assertTrue(showBookmarkSnackbarInvoked)
 
-        assertTrue(TabsTray.bookmarkSelectedTabs.testHasValue())
-        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()
+        assertNotNull(TabsTray.bookmarkSelectedTabs.testGetValue())
+        val snapshot = TabsTray.bookmarkSelectedTabs.testGetValue()!!
         Assert.assertEquals(1, snapshot.size)
         Assert.assertEquals("1", snapshot.single().extra?.getValue("tab_count"))
     }
@@ -224,7 +225,7 @@ class NavigationInteractorTest {
     fun `onSyncedTabsClicked sets metrics and opens browser`() {
         val tab = mockk<SyncTab>()
         val entry = mockk<TabEntry>()
-        assertFalse(Events.syncedTabOpened.testHasValue())
+        assertNull(Events.syncedTabOpened.testGetValue())
 
         every { tab.active() }.answers { entry }
         every { entry.url }.answers { "https://mozilla.org" }
@@ -237,7 +238,7 @@ class NavigationInteractorTest {
         ).onSyncedTabClicked(tab)
 
         assertTrue(dismissTabTrayInvoked)
-        assertTrue(Events.syncedTabOpened.testHasValue())
+        assertNotNull(Events.syncedTabOpened.testGetValue())
 
         verify {
             activity.openToBrowserAndLoad(

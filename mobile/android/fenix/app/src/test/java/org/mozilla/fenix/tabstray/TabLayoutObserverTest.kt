@@ -12,8 +12,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -40,34 +40,34 @@ class TabLayoutObserverTest {
         val observer = TabLayoutObserver(interactor)
         val tab = mockk<TabLayout.Tab>()
         every { tab.position } returns 1
-        assertFalse(TabsTray.privateModeTapped.testHasValue())
+        assertNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(1, false) }
-        assertTrue(TabsTray.privateModeTapped.testHasValue())
+        assertNotNull(TabsTray.privateModeTapped.testGetValue())
 
         every { tab.position } returns 0
-        assertFalse(TabsTray.normalModeTapped.testHasValue())
+        assertNull(TabsTray.normalModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(0, true) }
-        assertTrue(TabsTray.normalModeTapped.testHasValue())
+        assertNotNull(TabsTray.normalModeTapped.testGetValue())
 
         every { tab.position } returns 2
-        assertFalse(TabsTray.syncedModeTapped.testHasValue())
+        assertNull(TabsTray.syncedModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         store.waitUntilIdle()
 
         verify { interactor.onTrayPositionSelected(2, true) }
-        assertTrue(TabsTray.syncedModeTapped.testHasValue())
+        assertNotNull(TabsTray.syncedModeTapped.testGetValue())
     }
 
     @Test
@@ -75,16 +75,16 @@ class TabLayoutObserverTest {
         val observer = TabLayoutObserver(interactor)
         val tab = mockk<TabLayout.Tab>()
         every { tab.position } returns 1
-        assertFalse(TabsTray.privateModeTapped.testHasValue())
+        assertNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         verify { interactor.onTrayPositionSelected(1, false) }
-        assertTrue(TabsTray.privateModeTapped.testHasValue())
+        assertNotNull(TabsTray.privateModeTapped.testGetValue())
 
         observer.onTabSelected(tab)
 
         verify { interactor.onTrayPositionSelected(1, true) }
-        assertTrue(TabsTray.privateModeTapped.testHasValue())
+        assertNotNull(TabsTray.privateModeTapped.testGetValue())
     }
 }

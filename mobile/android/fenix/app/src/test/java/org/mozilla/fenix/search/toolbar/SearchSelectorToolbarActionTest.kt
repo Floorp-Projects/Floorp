@@ -25,7 +25,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -78,12 +79,12 @@ class SearchSelectorToolbarActionTest {
             )
         )
         val view = action.createView(LinearLayout(testContext) as ViewGroup) as SearchSelector
-        assertFalse(UnifiedSearch.searchMenuTapped.testHasValue())
+        assertNull(UnifiedSearch.searchMenuTapped.testGetValue())
 
         every { settings.shouldUseBottomToolbar } returns false
         view.performClick()
 
-        assertTrue(UnifiedSearch.searchMenuTapped.testHasValue())
+        assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
             menu.menuController.show(view, Orientation.DOWN)
         }
@@ -91,7 +92,7 @@ class SearchSelectorToolbarActionTest {
         every { settings.shouldUseBottomToolbar } returns true
         view.performClick()
 
-        assertTrue(UnifiedSearch.searchMenuTapped.testHasValue())
+        assertNotNull(UnifiedSearch.searchMenuTapped.testGetValue())
         verify {
             menu.menuController.show(view, Orientation.UP)
         }

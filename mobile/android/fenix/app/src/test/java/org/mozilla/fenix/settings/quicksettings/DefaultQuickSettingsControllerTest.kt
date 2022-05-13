@@ -31,7 +31,8 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -323,11 +324,11 @@ class DefaultQuickSettingsControllerTest {
         }
 
         isEnabled = false
-        assertFalse(TrackingProtection.exceptionAdded.testHasValue())
+        assertNull(TrackingProtection.exceptionAdded.testGetValue())
 
         controller.handleTrackingProtectionToggled(isEnabled)
 
-        assertTrue(TrackingProtection.exceptionAdded.testHasValue())
+        assertNotNull(TrackingProtection.exceptionAdded.testGetValue())
         verify {
             trackingProtectionUseCases.addException(tab.id)
             sessionUseCases.reload.invoke(tab.id)

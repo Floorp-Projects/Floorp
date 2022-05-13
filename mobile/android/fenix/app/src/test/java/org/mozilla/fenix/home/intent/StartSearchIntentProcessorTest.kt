@@ -13,7 +13,7 @@ import io.mockk.verify
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -61,8 +61,8 @@ class StartSearchIntentProcessorTest {
             popUpTo = R.id.homeFragment
         }
 
-        assertTrue(SearchWidget.newTabButton.testHasValue())
-        val recordedEvents = SearchWidget.newTabButton.testGetValue()
+        assertNotNull(SearchWidget.newTabButton.testGetValue())
+        val recordedEvents = SearchWidget.newTabButton.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 

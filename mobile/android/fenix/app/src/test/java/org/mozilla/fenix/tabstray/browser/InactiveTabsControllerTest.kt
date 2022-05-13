@@ -11,8 +11,8 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,37 +36,37 @@ class InactiveTabsControllerTest {
     fun `WHEN the inactive tabs section is expanded THEN the expanded telemetry event should be report`() {
         val controller = InactiveTabsController(appStore, settings, browserInteractor)
 
-        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
-        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
+        assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
+        assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
 
         controller.updateCardExpansion(true)
 
-        assertTrue(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
-        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
+        assertNotNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
+        assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
     }
 
     @Test
     fun `WHEN the inactive tabs section is collapsed THEN the collapsed telemetry event should be report`() {
         val controller = InactiveTabsController(appStore, settings, browserInteractor)
 
-        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
-        assertFalse(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
+        assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
+        assertNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
 
         controller.updateCardExpansion(false)
 
-        assertFalse(TabsTrayMetrics.inactiveTabsExpanded.testHasValue())
-        assertTrue(TabsTrayMetrics.inactiveTabsCollapsed.testHasValue())
+        assertNull(TabsTrayMetrics.inactiveTabsExpanded.testGetValue())
+        assertNotNull(TabsTrayMetrics.inactiveTabsCollapsed.testGetValue())
     }
 
     @Test
     fun `WHEN the inactive tabs auto-close feature prompt is dismissed THEN update settings and report the telemetry event`() {
         val controller = spyk(InactiveTabsController(appStore, settings, browserInteractor))
 
-        assertFalse(TabsTrayMetrics.autoCloseDimissed.testHasValue())
+        assertNull(TabsTrayMetrics.autoCloseDimissed.testGetValue())
 
         controller.close()
 
-        assertTrue(TabsTrayMetrics.autoCloseDimissed.testHasValue())
+        assertNotNull(TabsTrayMetrics.autoCloseDimissed.testGetValue())
         verify { settings.hasInactiveTabsAutoCloseDialogBeenDismissed = true }
     }
 
@@ -74,11 +74,12 @@ class InactiveTabsControllerTest {
     fun `WHEN the inactive tabs auto-close feature prompt is accepted THEN update settings and report the telemetry event`() {
         val controller = spyk(InactiveTabsController(appStore, settings, browserInteractor))
 
-        assertFalse(TabsTrayMetrics.autoCloseTurnOnClicked.testHasValue())
+        assertNull(TabsTrayMetrics.autoCloseTurnOnClicked.testGetValue())
 
         controller.enableAutoClosed()
 
-        assertTrue(TabsTrayMetrics.autoCloseTurnOnClicked.testHasValue())
+        assertNotNull(TabsTrayMetrics.autoCloseTurnOnClicked.testGetValue())
+
         verify { settings.closeTabsAfterOneMonth = true }
         verify { settings.closeTabsAfterOneWeek = false }
         verify { settings.closeTabsAfterOneDay = false }
@@ -96,13 +97,13 @@ class InactiveTabsControllerTest {
             )
         )
 
-        assertFalse(TabsTrayMetrics.openInactiveTab.testHasValue())
+        assertNull(TabsTrayMetrics.openInactiveTab.testGetValue())
 
         controller.openInactiveTab(tab)
 
         verify { browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
 
-        assertTrue(TabsTrayMetrics.openInactiveTab.testHasValue())
+        assertNotNull(TabsTrayMetrics.openInactiveTab.testGetValue())
     }
 
     @Test
@@ -115,12 +116,12 @@ class InactiveTabsControllerTest {
             )
         )
 
-        assertFalse(TabsTrayMetrics.openInactiveTab.testHasValue())
+        assertNull(TabsTrayMetrics.openInactiveTab.testGetValue())
 
         controller.openInactiveTab(tab)
 
         verify { browserInteractor.onTabSelected(tab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME) }
 
-        assertTrue(TabsTrayMetrics.openInactiveTab.testHasValue())
+        assertNotNull(TabsTrayMetrics.openInactiveTab.testGetValue())
     }
 }

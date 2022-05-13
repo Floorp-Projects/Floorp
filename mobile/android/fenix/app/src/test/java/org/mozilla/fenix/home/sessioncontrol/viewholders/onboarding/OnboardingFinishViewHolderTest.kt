@@ -11,8 +11,8 @@ import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -46,8 +46,8 @@ class OnboardingFinishViewHolderTest {
         binding.finishButton.performClick()
         verify { interactor.onStartBrowsingClicked() }
         // Check if the event was recorded
-        assertTrue(Onboarding.finish.testHasValue())
-        assertEquals(1, Onboarding.finish.testGetValue().size)
-        assertNull(Onboarding.finish.testGetValue().single().extra)
+        assertNotNull(Onboarding.finish.testGetValue())
+        assertEquals(1, Onboarding.finish.testGetValue()!!.size)
+        assertNull(Onboarding.finish.testGetValue()!!.single().extra)
     }
 }

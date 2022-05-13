@@ -54,9 +54,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Signin) }
-        assertEquals(true, SyncAuth.signIn.testHasValue())
-        assertEquals(1, SyncAuth.signIn.testGetValue().size)
-        assertEquals(null, SyncAuth.signIn.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.signIn.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.signIn.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -66,9 +65,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Signup) }
-        assertEquals(true, SyncAuth.signUp.testHasValue())
-        assertEquals(1, SyncAuth.signUp.testGetValue().size)
-        assertEquals(null, SyncAuth.signUp.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.signUp.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.signUp.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -78,9 +76,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Pairing) }
-        assertEquals(true, SyncAuth.paired.testHasValue())
-        assertEquals(1, SyncAuth.paired.testGetValue().size)
-        assertEquals(null, SyncAuth.paired.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.paired.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.paired.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -90,9 +87,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.Recovered) }
-        assertEquals(true, SyncAuth.recovered.testHasValue())
-        assertEquals(1, SyncAuth.recovered.testGetValue().size)
-        assertEquals(null, SyncAuth.recovered.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.recovered.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.recovered.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -102,9 +98,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal(null)) }
-        assertEquals(true, SyncAuth.otherExternal.testHasValue())
-        assertEquals(1, SyncAuth.otherExternal.testGetValue().size)
-        assertEquals(null, SyncAuth.otherExternal.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.otherExternal.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.otherExternal.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -114,9 +109,8 @@ class BackgroundServicesTest {
         val account = mockk<OAuthAccount>()
 
         registry.notifyObservers { onAuthenticated(account, AuthType.OtherExternal("someAction")) }
-        assertEquals(true, SyncAuth.otherExternal.testHasValue())
-        assertEquals(1, SyncAuth.otherExternal.testGetValue().size)
-        assertEquals(null, SyncAuth.otherExternal.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.otherExternal.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.otherExternal.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = true }
         confirmVerified(settings)
     }
@@ -124,9 +118,8 @@ class BackgroundServicesTest {
     @Test
     fun `telemetry account observer tracks sign out event`() {
         registry.notifyObservers { onLoggedOut() }
-        assertEquals(true, SyncAuth.signOut.testHasValue())
-        assertEquals(1, SyncAuth.signOut.testGetValue().size)
-        assertEquals(null, SyncAuth.signOut.testGetValue().single().extra)
+        assertEquals(1, SyncAuth.signOut.testGetValue()!!.size)
+        assertEquals(null, SyncAuth.signOut.testGetValue()!!.single().extra)
         verify { settings.signedInFxaAccount = false }
         confirmVerified(settings)
     }

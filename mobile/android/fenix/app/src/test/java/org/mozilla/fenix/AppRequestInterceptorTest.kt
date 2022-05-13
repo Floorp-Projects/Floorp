@@ -191,10 +191,9 @@ class AppRequestInterceptorTest {
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
-            assertEquals(true, ErrorPage.visitedError.testHasValue())
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
             )
         }
     }
@@ -214,10 +213,9 @@ class AppRequestInterceptorTest {
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
-            assertEquals(true, ErrorPage.visitedError.testHasValue())
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
             )
         }
     }
@@ -238,10 +236,9 @@ class AppRequestInterceptorTest {
 
             assertEquals(expectedPage, actualPage)
             // Check if the error metric was recorded
-            assertEquals(true, ErrorPage.visitedError.testHasValue())
             assertEquals(
                 error.name,
-                ErrorPage.visitedError.testGetValue().last().extra?.get("error_type")
+                ErrorPage.visitedError.testGetValue()!!.last().extra?.get("error_type")
             )
         }
     }

@@ -15,7 +15,7 @@ import mozilla.components.support.ktx.kotlin.crossProduct
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -83,7 +83,7 @@ class StartupTypeTelemetryTest {
         }
 
         // All invalid labels go to a single bucket: let's verify it has no value.
-        assertFalse(PerfStartup.startupType["__other__"].testHasValue())
+        assertNull(PerfStartup.startupType["__other__"].testGetValue())
     }
 
     @Test

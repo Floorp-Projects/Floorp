@@ -31,6 +31,7 @@ import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -255,9 +256,9 @@ class ShareControllerTest {
 
         controller.handleShareToDevice(deviceToShareTo)
 
-        assertTrue(SyncAccount.sendTab.testHasValue())
-        assertEquals(1, SyncAccount.sendTab.testGetValue().size)
-        assertNull(SyncAccount.sendTab.testGetValue().single().extra)
+        assertNotNull(SyncAccount.sendTab.testGetValue())
+        assertEquals(1, SyncAccount.sendTab.testGetValue()!!.size)
+        assertNull(SyncAccount.sendTab.testGetValue()!!.single().extra)
 
         // Verify all the needed methods are called.
         verify {
@@ -314,9 +315,9 @@ class ShareControllerTest {
     fun `handleSignIn should navigate to the Sync Fragment and dismiss this one`() {
         controller.handleSignIn()
 
-        assertTrue(SyncAccount.signInToSendTab.testHasValue())
-        assertEquals(1, SyncAccount.signInToSendTab.testGetValue().size)
-        assertNull(SyncAccount.signInToSendTab.testGetValue().single().extra)
+        assertNotNull(SyncAccount.signInToSendTab.testGetValue())
+        assertEquals(1, SyncAccount.signInToSendTab.testGetValue()!!.size)
+        assertNull(SyncAccount.signInToSendTab.testGetValue()!!.single().extra)
 
         verifyOrder {
             navController.nav(

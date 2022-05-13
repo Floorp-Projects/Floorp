@@ -97,8 +97,8 @@ class DefaultCollectionCreationControllerTest {
         assertTrue(dismissed)
         coVerify { tabCollectionStorage.createCollection("name", listOf(tab1)) }
 
-        assertTrue(Collections.saved.testHasValue())
-        val recordedEvents = Collections.saved.testGetValue()
+        assertNotNull(Collections.saved.testGetValue())
+        val recordedEvents = Collections.saved.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         val eventExtra = recordedEvents.single().extra
         assertNotNull(eventExtra)
@@ -152,8 +152,8 @@ class DefaultCollectionCreationControllerTest {
 
         assertTrue(dismissed)
 
-        assertTrue(Collections.renamed.testHasValue())
-        val recordedEvents = Collections.renamed.testGetValue()
+        assertNotNull(Collections.renamed.testGetValue())
+        val recordedEvents = Collections.renamed.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertNull(recordedEvents.single().extra)
 
@@ -203,8 +203,8 @@ class DefaultCollectionCreationControllerTest {
         assertTrue(dismissed)
         coVerify { tabCollectionStorage.addTabsToCollection(collection, listOf(tab1)) }
 
-        assertTrue(Collections.tabsAdded.testHasValue())
-        val recordedEvents = Collections.tabsAdded.testGetValue()
+        assertNotNull(Collections.tabsAdded.testGetValue())
+        val recordedEvents = Collections.tabsAdded.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         val eventExtra = recordedEvents.single().extra
         assertNotNull(eventExtra)

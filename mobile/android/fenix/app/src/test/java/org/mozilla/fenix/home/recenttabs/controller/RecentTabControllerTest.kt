@@ -21,8 +21,8 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -69,8 +69,8 @@ class RecentTabControllerTest {
 
     @Test
     fun handleRecentTabClicked() {
-        assertFalse(RecentTabs.recentTabOpened.testHasValue())
-        assertFalse(RecentTabs.inProgressMediaTabOpened.testHasValue())
+        assertNull(RecentTabs.recentTabOpened.testGetValue())
+        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -89,14 +89,14 @@ class RecentTabControllerTest {
             selectTabUseCase.selectTab.invoke(tab.id)
             navController.navigate(R.id.browserFragment)
         }
-        assertTrue(RecentTabs.recentTabOpened.testHasValue())
-        assertFalse(RecentTabs.inProgressMediaTabOpened.testHasValue())
+        assertNotNull(RecentTabs.recentTabOpened.testGetValue())
+        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
     }
 
     @Test
     fun handleRecentTabClickedForMediaTab() {
-        assertFalse(RecentTabs.recentTabOpened.testHasValue())
-        assertFalse(RecentTabs.inProgressMediaTabOpened.testHasValue())
+        assertNull(RecentTabs.recentTabOpened.testGetValue())
+        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -116,13 +116,13 @@ class RecentTabControllerTest {
             selectTabUseCase.selectTab.invoke(inProgressMediaTab.id)
             navController.navigate(R.id.browserFragment)
         }
-        assertFalse(RecentTabs.recentTabOpened.testHasValue())
-        assertTrue(RecentTabs.inProgressMediaTabOpened.testHasValue())
+        assertNull(RecentTabs.recentTabOpened.testGetValue())
+        assertNotNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
     }
 
     @Test
     fun handleRecentTabShowAllClickedFromHome() {
-        assertFalse(RecentTabs.showAllClicked.testHasValue())
+        assertNull(RecentTabs.showAllClicked.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -140,12 +140,12 @@ class RecentTabControllerTest {
             navController.navigateUp()
         }
 
-        assertTrue(RecentTabs.showAllClicked.testHasValue())
+        assertNotNull(RecentTabs.showAllClicked.testGetValue())
     }
 
     @Test
     fun handleRecentTabShowAllClickedFromSearchDialog() {
-        assertFalse(RecentTabs.showAllClicked.testHasValue())
+        assertNull(RecentTabs.showAllClicked.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
@@ -161,12 +161,12 @@ class RecentTabControllerTest {
             )
         }
 
-        assertTrue(RecentTabs.showAllClicked.testHasValue())
+        assertNotNull(RecentTabs.showAllClicked.testGetValue())
     }
 
     @Test
     fun `WHEN handleRecentSearchGroupClicked is called THEN navigate to the tabsTrayFragment and record the correct metric`() {
-        assertFalse(SearchTerms.jumpBackInGroupTapped.testHasValue())
+        assertNull(SearchTerms.jumpBackInGroupTapped.testGetValue())
 
         controller.handleRecentSearchGroupClicked("1")
 
@@ -178,6 +178,6 @@ class RecentTabControllerTest {
                 }
             )
         }
-        assertTrue(SearchTerms.jumpBackInGroupTapped.testHasValue())
+        assertNotNull(SearchTerms.jumpBackInGroupTapped.testGetValue())
     }
 }

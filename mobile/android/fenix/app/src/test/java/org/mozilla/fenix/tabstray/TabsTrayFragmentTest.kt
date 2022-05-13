@@ -36,7 +36,8 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -255,12 +256,12 @@ class TabsTrayFragmentTest {
             }
             every { fragment.getTrayMenu(any(), any(), any(), any(), any()) } returns menuBuilder
 
-            assertFalse(TabsTray.menuOpened.testHasValue())
+            assertNull(TabsTray.menuOpened.testGetValue())
 
             fragment.setupMenu(navigationInteractor)
             tabsTrayBinding.tabTrayOverflow.performClick()
 
-            assertTrue(TabsTray.menuOpened.testHasValue())
+            assertNotNull(TabsTray.menuOpened.testGetValue())
             verify { menuBuilder.build() }
             verify { menu.showWithTheme(tabsTrayBinding.tabTrayOverflow) }
         } finally {

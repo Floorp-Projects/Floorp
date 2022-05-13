@@ -10,9 +10,8 @@ import io.mockk.verifyAll
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,7 +54,7 @@ class LoginsListControllerTest {
     @Test
     fun `handle login item clicked`() {
         val login: SavedLogin = mockk(relaxed = true)
-        assertFalse(Logins.openIndividualLogin.testHasValue())
+        assertNull(Logins.openIndividualLogin.testGetValue())
 
         controller.handleItemClicked(login)
 
@@ -66,9 +65,9 @@ class LoginsListControllerTest {
             )
         }
 
-        assertTrue(Logins.openIndividualLogin.testHasValue())
-        assertEquals(1, Logins.openIndividualLogin.testGetValue().size)
-        assertNull(Logins.openIndividualLogin.testGetValue().single().extra)
+        assertNotNull(Logins.openIndividualLogin.testGetValue())
+        assertEquals(1, Logins.openIndividualLogin.testGetValue()!!.size)
+        assertNull(Logins.openIndividualLogin.testGetValue()!!.single().extra)
     }
 
     @Test

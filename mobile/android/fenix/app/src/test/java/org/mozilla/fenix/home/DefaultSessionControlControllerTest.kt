@@ -38,6 +38,7 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -159,8 +160,8 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionAddTabTapped(collection)
 
-        assertTrue(Collections.addTabButton.testHasValue())
-        val recordedEvents = Collections.addTabButton.testGetValue()
+        assertNotNull(Collections.addTabButton.testGetValue())
+        val recordedEvents = Collections.addTabButton.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -176,11 +177,11 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleCustomizeHomeTapped() {
-        assertFalse(HomeScreen.customizeHomeClicked.testHasValue())
+        assertNull(HomeScreen.customizeHomeClicked.testGetValue())
 
         createController().handleCustomizeHomeTapped()
 
-        assertTrue(HomeScreen.customizeHomeClicked.testHasValue())
+        assertNotNull(HomeScreen.customizeHomeClicked.testGetValue())
         verify {
             navController.navigate(
                 match<NavDirections> {
@@ -214,8 +215,8 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionOpenTabClicked(tab)
 
-        assertTrue(Collections.tabRestored.testHasValue())
-        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertNotNull(Collections.tabRestored.testGetValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -256,8 +257,8 @@ class DefaultSessionControlControllerTest {
 
         createController().handleCollectionOpenTabClicked(tab)
 
-        assertTrue(Collections.tabRestored.testHasValue())
-        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertNotNull(Collections.tabRestored.testGetValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -291,8 +292,8 @@ class DefaultSessionControlControllerTest {
 
         createController().handleCollectionOpenTabClicked(tab)
 
-        assertTrue(Collections.tabRestored.testHasValue())
-        val recordedEvents = Collections.tabRestored.testGetValue()
+        assertNotNull(Collections.tabRestored.testGetValue())
+        val recordedEvents = Collections.tabRestored.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -308,8 +309,8 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionOpenTabsTapped(collection)
 
-        assertTrue(Collections.allTabsRestored.testHasValue())
-        val recordedEvents = Collections.allTabsRestored.testGetValue()
+        assertNotNull(Collections.allTabsRestored.testGetValue())
+        val recordedEvents = Collections.allTabsRestored.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
     }
@@ -339,8 +340,8 @@ class DefaultSessionControlControllerTest {
             }
         ).handleCollectionRemoveTab(expectedCollection, tab, false)
 
-        assertTrue(Collections.tabRemoved.testHasValue())
-        val recordedEvents = Collections.tabRemoved.testGetValue()
+        assertNotNull(Collections.tabRemoved.testGetValue())
+        val recordedEvents = Collections.tabRemoved.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -353,8 +354,8 @@ class DefaultSessionControlControllerTest {
         val tab: ComponentTab = mockk(relaxed = true)
         createController().handleCollectionRemoveTab(collection, tab, false)
 
-        assertTrue(Collections.tabRemoved.testHasValue())
-        val recordedEvents = Collections.tabRemoved.testGetValue()
+        assertNotNull(Collections.tabRemoved.testGetValue())
+        val recordedEvents = Collections.tabRemoved.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
     }
@@ -367,8 +368,8 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleCollectionShareTabsClicked(collection)
 
-        assertTrue(Collections.shared.testHasValue())
-        val recordedEvents = Collections.shared.testGetValue()
+        assertNotNull(Collections.shared.testGetValue())
+        val recordedEvents = Collections.shared.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -398,8 +399,8 @@ class DefaultSessionControlControllerTest {
         ).handleDeleteCollectionTapped(expectedCollection)
 
         assertEquals(expectedCollection, actualCollection)
-        assertTrue(Collections.removed.testHasValue())
-        val recordedEvents = Collections.removed.testGetValue()
+        assertNotNull(Collections.removed.testGetValue())
+        val recordedEvents = Collections.removed.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
     }
@@ -424,8 +425,8 @@ class DefaultSessionControlControllerTest {
         }
         createController().handleRenameCollectionTapped(collection)
 
-        assertTrue(Collections.renameButton.testHasValue())
-        val recordedEvents = Collections.renameButton.testGetValue()
+        assertNotNull(Collections.renameButton.testGetValue())
+        val recordedEvents = Collections.renameButton.testGetValue()!!
         assertEquals(1, recordedEvents.size)
         assertEquals(null, recordedEvents.single().extra)
 
@@ -451,13 +452,13 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openDefault.testHasValue())
-        assertEquals(1, TopSites.openDefault.testGetValue().size)
-        assertNull(TopSites.openDefault.testGetValue().single().extra)
+        assertNotNull(TopSites.openDefault.testGetValue())
+        assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+        assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -483,9 +484,9 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -513,17 +514,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openDefault.testHasValue())
-        assertEquals(1, TopSites.openDefault.testGetValue().size)
-        assertNull(TopSites.openDefault.testGetValue().single().extra)
+        assertNotNull(TopSites.openDefault.testGetValue())
+        assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+        assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -551,17 +552,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openDefault.testHasValue())
-        assertEquals(1, TopSites.openDefault.testGetValue().size)
-        assertNull(TopSites.openDefault.testGetValue().single().extra)
+        assertNotNull(TopSites.openDefault.testGetValue())
+        assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+        assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -575,7 +576,7 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleSelectGoogleDefaultTopSite_EventPerformedSearchTopSite() {
-        assertFalse(Events.performedSearch.testHasValue())
+        assertNull(Events.performedSearch.testGetValue())
 
         val topSite = TopSite.Default(
             id = 1L,
@@ -594,15 +595,15 @@ class DefaultSessionControlControllerTest {
 
             controller.handleSelectTopSite(topSite, position = 0)
 
-            assertTrue(Events.performedSearch.testHasValue())
+            assertNotNull(Events.performedSearch.testGetValue())
 
-            assertTrue(TopSites.openDefault.testHasValue())
-            assertEquals(1, TopSites.openDefault.testGetValue().size)
-            assertNull(TopSites.openDefault.testGetValue().single().extra)
+            assertNotNull(TopSites.openDefault.testGetValue())
+            assertEquals(1, TopSites.openDefault.testGetValue()!!.size)
+            assertNull(TopSites.openDefault.testGetValue()!!.single().extra)
 
-            assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-            assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-            assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+            assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+            assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+            assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
         } finally {
             unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
         }
@@ -610,7 +611,7 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleSelectDuckDuckGoTopSite_EventPerformedSearchTopSite() {
-        assertFalse(Events.performedSearch.testHasValue())
+        assertNull(Events.performedSearch.testGetValue())
 
         val topSite = TopSite.Pinned(
             id = 1L,
@@ -629,7 +630,7 @@ class DefaultSessionControlControllerTest {
 
             controller.handleSelectTopSite(topSite, position = 0)
 
-            assertTrue(Events.performedSearch.testHasValue())
+            assertNotNull(Events.performedSearch.testGetValue())
         } finally {
             unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
         }
@@ -651,17 +652,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openPinned.testHasValue())
-        assertEquals(1, TopSites.openPinned.testGetValue().size)
-        assertNull(TopSites.openPinned.testGetValue().single().extra)
+        assertNotNull(TopSites.openPinned.testGetValue())
+        assertEquals(1, TopSites.openPinned.testGetValue()!!.size)
+        assertNull(TopSites.openPinned.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -689,17 +690,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openPinned.testHasValue())
-        assertEquals(1, TopSites.openPinned.testGetValue().size)
-        assertNull(TopSites.openPinned.testGetValue().single().extra)
+        assertNotNull(TopSites.openPinned.testGetValue())
+        assertEquals(1, TopSites.openPinned.testGetValue()!!.size)
+        assertNull(TopSites.openPinned.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -727,17 +728,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openFrecency.testHasValue())
-        assertEquals(1, TopSites.openFrecency.testGetValue().size)
-        assertNull(TopSites.openFrecency.testGetValue().single().extra)
+        assertNotNull(TopSites.openFrecency.testGetValue())
+        assertEquals(1, TopSites.openFrecency.testGetValue()!!.size)
+        assertNull(TopSites.openFrecency.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -765,17 +766,17 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position = 0)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openFrecency.testHasValue())
-        assertEquals(1, TopSites.openFrecency.testGetValue().size)
-        assertNull(TopSites.openFrecency.testGetValue().single().extra)
+        assertNotNull(TopSites.openFrecency.testGetValue())
+        assertEquals(1, TopSites.openFrecency.testGetValue()!!.size)
+        assertNull(TopSites.openFrecency.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openGoogleSearchAttribution.testHasValue())
-        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue().size)
-        assertNull(TopSites.openGoogleSearchAttribution.testGetValue().single().extra)
+        assertNotNull(TopSites.openGoogleSearchAttribution.testGetValue())
+        assertEquals(1, TopSites.openGoogleSearchAttribution.testGetValue()!!.size)
+        assertNull(TopSites.openGoogleSearchAttribution.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -805,13 +806,13 @@ class DefaultSessionControlControllerTest {
 
         controller.handleSelectTopSite(topSite, position)
 
-        assertTrue(TopSites.openInNewTab.testHasValue())
-        assertEquals(1, TopSites.openInNewTab.testGetValue().size)
-        assertNull(TopSites.openInNewTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openInNewTab.testGetValue())
+        assertEquals(1, TopSites.openInNewTab.testGetValue()!!.size)
+        assertNull(TopSites.openInNewTab.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.openContileTopSite.testHasValue())
-        assertEquals(1, TopSites.openContileTopSite.testGetValue().size)
-        assertNull(TopSites.openContileTopSite.testGetValue().single().extra)
+        assertNotNull(TopSites.openContileTopSite.testGetValue())
+        assertEquals(1, TopSites.openContileTopSite.testGetValue()!!.size)
+        assertNull(TopSites.openContileTopSite.testGetValue()!!.single().extra)
 
         verify {
             tabsUseCases.addTab.invoke(
@@ -837,17 +838,17 @@ class DefaultSessionControlControllerTest {
             createdAt = 3
         )
         val position = 0
-        assertFalse(TopSites.contileImpression.testHasValue())
+        assertNull(TopSites.contileImpression.testGetValue())
 
         var topSiteImpressionPinged = false
         Pings.topsitesImpression.testBeforeNextSubmit {
-            assertTrue(TopSites.contileTileId.testHasValue())
-            assertEquals(3, TopSites.contileTileId.testGetValue())
+            assertNotNull(TopSites.contileTileId.testGetValue())
+            assertEquals(3L, TopSites.contileTileId.testGetValue())
 
-            assertTrue(TopSites.contileAdvertiser.testHasValue())
+            assertNotNull(TopSites.contileAdvertiser.testGetValue())
             assertEquals("mozilla", TopSites.contileAdvertiser.testGetValue())
 
-            assertTrue(TopSites.contileReportingUrl.testHasValue())
+            assertNotNull(TopSites.contileReportingUrl.testGetValue())
             assertEquals(topSite.clickUrl, TopSites.contileReportingUrl.testGetValue())
 
             topSiteImpressionPinged = true
@@ -855,9 +856,9 @@ class DefaultSessionControlControllerTest {
 
         controller.submitTopSitesImpressionPing(topSite, position)
 
-        assertTrue(TopSites.contileClick.testHasValue())
+        assertNotNull(TopSites.contileClick.testGetValue())
 
-        val event = TopSites.contileClick.testGetValue()
+        val event = TopSites.contileClick.testGetValue()!!
 
         assertEquals(1, event.size)
         assertEquals("top_sites", event[0].category)
@@ -877,18 +878,18 @@ class DefaultSessionControlControllerTest {
             url = SupportUtils.GOOGLE_URL,
             createdAt = 0
         )
-        assertFalse(TopSites.remove.testHasValue())
-        assertFalse(TopSites.googleTopSiteRemoved.testHasValue())
+        assertNull(TopSites.remove.testGetValue())
+        assertNull(TopSites.googleTopSiteRemoved.testGetValue())
 
         controller.handleRemoveTopSiteClicked(topSite)
 
-        assertTrue(TopSites.googleTopSiteRemoved.testHasValue())
-        assertEquals(1, TopSites.googleTopSiteRemoved.testGetValue().size)
-        assertNull(TopSites.googleTopSiteRemoved.testGetValue().single().extra)
+        assertNotNull(TopSites.googleTopSiteRemoved.testGetValue())
+        assertEquals(1, TopSites.googleTopSiteRemoved.testGetValue()!!.size)
+        assertNull(TopSites.googleTopSiteRemoved.testGetValue()!!.single().extra)
 
-        assertTrue(TopSites.remove.testHasValue())
-        assertEquals(1, TopSites.remove.testGetValue().size)
-        assertNull(TopSites.remove.testGetValue().single().extra)
+        assertNotNull(TopSites.remove.testGetValue())
+        assertEquals(1, TopSites.remove.testGetValue()!!.size)
+        assertNull(TopSites.remove.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -932,8 +933,8 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handlePasteAndGo() {
-        assertFalse(Events.enteredUrl.testHasValue())
-        assertFalse(Events.performedSearch.testHasValue())
+        assertNull(Events.enteredUrl.testGetValue())
+        assertNull(Events.performedSearch.testGetValue())
 
         createController().handlePasteAndGo("text")
 
@@ -946,7 +947,7 @@ class DefaultSessionControlControllerTest {
             )
         }
 
-        assertTrue(Events.performedSearch.testHasValue())
+        assertNotNull(Events.performedSearch.testGetValue())
 
         createController().handlePasteAndGo("https://mozilla.org")
         verify {
@@ -957,7 +958,7 @@ class DefaultSessionControlControllerTest {
                 engine = searchEngine
             )
         }
-        assertTrue(Events.enteredUrl.testHasValue())
+        assertNotNull(Events.enteredUrl.testGetValue())
     }
 
     @Test
@@ -1096,36 +1097,36 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `WHEN handleReportSessionMetrics is called AND there are zero recent tabs THEN report Event#RecentTabsSectionIsNotVisible`() {
-        assertFalse(RecentTabs.sectionVisible.testHasValue())
+        assertNull(RecentTabs.sectionVisible.testGetValue())
 
         every { appState.recentTabs } returns emptyList()
         createController().handleReportSessionMetrics(appState)
-        assertTrue(RecentTabs.sectionVisible.testHasValue())
-        assertFalse(RecentTabs.sectionVisible.testGetValue())
+        assertNotNull(RecentTabs.sectionVisible.testGetValue())
+        assertFalse(RecentTabs.sectionVisible.testGetValue()!!)
     }
 
     @Test
     fun `WHEN handleReportSessionMetrics is called AND there is at least one recent tab THEN report Event#RecentTabsSectionIsVisible`() {
-        assertFalse(RecentTabs.sectionVisible.testHasValue())
+        assertNull(RecentTabs.sectionVisible.testGetValue())
 
         val recentTab: RecentTab = mockk(relaxed = true)
         every { appState.recentTabs } returns listOf(recentTab)
         createController().handleReportSessionMetrics(appState)
 
-        assertTrue(RecentTabs.sectionVisible.testHasValue())
-        assertTrue(RecentTabs.sectionVisible.testGetValue())
+        assertNotNull(RecentTabs.sectionVisible.testGetValue())
+        assertTrue(RecentTabs.sectionVisible.testGetValue()!!)
     }
 
     @Test
     fun `WHEN handleReportSessionMetrics is called AND there are zero recent bookmarks THEN report Event#RecentBookmarkCount(0)`() {
         every { appState.recentBookmarks } returns emptyList()
         every { appState.recentTabs } returns emptyList()
-        assertFalse(RecentBookmarks.recentBookmarksCount.testHasValue())
+        assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
 
         createController().handleReportSessionMetrics(appState)
 
-        assertTrue(RecentBookmarks.recentBookmarksCount.testHasValue())
-        assertEquals(0, RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNotNull(RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertEquals(0L, RecentBookmarks.recentBookmarksCount.testGetValue())
     }
 
     @Test
@@ -1133,21 +1134,21 @@ class DefaultSessionControlControllerTest {
         val recentBookmark: RecentBookmark = mockk(relaxed = true)
         every { appState.recentBookmarks } returns listOf(recentBookmark)
         every { appState.recentTabs } returns emptyList()
-        assertFalse(RecentBookmarks.recentBookmarksCount.testHasValue())
+        assertNull(RecentBookmarks.recentBookmarksCount.testGetValue())
 
         createController().handleReportSessionMetrics(appState)
 
-        assertTrue(RecentBookmarks.recentBookmarksCount.testHasValue())
-        assertEquals(1, RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertNotNull(RecentBookmarks.recentBookmarksCount.testGetValue())
+        assertEquals(1L, RecentBookmarks.recentBookmarksCount.testGetValue())
     }
 
     @Test
     fun `WHEN handleTopSiteSettingsClicked is called THEN navigate to the HomeSettingsFragment AND report the interaction`() {
         createController().handleTopSiteSettingsClicked()
 
-        assertTrue(TopSites.contileSettings.testHasValue())
-        assertEquals(1, TopSites.contileSettings.testGetValue().size)
-        assertNull(TopSites.contileSettings.testGetValue().single().extra)
+        assertNotNull(TopSites.contileSettings.testGetValue())
+        assertEquals(1, TopSites.contileSettings.testGetValue()!!.size)
+        assertNull(TopSites.contileSettings.testGetValue()!!.single().extra)
         verify {
             navController.navigate(
                 match<NavDirections> {
@@ -1162,9 +1163,9 @@ class DefaultSessionControlControllerTest {
     fun `WHEN handleSponsorPrivacyClicked is called THEN navigate to the privacy webpage AND report the interaction`() {
         createController().handleSponsorPrivacyClicked()
 
-        assertTrue(TopSites.contileSponsorsAndPrivacy.testHasValue())
-        assertEquals(1, TopSites.contileSponsorsAndPrivacy.testGetValue().size)
-        assertNull(TopSites.contileSponsorsAndPrivacy.testGetValue().single().extra)
+        assertNotNull(TopSites.contileSponsorsAndPrivacy.testGetValue())
+        assertEquals(1, TopSites.contileSponsorsAndPrivacy.testGetValue()!!.size)
+        assertNull(TopSites.contileSponsorsAndPrivacy.testGetValue()!!.single().extra)
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
@@ -1187,9 +1188,9 @@ class DefaultSessionControlControllerTest {
         )
         createController().handleOpenInPrivateTabClicked(topSite)
 
-        assertTrue(TopSites.openContileInPrivateTab.testHasValue())
-        assertEquals(1, TopSites.openContileInPrivateTab.testGetValue().size)
-        assertNull(TopSites.openContileInPrivateTab.testGetValue().single().extra)
+        assertNotNull(TopSites.openContileInPrivateTab.testGetValue())
+        assertEquals(1, TopSites.openContileInPrivateTab.testGetValue()!!.size)
+        assertNull(TopSites.openContileInPrivateTab.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -1213,15 +1214,15 @@ class DefaultSessionControlControllerTest {
             url = "mozilla.org",
             createdAt = 0
         )
-        assertFalse(TopSites.openInPrivateTab.testHasValue())
+        assertNull(TopSites.openInPrivateTab.testGetValue())
 
         controller.handleOpenInPrivateTabClicked(topSite1)
         controller.handleOpenInPrivateTabClicked(topSite2)
         controller.handleOpenInPrivateTabClicked(topSite3)
 
-        assertTrue(TopSites.openInPrivateTab.testHasValue())
-        assertEquals(3, TopSites.openInPrivateTab.testGetValue().size)
-        for (event in TopSites.openInPrivateTab.testGetValue()) {
+        assertNotNull(TopSites.openInPrivateTab.testGetValue())
+        assertEquals(3, TopSites.openInPrivateTab.testGetValue()!!.size)
+        for (event in TopSites.openInPrivateTab.testGetValue()!!) {
             assertNull(event.extra)
         }
     }

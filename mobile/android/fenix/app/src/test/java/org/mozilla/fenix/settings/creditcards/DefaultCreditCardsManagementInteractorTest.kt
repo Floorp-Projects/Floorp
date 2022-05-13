@@ -9,8 +9,8 @@ import io.mockk.verify
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,19 +38,19 @@ class DefaultCreditCardsManagementInteractorTest {
     @Test
     fun onSelectCreditCard() {
         val creditCard: CreditCard = mockk(relaxed = true)
-        assertFalse(CreditCards.managementCardTapped.testHasValue())
+        assertNull(CreditCards.managementCardTapped.testGetValue())
 
         interactor.onSelectCreditCard(creditCard)
         verify { controller.handleCreditCardClicked(creditCard) }
-        assertTrue(CreditCards.managementCardTapped.testHasValue())
+        assertNotNull(CreditCards.managementCardTapped.testGetValue())
     }
 
     @Test
     fun onClickAddCreditCard() {
-        assertFalse(CreditCards.managementAddTapped.testHasValue())
+        assertNull(CreditCards.managementAddTapped.testGetValue())
 
         interactor.onAddCreditCardClick()
         verify { controller.handleAddCreditCardClicked() }
-        assertTrue(CreditCards.managementAddTapped.testHasValue())
+        assertNotNull(CreditCards.managementAddTapped.testGetValue())
     }
 }

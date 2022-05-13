@@ -18,8 +18,8 @@ import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -198,7 +198,7 @@ class RecentSyncedTabFeatureTest {
         feature.startLoading()
         feature.displaySyncedTabs(listOf(tab))
 
-        assertTrue(RecentSyncedTabs.recentSyncedTabTimeToLoad.testHasValue())
+        assertNotNull(RecentSyncedTabs.recentSyncedTabTimeToLoad.testGetValue())
     }
 
     @Test
@@ -219,7 +219,7 @@ class RecentSyncedTabFeatureTest {
         feature.displaySyncedTabs(listOf(tab1))
         feature.displaySyncedTabs(listOf(tab2))
 
-        assertFalse(RecentSyncedTabs.latestSyncedTabIsStale.testHasValue())
+        assertNull(RecentSyncedTabs.latestSyncedTabIsStale.testGetValue())
     }
 
     @Test

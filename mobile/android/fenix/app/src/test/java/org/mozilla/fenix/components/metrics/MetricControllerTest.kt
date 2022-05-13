@@ -34,9 +34,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -173,13 +172,13 @@ class MetricControllerTest {
             metadata = metadata
         )
         // Verify history based suggestions
-        assertFalse(PerfAwesomebar.historySuggestions.testHasValue())
+        assertNull(PerfAwesomebar.historySuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.historySuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.historySuggestions.testGetValue())
 
         // Verify bookmark based suggestions
         metadata = mapOf(
@@ -189,13 +188,13 @@ class MetricControllerTest {
             )
         )
         fact = fact.copy(metadata = metadata)
-        assertFalse(PerfAwesomebar.bookmarkSuggestions.testHasValue())
+        assertNull(PerfAwesomebar.bookmarkSuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.bookmarkSuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.bookmarkSuggestions.testGetValue())
 
         // Verify session based suggestions
         metadata = mapOf(
@@ -205,13 +204,13 @@ class MetricControllerTest {
             )
         )
         fact = fact.copy(metadata = metadata)
-        assertFalse(PerfAwesomebar.sessionSuggestions.testHasValue())
+        assertNull(PerfAwesomebar.sessionSuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.sessionSuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.sessionSuggestions.testGetValue())
 
         // Verify search engine suggestions
         metadata = mapOf(
@@ -221,13 +220,13 @@ class MetricControllerTest {
             )
         )
         fact = fact.copy(metadata = metadata)
-        assertFalse(PerfAwesomebar.searchEngineSuggestions.testHasValue())
+        assertNull(PerfAwesomebar.searchEngineSuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.searchEngineSuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.searchEngineSuggestions.testGetValue())
 
         // Verify clipboard based suggestions
         metadata = mapOf(
@@ -237,13 +236,13 @@ class MetricControllerTest {
             )
         )
         fact = fact.copy(metadata = metadata)
-        assertFalse(PerfAwesomebar.clipboardSuggestions.testHasValue())
+        assertNull(PerfAwesomebar.clipboardSuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.clipboardSuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.clipboardSuggestions.testGetValue())
 
         // Verify shortcut based suggestions
         metadata = mapOf(
@@ -253,13 +252,13 @@ class MetricControllerTest {
             )
         )
         fact = fact.copy(metadata = metadata)
-        assertFalse(PerfAwesomebar.shortcutsSuggestions.testHasValue())
+        assertNull(PerfAwesomebar.shortcutsSuggestions.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(PerfAwesomebar.shortcutsSuggestions.testHasValue())
+        assertNotNull(PerfAwesomebar.shortcutsSuggestions.testGetValue())
     }
 
     @Test
@@ -354,52 +353,52 @@ class MetricControllerTest {
         val action = mockk<Action>()
 
         // Verify display interaction
-        assertFalse(LoginDialog.displayed.testHasValue())
+        assertNull(LoginDialog.displayed.testGetValue())
         var fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.DISPLAY)
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(LoginDialog.displayed.testHasValue())
-        assertEquals(1, LoginDialog.displayed.testGetValue().size)
-        assertNull(LoginDialog.displayed.testGetValue().single().extra)
+        assertNotNull(LoginDialog.displayed.testGetValue())
+        assertEquals(1, LoginDialog.displayed.testGetValue()!!.size)
+        assertNull(LoginDialog.displayed.testGetValue()!!.single().extra)
 
         // Verify cancel interaction
-        assertFalse(LoginDialog.cancelled.testHasValue())
+        assertNull(LoginDialog.cancelled.testGetValue())
         fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.CANCEL)
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(LoginDialog.cancelled.testHasValue())
-        assertEquals(1, LoginDialog.cancelled.testGetValue().size)
-        assertNull(LoginDialog.cancelled.testGetValue().single().extra)
+        assertNotNull(LoginDialog.cancelled.testGetValue())
+        assertEquals(1, LoginDialog.cancelled.testGetValue()!!.size)
+        assertNull(LoginDialog.cancelled.testGetValue()!!.single().extra)
 
         // Verify never save interaction
-        assertFalse(LoginDialog.neverSave.testHasValue())
+        assertNull(LoginDialog.neverSave.testGetValue())
         fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.NEVER_SAVE)
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(LoginDialog.neverSave.testHasValue())
-        assertEquals(1, LoginDialog.neverSave.testGetValue().size)
-        assertNull(LoginDialog.neverSave.testGetValue().single().extra)
+        assertNotNull(LoginDialog.neverSave.testGetValue())
+        assertEquals(1, LoginDialog.neverSave.testGetValue()!!.size)
+        assertNull(LoginDialog.neverSave.testGetValue()!!.single().extra)
 
         // Verify save interaction
-        assertFalse(LoginDialog.saved.testHasValue())
+        assertNull(LoginDialog.saved.testGetValue())
         fact = Fact(Component.FEATURE_PROMPTS, action, LoginDialogFacts.Items.SAVE)
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(LoginDialog.saved.testHasValue())
-        assertEquals(1, LoginDialog.saved.testGetValue().size)
-        assertNull(LoginDialog.saved.testGetValue().single().extra)
+        assertNotNull(LoginDialog.saved.testGetValue())
+        assertEquals(1, LoginDialog.saved.testGetValue()!!.size)
+        assertNull(LoginDialog.saved.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -407,27 +406,27 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
         // Verify the play action
         var fact = Fact(Component.FEATURE_MEDIA, Action.PLAY, MediaFacts.Items.NOTIFICATION)
-        assertFalse(MediaNotification.play.testHasValue())
+        assertNull(MediaNotification.play.testGetValue())
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(MediaNotification.play.testHasValue())
-        assertEquals(1, MediaNotification.play.testGetValue().size)
-        assertNull(MediaNotification.play.testGetValue().single().extra)
+        assertNotNull(MediaNotification.play.testGetValue())
+        assertEquals(1, MediaNotification.play.testGetValue()!!.size)
+        assertNull(MediaNotification.play.testGetValue()!!.single().extra)
 
         // Verify the pause action
         fact = Fact(Component.FEATURE_MEDIA, Action.PAUSE, MediaFacts.Items.NOTIFICATION)
-        assertFalse(MediaNotification.pause.testHasValue())
+        assertNull(MediaNotification.pause.testGetValue())
 
         controller.run {
             fact.process()
         }
 
-        assertTrue(MediaNotification.pause.testHasValue())
-        assertEquals(1, MediaNotification.pause.testGetValue().size)
-        assertNull(MediaNotification.pause.testGetValue().single().extra)
+        assertNotNull(MediaNotification.pause.testGetValue())
+        assertEquals(1, MediaNotification.pause.testGetValue()!!.size)
+        assertNull(MediaNotification.pause.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -441,60 +440,60 @@ class MetricControllerTest {
         )
 
         with(controller) {
-            assertFalse(AndroidAutofill.requestMatchingLogins.testHasValue())
+            assertNull(AndroidAutofill.requestMatchingLogins.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.requestMatchingLogins.testHasValue())
+            assertNotNull(AndroidAutofill.requestMatchingLogins.testGetValue())
 
             fact = fact.copy(metadata = mapOf(AutofillFacts.Metadata.HAS_MATCHING_LOGINS to false))
-            assertFalse(AndroidAutofill.requestNoMatchingLogins.testHasValue())
+            assertNull(AndroidAutofill.requestNoMatchingLogins.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.requestNoMatchingLogins.testHasValue())
+            assertNotNull(AndroidAutofill.requestNoMatchingLogins.testGetValue())
 
             fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_SEARCH, action = Action.DISPLAY, metadata = null)
-            assertFalse(AndroidAutofill.searchDisplayed.testHasValue())
+            assertNull(AndroidAutofill.searchDisplayed.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.searchDisplayed.testHasValue())
+            assertNotNull(AndroidAutofill.searchDisplayed.testGetValue())
 
             fact = fact.copy(action = Action.SELECT)
-            assertFalse(AndroidAutofill.searchItemSelected.testHasValue())
+            assertNull(AndroidAutofill.searchItemSelected.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.searchItemSelected.testHasValue())
+            assertNotNull(AndroidAutofill.searchItemSelected.testGetValue())
 
             fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_CONFIRMATION, action = Action.CONFIRM)
-            assertFalse(AndroidAutofill.confirmSuccessful.testHasValue())
+            assertNull(AndroidAutofill.confirmSuccessful.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.confirmSuccessful.testHasValue())
+            assertNotNull(AndroidAutofill.confirmSuccessful.testGetValue())
 
             fact = fact.copy(action = Action.DISPLAY)
-            assertFalse(AndroidAutofill.confirmCancelled.testHasValue())
+            assertNull(AndroidAutofill.confirmCancelled.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.confirmCancelled.testHasValue())
+            assertNotNull(AndroidAutofill.confirmCancelled.testGetValue())
 
             fact = fact.copy(item = AutofillFacts.Items.AUTOFILL_LOCK, action = Action.CONFIRM)
-            assertFalse(AndroidAutofill.unlockSuccessful.testHasValue())
+            assertNull(AndroidAutofill.unlockSuccessful.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.unlockSuccessful.testHasValue())
+            assertNotNull(AndroidAutofill.unlockSuccessful.testGetValue())
 
             fact = fact.copy(action = Action.DISPLAY)
-            assertFalse(AndroidAutofill.unlockCancelled.testHasValue())
+            assertNull(AndroidAutofill.unlockCancelled.testGetValue())
 
             fact.process()
 
-            assertTrue(AndroidAutofill.unlockCancelled.testHasValue())
+            assertNotNull(AndroidAutofill.unlockCancelled.testGetValue())
         }
     }
 
@@ -509,15 +508,15 @@ class MetricControllerTest {
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
             metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_COPY)
         )
-        assertFalse(ContextualMenu.copyTapped.testHasValue())
+        assertNull(ContextualMenu.copyTapped.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(ContextualMenu.copyTapped.testHasValue())
-        assertEquals(1, ContextualMenu.copyTapped.testGetValue().size)
-        assertNull(ContextualMenu.copyTapped.testGetValue().single().extra)
+        assertNotNull(ContextualMenu.copyTapped.testGetValue())
+        assertEquals(1, ContextualMenu.copyTapped.testGetValue()!!.size)
+        assertNull(ContextualMenu.copyTapped.testGetValue()!!.single().extra)
 
         // Verify search button interaction
         fact = Fact(
@@ -526,15 +525,15 @@ class MetricControllerTest {
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
             metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SEARCH)
         )
-        assertFalse(ContextualMenu.searchTapped.testHasValue())
+        assertNull(ContextualMenu.searchTapped.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(ContextualMenu.searchTapped.testHasValue())
-        assertEquals(1, ContextualMenu.searchTapped.testGetValue().size)
-        assertNull(ContextualMenu.searchTapped.testGetValue().single().extra)
+        assertNotNull(ContextualMenu.searchTapped.testGetValue())
+        assertEquals(1, ContextualMenu.searchTapped.testGetValue()!!.size)
+        assertNull(ContextualMenu.searchTapped.testGetValue()!!.single().extra)
 
         // Verify select all button interaction
         fact = Fact(
@@ -543,15 +542,15 @@ class MetricControllerTest {
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
             metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SELECT_ALL)
         )
-        assertFalse(ContextualMenu.selectAllTapped.testHasValue())
+        assertNull(ContextualMenu.selectAllTapped.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(ContextualMenu.selectAllTapped.testHasValue())
-        assertEquals(1, ContextualMenu.selectAllTapped.testGetValue().size)
-        assertNull(ContextualMenu.selectAllTapped.testGetValue().single().extra)
+        assertNotNull(ContextualMenu.selectAllTapped.testGetValue())
+        assertEquals(1, ContextualMenu.selectAllTapped.testGetValue()!!.size)
+        assertNull(ContextualMenu.selectAllTapped.testGetValue()!!.single().extra)
 
         // Verify share button interaction
         fact = Fact(
@@ -560,15 +559,15 @@ class MetricControllerTest {
             ContextMenuFacts.Items.TEXT_SELECTION_OPTION,
             metadata = mapOf("textSelectionOption" to Companion.CONTEXT_MENU_SHARE)
         )
-        assertFalse(ContextualMenu.shareTapped.testHasValue())
+        assertNull(ContextualMenu.shareTapped.testGetValue())
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(ContextualMenu.shareTapped.testHasValue())
-        assertEquals(1, ContextualMenu.shareTapped.testGetValue().size)
-        assertNull(ContextualMenu.shareTapped.testGetValue().single().extra)
+        assertNotNull(ContextualMenu.shareTapped.testGetValue())
+        assertEquals(1, ContextualMenu.shareTapped.testGetValue()!!.size)
+        assertNull(ContextualMenu.shareTapped.testGetValue()!!.single().extra)
     }
 
     @Test
@@ -591,9 +590,8 @@ class MetricControllerTest {
                 fact.process()
             }
 
-            assertEquals(true, event.testHasValue())
-            assertEquals(1, event.testGetValue().size)
-            assertEquals(null, event.testGetValue().single().extra)
+            assertEquals(1, event.testGetValue()!!.size)
+            assertEquals(null, event.testGetValue()!!.single().extra)
         }
     }
 
@@ -609,11 +607,11 @@ class MetricControllerTest {
             ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP,
         )
 
-        assertFalse(ProgressiveWebApp.homescreenTap.testHasValue())
+        assertNull(ProgressiveWebApp.homescreenTap.testGetValue())
         controller.run {
             openPWA.process()
         }
-        assertTrue(ProgressiveWebApp.homescreenTap.testHasValue())
+        assertNotNull(ProgressiveWebApp.homescreenTap.testGetValue())
 
         // a PWA shortcut was installed
         val installPWA = Fact(
@@ -622,13 +620,13 @@ class MetricControllerTest {
             ProgressiveWebAppFacts.Items.INSTALL_SHORTCUT,
         )
 
-        assertFalse(ProgressiveWebApp.installTap.testHasValue())
+        assertNull(ProgressiveWebApp.installTap.testGetValue())
 
         controller.run {
             installPWA.process()
         }
 
-        assertTrue(ProgressiveWebApp.installTap.testHasValue())
+        assertNotNull(ProgressiveWebApp.installTap.testGetValue())
     }
 
     @Test
@@ -636,64 +634,64 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(emptyList(), { true }, { true }, mockk())
 
         // Verify synced tabs suggestion clicked
-        assertFalse(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+        assertNull(SyncedTabs.syncedTabsSuggestionClicked.testGetValue())
         var fact = Fact(Component.FEATURE_SYNCEDTABS, Action.CANCEL, SyncedTabsFacts.Items.SYNCED_TABS_SUGGESTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(SyncedTabs.syncedTabsSuggestionClicked.testHasValue())
+        assertNotNull(SyncedTabs.syncedTabsSuggestionClicked.testGetValue())
 
         // Verify bookmark suggestion clicked
-        assertFalse(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+        assertNull(Awesomebar.bookmarkSuggestionClicked.testGetValue())
         fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.BOOKMARK_SUGGESTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(Awesomebar.bookmarkSuggestionClicked.testHasValue())
+        assertNotNull(Awesomebar.bookmarkSuggestionClicked.testGetValue())
 
         // Verify clipboard suggestion clicked
-        assertFalse(Awesomebar.clipboardSuggestionClicked.testHasValue())
+        assertNull(Awesomebar.clipboardSuggestionClicked.testGetValue())
         fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.CLIPBOARD_SUGGESTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(Awesomebar.clipboardSuggestionClicked.testHasValue())
+        assertNotNull(Awesomebar.clipboardSuggestionClicked.testGetValue())
 
         // Verify history suggestion clicked
-        assertFalse(Awesomebar.historySuggestionClicked.testHasValue())
+        assertNull(Awesomebar.historySuggestionClicked.testGetValue())
         fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.HISTORY_SUGGESTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(Awesomebar.historySuggestionClicked.testHasValue())
+        assertNotNull(Awesomebar.historySuggestionClicked.testGetValue())
 
         // Verify search action clicked
-        assertFalse(Awesomebar.searchActionClicked.testHasValue())
+        assertNull(Awesomebar.searchActionClicked.testGetValue())
         fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.SEARCH_ACTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(Awesomebar.searchActionClicked.testHasValue())
+        assertNotNull(Awesomebar.searchActionClicked.testGetValue())
 
         // Verify bookmark opened tab suggestion clicked
-        assertFalse(Awesomebar.openedTabSuggestionClicked.testHasValue())
+        assertNull(Awesomebar.openedTabSuggestionClicked.testGetValue())
         fact = Fact(Component.FEATURE_AWESOMEBAR, Action.CANCEL, AwesomeBarFacts.Items.OPENED_TAB_SUGGESTION_CLICKED)
 
         with(controller) {
             fact.process()
         }
 
-        assertTrue(Awesomebar.openedTabSuggestionClicked.testHasValue())
+        assertNotNull(Awesomebar.openedTabSuggestionClicked.testGetValue())
     }
 
     @Test
@@ -709,11 +707,11 @@ class MetricControllerTest {
             "provider"
         )
 
-        assertFalse(BrowserSearch.adClicks["provider"].testHasValue())
+        assertNull(BrowserSearch.adClicks["provider"].testGetValue())
         controller.run {
             addClickedInSearchFact.process()
         }
-        assertTrue(BrowserSearch.adClicks["provider"].testHasValue())
+        assertNotNull(BrowserSearch.adClicks["provider"].testGetValue())
         assertEquals(1, BrowserSearch.adClicks["provider"].testGetValue())
 
         // the user opened a Search Engine Result Page of one of our search providers which contains ads
@@ -724,13 +722,13 @@ class MetricControllerTest {
             "provider"
         )
 
-        assertFalse(BrowserSearch.withAds["provider"].testHasValue())
+        assertNull(BrowserSearch.withAds["provider"].testGetValue())
 
         controller.run {
             searchWithAdsOpenedFact.process()
         }
 
-        assertTrue(BrowserSearch.withAds["provider"].testHasValue())
+        assertNotNull(BrowserSearch.withAds["provider"].testGetValue())
         assertEquals(1, BrowserSearch.withAds["provider"].testGetValue())
 
         // the user performed a search
@@ -741,13 +739,13 @@ class MetricControllerTest {
             "provider"
         )
 
-        assertFalse(BrowserSearch.inContent["provider"].testHasValue())
+        assertNull(BrowserSearch.inContent["provider"].testGetValue())
 
         controller.run {
             inContentSearchFact.process()
         }
 
-        assertTrue(BrowserSearch.inContent["provider"].testHasValue())
+        assertNotNull(BrowserSearch.inContent["provider"].testGetValue())
         assertEquals(1, BrowserSearch.inContent["provider"].testGetValue())
 
         // the user performed another search

@@ -14,7 +14,8 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.telemetry.glean.testing.GleanTestRule
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -69,11 +70,11 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Settings menu item is tapped THEN navigate to settings fragment and record metrics`() {
-        assertFalse(HomeMenuMetrics.settingsItemClicked.testHasValue())
+        assertNull(HomeMenuMetrics.settingsItemClicked.testGetValue())
 
         homeMenuBuilder.onItemTapped(HomeMenu.Item.Settings)
 
-        assertTrue(HomeMenuMetrics.settingsItemClicked.testHasValue())
+        assertNotNull(HomeMenuMetrics.settingsItemClicked.testGetValue())
 
         verify {
             navController.nav(
@@ -85,11 +86,11 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Customize Home menu item is tapped THEN navigate to home settings fragment and record metrics`() {
-        assertFalse(HomeScreen.customizeHomeClicked.testHasValue())
+        assertNull(HomeScreen.customizeHomeClicked.testGetValue())
 
         homeMenuBuilder.onItemTapped(HomeMenu.Item.CustomizeHome)
 
-        assertTrue(HomeScreen.customizeHomeClicked.testHasValue())
+        assertNotNull(HomeScreen.customizeHomeClicked.testGetValue())
 
         verify {
             navController.nav(
@@ -183,11 +184,11 @@ class HomeMenuBuilderTest {
 
     @Test
     fun `WHEN Whats New menu item is tapped THEN open the browser to the SUMO whats new page and record metrics`() {
-        assertFalse(Events.whatsNewTapped.testHasValue())
+        assertNull(Events.whatsNewTapped.testGetValue())
 
         homeMenuBuilder.onItemTapped(HomeMenu.Item.WhatsNew)
 
-        assertTrue(Events.whatsNewTapped.testHasValue())
+        assertNotNull(Events.whatsNewTapped.testGetValue())
 
         verify {
             WhatsNew.userViewedWhatsNew(testContext)

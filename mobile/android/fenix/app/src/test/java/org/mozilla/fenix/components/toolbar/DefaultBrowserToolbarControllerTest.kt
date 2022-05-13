@@ -34,6 +34,7 @@ import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -209,31 +210,31 @@ class DefaultBrowserToolbarControllerTest {
     @Test
     fun `handle reader mode enabled`() {
         val controller = createController()
-        assertFalse(ReaderMode.opened.testHasValue())
+        assertNull(ReaderMode.opened.testGetValue())
 
         controller.handleReaderModePressed(enabled = true)
 
         verify { readerModeController.showReaderView() }
-        assertTrue(ReaderMode.opened.testHasValue())
-        assertNull(ReaderMode.opened.testGetValue().single().extra)
+        assertNotNull(ReaderMode.opened.testGetValue())
+        assertNull(ReaderMode.opened.testGetValue()!!.single().extra)
     }
 
     @Test
     fun `handle reader mode disabled`() {
         val controller = createController()
-        assertFalse(ReaderMode.closed.testHasValue())
+        assertNull(ReaderMode.closed.testGetValue())
 
         controller.handleReaderModePressed(enabled = false)
 
         verify { readerModeController.hideReaderView() }
-        assertTrue(ReaderMode.closed.testHasValue())
-        assertNull(ReaderMode.closed.testGetValue().single().extra)
+        assertNotNull(ReaderMode.closed.testGetValue())
+        assertNull(ReaderMode.closed.testGetValue()!!.single().extra)
     }
 
     @Test
     fun handleToolbarClick() {
         val controller = createController()
-        assertFalse(Events.searchBarTapped.testHasValue())
+        assertNull(Events.searchBarTapped.testGetValue())
 
         controller.handleToolbarClick()
 
@@ -242,8 +243,8 @@ class DefaultBrowserToolbarControllerTest {
             sessionId = "1"
         )
 
-        assertTrue(Events.searchBarTapped.testHasValue())
-        val snapshot = Events.searchBarTapped.testGetValue()
+        assertNotNull(Events.searchBarTapped.testGetValue())
+        val snapshot = Events.searchBarTapped.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("BROWSER", snapshot.single().extra?.getValue("source"))
 
@@ -259,7 +260,7 @@ class DefaultBrowserToolbarControllerTest {
         val searchResultsTab = createTab("https://google.com?q=mozilla+website", searchTerms = "mozilla website")
         store.dispatch(TabListAction.AddTabAction(searchResultsTab, select = true)).joinBlocking()
 
-        assertFalse(Events.searchBarTapped.testHasValue())
+        assertNull(Events.searchBarTapped.testGetValue())
 
         val controller = createController()
         controller.handleToolbarClick()
@@ -269,8 +270,8 @@ class DefaultBrowserToolbarControllerTest {
             sessionId = searchResultsTab.id
         )
 
-        assertTrue(Events.searchBarTapped.testHasValue())
-        val snapshot = Events.searchBarTapped.testGetValue()
+        assertNotNull(Events.searchBarTapped.testGetValue())
+        val snapshot = Events.searchBarTapped.testGetValue()!!
         assertEquals(1, snapshot.size)
         assertEquals("BROWSER", snapshot.single().extra?.getValue("source"))
 
@@ -356,13 +357,13 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleHomeButtonClick() {
-        assertFalse(Events.browserToolbarHomeTapped.testHasValue())
+        assertNull(Events.browserToolbarHomeTapped.testGetValue())
 
         val controller = createController()
         controller.handleHomeButtonClick()
 
         verify { navController.navigate(BrowserFragmentDirections.actionGlobalHome()) }
-        assertTrue(Events.browserToolbarHomeTapped.testHasValue())
+        assertNotNull(Events.browserToolbarHomeTapped.testGetValue())
     }
 
     private fun createController(

@@ -24,6 +24,7 @@ import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Ignore
@@ -114,7 +115,7 @@ class HistoryMetadataGroupControllerTest {
 
     @Test
     fun handleOpen() {
-        assertFalse(GleanHistory.searchTermGroupOpenTab.testHasValue())
+        assertNull(GleanHistory.searchTermGroupOpenTab.testGetValue())
 
         controller.handleOpen(mozillaHistoryMetadataItem)
 
@@ -125,13 +126,13 @@ class HistoryMetadataGroupControllerTest {
             )
             navController.navigate(R.id.browserFragment)
         }
-        assertTrue(GleanHistory.searchTermGroupOpenTab.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupOpenTab.testGetValue())
         assertEquals(
             1,
-            GleanHistory.searchTermGroupOpenTab.testGetValue().size
+            GleanHistory.searchTermGroupOpenTab.testGetValue()!!.size
         )
         assertNull(
-            GleanHistory.searchTermGroupOpenTab.testGetValue()
+            GleanHistory.searchTermGroupOpenTab.testGetValue()!!
                 .single().extra
         )
     }
@@ -190,7 +191,7 @@ class HistoryMetadataGroupControllerTest {
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteSingle() = runTestOnMain {
-        assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
         controller.handleDelete(setOf(mozillaHistoryMetadataItem))
 
@@ -198,13 +199,13 @@ class HistoryMetadataGroupControllerTest {
             store.dispatch(HistoryMetadataGroupFragmentAction.Delete(mozillaHistoryMetadataItem))
             historyStorage.deleteVisitsFor(mozillaHistoryMetadataItem.url)
         }
-        assertTrue(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         assertEquals(
             1,
-            GleanHistory.searchTermGroupRemoveTab.testGetValue().size
+            GleanHistory.searchTermGroupRemoveTab.testGetValue()!!.size
         )
         assertNull(
-            GleanHistory.searchTermGroupRemoveTab.testGetValue()
+            GleanHistory.searchTermGroupRemoveTab.testGetValue()!!
                 .single().extra
         )
         // Here we don't expect the action to be dispatched, because items inside the store
@@ -219,7 +220,7 @@ class HistoryMetadataGroupControllerTest {
     @Test
     @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteMultiple() = runTestOnMain {
-        assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         controller.handleDelete(getMetadataItemsList().toSet())
 
         coVerify {
@@ -228,9 +229,9 @@ class HistoryMetadataGroupControllerTest {
                 historyStorage.deleteVisitsFor(it.url)
             }
         }
-        assertTrue(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         assertNull(
-            GleanHistory.searchTermGroupRemoveTab.testGetValue()
+            GleanHistory.searchTermGroupRemoveTab.testGetValue()!!
                 .last().extra
         )
         // Here we expect the action to be dispatched, because both deleted items and items inside
@@ -252,7 +253,7 @@ class HistoryMetadataGroupControllerTest {
             mozillaHistoryMetadataItem.copy(title = "BBC", url = "https://www.bbc.com/"),
             mozillaHistoryMetadataItem.copy(title = "Stackoverflow", url = "https://stackoverflow.com/")
         )
-        assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
 
         controller.handleDelete(abnormalList.toSet())
         coVerify {
@@ -261,9 +262,9 @@ class HistoryMetadataGroupControllerTest {
                 historyStorage.deleteVisitsFor(it.url)
             }
         }
-        assertTrue(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         assertNull(
-            GleanHistory.searchTermGroupRemoveTab.testGetValue()
+            GleanHistory.searchTermGroupRemoveTab.testGetValue()!!
                 .last().extra
         )
         coVerify {
@@ -272,9 +273,9 @@ class HistoryMetadataGroupControllerTest {
                 historyStorage.deleteVisitsFor(it.url)
             }
         }
-        assertTrue(GleanHistory.searchTermGroupRemoveTab.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupRemoveTab.testGetValue())
         assertNull(
-            GleanHistory.searchTermGroupRemoveTab.testGetValue()
+            GleanHistory.searchTermGroupRemoveTab.testGetValue()!!
                 .last().extra
         )
         // Here we expect the action to be dispatched, because deleted items include the items
@@ -289,7 +290,7 @@ class HistoryMetadataGroupControllerTest {
 
     @Test
     fun handleDeleteAll() = runTestOnMain {
-        assertFalse(GleanHistory.searchTermGroupRemoveAll.testHasValue())
+        assertNull(GleanHistory.searchTermGroupRemoveAll.testGetValue())
 
         controller.handleDeleteAll()
 
@@ -302,13 +303,13 @@ class HistoryMetadataGroupControllerTest {
                 HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = searchTerm)
             )
         }
-        assertTrue(GleanHistory.searchTermGroupRemoveAll.testHasValue())
+        assertNotNull(GleanHistory.searchTermGroupRemoveAll.testGetValue())
         assertEquals(
             1,
-            GleanHistory.searchTermGroupRemoveAll.testGetValue().size
+            GleanHistory.searchTermGroupRemoveAll.testGetValue()!!.size
         )
         assertNull(
-            GleanHistory.searchTermGroupRemoveAll.testGetValue()
+            GleanHistory.searchTermGroupRemoveAll.testGetValue()!!
                 .single().extra
         )
     }

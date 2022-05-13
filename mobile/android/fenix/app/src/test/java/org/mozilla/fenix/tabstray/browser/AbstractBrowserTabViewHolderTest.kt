@@ -28,7 +28,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.mozilla.fenix.GleanMetrics.Tab
@@ -109,15 +109,15 @@ class AbstractBrowserTabViewHolderTest {
             mediaBrowserStore,
             interactor
         )
-        assertFalse(Tab.mediaPlay.testHasValue())
+        assertNull(Tab.mediaPlay.testGetValue())
 
         holder.bind(mediaTab, false, mockk(), mockk())
 
         holder.itemView.findViewById<ImageButton>(R.id.play_pause_button).performClick()
 
-        assertTrue(Tab.mediaPlay.testHasValue())
-        assertEquals(1, Tab.mediaPlay.testGetValue().size)
-        assertNull(Tab.mediaPlay.testGetValue().single().extra)
+        assertNotNull(Tab.mediaPlay.testGetValue())
+        assertEquals(1, Tab.mediaPlay.testGetValue()!!.size)
+        assertNull(Tab.mediaPlay.testGetValue()!!.single().extra)
 
         verify { mediaSessionController.play() }
     }
@@ -146,15 +146,15 @@ class AbstractBrowserTabViewHolderTest {
             mediaBrowserStore,
             interactor
         )
-        assertFalse(Tab.mediaPause.testHasValue())
+        assertNull(Tab.mediaPause.testGetValue())
 
         holder.bind(mediaTab, false, mockk(), mockk())
 
         holder.itemView.findViewById<ImageButton>(R.id.play_pause_button).performClick()
 
-        assertTrue(Tab.mediaPause.testHasValue())
-        assertEquals(1, Tab.mediaPause.testGetValue().size)
-        assertNull(Tab.mediaPause.testGetValue().single().extra)
+        assertNotNull(Tab.mediaPause.testGetValue())
+        assertEquals(1, Tab.mediaPause.testGetValue()!!.size)
+        assertNull(Tab.mediaPause.testGetValue()!!.single().extra)
 
         verify { mediaSessionController.pause() }
     }

@@ -26,8 +26,8 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -140,7 +140,7 @@ class RecentVisitsControllerTest {
                 )
             )
         )
-        assertFalse(RecentSearches.groupDeleted.testHasValue())
+        assertNull(RecentSearches.groupDeleted.testGetValue())
 
         controller.handleRemoveRecentHistoryGroup(historyGroup.title)
 
@@ -149,7 +149,7 @@ class RecentVisitsControllerTest {
             store.dispatch(HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
             appStore.dispatch(AppAction.DisbandSearchGroupAction(searchTerm = historyGroup.title))
         }
-        assertTrue(RecentSearches.groupDeleted.testHasValue())
+        assertNotNull(RecentSearches.groupDeleted.testGetValue())
 
         coVerify {
             storage.deleteHistoryMetadata(historyGroup.title)
