@@ -46,10 +46,7 @@
 #include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
-#include "mozilla/ipc/PChildToParentStreamChild.h"
-#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/net/HttpBackgroundChannelChild.h"
 #include "mozilla/net/PUDPSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -525,28 +522,6 @@ bool BackgroundChildImpl::DeallocPMessagePortChild(PMessagePortChild* aActor) {
   return true;
 }
 
-PChildToParentStreamChild*
-BackgroundChildImpl::AllocPChildToParentStreamChild() {
-  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
-}
-
-bool BackgroundChildImpl::DeallocPChildToParentStreamChild(
-    PChildToParentStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PParentToChildStreamChild*
-BackgroundChildImpl::AllocPParentToChildStreamChild() {
-  return mozilla::ipc::AllocPParentToChildStreamChild();
-}
-
-bool BackgroundChildImpl::DeallocPParentToChildStreamChild(
-    PParentToChildStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
 BackgroundChildImpl::PQuotaChild* BackgroundChildImpl::AllocPQuotaChild() {
   MOZ_CRASH("PQuotaChild actor should be manually constructed!");
 }
@@ -669,12 +644,6 @@ bool BackgroundChildImpl::DeallocPMediaTransportChild(
     dom::PMediaTransportChild* aActor) {
   delete aActor;
   return true;
-}
-
-PChildToParentStreamChild*
-BackgroundChildImpl::SendPChildToParentStreamConstructor(
-    PChildToParentStreamChild* aActor) {
-  return PBackgroundChild::SendPChildToParentStreamConstructor(aActor);
 }
 
 PFileDescriptorSetChild* BackgroundChildImpl::SendPFileDescriptorSetConstructor(

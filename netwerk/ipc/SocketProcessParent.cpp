@@ -14,9 +14,6 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/FOGIPC.h"
 #include "mozilla/ipc/FileDescriptorSetParent.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
-#include "mozilla/ipc/PChildToParentStreamParent.h"
-#include "mozilla/ipc/PParentToChildStreamParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ProxyConfigLookupParent.h"
 #include "mozilla/RemoteLazyInputStreamParent.h"
@@ -244,35 +241,6 @@ bool SocketProcessParent::DeallocPFileDescriptorSetParent(
     PFileDescriptorSetParent* aActor) {
   delete static_cast<mozilla::ipc::FileDescriptorSetParent*>(aActor);
   return true;
-}
-
-mozilla::ipc::PChildToParentStreamParent*
-SocketProcessParent::AllocPChildToParentStreamParent() {
-  return mozilla::ipc::AllocPChildToParentStreamParent();
-}
-
-bool SocketProcessParent::DeallocPChildToParentStreamParent(
-    PChildToParentStreamParent* aActor) {
-  delete aActor;
-  return true;
-}
-
-mozilla::ipc::PParentToChildStreamParent*
-SocketProcessParent::AllocPParentToChildStreamParent() {
-  MOZ_CRASH("PParentToChildStreamChild actors should be manually constructed!");
-}
-
-bool SocketProcessParent::DeallocPParentToChildStreamParent(
-    PParentToChildStreamParent* aActor) {
-  delete aActor;
-  return true;
-}
-
-mozilla::ipc::PParentToChildStreamParent*
-SocketProcessParent::SendPParentToChildStreamConstructor(
-    PParentToChildStreamParent* aActor) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PSocketProcessParent::SendPParentToChildStreamConstructor(aActor);
 }
 
 mozilla::ipc::PFileDescriptorSetParent*

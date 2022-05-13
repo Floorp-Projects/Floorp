@@ -41,8 +41,6 @@ class BackgroundChildImpl : public PBackgroundChild,
   // This functions is implemented in BackgroundImpl.cpp.
   static ThreadLocal* GetThreadLocalForCurrentThread();
 
-  PChildToParentStreamChild* SendPChildToParentStreamConstructor(
-      PChildToParentStreamChild* aActor) override;
   PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
       const FileDescriptor& aFD) override;
 
@@ -205,16 +203,6 @@ class BackgroundChildImpl : public PBackgroundChild,
       const uint32_t& aSequenceID) override;
 
   virtual bool DeallocPMessagePortChild(PMessagePortChild* aActor) override;
-
-  virtual PChildToParentStreamChild* AllocPChildToParentStreamChild() override;
-
-  virtual bool DeallocPChildToParentStreamChild(
-      PChildToParentStreamChild* aActor) override;
-
-  virtual PParentToChildStreamChild* AllocPParentToChildStreamChild() override;
-
-  virtual bool DeallocPParentToChildStreamChild(
-      PParentToChildStreamChild* aActor) override;
 
   virtual PQuotaChild* AllocPQuotaChild() override;
 

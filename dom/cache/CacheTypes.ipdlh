@@ -4,7 +4,6 @@
 
 include protocol PCache;
 include protocol PCacheStreamControl;
-include protocol PChildToParentStream;
 include IPCStream;
 include IPCChannelInfo;
 include PBackgroundSharedTypes;
