@@ -32,7 +32,7 @@
   }
 }
 
-@media (-moz-platform: win){
+@media (-moz-platform: windows){
   #Linux-only{
     display: none !important;
   }

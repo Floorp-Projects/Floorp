@@ -1,3 +1,5 @@
+const API_END_POINT = "https://repo.ablaze.one/api/"
+
 const Notify = (url, now, latest) =>{
     const msg = browser.i18n;
     browser.notifications.create({
