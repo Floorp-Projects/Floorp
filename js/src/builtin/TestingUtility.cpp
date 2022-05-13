@@ -19,7 +19,6 @@
 #include "js/Value.h"               // JS::Value, JS::StringValue
 #include "vm/JSContext.h"           // JSContext
 #include "vm/JSObject.h"            // JSObject
-#include "vm/Realm.h"               // JSRealm
 #include "vm/StringType.h"          // JSString
 
 bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
