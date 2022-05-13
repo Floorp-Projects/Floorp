@@ -25,7 +25,7 @@ var DeclinedEngines = function(service) {
 
   this.service = service;
 };
-this.DeclinedEngines.prototype = {
+DeclinedEngines.prototype = {
   updateDeclined(meta, engineManager = this.service.engineManager) {
     let enabled = new Set(engineManager.getEnabled().map(e => e.name));
     let known = new Set(engineManager.getAll().map(e => e.name));
