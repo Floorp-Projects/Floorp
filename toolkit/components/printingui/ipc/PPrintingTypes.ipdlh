@@ -32,7 +32,6 @@ struct PrintData {
   bool printBGImages;
   bool honorPageRuleMargins;
   bool showMarginGuides;
-  bool isPrintSelectionRBEnabled;
   bool printSelectionOnly;
   int32_t[] pageRanges;
   nsString title;
@@ -44,7 +43,6 @@ struct PrintData {
   nsString footerStrCenter;
   nsString footerStrRight;
 
-  bool isCancelled;
   bool printSilent;
   bool shrinkToFit;
 

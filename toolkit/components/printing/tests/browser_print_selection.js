@@ -233,9 +233,11 @@ add_task(async function open_system_print_with_selection_and_pdf() {
         helper.resolvePrint();
       });
 
-      helper.assertPrintedWithSettings({
-        isPrintSelectionRBEnabled: true,
-      });
+      ok(
+        helper.systemDialogOpenedWithSelection,
+        "Expect system print dialog to be notified of selection"
+      );
+
       PrintHelper.resetPrintPrefs();
     }
   );

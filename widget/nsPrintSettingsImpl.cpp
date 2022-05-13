@@ -547,17 +547,6 @@ NS_IMETHODIMP nsPrintSettings::SetHonorPageRuleMargins(bool aHonor) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::GetIsPrintSelectionRBEnabled(
-    bool* aIsPrintSelectionRBEnabled) {
-  *aIsPrintSelectionRBEnabled = mIsPrintSelectionRBEnabled;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetIsPrintSelectionRBEnabled(
-    bool aIsPrintSelectionRBEnabled) {
-  mIsPrintSelectionRBEnabled = aIsPrintSelectionRBEnabled;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPrintSettings::GetPrintSelectionOnly(bool* aResult) {
   *aResult = mPrintSelectionOnly;
   return NS_OK;
@@ -901,7 +890,6 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShrinkToFit = rhs.mShrinkToFit;
   mShowMarginGuides = rhs.mShowMarginGuides;
   mHonorPageRuleMargins = rhs.mHonorPageRuleMargins;
-  mIsPrintSelectionRBEnabled = rhs.mIsPrintSelectionRBEnabled;
   mPrintSelectionOnly = rhs.mPrintSelectionOnly;
   mPaperId = rhs.mPaperId;
   mPaperWidth = rhs.mPaperWidth;
