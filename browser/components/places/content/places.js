@@ -602,7 +602,7 @@ var PlacesOrganizer = {
           document.getElementById("restoreFromFile")
         );
         m.setAttribute("label", dateFormatter.format(backupDate) + sizeInfo);
-        m.setAttribute("value", OS.Path.basename(backupFiles[i]));
+        m.setAttribute("value", PathUtils.filename(backupFiles[i]));
         m.setAttribute(
           "oncommand",
           "PlacesOrganizer.onRestoreMenuItemClick(this);"
@@ -626,7 +626,7 @@ var PlacesOrganizer = {
     let backupName = aMenuItem.getAttribute("value");
     let backupFilePaths = await PlacesBackups.getBackupFiles();
     for (let backupFilePath of backupFilePaths) {
-      if (OS.Path.basename(backupFilePath) == backupName) {
+      if (PathUtils.filename(backupFilePath) == backupName) {
         PlacesOrganizer.restoreBookmarksFromFile(backupFilePath);
         break;
       }
