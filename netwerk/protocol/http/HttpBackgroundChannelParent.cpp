@@ -172,7 +172,6 @@ bool HttpBackgroundChannelParent::OnStartRequest(
   }
 
   HttpChannelAltDataStream altData;
-  ipc::AutoIPCStream altDataInputStream(true /* delay start */);
   if (aAltDataSource) {
     nsAutoCString altDataType;
     Unused << aAltDataSource->GetAltDataType(altDataType);
@@ -182,11 +181,12 @@ bool HttpBackgroundChannelParent::OnStartRequest(
       nsresult rv = aAltDataSource->OpenAlternativeInputStream(
           altDataType, getter_AddRefs(inputStream));
       if (NS_SUCCEEDED(rv)) {
-        Unused << altDataInputStream.Serialize(inputStream, Manager());
+        Unused << mozilla::ipc::SerializeIPCStream(inputStream.forget(),
+                                                   altData.altDataInputStream(),
+                                                   /* aAllowLazy */ true);
       }
     }
   }
-  altData.altDataInputStream() = altDataInputStream.TakeOptionalValue();
 
   return SendOnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
                             aArgs, altData);

@@ -2131,10 +2131,10 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.preferredAlternativeTypes() = mPreferredCachedAltDataTypes.Clone();
   openArgs.referrerInfo() = mReferrerInfo;
 
-  AutoIPCStream autoStream(openArgs.uploadStream());
   if (mUploadStream) {
-    autoStream.Serialize(mUploadStream, ContentChild::GetSingleton());
-    autoStream.TakeOptionalValue();
+    MOZ_ALWAYS_TRUE(SerializeIPCStream(do_AddRef(mUploadStream),
+                                       openArgs.uploadStream(),
+                                       /* aAllowLazy */ false));
   }
 
   Maybe<CorsPreflightArgs> optionalCorsPreflightArgs;

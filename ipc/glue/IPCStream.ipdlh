@@ -9,7 +9,10 @@ namespace mozilla {
 namespace ipc {
 
 // Use IPCStream in your ipdl to represent serialized nsIInputStreams. Then use
-// AutoIPCStream from IPCStreamUtils.h to perform the serialization.
+// SerializeIPCStream from IPCStreamUtils.h to perform the serialization.
+//
+// NOTE: If you don't need to handle nsIInputStream serialization failure,
+// `nsIInputStream` may be used directly by IPDL protocols.
 struct IPCStream
 {
   InputStreamParams stream;

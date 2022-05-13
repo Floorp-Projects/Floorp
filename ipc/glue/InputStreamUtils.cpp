@@ -42,14 +42,11 @@ using namespace mozilla::dom;
 namespace mozilla {
 namespace ipc {
 
-namespace {
-
-template <typename M>
-void SerializeInputStreamInternal(nsIInputStream* aInputStream,
-                                  InputStreamParams& aParams,
-                                  nsTArray<FileDescriptor>& aFileDescriptors,
-                                  bool aDelayedStart, uint32_t aMaxSize,
-                                  uint32_t* aSizeUsed, M* aManager) {
+void InputStreamHelper::SerializedComplexity(nsIInputStream* aInputStream,
+                                             uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed,
+                                             uint32_t* aPipes,
+                                             uint32_t* aTransferables) {
   MOZ_ASSERT(aInputStream);
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
@@ -58,18 +55,31 @@ void SerializeInputStreamInternal(nsIInputStream* aInputStream,
     MOZ_CRASH("Input stream is not serializable!");
   }
 
-  serializable->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
-                          aSizeUsed, aManager);
+  serializable->SerializedComplexity(aMaxSize, aSizeUsed, aPipes,
+                                     aTransferables);
+}
+
+void InputStreamHelper::SerializeInputStream(nsIInputStream* aInputStream,
+                                             InputStreamParams& aParams,
+                                             uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed) {
+  MOZ_ASSERT(aInputStream);
+
+  nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+      do_QueryInterface(aInputStream);
+  if (!serializable) {
+    MOZ_CRASH("Input stream is not serializable!");
+  }
+
+  serializable->Serialize(aParams, aMaxSize, aSizeUsed);
 
   if (aParams.type() == InputStreamParams::T__None) {
     MOZ_CRASH("Serialize failed!");
   }
 }
 
-template <typename M>
-void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
-                                        InputStreamParams& aParams,
-                                        bool aDelayedStart, M* aManager) {
+void InputStreamHelper::SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                                   InputStreamParams& aParams) {
   MOZ_ASSERT(aInputStream);
 
   // Let's try to take the length using InputStreamLengthHelper. If the length
@@ -104,60 +114,8 @@ void SerializeInputStreamAsPipeInternal(nsIInputStream* aInputStream,
   }
 }
 
-}  // namespace
-
-void InputStreamHelper::SerializedComplexity(nsIInputStream* aInputStream,
-                                             uint32_t aMaxSize,
-                                             uint32_t* aSizeUsed,
-                                             uint32_t* aPipes,
-                                             uint32_t* aTransferables) {
-  MOZ_ASSERT(aInputStream);
-
-  nsCOMPtr<nsIIPCSerializableInputStream> serializable =
-      do_QueryInterface(aInputStream);
-  if (!serializable) {
-    MOZ_CRASH("Input stream is not serializable!");
-  }
-
-  serializable->SerializedComplexity(aMaxSize, aSizeUsed, aPipes,
-                                     aTransferables);
-}
-
-void InputStreamHelper::SerializeInputStream(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    ParentToChildStreamActorManager* aManager) {
-  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
-}
-
-void InputStreamHelper::SerializeInputStream(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    nsTArray<FileDescriptor>& aFileDescriptors, bool aDelayedStart,
-    uint32_t aMaxSize, uint32_t* aSizeUsed,
-    ChildToParentStreamActorManager* aManager) {
-  SerializeInputStreamInternal(aInputStream, aParams, aFileDescriptors,
-                               aDelayedStart, aMaxSize, aSizeUsed, aManager);
-}
-
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, ParentToChildStreamActorManager* aManager) {
-  SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
-                                     aManager);
-}
-
-void InputStreamHelper::SerializeInputStreamAsPipe(
-    nsIInputStream* aInputStream, InputStreamParams& aParams,
-    bool aDelayedStart, ChildToParentStreamActorManager* aManager) {
-  SerializeInputStreamAsPipeInternal(aInputStream, aParams, aDelayedStart,
-                                     aManager);
-}
-
 already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
-    const InputStreamParams& aParams,
-    const nsTArray<FileDescriptor>& aFileDescriptors) {
+    const InputStreamParams& aParams) {
   if (aParams.type() == InputStreamParams::TRemoteLazyInputStreamParams) {
     const RemoteLazyInputStreamParams& params =
         aParams.get_RemoteLazyInputStreamParams();
@@ -238,7 +196,7 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
 
   MOZ_ASSERT(serializable);
 
-  if (!serializable->Deserialize(aParams, aFileDescriptors)) {
+  if (!serializable->Deserialize(aParams)) {
     MOZ_ASSERT(false, "Deserialize failed!");
     return nullptr;
   }

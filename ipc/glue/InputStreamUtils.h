@@ -17,12 +17,8 @@ namespace ipc {
 
 class FileDescriptor;
 
-// TODO: These interfaces are no longer necessary and should be removed.
-class ParentToChildStreamActorManager {};
-
-class ChildToParentStreamActorManager {};
-
-// If you want to serialize an inputStream, please use AutoIPCStream.
+// If you want to serialize an inputStream, please use SerializeIPCStream or
+// nsIInputStream directly.
 class InputStreamHelper {
  public:
   static void SerializedComplexity(nsIInputStream* aInputStream,
@@ -33,40 +29,19 @@ class InputStreamHelper {
   // The manager is needed in case a stream needs to serialize itself as
   // IPCRemoteStream.
   // The stream serializes itself fully only if the resulting IPC message will
-  // be smaller than |aMaxSize|. Otherwise, the stream serializes itself as
-  // IPCRemoteStream, and, its content will be sent to the other side of the IPC
-  // pipe in chunks. This sending can start immediatelly or at the first read
-  // based on the value of |aDelayedStart|. The IPC message size is returned
-  // into |aSizeUsed|.
-  // XXX: The aManager and aFileDescriptors arguments are no longer necessary
-  // and should be removed.
+  // be smaller than |aMaxSize|. Otherwise, the stream serializes itself as a
+  // DataPipe, and, its content will be sent to the other side of the IPC pipe
+  // in chunks. The IPC message size is returned into |aSizeUsed|.
   static void SerializeInputStream(nsIInputStream* aInputStream,
                                    InputStreamParams& aParams,
-                                   nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart, uint32_t aMaxSize,
-                                   uint32_t* aSizeUsed,
-                                   ParentToChildStreamActorManager* aManager);
+                                   uint32_t aMaxSize, uint32_t* aSizeUsed);
 
-  static void SerializeInputStream(nsIInputStream* aInputStream,
-                                   InputStreamParams& aParams,
-                                   nsTArray<FileDescriptor>& aFileDescriptors,
-                                   bool aDelayedStart, uint32_t aMaxSize,
-                                   uint32_t* aSizeUsed,
-                                   ChildToParentStreamActorManager* aManager);
-
-  // When a stream wants to serialize itself as IPCRemoteStream, it uses one of
-  // these methods.
-  static void SerializeInputStreamAsPipe(
-      nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, ParentToChildStreamActorManager* aManager);
-
-  static void SerializeInputStreamAsPipe(
-      nsIInputStream* aInputStream, InputStreamParams& aParams,
-      bool aDelayedStart, ChildToParentStreamActorManager* aManager);
+  // When a stream wants to serialize itself as a DataPipe, it uses this method.
+  static void SerializeInputStreamAsPipe(nsIInputStream* aInputStream,
+                                         InputStreamParams& aParams);
 
   static already_AddRefed<nsIInputStream> DeserializeInputStream(
-      const InputStreamParams& aParams,
-      const nsTArray<FileDescriptor>& aFileDescriptors);
+      const InputStreamParams& aParams);
 };
 
 }  // namespace ipc
