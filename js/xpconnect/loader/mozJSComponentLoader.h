@@ -75,6 +75,13 @@ class mozJSComponentLoader final : public nsIMemoryReporter {
   nsresult ImportModule(JSContext* aCx, const nsACString& aResourceURI,
                         JS::MutableHandleObject aModuleNamespace);
 
+  // Fallback from Import to ImportModule.
+  nsresult TryFallbackToImportModule(JSContext* aCx,
+                                     const nsACString& aResourceURI,
+                                     JS::MutableHandleObject aModuleGlobal,
+                                     JS::MutableHandleObject aModuleExports,
+                                     bool aIgnoreExports);
+
   nsresult Unload(const nsACString& aResourceURI);
   nsresult IsModuleLoaded(const nsACString& aResourceURI, bool* aRetval);
   bool IsLoaderGlobal(JSObject* aObj) { return mLoaderGlobal == aObj; }
