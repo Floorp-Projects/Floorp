@@ -7,7 +7,7 @@
 
 add_task(async function() {
   // Removes bookmarks.html if the file already exists.
-  let HTMLFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.html");
+  let HTMLFile = PathUtils.join(PathUtils.profileDir, "bookmarks.html");
   await IOUtils.remove(HTMLFile, { ignoreAbsent: true });
 
   let unescaped = '<unescaped="test">';
@@ -46,7 +46,7 @@ add_task(async function() {
     xhr.onabort = xhr.onerror = xhr.ontimeout = () => {
       reject(new Error("xmlhttprequest failed"));
     };
-    xhr.open("GET", OS.Path.toFileURI(HTMLFile));
+    xhr.open("GET", PathUtils.toFileURI(HTMLFile));
     xhr.responseType = "document";
     xhr.overrideMimeType("text/html");
     xhr.send();
