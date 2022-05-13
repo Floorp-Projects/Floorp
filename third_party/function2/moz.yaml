@@ -1,0 +1,38 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: MFBT
+
+origin:
+  name: function2
+  description: Improved and configurable drop-in replacement to std::function
+
+  url: https://naios.github.io/function2/
+
+  release: 02ca99831de59c7c3a4b834789260253cace0ced (2021-06-16T17:21:46Z).
+
+  revision: 02ca99831de59c7c3a4b834789260253cace0ced
+
+  license: BSL-1.0
+  license-file: LICENSE.txt
+
+updatebot:
+  maintainer-phab: nika
+  maintainer-bz: nika@thelayzells.com
+  tasks:
+    - type: vendoring
+      branch: master
+      enabled: True
+      frequency: every
+
+vendoring:
+  url: https://github.com/Naios/function2
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - .github/
+    - cmake/
+    - test/
+    - tools/
