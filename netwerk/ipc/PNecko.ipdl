@@ -18,7 +18,6 @@ include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PDNSRequest;
-include protocol PFileDescriptorSet;
 include protocol PDataChannel;
 include protocol PSimpleChannel;
 include protocol PTransportProvider;

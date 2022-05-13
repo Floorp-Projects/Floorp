@@ -68,15 +68,9 @@ class SocketProcessChild final
 
   already_AddRefed<PHttpTransactionChild> AllocPHttpTransactionChild();
 
-  PFileDescriptorSetChild* AllocPFileDescriptorSetChild(
-      const FileDescriptor& fd);
-  bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor);
-
   void CleanUp();
   void DestroySocketProcessBridgeParent(ProcessId aId);
 
-  PFileDescriptorSetChild* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
   already_AddRefed<PHttpConnectionMgrChild> AllocPHttpConnectionMgrChild(
       const HttpHandlerInitArgs& aArgs);
   mozilla::ipc::IPCResult RecvUpdateDeviceModelId(const nsCString& aModelId);

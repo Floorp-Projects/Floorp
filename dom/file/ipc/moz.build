@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "BlobTypes.ipdlh",
     "IPCBlob.ipdlh",
     "PFileCreator.ipdl",
     "PRemoteLazyInputStream.ipdl",

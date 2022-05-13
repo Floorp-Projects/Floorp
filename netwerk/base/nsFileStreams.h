@@ -155,8 +155,7 @@ class nsFileInputStream : public nsFileStreamBase,
  protected:
   virtual ~nsFileInputStream() = default;
 
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors);
+  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams);
 
   nsresult SeekInternal(int32_t aWhence, int64_t aOffset,
                         bool aClearBuf = true);

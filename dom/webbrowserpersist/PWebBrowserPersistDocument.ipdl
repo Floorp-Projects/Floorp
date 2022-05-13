@@ -6,7 +6,6 @@
 include protocol PContent;
 include protocol PWebBrowserPersistResources;
 include protocol PWebBrowserPersistSerialize;
-include protocol PFileDescriptorSet;
 
 include PBackgroundSharedTypes;
 include IPCStream;

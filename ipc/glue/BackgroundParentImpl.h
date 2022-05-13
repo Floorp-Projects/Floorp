@@ -17,10 +17,6 @@ namespace mozilla::ipc {
 // to be inherited in BackgroundImpl.
 class BackgroundParentImpl : public PBackgroundParent,
                              public ParentToChildStreamActorManager {
- public:
-  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
  protected:
   BackgroundParentImpl();
   virtual ~BackgroundParentImpl();
@@ -200,12 +196,6 @@ class BackgroundParentImpl : public PBackgroundParent,
       const mozilla::dom::MessagePortIdentifier& aPortIdentifier) override;
 
   bool DeallocPSharedWorkerParent(PSharedWorkerParent* aActor) override;
-
-  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const FileDescriptor& aFileDescriptor) override;
-
-  bool DeallocPFileDescriptorSetParent(
-      PFileDescriptorSetParent* aActor) override;
 
   already_AddRefed<PVsyncParent> AllocPVsyncParent() override;
 
