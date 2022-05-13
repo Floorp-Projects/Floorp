@@ -14,17 +14,13 @@ DIRS += [
     "search-detection",
     "translate",
     "treestyletab",
-    "floorp-system",
     "undo-closed-tab",
     "official-site-ua",
 ]
 
 
 if CONFIG["OS_TARGET"] == "Linux":
-  DIRS += [
-    "floorp-system-linux",
-]
-else:
- DIRS += [
-    "floorp-system",
-]
+  DIRS += ["floorp-system-linux"]
+
+if CONFIG["OS_TARGET"] == "WINNT":
+ DIRS += ["floorp-system"]
