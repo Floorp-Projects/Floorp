@@ -57,7 +57,7 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild,
   void SetSocket(TCPSocket* aSocket);
 
   void GetHost(nsAString& aHost);
-  void GetPort(uint16_t* aPort);
+  void GetPort(uint16_t* aPort) const;
 
   mozilla::ipc::IPCResult RecvCallback(const nsString& aType,
                                        const CallbackData& aData,
