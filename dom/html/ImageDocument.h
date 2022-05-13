@@ -84,7 +84,7 @@ class ImageDocument final : public MediaDocument,
 
   void ScrollImageTo(int32_t aX, int32_t aY);
 
-  float GetRatio() {
+  float GetRatio() const {
     return std::min(mVisibleWidth / mImageWidth, mVisibleHeight / mImageHeight);
   }
 

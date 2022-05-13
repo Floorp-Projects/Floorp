@@ -164,7 +164,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   }
   void Add(const HTMLOptionElementOrHTMLOptGroupElement& aElement,
            const Nullable<HTMLElementOrLong>& aBefore, ErrorResult& aRv);
-  void Remove(int32_t aIndex);
+  void Remove(int32_t aIndex) const;
   void IndexedSetter(uint32_t aIndex, HTMLOptionElement* aOption,
                      ErrorResult& aRv) {
     mOptions->IndexedSetter(aIndex, aOption, aRv);
@@ -176,7 +176,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   int32_t SelectedIndex() const { return mSelectedIndex; }
   void SetSelectedIndex(int32_t aIdx) { SetSelectedIndexInternal(aIdx, true); }
-  void GetValue(DOMString& aValue);
+  void GetValue(DOMString& aValue) const;
   void SetValue(const nsAString& aValue);
 
   // Override SetCustomValidity so we update our state properly when it's called
@@ -339,7 +339,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
    * @param aIndex the index
    * @return whether the option at the index is selected
    */
-  bool IsOptionSelectedByIndex(int32_t aIndex);
+  bool IsOptionSelectedByIndex(int32_t aIndex) const;
   /**
    * Starting with (and including) aStartIndex, find the first selected index
    * and set mSelectedIndex to it.

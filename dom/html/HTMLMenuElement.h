@@ -57,7 +57,7 @@ class HTMLMenuElement final : public nsGenericHTMLElement {
 
   MOZ_CAN_RUN_SCRIPT void SendShowEvent();
 
-  already_AddRefed<nsIMenuBuilder> CreateBuilder();
+  already_AddRefed<nsIMenuBuilder> CreateBuilder() const;
 
   void Build(nsIMenuBuilder* aBuilder);
 
