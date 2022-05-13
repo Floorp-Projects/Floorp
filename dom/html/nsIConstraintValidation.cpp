@@ -38,7 +38,7 @@ mozilla::dom::ValidityState* nsIConstraintValidation::Validity() {
 }
 
 bool nsIConstraintValidation::CheckValidity(nsIContent& aEventTarget,
-                                            bool* aEventDefaultAction) {
+                                            bool* aEventDefaultAction) const {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
   }

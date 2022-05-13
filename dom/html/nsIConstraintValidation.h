@@ -70,7 +70,7 @@ class nsIConstraintValidation : public nsISupports {
    * @return whether it's valid.
    */
   bool CheckValidity(nsIContent& aEventTarget,
-                     bool* aEventDefaultAction = nullptr);
+                     bool* aEventDefaultAction = nullptr) const;
 
   // Web IDL binding methods
   bool WillValidate() const { return IsCandidateForConstraintValidation(); }
