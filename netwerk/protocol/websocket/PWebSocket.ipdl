@@ -11,8 +11,6 @@ include protocol PTransportProvider;
 include IPCStream;
 include NeckoChannelParams;
 
-include protocol PFileDescriptorSet; //FIXME: bug #792908
-
 include "mozilla/net/WebSocketChannelParent.h";
 include "mozilla/net/WebSocketChannelChild.h";
 

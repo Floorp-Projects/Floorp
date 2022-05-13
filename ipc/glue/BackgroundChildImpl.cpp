@@ -8,7 +8,6 @@
 
 #include "ActorsChild.h"  // IndexedDB
 #include "BroadcastChannelChild.h"
-#include "FileDescriptorSetChild.h"
 #ifdef MOZ_WEBRTC
 #  include "CamerasChild.h"
 #endif
@@ -392,19 +391,6 @@ BackgroundChildImpl::AllocPRemoteLazyInputStreamChild(const nsID& aID,
   return actor.forget();
 }
 
-PFileDescriptorSetChild* BackgroundChildImpl::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFileDescriptor) {
-  return new FileDescriptorSetChild(aFileDescriptor);
-}
-
-bool BackgroundChildImpl::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
-}
-
 PUDPSocketChild* BackgroundChildImpl::AllocPUDPSocketChild(
     const Maybe<PrincipalInfo>& aPrincipalInfo, const nsCString& aFilter) {
   MOZ_CRASH("AllocPUDPSocket should not be called");
@@ -644,11 +630,6 @@ bool BackgroundChildImpl::DeallocPMediaTransportChild(
     dom::PMediaTransportChild* aActor) {
   delete aActor;
   return true;
-}
-
-PFileDescriptorSetChild* BackgroundChildImpl::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  return PBackgroundChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
 }  // namespace mozilla::ipc

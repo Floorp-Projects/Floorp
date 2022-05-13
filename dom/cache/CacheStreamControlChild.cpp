@@ -11,19 +11,14 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/ReadStream.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom::cache {
 
-using mozilla::dom::OptionalFileDescriptorSet;
 using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
-using mozilla::ipc::FileDescriptorSetChild;
-using mozilla::ipc::PFileDescriptorSetChild;
 
 // declared in ActorUtils.h
 already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild() {

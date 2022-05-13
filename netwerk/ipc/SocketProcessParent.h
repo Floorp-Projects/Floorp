@@ -70,13 +70,6 @@ class SocketProcessParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
 
-  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const FileDescriptor& fd);
-  bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor);
-
-  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
   mozilla::ipc::IPCResult RecvObserveHttpActivity(
       const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
       const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
