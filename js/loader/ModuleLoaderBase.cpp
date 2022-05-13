@@ -355,6 +355,20 @@ bool ModuleLoaderBase::IsModuleFetched(nsIURI* aURL) const {
   return mFetchedModules.Contains(aURL);
 }
 
+nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
+  for (const auto& entry : mFetchedModules) {
+    nsIURI* uri = entry.GetData()->BaseURL();
+
+    nsAutoCString spec;
+    nsresult rv = uri->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aURLs.AppendElement(spec);
+  }
+
+  return NS_OK;
+}
+
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
