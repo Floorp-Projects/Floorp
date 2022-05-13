@@ -303,20 +303,26 @@ add_task(function test_Cu_import_not_exported_shim() {
 
 add_task(function test_Cu_isModuleLoaded_shim() {
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-5.jsm"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-5.jsm"), false);
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-5.mjs"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-5.mjs"), false);
 
   Cu.import("resource://test/esmified-5.jsm", {});
 
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-5.jsm"), true);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-5.jsm"), true);
 
   // This is false because Cu.isModuleLoaded does not support ESM directly
   // (bug 1768819)
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-5.mjs"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-5.mjs"), false);
 });
 
 add_task(function test_Cu_isModuleLoaded_no_shim() {
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-6.jsm"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-6.jsm"), false);
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-6.mjs"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-6.mjs"), false);
 
   ChromeUtils.importModule("resource://test/esmified-6.mjs");
 
@@ -324,8 +330,10 @@ add_task(function test_Cu_isModuleLoaded_no_shim() {
   // query that accesses the ESM-ified module returns the existence of
   // ESM.
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-6.jsm"), true);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-6.jsm"), true);
 
   // This is false because Cu.isModuleLoaded does not support ESM directly
   // (bug 1768819)
   Assert.equal(Cu.isModuleLoaded("resource://test/esmified-6.mjs"), false);
+  Assert.equal(Cu.loadedModules.includes("resource://test/esmified-6.mjs"), false);
 });
