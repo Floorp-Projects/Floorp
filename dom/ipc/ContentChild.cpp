@@ -3759,8 +3759,8 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg) {
   return PContentChild::OnMessageReceived(aMsg);
 }
 
-PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
-                                                      UniquePtr<Message>& aReply) {
+PContentChild::Result ContentChild::OnMessageReceived(
+    const Message& aMsg, UniquePtr<Message>& aReply) {
   return PContentChild::OnMessageReceived(aMsg, aReply);
 }
 #endif
