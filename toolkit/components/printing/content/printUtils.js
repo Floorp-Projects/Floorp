@@ -330,17 +330,14 @@ var PrintUtils = {
         const hasSelection = await PrintUtils.checkForSelection(
           browsingContext
         );
+        settings.isPrintSelectionRBEnabled = hasSelection;
 
         // Prompt the user to choose a printer and make any desired print
         // settings changes.
         try {
           await Cc["@mozilla.org/widget/printdialog-service;1"]
             .getService(Ci.nsIPrintDialogService)
-            .showPrintDialog(
-              browsingContext.topChromeWindow,
-              hasSelection,
-              settings
-            );
+            .showPrintDialog(browsingContext.topChromeWindow, settings);
         } catch (e) {
           if (browser) {
             browser.remove(); // don't leak this

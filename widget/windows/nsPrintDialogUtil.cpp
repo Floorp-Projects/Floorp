@@ -152,7 +152,7 @@ static void GetDefaultPrinterNameFromGlobalPrinters(nsAString& aPrinterName) {
 
 //------------------------------------------------------------------
 // Displays the native Print Dialog
-static nsresult ShowNativePrintDialog(HWND aHWnd, bool aHaveSelection,
+static nsresult ShowNativePrintDialog(HWND aHWnd,
                                       nsIPrintSettings* aPrintSettings) {
   // NS_ENSURE_ARG_POINTER(aHWnd);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
@@ -220,7 +220,7 @@ static nsresult ShowNativePrintDialog(HWND aHWnd, bool aHaveSelection,
                   PD_COLLATE | PD_NOCURRENTPAGE;
 
   // If there is a current selection then enable the "Selection" radio button
-  if (!aHaveSelection) {
+  if (!aPrintSettings->GetIsPrintSelectionRBEnabled()) {
     prntdlg.Flags |= PD_NOSELECTION;
   }
 
@@ -363,9 +363,8 @@ static nsresult ShowNativePrintDialog(HWND aHWnd, bool aHaveSelection,
 //----------------------------------------------------------------------------------
 //-- Show Print Dialog
 //----------------------------------------------------------------------------------
-nsresult NativeShowPrintDialog(HWND aHWnd, bool aHaveSelection,
-                               nsIPrintSettings* aPrintSettings) {
-  nsresult rv = ShowNativePrintDialog(aHWnd, aHaveSelection, aPrintSettings);
+nsresult NativeShowPrintDialog(HWND aHWnd, nsIPrintSettings* aPrintSettings) {
+  nsresult rv = ShowNativePrintDialog(aHWnd, aPrintSettings);
   if (aHWnd) {
     ::DestroyWindow(aHWnd);
   }

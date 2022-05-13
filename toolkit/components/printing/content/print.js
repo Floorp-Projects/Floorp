@@ -298,6 +298,9 @@ var PrintEventHandler = {
         this.settings.printerName == PrintUtils.SAVE_TO_PDF_PRINTER
           ? PrintUtils.getPrintSettings(this.viewSettings.defaultSystemPrinter)
           : this.settings.clone();
+      // Update the settings print options on whether there is a selection since
+      // getPrintSettings won't have the correct value.
+      settings.isPrintSelectionRBEnabled = this.hasSelection;
       // We set the title so that if the user chooses save-to-PDF from the
       // system dialog the title will be used to generate the prepopulated
       // filename in the file picker.
@@ -310,12 +313,7 @@ var PrintEventHandler = {
           "printing.dialog_opened_via_preview_tm",
           1
         );
-        await this._showPrintDialog(
-          PRINTDIALOGSVC,
-          window,
-          this.hasSelection,
-          settings
-        );
+        await this._showPrintDialog(PRINTDIALOGSVC, window, settings);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_ABORT) {
           Services.telemetry.scalarAdd(
@@ -846,6 +844,9 @@ var PrintEventHandler = {
       this.updatePrintPreview();
     }
 
+    // Update the settings print options on whether there is a selection.
+    settings.isPrintSelectionRBEnabled = this.hasSelection;
+
     document.dispatchEvent(
       new CustomEvent("page-count", {
         detail: { sheetCount, totalPages: totalPageCount },
@@ -1006,17 +1007,8 @@ var PrintEventHandler = {
    * testing purposes. The showPrintDialog() call blocks until the dialog is
    * closed, so we mark it as async to allow us to reject from the test.
    */
-  async _showPrintDialog(
-    aPrintDialogService,
-    aWindow,
-    aHaveSelection,
-    aSettings
-  ) {
-    return aPrintDialogService.showPrintDialog(
-      aWindow,
-      aHaveSelection,
-      aSettings
-    );
+  async _showPrintDialog(aPrintDialogService, aWindow, aSettings) {
+    return aPrintDialogService.showPrintDialog(aWindow, aSettings);
   },
 };
 

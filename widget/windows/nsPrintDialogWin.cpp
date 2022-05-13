@@ -63,13 +63,12 @@ nsPrintDialogServiceWin::Init() {
 
 NS_IMETHODIMP
 nsPrintDialogServiceWin::ShowPrintDialog(mozIDOMWindowProxy* aParent,
-                                         bool aHaveSelection,
                                          nsIPrintSettings* aSettings) {
   NS_ENSURE_ARG(aParent);
   HWND hWnd = GetHWNDForDOMWindow(aParent);
   NS_ASSERTION(hWnd, "Couldn't get native window for PRint Dialog!");
 
-  return NativeShowPrintDialog(hWnd, aHaveSelection, aSettings);
+  return NativeShowPrintDialog(hWnd, aSettings);
 }
 
 NS_IMETHODIMP
