@@ -25,7 +25,6 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
-#include "test/pc/e2e/analyzer/video/id_generator.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -50,11 +49,7 @@ namespace webrtc_pc_e2e {
 // time the user registers their callback in quality decoder.
 class QualityAnalyzingVideoDecoder : public VideoDecoder {
  public:
-  // Creates analyzing decoder. |id| is unique coding entity id, that will
-  // be used to distinguish all encoders and decoders inside
-  // EncodedImageDataInjector and EncodedImageIdExtracor.
-  QualityAnalyzingVideoDecoder(int id,
-                               absl::string_view peer_name,
+  QualityAnalyzingVideoDecoder(absl::string_view peer_name,
                                std::unique_ptr<VideoDecoder> delegate,
                                EncodedImageDataExtractor* extractor,
                                VideoQualityAnalyzerInterface* analyzer);
@@ -105,7 +100,6 @@ class QualityAnalyzingVideoDecoder : public VideoDecoder {
                       absl::optional<int32_t> decode_time_ms,
                       absl::optional<uint8_t> qp);
 
-  const int id_;
   const std::string peer_name_;
   const std::string implementation_name_;
   std::unique_ptr<VideoDecoder> delegate_;
@@ -134,7 +128,6 @@ class QualityAnalyzingVideoDecoderFactory : public VideoDecoderFactory {
   QualityAnalyzingVideoDecoderFactory(
       absl::string_view peer_name,
       std::unique_ptr<VideoDecoderFactory> delegate,
-      IdGenerator<int>* id_generator,
       EncodedImageDataExtractor* extractor,
       VideoQualityAnalyzerInterface* analyzer);
   ~QualityAnalyzingVideoDecoderFactory() override;
@@ -150,7 +143,6 @@ class QualityAnalyzingVideoDecoderFactory : public VideoDecoderFactory {
  private:
   const std::string peer_name_;
   std::unique_ptr<VideoDecoderFactory> delegate_;
-  IdGenerator<int>* const id_generator_;
   EncodedImageDataExtractor* const extractor_;
   VideoQualityAnalyzerInterface* const analyzer_;
 };

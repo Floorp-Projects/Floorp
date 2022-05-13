@@ -27,11 +27,10 @@ class EncodedImageDataInjector {
   // Return encoded image with specified |id| and |discard| flag injected into
   // its payload. |discard| flag mean does analyzing decoder should discard this
   // encoded image because it belongs to unnecessary simulcast stream or spatial
-  // layer. |coding_entity_id| is unique id of decoder or encoder.
+  // layer.
   virtual EncodedImage InjectData(uint16_t id,
                                   bool discard,
-                                  const EncodedImage& source,
-                                  int coding_entity_id) = 0;
+                                  const EncodedImage& source) = 0;
 };
 
 struct EncodedImageExtractionResult {
@@ -58,9 +57,9 @@ class EncodedImageDataExtractor {
 
   // Returns encoded image id, extracted from payload and also encoded image
   // with its original payload. For concatenated spatial layers it should be the
-  // same id. |coding_entity_id| is unique id of decoder or encoder.
-  virtual EncodedImageExtractionResult ExtractData(const EncodedImage& source,
-                                                   int coding_entity_id) = 0;
+  // same id.
+  virtual EncodedImageExtractionResult ExtractData(
+      const EncodedImage& source) = 0;
 };
 
 }  // namespace webrtc_pc_e2e
