@@ -38,6 +38,9 @@ const MAX_UNSEEN_CRASHED_SUBFRAME_IDS = 10;
 // Time after which we will begin scanning for unsubmitted crash reports
 const CHECK_FOR_UNSUBMITTED_CRASH_REPORTS_DELAY_MS = 60 * 10000; // 10 minutes
 
+// This is SIGUSR1 and indicates a user-invoked crash
+const EXIT_CODE_CONTENT_CRASHED = 245;
+
 const TABCRASHED_ICON_URI = "chrome://browser/skin/tab-crashed.svg";
 
 const SUBFRAMECRASH_LEARNMORE_URI =
@@ -174,7 +177,10 @@ var TabCrashHandler = {
             "A content process crashed and MOZ_CRASHREPORTER_SHUTDOWN is " +
               "set, shutting down\n"
           );
-          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+          Services.startup.quit(
+            Ci.nsIAppStartup.eForceQuit,
+            EXIT_CODE_CONTENT_CRASHED
+          );
         }
 
         break;
