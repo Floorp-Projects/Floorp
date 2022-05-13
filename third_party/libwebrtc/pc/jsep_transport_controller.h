@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/async_dns_resolver.h"
+#include "api/async_resolver_factory.h"
 #include "api/candidate.h"
 #include "api/crypto/crypto_options.h"
 #include "api/ice_transport_factory.h"
@@ -140,11 +140,10 @@ class JsepTransportController : public sigslot::has_slots<> {
   // All the transport related methods are called on the |network_thread|
   // and destruction of the JsepTransportController must occur on the
   // |network_thread|.
-  JsepTransportController(
-      rtc::Thread* network_thread,
-      cricket::PortAllocator* port_allocator,
-      AsyncDnsResolverFactoryInterface* async_dns_resolver_factory,
-      Config config);
+  JsepTransportController(rtc::Thread* network_thread,
+                          cricket::PortAllocator* port_allocator,
+                          AsyncResolverFactory* async_resolver_factory,
+                          Config config);
   virtual ~JsepTransportController();
 
   // The main method to be called; applies a description at the transport
@@ -462,7 +461,7 @@ class JsepTransportController : public sigslot::has_slots<> {
 
   rtc::Thread* const network_thread_ = nullptr;
   cricket::PortAllocator* const port_allocator_ = nullptr;
-  AsyncDnsResolverFactoryInterface* const async_dns_resolver_factory_ = nullptr;
+  AsyncResolverFactory* const async_resolver_factory_ = nullptr;
 
   std::map<std::string, std::unique_ptr<cricket::JsepTransport>>
       jsep_transports_by_name_ RTC_GUARDED_BY(network_thread_);

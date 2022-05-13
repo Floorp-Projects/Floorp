@@ -13,7 +13,6 @@
 
 #include <string>
 
-#include "api/async_dns_resolver.h"
 #include "api/async_resolver_factory.h"
 #include "api/rtc_error.h"
 #include "api/rtc_event_log/rtc_event_log.h"
@@ -53,21 +52,11 @@ struct IceTransportInit final {
     port_allocator_ = port_allocator;
   }
 
-  AsyncDnsResolverFactoryInterface* async_dns_resolver_factory() {
-    return async_dns_resolver_factory_;
-  }
-  void set_async_dns_resolver_factory(
-      AsyncDnsResolverFactoryInterface* async_dns_resolver_factory) {
-    RTC_DCHECK(!async_resolver_factory_);
-    async_dns_resolver_factory_ = async_dns_resolver_factory;
-  }
   AsyncResolverFactory* async_resolver_factory() {
     return async_resolver_factory_;
   }
-  ABSL_DEPRECATED("bugs.webrtc.org/12598")
   void set_async_resolver_factory(
       AsyncResolverFactory* async_resolver_factory) {
-    RTC_DCHECK(!async_dns_resolver_factory_);
     async_resolver_factory_ = async_resolver_factory;
   }
 
@@ -76,8 +65,6 @@ struct IceTransportInit final {
 
  private:
   cricket::PortAllocator* port_allocator_ = nullptr;
-  AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_ = nullptr;
-  // For backwards compatibility. Only one resolver factory can be set.
   AsyncResolverFactory* async_resolver_factory_ = nullptr;
   RtcEventLog* event_log_ = nullptr;
 };
