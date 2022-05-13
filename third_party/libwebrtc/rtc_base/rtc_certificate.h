@@ -87,7 +87,7 @@ class RTC_EXPORT RTCCertificate : public RefCountInterface {
  private:
   // The SSLIdentity is the owner of the SSLCertificate. To protect our
   // GetSSLCertificate() we take ownership of |identity_|.
-  std::unique_ptr<SSLIdentity> identity_;
+  const std::unique_ptr<SSLIdentity> identity_;
 };
 
 }  // namespace rtc
