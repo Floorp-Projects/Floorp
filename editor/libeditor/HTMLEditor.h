@@ -2970,14 +2970,10 @@ class HTMLEditor final : public EditorBase,
      * aCellElement.
      *
      * @param aCellElement      An <td> or <th> element.
-     * @param aRv               Returns error if layout information is not
-     *                          available or given element is not a table cell.
      */
-    MOZ_CAN_RUN_SCRIPT CellIndexes(Element& aCellElement, PresShell* aPresShell,
-                                   ErrorResult& aRv)
+    MOZ_CAN_RUN_SCRIPT CellIndexes(Element& aCellElement, PresShell* aPresShell)
         : mRow(-1), mColumn(-1) {
-      MOZ_ASSERT(!aRv.Failed());
-      Update(aCellElement, aPresShell, aRv);
+      Update(aCellElement, aPresShell);
     }
 
     /**
@@ -2985,8 +2981,8 @@ class HTMLEditor final : public EditorBase,
      *
      * @param                   See above.
      */
-    MOZ_CAN_RUN_SCRIPT void Update(Element& aCellElement, PresShell* aPresShell,
-                                   ErrorResult& aRv);
+    MOZ_CAN_RUN_SCRIPT void Update(Element& aCellElement,
+                                   PresShell* aPresShell);
 
     /**
      * This constructor initializes mRowIndex and mColumnIndex with indexes of
@@ -2994,14 +2990,11 @@ class HTMLEditor final : public EditorBase,
      *
      * @param aHTMLEditor       The editor which creates the instance.
      * @param aSelection        The Selection for the editor.
-     * @param aRv               Returns error if there is no cell element
-     *                          which contains anchor of Selection, or layout
-     *                          information is not available.
      */
     MOZ_CAN_RUN_SCRIPT CellIndexes(HTMLEditor& aHTMLEditor,
-                                   Selection& aSelection, ErrorResult& aRv)
+                                   Selection& aSelection)
         : mRow(-1), mColumn(-1) {
-      Update(aHTMLEditor, aSelection, aRv);
+      Update(aHTMLEditor, aSelection);
     }
 
     /**
@@ -3011,7 +3004,7 @@ class HTMLEditor final : public EditorBase,
      * @param                   See above.
      */
     MOZ_CAN_RUN_SCRIPT void Update(HTMLEditor& aHTMLEditor,
-                                   Selection& aSelection, ErrorResult& aRv);
+                                   Selection& aSelection);
 
     bool operator==(const CellIndexes& aOther) const {
       return mRow == aOther.mRow && mColumn == aOther.mColumn;
@@ -3019,6 +3012,8 @@ class HTMLEditor final : public EditorBase,
     bool operator!=(const CellIndexes& aOther) const {
       return mRow != aOther.mRow || mColumn != aOther.mColumn;
     }
+
+    [[nodiscard]] bool isErr() const { return mRow < 0 || mColumn < 0; }
 
    private:
     CellIndexes() : mRow(-1), mColumn(-1) {}
@@ -3061,13 +3056,13 @@ class HTMLEditor final : public EditorBase,
      * both row and column index to specify a cell element.
      */
     CellData(HTMLEditor& aHTMLEditor, Element& aTableElement, int32_t aRowIndex,
-             int32_t aColumnIndex, ErrorResult& aRv) {
-      Update(aHTMLEditor, aTableElement, aRowIndex, aColumnIndex, aRv);
+             int32_t aColumnIndex) {
+      Update(aHTMLEditor, aTableElement, aRowIndex, aColumnIndex);
     }
 
     CellData(HTMLEditor& aHTMLEditor, Element& aTableElement,
-             const CellIndexes& aIndexes, ErrorResult& aRv) {
-      Update(aHTMLEditor, aTableElement, aIndexes, aRv);
+             const CellIndexes& aIndexes) {
+      Update(aHTMLEditor, aTableElement, aIndexes);
     }
 
     /**
@@ -3075,39 +3070,45 @@ class HTMLEditor final : public EditorBase,
      * both row and column index to specify a cell element.
      */
     void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
-                int32_t aRowIndex, int32_t aColumnIndex, ErrorResult& aRv) {
+                int32_t aRowIndex, int32_t aColumnIndex) {
       mCurrent.mRow = aRowIndex;
       mCurrent.mColumn = aColumnIndex;
-      Update(aHTMLEditor, aTableElement, aRv);
+      Update(aHTMLEditor, aTableElement);
     }
 
     void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
-                const CellIndexes& aIndexes, ErrorResult& aRv) {
+                const CellIndexes& aIndexes) {
       mCurrent = aIndexes;
-      Update(aHTMLEditor, aTableElement, aRv);
+      Update(aHTMLEditor, aTableElement);
     }
 
-    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement,
-                ErrorResult& aRv);
+    void Update(HTMLEditor& aHTMLEditor, Element& aTableElement);
+
+    /**
+     * Returns true if fails to compute current index or first index of the
+     * cell.  Note that this returns true even if the cell is not found due to
+     * no corresponding frame at current index.
+     */
+    [[nodiscard]] bool isErr() const { return mFirst.isErr(); }
 
     /**
      * FailedOrNotFound() returns true if this failed to initialize/update
      * or succeeded but found no cell element.
      */
-    bool FailedOrNotFound() const { return !mElement; }
+    [[nodiscard]] bool FailedOrNotFound() const { return isErr() || !mElement; }
 
     /**
      * IsSpannedFromOtherRowOrColumn(), IsSpannedFromOtherColumn and
      * IsSpannedFromOtherRow() return true if there is no cell element
      * at the index because of spanning from other row and/or column.
      */
-    bool IsSpannedFromOtherRowOrColumn() const {
+    [[nodiscard]] bool IsSpannedFromOtherRowOrColumn() const {
       return mElement && mCurrent != mFirst;
     }
-    bool IsSpannedFromOtherColumn() const {
+    [[nodiscard]] bool IsSpannedFromOtherColumn() const {
       return mElement && mCurrent.mColumn != mFirst.mColumn;
     }
-    bool IsSpannedFromOtherRow() const {
+    [[nodiscard]] bool IsSpannedFromOtherRow() const {
       return mElement && mCurrent.mRow != mFirst.mRow;
     }
 
@@ -3116,13 +3117,13 @@ class HTMLEditor final : public EditorBase,
      * next cell.  Note that this does not check whether there is next
      * cell or not actually.
      */
-    int32_t NextColumnIndex() const {
+    [[nodiscard]] int32_t NextColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn + mEffectiveColSpan;
     }
-    int32_t NextRowIndex() const {
+    [[nodiscard]] int32_t NextRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3133,13 +3134,13 @@ class HTMLEditor final : public EditorBase,
      * LastColumnIndex() and LastRowIndex() return column/row index of
      * column/row which is spanned by the cell.
      */
-    int32_t LastColumnIndex() const {
+    [[nodiscard]] int32_t LastColumnIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return NextColumnIndex() - 1;
     }
-    int32_t LastRowIndex() const {
+    [[nodiscard]] int32_t LastRowIndex() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3152,13 +3153,13 @@ class HTMLEditor final : public EditorBase,
      * Otherwise, i.e., current point is not spanned form other column/row,
      * returns 0.
      */
-    int32_t NumberOfPrecedingColmuns() const {
+    [[nodiscard]] int32_t NumberOfPrecedingColmuns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mCurrent.mColumn - mFirst.mColumn;
     }
-    int32_t NumberOfPrecedingRows() const {
+    [[nodiscard]] int32_t NumberOfPrecedingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3170,13 +3171,13 @@ class HTMLEditor final : public EditorBase,
      * number of remaining columns/rows if the cell spans to other
      * column/row.
      */
-    int32_t NumberOfFollowingColumns() const {
+    [[nodiscard]] int32_t NumberOfFollowingColumns() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
       return mEffectiveColSpan - 1;
     }
-    int32_t NumberOfFollowingRows() const {
+    [[nodiscard]] int32_t NumberOfFollowingRows() const {
       if (NS_WARN_IF(FailedOrNotFound())) {
         return -1;
       }
@@ -3192,6 +3193,8 @@ class HTMLEditor final : public EditorBase,
     int32_t mRowCount;
     int32_t mColumnCount;
 
+    TableSize() = delete;
+
     /**
      * @param aHTMLEditor               The editor which creates the instance.
      * @param aTableOrElementInTable    If a <table> element, computes number
@@ -3201,25 +3204,15 @@ class HTMLEditor final : public EditorBase,
      *                                  of nearest ancestor <table> element.
      *                                  Otherwise, i.e., non-<table> element
      *                                  not in <table>, returns error.
-     * @param aRv                       Returns error if the element is not
-     *                                  in <table> or layout information is
-     *                                  not available.
      */
-    TableSize(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
-              ErrorResult& aRv)
-        : mRowCount(-1), mColumnCount(-1) {
-      MOZ_ASSERT(!aRv.Failed());
-      Update(aHTMLEditor, aTableOrElementInTable, aRv);
-    }
+    [[nodiscard]] static Result<TableSize, nsresult> Create(
+        HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable);
 
-    /**
-     * Update mRowCount and mColumnCount for aTableOrElementInTable.
-     * See above for the detail.
-     */
-    void Update(HTMLEditor& aHTMLEditor, Element& aTableOrElementInTable,
-                ErrorResult& aRv);
+    [[nodiscard]] bool IsEmpty() const { return !mRowCount || !mColumnCount; }
 
-    bool IsEmpty() const { return !mRowCount || !mColumnCount; }
+   private:
+    TableSize(int32_t aRowCount, int32_t aColumCount)
+        : mRowCount(aRowCount), mColumnCount(aColumCount) {}
   };
 
   /**
