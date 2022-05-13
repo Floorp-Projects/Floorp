@@ -333,6 +333,19 @@ nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
   return inst->QueryInterface(iid, result);
 }
 
+void nsMIMEInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                             uint32_t* aSizeUsed,
+                                             uint32_t* aPipes,
+                                             uint32_t* aTransferables) {
+  if (nsCOMPtr<nsIIPCSerializableInputStream> serializable =
+          do_QueryInterface(mStream)) {
+    InputStreamHelper::SerializedComplexity(mStream, aMaxSize, aSizeUsed,
+                                            aPipes, aTransferables);
+  } else {
+    *aPipes = 1;
+  }
+}
+
 void nsMIMEInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
     bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,

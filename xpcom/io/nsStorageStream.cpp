@@ -574,6 +574,21 @@ nsresult nsStorageInputStream::Seek(uint32_t aPosition) {
   return NS_OK;
 }
 
+void nsStorageInputStream::SerializedComplexity(uint32_t aMaxSize,
+                                                uint32_t* aSizeUsed,
+                                                uint32_t* aPipes,
+                                                uint32_t* aTransferables) {
+  uint64_t remaining = 0;
+  mozilla::DebugOnly<nsresult> rv = Available(&remaining);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  if (remaining >= aMaxSize) {
+    *aPipes = 1;
+  } else {
+    *aSizeUsed = remaining;
+  }
+}
+
 void nsStorageInputStream::Serialize(
     InputStreamParams& aParams, FileDescriptorArray&, bool aDelayedStart,
     uint32_t aMaxSize, uint32_t* aSizeUsed,

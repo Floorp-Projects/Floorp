@@ -246,6 +246,14 @@ InputStreamLengthWrapper::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
 // nsIIPCSerializableInputStream
 
+void InputStreamLengthWrapper::SerializedComplexity(uint32_t aMaxSize,
+                                                    uint32_t* aSizeUsed,
+                                                    uint32_t* aPipes,
+                                                    uint32_t* aTransferables) {
+  InputStreamHelper::SerializedComplexity(mInputStream, aMaxSize, aSizeUsed,
+                                          aPipes, aTransferables);
+}
+
 void InputStreamLengthWrapper::Serialize(
     mozilla::ipc::InputStreamParams& aParams,
     FileDescriptorArray& aFileDescriptors, bool aDelayedStart,
