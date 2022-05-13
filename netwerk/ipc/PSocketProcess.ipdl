@@ -16,7 +16,6 @@ include protocol PAltSvcTransaction;
 include protocol PTRRService;
 include protocol PProxyConfigLookup;
 include protocol PNativeDNSResolverOverride;
-include protocol PRemoteLazyInputStream;
 include protocol PProxyAutoConfig;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -101,7 +100,6 @@ sync protocol PSocketProcess
   manages PTRRService;
   manages PProxyConfigLookup;
   manages PNativeDNSResolverOverride;
-  manages PRemoteLazyInputStream;
 
 parent:
   async InitCrashReporter(NativeThreadId threadId);
@@ -190,8 +188,6 @@ child:
                     nsCString[] aDNSSuffixList);
   async PNativeDNSResolverOverride();
   async NotifyObserver(nsCString aTopic, nsString aData);
-
-  async PRemoteLazyInputStream(nsID aID, uint64_t aSize);
 
   async GetSocketData()
     returns (SocketDataArgs data);

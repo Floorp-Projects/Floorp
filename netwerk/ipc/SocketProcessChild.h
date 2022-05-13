@@ -124,9 +124,6 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvNotifyObserver(const nsCString& aTopic,
                                              const nsString& aData);
 
-  virtual already_AddRefed<PRemoteLazyInputStreamChild>
-  AllocPRemoteLazyInputStreamChild(const nsID& aID, const uint64_t& aSize);
-
   mozilla::ipc::IPCResult RecvGetSocketData(GetSocketDataResolver&& aResolve);
   mozilla::ipc::IPCResult RecvGetDNSCacheEntries(
       GetDNSCacheEntriesResolver&& aResolve);

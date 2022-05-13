@@ -360,16 +360,6 @@ void SocketProcessParent::Destroy(UniquePtr<SocketProcessParent>&& aParent) {
       new DeferredDeleteSocketProcessParent(std::move(aParent)));
 }
 
-already_AddRefed<PRemoteLazyInputStreamParent>
-SocketProcessParent::AllocPRemoteLazyInputStreamParent(const nsID& aID,
-                                                       const uint64_t& aSize) {
-  // There is nothing to construct here, so we do not implement
-  // RecvPRemoteLazyInputStreamConstructor.
-  RefPtr<RemoteLazyInputStreamParent> actor =
-      RemoteLazyInputStreamParent::Create(aID, aSize, this);
-  return actor.forget();
-}
-
 mozilla::ipc::IPCResult SocketProcessParent::RecvODoHServiceActivated(
     const bool& aActivated) {
   nsCOMPtr<nsIObserverService> observerService =

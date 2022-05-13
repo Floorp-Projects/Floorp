@@ -13,5 +13,17 @@ interface nsIInputStream;
 [scriptable, builtinclass, uuid(4125585f-b0c2-4964-a83c-4b0d99f26d49)]
 interface mozIRemoteLazyInputStream : nsISupports
 {
-  [notxpcom, noscript] nsIInputStream GetInternalStream();
+  /**
+   * Attempts to take the internal stream out of this mozIRemoteLazyInputStream.
+   * Throws NS_BASE_STREAM_WOULD_BLOCK if the stream isn't available yet, and
+   * NS_BASE_STREAM_CLOSED if it was already closed.
+   */
+  [noscript] nsIInputStream TakeInternalStream();
+
+  /**
+   * If this RemoteLazyInputStream is actively backed by an actor, get the
+   * underlying actor's ID. Will throw if the underlying actor is no longer
+   * available.
+   */
+  [noscript] readonly attribute nsIDRef internalStreamID;
 };
