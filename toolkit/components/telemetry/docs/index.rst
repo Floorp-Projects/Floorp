@@ -17,7 +17,7 @@ This means, client-side the main building blocks are:
 * assembling :doc:`concepts/pings` with the general information and the data payload
 * sending them to the server and local ping retention
 
-There are also some noteable special cases:
+There are also some notable special cases:
 
 1. `Firefox on Glean (FOG) <../glean/index.html>`__ a wrapper around Glean for Firefox Desktop.
 2. `GeckoView Streaming Telemetry <../internals/geckoview-streaming.html>`__ - gecko uses Desktop Telemetry for recording data, but on Android (Fenix) Glean is used for sending the data. GeckoView provides the necessary adapter to get the data from Desktop Telemetry to Glean.
