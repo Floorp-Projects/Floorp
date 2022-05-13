@@ -214,4 +214,3 @@ function reallyHandleRequest(request, response) {
 
   response.write("</html>");
 }
-
