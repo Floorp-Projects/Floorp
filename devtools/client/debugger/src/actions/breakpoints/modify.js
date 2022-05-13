@@ -6,14 +6,11 @@ import { createBreakpoint } from "../../client/firefox/create";
 import {
   makeBreakpointLocation,
   makeBreakpointId,
-  getASTLocation,
 } from "../../utils/breakpoint";
-
 import {
   getBreakpoint,
   getBreakpointPositionsForLocation,
   getFirstBreakpointPosition,
-  getSymbols,
   getSource,
   getSourceContent,
   getBreakpointsList,
@@ -35,7 +32,7 @@ import { validateNavigateContext } from "../../utils/context";
 // and keep them in sync with the breakpoints installed on server threads. These
 // are collected here to make it easier to preserve the following invariant:
 //
-// Breakpoints are included in reducer state iff they are disabled or requests
+// Breakpoints are included in reducer state if they are disabled or requests
 // have been dispatched to set them in all server threads.
 //
 // To maintain this property, updates to the reducer and installed breakpoints
@@ -118,6 +115,8 @@ export function addBreakpoint(
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
       : getFirstBreakpointPosition(getState(), initialLocation);
 
+    // No position is found if the `initialLocation` is on a non-breakable line or
+    // the line no longer exists.
     if (!position) {
       return;
     }
@@ -130,9 +129,6 @@ export function addBreakpoint(
     if (!source || !generatedSource) {
       return;
     }
-
-    const symbols = getSymbols(getState(), source);
-    const astLocation = getASTLocation(source, symbols, location);
 
     const originalContent = getSourceContent(getState(), source.id);
     const originalText = getTextAtPosition(
@@ -155,7 +151,6 @@ export function addBreakpoint(
       disabled,
       options,
       location,
-      astLocation,
       generatedLocation,
       text,
       originalText,

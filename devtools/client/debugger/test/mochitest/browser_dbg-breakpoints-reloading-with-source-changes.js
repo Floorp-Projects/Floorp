@@ -4,15 +4,7 @@
 
 // This tests breakpoints resyncing when source content changes
 // after reload.
-// IMPORTANT NOTE: This test currently test scenarios with breakpoint shifting
-// feature enabled and disabled. The breakpoint shifting feature is broken and
-// causes failures for the expected behaviours. This feature is going to be
-// removed in which case the correct behaviours should begin to pass. To see the
-// failures with breakpoints shifting make flag IS_BREAKPOINT_SHIFTING_ENABLED = false
-
 "use strict";
-
-const IS_BREAKPOINT_SHIFTING_ENABLED = true;
 
 const httpServer = createTestHTTPServer();
 httpServer.registerContentType("html", "text/html");
@@ -100,10 +92,10 @@ add_task(async function testBreakpointInFunctionRelocation() {
   );
   assertTextContentOnLine(dbg, 3, 'return prefix + "bar";');
 
-  info("Check that only one breakpoint is set");
+  info("Check that only one breakpoint is set in the reducer");
   is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
 
-  info("Check that only one breakpoint exist on the server");
+  info("Check that only one breakpoint is set on the server");
   is(
     dbg.client.getServerBreakpointsList().length,
     1,
@@ -121,20 +113,13 @@ add_task(async function testBreakpointInFunctionRelocation() {
   info("Assert that the breakpoint pauses on line 3");
   assertPausedAtSourceAndLine(dbg, source.id, 3);
 
-  if (IS_BREAKPOINT_SHIFTING_ENABLED) {
-    // This is one of the bugs we see, the debugger pauses
-    // on line 3 while the breakpoint has move to line 8
-    info("Assert that the breakpoint is visible on line 8");
-    await assertBreakpoint(dbg, 8);
-  } else {
-    info("Assert that the breakpoint is visible on line 3");
-    await assertBreakpoint(dbg, 3);
-  }
+  info("Assert that the breakpoint is visible on line 3");
+  await assertBreakpoint(dbg, 3);
 
   info("Assert the text content on line 3 to make sure we are paused in foo()");
   assertTextContentOnLine(dbg, 3, 'return prefix + "foo";');
 
-  info("Check that only one breakpoint currently exists");
+  info("Check that only one breakpoint currently exists in the reducer");
   is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
 
   info("Check that only one breakpoint exist on the server");
@@ -152,35 +137,22 @@ add_task(async function testBreakpointInFunctionRelocation() {
   await reload(dbg);
   await waitForSelectedSource(dbg, "script.js");
 
-  if (IS_BREAKPOINT_SHIFTING_ENABLED) {
-    // Another bug here is that this should be paused as the
-    // breakpoint shifted to line 7 which is a breakble line
-    assertNotPaused(dbg);
-
-    info("Assert that the breakpoint is visible on line 7");
-    await assertBreakpoint(dbg, 7);
-  } else {
-    assertNotPaused(dbg);
-
-    info(
-      "Assert that the breakpoint is still visible on line 3 which is a non-breakable line"
-    );
-    await assertBreakpoint(dbg, 3);
-  }
+  await assertNotPaused(dbg);
 
   info(
-    "Assert the text content on line 3 to make sure the breakpoint is set line 3 of the comment"
+    "Assert that the breakpoint is not visible on line 3 which is a non-breakable line"
   );
-  assertTextContentOnLine(dbg, 3, "// down, making sure the breakpoint is on");
+  await assertNoBreakpoint(dbg, 3);
 
-  info("Check that only one breakpoint still exists");
-  is(dbg.selectors.getBreakpointCount(), 1, "Only one breakpoint exists");
+  info("Check that no breakpoint exists in the reducer");
+  is(dbg.selectors.getBreakpointCount(), 0, "Breakpoint has been removed");
 
-  info("Check that one breakpoint exist on the server");
+  // See comment on line 175
+  info("Check that one breakpoint exists on the server");
   is(
     dbg.client.getServerBreakpointsList().length,
     1,
-    "One breakpoint exists on the server"
+    "Breakpoint has been removed on the server"
   );
 
   info(
@@ -197,7 +169,7 @@ add_task(async function testBreakpointInFunctionRelocation() {
   info("Assert that the source content is one comment line");
   assertTextContentOnLine(dbg, 1, "// one line comment");
 
-  info("Check that the breakpoint has been removed");
+  info("Check that no breakpoint still exists in the reducer");
   is(dbg.selectors.getBreakpointCount(), 0, "No breakpoint exists");
 
   // Breakpoints do not get removed in this situation, to support breakpoints in
