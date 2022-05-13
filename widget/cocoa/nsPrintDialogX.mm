@@ -33,7 +33,7 @@ NS_IMETHODIMP
 nsPrintDialogServiceX::Init() { return NS_OK; }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) {
+nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, nsIPrintSettings* aSettings) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aSettings, "aSettings must not be null");
@@ -130,7 +130,8 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aNSSettings) {
+nsPrintDialogServiceX::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
+                                           nsIPrintSettings* aNSSettings) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aParent, "aParent must not be null");
