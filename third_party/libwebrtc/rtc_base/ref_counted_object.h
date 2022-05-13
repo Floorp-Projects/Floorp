@@ -80,14 +80,7 @@ class FinalRefCountedObject final : public T {
  private:
   ~FinalRefCountedObject() = default;
 
-  // gcc v7.1 requires default contructors for members of
-  // `FinalRefCountedObject` to be able to use inherited constructors.
-  // TODO(danilchap): Replace with simpler braced initialization when
-  // bot support for that version of gcc is dropped.
-  class ZeroBasedRefCounter : public webrtc::webrtc_impl::RefCounter {
-   public:
-    ZeroBasedRefCounter() : RefCounter(0) {}
-  } mutable ref_count_;
+  mutable webrtc::webrtc_impl::RefCounter ref_count_{0};
 };
 
 }  // namespace rtc
