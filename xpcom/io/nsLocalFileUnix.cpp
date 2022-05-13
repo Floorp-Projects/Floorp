@@ -560,10 +560,9 @@ nsLocalFile::AppendNative(const nsACString& aFragment) {
     return NS_OK;
   }
 
-  // only one component of path can be appended and cannot append ".."
+  // only one component of path can be appended
   nsACString::const_iterator begin, end;
-  if (aFragment.EqualsASCII("..") ||
-      FindCharInReadable('/', aFragment.BeginReading(begin),
+  if (FindCharInReadable('/', aFragment.BeginReading(begin),
                          aFragment.EndReading(end))) {
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
   }
@@ -577,33 +576,9 @@ nsLocalFile::AppendRelativeNativePath(const nsACString& aFragment) {
     return NS_OK;
   }
 
-  // No leading '/' and cannot be ".."
-  if (aFragment.First() == '/' || aFragment.EqualsASCII("..")) {
+  // No leading '/'
+  if (aFragment.First() == '/') {
     return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-  }
-
-  if (aFragment.Contains('/')) {
-    // can't contain .. as a path component. Ensure that the valid components
-    // "foo..foo", "..foo", and "foo.." are not falsely detected,
-    // but the invalid paths "../", "foo/..", "foo/../foo",
-    // "../foo", etc are.
-    constexpr auto doubleDot = "/.."_ns;
-    nsACString::const_iterator start, end, offset;
-    aFragment.BeginReading(start);
-    aFragment.EndReading(end);
-    offset = end;
-    while (FindInReadable(doubleDot, start, offset)) {
-      if (offset == end || *offset == '/') {
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-      }
-      start = offset;
-      offset = end;
-    }
-
-    // catches the remaining cases of prefixes
-    if (StringBeginsWith(aFragment, "../"_ns)) {
-      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
   }
 
   if (!mPath.EqualsLiteral("/")) {
