@@ -1779,7 +1779,7 @@ bool nsIFrame::HasOpacityInternal(float aThreshold,
                                   EffectSet* aEffectSet) const {
   MOZ_ASSERT(0.0 <= aThreshold && aThreshold <= 1.0, "Invalid argument");
   if (aStyleEffects->mOpacity < aThreshold ||
-      (aStyleDisplay->mWillChange.bits & StyleWillChangeBits::OPACITY)) {
+      aStyleDisplay->mWillChange.bits & StyleWillChangeBits::OPACITY) {
     return true;
   }
 
@@ -2651,32 +2651,38 @@ inline static bool IsSVGContentWithCSSClip(const nsIFrame* aFrame) {
                                                   nsGkAtoms::foreignObject);
 }
 
-bool nsIFrame::FormsBackdropRoot(const nsStyleDisplay* aStyleDisplay,
-                                 const nsStyleEffects* aStyleEffects,
-                                 const nsStyleSVGReset* aStyleSVGReset) {
+bool nsIFrame::FormsBackdropRoot() const {
   // Check if this is a root frame.
   if (!GetParent()) {
     return true;
   }
 
+  const auto& style = *Style();
+  const auto& effects = *style.StyleEffects();
   // Check for filter effects.
-  if (aStyleEffects->HasFilters() || aStyleEffects->HasBackdropFilters() ||
-      aStyleEffects->HasMixBlendMode()) {
+  if (!style.IsRootElementStyle()) {
+    if (effects.HasFilters() || effects.HasBackdropFilters()) {
+      return true;
+    }
+  }
+
+  if (effects.HasMixBlendMode()) {
     return true;
   }
 
   // Check for opacity.
-  if (HasOpacity(aStyleDisplay, aStyleEffects)) {
+  const auto& disp = *style.StyleDisplay();
+  if (HasOpacity(&disp, &effects)) {
     return true;
   }
 
   // Check for mask or clip path.
-  if (aStyleSVGReset->HasMask() || aStyleSVGReset->HasClipPath()) {
+  const auto& svgReset = *style.StyleSVGReset();
+  if (svgReset.HasMask() || svgReset.HasClipPath()) {
     return true;
   }
 
   // TODO(cbrewster): Check will-change attributes
-
   return false;
 }
 
@@ -3146,8 +3152,9 @@ void nsIFrame::BuildDisplayListForStackingContext(
     return;
   }
 
-  const nsStyleDisplay* disp = StyleDisplay();
-  const nsStyleEffects* effects = StyleEffects();
+  const auto& style = *Style();
+  const nsStyleDisplay* disp = style.StyleDisplay();
+  const nsStyleEffects* effects = style.StyleEffects();
   EffectSet* effectSetForOpacity = EffectSet::GetEffectSetForFrame(
       this, nsCSSPropertyIDSet::OpacityProperties());
   // We can stop right away if this is a zero-opacity stacking context and
@@ -3224,10 +3231,11 @@ void nsIFrame::BuildDisplayListForStackingContext(
   AutoSaveRestoreContainsBlendMode autoRestoreBlendMode(*aBuilder);
   aBuilder->SetContainsBlendMode(false);
 
-  bool usingBackdropFilter =
-      IsVisibleForPainting() && effects->HasBackdropFilters() &&
-      nsDisplayBackdropFilters::CanCreateWebRenderCommands(aBuilder, this);
-
+  // NOTE: When changing this condition make sure to tweak nsGfxScrollFrame as
+  // well.
+  bool usingBackdropFilter = effects->HasBackdropFilters() &&
+                             IsVisibleForPainting() &&
+                             !style.IsRootElementStyle();
   if (usingBackdropFilter) {
     aBuilder->SetContainsBackdropFilter(true);
   }
@@ -3319,7 +3327,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  bool usingFilter = effects->HasFilters();
+  bool usingFilter = effects->HasFilters() && !style.IsRootElementStyle();
   bool usingMask = SVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
   bool usingSVGEffects = usingFilter || usingMask;
 
@@ -3482,8 +3490,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->Check();
     aBuilder->DisplayCaret(this, set.Outlines());
 
-    insertBackdropRoot = aBuilder->ContainsBackdropFilter() &&
-                         FormsBackdropRoot(disp, effects, StyleSVGReset());
+    insertBackdropRoot =
+        aBuilder->ContainsBackdropFilter() && FormsBackdropRoot();
 
     // Blend modes are a real pain for retained display lists. We build a blend
     // container item if the built list contains any blend mode items within
@@ -3584,7 +3592,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     nsRect backdropRect =
         GetRectRelativeToSelf() + aBuilder->ToReferenceFrame(this);
     resultList.AppendNewToTop<nsDisplayBackdropFilters>(
-        aBuilder, this, &resultList, backdropRect);
+        aBuilder, this, &resultList, backdropRect, this);
     createdContainer = true;
   }
 
@@ -3606,7 +3614,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // Skip all filter effects while generating glyph mask.
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
       /* List now emptied, so add the new list to the top. */
-      resultList.AppendNewToTop<nsDisplayFilters>(aBuilder, this, &resultList);
+      resultList.AppendNewToTop<nsDisplayFilters>(aBuilder, this, &resultList,
+                                                  this);
       createdContainer = true;
     }
 
