@@ -97,6 +97,10 @@ bool nsStyleDisplay::IsFixedPosContainingBlockForNonSVGTextFrames(
   // should return FIXPOS_CB_NON_SVG for will-change.
   NS_ASSERTION(aStyle.StyleDisplay() == this, "unexpected aStyle");
 
+  if (aStyle.IsRootElementStyle()) {
+    return false;
+  }
+
   if (mWillChange.bits & mozilla::StyleWillChangeBits::FIXPOS_CB_NON_SVG) {
     return true;
   }

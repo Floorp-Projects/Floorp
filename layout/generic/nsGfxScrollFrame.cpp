@@ -4172,6 +4172,35 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     set.PositionedDescendants()->AppendToTop(topLayerWrapList);
   }
 
+  nsDisplayList rootResultList(aBuilder);
+  bool serializedList = false;
+  auto SerializeList = [&] {
+    if (!serializedList) {
+      serializedList = true;
+      set.SerializeWithCorrectZOrder(&rootResultList, mOuter->GetContent());
+    }
+  };
+  if (mIsRoot) {
+    if (nsIFrame* rootStyleFrame = GetFrameForStyle()) {
+      if (rootStyleFrame->StyleEffects()->HasFilters()) {
+        SerializeList();
+        rootResultList.AppendNewToTop<nsDisplayFilters>(
+            aBuilder, mOuter, &rootResultList, rootStyleFrame);
+      }
+
+      if (rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
+          rootStyleFrame->IsVisibleForPainting()) {
+        SerializeList();
+        aBuilder->SetContainsBackdropFilter(true);
+        DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+        nsRect backdropRect = mOuter->GetRectRelativeToSelf() +
+                              aBuilder->ToReferenceFrame(mOuter);
+        rootResultList.AppendNewToTop<nsDisplayBackdropFilters>(
+            aBuilder, mOuter, &rootResultList, backdropRect, rootStyleFrame);
+      }
+    }
+  }
+
   if (willBuildAsyncZoomContainer) {
     MOZ_ASSERT(mIsRoot);
 
@@ -4181,9 +4210,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // it. The children have the layout viewport clip applied to them (above).
     // Effectively we are double clipping to the viewport, at potentially
     // different async scales.
-
-    nsDisplayList resultList(aBuilder);
-    set.SerializeWithCorrectZOrder(&resultList, mOuter->GetContent());
+    SerializeList();
 
     if (blendCapture.CaptureContainsBlendMode()) {
       // The async zoom contents contain a mix-blend mode, so let's wrap all
@@ -4193,9 +4220,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // WebRender.
       nsDisplayItem* blendContainer =
           nsDisplayBlendContainer::CreateForMixBlendMode(
-              aBuilder, mOuter, &resultList,
+              aBuilder, mOuter, &rootResultList,
               aBuilder->CurrentActiveScrolledRoot());
-      resultList.AppendToTop(blendContainer);
+      rootResultList.AppendToTop(blendContainer);
 
       // Blend containers can be created or omitted during partial updates
       // depending on the dirty rect. So we basically can't do partial updates
@@ -4217,8 +4244,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       // backdrop container in the async zoom container. Otherwise the
       // backdrop-root container ends up outside the zoom container which
       // results in blend failure for WebRender.
-      resultList.AppendNewToTop<nsDisplayBackdropRootContainer>(
-          aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot());
+      rootResultList.AppendNewToTop<nsDisplayBackdropRootContainer>(
+          aBuilder, mOuter, &rootResultList,
+          aBuilder->CurrentActiveScrolledRoot());
 
       // Backdrop root containers can be created or omitted during partial
       // updates depending on the dirty rect. So we basically can't do partial
@@ -4241,9 +4269,13 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
 
-    set.Content()->AppendNewToTop<nsDisplayAsyncZoom>(
-        aBuilder, mOuter, &resultList, aBuilder->CurrentActiveScrolledRoot(),
-        viewID);
+    rootResultList.AppendNewToTop<nsDisplayAsyncZoom>(
+        aBuilder, mOuter, &rootResultList,
+        aBuilder->CurrentActiveScrolledRoot(), viewID);
+  }
+
+  if (serializedList) {
+    set.Content()->AppendToTop(&rootResultList);
   }
 
   nsDisplayListCollection scrolledContent(aBuilder);
