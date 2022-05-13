@@ -29,7 +29,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 /** @type {any} */
-const global = this;
+const global = globalThis;
 
 // This module obtains symbol tables for binaries.
 // It does so with the help of a WASM module which gets pulled in from the
