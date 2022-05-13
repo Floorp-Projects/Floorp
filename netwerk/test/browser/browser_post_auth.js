@@ -56,4 +56,7 @@ add_task(async function() {
   });
 
   BrowserTestUtils.removeTab(tab);
+
+  // Clean up any active logins we added during the test.
+  Services.obs.notifyObservers(null, "net:clear-active-logins");
 });
