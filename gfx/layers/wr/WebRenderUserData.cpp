@@ -436,6 +436,20 @@ WebRenderCanvasRendererAsync* WebRenderCanvasData::CreateCanvasRenderer() {
   return mCanvasRenderer.get();
 }
 
+bool WebRenderCanvasData::SetCanvasRenderer(CanvasRenderer* aCanvasRenderer) {
+  if (!aCanvasRenderer || !aCanvasRenderer->AsWebRenderCanvasRendererAsync()) {
+    return false;
+  }
+
+  auto* renderer = aCanvasRenderer->AsWebRenderCanvasRendererAsync();
+  if (mManager != renderer->GetRenderRootStateManager()) {
+    return false;
+  }
+
+  mCanvasRenderer = renderer;
+  return true;
+}
+
 void WebRenderCanvasData::SetImageContainer(ImageContainer* aImageContainer) {
   mContainer = aImageContainer;
 }

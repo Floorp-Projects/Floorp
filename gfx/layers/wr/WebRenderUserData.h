@@ -40,6 +40,7 @@ class SourceSurface;
 namespace layers {
 
 class BasicLayerManager;
+class CanvasRenderer;
 class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
@@ -322,6 +323,7 @@ class WebRenderCanvasData : public WebRenderUserData {
   void ClearCanvasRenderer();
   WebRenderCanvasRendererAsync* GetCanvasRenderer();
   WebRenderCanvasRendererAsync* CreateCanvasRenderer();
+  bool SetCanvasRenderer(CanvasRenderer* aCanvasRenderer);
 
   void SetImageContainer(ImageContainer* aImageContainer);
   ImageContainer* GetImageContainer();
