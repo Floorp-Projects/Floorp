@@ -74,8 +74,6 @@ var Utils = {
   digestUTF8: CryptoUtils.digestUTF8,
   digestBytes: CryptoUtils.digestBytes,
   sha256: CryptoUtils.sha256,
-  makeHMACKey: CryptoUtils.makeHMACKey,
-  makeHMACHasher: CryptoUtils.makeHMACHasher,
   hkdfExpand: CryptoUtils.hkdfExpand,
   pbkdf2Generate: CryptoUtils.pbkdf2Generate,
   getHTTPMACSHA1Header: CryptoUtils.getHTTPMACSHA1Header,

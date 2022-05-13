@@ -5,7 +5,7 @@
 -->
 <html><head>
   <meta charset="utf-8">
-  <title>CSS Grid Test: abs pos static position (ancestor of grid container as abs.pos. CB)</title>
+  <title>CSS Grid Reference: abs pos static position (ancestor of grid container as abs.pos. CB)</title>
   <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151243">
   <style type="text/css">
 html,body {
@@ -20,7 +20,7 @@ separator { clear:both; display:block; height:6px; }
   grid-template: 25px 33px 7px / 30px 51px 5px;
   margin-right: 4px;
   height: 100px;
-  width: 100px;
+  width: 92px;
 }
 .wrap {
   position: relative;
@@ -40,7 +40,7 @@ abs1,abs2,abs3,abs4 {
 }
 abs1 { height:97px; top:-12px; left:-30px; background:lime; }
 abs2 { right:-18px; left:3px; background:pink; }
-abs3 { top: -20px; left:-35px; right:-26px; background:cyan; }
+abs3 { top: -20px; left:-35px; right:-18px; background:cyan; }
 abs4 { top:-6px; bottom:-53px; background:silver; }
 abs1::before { content:"1";}
 abs2::before { content:"2";}
@@ -55,9 +55,9 @@ abs4::before { content:"4";}
 .vlr { writing-mode: vertical-lr; direction:rtl; }
 .vrl { writing-mode: vertical-rl; direction:ltr; }
 
-.hr abs3 { left:-24px; right:-37px;  }
-.vl abs3, .vr abs3, .vrl abs3, .vlr abs3 { left:-30px; top:-14px; right:-49px; }
-.vr abs3, .vrl abs3 { left:-47px; right:-32px; }
+.hr abs3 { left:-16px; right:-37px;  }
+.vl abs3, .vr abs3, .vrl abs3, .vlr abs3 { left:-30px; top:-14px; right:-41px; }
+.vr abs3, .vrl abs3 { left:-39px; right:-32px; }
 .vrl abs3 { top:-25px; }
 
 .hl abs2, .hr abs2 { top:-25px; }
@@ -76,7 +76,7 @@ abs4::before { content:"4";}
 .hr abs4 { left:10px; }
 .vl abs4, .vr abs4, .vrl abs4, .vlr abs4 { top:0px; bottom:-41px; left:-25px; }
 .vr abs4, .vrl abs4 { left:68px; }
-.vrl abs4 { top:-11px; bottom:-29px; }
+.vrl abs4 { top:-11px; bottom:-30px; }
 
 
 </style>

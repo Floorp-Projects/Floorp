@@ -25,7 +25,7 @@
          return;
        }
        is(midi_access.sysexEnabled, false, "Sysex should be false");
-       output = midi_access.outputs.get(MIDITestUtils.outputInfo.id);
+       output = midi_access.outputs.get(await MIDITestUtils.outputInfo.id);
        let statePromiseRes;
        let statePromise = new Promise((res) => { statePromiseRes = res; });
        await output.open();

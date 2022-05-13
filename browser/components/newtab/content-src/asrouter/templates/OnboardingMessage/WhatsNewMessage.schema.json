@@ -89,7 +89,7 @@
       ]
     }
   },
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": ["published_date", "title", "body", "cta_url", "bucket_id"],
   "dependencies": {
     "layout": ["layout_title_content_variable"]

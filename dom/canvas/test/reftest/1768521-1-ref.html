@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="patternCanvas" width="8" height="32"></canvas>
+<br>
+<canvas id="canvas" width="32" height="32"></canvas>
+<script>
+
+const patternCanvas = document.getElementById("patternCanvas");
+const patternCtx = patternCanvas.getContext("2d");
+patternCtx.fillStyle = "green";
+patternCtx.fillRect(0, 0, patternCanvas.width, patternCanvas.height);
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+ctx.fillStyle = "green";
+ctx.fillRect(16, 16, 16, 16);
+</script>
+
+</body>
+</html>
+
