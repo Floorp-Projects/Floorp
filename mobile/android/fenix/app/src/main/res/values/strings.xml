@@ -1566,6 +1566,8 @@
     <string name="addresses_state">State</string>
     <!-- The header for the zip code of an address -->
     <string name="addresses_zip">Zip</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Country or region</string>
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Phone</string>
     <!-- The header for the email of an address -->

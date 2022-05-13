@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.search.RegionState
 import mozilla.components.concept.storage.Address
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -22,6 +23,7 @@ import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.address.interactor.AddressEditorInteractor
 import org.mozilla.fenix.settings.address.view.AddressEditorView
+import org.mozilla.fenix.settings.address.view.DEFAULT_COUNTRY
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AddressEditorViewTest {
@@ -54,27 +56,15 @@ class AddressEditorViewTest {
 
     @Test
     fun `GIVEN an existing address WHEN editor is opened THEN the form fields are correctly mapped to the address fields`() {
-        val address = Address(
-            guid = "123",
-            givenName = "Given",
-            additionalName = "Additional",
-            familyName = "Family",
-            organization = "Organization",
-            streetAddress = "Street",
-            addressLevel3 = "Suburb",
-            addressLevel2 = "City",
-            addressLevel1 = "State",
-            postalCode = "PostalCode",
-            country = "Country",
-            tel = "Telephone",
-            email = "email@mozilla.com",
-            timeCreated = 0L,
-            timeLastUsed = 1L,
-            timeLastModified = 1L,
-            timesUsed = 2L
-        )
+        val address = generateAddress()
 
-        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        val addressEditorView = spyk(
+            AddressEditorView(
+                binding = binding,
+                interactor = interactor,
+                address = address,
+            )
+        )
         addressEditorView.bind()
 
         assertEquals("PostalCode", binding.zipInput.text.toString())
@@ -90,7 +80,13 @@ class AddressEditorViewTest {
 
     @Test
     fun `GIVEN an existing address WHEN editor is opened THEN the delete address button is visible`() = runBlocking {
-        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        val addressEditorView = spyk(
+            AddressEditorView(
+                binding = binding,
+                interactor = interactor,
+                address = address,
+            )
+        )
         addressEditorView.bind()
 
         assertEquals(View.VISIBLE, binding.deleteButton.visibility)
@@ -98,11 +94,105 @@ class AddressEditorViewTest {
 
     @Test
     fun `GIVEN an existing address WHEN the delete address button is clicked THEN confirm delete dialog is shown`() = runBlocking {
-        val addressEditorView = spyk(AddressEditorView(binding, interactor, address))
+        val addressEditorView = spyk(
+            AddressEditorView(
+                binding = binding,
+                interactor = interactor,
+                address = address,
+            )
+        )
         addressEditorView.bind()
 
         binding.deleteButton.performClick()
 
         verify { addressEditorView.showConfirmDeleteAddressDialog(view.context, "123") }
     }
+
+    @Test
+    fun `GIVEN existing address WHEN country dropdown is bound THEN adapter sets country dropdown to address`() {
+        val addressEditorView = spyk(
+            AddressEditorView(
+                binding = binding,
+                interactor = interactor,
+                address = generateAddress(country = "CA"),
+            )
+        )
+        addressEditorView.bind()
+
+        assertEquals(addressEditorView.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN existing address and region not in supported countries WHEN country dropdown is bound THEN adapter sets dropdown to lower priority`() {
+        val addressEditorView = spyk(
+            AddressEditorView(
+                binding = binding,
+                interactor = interactor,
+                region = RegionState.Default,
+                address = generateAddress(country = "XX"),
+            )
+        )
+        addressEditorView.bind()
+
+        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN search region and no address WHEN country dropdown is bound THEN adapter sets country dropdown to home region`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            region = RegionState("CA", "US"),
+            address = null,
+        )
+        addressEditorView.bind()
+
+        assertEquals(addressEditorView.countries["CA"]?.displayName, binding.countryDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN search region not in supported countries WHEN country dropdown is bound THEN adapter sets dropdown to lower priority`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            region = RegionState.Default,
+            address = null,
+        )
+        addressEditorView.bind()
+
+        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+    }
+
+    @Test
+    fun `GIVEN no address or search region WHEN country dropdown is bound THEN adapter sets dropdown to default`() {
+        val addressEditorView = AddressEditorView(
+            binding = binding,
+            interactor = interactor,
+            region = null,
+            address = null,
+        )
+        addressEditorView.bind()
+
+        assertEquals(addressEditorView.countries[DEFAULT_COUNTRY]!!.displayName, binding.countryDropDown.selectedItem.toString())
+    }
+
+    private fun generateAddress(country: String = "US") = Address(
+        guid = "123",
+        givenName = "Given",
+        additionalName = "Additional",
+        familyName = "Family",
+        organization = "Organization",
+        streetAddress = "Street",
+        addressLevel3 = "Suburb",
+        addressLevel2 = "City",
+        addressLevel1 = "State",
+        postalCode = "PostalCode",
+        country = country,
+        tel = "Telephone",
+        email = "email@mozilla.com",
+        timeCreated = 0L,
+        timeLastUsed = 1L,
+        timeLastModified = 1L,
+        timesUsed = 2L
+    )
 }

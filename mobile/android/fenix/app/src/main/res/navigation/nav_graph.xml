@@ -1259,11 +1259,11 @@
             android:id="@+id/addressEditorFragment"
             android:name="org.mozilla.fenix.settings.address.AddressEditorFragment"
             android:label="@string/addresses_add_address">
-        <argument
-            android:name="address"
-            android:defaultValue="@null"
-            app:argType="mozilla.components.concept.storage.Address"
-            app:nullable="true" />
+            <argument
+                android:name="address"
+                android:defaultValue="@null"
+                app:argType="mozilla.components.concept.storage.Address"
+                app:nullable="true" />
         </fragment>
         <fragment
             android:id="@+id/addressManagementFragment"

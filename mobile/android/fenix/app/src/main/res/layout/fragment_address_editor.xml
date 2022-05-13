@@ -324,6 +324,41 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Country -->
+        <LinearLayout
+            android:id="@+id/country_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:paddingStart="3dp"
+            android:paddingEnd="0dp"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/zip_layout"
+            app:layout_constraintBottom_toTopOf="@id/phone_title">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/textPrimary"
+                android:textSize="12sp"
+                android:labelFor="@id/country_drop_down"
+                app:fontFamily="@font/metropolis_semibold"
+                android:text="@string/addresses_country" />
+
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/country_drop_down"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?attr/textPrimary" />
+
+        </LinearLayout>
+
         <!-- Phone -->
         <TextView
             android:id="@+id/phone_title"
@@ -340,7 +375,7 @@
             android:labelFor="@id/phone_input"
             app:fontFamily="@font/metropolis_semibold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/state_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/country_layout" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/phone_layout"

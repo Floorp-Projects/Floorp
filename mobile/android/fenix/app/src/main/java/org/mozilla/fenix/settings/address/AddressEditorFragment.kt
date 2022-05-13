@@ -17,6 +17,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.address.controller.DefaultAddressEditorController
 import org.mozilla.fenix.settings.address.interactor.AddressEditorInteractor
@@ -57,7 +58,8 @@ class AddressEditorFragment : SecureFragment(R.layout.fragment_address_editor) {
         val binding = FragmentAddressEditorBinding.bind(view)
         setHasOptionsMenu(true)
 
-        addressEditorView = AddressEditorView(binding, interactor, args.address)
+        val searchRegion = requireComponents.core.store.state.search.region
+        addressEditorView = AddressEditorView(binding, interactor, searchRegion, args.address)
         addressEditorView.bind()
     }
 
