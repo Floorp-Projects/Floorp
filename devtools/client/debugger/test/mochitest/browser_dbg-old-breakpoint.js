@@ -86,7 +86,6 @@ add_task(async function() {
         line: 47,
         column: 16,
       },
-      astLocation: {},
       options: {},
       disabled: false,
     },
