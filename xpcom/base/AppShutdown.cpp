@@ -58,7 +58,6 @@ const char* sPhaseObserverKeys[] = {
     "xpcom-will-shutdown",              // XPCOMWillShutdown
     "xpcom-shutdown",                   // XPCOMShutdown
     "xpcom-shutdown-threads",           // XPCOMShutdownThreads
-    nullptr,                            // XPCOMShutdownLoaders
     nullptr,                            // XPCOMShutdownFinal
     nullptr                             // CCPostLastCycleCollection
 };
