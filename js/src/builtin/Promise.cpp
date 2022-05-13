@@ -47,7 +47,7 @@ using namespace js;
 
 static double MillisecondsSinceStartup() {
   auto now = mozilla::TimeStamp::Now();
-  return (now - mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
+  return (now - mozilla::TimeStamp::FirstTimeStamp()).ToMilliseconds();
 }
 
 enum ResolutionMode { ResolveMode, RejectMode };
