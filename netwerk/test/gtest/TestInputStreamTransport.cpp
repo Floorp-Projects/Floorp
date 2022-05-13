@@ -154,6 +154,10 @@ class BlockingAsyncStream final : public nsIAsyncInputStream {
   NS_IMETHOD
   AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
             uint32_t aRequestedCount, nsIEventTarget* aEventTarget) override {
+    if (!aCallback) {
+      return NS_OK;
+    }
+
     RefPtr<BlockingAsyncStream> self = this;
     nsCOMPtr<nsIInputStreamCallback> callback = aCallback;
 

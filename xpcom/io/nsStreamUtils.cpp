@@ -318,41 +318,52 @@ class nsAStreamCopier : public nsIInputStreamCallback,
           // more source data, be sure to observe failures on output end.
           mAsyncSource->AsyncWait(this, 0, 0, nullptr);
 
-          if (mAsyncSink)
+          if (mAsyncSink) {
             mAsyncSink->AsyncWait(this, nsIAsyncOutputStream::WAIT_CLOSURE_ONLY,
                                   0, nullptr);
+          }
           break;
-        } else if (sinkCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSink) {
+        }
+        if (sinkCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSink) {
           // need to wait for more room in the sink.  while waiting for
           // more room in the sink, be sure to observer failures on the
           // input end.
           mAsyncSink->AsyncWait(this, 0, 0, nullptr);
 
-          if (mAsyncSource)
+          if (mAsyncSource) {
             mAsyncSource->AsyncWait(
                 this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, nullptr);
+          }
           break;
         }
       }
       if (copyFailed || canceled) {
+        if (mAsyncSource) {
+          // cancel any previously-registered AsyncWait callbacks to avoid leaks
+          mAsyncSource->AsyncWait(nullptr, 0, 0, nullptr);
+        }
         if (mCloseSource) {
           // close source
-          if (mAsyncSource)
+          if (mAsyncSource) {
             mAsyncSource->CloseWithStatus(canceled ? cancelStatus
                                                    : sinkCondition);
-          else {
+          } else {
             mSource->Close();
           }
         }
         mAsyncSource = nullptr;
         mSource = nullptr;
 
+        if (mAsyncSink) {
+          // cancel any previously-registered AsyncWait callbacks to avoid leaks
+          mAsyncSink->AsyncWait(nullptr, 0, 0, nullptr);
+        }
         if (mCloseSink) {
           // close sink
-          if (mAsyncSink)
+          if (mAsyncSink) {
             mAsyncSink->CloseWithStatus(canceled ? cancelStatus
                                                  : sourceCondition);
-          else {
+          } else {
             // If we have an nsISafeOutputStream, and our
             // sourceCondition and sinkCondition are not set to a
             // failure state, finish writing.
