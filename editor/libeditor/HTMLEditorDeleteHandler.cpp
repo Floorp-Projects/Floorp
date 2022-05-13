@@ -402,7 +402,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
 
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditActionResult
   FallbackToDeleteRangesWithTransaction(HTMLEditor& aHTMLEditor,
-                                        AutoRangeArray& aRangesToDelete) {
+                                        AutoRangeArray& aRangesToDelete) const {
     MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
     MOZ_ASSERT(CanFallbackToDeleteRangesWithTransaction(aRangesToDelete));
     nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
@@ -1031,7 +1031,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
 
 nsresult HTMLEditor::ComputeTargetRanges(
     nsIEditor::EDirection aDirectionAndAmount,
-    AutoRangeArray& aRangesToDelete) {
+    AutoRangeArray& aRangesToDelete) const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   Element* editingHost = GetActiveEditingHost();
