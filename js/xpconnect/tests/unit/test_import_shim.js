@@ -200,7 +200,7 @@ function testWriteProxyOps(global, expectedNames) {
 
 add_task(function test_Cu_import_not_exported_no_shim_JSM() {
   // `exports` and `global` properties for not-ESM-ified case.
-  // Not-exported non-lexical variables should be visible in `global`.
+  // Not-exported variables should be visible in `global`.
 
   const exports = {};
   const global = Components.utils.import(
@@ -210,25 +210,31 @@ add_task(function test_Cu_import_not_exported_no_shim_JSM() {
 
   Assert.equal(global.exportedVar, "exported var");
   Assert.equal(global.exportedFunction(), "exported function");
-  Assert.equal(global.exportedLet, undefined);
-  Assert.equal(global.exportedConst, undefined);
+  Assert.equal(global.exportedLet, "exported let");
+  Assert.equal(global.exportedConst, "exported const");
   Assert.equal(global.notExportedVar, "not exported var");
   Assert.equal(global.notExportedFunction(), "not exported function");
-  Assert.equal(global.notExportedLet, undefined);
-  Assert.equal(global.notExportedConst, undefined);
+  Assert.equal(global.notExportedLet, "not exported let");
+  Assert.equal(global.notExportedConst, "not exported const");
 
   const expectedNames = [
+    "EXPORTED_SYMBOLS",
     "exportedVar",
     "exportedFunction",
+    "exportedLet",
+    "exportedConst",
     "notExportedVar",
     "notExportedFunction",
+    "notExportedLet",
+    "notExportedConst",
   ];
 
   testReadProxyOps(global, expectedNames, {
-    writable: true,
+    writable: false,
     enumerable: true,
     configurable: false,
   });
+  testWriteProxyOps(global, expectedNames);
 
   Assert.equal(exports.exportedVar, "exported var");
   Assert.equal(exports.exportedFunction(), "exported function");
@@ -252,17 +258,11 @@ add_task(function test_Cu_import_not_exported_shim() {
 
   Assert.equal(global.exportedVar, "exported var");
   Assert.equal(global.exportedFunction(), "exported function");
-
-  // This is different than no-shim case.
-  // Lexical variables are visible in the shim's global.
   Assert.equal(global.exportedLet, "exported let");
   Assert.equal(global.exportedConst, "exported const");
 
   Assert.equal(global.notExportedVar, "not exported var");
   Assert.equal(global.notExportedFunction(), "not exported function");
-
-  // This is different than no-shim case.
-  // Lexical variables are visible in the shim's global.
   Assert.equal(global.notExportedLet, "not exported let");
   Assert.equal(global.notExportedConst, "not exported const");
 
@@ -276,6 +276,7 @@ add_task(function test_Cu_import_not_exported_shim() {
     "notExportedLet",
     "notExportedConst",
   ];
+
   testReadProxyOps(global, expectedNames, {
     writable: false,
     enumerable: true,
