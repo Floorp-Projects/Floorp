@@ -1957,12 +1957,6 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
       ->value()
       ->setClosedOver();
 
-  if (options().deoptimizeModuleGlobalVars) {
-    for (BindingIter bi = modulepc.varScope().bindings(pc_); bi; bi++) {
-      bi.setClosedOver();
-    }
-  }
-
   if (!CheckParseTree(cx_, alloc_, stmtList)) {
     return null();
   }

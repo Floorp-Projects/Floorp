@@ -216,16 +216,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // main thread allocation.
   bool allocateInstantiationStorage = false;
 
-  // De-optimize ES module's top-level `var`s, in order to define all of them
-  // on the ModuleEnvironmentObject, instead of local slot.
-  //
-  // This is used for providing all global variables in Cu.import return value
-  // (see bug 1766761 for more details), and this is temporary solution until
-  // ESM-ification finishes.
-  //
-  // WARNING: This option will eventually be removed.
-  bool deoptimizeModuleGlobalVars = false;
-
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
    * "Function", or "GeneratorFunction".
@@ -320,7 +310,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
     PrintFields_(borrowBuffer);
     PrintFields_(usePinnedBytecode);
     PrintFields_(allocateInstantiationStorage);
-    PrintFields_(deoptimizeModuleGlobalVars);
     PrintFields_(introductionType);
     PrintFields_(introductionLineno);
     PrintFields_(introductionOffset);

@@ -2522,7 +2522,8 @@ nsXPCComponents_Utils::CreateHTMLCopyEncoder(
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetLoadedModules(nsTArray<nsCString>& aLoadedModules) {
-  return mozJSComponentLoader::Get()->GetLoadedJSAndESModules(aLoadedModules);
+  mozJSComponentLoader::Get()->GetLoadedModules(aLoadedModules);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
