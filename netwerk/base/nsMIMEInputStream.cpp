@@ -154,11 +154,6 @@ NS_IMETHODIMP
 nsMIMEInputStream::SetData(nsIInputStream* aStream) {
   NS_ENSURE_FALSE(mStartedReading, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aStream);
-  if (!seekable) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   mStream = aStream;
   return NS_OK;
 }
@@ -423,18 +418,7 @@ bool nsMIMEInputStream::Deserialize(
       return false;
     }
 
-    // nsMIMEInputStream requires that the underlying data stream be seekable,
-    // as is checked in `SetData`. Ensure that the stream we deserialized is
-    // seekable before using it.
-    nsCOMPtr<nsIInputStream> seekable;
-    nsresult rv = mozilla::SeekableStreamWrapper::MaybeWrap(
-        stream.forget(), getter_AddRefs(seekable));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to ensure wrapped input stream is seekable");
-      return false;
-    }
-
-    MOZ_ALWAYS_SUCCEEDS(SetData(seekable));
+    MOZ_ALWAYS_SUCCEEDS(SetData(stream));
   }
 
   mHeaders = params.headers().Clone();
