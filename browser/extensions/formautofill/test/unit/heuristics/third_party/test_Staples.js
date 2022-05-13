@@ -9,13 +9,45 @@ runHeuristicsTest(
       expectedResult: [
         [
           // ac-off
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "organization"},
+          [
+            {
+              section: "",
+              addressType: "", 
+              contactType: "", 
+              fieldName: "given-name"
+            },
+            {
+              section: "",
+              addressType: "", 
+              contactType: "", 
+              fieldName: "family-name"
+            },
+            {
+              section: "",
+              addressType: "", 
+              contactType: "", 
+              fieldName: "address-line1"
+            },
+            {
+              section: "",
+              addressType: "", 
+              contactType: "", 
+              fieldName: "email"
+            },
+            {
+              section: "",
+              addressType: "", 
+              contactType: "", 
+              fieldName: "tel"
+            },
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "organization"
+            },
+          ]
         ],
       ],
     },
@@ -48,7 +80,12 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "email",
             },
-            { section: "", addressType: "", contactType: "", fieldName: "tel" },
+            { 
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel" 
+            },
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
             {
               section: "",
