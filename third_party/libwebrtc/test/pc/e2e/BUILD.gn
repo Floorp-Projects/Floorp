@@ -15,7 +15,6 @@ if (!build_with_chromium) {
     deps = [
       ":encoded_image_data_injector_api",
       ":example_video_quality_analyzer",
-      ":id_generator",
       ":quality_analyzing_video_decoder",
       ":quality_analyzing_video_encoder",
       ":single_process_encoded_image_data_injector",
@@ -89,16 +88,6 @@ if (!build_with_chromium) {
     absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
   }
 
-  rtc_library("id_generator") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "analyzer/video/id_generator.cc",
-      "analyzer/video/id_generator.h",
-    ]
-    deps = []
-  }
-
   rtc_library("simulcast_dummy_buffer_helper") {
     visibility = [ "*" ]
     testonly = true
@@ -118,7 +107,6 @@ if (!build_with_chromium) {
     ]
     deps = [
       ":encoded_image_data_injector_api",
-      ":id_generator",
       ":simulcast_dummy_buffer_helper",
       "../../../api:video_quality_analyzer_api",
       "../../../api/video:encoded_image",
@@ -145,7 +133,6 @@ if (!build_with_chromium) {
     ]
     deps = [
       ":encoded_image_data_injector_api",
-      ":id_generator",
       "../../../api:video_quality_analyzer_api",
       "../../../api/video:encoded_image",
       "../../../api/video:video_frame",
@@ -169,7 +156,6 @@ if (!build_with_chromium) {
       ]
       deps = [
         ":encoded_image_data_injector_api",
-        ":id_generator",
         ":quality_analyzing_video_decoder",
         ":quality_analyzing_video_encoder",
         ":simulcast_dummy_buffer_helper",

@@ -27,7 +27,6 @@
 #include "api/video_codecs/video_encoder_factory.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
-#include "test/pc/e2e/analyzer/video/id_generator.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/video_frame_writer.h"
 
@@ -132,8 +131,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   std::map<std::string,
            std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>>>
       sinks_ RTC_GUARDED_BY(lock_);
-
-  std::unique_ptr<IdGenerator<int>> encoding_entities_id_generator_;
 };
 
 }  // namespace webrtc_pc_e2e

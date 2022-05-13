@@ -90,8 +90,7 @@ VideoQualityAnalyzerInjectionHelper::VideoQualityAnalyzerInjectionHelper(
     EncodedImageDataExtractor* extractor)
     : analyzer_(std::move(analyzer)),
       injector_(injector),
-      extractor_(extractor),
-      encoding_entities_id_generator_(std::make_unique<IntIdGenerator>(1)) {
+      extractor_(extractor) {
   RTC_DCHECK(injector_);
   RTC_DCHECK(extractor_);
 }
@@ -107,8 +106,7 @@ VideoQualityAnalyzerInjectionHelper::WrapVideoEncoderFactory(
     const {
   return std::make_unique<QualityAnalyzingVideoEncoderFactory>(
       peer_name, std::move(delegate), bitrate_multiplier,
-      std::move(stream_required_spatial_index),
-      encoding_entities_id_generator_.get(), injector_, analyzer_.get());
+      std::move(stream_required_spatial_index), injector_, analyzer_.get());
 }
 
 std::unique_ptr<VideoDecoderFactory>
@@ -116,8 +114,7 @@ VideoQualityAnalyzerInjectionHelper::WrapVideoDecoderFactory(
     absl::string_view peer_name,
     std::unique_ptr<VideoDecoderFactory> delegate) const {
   return std::make_unique<QualityAnalyzingVideoDecoderFactory>(
-      peer_name, std::move(delegate), encoding_entities_id_generator_.get(),
-      extractor_, analyzer_.get());
+      peer_name, std::move(delegate), extractor_, analyzer_.get());
 }
 
 std::unique_ptr<test::TestVideoCapturer::FramePreprocessor>
