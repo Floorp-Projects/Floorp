@@ -68,7 +68,6 @@ enum class CallerType : uint32_t;
 class ContentChild final : public PContentChild,
                            public nsIDOMProcessChild,
                            public mozilla::ipc::IShmemAllocator,
-                           public mozilla::ipc::ChildToParentStreamActorManager,
                            public ProcessActor {
   using ClonedMessageData = mozilla::dom::ClonedMessageData;
   using FileDescriptor = mozilla::ipc::FileDescriptor;

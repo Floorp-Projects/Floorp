@@ -136,12 +136,12 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
     return NS_OK;
   }
 
-  mozilla::ipc::AutoIPCStream ipcStream(true /* delayed start */);
-  if (!ipcStream.Serialize(inputStream, aManager)) {
+  IPCStream stream;
+  if (!mozilla::ipc::SerializeIPCStream(inputStream.forget(), stream,
+                                        /* aAllowLazy */ true)) {
     return NS_ERROR_FAILURE;
   }
-
-  aIPCBlob.inputStream() = ipcStream.TakeValue();
+  aIPCBlob.inputStream() = stream;
   return NS_OK;
 }
 
