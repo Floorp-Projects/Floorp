@@ -221,7 +221,11 @@
 # the parent process.
 - name: accessibility.cache.enabled
   type: bool
+#ifdef ANDROID
+  value: true
+#else
   value: false
+#endif
   mirror: once
 
 #---------------------------------------------------------------------------
