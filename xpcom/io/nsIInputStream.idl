@@ -80,6 +80,10 @@ interface nsIInputStream : nsISupports
      * this method returns 0 bytes available.  (Note: some nsIInputStream
      * implementations automatically close when eof is reached; some do not).
      *
+     * NOTE: Streams implementing nsIAsyncInputStream must automatically close
+     * when eof is reached, as otherwise it is impossible to distinguish between
+     * a stream waiting for more data and a stream at EOF using Available().
+     *
      * @return number of bytes currently available in the stream.
      *
      * @throws NS_BASE_STREAM_CLOSED if the stream is closed normally.
