@@ -1,0 +1,67 @@
+{
+
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "description": "Floorp のシステムが含まれています。このアドオンは削除・停止ができません。",
+  "version": "1.0",
+  "homepage_url": "https://ablaze.one",
+  "default_locale": "en",
+  "permissions": [
+    "notifications",
+    "tabs",
+    "storage",
+    "sessions",
+    "storage",
+    "clipboardWrite",
+    "search",
+    "activeTab",
+    "browserSettings",
+    "mozillaAddons",
+    "about:*",
+    "about:reader*"
+  ],
+
+
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "icons/icon.png",
+    "default_popup": "qr-code/popup.html",
+    "show_matches": [
+      "<all_urls>"
+    ]
+  },
+
+  "background": {
+    "scripts": ["background-script.js"]
+  },
+
+  "applications": {
+    "gecko": {
+      "id": "floorp-system@floorp.ablaze.one"
+    }
+  },
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+        "schema": "updateAPIs/aboutConfigPrefs.json",
+        "parent": {
+            "scopes": ["addon_parent"],
+            "script": "updateAPIs/aboutConfigPrefs.js",
+            "paths": [["aboutConfigPrefs"]]
+        }
+    },
+    "BrowserInfo": {
+      "schema": "updateAPIs/BrowserInfo.json",
+      "parent": {
+        "scopes": [
+          "addon_parent"
+        ],
+        "script": "updateAPIs/BrowserInfo.js",
+        "paths": [
+          [
+            "BrowserInfo"
+          ]
+        ]
+      }
+    }
+  }
+}
