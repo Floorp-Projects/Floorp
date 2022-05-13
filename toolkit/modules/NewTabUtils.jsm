@@ -1185,6 +1185,15 @@ var ActivityStreamProvider = {
    *   {int}  topsiteFrecency: Minimum amount of frecency for a site.
    *   {bool} onePerDomain: Dedupe the resulting list.
    *   {bool} includeFavicon: Include favicons if available.
+   *   {string} hideWithSearchParam: URLs that contain this search param will be
+   *     excluded from the returned links. This value should be either undefined
+   *     or a string with one of the following forms:
+   *     - undefined: Fall back to the value of pref
+   *       `browser.newtabpage.activity-stream.hideTopSitesWithSearchParam`
+   *     - "" (empty) - Disable this feature
+   *     - "key" - Search param named "key" with any or no value
+   *     - "key=" - Search param named "key" with no value
+   *     - "key=value" - Search param named "key" with value "value"
    *
    * @returns {Promise} Returns a promise with the array of links as payload.
    */
@@ -1196,6 +1205,9 @@ var ActivityStreamProvider = {
         topsiteFrecency: ACTIVITY_STREAM_DEFAULT_FRECENCY,
         onePerDomain: true,
         includeFavicon: true,
+        hideWithSearchParam: Services.prefs.getCharPref(
+          "browser.newtabpage.activity-stream.hideTopSitesWithSearchParam"
+        ),
       },
       aOptions || {}
     );
@@ -1280,6 +1292,20 @@ var ActivityStreamProvider = {
         if (searchProvider) {
           link.url = searchProvider.url;
         }
+      });
+    }
+
+    // Remove links that contain the hide-with search param.
+    if (options.hideWithSearchParam) {
+      let [key, value] = options.hideWithSearchParam.split("=");
+      links = links.filter(link => {
+        try {
+          let { searchParams } = new URL(link.url);
+          return value === undefined
+            ? !searchParams.has(key)
+            : !searchParams.getAll(key).includes(value);
+        } catch (error) {}
+        return true;
       });
     }
 

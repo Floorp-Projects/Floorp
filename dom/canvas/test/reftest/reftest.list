@@ -252,3 +252,4 @@ skip-if(Android) == visible-occluded.html visible-occluded-ref.html
 skip-if(isDebugBuild) == draw-large-image.html draw-large-image-ref.html
 
 == 1758968-1.html 1758968-1-ref.html
+== 1768521-1.html 1768521-1-ref.html

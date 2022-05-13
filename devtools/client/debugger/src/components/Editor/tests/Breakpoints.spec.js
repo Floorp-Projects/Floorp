@@ -5,13 +5,12 @@
 import React from "react";
 import { shallow } from "enzyme";
 import Breakpoints from "../Breakpoints";
-import * as I from "immutable";
 
 const BreakpointsComponent = Breakpoints.WrappedComponent;
 
 function generateDefaults(overrides) {
   const sourceId = "server1.conn1.child1/source1";
-  const matchingBreakpoints = { id1: { location: { sourceId } } };
+  const matchingBreakpoints = [{ location: { sourceId } }];
 
   return {
     selectedSource: { sourceId, get: () => false },
@@ -20,7 +19,7 @@ function generateDefaults(overrides) {
         setGutterMarker: jest.fn(),
       },
     },
-    breakpoints: I.Map(matchingBreakpoints),
+    breakpoints: matchingBreakpoints,
     ...overrides,
   };
 }

@@ -135,9 +135,12 @@ var extensionStorageSync = null;
  * @param {string}    ciphertext The ciphertext over which to compute the HMAC
  * @returns {string} The computed HMAC
  */
-function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
-  const hasher = keyBundle.sha256HMACHasher;
-  return CommonUtils.bytesAsHex(Utils.digestUTF8(id + IV + ciphertext, hasher));
+async function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
+  const hmacKey = CommonUtils.byteStringToArrayBuffer(keyBundle.hmacKey);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(id + IV + ciphertext);
+  const hmac = await CryptoUtils.hmac("SHA-256", hmacKey, data);
+  return CommonUtils.bytesAsHex(CommonUtils.arrayBufferToByteString(hmac));
 }
 
 /**
@@ -176,7 +179,7 @@ class EncryptionRemoteTransformer {
       keyBundle.encryptionKeyB64,
       IV
     );
-    let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
+    let hmac = await ciphertextHMAC(keyBundle, id, IV, ciphertext);
     const encryptedResult = { ciphertext, IV, hmac, id };
 
     // Copy over the _status field, so that we handle concurrency
@@ -202,7 +205,7 @@ class EncryptionRemoteTransformer {
     }
     const keyBundle = await this.getKeys();
     // Authenticate the encrypted blob with the expected HMAC
-    let computedHMAC = ciphertextHMAC(
+    let computedHMAC = await ciphertextHMAC(
       keyBundle,
       record.id,
       record.IV,

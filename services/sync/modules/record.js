@@ -31,6 +31,9 @@ const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
+const { CryptoUtils } = ChromeUtils.import(
+  "resource://services-crypto/utils.js"
+);
 
 /**
  * The base class for all Sync basic storage objects (BSOs). This is the format
@@ -209,13 +212,17 @@ RawCryptoWrapper.prototype = {
     throw new TypeError("Override to parse incoming records");
   },
 
-  ciphertextHMAC: function ciphertextHMAC(keyBundle) {
-    let hasher = keyBundle.sha256HMACHasher;
-    if (!hasher) {
+  ciphertextHMAC: async function ciphertextHMAC(keyBundle) {
+    let hmacKeyByteString = keyBundle.hmacKey;
+    if (!hmacKeyByteString) {
       throw new Error("Cannot compute HMAC without an HMAC key.");
     }
-
-    return CommonUtils.bytesAsHex(Utils.digestBytes(this.ciphertext, hasher));
+    let hmacKey = CommonUtils.byteStringToArrayBuffer(hmacKeyByteString);
+    // NB: this.ciphertext is a base64-encoded string. For some reason this
+    // implementation computes the HMAC on the encoded value.
+    let data = CommonUtils.byteStringToArrayBuffer(this.ciphertext);
+    let hmac = await CryptoUtils.hmac("SHA-256", hmacKey, data);
+    return CommonUtils.bytesAsHex(CommonUtils.arrayBufferToByteString(hmac));
   },
 
   /*
@@ -238,7 +245,7 @@ RawCryptoWrapper.prototype = {
       keyBundle.encryptionKeyB64,
       this.IV
     );
-    this.hmac = this.ciphertextHMAC(keyBundle);
+    this.hmac = await this.ciphertextHMAC(keyBundle);
     this.cleartext = null;
   },
 
@@ -253,7 +260,7 @@ RawCryptoWrapper.prototype = {
     }
 
     // Authenticate the encrypted blob with the expected HMAC
-    let computedHMAC = this.ciphertextHMAC(keyBundle);
+    let computedHMAC = await this.ciphertextHMAC(keyBundle);
 
     if (computedHMAC != this.hmac) {
       Utils.throwHMACMismatch(this.hmac, computedHMAC);

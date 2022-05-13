@@ -19,7 +19,8 @@
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsCSSColorUtils.h"
 #include "nsCSSRendering.h"
-#include "nsIScrollableFrame.h"
+#include "nsScrollbarFrame.h"
+#include "nsIScrollbarMediator.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
 #include "nsRangeFrame.h"
@@ -1048,11 +1049,13 @@ static ScrollbarDrawing::ScrollbarKind ComputeScrollbarKind(
   if (NS_WARN_IF(!scrollbar)) {
     return ScrollbarDrawing::ScrollbarKind::VerticalRight;
   }
-  nsIScrollableFrame* sf = do_QueryFrame(scrollbar->GetParent());
-  if (NS_WARN_IF(!sf)) {
+  MOZ_ASSERT(scrollbar->IsScrollbarFrame());
+  nsIScrollbarMediator* sm =
+      static_cast<nsScrollbarFrame*>(scrollbar)->GetScrollbarMediator();
+  if (NS_WARN_IF(!sm)) {
     return ScrollbarDrawing::ScrollbarKind::VerticalRight;
   }
-  return sf->IsScrollbarOnRight()
+  return sm->IsScrollbarOnRight()
              ? ScrollbarDrawing::ScrollbarKind::VerticalRight
              : ScrollbarDrawing::ScrollbarKind::VerticalLeft;
 }

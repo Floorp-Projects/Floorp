@@ -128,6 +128,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     }
 
     let source = getSource(getState(), location.sourceId);
+
     if (!source) {
       // If there is no source we deselect the current selected source
       return dispatch(clearSelectedLocation(cx));

@@ -19,11 +19,63 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-static nsIStringBundle* sStringBundle;
+static nsTHashMap<nsStringHashKey, nsString> sLocalizedStrings;
 
-void a11y::PlatformInit() {}
+void a11y::PlatformInit() {
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+      components::StringBundle::Service();
+  if (!stringBundleService) return;
 
-void a11y::PlatformShutdown() { NS_IF_RELEASE(sStringBundle); }
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsCOMPtr<nsIStringBundleService> sbs = components::StringBundle::Service();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get string bundle service");
+    return;
+  }
+
+  rv = sbs->CreateBundle(ROLE_STRINGS_URL, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get string bundle");
+    return;
+  }
+
+  nsString localizedStr;
+  // Preload the state required localized string.
+  rv = stringBundle->GetStringFromName("stateRequired", localizedStr);
+  if (NS_SUCCEEDED(rv)) {
+    sLocalizedStrings.InsertOrUpdate(u"stateRequired"_ns, localizedStr);
+  }
+
+  // Preload heading level localized descriptions 1 thru 6.
+  for (int32_t level = 1; level <= 6; level++) {
+    nsAutoString token;
+    token.AppendPrintf("heading-%d", level);
+
+    nsAutoString formatString;
+    formatString.AppendInt(level);
+    AutoTArray<nsString, 1> formatParams;
+    formatParams.AppendElement(formatString);
+    rv = stringBundle->FormatStringFromName("headingLevel", formatParams,
+                                            localizedStr);
+    if (NS_SUCCEEDED(rv)) {
+      sLocalizedStrings.InsertOrUpdate(token, localizedStr);
+    }
+  }
+
+  // Preload any roles that have localized versions
+#define ROLE(geckoRole, stringRole, atkRole, macRole, macSubrole, msaaRole, \
+             ia2Role, androidClass, nameRule)                               \
+  rv = stringBundle->GetStringFromName(stringRole, localizedStr);           \
+  if (NS_SUCCEEDED(rv)) {                                                   \
+    sLocalizedStrings.InsertOrUpdate(u##stringRole##_ns, localizedStr);     \
+  }
+
+#include "RoleMap.h"
+#undef ROLE
+}
+
+void a11y::PlatformShutdown() { sLocalizedStrings.Clear(); }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
   SessionAccessibility::RegisterAccessible(aProxy);
@@ -202,42 +254,14 @@ void a11y::ProxyBatch(RemoteAccessible* aDocument, const uint64_t aBatchType,
   }
 }
 
-bool a11y::LocalizeString(const char* aToken, nsAString& aLocalized,
-                          const nsTArray<nsString>& aFormatString) {
+bool a11y::LocalizeString(const nsAString& aToken, nsAString& aLocalized) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  nsresult rv = NS_OK;
-  if (!sStringBundle) {
-    nsCOMPtr<nsIStringBundleService> sbs = components::StringBundle::Service();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get string bundle service");
-      return false;
-    }
 
-    nsCOMPtr<nsIStringBundle> sb;
-    rv = sbs->CreateBundle(ROLE_STRINGS_URL, getter_AddRefs(sb));
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to get string bundle");
-      return false;
-    }
-
-    sb.forget(&sStringBundle);
-  }
-
-  MOZ_ASSERT(sStringBundle);
-
-  if (aFormatString.Length()) {
-    rv = sStringBundle->FormatStringFromName(aToken, aFormatString, aLocalized);
-    if (NS_SUCCEEDED(rv)) {
-      return true;
-    }
+  auto str = sLocalizedStrings.Lookup(aToken);
+  if (str) {
+    aLocalized.Assign(*str);
   } else {
-    rv = sStringBundle->GetStringFromName(aToken, aLocalized);
-    if (NS_SUCCEEDED(rv)) {
-      return true;
-    }
   }
 
-  NS_WARNING("Failed to localize string");
-  aLocalized.AssignLiteral("");
-  return false;
+  return !!str;
 }

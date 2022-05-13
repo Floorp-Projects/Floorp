@@ -125,6 +125,8 @@ var GMPUtils = {
 var GMPPrefs = {
   KEY_EME_ENABLED: "media.eme.enabled",
   KEY_PLUGIN_ENABLED: "media.{0}.enabled",
+  KEY_PLUGIN_LAST_DOWNLOAD: "media.{0}.lastDownload",
+  KEY_PLUGIN_LAST_INSTALL_START: "media.{0}.lastInstallStart",
   KEY_PLUGIN_LAST_UPDATE: "media.{0}.lastUpdate",
   KEY_PLUGIN_VERSION: "media.{0}.version",
   KEY_PLUGIN_AUTOUPDATE: "media.{0}.autoupdate",

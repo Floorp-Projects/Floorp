@@ -362,7 +362,6 @@ export function createBreakpoint({
   disabled = false,
   options = {},
   location,
-  astLocation,
   generatedLocation,
   text,
   originalText,
@@ -387,9 +386,6 @@ export function createBreakpoint({
 
     // The location (object) information for the original source, for details on its format and structure See `makeBreakpointLocation`
     location,
-
-    // The source map location (object) infomation, for details see `getASTLocation`
-    astLocation,
 
     // The location (object) information for the generated source, for details on its format and structure See `makeBreakpointLocation`
     generatedLocation,

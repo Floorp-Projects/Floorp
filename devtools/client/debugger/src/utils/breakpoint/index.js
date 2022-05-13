@@ -6,7 +6,6 @@ import { getSource, getSourceActorsForSource } from "../../selectors";
 import { isGenerated } from "../source";
 import { sortSelectedLocations } from "../location";
 import assert from "../assert";
-export * from "./astBreakpointLocation";
 export * from "./breakpointPositions";
 
 // The ID for a Breakpoint is derived from its location in its Source.
@@ -96,7 +95,6 @@ export function createPendingBreakpoint(bp) {
     options: bp.options,
     disabled: bp.disabled,
     location: pendingLocation,
-    astLocation: bp.astLocation,
     generatedLocation: pendingGeneratedLocation,
   };
 }

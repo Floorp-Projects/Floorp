@@ -56,7 +56,7 @@ const instance = new Temporal.Calendar("iso8601");
 for (const arg of invalidStrings) {
   assert.throws(
     RangeError,
-    () => instance.dateAdd(arg),
+    () => instance.dateAdd(arg, new Temporal.Duration()),
     `"${arg}" should not be a valid ISO string for a PlainDate`
   );
 }

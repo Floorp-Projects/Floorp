@@ -4,7 +4,6 @@ exports[`visible column breakpoints doesnt show breakpoints to the right 1`] = `
 Array [
   Object {
     "breakpoint": Object {
-      "astLocation": null,
       "disabled": false,
       "generatedLocation": Object {
         "column": 1,
@@ -34,7 +33,6 @@ exports[`visible column breakpoints ignores single breakpoints 1`] = `
 Array [
   Object {
     "breakpoint": Object {
-      "astLocation": null,
       "disabled": false,
       "generatedLocation": Object {
         "column": 1,
@@ -72,7 +70,6 @@ exports[`visible column breakpoints only shows visible breakpoints 1`] = `
 Array [
   Object {
     "breakpoint": Object {
-      "astLocation": null,
       "disabled": false,
       "generatedLocation": Object {
         "column": 1,
@@ -110,7 +107,6 @@ exports[`visible column breakpoints simple 1`] = `
 Array [
   Object {
     "breakpoint": Object {
-      "astLocation": null,
       "disabled": false,
       "generatedLocation": Object {
         "column": 1,

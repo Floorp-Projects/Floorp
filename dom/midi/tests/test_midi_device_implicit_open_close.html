@@ -42,8 +42,8 @@
          output.close();
        }
 
-       input = access.inputs.get(MIDITestUtils.inputInfo.id);
-       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       input = access.inputs.get(await MIDITestUtils.inputInfo.id);
+       output = access.outputs.get(await MIDITestUtils.outputInfo.id);
        input.onstatechange = (event) => { checkCallbacks(event.port); };
        output.onstatechange = (event) => { checkCallbacks(event.port); };
        // Ports are closed. Fire rest of tests.

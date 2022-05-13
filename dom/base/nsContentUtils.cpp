@@ -25,6 +25,7 @@
 #include "MainThreadUtils.h"
 #include "PLDHashTable.h"
 #include "ReferrerInfo.h"
+#include "ScopedNSSTypes.h"
 #include "ThirdPartyUtil.h"
 #include "Units.h"
 #include "chrome/common/ipc_message.h"
@@ -269,7 +270,6 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentSink.h"
 #include "nsIContentViewer.h"
-#include "nsICryptoHMAC.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -290,7 +290,6 @@
 #include "nsIInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIKeyModule.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"
 #include "nsILoadInfo.h"
@@ -10649,10 +10648,6 @@ nsresult nsContentUtils::AnonymizeId(nsAString& aId,
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-  nsCOMPtr<nsIKeyObjectFactory> factory =
-      do_GetService("@mozilla.org/security/keyobjectfactory;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCString rawKey;
   if (aFormat == OriginFormat::Base64) {
     rv = Base64Decode(aOriginKey, rawKey);
@@ -10661,26 +10656,28 @@ nsresult nsContentUtils::AnonymizeId(nsAString& aId,
     rawKey = aOriginKey;
   }
 
-  nsCOMPtr<nsIKeyObject> key;
-  rv = factory->KeyFromString(nsIKeyObject::HMAC, rawKey, getter_AddRefs(key));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsICryptoHMAC> hasher =
-      do_CreateInstance(NS_CRYPTO_HMAC_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = hasher->Init(nsICryptoHMAC::SHA256, key);
+  HMAC hmac;
+  rv = hmac.Begin(
+      SEC_OID_SHA256,
+      Span(reinterpret_cast<const uint8_t*>(rawKey.get()), rawKey.Length()));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertUTF16toUTF8 id(aId);
-  rv = hasher->Update(reinterpret_cast<const uint8_t*>(id.get()), id.Length());
+  rv = hmac.Update(reinterpret_cast<const uint8_t*>(id.get()), id.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString mac;
-  rv = hasher->Finish(true, mac);
+  nsTArray<uint8_t> macBytes;
+  rv = hmac.End(macBytes);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CopyUTF8toUTF16(mac, aId);
+  nsCString macBase64;
+  rv = Base64Encode(
+      nsDependentCSubstring(reinterpret_cast<const char*>(macBytes.Elements()),
+                            macBytes.Length()),
+      macBase64);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CopyUTF8toUTF16(macBase64, aId);
   return NS_OK;
 }
 

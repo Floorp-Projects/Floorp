@@ -678,7 +678,7 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     // Clone the extensible stencil to be used for eager delazification.
     auto initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
         cx, options, stencil_->source);
-    if (!initial->cloneFrom(cx, *stencil_)) {
+    if (!initial || !initial->cloneFrom(cx, *stencil_)) {
       // In case of errors, skip this and delazify on-demand.
       return;
     }

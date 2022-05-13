@@ -416,6 +416,7 @@ nsresult DataStorage::Reader::ParseLine(nsDependentCSubstring& aLine,
 }
 
 nsresult DataStorage::AsyncReadData(const MutexAutoLock& /*aProofOfLock*/) {
+  mMutex.AssertCurrentThreadOwns();
   // Allocate a Reader so that even if it isn't dispatched,
   // the data-storage-ready notification will be fired and Get
   // will be able to proceed (this happens in its destructor).
@@ -581,6 +582,7 @@ nsresult DataStorage::Put(const nsCString& aKey, const nsCString& aValue,
 nsresult DataStorage::PutInternal(const nsCString& aKey, Entry& aEntry,
                                   DataStorageType aType,
                                   const MutexAutoLock& aProofOfLock) {
+  mMutex.AssertCurrentThreadOwns();
   DataStorageTable& table = GetTableForType(aType, aProofOfLock);
   table.InsertOrUpdate(aKey, aEntry);
 
@@ -683,6 +685,7 @@ DataStorage::Writer::Run() {
 }
 
 nsresult DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/) {
+  mMutex.AssertCurrentThreadOwns();
   if (!mPendingWrite || mShuttingDown || !mBackingFile) {
     return NS_OK;
   }
