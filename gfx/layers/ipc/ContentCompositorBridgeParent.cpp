@@ -38,6 +38,10 @@ namespace mozilla {
 
 namespace layers {
 
+// defined in CompositorBridgeParent.cpp
+typedef std::map<LayersId, CompositorBridgeParent::LayerTreeState> LayerTreeMap;
+extern LayerTreeMap sIndirectLayerTrees;
+extern StaticAutoPtr<mozilla::Monitor> sIndirectLayerTreesLock;
 void EraseLayerState(LayersId aId);
 
 void ContentCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
@@ -61,9 +65,9 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     return nullptr;
   }
 
-  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state =
-      CompositorBridgeParent::sIndirectLayerTrees[aLayersId];
+      sIndirectLayerTrees[aLayersId];
 
   // If the widget has shutdown its compositor, we may not have had a chance yet
   // to unmap our layers id, and we could get here without a parent compositor.
@@ -86,10 +90,9 @@ bool ContentCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
     PAPZCTreeManagerParent* aActor) {
   APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
 
-  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-  auto iter =
-      CompositorBridgeParent::sIndirectLayerTrees.find(parent->GetLayersId());
-  if (iter != CompositorBridgeParent::sIndirectLayerTrees.end()) {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  auto iter = sIndirectLayerTrees.find(parent->GetLayersId());
+  if (iter != sIndirectLayerTrees.end()) {
     CompositorBridgeParent::LayerTreeState& state = iter->second;
     MOZ_ASSERT(state.mApzcTreeManagerParent == parent);
     state.mApzcTreeManagerParent = nullptr;
@@ -114,9 +117,9 @@ PAPZParent* ContentCompositorBridgeParent::AllocPAPZParent(
   // controller alive until it is released by IPDL in DeallocPAPZParent.
   controller->AddRef();
 
-  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state =
-      CompositorBridgeParent::sIndirectLayerTrees[aLayersId];
+      sIndirectLayerTrees[aLayersId];
   MOZ_ASSERT(!state.mController);
   state.mController = controller;
 
@@ -147,16 +150,12 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
   RefPtr<WebRenderBridgeParent> root = nullptr;
 
   {  // scope lock
-    StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-    MOZ_ASSERT(CompositorBridgeParent::sIndirectLayerTrees.find(layersId) !=
-               CompositorBridgeParent::sIndirectLayerTrees.end());
-    MOZ_ASSERT(
-        CompositorBridgeParent::sIndirectLayerTrees[layersId].mWrBridge ==
-        nullptr);
-    cbp = CompositorBridgeParent::sIndirectLayerTrees[layersId].mParent;
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    MOZ_ASSERT(sIndirectLayerTrees.find(layersId) != sIndirectLayerTrees.end());
+    MOZ_ASSERT(sIndirectLayerTrees[layersId].mWrBridge == nullptr);
+    cbp = sIndirectLayerTrees[layersId].mParent;
     if (cbp) {
-      root = CompositorBridgeParent::sIndirectLayerTrees[cbp->RootLayerTreeId()]
-                 .mWrBridge;
+      root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge;
     }
   }
 
@@ -188,10 +187,9 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
   parent->AddRef();  // IPDL reference
 
   {  // scope lock
-    StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-    CompositorBridgeParent::sIndirectLayerTrees[layersId]
-        .mContentCompositorBridgeParent = this;
-    CompositorBridgeParent::sIndirectLayerTrees[layersId].mWrBridge = parent;
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    sIndirectLayerTrees[layersId].mContentCompositorBridgeParent = this;
+    sIndirectLayerTrees[layersId].mWrBridge = parent;
   }
 
   return parent;
@@ -207,9 +205,9 @@ bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
 
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
-  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-  for (auto it = CompositorBridgeParent::sIndirectLayerTrees.begin();
-       it != CompositorBridgeParent::sIndirectLayerTrees.end(); it++) {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
+       it != sIndirectLayerTrees.end(); it++) {
     CompositorBridgeParent::LayerTreeState* lts = &it->second;
     if (lts->mParent && lts->mContentCompositorBridgeParent == this) {
       lts->mParent->NotifyChildCreated(child);
@@ -247,7 +245,8 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
   gfx::D3D11DeviceStatus status;
   dm->ExportDeviceInfo(&status);
 
-  if (sequenceNum == static_cast<uint32_t>(status.sequenceNumber()) && !dm->HasDeviceReset()) {
+  if (sequenceNum == static_cast<uint32_t>(status.sequenceNumber()) &&
+      !dm->HasDeviceReset()) {
     *isContentOnlyTDR = true;
   }
 
@@ -258,8 +257,8 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
 void ContentCompositorBridgeParent::DidCompositeLocked(
     LayersId aId, const VsyncId& aVsyncId, TimeStamp& aCompositeStart,
     TimeStamp& aCompositeEnd) {
-  CompositorBridgeParent::sIndirectLayerTreesLock.AssertCurrentThreadOwns();
-  if (CompositorBridgeParent::sIndirectLayerTrees[aId].mWrBridge) {
+  sIndirectLayerTreesLock->AssertCurrentThreadOwns();
+  if (sIndirectLayerTrees[aId].mWrBridge) {
     MOZ_ASSERT(false);  // this should never get called for a WR compositor
   }
 }
@@ -380,9 +379,8 @@ PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
     const wr::MaybeExternalImageId& aExternalImageId) {
   CompositorBridgeParent::LayerTreeState* state = nullptr;
 
-  StaticMonitorAutoLock lock(CompositorBridgeParent::sIndirectLayerTreesLock);
-  auto itr = CompositorBridgeParent::sIndirectLayerTrees.find(aId);
-  if (CompositorBridgeParent::sIndirectLayerTrees.end() != itr) {
+  LayerTreeMap::iterator itr = sIndirectLayerTrees.find(aId);
+  if (sIndirectLayerTrees.end() != itr) {
     state = &itr->second;
   }
 
