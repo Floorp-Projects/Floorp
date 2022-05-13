@@ -4,7 +4,6 @@
 
 include protocol PBackground;
 include protocol PContent;
-include protocol PFileDescriptorSet;
 include protocol PSocketProcess;
 
 include IPCStream;

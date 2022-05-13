@@ -4,7 +4,6 @@
 
 include protocol PBackgroundIDBDatabaseFile;
 include protocol PBackgroundMutableFile;
-include protocol PFileDescriptorSet; // FIXME: bug 792908
 include protocol PRemoteLazyInputStream; // FIXME: bug 792908
 
 include DOMTypes;

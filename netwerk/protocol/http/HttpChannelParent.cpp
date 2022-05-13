@@ -8,7 +8,6 @@
 #include "HttpLog.h"
 
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/ContentParent.h"

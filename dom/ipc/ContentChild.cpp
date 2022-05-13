@@ -98,7 +98,6 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -1877,28 +1876,6 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
 void ContentChild::GetAvailableDictionaries(
     nsTArray<nsCString>& aDictionaries) {
   aDictionaries = mAvailableDictionaries.Clone();
-}
-
-PFileDescriptorSetChild* ContentChild::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (IsShuttingDown()) {
-    return nullptr;
-  }
-
-  return PContentChild::SendPFileDescriptorSetConstructor(aFD);
-}
-
-PFileDescriptorSetChild* ContentChild::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
-}
-
-bool ContentChild::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
 }
 
 already_AddRefed<PRemoteLazyInputStreamChild>
