@@ -307,7 +307,7 @@ bool AppShutdown::IsNoOrLegalShutdownTopic(const char* aTopic) {
 }
 #endif
 
-void AdvanceShutdownPhaseInternal(
+void AppShutdown::AdvanceShutdownPhaseInternal(
     ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
     const nsCOMPtr<nsISupports>& aNotificationSubject) {
   AssertIsOnMainThread();
@@ -320,6 +320,13 @@ void AdvanceShutdownPhaseInternal(
     return;
   }
   sCurrentShutdownPhase = aPhase;
+
+  // TODO: Bug 1768581
+  // We think it would be more logical to have the following order here:
+  //    AppShutdown::MaybeFastShutdown(aPhase);
+  //    sTerminator->AdvancePhase(aPhase);
+  //    obsService->NotifyObservers(...);
+  //    mozilla::KillClearOnShutdown(aPhase);
 
 #ifndef ANDROID
   if (sTerminator) {
