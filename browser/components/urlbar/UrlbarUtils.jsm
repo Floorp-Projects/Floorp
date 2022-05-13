@@ -1118,12 +1118,17 @@ var UrlbarUtils = {
    * @returns {boolean} true: can autofill
    */
   canAutofillURL(url, candidate, checkFragmentOnly = false) {
-    if (
-      !checkFragmentOnly &&
-      (url.length <= candidate.length ||
-        !url.toLocaleLowerCase().startsWith(candidate.toLocaleLowerCase()))
-    ) {
-      return false;
+    if (!checkFragmentOnly) {
+      if (
+        url.length <= candidate.length ||
+        !url.toLocaleLowerCase().startsWith(candidate.toLocaleLowerCase())
+      ) {
+        return false;
+      }
+
+      if (!candidate.includes("/")) {
+        return true;
+      }
     }
 
     if (!UrlbarTokenizer.REGEXP_PREFIX.test(url)) {
