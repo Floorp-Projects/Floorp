@@ -229,7 +229,7 @@ dependencies {
 
     implementation Dependencies.google_material
 
-    implementation 'io.sentry:sentry-android:5.6.2'
+    implementation Dependencies.sentry
 
     compileOnly 'net.jcip:jcip-annotations:1.0'
     implementation("com.google.code.findbugs:jsr305:3.0.2")

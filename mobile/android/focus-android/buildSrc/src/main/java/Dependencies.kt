@@ -5,6 +5,7 @@
 object Versions {
     const val compose_version = "1.1.1"
     const val leakcanary = "2.8.1"
+    const val sentry = "5.7.3"
 
     object AndroidX {
         const val activity_compose = "1.3.1"
@@ -73,6 +74,7 @@ object Dependencies {
     const val kotlin_gradle_plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.Gradle.kotlin_plugin}"
     const val android_gradle_plugin = "com.android.tools.build:gradle:${Versions.Gradle.android_plugin}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android-core:${Versions.leakcanary}"
+    const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
 
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.Kotlin.version}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.Kotlin.coroutines}"
