@@ -65,6 +65,22 @@ const char* sPhaseObserverKeys[] = {
 static_assert(sizeof(sPhaseObserverKeys) / sizeof(sPhaseObserverKeys[0]) ==
               (size_t)ShutdownPhase::ShutdownPhase_Length);
 
+const char* sPhaseReadableNames[] = {"NotInShutdown",
+                                     "AppShutdownConfirmed",
+                                     "AppShutdownNetTeardown",
+                                     "AppShutdownTeardown",
+                                     "AppShutdown",
+                                     "AppShutdownQM",
+                                     "AppShutdownTelemetry",
+                                     "XPCOMWillShutdown",
+                                     "XPCOMShutdown",
+                                     "XPCOMShutdownThreads",
+                                     "XPCOMShutdownFinal",
+                                     "CCPostLastCycleCollection"};
+
+static_assert(sizeof(sPhaseReadableNames) / sizeof(sPhaseReadableNames[0]) ==
+              (size_t)ShutdownPhase::ShutdownPhase_Length);
+
 #ifndef ANDROID
 static nsTerminator* sTerminator = nullptr;
 #endif
@@ -122,6 +138,11 @@ void AppShutdown::SaveEnvVarsForPotentialRestart() {
 
 const char* AppShutdown::GetObserverKey(ShutdownPhase aPhase) {
   return sPhaseObserverKeys[static_cast<std::underlying_type_t<ShutdownPhase>>(
+      aPhase)];
+}
+
+const char* AppShutdown::GetShutdownPhaseName(ShutdownPhase aPhase) {
+  return sPhaseReadableNames[static_cast<std::underlying_type_t<ShutdownPhase>>(
       aPhase)];
 }
 
