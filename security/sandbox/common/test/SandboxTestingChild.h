@@ -39,7 +39,7 @@ class SandboxTestingChild : public PSandboxTestingChild {
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvShutDown();
+  virtual ipc::IPCResult RecvShutDown();
 
   // Helper to return that no test have been executed. Tests should make sure
   // they have some fallback through that otherwise the framework will consider
