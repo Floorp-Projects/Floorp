@@ -1131,8 +1131,8 @@ void TRRService::ConfirmationContext::RecordTRRStatus(nsresult aChannelStatus) {
   }
 }
 
-void TRRService::ConfirmationContext::RecordEvent(const char* aReason,
-                                                  const MutexSingleWriterAutoLock&) {
+void TRRService::ConfirmationContext::RecordEvent(
+    const char* aReason, const MutexSingleWriterAutoLock&) {
   // Reset the confirmation context attributes
   // Only resets the attributes that we keep for telemetry purposes.
   auto reset = [&]() {
