@@ -5,16 +5,6 @@ Array [
   Object {
     "breakpoints": Array [
       Object {
-        "astLocation": Object {
-          "index": 0,
-          "name": undefined,
-          "offset": Object {
-            "column": 1,
-            "line": 2,
-            "sourceId": "a",
-            "sourceUrl": "http://localhost:8000/examples/a",
-          },
-        },
         "disabled": false,
         "generatedLocation": Object {
           "column": 1,
@@ -59,14 +49,6 @@ exports[`breakpoints should not show a breakpoint that does not have text 2`] = 
 
 exports[`breakpoints should remap breakpoints on pretty print 1`] = `
 Object {
-  "astLocation": Object {
-    "index": 0,
-    "name": "a",
-    "offset": Object {
-      "column": undefined,
-      "line": 0,
-    },
-  },
   "disabled": false,
   "generatedLocation": Object {
     "column": 0,
@@ -93,16 +75,6 @@ Array [
   Object {
     "breakpoints": Array [
       Object {
-        "astLocation": Object {
-          "index": 0,
-          "name": undefined,
-          "offset": Object {
-            "column": 1,
-            "line": 5,
-            "sourceId": "a",
-            "sourceUrl": "http://localhost:8000/examples/a",
-          },
-        },
         "disabled": true,
         "generatedLocation": Object {
           "column": 1,
