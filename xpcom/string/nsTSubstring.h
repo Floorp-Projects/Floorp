@@ -550,6 +550,133 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
     ReplaceLiteral(aCutStart, aCutLength, aStr, N - 1);
   }
 
+  /**
+   * |Left|, |Mid|, and |Right| are annoying signatures that seem better almost
+   * any _other_ way than they are now.  Consider these alternatives
+   *
+   * // ...a member function that returns a |Substring|
+   * aWritable = aReadable.Left(17);
+   * // ...a global function that returns a |Substring|
+   * aWritable = Left(aReadable, 17);
+   * // ...a global function that does the assignment
+   * Left(aReadable, 17, aWritable);
+   *
+   * as opposed to the current signature
+   *
+   * // ...a member function that does the assignment
+   * aReadable.Left(aWritable, 17);
+   *
+   * or maybe just stamping them out in favor of |Substring|, they are just
+   * duplicate functionality
+   *
+   * aWritable = Substring(aReadable, 0, 17);
+   */
+  size_type Mid(self_type& aResult, index_type aStartPos,
+                size_type aCount) const;
+
+  size_type Left(self_type& aResult, size_type aCount) const {
+    return Mid(aResult, 0, aCount);
+  }
+
+  size_type Right(self_type& aResult, size_type aCount) const {
+    aCount = XPCOM_MIN(this->Length(), aCount);
+    return Mid(aResult, this->mLength - aCount, aCount);
+  }
+
+  /**
+   *  This method strips whitespace throughout the string.
+   */
+  void StripWhitespace();
+  bool StripWhitespace(const fallible_t&);
+
+  /**
+   *  This method is used to remove all occurrences of aChar from this
+   * string.
+   *
+   *  @param  aChar -- char to be stripped
+   */
+  void StripChar(char_type aChar);
+
+  /**
+   *  This method is used to remove all occurrences of aChars from this
+   * string.
+   *
+   *  @param  aChars -- chars to be stripped
+   */
+  void StripChars(const char_type* aChars);
+
+  /**
+   * This method is used to remove all occurrences of some characters this
+   * from this string.  The characters removed have the corresponding
+   * entries in the bool array set to true; we retain all characters
+   * with code beyond 127.
+   * THE CALLER IS RESPONSIBLE for making sure the complete boolean
+   * array, 128 entries, is properly initialized.
+   *
+   * See also: ASCIIMask class.
+   *
+   *  @param  aToStrip -- Array where each entry is true if the
+   *          corresponding ASCII character is to be stripped.  All
+   *          characters beyond code 127 are retained.  Note that this
+   *          parameter is of ASCIIMaskArray type, but we expand the typedef
+   *          to avoid having to include nsASCIIMask.h in this include file
+   *          as it brings other includes.
+   */
+  void StripTaggedASCII(const std::array<bool, 128>& aToStrip);
+
+  /**
+   * A shortcut to strip \r and \n.
+   */
+  void StripCRLF();
+
+  /**
+   * swaps occurence of 1 string for another
+   */
+  void ReplaceChar(char_type aOldChar, char_type aNewChar);
+  void ReplaceChar(const char_type* aSet, char_type aNewChar);
+
+  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
+  void ReplaceChar(const char* aSet, char16_t aNewChar);
+
+  /**
+   * Replace all occurrences of aTarget with aNewValue.
+   * The complexity of this function is O(n+m), n being the length of the string
+   * and m being the length of aNewValue.
+   */
+  void ReplaceSubstring(const self_type& aTarget, const self_type& aNewValue);
+  void ReplaceSubstring(const char_type* aTarget, const char_type* aNewValue);
+  [[nodiscard]] bool ReplaceSubstring(const self_type& aTarget,
+                                      const self_type& aNewValue,
+                                      const fallible_t&);
+  [[nodiscard]] bool ReplaceSubstring(const char_type* aTarget,
+                                      const char_type* aNewValue,
+                                      const fallible_t&);
+
+  /**
+   *  This method trims characters found in aTrimSet from
+   *  either end of the underlying string.
+   *
+   *  @param   aSet -- contains chars to be trimmed from both ends
+   *  @param   aEliminateLeading
+   *  @param   aEliminateTrailing
+   *  @param   aIgnoreQuotes -- if true, causes surrounding quotes to be ignored
+   *  @return  this
+   */
+  void Trim(const char* aSet, bool aEliminateLeading = true,
+            bool aEliminateTrailing = true, bool aIgnoreQuotes = false);
+
+  /**
+   *  This method strips whitespace from string.
+   *  You can control whether whitespace is yanked from start and end of
+   *  string as well.
+   *
+   *  @param   aEliminateLeading controls stripping of leading ws
+   *  @param   aEliminateTrailing controls stripping of trailing ws
+   */
+  void CompressWhitespace(bool aEliminateLeading = true,
+                          bool aEliminateTrailing = true);
+
+
   void Append(char_type aChar);
 
   [[nodiscard]] bool Append(char_type aChar, const fallible_t& aFallible);
@@ -1002,48 +1129,6 @@ class nsTSubstring : public mozilla::detail::nsTStringRepr<T> {
    */
 
   void NS_FASTCALL SetIsVoid(bool);
-
-  /**
-   *  This method is used to remove all occurrences of aChar from this
-   * string.
-   *
-   *  @param  aChar -- char to be stripped
-   */
-
-  void StripChar(char_type aChar);
-
-  /**
-   *  This method is used to remove all occurrences of aChars from this
-   * string.
-   *
-   *  @param  aChars -- chars to be stripped
-   */
-
-  void StripChars(const char_type* aChars);
-
-  /**
-   * This method is used to remove all occurrences of some characters this
-   * from this string.  The characters removed have the corresponding
-   * entries in the bool array set to true; we retain all characters
-   * with code beyond 127.
-   * THE CALLER IS RESPONSIBLE for making sure the complete boolean
-   * array, 128 entries, is properly initialized.
-   *
-   * See also: ASCIIMask class.
-   *
-   *  @param  aToStrip -- Array where each entry is true if the
-   *          corresponding ASCII character is to be stripped.  All
-   *          characters beyond code 127 are retained.  Note that this
-   *          parameter is of ASCIIMaskArray type, but we expand the typedef
-   *          to avoid having to include nsASCIIMask.h in this include file
-   *          as it brings other includes.
-   */
-  void StripTaggedASCII(const std::array<bool, 128>& aToStrip);
-
-  /**
-   * A shortcut to strip \r and \n.
-   */
-  void StripCRLF();
 
   /**
    * If the string uses a shared buffer, this method

@@ -24,8 +24,8 @@ template class nsTSubstring<char16_t>;
 template class nsTDependentSubstring<char>;
 template class nsTDependentSubstring<char16_t>;
 
-// Note: nsTString is skipped as it's implicitly instantiated by derived
-// classes.
+template class nsTString<char>;
+template class nsTString<char16_t>;
 
 template class nsTAutoStringN<char, 64>;
 template class nsTAutoStringN<char16_t, 64>;
