@@ -588,6 +588,11 @@ static void JNI_PeerConnection_SetRemoteDescription(
       observer, JavaToNativeSessionDescription(jni, j_sdp).release());
 }
 
+static void JNI_PeerConnection_RestartIce(JNIEnv* jni,
+                                          const JavaParamRef<jobject>& j_pc) {
+  ExtractNativePC(jni, j_pc)->RestartIce();
+}
+
 static void JNI_PeerConnection_SetAudioPlayout(
     JNIEnv* jni,
     const JavaParamRef<jobject>& j_pc,
