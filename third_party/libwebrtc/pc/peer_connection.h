@@ -23,7 +23,6 @@
 
 #include "absl/types/optional.h"
 #include "api/adaptation/resource.h"
-#include "api/async_dns_resolver.h"
 #include "api/async_resolver_factory.h"
 #include "api/audio_options.h"
 #include "api/candidate.h"
@@ -636,8 +635,11 @@ class PeerConnection : public PeerConnectionInternal,
   PeerConnectionInterface::RTCConfiguration configuration_
       RTC_GUARDED_BY(signaling_thread());
 
-  const std::unique_ptr<AsyncDnsResolverFactoryInterface>
-      async_dns_resolver_factory_;
+  // TODO(zstein): |async_resolver_factory_| can currently be nullptr if it
+  // is not injected. It should be required once chromium supplies it.
+  // This member variable is only used by JsepTransportController so we should
+  // consider moving ownership to there.
+  const std::unique_ptr<AsyncResolverFactory> async_resolver_factory_;
   std::unique_ptr<cricket::PortAllocator>
       port_allocator_;  // TODO(bugs.webrtc.org/9987): Accessed on both
                         // signaling and network thread.

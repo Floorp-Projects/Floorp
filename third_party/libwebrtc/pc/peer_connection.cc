@@ -12,7 +12,6 @@
 
 #include <limits.h>
 #include <stddef.h>
-
 #include <algorithm>
 #include <memory>
 #include <set>
@@ -34,7 +33,6 @@
 #include "media/base/rid_description.h"
 #include "media/base/stream_params.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
-#include "p2p/base/basic_async_resolver_factory.h"
 #include "p2p/base/connection.h"
 #include "p2p/base/connection_info.h"
 #include "p2p/base/dtls_transport_internal.h"
@@ -437,30 +435,6 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
   bool is_unified_plan =
       configuration.sdp_semantics == SdpSemantics::kUnifiedPlan;
   bool dtls_enabled = DtlsEnabled(configuration, options, dependencies);
-
-  // Interim code: If an AsyncResolverFactory is given, but not an
-  // AsyncDnsResolverFactory, wrap it in a WrappingAsyncDnsResolverFactory
-  // If neither is given, create a WrappingAsyncDnsResolverFactory wrapping
-  // a BasicAsyncResolver.
-  // TODO(bugs.webrtc.org/12598): Remove code once all callers pass a
-  // AsyncDnsResolverFactory.
-  if (dependencies.async_dns_resolver_factory &&
-      dependencies.async_resolver_factory) {
-    RTC_LOG(LS_ERROR)
-        << "Attempt to set both old and new type of DNS resolver factory";
-    return RTCError(RTCErrorType::INVALID_PARAMETER,
-                    "Both old and new type of DNS resolver given");
-  }
-  if (dependencies.async_resolver_factory) {
-    dependencies.async_dns_resolver_factory =
-        std::make_unique<WrappingAsyncDnsResolverFactory>(
-            std::move(dependencies.async_resolver_factory));
-  } else {
-    dependencies.async_dns_resolver_factory =
-        std::make_unique<WrappingAsyncDnsResolverFactory>(
-            std::make_unique<BasicAsyncResolverFactory>());
-  }
-
   // The PeerConnection constructor consumes some, but not all, dependencies.
   rtc::scoped_refptr<PeerConnection> pc(
       new rtc::RefCountedObject<PeerConnection>(
@@ -488,8 +462,7 @@ PeerConnection::PeerConnection(
       is_unified_plan_(is_unified_plan),
       event_log_(std::move(event_log)),
       event_log_ptr_(event_log_.get()),
-      async_dns_resolver_factory_(
-          std::move(dependencies.async_dns_resolver_factory)),
+      async_resolver_factory_(std::move(dependencies.async_resolver_factory)),
       port_allocator_(std::move(dependencies.allocator)),
       ice_transport_factory_(std::move(dependencies.ice_transport_factory)),
       tls_cert_verifier_(std::move(dependencies.tls_cert_verifier)),
@@ -698,7 +671,7 @@ void PeerConnection::InitializeTransportController_n(
 
   transport_controller_.reset(
       new JsepTransportController(network_thread(), port_allocator_.get(),
-                                  async_dns_resolver_factory_.get(), config));
+                                  async_resolver_factory_.get(), config));
 
   transport_controller_->SubscribeIceConnectionState(
       [this](cricket::IceConnectionState s) {
