@@ -10,7 +10,6 @@ CHECK(CanRunScriptChecker, "can-run-script")
 CHECK(DanglingOnTemporaryChecker, "dangling-on-temporary")
 CHECK(ExplicitImplicitChecker, "implicit-constructor")
 CHECK(ExplicitOperatorBoolChecker, "explicit-operator-bool")
-CHECK(JSHandleRootedTypedefChecker, "js-handle-rooted-typedef")
 CHECK(KungFuDeathGripChecker, "kungfu-death-grip")
 #ifdef TARGET_IS_WINDOWS
 CHECK(LoadLibraryUsageChecker, "load-library-usage")

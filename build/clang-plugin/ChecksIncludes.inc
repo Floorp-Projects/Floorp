@@ -15,7 +15,6 @@
 #include "LoadLibraryUsageChecker.h"
 #include "FopenUsageChecker.h"
 #endif
-#include "JSHandleRootedTypedefChecker.h"
 #include "KungFuDeathGripChecker.h"
 #include "MustOverrideChecker.h"
 #include "MustReturnFromCallerChecker.h"
