@@ -27,6 +27,10 @@ interface nsIPrintDialogService : nsISupports
   /**
    * Show the print dialog.
    * @param aParent   A DOM window the dialog will be parented to.
+   * @param aHaveSelection A boolean indicating whether the document to be
+   *                  printed has some selected text, which is used to
+   *                  determine whether the "Print selection only" radio
+   *                  button is enabled in the print settings dialog.
    * @param aSettings On entry, this contains initial settings for the
    *                  print dialog. On return, if the print operation should
    *                  proceed, then this has been updated with the settings
@@ -36,6 +40,7 @@ interface nsIPrintDialogService : nsISupports
    * @return a suitable error for failures to show the print dialog.
    */
   void showPrintDialog(in mozIDOMWindowProxy aParent,
+                       in boolean aHaveSelection,
                        in nsIPrintSettings aPrintSettings);
 
   /**

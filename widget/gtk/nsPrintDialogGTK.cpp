@@ -129,7 +129,7 @@ static void ShowCustomDialog(GtkComboBox* changed_box, gpointer user_data) {
 
 class nsPrintDialogWidgetGTK {
  public:
-  nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
+  nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent, bool aHaveSelection,
                          nsIPrintSettings* aPrintSettings);
   ~nsPrintDialogWidgetGTK() { gtk_widget_destroy(dialog); }
   NS_ConvertUTF16toUTF8 GetUTF8FromBundle(const char* aKey);
@@ -163,6 +163,7 @@ class nsPrintDialogWidgetGTK {
 };
 
 nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
+                                               bool aHaveSelection,
                                                nsIPrintSettings* aSettings) {
   nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(aParent);
   NS_ASSERTION(widget, "Need a widget for dialog to be modal.");
@@ -202,17 +203,16 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsPIDOMWindowOuter* aParent,
   // GTK+2.18 and above allow us to add a "Selection" option to the main
   // settings screen, rather than adding an option on a custom tab like we must
   // do on older versions.
-  bool canSelectText = aSettings->GetIsPrintSelectionRBEnabled();
   if (gtk_major_version > 2 ||
       (gtk_major_version == 2 && gtk_minor_version >= 18)) {
     useNativeSelection = true;
     g_object_set(dialog, "support-selection", TRUE, "has-selection",
-                 canSelectText, "embed-page-setup", TRUE, nullptr);
+                 aHaveSelection, "embed-page-setup", TRUE, nullptr);
   } else {
     useNativeSelection = false;
     selection_only_toggle = gtk_check_button_new_with_mnemonic(
         GetUTF8FromBundle("selectionOnly").get());
-    gtk_widget_set_sensitive(selection_only_toggle, canSelectText);
+    gtk_widget_set_sensitive(selection_only_toggle, aHaveSelection);
     gtk_box_pack_start(GTK_BOX(check_buttons_container), selection_only_toggle,
                        FALSE, FALSE, 0);
   }
@@ -496,12 +496,13 @@ nsPrintDialogServiceGTK::Init() { return NS_OK; }
 
 NS_IMETHODIMP
 nsPrintDialogServiceGTK::ShowPrintDialog(mozIDOMWindowProxy* aParent,
+                                         bool aHaveSelection,
                                          nsIPrintSettings* aSettings) {
   MOZ_ASSERT(aParent, "aParent must not be null");
   MOZ_ASSERT(aSettings, "aSettings must not be null");
 
   nsPrintDialogWidgetGTK printDialog(nsPIDOMWindowOuter::From(aParent),
-                                     aSettings);
+                                     aHaveSelection, aSettings);
   nsresult rv = printDialog.ImportSettings(aSettings);
 
   NS_ENSURE_SUCCESS(rv, rv);
