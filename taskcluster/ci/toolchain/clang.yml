@@ -387,102 +387,6 @@ win64-clang-14-stage1:
         toolchain:
             - win64-vs2019
 
-linux64-clang-trunk-mingw-x86:
-    description: "MinGW-Clang trunk x86 toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TMW(clang-trunk-x86)
-    worker-type: b-linux
-    run:
-        script: build-clang-mingw.sh
-        arguments:
-            - 'x86'
-        toolchain-artifact: public/build/clangmingw.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-            - mingw-w64
-            - llvm-mingw
-            - gcc-9.4.0
-        toolchain:
-            - linux64-clang-trunk
-
-linux64-clang-trunk-mingw-x64:
-    description: "MinGW-Clang trunk x64 toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TMW(clang-trunk-x64)
-        tier: 1
-    worker-type: b-linux
-    run:
-        script: build-clang-mingw.sh
-        arguments:
-            - 'x64'
-        toolchain-artifact: public/build/clangmingw.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-            - mingw-w64
-            - llvm-mingw
-            - gcc-9.4.0
-        toolchain:
-            - linux64-clang-trunk
-
-linux64-clang-trunk-stage1:
-    description: "Clang trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TL(clang-trunk-stage1)
-    run-on-projects: [trunk]
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        resources:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-        toolchain:
-            - linux64-toolchain-sysroot
-
-linux64-clang-trunk-profile:
-    description: "Clang trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TL(clang-trunk-profile)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-stage-1.json'
-            - 'build/build-clang/profile.json'
-        resources:
-            - 'build/build-clang/linux64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-stage-1.json'
-            - 'build/build-clang/profile.json'
-        toolchain-artifact: public/build/merged.profdata
-    fetches:
-        fetch:
-            - clang-trunk
-        toolchain:
-            - linux64-clang-trunk-stage1
-            - linux64-x64-compiler-rt-trunk
-            - linux64-toolchain-sysroot
-
 linux64-clang-trunk-raw:
     description: "Clang trunk toolchain build"
     attributes:
@@ -490,264 +394,38 @@ linux64-clang-trunk-raw:
     treeherder:
         symbol: TL(clang-trunk-raw)
     run:
+        using: toolchain-script
         script: build-clang.sh
         arguments:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
+            - 'build/build-clang/2stages.json'
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
+            - 'build/build-clang/2stages.json'
         toolchain-artifact: public/build/clang.tar.zst
+    run-on-projects: []
     fetches:
         fetch:
             - clang-trunk
         toolchain:
-            - linux64-clang-trunk-stage1
-            - linux64-clang-trunk-profile
             - linux64-toolchain-sysroot
 
 linux64-clang-trunk:
     description: "Clang trunk toolchain build"
     attributes:
         cached_task: false
-        local-toolchain: true
     treeherder:
         symbol: TL(clang-trunk)
     worker-type: b-linux
     worker:
         max-run-time: 600
-    run-on-projects: [trunk]
     run:
         script: repack-clang.sh
         toolchain-artifact: public/build/clang.tar.zst
+    run-on-projects: []
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang-trunk-raw
-            - android-aarch64-compiler-rt-trunk
-            - android-arm-compiler-rt-trunk
-            - android-x64-compiler-rt-trunk
-            - android-x86-compiler-rt-trunk
-            - linux64-aarch64-compiler-rt-trunk
-            - linux64-x64-compiler-rt-trunk
-            - linux64-x86-compiler-rt-trunk
-            - macosx64-aarch64-compiler-rt-trunk
-            - macosx64-x64-compiler-rt-trunk
-            - wasm32-wasi-compiler-rt-trunk
-            - win32-compiler-rt-trunk
-            - win64-compiler-rt-trunk
-
-macosx64-clang-trunk-raw:
-    description: "Clang trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TM(clang-trunk-raw)
-    worker-type: b-linux-large
-    worker:
-        max-run-time: 3600
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
-        resources:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-        toolchain:
-            - linux64-cctools-port
-            - linux64-clang-trunk-stage1
-            - linux64-clang-trunk-profile
-            - macosx64-sdk-11.0
-            - macosx64-x64-compiler-rt-trunk
-
-macosx64-clang-trunk:
-    description: "Clang trunk toolchain repack with MacOS Compiler RT libs"
-    attributes:
-        cached_task: false
-        local-toolchain: true
-    treeherder:
-        symbol: TM(clang-trunk)
-    worker-type: b-linux
-    worker:
-        max-run-time: 600
-    run-on-projects:
-        - trunk
-    run:
-        script: repack-clang.sh
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - macosx64-clang-trunk-raw
-            - android-aarch64-compiler-rt-trunk
-            - android-arm-compiler-rt-trunk
-            - android-x64-compiler-rt-trunk
-            - android-x86-compiler-rt-trunk
-            - linux64-aarch64-compiler-rt-trunk
-            - linux64-x64-compiler-rt-trunk
-            - linux64-x86-compiler-rt-trunk
-            - macosx64-aarch64-compiler-rt-trunk
-            - macosx64-x64-compiler-rt-trunk
-            - wasm32-wasi-compiler-rt-trunk
-            - win32-compiler-rt-trunk
-            - win64-compiler-rt-trunk
-
-macosx64-aarch64-clang-trunk-raw:
-    description: "Clang trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TM(clang-trunk-aarch64-raw)
-    worker-type: b-linux-large
-    worker:
-        env:
-            OSX_ARCH: arm64
-        max-run-time: 3600
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
-        resources:
-            - 'build/build-clang/macosx64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-3-stages.json'
-            - 'build/build-clang/4stages-pgo.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-        toolchain:
-            - linux64-cctools-port
-            - linux64-clang-trunk-stage1
-            - linux64-clang-trunk-profile
-            - macosx64-sdk-11.0
-            - macosx64-aarch64-compiler-rt-trunk
-
-macosx64-aarch64-clang-trunk:
-    description: "Clang trunk toolchain repack with MacOS Compiler RT libs"
-    attributes:
-        cached_task: false
-        local-toolchain: true
-    treeherder:
-        symbol: TM(clang-trunk-aarch64)
-    worker-type: b-linux
-    worker:
-        max-run-time: 600
-    run-on-projects:
-        - trunk
-    run:
-        script: repack-clang.sh
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - macosx64-aarch64-clang-trunk-raw
-            - macosx64-aarch64-compiler-rt-trunk
-            - macosx64-x64-compiler-rt-trunk
-            - wasm32-wasi-compiler-rt-trunk
-
-win64-clang-trunk-raw:
-    description: "Clang-cl trunk toolchain build"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TW64(clang-trunk-raw)
-    worker-type: b-win2012
-    worker:
-        max-run-time: 9000
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-stage-1-win64.json'
-            - 'build/build-clang/4stages-pgo.json'
-        resources:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/skip-stage-1-win64.json'
-            - 'build/build-clang/4stages-pgo.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-            - cmake
-            - ninja
-        toolchain:
-            - win64-clang-trunk-stage1
-            - win64-compiler-rt-trunk
-            - win64-vs2019
-
-win64-clang-trunk:
-    description: "Clang-cl trunk toolchain build"
-    attributes:
-        cached_task: false
-        local-toolchain: true
-    treeherder:
-        symbol: TW64(clang-trunk)
-    worker-type: b-linux
-    worker:
-        max-run-time: 600
-    run-on-projects:
-        - trunk
-    run:
-        script: repack-clang.sh
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        toolchain:
-            - linux64-cctools-port
-            - win64-clang-trunk-raw
-            - android-aarch64-compiler-rt-trunk
-            - android-arm-compiler-rt-trunk
-            - android-x64-compiler-rt-trunk
-            - android-x86-compiler-rt-trunk
-            - linux64-aarch64-compiler-rt-trunk
-            - linux64-x64-compiler-rt-trunk
-            - linux64-x86-compiler-rt-trunk
-            - macosx64-aarch64-compiler-rt-trunk
-            - macosx64-x64-compiler-rt-trunk
-            - wasm32-wasi-compiler-rt-trunk
-            - win32-compiler-rt-trunk
-            - win64-compiler-rt-trunk
-
-win64-clang-trunk-stage1:
-    description: "Clang-cl trunk toolchain build stage 1"
-    attributes:
-        cached_task: false
-    treeherder:
-        symbol: TW64(clang-trunk-stage1)
-    worker-type: b-win2012
-    run:
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        resources:
-            - 'build/build-clang/win64.json'
-            - 'build/build-clang/clang-trunk.json'
-            - 'build/build-clang/1stage.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-trunk
-            - cmake
-            - ninja
-        toolchain:
-            - win64-vs2019
+            - wasm32-wasi-compiler-rt

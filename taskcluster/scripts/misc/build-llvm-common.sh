@@ -122,29 +122,18 @@ case "$target" in
 *-pc-windows-msvc)
   export LD_PRELOAD="/builds/worker/fetches/liblowercase/liblowercase.so"
   export LOWERCASE_DIRS="/builds/worker/fetches/vs"
+  # WinMsvc.cmake before LLVM 15 doesn't support spaces in WINDSK_BASE. LLVM 15+ uses
+  # different input variables.
+  ln -s "windows kits/10" $MOZ_FETCHES_DIR/vs/sdk
   EXTRA_CMAKE_FLAGS="
     $EXTRA_CMAKE_FLAGS
     -DCMAKE_TOOLCHAIN_FILE=$MOZ_FETCHES_DIR/llvm-project/llvm/cmake/platforms/WinMsvc.cmake
     -DLLVM_NATIVE_TOOLCHAIN=$MOZ_FETCHES_DIR/clang
+    -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.29.30133
+    -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs/sdk
+    -DWINSDK_VER=10.0.19041.0
     -DHOST_ARCH=${target%-pc-windows-msvc}
-    -DLLVM_DISABLE_ASSEMBLY_FILES=ON
   "
-  # LLVM 15+ uses different input variables.
-  if grep -q LLVM_WINSYSROOT $MOZ_FETCHES_DIR/llvm-project/llvm/cmake/platforms/WinMsvc.cmake; then
-    EXTRA_CMAKE_FLAGS="
-      $EXTRA_CMAKE_FLAGS
-      -DLLVM_WINSYSROOT=$MOZ_FETCHES_DIR/vs
-    "
-  else
-    # WinMsvc.cmake before LLVM 15 doesn't support spaces in WINDSK_BASE.
-    ln -s "windows kits/10" $MOZ_FETCHES_DIR/vs/sdk
-    EXTRA_CMAKE_FLAGS="
-      $EXTRA_CMAKE_FLAGS
-      -DMSVC_BASE=$MOZ_FETCHES_DIR/vs/vc/tools/msvc/14.29.30133
-      -DWINSDK_BASE=$MOZ_FETCHES_DIR/vs/sdk
-      -DWINSDK_VER=10.0.19041.0
-    "
-  fi
   ;;
 *)
   echo $target is not supported yet
