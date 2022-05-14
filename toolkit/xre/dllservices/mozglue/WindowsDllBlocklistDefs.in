@@ -311,5 +311,8 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("safaweb_m.dll", (3, 0, 21, 3181)),
     DllBlocklistEntry("safaweb64.dll", (3, 0, 21, 3181)),
     DllBlocklistEntry("safaweb64_m.dll", (3, 0, 21, 3181)),
+
+    # Causes crashes in the content process with win32k lockdown, bug 1769309
+    DllBlocklistEntry("hmpalert.dll", (3, 8, 8, 889)),
 ]
 
