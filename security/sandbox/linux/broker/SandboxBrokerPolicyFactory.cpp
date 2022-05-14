@@ -327,64 +327,6 @@ static void AddDynamicPathList(SandboxBroker::Policy* policy,
   }
 }
 
-static void AddX11Dependencies(SandboxBroker::Policy* policy) {
-  // Allow Primus to contact the Bumblebee daemon to manage GPU
-  // switching on NVIDIA Optimus systems.
-  const char* bumblebeeSocket = PR_GetEnv("BUMBLEBEE_SOCKET");
-  if (bumblebeeSocket == nullptr) {
-    bumblebeeSocket = "/var/run/bumblebee.socket";
-  }
-  policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
-
-#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
-  // Allow local X11 connections, for several purposes:
-  //
-  // * for content processes to use WebGL when the browser is in headless
-  //   mode, by opening the X display if/when needed
-  //
-  // * if Primus or VirtualGL is used, to contact the secondary X server
-  static const bool kIsX11 =
-      !mozilla::widget::GdkIsWaylandDisplay() && PR_GetEnv("DISPLAY");
-  if (kIsX11) {
-    policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
-    if (auto* const xauth = PR_GetEnv("XAUTHORITY")) {
-      policy->AddPath(rdonly, xauth);
-    } else if (auto* const home = PR_GetEnv("HOME")) {
-      // This follows the logic in libXau: append "/.Xauthority",
-      // even if $HOME ends in a slash, except in the special case
-      // where HOME=/ because POSIX allows implementations to treat
-      // an initial double slash specially.
-      nsAutoCString xauth(home);
-      if (xauth != "/"_ns) {
-        xauth.Append('/');
-      }
-      xauth.AppendLiteral(".Xauthority");
-      policy->AddPath(rdonly, xauth.get());
-    }
-  }
-#endif
-}
-
-static void AddGLDependencies(SandboxBroker::Policy* policy) {
-  // Devices
-  policy->AddDir(rdwr, "/dev/dri");
-  policy->AddFilePrefix(rdwr, "/dev", "nvidia");
-
-  // Hardware info
-  AddDriPaths(policy);
-
-  // /etc and /usr/share (glvnd, libdrm, drirc, ...?)
-  policy->AddDir(rdonly, "/etc");
-  policy->AddDir(rdonly, "/usr/share");
-  policy->AddDir(rdonly, "/usr/local/share");
-
-  // Note: This function doesn't do anything about Mesa's shader
-  // cache, because the details can vary by process type, including
-  // whether caching is enabled.
-
-  AddX11Dependencies(policy);
-}
-
 void SandboxBrokerPolicyFactory::InitContentPolicy() {
   const bool headless =
       StaticPrefs::security_sandbox_content_headless_AtStartup();
@@ -393,13 +335,17 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   // are cached over the lifetime of the factory.
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
   // Write permssions
+  //
+  if (!headless) {
+    // Bug 1308851: NVIDIA proprietary driver when using WebGL
+    policy->AddFilePrefix(rdwr, "/dev", "nvidia");
+
+    // Bug 1312678: Mesa with DRI when using WebGL
+    policy->AddDir(rdwr, "/dev/dri");
+  }
 
   // Bug 1575985: WASM library sandbox needs RW access to /dev/null
   policy->AddPath(rdwr, "/dev/null");
-
-  if (!headless) {
-    AddGLDependencies(policy);
-  }
 
   // Read permissions
   policy->AddPath(rdonly, "/dev/urandom");
@@ -426,6 +372,9 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
   policy->AddDir(rdonly, "/run/host/local-fonts");
   policy->AddDir(rdonly, "/var/cache/fontconfig");
 
+  if (!headless) {
+    AddDriPaths(policy);
+  }
   AddLdconfigPaths(policy);
   AddLdLibraryEnvPaths(policy);
 
@@ -622,7 +571,41 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 #endif
 
   if (!headless) {
-    AddX11Dependencies(policy);
+    // Allow Primus to contact the Bumblebee daemon to manage GPU
+    // switching on NVIDIA Optimus systems.
+    const char* bumblebeeSocket = PR_GetEnv("BUMBLEBEE_SOCKET");
+    if (bumblebeeSocket == nullptr) {
+      bumblebeeSocket = "/var/run/bumblebee.socket";
+    }
+    policy->AddPath(SandboxBroker::MAY_CONNECT, bumblebeeSocket);
+
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
+    // Allow local X11 connections, for several purposes:
+    //
+    // * for content processes to use WebGL when the browser is in headless
+    //   mode, by opening the X display if/when needed
+    //
+    // * if Primus or VirtualGL is used, to contact the secondary X server
+    static const bool kIsX11 =
+        !mozilla::widget::GdkIsWaylandDisplay() && PR_GetEnv("DISPLAY");
+    if (kIsX11) {
+      policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
+      if (auto* const xauth = PR_GetEnv("XAUTHORITY")) {
+        policy->AddPath(rdonly, xauth);
+      } else if (auto* const home = PR_GetEnv("HOME")) {
+        // This follows the logic in libXau: append "/.Xauthority",
+        // even if $HOME ends in a slash, except in the special case
+        // where HOME=/ because POSIX allows implementations to treat
+        // an initial double slash specially.
+        nsAutoCString xauth(home);
+        if (xauth != "/"_ns) {
+          xauth.Append('/');
+        }
+        xauth.AppendLiteral(".Xauthority");
+        policy->AddPath(rdonly, xauth.get());
+      }
+    }
+#endif
   }
 
   // Bug 1732580: when packaged as a strictly confined snap, may need
@@ -855,8 +838,9 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
     }
   }
 
-  // VA-API needs GPU access and GL context creation
-  AddGLDependencies(policy.get());
+  // VA-API needs DRI and GPU detection
+  policy->AddDir(rdwr, "/dev/dri");
+  AddDriPaths(policy.get());
 
   // FFmpeg and GPU drivers may need general-case library loading
   AddLdconfigPaths(policy.get());
