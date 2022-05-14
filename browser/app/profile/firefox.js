@@ -2094,11 +2094,7 @@ pref("extensions.pocket.showHome", true);
 pref("extensions.pocket.loggedOutVariant", "control");
 
 // Enable the new Pocket panels.
-#ifdef NIGHTLY_BUILD
-  pref("extensions.pocket.refresh.layout.enabled", true);
-#else
-  pref("extensions.pocket.refresh.layout.enabled", false);
-#endif
+pref("extensions.pocket.refresh.layout.enabled", true);
 
 // Just for the new Pocket panels, enables the email signup button.
 pref("extensions.pocket.refresh.emailButton.enabled", false);
