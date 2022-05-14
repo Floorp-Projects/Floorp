@@ -45,6 +45,13 @@ typedef enum FT_LcdFilter_
 #    define FT_PIXEL_MODE_BGRA 7
 #endif
 
+// If compiling with FreeType before 2.12.0
+#ifndef FT_FACE_FLAG_SVG
+// We need the format tag so that we can switch on it and handle a possibly-
+// newer version of the library at runtime.
+static constexpr FT_UInt32 FT_IMAGE_TAG(FT_GLYPH_FORMAT_SVG, 'S', 'V', 'G', ' ');
+#endif
+
 #ifndef SK_CAN_USE_DLOPEN
 #define SK_CAN_USE_DLOPEN 1
 #endif
@@ -586,6 +593,10 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
                                        fFTFace->glyph->bitmap.width,
                                        fFTFace->glyph->bitmap.rows);
         }
+        break;
+    case FT_GLYPH_FORMAT_SVG:
+        // We don't support getting glyph bounds for SVG, but at least the advance
+        // should be correctly returned, and we don't want to fire an assertion.
         break;
     default:
         SkDEBUGFAIL("unknown glyph format");
