@@ -14,7 +14,6 @@
 #include "mozilla/Variant.h"
 #include "NamespaceImports.h"
 
-#include "js/experimental/JSStencil.h"
 #include "js/OffThreadScriptCompilation.h"
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"
@@ -206,11 +205,6 @@ void CancelOffThreadParses(JSRuntime* runtime);
 void CancelOffThreadDelazify(JSRuntime* runtime);
 
 /*
- * Wait for all delazification to complete.
- */
-void WaitForAllDelazifyTasks(JSRuntime* rt);
-
-/*
  * Start a parse/emit cycle for a stream of source. The characters must stay
  * alive until the compilation finishes.
  */
@@ -242,12 +236,6 @@ JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
     JSContext* cx, const JS::DecodeOptions& options,
     JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
     void* callbackData);
-
-// Start off-thread delazification task, to race the delazification of inner
-// functions.
-[[nodiscard]] bool StartOffThreadDelazification(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    const frontend::CompilationStencil& stencil);
 
 // Drain the task queues and wait for all helper threads to finish running.
 //
