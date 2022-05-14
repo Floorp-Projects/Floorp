@@ -252,7 +252,14 @@ class PrintHelper {
     });
 
     // Mock PrintEventHandler with our Promises.
-    this.win.PrintEventHandler._showPrintDialog = () => showSystemDialogPromise;
+    this.win.PrintEventHandler._showPrintDialog = (
+      dialogSvc,
+      haveSelection,
+      settings
+    ) => {
+      this.systemDialogOpenedWithSelection = haveSelection;
+      return showSystemDialogPromise;
+    };
     this.win.PrintEventHandler._doPrint = (bc, settings) => {
       this._printedSettings = settings;
       return printPromise;

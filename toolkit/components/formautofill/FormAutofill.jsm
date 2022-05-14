@@ -38,6 +38,10 @@ const ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF =
 const AUTOFILL_CREDITCARDS_HIDE_UI_PREF =
   "extensions.formautofill.creditCards.hideui";
 const FORM_AUTOFILL_SUPPORT_RTL_PREF = "extensions.formautofill.supportRTL";
+const AUTOFILL_CREDITCARDS_AUTOCOMPLETE_OFF_PREF =
+  "extensions.formautofill.creditCards.ignoreAutocompleteOff";
+const AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF =
+  "extensions.formautofill.addresses.ignoreAutocompleteOff";
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -70,6 +74,8 @@ var FormAutofill = {
   ENABLED_AUTOFILL_CREDITCARDS_REAUTH_PREF,
   ADDRESSES_FIRST_TIME_USE_PREF,
   CREDITCARDS_USED_STATUS_PREF,
+  AUTOFILL_CREDITCARDS_AUTOCOMPLETE_OFF_PREF,
+  AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF,
 
   get DEFAULT_REGION() {
     return Region.home || "US";
@@ -225,6 +231,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
   "supportRTL",
   FORM_AUTOFILL_SUPPORT_RTL_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "creditCardsAutocompleteOff",
+  AUTOFILL_CREDITCARDS_AUTOCOMPLETE_OFF_PREF
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  FormAutofill,
+  "addressesAutocompleteOff",
+  AUTOFILL_ADDRESSES_AUTOCOMPLETE_OFF_PREF
 );
 
 // XXX: This should be invalidated on intl:app-locales-changed.

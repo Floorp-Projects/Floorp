@@ -262,6 +262,12 @@ extern JS_PUBLIC_API JSObject* GetModuleObject(Handle<JSScript*> moduleScript);
 extern JS_PUBLIC_API JSObject* GetModuleNamespace(
     JSContext* cx, Handle<JSObject*> moduleRecord);
 
+extern JS_PUBLIC_API JSObject* GetModuleForNamespace(
+    JSContext* cx, Handle<JSObject*> moduleNamespace);
+
+extern JS_PUBLIC_API JSObject* GetModuleEnvironment(
+    JSContext* cx, Handle<JSObject*> moduleObj);
+
 }  // namespace JS
 
 #endif  // js_Modules_h

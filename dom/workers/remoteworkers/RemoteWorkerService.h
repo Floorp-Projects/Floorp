@@ -48,7 +48,7 @@ class RemoteWorkerService final : public nsIObserver {
 
   void InitializeOnTargetThread();
 
-  void ShutdownOnTargetThread();
+  void CloseActorOnTargetThread();
 
   nsCOMPtr<nsIThread> mThread;
   RefPtr<RemoteWorkerServiceChild> mActor;

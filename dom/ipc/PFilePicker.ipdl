@@ -5,10 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
-include protocol PChildToParentStream;
-include protocol PFileDescriptorSet;
-include protocol PParentToChildStream;
-include protocol PRemoteLazyInputStream;
 
 include IPCBlob;
 

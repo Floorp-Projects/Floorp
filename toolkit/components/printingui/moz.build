@@ -9,9 +9,4 @@ with Files("**"):
 
 DIRS += ["ipc"]
 
-if CONFIG["NS_PRINTING"]:
-    UNIFIED_SOURCES += [
-        "nsPrintingPromptService.cpp",
-    ]
-
 FINAL_LIBRARY = "xul"

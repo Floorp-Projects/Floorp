@@ -49,8 +49,6 @@ const kPrefSidebarButtonUsed = "browser.engagement.sidebar-button.has-used";
 
 const kExpectedWindowURL = AppConstants.BROWSER_CHROME_URL;
 
-const global = this;
-
 var gDefaultTheme;
 var gSelectedTheme;
 
@@ -4641,31 +4639,44 @@ var CustomizableUI = {
   },
 
   getTestOnlyInternalProp(aProp) {
-    if (
-      !Cu.isInAutomation ||
-      ![
-        "CustomizableUIInternal",
-        "gAreas",
-        "gFuturePlacements",
-        "gPalette",
-        "gPlacements",
-        "gSavedState",
-        "gSeenWidgets",
-        "kVersion",
-      ].includes(aProp)
-    ) {
+    if (!Cu.isInAutomation) {
       return null;
     }
-    return global[aProp];
+    switch (aProp) {
+      case "CustomizableUIInternal":
+        return CustomizableUIInternal;
+      case "gAreas":
+        return gAreas;
+      case "gFuturePlacements":
+        return gFuturePlacements;
+      case "gPalette":
+        return gPalette;
+      case "gPlacements":
+        return gPlacements;
+      case "gSavedState":
+        return gSavedState;
+      case "gSeenWidgets":
+        return gSeenWidgets;
+      case "kVersion":
+        return kVersion;
+    }
+    return null;
   },
   setTestOnlyInternalProp(aProp, aValue) {
-    if (
-      !Cu.isInAutomation ||
-      !["gSavedState", "kVersion", "gDirty"].includes(aProp)
-    ) {
+    if (!Cu.isInAutomation) {
       return;
     }
-    global[aProp] = aValue;
+    switch (aProp) {
+      case "gSavedState":
+        gSavedState = aValue;
+        break;
+      case "kVersion":
+        kVersion = aValue;
+        break;
+      case "gDirty":
+        gDirty = aValue;
+        break;
+    }
   },
 };
 Object.freeze(CustomizableUI);

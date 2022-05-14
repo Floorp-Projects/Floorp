@@ -1058,8 +1058,8 @@ dictionary GPUComputePassDescriptor : GPUObjectDescriptorBase {
  Exposed=(Window,DedicatedWorker)]
 interface GPUComputePassEncoder {
     void setPipeline(GPUComputePipeline pipeline);
-    void dispatch(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
-    void dispatchIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
+    void dispatchWorkgroups(GPUSize32 x, optional GPUSize32 y = 1, optional GPUSize32 z = 1);
+    void dispatchWorkgroupsIndirect(GPUBuffer indirectBuffer, GPUSize64 indirectOffset);
 
     [Throws]
     void endPass();

@@ -49,8 +49,6 @@ const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE =
   "webextensions.native-messaging.max-output-message-bytes";
 
-const global = this;
-
 var NativeApp = class extends EventEmitter {
   /**
    * @param {BaseContext} context The context that initiated the native app.
@@ -244,7 +242,7 @@ var NativeApp = class extends EventEmitter {
     if (this._isDisconnected) {
       throw new ExtensionError("Attempt to postMessage on disconnected port");
     }
-    let msg = holder.deserialize(global);
+    let msg = holder.deserialize(globalThis);
     if (Cu.getClassName(msg, true) != "ArrayBuffer") {
       // This error cannot be triggered by extensions; it indicates an error in
       // our implementation.

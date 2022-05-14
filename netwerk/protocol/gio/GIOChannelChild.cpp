@@ -102,9 +102,9 @@ GIOChannelChild::AsyncOpen(nsIStreamListener* aListener) {
     mLoadGroup->AddRequest(this, nullptr);
   }
 
-  mozilla::ipc::AutoIPCStream autoStream;
-  autoStream.Serialize(mUploadStream,
-                       static_cast<ContentChild*>(gNeckoChild->Manager()));
+  Maybe<mozilla::ipc::IPCStream> ipcStream;
+  mozilla::ipc::SerializeIPCStream(do_AddRef(mUploadStream), ipcStream,
+                                   /* aAllowLazy */ false);
 
   uint32_t loadFlags = 0;
   GetLoadFlags(&loadFlags);
@@ -113,7 +113,7 @@ GIOChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   SerializeURI(nsBaseChannel::URI(), openArgs.uri());
   openArgs.startPos() = mStartPos;
   openArgs.entityID() = mEntityID;
-  openArgs.uploadStream() = autoStream.TakeOptionalValue();
+  openArgs.uploadStream() = ipcStream;
   openArgs.loadFlags() = loadFlags;
 
   nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();

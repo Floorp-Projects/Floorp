@@ -58,12 +58,27 @@ const char* sPhaseObserverKeys[] = {
     "xpcom-will-shutdown",              // XPCOMWillShutdown
     "xpcom-shutdown",                   // XPCOMShutdown
     "xpcom-shutdown-threads",           // XPCOMShutdownThreads
-    nullptr,                            // XPCOMShutdownLoaders
     nullptr,                            // XPCOMShutdownFinal
     nullptr                             // CCPostLastCycleCollection
 };
 
 static_assert(sizeof(sPhaseObserverKeys) / sizeof(sPhaseObserverKeys[0]) ==
+              (size_t)ShutdownPhase::ShutdownPhase_Length);
+
+const char* sPhaseReadableNames[] = {"NotInShutdown",
+                                     "AppShutdownConfirmed",
+                                     "AppShutdownNetTeardown",
+                                     "AppShutdownTeardown",
+                                     "AppShutdown",
+                                     "AppShutdownQM",
+                                     "AppShutdownTelemetry",
+                                     "XPCOMWillShutdown",
+                                     "XPCOMShutdown",
+                                     "XPCOMShutdownThreads",
+                                     "XPCOMShutdownFinal",
+                                     "CCPostLastCycleCollection"};
+
+static_assert(sizeof(sPhaseReadableNames) / sizeof(sPhaseReadableNames[0]) ==
               (size_t)ShutdownPhase::ShutdownPhase_Length);
 
 #ifndef ANDROID
@@ -123,6 +138,11 @@ void AppShutdown::SaveEnvVarsForPotentialRestart() {
 
 const char* AppShutdown::GetObserverKey(ShutdownPhase aPhase) {
   return sPhaseObserverKeys[static_cast<std::underlying_type_t<ShutdownPhase>>(
+      aPhase)];
+}
+
+const char* AppShutdown::GetShutdownPhaseName(ShutdownPhase aPhase) {
+  return sPhaseReadableNames[static_cast<std::underlying_type_t<ShutdownPhase>>(
       aPhase)];
 }
 
@@ -308,7 +328,7 @@ bool AppShutdown::IsNoOrLegalShutdownTopic(const char* aTopic) {
 }
 #endif
 
-void AdvanceShutdownPhaseInternal(
+void AppShutdown::AdvanceShutdownPhaseInternal(
     ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
     const nsCOMPtr<nsISupports>& aNotificationSubject) {
   AssertIsOnMainThread();
@@ -321,6 +341,13 @@ void AdvanceShutdownPhaseInternal(
     return;
   }
   sCurrentShutdownPhase = aPhase;
+
+  // TODO: Bug 1768581
+  // We think it would be more logical to have the following order here:
+  //    AppShutdown::MaybeFastShutdown(aPhase);
+  //    sTerminator->AdvancePhase(aPhase);
+  //    obsService->NotifyObservers(...);
+  //    mozilla::KillClearOnShutdown(aPhase);
 
 #ifndef ANDROID
   if (sTerminator) {

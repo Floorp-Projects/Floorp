@@ -140,7 +140,6 @@ UNIFIED_SOURCES += [
     "CreateAppData.cpp",
     "nsAppStartupNotifier.cpp",
     "nsConsoleWriter.cpp",
-    "nsEmbeddingModule.cpp",
     "nsNativeAppSupportBase.cpp",
     "nsSigHandlers.cpp",
     "nsXREDirProvider.cpp",

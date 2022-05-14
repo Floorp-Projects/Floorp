@@ -1,0 +1,66 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Doc interface here */
+
+#include "nsISupports.idl"
+#include "nsIWebProgressListener.idl"
+#include "nsIPrintSettings.idl"
+#include "nsIObserver.idl"
+
+interface mozIDOMWindowProxy;
+
+/**
+ * Service for opening native print dialogs provided by the operating system.
+ * (The widget code may customize the dialog.)
+ */
+[scriptable, uuid(88af6712-a9fd-4393-9af3-3ffbb1f2caaf)]
+interface nsIPrintDialogService : nsISupports
+{
+  /**
+   * Initialize the service.
+   */
+  void init();
+
+  /**
+   * Show the print dialog.
+   * @param aParent   A DOM window the dialog will be parented to.
+   * @param aHaveSelection A boolean indicating whether the document to be
+   *                  printed has some selected text, which is used to
+   *                  determine whether the "Print selection only" radio
+   *                  button is enabled in the print settings dialog.
+   * @param aSettings On entry, this contains initial settings for the
+   *                  print dialog. On return, if the print operation should
+   *                  proceed, then this has been updated with the settings
+   *                  that the user selected in the dialog.
+   * @return NS_OK if the print operation should proceed
+   * @return NS_ERROR_ABORT if the user indicated not to proceed
+   * @return a suitable error for failures to show the print dialog.
+   */
+  void showPrintDialog(in mozIDOMWindowProxy aParent,
+                       in boolean aHaveSelection,
+                       in nsIPrintSettings aPrintSettings);
+
+  /**
+   * Show the page setup dialog. Note that there is no way to tell whether the
+   * user clicked OK or Cancel on the dialog.
+   * @param aParent   A DOM window the dialog will be parented to.
+   * @param aSettings On entry, this contains initial settings for the
+   *                  page setup dialog. On return, if the dialog wasn't
+   *                  cancelled, then this has been updated with the settings
+   *                  that the user selected in the dialog.
+   */
+  void showPageSetupDialog(in mozIDOMWindowProxy aParent,
+                           in nsIPrintSettings aPrintSettings);
+
+};
+
+%{C++
+#define NS_PRINTDIALOGSERVICE_IID \
+ {0x88af6712, 0xa9fd, 0x4393, { 0x9a, 0xf3, 0x3f, 0xfb, 0xb1, 0xf2, 0xca, 0xaf}}
+
+#define NS_PRINTDIALOGSERVICE_CONTRACTID \
+  ("@mozilla.org/widget/printdialog-service;1")
+%}

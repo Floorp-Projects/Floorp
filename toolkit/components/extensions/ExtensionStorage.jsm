@@ -24,8 +24,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 
-const global = this;
-
 function isStructuredCloneHolder(value) {
   return (
     value &&
@@ -39,7 +37,7 @@ class SerializeableMap extends Map {
     let result = {};
     for (let [key, value] of this) {
       if (isStructuredCloneHolder(value)) {
-        value = value.deserialize(global);
+        value = value.deserialize(globalThis);
         this.set(key, value);
       }
 

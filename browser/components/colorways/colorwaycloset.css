@@ -14,7 +14,7 @@ body > header {
   margin: 2em;
 }
 
-body > header > h1 {
+#collection-title {
   display: inline-block;
   margin: 0;
   padding: 0;

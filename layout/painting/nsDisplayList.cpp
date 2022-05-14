@@ -8296,19 +8296,14 @@ bool nsDisplayBackdropRootContainer::CreateWebRenderCommands(
   return true;
 }
 
-/* static */
-bool nsDisplayBackdropFilters::CanCreateWebRenderCommands(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-  return SVGIntegrationUtils::CanCreateWebRenderFiltersForFrame(aFrame);
-}
-
 bool nsDisplayBackdropFilters::CreateWebRenderCommands(
     wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
     const StackingContextHelper& aSc, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
-  auto filterChain = mFrame->StyleEffects()->mBackdropFilters.AsSpan();
+  const ComputedStyle& style = mStyle ? *mStyle : *mFrame->Style();
+  auto filterChain = style.StyleEffects()->mBackdropFilters.AsSpan();
   bool initialized = true;
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
@@ -8324,7 +8319,7 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
 
   nsCSSRendering::ImageLayerClipState clip;
   nsCSSRendering::GetImageLayerClip(
-      mFrame->StyleBackground()->BottomLayer(), mFrame, *mFrame->StyleBorder(),
+      style.StyleBackground()->BottomLayer(), mFrame, *style.StyleBorder(),
       mBackdropRect, mBackdropRect, false,
       mFrame->PresContext()->AppUnitsPerDevPixel(), &clip);
 
@@ -8359,8 +8354,10 @@ void nsDisplayBackdropFilters::Paint(nsDisplayListBuilder* aBuilder,
 
 /* static */
 nsDisplayFilters::nsDisplayFilters(nsDisplayListBuilder* aBuilder,
-                                   nsIFrame* aFrame, nsDisplayList* aList)
+                                   nsIFrame* aFrame, nsDisplayList* aList,
+                                   nsIFrame* aStyleFrame)
     : nsDisplayEffectsBase(aBuilder, aFrame, aList),
+      mStyle(aFrame == aStyleFrame ? nullptr : aStyleFrame->Style()),
       mEffectsBounds(aFrame->InkOverflowRectRelativeToSelf()) {
   MOZ_COUNT_CTOR(nsDisplayFilters);
   mVisibleRect = aBuilder->GetVisibleRect() +
@@ -8382,7 +8379,6 @@ void nsDisplayFilters::ComputeInvalidationRegion(
 
   const auto* geometry =
       static_cast<const nsDisplayFiltersGeometry*>(aGeometry);
-
   if (aBuilder->ShouldSyncDecodeImages() &&
       geometry->ShouldInvalidateToSyncDecodeImages()) {
     bool snap;
@@ -8394,6 +8390,7 @@ void nsDisplayFilters::ComputeInvalidationRegion(
 void nsDisplayFilters::PaintWithContentsPaintCallback(
     nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     const std::function<void(gfxContext* aContext)>& aPaintChildren) {
+  MOZ_ASSERT(!mStyle, "Shouldn't get to  this code path on the root");
   imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   SVGIntegrationUtils::PaintFramesParams params(
@@ -8427,11 +8424,16 @@ bool nsDisplayFilters::CreateWebRenderCommands(
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   bool initialized = true;
-  auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
+  auto filterChain = mStyle ? mStyle->StyleEffects()->mFilters.AsSpan()
+                            : mFrame->StyleEffects()->mFilters.AsSpan();
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
       !SVGIntegrationUtils::BuildWebRenderFilters(
           mFrame, filterChain, wrFilters, filterClip, initialized)) {
+    if (mStyle) {
+      // TODO(bug 1769223): Support fallback filters in the root code-path.
+      return true;
+    }
     return false;
   }
 

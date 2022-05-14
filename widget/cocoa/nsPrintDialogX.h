@@ -15,18 +15,14 @@
 class nsIPrintSettings;
 class nsIStringBundle;
 
-class nsPrintDialogServiceX : public nsIPrintDialogService {
+class nsPrintDialogServiceX final : public nsIPrintDialogService {
+  virtual ~nsPrintDialogServiceX();
+
  public:
   nsPrintDialogServiceX();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init() override;
-  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) override;
-  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) override;
-
- protected:
-  virtual ~nsPrintDialogServiceX();
+  NS_DECL_NSIPRINTDIALOGSERVICE
 };
 
 @interface PrintPanelAccessoryView : NSView {
@@ -44,7 +40,7 @@ class nsPrintDialogServiceX : public nsIPrintDialogService {
   NSPopUpButton* mFooterRightList;
 }
 
-- (id)initWithSettings:(nsIPrintSettings*)aSettings;
+- (id)initWithSettings:(nsIPrintSettings*)aSettings haveSelection:(bool)aHaveSelection;
 
 - (void)exportSettings;
 
@@ -52,10 +48,12 @@ class nsPrintDialogServiceX : public nsIPrintDialogService {
 
 @interface PrintPanelAccessoryController : NSViewController <NSPrintPanelAccessorizing>
 
-- (id)initWithSettings:(nsIPrintSettings*)aSettings;
+- (id)initWithSettings:(nsIPrintSettings*)aSettings haveSelection:(bool)aHaveSelection;
 
 - (void)exportSettings;
 
 @end
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintDialogServiceX, NS_IPRINTDIALOGSERVICE_IID)
 
 #endif  // nsPrintDialog_h_
