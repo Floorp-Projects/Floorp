@@ -5973,8 +5973,10 @@ class nsDisplayBackdropRootContainer : public nsDisplayWrapList {
 class nsDisplayBackdropFilters : public nsDisplayWrapList {
  public:
   nsDisplayBackdropFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                           nsDisplayList* aList, const nsRect& aBackdropRect)
+                           nsDisplayList* aList, const nsRect& aBackdropRect,
+                           nsIFrame* aStyleFrame)
       : nsDisplayWrapList(aBuilder, aFrame, aList),
+        mStyle(aFrame == aStyleFrame ? nullptr : aStyleFrame->Style()),
         mBackdropRect(aBackdropRect) {
     MOZ_COUNT_CTOR(nsDisplayBackdropFilters);
   }
@@ -5990,9 +5992,6 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
       nsDisplayListBuilder* aDisplayListBuilder) override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
-  static bool CanCreateWebRenderCommands(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame);
-
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return !aBuilder->IsPaintingForWebRender();
   }
@@ -6000,6 +5999,7 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
   bool CreatesStackingContextHelper() override { return true; }
 
  private:
+  RefPtr<ComputedStyle> mStyle;
   nsRect mBackdropRect;
 };
 
@@ -6013,11 +6013,12 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
 class nsDisplayFilters : public nsDisplayEffectsBase {
  public:
   nsDisplayFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   nsDisplayList* aList);
+                   nsDisplayList* aList, nsIFrame* aStyleFrame);
 
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    const nsDisplayFilters& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
+        mStyle(aOther.mStyle),
         mEffectsBounds(aOther.mEffectsBounds) {
     MOZ_COUNT_CTOR(nsDisplayFilters);
   }
@@ -6082,6 +6083,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
  private:
   NS_DISPLAY_ALLOW_CLONING()
 
+  RefPtr<ComputedStyle> mStyle;
   // relative to mFrame
   nsRect mEffectsBounds;
   nsRect mVisibleRect;

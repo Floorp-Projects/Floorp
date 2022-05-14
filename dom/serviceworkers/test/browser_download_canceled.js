@@ -141,7 +141,6 @@ add_task(async function interruptedDownloads() {
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.testing.enabled", true],
-      ["javascript.options.streams", true],
     ],
   });
 

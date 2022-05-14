@@ -6,8 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PHttpChannel;
-include protocol PChildToParentStream;
-include BlobTypes;
 include ClientIPCTypes;
 include URIParams;
 include IPCServiceWorkerDescriptor;

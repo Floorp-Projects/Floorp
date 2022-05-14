@@ -85,15 +85,14 @@ class AppShutdown {
   static void AdvanceShutdownPhaseWithoutNotify(ShutdownPhase aPhase);
 
   /**
-   * This will perform a fast shutdown via _exit(0) or similar if the user's
-   * prefs are configured to do so at this phase.
-   */
-  static void MaybeFastShutdown(ShutdownPhase aPhase);
-
-  /**
    * Map shutdown phase to observer key
    */
   static const char* GetObserverKey(ShutdownPhase aPhase);
+
+  /**
+   * Map shutdown phase to readable name
+   */
+  static const char* GetShutdownPhaseName(ShutdownPhase aPhase);
 
   /**
    * Map observer topic key to shutdown phase
@@ -108,6 +107,20 @@ class AppShutdown {
    */
   static bool IsNoOrLegalShutdownTopic(const char* aTopic);
 #endif
+
+ private:
+  /**
+   * This will perform a fast shutdown via _exit(0) or similar if the user's
+   * prefs are configured to do so at this phase.
+   */
+  static void MaybeFastShutdown(ShutdownPhase aPhase);
+
+  /**
+   * Internal helper function, uses MaybeFastShutdown.
+   */
+  static void AdvanceShutdownPhaseInternal(
+      ShutdownPhase aPhase, bool doNotify, const char16_t* aNotificationData,
+      const nsCOMPtr<nsISupports>& aNotificationSubject);
 };
 
 }  // namespace mozilla

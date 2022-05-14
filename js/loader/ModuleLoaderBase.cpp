@@ -344,13 +344,29 @@ nsresult ModuleLoaderBase::StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
 }
 
 bool ModuleLoaderBase::ModuleMapContainsURL(nsIURI* aURL) const {
-  // Returns whether we have fetched, or are currently fetching, a module script
-  // for a URL.
-  return mFetchingModules.Contains(aURL) || mFetchedModules.Contains(aURL);
+  return IsModuleFetching(aURL) || IsModuleFetched(aURL);
 }
 
 bool ModuleLoaderBase::IsModuleFetching(nsIURI* aURL) const {
   return mFetchingModules.Contains(aURL);
+}
+
+bool ModuleLoaderBase::IsModuleFetched(nsIURI* aURL) const {
+  return mFetchedModules.Contains(aURL);
+}
+
+nsresult ModuleLoaderBase::GetFetchedModuleURLs(nsTArray<nsCString>& aURLs) {
+  for (const auto& entry : mFetchedModules) {
+    nsIURI* uri = entry.GetData()->BaseURL();
+
+    nsAutoCString spec;
+    nsresult rv = uri->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aURLs.AppendElement(spec);
+  }
+
+  return NS_OK;
 }
 
 void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {

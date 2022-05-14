@@ -15,7 +15,7 @@ log = "0.4"
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 pkcs11 = "0.4"
 rsclientcerts = { path = "../rsclientcerts" }
-sha2 = "0.8"
+sha2 = "0.10.2"
 
 [target."cfg(target_os = \"macos\")".dependencies.core-foundation]
 version = "0.9"

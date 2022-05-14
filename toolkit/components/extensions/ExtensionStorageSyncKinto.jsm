@@ -16,8 +16,6 @@ var EXPORTED_SYMBOLS = [
   "extensionStorageSync",
 ];
 
-const global = this;
-
 Cu.importGlobalProperties(["atob", "btoa"]);
 
 const { AppConstants } = ChromeUtils.import(
@@ -265,7 +263,7 @@ class EncryptionRemoteTransformer {
     return Promise.resolve(record.id);
   }
 }
-global.EncryptionRemoteTransformer = EncryptionRemoteTransformer;
+this.EncryptionRemoteTransformer = EncryptionRemoteTransformer;
 
 /**
  * An EncryptionRemoteTransformer that provides a keybundle derived
@@ -331,7 +329,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
     );
   }
 }
-global.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
+this.KeyRingEncryptionRemoteTransformer = KeyRingEncryptionRemoteTransformer;
 
 /**
  * A Promise that centralizes initialization of ExtensionStorageSync.
@@ -697,7 +695,7 @@ let CollectionKeyEncryptionRemoteTransformer = class extends EncryptionRemoteTra
   }
 };
 
-global.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
+this.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
 
 /**
  * Clean up now that one context is no longer using this extension's collection.
@@ -1323,7 +1321,7 @@ class ExtensionStorageSync {
       records = {};
     } else {
       keys = Object.keys(spec);
-      records = Cu.cloneInto(spec, global);
+      records = Cu.cloneInto(spec, {});
     }
 
     for (let key of keys) {

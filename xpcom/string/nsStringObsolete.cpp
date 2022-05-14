@@ -778,65 +778,68 @@ static void RFind_ComputeSearchRange(uint32_t bigLen, uint32_t littleLen,
 
 // specialized methods:
 
+namespace mozilla::detail {
+
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-int32_t nsTString<T>::Find(const self_type& aString, int32_t aOffset,
-                           int32_t aCount) const {
+int32_t nsTStringRepr<T>::Find(const self_type& aString, int32_t aOffset,
+                               int32_t aCount) const {
   // this method changes the meaning of aOffset and aCount:
   Find_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
   // Capture the raw buffer locally to help msvc deduce the type.
-  const char_type* str = aString.get();
+  const char_type* str = aString.BeginReading();
   int32_t result = FindSubstring(this->mData + aOffset, aCount, str,
                                  aString.Length(), false);
   if (result != kNotFound) result += aOffset;
   return result;
 }
 
-template int32_t nsTString<char16_t>::Find(const self_type&, int32_t,
-                                           int32_t) const;
+template int32_t nsTStringRepr<char16_t>::Find(const self_type&, int32_t,
+                                               int32_t) const;
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-int32_t nsTString<T>::Find(const char_type* aString, int32_t aOffset,
-                           int32_t aCount) const {
+int32_t nsTStringRepr<T>::Find(const char_type* aString, int32_t aOffset,
+                               int32_t aCount) const {
   return Find(nsTDependentString<T>(aString), aOffset, aCount);
 }
 
-template int32_t nsTString<char16_t>::Find(const char_type*, int32_t,
-                                           int32_t) const;
+template int32_t nsTStringRepr<char16_t>::Find(const char_type*, int32_t,
+                                               int32_t) const;
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-int32_t nsTString<T>::RFind(const self_type& aString, int32_t aOffset,
-                            int32_t aCount) const {
+int32_t nsTStringRepr<T>::RFind(const self_type& aString, int32_t aOffset,
+                                int32_t aCount) const {
   // this method changes the meaning of aOffset and aCount:
   RFind_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
   // Capture the raw buffer locally to help msvc deduce the type.
-  const char_type* str = aString.get();
+  const char_type* str = aString.BeginReading();
   int32_t result = RFindSubstring(this->mData + aOffset, aCount, str,
                                   aString.Length(), false);
   if (result != kNotFound) result += aOffset;
   return result;
 }
 
-template int32_t nsTString<char16_t>::RFind(const self_type&, int32_t,
-                                            int32_t) const;
+template int32_t nsTStringRepr<char16_t>::RFind(const self_type&, int32_t,
+                                                int32_t) const;
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-int32_t nsTString<T>::RFind(const char_type* aString, int32_t aOffset,
-                            int32_t aCount) const {
+int32_t nsTStringRepr<T>::RFind(const char_type* aString, int32_t aOffset,
+                                int32_t aCount) const {
   return RFind(nsTDependentString<T>(aString), aOffset, aCount);
 }
 
-template int32_t nsTString<char16_t>::RFind(const char_type*, int32_t,
-                                            int32_t) const;
+template int32_t nsTStringRepr<char16_t>::RFind(const char_type*, int32_t,
+                                                int32_t) const;
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-int32_t nsTString<T>::FindCharInSet(const char* aSet, int32_t aOffset) const {
+int32_t nsTStringRepr<T>::FindCharInSet(const char* aSet,
+                                        int32_t aOffset) const {
   if (aOffset < 0)
     aOffset = 0;
   else if (aOffset >= int32_t(this->mLength))
@@ -848,11 +851,14 @@ int32_t nsTString<T>::FindCharInSet(const char* aSet, int32_t aOffset) const {
   return result;
 }
 
-template int32_t nsTString<char16_t>::FindCharInSet(const char*, int32_t) const;
+template int32_t nsTStringRepr<char16_t>::FindCharInSet(const char*,
+                                                        int32_t) const;
+
+}  // namespace mozilla::detail
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-void nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar) {
+void nsTSubstring<T>::ReplaceChar(const char* aSet, char16_t aNewChar) {
   if (!this->EnsureMutable())  // XXX do this lazily?
     this->AllocFailed(this->mLength);
 
@@ -869,8 +875,7 @@ void nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar) {
   }
 }
 
-namespace mozilla {
-namespace detail {
+namespace mozilla::detail {
 
 template <typename T>
 template <typename Q, typename EnableIfChar>
@@ -927,27 +932,21 @@ bool nsTStringRepr<T>::EqualsIgnoreCase(const incompatible_char_type* aString,
 template bool nsTStringRepr<char16_t>::EqualsIgnoreCase(
     const incompatible_char_type*, size_type) const;
 
-}  // namespace detail
-}  // namespace mozilla
-
 /**
  * nsTString::ToDouble
  */
-
 template <>
-double nsTString<char>::ToDouble(TrailingCharsPolicy aTrailingCharsPolicy,
-                                 nsresult* aErrorCode) const {
+double nsTStringRepr<char>::ToDouble(bool aAllowTrailingChars,
+                                     nsresult* aErrorCode) const {
   double res = 0.0;
   if (this->mLength > 0) {
     char* conv_stopped;
     const char* str = this->mData;
     // Use PR_strtod, not strtod, since we don't want locale involved.
     res = PR_strtod(str, &conv_stopped);
-    if (aTrailingCharsPolicy == TrailingCharsPolicy::Allow &&
-        conv_stopped != str) {
+    if (aAllowTrailingChars && conv_stopped != str) {
       *aErrorCode = NS_OK;
-    } else if (aTrailingCharsPolicy == TrailingCharsPolicy::Disallow &&
-               conv_stopped == str + this->mLength) {
+    } else if (!aAllowTrailingChars && conv_stopped == str + this->mLength) {
       *aErrorCode = NS_OK;
     } else {
       *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
@@ -960,36 +959,11 @@ double nsTString<char>::ToDouble(TrailingCharsPolicy aTrailingCharsPolicy,
 }
 
 template <>
-double nsTString<char>::ToDouble(nsresult* aErrorCode) const {
-  return ToDouble(TrailingCharsPolicy::Disallow, aErrorCode);
+double nsTStringRepr<char16_t>::ToDouble(bool aAllowTrailingChars,
+                                         nsresult* aErrorCode) const {
+  NS_LossyConvertUTF16toASCII cString(BeginReading(), Length());
+  return aAllowTrailingChars ? cString.ToDoubleAllowTrailingChars(aErrorCode)
+                             : cString.ToDouble(aErrorCode);
 }
 
-template <>
-double nsTString<char16_t>::ToDouble(nsresult* aErrorCode) const {
-  return NS_LossyConvertUTF16toASCII(*this).ToDouble(aErrorCode);
-}
-
-template <typename T>
-float nsTString<T>::ToFloat(nsresult* aErrorCode) const {
-  return (float)ToDouble(aErrorCode);
-}
-
-template <>
-double nsTString<char>::ToDoubleAllowTrailingChars(nsresult* aErrorCode) const {
-  return ToDouble(TrailingCharsPolicy::Allow, aErrorCode);
-}
-
-template <>
-double nsTString<char16_t>::ToDoubleAllowTrailingChars(
-    nsresult* aErrorCode) const {
-  return NS_LossyConvertUTF16toASCII(*this).ToDoubleAllowTrailingChars(
-      aErrorCode);
-}
-
-template <typename T>
-float nsTString<T>::ToFloatAllowTrailingChars(nsresult* aErrorCode) const {
-  return (float)ToDoubleAllowTrailingChars(aErrorCode);
-}
-
-template class nsTString<char>;
-template class nsTString<char16_t>;
+}  // namespace mozilla::detail

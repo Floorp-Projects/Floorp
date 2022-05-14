@@ -22,12 +22,6 @@ async function checkInputHistory(len = 0) {
   );
 }
 
-async function clearInputHistory() {
-  await PlacesUtils.withConnectionWrapper("test::clearInputHistory", db => {
-    return db.executeCached(`DELETE FROM moz_inputhistory`);
-  });
-}
-
 const TEST_URL = "http://example.com/";
 
 async function do_test(openFn, pickMethod) {
@@ -37,7 +31,7 @@ async function do_test(openFn, pickMethod) {
       url: "about:blank",
     },
     async function(browser) {
-      await clearInputHistory();
+      await PlacesTestUtils.clearInputHistory();
       await openFn();
       await UrlbarTestUtils.promiseSearchComplete(window);
       let promise = BrowserTestUtils.waitForDocLoadAndStopIt(TEST_URL, browser);

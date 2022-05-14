@@ -11,7 +11,11 @@ impl Seconds {
     pub(crate) fn from_val(val: &HeaderValue) -> Option<Self> {
         let secs = val.to_str().ok()?.parse().ok()?;
 
-        Some(Seconds(Duration::from_secs(secs)))
+        Some(Self::from_secs(secs))
+    }
+
+    pub(crate) fn from_secs(secs: u64) -> Self {
+        Self::from(Duration::from_secs(secs))
     }
 
     pub(crate) fn as_u64(&self) -> u64 {

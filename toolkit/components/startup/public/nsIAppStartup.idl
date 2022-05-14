@@ -142,7 +142,7 @@ interface nsIAppStartup : nsISupports
      * @param aExitCode
      *        The exit code to return from the process. The precise code
      *        returned by the process may vary depending on the platform. Only
-     *        values 0-255 should generallt be used. If not specified an exit
+     *        values 0-255 should generally be used. If not specified an exit
      *        code of 0 will be used.
      *
      * @return false if the shutdown was cancelled due to the presence
@@ -154,7 +154,7 @@ interface nsIAppStartup : nsISupports
     /**
     * These values must match the xpcom/base/ShutdownPhase.h values.
     * We do not expose late XPCOM shutdown phases here, everything
-    * after SHUTDOWN_PHASE_XPCOMSHUTDOWN is expected to be irrelevant 
+    * after SHUTDOWN_PHASE_XPCOMSHUTDOWN is expected to be irrelevant
     * for JS.
     */
     cenum IDLShutdownPhase : 8 {
@@ -174,7 +174,7 @@ interface nsIAppStartup : nsISupports
      * we notify other observers. Calls MaybeFastShutdown.
      * This function is supposed to be used only from some (xpcshell) tests
      * explicitely dealing with shutdown.
-     * 
+     *
      * @param aPhase
      *        The shutdown phase we want to advance to. Please note, that
      *        we cannot go back to earlier phases or abort shutdown once
@@ -184,9 +184,9 @@ interface nsIAppStartup : nsISupports
 
     /**
      * Check if we entered or passed a specific shutdown phase.
-     * 
+     *
      * @param aPhase
-     *        The shutdown phase we want to check. 
+     *        The shutdown phase we want to check.
      *
      * @return true if we are in or beyond the given phase.
      */

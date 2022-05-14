@@ -13,8 +13,8 @@ moz_task = { path = "../../../../xpcom/rust/moz_task" }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 rkv = { version = "0.17", default-features = false }
-rust_cascade = "1.2.0"
-sha2 = "^0.8"
+rust_cascade = "1.4.0"
+sha2 = "0.10.2"
 storage_variant = { path = "../../../../storage/variant" }
 tempfile = "3"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }

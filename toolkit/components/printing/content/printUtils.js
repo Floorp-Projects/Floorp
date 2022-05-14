@@ -128,10 +128,10 @@ var PrintUtils = {
       }
     }
     try {
-      var PRINTPROMPTSVC = Cc[
-        "@mozilla.org/embedcomp/printingprompt-service;1"
-      ].getService(Ci.nsIPrintingPromptService);
-      PRINTPROMPTSVC.showPageSetupDialog(window, printSettings, null);
+      var PRINTDIALOGSVC = Cc[
+        "@mozilla.org/widget/printdialog-service;1"
+      ].getService(Ci.nsIPrintDialogService);
+      PRINTDIALOGSVC.showPageSetupDialog(window, printSettings, null);
     } catch (e) {
       dump("showPageSetup " + e + "\n");
       return false;
@@ -330,14 +330,17 @@ var PrintUtils = {
         const hasSelection = await PrintUtils.checkForSelection(
           browsingContext
         );
-        settings.isPrintSelectionRBEnabled = hasSelection;
 
         // Prompt the user to choose a printer and make any desired print
         // settings changes.
         try {
-          await Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
-            .getService(Ci.nsIPrintingPromptService)
-            .showPrintDialog(browsingContext.topChromeWindow, settings);
+          await Cc["@mozilla.org/widget/printdialog-service;1"]
+            .getService(Ci.nsIPrintDialogService)
+            .showPrintDialog(
+              browsingContext.topChromeWindow,
+              hasSelection,
+              settings
+            );
         } catch (e) {
           if (browser) {
             browser.remove(); // don't leak this

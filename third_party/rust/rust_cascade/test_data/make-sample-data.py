@@ -2,9 +2,14 @@ import filtercascade
 import hashlib
 from pathlib import Path
 
+import sys
+import logging
 
-def predictable_serial_gen(end):
-    counter = 0
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+
+def predictable_serial_gen(start, end):
+    counter = start
     while counter < end:
         counter += 1
         m = hashlib.sha256()
@@ -19,41 +24,83 @@ def store(fc, path):
         fc.tofile(f)
 
 
-large_set = set(predictable_serial_gen(100_000))
+small_set = list(set(predictable_serial_gen(0, 500)))
+large_set = set(predictable_serial_gen(500, 10_000))
 
-v2_sha256_with_salt = filtercascade.FilterCascade(
-    [], defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256, salt=b"nacl"
-)
-v2_sha256_with_salt.initialize(
-    include=[b"this", b"that"], exclude=large_set | set([b"other"])
-)
-store(v2_sha256_with_salt, Path("test_v2_sha256_salt_mlbf"))
+# filter parameters
+growth_factor = 1.0
+min_filter_length = 177  # 177 * 1.44 ~ 256, so smallest filter will have 256 bits
 
-v2_sha256 = filtercascade.FilterCascade(
-    [], defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256
+print("--- v2_sha256l32_with_salt ---")
+v2_sha256l32_with_salt = filtercascade.FilterCascade(
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256,
+    salt=b"nacl",
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
 )
-v2_sha256.initialize(include=[b"this", b"that"], exclude=large_set | set([b"other"]))
-store(v2_sha256, Path("test_v2_sha256_mlbf"))
+v2_sha256l32_with_salt.initialize(
+    include=[b"this", b"that"] + small_set, exclude=large_set | set([b"other"])
+)
+store(v2_sha256l32_with_salt, Path("test_v2_sha256l32_salt_mlbf"))
 
+print("--- v2_sha256l32 ---")
+v2_sha256l32 = filtercascade.FilterCascade(
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256,
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
+)
+v2_sha256l32.initialize(
+    include=[b"this", b"that"] + small_set, exclude=large_set | set([b"other"])
+)
+store(v2_sha256l32, Path("test_v2_sha256l32_mlbf"))
+
+print("--- v2_murmur ---")
 v2_murmur = filtercascade.FilterCascade(
-    [], defaultHashAlg=filtercascade.fileformats.HashAlgorithm.MURMUR3
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.MURMUR3,
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
 )
-v2_murmur.initialize(include=[b"this", b"that"], exclude=large_set | set([b"other"]))
+v2_murmur.initialize(
+    include=[b"this", b"that"] + small_set, exclude=large_set | set([b"other"])
+)
 store(v2_murmur, Path("test_v2_murmur_mlbf"))
 
+print("--- v2_murmur_inverted ---")
 v2_murmur_inverted = filtercascade.FilterCascade(
-    [], defaultHashAlg=filtercascade.fileformats.HashAlgorithm.MURMUR3
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.MURMUR3,
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
 )
 v2_murmur_inverted.initialize(
-    include=large_set | set([b"this", b"that"]), exclude=[b"other"]
+    include=large_set | set([b"this", b"that"]), exclude=[b"other"] + small_set
 )
 store(v2_murmur_inverted, Path("test_v2_murmur_inverted_mlbf"))
 
+print("--- v2_sha256l32_inverted ---")
+v2_sha256l32_inverted = filtercascade.FilterCascade(
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256,
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
+)
+v2_sha256l32_inverted.initialize(
+    include=large_set | set([b"this", b"that"]), exclude=[b"other"] + small_set
+)
+store(v2_sha256l32_inverted, Path("test_v2_sha256l32_inverted_mlbf"))
 
-v2_sha256_inverted = filtercascade.FilterCascade(
-    [], defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256
+print("--- v2_sha256ctr_with_salt ---")
+v2_sha256ctr_with_salt = filtercascade.FilterCascade(
+    [],
+    defaultHashAlg=filtercascade.fileformats.HashAlgorithm.SHA256CTR,
+    salt=b"nacl",
+    growth_factor=growth_factor,
+    min_filter_length=min_filter_length,
 )
-v2_sha256_inverted.initialize(
-    include=large_set | set([b"this", b"that"]), exclude=[b"other"]
+v2_sha256ctr_with_salt.initialize(
+    include=[b"this", b"that"] + small_set, exclude=large_set | set([b"other"])
 )
-store(v2_sha256_inverted, Path("test_v2_sha256_inverted_mlbf"))
+store(v2_sha256ctr_with_salt, Path("test_v2_sha256ctr_salt_mlbf"))

@@ -5,6 +5,34 @@
 
 // Tests that CRLite filter downloading works correctly.
 
+// The file `test_crlite_filters/20201017-0-filter` can be regenerated using
+// the rust-create-cascade program from https://github.com/mozilla/crlite.
+//
+// The input to this program is a list of known serial numbers and a list of
+// revoked serial numbers. The lists are presented as directories of files in
+// which each file holds serials for one issuer. The file names are
+// urlsafe-base64 encoded SHA256 hashes of issuer SPKIs. The file contents are
+// ascii hex encoded serial numbers. The program crlite_key.py in this directory
+// can generate these values for you.
+//
+// The test filter was generated as follows:
+//
+// $ ./crlite_key.py test_crlite_filters/issuer.pem test_crlite_filters/valid.pem
+// 8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=
+// 00da4f392bfd8bcea8
+//
+// $ ./crlite_key.py test_crlite_filters/issuer.pem test_crlite_filters/revoked.pem
+// 8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=
+// 2d35ca6503fb1ba3
+//
+// $ mkdir known revoked
+// $ echo "00da4f392bfd8bcea8" > known/8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8\=
+// $ echo "2d35ca6503fb1ba3" >> known/8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8\=
+// $ echo "2d35ca6503fb1ba3" > revoked/8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8\=
+//
+// $ rust-create-cascade --known ./known/ --revoked ./revoked/
+//
+
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 

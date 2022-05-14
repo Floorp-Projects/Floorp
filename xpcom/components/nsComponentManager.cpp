@@ -286,7 +286,6 @@ extern const mozilla::Module kWidgetModule;
 extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
-extern const mozilla::Module kEmbeddingModule;
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
@@ -381,7 +380,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kLayoutModule);
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
-  RegisterModule(&kEmbeddingModule);
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);

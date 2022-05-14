@@ -252,6 +252,9 @@ async function doPickTest({ pickHelpButton, useKeyboard }) {
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
     UrlbarProvidersManager.unregisterProvider(provider);
+
+    // Avoid showing adaptive history autofill.
+    await PlacesTestUtils.clearInputHistory();
   });
 }
 

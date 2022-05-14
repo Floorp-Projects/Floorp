@@ -29,8 +29,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const Utils = TelemetryUtils;
 
-const myScope = this;
-
 // When modifying the payload in incompatible ways, please bump this version number
 const PAYLOAD_VERSION = 4;
 const PING_TYPE_MAIN = "main";
@@ -1400,7 +1398,7 @@ var Impl = {
 
     let payload = null;
     if (aProvidedPayload) {
-      payload = Cu.cloneInto(aProvidedPayload, myScope);
+      payload = Cu.cloneInto(aProvidedPayload, {});
       // Overwrite the original reason.
       payload.info.reason = REASON_ABORTED_SESSION;
     } else {

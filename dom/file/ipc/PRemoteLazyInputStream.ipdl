@@ -2,45 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
-include protocol PChildToParentStream;
-include protocol PContent;
-include protocol PFileDescriptorSet;
-include protocol PParentToChildStream;
-include protocol PSocketProcess;
-
 include IPCStream;
 
 namespace mozilla {
 
 protocol PRemoteLazyInputStream
 {
-  manager PBackground or PContent or PSocketProcess;
-
 parent:
-  async StreamNeeded();
+  async Clone(Endpoint<PRemoteLazyInputStreamParent> aCloneEndpoint);
 
-  async LengthNeeded();
+  async StreamNeeded(uint64_t aStart, uint64_t aLength) returns (IPCStream? stream);
 
-  // When this is called, the parent releases the inputStream and sends a
-  // __delete__.
-  async Close();
+  async LengthNeeded() returns (int64_t length);
 
-child:
-  async StreamReady(IPCStream? aStream);
-
-  async LengthReady(int64_t aLength);
-
-both:
-  // __delete__ can be called by parent and by child for 2 reasons:
-  // - parent->child: This happens after a Close(). The child wants to inform
-  //                  the parent that no other messages will be dispatched and
-  //                  that the channel can be interrupted.
-  // - child->parent: before any operation, the child could start a migration
-  //                  from the current thread to a dedicated DOM-File one. The
-  //                  reason why a __delete__ is sent from child to parent is
-  //                  because it doesn't require any additional runnables.
-  async __delete__();
+  async Goodbye();
 };
 
 } // namespace mozilla
