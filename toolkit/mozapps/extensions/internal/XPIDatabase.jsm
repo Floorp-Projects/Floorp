@@ -344,17 +344,14 @@ class AddonInternal {
   }
 
   /**
-   * Validate a list of origins are contained in the installOrigins array (defined in manifest.json).
+   * Validate a list of origins are contained in the installOrigins array (defined in manifest.json)
    *
-   * SitePermission addons are a special case, where the triggering install site may be a subdomain
-   * of a valid xpi origin.
-   *
-   * @param {Object}  origins             Object containing URIs related to install.
-   * @params {nsIURI} origins.installFrom The nsIURI of the website that has triggered the install flow.
-   * @params {nsIURI} origins.source      The nsIURI where the xpi is hosted.
+   * @param {Object} origins A map of origins to validate using the addon installOrigins
+   *                         (keys are arbitrary strings meant to briefly describe the
+   *                         kind of source being validated, values are nsIURI).
    * @returns {boolean}
    */
-  validInstallOrigins({ installFrom, source }) {
+  validInstallOrigins(origins = {}) {
     if (
       !Services.prefs.getBoolPref("extensions.install_origins.enabled", true)
     ) {
@@ -373,40 +370,10 @@ class AddonInternal {
       return false;
     }
 
-    if (this.type == "sitepermission") {
-      // NOTE: This may move into a check for all addons later.
-      for (let origin of installOrigins) {
-        let host = new URL(origin).host;
-        // install_origin cannot be on a known etld (e.g. github.io).
-        if (Services.eTLD.getKnownPublicSuffixFromHost(host) == host) {
-          logger.warn(
-            `Addon ${this.id} Installation not allowed from the install_origin ${host} that is an eTLD`
-          );
-          return false;
-        }
-      }
-
+    for (const [name, source] of Object.entries(origins)) {
       if (!installOrigins.includes(new URL(source.spec).origin)) {
         logger.warn(
-          `Addon ${this.id} Installation not allowed, "${source.spec}" is not included in the Addon install_origins`
-        );
-        return false;
-      }
-
-      if (ThirdPartyUtil.isThirdPartyURI(source, installFrom)) {
-        logger.warn(
-          `Addon ${this.id} Installation not allowed, installFrom "${installFrom.spec}" is third party to the Addon install_origins`
-        );
-        return false;
-      }
-
-      return true;
-    }
-
-    for (const [name, uri] of Object.entries({ installFrom, source })) {
-      if (!installOrigins.includes(new URL(uri.spec).origin)) {
-        logger.warn(
-          `Addon ${this.id} Installation not allowed, ${name} "${uri.spec}" is not included in the Addon install_origins`
+          `Addon ${this.id} Installation not allowed, ${name} "${source.spec}" is not included in the Addon install_origins`
         );
         return false;
       }

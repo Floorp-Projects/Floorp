@@ -22,7 +22,7 @@ Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 Services.prefs.setBoolPref("extensions.postDownloadThirdPartyPrompt", true);
 
 let server = AddonTestUtils.createHttpServer({
-  hosts: ["example.com", "example.org", "amo.example.com", "github.io"],
+  hosts: ["example.com", "example.org", "amo.example.com"],
 });
 
 server.registerFile(
@@ -38,42 +38,6 @@ server.registerFile(
         },
       },
       install_origins: ["http://example.com"],
-    },
-  })
-);
-
-server.registerFile(
-  `/addons/sitepermission.xpi`,
-  AddonTestUtils.createTempXPIFile({
-    "manifest.json": {
-      manifest_version: 2,
-      name: "Install Origins sitepermission test",
-      version: "1.0",
-      applications: {
-        gecko: {
-          id: "sitepermission@example.com",
-        },
-      },
-      install_origins: ["http://example.com"],
-      site_permissions: ["midi"],
-    },
-  })
-);
-
-server.registerFile(
-  `/addons/sitepermission-suffix.xpi`,
-  AddonTestUtils.createTempXPIFile({
-    "manifest.json": {
-      manifest_version: 2,
-      name: "Install Origins sitepermission public suffix test",
-      version: "1.0",
-      applications: {
-        gecko: {
-          id: "sitepermission-suffix@github.io",
-        },
-      },
-      install_origins: ["http://github.io"],
-      site_permissions: ["midi"],
     },
   })
 );
@@ -243,7 +207,6 @@ function promiseCompleteWebInstall(
 
 async function testAddonInstall(test) {
   let { name, xpiUrl, installPrincipal, expectState, expectTelemetry } = test;
-  info(`testAddonInstall: ${name}`);
   let expectInstall = expectState == AddonManager.STATE_INSTALLED;
   let install = await AddonManager.getInstallForURL(xpiUrl, {
     triggeringPrincipal: installPrincipal,
@@ -279,16 +242,9 @@ const PRINCIPAL_AMO = ssm.createContentPrincipalFromOrigin(
 const PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
   "http://example.com"
 );
-const SUB_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
-  "http://abc.example.com"
-);
-const THIRDPARTY_PRINCIPAL_COM = ssm.createContentPrincipalFromOrigin(
-  "http://fake-example.com"
-);
 const PRINCIPAL_ORG = ssm.createContentPrincipalFromOrigin(
   "http://example.org"
 );
-const PRINCIPAL_ETLD = ssm.createContentPrincipalFromOrigin("http://github.io");
 
 const TESTS = [
   {
@@ -445,64 +401,6 @@ const TESTS = [
     expectTelemetry: {
       step: "completed",
       addon_id: "no_origins@example.com",
-      install_origins: "1",
-    },
-  },
-  {
-    name: "Install sitepermission from domain",
-    xpiUrl: "http://example.com/addons/sitepermission.xpi",
-    installPrincipal: PRINCIPAL_COM,
-    expectState: AddonManager.STATE_INSTALLED,
-    expectTelemetry: {
-      step: "completed",
-      addon_id: "sitepermission@example.com",
-      install_origins: "1",
-    },
-  },
-  {
-    name: "Install sitepermission from subdomain",
-    xpiUrl: "http://example.com/addons/sitepermission.xpi",
-    installPrincipal: SUB_PRINCIPAL_COM,
-    expectState: AddonManager.STATE_INSTALLED,
-    expectTelemetry: {
-      step: "completed",
-      addon_id: "sitepermission@example.com",
-      install_origins: "1",
-    },
-  },
-  {
-    name: "Install sitepermission from thirdparty domain should fail",
-    xpiUrl: "http://example.com/addons/sitepermission.xpi",
-    installPrincipal: THIRDPARTY_PRINCIPAL_COM,
-    expectState: AddonManager.STATE_INSTALL_FAILED,
-    expectTelemetry: {
-      step: "failed",
-      addon_id: "sitepermission@example.com",
-      error: "ERROR_INVALID_DOMAIN",
-      install_origins: "1",
-    },
-  },
-  {
-    name: "Install sitepermission from different domain",
-    xpiUrl: "http://example.com/addons/sitepermission.xpi",
-    installPrincipal: PRINCIPAL_ORG,
-    expectState: AddonManager.STATE_INSTALL_FAILED,
-    expectTelemetry: {
-      step: "failed",
-      addon_id: "sitepermission@example.com",
-      error: "ERROR_INVALID_DOMAIN",
-      install_origins: "1",
-    },
-  },
-  {
-    name: "Install sitepermission from public suffix domain",
-    xpiUrl: "http://github.io/addons/sitepermission-suffix.xpi",
-    installPrincipal: PRINCIPAL_ETLD,
-    expectState: AddonManager.STATE_INSTALL_FAILED,
-    expectTelemetry: {
-      step: "failed",
-      addon_id: "sitepermission-suffix@github.io",
-      error: "ERROR_INVALID_DOMAIN",
       install_origins: "1",
     },
   },
