@@ -1206,7 +1206,8 @@ var ActivityStreamProvider = {
         onePerDomain: true,
         includeFavicon: true,
         hideWithSearchParam: Services.prefs.getCharPref(
-          "browser.newtabpage.activity-stream.hideTopSitesWithSearchParam"
+          "browser.newtabpage.activity-stream.hideTopSitesWithSearchParam",
+          ""
         ),
       },
       aOptions || {}
