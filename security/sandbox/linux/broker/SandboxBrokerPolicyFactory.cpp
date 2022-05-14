@@ -855,9 +855,8 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
     }
   }
 
-  // VA-API needs DRI and GPU detection
-  policy->AddDir(rdwr, "/dev/dri");
-  AddDriPaths(policy.get());
+  // VA-API needs GPU access and GL context creation
+  AddGLDependencies(policy.get());
 
   // FFmpeg and GPU drivers may need general-case library loading
   AddLdconfigPaths(policy.get());
