@@ -91,7 +91,7 @@ void WorkerRef::Notify() {
     return;
   }
 
-  MoveOnlyFunction<void()> callback = std::move(mCallback);
+  std::function<void()> callback = std::move(mCallback);
   MOZ_ASSERT(!mCallback);
 
   callback();
@@ -102,7 +102,7 @@ void WorkerRef::Notify() {
 
 /* static */
 already_AddRefed<WeakWorkerRef> WeakWorkerRef::Create(
-    WorkerPrivate* aWorkerPrivate, MoveOnlyFunction<void()>&& aCallback) {
+    WorkerPrivate* aWorkerPrivate, std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -148,7 +148,7 @@ WorkerPrivate* WeakWorkerRef::GetUnsafePrivate() const {
 /* static */
 already_AddRefed<StrongWorkerRef> StrongWorkerRef::Create(
     WorkerPrivate* const aWorkerPrivate, const char* const aName,
-    MoveOnlyFunction<void()>&& aCallback) {
+    std::function<void()>&& aCallback) {
   if (RefPtr<StrongWorkerRef> ref =
           CreateImpl(aWorkerPrivate, aName, Canceling)) {
     ref->mCallback = std::move(aCallback);
@@ -218,7 +218,7 @@ WorkerPrivate* ThreadSafeWorkerRef::Private() const {
 /* static */
 already_AddRefed<IPCWorkerRef> IPCWorkerRef::Create(
     WorkerPrivate* aWorkerPrivate, const char* aName,
-    MoveOnlyFunction<void()>&& aCallback) {
+    std::function<void()>&& aCallback) {
   MOZ_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
