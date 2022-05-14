@@ -52,29 +52,48 @@
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s موزلّا ولوں تیار تھیا ہے۔</string>
 
+    <string name="private_browsing_common_myths">
+        نجی براؤزنگ بارے عام فرضی قصے
+    </string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">آپݨی ہوم سکرین کنوں نجی ٹیب کھولݨ کیتے ہک شارٹ کٹ شامل کرو۔</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text">شارٹ کٹ شامل کرو</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">کو، شکریہ</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">تساں %1$s کیتے مقرر کر سڳدے ہو جو ایپاں وچ خودکار لنک کھولے۔</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">ترتیباں تے ون٘ڄو</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">فارغ کرو</string>
 
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">کیمرے تائیں رسائی دی لوڑ ہے۔ انڈرائیڈ دیاں ترتیباں تے ون٘ڄو، اجازتاں تے ٹیپ کرو تے اجازت ݙیوو تے انگل پھیرو۔</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">ترتیباں تے ون٘ڄو</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">فارغ کرو</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">جہڑے ٹیب پچھلے ݙین٘ہ، ہفتے یا مہینے وچ کائنی ݙٹھے ڳئے انہاں کھلے ٹیباں دا خودکار بند تھیوݨ مقرر کرو۔</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">نظارے آپشناں</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">فارغ کرو</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">جہڑیاں ٹیباں تساں پچھلے ݙو ہفتیاں دے دوران کائنی ݙٹھیاں، اِتھاں ٹور ݙتیاں ویسن۔</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">ترتیباں وچ بند کر ݙیوو</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">ہک مہینے بعد آپݨے آپ بند کروں؟</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">جہڑے ٹیب تساں پہلے مہینے دے دوران کائنی ݙٹھے، انہاں کوں %1$s بند کر سڳدے۔</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">بند کرو</string>
 
@@ -115,6 +134,9 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ہٹاؤ</string>
 
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">ماضی دیاں ساریاں پھلوراں ݙکھاؤ</string>
+
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">پچھوں</string>
@@ -126,6 +148,8 @@
     <string name="browser_menu_stop">روکو</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">ایڈ ــ آن</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">اِتھاں کوئی ایڈ ــ آن کائنی</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">مدد</string>
     <!-- Browser menu button that sends a to a the what's new article -->
@@ -198,6 +222,8 @@
     <string name="search_suggestions_onboarding_do_not_allow_button">اجازت نہ ݙیوو</string>
     <!-- Search suggestion onboarding hint title text -->
     <string name="search_suggestions_onboarding_title">نجی مجلساں وچ ڳولݨ تجویزاں دی اجازت ݙیووں؟</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">جہڑی شئے تساں پتہ بار وچ ٹائپ کریسو %s تہاݙے کیتے پہلوں مقرر ڳولݨ انجݨ نال شیئر کریسی۔</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">ٻیا سِکھو</string>
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
@@ -210,12 +236,19 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_title_3">%1$s وچ کیا نواں ہے؟</string>
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">جتھ تساں چھوڑیا ہے، ہݨ اُتھوں بیک اپ چاوݨ سوکھڑا ہے۔</string>
     <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
     <string name="onboarding_home_screen_section_home_title_3">ذاتی تھیا %1$s مکھ پناں</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">ٹیب، نشانیاں تے براؤزنگ تاریخ کھولݨ کیتے ٹپ مارو۔</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ستھریاں، منظم ٹیباں</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">حالیہ ڳولاں</string>
+
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">آپݨے مکھ پنے تے ٹیباں نال آپݨیاں تازہ ترین ڳولاں تے ولدا ون٘جو۔</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -278,6 +311,8 @@
     <string name="preferences_https_only_in_private_tabs">صرف نجی ٹیب وچ وچ فعال کرو</string>
     <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
     <string name="errorpage_httpsonly_title">محفوظ سائٹ دستیاب کائنی</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">غالباً، ویب سائٹ سادگی نال ایچ ٹی ٹی پی ایس کوں سہارا کائنی ݙیندی۔</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">رسائیت</string>
     <!-- Preference to override the Firefox Account server -->
@@ -345,6 +380,9 @@
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعہ مالک (ورتݨ آئی ڈی)</string>
 
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">ایڈ ــ آن مجموعے دی تجدید تھی ڳئی ہے۔ تبدیلیان لاگو کرݨ کیتے ایپ چھوڑیندے پئے ہو۔۔۔</string>
+
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">واپس ون٘ڄو</string>
@@ -358,6 +396,9 @@
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">وال پیپرز</string>
 
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">سپانسر تھئے شارٹ کٹ</string>
+
     <!-- Wallpapers -->
     <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
     <string name="wallpapers_item_name_content_description">وال پیپر آئٹم: %1$s</string>
@@ -366,6 +407,8 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">نظارہ</string>
 
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">فائرفوکس مکھ پنے لوگو تے انگل پھیرݨ نال وال پیپر وٹاؤ</string>
     <!-- This is the accessibility content description for the wallpapers functionality. Users are
     able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
     <string name="wallpaper_logo_content_description">فائر فوکس لوگو ــ وال پیپر وٹاؤ، بٹݨ</string>
@@ -427,6 +470,9 @@
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">مطالعہ</string>
 
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">موزلّا کوں پڑھائی انسٹال کرݨ تے چلاوݨ دی اجازت ݙیندے</string>
+
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ولدا کنکٹ کرݨ کیتے سائن ان تھیوو</string>
     <!-- Preference for removing FxA account -->
@@ -460,6 +506,8 @@
     <!-- Preference for using the dynamic toolbar -->
     <string name="preference_gestures_dynamic_toolbar">ٹول بار لُکاوݨ کیتے سکرول کرو</string>
 
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">ٹیباں تبدیل کرݨ کیتے ٹول بار تے پاسے ول انگل پھیرو</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
     <string name="preference_gestures_swipe_toolbar_show_tabs">ٹیباں کھولݨ کیتے ٹول بار کوں سوائپ کرو</string>
 
@@ -518,6 +566,8 @@
 
     <!-- Option for search term tab groups -->
     <string name="tab_view_search_term_tab_groups">گروپ ڳولو</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">ہکو سن٘ویاں سائٹاں کٹھیاں گروپ کرو</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ٹیباں بند کرو</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -555,11 +605,16 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">پراݨے ٹیب غیرفعال وچ ٹورو</string>
 
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">جہڑیاں ٹیباں تساں پچھلے ݙو ہفتیاں دے دوران کائنی ݙٹھیاں، غیرفعال حصے وچ ٹور ݙتیاں ویسن۔</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">ہٹاؤ</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">فعال</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s وقتاً فوقتاً مطالعہ انسٹال کرسڳدے تے چلا سڳدے۔</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ٻیا سِکھو</string>
     <!-- Dialog message shown after removing a study -->
@@ -568,6 +623,9 @@
     <string name="studies_restart_dialog_ok">ٹھیک ہے</string>
     <!-- Dialog button text for canceling removing a study. -->
     <string name="studies_restart_dialog_cancel">منسوخ</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">تبدیلیاں لاگو کرݨ کیتے ایپ چھوڑیندے پئے ہو۔۔۔</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -1065,6 +1123,8 @@
     <string name="onboarding_tracking_protection_header_3">ہمیشہ رازداری تے</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے کنوں مقرر)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">کارکردگی تے رازداری کیتے متوازن تھیا، ورقے معمول دے مطابق لوڈ تھیندن۔</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">سخت</string>
     <!-- text for the toolbar position card header  -->
@@ -1082,6 +1142,8 @@
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">آپݨاں تھیم چݨو</string>
 
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">ڈارک موڈ نال کجھ بیٹری تے آپݨی دید بچاؤ۔</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">خود بخود</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1141,6 +1203,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">کراس سائٹ تے سوشل میڈیا ٹریکرز</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">ان ݙٹھیاں سائٹاں کنوں کوکیاں</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ساریاں کوکیاں (ویب سائٹاں دے ترٹݨ دا سبب بݨ سڳدی ہے)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">ٹریکنگ مواد</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1178,6 +1242,9 @@
     <string name="etp_back_button_content_description">واپس ون٘ڄو</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">%s وچ کیا نواں ہے؟</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">OSS | %s لائبریریاں</string>
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">ریڈائرکٹ ٹریکرز</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
@@ -1349,6 +1416,10 @@
     <string name="credit_cards_number_validation_error_message">سوہݨا، ٹھیک کریڈٹ کارڈ نمبر درج کرو</string>
     <!-- Error message for credit card name on card validation -->
     <string name="credit_cards_name_on_card_validation_error_message">سوہݨا، ایہ خانہ پُر کرو</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">آپݨے محفوظ تھئے کارڈاں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">آپݨے کریڈٹ کارڈاں کوں محفوظ بݨاؤ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">بݨ قائم کرو</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1449,6 +1520,8 @@
     <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s اپ ڈیٹ کریندا پئے۔۔۔</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
     <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">شروع کرو %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">منتقلی مکمل تھی ڳئی</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">پاس ورڈز</string>
 
@@ -1467,6 +1540,12 @@
     <string name="quick_settings_sheet_insecure_connection_2">کنکشن محفوظ کائنی۔</string>
     <!-- Label to clear site data -->
     <string name="clear_site_data">کوکیاں تے سائٹ ڈیٹا صاف کرو </string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">بھلا تہاکوں پک ہے جو تساں ساریاں سائٹاں کیتے ساریاں اجازتاں مکاوݨ چاہندے ہو؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">بھلا تہاکوں پک ہے جو تساں ایں سائٹ کیتے ساریاں اجازتاں مکاوݨ چاہندے ہو؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">بھلا تہاکوں پک ہے جو تساں ایں سائٹ کیتے ایہ اجازت مکاوݨ چاہندے ہو؟</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">کوئی سائٹ استثنات کائنی</string>
     <!-- Bookmark deletion confirmation -->
@@ -1494,6 +1573,12 @@
     <string name="dialog_delete_negative">منسوخ کرو</string>
     <!--  The saved login options menu description. -->
     <string name="login_options_menu">لاگ ان آپشناں</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">لاگ ان دے ویب پتے کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">لاگ ان دے ورتݨ ناں کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">لاگ ان دے پاس ورڈ کیتے عبارت تبدیل کرݨ دے قابل خانہ۔</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">لاگ ان وچ تبدیلیاں محفوظ کرو۔</string>
     <!--  The page title for editing a saved login. -->
@@ -1526,6 +1611,13 @@
 
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">سوہݨا، ولدا تصدیق کرو۔</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">تہاݙیاں ٻیاں ڈیوائساں تے فائرفوکس وچ کوئی ٹیب کائنی کھلے ہوئے۔</string>
+    <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="synced_tabs_no_tabs_2" tools:ignore="UnusedResources">تہاݙیاں ٻیاں ڈیوائساں تے %1$s وچ کوئی ٹیب کائنی کھلے ہوئے۔</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">آپݨیاں ساریاں ڈیوائساں کنوں ٹیباں دی تندیر ݙیکھو۔</string>
 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے، سمنجھ گھدے</string>

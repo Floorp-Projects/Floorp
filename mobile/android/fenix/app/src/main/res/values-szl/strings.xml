@@ -37,6 +37,18 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Ôbrane</string>
 
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recent_bookmarks_title">Niydowne zokłodki</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">Niydowno spamiyntane zokłodki</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">Pokoż wszyske</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Pokoż wszyske zokłodki</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Skasuj</string>
+
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s produkuje Mozilla.</string>
 
@@ -59,6 +71,9 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Niy, dziynkuja</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Możesz nastawić aplikacyjo %1$s, coby autōmatycznie ôtwiyrała linki w aplikacyjach. </string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Idź do sztalōnkōw</string>
     <!-- Text for the negative action button -->
@@ -79,6 +94,12 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Ôdkoż</string>
 
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Sam przidōm zokłodki niypokazowane ôd dwōch tydni.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Wyłōncz we sztalōnkach</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Autōmatycznie zawiyrać po miesiōncu?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs.
         The first parameter is the name of the application.-->
     <string name="tab_tray_inactive_auto_close_body_2">%1$s może zawiyrać karty, co w zeszłym miesiōncu niy były ôglōndane.</string>
@@ -239,6 +260,19 @@
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Klarowne, zorganizowane karty</string>
 
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Zrōb porzōndek skuli lepszego rozłożynio i autōmatycznego zawiyranio kart.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Niydowne szukania</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Wrōć do niydownego szukanio z domowyj strōny i kart.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Twoja spersōnalizowano dōmowo strōna Firefoksa pōmogo teroz snadnij wrōcić tam, kaj sie skōńczyło. Znojdź niydowne karty, zokłodki i wyniki szukanio.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Ôdewrzij w nowyj karcie aplikacyje %1$s</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Szukej</string>
     <!-- Text preview for larger sized widgets -->
@@ -284,6 +318,26 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">Jak przizwolisz, to prywatne karty pōdzie tyż ôboczyć przi poru ôtwartych aplikacyjach</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Przidej skrōt do prywatnego przeglōndanio</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Tryb &quot;Ino HTTPS&quot;</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Autōmatycznie prōbuje łōnczyć sie ze strōnami z protokołym kodowanio HTTPS, coby zwiynkszyć bezpieczyństwo.</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="preferences_https_only_on">Załōnczōne</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="preferences_https_only_off">Wyłōnczōne</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Przewiydz sie wiyncyj</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Załōncz we wszyskich kartach</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Załōncz ino we prywatnych kartach</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Zabezpieczōno strōna niy ma dostympno</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Zdowo sie, że to strōna niy ôbsuguje HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Może ale tyż sie rozchodzić ô jaki atak. Jak przyńdziesz na strōna, to niy ôstawiej na nij żodnych prywatnych informacyji. Jak na nia pudziesz, tryb &quot;Ino HTTPS&quot; czasowo sie wyłōnczy do tyj strōny. </string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Dostympność</string>
     <!-- Preference to override the Firefox Account server -->
@@ -300,6 +354,8 @@
     <string name="preferences_toolbar">Posek z noczyniami</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Motyw</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Dōmowo strōna</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gesty</string>
     <!-- Preference for settings related to visual options -->
@@ -368,6 +424,34 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Kolekcyjo rozszyrzyń je zmiyniōno. Wyłōnczynie aplikacyji, coby przidać zmiany…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Idź nazod</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Niydowne zokłodki</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Niydowno nawiedzōne</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Tapety</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Spōnsorowane skrōty</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Tapeta: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Tapeta je nastawiōno!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Pokoż</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label_1">Tyknij logo dōmowyj strōny Firefoxa, coby zmiynić tapeta</string>
+    <!-- This is the accessibility content description for the wallpapers functionality. Users are
+    able to tap on the app logo in the home screen and can switch to different wallpapers by tapping. -->
+    <string name="wallpaper_logo_content_description">Logo firefoxa - zmiyń tapeta, knefel</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -482,6 +566,13 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Przeciōng, coby ôdświyżyć</string>
 
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Skryj posek z noczyniami przi przesuwaniu</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Przeciōng posek z noczyniami, coby przełōnczyć karty</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Przeciōng posek z noczyniami, coby ôdewrzić karty</string>
+
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Pobrania</string>
@@ -503,6 +594,13 @@
     <string name="settings_title">Sztalōnki</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zawrzij</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">Strōny: %d</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">Strōny: %d</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Niydowno zawarte karty</string>
@@ -526,6 +624,10 @@
     <string name="tab_view_list">Wykoz</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Nec</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Grupy szukanio</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Zbiyrej społym powiōnzane strōny </string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zawrzij karty</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -537,6 +639,18 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Po miesiōncu</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Autōmatyczne zawiyranie ôtwartych kart</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ekran przi ôtwiyraniu</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Dōmowo strōna</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Ôstatnio karta</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Dōmowo strōna po sztyrech godzinach bez aktywności</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Zawiyrej ryncznie</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -545,6 +659,31 @@
     <string name="close_tabs_after_one_week_summary">Zawiyrej po tydniu</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Zawiyrej po miesiōncu</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Dej stare karty do niyaktywnych</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Larty, co dwa tydnie niy były ôtwiyrane, idōm do sekcyje niyaktywnych kart.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Skasuj</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktywne</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s może roz za czas insztalować i kludzić podszukōnki.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Przewiydz sie wiyncyj</string>
+
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Aplikacyjo sie zawrzi, coby przidać zmiany</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Pociep</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">Zawiyranie aplikacyje, coby przidać zmiany…</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -567,6 +706,8 @@
     <string name="tab_tray_menu_item_share">Udostympnij wszyskie karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Niydowno zawarte karty</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Niydowno zawarte</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Sztalōnki kōnta</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -614,6 +755,12 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (prywatny tryb)</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Inksze karty</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Wkludź szukane wyrazy</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Skasuj historyjo</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -637,6 +784,11 @@
     <string name="history_older">Starsze</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Niy ma sam żodnyj historyje</string>
+
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">Synchrōnizowane z inkszych maszin</string>
+    <!-- The page title for browsing history coming from other devices. -->
+    <string name="history_from_other_devices">Z inkszych maszin</string>
 
     <!-- Downloads -->
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
@@ -668,6 +820,8 @@
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s skasuje ôbrane elymynty.</string>
 
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Pociep</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Przidej katalog</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -723,6 +877,9 @@
     <!-- Bookmark undo button for deletion snackbar action -->
     <string name="bookmark_undo_deletion">COFNIJ AKCYJO</string>
 
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Wkludź szukane wyrazy</string>
+
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Idź do sztalōnkōw</string>
@@ -735,8 +892,16 @@
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Wypucuj dozwolyństwa</string>
 
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">OK</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Pociep</string>
     <!-- Button label for clearing a site permission-->
     <string name="clear_permission">Wypucuj dozwolyństwo</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">OK</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Pociep</string>
     <!-- Button label for clearing all the information on all sites-->
     <string name="clear_permissions_on_all_sites">Wypucuj dozwolyństwa wszyskich serwerōw</string>
     <!-- Preference for altering video and audio autoplay for all websites -->
@@ -749,6 +914,12 @@
     <string name="preference_phone_feature_location">Plac</string>
     <!-- Preference for altering the notification access for all websites -->
     <string name="preference_phone_feature_notification">Powiadōmiynie</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Ôbstōno pamiyńć</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Cookies, co śledzōm miyndzy strōnami</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Zawartości brōniōno ôd DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Pytej ô zgoda</string>
     <!-- Label that indicates that a permission must be blocked -->
@@ -784,10 +955,214 @@
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Wyłōnczōne</string>
 
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Załōnczōne</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Wyłōnczōne</string>
+
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Kolekcyje</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Myni kolekcyjōw</string>
+
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Zbiyrej rzeczy, ô kere stoisz.\nTrzimej społym podobne szukania, strōny a karty, coby niyskorzij mieć do nich snadniyjszy dostymp.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Ôbier karty</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Ôbier kolekcyjo</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Dej miano kolekcyji</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Przidej nowo kolekcyjo</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Ôbier wszysko</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Pociep ôbranie</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Ôbier karty do spamiyntanio</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Ôbrane karty: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">Ôbrane karty: %d</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Karty sōm spamiyntane!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Kolekcyjo je spamiyntano!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Karta je spamiyntano!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Zawrzij</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Spamiyntej</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Pokoż</string>
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">OK</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Pociep</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Kolekcyjo %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Udostympnij</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Udostympnij</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Poślij na maszina</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Wszyske akcyje</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Niydowno używane</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Kopiuj do kamerlika</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Skopiowane do kamerlika</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Wloguj sie do synchrōnizacyje</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Wloguj sie do synchrōnizacyje</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Poślij na wszyskie masziny</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Połōncz zaś ze synchrōnizacyjōm</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Offline</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Połōncz inkszo maszina</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Coby posłać karta, zaloguj sie do Firefoxa aby na jednyj inkszyj maszinie.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Rozumia</string>
+
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Niy idzie udostympnić do tyj aplikacyje</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Poślij na maszina</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Niy ma żodnych połōnczōnych maszin</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Przewiydz sie ô posyłaniu kart…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Połōncz inkszo maszina…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Zawrzij prywatne karty</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Marketing</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_title">%1$s je gibki i prywatny</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
+    <string name="notification_default_browser_text">Nastow %1$s za bazowo przeglōndarka</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Kolekcyjo je skasowano</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Kolekcyjo mo zmiyniōne miano</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Karta je zawarto</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Karty sōm zawarte</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Zokłodki sōm spamiyntane!</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">Przidane do topowych strōn!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Przidane do skrōtōw!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Prywatno karta je zawarto</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Prywatne karty sōm zawarte</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">COFNIJ AKCYJO</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Strōna je skasowano</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Dowej aplikacyji %1$s ôtwiyrać %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">POZWŌL</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ZAKOŻ</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Adresa strōny je felerno.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Na zicher chcesz skasować %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Jak skasujesz ta karta, to skasuje sie cołko kolekcyjo. Zawdy możesz stworzić nowe kolekcyje.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Skasować %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Skasuj</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Sztart trybu połnego ekranu</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Adresa je skopiowano</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">To je przikładowy tekst. Je sam na to, coby pokozać, jak bydzie wyglōndoł, jak go zwiynkszysz abo zmyńszysz z tym sztalōnkiym.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Zmiyniej srogość tekstu na strōnach</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Srogość pisma</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Autōmatyczno srogość pisma</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Srogość pisma bydzie sztimować ze sztalōnkami ôd Androida. Jak wyłōnczysz, to pudzie sam sztalować srogość pisma.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Skasuj dane przeglōndanio</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Ôtwarte karty</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">Karty: %d</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Historyjo przeglōndanio i dane strōn</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">Adresy: %d</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Cookies</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Wyloguje cie to z wiynkszości strōn</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Ôbrozki i zbiory w podryncznyj pamiyńci</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Dowo plac w pamiyńci</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Dozwolyństwa strōn</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Pobrania</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Skasuj dane przeglōndanio</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Skasuj dane przeglōndanio przi zawiyraniu</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Autōmatycznie kasuje dane przeglōndanio, jak we głōwnym myni ôbieresz &quot;Skōńcz&quot;</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Skōńcz</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Bez to skasujōm sie wszyske dane przeglōndanio.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s skasuje ôbrane dane przeglōndanio.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Pociep</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Skasuj</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Dane przeglōndanio sōm skasowane</string>
 
     </resources>

@@ -1619,6 +1619,8 @@
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Agregar dirección</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Editar dirección</string>
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Administrar direcciones</string>
     <!-- The header for the full name of an address -->
@@ -1647,6 +1649,17 @@
     <string name="addresses_cancel_button">Cancelar</string>
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Borrar dirección</string>
+
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">¿Estás seguro de querer borrar esta dirección?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Borrar</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Cancelar</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Guardar dirección</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Borrar dirección</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agregar buscador</string>
