@@ -59,6 +59,8 @@ namespace layers {
   FileDescriptor[] fds;
   uint32_t[] width;
   uint32_t[] height;
+  uint32_t[] widthAligned;
+  uint32_t[] heightAligned;
   uint32_t[] format;
   uint32_t[] strides;
   uint32_t[] offsets;
