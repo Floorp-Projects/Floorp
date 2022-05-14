@@ -201,6 +201,15 @@ class _BuiltInThemes {
       );
     }
   }
+
+  /**
+   * Finds the active colorway collection.
+   * @return {object}
+   *   Colorway Collection
+   */
+  findActiveColorwayCollection() {
+    return this.builtInThemeMap.findActiveColorwayCollection(new Date());
+  }
 }
 
 var BuiltInThemes = new _BuiltInThemes();

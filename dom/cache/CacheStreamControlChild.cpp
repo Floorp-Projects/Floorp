@@ -11,19 +11,13 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/dom/cache/CacheWorkerRef.h"
 #include "mozilla/dom/cache/ReadStream.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/PFileDescriptorSetChild.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla::dom::cache {
 
-using mozilla::dom::OptionalFileDescriptorSet;
-using mozilla::ipc::AutoIPCStream;
 using mozilla::ipc::FileDescriptor;
-using mozilla::ipc::FileDescriptorSetChild;
-using mozilla::ipc::PFileDescriptorSetChild;
 
 // declared in ActorUtils.h
 already_AddRefed<PCacheStreamControlChild> AllocPCacheStreamControlChild() {
@@ -78,15 +72,12 @@ void CacheStreamControlChild::SerializeControl(
   aReadStreamOut->controlChild() = this;
 }
 
-void CacheStreamControlChild::SerializeStream(
-    CacheReadStream* aReadStreamOut, nsIInputStream* aStream,
-    nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList) {
+void CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
+                                              nsIInputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
-  UniquePtr<AutoIPCStream> autoStream(
-      new AutoIPCStream(aReadStreamOut->stream()));
-  autoStream->Serialize(aStream, Manager());
-  aStreamCleanupList.AppendElement(std::move(autoStream));
+  MOZ_ALWAYS_TRUE(mozilla::ipc::SerializeIPCStream(
+      do_AddRef(aStream), aReadStreamOut->stream(), /* aAllowLazy */ false));
 }
 
 void CacheStreamControlChild::OpenStream(const nsID& aId,

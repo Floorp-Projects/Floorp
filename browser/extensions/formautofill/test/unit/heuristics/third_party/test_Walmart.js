@@ -43,7 +43,13 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "family-name",
             },
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"}, // ac-off
+             // ac-off
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "email"
+            },
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"},
             //      {"section": "", "addressType": "", "contactType": "", "fieldName": "password"}, // ac-off
           ],

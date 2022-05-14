@@ -1181,7 +1181,7 @@ bool nsLocalFile::CleanupCmdHandlerPath(nsAString& aCommandHandler) {
   handlerCommand.Assign(destination.get());
 
   // Remove quotes around paths
-  handlerCommand.StripChars("\"");
+  handlerCommand.StripChars(u"\"");
 
   // Strip windows host process bootstrap so we can get to the actual
   // handler.

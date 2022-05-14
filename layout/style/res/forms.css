@@ -332,12 +332,11 @@ select > option {
 }
 
 option:checked {
-  background-color: -moz-cellhighlight !important;
-  color: -moz-cellhighlighttext !important;
+  background-color: -moz-cellhighlight;
+  color: -moz-cellhighlighttext;
 }
 
-select:focus > option:checked,
-select:focus > optgroup > option:checked {
+select:focus option:checked {
   background-color: SelectedItem !important;
   color: SelectedItemText !important;
 }

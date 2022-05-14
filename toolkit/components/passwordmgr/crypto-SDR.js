@@ -304,13 +304,9 @@ LoginManagerCrypto_SDR.prototype = {
   },
 }; // end of nsLoginManagerCrypto_SDR implementation
 
-XPCOMUtils.defineLazyGetter(
-  this.LoginManagerCrypto_SDR.prototype,
-  "log",
-  () => {
-    let logger = LoginHelper.createLogger("Login crypto");
-    return logger.log.bind(logger);
-  }
-);
+XPCOMUtils.defineLazyGetter(LoginManagerCrypto_SDR.prototype, "log", () => {
+  let logger = LoginHelper.createLogger("Login crypto");
+  return logger.log.bind(logger);
+});
 
 const EXPORTED_SYMBOLS = ["LoginManagerCrypto_SDR"];

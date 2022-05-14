@@ -45,12 +45,6 @@ class NonBlockingAsyncInputStream final : public nsIAsyncInputStream,
       already_AddRefed<nsIInputStream> aInputStream);
   ~NonBlockingAsyncInputStream();
 
-  template <typename M>
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors,
-                         bool aDelayedStart, uint32_t aMaxSize,
-                         uint32_t* aSizeUsed, M* aManager);
-
   class AsyncWaitRunnable;
 
   void RunAsyncWaitCallback(AsyncWaitRunnable* aRunnable,

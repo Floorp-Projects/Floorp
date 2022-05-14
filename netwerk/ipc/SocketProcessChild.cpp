@@ -20,8 +20,6 @@
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
-#include "mozilla/ipc/FileDescriptorSetChild.h"
-#include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/net/AltSvcTransactionChild.h"
 #include "mozilla/net/BackgroundDataBridgeParent.h"
@@ -30,8 +28,6 @@
 #include "mozilla/net/NativeDNSResolverOverrideChild.h"
 #include "mozilla/net/ProxyAutoConfigChild.h"
 #include "mozilla/net/TRRServiceChild.h"
-#include "mozilla/ipc/PChildToParentStreamChild.h"
-#include "mozilla/ipc/PParentToChildStreamChild.h"
 #include "mozilla/ipc/ProcessUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
@@ -356,52 +352,6 @@ SocketProcessChild::AllocPHttpTransactionChild() {
   return actor.forget();
 }
 
-PFileDescriptorSetChild* SocketProcessChild::AllocPFileDescriptorSetChild(
-    const FileDescriptor& aFD) {
-  return new FileDescriptorSetChild(aFD);
-}
-
-bool SocketProcessChild::DeallocPFileDescriptorSetChild(
-    PFileDescriptorSetChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PChildToParentStreamChild*
-SocketProcessChild::AllocPChildToParentStreamChild() {
-  MOZ_CRASH("PChildToParentStreamChild actors should be manually constructed!");
-}
-
-bool SocketProcessChild::DeallocPChildToParentStreamChild(
-    PChildToParentStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PParentToChildStreamChild*
-SocketProcessChild::AllocPParentToChildStreamChild() {
-  return mozilla::ipc::AllocPParentToChildStreamChild();
-}
-
-bool SocketProcessChild::DeallocPParentToChildStreamChild(
-    PParentToChildStreamChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-PChildToParentStreamChild*
-SocketProcessChild::SendPChildToParentStreamConstructor(
-    PChildToParentStreamChild* aActor) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PSocketProcessChild::SendPChildToParentStreamConstructor(aActor);
-}
-
-PFileDescriptorSetChild* SocketProcessChild::SendPFileDescriptorSetConstructor(
-    const FileDescriptor& aFD) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return PSocketProcessChild::SendPFileDescriptorSetConstructor(aFD);
-}
-
 already_AddRefed<PHttpConnectionMgrChild>
 SocketProcessChild::AllocPHttpConnectionMgrChild(
     const HttpHandlerInitArgs& aArgs) {
@@ -551,14 +501,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvNotifyObserver(
     obs->NotifyObservers(nullptr, aTopic.get(), aData.get());
   }
   return IPC_OK();
-}
-
-already_AddRefed<PRemoteLazyInputStreamChild>
-SocketProcessChild::AllocPRemoteLazyInputStreamChild(const nsID& aID,
-                                                     const uint64_t& aSize) {
-  RefPtr<RemoteLazyInputStreamChild> actor =
-      new RemoteLazyInputStreamChild(aID, aSize);
-  return actor.forget();
 }
 
 namespace {

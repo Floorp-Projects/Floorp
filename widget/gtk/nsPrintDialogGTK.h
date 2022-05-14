@@ -19,19 +19,17 @@ typedef enum {
   _GTK_PRINT_PAGES_SELECTION
 } _GtkPrintPages;
 
-class nsPrintDialogServiceGTK : public nsIPrintDialogService {
+class nsPrintDialogServiceGTK final : public nsIPrintDialogService {
   virtual ~nsPrintDialogServiceGTK();
 
  public:
   nsPrintDialogServiceGTK();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init() override;
-  NS_IMETHOD Show(nsPIDOMWindowOuter* aParent,
-                  nsIPrintSettings* aSettings) override;
-  NS_IMETHOD ShowPageSetup(nsPIDOMWindowOuter* aParent,
-                           nsIPrintSettings* aSettings) override;
+  NS_DECL_NSIPRINTDIALOGSERVICE
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPrintDialogServiceGTK,
+                              NS_IPRINTDIALOGSERVICE_IID)
 
 #endif

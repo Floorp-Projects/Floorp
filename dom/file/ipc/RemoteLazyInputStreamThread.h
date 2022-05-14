@@ -25,13 +25,9 @@ class RemoteLazyInputStreamThread final : public nsIObserver,
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIEVENTTARGET
 
-  static bool IsOnFileEventTarget(nsIEventTarget* aEventTarget);
-
   static RemoteLazyInputStreamThread* Get();
 
   static RemoteLazyInputStreamThread* GetOrCreate();
-
-  void MigrateActor(RemoteLazyInputStreamChild* aActor);
 
   bool Initialize();
 
@@ -40,13 +36,7 @@ class RemoteLazyInputStreamThread final : public nsIObserver,
  private:
   ~RemoteLazyInputStreamThread() = default;
 
-  void MigrateActorInternal(RemoteLazyInputStreamChild* aActor);
-
   nsCOMPtr<nsIThread> mThread;
-
-  // This is populated if MigrateActor() is called before the initialization of
-  // the thread.
-  nsTArray<RefPtr<RemoteLazyInputStreamChild>> mPendingActors;
 };
 
 bool IsOnDOMFileThread();

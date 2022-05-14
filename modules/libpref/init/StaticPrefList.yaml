@@ -221,7 +221,11 @@
 # the parent process.
 - name: accessibility.cache.enabled
   type: bool
+#ifdef ANDROID
+  value: true
+#else
   value: false
+#endif
   mirror: once
 
 #---------------------------------------------------------------------------
@@ -6752,22 +6756,6 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Streams API. This only applies to JS Streams
-- name: javascript.options.streams
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
-# Writable Streams API.  (The pref above must also be set to expose this.)
-#
-# Writable streams are still EXTRAORDINARILY BETA and it is well-known that
-# things are likely pretty broken if you poke much at all, so if you flip this
-# preference, don't report bugs against it just yet.
-- name: javascript.options.writable_streams
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: javascript.options.main_thread_stack_quota_cap
   type: uint32_t
 #if defined(MOZ_ASAN)
@@ -8225,21 +8213,6 @@
 
 # Is support for -webkit-line-clamp enabled?
 - name: layout.css.webkit-line-clamp.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether the computed value of line-height: normal returns the `normal`
-# keyword rather than a pixel value based on the first available font.
-#
-# Only enabled on Nightly and early beta, at least for now.
-#
-# It'd be nice to make numbers compute also to themselves, but it looks like
-# everybody agrees on turning them into pixels, see the discussion starting
-# from [1].
-#
-# [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
-- name: layout.css.line-height.normal-as-resolved-value.enabled
   type: bool
   value: true
   mirror: always
@@ -11912,7 +11885,6 @@
   value: true
   mirror: always
 
-
 # The level to which we sandbox the content process. firefox.js sets the
 # default to different values on a per-OS basis, and has documentation
 # on what the defaults are and what the numbers mean.
@@ -12038,6 +12010,13 @@
 
 # Block Worker/SharedWorker scripts with wrong MIME type.
 - name: security.block_Worker_with_wrong_mime
+  type: bool
+  value: true
+  mirror: always
+
+# Block the execution of scripts using a wrong type as defined by the file extension
+# (OS) mapping when loaded via the file:// protocol.
+- name: security.block_fileuri_script_with_wrong_mime
   type: bool
   value: true
   mirror: always

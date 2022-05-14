@@ -37,8 +37,7 @@ namespace {
 
 nsresult GetIPCSynthesizeResponseArgs(
     ChildToParentSynthesizeResponseArgs* aIPCArgs,
-    SynthesizeResponseArgs&& aArgs, UniquePtr<AutoIPCStream>& aAutoBodyStream,
-    UniquePtr<AutoIPCStream>& aAutoAlternativeBodyStream) {
+    SynthesizeResponseArgs&& aArgs) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
   SafeRefPtr<InternalResponse> internalResponse;
@@ -56,8 +55,7 @@ nsresult GetIPCSynthesizeResponseArgs(
   }
 
   internalResponse->ToChildToParentInternalResponse(
-      &aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
-      aAutoAlternativeBodyStream);
+      &aIPCArgs->internalResponse(), bgChild);
   return NS_OK;
 }
 
@@ -149,13 +147,8 @@ void FetchEventOpProxyChild::Initialize(
 
                if (result.is<SynthesizeResponseArgs>()) {
                  ChildToParentSynthesizeResponseArgs ipcArgs;
-                 UniquePtr<AutoIPCStream> autoBodyStream =
-                     MakeUnique<AutoIPCStream>();
-                 UniquePtr<AutoIPCStream> autoAlternativeBodyStream =
-                     MakeUnique<AutoIPCStream>();
                  nsresult rv = GetIPCSynthesizeResponseArgs(
-                     &ipcArgs, result.extract<SynthesizeResponseArgs>(),
-                     autoBodyStream, autoAlternativeBodyStream);
+                     &ipcArgs, result.extract<SynthesizeResponseArgs>());
 
                  if (NS_WARN_IF(NS_FAILED(rv))) {
                    Unused << self->SendRespondWith(
@@ -164,14 +157,6 @@ void FetchEventOpProxyChild::Initialize(
                  }
 
                  Unused << self->SendRespondWith(ipcArgs);
-
-                 if (ipcArgs.internalResponse().body()) {
-                   autoBodyStream->TakeValue();
-                 }
-
-                 if (ipcArgs.internalResponse().alternativeBody()) {
-                   autoAlternativeBodyStream->TakeValue();
-                 }
                } else if (result.is<ResetInterceptionArgs>()) {
                  Unused << self->SendRespondWith(
                      result.extract<ResetInterceptionArgs>());

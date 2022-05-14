@@ -148,6 +148,58 @@ const TESTCASES = [
     },
   },
   {
+    description: `Form with elements that have autocomplete set to "off"`,
+    document: `<form>
+                <input id="given-name" autocomplete="off">
+                <input id="family-name" autocomplete="off">
+                <input id="street-address" autocomplete="off">
+                <input id="organization" autocomplete="off">
+                <input id="country" autocomplete="off">
+               </form>`,
+    focusedInputId: "given-name",
+    profileData: {
+      guid: "123",
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "2 Harrison St",
+      country: "US",
+      organization: "Test organization",
+    },
+    expectedResult: {
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "2 Harrison St",
+      organization: "Test organization",
+      country: "US",
+    },
+  },
+  {
+    description: `Form with autocomplete set to "off" and no autocomplete attribute on the form's elements`,
+    document: `<form autocomplete="off">
+                <input id="given-name">
+                <input id="family-name">
+                <input id="street-address">
+                <input id="city">
+                <input id="country">
+               </form>`,
+    focusedInputId: "given-name",
+    profileData: {
+      guid: "123",
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "2 Harrison St",
+      country: "US",
+      "address-level2": "Somewhere",
+    },
+    expectedResult: {
+      "given-name": "John",
+      "family-name": "Doe",
+      "street-address": "2 Harrison St",
+      city: "Somewhere",
+      country: "US",
+    },
+  },
+  {
     description:
       "Form with autocomplete select elements and matching option values",
     document: `<form>

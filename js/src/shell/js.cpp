@@ -620,8 +620,6 @@ bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableStreams = false;
-bool shell::enableReadableByteStreams = false;
-bool shell::enableBYOBStreamReaders = false;
 bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
@@ -4233,8 +4231,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setCoopAndCoepEnabled(false)
       .setStreamsEnabled(enableStreams)
-      .setReadableByteStreamsEnabled(enableReadableByteStreams)
-      .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setWeakRefsEnabled(enableWeakRefs
                               ? JS::WeakRefSpecifier::EnabledWithCleanupSome
                               : JS::WeakRefSpecifier::Disabled)
@@ -5577,7 +5573,7 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static ModuleEnvironmentObject* GetModuleEnvironment(
+static ModuleEnvironmentObject* GetModuleInitialEnvironment(
     JSContext* cx, HandleModuleObject module) {
   // Use the initial environment so that tests can check bindings exists
   // before they have been instantiated.
@@ -5607,7 +5603,8 @@ static bool GetModuleEnvironmentNames(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
+  RootedModuleEnvironmentObject env(cx,
+                                    GetModuleInitialEnvironment(cx, module));
   Rooted<IdVector> ids(cx, IdVector(cx));
   if (!JS_Enumerate(cx, env, &ids)) {
     return false;
@@ -5658,7 +5655,8 @@ static bool GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedModuleEnvironmentObject env(cx, GetModuleEnvironment(cx, module));
+  RootedModuleEnvironmentObject env(cx,
+                                    GetModuleInitialEnvironment(cx, module));
   RootedString name(cx, args[1].toString());
   RootedId id(cx);
   if (!JS_StringToId(cx, name, &id)) {
@@ -10994,8 +10992,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStackCaptureDebuggeeOnly =
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableStreams = !op.getBoolOption("no-streams");
-  enableReadableByteStreams = op.getBoolOption("enable-readable-byte-streams");
-  enableBYOBStreamReaders = op.getBoolOption("enable-byob-stream-readers");
   enableWeakRefs = !op.getBoolOption("disable-weak-refs");
   enableToSource = !op.getBoolOption("disable-tosource");
   enablePropertyErrorMessageFix =
@@ -11975,12 +11971,6 @@ int main(int argc, char** argv) {
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
-      !op.addBoolOption('\0', "enable-readable-byte-streams",
-                        "Enable support for WHATWG ReadableStreams of type "
-                        "'bytes'") ||
-      !op.addBoolOption('\0', "enable-byob-stream-readers",
-                        "Enable support for getting BYOB readers for WHATWG "
-                        "ReadableStreams of type \"bytes\"") ||
       !op.addBoolOption('\0', "disable-weak-refs", "Disable weak references") ||
       !op.addBoolOption('\0', "disable-tosource", "Disable toSource/uneval") ||
       !op.addBoolOption('\0', "disable-property-error-message-fix",

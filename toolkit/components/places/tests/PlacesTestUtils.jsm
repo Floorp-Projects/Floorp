@@ -511,6 +511,15 @@ var PlacesTestUtils = Object.freeze({
   },
 
   /**
+   * Clear moz_inputhistory table.
+   */
+  async clearInputHistory() {
+    await PlacesUtils.withConnectionWrapper("test:clearInputHistory", db => {
+      return db.executeCached("DELETE FROM moz_inputhistory");
+    });
+  },
+
+  /**
    * Compares 2 place: URLs ignoring the order of their params.
    * @param url1 First URL to compare
    * @param url2 Second URL to compare

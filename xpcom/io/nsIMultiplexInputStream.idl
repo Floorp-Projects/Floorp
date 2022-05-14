@@ -10,13 +10,13 @@
  * stream.
  */
 
-[scriptable, uuid(a076fd12-1dd1-11b2-b19a-d53b5dffaade)]
+[scriptable, builtinclass, uuid(a076fd12-1dd1-11b2-b19a-d53b5dffaade)]
 interface nsIMultiplexInputStream : nsISupports
 {
     /**
      * Number of streams in this multiplex-stream
      */
-    readonly attribute unsigned long count;
+    [infallible] readonly attribute unsigned long count;
 
     /**
      * Appends a stream to the end of the streams. The cursor of the stream

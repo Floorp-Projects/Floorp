@@ -71,6 +71,13 @@ browser.urlbar.autoFill (boolean, default: true)
   Autofill is the the feature that automatically completes domains and URLs that
   the user has visited as the user is typing them in the urlbar textbox.
 
+browser.urlbar.autoFill.adaptiveHistory.enabled (boolean, default: false)
+  Whether adaptive history autofill feature is enabled.
+
+browser.urlbar.autoFill.adaptiveHistory.useCountThreshold (float, default: 1.0)
+  Threshold for use count of input history that we handle as adaptive history
+  autofill. If the use count is this value or more, it will be a candidate.
+
 browser.urlbar.bestMatch.enabled (boolean, default: false)
   Whether the best match feature is enabled.
 

@@ -27,8 +27,7 @@ class SocketProcessHost;
 // by SocketProcessHost.
 class SocketProcessParent final
     : public PSocketProcessParent,
-      public ipc::CrashReporterHelper<GeckoProcessType_Socket>,
-      public ipc::ParentToChildStreamActorManager {
+      public ipc::CrashReporterHelper<GeckoProcessType_Socket> {
  public:
   friend class SocketProcessHost;
 
@@ -70,20 +69,6 @@ class SocketProcessParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
 
-  PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
-      const FileDescriptor& fd);
-  bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor);
-
-  PChildToParentStreamParent* AllocPChildToParentStreamParent();
-  bool DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor);
-  PParentToChildStreamParent* AllocPParentToChildStreamParent();
-  bool DeallocPParentToChildStreamParent(PParentToChildStreamParent* aActor);
-
-  PParentToChildStreamParent* SendPParentToChildStreamConstructor(
-      PParentToChildStreamParent* aActor) override;
-  PFileDescriptorSetParent* SendPFileDescriptorSetConstructor(
-      const FileDescriptor& aFD) override;
-
   mozilla::ipc::IPCResult RecvObserveHttpActivity(
       const HttpActivityArgs& aArgs, const uint32_t& aActivityType,
       const uint32_t& aActivitySubtype, const PRTime& aTimestamp,
@@ -117,9 +102,6 @@ class SocketProcessParent final
   mozilla::ipc::IPCResult RecvCachePushCheck(
       nsIURI* aPushedURL, OriginAttributes&& aOriginAttributes,
       nsCString&& aRequestString, CachePushCheckResolver&& aResolver);
-
-  already_AddRefed<PRemoteLazyInputStreamParent>
-  AllocPRemoteLazyInputStreamParent(const nsID& aID, const uint64_t& aSize);
 
   mozilla::ipc::IPCResult RecvODoHServiceActivated(const bool& aActivated);
 

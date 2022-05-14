@@ -34,6 +34,10 @@ urlbar:
     the event is recorded once per app session when the user first encounters
     the UI of the experiment in which they're enrolled.
   variables:
+    autoFillAdaptiveHistoryEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.autoFill.adaptiveHistory.enabled
+      description: Whether enabling adaptive history autofill.
     bestMatchBlockingEnabled:
       type: boolean
       fallbackPref: browser.urlbar.bestMatch.blockingEnabled

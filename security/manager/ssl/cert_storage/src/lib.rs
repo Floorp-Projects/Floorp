@@ -352,8 +352,8 @@ impl SecurityState {
         pub_key: &[u8],
     ) -> Result<i16, SecurityStateError> {
         let mut digest = Sha256::default();
-        digest.input(pub_key);
-        let pub_key_hash = digest.result();
+        digest.update(pub_key);
+        let pub_key_hash = digest.finalize();
 
         let subject_pubkey = make_key!(PREFIX_REV_SPK, subject, &pub_key_hash);
         let issuer_serial = make_key!(PREFIX_REV_IS, issuer, serial);
@@ -386,9 +386,9 @@ impl SecurityState {
     fn issuer_is_enrolled(&self, subject: &[u8], pub_key: &[u8]) -> bool {
         if let Some(crlite_enrollment) = self.crlite_enrollment.as_ref() {
             let mut digest = Sha256::default();
-            digest.input(subject);
-            digest.input(pub_key);
-            let issuer_id = digest.result();
+            digest.update(subject);
+            digest.update(pub_key);
+            let issuer_id = digest.finalize();
             return crlite_enrollment.contains(&issuer_id.to_vec());
         }
         return false;
@@ -548,7 +548,7 @@ impl SecurityState {
         let mut filter_file = File::open(path)?;
         let mut filter_bytes = Vec::new();
         let _ = filter_file.read_to_end(&mut filter_bytes)?;
-        let crlite_filter = *Cascade::from_bytes(filter_bytes)
+        let crlite_filter = Cascade::from_bytes(filter_bytes)
             .map_err(|_| SecurityStateError::from("invalid CRLite filter"))?
             .ok_or(SecurityStateError::from("expecting non-empty filter"))?;
 
@@ -658,8 +658,8 @@ impl SecurityState {
             None => return Ok(false),
         };
         let mut digest = Sha256::default();
-        digest.input(issuer_spki);
-        let lookup_key = digest.result().as_slice().to_vec();
+        digest.update(issuer_spki);
+        let lookup_key = digest.finalize().to_vec();
         let serials = match crlite_stash.get(&lookup_key) {
             Some(serials) => serials,
             None => return Ok(false),
@@ -684,12 +684,12 @@ impl SecurityState {
             return nsICertStorage::STATE_NOT_COVERED;
         }
         let mut digest = Sha256::default();
-        digest.input(issuer_spki);
-        let mut lookup_key = digest.result().as_slice().to_vec();
+        digest.update(issuer_spki);
+        let mut lookup_key = digest.finalize().to_vec();
         lookup_key.extend_from_slice(serial_number);
         debug!("CRLite lookup key: {:?}", lookup_key);
         let result = match &self.crlite_filter {
-            Some(crlite_filter) => crlite_filter.has(&lookup_key),
+            Some(crlite_filter) => crlite_filter.has(lookup_key),
             // This can only happen if the backing file was deleted or if it or our database has
             // become corrupted. In any case, we have no information.
             None => return nsICertStorage::STATE_NO_FILTER,
@@ -742,8 +742,8 @@ impl SecurityState {
                 }
             };
             let mut digest = Sha256::default();
-            digest.input(&cert_der);
-            let cert_hash = digest.result();
+            digest.update(&cert_der);
+            let cert_hash = digest.finalize();
             let cert_key = make_key!(PREFIX_CERT, &cert_hash);
             let cert = Cert::new(&cert_der, &subject, *trust)?;
             env_and_store

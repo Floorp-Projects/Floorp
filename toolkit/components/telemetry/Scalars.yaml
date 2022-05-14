@@ -6620,9 +6620,9 @@ urlbar.tabtosearch:
       - main
 
 urlbar.picked:
-    autofill:
+    autofill_adaptive:
       bug_numbers:
-        - 1671508
+        - 1597791
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never
@@ -6630,7 +6630,38 @@ urlbar.picked:
       keyed: true
       notification_emails:
         - fx-search@mozilla.com
-        - tbrooks@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_origin:
+      bug_numbers:
+        - 1597791
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_url:
+      bug_numbers:
+        - 1597791
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
       release_channel_collection: opt-out
       products:
         - 'firefox'

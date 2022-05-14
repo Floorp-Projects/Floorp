@@ -241,7 +241,9 @@ class SingletonThreadHolder final {
 static StaticRefPtr<SingletonThreadHolder> sThread;
 
 static void ClearSingletonOnShutdown() {
-  ClearOnShutdown(&sThread, ShutdownPhase::XPCOMShutdownLoaders);
+  // We expect everybody to have done ReleaseUse() at the latest during
+  // xpcom-shutdown-threads. So we need to live longer than that.
+  ClearOnShutdown(&sThread, ShutdownPhase::XPCOMShutdownFinal);
 }
 #endif
 

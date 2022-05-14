@@ -534,8 +534,8 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
 });
 
 // This is similar to suggestHistoryFalse_bookmark_prefix_0 in
-// autofill_tasks.js, but it adds unbookmarked visits for multiple URLs with the
-// same origin.
+// autofill_test_autofill_originsAndQueries.js, but it adds unbookmarked visits
+// for multiple URLs with the same origin.
 add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
   // Force only bookmarked pages to be suggested and therefore only bookmarked
   // pages to be completed.

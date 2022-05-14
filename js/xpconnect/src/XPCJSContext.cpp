@@ -797,8 +797,6 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setCoopAndCoepEnabled(
           StaticPrefs::browser_tabs_remote_useCrossOriginOpenerPolicy() &&
           StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy())
-      .setWritableStreamsEnabled(
-          StaticPrefs::javascript_options_writable_streams())
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)

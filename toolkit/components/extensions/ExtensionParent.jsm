@@ -92,8 +92,6 @@ let GlobalManager;
 let ParentAPIManager;
 let StartupCache;
 
-const global = this;
-
 function verifyActorForContext(actor, context) {
   if (JSWindowActorParent.isInstance(actor)) {
     let target = actor.browsingContext.top.embedderElement;
@@ -1094,7 +1092,7 @@ ParentAPIManager = {
           return new StructuredCloneHolder(listenerArgs);
         },
       });
-      let rv = result && result.deserialize(global);
+      let rv = result && result.deserialize(globalThis);
       ChromeUtils.addProfilerMarker(
         "ExtensionParent",
         { startTime },

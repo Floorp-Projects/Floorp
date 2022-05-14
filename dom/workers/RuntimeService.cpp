@@ -1549,6 +1549,11 @@ struct ActiveWorkerStats {
 void RuntimeService::CrashIfHanging() {
   MutexAutoLock lock(mMutex);
 
+  // If we never wanted to shut down we cannot hang.
+  if (!mShuttingDown) {
+    return;
+  }
+
   ActiveWorkerStats activeStats;
   uint32_t inactiveWorkers = 0;
 
