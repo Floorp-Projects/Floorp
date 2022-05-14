@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <style>
+    circle { fill: red }
+    @media (update: none) {
+      .a { fill: green }
+    }
+    @media (update: slow) {
+      .b { fill: green }
+    }
+    @media (update: fast) {
+      .c { fill: green }
+    }
+    @media (update: something-new-and-unknown) {
+      .d { fill: green }
+    }
+    @media (update) {
+      .e { fill: green }
+    }
+  </style>
+  <circle cx="5" cy="10" r="5" class="a">A</circle>
+  <circle cx="15" cy="10" r="5" class="b">B</circle>
+  <circle cx="25" cy="10" r="5" class="c">C</circle>
+  <circle cx="35" cy="10" r="5" class="d">D</circle>
+  <circle cx="45" cy="10" r="5" class="e">E</circle>
+</svg>
