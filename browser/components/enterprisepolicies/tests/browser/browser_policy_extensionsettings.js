@@ -33,15 +33,13 @@ function promisePopupNotificationShown(name) {
   });
 }
 
-add_setup(async function setupTestEnvironment() {
+add_setup(async function ensureInstallTriggerEnabled() {
   // Once InstallTrigger is removed, the tests targeting InstallTrigger should
   // be removed or adapted to don't use InstallTrigger.
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.InstallTrigger.enabled", true],
       ["extensions.InstallTriggerImpl.enabled", true],
-      // Relax the user input requirements while running this test.
-      ["xpinstall.userActivation.required", false],
     ],
   });
 });
