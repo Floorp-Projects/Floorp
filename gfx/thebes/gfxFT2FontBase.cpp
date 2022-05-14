@@ -646,6 +646,17 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
   if (!aBounds) {
     flags |= FT_LOAD_ADVANCE_ONLY;
   }
+
+  // Whether to disable subpixel positioning
+  bool roundX = ShouldRoundXOffset(nullptr);
+
+  // Workaround for FT_Load_Glyph not setting linearHoriAdvance for SVG glyphs.
+  // See https://gitlab.freedesktop.org/freetype/freetype/-/issues/1156.
+  if (!roundX &&
+      GetFontEntry()->HasFontTable(TRUETYPE_TAG('S', 'V', 'G', ' '))) {
+    flags &= ~FT_LOAD_COLOR;
+  }
+
   if (Factory::LoadFTGlyph(face.get(), aGID, flags) != FT_Err_Ok) {
     // FT_Face was somehow broken/invalid? Don't try to access glyph slot.
     // This probably shouldn't happen, but does: see bug 1440938.
@@ -655,8 +666,6 @@ bool gfxFT2FontBase::GetFTGlyphExtents(uint16_t aGID, int32_t* aAdvance,
 
   // Whether to interpret hinting settings (i.e. not printing)
   bool hintMetrics = ShouldHintMetrics();
-  // Whether to disable subpixel positioning
-  bool roundX = ShouldRoundXOffset(nullptr);
   // No hinting disables X and Y hinting. Light disables only X hinting.
   bool unhintedY = (mFTLoadFlags & FT_LOAD_NO_HINTING) != 0;
   bool unhintedX =
