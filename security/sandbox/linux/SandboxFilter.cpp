@@ -130,6 +130,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
   SandboxBrokerClient* mBroker = nullptr;
   bool mMayCreateShmem = false;
   bool mAllowUnsafeSocketPair = false;
+  bool mBrokeredConnect = false;  // Can connect() be brokered?
 
   SandboxPolicyCommon() = default;
 
@@ -535,6 +536,120 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #endif
   }
 
+  // This just needs to return something to stand in for the
+  // unconnected socket until ConnectTrap, below, and keep track of
+  // the socket type somehow.  Half a socketpair *is* a socket, so it
+  // should result in minimal confusion in the caller.
+  static intptr_t FakeSocketTrapCommon(int domain, int type, int protocol) {
+    int fds[2];
+    // X11 client libs will still try to getaddrinfo() even for a
+    // local connection.  Also, WebRTC still has vestigial network
+    // code trying to do things in the content process.  Politely tell
+    // them no.
+    if (domain != AF_UNIX) {
+      return -EAFNOSUPPORT;
+    }
+    if (socketpair(domain, type, protocol, fds) != 0) {
+      return -errno;
+    }
+    close(fds[1]);
+    return fds[0];
+  }
+
+  static intptr_t FakeSocketTrap(ArgsRef aArgs, void* aux) {
+    return FakeSocketTrapCommon(static_cast<int>(aArgs.args[0]),
+                                static_cast<int>(aArgs.args[1]),
+                                static_cast<int>(aArgs.args[2]));
+  }
+
+  static intptr_t FakeSocketTrapLegacy(ArgsRef aArgs, void* aux) {
+    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
+
+    return FakeSocketTrapCommon(static_cast<int>(innerArgs[0]),
+                                static_cast<int>(innerArgs[1]),
+                                static_cast<int>(innerArgs[2]));
+  }
+
+  static Maybe<int> DoGetSockOpt(int fd, int optname) {
+    int optval;
+    socklen_t optlen = sizeof(optval);
+
+    if (getsockopt(fd, SOL_SOCKET, optname, &optval, &optlen) != 0) {
+      return Nothing();
+    }
+    MOZ_RELEASE_ASSERT(static_cast<size_t>(optlen) == sizeof(optval));
+    return Some(optval);
+  }
+
+  // Substitute the newly connected socket from the broker for the
+  // original socket.  This is meant to be used on a fd from
+  // FakeSocketTrap, above, but it should also work to simulate
+  // re-connect()ing a real connected socket.
+  //
+  // Warning: This isn't quite right if the socket is dup()ed, because
+  // other duplicates will still be the original socket, but hopefully
+  // nothing we're dealing with does that.
+  static intptr_t ConnectTrapCommon(SandboxBrokerClient* aBroker, int aFd,
+                                    const struct sockaddr_un* aAddr,
+                                    socklen_t aLen) {
+    if (aFd < 0) {
+      return -EBADF;
+    }
+    const auto maybeDomain = DoGetSockOpt(aFd, SO_DOMAIN);
+    if (!maybeDomain) {
+      return -errno;
+    }
+    if (*maybeDomain != AF_UNIX) {
+      return -EAFNOSUPPORT;
+    }
+    const auto maybeType = DoGetSockOpt(aFd, SO_TYPE);
+    if (!maybeType) {
+      return -errno;
+    }
+    const int oldFlags = fcntl(aFd, F_GETFL);
+    if (oldFlags == -1) {
+      return -errno;
+    }
+    const int newFd = aBroker->Connect(aAddr, aLen, *maybeType);
+    if (newFd < 0) {
+      return newFd;
+    }
+    // Copy over the nonblocking flag.  The connect() won't be
+    // nonblocking in that case, but that shouldn't matter for
+    // AF_UNIX.  The other fcntl-settable flags are either irrelevant
+    // for sockets (e.g., O_APPEND) or would be blocked by this
+    // seccomp-bpf policy, so they're ignored.
+    if (fcntl(newFd, F_SETFL, oldFlags & O_NONBLOCK) != 0) {
+      close(newFd);
+      return -errno;
+    }
+    if (dup2(newFd, aFd) < 0) {
+      close(newFd);
+      return -errno;
+    }
+    close(newFd);
+    return 0;
+  }
+
+  static intptr_t ConnectTrap(ArgsRef aArgs, void* aux) {
+    typedef const struct sockaddr_un* AddrPtr;
+
+    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
+                             static_cast<int>(aArgs.args[0]),
+                             reinterpret_cast<AddrPtr>(aArgs.args[1]),
+                             static_cast<socklen_t>(aArgs.args[2]));
+  }
+
+  static intptr_t ConnectTrapLegacy(ArgsRef aArgs, void* aux) {
+    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
+    typedef const struct sockaddr_un* AddrPtr;
+
+    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
+                             static_cast<int>(innerArgs[0]),
+                             reinterpret_cast<AddrPtr>(innerArgs[1]),
+                             static_cast<socklen_t>(innerArgs[2]));
+  }
+
  public:
   ResultExpr InvalidSyscall() const override {
     return Trap(BlockedSyscallTrap, nullptr);
@@ -632,10 +747,32 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         Arg<int> level(1), optname(2);
         // SO_SNDBUF is used by IPC to avoid constructing
         // unnecessarily large gather arrays for `sendmsg`.
-        return Some(
-            If(AllOf(level == SOL_SOCKET, optname == SO_SNDBUF), Allow())
-                .Else(InvalidSyscall()));
+        //
+        // SO_DOMAIN and SO_TYPE are needed for connect() brokering,
+        // but they're harmless even when it's not enabled.
+        return Some(If(AllOf(level == SOL_SOCKET,
+                             AnyOf(optname == SO_SNDBUF, optname == SO_DOMAIN,
+                                   optname == SO_TYPE)),
+                       Allow())
+                        .Else(InvalidSyscall()));
       }
+
+        // These two cases are for connect() brokering, if enabled.
+      case SYS_SOCKET:
+        if (mBrokeredConnect) {
+          const auto trapFn = aHasArgs ? FakeSocketTrap : FakeSocketTrapLegacy;
+          MOZ_ASSERT(mBroker);
+          return Some(Trap(trapFn, mBroker));
+        }
+        return Nothing();
+
+      case SYS_CONNECT:
+        if (mBrokeredConnect) {
+          const auto trapFn = aHasArgs ? ConnectTrap : ConnectTrapLegacy;
+          MOZ_ASSERT(mBroker);
+          return Some(Trap(trapFn, mBroker));
+        }
+        return Nothing();
 
       default:
         return Nothing();
@@ -1008,6 +1145,12 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
             .Else(SandboxPolicyBase::EvaluateSyscall(sysno));
       }
 
+      CASES_FOR_dup2:  // See ConnectTrapCommon
+        if (mBrokeredConnect) {
+          return Allow();
+        }
+        return SandboxPolicyBase::EvaluateSyscall(sysno);
+
 #ifdef MOZ_ASAN
         // ASAN's error reporter wants to know if stderr is a tty.
       case __NR_ioctl: {
@@ -1095,120 +1238,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     return rv;
   }
 
-  // This just needs to return something to stand in for the
-  // unconnected socket until ConnectTrap, below, and keep track of
-  // the socket type somehow.  Half a socketpair *is* a socket, so it
-  // should result in minimal confusion in the caller.
-  static intptr_t FakeSocketTrapCommon(int domain, int type, int protocol) {
-    int fds[2];
-    // X11 client libs will still try to getaddrinfo() even for a
-    // local connection.  Also, WebRTC still has vestigial network
-    // code trying to do things in the content process.  Politely tell
-    // them no.
-    if (domain != AF_UNIX) {
-      return -EAFNOSUPPORT;
-    }
-    if (socketpair(domain, type, protocol, fds) != 0) {
-      return -errno;
-    }
-    close(fds[1]);
-    return fds[0];
-  }
-
-  static intptr_t FakeSocketTrap(ArgsRef aArgs, void* aux) {
-    return FakeSocketTrapCommon(static_cast<int>(aArgs.args[0]),
-                                static_cast<int>(aArgs.args[1]),
-                                static_cast<int>(aArgs.args[2]));
-  }
-
-  static intptr_t FakeSocketTrapLegacy(ArgsRef aArgs, void* aux) {
-    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
-
-    return FakeSocketTrapCommon(static_cast<int>(innerArgs[0]),
-                                static_cast<int>(innerArgs[1]),
-                                static_cast<int>(innerArgs[2]));
-  }
-
-  static Maybe<int> DoGetSockOpt(int fd, int optname) {
-    int optval;
-    socklen_t optlen = sizeof(optval);
-
-    if (getsockopt(fd, SOL_SOCKET, optname, &optval, &optlen) != 0) {
-      return Nothing();
-    }
-    MOZ_RELEASE_ASSERT(static_cast<size_t>(optlen) == sizeof(optval));
-    return Some(optval);
-  }
-
-  // Substitute the newly connected socket from the broker for the
-  // original socket.  This is meant to be used on a fd from
-  // FakeSocketTrap, above, but it should also work to simulate
-  // re-connect()ing a real connected socket.
-  //
-  // Warning: This isn't quite right if the socket is dup()ed, because
-  // other duplicates will still be the original socket, but hopefully
-  // nothing we're dealing with does that.
-  static intptr_t ConnectTrapCommon(SandboxBrokerClient* aBroker, int aFd,
-                                    const struct sockaddr_un* aAddr,
-                                    socklen_t aLen) {
-    if (aFd < 0) {
-      return -EBADF;
-    }
-    const auto maybeDomain = DoGetSockOpt(aFd, SO_DOMAIN);
-    if (!maybeDomain) {
-      return -errno;
-    }
-    if (*maybeDomain != AF_UNIX) {
-      return -EAFNOSUPPORT;
-    }
-    const auto maybeType = DoGetSockOpt(aFd, SO_TYPE);
-    if (!maybeType) {
-      return -errno;
-    }
-    const int oldFlags = fcntl(aFd, F_GETFL);
-    if (oldFlags == -1) {
-      return -errno;
-    }
-    const int newFd = aBroker->Connect(aAddr, aLen, *maybeType);
-    if (newFd < 0) {
-      return newFd;
-    }
-    // Copy over the nonblocking flag.  The connect() won't be
-    // nonblocking in that case, but that shouldn't matter for
-    // AF_UNIX.  The other fcntl-settable flags are either irrelevant
-    // for sockets (e.g., O_APPEND) or would be blocked by this
-    // seccomp-bpf policy, so they're ignored.
-    if (fcntl(newFd, F_SETFL, oldFlags & O_NONBLOCK) != 0) {
-      close(newFd);
-      return -errno;
-    }
-    if (dup2(newFd, aFd) < 0) {
-      close(newFd);
-      return -errno;
-    }
-    close(newFd);
-    return 0;
-  }
-
-  static intptr_t ConnectTrap(ArgsRef aArgs, void* aux) {
-    typedef const struct sockaddr_un* AddrPtr;
-
-    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
-                             static_cast<int>(aArgs.args[0]),
-                             reinterpret_cast<AddrPtr>(aArgs.args[1]),
-                             static_cast<socklen_t>(aArgs.args[2]));
-  }
-
-  static intptr_t ConnectTrapLegacy(ArgsRef aArgs, void* aux) {
-    const auto innerArgs = reinterpret_cast<unsigned long*>(aArgs.args[1]);
-    typedef const struct sockaddr_un* AddrPtr;
-
-    return ConnectTrapCommon(static_cast<SandboxBrokerClient*>(aux),
-                             static_cast<int>(innerArgs[0]),
-                             reinterpret_cast<AddrPtr>(innerArgs[1]),
-                             static_cast<socklen_t>(innerArgs[2]));
-  }
-
  public:
   ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                        ContentProcessSandboxParams&& aParams)
@@ -1218,6 +1247,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
     mBroker = aBroker;
     mMayCreateShmem = true;
     mAllowUnsafeSocketPair = true;
+    mBrokeredConnect = true;
   }
 
   ~ContentSandboxPolicy() override = default;
@@ -1234,14 +1264,12 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case SYS_SOCKET:
         return Some(Error(EACCES));
 #else  // #ifdef DESKTOP
-      case SYS_SOCKET: {
-        const auto trapFn = aHasArgs ? FakeSocketTrap : FakeSocketTrapLegacy;
-        return Some(AllowBelowLevel(4, Trap(trapFn, nullptr)));
-      }
-      case SYS_CONNECT: {
-        const auto trapFn = aHasArgs ? ConnectTrap : ConnectTrapLegacy;
-        return Some(AllowBelowLevel(4, Trap(trapFn, mBroker)));
-      }
+      case SYS_SOCKET:
+      case SYS_CONNECT:
+        if (BelowLevel(4)) {
+          return Some(Allow());
+        }
+        return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
       case SYS_RECV:
       case SYS_SEND:
       case SYS_GETSOCKOPT:
@@ -1458,9 +1486,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
 
       case __NR_getrusage:
       case __NR_times:
-        return Allow();
-
-      CASES_FOR_dup2:  // See ConnectTrapCommon
         return Allow();
 
       case __NR_fsync:
