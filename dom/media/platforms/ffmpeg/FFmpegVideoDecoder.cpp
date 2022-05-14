@@ -1166,8 +1166,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   }
 
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
-  auto surface = mVideoFramePool->GetVideoFrameSurface(vaDesc, mCodecContext,
-                                                       mFrame, mLib);
+  auto surface = mVideoFramePool->GetVideoFrameSurface(
+      vaDesc, mFrame->width, mFrame->height, mCodecContext, mFrame, mLib);
   if (!surface) {
     return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("VAAPI dmabuf allocation error"));
