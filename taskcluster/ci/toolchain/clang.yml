@@ -13,7 +13,7 @@ job-defaults:
 linux64-clang-5.0:
     description: "Clang 5.0 toolchain build"
     treeherder:
-        symbol: TL(clang5.0)
+        symbol: TL(clang-5.0)
     worker-type: b-linux-large
     run:
         script: build-clang.sh
@@ -35,7 +35,7 @@ linux64-clang-5.0:
 linux64-clang-14-mingw-x86:
     description: "MinGW-Clang 14 x86 toolchain build"
     treeherder:
-        symbol: TMW(clang-x86)
+        symbol: TMW(clang-14-x86)
     worker-type: b-linux
     run:
         script: build-clang-mingw.sh
@@ -55,7 +55,7 @@ linux64-clang-14-mingw-x86:
 linux64-clang-14-mingw-x64:
     description: "MinGW-Clang 14 x64 toolchain build"
     treeherder:
-        symbol: TMW(clang-x64)
+        symbol: TMW(clang-14-x64)
         tier: 1
     worker-type: b-linux
     run:
@@ -76,7 +76,7 @@ linux64-clang-14-mingw-x64:
 linux64-clang-14-stage1:
     description: "Clang 14 toolchain build"
     treeherder:
-        symbol: TL(clang14-stage1)
+        symbol: TL(clang-14-stage1)
     run-on-projects: [trunk]
     run:
         using: toolchain-script
@@ -101,7 +101,7 @@ linux64-clang-14-stage1:
 linux64-clang-14-profile:
     description: "Clang 14 toolchain build"
     treeherder:
-        symbol: TL(clang14-profile)
+        symbol: TL(clang-14-profile)
     run:
         using: toolchain-script
         script: build-clang.sh
@@ -127,7 +127,7 @@ linux64-clang-14-profile:
 linux64-clang-14-raw:
     description: "Clang 14 toolchain build"
     treeherder:
-        symbol: TL(clang14-raw)
+        symbol: TL(clang-14-raw)
     run:
         script: build-clang.sh
         arguments:
@@ -154,7 +154,7 @@ linux64-clang-14:
     attributes:
         local-toolchain: true
     treeherder:
-        symbol: TL(clang14)
+        symbol: TL(clang-14)
     worker-type: b-linux
     worker:
         max-run-time: 600
