@@ -112,4 +112,6 @@
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">ایہ کارڈ حفاظت نال محفوظ کروں؟</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">کارڈ مُکݨ تریخ اپ ڈیٹ کروں؟</string>
-    </resources>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">کارڈ نمبر دی خفیہ کاری کیتی ویسی۔ حفاظتی کوڈ محفوظ کائناں کیتا ویسی۔</string>
+</resources>

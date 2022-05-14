@@ -20,6 +20,8 @@
     <string name="mozac_feature_prompt_dont_save">Ur seklas ara</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">Urǧin sekles</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Mačči tura</string>
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">Sekles</string>
     <!-- Negative confirmation that we should not save the updated login -->
@@ -103,6 +105,12 @@
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Semɣer tikerḍiwin n usmad i d-yettusumren</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Fneẓ tikerḍiwin n usmad i d-yettusumren</string>
-    <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Sefrektikarḍiwin n usmad</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Asekles n tkarḍa-a s wudem aɣellsan?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Leqqem azemz n keffu n tkarḍa?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Uṭṭun n tkarḍa ad yettwawgelhen. Tangalt n tɣellist ur tettwaseklas ara.</string>
 </resources>

@@ -64,6 +64,8 @@
     <string name="mozac_feature_addons_permissions_tab_hide_description">براؤزر ٹیباں لکاؤ تے ݙکھاؤ</string>
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">براؤزنگ تاریخ تے اپڑو</string>
+    <!-- Description for devtools permission. -->
+    <string name="mozac_feature_addons_permissions_devtools_description">کھلے ٹیب وچ آپݨے ڈیٹا تائیں رسائی کیتے ڈویلپر دے اوزار ودھاؤ</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورشن</string>
     <!-- The authors of an add-on. -->
@@ -138,6 +140,8 @@
     <string name="mozac_feature_addons_updater_notification_content_singular">نویں اجازت ضروری ہے</string>
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">ایڈ ــ آن اپ ڈیٹاں</string>
+    <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_addons_supported_checker_notification_channel">سہارا تھئے ایڈ ــ آن پڑتال کار</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">نویں ایڈ ــ آن دستیاب ہے</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
@@ -148,10 +152,14 @@
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s تے %2$s کوں %3$s وچ جوڑو</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_more_than_two">اُنہاں کوں %1$s وچ شامل کرو</string>
+    <!-- This is the caption for not yet supported screen caption -->
+    <string name="mozac_feature_addons_not_yet_supported_caption2">ایکسٹنشناساں فی الحال تجویز تھئے ایکسٹنشناں دے موہری انتخاب کیتے سہارا بݨیندے پئے ہیں۔</string>
     <!-- This is the caption for the add-on installation progress overlay -->
     <string name="mozac_add_on_install_progress_caption">ایڈ ــ آن کوں ڈاؤن لوڈ تے تصدیق کریندا پئے۔۔۔</string>
     <!-- Error shown when something unexpected happened while trying to get the add-on list from the server -->
     <string name="mozac_feature_addons_failed_to_query_add_ons">ایڈ ــ آن دریافت کرݨ وچ ناکام!</string>
+    <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
+    <string name="mozac_feature_addons_failed_to_translate"> %1$s  زبان کیتے تے نہ ہی پہلوں مقرر زبان %2$s کیتے ترجمہ لبھے</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_installed">%1$s کامیابی نال انسٹال تھی ڳیا</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
@@ -172,6 +180,8 @@
     <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s کامیابی نال ہٹ ڳیا</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s ہٹاوݨ وچ ناکام تھیا</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">ایہ ایڈ ــ آن %1$s دے پچھلے ورشن کنوں منتقل کیتا ڳیا ہائی</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption"> 1 ایڈ ــ آن</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->

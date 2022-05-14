@@ -2,6 +2,8 @@
 <resources>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="mozac_tab_counter_open_tab_tray_single">١ ٹیب کھولو۔ ٹیبز بدلݨ کیتے دباؤ۔</string>
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
+    <string name="mozac_tab_counter_open_tab_tray_plural">%1$s  ٹیبز کھولو۔ ٹیبز بدلݨ کیتے  دباؤ۔</string>
     <!-- Browser menu button that creates a new tab -->
     <string name="mozac_browser_menu_new_tab">نواں ٹیب</string>
     <!-- Browser menu button that creates a private tab -->

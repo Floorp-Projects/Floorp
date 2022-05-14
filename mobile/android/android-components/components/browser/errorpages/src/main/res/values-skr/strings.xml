@@ -55,8 +55,23 @@
     <!-- The document title and heading of the error page shown when a website takes too long to load. -->
     <string name="mozac_browser_errorpages_net_timeout_title">کنکشن ٹائم آوٹ تھی ڳیا ہے</string>
 
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>ارداس کیتی ڳئی سائٹ نے کنکشن دی ارداس دا جواب کائنی ݙتا تے براؤزر  نے جواب دی تانگھ کرݨ بند کر ݙتی ہے۔</p>
+      <ul>
+        <li>تھی سڳدے جو سرور زیادہ مانگ یا  عارضی وقفے دا سامھݨا کریندا پیا ہووے؟ ولدا بعد وچ کوشش کرو۔</li>
+        <li> پھلا تساں ݙوجھی سائٹ تے وی براؤز نہوے کر سڳدے پئے؟ ڈیوائس دے نیٹ ورک کنکشن دی جانچ کرو۔</li>
+        <li>بھلا تہاݙی ڈیوائس  یا نیٹ ورک کہیں فائروال یا پراکسی دے ذریعے محفوظ ہے؟غلط ترتیباں ویب براؤز کرݨ وچ مداخلت کر سڳدی ہے۔</li>
+        <li>ہݨ وی مسئلہ درپیش ہے؟ مدد کیتے آپݨے نیٹ ورک کے نگران یا انٹرنیٹ مہیا کار نال رابطہ کرو۔</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">جڑݨ وچ ناکام ریہا</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>سائٹ عارضی طور تے غیر دستیاب یا کافی مصروف تھی سڳدی ہے۔ کجھ دیر بعد ولدا کوشش کرو۔</li>
+        <li>جے تساں کوئی وی ورقہ لوڈ نہوے کر سڳدے پئے، تاں آپݨی ڈیوائس دا ڈیٹا یا وائی-فائی کنکشن دی جانچ کرو۔</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور ولوں غیر متوقع  جواب</string>
@@ -107,6 +122,9 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">غلط پتہ</string>
 
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>مہیا کیتا ڳیا پتہ سُن٘ڄاپُو فارمیٹ وچ کائنی۔ سوہݨا، غلطیاں کیتے لوکیشن پٹی دی پڑتال کرو تے ولدا کوشش کرو۔</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">پتہ ٹھیک کائنی</string>
 
@@ -124,6 +142,12 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">فائل تائیں رسائی مسترد کر ݙتی ڳئی ہائی</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>ایہ ہٹا یا ٹور ݙتا ڳیا ہوسی یا فائل اجازتاں رسائی کائناں تھیوݨ ݙیندیاں پیاں ہوسن</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">پراکسی سرور کنکشن دا انکار کر ݙتے</string>
