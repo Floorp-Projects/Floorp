@@ -125,27 +125,11 @@ namespace mozilla {
 // denied if no broker client is provided by the concrete class.
 class SandboxPolicyCommon : public SandboxPolicyBase {
  protected:
-  enum class ShmemUsage : uint8_t {
-    MAY_CREATE,
-    ONLY_USE,
-  };
-
-  enum class AllowUnsafeSocketPair : uint8_t {
-    NO,
-    YES,
-  };
-
+  // Subclasses can assign these in their constructors to loosen the
+  // default settings.
   SandboxBrokerClient* mBroker = nullptr;
   bool mMayCreateShmem = false;
   bool mAllowUnsafeSocketPair = false;
-
-  explicit SandboxPolicyCommon(SandboxBrokerClient* aBroker,
-                               ShmemUsage aShmemUsage,
-                               AllowUnsafeSocketPair aAllowUnsafeSocketPair)
-      : mBroker(aBroker),
-        mMayCreateShmem(aShmemUsage == ShmemUsage::MAY_CREATE),
-        mAllowUnsafeSocketPair(aAllowUnsafeSocketPair ==
-                               AllowUnsafeSocketPair::YES) {}
 
   SandboxPolicyCommon() = default;
 
@@ -1228,11 +1212,13 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
  public:
   ContentSandboxPolicy(SandboxBrokerClient* aBroker,
                        ContentProcessSandboxParams&& aParams)
-      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
-                            AllowUnsafeSocketPair::YES),
-        mParams(std::move(aParams)),
+      : mParams(std::move(aParams)),
         mAllowSysV(PR_GetEnv("MOZ_SANDBOX_ALLOW_SYSV") != nullptr),
-        mUsingRenderDoc(PR_GetEnv("RENDERDOC_CAPTUREOPTS") != nullptr) {}
+        mUsingRenderDoc(PR_GetEnv("RENDERDOC_CAPTUREOPTS") != nullptr) {
+    mBroker = aBroker;
+    mMayCreateShmem = true;
+    mAllowUnsafeSocketPair = true;
+  }
 
   ~ContentSandboxPolicy() override = default;
 
@@ -1762,9 +1748,10 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
 // segments, so it may need file brokering.
 class RDDSandboxPolicy final : public SandboxPolicyCommon {
  public:
-  explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker)
-      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
-                            AllowUnsafeSocketPair::NO) {}
+  explicit RDDSandboxPolicy(SandboxBrokerClient* aBroker) {
+    mBroker = aBroker;
+    mMayCreateShmem = true;
+  }
 
 #ifndef ANDROID
   Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const override {
@@ -1875,9 +1862,10 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetDecoderSandboxPolicy(
 // the SocketProcess sandbox looks like.
 class SocketProcessSandboxPolicy final : public SandboxPolicyCommon {
  public:
-  explicit SocketProcessSandboxPolicy(SandboxBrokerClient* aBroker)
-      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
-                            AllowUnsafeSocketPair::NO) {}
+  explicit SocketProcessSandboxPolicy(SandboxBrokerClient* aBroker) {
+    mBroker = aBroker;
+    mMayCreateShmem = true;
+  }
 
   static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
                             void* aux) {
@@ -2013,9 +2001,10 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetSocketProcessSandboxPolicy(
 
 class UtilitySandboxPolicy : public SandboxPolicyCommon {
  public:
-  explicit UtilitySandboxPolicy(SandboxBrokerClient* aBroker)
-      : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
-                            AllowUnsafeSocketPair::NO) {}
+  explicit UtilitySandboxPolicy(SandboxBrokerClient* aBroker) {
+    mBroker = aBroker;
+    mMayCreateShmem = true;
+  }
 
   ResultExpr PrctlPolicy() const override {
     Arg<int> op(0);
