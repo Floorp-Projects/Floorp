@@ -8,9 +8,7 @@
 void NoExplicitMoveConstructorChecker::registerMatchers(
     MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      cxxConstructorDecl(isExplicitMoveConstructor(), isFirstParty())
-          .bind("node"),
-      this);
+      cxxConstructorDecl(isExplicitMoveConstructor()).bind("node"), this);
 }
 
 void NoExplicitMoveConstructorChecker::check(
