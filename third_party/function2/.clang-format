@@ -1,9 +1,0 @@
-BasedOnStyle: LLVM
-
-PointerAlignment: Left
-IndentCaseLabels: true
-AllowShortFunctionsOnASingleLine: false
-AllowShortCaseLabelsOnASingleLine: false
-AlwaysBreakTemplateDeclarations: true
-BinPackArguments: true
-FixNamespaceComments: true

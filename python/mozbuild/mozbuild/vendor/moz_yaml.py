@@ -37,7 +37,6 @@ VALID_LICENSES = [
     "BSD-2-Clause",
     "BSD-3-Clause",
     "BSD-3-Clause-Clear",
-    "BSL-1.0",
     "CC0-1.0",
     "ISC",
     "ICU",
