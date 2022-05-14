@@ -180,7 +180,11 @@ public:
                                   StringRef FileName,
                                   bool IsAngled,
                                   CharSourceRange FileNameRange,
+#if CLANG_VERSION_MAJOR >= 15
+                                  Optional<FileEntryRef> File,
+#else
                                   const FileEntry *File,
+#endif
                                   StringRef SearchPath,
                                   StringRef RelativePath,
                                   const Module *Imported,
@@ -2084,12 +2088,23 @@ void PreprocessorHook::InclusionDirective(SourceLocation HashLoc,
                                           StringRef FileName,
                                           bool IsAngled,
                                           CharSourceRange FileNameRange,
+#if CLANG_VERSION_MAJOR >= 15
+                                          Optional<FileEntryRef> File,
+#else
                                           const FileEntry *File,
+#endif
                                           StringRef SearchPath,
                                           StringRef RelativePath,
                                           const Module *Imported,
                                           SrcMgr::CharacteristicKind FileType) {
+#if CLANG_VERSION_MAJOR >= 15
+  if (!File) {
+    return;
+  }
+  Indexer->inclusionDirective(FileNameRange.getAsRange(), &File->getFileEntry());
+#else
   Indexer->inclusionDirective(FileNameRange.getAsRange(), File);
+#endif
 }
 
 void PreprocessorHook::MacroDefined(const Token &Tok,
