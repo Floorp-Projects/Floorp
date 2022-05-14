@@ -213,6 +213,7 @@ Preferences.addAll([
   { id: "floorp.bookmarks.fakestatus.mode", type:"bool"},
   { id: "floorp.search.top.mode", type:"bool"},
   { id: "floorp.legacy.menu.mode", type:"bool"},
+  { id: "floorp.enable.auto.restart", type:"bool"},
 
 ]);
 
@@ -560,6 +561,7 @@ var gMainPane = {
           themeelement[i].addEventListener('click',
          function()
           {
+            if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)){
             (async() => {
               let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
@@ -569,6 +571,12 @@ var gMainPane = {
               }
             })()
           }
+          else {
+            window.setTimeout(function(){
+              Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+            }, 500);
+          }
+         }
   
             ,false);
         }
@@ -579,6 +587,7 @@ var gMainPane = {
   
           function()
           {
+            if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)){
             (async() => {
               let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
@@ -588,6 +597,12 @@ var gMainPane = {
               }
             })()
           }
+          else {
+            window.setTimeout(function(){
+              Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+            }, 500);
+          }
+         }
   
             ,false);
         }
@@ -598,6 +613,7 @@ var gMainPane = {
   
           function()
           {
+            if (Services.prefs.getBoolPref(!"floorp.enable.auto.restart", false)){
             (async() => {
               let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
@@ -607,6 +623,12 @@ var gMainPane = {
               }
             })()
           }
+          else {
+            window.setTimeout(function(){
+              Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+            }, 500);
+          }
+         }
   
             ,false);
         }
