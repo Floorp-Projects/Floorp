@@ -1693,7 +1693,6 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
           TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                          "delazification_on_demand_only");
           break;
-        case JS::DelazificationOption::CheckConcurrentWithOnDemand:
         case JS::DelazificationOption::ConcurrentDepthFirst:
           TRACE_FOR_TEST(aRequest->GetScriptLoadContext()->GetScriptElement(),
                          "delazification_concurrent_depth_first");

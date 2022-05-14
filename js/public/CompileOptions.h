@@ -77,13 +77,6 @@ enum class AsmJSOption : uint8_t {
   _(OnDemandOnly)                                                              \
                                                                                \
   /*                                                                           \
-   * Compare the stencil produced by concurrent depth first delazification and \
-   * on-demand delazification. Any differences would crash SpiderMonkey with   \
-   * an assertion.                                                             \
-   */                                                                          \
-  _(CheckConcurrentWithOnDemand)                                               \
-                                                                               \
-  /*                                                                           \
    * Delazifiy functions in a depth first traversal of the functions.          \
    */                                                                          \
   _(ConcurrentDepthFirst)                                                      \
@@ -246,41 +239,15 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // rooting, or other hand-holding) to their values in |rhs|.
   void copyPODTransitiveOptions(const TransitiveCompileOptions& rhs);
 
-  bool isEagerDelazificationEqualTo(DelazificationOption val) const {
-    return eagerDelazificationStrategy() == val;
-  }
-
-  template <DelazificationOption... Values>
-  bool eagerDelazificationIsOneOf() const {
-    return (isEagerDelazificationEqualTo(Values) || ...);
-  }
-
  public:
   // Read-only accessors for non-POD options. The proper way to set these
   // depends on the derived type.
   bool mutedErrors() const { return mutedErrors_; }
   bool forceFullParse() const {
-    return eagerDelazificationIsOneOf<
-      DelazificationOption::ParseEverythingEagerly>();
+    return eagerDelazificationStrategy_ ==
+           DelazificationOption::ParseEverythingEagerly;
   }
   bool forceStrictMode() const { return forceStrictMode_; }
-  bool consumeDelazificationCache() const {
-    return eagerDelazificationIsOneOf<
-      DelazificationOption::ConcurrentDepthFirst>();
-  }
-  bool populateDelazificationCache() const {
-    return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand,
-      DelazificationOption::ConcurrentDepthFirst>();
-  }
-  bool waitForDelazificationCache() const {
-    return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand>();
-  }
-  bool checkDelazificationCache() const {
-    return eagerDelazificationIsOneOf<
-      DelazificationOption::CheckConcurrentWithOnDemand>();
-  }
   DelazificationOption eagerDelazificationStrategy() const {
     return eagerDelazificationStrategy_;
   }

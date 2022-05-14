@@ -605,9 +605,6 @@ class ScriptSource {
   // See: CompileOptions::mutedErrors.
   bool mutedErrors_ = false;
 
-  // Carry the delazification mode per source.
-  JS::DelazificationOption delazificationMode_;
-
   //
   // End of fields.
   //
@@ -1027,10 +1024,6 @@ class ScriptSource {
   bool mutedErrors() const { return mutedErrors_; }
 
   uint32_t startLine() const { return startLine_; }
-
-  JS::DelazificationOption delazificationMode() const {
-    return delazificationMode_;
-  }
 
   bool hasIntroductionOffset() const { return introductionOffset_.isSome(); }
   uint32_t introductionOffset() const { return introductionOffset_.value(); }
@@ -1499,10 +1492,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
 
   uint32_t lineno() const { return extent_.lineno; }
   uint32_t column() const { return extent_.column; }
-
-  JS::DelazificationOption delazificationMode() const {
-    return scriptSource()->delazificationMode();
-  }
 
  public:
   ImmutableScriptFlags immutableFlags() const { return immutableFlags_; }
