@@ -1,3 +1,1529 @@
+2022-05-01  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.12.1 released.
+	==========================
+
+	Tag sources with `VER-2-12-1'.
+
+	* docs/VERSION.TXT: Add entry for version 2.12.1.
+	* docs/CHANGES, docs/release: Updated.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html, builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html, builds/wince/vc2008-ce/index.html,
+	docs/freetype-config.1: s/2.12.0/2.12.1/, s/2120/2121/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 24:3:18.
+	* CMakeLists.txt (VERSION_PATCH): Set to 1.
+
+2022-04-30  Anuj Verma  <anuj@posteo.net>
+
+	[sdf] Do not throw errors for invisible glyphs.
+
+	* src/sdf/ftsdfrend.c (ft_sdf_render, ft_bsdf_render): Return `FT_Err_Ok` if
+	width or height is zero, since some glyphs do not generate visible bitmaps.
+
+	Fixes #1150.
+
+2022-04-30  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Set `FT_FACE_FLAG_COLOR` for SVG fonts.
+
+	Fixes #1151.
+
+2022-04-27  Brendan Shanks  <bshanks@codeweavers.com>
+
+	autogen.sh: Fix building when freetype is itself a git submodule.
+
+	There are situations where .git is not a directory, like when
+	freetype is a submodule in another repository.
+
+2022-04-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[builds/windows] Simplify non-desktop UWP check.
+
+	Fixes mingw compilation described in !159.
+
+	* builds/windows/ftsystem.c: Do not use WINAPI_FAMILY_PARTITION macro.
+
+2022-04-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reset IUP flags in `TT_RunIns`.
+
+	Fixes #1148 by moving the flag initialization back, partly reverting
+	7809007a and fd03dcc1.  Initializing these flags elsewhere skips 'cvt'.
+
+	* src/truetype/ttinterp.c (TT_RunIns): Initialize the IUP flag here...
+	(TT_Run_Context): ... instead of here.
+
+2022-04-24  Xavier Claessens  <xavier.claessens@collabora.com>
+
+	[meson] Remove `default_library=both` from `default_options`.
+
+	It is inconsistent with what all other Meson projects do.
+
+	It also prevents static linking to FreeType when it is a subproject because
+	`default_options` in a subproject takes precedence on values set on the main
+	project.  For example, building 'GStreamer' with `-Ddefault_library=static`
+	would still dynamically link on FreeType unless the user also sets
+	`-Dfreetype2:default_library=static`.
+
+	* meson.build: Updated.
+
+	* .gitlab-ci.yml: Retain `both` option for testing.
+
+2022-04-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgload.c (TT_Process_Simple_Glyph): Integer overflow.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=46792
+
+2022-04-16  Georg Brandl  <georg@python.org>
+
+	* src/cff/cffgload.c (cff_slot_load) [FT_CONFIG_OPTION_SVG]: Fix segfault.
+
+	This can happen if the function is called with `size` being `NULL`.
+
+	Fixes #1147.
+
+2022-04-14  Steve Lhomme  <robux4@ycbcr.xyz>
+
+	.gitlab-ci.yml: Add a Universal Windows build target
+
+	It's compiled for Windows 10 and up, ensuring UNICODE is set (default for UWP)
+	and selecting the proper WINAPI_FAMILY (WINAPI_FAMILY_APP).
+
+	Do not try to run the UWP exe in the Docker as it doesn't work.
+
+2022-04-04  Ben Wagner  <bungeman@chromium.org>
+
+	[sfnt] Correct FT_ColorStopIterator documentation.
+
+	* include/freetype/ftcolor.h (FT_ColorStopIterator): the user should not
+	 set `p` to NULL before calling `FT_Get_Colorline_Stops`. `p` and
+	`num_color_stops` are set by `FT_Get_Paint`. `p` and
+	`current_color_stop` are updated by `FT_Get_Colorline_Stops`.
+
+2022-04-01  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/configure.raw: Add option `--with-librsvg`.
+
+	Since 'librsvg' is written in Rust, this option allows distributions to
+	avoid a dependency on the entire Rust toolchain to provide the FreeType demo
+	programs.
+
+	Suggested by Lars Wendler in !156.
+
+2022-04-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfwoff.c (reconstruct_glyf): Fix gcc 10 warning.
+
+2022-04-01  Werner Lemberg  <wl@gnu.org>
+
+	[gzip] Update sources to zlib 1.2.12.
+
+2022-04-01  Eric Jing  <@CPUcontrol>
+
+	CMakeLists.txt: Fix `Info.plist` path.
+
+	When building a framework using CMake with `add_subdirectory`, CMake must be
+	able to find `freetype-Info.plist` when configuring the framework
+	properties.
+
+	Fixes #1145.
+
+2022-04-01  Werner Lemberg  <wl@gnu.org>
+
+	Whitespace.
+
+2022-04-01  Ben Wagner  <bungeman@chromium.org>
+
+	[truetype] Use SUB_LONG for component offset.
+
+	* src/truetype/ttgload.c (TT_Process_Composite_Component): do it.
+
+	Bug: https://crbug.com/1309429
+
+2022-03-31  Werner Lemberg  <wl@gnu.org>
+
+	CMakeList.txt: Update code to handle recent changes for `freetype.pc`.
+
+	Fixes #1144.
+
+2022-03-31  Werner Lemberg  <wl@gnu.org>
+
+	CMakeLists.txt: s/PKG_CONFIG/PKGCONFIG/, s/REQUIRED_/REQUIRES_/.
+
+2022-03-31  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.12.0 released.
+	==========================
+
+	Tag sources with `VER-2-12-0'.
+
+	* docs/VERSION.TXT: Add entry for version 2.12.0.
+	* docs/CHANGES, docs/release: Updated.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html, builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html, builds/wince/vc2008-ce/index.html,
+	docs/freetype-config.1: s/2.11.1/2.12.0/, s/2111/2120/.
+
+	* include/freetype/freetype.h (FREETYPE_MINOR): Set to 12.
+	(FREETYPE_PATCH): Set to 0.
+
+	* builds/unix/configure.raw (version_info): Set to 24:2:18.
+	* CMakeLists.txt (VERSION_MINOR): Set to 12.
+	(VERSION_PATCH): Set to 0.
+
+	* builds/toplevel.mk (do-dist): Generate `ChangeLog` entries for all commits
+	since version 2.11.0 (when we stopped creating this file manually).
+
+2022-03-31  Werner Lemberg  <wl@gnu.org>
+
+	Fix clang++ warnings.
+
+	* src/base/ftglyph.c (ft_svg_glyph_prepare), src/base/ftobj.c
+	(ft_glyphslot_init), src/cache/ftccmap.c (ftc_cmap_node_new),
+	src/cache/ftcimage.c (FTC_INode_New), src/lzw/ftlzw.c (FT_Stream_OpenLZW),
+	src/psaux/psobjs.c (ps_parser_load_field), src/pshinter/pshglob.c
+	(psh_globals_new), src/sfnt/ttsvg.c (tt_face_load_svg_doc): Initialize
+	variables used for allocation.
+
+	* src/sdf/ftsdf.c (split_sdf_conic, split_sdf_cubic): Change type of
+	`max_splits` to FT_UInt.
+	(sdf_generate_bounding_box): Add cast.
+
+2022-03-30  Werner Lemberg  <wl@gnu.org>
+
+	Whitespace.
+
+2022-03-30  Werner Lemberg  <wl@gnu.org>
+
+	[builds] Fix creation of `freetype2.pc` for static-only builds.
+
+	We have to help `pkg-config` since it can't recognize that there is no
+	shared library installed.
+
+	Note that meson already does exactly the same.
+
+	* builds/unix/configure.raw (REQUIRES_PRIVATE, LIBS_PRIVATE): Rename to...
+	(PKGCONFIG_REQUIRES_PRIVATE, PKGCONFIG_LIBS_PRIVATE): This.  Adjust them
+	depending on `$enable_shared`.
+	(PKGCONFIG_REQUIRES, PKGCONFIG_LIBS): New variables.
+
+	* builds/unix/freetype2.in, builds/unix/unix-def.in: Use new and updated
+	variables.
+
+2022-03-25  Werner Lemberg  <wl@gnu.org>
+
+	Add `FT_FACE_FLAG_SBIX_OVERLAY` and `FT_HAS_SBIX_OVERLAY`.
+
+	* include/freetype/freetype.h (FT_FACE_FLAG_SBIX_OVERLAY,
+	FT_HAS_SBIX_OVERLAY): New macro.
+
+	* src/sfnt/ttsbit.c (tt_face_load_sbit): Handle `FT_FACE_FLAG_SBIX_OVERLAY`.
+	Remove obsolete tracing message.
+
+2022-03-25  Werner Lemberg  <wl@gnu.org>
+
+	Add `FT_PARAM_TAG_IGNORE_SBIX`.
+
+	This is another bit to handle 'sbix' tables as described in the OpenType
+	specification.
+
+	* include/freetype/ftparams.h (FT_PARAM_TAG_IGNORE_SBIX): New macro.
+
+	* src/sfnt/sfobjc.c (is_apple_sbix): Rename to...
+	(has_sbix): ... this.
+	Check for more sbit tables.
+	Handle `FT_PARAM_TAG_IGNORE_SBIX` to eventually control `has_sbix`.
+	Only call sbit table loader if an sbit table is present.
+
+2022-03-25  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix 'sbix' table handling.
+
+	* src/sfnt/ttsbit.c (tt_face_load_sbix_image): Correct calculation of
+	'metrics->horiBearingY'.
+	Set vertical metrics.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Adjust setting of `FT_FACE_FLAG_SBIX`.
+	Handle metrics of fonts with 'sbix' table.
+
+	* src/truetype/ttgload.c (TT_Load_Glyph): For 'sbix' embedded bitmaps, apply
+	bbox offset and bearing values of the corresponding glyph in the 'glyf'
+	table if it exists and has a contour.
+
+	* src/truetype/ttobjs.c (tt_face_init): Handle font with 'sbix' table.
+
+	Fixes issue #998.
+
+2022-03-25  Werner Lemberg  <wl@gnu.org>
+
+	Add `FT_FACE_FLAG_SBIX` and `FT_HAS_SBIX`.
+
+	Fonts with 'sbix' tables need special handling by the application.
+
+	* include/freetype/freetype.h (FT_FACE_FLAG_SBIX, FT_HAS_SBIX): New macros.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Set `FT_FACE_FLAG_SBIX` if 'sbix'
+	table is present.
+
+2022-03-25  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/freetype.h (FT_LOAD_SBITS_ONLY): Tag macro as public.
+
+2022-03-24  Carlo Bramini  <carlo.bramix@libero.it>
+
+	[builds/windows] Fix WCE support.
+
+	* builds/windows/ftsystem.c [_WIN32_WCE]: Include <malloc.h> needed by
+	_alloca.
+
+2022-03-24  Steve Lhomme  <robux4@ycbcr.xyz>
+
+	[build/windows] Improve UWP support.
+
+	* builds/windows/ftsystem.c [UWP]: Wrap CreateFile2 into CreateFileA.
+
+2022-03-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttkern.c (tt_face_get_kerning): Exit early if no table.
+
+	Fixes #1141.
+
+2022-03-20  Ben Wagner  <bungeman@chromium.org>
+
+	[woff2] Support overlap flag for simple glyphs.
+
+	In the woff2 spec it has been proposed to allow the OVERLAP_SIMPLE flag
+	to be retained through the woff2 format [0].
+
+	[0] https://www.w3.org/TR/WOFF2/#glyf_table_format
+
+	* src/sfnt/sfwoff2.h (GLYF_OVERLAP_SIMPLE): add glyf flag.
+
+	* src/sfnt/sfwoff2.c (reconstruct_glyf): parse optionFlags and
+	overlapSimpleBitmap[]. (store_points): set OVERLAP_SIMPLE on first point's
+	flag if the overlap bit is set.
+
+2022-03-19  Werner Lemberg  <wl@gnu.org>
+
+	[cff] Synchronize `cff_slot_load` with `TT_Load_Glyph`.
+
+	* src/cff/cffgload.c (IS_DEFAULT_INSTANCE): New macro.
+	(cff_slot_load): Use it.
+
+2022-03-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (FT_Request_Size): Guard `face->size`.
+
+	Fixes #1140.
+
+2022-03-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (ft_open_face_internal): Thinko.
+
+2022-03-19  Ben Wagner  <bungeman@chromium.org>
+
+	[doc] FT_OUTLINE_OVERLAP was introduced in 2.10.3.
+
+	* include/freetype/ftimage.h (FT_OUTLINE_OVERLAP): Document when added.
+
+2022-03-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftobjs.c (ft_open_face_internal): Properly guard `face_index`.
+
+	We must ensure that the cast to `FT_Int` doesn't change the sign.
+
+	Fixes #1139.
+
+2022-03-17  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Avoid invalid face index.
+
+	Fixes #1138.
+
+	* src/sfnt/sfobjs.c (sfnt_init_face), src/sfnt/sfwoff2.c (woff2_open_font):
+	Check `face_index` before decrementing.
+
+2022-03-07  Werner Lemberg  <wl@gnu.org>
+
+	Documentation, whitespace.
+
+2022-03-05  Anuj Verma  <anuj@womp.xyz>
+
+	[sdf] Fix corner checks and improve performance.
+
+	* src/sdf/ftsdf.c (sdf_generate_bounding_box): Always check for a corner if
+	two distances (for different curves) are very close.
+
+	(sdf_conic_to): Check whether the conic curve can be treated as a line
+	(which happens if the control point coincides with any end point).
+
+2022-03-05  Anuj Verma  <anuj@womp.xyz>
+
+	[sdf] Implement deviation-based splitting for Bezier curves.
+
+	* src/sdf/ftsdf.c (split_sdf_cubic, split_sdf_shape): Add checks to figure
+	out the deviation of Bezier curves and stop splitting if the curve is flat
+	enough.
+
+	* src/sdf/ftsdfcommon.h (ONE_PIXEL): New macro.
+
+2022-03-05  Anuj Verma  <anuj@womp.xyz>
+
+	* include/freetype/freetype.h: Improve SDF documentation.
+
+2022-03-03  Ben Wagner  <bungeman@chromium.org>
+
+	[sfnt] Fix bounds check in SVG.
+
+	The `SVG_DOCUMENT_LIST_MINIMUM_SIZE` macro is non trivial and not
+	protected by parentheses. As a result, the expression
+	`table_size - SVG_DOCUMENT_LIST_MINIMUM_SIZE` expands to
+	`table_size - 2U + SVG_DOCUMENT_RECORD_SIZE` instead of the expected
+	`table_size - (2U + SVG_DOCUMENT_RECORD_SIZE)`. This causes an incorrect
+	bounds check which may lead to reading past the end of the `SVG ` table.
+
+	* src/sfnt/ttsvg.c (tt_face_load_svg): wrap macro definitions in
+	parentheses.
+
+	Bug: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=45179
+
+2022-02-23  Ben Wagner  <bungeman@chromium.org>
+
+	[psaux] Full bounds check for OtherSubr 19.
+
+	It is possible for OtherSubr 19 to be invoked when `decoder->buildchar` is
+	NULL (so that `decoder->len_buildchar` is 0), the `blend` is non-NULL with
+	`blend->num_designs` set to 2, and the user supplied `idx` to be large (for
+	example 0xFFFFFFFE).  Since these are all `FT_UInt32` the existing bounds
+	check overflows in a well defined manner, allowing for an invalid call to
+	`memcpy`.
+
+	In addition, it is possible to call OtherSubr 19 with
+	`decoder->len_buildchar`, `blend->num_designs`, and `idx` all zero (implying
+	that `blend->weight_vector` and `decoder->buildchar` are NULL).  This passes
+	the bounds check (it is logically always fine to copy nothing starting at
+	index zero) but may invoke undefined behavior in `ft_memcpy` if it is backed
+	by `memcpy`.  Calling `memcpy` with either the `src` or `dst` NULL is
+	undefined behavior (even if `count` is zero).
+
+	* src/psaux/psintrp.c (cf2_interpT2CharString): Correctly check that
+	`blend->num_designs` can be copied to `decoder->buildchar[idx]`.
+	Also avoid passing NULL to `ft_memcpy`.
+
+	Bug: https://crbug.com/1299259
+
+2022-02-21  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cmake] Drop the support of CMake 2.x.
+
+	* CMakeLists.txt: Require CMake 3.0 (released on 2014) or newer.
+
+	The issue #1059 reports the difficulty to support both of
+	CMake 2.x and newer one by single CMakeLists.txt without
+	the inflation of cmake_policy() workarounds.
+
+	For better maintainability, the support of CMake 2.x is
+	dropped.
+
+2022-02-19  Werner Lemberg  <wl@gnu.org>
+
+	* src/bdf/README: Updated.
+
+2022-02-19  Werner Lemberg  <wl@gnu.org>
+
+	* builds/mac/ftmac.c, src/base/ftmac.c: s|FT_MAC_H|<freetype/ftmac.h>|.
+
+2022-02-19  Werner Lemberg  <wl@gnu.org>
+
+	src/sfnt/ttkern.c (tt_face_load_kern): Micro-optimize.
+
+	A kerning table can be handled by binary search if it has equal entries.
+
+	Fixes #1132.
+
+2022-02-17  Steve Lhomme  <robux4@ycbcr.xyz>
+	    Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[builds/windows] Add support for legacy UWP builds.
+
+	* builds/windows/ftsystem.c: Add neccessary macro substitutions to
+	enable strict UWP builds.
+
+	See !141.
+
+2022-02-16  Werner Lemberg  <wl@gnu.org>
+
+	ftmm.h: Minor documentation improvement.
+
+2022-02-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Tune PSH_STRONG_THRESHOLD_MAXIMUM value.
+
+	Before the change, the hinting engine frequently confused horizontal
+	stem and serif hints making some stems too thin and some serifs too
+	thick. The value was tuned using serif fonts from the URW+ base 35
+	collection.
+
+	* src/pshinter/pshalgo.c [PSH_STRONG_THRESHOLD_MAXIMUM]: s/30/12/.
+
+2022-02-12  Werner Lemberg  <wl@gnu.org>
+
+	t1tables.h: Documentation improvements.
+
+2022-02-12  Werner Lemberg  <wl@gnu.org>
+
+	t1tables.h: Whitespace.
+
+2022-02-11  Werner Lemberg  <wl@gnu.org>
+
+	[type42] Fix `FT_Get_PS_Font_Private` for this format.
+
+	Since Type42 fonts don't have a 'Private' dictionary, the return value
+	should be `FT_Err_Invalid_Argument`.
+
+	* src/type42/t42drivr.c (t42_ps_get_font_private): Removed.
+	(t42_service_ps_info): Updated.
+
+2022-02-09  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Clear reused mask.
+	
+	In PS hinter, memory allocations persist until the module is done.
+	Therefore, we have to clear reused masks.
+	
+	* src/pshinter/pshrec.c (ps_mask_table_alloc): Clear reused mask.
+
+2022-02-09  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Use unsigned indices.
+	
+	This reduces casting and eliminates some checks.
+	
+	* src/pshinter/pshrec.c (ps_mask_test_bit, ps_mask_table_merge,
+	ps_dimension_add_t1stem, ps_hints_t1stem3): Updated.
+	(ps_dimension_add_counter): Updated, unnecessary checks removed.
+
+2022-02-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Fix mask merging.
+
+	We forgot to update the number of bits when merging a larger mask
+	into a smaller one.  This fix might have rendering effects.
+
+	* src/pshinter/pshrec.c (ps_mask_table_merge): Inherit the number
+	of bits from a larger mask. There is no need to zero unused bits,
+	already zeroed during allocation.
+	(ps_mask_clear_bit): Removed.
+	(ps_mask_ensure): Minor.
+
+2022-02-08  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Revise the hint table handling.
+	
+	* src/pshinter/pshrec.c (ps_hint_table_ensure): Remove redundant size
+	check; avoid array zeroing because it is fully initialized when used.
+	(ps_hint_table_alloc): Fix off-by-one comparison and remove another
+	zeroing of the array elements.
+
+2022-02-06  Werner Lemberg  <wl@gnu.org>
+
+	Various minor doc fixes.
+
+2022-02-06  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[builds/windows] Add SVG to to project files.
+
+	* builds/windows/vc2010/freetype.vcxproj: Updated.
+	* builds/windows/vc2010/freetype.vcxproj.filters: Updated.
+	* builds/windows/visualc/freetype.vcproj: Updated.
+
+2022-02-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/winfonts/winfnt.c (fnt_face_get_dll_font): Trace font resources.
+
+2022-02-02  Eric Jing  <@CPUcontrol>
+
+	[cmake] Fix build on MacOS.
+
+	* CMakeLists.txt (CMAKE_OSX_ARCHITECTURES): Update value to fix the building
+	of a framework on MacOS.
+
+	* builds/mac/freetype-Info.plist (CFBundleExecutable): Make identifier
+	lowercase only.
+
+	Fixes #1127.
+
+2022-02-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[psaux] Revise `PS_Table` handling.
+
+	The old impleemntation was not using `FT_REALLOC`, buing too careful
+	with the offset rebasing.  It shoudl be safe to rely on the base
+	movements.
+
+	* src/psaux/psobjs.c (reallocate_t1_table, shift_elements): Combine
+	into...
+	(ps_table_realloc): ... this function based on `FT_REALLOC`.
+	(ps_table_done): Simplified.
+	(ps_table_add): Updated.
+
+2022-02-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cache/ftcmru.c (FTC_MruList_New): Explain zeroing.
+
+2022-01-31  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Partially revert 9870b6c07e2c.
+	
+	Fix crashes reported by Werner.
+	
+	* src/cache/ftcmru.c (FTC_MruList_New): Use `FT_ALLOC` again.
+
+2022-01-31  Werner Lemberg  <wl@gnu.org>
+
+	freetype.h: Minor documentation improvement.
+
+2022-01-31  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Fix fallouts from edd4fedc5427.
+
+	Reported by Werner.
+
+	* src/cache/ftcimage.c (FTC_INode_New): Always initialize FT_Glyph.
+	* src/cache/ftcsbits.c (FTC_SNode_New): Always initialize FT_SBit.
+
+2022-01-31  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Clean-up - do not doubt FT_FREE.
+
+	* src/base/ftobjs.c (memory_stream_close): Do not reassign zero
+	after `FT_FREE`.
+	* src/sfnt/sfwoff.c (sfnt_stream_close): Ditto.
+	* src/sfnt/sfwoff2.c (stream_close): Ditto.
+	* src/psaux/psobjs.c (ps_parser_load_field): Ditto.
+	* src/truetype/ttgxvar.c (ft_var_load_avar, tt_set_mm_blend,
+	tt_set_mm_blend): Ditto.
+
+2022-01-30  Werner Lemberg  <wl@gnu.org>
+
+	* CMakeLists.txt: Include 'FindPkgConfig' module.
+
+	Older cmake versions don't provide `pkg_check_modules` by default.
+
+	Fixes #1126.
+
+2022-01-30  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/psaux/psobjs.c (ps_parser_load_field): Reduce `string` scope.
+
+2022-01-29  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[cmake] Check the availability of `bzip2.pc'.
+
+	(CMakeLists.txt): Check the availability of `bzip2.pc'.
+
+	* If `bzip2.pc' is available, Requires.private should include
+	bzip2, but Libs.private should not include -lbz2.
+
+	* If `bzip2.pc' is unavailable, Requires.private cannot include
+	bzip2, but Libs.private should include -lbz2.
+
+	Fix #897.
+
+2022-01-28  Werner Lemberg  <wl@gnu.org>
+
+	* unix/configure.raw: We need 'librsvg' version 2.46.0 or newer.
+
+	Older versions don't have function `rsvg_handle_get_intrinsic_dimensions`.
+
+2022-01-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Minor clean-ups.
+
+	* src/base/ftrfork.c (raccess_make_file_name): Do not set error.
+	* src/sfnt/sfdriver.c (get_win_string, get_apple_string): Ditto.
+	* src/cff/cffobjs.c (cff_strcpy): Do not confuse about error.
+	* src/psaux/psobjs.c (ps_table_done): Ditto.
+	* src/truetype/ttgxvar.c (ft_var_readpacked*, ft_var_load_avar): Ditto.
+
+2022-01-27  Ben Wagner  <bungeman@chromium.org>
+
+	Document `FT_Outline_Decompose` degenerate segments.
+
+	`FT_Outline_Decompose` does not filter out and can return degenerate
+	segments in an outline. This can be surprising when attemping to
+	stroke such an outline. Clarify the existing documentation on this
+	matter to cover all forms of degeneracy (without specifying exactly
+	how they will be reported), why they might arise, and better explain in
+	what cases they may be an issue.
+
+	* include/freetype/ftoutlin.h (FT_Outline_Decompose): update
+	documentation.
+
+	Fixes #952.
+
+2022-01-27  Anuj Verma  <anujv@posteo.net>
+
+	Fix sdf computation while `USE_SQUARED_DISTANCES`.
+
+	Function `map_fixed_to_sdf` expects spread to be absolute
+	and not squared.
+
+	* src/sdf/ftbsdf.c (finalize_sdf): Pass absolute spread
+	while `map_fixed_to_sdf`.
+
+	* src/sdf/ftsdf.c (sdf_generate_bounding_box): Ditto.
+
+2022-01-27  Tapish Ojha  <tapishojha2000@gmail.com>
+
+	[sfnt] Improve sRGB constants.
+
+	* src/base/ftbitmap.c (ft_gray_for_premultiplied_srgb_bgra): Use slightly
+	more precise values.
+
+	Fixes #1018.
+
+2022-01-27  Werner Lemberg  <wl@gnu.org>
+
+	docs/release: Updated.
+
+2022-01-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/pfr/pfrload.c (pfr_phy_font_load): Use FT_QNEW_ARRAY.
+
+2022-01-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sdf/ftsdf.c (sdf_*_new): Use standard macro.
+
+2022-01-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pcf] Delay encoding allocation and avoid its zeroing.
+
+	* src/pcf/pcfread.c (pcf_get_encodings): Refactor and use FT_QNEW_ARRAY.
+
+2022-01-25  Werner Lemberg  <wl@gnu.org>
+
+	Aarg, typo.
+
+2022-01-25  Werner Lemberg  <wl@gnu.org>
+
+	freetype.h: More updates to `FT_LOAD_COLOR` description.
+
+2022-01-25  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/configure.raw (FT_DEMO_CFLAGS): Pass `-DHAVE-LIBRSVG`.
+
+	This helps in decoupling library support from `pkg-config` for other
+	platforms.
+
+2022-01-25  Werner Lemberg  <wl@gnu.org>
+
+	Update documentation for `FT_LOAD_COLOR`.
+
+2022-01-24  Ben Wagner  <bungeman@chromium.org>
+
+	[pshinter] Ensure all point flags are initialized.
+
+	Only off curve point flags were fully initialized.
+
+	* src/pshinter/pshalgo.c (psh_glyph_init): always initialize flags.
+
+	Fixes: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43930
+
+2022-01-24  Werner Lemberg  <wl@gnu.org>
+
+	.mailmap: Typo.
+
+2022-01-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/svg/ftsvg.c (ft_svg_property_set): Disallow NULL pointers.
+
+2022-01-23  Werner Lemberg  <wl@gnu.org>
+
+	.mailmap: Updated.
+
+2022-01-23  Werner Lemberg  <wl@gnu.org>
+
+	More documentation on handling OT-SVG.
+
+2022-01-23  Werner Lemberg  <wl@gnu.org>
+
+	* src/svg/ftsvg.c: Rename `svg_hooks` to `svg-hooks` for consistency.
+
+2022-01-22  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Reject malformed SVG tables.
+
+	* src/sfnt/ttsvg.c (SVG_TABLE_HEADER_SIZE, SVG_DOCUMENT_RECORD_SIZE,
+	SVG_DOCUMENT_LIST_MINIMUM_SIZE, SVG_MINIMUM_SIZE): New macros.
+	(tt_face_load_svg): Check offsets.
+	Check table and record sizes.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43918
+
+2022-01-22  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/psaux/psobjs.c (ps_table_new): Revert to zeroing.
+
+2022-01-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[psaux, type1, type42] Avoid annecessary zeroing.
+
+	* src/psaux/psobjs.c (ps_table_new): Use FT_QNEW_ARRAY.
+	* src/type1/t1load.c (parse_encoding): Ditto.
+	* src/type42/t42parse.c (t42_parse_encoding): Ditto.
+
+2022-01-20  Werner Lemberg  <wl@gnu.org>
+
+	[builds/unix] Handle 'librsvg' for demo programs.
+
+	* builds/unix/configure.raw: Check for 'librsvg'.
+	(LIB_CLOCK_GETTIME): Don't call `AC_SUBST` on this but on...
+	(FT_DEMO_CFLAGS, FT_DEMO_LDFLAGS): ... these two new variables.
+
+	* builds/unix/unix-cc.in (LIB_CLOCK_GETTIME): Replaced by...
+	(FT_DEMO_CFLAGS, FT_DEMO_LDFLAGS): ... these two new variables.
+
+2022-01-20  Moazin Khatti  <moazinkhatri@gmail.com>
+
+	Add 'svg' module for OT-SVG rendering.
+
+	* CMakeLists.txt (BASE_SRCS): Add svg module file.
+	* meson.build (ft2_public_headers): Add `otsvg.h`.
+
+	* modules.cfg (RASTER_MODULES): Add `svg` module.
+
+	* builds/meson/parse_modules_cfg.py: Add svg module.
+
+	* include/freetype/config/ftmodule.h: Add `ft_svg_renderer_class`.
+	* include/freetype/fterrdef.h: Add `Invalid_SVG_Document` and
+	`Missing_SVG_Hooks` error codes.
+	* include/freetype/internal/fttrace.h: Add tracing for `otsvg`.
+	* include/freetype/internal/svginterface.h: New file.  It adds an interface
+	to enable the presetting hook from the `base` module.
+	* include/freetype/otsvg.h (SVG_Lib_Init_Func, SVG_Lib_Free_Func,
+	SVG_Lib_Render_Func, SVG_Lib_Preset_Slot_Func): New hooks for SVG rendering.
+	(SVG_RendererHooks): New structure to access them.
+
+	* src/base/ftobjs.c: Include `svginterface.h`.
+	(ft_glyphslot_preset_bitmap): Add code for presetting the slot for SVG
+	glyphs.
+	(ft_add_renderer): Updated.
+
+	* src/svg/*: New files.
+
+2022-01-20  Moazin Khatti  <moazinkhatri@gmail.com>
+
+	Add `FT_Glyph` support for OT-SVG glyphs.
+
+	* include/freetype/ftglyph.h (FT_SvgGlyphRec, FT_SvgGlyph): New structure.
+
+	* src/base/ftglyph.c: Include `otsvg.h`.
+	(ft_svg_glyph_init, ft_svg_glyph_done, ft_svg_glyph_copy,
+	ft_svg_glyph_transform, ft_svg_glyph_prepare): New function.
+	(ft_svg_glyph_class): New class.
+	(FT_New_Glyph, FT_Glyph_To_Bitmap): Updated to handle OT-SVG glyphs.
+	* src/base/ftglyph.h: Updated.
+
+2022-01-20  Moazin Khatti  <moazinkhatri@gmail.com>
+
+	[truetype, cff] Add code to load SVG document.
+
+	* src/cff/cffgload.c (cff_slot_load): Add code to load SVG doc.
+	* src/truetype/ttgload.c (TT_Load_Glyph): Add code to load SVG doc.
+
+2022-01-20  Moazin Khatti  <moazinkhatri@gmail.com>
+
+	Add code to load OT-SVG glyph documents.
+
+	* include/freetype/config/ftheader.h (FT_OTSVG_H): New macro.
+	* include/freetype/freetype.h (FT_FACE_FLAG_SVG, FT_HAS_SVG): New macros.
+	(FT_LOAD_SVG_ONLY): New internal macro.
+	* include/freetype/ftimage.h (FT_Glyph_Format): New enumeration value
+	`FT_GLYPH_FORMAT_SVG`.
+	* include/freetype/internal/ftobjs.h (FT_GLYPH_OWN_GZIP_SVG): New macro.
+	* include/freetype/internal/fttrace.h: Add `ttsvg` for `ttsvg.c`.
+	* include/freetype/internal/sfnt.h(load_svg, free_svg, load_svg_doc): New
+	functions.
+	* include/freetype/internal/tttypes.h (TT_FaceRec): Add `svg` for
+	the SVG table.
+	* include/freetype/otsvg.h (FT_SVG_DocumentRec): New structure to hold the
+	SVG document and other necessary information of an OT-SVG glyph in a glyph
+	slot.
+	* include/freetype/tttags.h (TTAG_SVG): New macro.
+
+	* src/base/ftobjs.c: Include `otsvg.h`.
+	(ft_glyphslot_init): Allocate `FT_SVG_DocumentRec` in `slot->other`
+	if the SVG table exists.
+	(ft_glyphslot_clear): Free it upon clean-up if it is a GZIP compressed
+	glyph.
+	(ft_glyphslot_done): Free the document data if it is a GZIP compressed
+	glyph.
+	(FT_Load_Glyph): Don't auto-hint SVG documents.
+
+	* src/cache/ftcbasic.c (ftc_basic_family_load_glyph): Add support for
+	FT_GLYPH_FORMAT_SVG.
+
+	* src/sfnt/rules.mk (SFNT_DRV_SRC): Add `ttsvg.c`.
+	* src/sfnt/sfdriver.c: Include `ttsvg.h`.
+	(sfnt_interface): Add `tt_face_load_svg`, `tt_face_free_svg` and
+	`tt_face_load_svg_doc`.
+	* src/sfnt/sfnt.c: Include `ttsvg.c`.
+	* src/sfnt/sfobjs.c (sfnt_load_face, sfnt_done_face): Add code to load and
+	free data of the the SVG table.
+	* src/sfnt/ttsvg.c: New file, implementing `tt_face_load_svg`,
+	`tt_face_free_svg` and `tt_face_load_svg_doc`.
+	* src/sfnt/ttsvg.h: Declarations of the SVG functions in
+	`ttsvg.c`.
+
+2022-01-20  Moazin Khatti  <moazinkhatri@gmail.com>
+
+	Add flag `FT_CONFIG_OPTION_SVG`.
+
+	This flag is going to be used to conditionally compile support for OT-SVG
+	glyphs.  FreeType will do the parsing and rely on external hooks for
+	rendering of OT-SVG glyphs.
+
+	* devel/ftoption.h, include/freetype/config/ftoption.h
+	(FT_CONFIG_OPTION_SVG): New flag.
+
+2022-01-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pshinter] Avoid unnecessary zeroing.
+	
+	* src/pshinter/pshalgo.c (psh_hint_table_init,psh_glyph_init,
+	psh_glyph_interpolate_normal_points): Use FT_QNEW_ARRAY.
+
+2022-01-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* include/freetype/freetype.h: Clarify `FT_Size` life cycle.
+
+2022-01-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Undefined scale means no scale.
+
+	It might be surprising that FreeType does not have default ppem and
+	the size has to be set explicitly or face undefined behavior with
+	undefined variables and errors. This offers an alternative to
+	missing or zero scale by simply setting FT_LOAD_NO_SCALE.  Defined
+	behavior is bettr than undefined one.
+
+	This is alternative to !132 and discussed in
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43708
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Deal with zero scale.
+	* include/freetype/freetype.h: Document it.
+
+2022-01-18  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/autofit/afglobal.c (af_face_globals_new): Reduce zeroing.
+
+	Everything in AF_FaceGlobals is initialized except metrics.  Those
+	are zeroed here and initialized on demand later.
+
+2022-01-16  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[bdf,type1] Avoid unnecessary hash zeroing.
+
+	* src/bdf/bdflib.c (_bdf_parse_start): Use `FT_QALLOC`.
+	* src/type1/t1load.c (parse_subrs): Use `FT_QNEW`.
+
+2022-01-16  Ozkan Sezer  <sezeroz@gmail.com>
+
+	Add Watcom C/C++ calling.
+
+	In the unlikely case the source is built with OpenWatcom's -ec?
+	switches to enforce a calling convention, the qsort() compare
+	function must still be set to __watcall.
+
+	* include/freetype/internal/compiler-macros.h (FT_COMPARE_DEF):
+	Updated.
+
+2022-01-15  Ben Wagner  <bungeman@chromium.org>
+
+	[pshinter] Avoid accessing uninitialized zone.
+
+	The `normal_top.count` may be 0, implying no `normal_top.zones` exist.
+	The code must not access these (non-existent) `normal_top.zones`.
+
+	* src/pshinter/pshalgo.c (ps_hints_apply): Do not assume that
+	`normal_top.zones[0]` is initialized. Test `normal_top.count`
+	before using `normal_top.zones[0]`. Do not rescale if there are no
+	`zones`.
+
+	Fixes: https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43675
+
+2022-01-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Avoid unnecessary zeroing.
+
+	* src/cache/ftccmap.c (ftc_cmap_node_new): Use `FT_QNEW`.
+	* src/cache/ftcimage.c (FTC_INode_New): Ditto.
+	* src/cache/ftcsbits.c (FTC_SNode_New): Ditto.
+
+2022-01-15  Ozkan Sezer  <sezeroz@gmail.com>
+
+	Add Watcom C/C++ support.
+
+	* include/freetype/config/integer-types.h: Make sure `long long` is
+	used then available.
+	* include/freetype/internal/ftcalc.h (FT_MSB): Add Watcom C/C++ pragma.
+
+2022-01-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sdf/ftbsdf.c (ED): s/near/prox/.
+
+	This works around the Watcom C definition of `near` as restricted
+	__near.
+
+2022-01-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* include/freetype/internal/compiler-macros.h [FT_COMPARE_DEF]: Tighten.
+
+	This works around Watcom C library using __watcall.
+
+2022-01-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/pshinter/pshglob.c (psh_globals_new): Avoid zeroing.
+
+	This large allocation is followed by careful initialization. Whatever
+	is missed should be initialized manually.
+
+2022-01-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/fthash.c (hash_insert): Avoid unnecessary zeroing.
+
+2022-01-14  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/bdf/bdflib.c (_bdf_parse_glyphs): Remove redundant assignment.
+
+2022-01-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/lzw/ftlzw.c (FT_Stream_OpenLZW): Avoid unnecessary zeroing.
+
+2022-01-13  Ben Wagner  <bungeman@chromium.org>
+
+	[bzip2] Reset bzip stream on any error.
+
+	According to the bzip documentation it is undefined what will happen if
+	`BZ2_bzDecompress` is called on a `bz_stream` it has previously returned an
+	error against.  If `BZ2_bzDecompress` returns anything other than `BZ_OK`
+	the only valid next action is `BZ2_bzDecompressEnd`.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43564
+
+	* src/bzip2/ftbzip2.c (FT_BZip2FileRec_): Add `reset` to track the need to
+	reset the stream.
+	(ft_bzip2_file_init): Initialize `reset` to 0.
+	(ft_bzip2_file_reset): Set `reset` to 0 after resetting.
+	(ft_bzip2_file_fill_output): Set `reset` to 1 when `BZ2_bzDecompress`
+	returns anything other than `BZ_OK`.
+
+2022-01-12  Werner Lemberg  <wl@gnu.org>
+
+	.gitlab-ci.yml: Minor comment cleanups.
+
+2022-01-12  Azamat H. Hackimov  <azamat.hackimov@gmail.com>
+
+	.gitlab-ci.yml: Add steps to `before_script` to ensure recent CA.
+
+	Fetch current list of valid CAs from Windows Update and manually import them
+	to trusted datastore.  This action is required to make downloads work from
+	sites that need recent Let's Encrypt ISRG Root X1 certificate.
+
+2022-01-11  Ben Wagner  <bungeman@chromium.org>
+
+	Revert "[bzip2] Avoid use of uninitialized memory."
+
+	This reverts commit d276bcb7f0c02c20d3585b2e5626702df6d140a6.
+
+	The original commit did avoid the use of uninitialized memory. However,
+	it appears that the original commit is no longer required. The
+	underlying issue was resolved by a change in freetype2-testing "Build
+	bzip2 correctly." [0]. Prior to [0] bzip2 was built without msan, so
+	bzip2 writes were not tracked or considered initialized. Clearing
+	`buffer` in the original commit allowed msan to see the `buffer` content
+	initialized once in FreeType code, but msan saw no writes into buffer
+	from bzip2.  With bzip2 now built with msan, the bzip2 writes are
+	properly instrumented and msan sees the bzip2 writes into the buffer. As
+	a result the original commit can be safely reverted to allow for better
+	detection of other uninitialized data scenarios.
+
+	* src/bzip2/ftbzip2.c (FT_Stream_OpenBzip2): Revert to using `FT_QNEW`.
+
+	[0] https://github.com/freetype/freetype2-testing/commit/3c052a837a3c960709227a0d6ddd256e87b88853
+
+2022-01-11  Ben Wagner  <bungeman@chromium.org>
+
+	[type42] Track how much type42 ttf data is available.
+
+	Currently `T42_Open_Face` eagerly allocates 12 bytes for the ttf header
+	data which it expects `t42_parse_sfnts` to fill out from /sfnts data.
+	However, there is no guarantee that `t42_parse_sfnts` will actually be
+	called while parsing the type42 data as the /sfnts array may be missing
+	or very short. This is also confusing behavior as it means
+	`T42_Open_Face` is tightly coupled to the implementation of the very
+	distant `t42_parse_sfnts` code which requires at least 12 bytes to
+	already be reserved in `face->ttf_data`.
+
+	`t42_parse_sfnts` itself eagerly updates `face->ttf_size` to track how
+	much space is reserved for ttf data instead of traking how much data has
+	actually been written into `face->ttf_data`. It will also act strangely
+	in the presense of multiple /sfnts arrays.
+
+	* src/type42/t42objs.c (T42_Open_Face): ensure `ttf_data` is initialized
+	to NULL. Free `ttf_data` on error.
+
+	* src/type42/t42parse.c (t42_parse_sfnts): delay setting `ttf_size` and
+	set it to the actual number of bytes read. Ensure `ttf_data` is freed
+	if there are multiple /sfnts arrays or there are any errors.
+
+2022-01-11  Dominik Röttsches  <drott@chromium.org>
+
+	[sfnt] Fix limit checks for `COLR` v1 ClipBoxes
+
+	* src/sfnt/ttcolr.c (tt_face_get_color_glyph_clipbox): Fix off-by-one in
+	limit checks.
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	Update all copyright notices.
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttcolr.c (read_paint): Fix undefined left-shift operation.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43151
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42objs.c (T42_Open_Face): Avoid use of uninitialized memory.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=43508
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	.gitlab-ci.yml: Fix typo in previous commit.
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	.gitlab-ci.yml: Update Windows image.
+
+	The old image produced errors like
+
+	```
+	Downloading zlib patch from
+	  https://wrapdb.mesonbuild.com/v2/zlib_1.2.11-5/get_patch
+	A fallback URL could be specified using patch_fallback_url key in the wrap file
+	WrapDB connection failed to
+	  https://wrapdb.mesonbuild.com/v2/zlib_1.2.11-5/get_patch
+	with error
+	  <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify
+	   failed: certificate has expired (_ssl.c:1122)>
+	```
+
+2022-01-11  Werner Lemberg  <wl@gnu.org>
+
+	* subprojects/zlib.wrap: Update from upstream.
+
+2022-01-10  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttcolr.c (tt_face_get_color_glyph_clipbox): Add limit checks.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=40716
+
+2022-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[zlib] Don't typedef `ptrdiff_t`.
+
+	While using zlib in 'solo' mode (via the `Z_SOLO` macro), we actually
+	include some standard header files, making the typedef fail on systems where
+	the native `ptrdiff_t` type differs.
+
+	Fixes #1124.
+
+	* src/zlib/zutil.h: Comment out definition; it doesn't work on Windows.
+
+	* src/zlib/patches/freetype-zlib.diff: Updated.
+
+2022-01-10  Werner Lemberg  <wl@gnu.org>
+
+	[zlib] Some organizational changes.
+
+	We now first apply zlib's `zlib2ansi` script, then FreeType's patch file.
+
+	* src/gzip/README.freetype: Updated.
+
+	* patches/0001-zlib-Fix-zlib-sources-to-compile-for-FreeType.patch: Renamed
+	to...
+	* patches/freetype-zlib.diff: This.
+	Clean up description, then regenerate it as follows:
+
+	  - Copy unmodified files from `zlib` repository.
+	  - Run `zlib2ansi` script.
+	  - Run `git diff -R > patches/freetype-zlib.diff.new`.
+	  - Insert patch description of old diff file, then replace old diff with
+	    new diff file.
+
+2022-01-09  David Turner  <david@freetype.org>
+
+	[gzip] Update sources to zlib 1.2.11
+
+	This can be tested by building with the Unix development build
+
+	  make setup devel
+	  make
+
+	or by building the freetype-demos programs with
+
+	  meson setup build -Dfreetype2:zlib=internal
+	  meson compile -C out
+
+	and trying to run `ftview` with a `.pcf.gz` font file.
+
+	* src/gzip/ftgzip.c, src/gzip/rules.mk: Update for new zlib sources.  Also
+	remove the temporary fix introduced in commit 6a431038 to work around the
+	fact that the internal sources were too old.
+
+	* src/gzip/README.freetype: New file describing the origin of the sources
+	and how they were modified.
+
+	* src/gzip/patches/*: Patch files applied to original sources.
+
+	* src/gzip/*: Updated zlib sources with the patch file(s) from
+	`src/gzip/patches/` applied, followed by a conversion with zlib's
+	`zlib2ansi` script.
+
+2022-01-09  David Turner  <david@freetype.org>
+
+	[meson] Change Zlib configuration option.
+
+	* meson_options.txt, meson.build: Change the format of the 'zlib' meson
+	build configuration option to be a combo with the following choices:
+
+	  - none: Do not support gzip-compressed streams at all.
+
+	  - internal: Support gzip-compressed streams using the copy of the gzip
+	    sources under `src/gzip/`; this should only be used during development
+	    to ensure these work properly.
+
+	  - external: Support gzip-compressed streams using the 'zlib' Meson
+	    subproject, linked as a static library.
+
+	  - system: Support gzip-compressed streams using a system-installed version
+	    of zlib.
+
+	  - auto: Support gzip-compressed streams using a system-installed version
+	    of zlib, if available, or using the 'zlib' subproject otherwise.  This
+	    is the default.
+
+	  - disabled: Backward-compatible alias for 'none'.
+
+	  - enabled: Backward-compatible alias for 'auto'.
+
+2022-01-09  Werner Lemberg  <wl@gnu.org>
+
+	[bzip2] Avoid use of uninitialized memory.
+
+	* src/bzip2/ftbzip2.c (FT_Stream_OpenBzip2): Don't use `FT_QNEW` but
+	`FT_NEW` for setting up `zip` to avoid uninitialized memory access while
+	handling malformed PCF fonts later on.
+
+	Fixes
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=42800
+
+2022-01-09  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Fix off-by-one error.
+
+	The 0-base index is equal to the number of previosly parsed entries.
+	It is an error to adjust it by one to get the number truncated by
+	a stream error.  This is probably inconsequential because valid
+	entries are correctly accounted for.
+
+	* src/sfnt/ttload.c (check_table_dir): Do not adjust the truncated
+	number of tables.
+
+2022-01-08  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt, type42] Correct previous commit.
+
+	Really fix https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=42773.
+
+	* src/sfnt/ttload.c (check_table_dir): Revert change.
+
+	* src/type42/t42.parse.c (t42_parse_sfnts): Don't use `FT_QREALLOC` but
+	`FT_REALLOC` for setting up `ttf_data` to avoid uninitialized memory access
+	while handling malformed TrueType fonts later on.
+
+2022-01-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttload.c (check_table_dir): Initialize `table`.
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=42773
+
+2022-01-07  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Avoid 'runtime error: applying zero offset to null pointer'.
+
+	* src/sfnt/ttsbit.c (tt_sbit_decoder_load_byte_aligned): Exit early if
+	`line` is NULL.
+
+2022-01-07  Werner Lemberg  <wl@gnu.org>
+
+	[autofit, pshinter] Use `FT_OFFSET`.
+
+	This avoids
+
+	```
+	runtime error: applying zero offset to null pointer
+	```
+
+	warnings of clang's undefined behaviour sanitizer.
+
+	* src/autofit/afcjk.c (af_cjk_hints_link_segments,
+	af_cjk_hints_compute_edges, af_cjk_hints_compute_blue_edges,
+	af_cjk_hint_edges, af_cjk_align_edge_points): Do it.
+
+	* src/autofit/afhints.c (af_glyph_hints_align_edge_points,
+	af_glyph_hints_align_strong_points): Ditto.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_widths,
+	af_latin_hints_link_segments, af_latin_hints_compute_edges,
+	af_latin_hints_compute_blue_edges, af_latin_hint_edges): Ditto.
+
+	* src/pshinter/pshalgo.c (psh_hint_table_init): Ditto.
+
+2022-01-06  Ben Wagner  <bungeman@chromium.org>
+
+	[truetype] Reset localpoints when varying cvt.
+
+	When iterating over the cvt tuples and reading in the points it is necessary
+	to set all of `localpoints`, `points`, and `point_count` in all cases.  The
+	existing code did not reset `localpoints` to `NULL` when there were no
+	private point numbers.  If the previous tuple did have private point numbers
+	and set `localpoints` to `ALL_POINTS` this would not be cleared and the
+	wrong branch would be taken later, leading to possible heap buffer overflow.
+
+	* src/truetype/ttgxvar.c (tt_face_vary_cvt): Reset `localpoints` to `NULL`
+	when it isn't valid.
+
+	Fixes: https://crbug.com/1284742
+
+2022-01-02  Werner Lemberg  <wl@gnu.org>
+
+	* builds/unix/configure.raw: Restore `SYSTEM_ZLIB` variable.
+
+	This was accidentally removed with commit 93ebcbd0 almost eight years ago.
+
+2021-12-27  Alexander Borsuk  <me@alex.bio>
+
+	Fix warnings for CMake Unity builds.
+
+	* src/cache/ftcbasic.c (FT_COMPONENT): Undefine macro before redefinition.
+	* src/smooth/ftgrays.c (TRUNC, FRACT): Ditto.
+
+2021-12-18  Alexander Borsuk  <alexander.borsuk@qnective.com>
+
+	Clang-Tidy warning fixes.
+
+	* src/base/ftobjs.c (FT_Get_Paint): Operator has equivalent nested operands.
+	* src/bdf/bdflib.c (_bdf_add_property): Value stored to `fp` is never read.
+	* src/sdf/ftbsdf.c (bsdf_init_distance_map): Value stored to `pixel` is
+	never read.
+	* src/sdf/ftsdf.c (split_sdf_shape): Value stored to `error` is never read.
+
+2021-12-17  Eli Schwartz  <eschwartz@archlinux.org>
+
+	* meson.build: Optimize lookup for `python3` program.
+
+	The python module's `find_installation` method is intended to provide
+	routines for compiling and installing python modules into the
+	`site-packages` directory.  It does a couple of slow things, including run
+	an introspection command to scrape sysconfig info from the detected
+	interpreter, which are not needed for the sole use case of invoking the
+	found installation as an executable.
+
+	Furthermore, when invoked without the name or path of a python binary, it is
+	hardcoded to always look for `python3` corresponding to the interpreter
+	meson itself uses to run.  So using `find_installation` did not even allow
+	detecting `python2` as a fallback.
+
+	Instead, switch to a simple `find_program` lookup that finishes as soon as
+	the program is found.
+
+2021-12-17  Eli Schwartz  <eschwartz@archlinux.org>
+
+	* builds/meson/*.py: Fix name of python executable for auxiliary scripts.
+
+	The previous change to check the return code of `run_command` invocations
+	caused the CI to fail.  Although most scripts used `python_exe` as the
+	program command, the script to determine the project version did not.
+
+	But, all scripts used `python` as the shebang, and this is not available on
+	all systems.  Particularly Debian does not provide a `python` command,
+	though `python3` does exist.  This meant that formerly the version number
+	was lacking, and now the build simply fails.
+
+	Instead, rely on `python3` since it is guaranteed to exist when running
+	meson, and `python2` is end of life anyway.
+
+2021-12-17  Eli Schwartz  <eschwartz@archlinux.org>
+
+	* meson.build: Check the return value of `run_command`.
+
+	By default, errors are not checked and a command that is somehow broken will
+	just capture incorrect output (likely an empty string).  Current development
+	versions of meson now raise a warning for this implicit behavior, and advise
+	explicitly setting the `check:` keyword argumend to determine whether a
+	failing return code should be considered an error.
+
+	Since none of the commands in this project are expected to fail, mark them
+	as required to succeed.
+
+2021-12-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Upstream the hdmx binary search.
+
+	* src/truetype/ttobjs.h (TT_SizeRec): Add `widthp` for the hdmx
+	widths.
+	* src/truetype/ttobjs.c (tt_size_reset): Initialize `widthp` even
+	though it might never be used by the interpreter.
+	* src/truetype/ttgload.c (tt_loader_init): Avoid repeated searches
+	in the hdmx table.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reset the IUP-called flags for each subglyph.
+
+	This fixes fall-out from 7809007a5b88b15, where the composite
+	accents were no longer hinted.
+
+	* src/truetype/ttgload.c (ttloader_init): Move the IUP-called flag
+	initialization from here...
+	* src/truetype/ttinterp.c (TT_Run_Context): ... to here.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Binary search through the `hdmx` records.
+
+	The `hdmx` table is supposed to be sorted by ppem size, which
+	enables binary search.  We also drop the check for the sufficient
+	length of the record because it is now enforced when the table
+	is loaded.
+
+	* include/freetype/internal/tttypes.h (TT_FaceRec): Store the `hdmx`
+	record pointers sorted by ppem instead of ppem's themselves.
+	* src/truetype/ttpload.c (tt_face_load_hdmx): Prudently sort records.
+	(tt_face_get_device_metrics): Implement binary search to retrieve
+	advances.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Honor FT_LOAD_ADVANCE_ONLY if `hdmx` is usable.
+
+	This simply shortcuts the glyph loading if FT_LOAD_ADVANCE_ONLY
+	is specified by FT_Get_Advances and the `hdmx` data are located.
+	Particularly, the classic v35 interpreter or "verified" ClearType
+	fonts might see 100x speed up in retrieving the hdmx cache.
+
+	* src/truetype/ttgload.c (TT_Load_Glyph): Insert the shortcut.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Initialize the loader with `hdmx` data.
+
+	The `hdmx` matching can be done before the glyph is loaded.
+
+	* include/freetype/internal/tttypes.h (TT_LoaderRec): Add a field.
+	* src/truetype/ttgload.c (compute_glyph_metrics): Relocate the `hdmx`
+	code from here...
+	(tt_loader_init): ... to here, before the glyph is loaded.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Relocate subpixel flag setting.
+
+	`TT_RunIns` is too busy to deal with subpixel flags. It is better
+	to set them in `tt_loader_init`, which is executed before each
+	glyph program.
+
+	* src/truetype/ttinterp.c (TT_RunIns): Move the flag setting from
+	here...
+	* src/truetype/ttgload.c (tt_loader_init): ... to here.
+
+2021-12-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Limit INSTCTRL appication within specs.
+
+	* src/truetype/ttinterp.c (Ins_INSTCTRL): Limit its global effects
+	to the CVT program and local effects to the glyph program.
+
+	This also fixes an Infinality buglet. The `ignore_x_mode` should be
+	locally unset by the glyph program.
+
+2021-12-09  Ben Wagner  <bungeman@chromium.org>
+
+	[bdf] Fix use of uninitialized value.
+
+	In _bdf_readstream if the data contained no newline then the buffer
+	would continue to grow and uninitialized data read until either the
+	uninitialized data contained a newline or the buffer reached its
+	maxiumum size. The assumption was that the line was always too long and
+	the buffer had been filled, however this case can also happen when there
+	is not enough data to fill the buffer.
+
+	Correct this by properly setting the cursor to the end of the available
+	data, which may be different from the end of the buffer. This may still
+	result in one extra allocation, but only on malformed fonts.
+
+	* src/bdf/bdflib.c (_bfd_readstream): Correctly update cursor. Remove
+	unread set of `avail`.
+
+	Bug: https://lists.nongnu.org/archive/html/freetype-devel/2021-12/msg00001.html
+
+2021-12-07  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Reduce Infinality footprint again.
+
+	* src/truetype/ttgload.c (compute_glyph_metrics): Streamline and
+	prioritize the Infinality checks to use `hdmx`.
+
+2021-12-07  Cameron Cawley  <ccawley2011@gmail.com>
+
+	[builds/windows] Guard some non-ancient API.
+
+	We can support Windows 98 and NT 4.0 in principle...
+
+	* builds/windows/ftdebug.c, builds/windows/ftsystem.c: Check for the
+	ancient SDK using _WIN32_WINDOWS, _WIN32_WCE, or _WIN32_WINNT.
+
+2021-12-07  Cameron Cawley  <ccawley2011@gmail.com>
+
+	* builds/windows/visualc/freetype.vcproj: Add missing file.
+
 2021-12-02  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.11.1 released.
