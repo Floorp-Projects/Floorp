@@ -353,8 +353,8 @@ void GfxInfo::GetData() {
     }
 
     if (mVendorId.IsEmpty()) {
-      const char* intelDrivers[] = {"iris", "i915",  "i965",
-                                    "i810", "intel", nullptr};
+      const char* intelDrivers[] = {"iris", "crocus", "i915", "i965",
+                                    "i810", "intel",  nullptr};
       for (size_t i = 0; intelDrivers[i]; ++i) {
         if (driDriver.Equals(intelDrivers[i])) {
           CopyUTF16toUTF8(GfxDriverInfo::GetDeviceVendor(DeviceVendor::Intel),
