@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Base Interface - FreeType-2.11.1 API Reference</title>
+        <title>Base Interface - FreeType-2.12.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -462,6 +462,27 @@
         <li class="md-nav__item">
   <a href="#ft_has_multiple_masters" class="md-nav__link">
     FT_HAS_MULTIPLE_MASTERS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_svg" class="md-nav__link">
+    FT_HAS_SVG
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_sbix" class="md-nav__link">
+    FT_HAS_SBIX
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_sbix_overlay" class="md-nav__link">
+    FT_HAS_SBIX_OVERLAY
   </a>
   
 </li>
@@ -1144,6 +1165,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -1248,6 +1281,18 @@
     <li class="md-nav__item">
       <a href="ft2-pcf_driver.html" class="md-nav__link">
         The PCF driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
       </a>
     </li>
   
@@ -1793,6 +1838,27 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ft_has_svg" class="md-nav__link">
+    FT_HAS_SVG
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_sbix" class="md-nav__link">
+    FT_HAS_SBIX
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_sbix_overlay" class="md-nav__link">
+    FT_HAS_SBIX_OVERLAY
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ft_is_sfnt" class="md-nav__link">
     FT_IS_SFNT
   </a>
@@ -2303,8 +2369,8 @@
 <p>A handle to an object that models a face scaled to a given character size.</p>
 <h4>note</h4>
 
-<p>An <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code> has one <em>active</em> <code><a href="ft2-base_interface.html#ft_size">FT_Size</a></code> object that is used by functions like <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> to determine the scaling transformation that in turn is used to load and hint glyphs and metrics.</p>
-<p>You can use <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code>, <code><a href="ft2-base_interface.html#ft_set_pixel_sizes">FT_Set_Pixel_Sizes</a></code>, <code><a href="ft2-base_interface.html#ft_request_size">FT_Request_Size</a></code> or even <code><a href="ft2-base_interface.html#ft_select_size">FT_Select_Size</a></code> to change the content (i.e., the scaling values) of the active <code><a href="ft2-base_interface.html#ft_size">FT_Size</a></code>.</p>
+<p>An <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code> has one <em>active</em> <code>FT_Size</code> object that is used by functions like <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> to determine the scaling transformation that in turn is used to load and hint glyphs and metrics.</p>
+<p>A newly created <code>FT_Size</code> object contains only meaningless zero values. You must use <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code>, <code><a href="ft2-base_interface.html#ft_set_pixel_sizes">FT_Set_Pixel_Sizes</a></code>, <code><a href="ft2-base_interface.html#ft_request_size">FT_Request_Size</a></code> or even <code><a href="ft2-base_interface.html#ft_select_size">FT_Select_Size</a></code> to change the content (i.e., the scaling values) of the active <code>FT_Size</code>. Otherwise, the scaling and hinting will not be performed.</p>
 <p>You can use <code><a href="ft2-sizes_management.html#ft_new_size">FT_New_Size</a></code> to create additional size objects for a given <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code>, but they won't be used by other functions until you activate it through <code><a href="ft2-sizes_management.html#ft_activate_size">FT_Activate_Size</a></code>. Only one size can be activated at any given time per face.</p>
 <h4>also</h4>
 
@@ -2718,6 +2784,93 @@
 </code></pre></div>
 
 <p>A macro that returns true whenever a face object contains some multiple masters. The functions provided by <code><a href="ft2-header_file_macros.html#ft_multiple_masters_h">FT_MULTIPLE_MASTERS_H</a></code> are then available to choose the exact design you want.</p>
+<hr>
+
+<h2 id="ft_has_svg">FT_HAS_SVG<a class="headerlink" href="#ft_has_svg" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_HAS_SVG</b>( face ) \
+          ( !!( (face)-&gt;face_flags &amp; <a href="ft2-base_interface.html#ft_face_flag_svg">FT_FACE_FLAG_SVG</a> ) )
+</code></pre></div>
+
+<p>A macro that returns true whenever a face object contains an &lsquo;SVG&nbsp;&rsquo; OpenType table.</p>
+<h4>since</h4>
+
+<p>2.12</p>
+<hr>
+
+<h2 id="ft_has_sbix">FT_HAS_SBIX<a class="headerlink" href="#ft_has_sbix" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_HAS_SBIX</b>( face ) \
+          ( !!( (face)-&gt;face_flags &amp; <a href="ft2-base_interface.html#ft_face_flag_sbix">FT_FACE_FLAG_SBIX</a> ) )
+</code></pre></div>
+
+<p>A macro that returns true whenever a face object contains an &lsquo;sbix&rsquo; OpenType table <em>and</em> outline glyphs.</p>
+<p>Currently, FreeType only supports bitmap glyphs in PNG format for this table (i.e., JPEG and TIFF formats are unsupported, as are Apple-specific formats not part of the OpenType specification).</p>
+<h4>note</h4>
+
+<p>For backward compatibility, a font with an &lsquo;sbix&rsquo; table is treated as a bitmap-only face. Using <code><a href="ft2-base_interface.html#ft_open_face">FT_Open_Face</a></code> with <code><a href="ft2-parameter_tags.html#ft_param_tag_ignore_sbix">FT_PARAM_TAG_IGNORE_SBIX</a></code>, an application can switch off &lsquo;sbix&rsquo; handling so that the face is treated as an ordinary outline font with scalable outlines.</p>
+<p>Here is some pseudo code that roughly illustrates how to implement &lsquo;sbix&rsquo; handling according to the OpenType specification.
+<div class="highlight"><pre><span></span><code>  if ( FT_HAS_SBIX( face ) )
+  {
+    // open font as a scalable one without sbix handling
+    FT_Face       face2;
+    FT_Parameter  param = { FT_PARAM_TAG_IGNORE_SBIX, NULL };
+    FT_Open_Args  args  = { FT_OPEN_PARAMS | ...,
+                            ...,
+                            1, &amp;param };
+
+
+    FT_Open_Face( library, &amp;args, 0, &amp;face2 );
+
+    &lt;sort `face-&gt;available_size` as necessary into
+     `preferred_sizes`[*]&gt;
+
+    for ( i = 0; i &lt; face-&gt;num_fixed_sizes; i++ )
+    {
+      size = preferred_sizes[i].size;
+
+      error = FT_Set_Pixel_Sizes( face, size, size );
+      &lt;error handling omitted&gt;
+
+      // check whether we have a glyph in a bitmap strike
+      error = FT_Load_Glyph( face,
+                             glyph_index,
+                             FT_LOAD_SBITS_ONLY          |
+                             FT_LOAD_BITMAP_METRICS_ONLY );
+      if ( error == FT_Err_Invalid_Argument )
+        continue;
+      else if ( error )
+        &lt;other error handling omitted&gt;
+      else
+        break;
+    }
+
+    if ( i != face-&gt;num_fixed_sizes )
+      &lt;load embedded bitmap with `FT_Load_Glyph`,
+       scale it, display it, etc.&gt;
+
+    if ( i == face-&gt;num_fixed_sizes  ||
+         FT_HAS_SBIX_OVERLAY( face ) )
+      &lt;use `face2` to load outline glyph with `FT_Load_Glyph`,
+       scale it, display it on top of the bitmap, etc.&gt;
+  }
+</code></pre></div></p>
+<p>[*] Assuming a target value of 400dpi and available strike sizes 100, 200, 300, and 400dpi, a possible order might be [400, 200, 300, 100]: scaling 200dpi to 400dpi usually gives better results than scaling 300dpi to 400dpi; it is also much faster. However, scaling 100dpi to 400dpi can yield a too pixelated result, thus the preference might be 300dpi over 100dpi.</p>
+<h4>since</h4>
+
+<p>2.12</p>
+<hr>
+
+<h2 id="ft_has_sbix_overlay">FT_HAS_SBIX_OVERLAY<a class="headerlink" href="#ft_has_sbix_overlay" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_HAS_SBIX_OVERLAY</b>( face ) \
+          ( !!( (face)-&gt;face_flags &amp; <a href="ft2-base_interface.html#ft_face_flag_sbix_overlay">FT_FACE_FLAG_SBIX_OVERLAY</a> ) )
+</code></pre></div>
+
+<p>A macro that returns true whenever a face object contains an &lsquo;sbix&rsquo; OpenType table with bit&nbsp;1 in its <code>flags</code> field set, instructing the application to overlay the bitmap strike with the corresponding outline glyph. See <code><a href="ft2-base_interface.html#ft_has_sbix">FT_HAS_SBIX</a></code> for pseudo code how to use it.</p>
+<h4>since</h4>
+
+<p>2.12</p>
 <hr>
 
 <h2 id="ft_is_sfnt">FT_IS_SFNT<a class="headerlink" href="#ft_is_sfnt" title="Permanent link">&para;</a></h2>
@@ -3786,7 +3939,7 @@
 
 <p>Although drivers may select the bitmap strike matching the request, you should not rely on this if you intend to select a particular bitmap strike. Use <code><a href="ft2-base_interface.html#ft_select_size">FT_Select_Size</a></code> instead in that case.</p>
 <p>The relation between the requested size and the resulting glyph size is dependent entirely on how the size is defined in the source face. The font designer chooses the final size of each glyph relative to this size. For more information refer to &lsquo;<a href="https://www.freetype.org/freetype2/docs/glyphs/glyphs-2.html">https://www.freetype.org/freetype2/docs/glyphs/glyphs-2.html</a>&rsquo;.</p>
-<p>Contrary to <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code>, this function doesn't have special code to normalize zero-valued widths, heights, or resolutions (which lead to errors in most cases).</p>
+<p>Contrary to <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code>, this function doesn't have special code to normalize zero-valued widths, heights, or resolutions, which are treated as <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code>.</p>
 <p>Don't use this function if you are using the FreeType cache API.</p>
 <hr>
 
@@ -3997,7 +4150,7 @@
 <p>The index of the glyph in the font file. For CID-keyed fonts (either in PS or in CFF format) this argument specifies the CID value.</p>
 </td></tr>
 <tr><td class="val" id="load_flags">load_flags</td><td class="desc">
-<p>A flag indicating what to load for this glyph. The <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_XXX</a></code> constants can be used to control the glyph loading process (e.g., whether the outline should be scaled, whether to load bitmaps or not, whether to hint the outline, etc).</p>
+<p>A flag indicating what to load for this glyph. The <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_XXX</a></code> flags can be used to control the glyph loading process (e.g., whether the outline should be scaled, whether to load bitmaps or not, whether to hint the outline, etc).</p>
 </td></tr>
 </table>
 
@@ -4006,7 +4159,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>The loaded glyph may be transformed. See <code><a href="ft2-base_interface.html#ft_set_transform">FT_Set_Transform</a></code> for the details.</p>
+<p>For proper scaling and hinting, the active <code><a href="ft2-base_interface.html#ft_size">FT_Size</a></code> object owned by the face has to be meaningfully initialized by calling <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code> before this function, for example. The loaded glyph may be transformed. See <code><a href="ft2-base_interface.html#ft_set_transform">FT_Set_Transform</a></code> for the details.</p>
 <p>For subsetted CID-keyed fonts, <code>FT_Err_Invalid_Argument</code> is returned for invalid CID values (this is, for CID values that don't have a corresponding glyph in the font). See the discussion of the <code><a href="ft2-base_interface.html#ft_face_flag_xxx">FT_FACE_FLAG_CID_KEYED</a></code> flag for more details.</p>
 <p>If you receive <code>FT_Err_Glyph_Too_Big</code>, try getting the glyph outline at EM size, then scale it manually and fill it as a graphics operation.</p>
 <hr>
@@ -4203,7 +4356,7 @@
 <table class="fields">
 <tr><td class="val" id="render_mode">render_mode</td><td class="desc">
 <p>The render mode used to render the glyph image into a bitmap. See <code><a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a></code> for a list of possible values.</p>
-<p>If <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_NORMAL</a></code> is used, a previous call of <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> with flag <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> makes FT_Render_Glyph provide a default blending of colored glyph layers associated with the current glyph slot (provided the font contains such layers) instead of rendering the glyph slot's outline. This is an experimental feature; see <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> for more information.</p>
+<p>If <code><a href="ft2-base_interface.html#ft_render_mode">FT_RENDER_MODE_NORMAL</a></code> is used, a previous call of <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> with flag <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> makes <code>FT_Render_Glyph</code> provide a default blending of colored glyph layers associated with the current glyph slot (provided the font contains such layers) instead of rendering the glyph slot's outline. This is an experimental feature; see <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> for more information.</p>
 </td></tr>
 </table>
 
@@ -4212,7 +4365,6 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>To get meaningful results, font scaling values must be set with functions like <code><a href="ft2-base_interface.html#ft_set_char_size">FT_Set_Char_Size</a></code> before calling <code>FT_Render_Glyph</code>.</p>
 <p>When FreeType outputs a bitmap of a glyph, it really outputs an alpha coverage map. If a pixel is completely covered by a filled-in outline, the bitmap contains 0xFF at that pixel, meaning that 0xFF/0xFF fraction of that pixel is covered, meaning the pixel is 100% black (or 0% bright). If a pixel is only 50% covered (value 0x80), the pixel is made 50% black (50% bright or a middle shade of grey). 0% covered means 0% black (100% bright or white).</p>
 <p>On high-DPI screens like on smartphones and tablets, the pixels are so small that their chance of being completely covered and therefore completely black are fairly good. On the low-DPI screens, however, the situation is different. The pixels are too large for most of the details of a glyph and shades of gray are the norm rather than the exception.</p>
 <p>This is relevant because all our screens have a second problem: they are not linear. 1&nbsp;+&nbsp;1 is not&nbsp;2. Twice the value does not result in twice the brightness. When a pixel is only 50% covered, the coverage map says 50% black, and this translates to a pixel value of 128 when you use 8&nbsp;bits per channel (0-255). However, this does not translate to 50% brightness for that pixel on our sRGB and gamma&nbsp;2.2 screens. Due to their non-linearity, they dwell longer in the darks and only a pixel value of about 186 results in 50% brightness &ndash; 128 ends up too dark on both bright and dark backgrounds. The net result is that dark text looks burnt-out, pixely and blotchy on bright background, bright text too frail on dark backgrounds, and colored text on colored background (for example, red on green) seems to have dark halos or &lsquo;dirt&rsquo; around it. The situation is especially ugly for diagonal stems like in &lsquo;w&rsquo; glyph shapes where the quality of FreeType's anti-aliasing depends on the correct display of grays. On high-DPI screens where smaller, fully black pixels reign supreme, this doesn't matter, but on our low-DPI screens with all the gray shades, it does. 0% and 100% brightness are the same things in linear and non-linear space, just all the shades in-between aren't.</p>
@@ -4310,6 +4462,32 @@ for pixel in buffer
   // Store `sd` in a buffer or use as required.
 }
 </code></pre></div></p>
+<p>FreeType has two rasterizers for generating SDF, namely:</p>
+<ol>
+<li>
+<p><code>sdf</code> for generating SDF directly from glyph's outline, and</p>
+</li>
+<li>
+<p><code>bsdf</code> for generating SDF from rasterized bitmaps.</p>
+</li>
+</ol>
+<p>Depending on the glyph type (i.e., outline or bitmap), one of the two rasterizers is chosen at runtime and used for generating SDFs. To force the use of <code>bsdf</code> you should render the glyph with any of the FreeType's other rendering modes (e.g., <code>FT_RENDER_MODE_NORMAL</code>) and then re-render with <code>FT_RENDER_MODE_SDF</code>.</p>
+<p>There are some issues with stability and possible failures of the SDF renderers (specifically <code>sdf</code>).</p>
+<ol>
+<li>
+<p>The <code>sdf</code> rasterizer is sensitive to really small features (e.g., sharp turns that are less than 1&nbsp;pixel) and imperfections in the glyph's outline, causing artifacts in the final output.</p>
+</li>
+<li>
+<p>The <code>sdf</code> rasterizer has limited support for handling intersecting contours and <em>cannot</em> handle self-intersecting contours whatsoever. Self-intersection happens when a single connected contour intersect itself at some point; having these in your font definitely pose a problem to the rasterizer and cause artifacts, too.</p>
+</li>
+<li>
+<p>Generating SDF for really small glyphs may result in undesirable output; the pixel grid (which stores distance information) becomes too coarse.</p>
+</li>
+<li>
+<p>Since the output buffer is normalized, precision at smaller spreads is greater than precision at larger spread values because the output range of [0..255] gets mapped to a smaller SDF range. A spread of&nbsp;2 should be sufficient in most cases.</p>
+</li>
+</ol>
+<p>Points (1) and (2) can be avoided by using the <code>bsdf</code> rasterizer, which is more stable than the <code>sdf</code> rasterizer in general.</p>
 <hr>
 
 <h2 id="ft_get_kerning">FT_Get_Kerning<a class="headerlink" href="#ft_get_kerning" title="Permanent link">&para;</a></h2>
@@ -4729,6 +4907,9 @@ for pixel in buffer
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_tricky">FT_FACE_FLAG_TRICKY</a>            ( 1L &lt;&lt; 13 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_color">FT_FACE_FLAG_COLOR</a>             ( 1L &lt;&lt; 14 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_variation">FT_FACE_FLAG_VARIATION</a>         ( 1L &lt;&lt; 15 )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_svg">FT_FACE_FLAG_SVG</a>               ( 1L &lt;&lt; 16 )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_sbix">FT_FACE_FLAG_SBIX</a>              ( 1L &lt;&lt; 17 )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_face_flag_sbix_overlay">FT_FACE_FLAG_SBIX_OVERLAY</a>      ( 1L &lt;&lt; 18 )
 </code></pre></div>
 
 <p>A list of bit flags used in the <code>face_flags</code> field of the <code><a href="ft2-base_interface.html#ft_facerec">FT_FaceRec</a></code> structure. They inform client applications of properties of the corresponding face.</p>
@@ -4785,6 +4966,15 @@ for pixel in buffer
 </td></tr>
 <tr><td class="val" id="ft_face_flag_variation">FT_FACE_FLAG_VARIATION</td><td class="desc">
 <p>[Since 2.9] Set if the current face (or named instance) has been altered with <code><a href="ft2-multiple_masters.html#ft_set_mm_design_coordinates">FT_Set_MM_Design_Coordinates</a></code>, <code><a href="ft2-multiple_masters.html#ft_set_var_design_coordinates">FT_Set_Var_Design_Coordinates</a></code>, or <code><a href="ft2-multiple_masters.html#ft_set_var_blend_coordinates">FT_Set_Var_Blend_Coordinates</a></code>. This flag is unset by a call to <code><a href="ft2-multiple_masters.html#ft_set_named_instance">FT_Set_Named_Instance</a></code>.</p>
+</td></tr>
+<tr><td class="val" id="ft_face_flag_svg">FT_FACE_FLAG_SVG</td><td class="desc">
+<p>[Since 2.12] The face has an &lsquo;SVG&nbsp;&rsquo; OpenType table.</p>
+</td></tr>
+<tr><td class="val" id="ft_face_flag_sbix">FT_FACE_FLAG_SBIX</td><td class="desc">
+<p>[Since 2.12] The face has an &lsquo;sbix&rsquo; OpenType table <em>and</em> outlines. For such fonts, <code><a href="ft2-base_interface.html#ft_face_flag_xxx">FT_FACE_FLAG_SCALABLE</a></code> is not set by default to retain backward compatibility.</p>
+</td></tr>
+<tr><td class="val" id="ft_face_flag_sbix_overlay">FT_FACE_FLAG_SBIX_OVERLAY</td><td class="desc">
+<p>[Since 2.12] The face has an &lsquo;sbix&rsquo; OpenType table where outlines should be drawn on top of bitmap strikes.</p>
 </td></tr>
 </table>
 
@@ -4858,19 +5048,20 @@ for pixel in buffer
 <h2 id="ft_load_xxx">FT_LOAD_XXX<a class="headerlink" href="#ft_load_xxx" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_default">FT_LOAD_DEFAULT</a>                      0x0
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_scale">FT_LOAD_NO_SCALE</a>                     ( 1L &lt;&lt; 0 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_hinting">FT_LOAD_NO_HINTING</a>                   ( 1L &lt;&lt; 1 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_render">FT_LOAD_RENDER</a>                       ( 1L &lt;&lt; 2 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_bitmap">FT_LOAD_NO_BITMAP</a>                    ( 1L &lt;&lt; 3 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_vertical_layout">FT_LOAD_VERTICAL_LAYOUT</a>              ( 1L &lt;&lt; 4 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_force_autohint">FT_LOAD_FORCE_AUTOHINT</a>               ( 1L &lt;&lt; 5 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_crop_bitmap">FT_LOAD_CROP_BITMAP</a>                  ( 1L &lt;&lt; 6 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_pedantic">FT_LOAD_PEDANTIC</a>                     ( 1L &lt;&lt; 7 )
-#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_ignore_global_advance_width">FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH</a>  ( 1L &lt;&lt; 9 )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_scale">FT_LOAD_NO_SCALE</a>                     ( 1L &lt;&lt; 0  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_hinting">FT_LOAD_NO_HINTING</a>                   ( 1L &lt;&lt; 1  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_render">FT_LOAD_RENDER</a>                       ( 1L &lt;&lt; 2  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_bitmap">FT_LOAD_NO_BITMAP</a>                    ( 1L &lt;&lt; 3  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_vertical_layout">FT_LOAD_VERTICAL_LAYOUT</a>              ( 1L &lt;&lt; 4  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_force_autohint">FT_LOAD_FORCE_AUTOHINT</a>               ( 1L &lt;&lt; 5  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_crop_bitmap">FT_LOAD_CROP_BITMAP</a>                  ( 1L &lt;&lt; 6  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_pedantic">FT_LOAD_PEDANTIC</a>                     ( 1L &lt;&lt; 7  )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_ignore_global_advance_width">FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH</a>  ( 1L &lt;&lt; 9  )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_recurse">FT_LOAD_NO_RECURSE</a>                   ( 1L &lt;&lt; 10 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_ignore_transform">FT_LOAD_IGNORE_TRANSFORM</a>             ( 1L &lt;&lt; 11 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_monochrome">FT_LOAD_MONOCHROME</a>                   ( 1L &lt;&lt; 12 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_linear_design">FT_LOAD_LINEAR_DESIGN</a>                ( 1L &lt;&lt; 13 )
+#<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_sbits_only">FT_LOAD_SBITS_ONLY</a>                   ( 1L &lt;&lt; 14 )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_no_autohint">FT_LOAD_NO_AUTOHINT</a>                  ( 1L &lt;&lt; 15 )
   /* Bits 16-19 are used by `FT_LOAD_TARGET_` */
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_color">FT_LOAD_COLOR</a>                        ( 1L &lt;&lt; 20 )
@@ -4892,7 +5083,7 @@ for pixel in buffer
 <p>Note that by default the glyph loader doesn't render outlines into bitmaps. The following flags are used to modify this default behaviour to more specific and useful cases.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_no_scale">FT_LOAD_NO_SCALE</td><td class="desc">
-<p>Don't scale the loaded outline glyph but keep it in font units.</p>
+<p>Don't scale the loaded outline glyph but keep it in font units. This flag is also assumed if <code><a href="ft2-base_interface.html#ft_size">FT_Size</a></code> owned by the face was not properly initialized.</p>
 <p>This flag implies <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_HINTING</a></code> and <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_BITMAP</a></code>, and unsets <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_RENDER</a></code>.</p>
 <p>If the font is &lsquo;tricky&rsquo; (see <code><a href="ft2-base_interface.html#ft_face_flag_xxx">FT_FACE_FLAG_TRICKY</a></code> for more), using <code>FT_LOAD_NO_SCALE</code> usually yields meaningless outlines because the subglyphs must be scaled and positioned with hinting instructions. This can be solved by loading the font without <code>FT_LOAD_NO_SCALE</code> and setting the character size to <code>font-&gt;units_per_EM</code>.</p>
 </td></tr>
@@ -4907,6 +5098,10 @@ for pixel in buffer
 <tr><td class="val" id="ft_load_no_bitmap">FT_LOAD_NO_BITMAP</td><td class="desc">
 <p>Ignore bitmap strikes when loading. Bitmap-only fonts ignore this flag.</p>
 <p><code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_SCALE</a></code> always sets this flag.</p>
+</td></tr>
+<tr><td class="val" id="ft_load_sbits_only">FT_LOAD_SBITS_ONLY</td><td class="desc">
+<p>[Since 2.12] This is the opposite of <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_BITMAP</a></code>, more or less: <code><a href="ft2-base_interface.html#ft_load_glyph">FT_Load_Glyph</a></code> returns <code>FT_Err_Invalid_Argument</code> if the face contains a bitmap strike for the given size (or the strike selected by <code><a href="ft2-base_interface.html#ft_select_size">FT_Select_Size</a></code>) but there is no glyph in the strike.</p>
+<p>Note that this load flag was part of FreeType since version 2.0.6 but previously tagged as internal.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_vertical_layout">FT_LOAD_VERTICAL_LAYOUT</td><td class="desc">
 <p>Load the glyph for vertical text layout. In particular, the <code>advance</code> value in the <code><a href="ft2-base_interface.html#ft_glyphslotrec">FT_GlyphSlotRec</a></code> structure is set to the <code>vertAdvance</code> value of the <code>metrics</code> field.</p>
@@ -4938,9 +5133,10 @@ for pixel in buffer
 <p>Disable the auto-hinter. See also the note below.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_color">FT_LOAD_COLOR</td><td class="desc">
-<p>Load colored glyphs. There are slight differences depending on the font format.</p>
-<p>[Since 2.5] Load embedded color bitmap images. The resulting color bitmaps, if available, will have the <code><a href="ft2-basic_types.html#ft_pixel_mode">FT_PIXEL_MODE_BGRA</a></code> format, with pre-multiplied color channels. If the flag is not set and color bitmaps are found, they are converted to 256-level gray bitmaps, using the <code><a href="ft2-basic_types.html#ft_pixel_mode">FT_PIXEL_MODE_GRAY</a></code> format.</p>
-<p>[Since 2.10, experimental] If the glyph index contains an entry in the face's &lsquo;COLR&rsquo; table with a &lsquo;CPAL&rsquo; palette table (as defined in the OpenType specification), make <code><a href="ft2-base_interface.html#ft_render_glyph">FT_Render_Glyph</a></code> provide a default blending of the color glyph layers associated with the glyph index, using the same bitmap format as embedded color bitmap images. This is mainly for convenience; for full control of color layers use <code><a href="ft2-layer_management.html#ft_get_color_glyph_layer">FT_Get_Color_Glyph_Layer</a></code> and FreeType's color functions like <code><a href="ft2-color_management.html#ft_palette_select">FT_Palette_Select</a></code> instead of setting <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> for rendering so that the client application can handle blending by itself.</p>
+<p>Load colored glyphs. FreeType searches in the following order; there are slight differences depending on the font format.</p>
+<p>[Since 2.5] Load embedded color bitmap images (provided <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_NO_BITMAP</a></code> is not set). The resulting color bitmaps, if available, have the <code><a href="ft2-basic_types.html#ft_pixel_mode">FT_PIXEL_MODE_BGRA</a></code> format, with pre-multiplied color channels. If the flag is not set and color bitmaps are found, they are converted to 256-level gray bitmaps, using the <code><a href="ft2-basic_types.html#ft_pixel_mode">FT_PIXEL_MODE_GRAY</a></code> format.</p>
+<p>[Since 2.12] If the glyph index maps to an entry in the face's &lsquo;SVG&nbsp;&rsquo; table, load the associated SVG document from this table and set the <code>format</code> field of <code><a href="ft2-base_interface.html#ft_glyphslotrec">FT_GlyphSlotRec</a></code> to <code><a href="ft2-basic_types.html#ft_glyph_format">FT_GLYPH_FORMAT_SVG</a></code>. Note that FreeType itself can't render SVG documents; however, the library provides hooks to seamlessly integrate an external renderer. See sections &lsquo;<a href="ft2-ot_svg_driver.html#ot_svg_driver">The SVG driver</a>&rsquo; and &lsquo;<a href="ft2-svg_fonts.html#svg_fonts">OpenType SVG Fonts</a>&rsquo; for more.</p>
+<p>[Since 2.10, experimental] If the glyph index maps to an entry in the face's &lsquo;COLR&rsquo; table with a &lsquo;CPAL&rsquo; palette table (as defined in the OpenType specification), make <code><a href="ft2-base_interface.html#ft_render_glyph">FT_Render_Glyph</a></code> provide a default blending of the color glyph layers associated with the glyph index, using the same bitmap format as embedded color bitmap images. This is mainly for convenience and works only for glyphs in &lsquo;COLR&rsquo; v0 tables (or glyphs in &lsquo;COLR&rsquo; v1 tables that exclusively use v0 features). For full control of color layers use <code><a href="ft2-layer_management.html#ft_get_color_glyph_layer">FT_Get_Color_Glyph_Layer</a></code> and FreeType's color functions like <code><a href="ft2-color_management.html#ft_palette_select">FT_Palette_Select</a></code> instead of setting <code><a href="ft2-base_interface.html#ft_load_xxx">FT_LOAD_COLOR</a></code> for rendering so that the client application can handle blending by itself.</p>
 </td></tr>
 <tr><td class="val" id="ft_load_compute_metrics">FT_LOAD_COMPUTE_METRICS</td><td class="desc">
 <p>[Since 2.6.1] Compute glyph metrics from the glyph data, without the use of bundled metrics tables (for example, the &lsquo;hdmx&rsquo; table in TrueType fonts). This flag is mainly used by font validating or font editing applications, which need to ignore, verify, or edit those tables.</p>
@@ -5157,7 +5353,7 @@ for pixel in buffer
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

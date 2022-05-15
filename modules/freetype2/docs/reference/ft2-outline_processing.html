@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Outline Processing - FreeType-2.11.1 API Reference</title>
+        <title>Outline Processing - FreeType-2.12.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -542,6 +542,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -646,6 +658,18 @@
     <li class="md-nav__item">
       <a href="ft2-pcf_driver.html" class="md-nav__link">
         The PCF driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
       </a>
     </li>
   
@@ -1915,7 +1939,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
-<p>A contour that contains a single point only is represented by a &lsquo;move to&rsquo; operation followed by &lsquo;line to&rsquo; to the same point. In most cases, it is best to filter this out before using the outline for stroking purposes (otherwise it would result in a visible dot when round caps are used).</p>
+<p>Degenerate contours, segments, and Bezier arcs may be reported. In most cases, it is best to filter these out before using the outline for stroking or other path modification purposes (which may cause degenerate segments to become non-degenrate and visible, like when stroke caps are used or the path is otherwise outset). Some glyph outlines may contain deliberate degenerate single points for mark attachement.</p>
 <p>Similarly, the function returns success for an empty outline also (doing nothing, this is, not calling any emitter); if necessary, you should filter this out, too.</p>
 <hr>
 
@@ -2189,7 +2213,7 @@
 <p>If set, turn pixels on for &lsquo;stubs&rsquo;, otherwise exclude them. Ignored if <code><a href="ft2-outline_processing.html#ft_outline_xxx">FT_OUTLINE_IGNORE_DROPOUTS</a></code> is set. See below for more information.</p>
 </td></tr>
 <tr><td class="val" id="ft_outline_overlap">FT_OUTLINE_OVERLAP</td><td class="desc">
-<p>This flag indicates that this outline contains overlapping contrours and the anti-aliased renderer should perform oversampling to mitigate possible artifacts. This flag should <em>not</em> be set for well designed glyphs without overlaps because it quadruples the rendering time.</p>
+<p>[Since 2.10.3] This flag indicates that this outline contains overlapping contours and the anti-aliased renderer should perform oversampling to mitigate possible artifacts. This flag should <em>not</em> be set for well designed glyphs without overlaps because it quadruples the rendering time.</p>
 </td></tr>
 <tr><td class="val" id="ft_outline_high_precision">FT_OUTLINE_HIGH_PRECISION</td><td class="desc">
 <p>This flag indicates that the scan-line converter should try to convert this outline to bitmaps with the highest possible quality. It is typically set for small character sizes. Note that this is only a hint that might be completely ignored by a given scan-converter.</p>
@@ -2261,7 +2285,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

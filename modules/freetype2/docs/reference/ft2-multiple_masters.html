@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Multiple Masters - FreeType-2.11.1 API Reference</title>
+        <title>Multiple Masters - FreeType-2.12.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -724,6 +724,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -828,6 +840,18 @@
     <li class="md-nav__item">
       <a href="ft2-pcf_driver.html" class="md-nav__link">
         The PCF driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
       </a>
     </li>
   
@@ -1426,6 +1450,7 @@
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
 <p>The following types and functions are used to manage Multiple Master fonts, i.e., the selection of specific design instances by setting design axis coordinates.</p>
 <p>Besides Adobe MM fonts, the interface supports Apple's TrueType GX and OpenType variation fonts. Some of the routines only work with Adobe MM fonts, others will work with all three types. They are similar enough that a consistent interface makes sense.</p>
+<p>For Adobe MM fonts, macro <code><a href="ft2-base_interface.html#ft_is_sfnt">FT_IS_SFNT</a></code> returns false. For GX and OpenType variation fonts, it returns true.</p>
 <h2 id="ft_mm_axis">FT_MM_Axis<a class="headerlink" href="#ft_mm_axis" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span>  FT_MM_Axis_
@@ -2086,7 +2111,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with
