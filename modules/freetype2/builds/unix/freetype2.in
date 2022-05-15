@@ -7,8 +7,8 @@ Name: FreeType 2
 URL: https://freetype.org
 Description: A free, high-quality, and portable font engine.
 Version: %ft_version%
-Requires:
-Requires.private: %REQUIRES_PRIVATE%
-Libs: -L${libdir} -lfreetype
-Libs.private: %LIBS_PRIVATE%
+Requires: %PKGCONFIG_REQUIRES%
+Requires.private: %PKGCONFIG_REQUIRES_PRIVATE%
+Libs: %PKGCONFIG_LIBS%
+Libs.private: %PKGCONFIG_LIBS_PRIVATE%
 Cflags: -I${includedir}/freetype2
