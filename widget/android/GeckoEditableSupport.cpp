@@ -743,7 +743,8 @@ void GeckoEditableSupport::FlushIMEChanges(FlushChangesFlag aFlags) {
 
   if (textTransaction.IsValid()) {
     mEditable->OnTextChange(textTransaction.text, textTransaction.start,
-                            textTransaction.oldEnd, textTransaction.newEnd);
+                            textTransaction.oldEnd, textTransaction.newEnd,
+                            causedOnlyByComposition);
     if (flushOnException()) {
       return;
     }
@@ -976,11 +977,13 @@ bool GeckoEditableSupport::DoReplaceText(int32_t aStart, int32_t aEnd,
       }
     }
   } else if (composition->String().Equals(string)) {
-    /* If the new text is the same as the existing composition text,
-     * the NS_COMPOSITION_CHANGE event does not generate a text
-     * change notification. However, the Java side still expects
-     * one, so we manually generate a notification. */
-    IMENotification::TextChangeData dummyChange(aStart, aEnd, aEnd, false,
+    // If the new text is the same as the existing composition text,
+    // the NS_COMPOSITION_CHANGE event does not generate a text
+    // change notification. However, the Java side still expects
+    // one, so we manually generate a notification.
+    //
+    // Also, since this is IME change, we have to set mCausedOnlyByComposition.
+    IMENotification::TextChangeData dummyChange(aStart, aEnd, aEnd, true,
                                                 false);
     PostFlushIMEChanges();
     mIMESelectionChanged = true;
