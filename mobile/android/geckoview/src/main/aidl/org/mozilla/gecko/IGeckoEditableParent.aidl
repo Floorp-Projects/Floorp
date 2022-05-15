@@ -26,7 +26,8 @@ interface IGeckoEditableParent {
 
     // Notify a change in editor text.
     void onTextChange(IBinder token, in CharSequence text,
-                      int start, int unboundedOldEnd);
+                      int start, int unboundedOldEnd,
+                      boolean causedOnlyByComposition);
 
     // Perform the default action associated with a key event.
     void onDefaultKeyEvent(IBinder token, in KeyEvent event);
