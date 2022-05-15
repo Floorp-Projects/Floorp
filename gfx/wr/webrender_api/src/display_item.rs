@@ -54,6 +54,8 @@ bitflags! {
         const SUPPORTS_EXTERNAL_COMPOSITOR_SURFACE = 1 << 4;
         /// This flags disables snapping and forces anti-aliasing even if the primitive is axis-aligned.
         const ANTIALISED = 1 << 5;
+        /// If true, this primitive is used as a background for checkerboarding
+        const CHECKERBOARD_BACKGROUND = 1 << 6;
     }
 }
 

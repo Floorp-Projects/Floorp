@@ -243,7 +243,7 @@ class TextDrawTarget : public DrawTarget {
                            const DeviceColor& aColor) {
     auto rect = wr::ToLayoutRect(aRect);
     auto color = wr::ToColorF(aColor);
-    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, false, color);
   }
 
   // This function is basically designed to slide into the decoration drawing
@@ -459,7 +459,7 @@ class TextDrawTarget : public DrawTarget {
     auto rect = wr::ToLayoutRect(LayoutDeviceRect::FromUnknownRect(aRect));
     auto color =
         wr::ToColorF(static_cast<const ColorPattern&>(aPattern).mColor);
-    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, color);
+    mBuilder.PushRect(rect, ClipRect(), mBackfaceVisible, false, false, color);
   }
 
   void StrokeRect(const Rect& aRect, const Pattern& aPattern,

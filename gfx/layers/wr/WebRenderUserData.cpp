@@ -27,7 +27,7 @@ namespace layers {
 
 void WebRenderBackgroundData::AddWebRenderCommands(
     wr::DisplayListBuilder& aBuilder) {
-  aBuilder.PushRect(mBounds, mBounds, true, true, mColor);
+  aBuilder.PushRect(mBounds, mBounds, true, true, false, mColor);
 }
 
 /* static */

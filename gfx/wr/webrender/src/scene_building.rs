@@ -1334,6 +1334,10 @@ impl<'a> SceneBuilder<'a> {
                         color: info.color.into(),
                     },
                 );
+
+                if info.common.flags.contains(PrimitiveFlags::CHECKERBOARD_BACKGROUND) {
+                    self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
+                }
             }
             DisplayItem::HitTest(ref info) => {
                 profile_scope!("hit_test");
