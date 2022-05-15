@@ -13,6 +13,13 @@ case "$target" in
     -DCOMPILER_RT_BUILD_ORC=OFF
   "
   ;;
+*-apple-darwin)
+  EXTRA_CMAKE_FLAGS="
+    -DCOMPILER_RT_ENABLE_IOS=OFF
+    -DCOMPILER_RT_ENABLE_WATCHOS=OFF
+    -DCOMPILER_RT_ENABLE_TVOS=OFF
+  "
+  ;;
 esac
 
 EXTRA_CMAKE_FLAGS="
