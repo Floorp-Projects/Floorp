@@ -3977,7 +3977,9 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor,
                       bool aCanBeReused = true)
-      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor), mBounds(aBounds) {
+      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor),
+        mBounds(aBounds),
+        mIsCheckerboardBackground(false) {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
@@ -3993,6 +3995,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   void WriteDebugInfo(std::stringstream& aStream) override;
+  void SetIsCheckerboardBackground() { mIsCheckerboardBackground = true; }
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
@@ -4010,6 +4013,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
 
  private:
   nsRect mBounds;
+  bool mIsCheckerboardBackground;
   Maybe<int32_t> mOverrideZIndex;
 };
 
