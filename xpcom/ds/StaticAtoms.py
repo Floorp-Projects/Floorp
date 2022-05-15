@@ -1260,6 +1260,7 @@ STATIC_ATOMS = [
     Atom("ul", "ul"),
     Atom("unparsedEntityUri", "unparsed-entity-uri"),
     Atom("up", "up"),
+    Atom("update", "update"),
     Atom("upperFirst", "upper-first"),
     Atom("use", "use"),
     Atom("useAttributeSets", "use-attribute-sets"),

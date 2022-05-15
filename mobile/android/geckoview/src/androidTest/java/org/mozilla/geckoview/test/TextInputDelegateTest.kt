@@ -1059,4 +1059,32 @@ class TextInputDelegateTest : BaseSessionTest() {
 
         finishComposingText(ic)
     }
+
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_bug1767556() {
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        // Emulate GBoard's InputConnection API calls
+        ic.beginBatchEdit()
+        ic.setComposingText("fooba", 1)
+        ic.endBatchEdit()
+        ic.setComposingText("fooba", 1)
+        processChildEvents()
+
+        ic.beginBatchEdit()
+        ic.setComposingText("foobaz", 1)
+        ic.endBatchEdit()
+        ic.setComposingText("foobaz", 1)
+        processChildEvents()
+
+        ic.beginBatchEdit()
+        ic.setComposingText("foobaz1", 1)
+        ic.endBatchEdit()
+        ic.setComposingText("foobaz1", 1)
+        processChildEvents()
+
+        finishComposingText(ic)
+        assertText("commit foobaz1", ic, "foobaz1")
+    }
 }
