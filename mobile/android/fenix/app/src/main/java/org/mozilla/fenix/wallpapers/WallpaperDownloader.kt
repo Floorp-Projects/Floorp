@@ -34,6 +34,10 @@ class WallpaperDownloader(
      * <WALLPAPER_URL>/<resolution>/<orientation>/<app theme>/<wallpaper theme>/<wallpaper name>.png
      */
     suspend fun downloadWallpaper(wallpaper: Wallpaper.Remote) = withContext(Dispatchers.IO) {
+        if (remoteHost.isNullOrEmpty()) {
+            return@withContext
+        }
+
         for (metadata in wallpaper.toMetadata(context)) {
             val localFile = File(context.filesDir.absolutePath, metadata.localPath)
             if (localFile.exists()) continue
