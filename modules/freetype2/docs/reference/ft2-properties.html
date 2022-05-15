@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Driver properties - FreeType-2.11.1 API Reference</title>
+        <title>Driver properties - FreeType-2.12.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -542,6 +542,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -656,6 +668,18 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -749,6 +773,13 @@
         <li class="md-nav__item">
   <a href="#interpreter-version" class="md-nav__link">
     interpreter-version
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#svg-hooks" class="md-nav__link">
+    svg-hooks
   </a>
   
 </li>
@@ -1296,6 +1327,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#svg-hooks" class="md-nav__link">
+    svg-hooks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#glyph-to-script-map" class="md-nav__link">
     glyph-to-script-map
   </a>
@@ -1616,6 +1654,29 @@
 <p>2.5</p>
 <hr>
 
+<h2 id="svg-hooks">svg-hooks<a class="headerlink" href="#svg-hooks" title="Permanent link">&para;</a></h2>
+<p>Set up the interface between FreeType and an extern SVG rendering library like &lsquo;librsvg&rsquo;. All details on the function hooks can be found in section &lsquo;<a href="ft2-svg_fonts.html#svg_fonts">OpenType SVG Fonts</a>&rsquo;.</p>
+<h4>example</h4>
+
+<p>The following example code expects that the four hook functions <code>svg_*</code> are defined elsewhere. Error handling is omitted, too.
+<div class="highlight"><pre><span></span><code>  FT_Library  library;
+  SVG_RendererHooks  hooks = {
+                       (SVG_Lib_Init_Func)svg_init,
+                       (SVG_Lib_Free_Func)svg_free,
+                       (SVG_Lib_Render_Func)svg_render,
+                       (SVG_Lib_Preset_Slot_Func)svg_preset_slot };
+
+
+  FT_Init_FreeType( &amp;library );
+
+  FT_Property_Set( library, &quot;ot-svg&quot;,
+                            &quot;svg-hooks&quot;, &amp;hooks );
+</code></pre></div></p>
+<h4>since</h4>
+
+<p>2.12</p>
+<hr>
+
 <h2 id="glyph-to-script-map">glyph-to-script-map<a class="headerlink" href="#glyph-to-script-map" title="Permanent link">&para;</a></h2>
 <p><strong>Experimental only</strong></p>
 <p>The auto-hinter provides various script modules to hint glyphs. Examples of supported scripts are Latin or CJK. Before a glyph is auto-hinted, the Unicode character map of the font gets examined, and the script is then determined based on Unicode character ranges, see below.</p>
@@ -1880,7 +1941,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="ft2-pcf_driver.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: The PCF driver" rel="prev">
+        <a href="ft2-ot_svg_driver.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: The SVG driver" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1889,7 +1950,7 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              The PCF driver
+              The SVG driver
             </div>
           </div>
         </a>
@@ -1917,7 +1978,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

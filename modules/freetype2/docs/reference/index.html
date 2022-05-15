@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
+        <meta name="description" content="API Reference Documentation for FreeType-2.12.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>FreeType-2.11.1 API Reference</title>
+        <title>FreeType-2.12.1 API Reference</title>
       
     
     
@@ -71,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#freetype-2111-api-reference" class="md-skip">
+        <a href="#freetype-2121-api-reference" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.1 API Reference
+            FreeType-2.12.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.12.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.12.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.1 API Reference
+    FreeType-2.12.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -552,6 +552,18 @@
   
   
     <li class="md-nav__item">
+      <a href="ft2-svg_fonts.html" class="md-nav__link">
+        OpenType SVG Fonts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="ft2-font_formats.html" class="md-nav__link">
         Font Formats
       </a>
@@ -656,6 +668,18 @@
     <li class="md-nav__item">
       <a href="ft2-pcf_driver.html" class="md-nav__link">
         The PCF driver
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-ot_svg_driver.html" class="md-nav__link">
+        The SVG driver
       </a>
     </li>
   
@@ -1095,7 +1119,7 @@
                 
                 <p><a href="https://www.freetype.org">FreeType</a> &raquo; <a href="../">Docs</a> &raquo; Table of Contents</p>
 <hr />
-<h1 id="freetype-2111-api-reference">FreeType-2.11.1 API Reference<a class="headerlink" href="#freetype-2111-api-reference" title="Permanent link">&para;</a></h1>
+<h1 id="freetype-2121-api-reference">FreeType-2.12.1 API Reference<a class="headerlink" href="#freetype-2121-api-reference" title="Permanent link">&para;</a></h1>
 <h1 id="table-of-contents">Table of Contents<a class="headerlink" href="#table-of-contents" title="Permanent link">&para;</a></h1>
 <h2 id="general-remarks">General Remarks<a class="headerlink" href="#general-remarks" title="Permanent link">&para;</a></h2>
 <table class="toc">
@@ -1168,6 +1192,9 @@
 <tr><td class="link"><a href="ft2-winfnt_fonts.html">Window FNT Files</a></td><td class="desc">
 <p>Windows FNT-specific API.</p>
 </td></tr>
+<tr><td class="link"><a href="ft2-svg_fonts.html">OpenType SVG Fonts</a></td><td class="desc">
+<p>OT-SVG API between FreeType and an external SVG rendering library.</p>
+</td></tr>
 <tr><td class="link"><a href="ft2-font_formats.html">Font Formats</a></td><td class="desc">
 <p>Getting the font format.</p>
 </td></tr>
@@ -1191,6 +1218,9 @@
 </td></tr>
 <tr><td class="link"><a href="ft2-pcf_driver.html">The PCF driver</a></td><td class="desc">
 <p>Controlling the PCF driver module.</p>
+</td></tr>
+<tr><td class="link"><a href="ft2-ot_svg_driver.html">The SVG driver</a></td><td class="desc">
+<p>Controlling the external rendering of OT-SVG glyphs.</p>
 </td></tr>
 <tr><td class="link"><a href="ft2-properties.html">Driver properties</a></td><td class="desc">
 <p>Controlling driver modules.</p>
@@ -1276,7 +1306,7 @@
 </table>
 <h2 id="global-index"><a href="ft2-index.html">Global Index</a><a class="headerlink" href="#global-index" title="Permanent link">&para;</a></h2>
 <hr />
-<div class="timestamp">generated on Thu Dec  2 12:36:11 2021 UTC</div>
+<div class="timestamp">generated on Sun May  1 05:24:59 2022 UTC</div>
                 
               
               
@@ -1318,7 +1348,7 @@
       <div class="md-footer-copyright">
         
           <div class="md-footer-copyright__highlight">
-            Copyright 2021 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
+            Copyright 2022 <a href = "https://www.freetype.org/license.html">The FreeType Project</a>.
           </div>
         
         Made with

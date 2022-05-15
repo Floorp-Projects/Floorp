@@ -485,6 +485,7 @@
     <ClCompile Include="..\..\..\src\sfnt\sfnt.c" />
     <ClCompile Include="..\..\..\src\smooth\smooth.c" />
     <ClCompile Include="..\..\..\src\sdf\sdf.c" />
+    <ClCompile Include="..\..\..\src\svg\svg.c" />
     <ClCompile Include="..\..\..\src\truetype\truetype.c" />
     <ClCompile Include="..\..\..\src\type1\type1.c" />
     <ClCompile Include="..\..\..\src\type42\type42.c" />

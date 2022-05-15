@@ -2,7 +2,7 @@
 # FreeType 2 template for Unix-specific compiler definitions
 #
 
-# Copyright (C) 1996-2021 by
+# Copyright (C) 1996-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -106,9 +106,7 @@ endif
 
 # Linker flags.
 #
-LDFLAGS           := @LDFLAGS@
-LIB_CLOCK_GETTIME := @LIB_CLOCK_GETTIME@  # for ftbench
-
+LDFLAGS := @LDFLAGS@
 
 # export symbols
 #
@@ -118,11 +116,15 @@ EXPORTS_LIST := $(OBJ_DIR)/ftexport.sym
 CCexe        := $(CCraw_build)	# used to compile `apinames' only
 
 
-# Library linking
+# Library linking.
 #
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
                           -rpath $(libdir) -version-info $(version_info) \
                           $(LDFLAGS) -no-undefined \
                           -export-symbols $(EXPORTS_LIST)
+
+# For the demo programs.
+FT_DEMO_CFLAGS := @FT_DEMO_CFLAGS@
+FT_DEMO_LDFLAGS := @FT_DEMO_LDFLAGS@
 
 # EOF
