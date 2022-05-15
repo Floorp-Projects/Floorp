@@ -291,3 +291,25 @@ power.cpu_ms_per_thread:
   content_foreground: *per_thread_cpu_ms
   content_background: *per_thread_cpu_ms
   gpu_process: *per_thread_cpu_ms
+
+power.battery:
+  percentage_when_user_active:
+    type: custom_distribution
+    description: >
+      Records how many percent of battery was available for each period of
+      user activity.
+    range_min: 0
+    range_max: 100
+    bucket_count: 100
+    histogram_type: linear
+    unit: percent
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1769255
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1769255
+    data_sensitivity:
+      - interaction
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never

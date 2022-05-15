@@ -12,6 +12,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/Hal.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
@@ -42,6 +43,7 @@
 #include "mozilla/dom/UIEventBinding.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -185,6 +187,13 @@ UITimerCallback::Notify(nsITimer* aTimer) {
   } else {
     obs->NotifyObservers(nullptr, "user-interaction-active", nullptr);
     EventStateManager::UpdateUserActivityTimer();
+
+    if (XRE_IsParentProcess()) {
+      hal::BatteryInformation batteryInfo;
+      hal::GetCurrentBatteryInformation(&batteryInfo);
+      glean::power_battery::percentage_when_user_active.AccumulateSamples(
+          {uint64_t(batteryInfo.level() * 100)});
+    }
   }
   mPreviousCount = gMouseOrKeyboardEventCounter;
   return NS_OK;
