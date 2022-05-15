@@ -853,7 +853,8 @@ bool SVGGeometryFrame::CreateWebRenderCommands(
         ((float)NS_GET_R(c)) / 255.0f, ((float)NS_GET_G(c)) / 255.0f,
         ((float)NS_GET_B(c)) / 255.0f, ((float)NS_GET_A(c)) / 255.0f * opacity};
 
-    aBuilder.PushRect(wrRect, wrRect, !aItem->BackfaceIsHidden(), true, color);
+    aBuilder.PushRect(wrRect, wrRect, !aItem->BackfaceIsHidden(), true, false,
+                      color);
   }
 
   return true;
