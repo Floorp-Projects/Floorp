@@ -32,6 +32,7 @@ SOURCES += [
     'src/pfr/pfr.c',            # PFR/TrueDoc font driver.
     'src/sdf/sdf.c',            # SDF font driver.
     'src/sfnt/sfnt.c',          # SFNT files support.
+    'src/svg/svg.c',            # OT-SVG rendering support.
     'src/truetype/truetype.c',  # TrueType font driver.
     'src/type1/type1.c',        # PostScript Type 1 font driver.
     'src/type42/type42.c',      # PostScript Type 42 font driver.
