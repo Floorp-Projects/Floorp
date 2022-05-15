@@ -45,6 +45,7 @@ class nsIPrincipal;
 
 #ifdef MOZ_ENABLE_DBUS
 #  include "mozilla/WidgetUtilsGtk.h"
+#  include "GeoclueLocationProvider.h"
 #  include "PortalLocationProvider.h"
 #endif
 
@@ -494,15 +495,24 @@ nsresult nsGeolocationService::Init() {
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-#  ifdef MOZ_GPSD
-  if (Preferences::GetBool("geo.provider.use_gpsd", false)) {
-    mProvider = new GpsdLocationProvider();
-  }
-#  endif
 #  ifdef MOZ_ENABLE_DBUS
   if (!mProvider && widget::ShouldUsePortal(widget::PortalKind::Location)) {
     mProvider = new PortalLocationProvider();
   }
+  // Geoclue includes GPS data so it has higher priority than raw GPSD
+  if (!mProvider && StaticPrefs::geo_provider_use_geoclue()) {
+    nsCOMPtr<nsIGeolocationProvider> gcProvider = new GeoclueLocationProvider();
+    // The Startup() method will only succeed if Geoclue is available on D-Bus
+    if (NS_SUCCEEDED(gcProvider->Startup())) {
+      gcProvider->Shutdown();
+      mProvider = std::move(gcProvider);
+    }
+  }
+#    ifdef MOZ_GPSD
+  if (!mProvider && Preferences::GetBool("geo.provider.use_gpsd", false)) {
+    mProvider = new GpsdLocationProvider();
+  }
+#    endif
 #  endif
 #endif
 
