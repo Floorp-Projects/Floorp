@@ -310,13 +310,6 @@
     }                                                \
   }
 
-#define NS_PRINTSESSION_CID                          \
-  {                                                  \
-    0x2f977d53, 0x5485, 0x11d4, {                    \
-      0x87, 0xe2, 0x00, 0x10, 0xa4, 0xe7, 0x5e, 0xf2 \
-    }                                                \
-  }
-
 #define NS_PRINTDIALOGSERVICE_CID                    \
   {                                                  \
     0x06beec76, 0xa183, 0x4d9f, {                    \

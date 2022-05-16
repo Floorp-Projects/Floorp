@@ -13,7 +13,6 @@
 #include "mozilla/layout/printing/DrawEventRecorder.h"
 
 class nsIFile;
-class nsIPrintSession;
 class nsIUUIDGenerator;
 
 namespace mozilla {
@@ -60,7 +59,6 @@ class nsDeviceContextSpecProxy final : public nsIDeviceContextSpec {
   ~nsDeviceContextSpecProxy();
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-  nsCOMPtr<nsIPrintSession> mPrintSession;
   nsCOMPtr<nsIDeviceContextSpec> mRealDeviceContextSpec;
   RefPtr<RemotePrintJobChild> mRemotePrintJob;
   RefPtr<mozilla::layout::DrawEventRecorderPRFileDesc> mRecorder;

@@ -16,7 +16,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsIPrintSession.h"
 #include "nsIPrintSettings.h"
 #include "private/pprio.h"
 
@@ -53,14 +52,6 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
 
   if (aIsPrintPreview) {
     return NS_OK;
-  }
-
-  // nsIPrintSettings only has a weak reference to nsIPrintSession, so we hold
-  // it to make sure it's available for the lifetime of the print.
-  rv = mPrintSettings->GetPrintSession(getter_AddRefs(mPrintSession));
-  if (NS_FAILED(rv) || !mPrintSession) {
-    NS_WARNING("We can't print via the parent without an nsIPrintSession.");
-    return NS_ERROR_FAILURE;
   }
 
   if (!mRemotePrintJob) {
