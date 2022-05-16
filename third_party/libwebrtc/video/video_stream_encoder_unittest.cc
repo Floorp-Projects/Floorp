@@ -519,11 +519,10 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
             VideoFrame::Builder()
                 .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
                     nullptr, out_width, out_height))
-                .set_timestamp_rtp(99)
+                .set_ntp_time_ms(video_frame.ntp_time_ms())
                 .set_timestamp_ms(99)
                 .set_rotation(kVideoRotation_0)
                 .build();
-        adapted_frame.set_ntp_time_ms(video_frame.ntp_time_ms());
         if (video_frame.has_update_rect()) {
           adapted_frame.set_update_rect(
               video_frame.update_rect().ScaleWithFrame(
@@ -724,91 +723,71 @@ class VideoStreamEncoderTest : public ::testing::Test {
 
   VideoFrame CreateFrame(int64_t ntp_time_ms,
                          rtc::Event* destruction_event) const {
-    VideoFrame frame =
-        VideoFrame::Builder()
-            .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
-                destruction_event, codec_width_, codec_height_))
-            .set_timestamp_rtp(99)
-            .set_timestamp_ms(99)
-            .set_rotation(kVideoRotation_0)
-            .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
+            destruction_event, codec_width_, codec_height_))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(99)
+        .set_rotation(kVideoRotation_0)
+        .build();
   }
 
   VideoFrame CreateFrameWithUpdatedPixel(int64_t ntp_time_ms,
                                          rtc::Event* destruction_event,
                                          int offset_x) const {
-    VideoFrame frame =
-        VideoFrame::Builder()
-            .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
-                destruction_event, codec_width_, codec_height_))
-            .set_timestamp_rtp(99)
-            .set_timestamp_ms(99)
-            .set_rotation(kVideoRotation_0)
-            .set_update_rect(VideoFrame::UpdateRect{offset_x, 0, 1, 1})
-            .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
+            destruction_event, codec_width_, codec_height_))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(99)
+        .set_rotation(kVideoRotation_0)
+        .set_update_rect(VideoFrame::UpdateRect{offset_x, 0, 1, 1})
+        .build();
   }
 
   VideoFrame CreateFrame(int64_t ntp_time_ms, int width, int height) const {
-    VideoFrame frame =
-        VideoFrame::Builder()
-            .set_video_frame_buffer(
-                new rtc::RefCountedObject<TestBuffer>(nullptr, width, height))
-            .set_timestamp_rtp(99)
-            .set_timestamp_ms(99)
-            .set_rotation(kVideoRotation_0)
-            .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    frame.set_timestamp_us(ntp_time_ms * 1000);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(
+            new rtc::RefCountedObject<TestBuffer>(nullptr, width, height))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(ntp_time_ms)
+        .set_rotation(kVideoRotation_0)
+        .build();
   }
 
   VideoFrame CreateNV12Frame(int64_t ntp_time_ms, int width, int height) const {
-    VideoFrame frame =
-        VideoFrame::Builder()
-            .set_video_frame_buffer(NV12Buffer::Create(width, height))
-            .set_timestamp_rtp(99)
-            .set_timestamp_ms(99)
-            .set_rotation(kVideoRotation_0)
-            .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    frame.set_timestamp_us(ntp_time_ms * 1000);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(NV12Buffer::Create(width, height))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(ntp_time_ms)
+        .set_rotation(kVideoRotation_0)
+        .build();
   }
 
   VideoFrame CreateFakeNativeFrame(int64_t ntp_time_ms,
                                    rtc::Event* destruction_event,
                                    int width,
                                    int height) const {
-    VideoFrame frame =
-        VideoFrame::Builder()
-            .set_video_frame_buffer(new rtc::RefCountedObject<FakeNativeBuffer>(
-                destruction_event, width, height))
-            .set_timestamp_rtp(99)
-            .set_timestamp_ms(99)
-            .set_rotation(kVideoRotation_0)
-            .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(new rtc::RefCountedObject<FakeNativeBuffer>(
+            destruction_event, width, height))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(99)
+        .set_rotation(kVideoRotation_0)
+        .build();
   }
 
   VideoFrame CreateFakeNV12NativeFrame(int64_t ntp_time_ms,
                                        rtc::Event* destruction_event,
                                        int width,
                                        int height) const {
-    VideoFrame frame = VideoFrame::Builder()
-                           .set_video_frame_buffer(
-                               new rtc::RefCountedObject<FakeNV12NativeBuffer>(
-                                   destruction_event, width, height))
-                           .set_timestamp_rtp(99)
-                           .set_timestamp_ms(99)
-                           .set_rotation(kVideoRotation_0)
-                           .build();
-    frame.set_ntp_time_ms(ntp_time_ms);
-    return frame;
+    return VideoFrame::Builder()
+        .set_video_frame_buffer(new rtc::RefCountedObject<FakeNV12NativeBuffer>(
+            destruction_event, width, height))
+        .set_ntp_time_ms(ntp_time_ms)
+        .set_timestamp_ms(99)
+        .set_rotation(kVideoRotation_0)
+        .build();
   }
 
   VideoFrame CreateFakeNativeFrame(int64_t ntp_time_ms,
