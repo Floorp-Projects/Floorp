@@ -19,9 +19,9 @@ constexpr float kMinFloatS16Value = -32768.f;
 constexpr float kMaxFloatS16Value = 32767.f;
 constexpr float kMaxAbsFloatS16Value = 32768.0f;
 
-constexpr size_t kFrameDurationMs = 10;
-constexpr size_t kSubFramesInFrame = 20;
-constexpr size_t kMaximalNumberOfSamplesPerChannel = 480;
+constexpr int kFrameDurationMs = 10;
+constexpr int kSubFramesInFrame = 20;
+constexpr int kMaximalNumberOfSamplesPerChannel = 480;
 
 constexpr float kAttackFilterConstant = 0.f;
 
@@ -38,7 +38,7 @@ constexpr float kLimiterThresholdForAgcGainDbfs = -kHeadroomDbfs;
 constexpr float kVadConfidenceThreshold = 0.9f;
 
 // The amount of 'memory' of the Level Estimator. Decides leak factors.
-constexpr size_t kFullBufferSizeMs = 1200;
+constexpr int kFullBufferSizeMs = 1200;
 constexpr float kFullBufferLeakFactor = 1.f - 1.f / kFullBufferSizeMs;
 
 constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
@@ -51,12 +51,12 @@ constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 1;
 constexpr float kDefaultInitialSaturationMarginDb = 20.f;
 constexpr float kDefaultExtraSaturationMarginDb = 2.f;
 
-constexpr size_t kPeakEnveloperSuperFrameLengthMs = 400;
+constexpr int kPeakEnveloperSuperFrameLengthMs = 400;
 static_assert(kFullBufferSizeMs % kPeakEnveloperSuperFrameLengthMs == 0,
               "Full buffer size should be a multiple of super frame length for "
               "optimal Saturation Protector performance.");
 
-constexpr size_t kPeakEnveloperBufferSize =
+constexpr int kPeakEnveloperBufferSize =
     kFullBufferSizeMs / kPeakEnveloperSuperFrameLengthMs + 1;
 
 // This value is 10 ** (-1/20 * frame_size_ms / satproc_attack_ms),
@@ -76,9 +76,9 @@ constexpr float kDecayFilterConstant = 0.9998848773724686f;
 // Number of interpolation points for each region of the limiter.
 // These values have been tuned to limit the interpolated gain curve error given
 // the limiter parameters and allowing a maximum error of +/- 32768^-1.
-constexpr size_t kInterpolatedGainCurveKneePoints = 22;
-constexpr size_t kInterpolatedGainCurveBeyondKneePoints = 10;
-constexpr size_t kInterpolatedGainCurveTotalPoints =
+constexpr int kInterpolatedGainCurveKneePoints = 22;
+constexpr int kInterpolatedGainCurveBeyondKneePoints = 10;
+constexpr int kInterpolatedGainCurveTotalPoints =
     kInterpolatedGainCurveKneePoints + kInterpolatedGainCurveBeyondKneePoints;
 
 }  // namespace webrtc
