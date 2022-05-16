@@ -941,7 +941,7 @@ impl BatchBuilder {
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
-                    EdgeAaSegmentMask::all(),
+                    prim_data.edge_aa_mask,
                     clip_task_address,
                     brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
@@ -1015,6 +1015,7 @@ impl BatchBuilder {
                     blend_mode,
                     batch_features,
                     brush_flags,
+                    common_data.edge_aa_mask,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -1343,7 +1344,7 @@ impl BatchBuilder {
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
-                    EdgeAaSegmentMask::all(),
+                    common_data.edge_aa_mask,
                     clip_task_address,
                     brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
@@ -1463,7 +1464,7 @@ impl BatchBuilder {
                                             bounding_rect,
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
-                                            EdgeAaSegmentMask::empty(),
+                                            EdgeAaSegmentMask::all(),
                                             clip_task_address,
                                             brush_flags,
                                             prim_header_index,
@@ -1548,7 +1549,7 @@ impl BatchBuilder {
                                                 bounding_rect,
                                                 z_id,
                                                 INVALID_SEGMENT_INDEX,
-                                                EdgeAaSegmentMask::empty(),
+                                                EdgeAaSegmentMask::all(),
                                                 clip_task_address,
                                                 brush_flags,
                                                 shadow_prim_header_index,
@@ -1574,7 +1575,7 @@ impl BatchBuilder {
                                             bounding_rect,
                                             z_id_content,
                                             INVALID_SEGMENT_INDEX,
-                                            EdgeAaSegmentMask::empty(),
+                                            EdgeAaSegmentMask::all(),
                                             clip_task_address,
                                             brush_flags,
                                             content_prim_header_index,
@@ -1618,7 +1619,7 @@ impl BatchBuilder {
                                             bounding_rect,
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
-                                            EdgeAaSegmentMask::empty(),
+                                            EdgeAaSegmentMask::all(),
                                             clip_task_address,
                                             brush_flags,
                                             prim_header_index,
@@ -1702,7 +1703,7 @@ impl BatchBuilder {
                                             bounding_rect,
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
-                                            EdgeAaSegmentMask::empty(),
+                                            EdgeAaSegmentMask::all(),
                                             clip_task_address,
                                             brush_flags,
                                             prim_header_index,
@@ -1757,7 +1758,7 @@ impl BatchBuilder {
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
-                                    EdgeAaSegmentMask::empty(),
+                                    EdgeAaSegmentMask::all(),
                                     clip_task_address,
                                     brush_flags,
                                     prim_header_index,
@@ -1817,7 +1818,7 @@ impl BatchBuilder {
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
-                                    EdgeAaSegmentMask::empty(),
+                                    EdgeAaSegmentMask::all(),
                                     clip_task_address,
                                     brush_flags,
                                     prim_header_index,
@@ -1880,7 +1881,7 @@ impl BatchBuilder {
 
                                 let instance = BrushInstance {
                                     segment_index: INVALID_SEGMENT_INDEX,
-                                    edge_flags: EdgeAaSegmentMask::empty(),
+                                    edge_flags: EdgeAaSegmentMask::all(),
                                     clip_task_address,
                                     render_task_address,
                                     brush_flags,
@@ -2034,6 +2035,7 @@ impl BatchBuilder {
                                             blend_mode,
                                             batch_features,
                                             brush_flags,
+                                            EdgeAaSegmentMask::all(),
                                             prim_header_index,
                                             bounding_rect,
                                             transform_kind,
@@ -2084,7 +2086,7 @@ impl BatchBuilder {
                                     bounding_rect,
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
-                                    EdgeAaSegmentMask::empty(),
+                                    EdgeAaSegmentMask::all(),
                                     clip_task_address,
                                     brush_flags,
                                     prim_header_index,
@@ -2154,6 +2156,7 @@ impl BatchBuilder {
                     blend_mode,
                     batch_features,
                     brush_flags,
+                    common_data.edge_aa_mask,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -2211,6 +2214,7 @@ impl BatchBuilder {
                     blend_mode,
                     batch_features,
                     brush_flags,
+                    prim_data.edge_aa_mask,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -2274,7 +2278,7 @@ impl BatchBuilder {
                     0,
                 );
 
-                let prim_common_data = &ctx.data_stores.as_common_data(&prim_instance);
+                let prim_common_data = ctx.data_stores.as_common_data(&prim_instance);
 
                 let blend_mode = if !prim_common_data.opacity.is_opaque ||
                     prim_info.clip_task_index != ClipTaskIndex::INVALID ||
@@ -2315,6 +2319,7 @@ impl BatchBuilder {
                     blend_mode,
                     batch_features,
                     brush_flags,
+                    prim_common_data.edge_aa_mask,
                     prim_header_index,
                     bounding_rect,
                     transform_kind,
@@ -2403,6 +2408,7 @@ impl BatchBuilder {
                         blend_mode,
                         batch_features,
                         brush_flags,
+                        common_data.edge_aa_mask,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2517,7 +2523,6 @@ impl BatchBuilder {
                     } else {
                         Some(prim_data.brush_segments.as_slice())
                     };
-
                     self.add_segmented_prim_to_batch(
                         segments,
                         prim_data.opacity,
@@ -2525,6 +2530,7 @@ impl BatchBuilder {
                         blend_mode,
                         batch_features,
                         brush_flags,
+                        prim_data.edge_aa_mask,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2562,7 +2568,7 @@ impl BatchBuilder {
                             bounding_rect,
                             z_id,
                             INVALID_SEGMENT_INDEX,
-                            EdgeAaSegmentMask::all(),
+                            prim_data.edge_aa_mask,
                             clip_task_address,
                             brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
@@ -2639,6 +2645,7 @@ impl BatchBuilder {
                         blend_mode,
                         batch_features,
                         brush_flags,
+                        common_data.edge_aa_mask,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2678,7 +2685,7 @@ impl BatchBuilder {
                             bounding_rect,
                             z_id,
                             INVALID_SEGMENT_INDEX,
-                            EdgeAaSegmentMask::all(),
+                            prim_data.edge_aa_mask,
                             clip_task_address,
                             brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
@@ -2756,6 +2763,7 @@ impl BatchBuilder {
                         blend_mode,
                         batch_features,
                         brush_flags,
+                        prim_data.edge_aa_mask,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2795,7 +2803,7 @@ impl BatchBuilder {
                             bounding_rect,
                             z_id,
                             INVALID_SEGMENT_INDEX,
-                            EdgeAaSegmentMask::all(),
+                            prim_data.edge_aa_mask,
                             clip_task_address,
                             brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
@@ -2874,6 +2882,7 @@ impl BatchBuilder {
                         blend_mode,
                         batch_features,
                         brush_flags,
+                        prim_data.edge_aa_mask,
                         prim_header_index,
                         bounding_rect,
                         transform_kind,
@@ -2913,7 +2922,7 @@ impl BatchBuilder {
                             bounding_rect,
                             z_id,
                             INVALID_SEGMENT_INDEX,
-                            EdgeAaSegmentMask::all(),
+                            prim_data.edge_aa_mask,
                             clip_task_address,
                             brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
@@ -2927,6 +2936,11 @@ impl BatchBuilder {
     }
 
     /// Add a single segment instance to a batch.
+    ///
+    /// `edge_aa_mask` Specifies the edges that are *allowed* to have anti-aliasing, if and only
+    /// if the segments enable it.
+    /// In other words passing EdgeAaSegmentFlags::all() does not necessarily mean all edges will
+    /// be anti-aliased, only that they could be.
     fn add_segment_to_batch(
         &mut self,
         segment: &BrushSegment,
@@ -2937,6 +2951,7 @@ impl BatchBuilder {
         alpha_blend_mode: BlendMode,
         features: BatchFeatures,
         brush_flags: BrushFlags,
+        edge_aa_mask: EdgeAaSegmentMask,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
         z_id: ZBufferId,
@@ -2978,7 +2993,7 @@ impl BatchBuilder {
                 bounding_rect,
                 z_id,
                 segment_index,
-                segment.edge_flags,
+                segment.edge_flags & edge_aa_mask,
                 clip_task_address,
                 brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION | segment.brush_flags,
                 prim_header_index,
@@ -2988,6 +3003,11 @@ impl BatchBuilder {
     }
 
     /// Add any segment(s) from a brush to batches.
+    ///
+    /// `edge_aa_mask` Specifies the edges that are *allowed* to have anti-aliasing, if and only
+    /// if the segments enable it.
+    /// In other words passing EdgeAaSegmentFlags::all() does not necessarily mean all edges will
+    /// be anti-aliased, only that they could be.
     fn add_segmented_prim_to_batch(
         &mut self,
         brush_segments: Option<&[BrushSegment]>,
@@ -2996,6 +3016,7 @@ impl BatchBuilder {
         blend_mode: BlendMode,
         features: BatchFeatures,
         brush_flags: BrushFlags,
+        edge_aa_mask: EdgeAaSegmentMask,
         prim_header_index: PrimitiveHeaderIndex,
         bounding_rect: &PictureRect,
         transform_kind: TransformedRectKind,
@@ -3023,6 +3044,7 @@ impl BatchBuilder {
                         blend_mode,
                         features,
                         brush_flags,
+                        edge_aa_mask,
                         bounding_rect,
                         transform_kind,
                         z_id,
@@ -3049,6 +3071,7 @@ impl BatchBuilder {
                         blend_mode,
                         features,
                         brush_flags,
+                        edge_aa_mask,
                         bounding_rect,
                         transform_kind,
                         z_id,
@@ -3085,7 +3108,7 @@ impl BatchBuilder {
                     bounding_rect,
                     z_id,
                     INVALID_SEGMENT_INDEX,
-                    EdgeAaSegmentMask::all(),
+                    edge_aa_mask,
                     clip_task_address,
                     brush_flags | BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
