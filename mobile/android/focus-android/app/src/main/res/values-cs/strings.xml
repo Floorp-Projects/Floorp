@@ -502,7 +502,7 @@
 
     <!-- Onboarding: Incognito Description -->
     <!-- Text %s will be replaced with the name of the app (e.g. Focus, Klar) -->
-    <string name="onboarding_incognito_description">%s je prohlížeč zaměřený na soukromí s vestavěnou extra silnou ochranou cookies proti sledování.</string>
+    <string name="onboarding_incognito_description">%s je prohlížeč zaměřený na ochranu soukromí se zabudovanou mimořádně silnou ochranou proti sledování a před cookies.</string>
 
     <!-- Onboarding: History Title -->
     <string name="onboarding_history_title">Prohlížejte bez obav</string>

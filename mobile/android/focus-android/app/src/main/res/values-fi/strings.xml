@@ -683,6 +683,15 @@
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Sijainti</string>
 
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Ilmoitus</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-suojattu sisältö</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Kysy lupaa</string>
+
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Estetty</string>
 
