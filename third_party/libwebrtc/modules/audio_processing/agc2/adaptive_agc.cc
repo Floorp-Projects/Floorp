@@ -58,7 +58,7 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
                     kMaxGainChangePerSecondDb,
                     kMaxOutputNoiseLevelDbfs),
       apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(apm_data_dumper) {
+      noise_level_estimator_(CreateNoiseLevelEstimator(apm_data_dumper)) {
   RTC_DCHECK(apm_data_dumper);
 }
 
@@ -80,7 +80,7 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
           config.adaptive_digital.max_gain_change_db_per_second,
           config.adaptive_digital.max_output_noise_level_dbfs),
       apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(apm_data_dumper) {
+      noise_level_estimator_(CreateNoiseLevelEstimator(apm_data_dumper)) {
   RTC_DCHECK(apm_data_dumper);
   if (!config.adaptive_digital.use_saturation_protector) {
     RTC_LOG(LS_WARNING) << "The saturation protector cannot be disabled.";
@@ -94,7 +94,7 @@ void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
   info.vad_result = vad_.AnalyzeFrame(frame);
   speech_level_estimator_.Update(info.vad_result);
   info.input_level_dbfs = speech_level_estimator_.level_dbfs();
-  info.input_noise_level_dbfs = noise_level_estimator_.Analyze(frame);
+  info.input_noise_level_dbfs = noise_level_estimator_->Analyze(frame);
   info.limiter_envelope_dbfs =
       limiter_envelope > 0 ? FloatS16ToDbfs(limiter_envelope) : -90.0f;
   info.estimate_is_confident = speech_level_estimator_.IsConfident();
