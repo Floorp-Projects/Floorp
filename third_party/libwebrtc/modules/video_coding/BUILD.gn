@@ -992,6 +992,7 @@ if (rtc_include_tests) {
       "session_info_unittest.cc",
       "test/stream_generator.cc",
       "test/stream_generator.h",
+      "timestamp_map_unittest.cc",
       "timing_unittest.cc",
       "unique_timestamp_counter_unittest.cc",
       "utility/decoded_frames_history_unittest.cc",

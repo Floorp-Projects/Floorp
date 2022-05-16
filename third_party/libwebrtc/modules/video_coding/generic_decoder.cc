@@ -93,16 +93,27 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   // callbacks from one call to Decode().
   absl::optional<VCMFrameInformation> frameInfo;
   int timestamp_map_size = 0;
+  int dropped_frames = 0;
   {
     MutexLock lock(&lock_);
+    int initial_timestamp_map_size = _timestampMap.Size();
     frameInfo = _timestampMap.Pop(decodedImage.timestamp());
     timestamp_map_size = _timestampMap.Size();
+    // _timestampMap.Pop() erases all frame upto the specified timestamp and
+    // return the frame info for this timestamp if it exists. Thus, the
+    // difference in the _timestampMap size before and after Pop() will show
+    // internally dropped frames.
+    dropped_frames =
+        initial_timestamp_map_size - timestamp_map_size - (frameInfo ? 1 : 0);
+  }
+
+  if (dropped_frames > 0) {
+    _receiveCallback->OnDroppedFrames(dropped_frames);
   }
 
   if (!frameInfo) {
     RTC_LOG(LS_WARNING) << "Too many frames backed up in the decoder, dropping "
                            "this one.";
-    _receiveCallback->OnDroppedFrames(1);
     return;
   }
 
@@ -197,17 +208,29 @@ void VCMDecodedFrameCallback::OnDecoderImplementationName(
 
 void VCMDecodedFrameCallback::Map(uint32_t timestamp,
                                   const VCMFrameInformation& frameInfo) {
-  MutexLock lock(&lock_);
-  _timestampMap.Add(timestamp, frameInfo);
+  int dropped_frames = 0;
+  {
+    MutexLock lock(&lock_);
+    int initial_size = _timestampMap.Size();
+    _timestampMap.Add(timestamp, frameInfo);
+    // If no frame is dropped, the new size should be |initial_size| + 1
+    dropped_frames = (initial_size + 1) - _timestampMap.Size();
+  }
+  if (dropped_frames > 0) {
+    _receiveCallback->OnDroppedFrames(dropped_frames);
+  }
 }
 
-int32_t VCMDecodedFrameCallback::Pop(uint32_t timestamp) {
-  MutexLock lock(&lock_);
-  if (_timestampMap.Pop(timestamp) == absl::nullopt) {
-    return VCM_GENERAL_ERROR;
+void VCMDecodedFrameCallback::ClearTimestampMap() {
+  int dropped_frames = 0;
+  {
+    MutexLock lock(&lock_);
+    dropped_frames = _timestampMap.Size();
+    _timestampMap.Clear();
   }
-  _receiveCallback->OnDroppedFrames(1);
-  return VCM_OK;
+  if (dropped_frames > 0) {
+    _receiveCallback->OnDroppedFrames(dropped_frames);
+  }
 }
 
 VCMGenericDecoder::VCMGenericDecoder(std::unique_ptr<VideoDecoder> decoder)
@@ -281,11 +304,10 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   if (ret < WEBRTC_VIDEO_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "Failed to decode frame with timestamp "
                         << frame.Timestamp() << ", error code: " << ret;
-    _callback->Pop(frame.Timestamp());
-    return ret;
+    _callback->ClearTimestampMap();
   } else if (ret == WEBRTC_VIDEO_CODEC_NO_OUTPUT) {
-    // No output
-    _callback->Pop(frame.Timestamp());
+    // No output.
+    _callback->ClearTimestampMap();
   }
   return ret;
 }

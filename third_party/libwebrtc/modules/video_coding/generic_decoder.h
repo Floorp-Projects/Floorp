@@ -45,7 +45,7 @@ class VCMDecodedFrameCallback : public DecodedImageCallback {
   void OnDecoderImplementationName(const char* implementation_name);
 
   void Map(uint32_t timestamp, const VCMFrameInformation& frameInfo);
-  int32_t Pop(uint32_t timestamp);
+  void ClearTimestampMap();
 
  private:
   SequenceChecker construction_thread_;
@@ -104,7 +104,6 @@ class VCMGenericDecoder {
 
  private:
   VCMDecodedFrameCallback* _callback;
-  VCMFrameInformation _frameInfos[kDecoderFrameMemoryLength];
   std::unique_ptr<VideoDecoder> decoder_;
   VideoCodecType _codecType;
   const bool _isExternal;
