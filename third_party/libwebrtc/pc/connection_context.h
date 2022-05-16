@@ -120,8 +120,6 @@ class ConnectionContext : public rtc::RefCountInterface {
 
   std::unique_ptr<rtc::BasicPacketSocketFactory> default_socket_factory_
       RTC_GUARDED_BY(signaling_thread_);
-  std::unique_ptr<cricket::MediaEngineInterface> media_engine_
-      RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_;
   // Accessed both on signaling thread and worker thread.
   std::unique_ptr<WebRtcKeyValueConfig> const trials_;

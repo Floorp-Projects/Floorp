@@ -340,6 +340,7 @@ rtc_library("connection_context") {
     "../rtc_base",
     "../rtc_base:checks",
     "../rtc_base:threading",
+    "../rtc_base/task_utils:to_queued_task",
   ]
 }
 
