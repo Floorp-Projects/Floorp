@@ -1,0 +1,31 @@
+# A gradient that can be decomposed into simpler parts with a transform applied,
+# in the four permutations (vertical/horizontal, regular/inversed stops).
+# The goal of this test is that we still get correct antialiasing and no gaps
+# between the gradient segments.
+---
+root:
+  items:
+    - type: stacking-context
+      bounds: [80, 30, 500, 500]
+      transform: rotate-z(10)
+      items:
+      - type: gradient
+        bounds: 0 0 300 300
+        start: 25 100
+        end: 175 100
+        stops: [0.0, red, 1.0, blue]
+      - type: gradient
+        bounds: 310 50 300 300
+        start: 175 100
+        end: 25 100
+        stops: [0.0, red, 1.0, blue]
+      - type: gradient
+        bounds: 0 310 300 300
+        start: 100 175
+        end: 100 25
+        stops: [0.0, red, 1.0, blue]
+      - type: gradient
+        bounds: 310 360 300 300
+        start: 100 25
+        end: 100 175
+        stops: [0.0, red, 1.0, blue]
