@@ -233,6 +233,41 @@ RTC_OBJC_EXPORT
  */
 @property(nonatomic, assign) BOOL offerExtmapAllowMixed;
 
+/**
+ * Defines the interval applied to ALL candidate pairs
+ * when ICE is strongly connected, and it overrides the
+ * default value of this interval in the ICE implementation;
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceCheckIntervalStrongConnectivity;
+
+/**
+ * Defines the counterpart for ALL pairs when ICE is
+ * weakly connected, and it overrides the default value of
+ * this interval in the ICE implementation
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceCheckIntervalWeakConnectivity;
+
+/**
+ * The min time period for which a candidate pair must wait for response to
+ * connectivity checks before it becomes unwritable. This parameter
+ * overrides the default value in the ICE implementation if set.
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceUnwritableTimeout;
+
+/**
+ * The min number of connectivity checks that a candidate pair must sent
+ * without receiving response before it becomes unwritable. This parameter
+ * overrides the default value in the ICE implementation if set.
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceUnwritableMinChecks;
+
+/**
+ * The min time period for which a candidate pair must wait for response to
+ * connectivity checks it becomes inactive. This parameter overrides the
+ * default value in the ICE implementation if set.
+ */
+@property(nonatomic, copy, nullable) NSNumber *iceInactiveTimeout;
+
 - (instancetype)init;
 
 @end
