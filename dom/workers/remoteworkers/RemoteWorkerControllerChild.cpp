@@ -12,7 +12,7 @@
 #include "nsError.h"
 #include "nsThreadUtils.h"
 
-#include "ServiceWorkerPrivateImpl.h"
+#include "ServiceWorkerPrivate.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
@@ -102,7 +102,7 @@ IPCResult RemoteWorkerControllerChild::RecvSetServiceWorkerSkipWaitingFlag(
   AssertIsOnMainThread();
 
   if (mObserver) {
-    static_cast<ServiceWorkerPrivateImpl*>(mObserver.get())
+    static_cast<ServiceWorkerPrivate*>(mObserver.get())
         ->SetSkipWaitingFlag()
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [resolve = std::move(aResolve)](
