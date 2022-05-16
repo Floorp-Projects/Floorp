@@ -11,6 +11,8 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_AGC_H_
 
+#include <memory>
+
 #include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
 #include "modules/audio_processing/agc2/adaptive_mode_level_estimator.h"
 #include "modules/audio_processing/agc2/noise_level_estimator.h"
@@ -42,7 +44,7 @@ class AdaptiveAgc {
   VadLevelAnalyzer vad_;
   AdaptiveDigitalGainApplier gain_applier_;
   ApmDataDumper* const apm_data_dumper_;
-  NoiseLevelEstimator noise_level_estimator_;
+  std::unique_ptr<NoiseLevelEstimator> noise_level_estimator_;
 };
 
 }  // namespace webrtc

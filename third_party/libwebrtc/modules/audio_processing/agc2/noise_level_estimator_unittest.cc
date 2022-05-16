@@ -31,7 +31,7 @@ constexpr int kFramesPerSecond = 100;
 float RunEstimator(rtc::FunctionView<float()> sample_generator,
                    int sample_rate_hz) {
   ApmDataDumper data_dumper(0);
-  NoiseLevelEstimator estimator(&data_dumper);
+  auto estimator = CreateNoiseLevelEstimator(&data_dumper);
   const int samples_per_channel =
       rtc::CheckedDivExact(sample_rate_hz, kFramesPerSecond);
   VectorFloatFrame signal(1, samples_per_channel, 0.0f);
@@ -41,9 +41,9 @@ float RunEstimator(rtc::FunctionView<float()> sample_generator,
     for (int j = 0; j < samples_per_channel; ++j) {
       frame_view.channel(0)[j] = sample_generator();
     }
-    estimator.Analyze(frame_view);
+    estimator->Analyze(frame_view);
   }
-  return estimator.Analyze(signal.float_frame_view());
+  return estimator->Analyze(signal.float_frame_view());
 }
 
 class NoiseEstimatorParametrization : public ::testing::TestWithParam<int> {
