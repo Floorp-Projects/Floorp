@@ -620,6 +620,7 @@ webrtc_fuzzer_test("dcsctp_packet_fuzzer") {
     "../../net/dcsctp/packet:sctp_packet",
     "../../rtc_base:rtc_base_approved",
   ]
+  seed_corpus = "corpora/sctp-packet-corpus"
 }
 
 webrtc_fuzzer_test("rtp_header_parser_fuzzer") {
