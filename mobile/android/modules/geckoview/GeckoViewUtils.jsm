@@ -365,23 +365,6 @@ var GeckoViewUtils = {
     return null;
   },
 
-  getActiveDispatcherAndWindow() {
-    const bc = Services.focus.activeBrowsingContext;
-    const win = bc ? bc.window : null; // WON'T WORK FOR OOP IFRAMES!
-    let dispatcher = this.getDispatcherForWindow(win);
-    if (dispatcher) {
-      return [dispatcher, win];
-    }
-
-    for (const win of Services.wm.getEnumerator(/* windowType */ null)) {
-      dispatcher = this.getDispatcherForWindow(win);
-      if (dispatcher) {
-        return [dispatcher, win];
-      }
-    }
-    return [null, null];
-  },
-
   /**
    * Add logging functions to the specified scope that forward to the given
    * Log.jsm logger. Currently "debug" and "warn" functions are supported. To
