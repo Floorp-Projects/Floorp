@@ -109,7 +109,6 @@ class AudioReceiveStream final : public webrtc::AudioReceiveStream,
   AudioState* audio_state() const;
 
   SequenceChecker worker_thread_checker_;
-  SequenceChecker module_process_thread_checker_;
   webrtc::AudioReceiveStream::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   SourceTracker source_tracker_;

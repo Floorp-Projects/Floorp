@@ -129,8 +129,6 @@ AudioReceiveStream::AudioReceiveStream(
   RTC_DCHECK(audio_state_);
   RTC_DCHECK(channel_receive_);
 
-  module_process_thread_checker_.Detach();
-
   RTC_DCHECK(receiver_controller);
   RTC_DCHECK(packet_router);
   // Configure bandwidth estimation.
@@ -327,14 +325,10 @@ uint32_t AudioReceiveStream::id() const {
 }
 
 absl::optional<Syncable::Info> AudioReceiveStream::GetInfo() const {
-  RTC_DCHECK_RUN_ON(&module_process_thread_checker_);
-  absl::optional<Syncable::Info> info = channel_receive_->GetSyncInfo();
-
-  if (!info)
-    return absl::nullopt;
-
-  info->current_delay_ms = channel_receive_->GetDelayEstimate();
-  return info;
+  // TODO(bugs.webrtc.org/11993): This is called via RtpStreamsSynchronizer,
+  // expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  return channel_receive_->GetSyncInfo();
 }
 
 bool AudioReceiveStream::GetPlayoutRtpTimestamp(uint32_t* rtp_timestamp,
@@ -352,7 +346,9 @@ void AudioReceiveStream::SetEstimatedPlayoutNtpTimestampMs(
 }
 
 bool AudioReceiveStream::SetMinimumPlayoutDelay(int delay_ms) {
-  RTC_DCHECK_RUN_ON(&module_process_thread_checker_);
+  // TODO(bugs.webrtc.org/11993): This is called via RtpStreamsSynchronizer,
+  // expect to be called on the network thread.
+  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   return channel_receive_->SetMinimumPlayoutDelay(delay_ms);
 }
 
