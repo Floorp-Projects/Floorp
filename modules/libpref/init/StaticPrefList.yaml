@@ -5073,6 +5073,23 @@
   value: 6000
   mirror: always
 
+#ifdef MOZ_ENABLE_DBUS
+# Whether to use Geoclue location provider (if available on the system).
+- name: geo.provider.use_geoclue
+  type: bool
+  value: false
+  mirror: always
+
+# Whether to always provide high location accuracy, even if site
+# doesn't actually request this level of accuracy.
+# Almost no site correctly requests high accuracy so force it by default
+# for compatibility with other geolocation providers.
+- name: geo.provider.geoclue.always_high_accuracy
+  type: bool
+  value: true
+  mirror: always
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "gfx."
 #---------------------------------------------------------------------------
