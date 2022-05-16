@@ -12281,6 +12281,10 @@ blogspot.vn
 // Submitted by Niels Martignene <hello@goupile.fr>
 goupile.fr
 
+// Government of the Netherlands: https://www.government.nl
+// Submitted by <domeinnaam@minaz.nl>
+gov.nl
+
 // Group 53, LLC : https://www.group53.com
 // Submitted by Tyler Todd <noc@nova53.net>
 awsmppl.com
@@ -12357,7 +12361,6 @@ ltd.ng
 ngo.ng
 edu.scot
 sch.so
-org.yt
 
 // HostyHosting (hostyhosting.com)
 hostyhosting.io
@@ -13389,6 +13392,12 @@ rocky.page
 спб.рус
 я.рус
 
+// Salesforce.com, Inc. https://salesforce.com/
+// Submitted by Michael Biven <mbiven@salesforce.com>
+builder.code.com
+dev-builder.code.com
+stg-builder.code.com
+
 // Sandstorm Development Group, Inc. : https://sandcats.io/
 // Submitted by Asheesh Laroia <asheesh@sandstorm.io>
 sandcats.io
@@ -13811,6 +13820,15 @@ hk.com
 hk.org
 ltd.hk
 inc.hk
+
+// UNIVERSAL DOMAIN REGISTRY : https://www.udr.org.yt/
+// see also: whois -h whois.udr.org.yt help
+// Submitted by Atanunu Igbunuroghene <publicsuffixlist@udr.org.yt>
+name.pm
+sch.tf
+biz.wf
+sch.wf
+org.yt
 
 // United Gameserver GmbH : https://united-gameserver.de
 // Submitted by Stefan Schwarz <sysadm@united-gameserver.de>
