@@ -18,6 +18,7 @@ if (!build_with_chromium) {
       ":quality_analyzing_video_decoder",
       ":quality_analyzing_video_encoder",
       ":single_process_encoded_image_data_injector",
+      ":video_frame_tracking_id_injector",
     ]
     if (rtc_include_tests) {
       deps += [
@@ -37,6 +38,7 @@ if (!build_with_chromium) {
         ":multi_head_queue_test",
         ":peer_connection_e2e_smoke_test",
         ":single_process_encoded_image_data_injector_unittest",
+        ":video_frame_tracking_id_injector_unittest",
       ]
     }
   }
@@ -84,6 +86,22 @@ if (!build_with_chromium) {
       "../../../rtc_base:checks",
       "../../../rtc_base:criticalsection",
       "../../../rtc_base/synchronization:mutex",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+  }
+
+  rtc_library("video_frame_tracking_id_injector") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [
+      "analyzer/video/video_frame_tracking_id_injector.cc",
+      "analyzer/video/video_frame_tracking_id_injector.h",
+    ]
+
+    deps = [
+      ":encoded_image_data_injector_api",
+      "../../../api/video:encoded_image",
+      "../../../rtc_base:checks",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
   }
@@ -388,6 +406,18 @@ if (!build_with_chromium) {
       ]
       deps = [
         ":single_process_encoded_image_data_injector",
+        "../../../api/video:encoded_image",
+        "../../../rtc_base:rtc_base_approved",
+        "../../../test:test_support",
+      ]
+    }
+
+    rtc_library("video_frame_tracking_id_injector_unittest") {
+      testonly = true
+      sources =
+          [ "analyzer/video/video_frame_tracking_id_injector_unittest.cc" ]
+      deps = [
+        ":video_frame_tracking_id_injector",
         "../../../api/video:encoded_image",
         "../../../rtc_base:rtc_base_approved",
         "../../../test:test_support",
