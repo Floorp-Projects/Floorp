@@ -138,6 +138,10 @@ config("common_inherited_config") {
     defines += [ "WEBRTC_ENABLE_AVX2" ]
   }
 
+  if (rtc_enable_win_wgc) {
+    defines += [ "RTC_ENABLE_WIN_WGC" ]
+  }
+
   # Some tests need to declare their own trace event handlers. If this define is
   # not set, the first time TRACE_EVENT_* is called it will store the return
   # value for the current handler in an static variable, so that subsequent
