@@ -18,8 +18,10 @@ import androidx.compose.material.Card
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -49,10 +51,20 @@ fun ListItemTabLarge(
     onClick: (() -> Unit)? = null
 ) {
     ListItemTabSurface(imageUrl, onClick) {
-        TabTitle(text = title, maxLines = 3)
+        PrimaryText(
+            text = title,
+            fontSize = 14.sp,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 3,
+        )
 
         if (caption != null) {
-            TabSubtitle(text = caption)
+            SecondaryText(
+                text = caption,
+                fontSize = 12.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
         }
     }
 }

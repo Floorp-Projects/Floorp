@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 
@@ -47,9 +49,24 @@ fun TabSubtitleWithInterdot(
 
     Layout(
         content = {
-            TabSubtitle(text = firstText)
-            TabSubtitle(text = " \u00b7 ")
-            TabSubtitle(text = secondText)
+            SecondaryText(
+                text = firstText,
+                fontSize = 12.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+            SecondaryText(
+                text = " \u00b7 ",
+                fontSize = 12.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
+            SecondaryText(
+                text = secondText,
+                fontSize = 12.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1,
+            )
         }
     ) { items, constraints ->
 

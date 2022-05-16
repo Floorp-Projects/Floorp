@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -44,9 +45,9 @@ import org.mozilla.fenix.compose.ListItemTabLarge
 import org.mozilla.fenix.compose.ListItemTabLargePlaceholder
 import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
-import org.mozilla.fenix.compose.TabSubtitle
+import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
-import org.mozilla.fenix.compose.TabTitle
+import org.mozilla.fenix.compose.SecondaryText
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import kotlin.math.roundToInt
@@ -83,15 +84,30 @@ fun PocketStory(
         imageUrl = imageUrl,
         onClick = { onStoryClick(story) },
         title = {
-            TabTitle(text = story.title, maxLines = 2)
+            PrimaryText(
+                text = story.title,
+                fontSize = 14.sp,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
+            )
         },
         subtitle = {
             if (isValidPublisher && isValidTimeToRead) {
                 TabSubtitleWithInterdot(story.publisher, "${story.timeToRead} min")
             } else if (isValidPublisher) {
-                TabSubtitle(story.publisher)
+                SecondaryText(
+                    text = story.publisher,
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
             } else if (isValidTimeToRead) {
-                TabSubtitle("${story.timeToRead} min")
+                SecondaryText(
+                    text = "${story.timeToRead} min",
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
             }
         }
     )
