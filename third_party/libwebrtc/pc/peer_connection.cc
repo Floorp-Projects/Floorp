@@ -2190,17 +2190,22 @@ absl::optional<std::string> PeerConnection::sctp_transport_name() const {
 }
 
 cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
+  RTC_DCHECK_RUN_ON(network_thread());
+  if (!network_thread_safety_->alive())
+    return {};
   cricket::CandidateStatsList candidate_states_list;
-  network_thread()->Invoke<void>(RTC_FROM_HERE, [this, &candidate_states_list] {
-    port_allocator_->GetCandidateStatsFromPooledSessions(
-        &candidate_states_list);
-  });
+  port_allocator_->GetCandidateStatsFromPooledSessions(&candidate_states_list);
   return candidate_states_list;
 }
 
 std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
     const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
+  RTC_DCHECK_RUN_ON(network_thread());
+  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
+
+  if (!network_thread_safety_->alive())
+    return {};
+
   std::map<std::string, std::string> transport_names_by_mid;
   for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
@@ -2214,10 +2219,10 @@ std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
                                ->content_name()] =
         data_channel_controller_.rtp_data_channel()->transport_name();
   }
-  if (data_channel_controller_.data_channel_transport()) {
-    absl::optional<std::string> transport_name = sctp_transport_name();
-    RTC_DCHECK(transport_name);
-    transport_names_by_mid[*sctp_mid_s_] = *transport_name;
+  if (sctp_mid_n_) {
+    cricket::DtlsTransportInternal* dtls_transport =
+        transport_controller_->GetDtlsTransport(*sctp_mid_n_);
+    transport_names_by_mid[*sctp_mid_n_] = dtls_transport->transport_name();
   }
   return transport_names_by_mid;
 }
@@ -2225,13 +2230,11 @@ std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
 std::map<std::string, cricket::TransportStats>
 PeerConnection::GetTransportStatsByNames(
     const std::set<std::string>& transport_names) {
-  if (!network_thread()->IsCurrent()) {
-    return network_thread()
-        ->Invoke<std::map<std::string, cricket::TransportStats>>(
-            RTC_FROM_HERE,
-            [&] { return GetTransportStatsByNames(transport_names); });
-  }
   RTC_DCHECK_RUN_ON(network_thread());
+  if (!network_thread_safety_->alive())
+    return {};
+
+  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   std::map<std::string, cricket::TransportStats> transport_stats_by_name;
   for (const std::string& transport_name : transport_names) {
     cricket::TransportStats transport_stats;
@@ -2250,7 +2253,8 @@ PeerConnection::GetTransportStatsByNames(
 bool PeerConnection::GetLocalCertificate(
     const std::string& transport_name,
     rtc::scoped_refptr<rtc::RTCCertificate>* certificate) {
-  if (!certificate) {
+  RTC_DCHECK_RUN_ON(network_thread());
+  if (!network_thread_safety_->alive() || !certificate) {
     return false;
   }
   *certificate = transport_controller_->GetLocalCertificate(transport_name);
@@ -2259,6 +2263,7 @@ bool PeerConnection::GetLocalCertificate(
 
 std::unique_ptr<rtc::SSLCertChain> PeerConnection::GetRemoteSSLCertChain(
     const std::string& transport_name) {
+  RTC_DCHECK_RUN_ON(network_thread());
   return transport_controller_->GetRemoteSSLCertChain(transport_name);
 }
 
@@ -2427,7 +2432,8 @@ bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {
   data_channel_controller_.set_data_channel_transport(transport);
   data_channel_controller_.SetupDataChannelTransport_n();
   sctp_mid_n_ = mid;
-  auto dtls_transport = transport_controller_->GetDtlsTransport(mid);
+  cricket::DtlsTransportInternal* dtls_transport =
+      transport_controller_->GetDtlsTransport(mid);
   if (dtls_transport) {
     signaling_thread()->PostTask(
         ToQueuedTask(signaling_thread_safety_.flag(),
@@ -2710,7 +2716,8 @@ void PeerConnection::ReportTransportStats() {
   }
 
   if (sctp_mid_n_) {
-    auto dtls_transport = transport_controller_->GetDtlsTransport(*sctp_mid_n_);
+    cricket::DtlsTransportInternal* dtls_transport =
+        transport_controller_->GetDtlsTransport(*sctp_mid_n_);
     if (dtls_transport) {
       media_types_by_transport_name[dtls_transport->transport_name()].insert(
           cricket::MEDIA_TYPE_DATA);
