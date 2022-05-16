@@ -28,7 +28,7 @@ namespace dcsctp {
 namespace tlv_trait_impl {
 // Logging functions, only to be used by TLVTrait, which is a templated class.
 void ReportInvalidSize(size_t actual_size, size_t expected_size);
-void ReportInvalidType(int acutal_type, int expected_type);
+void ReportInvalidType(int actual_type, int expected_type);
 void ReportInvalidFixedLengthField(size_t value, size_t expected);
 void ReportInvalidVariableLengthField(size_t value, size_t available);
 void ReportInvalidPadding(size_t padding_bytes);
