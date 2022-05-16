@@ -527,7 +527,7 @@ class Native(object):
         "utf8string": ("const nsACString&", "nsACString&", "nsCString"),
         "cstring": ("const nsACString&", "nsACString&", "nsCString"),
         "astring": ("const nsAString&", "nsAString&", "nsString"),
-        "jsval": ("JS::HandleValue", "JS::MutableHandleValue", "JS::Value"),
+        "jsval": ("JS::Handle<JS::Value>", "JS::MutableHandle<JS::Value>", "JS::Value"),
         "promise": "::mozilla::dom::Promise",
     }
 
