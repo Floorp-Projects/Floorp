@@ -8909,9 +8909,21 @@
 # using the IPC actor within the Utility process rather than the RDD process.
 # When it is set to true, then the utility process will take precedence over RDD
 # to perform audio decoding.
+# TODO: Android: Bug 1767930
+# TODO: OpenBSD: Bug 1769033
 - name: media.utility-process.enabled
   type: RelaxedAtomicBool
+#if defined(XP_WIN)
+  value: true
+#elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_OPENBSD)
   value: false
+#else
+  value: false
+#endif
   mirror: always
 
 #ifdef MOZ_FFMPEG
