@@ -4597,6 +4597,9 @@ Checker.prototype = {
         }
         if ("AppUpdatePin" in policies) {
           updatePin = policies.AppUpdatePin;
+
+          // Scalar ID: update.version_pin
+          AUSTLMY.pingPinPolicy(updatePin);
         }
       }
     }

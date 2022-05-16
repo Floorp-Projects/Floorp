@@ -644,5 +644,13 @@ var AUSTLMY = {
       Cu.reportError(e);
     }
   },
+
+  pingPinPolicy: function UT_pingPinPolicy(updatePin) {
+    try {
+      Services.telemetry.scalarSet("update.version_pin", updatePin);
+    } catch (e) {
+      Cu.reportError(e);
+    }
+  },
 };
 Object.freeze(AUSTLMY);
