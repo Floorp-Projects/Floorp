@@ -551,14 +551,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       printData->mPrintSettings->SetPrintSession(printSession);
-    } else {
-      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-          printSession->GetRemotePrintJob();
-      if (remotePrintJob) {
-        // If we have a RemotePrintJob add it to the print progress listeners,
-        // so it can forward to the parent.
-        printData->mPrintProgressListeners.AppendElement(remotePrintJob);
-      }
+    } else if (mRemotePrintJob) {
+      // If we have a RemotePrintJob add it to the print progress listeners,
+      // so it can forward to the parent.
+      printData->mPrintProgressListeners.AppendElement(mRemotePrintJob);
     }
   }
 
@@ -566,7 +562,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
       XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
   nsCOMPtr<nsIDeviceContextSpec> devspec;
   if (printingViaParent) {
-    devspec = new nsDeviceContextSpecProxy();
+    devspec = new nsDeviceContextSpecProxy(mRemotePrintJob);
   } else {
     devspec = do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -601,7 +597,10 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 //---------------------------------------------------------------------------------
 nsresult nsPrintJob::Print(Document* aSourceDoc,
                            nsIPrintSettings* aPrintSettings,
+                           RemotePrintJobChild* aRemotePrintJob,
                            nsIWebProgressListener* aWebProgressListener) {
+  mRemotePrintJob = aRemotePrintJob;
+
   // If we have a print preview document, use that instead of the original
   // mDocument. That way animated images etc. get printed using the same state
   // as in print preview.
@@ -2272,16 +2271,9 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
     mPagePrintTimer =
         new nsPagePrintTimer(this, mDocViewerPrint, doc, printPageDelay);
 
-    nsCOMPtr<nsIPrintSession> printSession;
-    nsresult rv =
-        mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
-    if (NS_SUCCEEDED(rv) && printSession) {
-      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-          printSession->GetRemotePrintJob();
-      if (remotePrintJob) {
-        remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
-        remotePrintJob->SetPrintJob(this);
-      }
+    if (mRemotePrintJob) {
+      mRemotePrintJob->SetPagePrintTimer(mPagePrintTimer);
+      mRemotePrintJob->SetPrintJob(this);
     }
   }
 

@@ -24,6 +24,9 @@ class PresShell;
 namespace dom {
 class WindowGlobalChild;
 } // namespace dom
+namespace layout {
+class RemotePrintJobChild;
+} // namespace layout
 } // namespace mozilla
 %}
 
@@ -34,6 +37,7 @@ class WindowGlobalChild;
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 [ptr] native Encoding(const mozilla::Encoding);
 [ptr] native PresShellPtr(mozilla::PresShell);
+[ptr] native RemotePrintJobChildPtr(mozilla::layout::RemotePrintJobChild);
 [ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
 
 [scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
@@ -205,7 +209,8 @@ interface nsIContentViewer : nsISupports
   /**
    * Sets the print settings for print / print-previewing a subdocument.
    */
-  [can_run_script] void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings);
+  [can_run_script] void setPrintSettingsForSubdocument(in nsIPrintSettings aPrintSettings,
+                                                       in RemotePrintJobChildPtr aRemotePrintJob);
 
   /**
    * Get the history entry that this viewer will save itself into when

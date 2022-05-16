@@ -27,7 +27,9 @@ using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecProxy, nsIDeviceContextSpec)
 
-nsDeviceContextSpecProxy::nsDeviceContextSpecProxy() = default;
+nsDeviceContextSpecProxy::nsDeviceContextSpecProxy(
+    RemotePrintJobChild* aRemotePrintJob)
+    : mRemotePrintJob(aRemotePrintJob) {}
 nsDeviceContextSpecProxy::~nsDeviceContextSpecProxy() = default;
 
 NS_IMETHODIMP
@@ -61,7 +63,6 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
     return NS_ERROR_FAILURE;
   }
 
-  mRemotePrintJob = mPrintSession->GetRemotePrintJob();
   if (!mRemotePrintJob) {
     NS_WARNING("We can't print via the parent without a RemotePrintJobChild.");
     return NS_ERROR_FAILURE;
