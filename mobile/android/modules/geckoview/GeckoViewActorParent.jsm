@@ -19,15 +19,37 @@ class GeckoViewActorParent extends JSWindowActorParent {
   }
 
   get window() {
-    return this.browser.ownerGlobal;
+    const { browsingContext } = this;
+    // If this is a chrome actor, the chrome window will be at
+    // browsingContext.window.
+    if (!browsingContext.isContent && browsingContext.window) {
+      return browsingContext.window;
+    }
+    return this.browser?.ownerGlobal;
   }
 
   get eventDispatcher() {
-    return this.window.moduleManager.eventDispatcher;
+    return this.window?.moduleManager.eventDispatcher;
   }
 
   receiveMessage(aMessage) {
+    if (!this.window) {
+      // If we have no window, it means that this browsingContext has been
+      // destroyed already and there's nothing to do here for us.
+      debug`receiveMessage window destroyed ${aMessage.name} ${aMessage.data?.type}`;
+      return null;
+    }
+
+    switch (aMessage.name) {
+      case "DispatcherMessage":
+        return this.eventDispatcher.sendRequest(aMessage.data);
+      case "DispatcherQuery":
+        return this.eventDispatcher.sendRequestForResult(aMessage.data);
+    }
+
     // By default messages are forwarded to the module.
-    this.window.moduleManager.onMessageFromActor(this.name, aMessage);
+    return this.window.moduleManager.onMessageFromActor(this.name, aMessage);
   }
 }
+
+const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewActorParent");
