@@ -373,7 +373,6 @@ void UtilityProcessManager::DestroyProcess(SandboxingKind aSandbox) {
 
   RefPtr<ProcessFields> p = GetProcess(aSandbox);
   if (!p) {
-    MOZ_CRASH("Cannot get no ProcessFields");
     return;
   }
 
