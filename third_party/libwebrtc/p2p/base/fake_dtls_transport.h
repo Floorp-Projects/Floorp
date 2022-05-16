@@ -146,9 +146,6 @@ class FakeDtlsTransport : public DtlsTransportInternal {
         rtc::SSLFingerprint(alg, rtc::MakeArrayView(digest, digest_len));
     return true;
   }
-  bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version) override {
-    return true;
-  }
   bool SetDtlsRole(rtc::SSLRole role) override {
     dtls_role_ = std::move(role);
     return true;
@@ -159,12 +156,6 @@ class FakeDtlsTransport : public DtlsTransportInternal {
     }
     *role = *dtls_role_;
     return true;
-  }
-  const webrtc::CryptoOptions& crypto_options() const override {
-    return crypto_options_;
-  }
-  void SetCryptoOptions(const webrtc::CryptoOptions& crypto_options) {
-    crypto_options_ = crypto_options;
   }
   bool SetLocalCertificate(
       const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) override {
@@ -303,7 +294,6 @@ class FakeDtlsTransport : public DtlsTransportInternal {
   absl::optional<rtc::SSLRole> dtls_role_;
   int crypto_suite_ = rtc::SRTP_AES128_CM_SHA1_80;
   absl::optional<int> ssl_cipher_suite_;
-  webrtc::CryptoOptions crypto_options_;
 
   DtlsTransportState dtls_state_ = DTLS_TRANSPORT_NEW;
 

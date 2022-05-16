@@ -18,6 +18,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "api/crypto/crypto_options.h"
 #include "api/dtls_transport_interface.h"
 #include "api/scoped_refptr.h"
@@ -28,7 +29,6 @@
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/ssl_stream_adapter.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace cricket {
 
@@ -63,8 +63,6 @@ enum PacketFlags {
 class DtlsTransportInternal : public rtc::PacketTransportInternal {
  public:
   ~DtlsTransportInternal() override;
-
-  virtual const webrtc::CryptoOptions& crypto_options() const = 0;
 
   virtual DtlsTransportState dtls_state() const = 0;
 
@@ -109,7 +107,10 @@ class DtlsTransportInternal : public rtc::PacketTransportInternal {
                                     const uint8_t* digest,
                                     size_t digest_len) = 0;
 
-  virtual bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version) = 0;
+  ABSL_DEPRECATED("Set the max version via construction.")
+  bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version) {
+    return true;
+  }
 
   // Expose the underneath IceTransport.
   virtual IceTransportInternal* ice_transport() = 0;

@@ -101,13 +101,14 @@ class DtlsTransport : public DtlsTransportInternal {
   //
   // |event_log| is an optional RtcEventLog for logging state changes. It should
   // outlive the DtlsTransport.
-  explicit DtlsTransport(IceTransportInternal* ice_transport,
-                         const webrtc::CryptoOptions& crypto_options,
-                         webrtc::RtcEventLog* event_log);
+  DtlsTransport(
+      IceTransportInternal* ice_transport,
+      const webrtc::CryptoOptions& crypto_options,
+      webrtc::RtcEventLog* event_log,
+      rtc::SSLProtocolVersion max_version = rtc::SSL_PROTOCOL_DTLS_12);
 
   ~DtlsTransport() override;
 
-  const webrtc::CryptoOptions& crypto_options() const override;
   DtlsTransportState dtls_state() const override;
   const std::string& transport_name() const override;
   int component() const override;
@@ -141,8 +142,6 @@ class DtlsTransport : public DtlsTransportInternal {
                  int flags) override;
 
   bool GetOption(rtc::Socket::Option opt, int* value) override;
-
-  bool SetSslMaxProtocolVersion(rtc::SSLProtocolVersion version) override;
 
   // Find out which TLS version was negotiated
   bool GetSslVersionBytes(int* version) const override;
@@ -191,7 +190,7 @@ class DtlsTransport : public DtlsTransportInternal {
     const absl::string_view RECEIVING_ABBREV[2] = {"_", "R"};
     const absl::string_view WRITABLE_ABBREV[2] = {"_", "W"};
     rtc::StringBuilder sb;
-    sb << "DtlsTransport[" << transport_name_ << "|" << component_ << "|"
+    sb << "DtlsTransport[" << transport_name() << "|" << component_ << "|"
        << RECEIVING_ABBREV[receiving()] << WRITABLE_ABBREV[writable()] << "]";
     return sb.Release();
   }
@@ -224,20 +223,18 @@ class DtlsTransport : public DtlsTransportInternal {
 
   webrtc::SequenceChecker thread_checker_;
 
-  std::string transport_name_;
-  int component_;
+  const int component_;
   DtlsTransportState dtls_state_ = DTLS_TRANSPORT_NEW;
   // Underlying ice_transport, not owned by this class.
-  IceTransportInternal* ice_transport_;
+  IceTransportInternal* const ice_transport_;
   std::unique_ptr<rtc::SSLStreamAdapter> dtls_;  // The DTLS stream
   StreamInterfaceChannel*
       downward_;  // Wrapper for ice_transport_, owned by dtls_.
-  std::vector<int> srtp_ciphers_;  // SRTP ciphers to use with DTLS.
+  const std::vector<int> srtp_ciphers_;  // SRTP ciphers to use with DTLS.
   bool dtls_active_ = false;
   rtc::scoped_refptr<rtc::RTCCertificate> local_certificate_;
   absl::optional<rtc::SSLRole> dtls_role_;
-  rtc::SSLProtocolVersion ssl_max_version_;
-  webrtc::CryptoOptions crypto_options_;
+  const rtc::SSLProtocolVersion ssl_max_version_;
   rtc::Buffer remote_fingerprint_value_;
   std::string remote_fingerprint_algorithm_;
 
