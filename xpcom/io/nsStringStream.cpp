@@ -129,18 +129,20 @@ class nsStringInputStream final : public nsIStringInputStream,
  private:
   ~nsStringInputStream() = default;
 
-  size_t Length() const { return mSource ? mSource->Data().Length() : 0; }
+  size_t Length() const REQUIRES(mMon) {
+    return mSource ? mSource->Data().Length() : 0;
+  }
 
-  size_t LengthRemaining() const { return Length() - mOffset; }
+  size_t LengthRemaining() const REQUIRES(mMon) { return Length() - mOffset; }
 
-  void Clear() { mSource = nullptr; }
+  void Clear() REQUIRES(mMon) { mSource = nullptr; }
 
-  bool Closed() { return !mSource; }
+  bool Closed() REQUIRES(mMon) { return !mSource; }
 
-  RefPtr<StreamBufferSource> mSource;
-  size_t mOffset = 0;
+  RefPtr<StreamBufferSource> mSource GUARDED_BY(mMon);
+  size_t mOffset GUARDED_BY(mMon) = 0;
 
-  mozilla::ReentrantMonitor mMon MOZ_UNANNOTATED{"nsStringInputStream"};
+  mutable mozilla::ReentrantMonitor mMon{"nsStringInputStream"};
 };
 
 nsresult nsStringInputStream::Init(nsCString&& aString) {
@@ -519,6 +521,8 @@ nsStringInputStream::Clone(nsIInputStream** aCloneOut) {
   ReentrantMonitorAutoEnter lock(mMon);
 
   RefPtr<nsStringInputStream> ref = new nsStringInputStream();
+  // Nothing else can access this yet, but suppress static analysis warnings
+  ReentrantMonitorAutoEnter reflock(ref->mMon);
   if (mSource && !mSource->Owning()) {
     auto data = mSource->Data();
     nsresult rv = ref->SetData(data.Elements(), data.Length());

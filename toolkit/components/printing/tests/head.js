@@ -288,7 +288,7 @@ class PrintHelper {
       ).fallbackPaperList;
     }
 
-    let defaultSettings = PSSVC.newPrintSettings;
+    let defaultSettings = PSSVC.createNewPrintSettings();
     defaultSettings.printerName = name;
     defaultSettings.toFileName = "";
     defaultSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;

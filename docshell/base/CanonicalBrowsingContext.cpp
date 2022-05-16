@@ -706,7 +706,8 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
     }
 
     ErrorResult rv;
-    outerWindow->Print(aPrintSettings, listener,
+    outerWindow->Print(aPrintSettings,
+                       /* aRemotePrintJob = */ nullptr, listener,
                        /* aDocShellToCloneInto = */ nullptr,
                        nsGlobalWindowOuter::IsPreview::No,
                        nsGlobalWindowOuter::IsForWindowDotPrint::No,
@@ -733,7 +734,8 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
   nsresult rv;
   nsCOMPtr<nsIPrintSettings> printSettings = aPrintSettings;
   if (!printSettings) {
-    rv = printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+    rv =
+        printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       promise->MaybeReject(ErrorResult(rv));
       return promise.forget();

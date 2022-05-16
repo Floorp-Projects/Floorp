@@ -1193,7 +1193,7 @@ var PrintSettingsViewProxy = {
       printerInfo.defaultSettings = basePrinterInfo.defaultSettings;
     } else if (printerName == PrintUtils.SAVE_TO_PDF_PRINTER) {
       // The Mozilla PDF pseudo-printer has no actual nsIPrinter implementation
-      printerInfo.defaultSettings = PSSVC.newPrintSettings;
+      printerInfo.defaultSettings = PSSVC.createNewPrintSettings();
       printerInfo.defaultSettings.printerName = printerName;
       printerInfo.defaultSettings.toFileName = "";
       printerInfo.defaultSettings.outputFormat =

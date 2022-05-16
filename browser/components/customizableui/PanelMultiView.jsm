@@ -1810,6 +1810,9 @@ var PanelView = class extends AssociatedToNode {
         return false;
       }
       let context = contextNode.getAttribute("context");
+      if (!context) {
+        return false;
+      }
       let popup = this.document.getElementById(context);
       return popup && popup.state == "open";
     };
