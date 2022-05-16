@@ -1682,14 +1682,12 @@ var TelemetrySendImpl = {
     }
 
     const exeName =
-      AppConstants.MOZ_APP_NAME +
-      (AppConstants.platform === "win" ? ".exe" : "");
+      AppConstants.platform === "win" ? "pingsender.exe" : "pingsender";
 
     let exe = Services.dirsvc.get("GreBinD", Ci.nsIFile);
     exe.append(exeName);
 
-    let params = ["--backgroundtask", "pingsender"];
-    params.push(...pings.flatMap(ping => [ping.url, ping.path]));
+    let params = pings.flatMap(ping => [ping.url, ping.path]);
     let process = Cc["@mozilla.org/process/util;1"].createInstance(
       Ci.nsIProcess
     );
