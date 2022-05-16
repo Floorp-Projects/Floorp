@@ -77,7 +77,7 @@ struct TwoByteTypeConfig {
   static constexpr int kTypeSizeInBytes = 2;
   static constexpr int kType = 31337;
   static constexpr size_t kHeaderSize = 8;
-  static constexpr int kVariableLengthAlignment = 4;
+  static constexpr int kVariableLengthAlignment = 2;
 };
 
 class TwoByteChunk : public TLVTrait<TwoByteTypeConfig> {
@@ -120,6 +120,13 @@ TEST(TlvDataTest, CanReadTwoByteTypeTlvs) {
   EXPECT_EQ(reader->Load32<4>(), 0x01020304U);
   EXPECT_THAT(reader->variable_data(),
               ElementsAre(0x05, 0x06, 0x07, 0x08, 0xDE, 0xAD, 0xBE, 0xEF));
+}
+
+TEST(TlvDataTest, CanHandleInvalidLengthSmallerThanFixedSize) {
+  // Has 'length=6', which is below the kHeaderSize of 8.
+  uint8_t data[] = {0x7A, 0x69, 0x00, 0x06, 0x01, 0x02, 0x03, 0x04};
+
+  EXPECT_FALSE(TwoByteChunk::Parse(data).has_value());
 }
 
 }  // namespace
