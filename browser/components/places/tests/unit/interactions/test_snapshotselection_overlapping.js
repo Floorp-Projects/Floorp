@@ -64,7 +64,7 @@ add_task(async function test_enable_overlapping() {
   await Snapshots.add({ url: TEST_URL3 });
   await Snapshots.add({ url: TEST_URL4 });
 
-  selector.setUrl(TEST_URL1);
+  selector.updateDetailsAndRebuild({ url: TEST_URL1 });
   snapshots = await snapshotPromise;
 
   // Only snapshots with overlapping interactions should be selected
