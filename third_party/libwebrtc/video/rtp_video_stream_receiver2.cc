@@ -117,6 +117,7 @@ std::unique_ptr<NackModule2> MaybeConstructNackModule(
   if (config.rtp.nack.rtp_history_ms == 0)
     return nullptr;
 
+  // TODO(bugs.webrtc.org/12420): pass rtp_history_ms to the nack module.
   return std::make_unique<NackModule2>(current_queue, clock, nack_sender,
                                        keyframe_request_sender);
 }

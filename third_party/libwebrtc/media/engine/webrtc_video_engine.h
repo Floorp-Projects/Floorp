@@ -273,6 +273,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     webrtc::UlpfecConfig ulpfec;
     int flexfec_payload_type;  // -1 if absent.
     int rtx_payload_type;      // -1 if absent.
+    int rtx_time;              // -1 if absent.
   };
 
   struct ChangedSendParameters {
@@ -455,7 +456,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     void SetFeedbackParameters(bool lntf_enabled,
                                bool nack_enabled,
                                bool transport_cc_enabled,
-                               webrtc::RtcpMode rtcp_mode);
+                               webrtc::RtcpMode rtcp_mode,
+                               int rtx_time);
     void SetRecvParameters(const ChangedRecvParameters& recv_params);
 
     void OnFrame(const webrtc::VideoFrame& frame) override;

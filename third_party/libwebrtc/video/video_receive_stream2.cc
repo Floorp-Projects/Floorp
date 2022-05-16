@@ -186,6 +186,23 @@ constexpr int kInactiveStreamThresholdMs = 600000;  //  10 minutes.
 
 }  // namespace
 
+int DetermineMaxWaitForFrame(const VideoReceiveStream::Config& config,
+                             bool is_keyframe) {
+  // A (arbitrary) conversion factor between the remotely signalled NACK buffer
+  // time (if not present defaults to 1000ms) and the maximum time we wait for a
+  // remote frame. Chosen to not change existing defaults when using not
+  // rtx-time.
+  const int conversion_factor = 3;
+
+  if (config.rtp.nack.rtp_history_ms > 0 &&
+      conversion_factor * config.rtp.nack.rtp_history_ms < kMaxWaitForFrameMs) {
+    return is_keyframe ? config.rtp.nack.rtp_history_ms
+                       : conversion_factor * config.rtp.nack.rtp_history_ms;
+  }
+  return is_keyframe ? VideoReceiveStream2::kMaxWaitForKeyFrameMs
+                     : kMaxWaitForFrameMs;
+}
+
 VideoReceiveStream2::VideoReceiveStream2(
     TaskQueueFactory* task_queue_factory,
     TaskQueueBase* current_queue,
@@ -226,8 +243,8 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  config_.frame_decryptor,
                                  config_.frame_transformer),
       rtp_stream_sync_(current_queue, this),
-      max_wait_for_keyframe_ms_(kMaxWaitForKeyFrameMs),
-      max_wait_for_frame_ms_(kMaxWaitForFrameMs),
+      max_wait_for_keyframe_ms_(DetermineMaxWaitForFrame(config, true)),
+      max_wait_for_frame_ms_(DetermineMaxWaitForFrame(config, false)),
       low_latency_renderer_enabled_("enabled", true),
       low_latency_renderer_include_predecode_buffer_("include_predecode_buffer",
                                                      true),
