@@ -421,7 +421,7 @@ jobs:
 - job: results_edge_canary
   displayName: 'all tests: Edge Canary'
   condition: |
-    or(eq(variables['Build.SourceBranch'], 'refs/heads/epochs/three_hourly'),
+    or(eq(variables['Build.SourceBranch'], 'refs/heads/epochs/weekly'),
        eq(variables['Build.SourceBranch'], 'refs/heads/triggers/edge_canary'),
        and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_canary']))
   strategy:
