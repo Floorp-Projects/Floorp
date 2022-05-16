@@ -232,14 +232,12 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
     static_cast<DesktopCaptureImpl*>(obj)->process();
   };
   void process();
-  void ProcessIter();
 
  private:
   // This is created on the main thread and accessed on both the main thread
   // and the capturer thread. It is created prior to the capturer thread
   // starting and is destroyed after it is stopped.
   std::unique_ptr<DesktopCapturer> desktop_capturer_cursor_composer_;
-  bool cursor_composer_started_ = false;
 
   std::unique_ptr<EventWrapper> time_event_;
 #if defined(_WIN32)
