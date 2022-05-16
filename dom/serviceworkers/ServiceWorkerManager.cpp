@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerPrivateImpl.h"
 
 #include <algorithm>
 
@@ -718,7 +719,7 @@ void ServiceWorkerManager::MaybeFinishShutdown() {
   mActor = nullptr;
 
   // This also submits final telemetry
-  ServiceWorkerPrivate::RunningShutdown();
+  ServiceWorkerPrivateImpl::RunningShutdown();
 }
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final

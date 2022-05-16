@@ -28,9 +28,8 @@ class NavigationPreloadManager final : public nsISupports,
 
   static bool IsValidHeader(const nsACString& aHeader);
 
-  NavigationPreloadManager(
-      nsCOMPtr<nsIGlobalObject>&& aGlobal,
-      RefPtr<ServiceWorkerRegistration>& aServiceWorkerRegistration);
+  NavigationPreloadManager(nsCOMPtr<nsIGlobalObject>&& aGlobal,
+                           RefPtr<ServiceWorkerRegistration::Inner>& aInner);
 
   // Webidl binding
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
@@ -55,7 +54,7 @@ class NavigationPreloadManager final : public nsISupports,
   already_AddRefed<Promise> SetEnabled(bool aEnabled, ErrorResult& aError);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<ServiceWorkerRegistration> mServiceWorkerRegistration;
+  RefPtr<ServiceWorkerRegistration::Inner> mInner;
 };
 
 }  // namespace mozilla::dom

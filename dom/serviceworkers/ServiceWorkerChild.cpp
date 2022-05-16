@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerChild.h"
-#include "ServiceWorker.h"
+#include "RemoteServiceWorkerImpl.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
@@ -46,13 +46,13 @@ RefPtr<ServiceWorkerChild> ServiceWorkerChild::Create() {
 ServiceWorkerChild::ServiceWorkerChild()
     : mOwner(nullptr), mTeardownStarted(false) {}
 
-void ServiceWorkerChild::SetOwner(ServiceWorker* aOwner) {
+void ServiceWorkerChild::SetOwner(RemoteServiceWorkerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner);
   mOwner = aOwner;
 }
 
-void ServiceWorkerChild::RevokeOwner(ServiceWorker* aOwner) {
+void ServiceWorkerChild::RevokeOwner(RemoteServiceWorkerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
   mOwner = nullptr;
