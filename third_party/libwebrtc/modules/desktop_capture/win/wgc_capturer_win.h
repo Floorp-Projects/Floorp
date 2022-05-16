@@ -13,6 +13,7 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
+
 #include <map>
 #include <memory>
 
@@ -65,7 +66,7 @@ class ScreenEnumerator final : public SourceEnumerator {
   ~ScreenEnumerator() override = default;
 
   bool FindAllSources(DesktopCapturer::SourceList* sources) override {
-    return webrtc::GetMonitorList(sources);
+    return webrtc::GetScreenList(sources);
   }
 };
 
