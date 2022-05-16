@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import argparse
 import json
 import logging
@@ -100,7 +102,7 @@ def import_command(prog, command, props):
     script = getattr(mod, props["script"])
     if props["parser"] is not None:
         parser = getattr(mod, props["parser"])()
-        parser.prog = "%s %s" % (os.path.basename(prog), command)
+        parser.prog = f"{os.path.basename(prog)} {command}"
     else:
         parser = None
 

@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from io import BytesIO
 
 import pytest
