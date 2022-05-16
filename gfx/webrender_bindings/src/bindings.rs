@@ -2873,6 +2873,7 @@ pub extern "C" fn wr_dp_push_rect(
     clip: LayoutRect,
     is_backface_visible: bool,
     force_antialiasing: bool,
+    is_checkerboard: bool,
     parent: &WrSpaceAndClipChain,
     color: ColorF,
 ) {
@@ -2881,6 +2882,9 @@ pub extern "C" fn wr_dp_push_rect(
     let mut prim_info = common_item_properties_for_rect(state, clip, is_backface_visible, parent);
     if force_antialiasing {
         prim_info.flags |= PrimitiveFlags::ANTIALISED;
+    }
+    if is_checkerboard {
+        prim_info.flags |= PrimitiveFlags::CHECKERBOARD_BACKGROUND;
     }
 
     state.frame_builder.dl_builder.push_rect(&prim_info, rect, color);

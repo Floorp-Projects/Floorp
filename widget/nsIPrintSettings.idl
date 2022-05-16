@@ -20,7 +20,6 @@ struct PrintSettingsInitializer;
 native nsNativeIntMargin(nsIntMargin);
 [ref] native nsNativeIntMarginRef(nsIntMargin);
 
-interface nsIPrintSession;
 interface nsIOutputStream;
 
 /**
@@ -212,11 +211,6 @@ interface nsIPrintSettings : nsISupports
    * delta in sizes to allow for rounding differences.
    */
   bool equivalentTo(in nsIPrintSettings aPrintSettings);
-
-  /**
-   * Data Members
-   */
-  [noscript] attribute nsIPrintSession printSession; /* We hold a weak reference */
 
   /**
    * The edge measurements define the positioning of the headers

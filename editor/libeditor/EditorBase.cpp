@@ -171,7 +171,7 @@ template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorRawDOMPoint& aPointAtCaret);
 
-EditorBase::EditorBase()
+EditorBase::EditorBase(EditorType aEditorType)
     : mEditActionData(nullptr),
       mPlaceholderName(nullptr),
       mModCount(0),
@@ -191,9 +191,10 @@ EditorBase::EditorBase()
       mIsInEditSubAction(false),
       mHidingCaret(false),
       mSpellCheckerDictionaryUpdated(true),
-      mIsHTMLEditorClass(false) {
+      mIsHTMLEditorClass(aEditorType == EditorType::HTML) {
 #ifdef XP_WIN
-  if (!mCaretStyle) {
+  if (!mCaretStyle && !IsTextEditor()) {
+    // Wordpad-like caret behavior.
     mCaretStyle = 1;
   }
 #endif  // #ifdef XP_WIN

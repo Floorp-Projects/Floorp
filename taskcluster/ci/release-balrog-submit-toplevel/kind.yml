@@ -47,6 +47,7 @@ jobs:
                     beta: ["firefox-beta-cdntest", "firefox-beta-localtest"]
                     release(-rc)?: ["firefox-release-cdntest", "firefox-release-localtest"]
                     esr91: ["firefox-esr91-cdntest", "firefox-esr91-localtest"]
+                    esr102: ["firefox-esr102-cdntest", "firefox-esr102-localtest"]
                     default: []
             platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
         treeherder:

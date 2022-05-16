@@ -455,7 +455,7 @@ class nsAStreamCopier : public nsIInputStreamCallback,
     return PostContinuationEvent_Locked();
   }
 
-  nsresult PostContinuationEvent_Locked() {
+  nsresult PostContinuationEvent_Locked() REQUIRES(mLock) {
     nsresult rv = NS_OK;
     if (mEventInProcess) {
       mEventIsPending = true;
@@ -476,17 +476,17 @@ class nsAStreamCopier : public nsIInputStreamCallback,
   nsCOMPtr<nsIAsyncInputStream> mAsyncSource;
   nsCOMPtr<nsIAsyncOutputStream> mAsyncSink;
   nsCOMPtr<nsIEventTarget> mTarget;
-  Mutex mLock MOZ_UNANNOTATED;
+  Mutex mLock;
   nsAsyncCopyCallbackFun mCallback;
   nsAsyncCopyProgressFun mProgressCallback;
   void* mClosure;
   uint32_t mChunkSize;
-  bool mEventInProcess;
-  bool mEventIsPending;
+  bool mEventInProcess GUARDED_BY(mLock);
+  bool mEventIsPending GUARDED_BY(mLock);
   bool mCloseSource;
   bool mCloseSink;
-  bool mCanceled;
-  nsresult mCancelStatus;
+  bool mCanceled GUARDED_BY(mLock);
+  nsresult mCancelStatus GUARDED_BY(mLock);
 
   // virtual since subclasses call superclass Release()
   virtual ~nsAStreamCopier() = default;

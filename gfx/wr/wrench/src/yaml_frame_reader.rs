@@ -2024,7 +2024,6 @@ impl YamlFrameReader {
         let raster_space = yaml["raster-space"]
             .as_raster_space()
             .unwrap_or(RasterSpace::Screen);
-        let is_backdrop_root = yaml["backdrop-root"].as_bool().unwrap_or(false);
         let is_blend_container = yaml["blend-container"].as_bool().unwrap_or(false);
 
         if is_root {
@@ -2045,7 +2044,6 @@ impl YamlFrameReader {
         let filter_primitives = yaml["filter-primitives"].as_vec_filter_primitive().unwrap_or_default();
 
         let mut flags = StackingContextFlags::empty();
-        flags.set(StackingContextFlags::IS_BACKDROP_ROOT, is_backdrop_root);
         flags.set(StackingContextFlags::IS_BLEND_CONTAINER, is_blend_container);
 
         dl.push_stacking_context(

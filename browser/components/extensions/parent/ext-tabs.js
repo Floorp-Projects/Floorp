@@ -1382,7 +1382,7 @@ this.tabs = class extends ExtensionAPIPersistent {
                 let psService = Cc[
                   "@mozilla.org/gfx/printsettings-service;1"
                 ].getService(Ci.nsIPrintSettingsService);
-                let printSettings = psService.newPrintSettings;
+                let printSettings = psService.createNewPrintSettings();
 
                 printSettings.printerName = "";
                 printSettings.isInitializedFromPrinter = true;

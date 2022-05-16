@@ -12,7 +12,6 @@
 #include "nsIPrinterList.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
-#include "nsIPrintSession.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSize.h"
 
@@ -176,13 +175,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 NS_IMETHODIMP
 nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
                                                    nsIPrintSettings* settings) {
-  nsCOMPtr<nsIPrintSession> session;
-  nsresult rv = settings->GetPrintSession(getter_AddRefs(session));
-  if (NS_SUCCEEDED(rv) && session) {
-    session->SetRemotePrintJob(
-        static_cast<RemotePrintJobChild*>(data.remotePrintJobChild()));
-  }
-
   settings->SetPageRanges(data.pageRanges());
 
   settings->SetEdgeTop(data.edgeTop());
@@ -774,7 +766,7 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
 NS_IMETHODIMP
 nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
     nsIPrintSettings** aPrintSettings) {
-  nsresult rv = GetNewPrintSettings(aPrintSettings);
+  nsresult rv = CreateNewPrintSettings(aPrintSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIPrintSettings* settings = *aPrintSettings;
@@ -791,7 +783,7 @@ nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
 }
 
 NS_IMETHODIMP
-nsPrintSettingsService::GetNewPrintSettings(
+nsPrintSettingsService::CreateNewPrintSettings(
     nsIPrintSettings** aNewPrintSettings) {
   return _CreatePrintSettings(aNewPrintSettings);
 }
