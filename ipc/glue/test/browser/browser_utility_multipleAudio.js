@@ -8,9 +8,13 @@ async function runTest(expectUtility) {
     `Running tests with decoding from Utility or RDD: expectUtility=${expectUtility}`
   );
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["media.utility-process.enabled", expectUtility]],
-  });
+  // Utility should now be the default, so dont toggle the pref unless we test
+  // RDD
+  if (!expectUtility) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["media.utility-process.enabled", expectUtility]],
+    });
+  }
 
   for (let src of [
     "small-shot.ogg",
