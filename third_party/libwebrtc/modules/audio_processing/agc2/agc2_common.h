@@ -15,20 +15,20 @@
 
 namespace webrtc {
 
-constexpr float kMinFloatS16Value = -32768.f;
-constexpr float kMaxFloatS16Value = 32767.f;
+constexpr float kMinFloatS16Value = -32768.0f;
+constexpr float kMaxFloatS16Value = 32767.0f;
 constexpr float kMaxAbsFloatS16Value = 32768.0f;
 
 constexpr int kFrameDurationMs = 10;
 constexpr int kSubFramesInFrame = 20;
 constexpr int kMaximalNumberOfSamplesPerChannel = 480;
 
-constexpr float kAttackFilterConstant = 0.f;
+constexpr float kAttackFilterConstant = 0.0f;
 
 // Adaptive digital gain applier settings below.
-constexpr float kHeadroomDbfs = 1.f;
-constexpr float kMaxGainDb = 30.f;
-constexpr float kInitialAdaptiveDigitalGainDb = 8.f;
+constexpr float kHeadroomDbfs = 1.0f;
+constexpr float kMaxGainDb = 30.0f;
+constexpr float kInitialAdaptiveDigitalGainDb = 8.0f;
 // At what limiter levels should we start decreasing the adaptive digital gain.
 constexpr float kLimiterThresholdForAgcGainDbfs = -kHeadroomDbfs;
 
@@ -39,17 +39,18 @@ constexpr float kVadConfidenceThreshold = 0.9f;
 
 // The amount of 'memory' of the Level Estimator. Decides leak factors.
 constexpr int kFullBufferSizeMs = 1200;
-constexpr float kFullBufferLeakFactor = 1.f - 1.f / kFullBufferSizeMs;
+constexpr float kFullBufferLeakFactor = 1.0f - 1.0f / kFullBufferSizeMs;
 
-constexpr float kInitialSpeechLevelEstimateDbfs = -30.f;
+constexpr float kInitialSpeechLevelEstimateDbfs = -30.0f;
 
 // Robust VAD probability and speech decisions.
-constexpr float kDefaultSmoothedVadProbabilityAttack = 1.f;
+constexpr int kDefaultVadRnnResetPeriodMs = 1500;
+constexpr float kDefaultSmoothedVadProbabilityAttack = 1.0f;
 constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 1;
 
 // Saturation Protector settings.
-constexpr float kDefaultInitialSaturationMarginDb = 20.f;
-constexpr float kDefaultExtraSaturationMarginDb = 2.f;
+constexpr float kDefaultInitialSaturationMarginDb = 20.0f;
+constexpr float kDefaultExtraSaturationMarginDb = 2.0f;
 
 constexpr int kPeakEnveloperSuperFrameLengthMs = 400;
 static_assert(kFullBufferSizeMs % kPeakEnveloperSuperFrameLengthMs == 0,

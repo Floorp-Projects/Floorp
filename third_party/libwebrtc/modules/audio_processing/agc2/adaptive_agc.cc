@@ -30,8 +30,8 @@ void DumpDebugData(const AdaptiveDigitalGainApplier::FrameInfo& info,
 }
 
 constexpr int kGainApplierAdjacentSpeechFramesThreshold = 1;
-constexpr float kMaxGainChangePerSecondDb = 3.f;
-constexpr float kMaxOutputNoiseLevelDbfs = -50.f;
+constexpr float kMaxGainChangePerSecondDb = 3.0f;
+constexpr float kMaxOutputNoiseLevelDbfs = -50.0f;
 
 // Detects the available CPU features and applies any kill-switches.
 AvailableCpuFeatures GetAllowedCpuFeatures(
@@ -71,7 +71,8 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
               .level_estimator_adjacent_speech_frames_threshold,
           config.adaptive_digital.initial_saturation_margin_db,
           config.adaptive_digital.extra_saturation_margin_db),
-      vad_(config.adaptive_digital.vad_probability_attack,
+      vad_(config.adaptive_digital.vad_reset_period_ms,
+           config.adaptive_digital.vad_probability_attack,
            GetAllowedCpuFeatures(config.adaptive_digital)),
       gain_applier_(
           apm_data_dumper,
@@ -95,7 +96,7 @@ void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
   info.input_level_dbfs = speech_level_estimator_.level_dbfs();
   info.input_noise_level_dbfs = noise_level_estimator_.Analyze(frame);
   info.limiter_envelope_dbfs =
-      limiter_envelope > 0 ? FloatS16ToDbfs(limiter_envelope) : -90.f;
+      limiter_envelope > 0 ? FloatS16ToDbfs(limiter_envelope) : -90.0f;
   info.estimate_is_confident = speech_level_estimator_.IsConfident();
   DumpDebugData(info, *apm_data_dumper_);
   gain_applier_.Process(info, frame);
