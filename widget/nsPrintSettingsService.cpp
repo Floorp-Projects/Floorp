@@ -12,7 +12,6 @@
 #include "nsIPrinterList.h"
 #include "nsReadableUtils.h"
 #include "nsPrintSettingsImpl.h"
-#include "nsIPrintSession.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSize.h"
 
@@ -176,13 +175,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 NS_IMETHODIMP
 nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
                                                    nsIPrintSettings* settings) {
-  nsCOMPtr<nsIPrintSession> session;
-  nsresult rv = settings->GetPrintSession(getter_AddRefs(session));
-  if (NS_SUCCEEDED(rv) && session) {
-    session->SetRemotePrintJob(
-        static_cast<RemotePrintJobChild*>(data.remotePrintJobChild()));
-  }
-
   settings->SetPageRanges(data.pageRanges());
 
   settings->SetEdgeTop(data.edgeTop());
