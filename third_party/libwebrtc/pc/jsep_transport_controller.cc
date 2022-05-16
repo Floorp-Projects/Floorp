@@ -153,11 +153,7 @@ rtc::scoped_refptr<SctpTransport> JsepTransportController::GetSctpTransport(
 }
 
 void JsepTransportController::SetIceConfig(const cricket::IceConfig& config) {
-  if (!network_thread_->IsCurrent()) {
-    network_thread_->Invoke<void>(RTC_FROM_HERE, [&] { SetIceConfig(config); });
-    return;
-  }
-
+  RTC_DCHECK_RUN_ON(network_thread_);
   ice_config_ = config;
   for (auto& dtls : GetDtlsTransports()) {
     dtls->ice_transport()->SetIceConfig(ice_config_);
@@ -233,11 +229,6 @@ bool JsepTransportController::SetLocalCertificate(
 rtc::scoped_refptr<rtc::RTCCertificate>
 JsepTransportController::GetLocalCertificate(
     const std::string& transport_name) const {
-  if (!network_thread_->IsCurrent()) {
-    return network_thread_->Invoke<rtc::scoped_refptr<rtc::RTCCertificate>>(
-        RTC_FROM_HERE, [&] { return GetLocalCertificate(transport_name); });
-  }
-
   RTC_DCHECK_RUN_ON(network_thread_);
 
   const cricket::JsepTransport* t = GetJsepTransportByName(transport_name);
@@ -250,10 +241,6 @@ JsepTransportController::GetLocalCertificate(
 std::unique_ptr<rtc::SSLCertChain>
 JsepTransportController::GetRemoteSSLCertChain(
     const std::string& transport_name) const {
-  if (!network_thread_->IsCurrent()) {
-    return network_thread_->Invoke<std::unique_ptr<rtc::SSLCertChain>>(
-        RTC_FROM_HERE, [&] { return GetRemoteSSLCertChain(transport_name); });
-  }
   RTC_DCHECK_RUN_ON(network_thread_);
 
   // Get the certificate from the RTP transport's DTLS handshake. Should be
