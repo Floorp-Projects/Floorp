@@ -360,14 +360,13 @@ bool ChannelManager::has_channels() const {
 
 bool ChannelManager::StartAecDump(webrtc::FileWrapper file,
                                   int64_t max_size_bytes) {
-  return worker_thread_->Invoke<bool>(RTC_FROM_HERE, [&] {
-    return media_engine_->voice().StartAecDump(std::move(file), max_size_bytes);
-  });
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  return media_engine_->voice().StartAecDump(std::move(file), max_size_bytes);
 }
 
 void ChannelManager::StopAecDump() {
-  worker_thread_->Invoke<void>(RTC_FROM_HERE,
-                               [&] { media_engine_->voice().StopAecDump(); });
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  media_engine_->voice().StopAecDump();
 }
 
 }  // namespace cricket

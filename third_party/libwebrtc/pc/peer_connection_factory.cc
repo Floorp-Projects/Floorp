@@ -73,8 +73,8 @@ CreateModularPeerConnectionFactory(
   // Verify that the invocation and the initialization ended up agreeing on the
   // thread.
   RTC_DCHECK_RUN_ON(pc_factory->signaling_thread());
-  return PeerConnectionFactoryProxy::Create(pc_factory->signaling_thread(),
-                                            pc_factory);
+  return PeerConnectionFactoryProxy::Create(
+      pc_factory->signaling_thread(), pc_factory->worker_thread(), pc_factory);
 }
 
 // Static
@@ -176,12 +176,12 @@ PeerConnectionFactory::CreateAudioSource(const cricket::AudioOptions& options) {
 }
 
 bool PeerConnectionFactory::StartAecDump(FILE* file, int64_t max_size_bytes) {
-  RTC_DCHECK(signaling_thread()->IsCurrent());
+  RTC_DCHECK_RUN_ON(worker_thread());
   return channel_manager()->StartAecDump(FileWrapper(file), max_size_bytes);
 }
 
 void PeerConnectionFactory::StopAecDump() {
-  RTC_DCHECK(signaling_thread()->IsCurrent());
+  RTC_DCHECK_RUN_ON(worker_thread());
   channel_manager()->StopAecDump();
 }
 
