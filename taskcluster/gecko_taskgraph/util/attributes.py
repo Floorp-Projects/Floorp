@@ -21,6 +21,7 @@ RELEASE_PROJECTS = {
     "comm-central",
     "comm-beta",
     "comm-esr91",
+    "comm-esr102",
     "oak",
 }
 
