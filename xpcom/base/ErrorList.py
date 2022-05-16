@@ -1372,3 +1372,27 @@ use super::nsresult;
 
     for error, val in errors.items():
         output.write("pub const {}: nsresult = nsresult(0x{:X});\n".format(error, val))
+
+
+def gen_jinja(output, input_filename):
+    # This is used to generate Java code for error lists, and can be expanded to
+    # other required contexts in the future if desired.
+    from jinja2 import Environment, FileSystemLoader, StrictUndefined
+    import os
+
+    # FileSystemLoader requires the path to the directory containing templates,
+    # not the file name of the template itself.
+    (path, leaf) = os.path.split(input_filename)
+    env = Environment(
+        loader=FileSystemLoader(path, encoding="utf-8"),
+        undefined=StrictUndefined,
+    )
+    tpl = env.get_template(leaf)
+
+    context = {
+        "MODULE_BASE_OFFSET": MODULE_BASE_OFFSET,
+        "modules": ((mod, val.num) for mod, val in modules.items()),
+        "errors": errors.items(),
+    }
+
+    tpl.stream(context).dump(output, encoding="utf-8")

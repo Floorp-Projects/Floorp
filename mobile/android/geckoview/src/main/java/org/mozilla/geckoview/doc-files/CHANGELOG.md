@@ -18,12 +18,15 @@ exclude: true
   ([bug 1499635]({{bugzilla}}1499635))
 - Deprecated [`onLocationChange(2)`][102.3], please use [`onLocationChange(3)`][102.4].
 - Added [`GeckoSession.setPriorityHint`][102.5] function to set the session to either high priority or default.
+- [`WebRequestError.ERROR_HTTPS_ONLY`][102.6] now has error category
+  `ERROR_CATEGORY_NETWORK` rather than `ERROR_CATEGORY_SECURITY`.
 
 [102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
 [102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
 [102.3]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String)
 [102.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
 [102.5]: {{javadoc_uri}}/GeckoSession.html#setPriorityHint(int)
+[102.6]: {{javadoc_uri}}/WebRequestError.html#ERROR_HTTPS_ONLY
 
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
