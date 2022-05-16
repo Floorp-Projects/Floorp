@@ -141,6 +141,7 @@ class PrintPreviewResultInfo;
 using namespace mozilla;
 using namespace mozilla::dom;
 
+using mozilla::layout::RemotePrintJobChild;
 using PrintPreviewResolver =
     std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
 
@@ -2898,6 +2899,7 @@ nsresult nsDocViewerFocusListener::HandleEvent(Event* aEvent) {
 
 NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
+                        RemotePrintJobChild* aRemotePrintJob,
                         nsIWebProgressListener* aWebProgressListener) {
   if (NS_WARN_IF(!mContainer)) {
     PR_PL(("Container was destroyed yet we are still trying to use it!"));
@@ -2932,7 +2934,8 @@ nsDocumentViewer::Print(nsIPrintSettings* aPrintSettings,
   }
 
   mPrintJob = printJob;
-  rv = printJob->Print(mDocument, aPrintSettings, aWebProgressListener);
+  rv = printJob->Print(mDocument, aPrintSettings, aRemotePrintJob,
+                       aWebProgressListener);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     OnDonePrinting();
   }
@@ -3394,7 +3397,7 @@ void nsDocumentViewer::OnDonePrinting() {
 }
 
 NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
-    nsIPrintSettings* aPrintSettings) {
+    nsIPrintSettings* aPrintSettings, RemotePrintJobChild* aRemotePrintJob) {
 #ifdef NS_PRINTING
   {
     nsAutoScriptBlocker scriptBlocker;
@@ -3414,7 +3417,8 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    RefPtr<nsIDeviceContextSpec> devspec = new nsDeviceContextSpecProxy();
+    RefPtr<nsDeviceContextSpecProxy> devspec =
+        new nsDeviceContextSpecProxy(aRemotePrintJob);
     nsresult rv =
         devspec->Init(nullptr, aPrintSettings, /* aIsPrintPreview = */ true);
     NS_ENSURE_SUCCESS(rv, rv);

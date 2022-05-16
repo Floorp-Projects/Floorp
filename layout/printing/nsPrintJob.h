@@ -7,6 +7,7 @@
 #define nsPrintJob_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCOMPtr.h"
@@ -52,6 +53,7 @@ class nsPrintJob final : public nsIWebProgressListener,
   using Document = mozilla::dom::Document;
   using PrintPreviewResolver =
       std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
+  using RemotePrintJobChild = mozilla::layout::RemotePrintJobChild;
 
  public:
   nsPrintJob();
@@ -97,6 +99,7 @@ class nsPrintJob final : public nsIWebProgressListener,
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   Print(Document* aSourceDoc, nsIPrintSettings* aPrintSettings,
+        RemotePrintJobChild* aRemotePrintJob,
         nsIWebProgressListener* aWebProgressListener);
 
   /**
@@ -253,6 +256,9 @@ class nsPrintJob final : public nsIWebProgressListener,
   RefPtr<nsPrintData> mPrtPreview;
 
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
+
+  // Only set if this nsPrintJob was created for a real print.
+  RefPtr<RemotePrintJobChild> mRemotePrintJob;
 
   // If the code that initiates a print preview passes a PrintPreviewResolver
   // (a std::function) to be notified of the final sheet/page counts (once

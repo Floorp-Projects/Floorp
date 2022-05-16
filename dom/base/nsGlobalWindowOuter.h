@@ -122,6 +122,9 @@ class CacheStorage;
 }  // namespace cache
 class IDBFactory;
 }  // namespace dom
+namespace layout {
+class RemotePrintJobChild;
+}  // namespace layout
 }  // namespace mozilla
 
 extern already_AddRefed<nsIScriptTimeoutHandler> NS_CreateJSTimeoutHandler(
@@ -588,8 +591,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   enum class IsPreview : bool { No, Yes };
   enum class IsForWindowDotPrint : bool { No, Yes };
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Print(
-      nsIPrintSettings*, nsIWebProgressListener*, nsIDocShell*, IsPreview,
-      IsForWindowDotPrint, PrintPreviewResolver&&, mozilla::ErrorResult&);
+      nsIPrintSettings*, mozilla::layout::RemotePrintJobChild* aRemotePrintJob,
+      nsIWebProgressListener*, nsIDocShell*, IsPreview, IsForWindowDotPrint,
+      PrintPreviewResolver&&, mozilla::ErrorResult&);
   mozilla::dom::Selection* GetSelectionOuter();
   already_AddRefed<mozilla::dom::Selection> GetSelection() override;
   nsScreen* GetScreen();
