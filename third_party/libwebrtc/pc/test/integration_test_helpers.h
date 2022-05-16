@@ -1355,10 +1355,12 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
     // when Send() is called it will hit a seg fault.
     if (caller_) {
       caller_->set_signaling_message_receiver(nullptr);
+      caller_->pc()->Close();
       delete SetCallerPcWrapperAndReturnCurrent(nullptr);
     }
     if (callee_) {
       callee_->set_signaling_message_receiver(nullptr);
+      callee_->pc()->Close();
       delete SetCalleePcWrapperAndReturnCurrent(nullptr);
     }
 
@@ -1779,8 +1781,10 @@ class PeerConnectionIntegrationBaseTest : public ::testing::Test {
   }
 
   void ClosePeerConnections() {
-    caller()->pc()->Close();
-    callee()->pc()->Close();
+    if (caller())
+      caller()->pc()->Close();
+    if (callee())
+      callee()->pc()->Close();
   }
 
   void TestNegotiatedCipherSuite(

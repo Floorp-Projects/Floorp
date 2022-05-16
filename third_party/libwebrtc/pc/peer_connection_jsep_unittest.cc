@@ -2214,6 +2214,7 @@ TEST_F(PeerConnectionJsepTest, RollbackRtpDataChannel) {
   EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
   EXPECT_TRUE(pc->SetRemoteDescription(pc->CreateRollback()));
   EXPECT_TRUE(pc->SetLocalDescription(std::move(offer)));
+  pc->pc()->Close();
 }
 
 }  // namespace webrtc

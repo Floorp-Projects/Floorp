@@ -1746,6 +1746,10 @@ void PeerConnection::Close() {
   // The .h file says that observer can be discarded after close() returns.
   // Make sure this is true.
   observer_ = nullptr;
+
+  // Signal shutdown to the sdp handler. This invalidates weak pointers for
+  // internal pending callbacks.
+  sdp_handler_->PrepareForShutdown();
 }
 
 void PeerConnection::SetIceConnectionState(IceConnectionState new_state) {

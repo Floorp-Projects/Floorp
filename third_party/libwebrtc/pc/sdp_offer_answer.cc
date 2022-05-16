@@ -28,7 +28,6 @@
 #include "api/rtp_parameters.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/rtp_sender_interface.h"
-#include "api/uma_metrics.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "media/base/codec.h"
 #include "media/base/media_engine.h"
@@ -2280,55 +2279,58 @@ void SdpOfferAnswerHandler::SetAssociatedRemoteStreams(
 
 bool SdpOfferAnswerHandler::AddIceCandidate(
     const IceCandidateInterface* ice_candidate) {
+  const AddIceCandidateResult result = AddIceCandidateInternal(ice_candidate);
+  NoteAddIceCandidateResult(result);
+  // If the return value is kAddIceCandidateFailNotReady, the candidate has been
+  // added, although not 'ready', but that's a success.
+  return result == kAddIceCandidateSuccess ||
+         result == kAddIceCandidateFailNotReady;
+}
+
+AddIceCandidateResult SdpOfferAnswerHandler::AddIceCandidateInternal(
+    const IceCandidateInterface* ice_candidate) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "SdpOfferAnswerHandler::AddIceCandidate");
   if (pc_->IsClosed()) {
     RTC_LOG(LS_ERROR) << "AddIceCandidate: PeerConnection is closed.";
-    NoteAddIceCandidateResult(kAddIceCandidateFailClosed);
-    return false;
+    return kAddIceCandidateFailClosed;
   }
 
   if (!remote_description()) {
     RTC_LOG(LS_ERROR) << "AddIceCandidate: ICE candidates can't be added "
                          "without any remote session description.";
-    NoteAddIceCandidateResult(kAddIceCandidateFailNoRemoteDescription);
-    return false;
+    return kAddIceCandidateFailNoRemoteDescription;
   }
 
   if (!ice_candidate) {
     RTC_LOG(LS_ERROR) << "AddIceCandidate: Candidate is null.";
-    NoteAddIceCandidateResult(kAddIceCandidateFailNullCandidate);
-    return false;
+    return kAddIceCandidateFailNullCandidate;
   }
 
   bool valid = false;
   bool ready = ReadyToUseRemoteCandidate(ice_candidate, nullptr, &valid);
   if (!valid) {
-    NoteAddIceCandidateResult(kAddIceCandidateFailNotValid);
-    return false;
+    return kAddIceCandidateFailNotValid;
   }
 
   // Add this candidate to the remote session description.
   if (!mutable_remote_description()->AddCandidate(ice_candidate)) {
     RTC_LOG(LS_ERROR) << "AddIceCandidate: Candidate cannot be used.";
-    NoteAddIceCandidateResult(kAddIceCandidateFailInAddition);
-    return false;
+    return kAddIceCandidateFailInAddition;
   }
 
-  if (ready) {
-    bool result = UseCandidate(ice_candidate);
-    if (result) {
-      pc_->NoteUsageEvent(UsageEvent::ADD_ICE_CANDIDATE_SUCCEEDED);
-      NoteAddIceCandidateResult(kAddIceCandidateSuccess);
-    } else {
-      NoteAddIceCandidateResult(kAddIceCandidateFailNotUsable);
-    }
-    return result;
-  } else {
+  if (!ready) {
     RTC_LOG(LS_INFO) << "AddIceCandidate: Not ready to use candidate.";
-    NoteAddIceCandidateResult(kAddIceCandidateFailNotReady);
-    return true;
+    return kAddIceCandidateFailNotReady;
   }
+
+  if (!UseCandidate(ice_candidate)) {
+    return kAddIceCandidateFailNotUsable;
+  }
+
+  pc_->NoteUsageEvent(UsageEvent::ADD_ICE_CANDIDATE_SUCCEEDED);
+
+  return kAddIceCandidateSuccess;
 }
 
 void SdpOfferAnswerHandler::AddIceCandidate(
@@ -2342,23 +2344,25 @@ void SdpOfferAnswerHandler::AddIceCandidate(
       [this_weak_ptr = weak_ptr_factory_.GetWeakPtr(),
        candidate = std::move(candidate), callback = std::move(callback)](
           std::function<void()> operations_chain_callback) {
-        if (!this_weak_ptr) {
-          operations_chain_callback();
+        auto result =
+            this_weak_ptr
+                ? this_weak_ptr->AddIceCandidateInternal(candidate.get())
+                : kAddIceCandidateFailClosed;
+        NoteAddIceCandidateResult(result);
+        operations_chain_callback();
+        if (result == kAddIceCandidateFailClosed) {
           callback(RTCError(
               RTCErrorType::INVALID_STATE,
               "AddIceCandidate failed because the session was shut down"));
-          return;
-        }
-        if (!this_weak_ptr->AddIceCandidate(candidate.get())) {
-          operations_chain_callback();
+        } else if (result != kAddIceCandidateSuccess &&
+                   result != kAddIceCandidateFailNotReady) {
           // Fail with an error type and message consistent with Chromium.
           // TODO(hbos): Fail with error types according to spec.
           callback(RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
                             "Error processing ICE candidate"));
-          return;
+        } else {
+          callback(RTCError::OK());
         }
-        operations_chain_callback();
-        callback(RTCError::OK());
       });
 }
 

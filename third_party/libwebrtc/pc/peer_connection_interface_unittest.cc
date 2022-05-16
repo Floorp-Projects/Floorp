@@ -683,7 +683,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
 #endif
   }
 
-  virtual void SetUp() {
+  void SetUp() override {
     // Use fake audio capture module since we're only testing the interface
     // level, and using a real one could make tests flaky when run in parallel.
     fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
@@ -699,6 +699,11 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
     ASSERT_TRUE(pc_factory_);
     pc_factory_for_test_ =
         PeerConnectionFactoryForTest::CreatePeerConnectionFactoryForTest();
+  }
+
+  void TearDown() override {
+    if (pc_)
+      pc_->Close();
   }
 
   void CreatePeerConnection() {
@@ -734,6 +739,10 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
   }
 
   void CreatePeerConnection(const RTCConfiguration& config) {
+    if (pc_) {
+      pc_->Close();
+      pc_ = nullptr;
+    }
     std::unique_ptr<cricket::FakePortAllocator> port_allocator(
         new cricket::FakePortAllocator(rtc::Thread::Current(), nullptr));
     port_allocator_ = port_allocator.get();
