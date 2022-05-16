@@ -14,7 +14,6 @@
 #include <limits>
 #include <map>
 #include <set>
-#include <sstream>  // no-presubmit-check TODO(webrtc:8982)
 #include <string>
 #include <utility>  // pair
 #include <vector>
@@ -389,9 +388,8 @@ class ParsedRtcEventLog {
   // Reads an RtcEventLog from a string and returns success if successful.
   ParseStatus ParseString(const std::string& s);
 
-  // Reads an RtcEventLog from an istream and returns success if successful.
-  ParseStatus ParseStream(
-      std::istream& stream);  // no-presubmit-check TODO(webrtc:8982)
+  // Reads an RtcEventLog from an string and returns success if successful.
+  ParseStatus ParseStream(const std::string& s);
 
   MediaType GetMediaType(uint32_t ssrc, PacketDirection direction) const;
 
@@ -667,8 +665,7 @@ class ParsedRtcEventLog {
   std::vector<InferredRouteChangeEvent> GetRouteChanges() const;
 
  private:
-  ABSL_MUST_USE_RESULT ParseStatus ParseStreamInternal(
-      std::istream& stream);  // no-presubmit-check TODO(webrtc:8982)
+  ABSL_MUST_USE_RESULT ParseStatus ParseStreamInternal(absl::string_view s);
 
   ABSL_MUST_USE_RESULT ParseStatus
   StoreParsedLegacyEvent(const rtclog::Event& event);

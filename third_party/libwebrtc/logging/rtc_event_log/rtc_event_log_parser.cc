@@ -14,8 +14,6 @@
 #include <string.h>
 
 #include <algorithm>
-#include <fstream>
-#include <istream>  // no-presubmit-check TODO(webrtc:8982)
 #include <limits>
 #include <map>
 #include <utility>
@@ -29,6 +27,7 @@
 #include "logging/rtc_event_log/encoder/blob_encoding.h"
 #include "logging/rtc_event_log/encoder/delta_encoding.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_common.h"
+#include "logging/rtc_event_log/encoder/var_int.h"
 #include "logging/rtc_event_log/rtc_event_processor.h"
 #include "modules/audio_coding/audio_network_adaptor/include/audio_network_adaptor.h"
 #include "modules/include/module_common_types_public.h"
@@ -42,6 +41,7 @@
 #include "rtc_base/numerics/safe_conversions.h"
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/protobuf_utils.h"
+#include "rtc_base/system/file_wrapper.h"
 
 // These macros were added to convert existing code using RTC_CHECKs
 // to returning a Status object instead. Macros are necessary (over
@@ -98,6 +98,8 @@ using webrtc_event_logging::ToUnsigned;
 namespace webrtc {
 
 namespace {
+constexpr int64_t kMaxLogSize = 250000000;
+
 constexpr size_t kIpv4Overhead = 20;
 constexpr size_t kIpv6Overhead = 40;
 constexpr size_t kUdpOverhead = 8;
@@ -311,33 +313,6 @@ VideoCodecType GetRuntimeCodecType(rtclog2::FrameDecodedEvents::Codec codec) {
   }
   RTC_NOTREACHED();
   return VideoCodecType::kVideoCodecMultiplex;
-}
-
-// Reads a VarInt from |stream| and returns it. Also writes the read bytes to
-// |buffer| starting |bytes_written| bytes into the buffer. |bytes_written| is
-// incremented for each written byte.
-ParsedRtcEventLog::ParseStatusOr<uint64_t> ParseVarInt(
-    std::istream& stream,  // no-presubmit-check TODO(webrtc:8982)
-    char* buffer,
-    size_t* bytes_written) {
-  uint64_t varint = 0;
-  for (size_t bytes_read = 0; bytes_read < 10; ++bytes_read) {
-    // The most significant bit of each byte is 0 if it is the last byte in
-    // the varint and 1 otherwise. Thus, we take the 7 least significant bits
-    // of each byte and shift them 7 bits for each byte read previously to get
-    // the (unsigned) integer.
-    int byte = stream.get();
-    RTC_PARSE_CHECK_OR_RETURN(!stream.eof());
-    RTC_DCHECK_GE(byte, 0);
-    RTC_DCHECK_LE(byte, 255);
-    varint |= static_cast<uint64_t>(byte & 0x7F) << (7 * bytes_read);
-    buffer[*bytes_written] = byte;
-    *bytes_written += 1;
-    if ((byte & 0x80) == 0) {
-      return varint;
-    }
-  }
-  RTC_PARSE_CHECK_OR_RETURN(false);
 }
 
 ParsedRtcEventLog::ParseStatus GetHeaderExtensions(
@@ -1109,27 +1084,39 @@ void ParsedRtcEventLog::Clear() {
 
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseFile(
     const std::string& filename) {
-  std::ifstream file(  // no-presubmit-check TODO(webrtc:8982)
-      filename, std::ios_base::in | std::ios_base::binary);
-  if (!file.good() || !file.is_open()) {
-    RTC_LOG(LS_WARNING) << "Could not open file for reading.";
-    RTC_PARSE_CHECK_OR_RETURN(file.good() && file.is_open());
+  FileWrapper file = FileWrapper::OpenReadOnly(filename);
+  if (!file.is_open()) {
+    RTC_LOG(LS_WARNING) << "Could not open file " << filename
+                        << " for reading.";
+    RTC_PARSE_CHECK_OR_RETURN(file.is_open());
   }
 
-  return ParseStream(file);
+  // Compute file size.
+  long signed_filesize = file.FileSize();  // NOLINT(runtime/int)
+  RTC_PARSE_CHECK_OR_RETURN_GE(signed_filesize, 0);
+  RTC_PARSE_CHECK_OR_RETURN_LE(signed_filesize, kMaxLogSize);
+  size_t filesize = rtc::checked_cast<size_t>(signed_filesize);
+
+  // Read file into memory.
+  std::string buffer(filesize, '\0');
+  size_t bytes_read = file.Read(&buffer[0], buffer.size());
+  if (bytes_read != filesize) {
+    RTC_LOG(LS_WARNING) << "Failed to read file " << filename;
+    RTC_PARSE_CHECK_OR_RETURN_EQ(bytes_read, filesize);
+  }
+
+  return ParseStream(buffer);
 }
 
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseString(
     const std::string& s) {
-  std::istringstream stream(  // no-presubmit-check TODO(webrtc:8982)
-      s, std::ios_base::in | std::ios_base::binary);
-  return ParseStream(stream);
+  return ParseStream(s);
 }
 
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
-    std::istream& stream) {  // no-presubmit-check TODO(webrtc:8982)
+    const std::string& s) {
   Clear();
-  ParseStatus status = ParseStreamInternal(stream);
+  ParseStatus status = ParseStreamInternal(s);
 
   // Cache the configured SSRCs.
   for (const auto& video_recv_config : video_recv_configs()) {
@@ -1280,17 +1267,12 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStream(
 }
 
 ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
-    std::istream& stream) {  // no-presubmit-check TODO(webrtc:8982)
+    absl::string_view s) {
   constexpr uint64_t kMaxEventSize = 10000000;  // Sanity check.
-  std::vector<char> buffer(0xFFFF);
 
-  RTC_DCHECK(stream.good());
-  while (1) {
-    // Check whether we have reached end of file.
-    stream.peek();
-    if (stream.eof()) {
-      break;
-    }
+  while (!s.empty()) {
+    absl::string_view event_start = s;
+    bool success = false;
 
     // Read the next message tag. Protobuf defines the message tag as
     // (field_number << 3) | wire_type. In the legacy encoding, the field number
@@ -1298,18 +1280,18 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
     // In the new encoding we still expect the wire type to be 2, but the field
     // number will be greater than 1.
     constexpr uint64_t kExpectedV1Tag = (1 << 3) | 2;
-    size_t bytes_written = 0;
-    ParsedRtcEventLog::ParseStatusOr<uint64_t> tag =
-        ParseVarInt(stream, buffer.data(), &bytes_written);
-    if (!tag.ok()) {
+    uint64_t tag = 0;
+    std::tie(success, s) = DecodeVarInt(s, &tag);
+    if (!success) {
       RTC_LOG(LS_WARNING)
-          << "Missing field tag from beginning of protobuf event.";
+          << "Failed to read field tag from beginning of protobuf event.";
       RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
                                            kIncompleteLogError);
-      return tag.status();
+      return ParseStatus::Error("Failed to read field tag varint", __FILE__,
+                                __LINE__);
     }
     constexpr uint64_t kWireTypeMask = 0x07;
-    const uint64_t wire_type = tag.value() & kWireTypeMask;
+    const uint64_t wire_type = tag & kWireTypeMask;
     if (wire_type != 2) {
       RTC_LOG(LS_WARNING) << "Expected field tag with wire type 2 (length "
                              "delimited message). Found wire type "
@@ -1320,36 +1302,32 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
     }
 
     // Read the length field.
-    ParsedRtcEventLog::ParseStatusOr<uint64_t> message_length =
-        ParseVarInt(stream, buffer.data(), &bytes_written);
-    if (!message_length.ok()) {
+    uint64_t message_length = 0;
+    std::tie(success, s) = DecodeVarInt(s, &message_length);
+    if (!success) {
       RTC_LOG(LS_WARNING) << "Missing message length after protobuf field tag.";
       RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
                                            kIncompleteLogError);
-      return message_length.status();
-    } else if (message_length.value() > kMaxEventSize) {
+      return ParseStatus::Error("Failed to read message length varint",
+                                __FILE__, __LINE__);
+    }
+
+    if (message_length > s.size()) {
       RTC_LOG(LS_WARNING) << "Protobuf message length is too large.";
       RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
                                            kIncompleteLogError);
-      RTC_PARSE_CHECK_OR_RETURN_LE(message_length.value(), kMaxEventSize);
+      RTC_PARSE_CHECK_OR_RETURN_LE(message_length, kMaxEventSize);
     }
 
-    // Read the next protobuf event to a temporary char buffer.
-    if (buffer.size() < bytes_written + message_length.value())
-      buffer.resize(bytes_written + message_length.value());
-    stream.read(buffer.data() + bytes_written, message_length.value());
-    if (stream.gcount() != static_cast<int>(message_length.value())) {
-      RTC_LOG(LS_WARNING) << "Failed to read protobuf message.";
-      RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
-                                           kIncompleteLogError);
-      RTC_PARSE_CHECK_OR_RETURN(false);
-    }
-    size_t buffer_size = bytes_written + message_length.value();
+    // Skip forward to the start of the next event.
+    s = s.substr(message_length);
+    size_t total_event_size = event_start.size() - s.size();
+    RTC_CHECK_LE(total_event_size, event_start.size());
 
-    if (tag.value() == kExpectedV1Tag) {
+    if (tag == kExpectedV1Tag) {
       // Parse the protobuf event from the buffer.
       rtclog::EventStream event_stream;
-      if (!event_stream.ParseFromArray(buffer.data(), buffer_size)) {
+      if (!event_stream.ParseFromArray(event_start.data(), total_event_size)) {
         RTC_LOG(LS_WARNING)
             << "Failed to parse legacy-format protobuf message.";
         RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
@@ -1363,7 +1341,7 @@ ParsedRtcEventLog::ParseStatus ParsedRtcEventLog::ParseStreamInternal(
     } else {
       // Parse the protobuf event from the buffer.
       rtclog2::EventStream event_stream;
-      if (!event_stream.ParseFromArray(buffer.data(), buffer_size)) {
+      if (!event_stream.ParseFromArray(event_start.data(), total_event_size)) {
         RTC_LOG(LS_WARNING) << "Failed to parse new-format protobuf message.";
         RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(allow_incomplete_logs_,
                                              kIncompleteLogError);
