@@ -57,7 +57,8 @@ class FakeDtlsTransportFactory : public cricket::DtlsTransportFactory {
  public:
   std::unique_ptr<cricket::DtlsTransportInternal> CreateDtlsTransport(
       cricket::IceTransportInternal* ice,
-      const webrtc::CryptoOptions& crypto_options) override {
+      const webrtc::CryptoOptions& crypto_options,
+      rtc::SSLProtocolVersion max_version) override {
     return std::make_unique<FakeDtlsTransport>(
         static_cast<cricket::FakeIceTransport*>(ice));
   }

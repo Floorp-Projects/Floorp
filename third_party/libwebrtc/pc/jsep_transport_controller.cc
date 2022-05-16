@@ -414,14 +414,14 @@ JsepTransportController::CreateDtlsTransport(
 
   if (config_.dtls_transport_factory) {
     dtls = config_.dtls_transport_factory->CreateDtlsTransport(
-        ice, config_.crypto_options);
+        ice, config_.crypto_options, config_.ssl_max_version);
   } else {
     dtls = std::make_unique<cricket::DtlsTransport>(ice, config_.crypto_options,
-                                                    config_.event_log);
+                                                    config_.event_log,
+                                                    config_.ssl_max_version);
   }
 
   RTC_DCHECK(dtls);
-  dtls->SetSslMaxProtocolVersion(config_.ssl_max_version);
   dtls->ice_transport()->SetIceRole(ice_role_);
   dtls->ice_transport()->SetIceTiebreaker(ice_tiebreaker_);
   dtls->ice_transport()->SetIceConfig(ice_config_);
