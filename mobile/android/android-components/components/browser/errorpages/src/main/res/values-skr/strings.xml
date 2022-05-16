@@ -84,8 +84,23 @@
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">ورقہ ٹھیک طرح ری ڈائریکٹ کائنی تھیندا پیا</string>
 
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>براؤزر  نے ارداس کیتے ڳئے آئٹم کوں  واگزار کرواوݨ دی کوشش روک ݙتی ہے۔ سائٹ ایں ارداس کوں ایں طرحاں ٻئے پاسے  بھیڄیندا پیا ہے جہڑی کݙاہیں وی مکمل کائناں تھیسی۔</p>
+      <ul>
+        <li>بھلا تساں سائٹ کیتے ضروری کوکیاں کوں معذور یا بلاک کر ݙتے؟</li>
+        <li>اگر سائٹ دیاں کوکیاں کوں قبول کرݨ  نال وی مسئلہ ٹھیک نئیں تھیندا، تاں ممکن ہے جو ایہ سرور کنفگریشن دا کوئی مسئلہ ہووے نا کہ تہاݙی ڈیوائس دا۔</li>
+      </ul>]]></string>
+
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">آف لائن موڈ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>براؤزر آپݨے آف لائن موڈ وچ کم کریندا پئے تے ارداس تھئے آئٹم چیز نال کائنی جڑ سڳدا۔
+</p>
+      <ul>
+        <li>بھلا ڈیوائس فعال نیٹ ورک نال کنکٹ تھیا ہویا ہے؟</li>
+        <li>آن لائن موڈ وچ گھن آوݨ کیتے “ولدا کوشش کرو” دباؤ  تے ورقے کوں ولدا لوڈ کرو۔</li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">حفاظتی وجوہات کیتے پورٹ محدود کر ݙتا ڳیا ہے</string>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">o sin</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">mi ken ala pini e kama jo</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+<p>sona namako pi pakala ni li lon ala.</p>
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">linja len li pakala</string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">linja len li pakala</string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">namako…</string>
+
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ <label>ken la jan pi lipu ni li lon ala, li wile ike e sina kepeken nasin len. ni la o tawa ala.</label>
+ <br><br>
+ <label>lipu li pana e sona ona kepeken lipu lawa. <b>lipu %2$s</b> li pona ala tawa ilo %1$s tan ni: lipu lawa ona li tan seme? mi sona ala.</label>
+]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">o tawa pona (sina pona tan ni)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">o awen tawa lipu</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">linja li pakala</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">tenpo mute la linja li pakala</string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">mi ken ala tawa lipu</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">lipu li pana e pakala. nasin la mi sona ala</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">lipu li toki e ni: o tawa ni. taso tawa ni li pakala</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">nasin pi linja ala</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">lipu pi nasin ike</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+<ul>
+<li>o toki e pakala tawa jan lawa pi lipu ni.</li>
+</ul>
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">linja li lon ala</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">o lukin e linja sina. o sin e lipu lon tenpo kama.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">o sin</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">nimi nasin pakala</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">nimi nasin li pakala.</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">lipu li lon ala</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">sina ken ala lukin e lipu</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">lipu li wile ike e sina</string>
+
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">o tawa lipu pi len ala</string>
+</resources>

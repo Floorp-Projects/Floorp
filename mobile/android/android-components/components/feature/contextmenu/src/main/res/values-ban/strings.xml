@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">Unduh tautan</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">Ngbagiang tautan</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">Ngbagiang gambar</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">Raksa gambar</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">Raksa berkas ka piranti</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Tambah ka kontak</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">Rereh</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">Bagiang</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">Rerepél</string>
+    </resources>
