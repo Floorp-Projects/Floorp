@@ -75,6 +75,64 @@ class FakeVideoMediaChannelForStats : public cricket::FakeVideoMediaChannel {
 constexpr bool kDefaultRtcpMuxRequired = true;
 constexpr bool kDefaultSrtpRequired = true;
 
+class VoiceChannelForTesting : public cricket::VoiceChannel {
+ public:
+  VoiceChannelForTesting(rtc::Thread* worker_thread,
+                         rtc::Thread* network_thread,
+                         rtc::Thread* signaling_thread,
+                         std::unique_ptr<cricket::VoiceMediaChannel> channel,
+                         const std::string& content_name,
+                         bool srtp_required,
+                         webrtc::CryptoOptions crypto_options,
+                         rtc::UniqueRandomIdGenerator* ssrc_generator,
+                         std::string transport_name)
+      : VoiceChannel(worker_thread,
+                     network_thread,
+                     signaling_thread,
+                     std::move(channel),
+                     content_name,
+                     srtp_required,
+                     std::move(crypto_options),
+                     ssrc_generator),
+        test_transport_name_(std::move(transport_name)) {}
+
+ private:
+  const std::string& transport_name() const override {
+    return test_transport_name_;
+  }
+
+  const std::string test_transport_name_;
+};
+
+class VideoChannelForTesting : public cricket::VideoChannel {
+ public:
+  VideoChannelForTesting(rtc::Thread* worker_thread,
+                         rtc::Thread* network_thread,
+                         rtc::Thread* signaling_thread,
+                         std::unique_ptr<cricket::VideoMediaChannel> channel,
+                         const std::string& content_name,
+                         bool srtp_required,
+                         webrtc::CryptoOptions crypto_options,
+                         rtc::UniqueRandomIdGenerator* ssrc_generator,
+                         std::string transport_name)
+      : VideoChannel(worker_thread,
+                     network_thread,
+                     signaling_thread,
+                     std::move(channel),
+                     content_name,
+                     srtp_required,
+                     std::move(crypto_options),
+                     ssrc_generator),
+        test_transport_name_(std::move(transport_name)) {}
+
+ private:
+  const std::string& transport_name() const override {
+    return test_transport_name_;
+  }
+
+  const std::string test_transport_name_;
+};
+
 // This class is intended to be fed into the StatsCollector and
 // RTCStatsCollector so that the stats functionality can be unit tested.
 // Individual tests can configure this fake as needed to simulate scenarios
@@ -140,11 +198,10 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     auto voice_media_channel =
         std::make_unique<FakeVoiceMediaChannelForStats>();
     auto* voice_media_channel_ptr = voice_media_channel.get();
-    voice_channel_ = std::make_unique<cricket::VoiceChannel>(
+    voice_channel_ = std::make_unique<VoiceChannelForTesting>(
         worker_thread_, network_thread_, signaling_thread_,
         std::move(voice_media_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), &ssrc_generator_);
-    voice_channel_->set_transport_name_for_testing(transport_name);
+        webrtc::CryptoOptions(), &ssrc_generator_, transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_AUDIO)
         ->internal()
         ->SetChannel(voice_channel_.get());
@@ -158,11 +215,10 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     auto video_media_channel =
         std::make_unique<FakeVideoMediaChannelForStats>();
     auto video_media_channel_ptr = video_media_channel.get();
-    video_channel_ = std::make_unique<cricket::VideoChannel>(
+    video_channel_ = std::make_unique<VideoChannelForTesting>(
         worker_thread_, network_thread_, signaling_thread_,
         std::move(video_media_channel), mid, kDefaultSrtpRequired,
-        webrtc::CryptoOptions(), &ssrc_generator_);
-    video_channel_->set_transport_name_for_testing(transport_name);
+        webrtc::CryptoOptions(), &ssrc_generator_, transport_name);
     GetOrCreateFirstTransceiverOfType(cricket::MEDIA_TYPE_VIDEO)
         ->internal()
         ->SetChannel(video_channel_.get());
