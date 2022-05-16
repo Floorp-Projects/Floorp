@@ -501,7 +501,7 @@ enum class nsXPTInterface : uint16_t {
 
 // These template methods are specialized to be used in the sDOMObjects table.
 template<mozilla::dom::prototypes::ID PrototypeID, typename T>
-static nsresult UnwrapDOMObject(JS::HandleValue aHandle, void** aObj, JSContext* aCx)
+static nsresult UnwrapDOMObject(JS::Handle<JS::Value> aHandle, void** aObj, JSContext* aCx)
 {
   RefPtr<T> p;
   nsresult rv = mozilla::dom::UnwrapObject<PrototypeID, T>(aHandle, p, aCx);
@@ -510,7 +510,7 @@ static nsresult UnwrapDOMObject(JS::HandleValue aHandle, void** aObj, JSContext*
 }
 
 template<typename T>
-static bool WrapDOMObject(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle)
+static bool WrapDOMObject(JSContext* aCx, void* aObj, JS::MutableHandle<JS::Value> aHandle)
 {
   return mozilla::dom::GetOrCreateDOMReflector(aCx, reinterpret_cast<T*>(aObj), aHandle);
 }
