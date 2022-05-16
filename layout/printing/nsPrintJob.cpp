@@ -116,8 +116,7 @@ static uint32_t gDumpLOFileNameCnt = 0;
 #endif
 
 #define PRT_YESNO(_p) ((_p) ? "YES" : "NO")
-static const char* gFrameTypesStr[] = {"eDoc", "eFrame", "eIFrame",
-                                       "eFrameSet"};
+static const char* gFrameTypesStr[] = {"eDoc", "eIFrame"};
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
@@ -148,51 +147,6 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
 // -------------------------------------------------------
 // Helpers
 // -------------------------------------------------------
-
-static bool HasFramesetChild(nsIContent* aContent) {
-  if (!aContent) {
-    return false;
-  }
-
-  // do a breadth search across all siblings
-  for (nsIContent* child = aContent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static bool IsParentAFrameSet(nsIDocShell* aParent) {
-  // See if the incoming doc is the root document
-  if (!aParent) return false;
-
-  // When it is the top level document we need to check
-  // to see if it contains a frameset. If it does, then
-  // we only want to print the doc's children and not the document itself
-  // For anything else we always print all the children and the document
-  // for example, if the doc contains an IFRAME we eant to print the child
-  // document (the IFRAME) and then the rest of the document.
-  //
-  // XXX we really need to search the frame tree, and not the content
-  // but there is no way to distinguish between IFRAMEs and FRAMEs
-  // with the GetFrameType call.
-  // Bug 53459 has been files so we can eventually distinguish
-  // between IFRAME frames and FRAME frames
-  bool isFrameSet = false;
-  // only check to see if there is a frameset if there is
-  // NO parent doc for this doc. meaning this parent is the root doc
-  nsCOMPtr<Document> doc = aParent->GetDocument();
-  if (doc) {
-    nsIContent* rootElement = doc->GetRootElement();
-    if (rootElement) {
-      isFrameSet = HasFramesetChild(rootElement);
-    }
-  }
-  return isFrameSet;
-}
 
 /**
  * Build a tree of nsPrintObjects under aPO. It also appends a (depth first)
@@ -518,9 +472,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     printData->mPrintDocList.AppendElement(printData->mPrintObject.get());
 
-    printData->mIsParentAFrameSet = IsParentAFrameSet(docShell);
-    printData->mPrintObject->mFrameType =
-        printData->mIsParentAFrameSet ? eFrameSet : eDoc;
+    printData->mPrintObject->mFrameType = eDoc;
 
     BuildNestedPrintObjects(printData->mPrintObject, printData);
   }
@@ -961,19 +913,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
   // But skip this step if we are in PrintPreview
   bool ppIsShrinkToFit = mPrtPreview && mPrtPreview->mShrinkToFit;
   if (printData->mShrinkToFit && !ppIsShrinkToFit) {
-    // Now look for the PO that has the smallest percent for shrink to fit
-    if (printData->mPrintDocList.Length() > 1 &&
-        printData->mPrintObject->mFrameType == eFrameSet) {
-      nsPrintObject* smallestPO = FindSmallestSTF();
-      NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
-      if (smallestPO) {
-        // Calc the shrinkage based on the entire content area
-        printData->mShrinkRatio = smallestPO->mShrinkRatio;
-      }
-    } else {
-      // Single document so use the Shrink as calculated for the PO
-      printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
-    }
+    printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
 
     if (printData->mShrinkRatio < 0.998f) {
       nsresult rv = ReconstructAndReflow(true);
@@ -989,19 +929,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
     }
 
     if (MOZ_LOG_TEST(gPrintingLog, LogLevel::Debug)) {
-      float calcRatio = 0.0f;
-      if (printData->mPrintDocList.Length() > 1 &&
-          printData->mPrintObject->mFrameType == eFrameSet) {
-        nsPrintObject* smallestPO = FindSmallestSTF();
-        NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
-        if (smallestPO) {
-          // Calc the shrinkage based on the entire content area
-          calcRatio = smallestPO->mShrinkRatio;
-        }
-      } else {
-        // Single document so use the Shrink as calculated for the PO
-        calcRatio = printData->mPrintObject->mShrinkRatio;
-      }
+      float calcRatio = printData->mPrintObject->mShrinkRatio;
       PR_PL(
           ("*******************************************************************"
            "*******\n"));
@@ -2130,32 +2058,6 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
     printData->mSelectionRoot->EnablePrintingSelectionOnly();
   }
   return NS_OK;
-}
-
-//-------------------------------------------------------
-// Return the nsPrintObject with that is XMost (The widest frameset frame) AND
-// contains the XMost (widest) layout frame
-nsPrintObject* nsPrintJob::FindSmallestSTF() {
-  float smallestRatio = 1.0f;
-  nsPrintObject* smallestPO = nullptr;
-
-  for (uint32_t i = 0; i < mPrt->mPrintDocList.Length(); i++) {
-    nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
-    if (po->mFrameType != eFrameSet && po->mFrameType != eIFrame) {
-      if (po->mShrinkRatio < smallestRatio) {
-        smallestRatio = po->mShrinkRatio;
-        smallestPO = po;
-      }
-    }
-  }
-
-#ifdef EXTENDED_DEBUG_PRINTING
-  if (smallestPO)
-    printf("*PO: %p  Type: %d  %10.3f\n", smallestPO, smallestPO->mFrameType,
-           smallestPO->mShrinkRatio);
-#endif
-  return smallestPO;
 }
 
 //-----------------------------------------------------------------
