@@ -240,8 +240,9 @@ RtpTransmissionManager::CreateReceiver(cricket::MediaType media_type,
       receiver;
   if (media_type == cricket::MEDIA_TYPE_AUDIO) {
     receiver = RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
-        signaling_thread(), new AudioRtpReceiver(worker_thread(), receiver_id,
-                                                 std::vector<std::string>({})));
+        signaling_thread(),
+        new AudioRtpReceiver(worker_thread(), receiver_id,
+                             std::vector<std::string>({}), IsUnifiedPlan()));
     NoteUsageEvent(UsageEvent::AUDIO_ADDED);
   } else {
     RTC_DCHECK_EQ(media_type, cricket::MEDIA_TYPE_VIDEO);
@@ -453,7 +454,7 @@ void RtpTransmissionManager::CreateAudioReceiver(
   // TODO(https://crbug.com/webrtc/9480): When we remove remote_streams(), use
   // the constructor taking stream IDs instead.
   auto* audio_receiver = new AudioRtpReceiver(
-      worker_thread(), remote_sender_info.sender_id, streams);
+      worker_thread(), remote_sender_info.sender_id, streams, IsUnifiedPlan());
   audio_receiver->SetMediaChannel(voice_media_channel());
   if (remote_sender_info.sender_id == kDefaultAudioSenderId) {
     audio_receiver->SetupUnsignaledMediaChannel();
