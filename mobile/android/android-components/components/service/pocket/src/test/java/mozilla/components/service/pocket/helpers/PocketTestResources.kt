@@ -4,7 +4,7 @@
 
 package mozilla.components.service.pocket.helpers
 
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.spocs.api.ApiSpoc
 import mozilla.components.service.pocket.spocs.api.ApiSpocShim
 import mozilla.components.service.pocket.spocs.db.SpocEntity

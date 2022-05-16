@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
 * **service-pocket**
+  * Add a new `PocketStory` supertype for all Pocket stories. [#12171](https://github.com/mozilla-mobile/android-components/issues/12171)
+
+* **service-pocket**
   * 🌟️ Add support for Pocket sponsored stories.
   * See component's [README](https://github.com/mozilla-mobile/android-components/blob/main/components/service/pocket/README.md) to get more info.
 

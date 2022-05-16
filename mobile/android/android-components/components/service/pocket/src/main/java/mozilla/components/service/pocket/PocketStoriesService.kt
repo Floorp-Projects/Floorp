@@ -6,6 +6,8 @@ package mozilla.components.service.pocket
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.spocs.SpocsUseCases
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.service.pocket.update.PocketStoriesRefreshScheduler
