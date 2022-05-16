@@ -24,9 +24,6 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.expectAssertions(0, 1);  // In a11y module
 SimpleTest.waitForFocus(runTests, window);
 
-const kIsWin = navigator.platform.indexOf("Win") == 0;
-const kIsMac = navigator.platform.indexOf("Mac") == 0;
-
 function runTests() {
   const kWordSelectEatSpaceToNextWord = SpecialPowers.getBoolPref("layout.word_select.eat_space_to_next_word");
 
@@ -676,15 +673,14 @@ function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteWordBackward");
         },
         {
-          // Only on Windows, we collapse selection to start before handling this command.
-          value: kIsWin ? "abc ef" : "abc df",
+          value: "abc df",
           beforeInputEvent: {
             cancelable: true,
-            inputType: kIsWin ? "deleteWordBackward" : "deleteContentBackward",
+            inputType: "deleteContentBackward",
             data: null,
           },
           inputEvent: {
-            inputType: kIsWin ? "deleteWordBackward" : "deleteContentBackward",
+            inputType: "deleteContentBackward",
             data: null,
           },
         }
@@ -705,20 +701,14 @@ function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteWordForward");
         },
         {
-          // Only on Windows, we collapse selection to start before handling this command.
-          value: (function () {
-            if (!kIsWin) {
-              return "ac def";
-            }
-            return kWordSelectEatSpaceToNextWord ? "adef" : "a def";
-          })(),
+          value: "ac def",
           beforeInputEvent: {
             cancelable: true,
-            inputType: kIsWin ? "deleteWordForward" : "deleteContentForward",
+            inputType: "deleteContentForward",
             data: null,
           },
           inputEvent: {
-            inputType: kIsWin ? "deleteWordForward" : "deleteContentForward",
+            inputType: "deleteContentForward",
             data: null,
           },
         }
@@ -795,15 +785,14 @@ function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteToBeginningOfLine");
         },
         {
-          // Only on Windows, we collapse selection to start before handling this command.
-          value: kIsWin ? "ef" : "abc df",
+          value: "abc df",
           beforeInputEvent: {
             cancelable: true,
-            inputType: kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward",
+            inputType: "deleteContentBackward",
             data: null,
           },
           inputEvent: {
-            inputType: kIsWin ? "deleteSoftLineBackward" : "deleteContentBackward",
+            inputType: "deleteContentBackward",
             data: null,
           },
         }
@@ -824,15 +813,14 @@ function runTests() {
           SpecialPowers.doCommand(window, "cmd_deleteToEndOfLine");
         },
         {
-          // Only on Windows, we collapse selection to start before handling this command.
-          value: kIsWin ? "a" : "ac def",
+          value: "ac def",
           beforeInputEvent: {
             cancelable: true,
-            inputType: kIsWin ? "deleteSoftLineForward" : "deleteContentForward",
+            inputType: "deleteContentForward",
             data: null,
           },
           inputEvent: {
-            inputType: kIsWin ? "deleteSoftLineForward" : "deleteContentForward",
+            inputType: "deleteContentForward",
             data: null,
           },
         }

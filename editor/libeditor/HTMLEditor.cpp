@@ -154,7 +154,8 @@ HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
     [](HTMLEditor&, Element&, const EditorDOMPoint&) { return NS_OK; };
 
 HTMLEditor::HTMLEditor()
-    : mCRInParagraphCreatesParagraph(false),
+    : EditorBase(EditorBase::EditorType::HTML),
+      mCRInParagraphCreatesParagraph(false),
       mIsObjectResizingEnabled(
           StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),
@@ -197,7 +198,6 @@ HTMLEditor::HTMLEditor()
           StaticPrefs::editor_use_div_for_default_newlines()
               ? ParagraphSeparator::div
               : ParagraphSeparator::br) {
-  mIsHTMLEditorClass = true;
 }
 
 HTMLEditor::~HTMLEditor() {
