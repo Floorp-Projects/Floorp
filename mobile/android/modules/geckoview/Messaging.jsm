@@ -13,12 +13,47 @@ var EXPORTED_SYMBOLS = ["EventDispatcher"];
 const IS_PARENT_PROCESS =
   Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT;
 
+class ChildActorDispatcher {
+  constructor(actor) {
+    this._actor = actor;
+  }
+
+  // TODO: Bug 1658980
+  registerListener(aListener, aEvents) {
+    throw new Error("Cannot registerListener in child actor");
+  }
+  unregisterListener(aListener, aEvents) {
+    throw new Error("Cannot registerListener in child actor");
+  }
+
+  /**
+   * Sends a request to Java.
+   *
+   * @param aMsg      Message to send; must be an object with a "type" property
+   */
+  sendRequest(aMsg) {
+    this._actor.sendAsyncMessage("DispatcherMessage", aMsg);
+  }
+
+  /**
+   * Sends a request to Java, returning a Promise that resolves to the response.
+   *
+   * @param aMsg Message to send; must be an object with a "type" property
+   * @return A Promise resolving to the response
+   */
+  sendRequestForResult(aMsg) {
+    return this._actor.sendQuery("DispatcherQuery", aMsg);
+  }
+}
+
 function DispatcherDelegate(aDispatcher, aMessageManager) {
   this._dispatcher = aDispatcher;
   this._messageManager = aMessageManager;
 
   if (!aDispatcher) {
     // Child process.
+    // TODO: this doesn't work with Fission, remove this code path once every
+    // consumer has been migrated. Bug 1569360.
     this._replies = new Map();
     (aMessageManager || Services.cpmm).addMessageListener(
       "GeckoView:MessagingReply",
@@ -224,6 +259,15 @@ var EventDispatcher = {
    */
   forMessageManager(aMessageManager) {
     return new DispatcherDelegate(null, aMessageManager);
+  },
+
+  /**
+   * Return the EventDispatcher instance associated with an actor.
+   *
+   * @param aActor an actor
+   */
+  forActor(aActor) {
+    return new ChildActorDispatcher(aActor);
   },
 
   receiveMessage(aMsg) {
