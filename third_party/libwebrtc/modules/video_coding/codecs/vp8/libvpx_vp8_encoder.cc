@@ -1383,6 +1383,8 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
                         << VideoFrameBufferTypeToString(buffer_to_scale->type())
                         << ", the image was unexpectedly converted to "
                         << VideoFrameBufferTypeToString(scaled_buffer->type())
+                        << " instead of "
+                        << VideoFrameBufferTypeToString(mapped_buffer->type())
                         << ". Can't encode frame.";
       return {};
     }
