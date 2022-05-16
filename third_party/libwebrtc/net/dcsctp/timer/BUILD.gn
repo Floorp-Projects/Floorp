@@ -10,11 +10,11 @@ import("../../../webrtc.gni")
 
 rtc_library("timer") {
   deps = [
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
     "../public:types",
-    "//api:array_view",
-    "//rtc_base",
-    "//rtc_base:checks",
-    "//rtc_base:rtc_base_approved",
   ]
   sources = [
     "fake_timeout.h",
@@ -30,11 +30,11 @@ if (rtc_include_tests) {
     defines = []
     deps = [
       ":timer",
-      "//api:array_view",
-      "//rtc_base:checks",
-      "//rtc_base:gunit_helpers",
-      "//rtc_base:rtc_base_approved",
-      "//test:test_support",
+      "../../../api:array_view",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
     ]
     sources = [ "timer_test.cc" ]
   }
