@@ -209,7 +209,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     // capture_level_adjustment instead.
     struct PreAmplifier {
       bool enabled = false;
-      float fixed_gain_factor = 1.f;
+      float fixed_gain_factor = 1.0f;
     } pre_amplifier;
 
     // Functionality for general level adjustment in the capture pipeline. This
@@ -221,9 +221,9 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       }
       bool enabled = false;
       // The `pre_gain_factor` scales the signal before any processing is done.
-      float pre_gain_factor = 1.f;
+      float pre_gain_factor = 1.0f;
       // The `post_gain_factor` scales the signal after all processing is done.
-      float post_gain_factor = 1.f;
+      float post_gain_factor = 1.0f;
       struct AnalogMicGainEmulation {
         bool operator==(const AnalogMicGainEmulation& rhs) const;
         bool operator!=(const AnalogMicGainEmulation& rhs) const {
@@ -351,20 +351,21 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       enum LevelEstimator { kRms, kPeak };
       bool enabled = false;
       struct FixedDigital {
-        float gain_db = 0.f;
+        float gain_db = 0.0f;
       } fixed_digital;
       struct AdaptiveDigital {
         bool enabled = false;
+        int vad_reset_period_ms = 1500;
         float vad_probability_attack = 0.3f;
         LevelEstimator level_estimator = kRms;
         int level_estimator_adjacent_speech_frames_threshold = 6;
         // TODO(crbug.com/webrtc/7494): Remove `use_saturation_protector`.
         bool use_saturation_protector = true;
-        float initial_saturation_margin_db = 20.f;
-        float extra_saturation_margin_db = 5.f;
+        float initial_saturation_margin_db = 20.0f;
+        float extra_saturation_margin_db = 5.0f;
         int gain_applier_adjacent_speech_frames_threshold = 6;
-        float max_gain_change_db_per_second = 3.f;
-        float max_output_noise_level_dbfs = -55.f;
+        float max_gain_change_db_per_second = 3.0f;
+        float max_output_noise_level_dbfs = -55.0f;
         bool sse2_allowed = true;
         bool avx2_allowed = true;
         bool neon_allowed = true;
@@ -416,7 +417,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       int max_volume;  // Maximum play-out volume.
     };
 
-    RuntimeSetting() : type_(Type::kNotSpecified), value_(0.f) {}
+    RuntimeSetting() : type_(Type::kNotSpecified), value_(0.0f) {}
     ~RuntimeSetting() = default;
 
     static RuntimeSetting CreateCapturePreGain(float gain) {
@@ -438,8 +439,8 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
     // Corresponds to Config::GainController2::fixed_digital::gain_db, but for
     // runtime configuration.
     static RuntimeSetting CreateCaptureFixedPostGain(float gain_db) {
-      RTC_DCHECK_GE(gain_db, 0.f);
-      RTC_DCHECK_LE(gain_db, 90.f);
+      RTC_DCHECK_GE(gain_db, 0.0f);
+      RTC_DCHECK_LE(gain_db, 90.0f);
       return {Type::kCaptureFixedPostGain, gain_db};
     }
 
