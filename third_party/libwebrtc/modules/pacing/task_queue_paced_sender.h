@@ -55,6 +55,9 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
 
   ~TaskQueuePacedSender() override;
 
+  // Ensure that necessary delayed tasks are scheduled.
+  void EnsureStarted();
+
   // Methods implementing RtpPacketSender.
 
   // Adds the packet to the queue and calls PacketRouter::SendPacket() when
@@ -149,6 +152,12 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   bool stats_update_scheduled_ RTC_GUARDED_BY(task_queue_);
   // Last time stats were updated.
   Timestamp last_stats_time_ RTC_GUARDED_BY(task_queue_);
+
+  // Indicates if this task queue is started. If not, don't allow
+  // posting delayed tasks yet.
+  // TODO(crbug.com/1152887): Initialize to false once all users call
+  // EnsureStarted().
+  bool is_started_ RTC_GUARDED_BY(task_queue_) = true;
 
   // Indicates if this task queue is shutting down. If so, don't allow
   // posting any more delayed tasks as that can cause the task queue to
