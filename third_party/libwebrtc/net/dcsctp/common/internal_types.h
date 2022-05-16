@@ -10,6 +10,8 @@
 #ifndef NET_DCSCTP_COMMON_INTERNAL_TYPES_H_
 #define NET_DCSCTP_COMMON_INTERNAL_TYPES_H_
 
+#include <utility>
+
 #include "net/dcsctp/public/strong_alias.h"
 
 namespace dcsctp {

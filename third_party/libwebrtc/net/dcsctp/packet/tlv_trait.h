@@ -116,7 +116,7 @@ class TLVTrait {
         tlv_trait_impl::ReportInvalidPadding(padding);
         return absl::nullopt;
       }
-      if ((length % Config::kVariableLengthAlignment) != 0) {
+      if (!ValidateLengthAlignment(length, Config::kVariableLengthAlignment)) {
         tlv_trait_impl::ReportInvalidLengthMultiple(
             length, Config::kVariableLengthAlignment);
         return absl::nullopt;
@@ -146,6 +146,16 @@ class TLVTrait {
 
     return BoundedByteWriter<Config::kHeaderSize>(
         rtc::ArrayView<uint8_t>(out.data() + offset, size));
+  }
+
+ private:
+  static bool ValidateLengthAlignment(uint16_t length, size_t alignment) {
+    // This is to avoid MSVC believing there could be a "mod by zero", when it
+    // certainly can't.
+    if (alignment == 0) {
+      return true;
+    }
+    return (length % alignment) == 0;
   }
 };
 
