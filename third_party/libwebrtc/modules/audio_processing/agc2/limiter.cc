@@ -125,9 +125,11 @@ void Limiter::Process(AudioFrameView<float> signal) {
   last_scaling_factor_ = scaling_factors_.back();
 
   // Dump data for debug.
-  apm_data_dumper_->DumpRaw("agc2_gain_curve_applier_scaling_factors",
-                            samples_per_channel,
-                            per_sample_scaling_factors_.data());
+  apm_data_dumper_->DumpRaw("agc2_limiter_last_scaling_factor",
+                            last_scaling_factor_);
+  apm_data_dumper_->DumpRaw(
+      "agc2_limiter_region",
+      static_cast<int>(interp_gain_curve_.get_stats().region));
 }
 
 InterpolatedGainCurve::Stats Limiter::GetGainCurveStats() const {
