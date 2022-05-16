@@ -136,14 +136,14 @@ class UnwrappedSequenceNumber {
   int64_t value_;
 };
 
-// Transmission Sequence Numbers (TSN)
-using TSN = UnwrappedSequenceNumber<uint32_t>;
+// Unwrapped Transmission Sequence Numbers (TSN)
+using UnwrappedTSN = UnwrappedSequenceNumber<uint32_t>;
 
-// Stream Sequence Numbers (SSN)
-using SSN = UnwrappedSequenceNumber<uint16_t>;
+// Unwrapped Stream Sequence Numbers (SSN)
+using UnwrappedSSN = UnwrappedSequenceNumber<uint16_t>;
 
-// Message Identifier (MID)
-using MID = UnwrappedSequenceNumber<uint32_t>;
+// Unwrapped Message Identifier (MID)
+using UnwrappedMID = UnwrappedSequenceNumber<uint32_t>;
 
 }  // namespace dcsctp
 
