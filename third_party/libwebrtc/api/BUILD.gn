@@ -161,6 +161,7 @@ rtc_library("libjingle_peerconnection_api") {
   ]
   deps = [
     ":array_view",
+    ":async_dns_resolver",
     ":audio_options_api",
     ":callfactory_api",
     ":fec_controller_api",
@@ -251,13 +252,21 @@ rtc_library("rtc_error") {
 rtc_source_set("packet_socket_factory") {
   visibility = [ "*" ]
   sources = [
-    "async_dns_resolver.h",
     "async_resolver_factory.h",
     "packet_socket_factory.h",
   ]
   deps = [
+    ":async_dns_resolver",
     "../rtc_base:async_resolver_interface",
     "../rtc_base:rtc_base",
+    "../rtc_base:socket_address",
+    "../rtc_base/system:rtc_export",
+  ]
+}
+
+rtc_source_set("async_dns_resolver") {
+  sources = [ "async_dns_resolver.h" ]
+  deps = [
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]
@@ -950,6 +959,15 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_async_dns_resolver") {
+    testonly = true
+    sources = [ "test/mock_async_dns_resolver.h" ]
+    deps = [
+      ":async_dns_resolver",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("mock_rtp") {
     visibility = [ "*" ]
     testonly = true
@@ -1102,6 +1120,7 @@ if (rtc_include_tests) {
       ":dummy_peer_connection",
       ":fake_frame_decryptor",
       ":fake_frame_encryptor",
+      ":mock_async_dns_resolver",
       ":mock_audio_mixer",
       ":mock_data_channel",
       ":mock_frame_decryptor",

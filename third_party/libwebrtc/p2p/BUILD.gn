@@ -86,6 +86,8 @@ rtc_library("rtc_p2p") {
   ]
 
   deps = [
+    "../api:array_view",
+    "../api:async_dns_resolver",
     "../api:libjingle_peerconnection_api",
     "../api:packet_socket_factory",
     "../api:rtc_error",
@@ -93,6 +95,7 @@ rtc_library("rtc_p2p") {
     "../api:sequence_checker",
     "../api/crypto:options",
     "../api/rtc_event_log",
+    "../api/task_queue",
     "../api/transport:enums",
     "../api/transport:stun_types",
     "../logging:ice_log",
@@ -235,6 +238,7 @@ if (rtc_include_tests) {
       ":p2p_test_utils",
       ":rtc_p2p",
       "../api:libjingle_peerconnection_api",
+      "../api:mock_async_dns_resolver",
       "../api:packet_socket_factory",
       "../api:scoped_refptr",
       "../api/transport:stun_types",
@@ -256,6 +260,7 @@ if (rtc_include_tests) {
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
       "../test:field_trial",
+      "../test:rtc_expect_death",
       "../test:test_support",
       "//testing/gtest",
     ]
