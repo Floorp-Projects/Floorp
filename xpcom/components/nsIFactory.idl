@@ -10,7 +10,7 @@
  * components without specifying a concrete base class.
  */
 
-[scriptable, object, uuid(00000001-0000-0000-c000-000000000046)]
+[scriptable, object, uuid(1bb40a56-9223-41e6-97d4-da97bdeb6a4d)]
 interface nsIFactory :  nsISupports {
    /**
     * Creates an instance of a component.
@@ -28,15 +28,4 @@ interface nsIFactory :  nsISupports {
     */
     void createInstance(in nsISupports aOuter, in nsIIDRef iid,
                       [retval, iid_is(iid)] out nsQIResult result);
-
-   /**
-    * LockFactory provides the client a way to keep the component
-    * in memory until it is finished with it. The client can call
-    * LockFactory(PR_TRUE) to lock the factory and LockFactory(PR_FALSE)
-    * to release the factory.
-    *
-    * @param lock - Must be PR_TRUE or PR_FALSE
-    * @throws NS_ERROR* - Method failure.
-    */
-    void lockFactory(in boolean lock);
 };

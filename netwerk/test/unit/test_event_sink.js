@@ -26,9 +26,6 @@ var eventsink = {
     }
     return this.QueryInterface(iid);
   },
-  lockFactory: function eventsink_lockf(lock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
 
   asyncOnChannelRedirect: function eventsink_onredir(
     oldChan,

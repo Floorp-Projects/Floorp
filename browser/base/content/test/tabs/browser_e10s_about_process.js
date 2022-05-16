@@ -67,10 +67,6 @@ var AboutModuleFactory = {
     return new AboutModule().QueryInterface(aIID);
   },
 
-  lockFactory(aLock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
-
   QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 

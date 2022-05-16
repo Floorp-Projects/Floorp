@@ -12,9 +12,6 @@ var factory = {
   createInstance() {
     throw new Error("There is no history service");
   },
-  lockFactory() {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
   QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
 };
 

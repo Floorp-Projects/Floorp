@@ -116,7 +116,6 @@ ProtocolHandler.prototype = {
     }
     return this.QueryInterface(aIID);
   },
-  lockFactory() {},
 
   /** nsISupports */
   QueryInterface: ChromeUtils.generateQI([

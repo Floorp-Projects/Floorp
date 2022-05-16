@@ -16,10 +16,4 @@ GenericFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   return mCtor(aOuter, aIID, aResult);
 }
 
-NS_IMETHODIMP
-GenericFactory::LockFactory(bool aLock) {
-  NS_ERROR("Vestigial method, never called!");
-  return NS_ERROR_FAILURE;
-}
-
 }  // namespace mozilla
