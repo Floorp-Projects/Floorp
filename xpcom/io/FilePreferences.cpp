@@ -29,7 +29,7 @@ typedef nsTArray<nsString> WinPaths;
 static WinPaths& PathAllowlist() REQUIRES(sMutex) {
   sMutex.AssertCurrentThreadOwns();
 
-  static WinPaths sPaths;
+  static WinPaths sPaths GUARDED_BY(sMutex);
   return sPaths;
 }
 
