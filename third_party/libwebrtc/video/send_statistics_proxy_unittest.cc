@@ -64,9 +64,7 @@ class SendStatisticsProxyTest : public ::testing::Test {
   explicit SendStatisticsProxyTest(const std::string& field_trials)
       : override_field_trials_(field_trials),
         fake_clock_(1234),
-        config_(GetTestConfig()),
-        avg_delay_ms_(0),
-        max_delay_ms_(0) {}
+        config_(GetTestConfig()) {}
   virtual ~SendStatisticsProxyTest() {}
 
  protected:
@@ -173,11 +171,7 @@ class SendStatisticsProxyTest : public ::testing::Test {
   SimulatedClock fake_clock_;
   std::unique_ptr<SendStatisticsProxy> statistics_proxy_;
   VideoSendStream::Config config_;
-  int avg_delay_ms_;
-  int max_delay_ms_;
   VideoSendStream::Stats expected_;
-  typedef std::map<uint32_t, VideoSendStream::StreamStats>::const_iterator
-      StreamIterator;
 };
 
 TEST_F(SendStatisticsProxyTest, RtcpStatistics) {
@@ -284,21 +278,17 @@ TEST_F(SendStatisticsProxyTest, DataCounters) {
 TEST_F(SendStatisticsProxyTest, Bitrate) {
   BitrateStatisticsObserver* observer = statistics_proxy_.get();
   for (const auto& ssrc : config_.rtp.ssrcs) {
-    uint32_t total;
-    uint32_t retransmit;
     // Use ssrc as bitrate_bps to get a unique value for each stream.
-    total = ssrc;
-    retransmit = ssrc + 1;
+    uint32_t total = ssrc;
+    uint32_t retransmit = ssrc + 1;
     observer->Notify(total, retransmit, ssrc);
     expected_.substreams[ssrc].total_bitrate_bps = total;
     expected_.substreams[ssrc].retransmit_bitrate_bps = retransmit;
   }
   for (const auto& ssrc : config_.rtp.rtx.ssrcs) {
-    uint32_t total;
-    uint32_t retransmit;
     // Use ssrc as bitrate_bps to get a unique value for each stream.
-    total = ssrc;
-    retransmit = ssrc + 1;
+    uint32_t total = ssrc;
+    uint32_t retransmit = ssrc + 1;
     observer->Notify(total, retransmit, ssrc);
     expected_.substreams[ssrc].total_bitrate_bps = total;
     expected_.substreams[ssrc].retransmit_bitrate_bps = retransmit;
