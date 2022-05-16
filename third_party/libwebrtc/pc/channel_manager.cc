@@ -41,6 +41,7 @@ ChannelManager::ChannelManager(
 }
 
 ChannelManager::~ChannelManager() {
+  RTC_DCHECK_RUN_ON(main_thread_);
   if (initialized_) {
     Terminate();
   }
@@ -50,6 +51,7 @@ ChannelManager::~ChannelManager() {
 }
 
 bool ChannelManager::SetVideoRtxEnabled(bool enable) {
+  RTC_DCHECK_RUN_ON(main_thread_);
   // To be safe, this call is only allowed before initialization. Apps like
   // Flute only have a singleton ChannelManager and we don't want this flag to
   // be toggled between calls or when there's concurrent calls. We expect apps
@@ -119,7 +121,13 @@ void ChannelManager::GetSupportedDataCodecs(
   *codecs = data_engine_->data_codecs();
 }
 
+bool ChannelManager::initialized() const {
+  RTC_DCHECK_RUN_ON(main_thread_);
+  return initialized_;
+}
+
 bool ChannelManager::Init() {
+  RTC_DCHECK_RUN_ON(main_thread_);
   RTC_DCHECK(!initialized_);
   if (initialized_) {
     return false;
@@ -171,6 +179,7 @@ ChannelManager::GetSupportedVideoRtpHeaderExtensions() const {
 }
 
 void ChannelManager::Terminate() {
+  RTC_DCHECK_RUN_ON(main_thread_);
   RTC_DCHECK(initialized_);
   if (!initialized_) {
     return;
@@ -206,7 +215,6 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(initialized_);
   RTC_DCHECK(call);
   if (!media_engine_) {
     return nullptr;
@@ -240,8 +248,6 @@ void ChannelManager::DestroyVoiceChannel(VoiceChannel* voice_channel) {
                                  [&] { DestroyVoiceChannel(voice_channel); });
     return;
   }
-
-  RTC_DCHECK(initialized_);
 
   auto it = absl::c_find_if(voice_channels_,
                             [&](const std::unique_ptr<VoiceChannel>& p) {
@@ -279,7 +285,6 @@ VideoChannel* ChannelManager::CreateVideoChannel(
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(initialized_);
   RTC_DCHECK(call);
   if (!media_engine_) {
     return nullptr;
@@ -315,8 +320,6 @@ void ChannelManager::DestroyVideoChannel(VideoChannel* video_channel) {
     return;
   }
 
-  RTC_DCHECK(initialized_);
-
   auto it = absl::c_find_if(video_channels_,
                             [&](const std::unique_ptr<VideoChannel>& p) {
                               return p.get() == video_channel;
@@ -346,7 +349,6 @@ RtpDataChannel* ChannelManager::CreateRtpDataChannel(
   }
 
   // This is ok to alloc from a thread other than the worker thread.
-  RTC_DCHECK(initialized_);
   DataMediaChannel* media_channel = data_engine_->CreateChannel(media_config);
   if (!media_channel) {
     RTC_LOG(LS_WARNING) << "Failed to create RTP data channel.";
@@ -376,8 +378,6 @@ void ChannelManager::DestroyRtpDataChannel(RtpDataChannel* data_channel) {
         RTC_FROM_HERE, [&] { return DestroyRtpDataChannel(data_channel); });
     return;
   }
-
-  RTC_DCHECK(initialized_);
 
   auto it = absl::c_find_if(data_channels_,
                             [&](const std::unique_ptr<RtpDataChannel>& p) {
