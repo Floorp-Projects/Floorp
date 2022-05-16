@@ -208,11 +208,6 @@ NS_IMETHODIMP StaticModuleFactory::CreateInstance(nsISupports* aOuter,
   return CreateInstanceImpl(mID, aIID, aResult);
 }
 
-NS_IMETHODIMP StaticModuleFactory::LockFactory(bool aLock) {
-  MOZ_CRASH("LockFactory is no longer a thing");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 }  // anonymous namespace
 
 
