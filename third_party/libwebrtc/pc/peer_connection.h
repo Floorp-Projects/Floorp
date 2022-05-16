@@ -577,7 +577,7 @@ class PeerConnection : public PeerConnectionInternal,
 
   // Invoked when TransportController connection completion is signaled.
   // Reports stats for all transports in use.
-  void ReportTransportStats() RTC_RUN_ON(signaling_thread());
+  void ReportTransportStats() RTC_RUN_ON(network_thread());
 
   // Gather the usage of IPv4/IPv6 as best connection.
   static void ReportBestConnectionState(const cricket::TransportStats& stats);
