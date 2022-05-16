@@ -323,7 +323,8 @@ class PeerConnection : public PeerConnectionInternal,
   PeerConnectionObserver* Observer() const;
   bool IsClosed() const {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    return sdp_handler_->signaling_state() == PeerConnectionInterface::kClosed;
+    return !sdp_handler_ ||
+           sdp_handler_->signaling_state() == PeerConnectionInterface::kClosed;
   }
   // Get current SSL role used by SCTP's underlying transport.
   bool GetSctpSslRole(rtc::SSLRole* role);

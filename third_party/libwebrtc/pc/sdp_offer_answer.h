@@ -39,6 +39,7 @@
 #include "api/set_remote_description_observer_interface.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "api/turn_customizer.h"
+#include "api/uma_metrics.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "media/base/media_channel.h"
 #include "media/base/stream_params.h"
@@ -637,6 +638,12 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
 
   // Updates the error state, signaling if necessary.
   void SetSessionError(SessionError error, const std::string& error_desc);
+
+  // Implements AddIceCandidate without reporting usage, but returns the
+  // particular success/error value that should be reported (and can be utilized
+  // for other purposes).
+  AddIceCandidateResult AddIceCandidateInternal(
+      const IceCandidateInterface* candidate);
 
   SessionError session_error_ RTC_GUARDED_BY(signaling_thread()) =
       SessionError::kNone;

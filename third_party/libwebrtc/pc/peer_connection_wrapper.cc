@@ -48,7 +48,10 @@ PeerConnectionWrapper::PeerConnectionWrapper(
   observer_->SetPeerConnectionInterface(pc_.get());
 }
 
-PeerConnectionWrapper::~PeerConnectionWrapper() = default;
+PeerConnectionWrapper::~PeerConnectionWrapper() {
+  if (pc_)
+    pc_->Close();
+}
 
 PeerConnectionFactoryInterface* PeerConnectionWrapper::pc_factory() {
   return pc_factory_.get();
