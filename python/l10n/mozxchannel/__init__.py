@@ -39,7 +39,7 @@ def get_default_config(topsrcdir, strings_path):
                     "central": "mozilla-central",
                     "beta": "releases/mozilla-beta",
                     "release": "releases/mozilla-release",
-                    "esr91": "releases/mozilla-esr91",
+                    "esr102": "releases/mozilla-esr102",
                 },
                 "config_files": [
                     "browser/locales/l10n.toml",
@@ -57,7 +57,7 @@ def get_default_config(topsrcdir, strings_path):
                     # ESR goes last (e.g. esr78 goes after esr91).
                     "comm": "comm-central",
                     "comm-beta": "releases/comm-beta",
-                    "comm-esr91": "releases/comm-esr91",
+                    "comm-esr102": "releases/comm-esr102",
                 },
                 "config_files": [
                     "comm/calendar/locales/l10n.toml",
