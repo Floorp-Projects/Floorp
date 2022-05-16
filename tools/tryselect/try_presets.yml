@@ -87,6 +87,17 @@ geckodriver:
         - "'platform 'wdspec 'debug !fis"
         - "'browsertime 'amazon 'shippable 'firefox !fis"
 
+media-full:
+    selector: fuzzy
+    description: >-
+        Runs tests that exercise media playback and WebRTC code.
+    query:
+        - "mochitest-media !dfpi !nofis"
+        - "mochitest-browser-chrome !dfpi !nofis !a11y"
+        - "web-platform-tests !dfpi !nofis"
+        - "crashtest !wdspec !nofis"
+        - "'gtest"
+
 perf:
     selector: fuzzy
     description: >-
