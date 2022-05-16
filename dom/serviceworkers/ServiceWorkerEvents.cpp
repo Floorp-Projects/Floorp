@@ -226,10 +226,10 @@ class BodyCopyHandle final : public nsIInterceptedBodyCallback {
 
     nsCOMPtr<nsIRunnable> event;
     if (NS_WARN_IF(NS_FAILED(aRv))) {
-      AsyncLog(mClosure->mInterceptedChannel, mClosure->mRespondWithScriptSpec,
-               mClosure->mRespondWithLineNumber,
-               mClosure->mRespondWithColumnNumber,
-               "InterceptionFailedWithURL"_ns, mClosure->mRequestURL);
+      ::AsyncLog(
+          mClosure->mInterceptedChannel, mClosure->mRespondWithScriptSpec,
+          mClosure->mRespondWithLineNumber, mClosure->mRespondWithColumnNumber,
+          "InterceptionFailedWithURL"_ns, mClosure->mRequestURL);
       event = new CancelChannelRunnable(mClosure->mInterceptedChannel,
                                         mClosure->mRegistration,
                                         NS_ERROR_INTERCEPTION_FAILED);
