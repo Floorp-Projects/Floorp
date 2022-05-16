@@ -32,9 +32,15 @@ class BasicAsyncResolverFactory final : public AsyncResolverFactory {
 class WrappingAsyncDnsResolverFactory final
     : public AsyncDnsResolverFactoryInterface {
  public:
-  WrappingAsyncDnsResolverFactory(
+  explicit WrappingAsyncDnsResolverFactory(
       std::unique_ptr<AsyncResolverFactory> wrapped_factory)
-      : wrapped_factory_(std::move(wrapped_factory)) {}
+      : owned_factory_(std::move(wrapped_factory)),
+        wrapped_factory_(owned_factory_.get()) {}
+
+  explicit WrappingAsyncDnsResolverFactory(
+      AsyncResolverFactory* non_owned_factory)
+      : wrapped_factory_(non_owned_factory) {}
+
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
       const rtc::SocketAddress& addr,
       std::function<void()> callback) override;
@@ -42,7 +48,8 @@ class WrappingAsyncDnsResolverFactory final
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> Create() override;
 
  private:
-  const std::unique_ptr<AsyncResolverFactory> wrapped_factory_;
+  const std::unique_ptr<AsyncResolverFactory> owned_factory_;
+  AsyncResolverFactory* const wrapped_factory_;
 };
 
 }  // namespace webrtc
