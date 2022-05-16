@@ -454,8 +454,9 @@ bool ClientWebGLContext::UpdateWebRenderCanvasData(
     return true;
   }
 
-  if (!IsContextLost() && !renderer &&
+  if (!IsContextLost() && !renderer && mNotLost->mCanvasRenderer &&
       aCanvasData->SetCanvasRenderer(mNotLost->mCanvasRenderer)) {
+    mNotLost->mCanvasRenderer->SetDirty();
     mResetLayer = false;
     return true;
   }
