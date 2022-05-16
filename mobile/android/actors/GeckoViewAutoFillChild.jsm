@@ -61,15 +61,11 @@ class GeckoViewAutoFillChild extends GeckoViewActorChild {
         break;
       }
       case "pagehide": {
-        if (aEvent.target === contentWindow.top.document) {
-          this._autofill.clearElements();
-        }
+        this._autofill.clearElements(this.browsingContext);
         break;
       }
       case "pageshow": {
-        if (aEvent.target === contentWindow.top.document && aEvent.persisted) {
-          this._autofill.scanDocument(aEvent.target);
-        }
+        this._autofill.scanDocument(this.document);
         break;
       }
       case "PasswordManager:ShowDoorhanger": {
