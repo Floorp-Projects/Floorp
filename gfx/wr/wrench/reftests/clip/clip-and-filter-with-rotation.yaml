@@ -30,6 +30,6 @@ root:
                 type: rect
                 color: blue
               -
-                bounds: [-2, -2, 328, 299]
+                bounds: [0, 0, 324, 295]
                 type: rect
                 color: red
