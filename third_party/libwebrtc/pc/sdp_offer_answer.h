@@ -173,10 +173,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   absl::optional<bool> is_caller();
   bool HasNewIceCredentials();
   void UpdateNegotiationNeeded();
-  void SetHavePendingRtpDataChannel() {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    have_pending_rtp_data_channel_ = true;
-  }
 
   // Returns the media section in the given session description that is
   // associated with the RtpTransceiver. Returns null if none found or this
@@ -548,7 +544,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   cricket::MediaDescriptionOptions GetMediaDescriptionOptionsForRejectedData(
       const std::string& mid) const;
 
-  const std::string GetTransportName(const std::string& content_name);
   // Based on number of transceivers per media type, enabled or disable
   // payload type based demuxing in the affected channels.
   bool UpdatePayloadTypeDemuxingState(cricket::ContentSource source);

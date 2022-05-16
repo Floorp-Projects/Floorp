@@ -436,7 +436,7 @@ class PeerConnection : public PeerConnectionInternal,
 
   // Returns true if SRTP (either using DTLS-SRTP or SDES) is required by
   // this session.
-  bool SrtpRequired() const RTC_RUN_ON(signaling_thread());
+  bool SrtpRequired() const;
 
   void OnSentPacket_w(const rtc::SentPacket& sent_packet);
 

@@ -4613,14 +4613,11 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   // TODO(bugs.webrtc.org/11992): CreateVoiceChannel internally switches to the
   // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
   // be on the worker thread and use |call_| (update upstream code).
-  cricket::VoiceChannel* voice_channel;
-  {
-    RTC_DCHECK_RUN_ON(pc_->signaling_thread());
-    voice_channel = channel_manager()->CreateVoiceChannel(
-        pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
-        signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
-        &ssrc_generator_, audio_options());
-  }
+  cricket::VoiceChannel* voice_channel = channel_manager()->CreateVoiceChannel(
+      pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
+      signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
+      &ssrc_generator_, audio_options());
+
   if (!voice_channel) {
     return nullptr;
   }
@@ -4641,15 +4638,11 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to the
   // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
   // be on the worker thread and use |call_| (update upstream code).
-  cricket::VideoChannel* video_channel;
-  {
-    RTC_DCHECK_RUN_ON(pc_->signaling_thread());
-    video_channel = channel_manager()->CreateVideoChannel(
-        pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
-        signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
-        &ssrc_generator_, video_options(),
-        video_bitrate_allocator_factory_.get());
-  }
+  cricket::VideoChannel* video_channel = channel_manager()->CreateVideoChannel(
+      pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
+      signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
+      &ssrc_generator_, video_options(),
+      video_bitrate_allocator_factory_.get());
   if (!video_channel) {
     return nullptr;
   }
@@ -4678,14 +4671,12 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
       RtpTransportInternal* rtp_transport = pc_->GetRtpTransport(mid);
       // TODO(bugs.webrtc.org/9987): set_rtp_data_channel() should be called on
       // the network thread like set_data_channel_transport is.
-      {
-        RTC_DCHECK_RUN_ON(pc_->signaling_thread());
-        data_channel_controller()->set_rtp_data_channel(
-            channel_manager()->CreateRtpDataChannel(
-                pc_->configuration()->media_config, rtp_transport,
-                signaling_thread(), mid, pc_->SrtpRequired(),
-                pc_->GetCryptoOptions(), &ssrc_generator_));
-      }
+      data_channel_controller()->set_rtp_data_channel(
+          channel_manager()->CreateRtpDataChannel(
+              pc_->configuration()->media_config, rtp_transport,
+              signaling_thread(), mid, pc_->SrtpRequired(),
+              pc_->GetCryptoOptions(), &ssrc_generator_));
+
       if (!data_channel_controller()->rtp_data_channel()) {
         return false;
       }
@@ -4693,7 +4684,7 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
           pc_, &PeerConnection::OnSentPacket_w);
       data_channel_controller()->rtp_data_channel()->SetRtpTransport(
           rtp_transport);
-      SetHavePendingRtpDataChannel();
+      have_pending_rtp_data_channel_ = true;
       return true;
   }
   return false;
@@ -4866,23 +4857,6 @@ SdpOfferAnswerHandler::GetMediaDescriptionOptionsForRejectedData(
   AddRtpDataChannelOptions(*(data_channel_controller()->rtp_data_channels()),
                            &options);
   return options;
-}
-
-const std::string SdpOfferAnswerHandler::GetTransportName(
-    const std::string& content_name) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  cricket::ChannelInterface* channel = pc_->GetChannel(content_name);
-  if (channel) {
-    return channel->transport_name();
-  }
-  if (data_channel_controller()->data_channel_transport()) {
-    RTC_DCHECK(pc_->sctp_mid());
-    if (content_name == *(pc_->sctp_mid())) {
-      return *(pc_->sctp_transport_name());
-    }
-  }
-  // Return an empty string if failed to retrieve the transport name.
-  return "";
 }
 
 bool SdpOfferAnswerHandler::UpdatePayloadTypeDemuxingState(
