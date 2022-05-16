@@ -145,6 +145,9 @@ absl::optional<SctpPacket> SctpPacket::Parse(
       RTC_DLOG(LS_WARNING) << "Too large chunk. length=" << length
                            << ", remaining=" << descriptor_data.size();
       return absl::nullopt;
+    } else if (padded_length < kChunkTlvHeaderSize) {
+      RTC_DLOG(LS_WARNING) << "Too small chunk. length=" << length;
+      return absl::nullopt;
     }
     descriptors.emplace_back(type, flags,
                              descriptor_data.subview(0, padded_length));
