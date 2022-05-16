@@ -1147,7 +1147,7 @@ void RTCStatsCollector::GetStatsReport(
 
 void RTCStatsCollector::GetStatsReportInternal(
     RTCStatsCollector::RequestInfo request) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   requests_.push_back(std::move(request));
 
   // "Now" using a monotonically increasing timer.
@@ -1217,12 +1217,12 @@ void RTCStatsCollector::GetStatsReportInternal(
 }
 
 void RTCStatsCollector::ClearCachedStatsReport() {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   cached_report_ = nullptr;
 }
 
 void RTCStatsCollector::WaitForPendingRequest() {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   // If a request is pending, blocks until the |network_report_event_| is
   // signaled and then delivers the result. Otherwise this is a NO-OP.
   MergeNetworkReport_s();
@@ -1230,7 +1230,7 @@ void RTCStatsCollector::WaitForPendingRequest() {
 
 void RTCStatsCollector::ProducePartialResultsOnSignalingThread(
     int64_t timestamp_us) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   partial_report_ = RTCStatsReport::Create(timestamp_us);
@@ -1249,7 +1249,7 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThread(
 void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
     int64_t timestamp_us,
     RTCStatsReport* partial_report) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   ProduceDataChannelStats_s(timestamp_us, partial_report);
@@ -1261,7 +1261,7 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
     int64_t timestamp_us) {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   // Touching |network_report_| on this thread is safe by this method because
@@ -1291,7 +1291,7 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThreadImpl(
         transport_stats_by_name,
     const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     RTCStatsReport* partial_report) {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   ProduceCertificateStats_n(timestamp_us, transport_cert_stats, partial_report);
@@ -1305,7 +1305,7 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThreadImpl(
 }
 
 void RTCStatsCollector::MergeNetworkReport_s() {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   // The |network_report_event_| must be signaled for it to be safe to touch
   // |network_report_|. This is normally not blocking, but if
   // WaitForPendingRequest() is called while a request is pending, we might have
@@ -1348,7 +1348,7 @@ void RTCStatsCollector::MergeNetworkReport_s() {
 void RTCStatsCollector::DeliverCachedReport(
     rtc::scoped_refptr<const RTCStatsReport> cached_report,
     std::vector<RTCStatsCollector::RequestInfo> requests) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(!requests.empty());
   RTC_DCHECK(cached_report);
 
@@ -1379,7 +1379,7 @@ void RTCStatsCollector::ProduceCertificateStats_n(
     int64_t timestamp_us,
     const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& transport_cert_stats_pair : transport_cert_stats) {
@@ -1398,7 +1398,7 @@ void RTCStatsCollector::ProduceCodecStats_n(
     int64_t timestamp_us,
     const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& stats : transceiver_stats_infos) {
@@ -1470,7 +1470,7 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
         transport_stats_by_name,
     const Call::Stats& call_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& entry : transport_stats_by_name) {
@@ -1552,7 +1552,7 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
 void RTCStatsCollector::ProduceMediaStreamStats_s(
     int64_t timestamp_us,
     RTCStatsReport* report) const {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::map<std::string, std::vector<std::string>> track_ids;
@@ -1589,7 +1589,7 @@ void RTCStatsCollector::ProduceMediaStreamStats_s(
 void RTCStatsCollector::ProduceMediaStreamTrackStats_s(
     int64_t timestamp_us,
     RTCStatsReport* report) const {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const RtpTransceiverStatsInfo& stats : transceiver_stats_infos_) {
@@ -1612,7 +1612,7 @@ void RTCStatsCollector::ProduceMediaStreamTrackStats_s(
 void RTCStatsCollector::ProduceMediaSourceStats_s(
     int64_t timestamp_us,
     RTCStatsReport* report) const {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const RtpTransceiverStatsInfo& transceiver_stats_info :
@@ -1696,7 +1696,7 @@ void RTCStatsCollector::ProduceMediaSourceStats_s(
 void RTCStatsCollector::ProducePeerConnectionStats_s(
     int64_t timestamp_us,
     RTCStatsReport* report) const {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::unique_ptr<RTCPeerConnectionStats> stats(
@@ -1710,7 +1710,7 @@ void RTCStatsCollector::ProduceRTPStreamStats_n(
     int64_t timestamp_us,
     const std::vector<RtpTransceiverStatsInfo>& transceiver_stats_infos,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const RtpTransceiverStatsInfo& stats : transceiver_stats_infos) {
@@ -1728,7 +1728,7 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
     int64_t timestamp_us,
     const RtpTransceiverStatsInfo& stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   if (!stats.mid || !stats.transport_name) {
@@ -1820,7 +1820,7 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
     int64_t timestamp_us,
     const RtpTransceiverStatsInfo& stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   if (!stats.mid || !stats.transport_name) {
@@ -1905,7 +1905,7 @@ void RTCStatsCollector::ProduceTransportStats_n(
         transport_stats_by_name,
     const std::map<std::string, CertificateStatsPair>& transport_cert_stats,
     RTCStatsReport* report) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   for (const auto& entry : transport_stats_by_name) {
@@ -2003,7 +2003,7 @@ std::map<std::string, RTCStatsCollector::CertificateStatsPair>
 RTCStatsCollector::PrepareTransportCertificateStats_n(
     const std::map<std::string, cricket::TransportStats>&
         transport_stats_by_name) const {
-  RTC_DCHECK(network_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::map<std::string, CertificateStatsPair> transport_cert_stats;
@@ -2030,7 +2030,7 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
 }
 
 void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
 
   transceiver_stats_infos_.clear();
   // These are used to invoke GetStats for all the media channels together in
@@ -2140,7 +2140,7 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
 }
 
 std::set<std::string> RTCStatsCollector::PrepareTransportNames_s() const {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
   std::set<std::string> transport_names;
@@ -2170,7 +2170,7 @@ void RTCStatsCollector::OnSctpDataChannelCreated(SctpDataChannel* channel) {
 }
 
 void RTCStatsCollector::OnDataChannelOpened(DataChannelInterface* channel) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   bool result = internal_record_.opened_data_channels
                     .insert(reinterpret_cast<uintptr_t>(channel))
                     .second;
@@ -2179,7 +2179,7 @@ void RTCStatsCollector::OnDataChannelOpened(DataChannelInterface* channel) {
 }
 
 void RTCStatsCollector::OnDataChannelClosed(DataChannelInterface* channel) {
-  RTC_DCHECK(signaling_thread_->IsCurrent());
+  RTC_DCHECK_RUN_ON(signaling_thread_);
   // Only channels that have been fully opened (and have increased the
   // |data_channels_opened_| counter) increase the closed counter.
   if (internal_record_.opened_data_channels.erase(
