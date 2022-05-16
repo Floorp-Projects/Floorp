@@ -28,7 +28,7 @@ from condprof.changelog import Changelog
 
 TC_SERVICE = "https://firefox-ci-tc.services.mozilla.com"
 ROOT_URL = TC_SERVICE + "/api/index"
-INDEX_PATH = "gecko.v2.%(repo)s.latest.firefox.condprof-%(platform)s"
+INDEX_PATH = "gecko.v2.%(repo)s.latest.firefox.condprof-%(platform)s-%(scenario)s"
 PUBLIC_DIR = "artifacts/public/condprof"
 TC_LINK = ROOT_URL + "/v1/task/" + INDEX_PATH + "/" + PUBLIC_DIR + "/"
 ARTIFACT_NAME = "profile-%(platform)s-%(scenario)s-%(customization)s.tgz"
@@ -135,6 +135,7 @@ def get_profile(
     If task_id is provided, will grab the profile from that task. when not
     provided (default) will grab the latest profile.
     """
+
     # XXX assert values
     params = {
         "platform": platform,
@@ -212,8 +213,8 @@ def get_profile(
         raise ProfileNotFoundError(url)
 
 
-def read_changelog(platform, repo="mozilla-central"):
-    params = {"platform": platform, "repo": repo}
+def read_changelog(platform, repo="mozilla-central", scenario="settled"):
+    params = {"platform": platform, "repo": repo, "scenario": scenario}
     changelog_url = CHANGELOG_LINK % params
     logger.info("Getting %s" % changelog_url)
     download_dir = tempfile.mkdtemp()
