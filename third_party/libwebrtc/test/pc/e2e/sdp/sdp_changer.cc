@@ -34,6 +34,23 @@ std::string CodecRequiredParamsToString(
   return out.str();
 }
 
+std::string SupportedCodecsToString(
+    rtc::ArrayView<const RtpCodecCapability> supported_codecs) {
+  rtc::StringBuilder out;
+  for (const auto& codec : supported_codecs) {
+    out << codec.name;
+    if (!codec.parameters.empty()) {
+      out << "(";
+      for (const auto& param : codec.parameters) {
+        out << param.first << "=" << param.second << ";";
+      }
+      out << ")";
+    }
+    out << "; ";
+  }
+  return out.str();
+}
+
 }  // namespace
 
 std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
@@ -42,16 +59,6 @@ std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
     bool use_ulpfec,
     bool use_flexfec,
     rtc::ArrayView<const RtpCodecCapability> supported_codecs) {
-  RTC_LOG(INFO) << "Peer connection support these codecs:";
-  for (const auto& codec : supported_codecs) {
-    RTC_LOG(INFO) << "Codec: " << codec.name;
-    if (!codec.parameters.empty()) {
-      RTC_LOG(INFO) << "Params:";
-      for (const auto& param : codec.parameters) {
-        RTC_LOG(INFO) << "  " << param.first << "=" << param.second;
-      }
-    }
-  }
   std::vector<RtpCodecCapability> output_codecs;
   // Find requested codecs among supported and add them to output in the order
   // they were requested.
@@ -80,7 +87,8 @@ std::vector<RtpCodecCapability> FilterVideoCodecCapabilities(
     RTC_CHECK_GT(output_codecs.size(), size_before)
         << "Codec with name=" << codec_request.name << " and params {"
         << CodecRequiredParamsToString(codec_request.required_params)
-        << "} is unsupported for this peer connection";
+        << "} is unsupported for this peer connection. Supported codecs are: "
+        << SupportedCodecsToString(supported_codecs);
   }
 
   // Add required FEC and RTX codecs to output.
