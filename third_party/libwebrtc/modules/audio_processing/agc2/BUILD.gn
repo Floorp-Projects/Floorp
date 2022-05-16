@@ -249,6 +249,7 @@ rtc_library("noise_estimator_unittests") {
     "..:apm_logging",
     "..:audio_frame_view",
     "../../../api:array_view",
+    "../../../api:function_view",
     "../../../rtc_base:checks",
     "../../../rtc_base:gunit_helpers",
     "../../../rtc_base:rtc_base_approved",
