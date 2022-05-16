@@ -571,15 +571,24 @@ static void JNI_PeerConnection_CreateAnswer(
   ExtractNativePC(jni, j_pc)->CreateAnswer(observer, options);
 }
 
+static void JNI_PeerConnection_SetLocalDescriptionAutomatically(
+    JNIEnv* jni,
+    const JavaParamRef<jobject>& j_pc,
+    const JavaParamRef<jobject>& j_observer) {
+  rtc::scoped_refptr<SetLocalSdpObserverJni> observer(
+      new rtc::RefCountedObject<SetLocalSdpObserverJni>(jni, j_observer));
+  ExtractNativePC(jni, j_pc)->SetLocalDescription(observer);
+}
+
 static void JNI_PeerConnection_SetLocalDescription(
     JNIEnv* jni,
     const JavaParamRef<jobject>& j_pc,
     const JavaParamRef<jobject>& j_observer,
     const JavaParamRef<jobject>& j_sdp) {
-  rtc::scoped_refptr<SetSdpObserverJni> observer(
-      new rtc::RefCountedObject<SetSdpObserverJni>(jni, j_observer, nullptr));
+  rtc::scoped_refptr<SetLocalSdpObserverJni> observer(
+      new rtc::RefCountedObject<SetLocalSdpObserverJni>(jni, j_observer));
   ExtractNativePC(jni, j_pc)->SetLocalDescription(
-      observer, JavaToNativeSessionDescription(jni, j_sdp).release());
+      JavaToNativeSessionDescription(jni, j_sdp), observer);
 }
 
 static void JNI_PeerConnection_SetRemoteDescription(
@@ -587,10 +596,10 @@ static void JNI_PeerConnection_SetRemoteDescription(
     const JavaParamRef<jobject>& j_pc,
     const JavaParamRef<jobject>& j_observer,
     const JavaParamRef<jobject>& j_sdp) {
-  rtc::scoped_refptr<SetSdpObserverJni> observer(
-      new rtc::RefCountedObject<SetSdpObserverJni>(jni, j_observer, nullptr));
+  rtc::scoped_refptr<SetRemoteSdpObserverJni> observer(
+      new rtc::RefCountedObject<SetRemoteSdpObserverJni>(jni, j_observer));
   ExtractNativePC(jni, j_pc)->SetRemoteDescription(
-      observer, JavaToNativeSessionDescription(jni, j_sdp).release());
+      JavaToNativeSessionDescription(jni, j_sdp), observer);
 }
 
 static void JNI_PeerConnection_RestartIce(JNIEnv* jni,
