@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -320,7 +319,7 @@ var SearchUtils = {
       "to accordingly.";
 
     let salt =
-      OS.Path.basename(OS.Constants.Path.profileDir) +
+      PathUtils.filename(PathUtils.profileDir) +
       name +
       disclaimer.replace(/\$appName/g, Services.appinfo.name);
 
