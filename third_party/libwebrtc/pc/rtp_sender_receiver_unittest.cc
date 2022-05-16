@@ -108,24 +108,25 @@ class RtpSenderReceiverTest
         // Create fake media engine/etc. so we can create channels to use to
         // test RtpSenders/RtpReceivers.
         media_engine_(new cricket::FakeMediaEngine()),
-        channel_manager_(absl::WrapUnique(media_engine_),
-                         std::make_unique<cricket::RtpDataEngine>(),
-                         worker_thread_,
-                         network_thread_),
         fake_call_(),
         local_stream_(MediaStream::Create(kStreamId1)) {
-    // Create channels to be used by the RtpSenders and RtpReceivers.
-    channel_manager_.Init();
+    worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
+      channel_manager_ = cricket::ChannelManager::Create(
+          absl::WrapUnique(media_engine_),
+          std::make_unique<cricket::RtpDataEngine>(), false, worker_thread_,
+          network_thread_);
+    });
+
     bool srtp_required = true;
     rtp_dtls_transport_ = std::make_unique<cricket::FakeDtlsTransport>(
         "fake_dtls_transport", cricket::ICE_CANDIDATE_COMPONENT_RTP);
     rtp_transport_ = CreateDtlsSrtpTransport();
 
-    voice_channel_ = channel_manager_.CreateVoiceChannel(
+    voice_channel_ = channel_manager_->CreateVoiceChannel(
         &fake_call_, cricket::MediaConfig(), rtp_transport_.get(),
         rtc::Thread::Current(), cricket::CN_AUDIO, srtp_required,
         webrtc::CryptoOptions(), &ssrc_generator_, cricket::AudioOptions());
-    video_channel_ = channel_manager_.CreateVideoChannel(
+    video_channel_ = channel_manager_->CreateVideoChannel(
         &fake_call_, cricket::MediaConfig(), rtp_transport_.get(),
         rtc::Thread::Current(), cricket::CN_VIDEO, srtp_required,
         webrtc::CryptoOptions(), &ssrc_generator_, cricket::VideoOptions(),
@@ -159,6 +160,18 @@ class RtpSenderReceiverTest
         cricket::StreamParams::CreateLegacy(kVideoSsrc2));
     video_media_channel_->AddRecvStream(
         cricket::StreamParams::CreateLegacy(kVideoSsrc2));
+  }
+
+  ~RtpSenderReceiverTest() {
+    audio_rtp_sender_ = nullptr;
+    video_rtp_sender_ = nullptr;
+    audio_rtp_receiver_ = nullptr;
+    video_rtp_receiver_ = nullptr;
+    local_stream_ = nullptr;
+    video_track_ = nullptr;
+    audio_track_ = nullptr;
+    worker_thread_->Invoke<void>(RTC_FROM_HERE,
+                                 [&]() { channel_manager_.reset(); });
   }
 
   std::unique_ptr<webrtc::RtpTransportInternal> CreateDtlsSrtpTransport() {
@@ -497,7 +510,7 @@ class RtpSenderReceiverTest
       video_bitrate_allocator_factory_;
   // |media_engine_| is actually owned by |channel_manager_|.
   cricket::FakeMediaEngine* media_engine_;
-  cricket::ChannelManager channel_manager_;
+  std::unique_ptr<cricket::ChannelManager> channel_manager_;
   cricket::FakeCall fake_call_;
   cricket::VoiceChannel* voice_channel_;
   cricket::VideoChannel* video_channel_;

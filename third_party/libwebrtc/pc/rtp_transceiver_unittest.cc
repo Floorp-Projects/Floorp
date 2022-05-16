@@ -82,21 +82,23 @@ TEST(RtpTransceiverTest, CanUnsetChannelOnStoppedTransceiver) {
 class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
  public:
   RtpTransceiverUnifiedPlanTest()
-      : channel_manager_(std::make_unique<cricket::FakeMediaEngine>(),
-                         std::make_unique<cricket::FakeDataEngine>(),
-                         rtc::Thread::Current(),
-                         rtc::Thread::Current()),
+      : channel_manager_(cricket::ChannelManager::Create(
+            std::make_unique<cricket::FakeMediaEngine>(),
+            std::make_unique<cricket::FakeDataEngine>(),
+            false,
+            rtc::Thread::Current(),
+            rtc::Thread::Current())),
         transceiver_(RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
                          rtc::Thread::Current(),
                          new rtc::RefCountedObject<MockRtpSenderInternal>()),
                      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
                          rtc::Thread::Current(),
                          new rtc::RefCountedObject<MockRtpReceiverInternal>()),
-                     &channel_manager_,
-                     channel_manager_.GetSupportedAudioRtpHeaderExtensions(),
+                     channel_manager_.get(),
+                     channel_manager_->GetSupportedAudioRtpHeaderExtensions(),
                      /* on_negotiation_needed= */ [] {}) {}
 
-  cricket::ChannelManager channel_manager_;
+  std::unique_ptr<cricket::ChannelManager> channel_manager_;
   RtpTransceiver transceiver_;
 };
 
@@ -117,10 +119,12 @@ TEST_F(RtpTransceiverUnifiedPlanTest, StopSetsDirection) {
 class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
  public:
   RtpTransceiverTestForHeaderExtensions()
-      : channel_manager_(std::make_unique<cricket::FakeMediaEngine>(),
-                         std::make_unique<cricket::FakeDataEngine>(),
-                         rtc::Thread::Current(),
-                         rtc::Thread::Current()),
+      : channel_manager_(cricket::ChannelManager::Create(
+            std::make_unique<cricket::FakeMediaEngine>(),
+            std::make_unique<cricket::FakeDataEngine>(),
+            false,
+            rtc::Thread::Current(),
+            rtc::Thread::Current())),
         extensions_(
             {RtpHeaderExtensionCapability("uri1",
                                           1,
@@ -140,11 +144,11 @@ class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
                      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
                          rtc::Thread::Current(),
                          new rtc::RefCountedObject<MockRtpReceiverInternal>()),
-                     &channel_manager_,
+                     channel_manager_.get(),
                      extensions_,
                      /* on_negotiation_needed= */ [] {}) {}
 
-  cricket::ChannelManager channel_manager_;
+  std::unique_ptr<cricket::ChannelManager> channel_manager_;
   std::vector<RtpHeaderExtensionCapability> extensions_;
   RtpTransceiver transceiver_;
 };

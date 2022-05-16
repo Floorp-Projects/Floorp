@@ -41,8 +41,7 @@ TEST(NullWebRtcVideoEngineTest, CheckInterface) {
 
   CompositeMediaEngine engine(std::move(audio_engine),
                               std::make_unique<NullWebRtcVideoEngine>());
-
-  EXPECT_TRUE(engine.Init());
+  engine.Init();
 }
 
 }  // namespace cricket
