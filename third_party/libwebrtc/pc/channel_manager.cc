@@ -159,6 +159,8 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
     const webrtc::CryptoOptions& crypto_options,
     rtc::UniqueRandomIdGenerator* ssrc_generator,
     const AudioOptions& options) {
+  RTC_DCHECK(call);
+  RTC_DCHECK(media_engine_);
   // TODO(bugs.webrtc.org/11992): Remove this workaround after updates in
   // PeerConnection and add the expectation that we're already on the right
   // thread.
@@ -171,10 +173,6 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(call);
-  if (!media_engine_) {
-    return nullptr;
-  }
 
   VoiceMediaChannel* media_channel = media_engine_->voice().CreateMediaChannel(
       call, media_config, options, crypto_options);
@@ -196,9 +194,8 @@ VoiceChannel* ChannelManager::CreateVoiceChannel(
 
 void ChannelManager::DestroyVoiceChannel(VoiceChannel* voice_channel) {
   TRACE_EVENT0("webrtc", "ChannelManager::DestroyVoiceChannel");
-  if (!voice_channel) {
-    return;
-  }
+  RTC_DCHECK(voice_channel);
+
   if (!worker_thread_->IsCurrent()) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE,
                                  [&] { DestroyVoiceChannel(voice_channel); });
@@ -206,16 +203,11 @@ void ChannelManager::DestroyVoiceChannel(VoiceChannel* voice_channel) {
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
-  auto it = absl::c_find_if(voice_channels_,
-                            [&](const std::unique_ptr<VoiceChannel>& p) {
-                              return p.get() == voice_channel;
-                            });
-  RTC_DCHECK(it != voice_channels_.end());
-  if (it == voice_channels_.end()) {
-    return;
-  }
 
-  voice_channels_.erase(it);
+  voice_channels_.erase(absl::c_find_if(
+      voice_channels_, [&](const std::unique_ptr<VoiceChannel>& p) {
+        return p.get() == voice_channel;
+      }));
 }
 
 VideoChannel* ChannelManager::CreateVideoChannel(
@@ -229,6 +221,8 @@ VideoChannel* ChannelManager::CreateVideoChannel(
     rtc::UniqueRandomIdGenerator* ssrc_generator,
     const VideoOptions& options,
     webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
+  RTC_DCHECK(call);
+  RTC_DCHECK(media_engine_);
   // TODO(bugs.webrtc.org/11992): Remove this workaround after updates in
   // PeerConnection and add the expectation that we're already on the right
   // thread.
@@ -242,10 +236,6 @@ VideoChannel* ChannelManager::CreateVideoChannel(
   }
 
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(call);
-  if (!media_engine_) {
-    return nullptr;
-  }
 
   VideoMediaChannel* media_channel = media_engine_->video().CreateMediaChannel(
       call, media_config, options, crypto_options,
@@ -268,9 +258,8 @@ VideoChannel* ChannelManager::CreateVideoChannel(
 
 void ChannelManager::DestroyVideoChannel(VideoChannel* video_channel) {
   TRACE_EVENT0("webrtc", "ChannelManager::DestroyVideoChannel");
-  if (!video_channel) {
-    return;
-  }
+  RTC_DCHECK(video_channel);
+
   if (!worker_thread_->IsCurrent()) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE,
                                  [&] { DestroyVideoChannel(video_channel); });
@@ -278,16 +267,10 @@ void ChannelManager::DestroyVideoChannel(VideoChannel* video_channel) {
   }
   RTC_DCHECK_RUN_ON(worker_thread_);
 
-  auto it = absl::c_find_if(video_channels_,
-                            [&](const std::unique_ptr<VideoChannel>& p) {
-                              return p.get() == video_channel;
-                            });
-  RTC_DCHECK(it != video_channels_.end());
-  if (it == video_channels_.end()) {
-    return;
-  }
-
-  video_channels_.erase(it);
+  video_channels_.erase(absl::c_find_if(
+      video_channels_, [&](const std::unique_ptr<VideoChannel>& p) {
+        return p.get() == video_channel;
+      }));
 }
 
 RtpDataChannel* ChannelManager::CreateRtpDataChannel(
@@ -330,9 +313,8 @@ RtpDataChannel* ChannelManager::CreateRtpDataChannel(
 
 void ChannelManager::DestroyRtpDataChannel(RtpDataChannel* data_channel) {
   TRACE_EVENT0("webrtc", "ChannelManager::DestroyRtpDataChannel");
-  if (!data_channel) {
-    return;
-  }
+  RTC_DCHECK(data_channel);
+
   if (!worker_thread_->IsCurrent()) {
     worker_thread_->Invoke<void>(
         RTC_FROM_HERE, [&] { return DestroyRtpDataChannel(data_channel); });
@@ -340,22 +322,10 @@ void ChannelManager::DestroyRtpDataChannel(RtpDataChannel* data_channel) {
   }
   RTC_DCHECK_RUN_ON(worker_thread_);
 
-  auto it = absl::c_find_if(data_channels_,
-                            [&](const std::unique_ptr<RtpDataChannel>& p) {
-                              return p.get() == data_channel;
-                            });
-  RTC_DCHECK(it != data_channels_.end());
-  if (it == data_channels_.end()) {
-    return;
-  }
-
-  data_channels_.erase(it);
-}
-
-bool ChannelManager::has_channels() const {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  return (!voice_channels_.empty() || !video_channels_.empty() ||
-          !data_channels_.empty());
+  data_channels_.erase(absl::c_find_if(
+      data_channels_, [&](const std::unique_ptr<RtpDataChannel>& p) {
+        return p.get() == data_channel;
+      }));
 }
 
 bool ChannelManager::StartAecDump(webrtc::FileWrapper file,

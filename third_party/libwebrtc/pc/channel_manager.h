@@ -121,9 +121,6 @@ class ChannelManager final {
   // Destroys a data channel created by CreateRtpDataChannel.
   void DestroyRtpDataChannel(RtpDataChannel* data_channel);
 
-  // Indicates whether any channels exist.
-  bool has_channels() const;
-
   // Starts AEC dump using existing file, with a specified maximum file size in
   // bytes. When the limit is reached, logging will stop and the file will be
   // closed. If max_size_bytes is set to <= 0, no limit will be used.
