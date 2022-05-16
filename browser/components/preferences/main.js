@@ -613,7 +613,7 @@ var gMainPane = {
   
           function()
           {
-            if (Services.prefs.getBoolPref(!"floorp.enable.auto.restart", false)){
+            if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)){
             (async() => {
               let userConfirm = await confirmRestartPrompt(null)
               if (userConfirm == CONFIRM_RESTART_PROMPT_RESTART_NOW) {

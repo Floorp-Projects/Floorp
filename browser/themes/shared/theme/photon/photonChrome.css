@@ -6908,12 +6908,6 @@
     display: block;
   }
   
-  #add-ons-button,
-  #appMenu-addons-button
-  {
-    list-style-image: url(chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg) !important;
-  }
-  
   :root
       {
           --arrowpanel-menuitem-margin: 0 var(--browser-context-menu-margin-padding) !important;
