@@ -16,7 +16,6 @@
 #include "api/dtls_transport_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/sctp_transport_interface.h"
-#include "media/sctp/sctp_transport.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/dtls_transport_internal.h"
 #include "pc/dtls_transport.h"
