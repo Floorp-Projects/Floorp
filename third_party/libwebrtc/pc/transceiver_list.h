@@ -39,10 +39,16 @@ class TransceiverStableState {
   void SetMSectionIfUnset(absl::optional<std::string> mid,
                           absl::optional<size_t> mline_index);
   void SetRemoteStreamIdsIfUnset(const std::vector<std::string>& ids);
+  void SetInitSendEncodings(
+      const std::vector<RtpEncodingParameters>& encodings);
   absl::optional<std::string> mid() const { return mid_; }
   absl::optional<size_t> mline_index() const { return mline_index_; }
   absl::optional<std::vector<std::string>> remote_stream_ids() const {
     return remote_stream_ids_;
+  }
+  absl::optional<std::vector<RtpEncodingParameters>> init_send_encodings()
+      const {
+    return init_send_encodings_;
   }
   bool has_m_section() const { return has_m_section_; }
   bool newly_created() const { return newly_created_; }
@@ -51,6 +57,7 @@ class TransceiverStableState {
   absl::optional<std::string> mid_;
   absl::optional<size_t> mline_index_;
   absl::optional<std::vector<std::string>> remote_stream_ids_;
+  absl::optional<std::vector<RtpEncodingParameters>> init_send_encodings_;
   // Indicates that mid value from stable state has been captured and
   // that rollback has to restore the transceiver. Also protects against
   // subsequent overwrites.
