@@ -16,6 +16,7 @@ if (rtc_include_tests) {
       "common:dcsctp_common_unittests",
       "packet:dcsctp_packet_unittests",
       "public:dcsctp_public_unittests",
+      "timer:dcsctp_timer_unittests",
     ]
   }
 }
