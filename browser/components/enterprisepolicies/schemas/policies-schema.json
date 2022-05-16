@@ -25,6 +25,10 @@
       "type": "boolean"
     },
 
+    "AppUpdatePin": {
+      "type": "string"
+    },
+
     "AppUpdateURL": {
       "type": "URL"
     },
