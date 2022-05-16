@@ -163,7 +163,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   MOZ_CAN_RUN_SCRIPT nsresult DocumentReadyForPrinting();
   MOZ_CAN_RUN_SCRIPT nsresult SetupToPrintContent();
   nsresult EnablePOsForPrinting();
-  nsPrintObject* FindSmallestSTF();
 
   bool PrintDocContent(const mozilla::UniquePtr<nsPrintObject>& aPO,
                        nsresult& aStatus);
