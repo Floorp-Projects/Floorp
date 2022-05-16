@@ -31,8 +31,6 @@ INCLUDE_VERSION_REGEXES = {
     "esr": r"'^\d+\.\d+(\.\d+)?esr$'",
     # Previous esr versions, for update testing before we update users to esr102
     "esr102-next": r"'^(52|60|68|78|91)+\.\d+(\.\d+)?esr$'",
-    # Previous Thunderbird major versions. Same idea as esrXX-next, no esr suffix
-    "thunderbird91-next": r"'^78\.\d+(\.\d+)?$'",
 }
 
 MAR_CHANNEL_ID_OVERRIDE_REGEXES = {
