@@ -545,7 +545,7 @@ var PrintUtils = {
         ).systemDefaultPrinterName;
       })();
 
-      printSettings = PSSVC.newPrintSettings;
+      printSettings = PSSVC.createNewPrintSettings();
       printSettings.printerName = printerName;
 
       // First get any defaults from the printer. We want to skip this for Save

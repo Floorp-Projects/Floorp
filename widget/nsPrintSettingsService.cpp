@@ -766,7 +766,7 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
 NS_IMETHODIMP
 nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
     nsIPrintSettings** aPrintSettings) {
-  nsresult rv = GetNewPrintSettings(aPrintSettings);
+  nsresult rv = CreateNewPrintSettings(aPrintSettings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIPrintSettings* settings = *aPrintSettings;
@@ -783,7 +783,7 @@ nsPrintSettingsService::GetDefaultPrintSettingsForPrinting(
 }
 
 NS_IMETHODIMP
-nsPrintSettingsService::GetNewPrintSettings(
+nsPrintSettingsService::CreateNewPrintSettings(
     nsIPrintSettings** aNewPrintSettings) {
   return _CreatePrintSettings(aNewPrintSettings);
 }
