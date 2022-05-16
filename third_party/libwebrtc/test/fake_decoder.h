@@ -25,6 +25,8 @@ namespace test {
 
 class FakeDecoder : public VideoDecoder {
  public:
+  enum { kDefaultWidth = 320, kDefaultHeight = 180 };
+
   FakeDecoder();
   explicit FakeDecoder(TaskQueueFactory* task_queue_factory);
   virtual ~FakeDecoder() {}

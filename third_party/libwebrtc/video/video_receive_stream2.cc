@@ -41,6 +41,7 @@
 #include "rtc_base/location.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/thread_registry.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
@@ -70,13 +71,14 @@ constexpr int kDefaultMaximumPreStreamDecoders = 100;
 // from EncodedFrame.
 class WebRtcRecordableEncodedFrame : public RecordableEncodedFrame {
  public:
-  explicit WebRtcRecordableEncodedFrame(const EncodedFrame& frame)
+  explicit WebRtcRecordableEncodedFrame(
+      const EncodedFrame& frame,
+      RecordableEncodedFrame::EncodedResolution resolution)
       : buffer_(frame.GetEncodedData()),
         render_time_ms_(frame.RenderTime()),
         codec_(frame.CodecSpecific()->codecType),
         is_key_frame_(frame.FrameType() == VideoFrameType::kVideoFrameKey),
-        resolution_{frame.EncodedImage()._encodedWidth,
-                    frame.EncodedImage()._encodedHeight} {
+        resolution_(resolution) {
     if (frame.ColorSpace()) {
       color_space_ = *frame.ColorSpace();
     }
@@ -179,6 +181,12 @@ class NullVideoDecoder : public webrtc::VideoDecoder {
   const char* ImplementationName() const override { return "NullVideoDecoder"; }
 };
 
+bool IsKeyFrameAndUnspecifiedResolution(const EncodedFrame& frame) {
+  return frame.FrameType() == VideoFrameType::kVideoFrameKey &&
+         frame.EncodedImage()._encodedWidth == 0 &&
+         frame.EncodedImage()._encodedHeight == 0;
+}
+
 // TODO(https://bugs.webrtc.org/9974): Consider removing this workaround.
 // Maximum time between frames before resetting the FrameBuffer to avoid RTP
 // timestamps wraparound to affect FrameBuffer.
@@ -257,7 +265,6 @@ VideoReceiveStream2::VideoReceiveStream2(
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(config_.renderer);
   RTC_DCHECK(call_stats_);
-
   module_process_sequence_checker_.Detach();
 
   RTC_DCHECK(!config_.decoders.empty());
@@ -547,6 +554,22 @@ void VideoReceiveStream2::OnFrame(const VideoFrame& video_frame) {
 
   source_tracker_.OnFrameDelivered(video_frame.packet_infos());
   config_.renderer->OnFrame(video_frame);
+  webrtc::MutexLock lock(&pending_resolution_mutex_);
+  if (pending_resolution_.has_value()) {
+    if (!pending_resolution_->empty() &&
+        (video_frame.width() != static_cast<int>(pending_resolution_->width) ||
+         video_frame.height() !=
+             static_cast<int>(pending_resolution_->height))) {
+      RTC_LOG(LS_WARNING)
+          << "Recordable encoded frame stream resolution was reported as "
+          << pending_resolution_->width << "x" << pending_resolution_->height
+          << " but the stream is now " << video_frame.width()
+          << video_frame.height();
+    }
+    pending_resolution_ = RecordableEncodedFrame::EncodedResolution{
+        static_cast<unsigned>(video_frame.width()),
+        static_cast<unsigned>(video_frame.height())};
+  }
 }
 
 void VideoReceiveStream2::SetFrameDecryptor(
@@ -710,13 +733,16 @@ void VideoReceiveStream2::HandleEncodedFrame(
     }
   }
 
-  int decode_result = video_receiver_.Decode(frame.get());
+  int64_t frame_id = frame->Id();
+  bool received_frame_is_keyframe =
+      frame->FrameType() == VideoFrameType::kVideoFrameKey;
+  int decode_result = DecodeAndMaybeDispatchEncodedFrame(std::move(frame));
   if (decode_result == WEBRTC_VIDEO_CODEC_OK ||
       decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME) {
     keyframe_required_ = false;
     frame_decoded_ = true;
 
-    decoded_frame_picture_id = frame->Id();
+    decoded_frame_picture_id = frame_id;
 
     if (decode_result == WEBRTC_VIDEO_CODEC_OK_REQUEST_KEYFRAME)
       force_request_key_frame = true;
@@ -727,9 +753,6 @@ void VideoReceiveStream2::HandleEncodedFrame(
     //                 has been fixed.
     force_request_key_frame = true;
   }
-
-  bool received_frame_is_keyframe =
-      frame->FrameType() == VideoFrameType::kVideoFrameKey;
 
   worker_thread_->PostTask(ToQueuedTask(
       task_safety_,
@@ -744,10 +767,66 @@ void VideoReceiveStream2::HandleEncodedFrame(
                                  force_request_key_frame,
                                  keyframe_request_is_due);
       }));
+}
 
-  if (encoded_frame_buffer_function_) {
-    encoded_frame_buffer_function_(WebRtcRecordableEncodedFrame(*frame));
+int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
+    std::unique_ptr<EncodedFrame> frame) {
+  // Running on decode_queue_.
+
+  // If |buffered_encoded_frames_| grows out of control (=60 queued frames),
+  // maybe due to a stuck decoder, we just halt the process here and log the
+  // error.
+  const bool encoded_frame_output_enabled =
+      encoded_frame_buffer_function_ != nullptr &&
+      buffered_encoded_frames_.size() < kBufferedEncodedFramesMaxSize;
+  EncodedFrame* frame_ptr = frame.get();
+  if (encoded_frame_output_enabled) {
+    // If we receive a key frame with unset resolution, hold on dispatching the
+    // frame and following ones until we know a resolution of the stream.
+    // NOTE: The code below has a race where it can report the wrong
+    // resolution for keyframes after an initial keyframe of other resolution.
+    // However, the only known consumer of this information is the W3C
+    // MediaRecorder and it will only use the resolution in the first encoded
+    // keyframe from WebRTC, so misreporting is fine.
+    buffered_encoded_frames_.push_back(std::move(frame));
+    if (buffered_encoded_frames_.size() == kBufferedEncodedFramesMaxSize)
+      RTC_LOG(LS_ERROR) << "About to halt recordable encoded frame output due "
+                           "to too many buffered frames.";
+
+    webrtc::MutexLock lock(&pending_resolution_mutex_);
+    if (IsKeyFrameAndUnspecifiedResolution(*frame_ptr) &&
+        !pending_resolution_.has_value())
+      pending_resolution_.emplace();
   }
+
+  int decode_result = video_receiver_.Decode(frame_ptr);
+  if (encoded_frame_output_enabled) {
+    absl::optional<RecordableEncodedFrame::EncodedResolution>
+        pending_resolution;
+    {
+      // Fish out |pending_resolution_| to avoid taking the mutex on every lap
+      // or dispatching under the mutex in the flush loop.
+      webrtc::MutexLock lock(&pending_resolution_mutex_);
+      if (pending_resolution_.has_value())
+        pending_resolution = *pending_resolution_;
+    }
+    if (!pending_resolution.has_value() || !pending_resolution->empty()) {
+      // Flush the buffered frames.
+      for (const auto& frame : buffered_encoded_frames_) {
+        RecordableEncodedFrame::EncodedResolution resolution{
+            frame->EncodedImage()._encodedWidth,
+            frame->EncodedImage()._encodedHeight};
+        if (IsKeyFrameAndUnspecifiedResolution(*frame)) {
+          RTC_DCHECK(!pending_resolution->empty());
+          resolution = *pending_resolution;
+        }
+        encoded_frame_buffer_function_(
+            WebRtcRecordableEncodedFrame(*frame, resolution));
+      }
+      buffered_encoded_frames_.clear();
+    }
+  }
+  return decode_result;
 }
 
 void VideoReceiveStream2::HandleKeyFrameGeneration(

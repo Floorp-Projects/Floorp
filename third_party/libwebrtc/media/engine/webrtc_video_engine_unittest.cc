@@ -1426,6 +1426,13 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
     uint8_t* buf_ptr = packet.AllocatePayload(11);
     memset(buf_ptr, 0, 11);  // Pass MSAN (don't care about bytes 1-9)
     buf_ptr[0] = 0x10;       // Partition ID 0 + beginning of partition.
+    constexpr unsigned width = 1080;
+    constexpr unsigned height = 720;
+    buf_ptr[6] = width & 255;
+    buf_ptr[7] = width >> 8;
+    buf_ptr[8] = height & 255;
+    buf_ptr[9] = height >> 8;
+
     call_->Receiver()->DeliverPacket(webrtc::MediaType::VIDEO, packet.Buffer(),
                                      /*packet_time_us=*/0);
   }
