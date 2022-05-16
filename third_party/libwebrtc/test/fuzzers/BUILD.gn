@@ -613,6 +613,15 @@ webrtc_fuzzer_test("sctp_utils_fuzzer") {
   ]
 }
 
+webrtc_fuzzer_test("dcsctp_packet_fuzzer") {
+  sources = [ "dcsctp_packet_fuzzer.cc" ]
+  deps = [
+    "../../net/dcsctp/packet:chunk",
+    "../../net/dcsctp/packet:sctp_packet",
+    "../../rtc_base:rtc_base_approved",
+  ]
+}
+
 webrtc_fuzzer_test("rtp_header_parser_fuzzer") {
   sources = [ "rtp_header_parser_fuzzer.cc" ]
   deps = [ "../:rtp_test_utils" ]
