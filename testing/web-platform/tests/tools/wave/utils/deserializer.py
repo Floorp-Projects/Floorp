@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from ..data.session import Session, UNKNOWN
 from datetime import datetime
 import dateutil.parser

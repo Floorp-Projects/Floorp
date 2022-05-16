@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from tools.wpt import markdown
 
 def test_format_comment_title():

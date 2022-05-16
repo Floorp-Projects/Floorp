@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import json
 import os
 from unittest import mock
@@ -91,7 +93,7 @@ def test_verify_payload():
                 validate(instance=task_data, schema=create_task_schema)
                 validate(instance=task_data["payload"], schema=payload_schema)
             except Exception as e:
-                print("Validation failed for task '%s':\n%s" % (name, json.dumps(task_data, indent=2)))
+                print(f"Validation failed for task '{name}':\n{json.dumps(task_data, indent=2)}")
                 raise e
 
 
@@ -152,11 +154,11 @@ def test_verify_payload():
     ("pr_event.json", True, {".taskcluster.yml", ".travis.yml", "tools/ci/start.sh"},
      ['lint',
       'tools/ unittests (Python 3.6)',
-      'tools/ unittests (Python 3.9)',
+      'tools/ unittests (Python 3.10)',
       'tools/ integration tests (Python 3.6)',
-      'tools/ integration tests (Python 3.9)',
+      'tools/ integration tests (Python 3.10)',
       'resources/ tests (Python 3.6)',
-      'resources/ tests (Python 3.9)',
+      'resources/ tests (Python 3.10)',
       'download-firefox-nightly',
       'infrastructure/ tests',
       'sink-task']),

@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from .api_handler import ApiHandler
 
 TOKEN_LENGTH = 36

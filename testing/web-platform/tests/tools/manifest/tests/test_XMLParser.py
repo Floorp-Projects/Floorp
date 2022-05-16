@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from xml.etree.ElementTree import ParseError
 
 import pytest
