@@ -14,6 +14,9 @@
 #include <utility>
 #include <vector>
 
+#include "net/dcsctp/common/internal_types.h"
+#include "net/dcsctp/public/types.h"
+
 namespace dcsctp {
 
 // Represents data that is either received and extracted from a DATA/I-DATA
@@ -29,15 +32,23 @@ namespace dcsctp {
 // are wrapped numbers, and within the library, unwrapped sequence numbers are
 // preferably used.
 struct Data {
-  Data(uint16_t stream_id,
-       uint16_t ssn,
-       uint32_t message_id,
-       uint32_t fsn,
-       uint32_t ppid,
+  // Indicates if a chunk is the first in a fragmented message and maps to the
+  // "beginning" flag in DATA/I-DATA chunk.
+  using IsBeginning = StrongAlias<class IsBeginningTag, bool>;
+
+  // Indicates if a chunk is the last in a fragmented message  and maps to the
+  // "end" flag in DATA/I-DATA chunk.
+  using IsEnd = StrongAlias<class IsEndTag, bool>;
+
+  Data(StreamID stream_id,
+       SSN ssn,
+       MID message_id,
+       FSN fsn,
+       PPID ppid,
        std::vector<uint8_t> payload,
-       bool is_beginning,
-       bool is_end,
-       bool is_unordered)
+       IsBeginning is_beginning,
+       IsEnd is_end,
+       IsUnordered is_unordered)
       : stream_id(stream_id),
         ssn(ssn),
         message_id(message_id),
@@ -62,30 +73,30 @@ struct Data {
   size_t size() const { return payload.size(); }
 
   // Stream Identifier.
-  uint16_t stream_id;
+  StreamID stream_id;
 
   // Stream Sequence Number (SSN), per stream, for ordered chunks. Defined by
   // RFC4960 and used only in DATA chunks (not I-DATA).
-  uint16_t ssn;
+  SSN ssn;
 
   // Message Identifier (MID) per stream and ordered/unordered. Defined by
   // RFC8260, and used together with options.is_unordered and stream_id to
   // uniquely identify a message. Used only in I-DATA chunks (not DATA).
-  uint32_t message_id;
+  MID message_id;
   // Fragment Sequence Number (FSN) per stream and ordered/unordered, as above.
-  uint32_t fsn;
+  FSN fsn;
 
   // Payload Protocol Identifier (PPID).
-  uint32_t ppid;
+  PPID ppid;
 
   // The actual data payload.
   std::vector<uint8_t> payload;
 
   // If this data represents the first, last or a middle chunk.
-  bool is_beginning;
-  bool is_end;
+  IsBeginning is_beginning;
+  IsEnd is_end;
   // If this data is sent/received unordered.
-  bool is_unordered;
+  IsUnordered is_unordered;
 };
 }  // namespace dcsctp
 

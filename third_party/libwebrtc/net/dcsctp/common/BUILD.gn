@@ -6,8 +6,11 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("//build/config/linux/pkg_config.gni")
 import("../../../webrtc.gni")
+
+rtc_source_set("internal_types") {
+  sources = [ "internal_types.h" ]
+}
 
 rtc_source_set("math") {
   deps = []

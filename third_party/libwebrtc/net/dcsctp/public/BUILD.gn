@@ -6,16 +6,28 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
-import("../../webrtc.gni")
+import("../../../webrtc.gni")
+
+rtc_source_set("strong_alias") {
+  sources = [ "strong_alias.h" ]
+}
+
+rtc_source_set("types") {
+  deps = [ ":strong_alias" ]
+  sources = [ "types.h" ]
+}
 
 if (rtc_include_tests) {
-  rtc_test("dcsctp_unittests") {
+  rtc_library("dcsctp_public_unittests") {
     testonly = true
+
     deps = [
-      "../../test:test_main",
-      "common:dcsctp_common_unittests",
-      "packet:dcsctp_packet_unittests",
-      "public:dcsctp_public_unittests",
+      ":strong_alias",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
     ]
+    sources = [ "strong_alias_test.cc" ]
   }
 }
