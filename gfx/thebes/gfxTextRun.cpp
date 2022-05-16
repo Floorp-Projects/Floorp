@@ -1899,7 +1899,7 @@ gfxFontGroup::gfxFontGroup(nsPresContext* aPresContext,
 
 gfxFontGroup::~gfxFontGroup() {
   // Should not be dropped by stylo
-  MOZ_ASSERT(!ServoStyleSet::IsCurrentThreadInServoTraversal());
+  MOZ_ASSERT(!Servo_IsWorkerThread());
 }
 
 static StyleGenericFontFamily GetDefaultGeneric(nsAtom* aLanguage) {
