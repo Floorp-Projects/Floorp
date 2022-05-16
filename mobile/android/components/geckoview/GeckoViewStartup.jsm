@@ -104,35 +104,6 @@ class GeckoViewStartup {
           module: "resource://gre/modules/GeckoViewConsole.jsm",
         });
 
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
-          module: "resource://gre/modules/GeckoViewWebExtension.jsm",
-          ged: [
-            "GeckoView:ActionDelegate:Attached",
-            "GeckoView:BrowserAction:Click",
-            "GeckoView:PageAction:Click",
-            "GeckoView:RegisterWebExtension",
-            "GeckoView:UnregisterWebExtension",
-            "GeckoView:WebExtension:CancelInstall",
-            "GeckoView:WebExtension:Disable",
-            "GeckoView:WebExtension:Enable",
-            "GeckoView:WebExtension:EnsureBuiltIn",
-            "GeckoView:WebExtension:Get",
-            "GeckoView:WebExtension:Install",
-            "GeckoView:WebExtension:InstallBuiltIn",
-            "GeckoView:WebExtension:List",
-            "GeckoView:WebExtension:PortDisconnect",
-            "GeckoView:WebExtension:PortMessageFromApp",
-            "GeckoView:WebExtension:SetPBAllowed",
-            "GeckoView:WebExtension:Uninstall",
-            "GeckoView:WebExtension:Update",
-          ],
-          observers: [
-            "devtools-installed-addon",
-            "testing-installed-addon",
-            "testing-uninstalled-addon",
-          ],
-        });
-
         GeckoViewUtils.addLazyGetter(this, "GeckoViewStorageController", {
           module: "resource://gre/modules/GeckoViewStorageController.jsm",
           ged: [
@@ -168,6 +139,35 @@ class GeckoViewStartup {
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
           ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
+
+          GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
+            module: "resource://gre/modules/GeckoViewWebExtension.jsm",
+            ged: [
+              "GeckoView:ActionDelegate:Attached",
+              "GeckoView:BrowserAction:Click",
+              "GeckoView:PageAction:Click",
+              "GeckoView:RegisterWebExtension",
+              "GeckoView:UnregisterWebExtension",
+              "GeckoView:WebExtension:CancelInstall",
+              "GeckoView:WebExtension:Disable",
+              "GeckoView:WebExtension:Enable",
+              "GeckoView:WebExtension:EnsureBuiltIn",
+              "GeckoView:WebExtension:Get",
+              "GeckoView:WebExtension:Install",
+              "GeckoView:WebExtension:InstallBuiltIn",
+              "GeckoView:WebExtension:List",
+              "GeckoView:WebExtension:PortDisconnect",
+              "GeckoView:WebExtension:PortMessageFromApp",
+              "GeckoView:WebExtension:SetPBAllowed",
+              "GeckoView:WebExtension:Uninstall",
+              "GeckoView:WebExtension:Update",
+            ],
+            observers: [
+              "devtools-installed-addon",
+              "testing-installed-addon",
+              "testing-uninstalled-addon",
+            ],
+          });
 
           GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
             module: "resource://gre/modules/ChildCrashHandler.jsm",
