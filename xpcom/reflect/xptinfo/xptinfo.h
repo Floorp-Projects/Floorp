@@ -107,7 +107,7 @@ struct nsXPTInterfaceInfo {
   const nsXPTMethodInfo& Method(uint16_t aIndex) const;
 
   nsresult GetMethodInfo(uint16_t aIndex, const nsXPTMethodInfo** aInfo) const;
-  nsresult GetConstant(uint16_t aIndex, JS::MutableHandleValue constant,
+  nsresult GetConstant(uint16_t aIndex, JS::MutableHandle<JS::Value> constant,
                        char** aName) const;
 
   ////////////////////////////////////////////////////////////////
@@ -550,11 +550,13 @@ static_assert(sizeof(nsXPTConstantInfo) == 8, "wrong size");
  * This object will not live in rodata as it contains relocations.
  */
 struct nsXPTDOMObjectInfo {
-  nsresult Unwrap(JS::HandleValue aHandle, void** aObj, JSContext* aCx) const {
+  nsresult Unwrap(JS::Handle<JS::Value> aHandle, void** aObj,
+                  JSContext* aCx) const {
     return mUnwrap(aHandle, aObj, aCx);
   }
 
-  bool Wrap(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle) const {
+  bool Wrap(JSContext* aCx, void* aObj,
+            JS::MutableHandle<JS::Value> aHandle) const {
     return mWrap(aCx, aObj, aHandle);
   }
 
@@ -564,8 +566,10 @@ struct nsXPTDOMObjectInfo {
   // Ensure these fields are in the same order as xptcodegen.py //
   ////////////////////////////////////////////////////////////////
 
-  nsresult (*mUnwrap)(JS::HandleValue aHandle, void** aObj, JSContext* aCx);
-  bool (*mWrap)(JSContext* aCx, void* aObj, JS::MutableHandleValue aHandle);
+  nsresult (*mUnwrap)(JS::Handle<JS::Value> aHandle, void** aObj,
+                      JSContext* aCx);
+  bool (*mWrap)(JSContext* aCx, void* aObj,
+                JS::MutableHandle<JS::Value> aHandle);
   void (*mCleanup)(void* aObj);
 };
 
