@@ -4521,16 +4521,7 @@ bool SdpOfferAnswerHandler::ReadyToUseRemoteCandidate(
     return false;
   }
 
-  bool has_transport = false;
-  cricket::ChannelInterface* channel = pc_->GetChannel(result.value()->name);
-  if (channel) {
-    has_transport = !channel->transport_name().empty();
-  } else if (data_channel_controller()->data_channel_transport()) {
-    auto sctp_mid = pc_->sctp_mid();
-    RTC_DCHECK(sctp_mid);
-    has_transport = (result.value()->name == *sctp_mid);
-  }
-  return has_transport;
+  return true;
 }
 
 RTCErrorOr<const cricket::ContentInfo*> SdpOfferAnswerHandler::FindContentInfo(
