@@ -1753,7 +1753,7 @@ function RecvStartPrint(isPrintSelection, printRange)
     file.append(fileName);
 
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(Ci.nsIPrintSettingsService);
-    let ps = PSSVC.newPrintSettings;
+    let ps = PSSVC.createNewPrintSettings();
     ps.printSilent = true;
     ps.printBGImages = true;
     ps.printBGColors = true;
