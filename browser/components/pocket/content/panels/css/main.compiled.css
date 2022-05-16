@@ -2201,6 +2201,7 @@ body.theme_dark .stp_popular_topics .stp_popular_topic .stp_popular_topic_link:h
   display: flex;
   border-radius: 4px;
   padding: 8px;
+  margin: 0 -8px;
 }
 .stp_article_list .stp_article_list_link:hover, .stp_article_list .stp_article_list_link:focus {
   text-decoration: none;
@@ -2298,7 +2299,7 @@ body.theme_dark .stp_header .stp_header_logo {
   color: #054096;
 }
 body.theme_dark .stp_button.stp_button_text {
-  color: #F0F0F4;
+  color: #00DDFF;
 }
 
 .stp_button.stp_button_primary {
