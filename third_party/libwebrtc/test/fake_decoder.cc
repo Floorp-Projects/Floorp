@@ -27,11 +27,6 @@
 namespace webrtc {
 namespace test {
 
-namespace {
-const int kDefaultWidth = 320;
-const int kDefaultHeight = 180;
-}  // namespace
-
 FakeDecoder::FakeDecoder() : FakeDecoder(nullptr) {}
 
 FakeDecoder::FakeDecoder(TaskQueueFactory* task_queue_factory)
