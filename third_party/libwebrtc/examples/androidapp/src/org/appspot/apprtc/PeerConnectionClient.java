@@ -36,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.appspot.apprtc.AppRTCClient.SignalingParameters;
 import org.appspot.apprtc.RecordedAudioToFileController;
+import org.webrtc.AddIceObserver;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.CameraVideoCapturer;
@@ -824,7 +825,16 @@ public class PeerConnectionClient {
         if (queuedRemoteCandidates != null) {
           queuedRemoteCandidates.add(candidate);
         } else {
-          peerConnection.addIceCandidate(candidate);
+          peerConnection.addIceCandidate(candidate, new AddIceObserver() {
+            @Override
+            public void onAddSuccess() {
+              Log.d(TAG, "Candidate " + candidate + " successfully added.");
+            }
+            @Override
+            public void onAddFailure(String error) {
+              Log.d(TAG, "Candidate " + candidate + " addition failed: " + error);
+            }
+          });
         }
       }
     });
@@ -1146,7 +1156,16 @@ public class PeerConnectionClient {
     if (queuedRemoteCandidates != null) {
       Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
       for (IceCandidate candidate : queuedRemoteCandidates) {
-        peerConnection.addIceCandidate(candidate);
+        peerConnection.addIceCandidate(candidate, new AddIceObserver() {
+          @Override
+          public void onAddSuccess() {
+            Log.d(TAG, "Candidate " + candidate + " successfully added.");
+          }
+          @Override
+          public void onAddFailure(String error) {
+            Log.d(TAG, "Candidate " + candidate + " addition failed: " + error);
+          }
+        });
       }
       queuedRemoteCandidates = null;
     }
