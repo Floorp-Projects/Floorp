@@ -9,7 +9,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
-#include "ServiceWorkerChild.h"
+#include "RemoteServiceWorkerImpl.h"
 #include "ServiceWorkerCloneData.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerPrivate.h"
@@ -22,8 +22,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
 
@@ -33,9 +31,6 @@
 
 using mozilla::ErrorResult;
 using namespace mozilla::dom;
-
-using mozilla::ipc::BackgroundChild;
-using mozilla::ipc::PBackgroundChild;
 
 namespace mozilla::dom {
 
@@ -50,47 +45,32 @@ bool ServiceWorkerVisible(JSContext* aCx, JSObject* aObj) {
 // static
 already_AddRefed<ServiceWorker> ServiceWorker::Create(
     nsIGlobalObject* aOwner, const ServiceWorkerDescriptor& aDescriptor) {
-  RefPtr<ServiceWorker> ref = new ServiceWorker(aOwner, aDescriptor);
+  const RefPtr<ServiceWorker::Inner> inner =
+      new RemoteServiceWorkerImpl(aDescriptor);
+  NS_ENSURE_TRUE(inner, nullptr);
+
+  RefPtr<ServiceWorker> ref = new ServiceWorker(aOwner, aDescriptor, inner);
   return ref.forget();
 }
 
 ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
-                             const ServiceWorkerDescriptor& aDescriptor)
+                             const ServiceWorkerDescriptor& aDescriptor,
+                             ServiceWorker::Inner* aInner)
     : DOMEventTargetHelper(aGlobal),
       mDescriptor(aDescriptor),
-      mShutdown(false),
+      mInner(aInner),
       mLastNotifiedState(ServiceWorkerState::Installing) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
-
-  PBackgroundChild* parentActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!parentActor)) {
-    Shutdown();
-    return;
-  }
-
-  RefPtr<ServiceWorkerChild> actor = ServiceWorkerChild::Create();
-  if (NS_WARN_IF(!actor)) {
-    Shutdown();
-    return;
-  }
-
-  PServiceWorkerChild* sentActor =
-      parentActor->SendPServiceWorkerConstructor(actor, aDescriptor.ToIPC());
-  if (NS_WARN_IF(!sentActor)) {
-    Shutdown();
-    return;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(sentActor == actor);
-
-  mActor = std::move(actor);
-  mActor->SetOwner(this);
+  MOZ_DIAGNOSTIC_ASSERT(mInner);
 
   KeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
 
   // The error event handler is required by the spec currently, but is not used
   // anywhere.  Don't keep the object alive in that case.
+
+  // This will update our state too.
+  mInner->AddServiceWorker(this);
 
   // Attempt to get an existing binding object for the registration
   // associated with this ServiceWorker.
@@ -99,37 +79,30 @@ ServiceWorker::ServiceWorker(nsIGlobalObject* aGlobal,
           mDescriptor.RegistrationId(), mDescriptor.RegistrationVersion(),
           mDescriptor.PrincipalInfo(), mDescriptor.Scope(),
           ServiceWorkerUpdateViaCache::Imports));
-
   if (reg) {
     MaybeAttachToRegistration(reg);
-    // Following codes are commented since GetRegistration has no
-    // implementation. If we can not get an existing binding object, probably
-    // need to create one to associate to it.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1769652
-    /*
-    } else {
+  } else {
+    RefPtr<ServiceWorker> self = this;
 
-      RefPtr<ServiceWorker> self = this;
-      GetRegistration(
-          [self = std::move(self)](
-              const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-            nsIGlobalObject* global = self->GetParentObject();
-            NS_ENSURE_TRUE_VOID(global);
-            RefPtr<ServiceWorkerRegistration> reg =
-                global->GetOrCreateServiceWorkerRegistration(aDescriptor);
-            self->MaybeAttachToRegistration(reg);
-          },
-          [](ErrorResult&& aRv) {
-            // do nothing
-            aRv.SuppressException();
-          });
-    */
+    mInner->GetRegistration(
+        [self = std::move(self)](
+            const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+          nsIGlobalObject* global = self->GetParentObject();
+          NS_ENSURE_TRUE_VOID(global);
+          RefPtr<ServiceWorkerRegistration> reg =
+              global->GetOrCreateServiceWorkerRegistration(aDescriptor);
+          self->MaybeAttachToRegistration(reg);
+        },
+        [](ErrorResult&& aRv) {
+          // do nothing
+          aRv.SuppressException();
+        });
   }
 }
 
 ServiceWorker::~ServiceWorker() {
   MOZ_ASSERT(NS_IsMainThread());
-  Shutdown();
+  mInner->RemoveServiceWorker(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
@@ -247,19 +220,7 @@ void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     data->SetAsErrorMessageData();
   }
 
-  if (!mActor) {
-    return;
-  }
-
-  ClonedOrErrorMessageData clonedData;
-  if (!data->BuildClonedMessageDataForBackgroundChild(mActor->Manager(),
-                                                      clonedData)) {
-    return;
-  }
-
-  mActor->SendPostMessage(
-      clonedData,
-      ClientInfoAndState(clientInfo.ref().ToIPC(), clientState.ref().ToIPC()));
+  mInner->PostMessage(std::move(data), clientInfo.ref(), clientState.ref());
 }
 
 void ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
@@ -276,15 +237,6 @@ void ServiceWorker::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-void ServiceWorker::RevokeActor(ServiceWorkerChild* aActor) {
-  MOZ_DIAGNOSTIC_ASSERT(mActor);
-  MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
-  mActor->RevokeOwner(this);
-  mActor = nullptr;
-
-  mShutdown = true;
-}
-
 void ServiceWorker::MaybeAttachToRegistration(
     ServiceWorkerRegistration* aRegistration) {
   MOZ_DIAGNOSTIC_ASSERT(aRegistration);
@@ -299,19 +251,6 @@ void ServiceWorker::MaybeAttachToRegistration(
   }
 
   mRegistration = aRegistration;
-}
-
-void ServiceWorker::Shutdown() {
-  if (mShutdown) {
-    return;
-  }
-  mShutdown = true;
-
-  if (mActor) {
-    mActor->RevokeOwner(this);
-    mActor->MaybeStartTeardown();
-    mActor = nullptr;
-  }
 }
 
 }  // namespace mozilla::dom

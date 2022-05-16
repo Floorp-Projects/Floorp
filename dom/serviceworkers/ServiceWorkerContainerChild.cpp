@@ -8,7 +8,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
-#include "ServiceWorkerContainer.h"
+#include "RemoteServiceWorkerContainerImpl.h"
 #include "ServiceWorkerContainerChild.h"
 
 namespace mozilla::dom {
@@ -48,13 +48,15 @@ ServiceWorkerContainerChild::Create() {
 ServiceWorkerContainerChild::ServiceWorkerContainerChild()
     : mOwner(nullptr), mTeardownStarted(false) {}
 
-void ServiceWorkerContainerChild::SetOwner(ServiceWorkerContainer* aOwner) {
+void ServiceWorkerContainerChild::SetOwner(
+    RemoteServiceWorkerContainerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner);
   mOwner = aOwner;
 }
 
-void ServiceWorkerContainerChild::RevokeOwner(ServiceWorkerContainer* aOwner) {
+void ServiceWorkerContainerChild::RevokeOwner(
+    RemoteServiceWorkerContainerImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
   mOwner = nullptr;

@@ -35,12 +35,10 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorker.h"
 #include "mozilla/dom/ServiceWorkerContainerBinding.h"
-#include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 
+#include "RemoteServiceWorkerContainerImpl.h"
 #include "ServiceWorker.h"
 #include "ServiceWorkerRegistration.h"
 #include "ServiceWorkerUtils.h"
@@ -51,10 +49,6 @@
 #endif
 
 namespace mozilla::dom {
-
-using mozilla::ipc::BackgroundChild;
-using mozilla::ipc::PBackgroundChild;
-using mozilla::ipc::ResponseRejectReason;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerContainer)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -115,44 +109,26 @@ bool ServiceWorkerContainer::IsEnabled(JSContext* aCx, JSObject* aGlobal) {
 // static
 already_AddRefed<ServiceWorkerContainer> ServiceWorkerContainer::Create(
     nsIGlobalObject* aGlobal) {
-  RefPtr<ServiceWorkerContainer> ref = new ServiceWorkerContainer(aGlobal);
+  RefPtr<Inner> inner = new RemoteServiceWorkerContainerImpl();
+  RefPtr<ServiceWorkerContainer> ref =
+      new ServiceWorkerContainer(aGlobal, inner.forget());
   return ref.forget();
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(nsIGlobalObject* aGlobal)
-    : DOMEventTargetHelper(aGlobal), mShutdown(false) {
-  PBackgroundChild* parentActor =
-      BackgroundChild::GetOrCreateForCurrentThread();
-  if (NS_WARN_IF(!parentActor)) {
-    Shutdown();
-    return;
-  }
-
-  RefPtr<ServiceWorkerContainerChild> actor =
-      ServiceWorkerContainerChild::Create();
-  if (NS_WARN_IF(!actor)) {
-    Shutdown();
-    return;
-  }
-
-  PServiceWorkerContainerChild* sentActor =
-      parentActor->SendPServiceWorkerContainerConstructor(actor);
-  if (NS_WARN_IF(!sentActor)) {
-    Shutdown();
-    return;
-  }
-  MOZ_DIAGNOSTIC_ASSERT(sentActor == actor);
-
-  mActor = std::move(actor);
-  mActor->SetOwner(this);
-
+ServiceWorkerContainer::ServiceWorkerContainer(
+    nsIGlobalObject* aGlobal,
+    already_AddRefed<ServiceWorkerContainer::Inner> aInner)
+    : DOMEventTargetHelper(aGlobal), mInner(aInner) {
+  mInner->AddContainer(this);
   Maybe<ServiceWorkerDescriptor> controller = aGlobal->GetController();
   if (controller.isSome()) {
     mControllerWorker = aGlobal->GetOrCreateServiceWorker(controller.ref());
   }
 }
 
-ServiceWorkerContainer::~ServiceWorkerContainer() { Shutdown(); }
+ServiceWorkerContainer::~ServiceWorkerContainer() {
+  mInner->RemoveContainer(this);
+}
 
 void ServiceWorkerContainer::DisconnectFromOwner() {
   mControllerWorker = nullptr;
@@ -198,15 +174,6 @@ void ServiceWorkerContainer::ReceiveMessage(
   } else {
     mPendingMessages.AppendElement(message.forget());
   }
-}
-
-void ServiceWorkerContainer::RevokeActor(ServiceWorkerContainerChild* aActor) {
-  MOZ_DIAGNOSTIC_ASSERT(mActor);
-  MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
-  mActor->RevokeOwner(this);
-  mActor = nullptr;
-
-  mShutdown = true;
 }
 
 JSObject* ServiceWorkerContainer::WrapObject(
@@ -423,29 +390,10 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
 
   RefPtr<ServiceWorkerContainer> self = this;
 
-  if (!mActor) {
-    aRv.ThrowInvalidStateError("Can't register service worker");
-    return nullptr;
-  }
-
-  mActor->SendRegister(
-      clientInfo.ref().ToIPC(), nsCString(cleanedScopeURL),
-      nsCString(cleanedScriptURL), aOptions.mUpdateViaCache,
-      [self,
-       outer](const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&
-                  aResult) {
-        if (aResult.type() ==
-            IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::
-                TCopyableErrorResult) {
-          // application layer error
-          CopyableErrorResult rv = aResult.get_CopyableErrorResult();
-          MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
-          outer->MaybeReject(std::move(rv));
-          return;
-        }
-        // success
-        const auto& ipcDesc =
-            aResult.get_IPCServiceWorkerRegistrationDescriptor();
+  mInner->Register(
+      clientInfo.ref(), cleanedScopeURL, cleanedScriptURL,
+      aOptions.mUpdateViaCache,
+      [self, outer](const ServiceWorkerRegistrationDescriptor& aDesc) {
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
@@ -453,16 +401,10 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
-            global->GetOrCreateServiceWorkerRegistration(
-                ServiceWorkerRegistrationDescriptor(ipcDesc));
+            global->GetOrCreateServiceWorkerRegistration(aDesc);
         outer->MaybeResolve(reg);
       },
-      [outer](ResponseRejectReason&& aReason) {
-        // IPC layer error
-        CopyableErrorResult rv;
-        rv.ThrowInvalidStateError("Failed to register service worker");
-        outer->MaybeReject(std::move(rv));
-      });
+      [outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return outer.forget();
 }
@@ -498,34 +440,10 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
 
   RefPtr<ServiceWorkerContainer> self = this;
 
-  if (!mActor) {
-    outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return outer.forget();
-  }
-
-  mActor->SendGetRegistrations(
-      clientInfo.ref().ToIPC(),
-      [self, outer](
-          const IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult&
-              aResult) {
-        if (aResult.type() ==
-            IPCServiceWorkerRegistrationDescriptorListOrCopyableErrorResult::
-                TCopyableErrorResult) {
-          // application layer error
-          const auto& rv = aResult.get_CopyableErrorResult();
-          MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
-          outer->MaybeReject(CopyableErrorResult(rv));
-          return;
-        }
-        // success
-        const auto& ipcList =
-            aResult.get_IPCServiceWorkerRegistrationDescriptorList();
-        nsTArray<ServiceWorkerRegistrationDescriptor> list(
-            ipcList.values().Length());
-        for (const auto& ipcDesc : ipcList.values()) {
-          list.AppendElement(ServiceWorkerRegistrationDescriptor(ipcDesc));
-        }
-
+  mInner->GetRegistrations(
+      clientInfo.ref(),
+      [self,
+       outer](const nsTArray<ServiceWorkerRegistrationDescriptor>& aDescList) {
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
@@ -533,7 +451,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
           return;
         }
         nsTArray<RefPtr<ServiceWorkerRegistration>> regList;
-        for (auto& desc : list) {
+        for (auto& desc : aDescList) {
           RefPtr<ServiceWorkerRegistration> reg =
               global->GetOrCreateServiceWorkerRegistration(desc);
           if (reg) {
@@ -542,10 +460,7 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
         }
         outer->MaybeResolve(regList);
       },
-      [outer](ResponseRejectReason&& aReason) {
-        // IPC layer error
-        outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-      });
+      [self, outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return outer.forget();
 }
@@ -601,38 +516,9 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
 
   RefPtr<ServiceWorkerContainer> self = this;
 
-  if (!mActor) {
-    outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return outer.forget();
-  }
-
-  mActor->SendGetRegistration(
-      clientInfo.ref().ToIPC(), spec,
-      [self,
-       outer](const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&
-                  aResult) {
-        if (aResult.type() ==
-            IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::
-                TCopyableErrorResult) {
-          CopyableErrorResult ipcRv(aResult.get_CopyableErrorResult());
-          ErrorResult rv(std::move(ipcRv));
-          if (!rv.Failed()) {
-            // ErrorResult rv;
-            //  If rv is a failure then this is an application layer error.
-            //  Note, though, we also reject with NS_OK to indicate that we just
-            //  didn't find a registration.
-            Unused << self->GetGlobalIfValid(rv);
-            if (!rv.Failed()) {
-              outer->MaybeResolveWithUndefined();
-              return;
-            }
-          }
-          outer->MaybeReject(std::move(rv));
-          return;
-        }
-        // success
-        const auto& ipcDesc =
-            aResult.get_IPCServiceWorkerRegistrationDescriptor();
+  mInner->GetRegistration(
+      clientInfo.ref(), spec,
+      [self, outer](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
@@ -640,14 +526,20 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
-            global->GetOrCreateServiceWorkerRegistration(
-                ServiceWorkerRegistrationDescriptor(ipcDesc));
+            global->GetOrCreateServiceWorkerRegistration(aDescriptor);
         outer->MaybeResolve(reg);
       },
-      [self, outer](ResponseRejectReason&& aReason) {
-        // IPC layer error
-        outer->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+      [self, outer](ErrorResult&& aRv) {
+        if (!aRv.Failed()) {
+          Unused << self->GetGlobalIfValid(aRv);
+          if (!aRv.Failed()) {
+            outer->MaybeResolveWithUndefined();
+            return;
+          }
+        }
+        outer->MaybeReject(std::move(aRv));
       });
+
   return outer.forget();
 }
 
@@ -677,29 +569,9 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
   RefPtr<ServiceWorkerContainer> self = this;
   RefPtr<Promise> outer = mReadyPromise;
 
-  if (!mActor) {
-    mReadyPromise->MaybeReject(
-        CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
-    return mReadyPromise;
-  }
-
-  mActor->SendGetReady(
-      clientInfo.ref().ToIPC(),
-      [self,
-       outer](const IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult&
-                  aResult) {
-        if (aResult.type() ==
-            IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult::
-                TCopyableErrorResult) {
-          // application layer error
-          CopyableErrorResult rv(aResult.get_CopyableErrorResult());
-          MOZ_DIAGNOSTIC_ASSERT(rv.Failed());
-          outer->MaybeReject(std::move(rv));
-          return;
-        }
-        // success
-        const auto& ipcDesc =
-            aResult.get_IPCServiceWorkerRegistrationDescriptor();
+  mInner->GetReady(
+      clientInfo.ref(),
+      [self, outer](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
         ErrorResult rv;
         nsIGlobalObject* global = self->GetGlobalIfValid(rv);
         if (rv.Failed()) {
@@ -707,21 +579,17 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
           return;
         }
         RefPtr<ServiceWorkerRegistration> reg =
-            global->GetOrCreateServiceWorkerRegistration(
-                ServiceWorkerRegistrationDescriptor(ipcDesc));
+            global->GetOrCreateServiceWorkerRegistration(aDescriptor);
         NS_ENSURE_TRUE_VOID(reg);
 
         // Don't resolve the ready promise until the registration has
         // reached the right version.  This ensures that the active
         // worker property is set correctly on the registration.
-        reg->WhenVersionReached(ipcDesc.version(), [outer, reg](bool aResult) {
-          outer->MaybeResolve(reg);
-        });
+        reg->WhenVersionReached(
+            aDescriptor.Version(),
+            [outer, reg](bool aResult) { outer->MaybeResolve(reg); });
       },
-      [outer](ResponseRejectReason&& aReason) {
-        // IPC layer error
-        outer->MaybeReject(CopyableErrorResult(NS_ERROR_DOM_INVALID_STATE_ERR));
-      });
+      [self, outer](ErrorResult&& aRv) { outer->MaybeReject(std::move(aRv)); });
 
   return mReadyPromise;
 }
@@ -933,19 +801,6 @@ Result<Ok, bool> ServiceWorkerContainer::FillInMessageEventInit(
   }
 
   return Ok();
-}
-
-void ServiceWorkerContainer::Shutdown() {
-  if (mShutdown) {
-    return;
-  }
-  mShutdown = true;
-
-  if (mActor) {
-    mActor->RevokeOwner(this);
-    mActor->MaybeStartTeardown();
-    mActor = nullptr;
-  }
 }
 
 }  // namespace mozilla::dom
