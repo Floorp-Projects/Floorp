@@ -63,7 +63,7 @@ nsresult nsXPTInterfaceInfo::GetMethodInfo(
 }
 
 nsresult nsXPTInterfaceInfo::GetConstant(uint16_t aIndex,
-                                         JS::MutableHandleValue aConstant,
+                                         JS::MutableHandle<JS::Value> aConstant,
                                          char** aName) const {
   if (aIndex < ConstantCount()) {
     aConstant.set(Constant(aIndex).JSValue());
