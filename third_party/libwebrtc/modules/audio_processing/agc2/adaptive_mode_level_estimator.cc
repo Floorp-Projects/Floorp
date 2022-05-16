@@ -186,7 +186,7 @@ void AdaptiveModeLevelEstimator::ResetLevelEstimatorState(
 
 void AdaptiveModeLevelEstimator::DumpDebugData() const {
   apm_data_dumper_->DumpRaw("agc2_adaptive_level_estimate_dbfs", level_dbfs_);
-  apm_data_dumper_->DumpRaw("agc2_adaptive_num_adjacent_speech_frames_",
+  apm_data_dumper_->DumpRaw("agc2_adaptive_num_adjacent_speech_frames",
                             num_adjacent_speech_frames_);
   apm_data_dumper_->DumpRaw("agc2_adaptive_preliminary_level_estimate_num",
                             preliminary_state_.level_dbfs.numerator);
@@ -194,6 +194,10 @@ void AdaptiveModeLevelEstimator::DumpDebugData() const {
                             preliminary_state_.level_dbfs.denominator);
   apm_data_dumper_->DumpRaw("agc2_adaptive_preliminary_saturation_margin_db",
                             preliminary_state_.saturation_protector.margin_db);
+  apm_data_dumper_->DumpRaw("agc2_adaptive_preliminary_time_to_full_buffer_ms",
+                            preliminary_state_.time_to_full_buffer_ms);
+  apm_data_dumper_->DumpRaw("agc2_adaptive_reliable_time_to_full_buffer_ms",
+                            reliable_state_.time_to_full_buffer_ms);
 }
 
 }  // namespace webrtc

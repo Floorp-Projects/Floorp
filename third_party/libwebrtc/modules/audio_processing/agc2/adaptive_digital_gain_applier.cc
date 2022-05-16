@@ -136,6 +136,8 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
   } else if (frames_to_gain_increase_allowed_ > 0) {
     frames_to_gain_increase_allowed_--;
   }
+  apm_data_dumper_->DumpRaw("agc2_frames_to_gain_increase_allowed",
+                            frames_to_gain_increase_allowed_);
 
   const float gain_change_this_frame_db = ComputeGainChangeThisFrameDb(
       target_gain_db, last_gain_db_,
