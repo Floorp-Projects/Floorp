@@ -120,7 +120,7 @@
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Idź nazod</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
-    <string name="recent_tabs_show_all">Pokoż wszyskie</string>
+    <string name="recent_tabs_show_all">Pokoż wszyske</string>
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
     <string name="recent_tabs_show_all_content_description_2">Pokoż knefel wszyskich niydownych kart</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
@@ -130,7 +130,7 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">Strōny: %d</string>
     <!-- Text for button in synced tab card that opens synced tabs tray -->
-    <string name="recent_tabs_see_all_synced_tabs_button_text">Ôbocz wszyskie synchrōnizowane karty</string>
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Ôbocz wszyske synchrōnizowane karty</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Synchrōnizowano maszina</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
@@ -145,7 +145,7 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Skasuj</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description_2">Pokorz wszyskie downiyjsze poszukowania</string>
+    <string name="past_explorations_show_all_content_description_2">Pokorz wszyske downiyjsze poszukowania</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -703,7 +703,7 @@
 
 
     <!-- Text shown in the menu for sharing all tabs -->
-    <string name="tab_tray_menu_item_share">Udostympnij wszyskie karty</string>
+    <string name="tab_tray_menu_item_share">Udostympnij wszyske karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Niydowno zawarte karty</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
@@ -713,7 +713,7 @@
     <!-- Text shown in the menu to view tab settings -->
     <string name="tab_tray_menu_tab_settings">Sztalōnki kart</string>
     <!-- Text shown in the menu for closing all tabs -->
-    <string name="tab_tray_menu_item_close">Zawrzij wszyskie karty</string>
+    <string name="tab_tray_menu_item_close">Zawrzij wszyske karty</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Przidej do zokłodek</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -1029,7 +1029,7 @@
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Wloguj sie do synchrōnizacyje</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
-    <string name="sync_send_to_all">Poślij na wszyskie masziny</string>
+    <string name="sync_send_to_all">Poślij na wszyske masziny</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Połōncz zaś ze synchrōnizacyjōm</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
@@ -1111,7 +1111,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Adresa je skopiowano</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">To je przikładowy tekst. Je sam na to, coby pokozać, jak bydzie wyglōndoł, jak go zwiynkszysz abo zmyńszysz z tym sztalōnkiym.</string>
+    <string name="accessibility_text_size_sample_text_1">To je przikładowy tekst. Je sam na to, coby pokozać, jak bydzie wyglōndoł, jak go zwiynkszysz abo zmyńszysz z tym sztalōnkym.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Zmiyniej srogość tekstu na strōnach</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1164,5 +1164,124 @@
     <string name="delete_browsing_data_prompt_allow">Skasuj</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Dane przeglōndanio sōm skasowane</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Kasowanie danych przeglōndanio…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. -->
+    <string name="delete_history_group_prompt_message">To skasuje wszyske elymynta.</string>
+
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Pociep</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Skasuj</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Grupa skasowano</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview to teroz Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">Firefox Nightly kożdo noc je aktualizowany i mo nowe, eksperymyntalne funkcyje.
+        Może ale być mynij stabilny. Pobier nasza przeglōndarka beta, coby używać stabilniyjszyj wersyje.</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">Pobier Firefoxa Beta na Androida</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly sie przekludziōł</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">Ta aplikacyjo niy bydzie już dostować bezpiecznych aktualizacyji. Przestōń jij używać i przełōncz sie na nowe Nightly.
+        \n\nCoby przeniyś swoje zokłodki, dane logowanio i historyjo do inkszyj aplikacyji, załōż kōnto Firefoxa.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Przełōncz sie na nowe Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly sie przekludziōł</string>
+    <!-- text for firefox preview moving tip description -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">Ta aplikacyjo niy bydzie już dostować bezpiecznych aktualizacyji. Pobier nowe Nightly i przestōń jij używać.
+        \n\nCoby przeniyś swoje zokłodki, dane logowanio i historyjo do inkszyj aplikacyji, załōż kōnto Firefoxa.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Pobier nowe Nightly</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%s wito!</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Synchrōnizuj Firefoxa miyndzy maszinami</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">Synchrōnizuj aplikacyjo %1$s miyndzy maszinami</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">Przekludź zokłodki, historyjo i hasła do aplikacyje %1$s na tyj maszinie.</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Zaregistruj sie</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Synchrōnizacyjo je załōnczōno</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Zawdy z prywatnościōm</string>
+
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s autōmatycznie niy dowo fyrmōm śledzic cie po kryjōmu po necu.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Standardowo (bazowe)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Zbalansowane podug prywatności i sprowności. Strōny bydōm sie normalnie ladować.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Surowo</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Szperuje wiyncyj śledzōncych elymyntōw, tōż strōny gibcyj sie ladujō, ale niykere jejich fōnkcyje mogōm niy fungować. </string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Ôbier, kaj mo być posek z noczyniami</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Dej posek z noczyniami na spodku abo na wiyrchu, coby snadnie do niego dostować. </string>
+
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Twoja prywatność</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">%s dowo ci kōntrola nad tym, co udostympniosz online i co udostympniosz nōm.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Poczytej ô naszych prawidłach prywatności</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Zacznij przeglōndać internet</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Ôbier motyw</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Szporuj bateryjo i ôczy ze ćmawym motywym</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Autōmatyczny</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Przipasowuje sie do sztalōnkōw ôd masziny</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Ćmawy motyw</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Jasny motyw</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Karty sōm posłane!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Karta je posłano!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Niy idzie posłać</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">SPRŌBUJ JESZCZE ROZ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Skanuj kod</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Ôdewrzij Firefoxa na kōmputrze i idź na strōna <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Fertich, coby skanować</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Zaloguj sie z kamerōm</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Użyj lepij emaila</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Niy mosz kōnta? <u>Zrychtuj je</u>, coby synchrōnizować Firefoxa miyndzy maszinami.]]></string>
 
     </resources>

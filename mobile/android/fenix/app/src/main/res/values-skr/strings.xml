@@ -122,6 +122,10 @@
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d سائٹاں</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">ساریاں ہم وقت تھیاں ٹیباں ݙیکھو</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">ہم وقت تھئے ڈیوائس</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">ہٹاؤ</string>
@@ -165,6 +169,8 @@
     <string name="browser_menu_add_to_homescreen">ہوم سکرین تے شامل کرو</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">انسٹال کرو</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">ولدا ہم وقت کرو</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ورقے وچ لبھو</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -244,6 +250,8 @@
     <string name="onboarding_home_screen_section_home_description_2">ٹیب، نشانیاں تے براؤزنگ تاریخ کھولݨ کیتے ٹپ مارو۔</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">ستھریاں، منظم ٹیباں</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">بہترین خاکے تے خود کار بند تھیندیاں ٹیباں نال ٹیباں دی بے ترتیبی کوں صاف کرو۔</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">حالیہ ڳولاں</string>
 
@@ -317,6 +325,10 @@
     <string name="preferences_accessibility">رسائیت</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server">منپسند فائرفوکس کھاتہ سرور</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">من پسند ہم وقت سرور</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">فائرفوکس کھاتہ/ہم وقت سرور دی تجدید تھی ڳئی ہے۔ تبدیلیان لاگو کرݨ کیتے ایپ چھوڑیندے پئے ہو۔۔۔</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">کھاتہ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -329,8 +341,12 @@
     <string name="preferences_gestures">اشارے</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">تخصیص کرو</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">آپݨے فائرفوکس کھاتے نال کتاب نشانیاں، تاریخ تے ٻیا ٻہوں کجھ ہم وقت کرو</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">فائرفوکس کھاتہ</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">ہم وقت کرݨ کوں ولدا شروع کرݨ کیتے ولدا کنکٹ کرو</string>
     <!-- Preference for language -->
     <string name="preferences_language">زبان</string>
 
@@ -338,6 +354,8 @@
     <string name="preferences_data_choices">ڈیٹا چوائس</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">ڈیٹا مجموعہ</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">یوایس بی دے ذریعے بعید ٹھیک کاری</string>
     <!-- Preference title for switch preference to show search engines -->
     <string name="preferences_show_search_engines">ڳولݨ انجݨ ݙکھاؤ</string>
     <!-- Preference title for switch preference to show search suggestions -->
@@ -352,6 +370,8 @@
     <string name="preferences_search_browsing_history">براؤزنگ تاریخ  ڳولو</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">کتاب نشانیاں ڳولو</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">ہم وقت تھیاں ٹیباں ݙیکھو</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">کھاتہ ترتیباں</string>
     <!-- Preference for enabling url autocomplete-->
@@ -419,6 +439,11 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">ایڈ ــ آن پہلے ہی انسٹال تھیا ہویا ہے</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">ہݨ ہم وقت کرو</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">چݨو جو کیا ہم وقت کرݨے</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">تاریخ</string>
     <!-- Preference for syncing bookmarks -->
@@ -435,6 +460,16 @@
     <string name="preferences_sync_device_name">ڈیوائس ناں</string>
     <!-- Text shown when user enters empty device name -->
     <string name="empty_device_name_error">ڈیوائس ناں خالی کائنی تھی سڳدا۔</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">ہم وقت تھیندا پئے۔۔۔</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">ہم وقت کرݨ ناکام تھیا۔ چھیکڑی کامیابی: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">ہم وقت کرݨ ناکام تھیا۔ چھیکڑی ہم وقت تھیا: کݙاہیں وی کائناں</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">چھیکڑی ہم وقت تھیا: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">چھیکڑی ہم وقت تھیا: کݙاہیں وی کائناں</string>
     <!-- Text for displaying the default device name.
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
@@ -473,6 +508,9 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">موزلّا کوں پڑھائی انسٹال کرݨ تے چلاوݨ دی اجازت ݙیندے</string>
 
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">ہم وقت کرݨ چالو کرو</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ولدا کنکٹ کرݨ کیتے سائن ان تھیوو</string>
     <!-- Preference for removing FxA account -->
@@ -632,12 +670,16 @@
     <string name="tab_header_label">ٹیباں کھولو</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">نجی ٹیباں</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">ہم وقت تھیاں ٹیباں</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">ٹیب شامل کرو</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_private_tab">نجی ٹیب شامل کرو</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">نجی</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">ہم وقت کرو</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ساریاں ٹیباں شیئر کرو</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -721,6 +763,8 @@
 
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">اتھ کوئی تاریخ کائنی</string>
+    <!-- Text for the button inside History screen that opens Synced History screen. History that is coming from other devices -->
+    <string name="history_synced_from_other_devices">ٻیاں ڈیوائساں کنوں ہم وقت تھیاں</string>
     <!-- The page title for browsing history coming from other devices. -->
     <string name="history_from_other_devices">ٻیاں ڈیوائساں کنوں</string>
 
@@ -783,6 +827,8 @@
     <string name="edit_bookmark_fragment_title">نشانی وچ تبدیلی کرو</string>
     <!-- Bookmark folder editing screen title -->
     <string name="edit_bookmark_folder_fragment_title">فولڈر وچ تبدیلی کرو</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">ہم وقت تھیاں نشانیاں ݙیکھݨ کیتے سائن ان تھیوو</string>
     <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">یوآرایل</string>
     <!-- Bookmark FOLDER editing field label -->
@@ -951,13 +997,21 @@
     <string name="share_copy_link_to_clipboard">کلپ بورڈ تے نقل کرو</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">کلپ بورڈ تے نقل تھی ڳیا</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">ہم وقت کرݨ کیتے سائن ان تھیوو</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">ہم وقت کرݨ کیتے سائن ان تھیوو</string>
     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ساریاں ڈیوائساں  تے بھیڄو</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">ہم وقت کرݨ کیتے ولدا کنکٹ کرو</string>
     <!-- Text displayed when sync is offline and cannot be accessed -->
     <string name="sync_offline">آف لائن</string>
 
     <!-- An option to connect additional devices -->
     <string name="sync_connect_device">ٻئی ڈیوائس نال کنکٹ کرو</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">ٹیب بھیڄݨ کیتے گھٹ وگھٹ ہک ٻئی ڈیوائس تے فائرفوکس وچ سائن ان تھیوو۔</string>
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">سمنجھ گھدے</string>
 
@@ -1024,6 +1078,8 @@
     <string name="qr_scanner_dialog_invalid_ok">ٹھیک ہے</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">بھلا تہاکوں پک ہے جو تساں %1$s مٹاوݨ چاہندے ہو؟</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">ایں ٹیب کوں مٹاوݨ نال سارا مجموعہ مٹ ویسی۔ تساں کہیں وی ویلے نواں مجموعہ تخلیق کر سڳدے ہو۔</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s مٹاؤں؟</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1039,6 +1095,9 @@
 
     <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
     <string name="preference_accessibility_auto_size_2">خودکار فونٹ سائز تبدیلی</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">فونٹ سائز تہاݙیاں انڈرائیڈ ترتیباں دے مشابہ ہوسی۔ اِتھاں فونٹ سائز وٹاوݨ کیتے غیرفعال کرو۔</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">براؤزنگ ڈیٹا مٹاؤ</string>
@@ -1116,9 +1175,17 @@
     <!-- Text for onboarding welcome message
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">%s وچ ست بسم اللہ!</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">ڈیوائساں دے درمیان فائرفوکس ہم وقت کرو</string>
+    <!-- text for the Firefox account onboarding sign in card header. The first parameter is the name of the application.-->
+    <string moz:RemovedIn="100" name="onboarding_account_sign_in_header_2" tools:ignore="UnusedResources">ڈیوائساں دے درمیان %1$s ہم وقت کرو</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
+    <string name="onboarding_manual_sign_in_description_2">ایں ڈیوائس تے کتاب نشانیاں، تاریخ تے پاس ورڈ %1$s تے گھن آؤ۔ </string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">سائن اپ</string>
 
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">ہم وقت کرݨ چالو ہے</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ہمیشہ رازداری تے</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1171,6 +1238,8 @@
     <string name="sign_in_with_camera">آپݨے کیمرے نال سائن ان تھیوو</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">ایندی بجائے ای میل ورتو</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[کھاتہ کائنی؟ ڈیوائساں دے درمیان فائرفوکس ہم وقت کرݨ کیتے<u>ہک کھاتہ بݨاؤ</u>۔]]></string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">کنکشن توڑو</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1190,12 +1259,20 @@
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ٻیا سِکھو</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">معیاری (پہلے کنوں مقرر)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">کارکردگی تے رازداری کیتے متوازن تھیا، ورقے معمول دے مطابق لوڈ تھیندن۔</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">معیاری ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">سخت</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">سخت ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">مخصوص</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_description_2">بلاک کرݨ کیتے ٹریکر تے سکرپٹ چُݨو</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">من پسند ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">کوکیاں</string>
@@ -1203,6 +1280,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_1">کراس سائٹ تے سوشل میڈیا ٹریکرز</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">ان ݙٹھیاں سائٹاں کنوں کوکیاں</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ساریاں تریجھی پارٹی کوکیاں (ویب سائٹاں دے ترٹݨ دا سبب بݨ سڳدی ہے)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">ساریاں کوکیاں (ویب سائٹاں دے ترٹݨ دا سبب بݨ سڳدی ہے)</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
@@ -1223,12 +1302,18 @@
     <string name="enhanced_tracking_protection_allowed">اجازت ݙتے ہوئے</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">سوشل میڈیا ٹریکرز</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ویب تے تہاݙیاں براؤزنگ سرگرمیاں کوں ٹریک کرݨ آلے سماجی نیٹ ورک دی صلاحیت کوں محدود کریندے۔</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کراس سائٹ ٹریکنگ کوکیاں</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">کریپٹومینرز</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ڈیجیٹل کرنسی دی کھدائی کرݨ آلے نقصان دہ سکرپٹ کوں تہاݙی ڈیوائس تائیں پہنچݨ کنوں روکیندے۔</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">فنگر پرنٹرز</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">تہاݙی ڈیوائس بارے نویکلے سُن٘ڄاپُو ڈیٹا کوں کٹھا تھیوݨ کنوں روکیندے۔ جیکوں ٹریک کرݨ کیتے ورتیا ون٘ڄ سڳدے۔</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ٹریکنگ مواد</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1247,6 +1332,8 @@
     <string name="open_source_licenses_title">OSS | %s لائبریریاں</string>
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">ریڈائرکٹ ٹریکرز</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">معلوم ٹریکنگ ویب سائٹاں تے ریڈائریکٹ نال مقرر تھیاں کوکیاں کوں صاف کریندے۔</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ٻیا سِکھو</string>
 
@@ -1264,6 +1351,9 @@
     <string name="about_licensing_information">لائسنس ڄاݨکاری</string>
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">لائبریریاں جہڑیاں اساں ورتیندوں</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">ٹھیک کاری مینیو: فعال کرݨ کیتے کھٻے %1$d کلک(اں)</string>
     <string name="about_debug_menu_toast_done">ڈیبگ مینیو فعال تھی ڳیا</string>
 
     <!-- Browser long press popup menu -->
@@ -1300,15 +1390,29 @@
     <string name="preferences_passwords_save_logins_never_save">کݙاہیں وی محفوظ نہ کرو</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">%1$s وچ خود بخود بھرو</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s ورتݨ دے دوران ویب سائٹاں وچ ورتݨ  ناں تے پاس ورڈ بھرو تے محفوظ کرو۔</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">ٻیاں ایپاں وچ آٹوفل کرو</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">آپݨی ڈیوائس تے موجود ٻیاں ایپاں وچ ورتݨ ناں تے پاس ورڈ بھرو۔</string>
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">لاگ ان  شامل کرو</string>
 
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">لاگ اناں کوں ہم وقت کرو</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">ڈیوائساں دے مابین لاگ ان ہم وقت کرو</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">محفوظ تھئے لاگ ان</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">تساں جہڑے لاگ ان محفوظ کریندے ہو یا %s نال ہم وقت کریندے ہو او اِتھاں ݙکھائے ویسن۔</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ہم وقت کرݨ بارے ٻیا سِکھو۔</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">استثنیات</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">جہڑے لاگ ان تے پاس ورڈ محفوظ کائنی کیتے ڳئے او اِتھ ݙکھائے ویسن۔</string>
     <!-- Description of list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions_description">انہاں سائٹاں کیتے لاگ تے پاس ورڈ محفوظ کائناں تھیسن۔</string>
     <!-- Text on button to remove all saved login exceptions -->
@@ -1356,6 +1460,8 @@
     <string name="logins_biometric_prompt_message_pin">آپݨی ڈیوائس اݨ لاک کرو</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">ساریاں ویب سائٹاں تے زوم کرو</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">پِنچ یا زوم کرݨ دی اجازت ݙیوݨ کیتے فعال کرو، انہاں ویب سائٹاں کیتے وی جہڑیاں ایں علامتی اشاریاں کنوں روکیندیاں ہن۔</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">ناں(A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1374,6 +1480,10 @@
     <string name="preferences_credit_cards_save_and_autofill_cards">کارڈ محفوظ کرو تے آپݨے آپ بھرو</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary">ڈیٹا مخفی  ہے۔</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">ڈیوائساں دے مابین کارڈ ہم وقت کرو</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">کارڈ ہم وقت کرو</string>
     <!-- Preference option for adding a credit card -->
     <string name="preferences_credit_cards_add_credit_card">کریڈٹ کارڈ شامل کرو</string>
     <!-- Preference option for managing saved credit cards -->
@@ -1494,6 +1604,9 @@
 
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ورتݨ کیتے تند ڳولو</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example"> “%s” نال سوال وٹاؤ۔
+مثال:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">من پسند ڳولݨ انجݨ  تفصیلاں</string>
 
@@ -1540,6 +1653,8 @@
     <string name="quick_settings_sheet_insecure_connection_2">کنکشن محفوظ کائنی۔</string>
     <!-- Label to clear site data -->
     <string name="clear_site_data">کوکیاں تے سائٹ ڈیٹا صاف کرو </string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[بھلا تہاکوں پک ہے جو تساں سائٹ <b>%s</b> کیتے ساریاں کوکیاں تے ڈیٹا صاف کرݨ چاہندے ہو؟]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">بھلا تہاکوں پک ہے جو تساں ساریاں سائٹاں کیتے ساریاں اجازتاں مکاوݨ چاہندے ہو؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1612,6 +1727,8 @@
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">سوہݨا، ولدا تصدیق کرو۔</string>
 
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">سوہݨا، ٹیب ہم وقت کرݨ فعال کرو۔</string>
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">تہاݙیاں ٻیاں ڈیوائساں تے فائرفوکس وچ کوئی ٹیب کائنی کھلے ہوئے۔</string>
     <!-- Text displayed when user has no tabs that have been synced. The first parameter is the name of the application.-->
@@ -1619,6 +1736,24 @@
     <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
     <string name="synced_tabs_sign_in_message">آپݨیاں ساریاں ڈیوائساں کنوں ٹیباں دی تندیر ݙیکھو۔</string>
 
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ہم وقت کرݨ کیتے سائن ان تھیوو</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">کوئی کھلے ٹیب  کائنی</string>
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">ٹیباں کوں ہم وقت کرݨ کیتے گروپ کھنڈاؤ</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">ٹیباں کوں ہم وقت کرݨ کیتے گروپ کٹھے کرو</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">اہم سائٹ حد پوری تھی ڳئی</string>
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">شاٹ کٹ حد پوری تھی ڳئی</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">نویں اہم سائٹ شامل کرݨ کیتے، ہک ہٹاؤ۔ ٹچ کرتے، سائٹ قاٻو کرو تے ہٹاؤ چݨو۔</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">نواں شاٹ کٹ شامل کرݨ کیتے، ہک ہٹاؤ۔ ٹچ کرتے، سائٹ قاٻو کرو تے ہٹاؤ چݨو۔</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے، سمنجھ گھدے</string>
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
@@ -1636,16 +1771,29 @@
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">ترتیباں</string>
 
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">ساݙے سپانسر تے تہاݙی رازداری</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">سپانسر تھئے</string>
+
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">غیر فعال ٹیبز</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">ساریاں غیر فعال ٹیباں بند کرو</string>
 
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ہک مہینے بعد آپݨے آپ بند کروں؟</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">جہڑے ٹیب تساں پہلے مہینے دے دوران کائنی ݙٹھے، انہاں کوں فائرفوکس بند کر سڳدے۔</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">خود بخود بند کرݨ چالو کرو</string>
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">آپݨے آپ  بند تھیوݨ فعال تھی ڳیا</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">فائرفوکس وچ خودکار کھولݨ کیتے سنہیے، ای میلاں تے ویب سائٹاں کنوں لنک مقرر کرو۔</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹاؤ</string>
