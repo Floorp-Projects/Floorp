@@ -46,6 +46,13 @@ GeneratedFile(
     flags=flags,
 )
 
+GeneratedFile(
+    ("geckoview/src/main/java/org/mozilla/gecko/util/XPCOMError.java",),
+    script="/xpcom/base/ErrorList.py",
+    entry_point="gen_jinja",
+    inputs=["geckoview/src/main/java/org/mozilla/gecko/util/XPCOMError.jinja"],
+)
+
 CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 DIRS += [
