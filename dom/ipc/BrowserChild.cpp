@@ -36,6 +36,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NativeKeyBindingsType.h"
@@ -1116,7 +1117,9 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
       // BC tree, and our code above is simple enough and keeps strong refs to
       // everything.
       ([&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-        cv->SetPrintSettingsForSubdocument(printSettings);
+        cv->SetPrintSettingsForSubdocument(
+            printSettings, static_cast<RemotePrintJobChild*>(
+                               aPrintData.remotePrintJobChild()));
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
                    BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {
@@ -2468,6 +2471,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
   }
 
   sourceWindow->Print(printSettings,
+                      /* aRemotePrintJob = */ nullptr,
                       /* aListener = */ nullptr, docShellToCloneInto,
                       nsGlobalWindowOuter::IsPreview::Yes,
                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
@@ -2523,12 +2527,13 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
   {
     IgnoredErrorResult rv;
-    outerWindow->Print(printSettings,
-                       /* aListener = */ nullptr,
-                       /* aWindowToCloneInto = */ nullptr,
-                       nsGlobalWindowOuter::IsPreview::No,
-                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
-                       /* aPrintPreviewCallback = */ nullptr, rv);
+    outerWindow->Print(
+        printSettings,
+        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild()),
+        /* aListener = */ nullptr,
+        /* aWindowToCloneInto = */ nullptr, nsGlobalWindowOuter::IsPreview::No,
+        nsGlobalWindowOuter::IsForWindowDotPrint::No,
+        /* aPrintPreviewCallback = */ nullptr, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
     }

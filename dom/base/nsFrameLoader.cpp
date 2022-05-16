@@ -3449,6 +3449,7 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
   ErrorResult rv;
   sourceWindow->Print(
       aPrintSettings,
+      /* aRemotePrintJob = */ nullptr,
       /* aListener = */ nullptr, docShellToCloneInto,
       nsGlobalWindowOuter::IsPreview::Yes,
       nsGlobalWindowOuter::IsForWindowDotPrint::No,

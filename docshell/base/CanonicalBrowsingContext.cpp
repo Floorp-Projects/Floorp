@@ -706,7 +706,8 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
     }
 
     ErrorResult rv;
-    outerWindow->Print(aPrintSettings, listener,
+    outerWindow->Print(aPrintSettings,
+                       /* aRemotePrintJob = */ nullptr, listener,
                        /* aDocShellToCloneInto = */ nullptr,
                        nsGlobalWindowOuter::IsPreview::No,
                        nsGlobalWindowOuter::IsForWindowDotPrint::No,
