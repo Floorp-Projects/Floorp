@@ -43,6 +43,7 @@ class VCMTimestampMap {
   void Add(uint32_t timestamp, const VCMFrameInformation& data);
   absl::optional<VCMFrameInformation> Pop(uint32_t timestamp);
   size_t Size() const;
+  void Clear();
 
  private:
   struct TimestampDataTuple {
