@@ -99,6 +99,7 @@ class SnapshotSelector extends EventEmitter {
     filterAdult: false,
     sourceWeights: null,
     url: undefined,
+    time: Date.now(),
     type: undefined,
     getCurrentSessionUrls: undefined,
   };
@@ -338,6 +339,45 @@ class SnapshotSelector extends EventEmitter {
 
     this.#context.type = type;
     this.rebuild();
+  }
+
+  /**
+   * Update context details and start a rebuild.
+   * Undefined properties are ignored, thus pass null to nullify a property.
+   * @param {string} [url]
+   *  The url of the current context.
+   * @param {number} [time]
+   *  The time, in milliseconds from the Unix epoch.
+   * @param {PageDataSchema.DATA_TYPE} [type]
+   *  The type of snapshots for this selector.
+   * @param {string} [rebuildImmediately] (default: false)
+   *  Whether to rebuild immediately instead of waiting some delay. Useful on
+   *  startup.
+   */
+  updateDetailsAndRebuild({ url, time, type, rebuildImmediately = false }) {
+    let rebuild = false;
+    if (url !== undefined) {
+      url = Snapshots.stripFragments(url);
+      if (url != this.#context.url) {
+        this.#context.url = url;
+        rebuild = true;
+      }
+    }
+    if (time !== undefined && time != this.#context.time) {
+      this.#context.time = time;
+      rebuild = true;
+    }
+    if (type !== undefined && type != this.#context.type) {
+      this.#context.type = type;
+      rebuild = true;
+    }
+    if (rebuild) {
+      if (rebuildImmediately) {
+        this.#buildSnapshots();
+      } else {
+        this.rebuild();
+      }
+    }
   }
 }
 

@@ -2695,6 +2695,10 @@ pref("browser.snapshots.score.IsUsedRemoved", -10);
 // the last decimal map to the keys of `Snapshots.recommendationSources`.
 pref("browser.snapshots.source.CommonReferrer", 3);
 pref("browser.snapshots.source.Overlapping", 3);
+pref("browser.snapshots.source.TimeOfDay", 3);
+
+// Other preferences affecting snapshots scoring.
+pref("browser.snapshots.relevancy.timeOfDayIntervalSeconds", 3600);
 
 // Expiration days for snapshots.
 pref("browser.places.snapshots.expiration.days", 210);
