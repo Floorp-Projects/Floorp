@@ -14,15 +14,16 @@
 namespace dcsctp {
 namespace {
 
-using TestSequence = UnwrappedSequenceNumber<uint16_t>;
+using Wrapped = StrongAlias<class WrappedTag, uint16_t>;
+using TestSequence = UnwrappedSequenceNumber<Wrapped>;
 
 TEST(SequenceNumbersTest, SimpleUnwrapping) {
   TestSequence::Unwrapper unwrapper;
 
-  TestSequence s0 = unwrapper.Unwrap(0);
-  TestSequence s1 = unwrapper.Unwrap(1);
-  TestSequence s2 = unwrapper.Unwrap(2);
-  TestSequence s3 = unwrapper.Unwrap(3);
+  TestSequence s0 = unwrapper.Unwrap(Wrapped(0));
+  TestSequence s1 = unwrapper.Unwrap(Wrapped(1));
+  TestSequence s2 = unwrapper.Unwrap(Wrapped(2));
+  TestSequence s3 = unwrapper.Unwrap(Wrapped(3));
 
   EXPECT_LT(s0, s1);
   EXPECT_LT(s0, s2);
@@ -55,10 +56,10 @@ TEST(SequenceNumbersTest, SimpleUnwrapping) {
 TEST(SequenceNumbersTest, MidValueUnwrapping) {
   TestSequence::Unwrapper unwrapper;
 
-  TestSequence s0 = unwrapper.Unwrap(0x7FFE);
-  TestSequence s1 = unwrapper.Unwrap(0x7FFF);
-  TestSequence s2 = unwrapper.Unwrap(0x8000);
-  TestSequence s3 = unwrapper.Unwrap(0x8001);
+  TestSequence s0 = unwrapper.Unwrap(Wrapped(0x7FFE));
+  TestSequence s1 = unwrapper.Unwrap(Wrapped(0x7FFF));
+  TestSequence s2 = unwrapper.Unwrap(Wrapped(0x8000));
+  TestSequence s3 = unwrapper.Unwrap(Wrapped(0x8001));
 
   EXPECT_LT(s0, s1);
   EXPECT_LT(s0, s2);
@@ -91,10 +92,10 @@ TEST(SequenceNumbersTest, MidValueUnwrapping) {
 TEST(SequenceNumbersTest, WrappedUnwrapping) {
   TestSequence::Unwrapper unwrapper;
 
-  TestSequence s0 = unwrapper.Unwrap(0xFFFE);
-  TestSequence s1 = unwrapper.Unwrap(0xFFFF);
-  TestSequence s2 = unwrapper.Unwrap(0x0000);
-  TestSequence s3 = unwrapper.Unwrap(0x0001);
+  TestSequence s0 = unwrapper.Unwrap(Wrapped(0xFFFE));
+  TestSequence s1 = unwrapper.Unwrap(Wrapped(0xFFFF));
+  TestSequence s2 = unwrapper.Unwrap(Wrapped(0x0000));
+  TestSequence s3 = unwrapper.Unwrap(Wrapped(0x0001));
 
   EXPECT_LT(s0, s1);
   EXPECT_LT(s0, s2);
@@ -127,12 +128,12 @@ TEST(SequenceNumbersTest, WrappedUnwrapping) {
 TEST(SequenceNumbersTest, WrapAroundAFewTimes) {
   TestSequence::Unwrapper unwrapper;
 
-  TestSequence s0 = unwrapper.Unwrap(0);
+  TestSequence s0 = unwrapper.Unwrap(Wrapped(0));
   TestSequence prev = s0;
 
   for (uint32_t i = 1; i < 65536 * 3; i++) {
     uint16_t wrapped = static_cast<uint16_t>(i);
-    TestSequence si = unwrapper.Unwrap(wrapped);
+    TestSequence si = unwrapper.Unwrap(Wrapped(wrapped));
 
     EXPECT_LT(s0, si);
     EXPECT_LT(prev, si);
@@ -143,11 +144,11 @@ TEST(SequenceNumbersTest, WrapAroundAFewTimes) {
 TEST(SequenceNumbersTest, IncrementIsSameAsWrapped) {
   TestSequence::Unwrapper unwrapper;
 
-  TestSequence s0 = unwrapper.Unwrap(0);
+  TestSequence s0 = unwrapper.Unwrap(Wrapped(0));
 
   for (uint32_t i = 1; i < 65536 * 2; i++) {
     uint16_t wrapped = static_cast<uint16_t>(i);
-    TestSequence si = unwrapper.Unwrap(wrapped);
+    TestSequence si = unwrapper.Unwrap(Wrapped(wrapped));
 
     s0.Increment();
     EXPECT_EQ(s0, si);
@@ -159,12 +160,12 @@ TEST(SequenceNumbersTest, UnwrappingLargerNumberIsAlwaysLarger) {
 
   for (uint32_t i = 1; i < 65536 * 2; i++) {
     uint16_t wrapped = static_cast<uint16_t>(i);
-    TestSequence si = unwrapper.Unwrap(wrapped);
+    TestSequence si = unwrapper.Unwrap(Wrapped(wrapped));
 
-    EXPECT_GT(unwrapper.Unwrap(wrapped + 1), si);
-    EXPECT_GT(unwrapper.Unwrap(wrapped + 5), si);
-    EXPECT_GT(unwrapper.Unwrap(wrapped + 10), si);
-    EXPECT_GT(unwrapper.Unwrap(wrapped + 100), si);
+    EXPECT_GT(unwrapper.Unwrap(Wrapped(wrapped + 1)), si);
+    EXPECT_GT(unwrapper.Unwrap(Wrapped(wrapped + 5)), si);
+    EXPECT_GT(unwrapper.Unwrap(Wrapped(wrapped + 10)), si);
+    EXPECT_GT(unwrapper.Unwrap(Wrapped(wrapped + 100)), si);
   }
 }
 
@@ -173,12 +174,12 @@ TEST(SequenceNumbersTest, UnwrappingSmallerNumberIsAlwaysSmaller) {
 
   for (uint32_t i = 1; i < 65536 * 2; i++) {
     uint16_t wrapped = static_cast<uint16_t>(i);
-    TestSequence si = unwrapper.Unwrap(wrapped);
+    TestSequence si = unwrapper.Unwrap(Wrapped(wrapped));
 
-    EXPECT_LT(unwrapper.Unwrap(wrapped - 1), si);
-    EXPECT_LT(unwrapper.Unwrap(wrapped - 5), si);
-    EXPECT_LT(unwrapper.Unwrap(wrapped - 10), si);
-    EXPECT_LT(unwrapper.Unwrap(wrapped - 100), si);
+    EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 1)), si);
+    EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 5)), si);
+    EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 10)), si);
+    EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 100)), si);
   }
 }
 
