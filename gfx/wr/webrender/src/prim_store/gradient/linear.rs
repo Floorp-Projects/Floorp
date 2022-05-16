@@ -25,7 +25,6 @@ use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimit
 use crate::render_task::{RenderTask, RenderTaskKind};
 use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
-use crate::segment::EdgeAaSegmentMask;
 use crate::picture::{SurfaceIndex};
 use crate::util::pack_as_float;
 use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder, apply_gradient_local_clip};
@@ -49,7 +48,6 @@ pub struct LinearGradientKey {
     pub reverse_stops: bool,
     pub cached: bool,
     pub nine_patch: Option<Box<NinePatchDescriptor>>,
-    pub edge_aa_mask: EdgeAaSegmentMask,
 }
 
 impl LinearGradientKey {
@@ -68,7 +66,6 @@ impl LinearGradientKey {
             reverse_stops: linear_grad.reverse_stops,
             cached: linear_grad.cached,
             nine_patch: linear_grad.nine_patch,
-            edge_aa_mask: linear_grad.edge_aa_mask,
         }
     }
 }
@@ -124,7 +121,7 @@ pub fn optimize_linear_gradient(
     extend_mode: ExtendMode,
     stops: &mut [GradientStopKey],
     // Callback called for each fast-path segment (rect, start end, stops).
-    callback: &mut dyn FnMut(&LayoutRect, LayoutPoint, LayoutPoint, &[GradientStopKey], EdgeAaSegmentMask)
+    callback: &mut dyn FnMut(&LayoutRect, LayoutPoint, LayoutPoint, &[GradientStopKey])
 ) -> bool {
     // First sanitize the gradient parameters. See if we can remove repetitions,
     // tighten the primitive bounds, etc.
@@ -253,22 +250,6 @@ pub fn optimize_linear_gradient(
         last.offset = 1.0 - last.offset;
     }
 
-    let (side_edges, first_edge, last_edge) = if vertical {
-        (
-            EdgeAaSegmentMask::LEFT | EdgeAaSegmentMask::RIGHT,
-            EdgeAaSegmentMask::TOP,
-            EdgeAaSegmentMask::BOTTOM
-        )
-    } else {
-        (
-            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::BOTTOM,
-            EdgeAaSegmentMask::LEFT,
-            EdgeAaSegmentMask::RIGHT
-        )
-    };
-
-    let mut is_first = true;
-    let last_offset = last.offset;
     for stop in stops.iter().chain((&[last]).iter()) {
         let prev_stop = prev;
         prev = *stop;
@@ -314,15 +295,6 @@ pub fn optimize_linear_gradient(
         start -= offset;
         end -= offset;
 
-        let mut edge_flags = side_edges;
-        if is_first {
-            edge_flags |= first_edge;
-            is_first = false;
-        }
-        if stop.offset == last_offset {
-            edge_flags |= last_edge;
-        }
-
         callback(
             &segment_rect,
             start,
@@ -331,7 +303,6 @@ pub fn optimize_linear_gradient(
                 GradientStopKey { offset: 0.0, .. prev_stop },
                 GradientStopKey { offset: 1.0, .. *stop },
             ],
-            edge_flags,
         );
     }
 
@@ -341,8 +312,7 @@ pub fn optimize_linear_gradient(
 impl From<LinearGradientKey> for LinearGradientTemplate {
     fn from(item: LinearGradientKey) -> Self {
 
-        let mut common = PrimTemplateCommonData::with_key_common(item.common);
-        common.edge_aa_mask = item.edge_aa_mask;
+        let common = PrimTemplateCommonData::with_key_common(item.common);
 
         let (mut stops, min_alpha) = stops_and_min_alpha(&item.stops);
 
@@ -603,7 +573,6 @@ pub struct LinearGradient {
     pub reverse_stops: bool,
     pub nine_patch: Option<Box<NinePatchDescriptor>>,
     pub cached: bool,
-    pub edge_aa_mask: EdgeAaSegmentMask,
 }
 
 impl Internable for LinearGradient {
