@@ -534,6 +534,8 @@ GMPInstallManager.prototype = {
       }, this);
 
       if (!addonsToInstall.length) {
+        let now = Math.round(Date.now() / 1000);
+        GMPPrefs.setInt(GMPPrefs.KEY_UPDATE_LAST_EMPTY_CHECK, now);
         log.info("No new addons to install, returning");
         return { status: "nothing-new-to-install" };
       }
@@ -755,25 +757,45 @@ GMPDownloader.prototype = {
           gmpAddon.version,
         ]);
         let installPromise = gmpInstaller.install();
-        return installPromise.then(extractedPaths => {
-          // Success, set the prefs
-          let now = Math.round(Date.now() / 1000);
-          GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, now, gmpAddon.id);
-          // Remember our ABI, so that if the profile is migrated to another
-          // platform or from 32 -> 64 bit, we notice and don't try to load the
-          // unexecutable plugin library.
-          let abi = GMPUtils._expectedABI(gmpAddon);
-          log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
-          GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
-          // Setting the version pref signals installation completion to consumers,
-          // if you need to set other prefs etc. do it before this.
-          GMPPrefs.setString(
-            GMPPrefs.KEY_PLUGIN_VERSION,
-            gmpAddon.version,
-            gmpAddon.id
-          );
-          return extractedPaths;
-        });
+        return installPromise.then(
+          extractedPaths => {
+            // Success, set the prefs
+            let now = Math.round(Date.now() / 1000);
+            GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, now, gmpAddon.id);
+            // Remember our ABI, so that if the profile is migrated to another
+            // platform or from 32 -> 64 bit, we notice and don't try to load the
+            // unexecutable plugin library.
+            let abi = GMPUtils._expectedABI(gmpAddon);
+            log.info("Setting ABI to '" + abi + "' for " + gmpAddon.id);
+            GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_ABI, abi, gmpAddon.id);
+            // Setting the version pref signals installation completion to consumers,
+            // if you need to set other prefs etc. do it before this.
+            GMPPrefs.setString(
+              GMPPrefs.KEY_PLUGIN_VERSION,
+              gmpAddon.version,
+              gmpAddon.id
+            );
+            return extractedPaths;
+          },
+          reason => {
+            let now = Math.round(Date.now() / 1000);
+            GMPPrefs.setInt(
+              GMPPrefs.KEY_PLUGIN_LAST_INSTALL_FAILED,
+              now,
+              gmpAddon.id
+            );
+            throw reason;
+          }
+        );
+      },
+      reason => {
+        let now = Math.round(Date.now() / 1000);
+        GMPPrefs.setInt(
+          GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD_FAILED,
+          now,
+          gmpAddon.id
+        );
+        throw reason;
       }
     );
   },
