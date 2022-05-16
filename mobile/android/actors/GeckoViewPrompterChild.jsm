@@ -16,12 +16,12 @@ class GeckoViewPrompterChild extends GeckoViewActorChild {
     this._prompts = new Map();
   }
 
-  dismissPrompt(prompt) {
-    this.eventDispatcher.sendRequest({
-      type: "GeckoView:Prompt:Dismiss",
+  registerPrompt(prompt) {
+    this._prompts.set(prompt.id, prompt);
+    this.sendAsyncMessage("RegisterPrompt", {
       id: prompt.id,
+      promptType: prompt.getPromptType(),
     });
-    this.unregisterPrompt(prompt);
   }
 
   unregisterPrompt(prompt) {
@@ -31,23 +31,10 @@ class GeckoViewPrompterChild extends GeckoViewActorChild {
     });
   }
 
-  prompt(prompt, message) {
-    this._prompts.set(prompt.id, prompt);
-    this.sendAsyncMessage("RegisterPrompt", {
-      id: prompt.id,
-      promptType: prompt.getPromptType(),
-    });
-    // We intentionally do not await here as we want to fire NotifyPromptShow
-    // immediately rather than waiting until the user accepts/dismisses the
-    // prompt.
-    const result = this.eventDispatcher.sendRequestForResult({
-      type: "GeckoView:Prompt",
-      prompt: message,
-    });
+  notifyPromptShow(prompt) {
     this.sendAsyncMessage("NotifyPromptShow", {
       id: prompt.id,
     });
-    return result;
   }
 
   /**
@@ -89,5 +76,3 @@ class GeckoViewPrompterChild extends GeckoViewActorChild {
     }
   }
 }
-
-const { debug, warn } = GeckoViewPrompterChild.initLogging("Prompter");

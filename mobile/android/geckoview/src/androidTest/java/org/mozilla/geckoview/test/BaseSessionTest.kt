@@ -39,7 +39,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val DOWNLOAD_HTML_PATH = "/assets/www/download.html"
         const val FORM_BLANK_HTML_PATH = "/assets/www/form_blank.html"
         const val FORMS_HTML_PATH = "/assets/www/forms.html"
-        const val FORMS_XORIGIN_HTML_PATH = "/assets/www/forms_xorigin.html"
         const val FORMS2_HTML_PATH = "/assets/www/forms2.html"
         const val FORMS3_HTML_PATH = "/assets/www/forms3.html"
         const val FORMS4_HTML_PATH = "/assets/www/forms4.html"

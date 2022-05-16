@@ -468,12 +468,7 @@ class ModuleInfo {
       throw new Error(`No impl for message: ${aMessage.name}.`);
     }
 
-    try {
-      this._impl.receiveMessage(aMessage);
-    } catch (error) {
-      warn`this._impl.receiveMessage failed ${aMessage.name}`;
-      throw error;
-    }
+    this._impl.receiveMessage(aMessage);
   }
 
   onContentModuleLoaded() {
@@ -618,9 +613,6 @@ function startup() {
       onEnable: {
         actors: {
           ScrollDelegate: {
-            parent: {
-              moduleURI: "resource:///actors/ScrollDelegateParent.jsm",
-            },
             child: {
               moduleURI: "resource:///actors/ScrollDelegateChild.jsm",
               events: {
@@ -635,12 +627,8 @@ function startup() {
     {
       name: "GeckoViewSelectionAction",
       onEnable: {
-        resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
         actors: {
           SelectionActionDelegate: {
-            parent: {
-              moduleURI: "resource:///actors/SelectionActionDelegateParent.jsm",
-            },
             child: {
               moduleURI: "resource:///actors/SelectionActionDelegateChild.jsm",
               events: {
@@ -691,9 +679,6 @@ function startup() {
       onInit: {
         actors: {
           GeckoViewAutoFill: {
-            parent: {
-              moduleURI: "resource:///actors/GeckoViewAutoFillParent.jsm",
-            },
             child: {
               moduleURI: "resource:///actors/GeckoViewAutoFillChild.jsm",
               events: {
@@ -736,9 +721,6 @@ function startup() {
         resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
         actors: {
           MediaControlDelegate: {
-            parent: {
-              moduleURI: "resource:///actors/MediaControlDelegateParent.jsm",
-            },
             child: {
               moduleURI: "resource:///actors/MediaControlDelegateChild.jsm",
               events: {

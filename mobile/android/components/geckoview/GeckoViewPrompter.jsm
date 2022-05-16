@@ -34,8 +34,15 @@ class GeckoViewPrompter {
       }
     }
 
-    if (!this._domWin) {
-      this._domWin = Services.wm.getMostRecentWindow("navigator:geckoview");
+    if (this._domWin) {
+      this._dispatcher = GeckoViewUtils.getDispatcherForWindow(this._domWin);
+    }
+
+    if (!this._dispatcher) {
+      [
+        this._dispatcher,
+        this._domWin,
+      ] = GeckoViewUtils.getActiveDispatcherAndWindow();
     }
 
     this._innerWindowId = this._domWin?.browsingContext.currentWindowContext.innerWindowId;
@@ -81,7 +88,8 @@ class GeckoViewPrompter {
   }
 
   _dismissUi() {
-    this.prompterActor?.dismissPrompt(this);
+    this.prompterActor?.unregisterPrompt(this);
+    this._dispatcher.dispatch("GeckoView:Prompt:Dismiss", { id: this.id });
   }
 
   accept(aInputText = this.inputText) {
@@ -178,35 +186,46 @@ class GeckoViewPrompter {
     });
   }
 
-  async asyncShowPrompt(aMsg, aCallback) {
+  asyncShowPrompt(aMsg, aCallback) {
+    let handled = false;
     this.message = aMsg;
     this.inputText = aMsg.value;
     this.callback = aCallback;
+    this.prompterActor?.registerPrompt(this);
+
+    const onResponse = response => {
+      if (handled) {
+        return;
+      }
+      if (!this.checkInnerWindow()) {
+        // Page has navigated away, let's dismiss the prompt
+        aCallback(null);
+      } else {
+        aCallback(response);
+      }
+      // This callback object is tied to the Java garbage collector because
+      // it is invoked from Java. Manually release the target callback
+      // here; otherwise we may hold onto resources for too long, because
+      // we would be relying on both the Java and the JS garbage collectors
+      // to run.
+      aMsg = undefined;
+      aCallback = undefined;
+      handled = true;
+    };
+
+    if (!this._dispatcher || !this.checkInnerWindow()) {
+      onResponse(null);
+      return;
+    }
 
     aMsg.id = this.id;
-
-    let response = null;
-    try {
-      if (this.checkInnerWindow()) {
-        response = await this.prompterActor.prompt(this, aMsg);
-      }
-    } catch (error) {
-      // Nothing we can do really, we will treat this as a dismiss.
-      warn`Error while prompting: ${error}`;
-    }
-
-    if (!this.checkInnerWindow()) {
-      // Page has navigated away, let's dismiss the prompt
-      aCallback(null);
-    } else {
-      aCallback(response);
-    }
-    // This callback object is tied to the Java garbage collector because
-    // it is invoked from Java. Manually release the target callback
-    // here; otherwise we may hold onto resources for too long, because
-    // we would be relying on both the Java and the JS garbage collectors
-    // to run.
-    aMsg = undefined;
-    aCallback = undefined;
+    this._dispatcher.dispatch("GeckoView:Prompt", aMsg, {
+      onSuccess: onResponse,
+      onError: error => {
+        Cu.reportError("Prompt error: " + error);
+        onResponse(null);
+      },
+    });
+    this.prompterActor?.notifyPromptShow(this);
   }
 }

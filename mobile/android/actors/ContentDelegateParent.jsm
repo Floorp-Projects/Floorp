@@ -17,20 +17,18 @@ const { debug, warn } = GeckoViewUtils.initLogging("ContentDelegateParent");
 
 class ContentDelegateParent extends GeckoViewActorParent {
   async receiveMessage(aMsg) {
-    debug`receiveMessage: ${aMsg.name}`;
+    debug`receiveMessage: ${aMsg.name} ${aMsg}`;
 
     switch (aMsg.name) {
       case "GeckoView:DOMFullscreenExit": {
         this.window.windowUtils.remoteFrameFullscreenReverted();
-        return null;
+        break;
       }
 
       case "GeckoView:DOMFullscreenRequest": {
         this.window.windowUtils.remoteFrameFullscreenChanged(this.browser);
-        return null;
+        break;
       }
     }
-
-    return super.receiveMessage(aMsg);
   }
 }
