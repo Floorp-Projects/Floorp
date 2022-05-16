@@ -11,7 +11,6 @@
 #include "modules/video_capture/video_capture_impl.h"
 
 #include <stdlib.h>
-#include <memory>
 #include <string>
 
 #include "api/video/i420_buffer.h"
@@ -568,10 +567,6 @@ int32_t DesktopCaptureImpl::StartCapture(
                       ? 1000 / _requestedCapability.maxFPS
                       : 1000;
 #if defined(_WIN32)
-  if (!capturer_thread_) {
-    capturer_thread_ = std::make_unique<rtc::PlatformUIThread>(
-        Run, this, "ScreenCaptureThread");
-  }
   capturer_thread_->RequestCallbackTimer(_maxFPSNeeded);
 #endif
 
@@ -612,10 +607,6 @@ int32_t DesktopCaptureImpl::StopCapture() {
     capturer_thread_
         ->Stop();  // thread is guaranteed stopped before this returns
     desktop_capturer_cursor_composer_.reset();
-    cursor_composer_started_ = false;
-#if defined(_WIN32)
-    capturer_thread_.reset();
-#endif
     return 0;
   }
   return -1;
@@ -644,51 +635,41 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result result,
 
 void DesktopCaptureImpl::process() {
   // We need to call Start on the same thread we call CaptureFrame on.
-  if (!cursor_composer_started_) {
-    desktop_capturer_cursor_composer_->Start(this);
-    cursor_composer_started_ = true;
-  }
-#if defined(WEBRTC_WIN)
-  ProcessIter();
-#else
-  do {
-    ProcessIter();
-  } while (started_);
-#endif
-}
+  desktop_capturer_cursor_composer_->Start(this);
 
-void DesktopCaptureImpl::ProcessIter() {
   // We should deliver at least one frame before stopping
+  do {
 #if !defined(_WIN32)
-  int64_t startProcessTime = rtc::TimeNanos();
+    int64_t startProcessTime = rtc::TimeNanos();
 #endif
 
 #if defined(WEBRTC_MAC)
-  // Give cycles to the RunLoop so frame callbacks can happen
-  CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, true);
+    // Give cycles to the RunLoop so frame callbacks can happen
+    CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, true);
 #endif
 
-  desktop_capturer_cursor_composer_->CaptureFrame();
+    desktop_capturer_cursor_composer_->CaptureFrame();
 
 #if !defined(_WIN32)
-  const uint32_t processTime =
-      ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
-      rtc::kNumNanosecsPerMillisec;
-  // Use at most x% CPU or limit framerate
-  const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
-  const uint32_t sleepTime = sleepTimeFactor * processTime;
-  time_event_->Wait(std::max<uint32_t>(_maxFPSNeeded, sleepTime));
+    const uint32_t processTime =
+        ((uint32_t)(rtc::TimeNanos() - startProcessTime)) /
+        rtc::kNumNanosecsPerMillisec;
+    // Use at most x% CPU or limit framerate
+    const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
+    const uint32_t sleepTime = sleepTimeFactor * processTime;
+    time_event_->Wait(std::max<uint32_t>(_maxFPSNeeded, sleepTime));
 #endif
 
 #if defined(WEBRTC_WIN)
-// Let the timer events in PlatformUIThread drive process,
-// don't sleep.
+    // Alertable sleep to permit RaiseFlag to run and update |stop_|.
+    SleepEx(0, true);
 #elif defined(WEBRTC_MAC)
-  sched_yield();
+    sched_yield();
 #else
-  static const struct timespec ts_null = {0};
-  nanosleep(&ts_null, nullptr);
+    static const struct timespec ts_null = {0};
+    nanosleep(&ts_null, nullptr);
 #endif
+  } while (started_);
 }
 
 }  // namespace webrtc

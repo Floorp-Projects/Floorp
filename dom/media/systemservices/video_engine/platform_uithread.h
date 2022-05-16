@@ -11,47 +11,21 @@
 #ifndef RTC_BASE_PLATFORM_UITHREAD_H_
 #define RTC_BASE_PLATFORM_UITHREAD_H_
 
-#if defined(WEBRTC_WIN)
-
-#  include "Assertions.h"
-#  include "rtc_base/platform_thread.h"
-#  include "rtc_base/deprecated/recursive_critical_section.h"
-#  include "ThreadSafety.h"
+#include "rtc_base/platform_thread.h"
+#include "rtc_base/deprecated/recursive_critical_section.h"
 
 namespace rtc {
-/*
- * Windows UI thread for screen capture
- * Launches a thread which enters a message wait loop after calling the
- * provided ThreadRunFunction once. A repeating timer event might be registered
- * with a callback through the Win32 API. If so, that timer will cause WM_TIMER
- * messages to appear in the threads message queue. This will wake the thread
- * which will then first look to see if it received the WM_QUIT message, then
- * it will pass any non WM_QUIT messages on to the registered message handlers
- * (synchronously on the current thread). In the case oF WM_TIMER the
- * registered handler calls the NativeEventCallback which is simply the
- * ThreadRunFunction which was passed to the constructor.
- *
- * Shutdown of the message wait loop is triggered by sending a WM_CLOSE which
- * will start tearing down the "window" which hosts the UI thread. This will
- * cause a WM_DESTROY message to be received. Upon reception a WM_QUIT message
- * is enqueued. When the message wait loop receives a WM_QUIT message it stops,
- * thus allowing the thread to be joined.
- *
- * Note: that the only source of a WM_CLOSE should be PlatformUIThread::Stop.
- * Note: because PlatformUIThread::Stop is called from a different thread than
- * PlatformUIThread::Run, it is possible that Stop can race Run.
- *
- * After being stopped PlatformUIThread can not be started again.
- *
- */
 
+#if defined(WEBRTC_WIN)
 class PlatformUIThread : public PlatformThread {
  public:
   PlatformUIThread(ThreadRunFunction func, void* obj, const char* thread_name)
-      : PlatformThread(func, obj, thread_name) {
-    MOZ_ASSERT(func);
-  }
-  virtual ~PlatformUIThread();
+      : PlatformThread(func, obj, thread_name),
+        hwnd_(nullptr),
+        timerid_(0),
+        timeout_(0),
+        stop_(false) {}
+  virtual ~PlatformUIThread() {}
 
   void Stop() override;
 
@@ -66,21 +40,15 @@ class PlatformUIThread : public PlatformThread {
  private:
   static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
   void NativeEventCallback();
-  // Initialize the UI thread that is servicing the timer events
   bool InternalInit();
 
-  HWND hwnd_ GUARDED_BY(cs_) = nullptr;
-  UINT_PTR timerid_ GUARDED_BY(cs_) = 0;
-  unsigned int timeout_ GUARDED_BY(cs_) = 0;
-  enum class State {
-    UNSTARTED,
-    STARTED,
-    STOPPED,
-  };
-  State state_ GUARDED_BY(cs_) = State::UNSTARTED;
+  HWND hwnd_;
+  UINT_PTR timerid_;
+  unsigned int timeout_;
+  bool stop_;
 };
+#endif
 
 }  // namespace rtc
 
-#endif
 #endif  // RTC_BASE_PLATFORM_UITHREAD_H_
