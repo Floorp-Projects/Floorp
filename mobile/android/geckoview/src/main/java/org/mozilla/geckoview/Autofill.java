@@ -210,16 +210,16 @@ public class Autofill {
     private Node mRoot;
     private HashMap<String, NodeData> mUuidToNodeData;
     private SparseArray<Node> mIdToNode;
-    private int mCurrentIndex;
-    // TODO: support session id?
-    private int mId = View.NO_ID;
+    private int mCurrentIndex = 0;
+    private String mId = null;
 
     // We can't store the Node directly because it might be updated by subsequent NodeAdd calls.
     private String mFocusedUuid = null;
 
     /* package */ Session(@NonNull final GeckoSession geckoSession) {
       mGeckoSession = geckoSession;
-      clear();
+      // Dummy session until a real one gets created
+      clear(UUID.randomUUID().toString());
     }
 
     @UiThread
@@ -230,14 +230,13 @@ public class Autofill {
       return rect;
     }
 
-    /* package */ void clear() {
-      mId = View.NO_ID;
+    /* package */ void clear(String newSessionId) {
+      mId = newSessionId;
       mFocusedUuid = null;
-      mRoot = Node.newDummyRoot(getDefaultDimensions());
+      mRoot = Node.newDummyRoot(getDefaultDimensions(), newSessionId);
       mIdToNode = new SparseArray<>();
       mUuidToNodeData = new HashMap<>();
-      mUuidToNodeData.put(mRoot.getUuid(), new NodeData(View.NO_ID, mRoot));
-      mCurrentIndex = 0;
+      addNode(mRoot);
     }
 
     /* package */ boolean isEmpty() {
@@ -291,6 +290,10 @@ public class Autofill {
      */
     @UiThread
     public boolean isVisible(final @NonNull Node node) {
+      if (!Objects.equals(node.mSessionId, mId)) {
+        Log.w(LOGTAG, "Requesting visibility for older session " + node.mSessionId);
+        return false;
+      }
       if (mRoot == node) {
         // The root is always visible
         return true;
@@ -360,6 +363,10 @@ public class Autofill {
     @AnyThread
     public @NonNull Node getRoot() {
       return mRoot;
+    }
+
+    /* package */ String getId() {
+      return mId;
     }
 
     @Override
@@ -540,6 +547,7 @@ public class Autofill {
     private final @AutofillInputType int mInputType;
     private final @NonNull String mTag;
     private final @NonNull String mDomain;
+    private final String mSessionId;
 
     /**
      * Get the unique (within this page) ID for this node.
@@ -714,15 +722,16 @@ public class Autofill {
     }
 
     /* package */
-    static Node newDummyRoot(final Rect dimensions) {
-      return new Node(dimensions);
+    static Node newDummyRoot(final Rect dimensions, final String sessionId) {
+      return new Node(dimensions, sessionId);
     }
 
-    /* package */ Node(final Rect dimensions) {
+    /* package */ Node(final Rect dimensions, final String sessionId) {
       mRoot = null;
       mParent = null;
       mUuid = UUID.randomUUID().toString();
       mDimens = dimensions;
+      mSessionId = sessionId;
       mAttributes = new ArrayMap<>();
       mEnabled = false;
       mFocusable = false;
@@ -740,6 +749,8 @@ public class Autofill {
       builder
           .append("uuid=")
           .append(mUuid)
+          .append(", sessionId=")
+          .append(mSessionId)
           .append(", parent=")
           .append(mParent != null ? mParent.getUuid() : null)
           .append(", root=")
@@ -785,17 +796,20 @@ public class Autofill {
     public void fillViewStructure(
         @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {}
 
-    /* package */ Node(@NonNull final GeckoBundle bundle, final Rect defaultDimensions) {
-      this(bundle, /* root */ null, /* parent */ null, defaultDimensions);
+    /* package */ Node(
+        @NonNull final GeckoBundle bundle, final Rect defaultDimensions, final String sessionId) {
+      this(bundle, /* root */ null, /* parent */ null, defaultDimensions, sessionId);
     }
 
     /* package */ Node(
         @NonNull final GeckoBundle bundle,
         final Node root,
         final Node parent,
-        final Rect defaultDimensions) {
+        final Rect defaultDimensions,
+        final String sessionId) {
       final GeckoBundle bounds = bundle.getBundle("bounds");
 
+      mSessionId = sessionId;
       mUuid = bundle.getString("uuid");
       mDomain = bundle.getString("origin", "");
       final Rect dimens =
@@ -821,7 +835,7 @@ public class Autofill {
 
       if (children != null) {
         for (final GeckoBundle childBundle : children) {
-          final Node child = new Node(childBundle, mRoot, this, defaultDimensions);
+          final Node child = new Node(childBundle, mRoot, this, defaultDimensions, sessionId);
           childrenMap.put(child.getUuid(), child);
         }
       }
@@ -991,6 +1005,7 @@ public class Autofill {
           .getEventDispatcher()
           .registerUiThreadListener(
               this,
+              "GeckoView:StartAutofill",
               "GeckoView:AddAutofill",
               "GeckoView:ClearAutofill",
               "GeckoView:CommitAutofill",
@@ -1004,6 +1019,8 @@ public class Autofill {
       Log.d(LOGTAG, "handleMessage " + event);
       if ("GeckoView:AddAutofill".equals(event)) {
         addNode(message.getBundle("node"), callback);
+      } else if ("GeckoView:StartAutofill".equals(event)) {
+        start(message.getString("sessionId"));
       } else if ("GeckoView:ClearAutofill".equals(event)) {
         clear();
       } else if ("GeckoView:OnAutofillFocus".equals(event)) {
@@ -1090,16 +1107,12 @@ public class Autofill {
     /* package */ void addNode(
         @NonNull final GeckoBundle message, @NonNull final EventCallback callback) {
       final Session session = getAutofillSession();
-      final Node node = new Node(message, session.getDefaultDimensions());
-      final boolean initializing = session.isEmpty();
+      final Node node = new Node(message, session.getDefaultDimensions(), session.getId());
 
       session.addRoot(node, callback);
       addValues(message);
 
       if (mDelegate != null) {
-        if (initializing) {
-          mDelegate.onSessionStart(mGeckoSession);
-        }
         mDelegate.onNodeAdd(mGeckoSession, node, getAutofillSession().dataFor(node));
       }
     }
@@ -1122,6 +1135,14 @@ public class Autofill {
         for (final GeckoBundle child : children) {
           addValues(child);
         }
+      }
+    }
+
+    /* package */ void start(@Nullable final String sessionId) {
+      // Make sure we start with a clean session
+      getAutofillSession().clear(sessionId);
+      if (mDelegate != null) {
+        mDelegate.onSessionStart(mGeckoSession);
       }
     }
 
@@ -1190,7 +1211,7 @@ public class Autofill {
         Log.d(LOGTAG, "clear()");
       }
 
-      getAutofillSession().clear();
+      getAutofillSession().clear(null);
       if (mDelegate != null) {
         mDelegate.onSessionCancel(mGeckoSession);
       }

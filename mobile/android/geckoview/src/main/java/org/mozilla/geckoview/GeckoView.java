@@ -970,6 +970,22 @@ public class GeckoView extends FrameLayout {
         @NonNull GeckoSession session,
         @NonNull Autofill.Node node,
         @NonNull Autofill.NodeData data) {
+      if (!mSession.getAutofillSession().isVisible(node)) {
+        return;
+      }
+      final Autofill.Node focused = mSession.getAutofillSession().getFocused();
+      // We must have a focused node because |node| is visible
+      Objects.requireNonNull(focused);
+
+      final Autofill.NodeData focusedData = mSession.getAutofillSession().dataFor(focused);
+      Objects.requireNonNull(focusedData);
+
+      ensureAutofillManager();
+      if (mAutofillManager != null) {
+        mAutofillManager.notifyViewExited(GeckoView.this, focusedData.getId());
+        mAutofillManager.notifyViewEntered(
+            GeckoView.this, focusedData.getId(), displayRectForId(session, focused));
+      }
     }
 
     @Override
