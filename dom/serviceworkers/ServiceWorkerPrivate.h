@@ -8,22 +8,10 @@
 #define mozilla_dom_serviceworkerprivate_h
 
 #include <type_traits>
-#include <functional>
 
 #include "nsCOMPtr.h"
-#include "nsISupportsImpl.h"
-#include "nsTArray.h"
-
-#include "mozilla/Attributes.h"
-#include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
-#include "mozilla/dom/FetchService.h"
-#include "mozilla/dom/RemoteWorkerController.h"
-#include "mozilla/dom/RemoteWorkerTypes.h"
-#include "mozilla/dom/ServiceWorkerOpArgs.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/MozPromise.h"
 
 #define NOTIFICATION_CLICK_EVENT_NAME u"notificationclick"
 #define NOTIFICATION_CLOSE_EVENT_NAME u"notificationclose"
@@ -33,18 +21,15 @@ class nsIWorkerDebugger;
 
 namespace mozilla {
 
-template <typename T>
-class Maybe;
-
 class JSObjectHolder;
 
 namespace dom {
 
 class ClientInfoAndState;
-class RemoteWorkerControllerChild;
 class ServiceWorkerCloneData;
 class ServiceWorkerInfo;
 class ServiceWorkerPrivate;
+class ServiceWorkerPrivateImpl;
 class ServiceWorkerRegistrationInfo;
 
 namespace ipc {
@@ -73,13 +58,103 @@ class KeepAliveToken final : public nsISupports {
   RefPtr<ServiceWorkerPrivate> mPrivate;
 };
 
-class ServiceWorkerPrivate final : public RemoteWorkerObserver {
+// ServiceWorkerPrivate is a wrapper for managing the on-demand aspect of
+// service workers. It handles all event dispatching to the worker and ensures
+// the worker thread is running when needed.
+//
+// Lifetime management: To spin up the worker thread we own a |WorkerPrivate|
+// object which can be cancelled if no events are received for a certain
+// amount of time. The worker is kept alive by holding a |KeepAliveToken|
+// reference.
+//
+// Extendable events hold tokens for the duration of their handler execution
+// and until their waitUntil promise is resolved, while ServiceWorkerPrivate
+// will hold a token for |dom.serviceWorkers.idle_timeout| seconds after each
+// new event.
+//
+// Note: All timer events must be handled on the main thread because the
+// worker may block indefinitely the worker thread (e. g. infinite loop in the
+// script).
+//
+// There are 3 cases where we may ignore keep alive tokens:
+// 1. When ServiceWorkerPrivate's token expired, if there are still waitUntil
+// handlers holding tokens, we wait another
+// |dom.serviceWorkers.idle_extended_timeout| seconds before forcibly
+// terminating the worker.
+// 2. If the worker stopped controlling documents and it is not handling push
+// events.
+// 3. The content process is shutting down.
+//
+// Adding an API function for a new event requires calling |SpawnWorkerIfNeeded|
+// with an appropriate reason before any runnable is dispatched to the worker.
+// If the event is extendable then the runnable should inherit
+// ExtendableEventWorkerRunnable.
+class ServiceWorkerPrivate final {
   friend class KeepAliveToken;
+  friend class ServiceWorkerPrivateImpl;
 
  public:
-  NS_INLINE_DECL_REFCOUNTING(ServiceWorkerPrivate, override);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef();
+  NS_IMETHOD_(MozExternalRefCountType) Release();
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ServiceWorkerPrivate)
 
+  using HasThreadSafeRefCnt = std::false_type;
   using PromiseExtensionWorkerHasListener = MozPromise<bool, nsresult, false>;
+
+ protected:
+  nsCycleCollectingAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
+ public:
+  // TODO: remove this class. There's one (and only should be one) concrete
+  // class that derives this abstract base class.
+  class Inner {
+   public:
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+
+    virtual nsresult SendMessageEvent(
+        RefPtr<ServiceWorkerCloneData>&& aData,
+        const ClientInfoAndState& aClientInfoAndState) = 0;
+
+    virtual nsresult CheckScriptEvaluation(
+        RefPtr<LifeCycleEventCallback> aScriptEvaluationCallback) = 0;
+
+    virtual nsresult SendLifeCycleEvent(
+        const nsAString& aEventName,
+        RefPtr<LifeCycleEventCallback> aCallback) = 0;
+
+    virtual nsresult SendPushEvent(
+        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
+        const nsAString& aMessageId, const Maybe<nsTArray<uint8_t>>& aData) = 0;
+
+    virtual nsresult SendPushSubscriptionChangeEvent() = 0;
+
+    virtual nsresult SendNotificationEvent(
+        const nsAString& aEventName, const nsAString& aID,
+        const nsAString& aTitle, const nsAString& aDir, const nsAString& aLang,
+        const nsAString& aBody, const nsAString& aTag, const nsAString& aIcon,
+        const nsAString& aData, const nsAString& aBehavior,
+        const nsAString& aScope, uint32_t aDisableOpenClickDelay) = 0;
+
+    virtual nsresult SendFetchEvent(
+        RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
+        nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
+        const nsAString& aResultingClientId) = 0;
+
+    virtual RefPtr<PromiseExtensionWorkerHasListener> WakeForExtensionAPIEvent(
+        const nsAString& aExtensionAPINamespace,
+        const nsAString& aExtensionAPIEventName) = 0;
+
+    virtual nsresult SpawnWorkerIfNeeded() = 0;
+
+    virtual void TerminateWorker() = 0;
+
+    virtual void UpdateState(ServiceWorkerState aState) = 0;
+
+    virtual void NoteDeadOuter() = 0;
+
+    virtual bool WorkerIsDead() const = 0;
+  };
 
   explicit ServiceWorkerPrivate(ServiceWorkerInfo* aInfo);
 
@@ -88,14 +163,14 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
 
   // This is used to validate the worker script and continue the installation
   // process.
-  nsresult CheckScriptEvaluation(RefPtr<LifeCycleEventCallback> aCallback);
+  nsresult CheckScriptEvaluation(LifeCycleEventCallback* aCallback);
 
   nsresult SendLifeCycleEvent(const nsAString& aEventType,
-                              RefPtr<LifeCycleEventCallback> aCallback);
+                              LifeCycleEventCallback* aCallback);
 
   nsresult SendPushEvent(const nsAString& aMessageId,
                          const Maybe<nsTArray<uint8_t>>& aData,
-                         RefPtr<ServiceWorkerRegistrationInfo> aRegistration);
+                         ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult SendPushSubscriptionChangeEvent();
 
@@ -107,13 +182,17 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
                                  const nsAString& aBehavior,
                                  const nsAString& aScope);
 
-  nsresult SendFetchEvent(nsCOMPtr<nsIInterceptedChannel> aChannel,
+  nsresult SendFetchEvent(nsIInterceptedChannel* aChannel,
                           nsILoadGroup* aLoadGroup, const nsAString& aClientId,
                           const nsAString& aResultingClientId);
 
   Result<RefPtr<PromiseExtensionWorkerHasListener>, nsresult>
   WakeForExtensionAPIEvent(const nsAString& aExtensionAPINamespace,
                            const nsAString& aEXtensionAPIEventName);
+
+  bool MaybeStoreISupports(nsISupports* aSupports);
+
+  void RemoveISupports(nsISupports* aSupports);
 
   // This will terminate the current running worker thread and drop the
   // workerPrivate reference.
@@ -150,117 +229,7 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
 
   void SetHandlesFetch(bool aValue);
 
-  RefPtr<GenericPromise> SetSkipWaitingFlag();
-
-  static void RunningShutdown() {
-    // Force a final update of the number of running ServiceWorkers
-    UpdateRunning(0, 0);
-    MOZ_ASSERT(sRunningServiceWorkers == 0);
-    MOZ_ASSERT(sRunningServiceWorkersFetch == 0);
-  }
-
-  /**
-   * Update Telemetry for # of running ServiceWorkers
-   */
-  static void UpdateRunning(int32_t aDelta, int32_t aFetchDelta);
-
  private:
-  class PendingFunctionalEvent {
-   public:
-    PendingFunctionalEvent(
-        ServiceWorkerPrivate* aOwner,
-        RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration);
-
-    virtual ~PendingFunctionalEvent();
-
-    virtual nsresult Send() = 0;
-
-   protected:
-    ServiceWorkerPrivate* const MOZ_NON_OWNING_REF mOwner;
-    RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-  };
-
-  class PendingPushEvent final : public PendingFunctionalEvent {
-   public:
-    PendingPushEvent(ServiceWorkerPrivate* aOwner,
-                     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-                     ServiceWorkerPushEventOpArgs&& aArgs);
-
-    nsresult Send() override;
-
-   private:
-    ServiceWorkerPushEventOpArgs mArgs;
-  };
-
-  class PendingFetchEvent final : public PendingFunctionalEvent {
-   public:
-    PendingFetchEvent(
-        ServiceWorkerPrivate* aOwner,
-        RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-        ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
-        nsCOMPtr<nsIInterceptedChannel>&& aChannel,
-        RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises);
-
-    nsresult Send() override;
-
-    ~PendingFetchEvent();
-
-   private:
-    ParentToParentServiceWorkerFetchEventOpArgs mArgs;
-    nsCOMPtr<nsIInterceptedChannel> mChannel;
-    // The promises from FetchService. It indicates if the preload response is
-    // ready or not. The promise's resolve/reject value should be handled in
-    // FetchEventOpChild, such that the preload result can be propagated to the
-    // ServiceWorker through IPC. However, FetchEventOpChild creation could be
-    // pending here, so this member is needed. And it will be forwarded to
-    // FetchEventOpChild when crearting the FetchEventOpChild.
-    RefPtr<FetchServicePromises> mPreloadResponseReadyPromises;
-  };
-
-  /**
-   * It's possible that there are still in-progress operations when a
-   * a termination operation is issued. In this case, it's important to keep
-   * the RemoteWorkerControllerChild actor alive until all pending operations
-   * have completed before destroying it with Send__delete__().
-   *
-   * RAIIActorPtrHolder holds a singular, owning reference to a
-   * RemoteWorkerControllerChild actor and is responsible for destroying the
-   * actor in its (i.e. the holder's) destructor. This implies that all
-   * in-progress operations must maintain a strong reference to their
-   * corresponding holders and release the reference once completed/canceled.
-   *
-   * Additionally a RAIIActorPtrHolder must be initialized with a non-null actor
-   * and cannot be moved or copied. Therefore, the identities of two held
-   * actors can be compared by simply comparing their holders' addresses.
-   */
-  class RAIIActorPtrHolder final {
-   public:
-    NS_INLINE_DECL_REFCOUNTING(RAIIActorPtrHolder)
-
-    explicit RAIIActorPtrHolder(
-        already_AddRefed<RemoteWorkerControllerChild> aActor);
-
-    RAIIActorPtrHolder(const RAIIActorPtrHolder& aOther) = delete;
-    RAIIActorPtrHolder& operator=(const RAIIActorPtrHolder& aOther) = delete;
-
-    RAIIActorPtrHolder(RAIIActorPtrHolder&& aOther) = delete;
-    RAIIActorPtrHolder& operator=(RAIIActorPtrHolder&& aOther) = delete;
-
-    RemoteWorkerControllerChild* operator->() const
-        MOZ_NO_ADDREF_RELEASE_ON_RETURN;
-
-    RemoteWorkerControllerChild* get() const;
-
-    RefPtr<GenericPromise> OnDestructor();
-
-   private:
-    ~RAIIActorPtrHolder();
-
-    MozPromiseHolder<GenericPromise> mDestructorPromiseHolder;
-
-    const RefPtr<RemoteWorkerControllerChild> mActor;
-  };
-
   enum WakeUpReason {
     FetchEvent = 0,
     PushEvent,
@@ -286,67 +255,23 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
 
   void ReleaseToken();
 
-  nsresult SpawnWorkerIfNeeded();
+  nsresult SpawnWorkerIfNeeded(WakeUpReason aWhy,
+                               bool* aNewWorkerCreated = nullptr,
+                               nsILoadGroup* aLoadGroup = nullptr);
 
   ~ServiceWorkerPrivate();
 
   already_AddRefed<KeepAliveToken> CreateEventKeepAliveToken();
-
-  nsresult Initialize();
-
-  bool WorkerIsDead() const;
-
-  /**
-   * RemoteWorkerObserver
-   */
-  void CreationFailed() override;
-
-  void CreationSucceeded() override;
-
-  void ErrorReceived(const ErrorValue& aError) override;
-
-  void LockNotified(bool aCreated) final {
-    // no-op for service workers
-  }
-
-  void Terminated() override;
-
-  // Refreshes only the parts of mRemoteWorkerData that may change over time.
-  void RefreshRemoteWorkerData(
-      const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration);
-
-  nsresult SendPushEventInternal(
-      RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-      ServiceWorkerPushEventOpArgs&& aArgs);
-
-  // Setup the navigation preload by the intercepted channel and the
-  // RegistrationInfo.
-  RefPtr<FetchServicePromises> SetupNavigationPreload(
-      nsCOMPtr<nsIInterceptedChannel>& aChannel,
-      const RefPtr<ServiceWorkerRegistrationInfo>& aRegistration);
-
-  nsresult SendFetchEventInternal(
-      RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
-      nsCOMPtr<nsIInterceptedChannel>&& aChannel,
-      RefPtr<FetchServicePromises>&& aPreloadResponseReadyPromises);
-
-  void Shutdown();
-
-  RefPtr<GenericNonExclusivePromise> ShutdownInternal(
-      uint32_t aShutdownStateId);
-
-  nsresult ExecServiceWorkerOp(
-      ServiceWorkerOpArgs&& aArgs,
-      std::function<void(ServiceWorkerOpResult&&)>&& aSuccessCallback,
-      std::function<void()>&& aFailureCallback = [] {});
 
   // The info object owns us. It is possible to outlive it for a brief period
   // of time if there are pending waitUntil promises, in which case it
   // will be null and |SpawnWorkerIfNeeded| will always fail.
   ServiceWorkerInfo* MOZ_NON_OWNING_REF mInfo;
 
-  nsTArray<UniquePtr<PendingFunctionalEvent>> mPendingFunctionalEvents;
+  // The WorkerPrivate object can only be closed by this class or by the
+  // RuntimeService class if gecko is shutting down. Closing the worker
+  // multiple times is OK, since the second attempt will be a no-op.
+  RefPtr<WorkerPrivate> mWorkerPrivate;
 
   nsCOMPtr<nsITimer> mIdleWorkerTimer;
 
@@ -357,6 +282,18 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
   uint64_t mDebuggerCount;
 
   uint64_t mTokenCount;
+
+  // Meant for keeping objects alive while handling requests from the worker
+  // on the main thread. Access to this array is provided through
+  // |StoreISupports| and |RemoveISupports|. Note that the array is also
+  // cleared whenever the worker is terminated.
+  nsTArray<nsCOMPtr<nsISupports>> mSupportsArray;
+
+  // Array of function event worker runnables that are pending due to
+  // the worker activating.  Main thread only.
+  nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
+
+  RefPtr<Inner> mInner;
 
   // Used by the owning `ServiceWorkerRegistrationInfo` when it wants to call
   // `Clear` after being unregistered and isn't controlling any clients but this
@@ -369,24 +306,6 @@ class ServiceWorkerPrivate final : public RemoteWorkerObserver {
 #ifdef DEBUG
   bool mIdlePromiseObtained = false;
 #endif
-
-  RefPtr<RAIIActorPtrHolder> mControllerChild;
-
-  RemoteWorkerData mRemoteWorkerData;
-
-  TimeStamp mServiceWorkerLaunchTimeStart;
-
-  // Counters for Telemetry - totals running simultaneously, and those that
-  // handle Fetch, plus Max values for each
-  static uint32_t sRunningServiceWorkers;
-  static uint32_t sRunningServiceWorkersFetch;
-  static uint32_t sRunningServiceWorkersMax;
-  static uint32_t sRunningServiceWorkersFetchMax;
-
-  // We know the state after we've evaluated the worker, and we then store
-  // it in the registration.  The only valid state transition should be
-  // from Unknown to Enabled or Disabled.
-  enum { UnknownState, Enabled, Disabled } mHandlesFetch{UnknownState};
 };
 
 }  // namespace dom

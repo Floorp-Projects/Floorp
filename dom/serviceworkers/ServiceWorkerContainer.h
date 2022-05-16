@@ -20,11 +20,40 @@ struct MessageEventInit;
 class Promise;
 struct RegistrationOptions;
 class ServiceWorker;
-class ServiceWorkerContainerChild;
 
 // Lightweight serviceWorker APIs collection.
 class ServiceWorkerContainer final : public DOMEventTargetHelper {
  public:
+  class Inner {
+   public:
+    virtual void AddContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void RemoveContainer(ServiceWorkerContainer* aOuter) = 0;
+
+    virtual void Register(const ClientInfo& aClientInfo,
+                          const nsACString& aScopeURL,
+                          const nsACString& aScriptURL,
+                          ServiceWorkerUpdateViaCache aUpdateViaCache,
+                          ServiceWorkerRegistrationCallback&& aSuccessCB,
+                          ServiceWorkerFailureCallback&& aFailureCB) const = 0;
+
+    virtual void GetRegistration(
+        const ClientInfo& aClientInfo, const nsACString& aURL,
+        ServiceWorkerRegistrationCallback&& aSuccessCB,
+        ServiceWorkerFailureCallback&& aFailureCB) const = 0;
+
+    virtual void GetRegistrations(
+        const ClientInfo& aClientInfo,
+        ServiceWorkerRegistrationListCallback&& aSuccessCB,
+        ServiceWorkerFailureCallback&& aFailureCB) const = 0;
+
+    virtual void GetReady(const ClientInfo& aClientInfo,
+                          ServiceWorkerRegistrationCallback&& aSuccessCB,
+                          ServiceWorkerFailureCallback&& aFailureCB) const = 0;
+
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerContainer,
                                            DOMEventTargetHelper)
@@ -81,10 +110,10 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
 
   void ReceiveMessage(const ClientPostMessageArgs& aArgs);
 
-  void RevokeActor(ServiceWorkerContainerChild* aActor);
-
  private:
-  explicit ServiceWorkerContainer(nsIGlobalObject* aGlobal);
+  ServiceWorkerContainer(
+      nsIGlobalObject* aGlobal,
+      already_AddRefed<ServiceWorkerContainer::Inner> aInner);
 
   ~ServiceWorkerContainer();
 
@@ -119,10 +148,7 @@ class ServiceWorkerContainer final : public DOMEventTargetHelper {
                                                  MessageEventInit& aInit,
                                                  ErrorResult& aRv);
 
-  void Shutdown();
-
-  RefPtr<ServiceWorkerContainerChild> mActor;
-  bool mShutdown;
+  RefPtr<Inner> mInner;
 
   // This only changes when a worker hijacks everything in its scope by calling
   // claim.

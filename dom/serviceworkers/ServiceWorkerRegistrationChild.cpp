@@ -6,7 +6,7 @@
 
 #include "ServiceWorkerRegistrationChild.h"
 
-#include "ServiceWorkerRegistration.h"
+#include "RemoteServiceWorkerRegistrationImpl.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 
@@ -26,15 +26,14 @@ void ServiceWorkerRegistrationChild::ActorDestroy(ActorDestroyReason aReason) {
 IPCResult ServiceWorkerRegistrationChild::RecvUpdateState(
     const IPCServiceWorkerRegistrationDescriptor& aDescriptor) {
   if (mOwner) {
-    RefPtr<ServiceWorkerRegistration> owner = mOwner;
-    owner->UpdateState(ServiceWorkerRegistrationDescriptor(aDescriptor));
+    mOwner->UpdateState(ServiceWorkerRegistrationDescriptor(aDescriptor));
   }
   return IPC_OK();
 }
 
 IPCResult ServiceWorkerRegistrationChild::RecvFireUpdateFound() {
   if (mOwner) {
-    mOwner->MaybeDispatchUpdateFoundRunnable();
+    mOwner->FireUpdateFound();
   }
   return IPC_OK();
 }
@@ -67,14 +66,14 @@ ServiceWorkerRegistrationChild::ServiceWorkerRegistrationChild()
     : mOwner(nullptr), mTeardownStarted(false) {}
 
 void ServiceWorkerRegistrationChild::SetOwner(
-    ServiceWorkerRegistration* aOwner) {
+    RemoteServiceWorkerRegistrationImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(!mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner);
   mOwner = aOwner;
 }
 
 void ServiceWorkerRegistrationChild::RevokeOwner(
-    ServiceWorkerRegistration* aOwner) {
+    RemoteServiceWorkerRegistrationImpl* aOwner) {
   MOZ_DIAGNOSTIC_ASSERT(mOwner);
   MOZ_DIAGNOSTIC_ASSERT(aOwner == mOwner);
   mOwner = nullptr;

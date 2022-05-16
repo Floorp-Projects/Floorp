@@ -32,9 +32,8 @@ bool NavigationPreloadManager::IsValidHeader(const nsACString& aHeader) {
 
 NavigationPreloadManager::NavigationPreloadManager(
     nsCOMPtr<nsIGlobalObject>&& aGlobal,
-    RefPtr<ServiceWorkerRegistration>& aServiceWorkerRegistration)
-    : mGlobal(aGlobal),
-      mServiceWorkerRegistration(aServiceWorkerRegistration) {}
+    RefPtr<ServiceWorkerRegistration::Inner>& aInner)
+    : mGlobal(aGlobal), mInner(aInner) {}
 
 JSObject* NavigationPreloadManager::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -49,12 +48,12 @@ already_AddRefed<Promise> NavigationPreloadManager::SetEnabled(
     return nullptr;
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->SetNavigationPreloadEnabled(
+  mInner->SetNavigationPreloadEnabled(
       aEnabled,
       [promise](bool aSuccess) {
         if (aSuccess) {
@@ -91,12 +90,12 @@ already_AddRefed<Promise> NavigationPreloadManager::SetHeaderValue(
     return promise.forget();
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->SetNavigationPreloadHeader(
+  mInner->SetNavigationPreloadHeader(
       nsAutoCString(aHeader),
       [promise](bool aSuccess) {
         if (aSuccess) {
@@ -118,12 +117,12 @@ already_AddRefed<Promise> NavigationPreloadManager::GetState(
     return nullptr;
   }
 
-  if (!mServiceWorkerRegistration) {
+  if (!mInner) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
-  mServiceWorkerRegistration->GetNavigationPreloadState(
+  mInner->GetNavigationPreloadState(
       [promise](NavigationPreloadState&& aState) {
         promise->MaybeResolve(std::move(aState));
       },
