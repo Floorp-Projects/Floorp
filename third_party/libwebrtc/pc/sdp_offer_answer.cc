@@ -4671,19 +4671,18 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
     case cricket::DCT_RTP:
     default:
       RtpTransportInternal* rtp_transport = pc_->GetRtpTransport(mid);
-      // TODO(bugs.webrtc.org/9987): set_rtp_data_channel() should be called on
-      // the network thread like set_data_channel_transport is.
-      data_channel_controller()->set_rtp_data_channel(
+      cricket::RtpDataChannel* data_channel =
           channel_manager()->CreateRtpDataChannel(
               pc_->configuration()->media_config, rtp_transport,
               signaling_thread(), mid, pc_->SrtpRequired(),
-              pc_->GetCryptoOptions(), &ssrc_generator_));
-
-      if (!data_channel_controller()->rtp_data_channel()) {
+              pc_->GetCryptoOptions(), &ssrc_generator_);
+      if (!data_channel)
         return false;
-      }
-      data_channel_controller()->rtp_data_channel()->SignalSentPacket().connect(
-          pc_, &PeerConnection::OnSentPacket_w);
+
+      pc_->network_thread()->Invoke<void>(RTC_FROM_HERE, [this, data_channel] {
+        RTC_DCHECK_RUN_ON(pc_->network_thread());
+        pc_->SetupRtpDataChannelTransport_n(data_channel);
+      });
       have_pending_rtp_data_channel_ = true;
       return true;
   }
@@ -4722,21 +4721,22 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
 
 void SdpOfferAnswerHandler::DestroyDataChannelTransport() {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  if (data_channel_controller()->rtp_data_channel()) {
-    data_channel_controller()->OnTransportChannelClosed();
-    DestroyChannelInterface(data_channel_controller()->rtp_data_channel());
-    data_channel_controller()->set_rtp_data_channel(nullptr);
-  }
+  const bool has_sctp = pc_->sctp_mid().has_value();
+  auto* rtp_data_channel = data_channel_controller()->rtp_data_channel();
 
-  if (pc_->sctp_mid()) {
-    RTC_DCHECK_RUN_ON(pc_->signaling_thread());
+  if (has_sctp || rtp_data_channel)
     data_channel_controller()->OnTransportChannelClosed();
-    pc_->network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
-      RTC_DCHECK_RUN_ON(pc_->network_thread());
-      pc_->TeardownDataChannelTransport_n();
-    });
+
+  pc_->network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
+    RTC_DCHECK_RUN_ON(pc_->network_thread());
+    pc_->TeardownDataChannelTransport_n();
+  });
+
+  if (has_sctp)
     pc_->ResetSctpDataMid();
-  }
+
+  if (rtp_data_channel)
+    DestroyChannelInterface(rtp_data_channel);
 }
 
 void SdpOfferAnswerHandler::DestroyChannelInterface(

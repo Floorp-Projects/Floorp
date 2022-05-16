@@ -505,6 +505,19 @@ void DataChannelController::set_data_channel_type(
   data_channel_type_ = type;
 }
 
+cricket::RtpDataChannel* DataChannelController::rtp_data_channel() const {
+  // TODO(bugs.webrtc.org/9987): Only allow this accessor to be called on the
+  // network thread.
+  // RTC_DCHECK_RUN_ON(network_thread());
+  return rtp_data_channel_;
+}
+
+void DataChannelController::set_rtp_data_channel(
+    cricket::RtpDataChannel* channel) {
+  RTC_DCHECK_RUN_ON(network_thread());
+  rtp_data_channel_ = channel;
+}
+
 DataChannelTransportInterface* DataChannelController::data_channel_transport()
     const {
   // TODO(bugs.webrtc.org/11547): Only allow this accessor to be called on the
