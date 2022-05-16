@@ -20,11 +20,12 @@ namespace dcsctp {
 // https://source.chromium.org/chromium/chromium/src/+/master:base/types/strong_alias.h
 // as the API (and internals) are using type-safe integral identifiers, but this
 // library can't depend on that file. The ostream operator has been removed
-// per WebRTC library conventions.
+// per WebRTC library conventions, and the underlying type is exposed.
 
-template <typename TagType, typename UnderlyingType>
+template <typename TagType, typename TheUnderlyingType>
 class StrongAlias {
  public:
+  using UnderlyingType = TheUnderlyingType;
   constexpr StrongAlias() = default;
   constexpr explicit StrongAlias(const UnderlyingType& v) : value_(v) {}
   constexpr explicit StrongAlias(UnderlyingType&& v) noexcept

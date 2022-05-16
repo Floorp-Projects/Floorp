@@ -14,6 +14,8 @@
 #include <limits>
 #include <utility>
 
+#include "net/dcsctp/common/internal_types.h"
+
 namespace dcsctp {
 
 // UnwrappedSequenceNumber handles wrapping sequence numbers and unwraps them to
@@ -23,14 +25,18 @@ namespace dcsctp {
 // Sequence numbers are expected to be monotonically increasing, but they do not
 // need to be unwrapped in order, as long as the difference to the previous one
 // is not larger than half the range of the wrapped sequence number.
+//
+// The WrappedType must be a StrongAlias type.
 template <typename WrappedType>
 class UnwrappedSequenceNumber {
  public:
-  static_assert(!std::numeric_limits<WrappedType>::is_signed,
-                "The wrapped type must be unsigned");
-  static_assert(std::numeric_limits<WrappedType>::max() <
-                    std::numeric_limits<int64_t>::max(),
-                "The wrapped type must be less than the int64_t value space");
+  static_assert(
+      !std::numeric_limits<typename WrappedType::UnderlyingType>::is_signed,
+      "The wrapped type must be unsigned");
+  static_assert(
+      std::numeric_limits<typename WrappedType::UnderlyingType>::max() <
+          std::numeric_limits<int64_t>::max(),
+      "The wrapped type must be less than the int64_t value space");
 
   // The unwrapper is a sort of factory and converts wrapped sequence numbers to
   // unwrapped ones.
@@ -70,8 +76,9 @@ class UnwrappedSequenceNumber {
 
    private:
     static int64_t Delta(WrappedType value, WrappedType prev_value) {
-      static constexpr WrappedType kBreakpoint = kValueLimit / 2;
-      WrappedType diff = value - prev_value;
+      static constexpr typename WrappedType::UnderlyingType kBreakpoint =
+          kValueLimit / 2;
+      typename WrappedType::UnderlyingType diff = *value - *prev_value;
       diff %= kValueLimit;
       if (diff < kBreakpoint) {
         return static_cast<int64_t>(diff);
@@ -124,26 +131,28 @@ class UnwrappedSequenceNumber {
   }
 
   // Compares the difference between two sequence numbers.
-  WrappedType Difference(UnwrappedSequenceNumber<WrappedType> other) const {
+  typename WrappedType::UnderlyingType Difference(
+      UnwrappedSequenceNumber<WrappedType> other) const {
     return value_ - other.value_;
   }
 
  private:
   explicit UnwrappedSequenceNumber(int64_t value) : value_(value) {}
   static constexpr int64_t kValueLimit =
-      static_cast<int64_t>(1) << std::numeric_limits<WrappedType>::digits;
+      static_cast<int64_t>(1)
+      << std::numeric_limits<typename WrappedType::UnderlyingType>::digits;
 
   int64_t value_;
 };
 
 // Unwrapped Transmission Sequence Numbers (TSN)
-using UnwrappedTSN = UnwrappedSequenceNumber<uint32_t>;
+using UnwrappedTSN = UnwrappedSequenceNumber<TSN>;
 
 // Unwrapped Stream Sequence Numbers (SSN)
-using UnwrappedSSN = UnwrappedSequenceNumber<uint16_t>;
+using UnwrappedSSN = UnwrappedSequenceNumber<SSN>;
 
 // Unwrapped Message Identifier (MID)
-using UnwrappedMID = UnwrappedSequenceNumber<uint32_t>;
+using UnwrappedMID = UnwrappedSequenceNumber<MID>;
 
 }  // namespace dcsctp
 
