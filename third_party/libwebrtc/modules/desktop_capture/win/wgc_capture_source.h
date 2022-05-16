@@ -13,9 +13,12 @@
 
 #include <windows.graphics.capture.h>
 #include <wrl/client.h>
+
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+
 namespace webrtc {
 
 // Abstract class to represent the source that WGC-based capturers capture
@@ -27,7 +30,7 @@ class WgcCaptureSource {
   explicit WgcCaptureSource(DesktopCapturer::SourceId source_id);
   virtual ~WgcCaptureSource();
 
-  virtual bool IsCapturable() = 0;
+  virtual bool IsCapturable();
   HRESULT GetCaptureItem(
       Microsoft::WRL::ComPtr<
           ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>* result);
@@ -41,7 +44,7 @@ class WgcCaptureSource {
  private:
   Microsoft::WRL::ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>
       item_;
-  DesktopCapturer::SourceId source_id_;
+  const DesktopCapturer::SourceId source_id_;
 };
 
 class WgcCaptureSourceFactory {
@@ -115,6 +118,12 @@ class WgcScreenSource final : public WgcCaptureSource {
       Microsoft::WRL::ComPtr<
           ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>* result)
       override;
+
+  // To maintain compatibility with other capturers, this class accepts a
+  // device index as it's SourceId. However, WGC requires we use an HMONITOR to
+  // describe which screen to capture. So, we internally convert the supplied
+  // device index into an HMONITOR when |IsCapturable()| is called.
+  absl::optional<HMONITOR> hmonitor_;
 };
 
 }  // namespace webrtc

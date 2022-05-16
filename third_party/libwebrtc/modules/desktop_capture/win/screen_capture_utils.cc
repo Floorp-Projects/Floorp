@@ -16,48 +16,13 @@
 #include <vector>
 
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_geometry.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/win32.h"
 
 namespace webrtc {
-namespace {
-
-BOOL CALLBACK GetMonitorListHandler(HMONITOR monitor,
-                                    HDC hdc,
-                                    LPRECT rect,
-                                    LPARAM data) {
-  auto monitor_list = reinterpret_cast<DesktopCapturer::SourceList*>(data);
-
-  // Get the name of the monitor.
-  MONITORINFOEXA monitor_info;
-  monitor_info.cbSize = sizeof(MONITORINFOEXA);
-  if (!GetMonitorInfoA(monitor, &monitor_info)) {
-    // Continue the enumeration, but don't add this monitor to |monitor_list|.
-    return TRUE;
-  }
-
-  DesktopCapturer::Source monitor_source;
-  monitor_source.id = reinterpret_cast<intptr_t>(monitor);
-  monitor_source.title = monitor_info.szDevice;
-  monitor_list->push_back(monitor_source);
-  return TRUE;
-}
-
-}  // namespace
-
-// |monitors| is populated with HMONITOR values for each display monitor found.
-// This is in contrast to |GetScreenList| which returns the display indices.
-bool GetMonitorList(DesktopCapturer::SourceList* monitors) {
-  RTC_DCHECK_EQ(monitors->size(), 0U);
-  // |EnumDisplayMonitors| accepts a display context and a rectangle, which
-  // allows us to specify a certain region and return only the monitors that
-  // intersect that region. We, however, want all the monitors, so we pass in
-  // NULL parameters.
-  return EnumDisplayMonitors(/*hdc=*/NULL, /*clip_rect=*/NULL,
-                             GetMonitorListHandler,
-                             reinterpret_cast<LPARAM>(monitors));
-}
 
 bool GetScreenList(DesktopCapturer::SourceList* screens,
                    std::vector<std::string>* device_names /* = nullptr */) {
@@ -73,12 +38,14 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
     enum_result = EnumDisplayDevicesW(NULL, device_index, &device, 0);
 
     // |enum_result| is 0 if we have enumerated all devices.
-    if (!enum_result)
+    if (!enum_result) {
       break;
+    }
 
     // We only care about active displays.
-    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE))
+    if (!(device.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
       continue;
+    }
 
     screens->push_back({device_index, 0, std::string()});
     if (device_names) {
@@ -88,13 +55,52 @@ bool GetScreenList(DesktopCapturer::SourceList* screens,
   return true;
 }
 
-bool IsMonitorValid(DesktopCapturer::SourceId monitor) {
-  MONITORINFO monitor_info;
-  monitor_info.cbSize = sizeof(MONITORINFO);
-  return GetMonitorInfoA(reinterpret_cast<HMONITOR>(monitor), &monitor_info);
+bool GetHmonitorFromDeviceIndex(const DesktopCapturer::SourceId device_index,
+                                HMONITOR* hmonitor) {
+  // A device index of |kFullDesktopScreenId| or -1 represents all screens, an
+  // HMONITOR of 0 indicates the same.
+  if (device_index == kFullDesktopScreenId) {
+    *hmonitor = 0;
+    return true;
+  }
+
+  std::wstring device_key;
+  if (!IsScreenValid(device_index, &device_key)) {
+    return false;
+  }
+
+  DesktopRect screen_rect = GetScreenRect(device_index, device_key);
+  if (screen_rect.is_empty()) {
+    return false;
+  }
+
+  RECT rect = {screen_rect.left(), screen_rect.top(), screen_rect.right(),
+               screen_rect.bottom()};
+
+  HMONITOR monitor = MonitorFromRect(&rect, MONITOR_DEFAULTTONULL);
+  if (monitor == NULL) {
+    RTC_LOG(LS_WARNING) << "No HMONITOR found for supplied device index.";
+    return false;
+  }
+
+  *hmonitor = monitor;
+  return true;
 }
 
-bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {
+bool IsMonitorValid(const HMONITOR monitor) {
+  // An HMONITOR of 0 refers to a virtual monitor that spans all physical
+  // monitors.
+  if (monitor == 0) {
+    return true;
+  }
+
+  MONITORINFO monitor_info;
+  monitor_info.cbSize = sizeof(MONITORINFO);
+  return GetMonitorInfoA(monitor, &monitor_info);
+}
+
+bool IsScreenValid(const DesktopCapturer::SourceId screen,
+                   std::wstring* device_key) {
   if (screen == kFullDesktopScreenId) {
     *device_key = L"";
     return true;
@@ -103,8 +109,9 @@ bool IsScreenValid(DesktopCapturer::SourceId screen, std::wstring* device_key) {
   DISPLAY_DEVICEW device;
   device.cb = sizeof(device);
   BOOL enum_result = EnumDisplayDevicesW(NULL, screen, &device, 0);
-  if (enum_result)
+  if (enum_result) {
     *device_key = device.DeviceKey;
+  }
 
   return !!enum_result;
 }
@@ -116,7 +123,7 @@ DesktopRect GetFullscreenRect() {
                                GetSystemMetrics(SM_CYVIRTUALSCREEN));
 }
 
-DesktopRect GetScreenRect(DesktopCapturer::SourceId screen,
+DesktopRect GetScreenRect(const DesktopCapturer::SourceId screen,
                           const std::wstring& device_key) {
   RTC_DCHECK(IsGUIThread(false));
   if (screen == kFullDesktopScreenId) {
@@ -126,23 +133,26 @@ DesktopRect GetScreenRect(DesktopCapturer::SourceId screen,
   DISPLAY_DEVICEW device;
   device.cb = sizeof(device);
   BOOL result = EnumDisplayDevicesW(NULL, screen, &device, 0);
-  if (!result)
+  if (!result) {
     return DesktopRect();
+  }
 
   // Verifies the device index still maps to the same display device, to make
   // sure we are capturing the same device when devices are added or removed.
   // DeviceKey is documented as reserved, but it actually contains the registry
   // key for the device and is unique for each monitor, while DeviceID is not.
-  if (device_key != device.DeviceKey)
+  if (device_key != device.DeviceKey) {
     return DesktopRect();
+  }
 
   DEVMODEW device_mode;
   device_mode.dmSize = sizeof(device_mode);
   device_mode.dmDriverExtra = 0;
   result = EnumDisplaySettingsExW(device.DeviceName, ENUM_CURRENT_SETTINGS,
                                   &device_mode, 0);
-  if (!result)
+  if (!result) {
     return DesktopRect();
+  }
 
   return DesktopRect::MakeXYWH(
       device_mode.dmPosition.x, device_mode.dmPosition.y,
