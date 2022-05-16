@@ -423,15 +423,21 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``media.gmp-gmpopenh264.enabled``: Whether OpenH264 is enabled.
 
-- ``media.gmp-gmpopenh264.lastDownload``: When OpenH264 was last download.
+- ``media.gmp-gmpopenh264.lastDownload``: When OpenH264 was last downloaded as seconds since Jan 1, 1970.
 
-- ``media.gmp-gmpopenh264.lastInstallStart``: When OpenH264 installation was last started.
+- ``media.gmp-gmpopenh264.lastDownloadFailed``: When OpenH264 was last downloaded unsuccessfully as seconds since Jan 1, 1970.
 
-- ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated.
+- ``media.gmp-gmpopenh264.lastInstallFailed``: When OpenH264 installation last failed as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastInstallStart``: When OpenH264 installation was last started as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated as seconds since Jan 1, 1970.
 
 - ``media.gmp-gmpopenh264.visible``: Whether OpenH264 is visible.
 
-- ``media.gmp-manager.lastCheck``: When the gmp-manager last checked for updates.
+- ``media.gmp-manager.lastCheck``: When the gmp-manager last checked for updates as seconds since Jan 1, 1970.
+
+- ``media.gmp-manager.lastEmptyCheck``: When the gmp-manager last checked for updates and there was nothing to install as seconds since Jan 1, 1970.
 
 attribution
 ~~~~~~~~~~~
