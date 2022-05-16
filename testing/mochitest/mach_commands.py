@@ -175,7 +175,7 @@ class MochitestRunner(MozbuildObject):
             print("using e10s=False for non-geckoview app")
 
         # Disable fission until geckoview supports fission by default.
-        options["disable_fission"] = True
+        setattr(options, "disable_fission", True)
 
         return runtestsremote.run_test_harness(parser, options)
 
