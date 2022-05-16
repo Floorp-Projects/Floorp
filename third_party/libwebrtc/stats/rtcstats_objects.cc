@@ -894,10 +894,6 @@ RTCOutboundRTPStreamStats::~RTCOutboundRTPStreamStats() {}
 WEBRTC_RTCSTATS_IMPL(
     RTCRemoteInboundRtpStreamStats, RTCReceivedRtpStreamStats,
         "remote-inbound-rtp",
-    &ssrc,
-    &kind,
-    &transport_id,
-    &codec_id,
     &local_id,
     &round_trip_time,
     &fraction_lost,

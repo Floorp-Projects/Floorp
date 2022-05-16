@@ -1285,6 +1285,20 @@ TEST_F(RTCStatsIntegrationTest, GetStatsReferencedIds) {
     }
   }
 }
+
+TEST_F(RTCStatsIntegrationTest, GetStatsContainsNoDuplicateMembers) {
+  StartCall();
+
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStatsFromCallee();
+  for (const RTCStats& stats : *report) {
+    std::set<std::string> member_names;
+    for (const auto* member : stats.Members()) {
+      EXPECT_TRUE(member_names.find(member->name()) == member_names.end())
+          << member->name() << " is a duplicate!";
+      member_names.insert(member->name());
+    }
+  }
+}
 #endif  // WEBRTC_HAVE_SCTP
 
 }  // namespace
