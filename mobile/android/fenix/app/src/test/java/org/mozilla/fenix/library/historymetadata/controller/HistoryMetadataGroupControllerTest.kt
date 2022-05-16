@@ -188,6 +188,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteSingle() = runTestOnMain {
         assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
 
@@ -216,6 +217,7 @@ class HistoryMetadataGroupControllerTest {
     }
 
     @Test
+    @Ignore("Intermittent test: https://github.com/mozilla-mobile/fenix/issues/25167")
     fun handleDeleteMultiple() = runTestOnMain {
         assertFalse(GleanHistory.searchTermGroupRemoveTab.testHasValue())
         controller.handleDelete(getMetadataItemsList().toSet())
