@@ -256,6 +256,47 @@ TEST(ThreadTest, DISABLED_Main) {
   EXPECT_EQ(55, sock_client.last);
 }
 
+TEST(ThreadTest, CountBlockingCalls) {
+  // When the test runs, this will print out:
+  //   (thread_unittest.cc:262): Blocking TestBody: total=2 (actual=1, could=1)
+  RTC_LOG_THREAD_BLOCK_COUNT();
+#if RTC_DCHECK_IS_ON
+  rtc::Thread* current = rtc::Thread::Current();
+  ASSERT_TRUE(current);
+  rtc::Thread::ScopedCountBlockingCalls blocked_calls(
+      [&](uint32_t actual_block, uint32_t could_block) {
+        EXPECT_EQ(1u, actual_block);
+        EXPECT_EQ(1u, could_block);
+      });
+
+  EXPECT_EQ(0u, blocked_calls.GetBlockingCallCount());
+  EXPECT_EQ(0u, blocked_calls.GetCouldBeBlockingCallCount());
+  EXPECT_EQ(0u, blocked_calls.GetTotalBlockedCallCount());
+
+  // Test invoking on the current thread. This should not count as an 'actual'
+  // invoke, but should still count as an invoke that could block since we
+  // that the call to Invoke serves a purpose in some configurations (and should
+  // not be used a general way to call methods on the same thread).
+  current->Invoke<void>(RTC_FROM_HERE, []() {});
+  EXPECT_EQ(0u, blocked_calls.GetBlockingCallCount());
+  EXPECT_EQ(1u, blocked_calls.GetCouldBeBlockingCallCount());
+  EXPECT_EQ(1u, blocked_calls.GetTotalBlockedCallCount());
+
+  // Create a new thread to invoke on.
+  auto thread = Thread::CreateWithSocketServer();
+  thread->Start();
+  EXPECT_EQ(42, thread->Invoke<int>(RTC_FROM_HERE, []() { return 42; }));
+  EXPECT_EQ(1u, blocked_calls.GetBlockingCallCount());
+  EXPECT_EQ(1u, blocked_calls.GetCouldBeBlockingCallCount());
+  EXPECT_EQ(2u, blocked_calls.GetTotalBlockedCallCount());
+  thread->Stop();
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
+#else
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
+  RTC_LOG(LS_INFO) << "Test not active in this config";
+#endif
+}
+
 // Test that setting thread names doesn't cause a malfunction.
 // There's no easy way to verify the name was set properly at this time.
 TEST(ThreadTest, Names) {

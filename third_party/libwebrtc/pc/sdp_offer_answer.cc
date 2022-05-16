@@ -4700,11 +4700,29 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
     rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>
         transceiver) {
   RTC_DCHECK(transceiver);
+  RTC_LOG_THREAD_BLOCK_COUNT();
+
+  // TODO(tommi): We're currently on the signaling thread.
+  // There are multiple hops to the worker ahead.
+  // Consider if we can make the call to SetChannel() on the worker thread
+  // (and require that to be the context it's always called in) and also
+  // call DestroyChannelInterface there, since it also needs to hop to the
+  // worker.
 
   cricket::ChannelInterface* channel = transceiver->internal()->channel();
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
   if (channel) {
+    // TODO(tommi): VideoRtpReceiver::SetMediaChannel blocks and jumps to the
+    // worker thread. When being set to nullptr, there are additional blocking
+    // calls to e.g. ClearRecordableEncodedFrameCallback which triggers another
+    // blocking call or Stop() for video channels.
     transceiver->internal()->SetChannel(nullptr);
+    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
+    // TODO(tommi): All channel objects end up getting deleted on the
+    // worker thread. Can DestroyTransceiverChannel be purely posted to the
+    // worker?
     DestroyChannelInterface(channel);
+    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(3);
   }
 }
 
@@ -4734,6 +4752,9 @@ void SdpOfferAnswerHandler::DestroyChannelInterface(
   // DestroyChannelInterface to either be called on the worker thread, or do
   // this asynchronously on the worker.
   RTC_DCHECK(channel);
+
+  RTC_LOG_THREAD_BLOCK_COUNT();
+
   switch (channel->media_type()) {
     case cricket::MEDIA_TYPE_AUDIO:
       channel_manager()->DestroyVoiceChannel(
@@ -4751,6 +4772,10 @@ void SdpOfferAnswerHandler::DestroyChannelInterface(
       RTC_NOTREACHED() << "Unknown media type: " << channel->media_type();
       break;
   }
+
+  // TODO(tommi): Figure out why we can get 2 blocking calls when running
+  // PeerConnectionCryptoTest.CreateAnswerWithDifferentSslRoles.
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
 }
 
 void SdpOfferAnswerHandler::DestroyAllChannels() {
@@ -4758,18 +4783,25 @@ void SdpOfferAnswerHandler::DestroyAllChannels() {
   if (!transceivers()) {
     return;
   }
+
+  RTC_LOG_THREAD_BLOCK_COUNT();
+
   // Destroy video channels first since they may have a pointer to a voice
   // channel.
-  for (const auto& transceiver : transceivers()->List()) {
+  auto list = transceivers()->List();
+  RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
+
+  for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_VIDEO) {
       DestroyTransceiverChannel(transceiver);
     }
   }
-  for (const auto& transceiver : transceivers()->List()) {
+  for (const auto& transceiver : list) {
     if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
       DestroyTransceiverChannel(transceiver);
     }
   }
+
   DestroyDataChannelTransport();
 }
 

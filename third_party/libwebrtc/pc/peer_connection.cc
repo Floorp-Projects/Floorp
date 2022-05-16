@@ -1124,6 +1124,8 @@ bool PeerConnection::GetStats(StatsObserver* observer,
     return false;
   }
 
+  RTC_LOG_THREAD_BLOCK_COUNT();
+
   stats_->UpdateStats(level);
   // The StatsCollector is used to tell if a track is valid because it may
   // remember tracks that the PeerConnection previously removed.
@@ -1133,6 +1135,7 @@ bool PeerConnection::GetStats(StatsObserver* observer,
     return false;
   }
   message_handler_.PostGetStats(observer, stats_.get(), track);
+
   return true;
 }
 
@@ -1141,6 +1144,7 @@ void PeerConnection::GetStats(RTCStatsCollectorCallback* callback) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(stats_collector_);
   RTC_DCHECK(callback);
+  RTC_LOG_THREAD_BLOCK_COUNT();
   stats_collector_->GetStatsReport(callback);
 }
 
@@ -1684,6 +1688,8 @@ const SessionDescriptionInterface* PeerConnection::pending_remote_description()
 void PeerConnection::Close() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::Close");
+
+  RTC_LOG_THREAD_BLOCK_COUNT();
 
   if (IsClosed()) {
     return;
