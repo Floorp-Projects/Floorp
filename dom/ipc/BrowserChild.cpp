@@ -1028,7 +1028,7 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1096,7 +1096,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2455,7 +2455,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
   if (NS_WARN_IF(!printSettingsSvc)) {
     return IPC_OK();
   }
-  printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+  printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(!printSettings)) {
     return IPC_OK();
   }
@@ -2511,7 +2511,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
