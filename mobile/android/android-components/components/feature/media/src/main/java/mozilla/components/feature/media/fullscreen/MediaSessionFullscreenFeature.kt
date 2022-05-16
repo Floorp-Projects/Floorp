@@ -6,6 +6,7 @@ package mozilla.components.feature.media.fullscreen
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
@@ -47,14 +48,20 @@ class MediaSessionFullscreenFeature(
             return
         }
 
-        when (activeState.mediaSessionState?.elementMetadata?.portrait) {
-            true ->
-                activity.requestedOrientation =
-                    ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
-            false ->
-                activity.requestedOrientation =
-                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+        if (store.state.selectedTabId == activeState.id) {
+            when (activeState.mediaSessionState?.elementMetadata?.portrait) {
+                true ->
+                    activity.requestedOrientation =
+                        ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+                false ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInPictureInPictureMode) {
+                        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    } else {
+                        activity.requestedOrientation =
+                            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    }
+                else -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
+            }
         }
     }
 
