@@ -181,7 +181,7 @@ class AutofillDelegateTest : BaseSessionTest() {
                 }
             }
 
-            val childId = mainSession.autofillSession.getId(child)
+            val childId = mainSession.autofillSession.dataFor(child)!!.id
             if (childId == View.NO_ID) {
                 return
             }
