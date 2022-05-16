@@ -18,10 +18,6 @@ var TestPromptFactory = {
     return this.QueryInterface(iid);
   },
 
-  lockFactory: function tPF_lockf(lock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
-
   getPrompt: function tPF_getPrompt(aWindow, aIID) {
     if (aIID.equals(Ci.nsIAuthPrompt) || aIID.equals(Ci.nsIAuthPrompt2)) {
       authPromptRequestReceived = true;

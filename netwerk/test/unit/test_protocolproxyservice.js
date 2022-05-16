@@ -52,7 +52,6 @@ TestProtocolHandlerFactory.prototype = {
   createInstance(delegate, iid) {
     return new TestProtocolHandler().QueryInterface(iid);
   },
-  lockFactory(lock) {},
 };
 
 function register_test_protocol_handler() {
