@@ -442,6 +442,8 @@ class PeerConnection : public PeerConnectionInternal,
 
   bool SetupDataChannelTransport_n(const std::string& mid)
       RTC_RUN_ON(network_thread());
+  void SetupRtpDataChannelTransport_n(cricket::RtpDataChannel* data_channel)
+      RTC_RUN_ON(network_thread());
   void TeardownDataChannelTransport_n() RTC_RUN_ON(network_thread());
   cricket::ChannelInterface* GetChannel(const std::string& content_name);
 
