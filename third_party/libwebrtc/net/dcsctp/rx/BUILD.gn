@@ -40,12 +40,27 @@ rtc_library("traditional_reassembly_streams") {
   ]
 }
 
+rtc_library("reassembly_queue") {
+  deps = [
+    ":traditional_reassembly_streams",
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "reassembly_queue.cc",
+    "reassembly_queue.h",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("dcsctp_rx_unittests") {
     testonly = true
 
     deps = [
       ":data_tracker",
+      ":reassembly_queue",
       ":traditional_reassembly_streams",
       "../../../api:array_view",
       "../../../rtc_base:checks",
@@ -56,6 +71,7 @@ if (rtc_include_tests) {
     ]
     sources = [
       "data_tracker_test.cc",
+      "reassembly_queue_test.cc",
       "traditional_reassembly_streams_test.cc",
     ]
   }
