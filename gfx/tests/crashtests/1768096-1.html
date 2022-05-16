@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style id='a'>
+* {
+  margin: 63% auto;
+  border-start-start-radius: 96% 51%;
+  transition-duration: 3s;
+}
+</style>
+<script>
+window.addEventListener('load', () => {
+  document.documentElement.insertAdjacentHTML(
+    'afterbegin',
+    '<style>' +
+    'A { user-select: contain }\n' +
+    '* { ' +
+    'margin-inline-end: 0.24012348925467253px !important; ' +
+    'border-radius: 3338200034.36pc 2247759657.74px / 3661748185.77ch 2835570269% 169103236.41vmax; ' +
+    'font-size: xx-small; ' +
+    '}' +
+    '</style>'
+  );
+  document.documentElement.getClientRects();
+  document.getElementById('a').type = 'video/webm';
+  // Allow time for the transition to run before we end the test.
+  setTimeout("document.documentElement.className = ''", 5000);
+})
+</script>
+<meter lang='ar'>
+<var lang='xyzzy'>
