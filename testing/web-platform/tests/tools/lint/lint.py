@@ -227,8 +227,10 @@ def check_tentative_directories(repo_root, path):
 def check_git_ignore(repo_root, paths):
     # type: (Text, List[Text]) -> List[rules.Error]
     errors = []
-    with tempfile.TemporaryFile('w+') as f:
-        f.write('\n'.join(paths))
+
+    with tempfile.TemporaryFile('w+', newline='') as f:
+        for path in paths:
+            f.write('%s\n' % os.path.join(repo_root, path))
         f.seek(0)
         try:
             matches = subprocess.check_output(
@@ -851,7 +853,7 @@ def output_errors_text(log, errors):
         pos_string = path
         if line_number:
             pos_string += ":%s" % line_number
-        log("%s: %s (%s)" % (pos_string, description, error_type))
+        log(f"{pos_string}: {description} ({error_type})")
 
 
 def output_errors_markdown(log, errors):
@@ -868,7 +870,7 @@ def output_errors_markdown(log, errors):
         pos_string = path
         if line_number:
             pos_string += ":%s" % line_number
-        log("%s | %s | %s |" % (error_type, pos_string, description))
+        log(f"{error_type} | {pos_string} | {description} |")
 
 
 def output_errors_json(log, errors):
@@ -910,7 +912,7 @@ def output_error_count(error_count):
     count = sum(error_count.values())
     logger.info("")
     if count == 1:
-        logger.info("There was 1 error (%s)" % (by_type,))
+        logger.info(f"There was 1 error ({by_type})")
     else:
         logger.info("There were %d errors (%s)" % (count, by_type))
 
@@ -934,6 +936,16 @@ def lint_paths(kwargs, wpt_root):
                 paths.append(os.path.relpath(os.path.abspath(path), wpt_root))
     elif kwargs["all"]:
         paths = list(all_filesystem_paths(wpt_root))
+    elif kwargs["paths_file"]:
+        paths = []
+        with open(kwargs["paths_file"], 'r', newline='') as f:
+            for line in f.readlines():
+                path = line.strip()
+                if os.path.isdir(path):
+                    path_dir = list(all_filesystem_paths(wpt_root, path))
+                    paths.extend(path_dir)
+                elif os.path.isfile(path):
+                    paths.append(os.path.relpath(os.path.abspath(path), wpt_root))
     else:
         changed_paths = changed_files(wpt_root)
         force_all = False
@@ -970,6 +982,7 @@ def create_parser():
                         help="Path to GitHub checks output file for Taskcluster runs")
     parser.add_argument("-j", "--jobs", type=int, default=0,
                         help="Level to parallelism to use (defaults to 0, which detects the number of CPUs)")
+    parser.add_argument("--paths-file", help="File containing a list of files to lint, one per line")
     return parser
 
 

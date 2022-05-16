@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import os
 from unittest import mock
 

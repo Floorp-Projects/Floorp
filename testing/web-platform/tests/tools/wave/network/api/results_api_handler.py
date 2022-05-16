@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import json
 
 from .api_handler import ApiHandler

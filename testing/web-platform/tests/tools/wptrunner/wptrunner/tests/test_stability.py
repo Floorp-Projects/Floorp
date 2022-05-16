@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import sys
 from collections import OrderedDict, defaultdict
 from unittest import mock

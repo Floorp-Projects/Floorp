@@ -33,15 +33,21 @@
     assert_false(popupVisible(popup, /*isPopup*/true));
     popup.showPopup();
     assert_true(popupVisible(popup, /*isPopup*/true));
+    assert_throws_dom("InvalidStateError",() => popup.showPopup(),'Calling showPopup on a showing popup should throw InvalidStateError');
     popup.hidePopup();
     assert_false(popupVisible(popup, /*isPopup*/true));
+    assert_throws_dom("InvalidStateError",() => popup.hidePopup(),'Calling hidePopup on a hidden popup should throw InvalidStateError');
+    const parent = popup.parentElement;
+    popup.remove();
+    assert_throws_dom("InvalidStateError",() => popup.showPopup(),'Calling showPopup on a disconnected popup should throw InvalidStateError');
+    parent.appendChild(popup);
   }
   function assertNotAPopup(nonPopup) {
     // Non-popup elements should already be visible.
     assert_true(popupVisible(nonPopup, /*isPopup*/false));
-    nonPopup.showPopup(); // Should do nothing
+    assert_throws_dom("NotSupportedError",() => nonPopup.showPopup(),'Calling showPopup on a non-popup should throw NotSupportedError');
     assert_true(popupVisible(nonPopup, /*isPopup*/false));
-    nonPopup.hidePopup(); // Should also do nothing
+    assert_throws_dom("NotSupportedError",() => nonPopup.hidePopup(),'Calling hidePopup on a non-popup should throw NotSupportedError');
     assert_true(popupVisible(nonPopup, /*isPopup*/false));
   }
 
@@ -87,24 +93,7 @@
     assert_equals(popup.getAttribute('popup'),'invalid');
     popup.popup='';
     assert_equals(popup.getAttribute('popup'),'');
-  },'IDL attribute reflection')
-
-  test(() => {
-    const popup = createPopup();
-    assertIsFunctionalPopup(popup);
-
-    popup.setAttribute('popup','hint'); // Change popup type
-    assertIsFunctionalPopup(popup);
-
-    popup.setAttribute('popup','invalid'); // Change popup type to something invalid
-    assertNotAPopup(popup);
-
-    popup.popup = 'hint'; // Change popup type via IDL
-    assertIsFunctionalPopup(popup);
-
-    popup.popup = 'invalid'; // Make invalid via IDL
-    assertNotAPopup(popup);
-  },'Changing attribute values for popup should work')
+  },'IDL attribute reflection');
 
   test(() => {
     const popup = createPopup();
@@ -121,5 +110,48 @@
     assertIsFunctionalPopup(popup);
     popup.popup = 'PoPuP';
     assertIsFunctionalPopup(popup);
-  },'Popup attribute value should be case insensitive')
+  },'Popup attribute value should be case insensitive');
+
+  test(() => {
+    const popup = createPopup();
+    assertIsFunctionalPopup(popup);
+    popup.setAttribute('popup','hint'); // Change popup type
+    assertIsFunctionalPopup(popup);
+    popup.setAttribute('popup','invalid'); // Change popup type to something invalid
+    assertNotAPopup(popup);
+    popup.popup = 'hint'; // Change popup type via IDL
+    assertIsFunctionalPopup(popup);
+    popup.popup = 'invalid'; // Make invalid via IDL
+    assertNotAPopup(popup);
+  },'Changing attribute values for popup should work');
+
+  test(() => {
+    const popup = createPopup();
+    popup.showPopup();
+    assert_true(popup.matches(':popup-open'));
+    popup.setAttribute('popup','hint'); // Change popup type
+    assert_false(popup.matches(':popup-open'));
+    popup.showPopup();
+    assert_true(popup.matches(':popup-open'));
+    popup.setAttribute('popup','async');
+    assert_false(popup.matches(':popup-open'));
+    popup.showPopup();
+    assert_true(popup.matches(':popup-open'));
+    popup.setAttribute('popup','invalid');
+    assert_false(popup.matches(':popup-open'));
+  },'Changing attribute values should close open popups');
+
+
+  ["popup","hint","async"].forEach(type => {
+    test(() => {
+      const popup = createPopup();
+      popup.setAttribute('popup',type);
+      popup.showPopup();
+      assert_true(popup.matches(':popup-open'));
+      popup.remove();
+      assert_false(popup.matches(':popup-open'));
+      document.body.appendChild(popup);
+      assert_false(popup.matches(':popup-open'));
+    },`Removing a visible popup=${type} element from the document should close the popup`);
+  });
 </script>
