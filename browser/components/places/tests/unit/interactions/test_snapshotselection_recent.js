@@ -36,13 +36,13 @@ add_task(async function test_interactions_recent() {
   // Changing the url should generate new snapshots and should exclude the
   // current url.
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL1);
+  selector.updateDetailsAndRebuild({ url: TEST_URL1 });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, []);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL2);
+  selector.updateDetailsAndRebuild({ url: TEST_URL2 });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [{ url: TEST_URL1 }]);
@@ -60,13 +60,13 @@ add_task(async function test_interactions_recent() {
   await assertSnapshotList(snapshots, [{ url: TEST_URL1 }, { url: TEST_URL3 }]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL3);
+  selector.updateDetailsAndRebuild({ url: TEST_URL3 });
   snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [{ url: TEST_URL2 }, { url: TEST_URL1 }]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setUrl(TEST_URL4);
+  selector.updateDetailsAndRebuild({ url: TEST_URL4 });
   snapshots = await snapshotPromise;
 
   // The snapshot count is limited to 2.
