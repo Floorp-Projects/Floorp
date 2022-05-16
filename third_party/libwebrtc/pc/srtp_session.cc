@@ -278,23 +278,9 @@ bool SrtpSession::DoSetKey(int type,
     return false;
   }
 
-  int expected_key_len;
-  int expected_salt_len;
-  if (!rtc::GetSrtpKeyAndSaltLengths(cs, &expected_key_len,
-                                     &expected_salt_len)) {
-    // This should never happen.
-    RTC_NOTREACHED();
-    RTC_LOG(LS_WARNING)
-        << "Failed to " << (session_ ? "update" : "create")
-        << " SRTP session: unsupported cipher_suite without length information"
-        << cs;
-    return false;
-  }
-
-  if (!key ||
-      len != static_cast<size_t>(expected_key_len + expected_salt_len)) {
-    RTC_LOG(LS_WARNING) << "Failed to " << (session_ ? "update" : "create")
-                        << " SRTP session: invalid key";
+  if (!key || len != static_cast<size_t>(policy.rtp.cipher_key_len)) {
+    RTC_LOG(LS_ERROR) << "Failed to " << (session_ ? "update" : "create")
+                      << " SRTP session: invalid key";
     return false;
   }
 
