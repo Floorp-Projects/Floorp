@@ -292,5 +292,11 @@ TEST(SctpPacketTest, ParseAbortWithEmptyCause) {
   EXPECT_EQ(cause.upper_layer_abort_reason(), "");
 }
 
+TEST(SctpPacketTest, DetectPacketWithZeroSizeChunk) {
+  uint8_t data[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0x0a, 0x0a, 0x0a, 0x5c,
+                    0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x00, 0x00, 0x00};
+
+  EXPECT_FALSE(SctpPacket::Parse(data, true).has_value());
+}
 }  // namespace
 }  // namespace dcsctp
