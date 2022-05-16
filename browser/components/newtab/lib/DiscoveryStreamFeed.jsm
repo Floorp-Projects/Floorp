@@ -1905,7 +1905,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 */
 getHardcodedLayout = ({
   items = 21,
-  spocPositions = [2, 4, 11, 20],
+  spocPositions = [1, 5, 7, 11, 18, 20],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
   hybridLayout = false,
