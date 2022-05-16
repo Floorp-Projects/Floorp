@@ -39,6 +39,7 @@ const JSPROCESSACTORS = {
       observers: [
         "getUserMedia:ask-device-permission",
         "getUserMedia:request",
+        "recording-device-events",
         "PeerConnection:request",
       ],
     },
@@ -99,12 +100,6 @@ class GeckoViewStartup {
     switch (aTopic) {
       case "content-process-ready-for-script":
       case "app-startup": {
-        // Parent and content process.
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewRecordingMedia", {
-          module: "resource://gre/modules/GeckoViewMedia.jsm",
-          observers: ["recording-device-events"],
-        });
-
         GeckoViewUtils.addLazyGetter(this, "GeckoViewConsole", {
           module: "resource://gre/modules/GeckoViewConsole.jsm",
         });
