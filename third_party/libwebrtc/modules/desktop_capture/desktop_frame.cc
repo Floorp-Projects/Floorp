@@ -157,8 +157,8 @@ BasicDesktopFrame::~BasicDesktopFrame() {
 // static
 DesktopFrame* BasicDesktopFrame::CopyOf(const DesktopFrame& frame) {
   DesktopFrame* result = new BasicDesktopFrame(frame.size());
-  libyuv::CopyPlane(result->data(), result->stride(), frame.data(),
-                    frame.stride(), frame.size().width() * kBytesPerPixel,
+  libyuv::CopyPlane(frame.data(), frame.stride(), result->data(),
+                    result->stride(), frame.size().width() * kBytesPerPixel,
                     frame.size().height());
   result->CopyFrameInfoFrom(frame);
   return result;
