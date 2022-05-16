@@ -657,8 +657,9 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   // specified by the user (or by the remote party).
   // The generator is not used directly, instead it is passed on to the
   // channel manager and the session description factory.
-  rtc::UniqueRandomIdGenerator ssrc_generator_
-      RTC_GUARDED_BY(signaling_thread());
+  // TODO(bugs.webrtc.org/12666): This variable is used from both the signaling
+  // and worker threads. See if we can't restrict usage to a single thread.
+  rtc::UniqueRandomIdGenerator ssrc_generator_;
 
   // A video bitrate allocator factory.
   // This can be injected using the PeerConnectionDependencies,
