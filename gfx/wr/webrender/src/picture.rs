@@ -4216,6 +4216,12 @@ impl PrimitiveList {
         }
     }
 
+    pub fn merge(&mut self, other: PrimitiveList) {
+        self.clusters.extend(other.clusters);
+        self.child_pictures.extend(other.child_pictures);
+        self.compositor_surface_count += other.compositor_surface_count;
+    }
+
     /// Add a primitive instance to the end of the list
     pub fn add_prim(
         &mut self,

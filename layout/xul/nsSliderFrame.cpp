@@ -348,7 +348,7 @@ void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
       dRect.Inflate(increasePixelsX, increasePixelsY);
       wr::LayoutRect layoutRect = wr::ToLayoutRect(dRect);
       aBuilder->PushRect(layoutRect, layoutRect, BackfaceIsHidden(), false,
-                         wr::ToColorF(fillColor));
+                         false, wr::ToColorF(fillColor));
     }
   }
 }

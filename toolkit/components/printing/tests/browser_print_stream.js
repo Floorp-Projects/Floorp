@@ -13,7 +13,7 @@ async function printToDestination(aBrowser, aDestination) {
 
   info(`Printing to ${filePath}`);
 
-  let settings = PSSVC.newPrintSettings;
+  let settings = PSSVC.createNewPrintSettings();
   settings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
   settings.outputDestination = aDestination;
 

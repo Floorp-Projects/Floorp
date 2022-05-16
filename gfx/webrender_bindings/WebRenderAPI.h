@@ -481,7 +481,7 @@ class DisplayListBuilder final {
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
                 bool aIsBackfaceVisible, bool aForceAntiAliasing,
-                const wr::ColorF& aColor);
+                bool aIsCheckerboard, const wr::ColorF& aColor);
   void PushRectWithAnimation(const wr::LayoutRect& aBounds,
                              const wr::LayoutRect& aClip,
                              bool aIsBackfaceVisible, const wr::ColorF& aColor,

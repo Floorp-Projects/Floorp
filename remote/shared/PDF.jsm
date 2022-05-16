@@ -62,7 +62,7 @@ function getPrintSettings(settings, filePath) {
   );
 
   let cmToInches = cm => cm / 2.54;
-  const printSettings = psService.newPrintSettings;
+  const printSettings = psService.createNewPrintSettings();
   printSettings.isInitializedFromPrinter = true;
   printSettings.isInitializedFromPrefs = true;
   printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;

@@ -26,7 +26,7 @@ async function run() {
       let defaultSettings = printerInfo.defaultSettings;
 
       // Let the printer impose its defaults onto a fresh settings object:
-      let freshSettings = settingsSvc.newPrintSettings;
+      let freshSettings = settingsSvc.createNewPrintSettings();
       printerList.initPrintSettingsFromPrinter(printer.name, freshSettings);
 
       // Make sure they agree on the default orientation:

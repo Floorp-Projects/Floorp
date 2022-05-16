@@ -17,32 +17,6 @@ using namespace mozilla::net;
 
 NS_IMPL_ISUPPORTS(nsSOCKSSocketProvider, nsISocketProvider)
 
-nsresult nsSOCKSSocketProvider::CreateV4(nsISupports* aOuter, REFNSIID aIID,
-                                         void** aResult) {
-  nsresult rv;
-  nsCOMPtr<nsISocketProvider> inst =
-      new nsSOCKSSocketProvider(NS_SOCKS_VERSION_4);
-  if (!inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    rv = inst->QueryInterface(aIID, aResult);
-  }
-  return rv;
-}
-
-nsresult nsSOCKSSocketProvider::CreateV5(nsISupports* aOuter, REFNSIID aIID,
-                                         void** aResult) {
-  nsresult rv;
-  nsCOMPtr<nsISocketProvider> inst =
-      new nsSOCKSSocketProvider(NS_SOCKS_VERSION_5);
-  if (!inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  } else {
-    rv = inst->QueryInterface(aIID, aResult);
-  }
-  return rv;
-}
-
 // Per-platform implemenation of OpenTCPSocket helper function
 // Different platforms have special cases to handle
 

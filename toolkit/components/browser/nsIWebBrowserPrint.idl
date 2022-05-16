@@ -13,6 +13,9 @@ namespace mozilla {
 namespace dom {
 class PrintPreviewResultInfo;
 } // namespace dom
+namespace layout {
+class RemotePrintJobChild;
+} // namespace layout
 } // namespace mozilla
 %}
 
@@ -21,6 +24,7 @@ interface nsIPrintSettings;
 interface nsIWebProgressListener;
 
 native PrintPreviewResolver(std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>&&);
+[ptr] native RemotePrintJobChildPtr(mozilla::layout::RemotePrintJobChild);
 
 /**
  * nsIWebBrowserPrint corresponds to the main interface
@@ -101,6 +105,7 @@ interface nsIWebBrowserPrint : nsISupports
    * @note To cancel, close the window of the document that is being printed.
    */
   [noscript] void print(in nsIPrintSettings aThePrintSettings,
+                        in RemotePrintJobChildPtr aRemotePrintJob,
                         in nsIWebProgressListener aWPListener);
 
   /**

@@ -123,7 +123,7 @@ nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   nsCOMPtr<nsIPrintSettings> printSettings;
 
-  printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
+  printSettingsService->CreateNewPrintSettings(getter_AddRefs(printSettings));
 
   // Use the same setup as setupPrintMode() in reftest-content.js.
   printSettings->SetPaperWidth(5);

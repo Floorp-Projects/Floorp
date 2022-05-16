@@ -8,7 +8,7 @@
 # Additionally a field can have the following optional fields:
 # - altname: A string that will be used when writing out the annotation to the
 #   .extra file instead of the annotation name
-# - ping: A boolean that indicates whether the annotation is whitelisted for
+# - ping: A boolean that indicates whether the annotation is allowlisted for
 #   going into the crash ping, if not specified this defaults to false
 
 A11yHandlerRegistered:
