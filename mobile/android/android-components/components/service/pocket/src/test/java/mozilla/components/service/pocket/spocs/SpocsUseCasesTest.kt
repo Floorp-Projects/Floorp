@@ -4,9 +4,11 @@
 
 package mozilla.components.service.pocket.spocs
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
@@ -18,9 +20,9 @@ import mozilla.components.service.pocket.stories.api.PocketResponse.Success
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -35,19 +37,17 @@ import kotlin.reflect.KVisibility
 @OptIn(ExperimentalCoroutinesApi::class) // for runTest
 @RunWith(AndroidJUnit4::class)
 class SpocsUseCasesTest {
-    private val usecases = spy(SpocsUseCases())
+    private val fetchClient: Client = mock()
+    private val profileId = UUID.randomUUID()
+    private val appId = "test"
+    private val useCases = spy(SpocsUseCases(testContext, fetchClient, profileId, appId))
     private val spocsProvider: SpocsEndpoint = mock()
     private val spocsRepo: SpocsRepository = mock()
 
     @Before
     fun setup() {
-        doReturn(spocsProvider).`when`(usecases).getSpocsProvider(any(), any(), any())
-        doReturn(spocsRepo).`when`(usecases).getSpocsRepository(any())
-    }
-
-    @After
-    fun cleanup() {
-        SpocsUseCases.reset()
+        doReturn(spocsProvider).`when`(useCases).getSpocsProvider(any(), any(), any())
+        doReturn(spocsRepo).`when`(useCases).getSpocsRepository(any())
     }
 
     @Test
@@ -71,15 +71,47 @@ class SpocsUseCasesTest {
     }
 
     @Test
+    fun `GIVEN SpocsUseCases WHEN RefreshSponsoredStories is constructed THEN use the same parameters`() {
+        val refreshUseCase = useCases.refreshStories
+
+        assertSame(testContext, refreshUseCase.appContext)
+        assertSame(fetchClient, refreshUseCase.fetchClient)
+        assertSame(profileId, refreshUseCase.profileId)
+        assertSame(appId, refreshUseCase.appId)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN RefreshSponsoredStories is constructed separately THEN default to use the same parameters`() {
+        val refreshUseCase = useCases.RefreshSponsoredStories()
+
+        assertSame(testContext, refreshUseCase.appContext)
+        assertSame(fetchClient, refreshUseCase.fetchClient)
+        assertSame(profileId, refreshUseCase.profileId)
+        assertSame(appId, refreshUseCase.appId)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN RefreshSponsoredStories is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+        val fetchClient2: Client = mock()
+        val profileId2 = UUID.randomUUID()
+        val appId2 = "test"
+
+        val refreshUseCase = useCases.RefreshSponsoredStories(context2, fetchClient2, profileId2, appId2)
+
+        assertSame(context2, refreshUseCase.appContext)
+        assertSame(fetchClient2, refreshUseCase.fetchClient)
+        assertSame(profileId2, refreshUseCase.profileId)
+        assertSame(appId2, refreshUseCase.appId)
+    }
+
+    @Test
     fun `GIVEN SpocsUseCases WHEN RefreshSponsoredStories is called THEN download stories from API and return early if unsuccessful response`() = runTest {
-        SpocsUseCases.initialize(mock(), mock(), "test")
-        val refreshUsecase = spy(
-            usecases.RefreshSponsoredStories(testContext)
-        )
+        val refreshUseCase = useCases.RefreshSponsoredStories()
         val unsuccessfulResponse = getFailedSponsoredStories()
         doReturn(unsuccessfulResponse).`when`(spocsProvider).getSponsoredStories()
 
-        val result = refreshUsecase.invoke()
+        val result = refreshUseCase.invoke()
 
         assertFalse(result)
         verify(spocsProvider).getSponsoredStories()
@@ -88,14 +120,11 @@ class SpocsUseCasesTest {
 
     @Test
     fun `GIVEN SpocsUseCases WHEN RefreshSponsoredStories is called THEN download stories from API and save a successful response locally`() = runTest {
-        SpocsUseCases.initialize(mock(), mock(), "test")
-        val refreshUsecase = spy(
-            usecases.RefreshSponsoredStories(testContext)
-        )
+        val refreshUseCase = useCases.RefreshSponsoredStories()
         val successfulResponse = getSuccessfulSponsoredStories()
         doReturn(successfulResponse).`when`(spocsProvider).getSponsoredStories()
 
-        val result = refreshUsecase.invoke()
+        val result = refreshUseCase.invoke()
 
         assertTrue(result)
         verify(spocsProvider).getSponsoredStories()
@@ -103,14 +132,35 @@ class SpocsUseCasesTest {
     }
 
     @Test
+    fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is constructed THEN use the same parameters`() {
+        val sponsoredStoriesUseCase = useCases.getStories
+
+        assertSame(testContext, sponsoredStoriesUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN GetSponsoredStories is constructed separately THEN default to use the same parameters`() {
+        val sponsoredStoriesUseCase = useCases.GetSponsoredStories()
+
+        assertSame(testContext, sponsoredStoriesUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN GetSponsoredStories is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+
+        val sponsoredStoriesUseCase = useCases.GetSponsoredStories(context2)
+
+        assertSame(context2, sponsoredStoriesUseCase.context)
+    }
+
+    @Test
     fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return the stories from repository`() = runTest {
-        val sponsoredStoriesUsecase = spy(
-            usecases.GetSponsoredStories(testContext, UUID.randomUUID(), "test")
-        )
+        val sponsoredStoriesUseCase = useCases.GetSponsoredStories()
         val stories = listOf(PocketTestResources.clientExpectedPocketStory)
         doReturn(stories).`when`(spocsRepo).getAllSpocs()
 
-        val result = sponsoredStoriesUsecase.invoke()
+        val result = sponsoredStoriesUseCase.invoke()
 
         verify(spocsRepo).getAllSpocs()
         assertEquals(result, stories)
@@ -118,27 +168,57 @@ class SpocsUseCasesTest {
 
     @Test
     fun `GIVEN SpocsUseCases WHEN GetSponsoredStories is called THEN return return an empty list if none are available in the repository`() = runTest {
-        val sponsoredStoriesUsecase = spy(
-            usecases.GetSponsoredStories(testContext, UUID.randomUUID(), "test")
-        )
+        val sponsoredStoriesUseCase = useCases.GetSponsoredStories()
         doReturn(emptyList<PocketRecommendedStory>()).`when`(spocsRepo).getAllSpocs()
 
-        val result = sponsoredStoriesUsecase.invoke()
+        val result = sponsoredStoriesUseCase.invoke()
 
         verify(spocsRepo).getAllSpocs()
         assertTrue(result.isEmpty())
     }
 
     @Test
+    fun `GIVEN SpocsUseCases WHEN DeleteProfile is constructed THEN use the same parameters`() {
+        val deleteProfileUseCase = useCases.deleteProfile
+
+        assertSame(testContext, deleteProfileUseCase.context)
+        assertSame(fetchClient, deleteProfileUseCase.fetchClient)
+        assertSame(profileId, deleteProfileUseCase.profileId)
+        assertSame(appId, deleteProfileUseCase.appId)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN DeleteProfile is constructed separately THEN default to use the same parameters`() {
+        val deleteProfileUseCase = useCases.DeleteProfile()
+
+        assertSame(testContext, deleteProfileUseCase.context)
+        assertSame(fetchClient, deleteProfileUseCase.fetchClient)
+        assertSame(profileId, deleteProfileUseCase.profileId)
+        assertSame(appId, deleteProfileUseCase.appId)
+    }
+
+    @Test
+    fun `GIVEN SpocsUseCases constructed WHEN DeleteProfile is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+        val fetchClient2: Client = mock()
+        val profileId2 = UUID.randomUUID()
+        val appId2 = "test"
+
+        val deleteProfileUseCase = useCases.DeleteProfile(context2, fetchClient2, profileId2, appId2)
+
+        assertSame(context2, deleteProfileUseCase.context)
+        assertSame(fetchClient2, deleteProfileUseCase.fetchClient)
+        assertSame(profileId2, deleteProfileUseCase.profileId)
+        assertSame(appId2, deleteProfileUseCase.appId)
+    }
+
+    @Test
     fun `GIVEN SpocsUseCases WHEN DeleteProfile is called THEN return true if profile deletion was successful`() = runTest {
-        SpocsUseCases.initialize(mock())
-        val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
-        )
+        val deleteProfileUseCase = useCases.DeleteProfile()
         val successfulResponse = Success(true)
         doReturn(successfulResponse).`when`(spocsProvider).deleteProfile()
 
-        val result = deleteProfileUsecase.invoke()
+        val result = deleteProfileUseCase.invoke()
 
         verify(spocsProvider).deleteProfile()
         assertTrue(result)
@@ -146,14 +226,11 @@ class SpocsUseCasesTest {
 
     @Test
     fun `GIVEN SpocsUseCases WHEN DeleteProfile is called THEN return false if profile deletion was not successful`() = runTest {
-        SpocsUseCases.initialize(mock())
-        val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
-        )
+        val deleteProfileUseCase = useCases.DeleteProfile()
         val unsuccessfulResponse = Failure<Any>()
         doReturn(unsuccessfulResponse).`when`(spocsProvider).deleteProfile()
 
-        val result = deleteProfileUsecase.invoke()
+        val result = deleteProfileUseCase.invoke()
 
         verify(spocsProvider).deleteProfile()
         assertFalse(result)
@@ -161,28 +238,22 @@ class SpocsUseCasesTest {
 
     @Test
     fun `GIVEN SpocsUseCases WHEN profile deletion is succesfull THEN delete all locally persisted spocs`() = runTest {
-        SpocsUseCases.initialize(mock())
-        val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
-        )
+        val deleteProfileUseCase = useCases.DeleteProfile()
         val successfulResponse = Success(true)
         doReturn(successfulResponse).`when`(spocsProvider).deleteProfile()
 
-        deleteProfileUsecase.invoke()
+        deleteProfileUseCase.invoke()
 
         verify(spocsRepo).deleteAllSpocs()
     }
 
     @Test
     fun `GIVEN SpocsUseCases WHEN profile deletion is not succesfull THEN keep all locally persisted spocs`() = runTest {
-        SpocsUseCases.initialize(mock())
-        val deleteProfileUsecase = spy(
-            usecases.DeleteProfile(testContext, UUID.randomUUID(), "test")
-        )
+        val deleteProfileUseCase = useCases.DeleteProfile()
         val unsuccessfulResponse = Failure<Any>()
         doReturn(unsuccessfulResponse).`when`(spocsProvider).deleteProfile()
 
-        deleteProfileUsecase.invoke()
+        deleteProfileUseCase.invoke()
 
         verify(spocsRepo, never()).deleteAllSpocs()
     }

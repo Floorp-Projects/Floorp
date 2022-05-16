@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.pocket.spocs.SpocsUseCases
 import mozilla.components.service.pocket.stories.PocketStoriesUseCases
 import mozilla.components.service.pocket.update.PocketStoriesRefreshScheduler
@@ -20,29 +21,34 @@ class PocketStoriesService(
     private val context: Context,
     private val pocketStoriesConfig: PocketStoriesConfig
 ) {
+    @VisibleForTesting
     internal var storiesRefreshScheduler = PocketStoriesRefreshScheduler(pocketStoriesConfig)
+    @VisibleForTesting
     internal var spocsRefreshscheduler = SpocsRefreshScheduler(pocketStoriesConfig)
-    private val storiesUseCases = PocketStoriesUseCases()
-    private val spocsUseCases = SpocsUseCases()
-    internal var getStoriesUsecase = storiesUseCases.GetPocketStories(context)
-    internal var updateStoriesTimesShownUsecase = storiesUseCases.UpdateStoriesTimesShown(context)
-    internal val getSpocsUsecase = when (pocketStoriesConfig.profile) {
+    @VisibleForTesting
+    internal var storiesUseCases = PocketStoriesUseCases(
+        appContext = context,
+        fetchClient = pocketStoriesConfig.client
+    )
+    @VisibleForTesting
+    internal var spocsUseCases = when (pocketStoriesConfig.profile) {
         null -> {
             logger.debug("Missing profile for sponsored stories")
             null
         }
-        else -> spocsUseCases.GetSponsoredStories(
-            context = context,
+        else -> SpocsUseCases(
+            appContext = context,
+            fetchClient = pocketStoriesConfig.client,
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
         )
     }
-    internal val getDeleteProfileUsecase = when (pocketStoriesConfig.profile) {
+    internal val getDeleteProfileUseCase = when (pocketStoriesConfig.profile) {
         null -> {
             logger.debug("Missing profile for sponsored stories")
             null
         }
-        else -> spocsUseCases.DeleteProfile(
+        else -> spocsUseCases?.DeleteProfile(
             context = context,
             profileId = pocketStoriesConfig.profile.profileId,
             appId = pocketStoriesConfig.profile.appId
@@ -59,7 +65,7 @@ class PocketStoriesService(
      * making them available for the [getStories] method.
      */
     fun startPeriodicStoriesRefresh() {
-        PocketStoriesUseCases.initialize(pocketStoriesConfig.client)
+        GlobalDependencyProvider.RecommendedStories.initialize(storiesUseCases)
         storiesRefreshScheduler.schedulePeriodicRefreshes(context)
     }
 
@@ -73,7 +79,7 @@ class PocketStoriesService(
      */
     fun stopPeriodicStoriesRefresh() {
         storiesRefreshScheduler.stopPeriodicRefreshes(context)
-        PocketStoriesUseCases.reset()
+        GlobalDependencyProvider.RecommendedStories.reset()
     }
 
     /**
@@ -84,7 +90,7 @@ class PocketStoriesService(
      * [startPeriodicStoriesRefresh] hasn't yet completed.
      */
     suspend fun getStories(): List<PocketRecommendedStory> {
-        return getStoriesUsecase.invoke()
+        return storiesUseCases.getStories()
     }
 
     /**
@@ -97,18 +103,13 @@ class PocketStoriesService(
      * making them available for the [getSponsoredStories] method.
      */
     fun startPeriodicSponsoredStoriesRefresh() {
-        val profileId = pocketStoriesConfig.profile?.profileId
-        val appId = pocketStoriesConfig.profile?.appId
-        if (profileId == null || appId == null) {
+        val useCases = spocsUseCases
+        if (useCases == null) {
             logger.warn("Cannot start sponsored stories refresh. Service has incomplete setup")
             return
         }
 
-        SpocsUseCases.initialize(
-            client = pocketStoriesConfig.client,
-            profileId = profileId,
-            appId = appId
-        )
+        GlobalDependencyProvider.SponsoredStories.initialize(useCases)
         spocsRefreshscheduler.schedulePeriodicRefreshes(context)
     }
 
@@ -122,21 +123,21 @@ class PocketStoriesService(
      */
     fun stopPeriodicSponsoredStoriesRefresh() {
         spocsRefreshscheduler.stopPeriodicRefreshes(context)
-        SpocsUseCases.reset()
+        GlobalDependencyProvider.SponsoredStories.reset()
     }
 
     /**
      * Get a list of Pocket sponsored stories based on the initial configuration.
      */
     suspend fun getSponsoredStories(): List<PocketSponsoredStory> {
-        return getSpocsUsecase?.invoke() ?: emptyList()
+        return spocsUseCases?.getStories?.invoke() ?: emptyList()
     }
 
     /**
      * Delete all stored user data used for downloading personalized sponsored stories.
      */
     suspend fun deleteProfile(): Boolean {
-        return getDeleteProfileUsecase?.invoke() ?: false
+        return spocsUseCases?.deleteProfile?.invoke() ?: false
     }
 
     /**
@@ -146,6 +147,6 @@ class PocketStoriesService(
      * Automatically synchronized with the other [PocketStoriesService] methods.
      */
     suspend fun updateStoriesTimesShown(updatedStories: List<PocketRecommendedStory>) {
-        updateStoriesTimesShownUsecase.invoke(updatedStories)
+        storiesUseCases.updateTimesShown(updatedStories)
     }
 }

@@ -49,7 +49,7 @@ internal class SpocsEndpoint internal constructor(
          * Returns a new instance of [SpocsEndpoint].
          *
          * @param client the HTTP client to use for network requests.
-         * @param profileId Unique identifier of the user which will be presented with sponsored stories.
+         * @param profileId Unique profile identifier which will be presented with sponsored stories.
          * @param appId Unique identifier of the application using this feature.
          */
         fun newInstance(client: Client, profileId: UUID, appId: String): SpocsEndpoint {

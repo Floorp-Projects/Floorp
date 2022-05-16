@@ -9,19 +9,19 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mozilla.components.service.pocket.spocs.SpocsUseCases
+import mozilla.components.service.pocket.GlobalDependencyProvider
 
 /**
  * WorkManager Worker used for downloading and persisting locally a new list of Pocket recommended stories.
  */
 internal class RefreshSpocsWorker(
-    private val context: Context,
+    context: Context,
     params: WorkerParameters
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
-            if (SpocsUseCases().RefreshSponsoredStories(context).invoke()) {
+            if (GlobalDependencyProvider.SponsoredStories.useCases?.refreshStories?.invoke() == true) {
                 Result.success()
             } else {
                 Result.retry()

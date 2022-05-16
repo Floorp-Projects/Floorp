@@ -41,7 +41,7 @@ class PocketStoriesConfig(
 /**
  * Sponsored stories configuration data.
  *
- * @param profileId Unique identifier of the user which will be presented with sponsored stories.
+ * @param profileId Unique profile identifier which will be presented with sponsored stories.
  * @param appId Unique identifier of the application using this feature.
  */
 class Profile(val profileId: UUID, val appId: String)

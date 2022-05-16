@@ -4,6 +4,7 @@
 
 package mozilla.components.service.pocket.stories
 
+import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -16,10 +17,8 @@ import mozilla.components.service.pocket.stories.api.PocketResponse
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -35,19 +34,15 @@ import kotlin.reflect.KVisibility
 @ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class PocketStoriesUseCasesTest {
-    private val usecases = spy(PocketStoriesUseCases())
+    private val fetchClient: Client = mock()
+    private val useCases = spy(PocketStoriesUseCases(testContext, fetchClient))
     private val pocketRepo: PocketRecommendationsRepository = mock()
     private val pocketEndoint: PocketEndpoint = mock()
 
     @Before
     fun setup() {
-        doReturn(pocketEndoint).`when`(usecases).getPocketEndpoint(any())
-        doReturn(pocketRepo).`when`(usecases).getPocketRepository(any())
-    }
-
-    @After
-    fun cleanup() {
-        PocketStoriesUseCases.reset()
+        doReturn(pocketEndoint).`when`(useCases).getPocketEndpoint(any())
+        doReturn(pocketRepo).`when`(useCases).getPocketRepository(any())
     }
 
     @Test
@@ -69,43 +64,39 @@ class PocketStoriesUseCasesTest {
     }
 
     @Test
-    fun `GIVEN an uninitialized PocketStoriesUseCases WHEN initialize is called THEN api key and client are set`() {
-        val client: Client = mock()
+    fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is constructed THEN use the same parameters`() {
+        val refreshUseCase = useCases.refreshStories
 
-        PocketStoriesUseCases.initialize(client)
-
-        assertSame(client, PocketStoriesUseCases.fetchClient)
+        assertSame(testContext, refreshUseCase.appContext)
+        assertSame(fetchClient, refreshUseCase.fetchClient)
     }
 
     @Test
-    fun `GIVEN an already initialized PocketStoriesUseCases WHEN initialize is called THEN the new api key and client overwrite the old values`() {
-        PocketStoriesUseCases.fetchClient = mock()
-        val newClient: Client = mock()
+    fun `GIVEN PocketStoriesUseCases constructed WHEN RefreshPocketStories is constructed separately THEN default to use the same parameters`() {
+        val refreshUseCase = useCases.RefreshPocketStories()
 
-        PocketStoriesUseCases.initialize(newClient)
-
-        assertSame(newClient, PocketStoriesUseCases.fetchClient)
+        assertSame(testContext, refreshUseCase.appContext)
+        assertSame(fetchClient, refreshUseCase.fetchClient)
     }
 
     @Test
-    fun `GIVEN PocketStoriesUseCases WHEN reset is called THEN the api key and fetch client references are freed`() {
-        PocketStoriesUseCases.fetchClient = mock()
+    fun `GIVEN PocketStoriesUseCases constructed WHEN RefreshPocketStories is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+        val fetchClient2: Client = mock()
 
-        PocketStoriesUseCases.reset()
+        val refreshUseCase = useCases.RefreshPocketStories(context2, fetchClient2)
 
-        assertNull(PocketStoriesUseCases.fetchClient)
+        assertSame(context2, refreshUseCase.appContext)
+        assertSame(fetchClient2, refreshUseCase.fetchClient)
     }
 
     @Test
     fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN download stories from API and return early if unsuccessful response`() = runTest {
-        PocketStoriesUseCases.initialize(mock())
-        val refreshUsecase = spy(
-            usecases.RefreshPocketStories(testContext)
-        )
+        val refreshUseCase = useCases.RefreshPocketStories()
         val successfulResponse = getSuccessfulPocketStories()
         doReturn(successfulResponse).`when`(pocketEndoint).getRecommendedStories()
 
-        val result = refreshUsecase.invoke()
+        val result = refreshUseCase.invoke()
 
         assertTrue(result)
         verify(pocketEndoint).getRecommendedStories()
@@ -114,13 +105,11 @@ class PocketStoriesUseCasesTest {
 
     @Test
     fun `GIVEN PocketStoriesUseCases WHEN RefreshPocketStories is called THEN download stories from API and save a successful response locally`() = runTest {
-        PocketStoriesUseCases.initialize(mock())
-        val refreshUsecase = spy(usecases.RefreshPocketStories(testContext))
+        val refreshUseCase = useCases.RefreshPocketStories()
         val successfulResponse = getFailedPocketStories()
-
         doReturn(successfulResponse).`when`(pocketEndoint).getRecommendedStories()
 
-        val result = refreshUsecase.invoke()
+        val result = refreshUseCase.invoke()
 
         assertFalse(result)
         verify(pocketEndoint).getRecommendedStories()
@@ -128,27 +117,72 @@ class PocketStoriesUseCasesTest {
     }
 
     @Test
+    fun `GIVEN PocketStoriesUseCases WHEN GetPocketStories is constructed THEN use the same parameters`() {
+        val getStoriesUseCase = useCases.getStories
+
+        assertSame(testContext, getStoriesUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases constructed WHEN GetPocketStories is constructed separately THEN default to use the same parameters`() {
+        val getStoriesUseCase = useCases.GetPocketStories()
+
+        assertSame(testContext, getStoriesUseCase.context)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases constructed WHEN GetPocketStories is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+
+        val getStoriesUseCase = useCases.GetPocketStories(context2)
+
+        assertSame(context2, getStoriesUseCase.context)
+    }
+
+    @Test
     fun `GIVEN PocketStoriesUseCases WHEN GetPocketStories is called THEN delegate the repository to return locally stored stories`() =
         runTest {
-            val getStoriesUsecase = spy(usecases.GetPocketStories(testContext))
-
+            val getStoriesUseCase = useCases.GetPocketStories()
             doReturn(emptyList<PocketRecommendedStory>()).`when`(pocketRepo)
                 .getPocketRecommendedStories()
-            var result = getStoriesUsecase.invoke()
+            var result = getStoriesUseCase.invoke()
             verify(pocketRepo).getPocketRecommendedStories()
             assertTrue(result.isEmpty())
 
             val stories = listOf(PocketTestResources.clientExpectedPocketStory)
             doReturn(stories).`when`(pocketRepo).getPocketRecommendedStories()
-            result = getStoriesUsecase.invoke()
+            result = getStoriesUseCase.invoke()
             // getPocketRecommendedStories() should've been called 2 times. Once in the above check, once now.
             verify(pocketRepo, times(2)).getPocketRecommendedStories()
             assertEquals(result, stories)
         }
 
     @Test
+    fun `GIVEN PocketStoriesUseCases WHEN UpdateStoriesTimesShown is constructed THEN use the same parameters`() {
+        val updateStoriesTimesShown = useCases.updateTimesShown
+
+        assertSame(testContext, updateStoriesTimesShown.context)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases constructed WHEN UpdateStoriesTimesShown is constructed separately THEN default to use the same parameters`() {
+        val updateStoriesTimesShown = useCases.UpdateStoriesTimesShown()
+
+        assertSame(testContext, updateStoriesTimesShown.context)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesUseCases constructed WHEN UpdateStoriesTimesShown is constructed separately THEN allow using different parameters`() {
+        val context2: Context = mock()
+
+        val updateStoriesTimesShown = useCases.UpdateStoriesTimesShown(context2)
+
+        assertSame(context2, updateStoriesTimesShown.context)
+    }
+
+    @Test
     fun `GIVEN PocketStoriesUseCases WHEN UpdateStoriesTimesShown is called THEN delegate the repository to update the stories shown`() = runTest {
-        val updateStoriesTimesShown = usecases.UpdateStoriesTimesShown(testContext)
+        val updateStoriesTimesShown = useCases.UpdateStoriesTimesShown()
         val updatedStories: List<PocketRecommendedStory> = mock()
 
         updateStoriesTimesShown.invoke(updatedStories)

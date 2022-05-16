@@ -26,7 +26,7 @@ private const val SPOCS_ENDPOINT_DOWNLOAD_SPOCS_PATH = "spocs"
 private const val SPOCS_ENDPOINT_DELETE_PROFILE_PATH = "user"
 private const val SPOCS_PROXY_VERSION_KEY = "version"
 private const val SPOCS_PROXY_VERSION_VALUE = "2"
-private const val SPOCS_PROXY_USER_KEY = "pocket_id"
+private const val SPOCS_PROXY_PROFILE_KEY = "pocket_id"
 private const val SPOCS_PROXY_APP_KEY = "consumer_key"
 
 /**
@@ -88,7 +88,7 @@ internal class SpocsEndpointRaw internal constructor(
     private fun getDownloadStoriesRequestBody(): Body {
         val params = mapOf(
             SPOCS_PROXY_VERSION_KEY to SPOCS_PROXY_VERSION_VALUE,
-            SPOCS_PROXY_USER_KEY to profileId.toString(),
+            SPOCS_PROXY_PROFILE_KEY to profileId.toString(),
             SPOCS_PROXY_APP_KEY to appId,
         )
 
@@ -97,7 +97,7 @@ internal class SpocsEndpointRaw internal constructor(
 
     private fun getDeleteProfileRequestBody(): Body {
         val params = mapOf(
-            SPOCS_PROXY_USER_KEY to profileId.toString(),
+            SPOCS_PROXY_PROFILE_KEY to profileId.toString(),
         )
 
         return Body(JSONObject(params).toString().byteInputStream())
@@ -108,7 +108,7 @@ internal class SpocsEndpointRaw internal constructor(
          * Returns a new instance of [SpocsEndpointRaw].
          *
          * @param client HTTP client to use for network requests.
-         * @param profileId Unique identifier of the user which will be presented with sponsored stories.
+         * @param profileId Unique profile identifier which will be presented with sponsored stories.
          * @param appId Unique identifier of the application using this feature.
          */
         fun newInstance(client: Client, profileId: UUID, appId: String): SpocsEndpointRaw {

@@ -10,25 +10,44 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.helpers.assertConstructorsVisibility
 import mozilla.components.service.pocket.spocs.SpocsUseCases
+import mozilla.components.service.pocket.spocs.SpocsUseCases.DeleteProfile
+import mozilla.components.service.pocket.spocs.SpocsUseCases.GetSponsoredStories
+import mozilla.components.service.pocket.stories.PocketStoriesUseCases
+import mozilla.components.service.pocket.stories.PocketStoriesUseCases.GetPocketStories
+import mozilla.components.service.pocket.stories.PocketStoriesUseCases.UpdateStoriesTimesShown
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import java.util.UUID
 import kotlin.reflect.KVisibility
 
+@ExperimentalCoroutinesApi // for runTest
 @RunWith(AndroidJUnit4::class)
 class PocketStoriesServiceTest {
+    private val storiesUseCases: PocketStoriesUseCases = mock()
+    private val spocsUseCases: SpocsUseCases = mock()
     private val service = PocketStoriesService(testContext, PocketStoriesConfig(mock())).also {
         it.storiesRefreshScheduler = mock()
-        it.getStoriesUsecase = mock()
+        it.spocsRefreshscheduler = mock()
+        it.storiesUseCases = storiesUseCases
+        it.spocsUseCases = spocsUseCases
+    }
+
+    @After
+    fun teardown() {
+        GlobalDependencyProvider.SponsoredStories.reset()
+        GlobalDependencyProvider.RecommendedStories.reset()
     }
 
     @Test
@@ -37,21 +56,23 @@ class PocketStoriesServiceTest {
     }
 
     @Test
-    fun `GIVEN PocketStoriesService WHEN startPeriodicStoriesRefresh THEN scheduler#schedulePeriodicRefreshes should be called`() {
+    fun `GIVEN PocketStoriesService WHEN startPeriodicStoriesRefresh THEN persist dependencies and schedule stories refresh`() {
         service.startPeriodicStoriesRefresh()
 
+        assertNotNull(GlobalDependencyProvider.RecommendedStories.useCases)
         verify(service.storiesRefreshScheduler).schedulePeriodicRefreshes(any())
     }
 
     @Test
-    fun `GIVEN PocketStoriesService WHEN stopPeriodicStoriesRefresh THEN scheduler#stopPeriodicRefreshes should be called`() {
+    fun `GIVEN PocketStoriesService WHEN stopPeriodicStoriesRefresh THEN stop refreshing stories and clear dependencies`() {
         service.stopPeriodicStoriesRefresh()
 
         verify(service.storiesRefreshScheduler).stopPeriodicRefreshes(any())
+        assertNull(GlobalDependencyProvider.RecommendedStories.useCases)
     }
 
     @Test
-    fun `GIVEN PocketStoriesService is initialized with a valid profile WHEN called to start periodic refreshes THEN delegate SpocsRefreshScheduler`() {
+    fun `GIVEN PocketStoriesService is initialized with a valid profile WHEN called to start periodic refreshes THEN persist dependencies and schedule stories refresh`() {
         val client: Client = mock()
         val profileId = UUID.randomUUID()
         val appId = "test"
@@ -70,14 +91,12 @@ class PocketStoriesServiceTest {
 
         service.startPeriodicSponsoredStoriesRefresh()
 
+        assertNotNull(GlobalDependencyProvider.SponsoredStories.useCases)
         verify(service.spocsRefreshscheduler).schedulePeriodicRefreshes(any())
-        assertSame(client, SpocsUseCases.fetchClient)
-        assertEquals(profileId, SpocsUseCases.profileId)
-        assertEquals(appId, SpocsUseCases.appId)
     }
 
     @Test
-    fun `GIVEN PocketStoriesService is initialized with an invalid profile WHEN called to start periodic refreshes THEN don't delegate SpocsRefreshScheduler`() {
+    fun `GIVEN PocketStoriesService is initialized with an invalid profile WHEN called to start periodic refreshes THEN don't schedule periodic refreshes and don't persist dependencies`() {
         val service = PocketStoriesService(
             context = testContext,
             pocketStoriesConfig = PocketStoriesConfig(
@@ -91,35 +110,67 @@ class PocketStoriesServiceTest {
         service.startPeriodicSponsoredStoriesRefresh()
 
         verify(service.spocsRefreshscheduler, never()).schedulePeriodicRefreshes(any())
+        assertNull(GlobalDependencyProvider.SponsoredStories.useCases)
     }
 
     @Test
-    fun `GIVEN PocketStoriesService WHEN called to stop periodic refreshes THEN stop refreshing through SpocsRefreshScheduler`() {
+    fun `GIVEN PocketStoriesService WHEN called to stop periodic refreshes THEN stop refreshing stories and clear dependencies`() {
         // Mock periodic refreshes were started previously and profile details were set.
         // Now they will have to be cleaned.
-        SpocsUseCases.apply {
-            fetchClient = mock()
-            profileId = UUID.randomUUID()
-            appId = "test"
-        }
+        GlobalDependencyProvider.SponsoredStories.initialize(mock())
         service.spocsRefreshscheduler = mock()
 
         service.stopPeriodicSponsoredStoriesRefresh()
 
         verify(service.spocsRefreshscheduler).stopPeriodicRefreshes(any())
-        assertNull(SpocsUseCases.fetchClient)
-        assertNull(SpocsUseCases.profileId)
-        assertNull(SpocsUseCases.appId)
+        assertNull(GlobalDependencyProvider.SponsoredStories.useCases)
     }
 
-    @ExperimentalCoroutinesApi
     @Test
-    fun `GIVEN PocketStoriesService WHEN getStories THEN getStoriesUsecase should return`() = runTest {
+    fun `GIVEN PocketStoriesService WHEN getStories THEN stories useCases should return`() = runTest {
         val stories = listOf(mock<PocketRecommendedStory>())
-        whenever(service.getStoriesUsecase.invoke()).thenReturn(stories)
+        val getStoriesUseCase: GetPocketStories = mock()
+        doReturn(stories).`when`(getStoriesUseCase).invoke()
+        doReturn(getStoriesUseCase).`when`(storiesUseCases).getStories
 
         val result = service.getStories()
 
         assertEquals(stories, result)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesService WHEN updateStoriesTimesShown THEN delegate to spocs useCases`() = runTest {
+        val updateTimesShownUseCase: UpdateStoriesTimesShown = mock()
+        doReturn(updateTimesShownUseCase).`when`(storiesUseCases).updateTimesShown
+        val stories = listOf(mock<PocketRecommendedStory>())
+
+        service.updateStoriesTimesShown(stories)
+
+        verify(updateTimesShownUseCase).invoke(stories)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesService WHEN getSponsoredStories THEN delegate to spocs useCases`() = runTest {
+        val noProfileResponse = service.getSponsoredStories()
+        assertTrue(noProfileResponse.isEmpty())
+
+        val stories = listOf(mock<PocketSponsoredStory>())
+        val getStoriesUseCase: GetSponsoredStories = mock()
+        doReturn(stories).`when`(getStoriesUseCase).invoke()
+        doReturn(getStoriesUseCase).`when`(spocsUseCases).getStories
+        val existingProfileResponse = service.getSponsoredStories()
+        assertEquals(stories, existingProfileResponse)
+    }
+
+    @Test
+    fun `GIVEN PocketStoriesService WHEN deleteProfile THEN delegate to spocs useCases`() = runTest {
+        val noProfileResponse = service.deleteProfile()
+        assertFalse(noProfileResponse)
+
+        val deleteProfileUseCase: DeleteProfile = mock()
+        doReturn(deleteProfileUseCase).`when`(spocsUseCases).deleteProfile
+        doReturn(true).`when`(deleteProfileUseCase).invoke()
+        val existingProfileResponse = service.deleteProfile()
+        assertTrue(existingProfileResponse)
     }
 }

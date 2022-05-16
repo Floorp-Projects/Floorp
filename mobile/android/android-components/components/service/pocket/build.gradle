@@ -54,6 +54,7 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.androidx_room_testing
+    testImplementation Dependencies.androidx_work_testing
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')
