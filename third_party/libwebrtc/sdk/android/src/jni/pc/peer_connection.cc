@@ -271,6 +271,11 @@ void JavaToNativeRTCConfiguration(
   rtc_config->allow_codec_switching = JavaToNativeOptionalBool(
       jni, Java_RTCConfiguration_getAllowCodecSwitching(jni, j_rtc_config));
 
+  rtc_config->offer_extmap_allow_mixed =
+      Java_RTCConfiguration_getOfferExtmapAllowMixed(jni, j_rtc_config);
+  rtc_config->enable_implicit_rollback =
+      Java_RTCConfiguration_getEnableImplicitRollback(jni, j_rtc_config);
+
   ScopedJavaLocalRef<jstring> j_turn_logging_id =
       Java_RTCConfiguration_getTurnLoggingId(jni, j_rtc_config);
   if (!IsNull(jni, j_turn_logging_id)) {
