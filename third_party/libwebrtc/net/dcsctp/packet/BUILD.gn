@@ -40,12 +40,26 @@ rtc_library("tlv_trait") {
   ]
 }
 
+rtc_library("crc32c") {
+  deps = [
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "crc32c.cc",
+    "crc32c.h",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("dcsctp_packet_unittests") {
     testonly = true
 
     deps = [
       ":bounded_io",
+      ":crc32c",
       ":tlv_trait",
       "../../../api:array_view",
       "../../../rtc_base:checks",
@@ -56,6 +70,7 @@ if (rtc_include_tests) {
     sources = [
       "bounded_byte_reader_test.cc",
       "bounded_byte_writer_test.cc",
+      "crc32c_test.cc",
       "tlv_trait_test.cc",
     ]
   }
