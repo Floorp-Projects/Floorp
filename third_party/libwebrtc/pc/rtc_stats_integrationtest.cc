@@ -800,7 +800,7 @@ class RTCStatsReportVerifier {
   bool VerifyRTCInboundRTPStreamStats(
       const RTCInboundRTPStreamStats& inbound_stream) {
     RTCStatsVerifier verifier(report_, &inbound_stream);
-    VerifyRTCRTPStreamStats(inbound_stream, verifier);
+    VerifyRTCReceivedRtpStreamStats(inbound_stream, verifier);
     verifier.TestMemberIsOptionalIDReference(
         inbound_stream.remote_id, RTCRemoteOutboundRtpStreamStats::kType);
     if (inbound_stream.media_type.is_defined() &&
@@ -825,9 +825,6 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.bytes_received);
     verifier.TestMemberIsNonNegative<uint64_t>(
         inbound_stream.header_bytes_received);
-    // packets_lost is defined as signed, but this should never happen in
-    // this test. See RFC 3550.
-    verifier.TestMemberIsNonNegative<int32_t>(inbound_stream.packets_lost);
     verifier.TestMemberIsDefined(inbound_stream.last_packet_received_timestamp);
     if (inbound_stream.frames_received.ValueOrDefault(0) > 0) {
       verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.frame_width);
@@ -845,7 +842,6 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsUndefined(inbound_stream.frame_bit_depth);
     if (inbound_stream.media_type.is_defined() &&
         *inbound_stream.media_type == "video") {
-      verifier.TestMemberIsNonNegative<double>(inbound_stream.jitter);
       verifier.TestMemberIsUndefined(inbound_stream.jitter_buffer_delay);
       verifier.TestMemberIsUndefined(
           inbound_stream.jitter_buffer_emitted_count);
@@ -868,7 +864,6 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.fir_count);
       verifier.TestMemberIsUndefined(inbound_stream.pli_count);
       verifier.TestMemberIsUndefined(inbound_stream.nack_count);
-      verifier.TestMemberIsNonNegative<double>(inbound_stream.jitter);
       verifier.TestMemberIsNonNegative<double>(
           inbound_stream.jitter_buffer_delay);
       verifier.TestMemberIsNonNegative<uint64_t>(
@@ -935,9 +930,6 @@ class RTCStatsReportVerifier {
   bool VerifyRTCOutboundRTPStreamStats(
       const RTCOutboundRTPStreamStats& outbound_stream) {
     RTCStatsVerifier verifier(report_, &outbound_stream);
-    // TODO(https://crbug.com/webrtc/12532): Invoke
-    // VerifyRTCReceivedRtpStreamStats() instead of VerifyRTCRTPStreamStats()
-    // because they have a shared hierarchy now!
     VerifyRTCRTPStreamStats(outbound_stream, verifier);
     if (outbound_stream.media_type.is_defined() &&
         *outbound_stream.media_type == "video") {
