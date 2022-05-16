@@ -1,0 +1,38 @@
+/* -*- Mode: Java; c-basic-offset: 2; tab-width: 4; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.util;
+
+public final class XPCOMError {
+  /** Check if the error code corresponds to a failure */
+  public static boolean failed(long err) {
+    return (err & 0x80000000L) != 0;
+  }
+
+  /** Check if the error code corresponds to a failure */
+  public static boolean succeeded(long err) {
+    return !failed(err);
+  }
+
+  /** Extract the error code part of the error message */
+  public static int getErrorCode(long err) {
+    return (int)(err & 0xffffL);
+  }
+
+  /** Extract the error module part of the error message */
+  public static int getErrorModule(long err) {
+    return (int)(((err >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fffL);
+  }
+
+  public static final int NS_ERROR_MODULE_BASE_OFFSET = {{ MODULE_BASE_OFFSET }};
+
+{% for mod, val in modules %}
+  public static final int NS_ERROR_MODULE_{{ mod }} = {{ val }};
+{% endfor %}
+
+{% for error, val in errors %}
+  public static final long {{ error }} = 0x{{ "%X" % val }}L;
+{% endfor %}
+}

@@ -3879,10 +3879,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   }
 
   if (nsCOMPtr<nsILoadURIDelegate> loadURIDelegate = GetLoadURIDelegate()) {
+    nsresult code = isHttpsOnlyError ? NS_ERROR_HTTPS_ONLY : aError;
     nsCOMPtr<nsIURI> errorPageURI;
-    rv = loadURIDelegate->HandleLoadError(
-        aURI, (isHttpsOnlyError ? NS_ERROR_HTTPS_ONLY : aError),
-        NS_ERROR_GET_MODULE(aError), getter_AddRefs(errorPageURI));
+    rv = loadURIDelegate->HandleLoadError(aURI, code, NS_ERROR_GET_MODULE(code),
+                                          getter_AddRefs(errorPageURI));
     // If the docshell is going away there's no point in showing an error page.
     if (NS_FAILED(rv) || mIsBeingDestroyed) {
       *aDisplayedErrorPage = false;
