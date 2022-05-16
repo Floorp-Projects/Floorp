@@ -41,7 +41,7 @@ namespace {
 
 // Encoder configuration parameters
 constexpr int kQpMin = 10;
-constexpr int kUsageProfile = 1;  // 0 = good quality; 1 = real-time.
+constexpr int kUsageProfile = AOM_USAGE_REALTIME;
 constexpr int kMinQindex = 145;   // Min qindex threshold for QP scaling.
 constexpr int kMaxQindex = 205;   // Max qindex threshold for QP scaling.
 constexpr int kBitDepth = 8;
@@ -195,7 +195,7 @@ int LibaomAv1Encoder::InitEncode(const VideoCodec* codec_settings,
 
   // Initialize encoder configuration structure with default values
   aom_codec_err_t ret =
-      aom_codec_enc_config_default(aom_codec_av1_cx(), &cfg_, 0);
+      aom_codec_enc_config_default(aom_codec_av1_cx(), &cfg_, kUsageProfile);
   if (ret != AOM_CODEC_OK) {
     RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::EncodeInit returned " << ret
                         << " on aom_codec_enc_config_default.";
