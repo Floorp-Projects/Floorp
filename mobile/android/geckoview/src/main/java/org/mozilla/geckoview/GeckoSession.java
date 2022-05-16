@@ -831,7 +831,6 @@ public class GeckoSession {
             final String event,
             final GeckoBundle message,
             final EventCallback callback) {
-          Log.d(LOGTAG, "handleMessage: " + event);
           if (delegate == null) {
             callback.sendSuccess(/* granted */ false);
             return;
@@ -901,7 +900,7 @@ public class GeckoSession {
             final @SelectionActionDelegateAction HashSet<String> actionsSet =
                 new HashSet<>(Arrays.asList(message.getStringArray("actions")));
             final SelectionActionDelegate.Selection selection =
-                new SelectionActionDelegate.Selection(message, actionsSet, mEventDispatcher);
+                new SelectionActionDelegate.Selection(message, actionsSet, callback);
 
             delegate.onShowActionRequest(GeckoSession.this, selection);
 
@@ -1319,12 +1318,14 @@ public class GeckoSession {
     @Override
     public void handleMessage(
         final String event, final GeckoBundle message, final EventCallback callback) {
-      Log.d(LOGTAG, "handleMessage " + event);
+      if (DEBUG) {
+        Log.d(LOGTAG, "handleMessage: event = " + event);
+      }
 
       if ("GeckoView:PinOnScreen".equals(event)) {
         GeckoSession.this.setShouldPinOnScreen(message.getBoolean("pinned"));
       } else if ("GeckoView:Prompt".equals(event)) {
-        mPromptController.handleEvent(GeckoSession.this, message.getBundle("prompt"), callback);
+        mPromptController.handleEvent(GeckoSession.this, message, callback);
       } else if ("GeckoView:Prompt:Dismiss".equals(event)) {
         mPromptController.dismissPrompt(message.getString("id"));
       }
@@ -3405,14 +3406,14 @@ public class GeckoSession {
       /** Set of valid actions available through {@link Selection#execute(String)} */
       public final @NonNull @SelectionActionDelegateAction Collection<String> availableActions;
 
-      private final String mActionId;
+      private final int mSeqNo;
 
-      private final WeakReference<EventDispatcher> mEventDispatcher;
+      private final EventCallback mEventCallback;
 
       /* package */ Selection(
           final GeckoBundle bundle,
           final @NonNull @SelectionActionDelegateAction Set<String> actions,
-          final EventDispatcher eventDispatcher) {
+          final EventCallback callback) {
         flags =
             (bundle.getBoolean("collapsed") ? SelectionActionDelegate.FLAG_IS_COLLAPSED : 0)
                 | (bundle.getBoolean("editable") ? SelectionActionDelegate.FLAG_IS_EDITABLE : 0)
@@ -3420,8 +3421,8 @@ public class GeckoSession {
         text = bundle.getString("selection");
         clientRect = bundle.getRectF("clientRect");
         availableActions = actions;
-        mActionId = bundle.getString("actionId");
-        mEventDispatcher = new WeakReference<>(eventDispatcher);
+        mSeqNo = bundle.getInt("seqNo");
+        mEventCallback = callback;
       }
 
       /** Empty constructor for tests. */
@@ -3430,8 +3431,8 @@ public class GeckoSession {
         text = "";
         clientRect = null;
         availableActions = new HashSet<>();
-        mActionId = null;
-        mEventDispatcher = null;
+        mSeqNo = 0;
+        mEventCallback = null;
       }
 
       /**
@@ -3457,16 +3458,10 @@ public class GeckoSession {
         if (!isActionAvailable(action)) {
           throw new IllegalStateException("Action not available");
         }
-        final EventDispatcher eventDispatcher = mEventDispatcher.get();
-        if (eventDispatcher == null) {
-          // The session is not available anymore, nothing really to do
-          Log.w(LOGTAG, "Calling execute on a stale Selection.");
-          return;
-        }
         final GeckoBundle response = new GeckoBundle(2);
         response.putString("id", action);
-        response.putString("actionId", mActionId);
-        eventDispatcher.dispatch("GeckoView:ExecuteSelectionAction", response);
+        response.putInt("seqNo", mSeqNo);
+        mEventCallback.sendSuccess(response);
       }
 
       /**

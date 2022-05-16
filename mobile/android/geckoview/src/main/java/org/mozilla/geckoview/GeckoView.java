@@ -23,6 +23,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.DisplayCutout;
@@ -49,7 +50,6 @@ import androidx.annotation.UiThread;
 import androidx.core.view.ViewCompat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Objects;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.InputMethods;
@@ -272,12 +272,7 @@ public class GeckoView extends FrameLayout {
       mSelectionActionDelegate = new BasicSelectionActionDelegate(activity);
     }
 
-    if (Build.VERSION.SDK_INT >= 26) {
-      mAutofillDelegate = new AndroidAutofillDelegate();
-    } else {
-      // We don't support Autofill on SDK < 26
-      mAutofillDelegate = new Autofill.Delegate() {};
-    }
+    mAutofillDelegate = new AndroidAutofillDelegate();
   }
 
   /**
@@ -920,26 +915,10 @@ public class GeckoView extends FrameLayout {
     return mAutofillEnabled;
   }
 
-  @TargetApi(26)
   private class AndroidAutofillDelegate implements Autofill.Delegate {
-    AutofillManager mAutofillManager;
-    boolean mDisabled = false;
-
-    private void ensureAutofillManager() {
-      if (mDisabled || mAutofillManager != null) {
-        // Nothing to do
-        return;
-      }
-
-      mAutofillManager = GeckoView.this.getContext().getSystemService(AutofillManager.class);
-      if (mAutofillManager == null) {
-        // If we can't get a reference to the autofill manager, we cannot run the autofill service
-        mDisabled = true;
-      }
-    }
 
     private Rect displayRectForId(
-        @NonNull final GeckoSession session, @Nullable final Autofill.Node node) {
+        @NonNull final GeckoSession session, @NonNull final Autofill.Node node) {
       if (node == null) {
         return new Rect(0, 0, 0, 0);
       }
@@ -955,95 +934,43 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public void onNodeBlur(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node prev,
-        @NonNull Autofill.NodeData data) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        mAutofillManager.notifyViewExited(GeckoView.this, data.getId());
-      }
-    }
-
-    @Override
-    public void onNodeAdd(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node node,
-        @NonNull Autofill.NodeData data) {
-      if (!mSession.getAutofillSession().isVisible(node)) {
+    public void onAutofill(
+        @NonNull final GeckoSession session, final int notification, final Autofill.Node node) {
+      ThreadUtils.assertOnUiThread();
+      if (Build.VERSION.SDK_INT < 26) {
         return;
       }
-      final Autofill.Node focused = mSession.getAutofillSession().getFocused();
-      // We must have a focused node because |node| is visible
-      Objects.requireNonNull(focused);
 
-      final Autofill.NodeData focusedData = mSession.getAutofillSession().dataFor(focused);
-      Objects.requireNonNull(focusedData);
-
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        mAutofillManager.notifyViewExited(GeckoView.this, focusedData.getId());
-        mAutofillManager.notifyViewEntered(
-            GeckoView.this, focusedData.getId(), displayRectForId(session, focused));
+      final AutofillManager manager =
+          GeckoView.this.getContext().getSystemService(AutofillManager.class);
+      if (manager == null) {
+        return;
       }
-    }
 
-    @Override
-    public void onNodeFocus(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node focused,
-        @NonNull Autofill.NodeData data) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        mAutofillManager.notifyViewEntered(
-            GeckoView.this, data.getId(), displayRectForId(session, focused));
-      }
-    }
-
-    @Override
-    public void onNodeRemove(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node node,
-        @NonNull Autofill.NodeData data) {}
-
-    @Override
-    public void onNodeUpdate(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node node,
-        @NonNull Autofill.NodeData data) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        mAutofillManager.notifyValueChanged(
-            GeckoView.this, data.getId(), AutofillValue.forText(data.getValue()));
-      }
-    }
-
-    @Override
-    public void onSessionCancel(@NonNull GeckoSession session) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        // This line seems necessary for auto-fill to work on the initial page.
-        mAutofillManager.cancel();
-      }
-    }
-
-    @Override
-    public void onSessionCommit(
-        @NonNull GeckoSession session,
-        @NonNull Autofill.Node node,
-        @NonNull Autofill.NodeData data) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        mAutofillManager.commit();
-      }
-    }
-
-    @Override
-    public void onSessionStart(@NonNull GeckoSession session) {
-      ensureAutofillManager();
-      if (mAutofillManager != null) {
-        // This line seems necessary for auto-fill to work on the initial page.
-        mAutofillManager.cancel();
+      try {
+        switch (notification) {
+          case Autofill.Notify.SESSION_STARTED:
+            // This line seems necessary for auto-fill to work on the initial page.
+          case Autofill.Notify.SESSION_CANCELED:
+            manager.cancel();
+            break;
+          case Autofill.Notify.SESSION_COMMITTED:
+            manager.commit();
+            break;
+          case Autofill.Notify.NODE_FOCUSED:
+            manager.notifyViewEntered(
+                GeckoView.this, node.getId(), displayRectForId(session, node));
+            break;
+          case Autofill.Notify.NODE_BLURRED:
+            manager.notifyViewExited(GeckoView.this, node.getId());
+            break;
+          case Autofill.Notify.NODE_UPDATED:
+            manager.notifyValueChanged(
+                GeckoView.this, node.getId(), AutofillValue.forText(node.getValue()));
+            break;
+        }
+      } catch (final SecurityException e) {
+        Log.e(LOGTAG, "Failed to call Autofill Manager API: ", e);
       }
     }
   }
