@@ -4934,6 +4934,76 @@ TEST_F(WebRtcVideoChannelTest, SetRecvCodecsWithChangedRtxPayloadType) {
   EXPECT_EQ(kRtxSsrcs1[0], config_after.rtp.rtx_ssrc);
 }
 
+TEST_F(WebRtcVideoChannelTest, SetRecvCodecsRtxWithRtxTime) {
+  const int kUnusedPayloadType1 = 126;
+  const int kUnusedPayloadType2 = 127;
+  EXPECT_FALSE(FindCodecById(engine_.recv_codecs(), kUnusedPayloadType1));
+  EXPECT_FALSE(FindCodecById(engine_.recv_codecs(), kUnusedPayloadType2));
+
+  // SSRCs for RTX.
+  cricket::StreamParams params =
+      cricket::StreamParams::CreateLegacy(kSsrcs1[0]);
+  params.AddFidSsrc(kSsrcs1[0], kRtxSsrcs1[0]);
+  AddRecvStream(params);
+
+  // Payload type for RTX.
+  cricket::VideoRecvParameters parameters;
+  parameters.codecs.push_back(GetEngineCodec("VP8"));
+  cricket::VideoCodec rtx_codec(kUnusedPayloadType1, "rtx");
+  rtx_codec.SetParam("apt", GetEngineCodec("VP8").id);
+  parameters.codecs.push_back(rtx_codec);
+  EXPECT_TRUE(channel_->SetRecvParameters(parameters));
+  ASSERT_EQ(1U, fake_call_->GetVideoReceiveStreams().size());
+  const webrtc::VideoReceiveStream::Config& config =
+      fake_call_->GetVideoReceiveStreams()[0]->GetConfig();
+
+  const int kRtxTime = 343;
+  // Assert that the default value is different from the ones we test
+  // and store the default value.
+  EXPECT_NE(config.rtp.nack.rtp_history_ms, kRtxTime);
+  int default_history_ms = config.rtp.nack.rtp_history_ms;
+
+  // Set rtx-time.
+  parameters.codecs[1].SetParam(kCodecParamRtxTime, kRtxTime);
+  EXPECT_TRUE(channel_->SetRecvParameters(parameters));
+  EXPECT_EQ(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            kRtxTime);
+
+  // Negative values are ignored so the default value applies.
+  parameters.codecs[1].SetParam(kCodecParamRtxTime, -1);
+  EXPECT_TRUE(channel_->SetRecvParameters(parameters));
+  EXPECT_NE(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            -1);
+  EXPECT_EQ(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            default_history_ms);
+
+  // 0 is ignored so the default applies.
+  parameters.codecs[1].SetParam(kCodecParamRtxTime, 0);
+  EXPECT_TRUE(channel_->SetRecvParameters(parameters));
+  EXPECT_NE(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            0);
+  EXPECT_EQ(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            default_history_ms);
+
+  // Values larger than the default are clamped to the default.
+  parameters.codecs[1].SetParam(kCodecParamRtxTime, default_history_ms + 100);
+  EXPECT_TRUE(channel_->SetRecvParameters(parameters));
+  EXPECT_EQ(fake_call_->GetVideoReceiveStreams()[0]
+                ->GetConfig()
+                .rtp.nack.rtp_history_ms,
+            default_history_ms);
+}
+
 TEST_F(WebRtcVideoChannelTest, SetRecvCodecsDifferentPayloadType) {
   cricket::VideoRecvParameters parameters;
   parameters.codecs.push_back(GetEngineCodec("VP8"));

@@ -32,7 +32,6 @@ extern const float kHighSystemCpuThreshold;
 extern const float kLowSystemCpuThreshold;
 extern const float kProcessCpuThreshold;
 
-extern const char kRtxCodecName[];
 extern const char kRedCodecName[];
 extern const char kUlpfecCodecName[];
 extern const char kFlexfecCodecName[];
@@ -40,8 +39,10 @@ extern const char kMultiplexCodecName[];
 
 extern const char kFlexfecFmtpRepairWindow[];
 
-// Codec parameters
+extern const char kRtxCodecName[];
+extern const char kCodecParamRtxTime[];
 extern const char kCodecParamAssociatedPayloadType[];
+
 extern const char kCodecParamAssociatedCodecName[];
 
 extern const char kOpusCodecName[];

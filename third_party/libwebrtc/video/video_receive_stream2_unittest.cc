@@ -482,7 +482,8 @@ TEST_F(VideoReceiveStream2TestWithFakeDecoder,
   video_receive_stream_->Stop();
 }
 
-class VideoReceiveStream2TestWithSimulatedClock : public ::testing::Test {
+class VideoReceiveStream2TestWithSimulatedClock
+    : public ::testing::TestWithParam<int> {
  public:
   class FakeDecoder2 : public test::FakeDecoder {
    public:
@@ -509,6 +510,7 @@ class VideoReceiveStream2TestWithSimulatedClock : public ::testing::Test {
     VideoReceiveStream::Config config(transport);
     config.rtp.remote_ssrc = 1111;
     config.rtp.local_ssrc = 2222;
+    config.rtp.nack.rtp_history_ms = GetParam();  // rtx-time.
     config.renderer = renderer;
     config.decoder_factory = decoder_factory;
     VideoReceiveStream::Decoder fake_decoder;
@@ -566,10 +568,9 @@ class VideoReceiveStream2TestWithSimulatedClock : public ::testing::Test {
   std::unique_ptr<rtc::Event> event_;
 };
 
-TEST_F(VideoReceiveStream2TestWithSimulatedClock,
+TEST_P(VideoReceiveStream2TestWithSimulatedClock,
        RequestsKeyFramesUntilKeyFrameReceived) {
-  auto tick = TimeDelta::Millis(
-      internal::VideoReceiveStream2::kMaxWaitForKeyFrameMs / 2);
+  auto tick = TimeDelta::Millis(GetParam() / 2);
   EXPECT_CALL(mock_transport_, SendRtcp).Times(1).WillOnce(Invoke([this]() {
     loop_.Quit();
     return 0;
@@ -581,7 +582,8 @@ TEST_F(VideoReceiveStream2TestWithSimulatedClock,
   loop_.Run();
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
-  // T+200ms: still no key frame received, expect key frame request sent again.
+  // T+keyframetimeout: still no key frame received, expect key frame request
+  // sent again.
   EXPECT_CALL(mock_transport_, SendRtcp).Times(1).WillOnce(Invoke([this]() {
     loop_.Quit();
     return 0;
@@ -591,8 +593,8 @@ TEST_F(VideoReceiveStream2TestWithSimulatedClock,
   loop_.Run();
   testing::Mock::VerifyAndClearExpectations(&mock_transport_);
 
-  // T+200ms: now send a key frame - we should not observe new key frame
-  // requests after this.
+  // T+keyframetimeout: now send a key frame - we should not observe new key
+  // frame requests after this.
   EXPECT_CALL(mock_transport_, SendRtcp).Times(0);
   PassEncodedFrameAndWait(MakeFrame(VideoFrameType::kVideoFrameKey, 3));
   time_controller_.AdvanceTime(2 * tick);
@@ -600,6 +602,12 @@ TEST_F(VideoReceiveStream2TestWithSimulatedClock,
   loop_.PostTask([this]() { loop_.Quit(); });
   loop_.Run();
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    RtxTime,
+    VideoReceiveStream2TestWithSimulatedClock,
+    ::testing::Values(internal::VideoReceiveStream2::kMaxWaitForKeyFrameMs,
+                      50 /*ms*/));
 
 class VideoReceiveStream2TestWithLazyDecoderCreation : public ::testing::Test {
  public:
