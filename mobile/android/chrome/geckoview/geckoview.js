@@ -635,6 +635,7 @@ function startup() {
     {
       name: "GeckoViewSelectionAction",
       onEnable: {
+        resource: "resource://gre/modules/GeckoViewSelectionAction.jsm",
         actors: {
           SelectionActionDelegate: {
             parent: {
