@@ -286,21 +286,6 @@ class SctpTransport : public SctpTransportInternal,
   RTC_DISALLOW_COPY_AND_ASSIGN(SctpTransport);
 };
 
-class SctpTransportFactory : public webrtc::SctpTransportFactoryInterface {
- public:
-  explicit SctpTransportFactory(rtc::Thread* network_thread)
-      : network_thread_(network_thread) {}
-
-  std::unique_ptr<SctpTransportInternal> CreateSctpTransport(
-      rtc::PacketTransportInternal* transport) override {
-    return std::unique_ptr<SctpTransportInternal>(
-        new SctpTransport(network_thread_, transport));
-  }
-
- private:
-  rtc::Thread* network_thread_;
-};
-
 class SctpTransportMap;
 
 }  // namespace cricket

@@ -16,6 +16,7 @@
 
 #include "api/transport/field_trial_based_config.h"
 #include "media/base/rtp_data_engine.h"
+#include "media/sctp/sctp_transport_factory.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/to_queued_task.h"

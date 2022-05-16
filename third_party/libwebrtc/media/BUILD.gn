@@ -422,6 +422,8 @@ rtc_library("rtc_data") {
     sources = [
       "sctp/sctp_transport.cc",
       "sctp/sctp_transport.h",
+      "sctp/sctp_transport_factory.cc",
+      "sctp/sctp_transport_factory.h",
       "sctp/sctp_transport_internal.h",
     ]
   } else {
