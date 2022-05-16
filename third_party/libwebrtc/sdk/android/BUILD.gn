@@ -262,6 +262,7 @@ if (is_android) {
   rtc_android_library("peerconnection_java") {
     visibility = [ "*" ]
     sources = [
+      "api/org/webrtc/AddIceObserver.java",
       "api/org/webrtc/AudioProcessingFactory.java",
       "api/org/webrtc/AudioSource.java",
       "api/org/webrtc/AudioTrack.java",
@@ -692,6 +693,8 @@ if (current_os == "linux" || is_android) {
     visibility = [ "*" ]
 
     sources = [
+      "src/jni/pc/add_ice_candidate_observer.cc",
+      "src/jni/pc/add_ice_candidate_observer.h",
       "src/jni/pc/android_network_monitor.h",
       "src/jni/pc/audio_track.cc",
       "src/jni/pc/call_session_file_rotating_log_sink.cc",
@@ -1264,6 +1267,7 @@ if (current_os == "linux" || is_android) {
 
   generate_jni("generated_peerconnection_jni") {
     sources = [
+      "api/org/webrtc/AddIceObserver.java",
       "api/org/webrtc/AudioTrack.java",
       "api/org/webrtc/CallSessionFileRotatingLogSink.java",
       "api/org/webrtc/CandidatePairChangeEvent.java",

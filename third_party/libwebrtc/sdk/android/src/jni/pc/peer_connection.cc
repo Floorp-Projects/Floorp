@@ -44,6 +44,7 @@
 #include "sdk/android/generated_peerconnection_jni/PeerConnection_jni.h"
 #include "sdk/android/native_api/jni/java_types.h"
 #include "sdk/android/src/jni/jni_helpers.h"
+#include "sdk/android/src/jni/pc/add_ice_candidate_observer.h"
 #include "sdk/android/src/jni/pc/crypto_options.h"
 #include "sdk/android/src/jni/pc/data_channel.h"
 #include "sdk/android/src/jni/pc/ice_candidate.h"
@@ -649,6 +650,25 @@ static jboolean JNI_PeerConnection_AddIceCandidate(
   std::unique_ptr<IceCandidateInterface> candidate(
       CreateIceCandidate(sdp_mid, j_sdp_mline_index, sdp, nullptr));
   return ExtractNativePC(jni, j_pc)->AddIceCandidate(candidate.get());
+}
+
+static void JNI_PeerConnection_AddIceCandidateWithObserver(
+    JNIEnv* jni,
+    const JavaParamRef<jobject>& j_pc,
+    const JavaParamRef<jstring>& j_sdp_mid,
+    jint j_sdp_mline_index,
+    const JavaParamRef<jstring>& j_candidate_sdp,
+    const JavaParamRef<jobject>& j_observer) {
+  std::string sdp_mid = JavaToNativeString(jni, j_sdp_mid);
+  std::string sdp = JavaToNativeString(jni, j_candidate_sdp);
+  std::unique_ptr<IceCandidateInterface> candidate(
+      CreateIceCandidate(sdp_mid, j_sdp_mline_index, sdp, nullptr));
+
+  rtc::scoped_refptr<AddIceCandidateObserverJni> observer(
+      new AddIceCandidateObserverJni(jni, j_observer));
+  ExtractNativePC(jni, j_pc)->AddIceCandidate(
+      std::move(candidate),
+      [observer](RTCError error) { observer->OnComplete(error); });
 }
 
 static jboolean JNI_PeerConnection_RemoveIceCandidates(
