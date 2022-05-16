@@ -944,12 +944,9 @@ bitflags! {
     #[repr(C)]
     #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
     pub struct StackingContextFlags: u8 {
-        /// If true, this stacking context represents a backdrop root, per the CSS
-        /// filter-effects specification (see https://drafts.fxtf.org/filter-effects-2/#BackdropRoot).
-        const IS_BACKDROP_ROOT = 1 << 0;
         /// If true, this stacking context is a blend container than contains
         /// mix-blend-mode children (and should thus be isolated).
-        const IS_BLEND_CONTAINER = 1 << 1;
+        const IS_BLEND_CONTAINER = 1 << 0;
     }
 }
 
