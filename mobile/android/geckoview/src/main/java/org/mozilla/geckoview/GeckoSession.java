@@ -831,6 +831,7 @@ public class GeckoSession {
             final String event,
             final GeckoBundle message,
             final EventCallback callback) {
+          Log.d(LOGTAG, "handleMessage: " + event);
           if (delegate == null) {
             callback.sendSuccess(/* granted */ false);
             return;
