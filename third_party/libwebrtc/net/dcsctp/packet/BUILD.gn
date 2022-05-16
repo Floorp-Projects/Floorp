@@ -198,6 +198,21 @@ rtc_library("chunk") {
   ]
 }
 
+rtc_library("sctp_packet") {
+  deps = [
+    ":crc32c",
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+    "../public:types",
+  ]
+  sources = [
+    "sctp_packet.cc",
+    "sctp_packet.h",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_library("dcsctp_packet_unittests") {
     testonly = true
@@ -208,6 +223,7 @@ if (rtc_include_tests) {
       ":crc32c",
       ":error_cause",
       ":parameter",
+      ":sctp_packet",
       ":tlv_trait",
       "../../../api:array_view",
       "../../../rtc_base:checks",
@@ -258,6 +274,7 @@ if (rtc_include_tests) {
       "parameter/ssn_tsn_reset_request_parameter_test.cc",
       "parameter/state_cookie_parameter_test.cc",
       "parameter/supported_extensions_parameter_test.cc",
+      "sctp_packet_test.cc",
       "tlv_trait_test.cc",
     ]
   }
