@@ -133,16 +133,6 @@ class BaseChannel : public ChannelInterface,
     return rtp_transport_ && rtp_transport_->IsSrtpActive();
   }
 
-  // Version of the above that can be called from any thread.
-  bool SrtpActiveForTesting() const {
-    if (!network_thread_->IsCurrent()) {
-      return network_thread_->Invoke<bool>(RTC_FROM_HERE,
-                                           [this] { return srtp_active(); });
-    }
-    RTC_DCHECK_RUN_ON(network_thread());
-    return srtp_active();
-  }
-
   // Set an RTP level transport which could be an RtpTransport without
   // encryption, an SrtpTransport for SDES or a DtlsSrtpTransport for DTLS-SRTP.
   // This can be called from any thread and it hops to the network thread
@@ -152,16 +142,6 @@ class BaseChannel : public ChannelInterface,
   webrtc::RtpTransportInternal* rtp_transport() const {
     RTC_DCHECK_RUN_ON(network_thread());
     return rtp_transport_;
-  }
-
-  // Version of the above that can be called from any thread.
-  webrtc::RtpTransportInternal* RtpTransportForTesting() const {
-    if (!network_thread_->IsCurrent()) {
-      return network_thread_->Invoke<webrtc::RtpTransportInternal*>(
-          RTC_FROM_HERE, [this] { return rtp_transport(); });
-    }
-    RTC_DCHECK_RUN_ON(network_thread());
-    return rtp_transport();
   }
 
   // Channel control
@@ -206,12 +186,6 @@ class BaseChannel : public ChannelInterface,
 
   // RtpPacketSinkInterface overrides.
   void OnRtpPacket(const webrtc::RtpPacketReceived& packet) override;
-
-  // Used by the RTCStatsCollector tests to set the transport name without
-  // creating RtpTransports.
-  void set_transport_name_for_testing(const std::string& transport_name) {
-    transport_name_ = transport_name;
-  }
 
   MediaChannel* media_channel() const override {
     return media_channel_.get();
