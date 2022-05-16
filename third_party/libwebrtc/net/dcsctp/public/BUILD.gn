@@ -23,10 +23,10 @@ rtc_source_set("types") {
 
 rtc_source_set("socket") {
   deps = [
-    "//api:array_view",
-    "//rtc_base",
-    "//rtc_base:checks",
-    "//rtc_base:rtc_base_approved",
+    "../../../api:array_view",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
   ]
   sources = [
     "dcsctp_socket.h",
