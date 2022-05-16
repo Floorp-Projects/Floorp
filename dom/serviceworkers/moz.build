@@ -48,7 +48,6 @@ UNIFIED_SOURCES += [
     "FetchEventOpProxyChild.cpp",
     "FetchEventOpProxyParent.cpp",
     "NavigationPreloadManager.cpp",
-    "RemoteServiceWorkerImpl.cpp",
     "ServiceWorker.cpp",
     "ServiceWorkerActors.cpp",
     "ServiceWorkerChild.cpp",
