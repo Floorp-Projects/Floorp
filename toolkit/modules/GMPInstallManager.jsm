@@ -318,7 +318,7 @@ GMPInstallManager.prototype = {
     // will be done instead of the older cert pinning method.
     let checkContentSignature = GMPPrefs.getBool(
       GMPPrefs.KEY_CHECK_CONTENT_SIGNATURE,
-      false
+      true
     );
 
     let allowNonBuiltIn = true;
