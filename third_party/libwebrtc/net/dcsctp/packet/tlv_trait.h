@@ -105,7 +105,7 @@ class TLVTrait {
       }
     } else {
       // Expect variable length data - verify its size alignment.
-      if (length > data.size()) {
+      if (length > data.size() || length < Config::kHeaderSize) {
         tlv_trait_impl::ReportInvalidVariableLengthField(length, data.size());
         return absl::nullopt;
       }
