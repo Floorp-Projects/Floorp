@@ -36,6 +36,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 public class Autofill {
   private static final boolean DEBUG = false;
 
+  @Deprecated
+  @DeprecationSchedule(id = "autofill-node", version = 104)
   public static final class Notify {
     private Notify() {}
 
@@ -215,6 +217,27 @@ public class Autofill {
       }
     }
 
+    public String getValue(@NonNull final Node node) {
+      return node.getValue();
+    }
+
+    public int getId(final @NonNull Node node) {
+      return node.getId();
+    }
+
+    public boolean isVisible(final @NonNull Node node) {
+      return node.getVisible();
+    }
+
+    public Node getFocused() {
+      return getNode(mFocusedId);
+    }
+
+    /* package */ AutofillNode autofillNode(@NonNull final int id) {
+      final Node node = getNode(id);
+      return new AutofillNode(node.mId, node.getValue(), node.getDimensions(), node.getVisible());
+    }
+
     /* package */ void setFocus(final int id, final int rootId) {
       mFocusedId = id;
       mFocusedRootId = rootId;
@@ -222,6 +245,17 @@ public class Autofill {
 
     /* package */ int getFocusedId() {
       return mFocusedId;
+    }
+
+    /**
+     * Returns the currently focused node data.
+     *
+     * @return a refernce to {@link NodeData} or null if no node is focused.
+     */
+    @UiThread
+    public @Nullable NodeData getFocusedData() {
+      final Node focused = getNode(getFocusedId());
+      return focused != null ? dataFor(focused) : null;
     }
 
     /* package */ int getFocusedRootId() {
@@ -316,6 +350,8 @@ public class Autofill {
      * @return The unique ID of this node.
      */
     @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     public int getId() {
       return mId;
     }
@@ -382,6 +418,8 @@ public class Autofill {
      * @return True if this node is visible, false otherwise.
      */
     @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     public boolean getVisible() {
       final int focusedId = getAutofillSession().getFocusedId();
       final int focusedRootId = getAutofillSession().getFocusedRootId();
@@ -497,6 +535,8 @@ public class Autofill {
      * @return True if this node is focused, false otherwise.
      */
     @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     public boolean getFocused() {
       return getId() != View.NO_ID && getAutofillSession().getFocusedId() == getId();
     }
@@ -571,6 +611,8 @@ public class Autofill {
      * @return The value of this node.
      */
     @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     public @NonNull String getValue() {
       return mValue;
     }
@@ -968,10 +1010,47 @@ public class Autofill {
      * @param node The target node for this event, or null for {@link Notify#SESSION_CANCELED}.
      */
     @UiThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     default void onAutofill(
         @NonNull final GeckoSession session,
         @AutofillNotify final int notification,
         @Nullable final Node node) {}
+
+    /** An autofill session has started. Usually triggered by page load. */
+    default void onSessionStart(@NonNull final GeckoSession session) {}
+    /** An autofill session has been committed. Triggered by form submission or navigation. */
+    default void onSessionCommit(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /** An autofill session has been canceled. Triggered by page unload. */
+    default void onSessionCancel(@NonNull final GeckoSession session) {}
+    /** A node within the autofill session has been added. */
+    default void onNodeAdd(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /** A node within the autofill session has been removed. */
+    default void onNodeRemove(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /** A node within the autofill session has been updated. */
+    default void onNodeUpdate(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /** A node within the autofill session has gained focus. */
+    default void onNodeFocus(
+        @NonNull final GeckoSession session,
+        @NonNull final Node focused,
+        @NonNull final NodeData data) {}
+    /** A node within the autofill session has lost focus. */
+    default void onNodeBlur(
+        @NonNull final GeckoSession session,
+        @NonNull final Node prev,
+        @NonNull final NodeData data) {}
   }
 
   /* package */ static final class Support implements BundleEventListener {
@@ -1105,18 +1184,16 @@ public class Autofill {
         getAutofillSession().clear();
       }
 
-      final Node node = new Node.Builder(getAutofillSession(), message).build();
+      final Session session = getAutofillSession();
+      final Node node = new Node.Builder(session, message).build();
       node.setCallback(callback);
       getAutofillSession().addNode(node);
-      maybeDispatch(initializing ? Notify.SESSION_STARTED : Notify.NODE_ADDED, node);
-    }
-
-    private void maybeDispatch(final @AutofillNotify int notification, final Node node) {
-      if (mDelegate == null) {
-        return;
+      if (mDelegate != null) {
+        if (initializing) {
+          mDelegate.onSessionStart(mGeckoSession);
+        }
+        mDelegate.onNodeAdd(mGeckoSession, session.autofillNode(node));
       }
-
-      mDelegate.onAutofill(mGeckoSession, notification, node);
     }
 
     /* package */ void commit(@Nullable final GeckoBundle message) {
@@ -1131,7 +1208,10 @@ public class Autofill {
         Log.d(LOGTAG, "commit(" + id + ")");
       }
 
-      maybeDispatch(Notify.SESSION_COMMITTED, getAutofillSession().getNode(id));
+      final Node node = getAutofillSession().getNode(id);
+      if (mDelegate != null) {
+        mDelegate.onSessionCommit(mGeckoSession, node, getAutofillSession().dataFor(node));
+      }
     }
 
     /* package */ void update(@Nullable final GeckoBundle message) {
@@ -1159,7 +1239,9 @@ public class Autofill {
       }
 
       node.setValue(value);
-      maybeDispatch(Notify.NODE_UPDATED, node);
+      if (mDelegate != null) {
+        mDelegate.onNodeUpdate(mGeckoSession, node, getAutofillSession().dataFor(node));
+      }
     }
 
     /* package */ void clear() {
@@ -1172,23 +1254,26 @@ public class Autofill {
       }
 
       getAutofillSession().clear();
-      maybeDispatch(Notify.SESSION_CANCELED, null);
+      if (mDelegate != null) {
+        mDelegate.onSessionCancel(mGeckoSession);
+      }
     }
 
     /* package */ void onFocusChanged(@Nullable final GeckoBundle message) {
-      if (getAutofillSession().isEmpty()) {
+      final Session session = getAutofillSession();
+      if (session.isEmpty()) {
         return;
       }
 
-      final int prevId = getAutofillSession().getFocusedId();
+      final int prevId = session.getFocusedId();
       final int id;
       final int root;
 
       if (message != null) {
         final String uuid = message.getString("uuid");
-        id = getAutofillSession().getIdFromUuid(uuid);
+        id = session.getIdFromUuid(uuid);
         final String rootUuid = message.getString("rootUuid");
-        root = getAutofillSession().getIdFromUuid(rootUuid);
+        root = session.getIdFromUuid(rootUuid);
       } else {
         id = root = View.NO_ID;
       }
@@ -1201,14 +1286,15 @@ public class Autofill {
         return;
       }
 
-      getAutofillSession().setFocus(id, root);
+      session.setFocus(id, root);
 
-      if (prevId != View.NO_ID) {
-        maybeDispatch(Notify.NODE_BLURRED, getAutofillSession().getNode(prevId));
-      }
-
-      if (id != View.NO_ID) {
-        maybeDispatch(Notify.NODE_FOCUSED, getAutofillSession().getNode(id));
+      if (mDelegate != null) {
+        if (prev != null) {
+          mDelegate.onNodeBlur(mGeckoSession, prev, getAutofillSession().dataFor(prev));
+        }
+        if (uuid != null) {
+          mDelegate.onNodeFocus(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        }
       }
     }
 
@@ -1238,9 +1324,13 @@ public class Autofill {
         return;
       }
 
-      maybeDispatch(
-          active ? Notify.NODE_FOCUSED : Notify.NODE_BLURRED,
-          getAutofillSession().getNode(focusedId));
+      if (mDelegate != null) {
+        if (active) {
+          mDelegate.onNodeFocus(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        } else {
+          mDelegate.onNodeBlur(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        }
+      }
     }
   }
 }
