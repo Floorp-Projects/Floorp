@@ -32,7 +32,7 @@ constexpr TimeDelta kMinTimeBetweenStatsUpdates = TimeDelta::Millis(1);
 
 TaskQueuePacedSender::TaskQueuePacedSender(
     Clock* clock,
-    PacketRouter* packet_router,
+    PacingController::PacketSender* packet_sender,
     RtcEventLog* event_log,
     const WebRtcKeyValueConfig* field_trials,
     TaskQueueFactory* task_queue_factory,
@@ -40,7 +40,7 @@ TaskQueuePacedSender::TaskQueuePacedSender(
     : clock_(clock),
       hold_back_window_(hold_back_window),
       pacing_controller_(clock,
-                         packet_router,
+                         packet_sender,
                          event_log,
                          field_trials,
                          PacingController::ProcessMode::kDynamic),
