@@ -4629,8 +4629,6 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   }
   voice_channel->SignalSentPacket().connect(pc_,
                                             &PeerConnection::OnSentPacket_w);
-  voice_channel->SetRtpTransport(rtp_transport);
-
   return voice_channel;
 }
 
@@ -4654,8 +4652,6 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   }
   video_channel->SignalSentPacket().connect(pc_,
                                             &PeerConnection::OnSentPacket_w);
-  video_channel->SetRtpTransport(rtp_transport);
-
   return video_channel;
 }
 
@@ -4688,8 +4684,6 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
       }
       data_channel_controller()->rtp_data_channel()->SignalSentPacket().connect(
           pc_, &PeerConnection::OnSentPacket_w);
-      data_channel_controller()->rtp_data_channel()->SetRtpTransport(
-          rtp_transport);
       have_pending_rtp_data_channel_ = true;
       return true;
   }

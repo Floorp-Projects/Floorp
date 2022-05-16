@@ -1276,11 +1276,11 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
     new_rtp_transport_ = CreateDtlsSrtpTransport(
         fake_rtp_dtls_transport2_.get(), fake_rtcp_dtls_transport2_.get());
-    channel1_->SetRtpTransport(new_rtp_transport_.get());
 
     bool rcv_success, send_success;
     int rcv_buf, send_buf;
     network_thread_->Invoke<void>(RTC_FROM_HERE, [&] {
+      channel1_->SetRtpTransport(new_rtp_transport_.get());
       send_success = fake_rtp_dtls_transport2_->GetOption(
           rtc::Socket::Option::OPT_SNDBUF, &send_buf);
       rcv_success = fake_rtp_dtls_transport2_->GetOption(

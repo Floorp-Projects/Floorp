@@ -434,7 +434,6 @@ class VoiceChannel : public BaseChannel {
   cricket::MediaType media_type() const override {
     return cricket::MEDIA_TYPE_AUDIO;
   }
-  void Init_w(webrtc::RtpTransportInternal* rtp_transport) override;
 
  private:
   // overrides from BaseChannel
