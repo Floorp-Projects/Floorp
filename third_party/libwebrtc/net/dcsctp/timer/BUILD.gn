@@ -1,0 +1,41 @@
+# Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+rtc_library("timer") {
+  deps = [
+    "../public:types",
+    "//api:array_view",
+    "//rtc_base",
+    "//rtc_base:checks",
+    "//rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "fake_timeout.h",
+    "timer.cc",
+    "timer.h",
+  ]
+}
+
+if (rtc_include_tests) {
+  rtc_library("dcsctp_timer_unittests") {
+    testonly = true
+
+    defines = []
+    deps = [
+      ":timer",
+      "//api:array_view",
+      "//rtc_base:checks",
+      "//rtc_base:gunit_helpers",
+      "//rtc_base:rtc_base_approved",
+      "//test:test_support",
+    ]
+    sources = [ "timer_test.cc" ]
+  }
+}
