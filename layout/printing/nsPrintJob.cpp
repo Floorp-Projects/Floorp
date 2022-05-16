@@ -45,7 +45,6 @@
 // Print Options
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIPrintSession.h"
 #include "nsGkAtoms.h"
 #include "nsXPCOM.h"
 
@@ -494,6 +493,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   if (aWebProgressListener) {
     printData->mPrintProgressListeners.AppendObject(aWebProgressListener);
   }
+  if (mRemotePrintJob) {
+    // If we have a RemotePrintJob add it to the print progress listeners,
+    // so it can forward to the parent.
+    printData->mPrintProgressListeners.AppendElement(mRemotePrintJob);
+  }
 
   // Get the docshell for this documentviewer
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell, &rv));
@@ -537,26 +541,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
   MOZ_TRY(EnsureSettingsHasPrinterNameSet(printData->mPrintSettings));
 
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
-
-  // Create a print session and let the print settings know about it.
-  // Don't overwrite an existing print session.
-  // The print settings hold an nsWeakPtr to the session so it does not
-  // need to be cleared from the settings at the end of the job.
-  // XXX What lifetime does the printSession need to have?
-  nsCOMPtr<nsIPrintSession> printSession;
-  if (!mIsCreatingPrintPreview) {
-    rv = printData->mPrintSettings->GetPrintSession(
-        getter_AddRefs(printSession));
-    if (NS_FAILED(rv) || !printSession) {
-      printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      printData->mPrintSettings->SetPrintSession(printSession);
-    } else if (mRemotePrintJob) {
-      // If we have a RemotePrintJob add it to the print progress listeners,
-      // so it can forward to the parent.
-      printData->mPrintProgressListeners.AppendElement(mRemotePrintJob);
-    }
-  }
 
   bool printingViaParent =
       XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
