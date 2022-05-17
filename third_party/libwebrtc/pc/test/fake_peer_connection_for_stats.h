@@ -328,21 +328,9 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
     return {};
   }
 
-  std::map<std::string, std::string> GetTransportNamesByMid() const override {
-    std::map<std::string, std::string> transport_names_by_mid;
-    if (voice_channel_) {
-      transport_names_by_mid[voice_channel_->content_name()] =
-          voice_channel_->transport_name();
-    }
-    if (video_channel_) {
-      transport_names_by_mid[video_channel_->content_name()] =
-          video_channel_->transport_name();
-    }
-    return transport_names_by_mid;
-  }
-
   std::map<std::string, cricket::TransportStats> GetTransportStatsByNames(
       const std::set<std::string>& transport_names) override {
+    RTC_DCHECK_RUN_ON(network_thread_);
     std::map<std::string, cricket::TransportStats> transport_stats_by_name;
     for (const std::string& transport_name : transport_names) {
       transport_stats_by_name[transport_name] =

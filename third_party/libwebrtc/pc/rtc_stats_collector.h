@@ -227,12 +227,13 @@ class RTCStatsCollector : public virtual rtc::RefCountInterface,
       const std::map<std::string, cricket::TransportStats>&
           transport_stats_by_name) const;
   // The results are stored in |transceiver_stats_infos_| and |call_stats_|.
-  void PrepareTransceiverStatsInfosAndCallStats_s_w();
-  std::set<std::string> PrepareTransportNames_s() const;
+  void PrepareTransceiverStatsInfosAndCallStats_s_w_n();
 
   // Stats gathering on a particular thread.
   void ProducePartialResultsOnSignalingThread(int64_t timestamp_us);
-  void ProducePartialResultsOnNetworkThread(int64_t timestamp_us);
+  void ProducePartialResultsOnNetworkThread(
+      int64_t timestamp_us,
+      absl::optional<std::string> sctp_transport_name);
   // Merges |network_report_| into |partial_report_| and completes the request.
   // This is a NO-OP if |network_report_| is null.
   void MergeNetworkReport_s();
@@ -266,12 +267,16 @@ class RTCStatsCollector : public virtual rtc::RefCountInterface,
   // has updated the value of |network_report_|.
   rtc::Event network_report_event_;
 
-  // Set in |GetStatsReport|, read in |ProducePartialResultsOnNetworkThread| and
-  // |ProducePartialResultsOnSignalingThread|, reset after work is complete. Not
-  // passed as arguments to avoid copies. This is thread safe - when we
-  // set/reset we know there are no pending stats requests in progress.
+  // Cleared and set in `PrepareTransceiverStatsInfosAndCallStats_s_w_n`,
+  // starting out on the signaling thread, then network. Later read on the
+  // network and signaling threads as part of collecting stats and finally
+  // reset when the work is done. Initially this variable was added and not
+  // passed around as an arguments to avoid copies. This is thread safe due to
+  // how operations are sequenced and we don't start the stats collection
+  // sequence if one is in progress. As a future improvement though, we could
+  // now get rid of the variable and keep the data scoped within a stats
+  // collection sequence.
   std::vector<RtpTransceiverStatsInfo> transceiver_stats_infos_;
-  std::set<std::string> transport_names_;
 
   Call::Stats call_stats_;
 

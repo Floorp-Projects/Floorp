@@ -124,7 +124,13 @@ class BaseChannel : public ChannelInterface,
   rtc::Thread* network_thread() const { return network_thread_; }
   const std::string& content_name() const override { return content_name_; }
   // TODO(deadbeef): This is redundant; remove this.
-  const std::string& transport_name() const override { return transport_name_; }
+  const std::string& transport_name() const override {
+    RTC_DCHECK_RUN_ON(network_thread());
+    if (rtp_transport_)
+      return rtp_transport_->transport_name();
+    // TODO(tommi): Delete this variable.
+    return transport_name_;
+  }
   bool enabled() const override { return enabled_; }
 
   // This function returns true if using SRTP (DTLS-based keying or SDES).
@@ -332,6 +338,9 @@ class BaseChannel : public ChannelInterface,
   // Won't be set when using raw packet transports. SDP-specific thing.
   // TODO(bugs.webrtc.org/12230): Written on network thread, read on
   // worker thread (at least).
+  // TODO(tommi): Remove this variable and instead use rtp_transport_ to
+  // return the transport name. This variable is currently required for
+  // "for_test" methods.
   std::string transport_name_;
 
   webrtc::RtpTransportInternal* rtp_transport_

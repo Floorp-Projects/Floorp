@@ -1197,19 +1197,19 @@ void RTCStatsCollector::GetStatsReportInternal(
     // Prepare |transceiver_stats_infos_| and |call_stats_| for use in
     // |ProducePartialResultsOnNetworkThread| and
     // |ProducePartialResultsOnSignalingThread|.
-    PrepareTransceiverStatsInfosAndCallStats_s_w();
-    // Prepare |transport_names_| for use in
-    // |ProducePartialResultsOnNetworkThread|.
-    transport_names_ = PrepareTransportNames_s();
-
+    PrepareTransceiverStatsInfosAndCallStats_s_w_n();
     // Don't touch |network_report_| on the signaling thread until
     // ProducePartialResultsOnNetworkThread() has signaled the
     // |network_report_event_|.
     network_report_event_.Reset();
     rtc::scoped_refptr<RTCStatsCollector> collector(this);
-    network_thread_->PostTask(RTC_FROM_HERE, [collector, timestamp_us] {
-      collector->ProducePartialResultsOnNetworkThread(timestamp_us);
-    });
+    network_thread_->PostTask(
+        RTC_FROM_HERE,
+        [collector, sctp_transport_name = pc_->sctp_transport_name(),
+         timestamp_us]() mutable {
+          collector->ProducePartialResultsOnNetworkThread(
+              timestamp_us, std::move(sctp_transport_name));
+        });
     ProducePartialResultsOnSignalingThread(timestamp_us);
   }
 }
@@ -1258,7 +1258,8 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
 }
 
 void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
-    int64_t timestamp_us) {
+    int64_t timestamp_us,
+    absl::optional<std::string> sctp_transport_name) {
   RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
@@ -1266,8 +1267,18 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
   // |network_report_event_| is reset before this method is invoked.
   network_report_ = RTCStatsReport::Create(timestamp_us);
 
+  std::set<std::string> transport_names;
+  if (sctp_transport_name) {
+    transport_names.emplace(std::move(*sctp_transport_name));
+  }
+
+  for (const auto& info : transceiver_stats_infos_) {
+    if (info.transport_name)
+      transport_names.insert(*info.transport_name);
+  }
+
   std::map<std::string, cricket::TransportStats> transport_stats_by_name =
-      pc_->GetTransportStatsByNames(transport_names_);
+      pc_->GetTransportStatsByNames(transport_names);
   std::map<std::string, CertificateStatsPair> transport_cert_stats =
       PrepareTransportCertificateStats_n(transport_stats_by_name);
 
@@ -2027,7 +2038,7 @@ RTCStatsCollector::PrepareTransportCertificateStats_n(
   return transport_cert_stats;
 }
 
-void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
+void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
 
   transceiver_stats_infos_.clear();
@@ -2040,20 +2051,26 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
            std::unique_ptr<cricket::VideoMediaInfo>>
       video_stats;
 
-  {
+  auto transceivers = pc_->GetTransceiversInternal();
+
+  // TODO(tommi): See if we can avoid synchronously blocking the signaling
+  // thread while we do this (or avoid the Invoke at all).
+  network_thread_->Invoke<void>(RTC_FROM_HERE, [this, &transceivers,
+                                                &voice_stats, &video_stats] {
     rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-    for (const auto& transceiver : pc_->GetTransceiversInternal()) {
+    for (const auto& transceiver_proxy : transceivers) {
+      RtpTransceiver* transceiver = transceiver_proxy->internal();
       cricket::MediaType media_type = transceiver->media_type();
 
       // Prepare stats entry. The TrackMediaInfoMap will be filled in after the
       // stats have been fetched on the worker thread.
       transceiver_stats_infos_.emplace_back();
       RtpTransceiverStatsInfo& stats = transceiver_stats_infos_.back();
-      stats.transceiver = transceiver->internal();
+      stats.transceiver = transceiver;
       stats.media_type = media_type;
 
-      cricket::ChannelInterface* channel = transceiver->internal()->channel();
+      cricket::ChannelInterface* channel = transceiver->channel();
       if (!channel) {
         // The remaining fields require a BaseChannel.
         continue;
@@ -2078,7 +2095,7 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
         RTC_NOTREACHED();
       }
     }
-  }
+  });
 
   // We jump to the worker thread and call GetStats() on each media channel as
   // well as GetCallStats(). At the same time we construct the
@@ -2135,23 +2152,6 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w() {
 
     call_stats_ = pc_->GetCallStats();
   });
-}
-
-std::set<std::string> RTCStatsCollector::PrepareTransportNames_s() const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-
-  std::set<std::string> transport_names;
-  for (const auto& transceiver : pc_->GetTransceiversInternal()) {
-    if (transceiver->internal()->channel()) {
-      transport_names.insert(
-          transceiver->internal()->channel()->transport_name());
-    }
-  }
-  if (pc_->sctp_transport_name()) {
-    transport_names.insert(*pc_->sctp_transport_name());
-  }
-  return transport_names;
 }
 
 void RTCStatsCollector::OnSctpDataChannelCreated(SctpDataChannel* channel) {
