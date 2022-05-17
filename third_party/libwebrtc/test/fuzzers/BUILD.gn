@@ -443,15 +443,6 @@ webrtc_fuzzer_test("stun_validator_fuzzer") {
   dict = "corpora/stun.tokens"
 }
 
-webrtc_fuzzer_test("mdns_parser_fuzzer") {
-  sources = [ "mdns_parser_fuzzer.cc" ]
-  deps = [
-    "../../p2p:rtc_p2p",
-    "../../rtc_base:rtc_base_approved",
-  ]
-  seed_corpus = "corpora/mdns-corpus"
-}
-
 webrtc_fuzzer_test("pseudotcp_parser_fuzzer") {
   sources = [ "pseudotcp_parser_fuzzer.cc" ]
   deps = [
