@@ -371,7 +371,10 @@ rtc_library("video_coding_utility") {
     "../../system_wrappers:field_trial",
     "../rtp_rtcp:rtp_rtcp_format",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("webrtc_h264") {
