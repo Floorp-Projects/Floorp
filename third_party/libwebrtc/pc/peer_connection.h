@@ -97,6 +97,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
+#include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
 
@@ -428,7 +429,8 @@ class PeerConnection : public PeerConnectionInternal,
   bool SetupDataChannelTransport_n(const std::string& mid)
       RTC_RUN_ON(network_thread());
   void TeardownDataChannelTransport_n() RTC_RUN_ON(network_thread());
-  cricket::ChannelInterface* GetChannel(const std::string& content_name);
+  cricket::ChannelInterface* GetChannel(const std::string& content_name)
+      RTC_RUN_ON(network_thread());
 
   // Functions made public for testing.
   void ReturnHistogramVeryQuicklyForTesting() {

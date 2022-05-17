@@ -41,13 +41,13 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/p2p_transport_channel.h"
 #include "p2p/base/transport_info.h"
+#include "pc/channel.h"
 #include "pc/ice_server_parsing.h"
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "pc/sctp_transport.h"
 #include "pc/simulcast_description.h"
 #include "pc/webrtc_session_description_factory.h"
-#include "rtc_base/callback_list.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ip_address.h"
 #include "rtc_base/location.h"
@@ -2084,8 +2084,7 @@ void PeerConnection::StopRtcEventLog_w() {
 
 cricket::ChannelInterface* PeerConnection::GetChannel(
     const std::string& content_name) {
-  RTC_DCHECK_RUN_ON(network_thread());
-  for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
+  for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
     if (channel && channel->content_name() == content_name) {
       return channel;
@@ -2636,7 +2635,7 @@ void PeerConnection::ReportTransportStats() {
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   std::map<std::string, std::set<cricket::MediaType>>
       media_types_by_transport_name;
-  for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
+  for (const auto& transceiver : rtp_manager()->transceivers()->UnsafeList()) {
     if (transceiver->internal()->channel()) {
       const std::string& transport_name =
           transceiver->internal()->channel()->transport_name();
