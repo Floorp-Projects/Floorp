@@ -1,5 +1,5 @@
 "use strict";
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 const SCRIPT = "var foo = 24;";
 const CSS = "body { background-color: green; }";

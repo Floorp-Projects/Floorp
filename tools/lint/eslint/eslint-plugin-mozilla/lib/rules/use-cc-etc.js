@@ -22,7 +22,6 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/use-cc-etc.html",
     },
     type: "suggestion",
-    fixable: "code",
   },
 
   create(context) {
@@ -34,17 +33,12 @@ module.exports = {
           node.property.type === "Identifier" &&
           Object.getOwnPropertyNames(componentsMap).includes(node.property.name)
         ) {
-          context.report({
+          context.report(
             node,
-            message: `Use ${
-              componentsMap[node.property.name]
-            } rather than Components.${node.property.name}`,
-            fix: fixer =>
-              fixer.replaceTextRange(
-                [node.range[0], node.range[1]],
-                componentsMap[node.property.name]
-              ),
-          });
+            `Use ${componentsMap[node.property.name]} rather than Components.${
+              node.property.name
+            }`
+          );
         }
       },
     };

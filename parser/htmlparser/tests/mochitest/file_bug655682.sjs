@@ -16,16 +16,26 @@ function handleRequest(request, response) {
     response.setHeader("Content-Type", "text/html; charset=utf-8", false);
     response.write("<table><tr><td>A</td>     ");
     response.bodyOutputStream.flush();
-    timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+      Components.interfaces.nsITimer
+    );
 
     callback = function() {
       if (getState("triggered") == "triggered") {
         response.write("<td>B</td></tr></table>");
         response.finish();
       } else {
-        timer.initWithCallback(callback, 10, Ci.nsITimer.TYPE_ONE_SHOT);
+        timer.initWithCallback(
+          callback,
+          10,
+          Components.interfaces.nsITimer.TYPE_ONE_SHOT
+        );
       }
     };
-    timer.initWithCallback(callback, 10, Ci.nsITimer.TYPE_ONE_SHOT);
+    timer.initWithCallback(
+      callback,
+      10,
+      Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    );
   }
 }

@@ -1,13 +1,15 @@
 function handleRequest(request, response) {
   response.processAsync();
 
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
   timer.init(
     function() {
       response.write("Here the content. But slowly.");
       response.finish();
     },
     1000,
-    Ci.nsITimer.TYPE_ONE_SHOT
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
   );
 }

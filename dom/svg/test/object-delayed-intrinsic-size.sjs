@@ -10,7 +10,9 @@ function handleRequest(request, response) {
   // while waiting for the rest of the document to load:
   response.bodyOutputStream.write("\n", 1);
 
-  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
   timer.initWithCallback(
     function() {
       var body =
@@ -19,6 +21,6 @@ function handleRequest(request, response) {
       response.finish();
     },
     1000 /* milliseconds */,
-    Ci.nsITimer.TYPE_ONE_SHOT
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
   );
 }

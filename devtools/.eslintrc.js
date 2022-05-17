@@ -110,7 +110,6 @@ module.exports = {
       excludedFiles: [
         // Enable the rule on JSM, test head files and some specific files.
         "**/*.jsm",
-        "**/*.sjs",
         "**/test/**/head.js",
         "**/test/**/shared-head.js",
         "client/debugger/test/mochitest/code_frame-script.js",

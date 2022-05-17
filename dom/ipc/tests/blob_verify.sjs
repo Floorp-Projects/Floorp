@@ -13,7 +13,6 @@ const BinaryOutputStream = CC(
 function handleRequest(request, response) {
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
   var bodyBytes = [];
-  let bodyAvail;
   while ((bodyAvail = bodyStream.available()) > 0) {
     Array.prototype.push.apply(bodyBytes, bodyStream.readByteArray(bodyAvail));
   }

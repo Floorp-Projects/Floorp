@@ -15,7 +15,8 @@ function handleRequest(request, response) {
     Outer POST data: ";
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
-  var avail = 0;
+  var bytes = [],
+    avail = 0;
   while ((avail = bodyStream.available()) > 0) {
     body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
   }

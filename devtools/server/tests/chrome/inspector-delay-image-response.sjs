@@ -32,9 +32,9 @@ function handleRequest(request, response) {
   // If there is a delay, we create a timer which, when it fires, will write
   // image and leave.
   response.processAsync();
-  const nsITimer = Ci.nsITimer;
+  const nsITimer = Components.interfaces.nsITimer;
 
-  timer = Cc["@mozilla.org/timer;1"].createInstance(nsITimer);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(nsITimer);
   timer.initWithCallback(
     function() {
       response.write(IMAGE);
