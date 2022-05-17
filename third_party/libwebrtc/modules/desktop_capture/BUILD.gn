@@ -316,6 +316,8 @@ rtc_library("desktop_capture_generic") {
     "cropping_window_capturer.h",
     "desktop_and_cursor_composer.cc",
     "desktop_and_cursor_composer.h",
+    "desktop_capture_metrics_helper.cc",
+    "desktop_capture_metrics_helper.h",
     "desktop_capture_options.cc",
     "desktop_capture_options.h",
     "desktop_capturer.cc",
