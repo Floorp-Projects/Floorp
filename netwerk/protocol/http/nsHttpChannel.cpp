@@ -5151,7 +5151,8 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
 
       nsCOMPtr<nsIURI> strippedURI;
       if (!isRedirectURIInAllowList &&
-          URLQueryStringStripper::Strip(mRedirectURI, strippedURI)) {
+          URLQueryStringStripper::Strip(mRedirectURI, mPrivateBrowsing,
+                                        strippedURI)) {
         mUnstrippedRedirectURI = mRedirectURI;
         mRedirectURI = strippedURI;
 
