@@ -1093,28 +1093,6 @@ pub unsafe extern "C" fn wgpu_command_encoder_insert_debug_marker(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wgpu_render_pass_set_index_buffer(
-    pass: &mut wgc::command::RenderPass,
-    buffer: wgc::id::BufferId,
-    index_format: wgt::IndexFormat,
-    offset: wgt::BufferAddress,
-    size: Option<wgt::BufferSize>,
-) {
-    pass.set_index_buffer(buffer, index_format, offset, size);
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wgpu_render_bundle_set_index_buffer(
-    encoder: &mut wgc::command::RenderBundleEncoder,
-    buffer: wgc::id::BufferId,
-    index_format: wgt::IndexFormat,
-    offset: wgt::BufferAddress,
-    size: Option<wgt::BufferSize>,
-) {
-    encoder.set_index_buffer(buffer, index_format, offset, size);
-}
-
-#[no_mangle]
 pub unsafe extern "C" fn wgpu_queue_write_buffer(
     dst: id::BufferId,
     offset: wgt::BufferAddress,
