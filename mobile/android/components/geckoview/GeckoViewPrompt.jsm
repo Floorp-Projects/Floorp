@@ -18,6 +18,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "DeferredTask",
+  "resource://gre/modules/DeferredTask.jsm"
+);
+
 const { debug, warn } = GeckoViewUtils.initLogging("GeckoViewPrompt");
 
 class PromptFactory {
@@ -86,7 +92,7 @@ class PromptFactory {
     }
   }
 
-  _handleSelect(aElement, aIsDropDown) {
+  _generateSelectItems(aElement) {
     const win = aElement.ownerGlobal;
     let id = 0;
     const map = {};
@@ -118,10 +124,38 @@ class PromptFactory {
       return items;
     })(aElement);
 
+    return [items, map, id];
+  }
+
+  _handleSelect(aElement, aIsDropDown) {
+    const win = aElement.ownerGlobal;
+    const [items] = this._generateSelectItems(aElement);
+
     if (aIsDropDown) {
       aElement.openInParentProcess = true;
     }
+
     const prompt = new GeckoViewPrompter(win);
+
+    // Something changed the <select> while it was open.
+    const deferredUpdate = new DeferredTask(() => {
+      // Inner contents in choice prompt are updated.
+      const [newItems] = this._generateSelectItems(aElement);
+      prompt.update({
+        type: "choice",
+        mode: aElement.multiple ? "multiple" : "single",
+        choices: newItems,
+      });
+    }, 0);
+    const mut = new win.MutationObserver(() => {
+      deferredUpdate.arm();
+    });
+    mut.observe(aElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
     prompt.asyncShowPrompt(
       {
         type: "choice",
@@ -129,6 +163,9 @@ class PromptFactory {
         choices: items,
       },
       result => {
+        deferredUpdate.disarm();
+        mut.disconnect();
+
         if (aIsDropDown) {
           aElement.openInParentProcess = false;
         }
@@ -138,6 +175,7 @@ class PromptFactory {
           return;
         }
 
+        const [, map, id] = this._generateSelectItems(aElement);
         let dispatchEvents = false;
         if (!aElement.multiple) {
           const elem = map[result.choices[0]];

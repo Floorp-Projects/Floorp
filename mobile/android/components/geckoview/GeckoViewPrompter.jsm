@@ -209,4 +209,10 @@ class GeckoViewPrompter {
     aMsg = undefined;
     aCallback = undefined;
   }
+
+  update(aMsg) {
+    this.message = aMsg;
+    aMsg.id = this.id;
+    this.prompterActor?.updatePrompt(aMsg);
+  }
 }

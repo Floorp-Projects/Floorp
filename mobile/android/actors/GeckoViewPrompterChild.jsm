@@ -24,6 +24,13 @@ class GeckoViewPrompterChild extends GeckoViewActorChild {
     this.unregisterPrompt(prompt);
   }
 
+  updatePrompt(message) {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:Prompt:Update",
+      prompt: message,
+    });
+  }
+
   unregisterPrompt(prompt) {
     this._prompts.delete(prompt.id);
     this.sendAsyncMessage("UnregisterPrompt", {
