@@ -29,6 +29,22 @@ function InitLater(fn, object, name) {
   return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
 }
 
+const JSPROCESSACTORS = {
+  GeckoViewPermissionProcess: {
+    parent: {
+      moduleURI: "resource:///actors/GeckoViewPermissionProcessParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/GeckoViewPermissionProcessChild.jsm",
+      observers: [
+        "getUserMedia:ask-device-permission",
+        "getUserMedia:request",
+        "PeerConnection:request",
+      ],
+    },
+  },
+};
+
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
     parent: {
@@ -38,6 +54,16 @@ const JSWINDOWACTORS = {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
     messageManagerGroups: ["browsers"],
+  },
+  GeckoViewPermission: {
+    parent: {
+      moduleURI: "resource:///actors/GeckoViewPermissionParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/GeckoViewPermissionChild.jsm",
+    },
+    allFrames: true,
+    includeChrome: true,
   },
   GeckoViewPrompt: {
     child: {
@@ -74,16 +100,6 @@ class GeckoViewStartup {
       case "content-process-ready-for-script":
       case "app-startup": {
         // Parent and content process.
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewPermission", {
-          service: "@mozilla.org/content-permission/prompt;1",
-          observers: [
-            "getUserMedia:ask-device-permission",
-            "getUserMedia:request",
-            "PeerConnection:request",
-          ],
-          ppmm: ["GeckoView:AddCameraPermission"],
-        });
-
         GeckoViewUtils.addLazyGetter(this, "GeckoViewRecordingMedia", {
           module: "resource://gre/modules/GeckoViewMedia.jsm",
           observers: ["recording-device-events"],
@@ -156,6 +172,7 @@ class GeckoViewStartup {
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
+          ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
 
           GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
             module: "resource://gre/modules/ChildCrashHandler.jsm",
