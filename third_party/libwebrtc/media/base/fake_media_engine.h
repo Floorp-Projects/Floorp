@@ -472,48 +472,6 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   int max_bps_;
 };
 
-// Dummy option class, needed for the DataTraits abstraction in
-// channel_unittest.c.
-class DataOptions {};
-
-class FakeDataMediaChannel : public RtpHelper<DataMediaChannel> {
- public:
-  explicit FakeDataMediaChannel(void* unused, const DataOptions& options);
-  ~FakeDataMediaChannel();
-  const std::vector<DataCodec>& recv_codecs() const;
-  const std::vector<DataCodec>& send_codecs() const;
-  const std::vector<DataCodec>& codecs() const;
-  int max_bps() const;
-
-  bool SetSendParameters(const DataSendParameters& params) override;
-  bool SetRecvParameters(const DataRecvParameters& params) override;
-  bool SetSend(bool send) override;
-  bool SetReceive(bool receive) override;
-  bool AddRecvStream(const StreamParams& sp) override;
-  bool RemoveRecvStream(uint32_t ssrc) override;
-
-  bool SendData(const SendDataParams& params,
-                const rtc::CopyOnWriteBuffer& payload,
-                SendDataResult* result) override;
-
-  SendDataParams last_sent_data_params();
-  std::string last_sent_data();
-  bool is_send_blocked();
-  void set_send_blocked(bool blocked);
-
- private:
-  bool SetRecvCodecs(const std::vector<DataCodec>& codecs);
-  bool SetSendCodecs(const std::vector<DataCodec>& codecs);
-  bool SetMaxSendBandwidth(int bps);
-
-  std::vector<DataCodec> recv_codecs_;
-  std::vector<DataCodec> send_codecs_;
-  SendDataParams last_sent_data_params_;
-  std::string last_sent_data_;
-  bool send_blocked_;
-  int max_bps_;
-};
-
 class FakeVoiceEngine : public VoiceEngineInterface {
  public:
   FakeVoiceEngine();
@@ -607,25 +565,6 @@ class FakeMediaEngine : public CompositeMediaEngine {
  private:
   FakeVoiceEngine* const voice_;
   FakeVideoEngine* const video_;
-};
-
-// Have to come afterwards due to declaration order
-
-class FakeDataEngine : public DataEngineInterface {
- public:
-  DataMediaChannel* CreateChannel(const MediaConfig& config) override;
-
-  FakeDataMediaChannel* GetChannel(size_t index);
-
-  void UnregisterChannel(DataMediaChannel* channel);
-
-  void SetDataCodecs(const std::vector<DataCodec>& data_codecs);
-
-  const std::vector<DataCodec>& data_codecs() override;
-
- private:
-  std::vector<FakeDataMediaChannel*> channels_;
-  std::vector<DataCodec> data_codecs_;
 };
 
 }  // namespace cricket

@@ -82,7 +82,6 @@ using cricket::MediaContentDescription;
 using cricket::MediaProtocolType;
 using cricket::MediaType;
 using cricket::RidDescription;
-using cricket::RtpDataContentDescription;
 using cricket::RtpHeaderExtensions;
 using cricket::SctpDataContentDescription;
 using cricket::SimulcastDescription;
@@ -1415,12 +1414,7 @@ void BuildMediaDescription(const ContentInfo* content_info,
         fmt.append(kDefaultSctpmapProtocol);
       }
     } else {
-      const RtpDataContentDescription* rtp_data_desc =
-          media_desc->as_rtp_data();
-      for (const cricket::RtpDataCodec& codec : rtp_data_desc->codecs()) {
-        fmt.append(" ");
-        fmt.append(rtc::ToString(codec.id));
-      }
+      RTC_NOTREACHED() << "Data description without SCTP";
     }
   } else if (media_type == cricket::MEDIA_TYPE_UNSUPPORTED) {
     const UnsupportedContentDescription* unsupported_desc =
@@ -1971,19 +1965,6 @@ void BuildRtpMap(const MediaContentDescription* media_desc,
       ptime = std::min(ptime, min_maxptime);
       ptime = std::max(ptime, max_minptime);
       AddAttributeLine(kCodecParamPTime, ptime, message);
-    }
-  } else if (media_type == cricket::MEDIA_TYPE_DATA) {
-    if (media_desc->as_rtp_data()) {
-      for (const cricket::RtpDataCodec& codec :
-           media_desc->as_rtp_data()->codecs()) {
-        // RFC 4566
-        // a=rtpmap:<payload type> <encoding name>/<clock rate>
-        // [/<encodingparameters>]
-        InitAttrLine(kAttributeRtpmap, &os);
-        os << kSdpDelimiterColon << codec.id << " " << codec.name << "/"
-           << codec.clockrate;
-        AddLine(os.str(), message);
-      }
     }
   }
 }
@@ -2738,14 +2719,6 @@ bool ParseMediaDescription(
           return false;
         }
         data_desc->set_protocol(protocol);
-        content = std::move(data_desc);
-      } else if (cricket::IsRtpProtocol(protocol)) {
-        // RTP
-        std::unique_ptr<RtpDataContentDescription> data_desc =
-            ParseContentDescription<RtpDataContentDescription>(
-                message, cricket::MEDIA_TYPE_DATA, mline_index, protocol,
-                payload_types, pos, &content_name, &bundle_only,
-                &section_msid_signaling, &transport, candidates, error);
         content = std::move(data_desc);
       } else {
         return ParseFailed(line, "Unsupported protocol for media type", error);
@@ -3671,11 +3644,6 @@ bool ParseRtpmapAttribute(const std::string& line,
     AudioContentDescription* audio_desc = media_desc->as_audio();
     UpdateCodec(payload_type, encoding_name, clock_rate, 0, channels,
                 audio_desc);
-  } else if (media_type == cricket::MEDIA_TYPE_DATA) {
-    RtpDataContentDescription* data_desc = media_desc->as_rtp_data();
-    if (data_desc) {
-      data_desc->AddCodec(cricket::RtpDataCodec(payload_type, encoding_name));
-    }
   }
   return true;
 }

@@ -28,7 +28,7 @@ namespace webrtc {
 
 bool DataChannelController::HasDataChannels() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return !rtp_data_channels_.empty() || !sctp_data_channels_.empty();
+  return !sctp_data_channels_.empty();
 }
 
 bool DataChannelController::SendData(const cricket::SendDataParams& params,
@@ -36,38 +36,8 @@ bool DataChannelController::SendData(const cricket::SendDataParams& params,
                                      cricket::SendDataResult* result) {
   if (data_channel_transport())
     return DataChannelSendData(params, payload, result);
-  if (rtp_data_channel())
-    return rtp_data_channel()->SendData(params, payload, result);
   RTC_LOG(LS_ERROR) << "SendData called before transport is ready";
   return false;
-}
-
-bool DataChannelController::ConnectDataChannel(
-    RtpDataChannel* webrtc_data_channel) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!rtp_data_channel()) {
-    // Don't log an error here, because DataChannels are expected to call
-    // ConnectDataChannel in this state. It's the only way to initially tell
-    // whether or not the underlying transport is ready.
-    return false;
-  }
-  rtp_data_channel()->SignalReadyToSendData.connect(
-      webrtc_data_channel, &RtpDataChannel::OnChannelReady);
-  rtp_data_channel()->SignalDataReceived.connect(
-      webrtc_data_channel, &RtpDataChannel::OnDataReceived);
-  return true;
-}
-
-void DataChannelController::DisconnectDataChannel(
-    RtpDataChannel* webrtc_data_channel) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!rtp_data_channel()) {
-    RTC_LOG(LS_ERROR)
-        << "DisconnectDataChannel called when rtp_data_channel_ is NULL.";
-    return;
-  }
-  rtp_data_channel()->SignalReadyToSendData.disconnect(webrtc_data_channel);
-  rtp_data_channel()->SignalDataReceived.disconnect(webrtc_data_channel);
 }
 
 bool DataChannelController::ConnectDataChannel(
@@ -126,8 +96,7 @@ void DataChannelController::RemoveSctpDataStream(int sid) {
 
 bool DataChannelController::ReadyToSendData() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  return (rtp_data_channel() && rtp_data_channel()->ready_to_send_data()) ||
-         (data_channel_transport() && data_channel_transport_ready_to_send_);
+  return (data_channel_transport() && data_channel_transport_ready_to_send_);
 }
 
 void DataChannelController::OnDataReceived(
@@ -258,10 +227,10 @@ bool DataChannelController::HandleOpenMessage_s(
     // be created.
     std::string label;
     InternalDataChannelInit config;
-    config.id = params.ssrc;
+    config.id = params.sid;
     if (!ParseDataChannelOpenMessage(buffer, &label, &config)) {
-      RTC_LOG(LS_WARNING) << "Failed to parse the OPEN message for ssrc "
-                          << params.ssrc;
+      RTC_LOG(LS_WARNING) << "Failed to parse the OPEN message for sid "
+                          << params.sid;
       return true;
     }
     config.open_handshake_role = InternalDataChannelInit::kAcker;
@@ -304,36 +273,9 @@ DataChannelController::InternalCreateDataChannelWithProxy(
     if (channel) {
       return SctpDataChannel::CreateProxy(channel);
     }
-  } else if (data_channel_type() == cricket::DCT_RTP) {
-    rtc::scoped_refptr<RtpDataChannel> channel =
-        InternalCreateRtpDataChannel(label, config);
-    if (channel) {
-      return RtpDataChannel::CreateProxy(channel);
-    }
   }
 
   return nullptr;
-}
-
-rtc::scoped_refptr<RtpDataChannel>
-DataChannelController::InternalCreateRtpDataChannel(
-    const std::string& label,
-    const DataChannelInit* config) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  DataChannelInit new_config = config ? (*config) : DataChannelInit();
-  rtc::scoped_refptr<RtpDataChannel> channel(
-      RtpDataChannel::Create(this, label, new_config, signaling_thread()));
-  if (!channel) {
-    return nullptr;
-  }
-  if (rtp_data_channels_.find(channel->label()) != rtp_data_channels_.end()) {
-    RTC_LOG(LS_ERROR) << "DataChannel with label " << channel->label()
-                      << " already exists.";
-    return nullptr;
-  }
-  rtp_data_channels_[channel->label()] = channel;
-  SignalRtpDataChannelCreated_(channel.get());
-  return channel;
 }
 
 rtc::scoped_refptr<SctpDataChannel>
@@ -416,14 +358,8 @@ void DataChannelController::OnSctpDataChannelClosed(SctpDataChannel* channel) {
 
 void DataChannelController::OnTransportChannelClosed() {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  // Use a temporary copy of the RTP/SCTP DataChannel list because the
+  // Use a temporary copy of the SCTP DataChannel list because the
   // DataChannel may callback to us and try to modify the list.
-  std::map<std::string, rtc::scoped_refptr<RtpDataChannel>> temp_rtp_dcs;
-  temp_rtp_dcs.swap(rtp_data_channels_);
-  for (const auto& kv : temp_rtp_dcs) {
-    kv.second->OnTransportChannelClosed();
-  }
-
   std::vector<rtc::scoped_refptr<SctpDataChannel>> temp_sctp_dcs;
   temp_sctp_dcs.swap(sctp_data_channels_);
   for (const auto& channel : temp_sctp_dcs) {
@@ -441,58 +377,6 @@ SctpDataChannel* DataChannelController::FindDataChannelBySid(int sid) const {
   return nullptr;
 }
 
-void DataChannelController::UpdateLocalRtpDataChannels(
-    const cricket::StreamParamsVec& streams) {
-  std::vector<std::string> existing_channels;
-
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  // Find new and active data channels.
-  for (const cricket::StreamParams& params : streams) {
-    // |it->sync_label| is actually the data channel label. The reason is that
-    // we use the same naming of data channels as we do for
-    // MediaStreams and Tracks.
-    // For MediaStreams, the sync_label is the MediaStream label and the
-    // track label is the same as |streamid|.
-    const std::string& channel_label = params.first_stream_id();
-    auto data_channel_it = rtp_data_channels()->find(channel_label);
-    if (data_channel_it == rtp_data_channels()->end()) {
-      RTC_LOG(LS_ERROR) << "channel label not found";
-      continue;
-    }
-    // Set the SSRC the data channel should use for sending.
-    data_channel_it->second->SetSendSsrc(params.first_ssrc());
-    existing_channels.push_back(data_channel_it->first);
-  }
-
-  UpdateClosingRtpDataChannels(existing_channels, true);
-}
-
-void DataChannelController::UpdateRemoteRtpDataChannels(
-    const cricket::StreamParamsVec& streams) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-
-  std::vector<std::string> existing_channels;
-
-  // Find new and active data channels.
-  for (const cricket::StreamParams& params : streams) {
-    // The data channel label is either the mslabel or the SSRC if the mslabel
-    // does not exist. Ex a=ssrc:444330170 mslabel:test1.
-    std::string label = params.first_stream_id().empty()
-                            ? rtc::ToString(params.first_ssrc())
-                            : params.first_stream_id();
-    auto data_channel_it = rtp_data_channels()->find(label);
-    if (data_channel_it == rtp_data_channels()->end()) {
-      // This is a new data channel.
-      CreateRemoteRtpDataChannel(label, params.first_ssrc());
-    } else {
-      data_channel_it->second->SetReceiveSsrc(params.first_ssrc());
-    }
-    existing_channels.push_back(label);
-  }
-
-  UpdateClosingRtpDataChannels(existing_channels, false);
-}
-
 cricket::DataChannelType DataChannelController::data_channel_type() const {
   // TODO(bugs.webrtc.org/9987): Should be restricted to the signaling thread.
   // RTC_DCHECK_RUN_ON(signaling_thread());
@@ -503,19 +387,6 @@ void DataChannelController::set_data_channel_type(
     cricket::DataChannelType type) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   data_channel_type_ = type;
-}
-
-cricket::RtpDataChannel* DataChannelController::rtp_data_channel() const {
-  // TODO(bugs.webrtc.org/9987): Only allow this accessor to be called on the
-  // network thread.
-  // RTC_DCHECK_RUN_ON(network_thread());
-  return rtp_data_channel_;
-}
-
-void DataChannelController::set_rtp_data_channel(
-    cricket::RtpDataChannel* channel) {
-  RTC_DCHECK_RUN_ON(network_thread());
-  rtp_data_channel_ = channel;
 }
 
 DataChannelTransportInterface* DataChannelController::data_channel_transport()
@@ -530,56 +401,6 @@ void DataChannelController::set_data_channel_transport(
     DataChannelTransportInterface* transport) {
   RTC_DCHECK_RUN_ON(network_thread());
   data_channel_transport_ = transport;
-}
-
-const std::map<std::string, rtc::scoped_refptr<RtpDataChannel>>*
-DataChannelController::rtp_data_channels() const {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  return &rtp_data_channels_;
-}
-
-void DataChannelController::UpdateClosingRtpDataChannels(
-    const std::vector<std::string>& active_channels,
-    bool is_local_update) {
-  auto it = rtp_data_channels_.begin();
-  while (it != rtp_data_channels_.end()) {
-    RtpDataChannel* data_channel = it->second;
-    if (absl::c_linear_search(active_channels, data_channel->label())) {
-      ++it;
-      continue;
-    }
-
-    if (is_local_update) {
-      data_channel->SetSendSsrc(0);
-    } else {
-      data_channel->RemotePeerRequestClose();
-    }
-
-    if (data_channel->state() == RtpDataChannel::kClosed) {
-      rtp_data_channels_.erase(it);
-      it = rtp_data_channels_.begin();
-    } else {
-      ++it;
-    }
-  }
-}
-
-void DataChannelController::CreateRemoteRtpDataChannel(const std::string& label,
-                                                       uint32_t remote_ssrc) {
-  if (data_channel_type() != cricket::DCT_RTP) {
-    return;
-  }
-  rtc::scoped_refptr<RtpDataChannel> channel(
-      InternalCreateRtpDataChannel(label, nullptr));
-  if (!channel.get()) {
-    RTC_LOG(LS_WARNING) << "Remote peer requested a DataChannel but"
-                           "CreateDataChannel failed.";
-    return;
-  }
-  channel->SetReceiveSsrc(remote_ssrc);
-  rtc::scoped_refptr<DataChannelInterface> proxy_channel =
-      RtpDataChannel::CreateProxy(std::move(channel));
-  pc_->Observer()->OnDataChannel(std::move(proxy_channel));
 }
 
 bool DataChannelController::DataChannelSendData(

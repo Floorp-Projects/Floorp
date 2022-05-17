@@ -190,8 +190,6 @@ rtc_library("peerconnection") {
     "rtc_stats_collector.h",
     "rtc_stats_traversal.cc",
     "rtc_stats_traversal.h",
-    "rtp_data_channel.cc",
-    "rtp_data_channel.h",
     "sctp_data_channel.cc",
     "sctp_data_channel.h",
     "sdp_offer_answer.cc",  # TODO: Make separate target when not circular

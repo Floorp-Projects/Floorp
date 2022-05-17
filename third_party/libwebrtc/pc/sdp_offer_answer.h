@@ -632,10 +632,6 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
   rtc::scoped_refptr<MediaStreamInterface> missing_msid_default_stream_
       RTC_GUARDED_BY(signaling_thread());
 
-  // Used when rolling back RTP data channels.
-  bool have_pending_rtp_data_channel_ RTC_GUARDED_BY(signaling_thread()) =
-      false;
-
   // Updates the error state, signaling if necessary.
   void SetSessionError(SessionError error, const std::string& error_desc);
 

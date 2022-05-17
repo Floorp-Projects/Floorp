@@ -15,7 +15,6 @@
 #include <utility>
 
 #include "api/transport/field_trial_based_config.h"
-#include "media/base/rtp_data_engine.h"
 #include "media/sctp/sctp_transport_factory.h"
 #include "rtc_base/helpers.h"
 #include "rtc_base/ref_counted_object.h"
@@ -127,8 +126,7 @@ ConnectionContext::ConnectionContext(
   worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
     channel_manager_ = cricket::ChannelManager::Create(
         std::move(dependencies->media_engine),
-        std::make_unique<cricket::RtpDataEngine>(), /*enable_rtx=*/true,
-        worker_thread(), network_thread());
+        /*enable_rtx=*/true, worker_thread(), network_thread());
   });
 
   // Set warning levels on the threads, to give warnings when response

@@ -330,8 +330,9 @@ TEST_P(PeerConnectionDataChannelTest, SctpPortPropagatedFromSdpToTransport) {
 
   auto answer = callee->CreateAnswer();
   ChangeSctpPortOnDescription(answer->description(), kNewRecvPort);
+  std::string sdp;
+  answer->ToString(&sdp);
   ASSERT_TRUE(callee->SetLocalDescription(std::move(answer)));
-
   auto* callee_transport =
       callee->sctp_transport_factory()->last_fake_sctp_transport();
   ASSERT_TRUE(callee_transport);

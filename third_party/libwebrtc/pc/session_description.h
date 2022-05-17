@@ -60,7 +60,6 @@ const int kAutoBandwidth = -1;
 
 class AudioContentDescription;
 class VideoContentDescription;
-class RtpDataContentDescription;
 class SctpDataContentDescription;
 class UnsupportedContentDescription;
 
@@ -82,11 +81,6 @@ class MediaContentDescription {
   // nullptr if the cast fails.
   virtual VideoContentDescription* as_video() { return nullptr; }
   virtual const VideoContentDescription* as_video() const { return nullptr; }
-
-  virtual RtpDataContentDescription* as_rtp_data() { return nullptr; }
-  virtual const RtpDataContentDescription* as_rtp_data() const {
-    return nullptr;
-  }
 
   virtual SctpDataContentDescription* as_sctp() { return nullptr; }
   virtual const SctpDataContentDescription* as_sctp() const { return nullptr; }
@@ -358,20 +352,6 @@ class VideoContentDescription : public MediaContentDescriptionImpl<VideoCodec> {
  private:
   virtual VideoContentDescription* CloneInternal() const {
     return new VideoContentDescription(*this);
-  }
-};
-
-class RtpDataContentDescription
-    : public MediaContentDescriptionImpl<RtpDataCodec> {
- public:
-  RtpDataContentDescription() {}
-  MediaType type() const override { return MEDIA_TYPE_DATA; }
-  RtpDataContentDescription* as_rtp_data() override { return this; }
-  const RtpDataContentDescription* as_rtp_data() const override { return this; }
-
- private:
-  RtpDataContentDescription* CloneInternal() const override {
-    return new RtpDataContentDescription(*this);
   }
 };
 

@@ -28,35 +28,29 @@ namespace cricket {
 // static
 std::unique_ptr<ChannelManager> ChannelManager::Create(
     std::unique_ptr<MediaEngineInterface> media_engine,
-    std::unique_ptr<DataEngineInterface> data_engine,
     bool enable_rtx,
     rtc::Thread* worker_thread,
     rtc::Thread* network_thread) {
   RTC_DCHECK_RUN_ON(worker_thread);
   RTC_DCHECK(network_thread);
   RTC_DCHECK(worker_thread);
-  RTC_DCHECK(data_engine);
 
   if (media_engine)
     media_engine->Init();
 
-  return absl::WrapUnique(new ChannelManager(std::move(media_engine),
-                                             std::move(data_engine), enable_rtx,
-                                             worker_thread, network_thread));
+  return absl::WrapUnique(new ChannelManager(
+      std::move(media_engine), enable_rtx, worker_thread, network_thread));
 }
 
 ChannelManager::ChannelManager(
     std::unique_ptr<MediaEngineInterface> media_engine,
-    std::unique_ptr<DataEngineInterface> data_engine,
     bool enable_rtx,
     rtc::Thread* worker_thread,
     rtc::Thread* network_thread)
     : media_engine_(std::move(media_engine)),
-      data_engine_(std::move(data_engine)),
       worker_thread_(worker_thread),
       network_thread_(network_thread),
       enable_rtx_(enable_rtx) {
-  RTC_DCHECK(data_engine_);
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(network_thread_);
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -114,11 +108,6 @@ void ChannelManager::GetSupportedVideoReceiveCodecs(
     }
     codecs->push_back(video_codec);
   }
-}
-
-void ChannelManager::GetSupportedDataCodecs(
-    std::vector<DataCodec>* codecs) const {
-  *codecs = data_engine_->data_codecs();
 }
 
 RtpHeaderExtensions ChannelManager::GetDefaultEnabledAudioRtpHeaderExtensions()
@@ -270,61 +259,6 @@ void ChannelManager::DestroyVideoChannel(VideoChannel* video_channel) {
   video_channels_.erase(absl::c_find_if(
       video_channels_, [&](const std::unique_ptr<VideoChannel>& p) {
         return p.get() == video_channel;
-      }));
-}
-
-RtpDataChannel* ChannelManager::CreateRtpDataChannel(
-    const MediaConfig& media_config,
-    webrtc::RtpTransportInternal* rtp_transport,
-    rtc::Thread* signaling_thread,
-    const std::string& content_name,
-    bool srtp_required,
-    const webrtc::CryptoOptions& crypto_options,
-    rtc::UniqueRandomIdGenerator* ssrc_generator) {
-  if (!worker_thread_->IsCurrent()) {
-    return worker_thread_->Invoke<RtpDataChannel*>(RTC_FROM_HERE, [&] {
-      return CreateRtpDataChannel(media_config, rtp_transport, signaling_thread,
-                                  content_name, srtp_required, crypto_options,
-                                  ssrc_generator);
-    });
-  }
-
-  RTC_DCHECK_RUN_ON(worker_thread_);
-
-  // This is ok to alloc from a thread other than the worker thread.
-  DataMediaChannel* media_channel = data_engine_->CreateChannel(media_config);
-  if (!media_channel) {
-    RTC_LOG(LS_WARNING) << "Failed to create RTP data channel.";
-    return nullptr;
-  }
-
-  auto data_channel = std::make_unique<RtpDataChannel>(
-      worker_thread_, network_thread_, signaling_thread,
-      absl::WrapUnique(media_channel), content_name, srtp_required,
-      crypto_options, ssrc_generator);
-
-  // Media Transports are not supported with Rtp Data Channel.
-  data_channel->Init_w(rtp_transport);
-
-  RtpDataChannel* data_channel_ptr = data_channel.get();
-  data_channels_.push_back(std::move(data_channel));
-  return data_channel_ptr;
-}
-
-void ChannelManager::DestroyRtpDataChannel(RtpDataChannel* data_channel) {
-  TRACE_EVENT0("webrtc", "ChannelManager::DestroyRtpDataChannel");
-  RTC_DCHECK(data_channel);
-
-  if (!worker_thread_->IsCurrent()) {
-    worker_thread_->Invoke<void>(
-        RTC_FROM_HERE, [&] { return DestroyRtpDataChannel(data_channel); });
-    return;
-  }
-  RTC_DCHECK_RUN_ON(worker_thread_);
-
-  data_channels_.erase(absl::c_find_if(
-      data_channels_, [&](const std::unique_ptr<RtpDataChannel>& p) {
-        return p.get() == data_channel;
       }));
 }
 

@@ -158,15 +158,7 @@ class CompositeMediaEngine : public MediaEngineInterface {
 
 enum DataChannelType {
   DCT_NONE = 0,
-  DCT_RTP = 1,
   DCT_SCTP = 2,
-};
-
-class DataEngineInterface {
- public:
-  virtual ~DataEngineInterface() {}
-  virtual DataMediaChannel* CreateChannel(const MediaConfig& config) = 0;
-  virtual const std::vector<DataCodec>& data_codecs() = 0;
 };
 
 webrtc::RtpParameters CreateRtpParametersWithOneEncoding();

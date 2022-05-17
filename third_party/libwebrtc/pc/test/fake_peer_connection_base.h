@@ -248,15 +248,9 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return {};
   }
 
-  sigslot::signal1<RtpDataChannel*>& SignalRtpDataChannelCreated() override {
-    return SignalRtpDataChannelCreated_;
-  }
-
   sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
     return SignalSctpDataChannelCreated_;
   }
-
-  cricket::RtpDataChannel* rtp_data_channel() const override { return nullptr; }
 
   absl::optional<std::string> sctp_transport_name() const override {
     return absl::nullopt;
@@ -298,7 +292,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   }
 
  protected:
-  sigslot::signal1<RtpDataChannel*> SignalRtpDataChannelCreated_;
   sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_;
 };
 

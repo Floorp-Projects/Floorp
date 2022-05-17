@@ -130,16 +130,6 @@ TEST(SessionDescriptionTest, AddContentTransfersExtmapAllowMixedSetting) {
   EXPECT_EQ(MediaContentDescription::kSession,
             session_desc.GetContentDescriptionByName("video")
                 ->extmap_allow_mixed_enum());
-
-  // Session level setting overrides media level when new content is added.
-  std::unique_ptr<MediaContentDescription> data_desc =
-      std::make_unique<RtpDataContentDescription>();
-  data_desc->set_extmap_allow_mixed_enum(MediaContentDescription::kMedia);
-  session_desc.AddContent("data", MediaProtocolType::kRtp,
-                          std::move(data_desc));
-  EXPECT_EQ(MediaContentDescription::kSession,
-            session_desc.GetContentDescriptionByName("data")
-                ->extmap_allow_mixed_enum());
 }
 
 }  // namespace cricket
