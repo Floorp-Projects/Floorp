@@ -42,9 +42,16 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
 }
 
 /* static */
-bool URLQueryStringStripper::Strip(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput) {
-  if (!StaticPrefs::privacy_query_stripping_enabled()) {
-    return false;
+bool URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM,
+                                   nsCOMPtr<nsIURI>& aOutput) {
+  if (aIsPBM) {
+    if (!StaticPrefs::privacy_query_stripping_enabled_pbmode()) {
+      return false;
+    }
+  } else {
+    if (!StaticPrefs::privacy_query_stripping_enabled()) {
+      return false;
+    }
   }
 
   RefPtr<URLQueryStringStripper> stripper = GetOrCreate();

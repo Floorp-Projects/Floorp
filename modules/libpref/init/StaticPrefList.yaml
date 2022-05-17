@@ -11765,9 +11765,17 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-# The global switch to control the URL query sting stripping which strips query
-# parameters from loading URIs to prevent bounce (redirect) tracking.
+# Enables / disables the URL query string stripping in normal browsing mode
+# which strips query parameters from loading URIs to prevent bounce (redirect)
+# tracking.
 - name: privacy.query_stripping.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Same as the pref above, but controls query stripping for private browsing
+# mode.
+- name: privacy.query_stripping.enabled.pbmode
   type: RelaxedAtomicBool
   value: false
   mirror: always
