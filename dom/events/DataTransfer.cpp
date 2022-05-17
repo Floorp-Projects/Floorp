@@ -1501,15 +1501,17 @@ void DataTransfer::IPCDataTransferTextItemsToDataTransfer(
 
   uint32_t i = 0;
   for (const IPCDataTransferItem& item : aIpcDataTransfer.items()) {
-    if (item.data().type() == IPCDataTransferData::TnsString) {
-      RefPtr<nsVariantCC> variant = new nsVariantCC();
-      const nsString& data = item.data().get_nsString();
-      variant->SetAsAString(data);
-
-      aDataTransfer.SetDataWithPrincipalFromOtherProcess(
-          NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
-          nsContentUtils::GetSystemPrincipal(), aHidden);
+    MOZ_ASSERT(item.data().type() == IPCDataTransferData::TnsString);
+    RefPtr<nsVariantCC> variant = new nsVariantCC();
+    nsresult rv = nsContentUtils::IPCTransferableItemToVariant(
+        item, variant, ContentChild::GetSingleton());
+    if (NS_FAILED(rv)) {
+      continue;
     }
+
+    aDataTransfer.SetDataWithPrincipalFromOtherProcess(
+        NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
+        nsContentUtils::GetSystemPrincipal(), aHidden);
   }
 }
 
