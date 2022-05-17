@@ -33,6 +33,17 @@ registerCleanupFunction(() => {
 });
 
 /**
+ * FOG requires a little setup in order to test it
+ */
+add_setup(function test_setup() {
+  // FOG needs a profile directory to put its data in.
+  do_get_profile();
+
+  // FOG needs to be initialized in order for data to flow.
+  Services.fog.initializeFOG();
+});
+
+/**
  * The normal case: Enrollment of a new experiment
  */
 add_task(async function test_add_to_store() {
@@ -111,6 +122,13 @@ add_task(
 
     await manager.onStartup();
 
+    // Ensure there is no experiment active with the id in FOG
+    Assert.equal(
+      undefined,
+      Services.fog.testGetExperimentData("foo"),
+      "no active experiment exists before enrollment"
+    );
+
     await manager.enroll(
       ExperimentFakes.recipe("foo"),
       "test_setExperimentActive_sendEnrollmentTelemetry_called"
@@ -128,6 +146,13 @@ add_task(
       manager.sendEnrollmentTelemetry.calledWith(experiment),
       true,
       "should call sendEnrollmentTelemetry after an enrollment"
+    );
+
+    // Test Glean experiment API interaction
+    Assert.notEqual(
+      undefined,
+      Services.fog.testGetExperimentData(experiment.slug),
+      "Glean.setExperimentActive called with `foo` feature"
     );
 
     manager.unenroll("foo", "test-cleanup");
@@ -152,6 +177,13 @@ add_task(async function test_setRolloutActive_sendEnrollmentTelemetry_called() {
   sandbox.spy(manager, "sendEnrollmentTelemetry");
 
   await manager.onStartup();
+
+  // Test Glean experiment API interaction
+  Assert.equal(
+    undefined,
+    Services.fog.testGetExperimentData("rollout"),
+    "no rollout active before enrollment"
+  );
 
   let result = await manager.enroll(
     rolloutRecipe,
@@ -199,6 +231,13 @@ add_task(async function test_setRolloutActive_sendEnrollmentTelemetry_called() {
       }
     ),
     "Should send telemetry with expected values"
+  );
+
+  // Test Glean experiment API interaction
+  Assert.equal(
+    enrollment.branch.slug,
+    Services.fog.testGetExperimentData(enrollment.slug).branch,
+    "Glean.setExperimentActive called with expected values"
   );
 
   manager.unenroll("rollout", "test-cleanup");
