@@ -5,9 +5,9 @@
 package mozilla.components.service.pocket.ext
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
+import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.spocs.api.ApiSpoc
 import mozilla.components.service.pocket.spocs.db.SpocEntity
 import mozilla.components.service.pocket.stories.api.PocketApiStory

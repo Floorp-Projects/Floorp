@@ -7,7 +7,7 @@ package mozilla.components.service.pocket.spocs
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketSponsoredStory
 import mozilla.components.service.pocket.spocs.api.SpocsEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse.Failure
 import mozilla.components.service.pocket.stories.api.PocketResponse.Success

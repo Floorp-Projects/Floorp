@@ -9,7 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.service.pocket.helpers.PocketTestResources
 import mozilla.components.service.pocket.helpers.assertClassVisibility
 import mozilla.components.service.pocket.spocs.SpocsUseCases.RefreshSponsoredStories
