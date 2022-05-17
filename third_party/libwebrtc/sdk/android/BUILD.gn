@@ -124,19 +124,6 @@ if (is_android) {
     ]
   }
 
-  rtc_library("libjingle_peerconnection_metrics_default_jni") {
-    visibility = [ "*" ]
-    sources = [ "src/jni/android_metrics.cc" ]
-    deps = [
-      ":base_jni",
-      ":generated_metrics_jni",
-      ":native_api_jni",
-      ":peerconnection_jni",
-      "../../pc:peerconnection",
-      "../../system_wrappers:metrics",
-    ]
-  }
-
   rtc_shared_library("libjingle_peerconnection_so") {
     sources = [ "src/jni/jni_onload.cc" ]
 
@@ -805,6 +792,19 @@ if (current_os == "linux" || is_android) {
       ":base_jni",
       ":generated_java_audio_jni",
       ":java_audio_device_module",
+    ]
+  }
+
+  rtc_library("libjingle_peerconnection_metrics_default_jni") {
+    visibility = [ "*" ]
+    sources = [ "src/jni/android_metrics.cc" ]
+    deps = [
+      ":base_jni",
+      ":generated_metrics_jni",
+      ":native_api_jni",
+      ":peerconnection_jni",
+      "../../pc:peerconnection",
+      "../../system_wrappers:metrics",
     ]
   }
 
