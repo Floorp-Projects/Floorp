@@ -5073,7 +5073,7 @@
 # Whether to use Geoclue location provider (if available on the system).
 - name: geo.provider.use_geoclue
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether to always provide high location accuracy, even if site
