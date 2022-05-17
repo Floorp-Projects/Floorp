@@ -466,7 +466,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
                                   frame_in_flight->rendered_time(peer_index));
   {
     MutexLock cr(&comparison_lock_);
-    stream_stats_[stats_key].skipped_between_rendered.AddSample(
+    stream_stats_.at(stats_key).skipped_between_rendered.AddSample(
         StatsSample(dropped_count, Now()));
   }
 
@@ -519,6 +519,7 @@ void DefaultVideoQualityAnalyzer::RegisterParticipantInCall(
     counters.encoded = frames_count;
     stream_frame_counters_.insert({key, std::move(counters)});
 
+    stream_stats_.insert({key, StreamStats()});
     stream_last_freeze_end_time_.insert({key, start_time_});
   }
   // Ensure, that frames states are handled correctly
