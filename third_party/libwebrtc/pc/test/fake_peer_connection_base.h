@@ -256,8 +256,8 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return absl::nullopt;
   }
 
-  std::map<std::string, std::string> GetTransportNamesByMid() const override {
-    return {};
+  absl::optional<std::string> sctp_mid() const override {
+    return absl::nullopt;
   }
 
   std::map<std::string, cricket::TransportStats> GetTransportStatsByNames(

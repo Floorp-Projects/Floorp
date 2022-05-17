@@ -2094,6 +2094,7 @@ void PeerConnection::StopRtcEventLog_w() {
 
 cricket::ChannelInterface* PeerConnection::GetChannel(
     const std::string& content_name) {
+  RTC_DCHECK_RUN_ON(network_thread());
   for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
     cricket::ChannelInterface* channel = transceiver->internal()->channel();
     if (channel && channel->content_name() == content_name) {
@@ -2176,6 +2177,11 @@ absl::optional<std::string> PeerConnection::sctp_transport_name() const {
   return absl::optional<std::string>();
 }
 
+absl::optional<std::string> PeerConnection::sctp_mid() const {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return sctp_mid_s_;
+}
+
 cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
   RTC_DCHECK_RUN_ON(network_thread());
   if (!network_thread_safety_->alive())
@@ -2183,30 +2189,6 @@ cricket::CandidateStatsList PeerConnection::GetPooledCandidateStats() const {
   cricket::CandidateStatsList candidate_states_list;
   port_allocator_->GetCandidateStatsFromPooledSessions(&candidate_states_list);
   return candidate_states_list;
-}
-
-std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
-    const {
-  RTC_DCHECK_RUN_ON(network_thread());
-  rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
-
-  if (!network_thread_safety_->alive())
-    return {};
-
-  std::map<std::string, std::string> transport_names_by_mid;
-  for (const auto& transceiver : rtp_manager()->transceivers()->List()) {
-    cricket::ChannelInterface* channel = transceiver->internal()->channel();
-    if (channel) {
-      transport_names_by_mid[channel->content_name()] =
-          channel->transport_name();
-    }
-  }
-  if (sctp_mid_n_) {
-    cricket::DtlsTransportInternal* dtls_transport =
-        transport_controller_->GetDtlsTransport(*sctp_mid_n_);
-    transport_names_by_mid[*sctp_mid_n_] = dtls_transport->transport_name();
-  }
-  return transport_names_by_mid;
 }
 
 std::map<std::string, cricket::TransportStats>

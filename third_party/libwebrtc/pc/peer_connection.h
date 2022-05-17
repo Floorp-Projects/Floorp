@@ -293,9 +293,9 @@ class PeerConnection : public PeerConnectionInternal,
   std::vector<DataChannelStats> GetDataChannelStats() const override;
 
   absl::optional<std::string> sctp_transport_name() const override;
+  absl::optional<std::string> sctp_mid() const override;
 
   cricket::CandidateStatsList GetPooledCandidateStats() const override;
-  std::map<std::string, std::string> GetTransportNamesByMid() const override;
   std::map<std::string, cricket::TransportStats> GetTransportStatsByNames(
       const std::set<std::string>& transport_names) override;
   Call::Stats GetCallStats() override;
@@ -341,10 +341,6 @@ class PeerConnection : public PeerConnectionInternal,
   const PeerConnectionInterface::RTCConfiguration* configuration() const {
     RTC_DCHECK_RUN_ON(signaling_thread());
     return &configuration_;
-  }
-  absl::optional<std::string> sctp_mid() {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return sctp_mid_s_;
   }
   PeerConnectionMessageHandler* message_handler() {
     RTC_DCHECK_RUN_ON(signaling_thread());

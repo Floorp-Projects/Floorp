@@ -852,20 +852,40 @@ std::map<std::string, std::string> StatsCollector::ExtractSessionInfo() {
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   SessionStats stats;
+  auto transceivers = pc_->GetTransceiversInternal();
   pc_->network_thread()->Invoke<void>(
-      RTC_FROM_HERE, [this, &stats] { stats = ExtractSessionInfo_n(); });
+      RTC_FROM_HERE, [&, sctp_transport_name = pc_->sctp_transport_name(),
+                      sctp_mid = pc_->sctp_mid()]() mutable {
+        stats = ExtractSessionInfo_n(
+            transceivers, std::move(sctp_transport_name), std::move(sctp_mid));
+      });
 
   ExtractSessionInfo_s(stats);
 
   return std::move(stats.transport_names_by_mid);
 }
 
-StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n() {
+StatsCollector::SessionStats StatsCollector::ExtractSessionInfo_n(
+    const std::vector<rtc::scoped_refptr<
+        RtpTransceiverProxyWithInternal<RtpTransceiver>>>& transceivers,
+    absl::optional<std::string> sctp_transport_name,
+    absl::optional<std::string> sctp_mid) {
   RTC_DCHECK_RUN_ON(pc_->network_thread());
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   SessionStats stats;
   stats.candidate_stats = pc_->GetPooledCandidateStats();
-  stats.transport_names_by_mid = pc_->GetTransportNamesByMid();
+  for (auto& transceiver : transceivers) {
+    cricket::ChannelInterface* channel = transceiver->internal()->channel();
+    if (channel) {
+      stats.transport_names_by_mid[channel->content_name()] =
+          channel->transport_name();
+    }
+  }
+
+  if (sctp_transport_name) {
+    RTC_DCHECK(sctp_mid);
+    stats.transport_names_by_mid[*sctp_mid] = *sctp_transport_name;
+  }
 
   std::set<std::string> transport_names;
   for (const auto& entry : stats.transport_names_by_mid) {

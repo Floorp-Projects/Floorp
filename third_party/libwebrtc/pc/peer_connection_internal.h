@@ -50,14 +50,13 @@ class PeerConnectionInternal : public PeerConnectionInterface {
   }
 
   virtual absl::optional<std::string> sctp_transport_name() const = 0;
+  virtual absl::optional<std::string> sctp_mid() const = 0;
 
   virtual cricket::CandidateStatsList GetPooledCandidateStats() const = 0;
 
-  // Returns a map from MID to transport name for all active media sections.
-  virtual std::map<std::string, std::string> GetTransportNamesByMid() const = 0;
-
   // Returns a map from transport name to transport stats for all given
   // transport names.
+  // Must be called on the network thread.
   virtual std::map<std::string, cricket::TransportStats>
   GetTransportStatsByNames(const std::set<std::string>& transport_names) = 0;
 

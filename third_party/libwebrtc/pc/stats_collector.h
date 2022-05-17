@@ -180,7 +180,11 @@ class StatsCollector : public StatsCollectorInterface {
   // Helper method to update the timestamp of track records.
   void UpdateTrackReports();
 
-  SessionStats ExtractSessionInfo_n();
+  SessionStats ExtractSessionInfo_n(
+      const std::vector<rtc::scoped_refptr<
+          RtpTransceiverProxyWithInternal<RtpTransceiver>>>& transceivers,
+      absl::optional<std::string> sctp_transport_name,
+      absl::optional<std::string> sctp_mid);
   void ExtractSessionInfo_s(SessionStats& session_stats);
 
   // A collection for all of our stats reports.
