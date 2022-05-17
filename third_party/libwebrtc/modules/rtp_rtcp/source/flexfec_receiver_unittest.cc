@@ -646,4 +646,58 @@ TEST_F(FlexfecReceiverTest, CalculatesNumberOfPackets) {
   EXPECT_EQ(1U, packet_counter.num_recovered_packets);
 }
 
+TEST_F(FlexfecReceiverTest, DoesNotDecodeWrappedMediaSequenceUsingOldFec) {
+  const size_t kFirstFrameNumMediaPackets = 2;
+  const size_t kFirstFrameNumFecPackets = 1;
+
+  PacketList media_packets;
+  PacketizeFrame(kFirstFrameNumMediaPackets, 0, &media_packets);
+
+  // Protect first frame (sequences 0 and 1) with 1 FEC packet.
+  std::list<Packet*> fec_packets =
+      EncodeFec(media_packets, kFirstFrameNumFecPackets);
+
+  // Generate enough media packets to simulate media sequence number wraparound.
+  // Use no FEC for these frames to make sure old FEC is not purged due to age.
+  const size_t kNumFramesSequenceWrapAround =
+      std::numeric_limits<uint16_t>::max();
+  const size_t kNumMediaPacketsPerFrame = 1;
+
+  for (size_t i = 1; i <= kNumFramesSequenceWrapAround; ++i) {
+    PacketizeFrame(kNumMediaPacketsPerFrame, i, &media_packets);
+  }
+
+  // Receive first (|kFirstFrameNumMediaPackets| + 48) media packets.
+  // Simulate an old FEC packet by separating it from its encoded media
+  // packets by at least 48 packets.
+  auto media_it = media_packets.begin();
+  for (size_t i = 0; i < (kFirstFrameNumMediaPackets + 48); i++) {
+    if (i == 1) {
+      // Drop the second packet of the first frame.
+      media_it++;
+    } else {
+      receiver_.OnRtpPacket(ParsePacket(**media_it++));
+    }
+  }
+
+  // Receive FEC packet. Although a protected packet was dropped,
+  // expect no recovery callback since it is delayed from first frame
+  // by more than 48 packets.
+  auto fec_it = fec_packets.begin();
+  std::unique_ptr<Packet> fec_packet_with_rtp_header =
+      packet_generator_.BuildFlexfecPacket(**fec_it);
+  receiver_.OnRtpPacket(ParsePacket(*fec_packet_with_rtp_header));
+
+  // Receive remaining media packets.
+  // NOTE: Because we sent enough to simulate wrap around, sequence 0 is
+  // received again, but is a different packet than the original first
+  // packet of first frame.
+  while (media_it != media_packets.end()) {
+    receiver_.OnRtpPacket(ParsePacket(**media_it++));
+  }
+
+  // Do not expect a recovery callback, the FEC packet is old
+  // and should not decode wrapped around media sequences.
+}
+
 }  // namespace webrtc
