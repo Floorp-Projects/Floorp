@@ -109,8 +109,8 @@ function openContextMenu() {
         var rootElement = win.document.documentElement;
         var platformIsMac = navigator.userAgent.indexOf("Mac") > -1;
 
-        var x = menu.screenX - rootElement.screenX;
-        var y = menu.screenY - rootElement.screenY;
+        var x = menu.screenX - rootElement.screenX - parseFloat(getComputedStyle(menu).marginLeft);
+        var y = menu.screenY - rootElement.screenY - parseFloat(getComputedStyle(menu).marginTop);
 
         if (platformIsMac)
         {

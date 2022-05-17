@@ -39,6 +39,9 @@
     const contextmenu = await contextMenuPromise;
     ok(pointerUpSeen, "pointerup event was seen");
     is(contextmenu.button, 2, ".button indicates secondary button");
+
+    // Close the context menu.
+    await promiseNativePointerTap(container, "pen", 30, 30);
   });
 
   add_task(async function testPenContextMenuWhenButtonChange() {
@@ -60,5 +63,8 @@
 
     const contextmenu = await contextMenuPromise;
     is(contextmenu.button, 2, ".button still indicates secondary button");
+
+    // Close the context menu.
+    await promiseNativePointerTap(container, "pen", 30, 30);
   });
 </script>
