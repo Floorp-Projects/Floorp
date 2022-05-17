@@ -118,9 +118,9 @@ struct IPCDataTransferImage
 struct IPCDataTransferItem
 {
   nsCString flavor;
-  // The image details are only used when transferring images.
-  IPCDataTransferImage imageDetails;
   IPCDataTransferData data;
+  // The image details are only used when transferring images.
+  IPCDataTransferImage? imageDetails;
 };
 
 struct IPCDataTransfer

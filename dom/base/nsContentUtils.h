@@ -2869,9 +2869,14 @@ class nsContentUtils {
   static bool IsFlavorImage(const nsACString& aFlavor);
 
   static nsresult IPCTransferableToTransferable(
+      const mozilla::dom::IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
+      nsITransferable* aTransferable,
+      mozilla::ipc::IShmemAllocator* aAllocator);
+
+  static nsresult IPCTransferableToTransferable(
       const mozilla::dom::IPCDataTransfer& aDataTransfer,
       const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
-      const nsContentPolicyType& aContentPolicyType,
+      const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
       nsITransferable* aTransferable,
       mozilla::ipc::IShmemAllocator* aAllocator);
 

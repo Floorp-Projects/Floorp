@@ -3347,7 +3347,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetClipboard(
 
   rv = nsContentUtils::IPCTransferableToTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      trans, this);
+      true /* aAddDataFlavor */, trans, this);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   clipboard->SetData(trans, nullptr, aWhichClipboard);
