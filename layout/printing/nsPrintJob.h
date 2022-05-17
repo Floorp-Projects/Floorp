@@ -150,7 +150,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   void FirePrintingErrorEvent(nsresult aPrintError);
 
   bool CheckBeforeDestroy() const;
-  mozilla::PresShell* GetPrintPreviewPresShell();
   nsresult Cancel();
   void Destroy();
   void DestroyPrintingData();

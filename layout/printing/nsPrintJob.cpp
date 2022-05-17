@@ -276,10 +276,6 @@ bool nsPrintJob::CheckBeforeDestroy() const {
   return mPrt && mPrt->mPreparingForPrint;
 }
 
-PresShell* nsPrintJob::GetPrintPreviewPresShell() {
-  return mPrtPreview->mPrintObject->mPresShell;
-}
-
 //-------------------------------------------------------
 void nsPrintJob::Destroy() {
   if (mIsDestroying) {
