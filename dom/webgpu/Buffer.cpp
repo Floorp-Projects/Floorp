@@ -56,6 +56,17 @@ Buffer::~Buffer() {
 void Buffer::Cleanup() {
   if (mValid && mParent) {
     mValid = false;
+
+    if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
+      // The array buffers could live longer than us and our shmem, so make sure
+      // we clear the external buffer bindings.
+      dom::AutoJSAPI jsapi;
+      if (jsapi.Init(mParent->GetOwnerGlobal())) {
+        IgnoredErrorResult rv;
+        UnmapArrayBuffers(jsapi.cx(), rv);
+      }
+    }
+
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
       // Note: even if the buffer is considered mapped,
@@ -132,12 +143,18 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
   const auto checkedSize = aSize.WasPassed()
                                ? CheckedInt<size_t>(aSize.Value())
                                : CheckedInt<size_t>(mSize) - aOffset;
-  if (!checkedOffset.isValid() || !checkedSize.isValid()) {
+  const auto checkedMinBufferSize = checkedOffset + checkedSize;
+  if (!checkedOffset.isValid() || !checkedSize.isValid() ||
+      !checkedMinBufferSize.isValid()) {
     aRv.ThrowRangeError("Invalid mapped range");
     return;
   }
   if (!mMapped || !mMapped->IsReady()) {
     aRv.ThrowInvalidStateError("Buffer is not mapped");
+    return;
+  }
+  if (checkedMinBufferSize.value() > mMapped->mShmem.Size<uint8_t>()) {
+    aRv.ThrowOperationError("Mapped range exceeds buffer size");
     return;
   }
 
@@ -152,20 +169,25 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
   mMapped->mArrayBuffers.AppendElement(*aObject);
 }
 
+void Buffer::UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv) {
+  MOZ_ASSERT(mMapped);
+
+  for (const auto& arrayBuffer : mMapped->mArrayBuffers) {
+    JS::Rooted<JSObject*> rooted(aCx, arrayBuffer);
+    if (NS_WARN_IF(!JS::DetachArrayBuffer(aCx, rooted))) {
+      aRv.NoteJSContextException(aCx);
+    }
+  };
+
+  mMapped->mArrayBuffers.Clear();
+}
+
 void Buffer::Unmap(JSContext* aCx, ErrorResult& aRv) {
   if (!mMapped) {
     return;
   }
 
-  for (const auto& arrayBuffer : mMapped->mArrayBuffers) {
-    JS::Rooted<JSObject*> rooted(aCx, arrayBuffer);
-    bool ok = JS::DetachArrayBuffer(aCx, rooted);
-    if (!ok) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  };
-
+  UnmapArrayBuffers(aCx, aRv);
   mParent->UnmapBuffer(mId, std::move(mMapped->mShmem), mMapped->mWritable,
                        mMappable);
   mMapped.reset();
