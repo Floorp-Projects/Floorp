@@ -471,6 +471,10 @@ Telemetry Environment
     - ``browser.search.suggest.enabled``: The global toggle for search
       suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to
       true.
+    - ``browser.urlbar.autoFill``: The global preference for whether autofill in
+      the urlbar is enabled. When false, all types of autofill are disabled.
+    - ``browser.urlbar.autoFill.adaptiveHistory.enabled``: True if adaptive
+      history autofill in the urlbar is enabled.
     - ``browser.urlbar.suggest.searches``: True if search suggestions are
       enabled in the urlbar. Defaults to false.
 
