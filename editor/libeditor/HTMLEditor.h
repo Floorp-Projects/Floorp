@@ -12,6 +12,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
@@ -3052,6 +3053,13 @@ class HTMLEditor final : public EditorBase,
     [[nodiscard]] static CellData AtIndexInTableElement(
         const HTMLEditor& aHTMLEditor, const Element& aTableElement,
         int32_t aRowIndex, int32_t aColumnIndex);
+    [[nodiscard]] static CellData AtIndexInTableElement(
+        const HTMLEditor& aHTMLEditor, const Element& aTableElement,
+        const CellIndexes& aIndexes) {
+      MOZ_ASSERT(!aIndexes.isErr());
+      return AtIndexInTableElement(aHTMLEditor, aTableElement, aIndexes.mRow,
+                                   aIndexes.mColumn);
+    }
 
     /**
      * Treated as error if fails to compute current index or first index of the
@@ -3612,18 +3620,19 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans rows and aInsertPosition is eAfterSelectedCell, new rows will be
-   * inserted after the most-bottom row which contains the cell.  If first
-   * selection range is not in table cell element, this does nothing but
-   * does not return error.
+   * aCellElement.  When aCellElement spans rows and aInsertPosition is
+   * eAfterSelectedCell, new rows will be inserted after the most-bottom row
+   * which contains the cell.
    *
+   * @param aCellElement                The cell element pinting where this will
+   *                                    insert a row before or after.
    * @param aNumberOfRowsToInsert       Number of rows to insert.
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertTableRowsWithTransaction(
-      int32_t aNumberOfRowsToInsert, InsertPosition aInsertPosition);
+      Element& aCellElement, int32_t aNumberOfRowsToInsert,
+      InsertPosition aInsertPosition);
 
   /**
    * Insert a new cell after or before supplied aCell.
