@@ -47,15 +47,6 @@ interface nsIWebBrowserPrint : nsISupports
   const short PRINTPREVIEW_END          = 4;
 
   /**
-   * Returns a pointer to the PrintSettings object that
-   * that was passed into either "print" or "print preview"
-   *
-   * This enables any consumers of the interface to have access
-   * to the "current" PrintSetting at later points in the execution
-   */
-  readonly attribute nsIPrintSettings currentPrintSettings;
-
-  /**
    * Returns whether it is in Print mode
    */
   readonly attribute boolean doingPrint;
