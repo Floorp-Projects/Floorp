@@ -18,14 +18,9 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsEnvironment, nsIEnvironment)
 
-nsresult nsEnvironment::Create(nsISupports* aOuter, REFNSIID aIID,
-                               void** aResult) {
+nsresult nsEnvironment::Create(REFNSIID aIID, void** aResult) {
   nsresult rv;
   *aResult = nullptr;
-
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   nsEnvironment* obj = new nsEnvironment();
 

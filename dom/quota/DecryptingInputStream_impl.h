@@ -494,7 +494,7 @@ bool DecryptingInputStream<CipherStrategy>::Deserialize(
   const auto& params = aParams.get_EncryptedFileInputStreamParams();
 
   nsCOMPtr<nsIFileInputStream> stream;
-  nsFileInputStream::Create(nullptr, NS_GET_IID(nsIFileInputStream),
+  nsFileInputStream::Create(NS_GET_IID(nsIFileInputStream),
                             getter_AddRefs(stream));
   nsCOMPtr<nsIIPCSerializableInputStream> baseSerializable =
       do_QueryInterface(stream);

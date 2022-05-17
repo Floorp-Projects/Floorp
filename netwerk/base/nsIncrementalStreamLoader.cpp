@@ -20,10 +20,7 @@ nsIncrementalStreamLoader::Init(nsIIncrementalStreamLoaderObserver* observer) {
   return NS_OK;
 }
 
-nsresult nsIncrementalStreamLoader::Create(nsISupports* aOuter, REFNSIID aIID,
-                                           void** aResult) {
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
+nsresult nsIncrementalStreamLoader::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsIncrementalStreamLoader> it = new nsIncrementalStreamLoader();
   return it->QueryInterface(aIID, aResult);
 }

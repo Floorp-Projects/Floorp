@@ -313,9 +313,6 @@ inline void MOZ_PretendNoReturn() MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {}
 
 #define NS_ENSURE_STATE(state) NS_ENSURE_TRUE(state, NS_ERROR_UNEXPECTED)
 
-#define NS_ENSURE_NO_AGGREGATION(outer) \
-  NS_ENSURE_FALSE(outer, NS_ERROR_NO_AGGREGATION)
-
 /*****************************************************************************/
 
 #if (defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING))) && \

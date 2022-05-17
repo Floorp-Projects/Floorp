@@ -52,7 +52,7 @@ class SDBConnection final : public nsISDBConnection {
   bool mAllowedToClose;
 
  public:
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(SDBConnection); }
 

@@ -134,19 +134,13 @@ extern nsresult NS_CategoryManagerGetFactory(nsIFactory**);
 extern nsresult CreateAnonTempFileRemover();
 #endif
 
-nsresult nsThreadManagerGetSingleton(nsISupports* aOuter, const nsIID& aIID,
-                                     void** aInstancePtr) {
+nsresult nsThreadManagerGetSingleton(const nsIID& aIID, void** aInstancePtr) {
   NS_ASSERTION(aInstancePtr, "null outptr");
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
   return nsThreadManager::get().QueryInterface(aIID, aInstancePtr);
 }
 
-nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                void** aInstancePtr) {
-  return nsLocalFile::nsLocalFileConstructor(aOuter, aIID, aInstancePtr);
+nsresult nsLocalFileConstructor(const nsIID& aIID, void** aInstancePtr) {
+  return nsLocalFile::nsLocalFileConstructor(aIID, aInstancePtr);
 }
 
 nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
@@ -185,7 +179,7 @@ static nsIDebug2* gDebug = nullptr;
 
 EXPORT_XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug2** aResult) {
-  return nsDebugImpl::Create(nullptr, NS_GET_IID(nsIDebug2), (void**)aResult);
+  return nsDebugImpl::Create(NS_GET_IID(nsIDebug2), (void**)aResult);
 }
 
 class ICUReporter final : public nsIMemoryReporter,

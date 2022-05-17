@@ -25,10 +25,7 @@ nsStreamLoader::Init(nsIStreamLoaderObserver* aStreamObserver,
   return NS_OK;
 }
 
-nsresult nsStreamLoader::Create(nsISupports* aOuter, REFNSIID aIID,
-                                void** aResult) {
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
+nsresult nsStreamLoader::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsStreamLoader> it = new nsStreamLoader();
   return it->QueryInterface(aIID, aResult);
 }

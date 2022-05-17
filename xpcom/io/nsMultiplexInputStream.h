@@ -21,8 +21,7 @@
     }                                                \
   }
 
-extern nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter,
-                                                  REFNSIID aIID,
+extern nsresult nsMultiplexInputStreamConstructor(REFNSIID aIID,
                                                   void** aResult);
 
 #endif  //  _nsMultiplexInputStream_h_

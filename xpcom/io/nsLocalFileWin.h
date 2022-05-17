@@ -30,7 +30,7 @@ class nsLocalFile final : public nsILocalFileWin {
   nsLocalFile();
   explicit nsLocalFile(const nsAString& aFilePath);
 
-  static nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
+  static nsresult nsLocalFileConstructor(const nsIID& aIID,
                                          void** aInstancePtr);
 
   // nsISupports interface

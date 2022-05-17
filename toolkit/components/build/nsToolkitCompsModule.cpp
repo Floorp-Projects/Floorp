@@ -11,12 +11,10 @@ using namespace mozilla;
 
 /////////////////////////////////////////////////////////////////////////////
 
-nsresult nsUrlClassifierDBServiceConstructor(nsISupports* aOuter,
-                                             const nsIID& aIID,
+nsresult nsUrlClassifierDBServiceConstructor(const nsIID& aIID,
                                              void** aResult) {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aResult);
-  NS_ENSURE_NO_AGGREGATION(aOuter);
 
   RefPtr<nsUrlClassifierDBService> inst =
       nsUrlClassifierDBService::GetInstance(&rv);

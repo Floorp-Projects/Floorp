@@ -404,10 +404,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsFileInputStream, nsIInputStream,
                             nsIFileInputStream, nsISeekableStream,
                             nsITellableStream, nsILineInputStream)
 
-nsresult nsFileInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsresult nsFileInputStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsFileInputStream> stream = new nsFileInputStream();
   return stream->QueryInterface(aIID, aResult);
 }
@@ -654,10 +651,7 @@ nsFileInputStream::Clone(nsIInputStream** aResult) {
 NS_IMPL_ISUPPORTS_INHERITED(nsFileOutputStream, nsFileStreamBase,
                             nsIOutputStream, nsIFileOutputStream)
 
-nsresult nsFileOutputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                    void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsresult nsFileOutputStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsFileOutputStream> stream = new nsFileOutputStream();
   return stream->QueryInterface(aIID, aResult);
 }
@@ -877,10 +871,7 @@ nsSafeFileOutputStream::Finish() {
 ////////////////////////////////////////////////////////////////////////////////
 // nsFileStream
 
-nsresult nsFileStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                              void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsresult nsFileStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsFileStream> stream = new nsFileStream();
   return stream->QueryInterface(aIID, aResult);
 }

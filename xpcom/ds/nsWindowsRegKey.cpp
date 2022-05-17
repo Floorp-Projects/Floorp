@@ -516,12 +516,7 @@ void NS_NewWindowsRegKey(nsIWindowsRegKey** aResult) {
 
 //-----------------------------------------------------------------------------
 
-nsresult nsWindowsRegKeyConstructor(nsISupports* aDelegate, const nsIID& aIID,
-                                    void** aResult) {
-  if (aDelegate) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
+nsresult nsWindowsRegKeyConstructor(const nsIID& aIID, void** aResult) {
   nsCOMPtr<nsIWindowsRegKey> key;
   NS_NewWindowsRegKey(getter_AddRefs(key));
   return key->QueryInterface(aIID, aResult);

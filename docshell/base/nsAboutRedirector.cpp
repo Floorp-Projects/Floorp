@@ -284,8 +284,7 @@ nsAboutRedirector::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsresult nsAboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult) {
+nsresult nsAboutRedirector::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsAboutRedirector> about = new nsAboutRedirector();
   return about->QueryInterface(aIID, aResult);
 }
