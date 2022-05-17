@@ -4275,20 +4275,16 @@ void SdpOfferAnswerHandler::RemoveStoppedTransceivers() {
     if ((local_content && local_content->rejected) ||
         (remote_content && remote_content->rejected)) {
       RTC_LOG(LS_INFO) << "Dissociating transceiver"
-                       << " since the media section is being recycled.";
+                          " since the media section is being recycled.";
       transceiver->internal()->set_mid(absl::nullopt);
       transceiver->internal()->set_mline_index(absl::nullopt);
-      transceivers()->Remove(transceiver);
-      continue;
-    }
-    if (!local_content && !remote_content) {
+    } else if (!local_content && !remote_content) {
       // TODO(bugs.webrtc.org/11973): Consider if this should be removed already
       // See https://github.com/w3c/webrtc-pc/issues/2576
       RTC_LOG(LS_INFO)
           << "Dropping stopped transceiver that was never associated";
-      transceivers()->Remove(transceiver);
-      continue;
     }
+    transceivers()->Remove(transceiver);
   }
 }
 
