@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 
-from distutils.version import StrictVersion as Version
+from packaging.version import Version
 
 import buildconfig
 from mozbuild.action.util import log_build_task

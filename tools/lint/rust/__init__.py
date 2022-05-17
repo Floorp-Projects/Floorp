@@ -8,7 +8,7 @@ import six
 import re
 import subprocess
 from collections import namedtuple
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from mozboot.util import get_tools_dir
 from mozfile import which
@@ -128,7 +128,7 @@ def get_rustfmt_version(binary):
         output = e.output
 
     version = re.findall(r"\d.\d+.\d+", output)[0]
-    return StrictVersion(version)
+    return Version(version)
 
 
 def lint(paths, config, fix=None, **lintargs):
@@ -149,7 +149,7 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     min_version_str = config.get("min_rustfmt_version")
-    min_version = StrictVersion(min_version_str)
+    min_version = Version(min_version_str)
     actual_version = get_rustfmt_version(binary)
     log.debug(
         "Found version: {}. Minimal expected version: {}".format(
