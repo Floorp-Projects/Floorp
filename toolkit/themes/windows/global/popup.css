@@ -19,12 +19,6 @@ panel {
   --windows-panel-box-shadow: 0 0 4px hsla(0,0%,0%,.2);
 }
 
-@media (-moz-windows-default-theme) {
-  panel, menupopup {
-    --windows-panel-box-shadow: 0 0 4px hsla(210,4%,10%,.2);
-  }
-}
-
 menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
@@ -46,20 +40,18 @@ menupopup {
     appearance: none;
     color-scheme: unset;
 
-    /* Force a rounded-rect dropshadow to appear. */
-    -moz-window-shadow: cliprounded;
-
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
     border: none;
-    border-radius: 4px;
+    /* To account for the box-shadow below */
+    margin: -4px;
 
     --panel-color: var(--menu-color);
     --panel-border-radius: 4px;
     --panel-padding: 4px 0;
     --panel-border-color: var(--menu-border-color);
     --panel-background: var(--menu-background-color);
-    --nested-margin: -6px;
+    --nested-margin: -10px;
   }
 
   menupopup > menuitem,
@@ -69,8 +61,8 @@ menupopup {
   }
 
   menupopup::part(content) {
-    /* Prevent contained items from drawing over the border-radius. */
-    overflow: clip;
+    box-shadow: var(--windows-panel-box-shadow);
+    margin: 4px;
   }
 }
 
