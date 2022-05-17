@@ -2145,7 +2145,6 @@ package org.mozilla.geckoview {
     field public static final int ERROR_POSTPONED = -101;
     field public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
     field public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
-    field public static final int ERROR_UNEXPECTED_ADDON_VERSION = -9;
     field public static final int ERROR_USER_CANCELED = -100;
   }
 
