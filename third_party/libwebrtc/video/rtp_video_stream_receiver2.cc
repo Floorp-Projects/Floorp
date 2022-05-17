@@ -782,6 +782,9 @@ void RtpVideoStreamReceiver2::OnInsertedPacket(
   }
   RTC_DCHECK(frame_boundary);
   if (result.buffer_cleared) {
+    last_received_rtp_system_time_.reset();
+    last_received_keyframe_rtp_system_time_.reset();
+    last_received_keyframe_rtp_timestamp_.reset();
     RequestKeyFrame();
   }
 }
@@ -1159,7 +1162,9 @@ void RtpVideoStreamReceiver2::UpdatePacketReceiveTimestamps(
     const RtpPacketReceived& packet,
     bool is_keyframe) {
   Timestamp now = clock_->CurrentTime();
-  if (is_keyframe) {
+  if (is_keyframe ||
+      last_received_keyframe_rtp_timestamp_ == packet.Timestamp()) {
+    last_received_keyframe_rtp_timestamp_ = packet.Timestamp();
     last_received_keyframe_rtp_system_time_ = now;
   }
   last_received_rtp_system_time_ = now;

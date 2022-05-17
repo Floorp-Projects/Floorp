@@ -804,6 +804,12 @@ void RtpVideoStreamReceiver::OnInsertedPacket(
   }
   RTC_DCHECK(frame_boundary);
   if (result.buffer_cleared) {
+    {
+      MutexLock lock(&sync_info_lock_);
+      last_received_rtp_system_time_.reset();
+      last_received_keyframe_rtp_system_time_.reset();
+      last_received_keyframe_rtp_timestamp_.reset();
+    }
     RequestKeyFrame();
   }
 }
@@ -1192,7 +1198,9 @@ void RtpVideoStreamReceiver::UpdatePacketReceiveTimestamps(
   Timestamp now = clock_->CurrentTime();
   {
     MutexLock lock(&sync_info_lock_);
-    if (is_keyframe) {
+    if (is_keyframe ||
+        last_received_keyframe_rtp_timestamp_ == packet.Timestamp()) {
+      last_received_keyframe_rtp_timestamp_ = packet.Timestamp();
       last_received_keyframe_rtp_system_time_ = now;
     }
     last_received_rtp_system_time_ = now;
