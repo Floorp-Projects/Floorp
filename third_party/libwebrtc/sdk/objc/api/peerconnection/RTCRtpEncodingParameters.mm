@@ -24,6 +24,7 @@
 @synthesize ssrc = _ssrc;
 @synthesize bitratePriority = _bitratePriority;
 @synthesize networkPriority = _networkPriority;
+@synthesize adaptiveAudioPacketTime = _adaptiveAudioPacketTime;
 
 - (instancetype)init {
   webrtc::RtpEncodingParameters nativeParameters;
@@ -61,6 +62,7 @@
     _bitratePriority = nativeParameters.bitrate_priority;
     _networkPriority = [RTC_OBJC_TYPE(RTCRtpEncodingParameters)
         priorityFromNativePriority:nativeParameters.network_priority];
+    _adaptiveAudioPacketTime = nativeParameters.adaptive_ptime;
   }
   return self;
 }
@@ -93,6 +95,7 @@
   parameters.bitrate_priority = _bitratePriority;
   parameters.network_priority =
       [RTC_OBJC_TYPE(RTCRtpEncodingParameters) nativePriorityFromPriority:_networkPriority];
+  parameters.adaptive_ptime = _adaptiveAudioPacketTime;
   return parameters;
 }
 
