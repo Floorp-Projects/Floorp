@@ -26,7 +26,7 @@ namespace webrtc {
 // class MyClass {
 //  public:
 //   void Foo() {
-//     RTC_DCHECK_RUN_ON(sequence_checker_);
+//     RTC_DCHECK_RUN_ON(&sequence_checker_);
 //     ... (do stuff) ...
 //   }
 //
