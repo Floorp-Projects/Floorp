@@ -262,6 +262,7 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell2-1</td><td>cell2-2</td></tr>" +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // Requires layout information.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,

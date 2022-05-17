@@ -228,23 +228,6 @@ enum class EditAction {
   // <td> or <th>.
   eSetTableCellElementType,
 
-  // Those edit actions are mapped to the methods in nsITableEditor which
-  // access table layout information.
-  eSelectTableCell,
-  eSelectTableRow,
-  eSelectTableColumn,
-  eSelectTable,
-  eSelectAllTableCells,
-  eGetCellIndexes,
-  eGetTableSize,
-  eGetCellAt,
-  eGetCellDataAt,
-  eGetFirstRow,
-  eGetSelectedOrParentTableElement,
-  eGetSelectedCellsType,
-  eGetFirstSelectedCellInTable,
-  eGetSelectedCells,
-
   // eSetInlineStyleProperty indicates to set CSS another inline style property
   // which is not defined below.
   eSetInlineStyleProperty,
@@ -493,26 +476,6 @@ enum class EditSubAction : int32_t {
   eCreatePaddingBRElementForEmptyEditor,
 };
 
-// You can use this macro as:
-//   case NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING:
-// clang-format off
-#define NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING \
-       mozilla::EditAction::eSelectTableCell:                     \
-  case mozilla::EditAction::eSelectTableRow:                      \
-  case mozilla::EditAction::eSelectTableColumn:                   \
-  case mozilla::EditAction::eSelectTable:                         \
-  case mozilla::EditAction::eSelectAllTableCells:                 \
-  case mozilla::EditAction::eGetCellIndexes:                      \
-  case mozilla::EditAction::eGetTableSize:                        \
-  case mozilla::EditAction::eGetCellAt:                           \
-  case mozilla::EditAction::eGetCellDataAt:                       \
-  case mozilla::EditAction::eGetFirstRow:                         \
-  case mozilla::EditAction::eGetSelectedOrParentTableElement:     \
-  case mozilla::EditAction::eGetSelectedCellsType:                \
-  case mozilla::EditAction::eGetFirstSelectedCellInTable:         \
-  case mozilla::EditAction::eGetSelectedCells
-// clang-format on
-
 inline EditorInputType ToInputType(EditAction aEditAction) {
   switch (aEditAction) {
     case EditAction::eInsertText:
@@ -649,16 +612,6 @@ inline bool MayEditActionDeleteAroundCollapsedSelection(
   }
 }
 
-inline bool IsEditActionInOrderToEditSomething(const EditAction aEditAction) {
-  switch (aEditAction) {
-    case EditAction::eNotEditing:
-    case NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING:
-      return false;
-    default:
-      return true;
-  }
-}
-
 inline bool IsEditActionTableEditing(const EditAction aEditAction) {
   switch (aEditAction) {
     case EditAction::eInsertTableRowElement:
@@ -683,7 +636,6 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
     case EditAction::eNone:
     case EditAction::eNotEditing:
     case EditAction::eInitializing:
-    case NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING:
       return false;
 
     // EditActions modifying around selection.
@@ -825,28 +777,6 @@ inline bool MayEditActionDeleteSelection(const EditAction aEditAction) {
       return false;
   }
   return false;
-}
-
-inline bool MayEditActionRequireLayout(const EditAction aEditAction) {
-  switch (aEditAction) {
-    // Table editing require layout information for referring table cell data
-    // such as row/column number and rowspan/colspan.
-    case EditAction::eInsertTableRowElement:
-    case EditAction::eRemoveTableRowElement:
-    case EditAction::eInsertTableColumn:
-    case EditAction::eRemoveTableColumn:
-    case EditAction::eRemoveTableElement:
-    case EditAction::eRemoveTableCellElement:
-    case EditAction::eDeleteTableCellContents:
-    case EditAction::eInsertTableCellElement:
-    case EditAction::eJoinTableCellElements:
-    case EditAction::eSplitTableCellElement:
-    case EditAction::eSetTableCellElementType:
-    case NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING:
-      return true;
-    default:
-      return false;
-  }
 }
 
 }  // namespace mozilla

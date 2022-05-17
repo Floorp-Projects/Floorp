@@ -128,6 +128,7 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr>" +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -151,6 +152,7 @@ SimpleTest.waitForFocus(() => {
                        "<tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr>" +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -174,6 +176,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -197,6 +200,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td colspan="3">cell2-1</td></tr>' +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -220,6 +224,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td id="select" colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -243,6 +248,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td id="select" colspan="2">cell2-1</td><td>cell2-3</td></tr>' +
                      "</table>";
   editor.focus();
+  editor.scrollTop; // layout information required.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
