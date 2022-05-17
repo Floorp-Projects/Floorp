@@ -2272,13 +2272,6 @@ TEST_F(VideoSendStreamTest, VideoSendStreamUpdateActiveSimulcastLayers) {
     GetVideoSendStream()->ReconfigureVideoEncoder(
         GetVideoEncoderConfig()->Copy());
   });
-  // TODO(bugs.webrtc.org/8807): Currently we require a hard reconfiguration to
-  // update the VideoBitrateAllocator and BitrateAllocator of which layers are
-  // active. Once the change is made for a "soft" reconfiguration we can remove
-  // the expecation for an encoder init. We can also test that bitrate changes
-  // when just updating individual active layers, which should change the
-  // bitrate set to the video encoder.
-  EXPECT_TRUE(encoder.WaitForEncoderInit());
   EXPECT_TRUE(encoder.WaitBitrateChanged(true));
 
   // Turning off both simulcast layers should trigger a bitrate change of 0.
