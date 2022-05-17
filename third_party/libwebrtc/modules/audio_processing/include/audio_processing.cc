@@ -57,6 +57,17 @@ std::string GainController2LevelEstimatorToString(
   RTC_CHECK_NOTREACHED();
 }
 
+std::string GainController2NoiseEstimatorToString(
+    const Agc2Config::NoiseEstimator& type) {
+  switch (type) {
+    case Agc2Config::NoiseEstimator::kStationaryNoise:
+      return "StationaryNoise";
+    case Agc2Config::NoiseEstimator::kNoiseFloor:
+      return "NoiseFloor";
+  }
+  RTC_CHECK_NOTREACHED();
+}
+
 }  // namespace
 
 constexpr int AudioProcessing::kNativeSampleRatesHz[];
@@ -160,7 +171,9 @@ std::string AudioProcessing::Config::ToString() const {
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db
       << " }, adaptive_digital: { enabled: "
-      << gain_controller2.adaptive_digital.enabled
+      << gain_controller2.adaptive_digital.enabled << ", noise_estimator: "
+      << GainController2NoiseEstimatorToString(
+             gain_controller2.adaptive_digital.noise_estimator)
       << ", level_estimator: { vad_probability_attack: "
       << gain_controller2.adaptive_digital.vad_probability_attack << ", type: "
       << GainController2LevelEstimatorToString(

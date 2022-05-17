@@ -28,7 +28,11 @@ class NoiseLevelEstimator {
 };
 
 // Creates a noise level estimator based on stationarity detection.
-std::unique_ptr<NoiseLevelEstimator> CreateNoiseLevelEstimator(
+std::unique_ptr<NoiseLevelEstimator> CreateStationaryNoiseEstimator(
+    ApmDataDumper* data_dumper);
+
+// Creates a noise level estimator based on noise floor detection.
+std::unique_ptr<NoiseLevelEstimator> CreateNoiseFloorEstimator(
     ApmDataDumper* data_dumper);
 
 }  // namespace webrtc

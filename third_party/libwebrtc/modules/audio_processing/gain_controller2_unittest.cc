@@ -351,7 +351,7 @@ TEST(GainController2, UsageNoSaturationMargin) {
   config.adaptive_digital.extra_saturation_margin_db = 0.f;
   gain_controller2.ApplyConfig(config);
 
-  EXPECT_GT(GainAfterProcessingFile(&gain_controller2), 2.f);
+  EXPECT_GT(GainAfterProcessingFile(&gain_controller2), 1.9f);
 }
 
 }  // namespace test
