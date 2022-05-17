@@ -1423,6 +1423,7 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.PromptDelegate.PromptInstanceDelegate {
     method @UiThread default public void onPromptDismiss(@NonNull GeckoSession.PromptDelegate.BasePrompt);
+    method @UiThread default public void onPromptUpdate(@NonNull GeckoSession.PromptDelegate.BasePrompt);
   }
 
   public static class GeckoSession.PromptDelegate.PromptResponse {
