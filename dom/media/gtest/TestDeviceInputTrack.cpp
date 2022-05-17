@@ -541,6 +541,11 @@ TEST_F(TestDeviceInputTrack, ErrorCallback) {
   DispatchFunction([&] { stream->ForceError(); });
   WaitFor(stream->ErrorForcedEvent());
 
+  // Make sure the stream has been stopped by the error-state's backgroud thread
+  // task, to avoid getting a stopped state callback by `track->StopAudio`
+  // below.
+  WaitFor(stream->ErrorStoppedEvent());
+
   // Stop and destroy the stream.
   DispatchFunction([&] { track->StopAudio(); });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
