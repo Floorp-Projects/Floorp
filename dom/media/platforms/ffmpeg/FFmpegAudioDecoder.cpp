@@ -17,11 +17,14 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
                                                   const AudioInfo& aConfig)
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)) {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
-  // Use a new MediaByteBuffer as the object will be modified during
-  // initialization.
-  if (aConfig.mCodecSpecificConfig && aConfig.mCodecSpecificConfig->Length()) {
+
+  RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
+      ForceGetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
+  if (audioCodecSpecificBinaryBlob && audioCodecSpecificBinaryBlob->Length()) {
+    // Use a new MediaByteBuffer as the object will be modified during
+    // initialization.
     mExtraData = new MediaByteBuffer;
-    mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
+    mExtraData->AppendElements(*audioCodecSpecificBinaryBlob);
     if (mCodecID == AV_CODEC_ID_MP3) {
       BufferReader reader(mExtraData->Elements(), mExtraData->Length());
       mEncoderDelay = reader.ReadU32().unwrapOr(0);
