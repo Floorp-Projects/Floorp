@@ -17,6 +17,8 @@
       * AudioEngine
         * [ADM](/modules/audio_device/g3doc/audio_device_module.md)
       * [Audio Coding](/modules/audio_coding/g3doc/index.md)
+      * AudioProcessingModule
+        * [APM](/modules/audio_processing/g3doc/audio_processing_module.md)
     *   Video
     *   DataChannel
     *   PeerConnection
