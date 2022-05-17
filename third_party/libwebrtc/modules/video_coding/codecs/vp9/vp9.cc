@@ -14,7 +14,7 @@
 
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/sdp_video_format.h"
-#include "media/base/vp9_profile.h"
+#include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_decoder.h"
 #include "modules/video_coding/codecs/vp9/libvpx_vp9_encoder.h"
 #include "rtc_base/checks.h"

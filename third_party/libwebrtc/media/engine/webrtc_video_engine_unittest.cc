@@ -35,12 +35,12 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_decoder_factory.h"
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "call/flexfec_receive_stream.h"
-#include "common_video/h264/profile_level_id.h"
 #include "media/base/fake_frame_source.h"
 #include "media/base/fake_network_interface.h"
 #include "media/base/fake_video_renderer.h"
@@ -581,20 +581,21 @@ TEST_F(WebRtcVideoEngineTest, UseFactoryForVp8WhenSupported) {
 // TODO(deadbeef): This test should be updated if/when we start
 // adding RTX codecs for unrecognized codec names.
 TEST_F(WebRtcVideoEngineTest, RtxCodecAddedForH264Codec) {
-  using webrtc::H264::kLevel1;
-  using webrtc::H264::ProfileLevelId;
-  using webrtc::H264::ProfileLevelIdToString;
+  using webrtc::H264Level;
+  using webrtc::H264Profile;
+  using webrtc::H264ProfileLevelId;
+  using webrtc::H264ProfileLevelIdToString;
   webrtc::SdpVideoFormat h264_constrained_baseline("H264");
   h264_constrained_baseline.parameters[kH264FmtpProfileLevelId] =
-      *ProfileLevelIdToString(
-          ProfileLevelId(webrtc::H264::kProfileConstrainedBaseline, kLevel1));
+      *H264ProfileLevelIdToString(H264ProfileLevelId(
+          H264Profile::kProfileConstrainedBaseline, H264Level::kLevel1));
   webrtc::SdpVideoFormat h264_constrained_high("H264");
   h264_constrained_high.parameters[kH264FmtpProfileLevelId] =
-      *ProfileLevelIdToString(
-          ProfileLevelId(webrtc::H264::kProfileConstrainedHigh, kLevel1));
+      *H264ProfileLevelIdToString(H264ProfileLevelId(
+          H264Profile::kProfileConstrainedHigh, H264Level::kLevel1));
   webrtc::SdpVideoFormat h264_high("H264");
-  h264_high.parameters[kH264FmtpProfileLevelId] = *ProfileLevelIdToString(
-      ProfileLevelId(webrtc::H264::kProfileHigh, kLevel1));
+  h264_high.parameters[kH264FmtpProfileLevelId] = *H264ProfileLevelIdToString(
+      H264ProfileLevelId(H264Profile::kProfileHigh, H264Level::kLevel1));
 
   encoder_factory_->AddSupportedVideoCodec(h264_constrained_baseline);
   encoder_factory_->AddSupportedVideoCodec(h264_constrained_high);
@@ -721,10 +722,10 @@ size_t WebRtcVideoEngineTest::GetEngineCodecIndex(
     // The tests only use H264 Constrained Baseline. Make sure we don't return
     // an internal H264 codec from the engine with a different H264 profile.
     if (absl::EqualsIgnoreCase(name.c_str(), kH264CodecName)) {
-      const absl::optional<webrtc::H264::ProfileLevelId> profile_level_id =
-          webrtc::H264::ParseSdpProfileLevelId(engine_codec.params);
+      const absl::optional<webrtc::H264ProfileLevelId> profile_level_id =
+          webrtc::ParseSdpForH264ProfileLevelId(engine_codec.params);
       if (profile_level_id->profile !=
-          webrtc::H264::kProfileConstrainedBaseline) {
+          webrtc::H264Profile::kProfileConstrainedBaseline) {
         continue;
       }
     }

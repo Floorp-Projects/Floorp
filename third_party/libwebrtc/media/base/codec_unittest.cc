@@ -12,8 +12,8 @@
 
 #include <tuple>
 
-#include "media/base/h264_profile_level_id.h"
-#include "media/base/vp9_profile.h"
+#include "api/video_codecs/h264_profile_level_id.h"
+#include "api/video_codecs/vp9_profile.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
 #include "rtc_base/gunit.h"
 
@@ -457,10 +457,10 @@ TEST(CodecTest, TestToCodecParameters) {
 
 TEST(CodecTest, H264CostrainedBaselineIsAddedIfH264IsSupported) {
   const std::vector<webrtc::SdpVideoFormat> kExplicitlySupportedFormats = {
-      webrtc::CreateH264Format(webrtc::H264::kProfileBaseline,
-                               webrtc::H264::kLevel3_1, "1"),
-      webrtc::CreateH264Format(webrtc::H264::kProfileBaseline,
-                               webrtc::H264::kLevel3_1, "0")};
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                               webrtc::H264Level::kLevel3_1, "1"),
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                               webrtc::H264Level::kLevel3_1, "0")};
 
   std::vector<webrtc::SdpVideoFormat> supported_formats =
       kExplicitlySupportedFormats;
@@ -468,11 +468,11 @@ TEST(CodecTest, H264CostrainedBaselineIsAddedIfH264IsSupported) {
       &supported_formats);
 
   const webrtc::SdpVideoFormat kH264ConstrainedBasedlinePacketization1 =
-      webrtc::CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                               webrtc::H264::kLevel3_1, "1");
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                               webrtc::H264Level::kLevel3_1, "1");
   const webrtc::SdpVideoFormat kH264ConstrainedBasedlinePacketization0 =
-      webrtc::CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                               webrtc::H264::kLevel3_1, "0");
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                               webrtc::H264Level::kLevel3_1, "0");
 
   EXPECT_EQ(supported_formats[0], kExplicitlySupportedFormats[0]);
   EXPECT_EQ(supported_formats[1], kExplicitlySupportedFormats[1]);
@@ -497,14 +497,14 @@ TEST(CodecTest, H264CostrainedBaselineIsNotAddedIfH264IsUnsupported) {
 
 TEST(CodecTest, H264CostrainedBaselineNotAddedIfAlreadySpecified) {
   const std::vector<webrtc::SdpVideoFormat> kExplicitlySupportedFormats = {
-      webrtc::CreateH264Format(webrtc::H264::kProfileBaseline,
-                               webrtc::H264::kLevel3_1, "1"),
-      webrtc::CreateH264Format(webrtc::H264::kProfileBaseline,
-                               webrtc::H264::kLevel3_1, "0"),
-      webrtc::CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                               webrtc::H264::kLevel3_1, "1"),
-      webrtc::CreateH264Format(webrtc::H264::kProfileConstrainedBaseline,
-                               webrtc::H264::kLevel3_1, "0")};
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                               webrtc::H264Level::kLevel3_1, "1"),
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileBaseline,
+                               webrtc::H264Level::kLevel3_1, "0"),
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                               webrtc::H264Level::kLevel3_1, "1"),
+      webrtc::CreateH264Format(webrtc::H264Profile::kProfileConstrainedBaseline,
+                               webrtc::H264Level::kLevel3_1, "0")};
 
   std::vector<webrtc::SdpVideoFormat> supported_formats =
       kExplicitlySupportedFormats;

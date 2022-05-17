@@ -23,20 +23,15 @@ config("rtc_media_defines_config") {
   defines = [ "HAVE_WEBRTC_VIDEO" ]
 }
 
-rtc_library("rtc_h264_profile_id") {
+# Remove once downstream projects stop depend on this.
+rtc_source_set("rtc_h264_profile_id") {
   visibility = [ "*" ]
   sources = [
     "base/h264_profile_level_id.cc",
     "base/h264_profile_level_id.h",
   ]
-
-  deps = [
-    "../rtc_base",
-    "../rtc_base:checks",
-    "../rtc_base:rtc_base_approved",
-    "../rtc_base/system:rtc_export",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  public_deps =  # no-presubmit-check TODO(webrtc:8603)
+      [ "../api/video_codecs:video_codecs_api" ]
 }
 
 rtc_source_set("rtc_media_config") {
@@ -44,30 +39,24 @@ rtc_source_set("rtc_media_config") {
   sources = [ "base/media_config.h" ]
 }
 
-rtc_library("rtc_vp9_profile") {
+# Remove once downstream projects stop depend on this.
+rtc_source_set("rtc_vp9_profile") {
   visibility = [ "*" ]
-  sources = [
-    "base/vp9_profile.cc",
-    "base/vp9_profile.h",
-  ]
-
-  deps = [
-    "../api/video_codecs:video_codecs_api",
-    "../rtc_base:rtc_base_approved",
-    "../rtc_base/system:rtc_export",
-  ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  sources = [ "base/vp9_profile.h" ]
+  public_deps =  # no-presubmit-check TODO(webrtc:8603)
+      [ "../api/video_codecs:video_codecs_api" ]
 }
 
-rtc_library("rtc_sdp_fmtp_utils") {
+rtc_library("rtc_sdp_video_format_utils") {
   visibility = [ "*" ]
   sources = [
-    "base/sdp_fmtp_utils.cc",
-    "base/sdp_fmtp_utils.h",
+    "base/sdp_video_format_utils.cc",
+    "base/sdp_video_format_utils.h",
   ]
 
   deps = [
     "../api/video_codecs:video_codecs_api",
+    "../rtc_base:checks",
     "../rtc_base:stringutils",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -78,9 +67,7 @@ rtc_library("rtc_media_base") {
   defines = []
   libs = []
   deps = [
-    ":rtc_h264_profile_id",
     ":rtc_media_config",
-    ":rtc_vp9_profile",
     "../api:array_view",
     "../api:audio_options_api",
     "../api:frame_transformer_interface",
@@ -221,7 +208,6 @@ rtc_library("rtc_internal_video_codecs") {
   libs = []
   deps = [
     ":rtc_encoder_simulcast_proxy",
-    ":rtc_h264_profile_id",
     ":rtc_media_base",
     ":rtc_simulcast_encoder_adapter",
     "../api/video:encoded_image",
@@ -557,9 +543,8 @@ if (rtc_include_tests) {
         ":rtc_media_base",
         ":rtc_media_engine_defaults",
         ":rtc_media_tests_utils",
-        ":rtc_sdp_fmtp_utils",
+        ":rtc_sdp_video_format_utils",
         ":rtc_simulcast_encoder_adapter",
-        ":rtc_vp9_profile",
         "../api:create_simulcast_test_fixture_api",
         "../api:libjingle_peerconnection_api",
         "../api:mock_video_bitrate_allocator",
@@ -588,7 +573,6 @@ if (rtc_include_tests) {
         "../audio",
         "../call:call_interfaces",
         "../common_video",
-        "../media:rtc_h264_profile_id",
         "../modules/audio_device:mock_audio_device",
         "../modules/audio_processing",
         "../modules/audio_processing:api",
@@ -629,7 +613,7 @@ if (rtc_include_tests) {
         "base/codec_unittest.cc",
         "base/media_engine_unittest.cc",
         "base/rtp_utils_unittest.cc",
-        "base/sdp_fmtp_utils_unittest.cc",
+        "base/sdp_video_format_utils_unittest.cc",
         "base/stream_params_unittest.cc",
         "base/turn_utils_unittest.cc",
         "base/video_adapter_unittest.cc",
