@@ -91,4 +91,40 @@ class CreditCardAutofillDialogFactsTest {
             }
         }
     }
+
+    @Test
+    fun `Emits facts for autofill confirm and create events`() {
+        CollectionProcessor.withFactCollection { facts ->
+
+            emitCreditCardAutofillCreatedFact()
+
+            assertEquals(1, facts.size)
+
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.CONFIRM, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED,
+                fact.item
+            )
+        }
+    }
+
+    @Test
+    fun `Emits facts for autofill confirm and update events`() {
+        CollectionProcessor.withFactCollection { facts ->
+
+            emitCreditCardAutofillUpdatedFact()
+
+            assertEquals(1, facts.size)
+
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.CONFIRM, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED,
+                fact.item
+            )
+        }
+    }
 }

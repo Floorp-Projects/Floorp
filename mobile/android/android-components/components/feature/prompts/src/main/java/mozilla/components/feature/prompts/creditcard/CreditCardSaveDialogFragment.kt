@@ -30,6 +30,8 @@ import mozilla.components.feature.prompts.dialog.KEY_PROMPT_UID
 import mozilla.components.feature.prompts.dialog.KEY_SESSION_ID
 import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
+import mozilla.components.feature.prompts.facts.emitCreditCardAutofillCreatedFact
+import mozilla.components.feature.prompts.facts.emitCreditCardAutofillUpdatedFact
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.utils.creditCardIssuerNetwork
 
@@ -43,6 +45,9 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val creditCard by lazy { safeArguments.getParcelable<CreditCardEntry>(KEY_CREDIT_CARD)!! }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var confirmResult: Result = Result.CanBeCreated
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return BottomSheetDialog(requireContext(), R.style.MozDialogStyle).apply {
@@ -84,6 +89,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
                 value = creditCard
             )
             dismiss()
+            emitSaveUpdateFact()
         }
 
         view.findViewById<Button>(R.id.save_cancel).setOnClickListener {
@@ -95,6 +101,21 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
         }
 
         updateUI(view)
+    }
+
+    /**
+     * Emit the save or update fact based on the confirm action for the credit card.
+     */
+    @VisibleForTesting
+    internal fun emitSaveUpdateFact() {
+        when (confirmResult) {
+            is Result.CanBeCreated -> {
+                emitCreditCardAutofillCreatedFact()
+            }
+            is Result.CanBeUpdated -> {
+                emitCreditCardAutofillUpdatedFact()
+            }
+        }
     }
 
     override fun onCancel(dialog: DialogInterface) {
@@ -110,10 +131,10 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
      */
     private fun updateUI(view: View) = view.toScope().launch(IO) {
         val validationDelegate = feature?.creditCardValidationDelegate ?: return@launch
-        val result = validationDelegate.shouldCreateOrUpdate(creditCard)
+        confirmResult = validationDelegate.shouldCreateOrUpdate(creditCard)
 
         withContext(Main) {
-            when (result) {
+            when (confirmResult) {
                 is Result.CanBeCreated -> setViewText(
                     view = view,
                     header = requireContext().getString(R.string.mozac_feature_prompts_save_credit_card_prompt_title),

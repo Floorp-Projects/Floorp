@@ -12,8 +12,13 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.isVisible
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.CreditCardEntry
+import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.R
+import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Action
+import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.appCompatContext
 import mozilla.components.support.test.mock
@@ -252,5 +257,59 @@ class CreditCardSaveDialogFragmentTest {
             sessionId = sessionId,
             promptRequestUID = promptRequestUID
         )
+    }
+
+    @Test
+    fun `WHEN the confirm save button is clicked THEN the appropriate fact is emitted`() {
+        val fragment = spy(
+            CreditCardSaveDialogFragment.newInstance(
+                sessionId = sessionId,
+                promptRequestUID = promptRequestUID,
+                shouldDismissOnLoad = true,
+                creditCard = creditCard
+            )
+        )
+
+        fragment.confirmResult = CreditCardValidationDelegate.Result.CanBeCreated
+
+        CollectionProcessor.withFactCollection { facts ->
+            fragment.emitSaveUpdateFact()
+
+            assertEquals(1, facts.size)
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.CONFIRM, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_CREATED,
+                fact.item
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN the confirm update button is clicked THEN the appropriate fact is emitted`() {
+        val fragment = spy(
+            CreditCardSaveDialogFragment.newInstance(
+                sessionId = sessionId,
+                promptRequestUID = promptRequestUID,
+                shouldDismissOnLoad = true,
+                creditCard = creditCard
+            )
+        )
+
+        fragment.confirmResult = CreditCardValidationDelegate.Result.CanBeUpdated(mock())
+
+        CollectionProcessor.withFactCollection { facts ->
+            fragment.emitSaveUpdateFact()
+
+            assertEquals(1, facts.size)
+            val fact = facts.single()
+            assertEquals(Component.FEATURE_PROMPTS, fact.component)
+            assertEquals(Action.CONFIRM, fact.action)
+            assertEquals(
+                CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_UPDATED,
+                fact.item
+            )
+        }
     }
 }
