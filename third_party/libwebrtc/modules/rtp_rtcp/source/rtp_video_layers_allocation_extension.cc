@@ -110,8 +110,7 @@ bool AllocationIsValid(const VideoLayersAllocation& allocation) {
       if (spatial_layer.height <= 0) {
         return false;
       }
-      if (spatial_layer.frame_rate_fps < 0 ||
-          spatial_layer.frame_rate_fps > 255) {
+      if (spatial_layer.frame_rate_fps > 255) {
         return false;
       }
     }
