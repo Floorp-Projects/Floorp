@@ -63,7 +63,10 @@ RemoteAudioSource::RemoteAudioSource(
 RemoteAudioSource::~RemoteAudioSource() {
   RTC_DCHECK(main_thread_->IsCurrent());
   RTC_DCHECK(audio_observers_.empty());
-  RTC_DCHECK(sinks_.empty());
+  if (!sinks_.empty()) {
+    RTC_LOG(LS_WARNING)
+        << "RemoteAudioSource destroyed while sinks_ is non-empty.";
+  }
 }
 
 void RemoteAudioSource::Start(cricket::VoiceMediaChannel* media_channel,
