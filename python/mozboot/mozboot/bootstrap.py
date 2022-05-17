@@ -569,7 +569,7 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     git = to_optional_str(git)
 
     # Perform a download of cinnabar.
-    download_args = [git, "cinnabar", "download"]
+    download_args = [sys.executable, str(cinnabar_dir / "download.py")]
 
     try:
         subprocess.check_call(download_args, cwd=str(cinnabar_dir))

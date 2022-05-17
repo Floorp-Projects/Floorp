@@ -189,7 +189,9 @@ def git_clone_firefox(git: Path, dest: Path, watchman: Path):
             (cinnabar_dir / "git-remote-hg").chmod(st.st_mode | stat.S_IEXEC)
             env["PATH"] = str(cinnabar_dir) + os.pathsep + env["PATH"]
             subprocess.check_call(
-                ["git", "cinnabar", "download"], cwd=str(cinnabar_dir), env=env
+                [sys.executable, str(cinnabar_dir / "download.py")],
+                cwd=str(cinnabar_dir),
+                env=env,
             )
             print(
                 "WARNING! git-cinnabar is required for Firefox development  "
