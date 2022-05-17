@@ -164,6 +164,7 @@ rtc_source_set("video_legacy") {
     "../api:sequence_checker",
     "../api/crypto:frame_decryptor_interface",
     "../api/task_queue",
+    "../api/units:timestamp",
     "../api/video:encoded_image",
     "../api/video:recordable_encoded_frame",
     "../api/video:video_frame",
