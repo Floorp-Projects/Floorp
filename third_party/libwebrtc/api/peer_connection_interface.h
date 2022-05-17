@@ -634,6 +634,10 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // The delay before doing a usage histogram report for long-lived
     // PeerConnections. Used for testing only.
     absl::optional<int> report_usage_pattern_delay_ms;
+
+    // The ping interval (ms) when the connection is stable and writable. This
+    // parameter overrides the default value in the ICE implementation if set.
+    absl::optional<int> stable_writable_connection_ping_interval_ms;
     //
     // Don't forget to update operator== if adding something.
     //

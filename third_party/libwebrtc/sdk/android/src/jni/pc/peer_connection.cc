@@ -238,6 +238,12 @@ void JavaToNativeRTCConfiguration(
                                                               j_rtc_config);
   rtc_config->stun_candidate_keepalive_interval =
       JavaToNativeOptionalInt(jni, j_stun_candidate_keepalive_interval);
+  ScopedJavaLocalRef<jobject> j_stable_writable_connection_ping_interval_ms =
+      Java_RTCConfiguration_getStableWritableConnectionPingIntervalMs(
+          jni, j_rtc_config);
+  rtc_config->stable_writable_connection_ping_interval_ms =
+      JavaToNativeOptionalInt(jni,
+                              j_stable_writable_connection_ping_interval_ms);
   rtc_config->disable_ipv6_on_wifi =
       Java_RTCConfiguration_getDisableIPv6OnWifi(jni, j_rtc_config);
   rtc_config->max_ipv6_networks =
@@ -468,9 +474,7 @@ static jlong JNI_PeerConnection_CreatePeerConnectionObserver(
   return jlongFromPointer(new PeerConnectionObserverJni(jni, j_observer));
 }
 
-static void JNI_PeerConnection_FreeOwnedPeerConnection(
-    JNIEnv*,
-    jlong j_p) {
+static void JNI_PeerConnection_FreeOwnedPeerConnection(JNIEnv*, jlong j_p) {
   delete reinterpret_cast<OwnedPeerConnection*>(j_p);
 }
 
