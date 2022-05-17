@@ -310,7 +310,15 @@ package org.mozilla.geckoview {
   }
 
   public static interface Autofill.Delegate {
-    method @UiThread default public void onAutofill(@NonNull GeckoSession, int, @Nullable Autofill.Node);
+    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread default public void onAutofill(@NonNull GeckoSession, int, @Nullable Autofill.Node);
+    method @UiThread default public void onNodeAdd(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onNodeBlur(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onNodeFocus(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onNodeRemove(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onNodeUpdate(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onSessionCancel(@NonNull GeckoSession);
+    method @UiThread default public void onSessionCommit(@NonNull GeckoSession, @NonNull Autofill.Node, @NonNull Autofill.NodeData);
+    method @UiThread default public void onSessionStart(@NonNull GeckoSession);
   }
 
   public static final class Autofill.Hint {
@@ -331,7 +339,7 @@ package org.mozilla.geckoview {
   }
 
   public static final class Autofill.Node {
-    method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
+    method @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
     method @AnyThread @Nullable public String getAttribute(@NonNull String);
     method @AnyThread @NonNull public Map<String,String> getAttributes();
     method @AnyThread @NonNull public Collection<Autofill.Node> getChildren();
@@ -339,16 +347,21 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public String getDomain();
     method @AnyThread public boolean getEnabled();
     method @AnyThread public boolean getFocusable();
-    method @AnyThread public boolean getFocused();
+    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public boolean getFocused();
     method @AnyThread public int getHint();
-    method @AnyThread public int getId();
+    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public int getId();
     method @AnyThread public int getInputType();
     method @AnyThread @NonNull public String getTag();
-    method @AnyThread @NonNull public String getValue();
-    method @AnyThread public boolean getVisible();
+    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) @NonNull public String getValue();
+    method @AnyThread @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public boolean getVisible();
   }
 
-  public static final class Autofill.Notify {
+  public static class Autofill.NodeData {
+    method @AnyThread public int getId();
+    method @AnyThread @Nullable public String getValue();
+  }
+
+  @Deprecated @DeprecationSchedule(id="autofill-node",version=104) public static final class Autofill.Notify {
     method @AnyThread @Nullable public static String toString(int);
     field public static final int NODE_ADDED = 3;
     field public static final int NODE_BLURRED = 7;
@@ -361,9 +374,14 @@ package org.mozilla.geckoview {
   }
 
   public static final class Autofill.Session {
+    method @NonNull @UiThread public Autofill.NodeData dataFor(@NonNull Autofill.Node);
     method @UiThread public void fillViewStructure(@NonNull View, @NonNull ViewStructure, int);
-    method @AnyThread @NonNull public Rect getDefaultDimensions();
+    method @UiThread public void fillViewStructure(@NonNull Autofill.Node, @NonNull View, @NonNull ViewStructure, int);
+    method @NonNull @UiThread public Rect getDefaultDimensions();
+    method @Nullable @UiThread public Autofill.Node getFocused();
+    method @Nullable @UiThread public Autofill.NodeData getFocusedData();
     method @AnyThread @NonNull public Autofill.Node getRoot();
+    method @UiThread public boolean isVisible(@NonNull Autofill.Node);
   }
 
   @UiThread public class BasicSelectionActionDelegate implements ActionMode.Callback GeckoSession.SelectionActionDelegate {

@@ -27,9 +27,6 @@ var sniffer = {
     }
     return this.QueryInterface(iid);
   },
-  lockFactory: function sniffer_lockf(lock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
 
   getMIMETypeFromContent(request, data, length) {
     return sniffedType;

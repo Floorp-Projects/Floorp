@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import absolute_import, division
-from distutils.version import LooseVersion
+from packaging.version import Version
 import json
 import math
 import os
@@ -23,7 +23,7 @@ from mozharness.base.script import BaseScript
 
 # ensure all versions are 3 part (i.e. 99.1.0)
 # ensure all text (i.e. 'esr') is in the last part
-class CompareVersion(LooseVersion):
+class CompareVersion(Version):
     version = ""
 
     def __init__(self, versionMap):
@@ -38,7 +38,7 @@ class CompareVersion(LooseVersion):
         else:
             parts.append("0")
         self.version = ".".join(parts)
-        LooseVersion(versionMap)
+        Version(versionMap)
 
 
 def is_triangualar(x):
@@ -549,9 +549,9 @@ class UpdateVerifyConfigCreator(BaseScript):
 
             # Use new build targets for Windows, but only on compatible
             #  versions (42+). See bug 1185456 for additional context.
-            if self.config["platform"] not in ("win32", "win64") or LooseVersion(
+            if self.config["platform"] not in ("win32", "win64") or Version(
                 fromVersion
-            ) < LooseVersion("42.0"):
+            ) < Version("42.0"):
                 update_platform = ftp2updatePlatforms(self.config["platform"])[0]
             else:
                 update_platform = ftp2updatePlatforms(self.config["platform"])[1]

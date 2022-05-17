@@ -21,7 +21,7 @@ import attr
 import psutil
 import requests
 
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 import mozpack.path as mozpath
 
@@ -35,7 +35,7 @@ MEMORY_THRESHOLD = 7.4
 FREESPACE_THRESHOLD = 10
 
 # Latest MozillaBuild version.
-LATEST_MOZILLABUILD_VERSION = LooseVersion("3.3")
+LATEST_MOZILLABUILD_VERSION = Version("4.0")
 
 DISABLE_LASTACCESS_WIN = """
 Disable the last access time feature?
@@ -436,7 +436,7 @@ def mozillabuild(**kwargs) -> DoctorCheck:
                 display_text=["Could not get local MozillaBuild version."],
             )
 
-        if LooseVersion(local_version) < LATEST_MOZILLABUILD_VERSION:
+        if Version(local_version) < LATEST_MOZILLABUILD_VERSION:
             status = CheckStatus.WARNING
             desc = "MozillaBuild %s in use, <%s" % (
                 local_version,

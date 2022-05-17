@@ -947,6 +947,10 @@ bitflags! {
         /// If true, this stacking context is a blend container than contains
         /// mix-blend-mode children (and should thus be isolated).
         const IS_BLEND_CONTAINER = 1 << 0;
+        /// If true, this stacking context is a wrapper around a backdrop-filter (e.g. for
+        /// a clip-mask). This is needed to allow the correct selection of a backdrop root
+        /// since a clip-mask stacking context creates a parent surface.
+        const WRAPS_BACKDROP_FILTER = 1 << 1;
     }
 }
 

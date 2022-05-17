@@ -2126,9 +2126,6 @@ nsSingletonFactory::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
   return mSingleton->QueryInterface(aIID, aResult);
 }
 
-NS_IMETHODIMP
-nsSingletonFactory::LockFactory(bool) { return NS_OK; }
-
 /**
  * Set our windowcreator on the WindowWatcher service.
  */

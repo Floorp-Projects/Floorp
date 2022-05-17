@@ -2087,9 +2087,6 @@ nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
   return profileService->QueryInterface(aIID, aResult);
 }
 
-NS_IMETHODIMP
-nsToolkitProfileFactory::LockFactory(bool aVal) { return NS_OK; }
-
 nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult) {
   *aResult = new nsToolkitProfileFactory();
 

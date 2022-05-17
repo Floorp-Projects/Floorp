@@ -113,7 +113,7 @@ class SPSCRingBufferBase {
 
     mData = std::make_unique<T[]>(StorageCapacity());
 
-    std::atomic_thread_fence(std::memory_order::memory_order_seq_cst);
+    std::atomic_thread_fence(std::memory_order_seq_cst);
   }
   /**
    * Push `aCount` zero or default constructed elements in the array.
@@ -152,8 +152,8 @@ class SPSCRingBufferBase {
     AssertCorrectThread(mProducerId);
 #endif
 
-    int rdIdx = mReadIndex.load(std::memory_order::memory_order_acquire);
-    int wrIdx = mWriteIndex.load(std::memory_order::memory_order_relaxed);
+    int rdIdx = mReadIndex.load(std::memory_order_acquire);
+    int wrIdx = mWriteIndex.load(std::memory_order_relaxed);
 
     if (IsFull(rdIdx, wrIdx)) {
       return 0;
@@ -178,7 +178,7 @@ class SPSCRingBufferBase {
     }
 
     mWriteIndex.store(IncrementIndex(wrIdx, toWrite),
-                      std::memory_order::memory_order_release);
+                      std::memory_order_release);
 
     return toWrite;
   }
@@ -198,8 +198,8 @@ class SPSCRingBufferBase {
     AssertCorrectThread(mConsumerId);
 #endif
 
-    int wrIdx = mWriteIndex.load(std::memory_order::memory_order_acquire);
-    int rdIdx = mReadIndex.load(std::memory_order::memory_order_relaxed);
+    int wrIdx = mWriteIndex.load(std::memory_order_acquire);
+    int rdIdx = mReadIndex.load(std::memory_order_relaxed);
 
     if (IsEmpty(rdIdx, wrIdx)) {
       return 0;
@@ -217,8 +217,7 @@ class SPSCRingBufferBase {
                                               secondPart);
     }
 
-    mReadIndex.store(IncrementIndex(rdIdx, toRead),
-                     std::memory_order::memory_order_release);
+    mReadIndex.store(IncrementIndex(rdIdx, toRead), std::memory_order_release);
 
     return toRead;
   }
@@ -233,9 +232,8 @@ class SPSCRingBufferBase {
    * @return The number of available elements for reading.
    */
   int AvailableRead() const {
-    return AvailableReadInternal(
-        mReadIndex.load(std::memory_order::memory_order_relaxed),
-        mWriteIndex.load(std::memory_order::memory_order_relaxed));
+    return AvailableReadInternal(mReadIndex.load(std::memory_order_relaxed),
+                                 mWriteIndex.load(std::memory_order_relaxed));
   }
   /**
    * Get the number of available elements for writing.
@@ -248,9 +246,8 @@ class SPSCRingBufferBase {
    * @return The number of empty slots in the buffer, available for writing.
    */
   int AvailableWrite() const {
-    return AvailableWriteInternal(
-        mReadIndex.load(std::memory_order::memory_order_relaxed),
-        mWriteIndex.load(std::memory_order::memory_order_relaxed));
+    return AvailableWriteInternal(mReadIndex.load(std::memory_order_relaxed),
+                                  mWriteIndex.load(std::memory_order_relaxed));
   }
   /**
    * Get the total Capacity, for this ring buffer.

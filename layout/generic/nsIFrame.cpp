@@ -3442,8 +3442,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // to remove any existing content that isn't wrapped in the blend container,
     // and then we need to build content infront/behind the blend container
     // to get correct positioning during merging.
-    if ((aBuilder->ContainsBlendMode()) &&
-        aBuilder->IsRetainingDisplayList()) {
+    if ((aBuilder->ContainsBlendMode()) && aBuilder->IsRetainingDisplayList()) {
       if (aBuilder->IsPartialUpdate()) {
         aBuilder->SetPartialBuildFailed(true);
       } else {
@@ -3551,7 +3550,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
-          aBuilder, this, &resultList, maskASR);
+          aBuilder, this, &resultList, maskASR, usingBackdropFilter);
       createdContainer = true;
     }
 
