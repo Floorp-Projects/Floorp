@@ -210,6 +210,19 @@ rtc_library("chunk") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("chunk_validators") {
+  deps = [
+    ":chunk",
+    "../../../rtc_base",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "chunk_validators.cc",
+    "chunk_validators.h",
+  ]
+}
+
 rtc_library("sctp_packet") {
   deps = [
     ":bounded_io",
@@ -240,6 +253,7 @@ if (rtc_include_tests) {
     deps = [
       ":bounded_io",
       ":chunk",
+      ":chunk_validators",
       ":crc32c",
       ":error_cause",
       ":parameter",
@@ -271,6 +285,7 @@ if (rtc_include_tests) {
       "chunk/shutdown_ack_chunk_test.cc",
       "chunk/shutdown_chunk_test.cc",
       "chunk/shutdown_complete_chunk_test.cc",
+      "chunk_validators_test.cc",
       "crc32c_test.cc",
       "error_cause/cookie_received_while_shutting_down_cause_test.cc",
       "error_cause/invalid_mandatory_parameter_cause_test.cc",
