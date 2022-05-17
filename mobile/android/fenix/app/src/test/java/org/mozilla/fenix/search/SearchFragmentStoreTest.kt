@@ -23,6 +23,7 @@ import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -68,6 +69,7 @@ class SearchFragmentStoreTest {
             showHistorySuggestions = false,
             showBookmarkSuggestions = false,
             showSyncedTabsSuggestions = false,
+            showSessionSuggestions = true,
             tabId = null,
             pastedText = "pastedText",
             searchAccessPoint = MetricsUtils.Source.ACTION
@@ -126,6 +128,7 @@ class SearchFragmentStoreTest {
                 showHistorySuggestions = false,
                 showBookmarkSuggestions = false,
                 showSyncedTabsSuggestions = false,
+                showSessionSuggestions = true,
                 tabId = "tabId",
                 pastedText = "",
                 searchAccessPoint = MetricsUtils.Source.SHORTCUT
@@ -156,10 +159,20 @@ class SearchFragmentStoreTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
-        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)).join()
+        store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)).join()
         assertNotSame(initialState, store.state)
         assertEquals(SearchEngineSource.Shortcut(searchEngine), store.state.searchEngineSource)
         assertEquals(false, store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `WHEN history engine selected action dispatched THEN update search engine source`() = runTest {
+        val initialState = emptyDefaultState()
+        val store = SearchFragmentStore(initialState)
+
+        store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine)).join()
+        assertNotSame(initialState, store.state)
+        assertEquals(SearchEngineSource.History(searchEngine), store.state.searchEngineSource)
     }
 
     @Test
@@ -213,6 +226,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
+    @Ignore("Flaky, needs investigation: https://github.com/mozilla-mobile/fenix/issues/25170")
     fun `Updating SearchFragmentState from SearchState`() = runTest {
         val store = SearchFragmentStore(
             emptyDefaultState(
@@ -270,6 +284,7 @@ class SearchFragmentStoreTest {
     }
 
     @Test
+    @Ignore("Flaky, needs investigation: https://github.com/mozilla-mobile/fenix/issues/25170")
     fun `Updating SearchFragmentState from SearchState - shortcuts disabled`() = runTest {
         val store = SearchFragmentStore(
             emptyDefaultState(
@@ -347,6 +362,7 @@ class SearchFragmentStoreTest {
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
+        showSessionSuggestions = false,
         searchAccessPoint = MetricsUtils.Source.NONE
     )
 }

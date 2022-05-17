@@ -43,6 +43,7 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchDialogFragmentDirections.Companion.actionGlobalAddonsManagementFragment
@@ -76,6 +77,7 @@ class SearchDialogControllerTest {
         )
         every { store.state.tabId } returns "test-tab-id"
         every { store.state.searchEngineSource.searchEngine } returns searchEngine
+        every { searchEngine.type } returns SearchEngine.Type.BUNDLED
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.searchDialogFragment
         }
@@ -137,6 +139,31 @@ class SearchDialogControllerTest {
                 engine = searchEngine
             )
         }
+    }
+
+    @Test
+    fun `WHEN the search engine is added by the application THEN do not load URL`() {
+        every { searchEngine.type } returns SearchEngine.Type.APPLICATION
+
+        val searchTerm = "Firefox"
+        var dismissDialogInvoked = false
+
+        createController(
+            dismissDialog = {
+                dismissDialogInvoked = true
+            }
+        ).handleUrlCommitted(searchTerm)
+
+        verify(exactly = 0) {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = any(),
+                newTab = any(),
+                from = any(),
+                engine = any()
+            )
+        }
+
+        assertFalse(dismissDialogInvoked)
     }
 
     @Test
@@ -319,7 +346,7 @@ class SearchDialogControllerTest {
         ).handleSearchShortcutEngineSelected(searchEngine)
 
         assertTrue(focusToolbarInvoked)
-        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine)) }
+        verify { store.dispatch(SearchFragmentAction.SearchShortcutEngineSelected(searchEngine, settings)) }
 
         assertTrue(SearchShortcuts.selected.testHasValue())
         val recordedEvents = SearchShortcuts.selected.testGetValue()
@@ -328,6 +355,31 @@ class SearchDialogControllerTest {
         assertNotNull(eventExtra)
         assertTrue(eventExtra!!.containsKey("engine"))
         assertEquals(searchEngine.name, eventExtra["engine"])
+    }
+
+    @Test
+    fun `WHEN history search engine is selected THEN dispatch correct action`() {
+        val searchEngine: SearchEngine = mockk(relaxed = true)
+        every { searchEngine.type } returns SearchEngine.Type.APPLICATION
+        every { searchEngine.id } returns Core.HISTORY_SEARCH_ENGINE_ID
+
+        var focusToolbarInvoked = false
+        createController(
+            focusToolbar = {
+                focusToolbarInvoked = true
+            }
+        ).handleSearchShortcutEngineSelected(searchEngine)
+
+        assertTrue(focusToolbarInvoked)
+        verify { store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine)) }
+
+        assertTrue(SearchShortcuts.selected.testHasValue())
+        val recordedEvents = SearchShortcuts.selected.testGetValue()
+        assertEquals(1, recordedEvents.size)
+        val eventExtra = recordedEvents.single().extra
+        assertNotNull(eventExtra)
+        assertTrue(eventExtra!!.containsKey("engine"))
+        assertEquals("application", eventExtra["engine"])
     }
 
     @Test

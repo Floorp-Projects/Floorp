@@ -16,6 +16,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricsUtils
+import org.mozilla.fenix.utils.Settings
 
 /**
  * The [Store] for holding the [SearchFragmentState] and applying [SearchFragmentAction]s.
@@ -33,12 +34,28 @@ class SearchFragmentStore(
 sealed class SearchEngineSource {
     abstract val searchEngine: SearchEngine?
 
+    /**
+     * No search engine
+     */
     object None : SearchEngineSource() {
         override val searchEngine: SearchEngine? = null
     }
 
+    /**
+     * Search engine set as default
+     */
     data class Default(override val searchEngine: SearchEngine) : SearchEngineSource()
+
+    /**
+     * Search engine for quick search
+     * This is for any search engine that is not the user selected default.
+     */
     data class Shortcut(override val searchEngine: SearchEngine) : SearchEngineSource()
+
+    /**
+     * Search engine for history
+     */
+    data class History(override val searchEngine: SearchEngine) : SearchEngineSource()
 }
 
 /**
@@ -60,6 +77,8 @@ sealed class SearchEngineSource {
  * @property showClipboardSuggestions Whether or not to show clipboard suggestion in the AwesomeBar
  * @property showHistorySuggestions Whether or not to show history suggestions in the AwesomeBar
  * @property showBookmarkSuggestions Whether or not to show the bookmark suggestion in the AwesomeBar
+ * @property showSyncedTabsSuggestions Whether or not to show the synced tabs suggestion in the AwesomeBar
+ * @property showSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar
  * @property pastedText The text pasted from the long press toolbar menu
  * @property clipboardHasUrl Indicates if the clipboard contains an URL.
  */
@@ -78,6 +97,7 @@ data class SearchFragmentState(
     val showHistorySuggestions: Boolean,
     val showBookmarkSuggestions: Boolean,
     val showSyncedTabsSuggestions: Boolean,
+    val showSessionSuggestions: Boolean,
     val tabId: String?,
     val pastedText: String? = null,
     val searchAccessPoint: MetricsUtils.Source,
@@ -119,6 +139,7 @@ fun createInitialSearchFragmentState(
         showHistorySuggestions = settings.shouldShowHistorySuggestions,
         showBookmarkSuggestions = settings.shouldShowBookmarkSuggestions,
         showSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
+        showSessionSuggestions = true,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint
@@ -129,11 +150,44 @@ fun createInitialSearchFragmentState(
  * Actions to dispatch through the `SearchStore` to modify `SearchState` through the reducer.
  */
 sealed class SearchFragmentAction : Action {
+    /**
+     * Action to enable or disable search suggestions.
+     */
     data class SetShowSearchSuggestions(val show: Boolean) : SearchFragmentAction()
-    data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
+
+    /**
+     * Action when default search engine is selected.
+     */
+    data class SearchDefaultEngineSelected(val engine: SearchEngine, val settings: Settings) : SearchFragmentAction()
+
+    /**
+     * Action when shortcut search engine is selected.
+     */
+    data class SearchShortcutEngineSelected(val engine: SearchEngine, val settings: Settings) : SearchFragmentAction()
+
+    /**
+     * Action when history search engine is selected.
+     */
+    data class SearchHistoryEngineSelected(val engine: SearchEngine) : SearchFragmentAction()
+
+    /**
+     * Action when search engine picker is selected.
+     */
     data class ShowSearchShortcutEnginePicker(val show: Boolean) : SearchFragmentAction()
+
+    /**
+     * Action when allow search suggestion in private mode hint is tapped.
+     */
     data class AllowSearchSuggestionsInPrivateModePrompt(val show: Boolean) : SearchFragmentAction()
+
+    /**
+     * Action when query is updated.
+     */
     data class UpdateQuery(val query: String) : SearchFragmentAction()
+
+    /**
+     * Action when updating clipboard URL.
+     */
     data class UpdateClipboardHasUrl(val hasUrl: Boolean) : SearchFragmentAction()
 
     /**
@@ -145,12 +199,56 @@ sealed class SearchFragmentAction : Action {
 /**
  * The SearchState Reducer.
  */
+@Suppress("LongMethod")
 private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmentAction): SearchFragmentState {
     return when (action) {
+        is SearchFragmentAction.SearchDefaultEngineSelected ->
+            state.copy(
+                searchEngineSource = SearchEngineSource.Default(action.engine),
+                showSearchSuggestions = true,
+                showSearchShortcuts = action.settings.shouldShowSearchShortcuts,
+                showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
+                showHistorySuggestions = action.settings.shouldShowHistorySuggestions,
+                showBookmarkSuggestions = action.settings.shouldShowBookmarkSuggestions,
+                showSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
+                showSessionSuggestions = true,
+            )
         is SearchFragmentAction.SearchShortcutEngineSelected ->
             state.copy(
                 searchEngineSource = SearchEngineSource.Shortcut(action.engine),
-                showSearchShortcuts = false
+                showSearchSuggestions = true,
+                showSearchShortcuts = when (action.settings.showUnifiedSearchFeature) {
+                    true -> false
+                    false -> action.settings.shouldShowSearchShortcuts
+                },
+                showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
+                showHistorySuggestions = when (action.settings.showUnifiedSearchFeature) {
+                    true -> false
+                    false -> action.settings.shouldShowHistorySuggestions
+                },
+                showBookmarkSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                    true -> false
+                    false -> action.settings.shouldShowBookmarkSuggestions
+                },
+                showSyncedTabsSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                    true -> false
+                    false -> action.settings.shouldShowSyncedTabsSuggestions
+                },
+                showSessionSuggestions = when (action.settings.showUnifiedSearchFeature) {
+                    true -> false
+                    false -> true
+                },
+            )
+        is SearchFragmentAction.SearchHistoryEngineSelected ->
+            state.copy(
+                searchEngineSource = SearchEngineSource.History(action.engine),
+                showSearchSuggestions = false,
+                showSearchShortcuts = false,
+                showClipboardSuggestions = false,
+                showHistorySuggestions = true,
+                showBookmarkSuggestions = false,
+                showSyncedTabsSuggestions = false,
+                showSessionSuggestions = false,
             )
         is SearchFragmentAction.ShowSearchShortcutEnginePicker ->
             state.copy(showSearchShortcuts = action.show && state.areShortcutsAvailable)
@@ -167,11 +265,14 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSearchShortcuts = state.url.isEmpty() &&
                     state.showSearchShortcutsSetting &&
                     action.search.searchEngines.size > 1,
-                searchEngineSource = if (state.searchEngineSource !is SearchEngineSource.Shortcut) {
-                    action.search.selectedOrDefaultSearchEngine?.let { SearchEngineSource.Default(it) }
-                        ?: SearchEngineSource.None
-                } else {
-                    state.searchEngineSource
+                searchEngineSource = when (state.searchEngineSource) {
+                    is SearchEngineSource.Shortcut, is SearchEngineSource.History -> {
+                        state.searchEngineSource
+                    }
+                    else -> {
+                        action.search.selectedOrDefaultSearchEngine?.let { SearchEngineSource.Default(it) }
+                            ?: SearchEngineSource.None
+                    }
                 }
             )
         }

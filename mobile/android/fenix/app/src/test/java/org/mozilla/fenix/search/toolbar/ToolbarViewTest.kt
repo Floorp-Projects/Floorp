@@ -57,6 +57,7 @@ class ToolbarViewTest {
         showHistorySuggestions = false,
         showBookmarkSuggestions = false,
         showSyncedTabsSuggestions = false,
+        showSessionSuggestions = false,
         searchAccessPoint = MetricsUtils.Source.NONE
     )
 

@@ -28,6 +28,8 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.Core.Companion.METADATA_HISTORY_SUGGESTION_LIMIT
+import org.mozilla.fenix.components.Core.Companion.METADATA_SHORTCUT_SUGGESTION_LIMIT
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchEngineSource
@@ -53,7 +55,6 @@ class AwesomeBarView(
     private val defaultSearchActionProvider: SearchActionProvider
     private val searchEngineSuggestionProvider: SearchEngineSuggestionProvider
     private val searchSuggestionProviderMap: MutableMap<SearchEngine, List<AwesomeBar.SuggestionProvider>>
-    private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
         override fun invoke(
@@ -213,33 +214,15 @@ class AwesomeBarView(
     fun updateSuggestionProvidersVisibility(
         state: SearchProviderState
     ) {
+        view.removeAllProviders()
+
         if (state.showSearchShortcuts) {
             handleDisplayShortcutsProviders()
             return
         }
 
-        val providersToAdd = getProvidersToAdd(state)
-        val providersToRemove = getProvidersToRemove(state)
-
-        performProviderListChanges(providersToAdd, providersToRemove)
-    }
-
-    private fun performProviderListChanges(
-        providersToAdd: MutableSet<AwesomeBar.SuggestionProvider>,
-        providersToRemove: MutableSet<AwesomeBar.SuggestionProvider>
-    ) {
-        for (provider in providersToAdd) {
-            if (providersInUse.find { it.id == provider.id } == null) {
-                providersInUse.add(provider)
-                view.addProviders(provider)
-            }
-        }
-
-        for (provider in providersToRemove) {
-            if (providersInUse.find { it.id == provider.id } != null) {
-                providersInUse.remove(provider)
-                view.removeProviders(provider)
-            }
+        for (provider in getProvidersToAdd(state)) {
+            view.addProviders(provider)
         }
     }
 
@@ -248,6 +231,17 @@ class AwesomeBarView(
         state: SearchProviderState
     ): MutableSet<AwesomeBar.SuggestionProvider> {
         val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
+
+        when (state.searchEngineSource) {
+            is SearchEngineSource.History -> {
+                combinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
+                historyStorageProvider.setMaxNumberOfSuggestions(METADATA_HISTORY_SUGGESTION_LIMIT)
+            }
+            else -> {
+                combinedHistoryProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
+                historyStorageProvider.setMaxNumberOfSuggestions(METADATA_SUGGESTION_LIMIT)
+            }
+        }
 
         if (state.showHistorySuggestions) {
             if (activity.settings().historyMetadataUIFeature) {
@@ -269,45 +263,15 @@ class AwesomeBarView(
             providersToAdd.add(syncedTabsStorageSuggestionProvider)
         }
 
-        if (activity.browsingModeManager.mode == BrowsingMode.Normal) {
+        if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showSessionSuggestions) {
             providersToAdd.add(sessionProvider)
         }
 
-        providersToAdd.add(searchEngineSuggestionProvider)
+        if (!activity.settings().showUnifiedSearchFeature) {
+            providersToAdd.add(searchEngineSuggestionProvider)
+        }
 
         return providersToAdd
-    }
-
-    private fun getProvidersToRemove(state: SearchProviderState): MutableSet<AwesomeBar.SuggestionProvider> {
-        val providersToRemove = mutableSetOf<AwesomeBar.SuggestionProvider>()
-
-        providersToRemove.add(shortcutsEnginePickerProvider)
-
-        if (!state.showHistorySuggestions) {
-            if (activity.settings().historyMetadataUIFeature) {
-                providersToRemove.add(combinedHistoryProvider)
-            } else {
-                providersToRemove.add(historyStorageProvider)
-            }
-        }
-
-        if (!state.showBookmarkSuggestions) {
-            providersToRemove.add(bookmarksStorageSuggestionProvider)
-        }
-
-        if (!state.showSearchSuggestions) {
-            providersToRemove.addAll(getSelectedSearchSuggestionProvider(state))
-        }
-
-        if (!state.showSyncedTabsSuggestions) {
-            providersToRemove.add(syncedTabsStorageSuggestionProvider)
-        }
-
-        if (activity.browsingModeManager.mode == BrowsingMode.Private) {
-            providersToRemove.add(sessionProvider)
-        }
-
-        return providersToRemove
     }
 
     private fun getSelectedSearchSuggestionProvider(state: SearchProviderState): List<AwesomeBar.SuggestionProvider> {
@@ -319,14 +283,12 @@ class AwesomeBarView(
             is SearchEngineSource.Shortcut -> getSuggestionProviderForEngine(
                 state.searchEngineSource.searchEngine
             )
+            is SearchEngineSource.History -> emptyList()
             is SearchEngineSource.None -> emptyList()
         }
     }
 
     private fun handleDisplayShortcutsProviders() {
-        view.removeAllProviders()
-        providersInUse.clear()
-        providersInUse.add(shortcutsEnginePickerProvider)
         view.addProviders(shortcutsEnginePickerProvider)
     }
 
@@ -355,7 +317,11 @@ class AwesomeBarView(
                     engine,
                     shortcutSearchUseCase,
                     components.core.client,
-                    limit = 3,
+                    limit = if (activity.settings().showUnifiedSearchFeature) {
+                        METADATA_SHORTCUT_SUGGESTION_LIMIT
+                    } else {
+                        METADATA_SUGGESTION_LIMIT
+                    },
                     mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
                     icon = searchBitmap,
                     engine = engineForSpeculativeConnects,
@@ -375,11 +341,12 @@ class AwesomeBarView(
         val showBookmarkSuggestions: Boolean,
         val showSearchSuggestions: Boolean,
         val showSyncedTabsSuggestions: Boolean,
+        val showSessionSuggestions: Boolean,
         val searchEngineSource: SearchEngineSource
     )
 
     companion object {
-        // Maximum number of suggestions returned from the history metadata storage.
+        // Maximum number of suggestions returned.
         const val METADATA_SUGGESTION_LIMIT = 3
     }
 }
@@ -390,5 +357,6 @@ fun SearchFragmentState.toSearchProviderState() = AwesomeBarView.SearchProviderS
     showBookmarkSuggestions,
     showSearchSuggestions,
     showSyncedTabsSuggestions,
+    showSessionSuggestions,
     searchEngineSource
 )

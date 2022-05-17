@@ -9,6 +9,7 @@ import mozilla.components.feature.awesomebar.provider.CombinedHistorySuggestionP
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.Core.Companion.METADATA_SHORTCUT_SUGGESTION_LIMIT
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.HistorySearchFragmentState
 
@@ -47,7 +48,7 @@ class AwesomeBarView(
                 loadUrlUseCase = loadUrlUseCase,
                 icons = components.core.icons,
                 engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                maxNumberOfSuggestions = METADATA_SHORTCUT_SUGGESTION_LIMIT,
                 showEditSuggestion = false,
             )
 
@@ -56,10 +57,5 @@ class AwesomeBarView(
 
     fun update(state: HistorySearchFragmentState) {
         view.onInputChanged(state.query)
-    }
-
-    companion object {
-        // Maximum number of suggestions returned from the history metadata storage.
-        const val METADATA_SUGGESTION_LIMIT = 100
     }
 }
