@@ -166,7 +166,7 @@
 - (NSString *)description {
   static NSString *formatString = @"RTC_OBJC_TYPE(RTCConfiguration): "
                                   @"{\n%@\n%@\n%@\n%@\n%@\n%@\n%@\n%@\n%d\n%d\n%d\n%d\n%d\n%d\n"
-                                  @"%d\n%@\n%d\n%d\n%d\n%d\n%d\n%@\n%@\n}\n";
+                                  @"%d\n%@\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n}\n";
 
   return [NSString
       stringWithFormat:formatString,
