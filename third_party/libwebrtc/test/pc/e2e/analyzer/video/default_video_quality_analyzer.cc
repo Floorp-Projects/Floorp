@@ -21,6 +21,7 @@
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "rtc_base/cpu_time.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/platform_thread.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
@@ -144,7 +145,7 @@ void DefaultVideoQualityAnalyzer::Start(
     auto thread = std::make_unique<rtc::PlatformThread>(
         &DefaultVideoQualityAnalyzer::ProcessComparisonsThread, this,
         ("DefaultVideoQualityAnalyzerWorker-" + std::to_string(i)).data(),
-        rtc::ThreadPriority::kNormalPriority);
+        rtc::ThreadAttributes().SetPriority(rtc::kNormalPriority));
     thread->Start();
     thread_pool_.push_back(std::move(thread));
   }

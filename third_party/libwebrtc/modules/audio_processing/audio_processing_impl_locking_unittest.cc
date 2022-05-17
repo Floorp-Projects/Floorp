@@ -485,18 +485,21 @@ void PopulateAudioFrame(float amplitude,
 }
 
 AudioProcessingImplLockTest::AudioProcessingImplLockTest()
-    : render_thread_(RenderProcessorThreadFunc,
-                     this,
-                     "render",
-                     rtc::kRealtimePriority),
-      capture_thread_(CaptureProcessorThreadFunc,
-                      this,
-                      "capture",
-                      rtc::kRealtimePriority),
-      stats_thread_(StatsProcessorThreadFunc,
-                    this,
-                    "stats",
-                    rtc::kNormalPriority),
+    : render_thread_(
+          RenderProcessorThreadFunc,
+          this,
+          "render",
+          rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
+      capture_thread_(
+          CaptureProcessorThreadFunc,
+          this,
+          "capture",
+          rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
+      stats_thread_(
+          StatsProcessorThreadFunc,
+          this,
+          "stats",
+          rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
       apm_(AudioProcessingBuilderForTesting().Create()),
       render_thread_state_(kMaxFrameSize,
                            &rand_gen_,

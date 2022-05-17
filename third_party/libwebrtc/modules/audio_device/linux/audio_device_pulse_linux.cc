@@ -158,16 +158,16 @@ AudioDeviceGeneric::InitStatus AudioDeviceLinuxPulse::Init() {
 #endif
 
   // RECORDING
-  _ptrThreadRec.reset(new rtc::PlatformThread(RecThreadFunc, this,
-                                              "webrtc_audio_module_rec_thread",
-                                              rtc::kRealtimePriority));
+  _ptrThreadRec.reset(new rtc::PlatformThread(
+      RecThreadFunc, this, "webrtc_audio_module_rec_thread",
+      rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)));
 
   _ptrThreadRec->Start();
 
   // PLAYOUT
   _ptrThreadPlay.reset(new rtc::PlatformThread(
       PlayThreadFunc, this, "webrtc_audio_module_play_thread",
-      rtc::kRealtimePriority));
+      rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)));
   _ptrThreadPlay->Start();
 
   _initialized = true;

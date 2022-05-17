@@ -126,7 +126,10 @@ TaskQueueStdlib::TaskQueueStdlib(absl::string_view queue_name,
     : started_(/*manual_reset=*/false, /*initially_signaled=*/false),
       stopped_(/*manual_reset=*/false, /*initially_signaled=*/false),
       flag_notify_(/*manual_reset=*/false, /*initially_signaled=*/false),
-      thread_(&TaskQueueStdlib::ThreadMain, this, queue_name, priority) {
+      thread_(&TaskQueueStdlib::ThreadMain,
+              this,
+              queue_name,
+              rtc::ThreadAttributes().SetPriority(priority)) {
   thread_.Start();
   started_.Wait(rtc::Event::kForever);
 }

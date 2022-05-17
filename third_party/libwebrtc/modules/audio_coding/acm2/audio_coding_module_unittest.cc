@@ -429,15 +429,21 @@ class AudioCodingModuleMtTestOldApi : public AudioCodingModuleTestOldApi {
 
   AudioCodingModuleMtTestOldApi()
       : AudioCodingModuleTestOldApi(),
-        send_thread_(CbSendThread, this, "send", rtc::kRealtimePriority),
-        insert_packet_thread_(CbInsertPacketThread,
-                              this,
-                              "insert_packet",
-                              rtc::kRealtimePriority),
-        pull_audio_thread_(CbPullAudioThread,
-                           this,
-                           "pull_audio",
-                           rtc::kRealtimePriority),
+        send_thread_(
+            CbSendThread,
+            this,
+            "send",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
+        insert_packet_thread_(
+            CbInsertPacketThread,
+            this,
+            "insert_packet",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
+        pull_audio_thread_(
+            CbPullAudioThread,
+            this,
+            "pull_audio",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
         send_count_(0),
         insert_packet_count_(0),
         pull_audio_count_(0),
@@ -693,14 +699,16 @@ class AcmReRegisterIsacMtTestOldApi : public AudioCodingModuleTestOldApi {
 
   AcmReRegisterIsacMtTestOldApi()
       : AudioCodingModuleTestOldApi(),
-        receive_thread_(CbReceiveThread,
-                        this,
-                        "receive",
-                        rtc::kRealtimePriority),
-        codec_registration_thread_(CbCodecRegistrationThread,
-                                   this,
-                                   "codec_registration",
-                                   rtc::kRealtimePriority),
+        receive_thread_(
+            CbReceiveThread,
+            this,
+            "receive",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
+        codec_registration_thread_(
+            CbCodecRegistrationThread,
+            this,
+            "codec_registration",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)),
         codec_registered_(false),
         receive_packet_count_(0),
         next_insert_packet_time_ms_(0),

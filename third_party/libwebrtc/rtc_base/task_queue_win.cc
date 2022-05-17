@@ -190,7 +190,10 @@ class TaskQueue::Impl : public RefCountInterface {
    public:
     WorkerThread(ThreadRunFunction func, void* obj, const char* thread_name,
                  ThreadPriority priority)
-        : PlatformThread(func, obj, thread_name, priority) {}
+        : PlatformThread(func,
+                         obj,
+                         thread_name,
+                         rtc::ThreadAttributes().SetPriority(priority)) {}
 
     bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data) {
       return PlatformThread::QueueAPC(apc_function, data);

@@ -175,7 +175,10 @@ class TaskQueueLibevent::SetTimerTask : public QueuedTask {
 TaskQueueLibevent::TaskQueueLibevent(absl::string_view queue_name,
                                      rtc::ThreadPriority priority)
     : event_base_(event_base_new()),
-      thread_(&TaskQueueLibevent::ThreadMain, this, queue_name, priority) {
+      thread_(&TaskQueueLibevent::ThreadMain,
+              this,
+              queue_name,
+              rtc::ThreadAttributes().SetPriority(priority)) {
   int fds[2];
   RTC_CHECK(pipe(fds) == 0);
   SetNonBlocking(fds[0]);
