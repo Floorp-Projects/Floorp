@@ -362,7 +362,9 @@ Thread::ScopedCountBlockingCalls::ScopedCountBlockingCalls(
       result_callback_(std::move(callback)) {}
 
 Thread::ScopedCountBlockingCalls::~ScopedCountBlockingCalls() {
-  result_callback_(GetBlockingCallCount(), GetCouldBeBlockingCallCount());
+  if (GetTotalBlockedCallCount() >= min_blocking_calls_for_callback_) {
+    result_callback_(GetBlockingCallCount(), GetCouldBeBlockingCallCount());
+  }
 }
 
 uint32_t Thread::ScopedCountBlockingCalls::GetBlockingCallCount() const {

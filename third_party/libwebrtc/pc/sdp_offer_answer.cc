@@ -4725,7 +4725,6 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
     // worker thread. Can DestroyTransceiverChannel be purely posted to the
     // worker?
     DestroyChannelInterface(channel);
-    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(3);
   }
 }
 

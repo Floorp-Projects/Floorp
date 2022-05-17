@@ -297,6 +297,40 @@ TEST(ThreadTest, CountBlockingCalls) {
 #endif
 }
 
+#if RTC_DCHECK_IS_ON
+TEST(ThreadTest, CountBlockingCallsOneCallback) {
+  rtc::Thread* current = rtc::Thread::Current();
+  ASSERT_TRUE(current);
+  bool was_called_back = false;
+  {
+    rtc::Thread::ScopedCountBlockingCalls blocked_calls(
+        [&](uint32_t actual_block, uint32_t could_block) {
+          was_called_back = true;
+        });
+    current->Invoke<void>(RTC_FROM_HERE, []() {});
+  }
+  EXPECT_TRUE(was_called_back);
+}
+
+TEST(ThreadTest, CountBlockingCallsSkipCallback) {
+  rtc::Thread* current = rtc::Thread::Current();
+  ASSERT_TRUE(current);
+  bool was_called_back = false;
+  {
+    rtc::Thread::ScopedCountBlockingCalls blocked_calls(
+        [&](uint32_t actual_block, uint32_t could_block) {
+          was_called_back = true;
+        });
+    // Changed `blocked_calls` to not issue the callback if there are 1 or
+    // fewer blocking calls (i.e. we set the minimum required number to 2).
+    blocked_calls.set_minimum_call_count_for_callback(2);
+    current->Invoke<void>(RTC_FROM_HERE, []() {});
+  }
+  // We should not have gotten a call back.
+  EXPECT_FALSE(was_called_back);
+}
+#endif
+
 // Test that setting thread names doesn't cause a malfunction.
 // There's no easy way to verify the name was set properly at this time.
 TEST(ThreadTest, Names) {
