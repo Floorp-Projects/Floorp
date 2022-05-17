@@ -154,7 +154,7 @@
                     "[3] AttemptAsyncScriptCompile: On demand only");
 
       await SpecialPowers.pushPrefEnv({set: [
-        ['dom.script_loader.delazification.strategy', 1],
+        ['dom.script_loader.delazification.strategy', 2],
       ]});
       assert_equals(await WaitForScriptTagEvent(), "concurrent_depth_first",
                     "[3] AttemptAsyncScriptCompile: Concurrent Depth First");

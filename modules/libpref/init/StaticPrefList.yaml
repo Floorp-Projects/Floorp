@@ -3175,7 +3175,10 @@
 #   0: On-demand only. Delazification will be triggered only on the main thread
 #      before the execution of the function.
 #
-#   1: Depth-first. Delazify all functions off-thread in the order of appearance
+#   1: Compare on-demand delazification (= 0) with concurrent depth-first
+#      delazification (= 2).
+#
+#   2: Depth-first. Delazify all functions off-thread in the order of appearance
 #      in the source.
 #
 # 255: Parse everything eagerly, from the first parse. All functions are parsed
