@@ -86,8 +86,6 @@ public interface VideoEncoder {
 
   public class CodecSpecificInfoH264 extends CodecSpecificInfo {}
 
-  public class CodecSpecificInfoAV1 extends CodecSpecificInfo {}
-
   /**
    * Represents bitrate allocated for an encoder to produce frames. Bitrate can be divided between
    * spatial and temporal layers.
