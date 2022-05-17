@@ -2873,8 +2873,7 @@ class nsContentUtils {
       const bool& aIsPrivateData, nsIPrincipal* aRequestingPrincipal,
       const nsContentPolicyType& aContentPolicyType,
       nsITransferable* aTransferable,
-      mozilla::dom::ContentParent* aContentParent,
-      mozilla::dom::BrowserChild* aBrowserChild);
+      mozilla::ipc::IShmemAllocator* aAllocator);
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
