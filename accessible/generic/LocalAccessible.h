@@ -511,6 +511,8 @@ class LocalAccessible : public nsISupports, public Accessible {
   //////////////////////////////////////////////////////////////////////////////
   // ActionAccessible
 
+  virtual bool HasPrimaryAction() const override;
+
   virtual uint8_t ActionCount() const override;
 
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
@@ -980,8 +982,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual AccGroupInfo* GetGroupInfo() const override;
 
   virtual AccGroupInfo* GetOrCreateGroupInfo() override;
-
-  virtual bool HasPrimaryAction() const override;
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;
