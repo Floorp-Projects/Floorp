@@ -32,9 +32,9 @@ TEST(SequenceNumbersTest, SimpleUnwrapping) {
   EXPECT_LT(s1, s3);
   EXPECT_LT(s2, s3);
 
-  EXPECT_EQ(s1.Difference(s0), 1);
-  EXPECT_EQ(s2.Difference(s0), 2);
-  EXPECT_EQ(s3.Difference(s0), 3);
+  EXPECT_EQ(TestSequence::Difference(s1, s0), 1);
+  EXPECT_EQ(TestSequence::Difference(s2, s0), 2);
+  EXPECT_EQ(TestSequence::Difference(s3, s0), 3);
 
   EXPECT_GT(s1, s0);
   EXPECT_GT(s2, s0);
@@ -50,7 +50,7 @@ TEST(SequenceNumbersTest, SimpleUnwrapping) {
   s2.Increment();
   EXPECT_EQ(s2, s3);
 
-  EXPECT_EQ(s0.AddTo(2), s3);
+  EXPECT_EQ(TestSequence::AddTo(s0, 2), s3);
 }
 
 TEST(SequenceNumbersTest, MidValueUnwrapping) {
@@ -68,9 +68,9 @@ TEST(SequenceNumbersTest, MidValueUnwrapping) {
   EXPECT_LT(s1, s3);
   EXPECT_LT(s2, s3);
 
-  EXPECT_EQ(s1.Difference(s0), 1);
-  EXPECT_EQ(s2.Difference(s0), 2);
-  EXPECT_EQ(s3.Difference(s0), 3);
+  EXPECT_EQ(TestSequence::Difference(s1, s0), 1);
+  EXPECT_EQ(TestSequence::Difference(s2, s0), 2);
+  EXPECT_EQ(TestSequence::Difference(s3, s0), 3);
 
   EXPECT_GT(s1, s0);
   EXPECT_GT(s2, s0);
@@ -86,7 +86,7 @@ TEST(SequenceNumbersTest, MidValueUnwrapping) {
   s2.Increment();
   EXPECT_EQ(s2, s3);
 
-  EXPECT_EQ(s0.AddTo(2), s3);
+  EXPECT_EQ(TestSequence::AddTo(s0, 2), s3);
 }
 
 TEST(SequenceNumbersTest, WrappedUnwrapping) {
@@ -104,9 +104,9 @@ TEST(SequenceNumbersTest, WrappedUnwrapping) {
   EXPECT_LT(s1, s3);
   EXPECT_LT(s2, s3);
 
-  EXPECT_EQ(s1.Difference(s0), 1);
-  EXPECT_EQ(s2.Difference(s0), 2);
-  EXPECT_EQ(s3.Difference(s0), 3);
+  EXPECT_EQ(TestSequence::Difference(s1, s0), 1);
+  EXPECT_EQ(TestSequence::Difference(s2, s0), 2);
+  EXPECT_EQ(TestSequence::Difference(s3, s0), 3);
 
   EXPECT_GT(s1, s0);
   EXPECT_GT(s2, s0);
@@ -122,7 +122,7 @@ TEST(SequenceNumbersTest, WrappedUnwrapping) {
   s2.Increment();
   EXPECT_EQ(s2, s3);
 
-  EXPECT_EQ(s0.AddTo(2), s3);
+  EXPECT_EQ(TestSequence::AddTo(s0, 2), s3);
 }
 
 TEST(SequenceNumbersTest, WrapAroundAFewTimes) {
@@ -181,6 +181,21 @@ TEST(SequenceNumbersTest, UnwrappingSmallerNumberIsAlwaysSmaller) {
     EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 10)), si);
     EXPECT_LT(unwrapper.Unwrap(Wrapped(wrapped - 100)), si);
   }
+}
+
+TEST(SequenceNumbersTest, DifferenceIsAbsolute) {
+  TestSequence::Unwrapper unwrapper;
+
+  TestSequence this_value = unwrapper.Unwrap(Wrapped(10));
+  TestSequence other_value = TestSequence::AddTo(this_value, 100);
+
+  EXPECT_EQ(TestSequence::Difference(this_value, other_value), 100);
+  EXPECT_EQ(TestSequence::Difference(other_value, this_value), 100);
+
+  TestSequence minus_value = TestSequence::AddTo(this_value, -100);
+
+  EXPECT_EQ(TestSequence::Difference(this_value, minus_value), 100);
+  EXPECT_EQ(TestSequence::Difference(minus_value, this_value), 100);
 }
 
 }  // namespace

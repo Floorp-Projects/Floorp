@@ -179,9 +179,10 @@ std::vector<SackChunk::GapAckBlock> DataTracker::CreateGapAckBlocks() const {
 
   auto flush = [&]() {
     if (first_tsn_in_block.has_value()) {
-      int start_diff =
-          first_tsn_in_block->Difference(last_cumulative_acked_tsn_);
-      int end_diff = last_tsn_in_block->Difference(last_cumulative_acked_tsn_);
+      int start_diff = UnwrappedTSN::Difference(*first_tsn_in_block,
+                                                last_cumulative_acked_tsn_);
+      int end_diff = UnwrappedTSN::Difference(*last_tsn_in_block,
+                                              last_cumulative_acked_tsn_);
       gap_ack_blocks.emplace_back(static_cast<uint16_t>(start_diff),
                                   static_cast<uint16_t>(end_diff));
       first_tsn_in_block = absl::nullopt;

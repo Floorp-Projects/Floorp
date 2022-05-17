@@ -172,7 +172,8 @@ size_t TraditionalReassemblyStreams::OrderedStream::TryToAssembleMessage() {
     return 0;
   }
 
-  uint32_t tsn_diff = chunks.rbegin()->first.Difference(chunks.begin()->first);
+  uint32_t tsn_diff =
+      UnwrappedTSN::Difference(chunks.rbegin()->first, chunks.begin()->first);
   if (tsn_diff != chunks.size() - 1) {
     return 0;
   }

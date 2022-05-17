@@ -121,19 +121,26 @@ class UnwrappedSequenceNumber {
 
   // Increments the value.
   void Increment() { ++value_; }
+
+  // Returns the next value relative to this sequence number.
   UnwrappedSequenceNumber<WrappedType> next_value() const {
     return UnwrappedSequenceNumber<WrappedType>(value_ + 1);
   }
 
-  // Adds a delta to the current value.
-  UnwrappedSequenceNumber<WrappedType> AddTo(int delta) const {
-    return UnwrappedSequenceNumber<WrappedType>(value_ + delta);
+  // Returns a new sequence number based on `value`, and adding `delta` (which
+  // may be negative).
+  static UnwrappedSequenceNumber<WrappedType> AddTo(
+      UnwrappedSequenceNumber<WrappedType> value,
+      int delta) {
+    return UnwrappedSequenceNumber<WrappedType>(value.value_ + delta);
   }
 
-  // Compares the difference between two sequence numbers.
-  typename WrappedType::UnderlyingType Difference(
-      UnwrappedSequenceNumber<WrappedType> other) const {
-    return value_ - other.value_;
+  // Returns the absolute difference between `lhs` and `rhs`.
+  static typename WrappedType::UnderlyingType Difference(
+      UnwrappedSequenceNumber<WrappedType> lhs,
+      UnwrappedSequenceNumber<WrappedType> rhs) {
+    return (lhs.value_ > rhs.value_) ? (lhs.value_ - rhs.value_)
+                                     : (rhs.value_ - lhs.value_);
   }
 
  private:
