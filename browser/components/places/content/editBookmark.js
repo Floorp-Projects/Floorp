@@ -288,6 +288,12 @@ var gEditItemOverlay = {
       onPanelReady,
     } = this._setPaneInfo(aInfo);
 
+    // initPanel can be called multiple times in a row,
+    // and awaits Promises. If the reference to `instance`
+    // changes, it must mean another caller has called
+    // initPanel again, so bail out of the initialization.
+    let instance = (this._instance = {});
+
     // If we're creating a new item on the toolbar, show it:
     if (
       aInfo.isNewBookmark &&
@@ -326,6 +332,11 @@ var gEditItemOverlay = {
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
       await this._initKeywordField().catch(Cu.reportError);
+      // paneInfo can be null if paneInfo is uninitialized while
+      // the process above is awaiting initialization
+      if (instance != this._instance || this._paneInfo == null) {
+        return;
+      }
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -342,6 +353,9 @@ var gEditItemOverlay = {
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
       await this._initFolderMenuList(parentGuid).catch(Cu.reportError);
+      if (instance != this._instance || this._paneInfo == null) {
+        return;
+      }
     }
 
     // Selection count.
