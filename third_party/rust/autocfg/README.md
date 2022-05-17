@@ -43,6 +43,9 @@ should only be used when the compiler supports it.
 
 ## Release Notes
 
+- 1.1.0 (2022-02-07)
+  - Use `CARGO_ENCODED_RUSTFLAGS` when it is set.
+
 - 1.0.1 (2020-08-20)
   - Apply `RUSTFLAGS` for more `--target` scenarios, by @adamreichold.
 
