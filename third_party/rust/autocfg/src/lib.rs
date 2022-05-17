@@ -63,7 +63,7 @@ use std::env;
 use std::ffi::OsString;
 use std::fs;
 use std::io::{stderr, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 #[allow(deprecated)]
 use std::sync::atomic::ATOMIC_USIZE_INIT;
@@ -86,7 +86,7 @@ pub struct AutoCfg {
     rustc_version: Version,
     target: Option<OsString>,
     no_std: bool,
-    rustflags: Option<Vec<String>>,
+    rustflags: Vec<String>,
 }
 
 /// Writes a config flag for rustc on standard out.
@@ -166,37 +166,13 @@ impl AutoCfg {
             return Err(error::from_str("output path is not a writable directory"));
         }
 
-        // Cargo only applies RUSTFLAGS for building TARGET artifact in
-        // cross-compilation environment. Sadly, we don't have a way to detect
-        // when we're building HOST artifact in a cross-compilation environment,
-        // so for now we only apply RUSTFLAGS when cross-compiling an artifact.
-        //
-        // See https://github.com/cuviper/autocfg/pull/10#issuecomment-527575030.
-        let rustflags = if target != env::var_os("HOST")
-            || dir_contains_target(&target, &dir, env::var_os("CARGO_TARGET_DIR"))
-        {
-            env::var("RUSTFLAGS").ok().map(|rustflags| {
-                // This is meant to match how cargo handles the RUSTFLAG environment
-                // variable.
-                // See https://github.com/rust-lang/cargo/blob/69aea5b6f69add7c51cca939a79644080c0b0ba0/src/cargo/core/compiler/build_context/target_info.rs#L434-L441
-                rustflags
-                    .split(' ')
-                    .map(str::trim)
-                    .filter(|s| !s.is_empty())
-                    .map(str::to_string)
-                    .collect::<Vec<String>>()
-            })
-        } else {
-            None
-        };
-
         let mut ac = AutoCfg {
+            rustflags: rustflags(&target, &dir),
             out_dir: dir,
             rustc: rustc,
             rustc_version: rustc_version,
             target: target,
             no_std: false,
-            rustflags: rustflags,
         };
 
         // Sanity check with and without `std`.
@@ -240,14 +216,23 @@ impl AutoCfg {
             .arg(&self.out_dir)
             .arg("--emit=llvm-ir");
 
-        if let &Some(ref rustflags) = &self.rustflags {
-            command.args(rustflags);
-        }
-
         if let Some(target) = self.target.as_ref() {
             command.arg("--target").arg(target);
         }
 
+        command.args(&self.rustflags);
+
+        // Mozilla-local change: throw away stderr output.
+        //
+        // Mozilla's build system runs cargo with `-v -v` to help diagnose rustc
+        // selection problems. Without the change below, that causes error
+        // messages from autocfg compiler invocations (which simply indicate
+        // that the feature autocfg was checking for isn't available, and are
+        // not actual build errors) to show up in the build output stream, where
+        // they confuse other parts of Mozilla's build system that try to
+        // highlight and track errors.
+        //
+        // See: https://github.com/cuviper/autocfg/issues/30
         command.arg("-").stdin(Stdio::piped()).stderr(Stdio::null());
         let mut child = try!(command.spawn().map_err(error::from_io));
         let mut stdin = child.stdin.take().expect("rustc stdin");
@@ -417,7 +402,7 @@ fn mangle(s: &str) -> String {
 
 fn dir_contains_target(
     target: &Option<OsString>,
-    dir: &PathBuf,
+    dir: &Path,
     cargo_target_dir: Option<OsString>,
 ) -> bool {
     target
@@ -435,4 +420,45 @@ fn dir_contains_target(
             })
         })
         .unwrap_or(false)
+}
+
+fn rustflags(target: &Option<OsString>, dir: &Path) -> Vec<String> {
+    // Starting with rust-lang/cargo#9601, shipped in Rust 1.55, Cargo always sets
+    // CARGO_ENCODED_RUSTFLAGS for any host/target build script invocation. This
+    // includes any source of flags, whether from the environment, toml config, or
+    // whatever may come in the future. The value is either an empty string, or a
+    // list of arguments separated by the ASCII unit separator (US), 0x1f.
+    if let Ok(a) = env::var("CARGO_ENCODED_RUSTFLAGS") {
+        return if a.is_empty() {
+            Vec::new()
+        } else {
+            a.split('\x1f').map(str::to_string).collect()
+        };
+    }
+
+    // Otherwise, we have to take a more heuristic approach, and we don't
+    // support values from toml config at all.
+    //
+    // Cargo only applies RUSTFLAGS for building TARGET artifact in
+    // cross-compilation environment. Sadly, we don't have a way to detect
+    // when we're building HOST artifact in a cross-compilation environment,
+    // so for now we only apply RUSTFLAGS when cross-compiling an artifact.
+    //
+    // See https://github.com/cuviper/autocfg/pull/10#issuecomment-527575030.
+    if *target != env::var_os("HOST")
+        || dir_contains_target(target, dir, env::var_os("CARGO_TARGET_DIR"))
+    {
+        if let Ok(rustflags) = env::var("RUSTFLAGS") {
+            // This is meant to match how cargo handles the RUSTFLAGS environment variable.
+            // See https://github.com/rust-lang/cargo/blob/69aea5b6f69add7c51cca939a79644080c0b0ba0/src/cargo/core/compiler/build_context/target_info.rs#L434-L441
+            return rustflags
+                .split(' ')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(str::to_string)
+                .collect();
+        }
+    }
+
+    Vec::new()
 }

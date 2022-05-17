@@ -7,7 +7,8 @@
 #include <unknwn.h>
 #include <stdio.h>
 #include "nsISupports.h"
-#include "nsIFactory.h"
+#include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
@@ -67,64 +68,19 @@ MozExternalRefCountType nsTestCom::Release() {
   return res;
 }
 
-class nsTestComFactory final : public nsIFactory {
-  ~nsTestComFactory() { sDestructions++; }
-  NS_DECL_ISUPPORTS
- public:
-  nsTestComFactory() {}
-
-  NS_IMETHOD CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                            void** aResult) override;
-
-  NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
-
-  static int sDestructions;
-};
-
-int nsTestComFactory::sDestructions;
-
-NS_IMPL_ISUPPORTS(nsTestComFactory, nsIFactory)
-
-nsresult nsTestComFactory::CreateInstance(nsISupports* aOuter,
-                                          const nsIID& aIID, void** aResult) {
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  nsTestCom* t = new nsTestCom();
-
-  NS_ADDREF(t);
-  nsresult res = t->QueryInterface(aIID, aResult);
-  NS_RELEASE(t);
-
-  return res;
-}
-
 TEST(TestCOM, WindowsInterop)
 {
-  nsTestComFactory* inst = new nsTestComFactory();
-
-  // Test we can QI nsIFactory to an IClassFactory.
-  IClassFactory* iFactory = nullptr;
-  nsresult rv = inst->QueryInterface(NS_GET_IID(nsIFactory), (void**)&iFactory);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-  ASSERT_TRUE(iFactory);
-
-  // Test we can CreateInstance with an IUnknown.
+  // Test that we can QI an nsITestCom to an IUnknown.
+  RefPtr<nsTestCom> t = new nsTestCom();
   IUnknown* iUnknown = nullptr;
-
-  HRESULT hr = iFactory->LockServer(TRUE);
-  ASSERT_TRUE(SUCCEEDED(hr));
-  hr = iFactory->CreateInstance(nullptr, IID_IUnknown, (void**)&iUnknown);
-  ASSERT_TRUE(SUCCEEDED(hr));
+  nsresult rv = t->QueryInterface(NS_GET_IID(nsISupports), (void**)&iUnknown);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
   ASSERT_TRUE(iUnknown);
-  hr = iFactory->LockServer(FALSE);
-  ASSERT_TRUE(SUCCEEDED(hr));
 
   // Test we can QI an IUnknown to nsITestCom.
-  nsITestCom* iTestCom = nullptr;
+  nsCOMPtr<nsITestCom> iTestCom;
   GUID testGUID = NS_ITEST_COM_IID;
-  hr = iUnknown->QueryInterface(testGUID, (void**)&iTestCom);
+  HRESULT hr = iUnknown->QueryInterface(testGUID, getter_AddRefs(iTestCom));
   ASSERT_TRUE(SUCCEEDED(hr));
   ASSERT_TRUE(iTestCom);
 
@@ -133,9 +89,8 @@ TEST(TestCOM, WindowsInterop)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   iUnknown->Release();
-  iTestCom->Release();
-  iFactory->Release();
+  iTestCom = nullptr;
+  t = nullptr;
 
-  ASSERT_EQ(nsTestComFactory::sDestructions, 1);
   ASSERT_EQ(nsTestCom::sDestructions, 1);
 }

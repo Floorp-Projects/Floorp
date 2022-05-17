@@ -10,7 +10,7 @@ import shutil
 import six
 import sys
 from distutils.spawn import find_executable
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from mozbuild.base import MozbuildObject
 from mach.util import get_state_dir
@@ -345,7 +345,7 @@ def should_force_fzf_update(fzf_bin):
 
     # 0.20.0 introduced passing selections through a temporary file,
     # which is good for large ctrl-a actions.
-    if StrictVersion(fzf_version) < StrictVersion(FZF_MIN_VERSION):
+    if Version(fzf_version) < Version(FZF_MIN_VERSION):
         print("fzf version is old, you must update to use ./mach try fuzzy.")
         return True
     return False
@@ -378,7 +378,7 @@ def fzf_bootstrap(update=False):
     elif fzf_bin and update:
         # Case 2
         fzf_version = get_fzf_version(fzf_bin)
-        if StrictVersion(fzf_version) < StrictVersion(FZF_CURRENT_VERSION) and update:
+        if Version(fzf_version) < Version(FZF_CURRENT_VERSION) and update:
             # Bug 1623197: We only want to run fzf's `install` if it's not in the $PATH
             # Swap to os.path.commonpath when we're not on Py2
             if fzf_bin and update and not fzf_bin.startswith(fzf_path):

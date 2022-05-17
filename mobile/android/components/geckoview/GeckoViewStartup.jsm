@@ -29,12 +29,42 @@ function InitLater(fn, object, name) {
   return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
 }
 
+const JSPROCESSACTORS = {
+  GeckoViewPermissionProcess: {
+    parent: {
+      moduleURI: "resource:///actors/GeckoViewPermissionProcessParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/GeckoViewPermissionProcessChild.jsm",
+      observers: [
+        "getUserMedia:ask-device-permission",
+        "getUserMedia:request",
+        "recording-device-events",
+        "PeerConnection:request",
+      ],
+    },
+  },
+};
+
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
+    parent: {
+      moduleURI: "resource:///actors/LoadURIDelegateParent.jsm",
+    },
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
     messageManagerGroups: ["browsers"],
+  },
+  GeckoViewPermission: {
+    parent: {
+      moduleURI: "resource:///actors/GeckoViewPermissionParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/GeckoViewPermissionChild.jsm",
+    },
+    allFrames: true,
+    includeChrome: true,
   },
   GeckoViewPrompt: {
     child: {
@@ -70,53 +100,8 @@ class GeckoViewStartup {
     switch (aTopic) {
       case "content-process-ready-for-script":
       case "app-startup": {
-        // Parent and content process.
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewPermission", {
-          service: "@mozilla.org/content-permission/prompt;1",
-          observers: [
-            "getUserMedia:ask-device-permission",
-            "getUserMedia:request",
-            "PeerConnection:request",
-          ],
-          ppmm: ["GeckoView:AddCameraPermission"],
-        });
-
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewRecordingMedia", {
-          module: "resource://gre/modules/GeckoViewMedia.jsm",
-          observers: ["recording-device-events"],
-        });
-
         GeckoViewUtils.addLazyGetter(this, "GeckoViewConsole", {
           module: "resource://gre/modules/GeckoViewConsole.jsm",
-        });
-
-        GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
-          module: "resource://gre/modules/GeckoViewWebExtension.jsm",
-          ged: [
-            "GeckoView:ActionDelegate:Attached",
-            "GeckoView:BrowserAction:Click",
-            "GeckoView:PageAction:Click",
-            "GeckoView:RegisterWebExtension",
-            "GeckoView:UnregisterWebExtension",
-            "GeckoView:WebExtension:CancelInstall",
-            "GeckoView:WebExtension:Disable",
-            "GeckoView:WebExtension:Enable",
-            "GeckoView:WebExtension:EnsureBuiltIn",
-            "GeckoView:WebExtension:Get",
-            "GeckoView:WebExtension:Install",
-            "GeckoView:WebExtension:InstallBuiltIn",
-            "GeckoView:WebExtension:List",
-            "GeckoView:WebExtension:PortDisconnect",
-            "GeckoView:WebExtension:PortMessageFromApp",
-            "GeckoView:WebExtension:SetPBAllowed",
-            "GeckoView:WebExtension:Uninstall",
-            "GeckoView:WebExtension:Update",
-          ],
-          observers: [
-            "devtools-installed-addon",
-            "testing-installed-addon",
-            "testing-uninstalled-addon",
-          ],
         });
 
         GeckoViewUtils.addLazyGetter(this, "GeckoViewStorageController", {
@@ -153,6 +138,36 @@ class GeckoViewStartup {
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
+          ActorManagerParent.addJSProcessActors(JSPROCESSACTORS);
+
+          GeckoViewUtils.addLazyGetter(this, "GeckoViewWebExtension", {
+            module: "resource://gre/modules/GeckoViewWebExtension.jsm",
+            ged: [
+              "GeckoView:ActionDelegate:Attached",
+              "GeckoView:BrowserAction:Click",
+              "GeckoView:PageAction:Click",
+              "GeckoView:RegisterWebExtension",
+              "GeckoView:UnregisterWebExtension",
+              "GeckoView:WebExtension:CancelInstall",
+              "GeckoView:WebExtension:Disable",
+              "GeckoView:WebExtension:Enable",
+              "GeckoView:WebExtension:EnsureBuiltIn",
+              "GeckoView:WebExtension:Get",
+              "GeckoView:WebExtension:Install",
+              "GeckoView:WebExtension:InstallBuiltIn",
+              "GeckoView:WebExtension:List",
+              "GeckoView:WebExtension:PortDisconnect",
+              "GeckoView:WebExtension:PortMessageFromApp",
+              "GeckoView:WebExtension:SetPBAllowed",
+              "GeckoView:WebExtension:Uninstall",
+              "GeckoView:WebExtension:Update",
+            ],
+            observers: [
+              "devtools-installed-addon",
+              "testing-installed-addon",
+              "testing-uninstalled-addon",
+            ],
+          });
 
           GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
             module: "resource://gre/modules/ChildCrashHandler.jsm",
