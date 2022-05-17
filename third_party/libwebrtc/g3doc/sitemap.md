@@ -1,26 +1,26 @@
-[Home](/g3doc/index.md)
+*   [Home](/g3doc/index.md)
 *   How to contribute
     *   Code
     *   [Documentation](/g3doc/how_to_write_documentation.md)
-*  [Public C++ API](/api/g3doc/index.md)
+*   [Public C++ API](/api/g3doc/index.md)
     *   [Threading](/api/g3doc/threading_design.md)
 *   Implementation
-    * Network
-      * [ICE](/p2p/g3doc/ice.md)
-      * STUN
-      * TURN
-      * DTLS
-      * [SCTP](/pc/g3doc/sctp_transport.md)
+    *   Network
+        *   [ICE](/p2p/g3doc/ice.md)
+        *   STUN
+        *   TURN
+        *   DTLS
+        *   [SCTP](/pc/g3doc/sctp_transport.md)
     *   Congestion control and bandwidth estimation
     *   Audio
-      * [NetEq](/modules/audio_coding/neteq/g3doc/index.md)
-      * AudioEngine
-        * [ADM](/modules/audio_device/g3doc/audio_device_module.md)
-      * [Audio Coding](/modules/audio_coding/g3doc/index.md)
-      * AudioProcessingModule
-        * [APM](/modules/audio_processing/g3doc/audio_processing_module.md)
+        *   [NetEq](/modules/audio_coding/neteq/g3doc/index.md)
+        *   AudioEngine
+            *   [ADM](/modules/audio_device/g3doc/audio_device_module.md)
+        *   [Audio Coding](/modules/audio_coding/g3doc/index.md)
+        *   AudioProcessingModule
+            *   [APM](/modules/audio_processing/g3doc/audio_processing_module.md)
     *   Video
-      * [Adaptation](/video/g3doc/adaptation.md)
+        *   [Adaptation](/video/g3doc/adaptation.md)
     *   DataChannel
     *   PeerConnection
     *   Desktop capture
@@ -34,4 +34,4 @@
         *   Video codecs test framework
     *   Network emulation
         *   [Implementation](/test/network/g3doc/index.md)
-    * Performance stats collection
+    *   Performance stats collection
