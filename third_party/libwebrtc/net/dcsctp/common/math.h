@@ -16,7 +16,19 @@ namespace dcsctp {
 // used to e.g. pad chunks or parameters to an even 32-bit offset.
 template <typename IntType>
 IntType RoundUpTo4(IntType val) {
-  return (val + 3) & -4;
+  return (val + 3) & ~3;
+}
+
+// Similarly, rounds down `val` to the nearest value that is divisible by four.
+template <typename IntType>
+IntType RoundDownTo4(IntType val) {
+  return val & ~3;
+}
+
+// Returns true if `val` is divisible by four.
+template <typename IntType>
+bool IsDivisibleBy4(IntType val) {
+  return (val & 3) == 0;
 }
 
 }  // namespace dcsctp
