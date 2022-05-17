@@ -777,17 +777,21 @@ var PlacesOrganizer = {
     gEditItemOverlay.uninitPanel(false);
 
     if (selectedNode && !PlacesUtils.nodeIsSeparator(selectedNode)) {
-      gEditItemOverlay.initPanel({
-        node: selectedNode,
-        hiddenRows: ["folderPicker"],
-      });
+      gEditItemOverlay
+        .initPanel({
+          node: selectedNode,
+          hiddenRows: ["folderPicker"],
+        })
+        .catch(ex => Cu.reportError(ex));
     } else if (!selectedNode && aNodeList[0]) {
       if (aNodeList.every(PlacesUtils.nodeIsURI)) {
         let uris = aNodeList.map(node => Services.io.newURI(node.uri));
-        gEditItemOverlay.initPanel({
-          uris,
-          hiddenRows: ["folderPicker", "location", "keyword", "name"],
-        });
+        gEditItemOverlay
+          .initPanel({
+            uris,
+            hiddenRows: ["folderPicker", "location", "keyword", "name"],
+          })
+          .catch(ex => Cu.reportError(ex));
       } else {
         let selectItemDesc = document.getElementById("selectItemDescription");
         let itemsCountLabel = document.getElementById("itemsCountText");
