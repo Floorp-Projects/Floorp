@@ -629,10 +629,11 @@ enum class StyleImeMode : uint8_t {
 enum class StyleWindowShadow : uint8_t {
   None,
   Default,
+
+  // These can't be specified in CSS, they get computed from the "default"
+  // value.
   Menu,
   Tooltip,
-  Sheet,
-  Cliprounded,  // clip border to popup border-radius
 };
 
 // dominant-baseline
