@@ -16,10 +16,9 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, originalName, newName, output) {
+function invalidCode(code, originalName, newName) {
   return {
     code,
-    output,
     errors: [
       {
         message: `Use ${newName} rather than ${originalName}`,
@@ -35,26 +34,22 @@ ruleTester.run("use-cc-etc", rule, {
     invalidCode(
       "let foo = Components.classes['bar'];",
       "Components.classes",
-      "Cc",
-      "let foo = Cc['bar'];"
+      "Cc"
     ),
     invalidCode(
       "let bar = Components.interfaces.bar;",
       "Components.interfaces",
-      "Ci",
-      "let bar = Ci.bar;"
+      "Ci"
     ),
     invalidCode(
       "Components.results.NS_ERROR_ILLEGAL_INPUT;",
       "Components.results",
-      "Cr",
-      "Cr.NS_ERROR_ILLEGAL_INPUT;"
+      "Cr"
     ),
     invalidCode(
       "Components.utils.reportError('fake');",
       "Components.utils",
-      "Cu",
-      "Cu.reportError('fake');"
+      "Cu"
     ),
   ],
 });

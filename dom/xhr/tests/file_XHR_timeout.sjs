@@ -2,7 +2,9 @@ var timer = null;
 
 function handleRequest(request, response) {
   response.processAsync();
-  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
   timer.initWithCallback(
     function() {
       response.setStatusLine(null, 200, "OK");
@@ -11,6 +13,6 @@ function handleRequest(request, response) {
       response.finish();
     },
     3000 /* milliseconds */,
-    Ci.nsITimer.TYPE_ONE_SHOT
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
   );
 }

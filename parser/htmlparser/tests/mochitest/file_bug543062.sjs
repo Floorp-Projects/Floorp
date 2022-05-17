@@ -1,7 +1,9 @@
 var timer;
 
 function armTimer(response) {
-  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
   timer.initWithCallback(
     function() {
       if (
@@ -17,7 +19,7 @@ function armTimer(response) {
       }
     },
     20,
-    Ci.nsITimer.TYPE_ONE_SHOT
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
   );
 }
 

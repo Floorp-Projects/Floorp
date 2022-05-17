@@ -1,4 +1,4 @@
-let jsURL =
+jsURL =
   "javascript:" +
   escape(
     'window.parent.postMessage("JS uri ran", "*");\
@@ -8,7 +8,7 @@ window.parent.postMessage("Able to access private: " +\
   window.parent.private, "*");\
 </script>\''
   );
-let dataURL =
+dataURL =
   "data:text/html," +
   escape(
     '<!DOCTYPE HTML>\
@@ -23,7 +23,7 @@ catch (e) {\
 </script>'
   );
 
-let tests = [
+tests = [
   // Plain document should work as normal
   '<!DOCTYPE HTML>\
 <script>\
@@ -84,7 +84,7 @@ setTimeout(function() {\
 
 function handleRequest(request, response) {
   dump("@@@@@@@@@hi there: " + request.queryString + "\n");
-  let test = tests[parseInt(request.queryString, 10) - 1];
+  test = tests[parseInt(request.queryString, 10) - 1];
   response.setHeader("Content-Type", "text/html");
 
   if (!test) {

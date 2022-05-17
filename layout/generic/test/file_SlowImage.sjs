@@ -12,10 +12,13 @@ function handleRequest(request, response) {
     if (obj == null) {
       ctx = {
         QueryInterface: function(iid) {
-          if (iid.equals(Ci.nsISupports)) {
+          if (iid.equals(Components.interfaces.nsISupports)) {
             return this;
           }
-          throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+          throw Components.Exception(
+            "",
+            Components.results.NS_ERROR_NO_INTERFACE
+          );
         },
       };
       ctx.wrappedJSObject = ctx;
