@@ -184,7 +184,7 @@ class NoiseFloorEstimator : public NoiseLevelEstimator {
     const float frame_energy = FrameEnergy(frame);
     if (frame_energy <= min_noise_energy_) {
       // Ignore frames when muted or below the minimum measurable energy.
-      data_dumper_->DumpRaw("agc2_noise_floor_preliminary_level",
+      data_dumper_->DumpRaw("agc2_noise_floor_estimator_preliminary_level",
                             noise_energy_);
       return EnergyToDbfs(noise_energy_, frame.samples_per_channel());
     }
@@ -196,7 +196,7 @@ class NoiseFloorEstimator : public NoiseLevelEstimator {
       preliminary_noise_energy_ = frame_energy;
       preliminary_noise_energy_set_ = true;
     }
-    data_dumper_->DumpRaw("agc2_noise_floor_preliminary_level",
+    data_dumper_->DumpRaw("agc2_noise_floor_estimator_preliminary_level",
                           preliminary_noise_energy_);
 
     if (counter_ == 0) {

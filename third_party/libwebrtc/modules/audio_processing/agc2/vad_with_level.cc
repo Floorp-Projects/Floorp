@@ -65,43 +65,23 @@ class Vad : public VoiceActivityDetector {
   rnn_vad::RnnVad rnn_vad_;
 };
 
-// Returns an updated version of `p_old` by using instant decay and the given
-// `attack` on a new VAD probability value `p_new`.
-float SmoothedVadProbability(float p_old, float p_new, float attack) {
-  RTC_DCHECK_GT(attack, 0.0f);
-  RTC_DCHECK_LE(attack, 1.0f);
-  if (p_new < p_old || attack == 1.0f) {
-    // Instant decay (or no smoothing).
-    return p_new;
-  } else {
-    // Attack phase.
-    return attack * p_new + (1.0f - attack) * p_old;
-  }
-}
-
 }  // namespace
 
 VadLevelAnalyzer::VadLevelAnalyzer()
-    : VadLevelAnalyzer(kDefaultVadRnnResetPeriodMs,
-                       kDefaultSmoothedVadProbabilityAttack,
-                       GetAvailableCpuFeatures()) {}
+    : VadLevelAnalyzer(kDefaultVadRnnResetPeriodMs, GetAvailableCpuFeatures()) {
+}
 
 VadLevelAnalyzer::VadLevelAnalyzer(int vad_reset_period_ms,
-                                   float vad_probability_attack,
                                    const AvailableCpuFeatures& cpu_features)
     : VadLevelAnalyzer(vad_reset_period_ms,
-                       vad_probability_attack,
                        std::make_unique<Vad>(cpu_features)) {}
 
 VadLevelAnalyzer::VadLevelAnalyzer(int vad_reset_period_ms,
-                                   float vad_probability_attack,
                                    std::unique_ptr<VoiceActivityDetector> vad)
     : vad_(std::move(vad)),
       vad_reset_period_frames_(
           rtc::CheckedDivExact(vad_reset_period_ms, kFrameDurationMs)),
-      vad_probability_attack_(vad_probability_attack),
-      time_to_vad_reset_(vad_reset_period_frames_),
-      vad_probability_(0.0f) {
+      time_to_vad_reset_(vad_reset_period_frames_) {
   RTC_DCHECK(vad_);
   RTC_DCHECK_GT(vad_reset_period_frames_, 1);
 }
@@ -123,11 +103,7 @@ VadLevelAnalyzer::Result VadLevelAnalyzer::AnalyzeFrame(
     peak = std::max(std::fabs(x), peak);
     rms += x * x;
   }
-  // Compute smoothed speech probability.
-  vad_probability_ = SmoothedVadProbability(
-      /*p_old=*/vad_probability_, /*p_new=*/vad_->ComputeProbability(frame),
-      vad_probability_attack_);
-  return {vad_probability_,
+  return {vad_->ComputeProbability(frame),
           FloatS16ToDbfs(std::sqrt(rms / frame.samples_per_channel())),
           FloatS16ToDbfs(peak)};
 }
