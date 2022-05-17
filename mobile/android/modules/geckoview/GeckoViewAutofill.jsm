@@ -144,7 +144,7 @@ class GeckoViewAutofill {
     return updated;
   }
 
-  _addElement(aFormLike, aFromDeferredTask) {
+  async _addElement(aFormLike, aFromDeferredTask) {
     let task =
       this._autofillTasks && this._autofillTasks.get(aFormLike.rootElement);
     if (task && !aFromDeferredTask) {
@@ -223,51 +223,56 @@ class GeckoViewAutofill {
         );
       });
 
-    this._eventDispatcher.dispatch("GeckoView:AddAutofill", rootInfo, {
-      onSuccess: responses => {
-        // `responses` is an object with global IDs as keys.
-        debug`Performing auto-fill ${Object.keys(responses)}`;
+    try {
+      // We don't await here so that we can send a focus event immediately
+      // after this as the app might not know which element is focused.
+      const responsePromise = this._eventDispatcher.sendRequestForResult({
+        type: "GeckoView:AddAutofill",
+        node: rootInfo,
+      });
 
-        const AUTOFILL_STATE = "autofill";
-        const winUtils = window.windowUtils;
+      if (sendFocusEvent) {
+        // We might have missed sending a focus event for the active element.
+        this.onFocus(aFormLike.ownerDocument.activeElement);
+      }
 
-        for (const uuid in responses) {
-          const entry =
-            this._autofillElements && this._autofillElements.get(uuid);
-          const element = entry && entry.get();
-          const value = responses[uuid] || "";
+      const responses = await responsePromise;
+      // `responses` is an object with global IDs as keys.
+      debug`Performing auto-fill ${Object.keys(responses)}`;
 
-          if (
-            window.HTMLInputElement.isInstance(element) &&
-            !element.disabled &&
-            element.parentElement
-          ) {
-            element.setUserInput(value);
-            if (winUtils && element.value === value) {
-              // Add highlighting for autofilled fields.
-              winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
+      const AUTOFILL_STATE = "autofill";
+      const winUtils = window.windowUtils;
 
-              // Remove highlighting when the field is changed.
-              element.addEventListener(
-                "input",
-                _ =>
-                  winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
-                { mozSystemGroup: true, once: true }
-              );
-            }
-          } else if (element) {
-            warn`Don't know how to auto-fill ${element.tagName}`;
+      for (const uuid in responses) {
+        const entry =
+          this._autofillElements && this._autofillElements.get(uuid);
+        const element = entry && entry.get();
+        const value = responses[uuid] || "";
+
+        if (
+          window.HTMLInputElement.isInstance(element) &&
+          !element.disabled &&
+          element.parentElement
+        ) {
+          element.setUserInput(value);
+          if (winUtils && element.value === value) {
+            // Add highlighting for autofilled fields.
+            winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
+
+            // Remove highlighting when the field is changed.
+            element.addEventListener(
+              "input",
+              _ =>
+                winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
+              { mozSystemGroup: true, once: true }
+            );
           }
+        } else if (element) {
+          warn`Don't know how to auto-fill ${element.tagName}`;
         }
-      },
-      onError: error => {
-        warn`Cannot perform autofill ${error}`;
-      },
-    });
-
-    if (sendFocusEvent) {
-      // We might have missed sending a focus event for the active element.
-      this.onFocus(aFormLike.ownerDocument.activeElement);
+      }
+    } catch (error) {
+      warn`Cannot perform autofill ${error}`;
     }
   }
 
@@ -282,7 +287,10 @@ class GeckoViewAutofill {
     const info =
       aTarget && this._autofillInfos && this._autofillInfos.get(aTarget);
     if (!aTarget || info) {
-      this._eventDispatcher.dispatch("GeckoView:OnAutofillFocus", info);
+      this._eventDispatcher.sendRequest({
+        type: "GeckoView:OnAutofillFocus",
+        node: info,
+      });
     }
   }
 
@@ -300,29 +308,37 @@ class GeckoViewAutofill {
 
     for (const updatedInfo of updatedNodeInfos) {
       debug`Updating node ${updatedInfo}`;
-      this._eventDispatcher.dispatch("GeckoView:UpdateAutofill", updatedInfo);
+      this._eventDispatcher.sendRequest({
+        type: "GeckoView:UpdateAutofill",
+        node: updatedInfo,
+      });
     }
 
     const info = this._getInfo(aFormLike.rootElement);
     if (info) {
       debug`Committing node ${info}`;
-      this._eventDispatcher.dispatch("GeckoView:CommitAutofill", info);
+      this._eventDispatcher.sendRequest({
+        type: "GeckoView:CommitAutofill",
+        node: info,
+      });
     }
   }
 
   /**
    * Clear all tracked auto-fill forms and notify Java.
    */
-  clearElements() {
+  clearElements(browsingContext) {
     debug`Clearing auto-fill`;
 
     this._autofillTasks = undefined;
     this._autofillInfos = undefined;
     this._autofillElements = undefined;
 
-    this._eventDispatcher.sendRequest({
-      type: "GeckoView:ClearAutofill",
-    });
+    if (browsingContext === browsingContext.top) {
+      this._eventDispatcher.sendRequest({
+        type: "GeckoView:ClearAutofill",
+      });
+    }
   }
 
   /**
@@ -345,12 +361,6 @@ class GeckoViewAutofill {
         inputAdded = true;
         this._addElement(FormLikeFactory.createFromField(inputs[i]));
       }
-    }
-
-    // Finally add frames.
-    const frames = aDoc.defaultView.frames;
-    for (let i = 0; i < frames.length; i++) {
-      this.scanDocument(frames[i].document);
     }
   }
 }
