@@ -301,7 +301,7 @@ extern JS_PUBLIC_API bool ReadableStreamGetMode(JSContext* cx,
                                                 HandleObject stream,
                                                 ReadableStreamMode* mode);
 
-enum class ReadableStreamReaderMode { Default };
+enum class ReadableStreamReaderMode { Default, Byob };
 
 /**
  * Returns true if the given ReadableStream is readable, false if not.
