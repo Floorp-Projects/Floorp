@@ -129,7 +129,6 @@ class nsPrintJob final : public nsIWebProgressListener,
   // due to pages having been skipped in a page range or combined into a single
   // sheet via pages-per-sheet.)
   int32_t GetPrintPreviewNumSheets() const;
-  already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // The setters here also update the DocViewer
   void SetIsPrinting(bool aIsPrinting);

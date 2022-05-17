@@ -3186,18 +3186,6 @@ nsDocumentViewer::GetDoingPrintPreview(bool* aDoingPrintPreview) {
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::GetCurrentPrintSettings(
-    nsIPrintSettings** aCurrentPrintSettings) {
-  NS_ENSURE_ARG_POINTER(aCurrentPrintSettings);
-
-  *aCurrentPrintSettings = nullptr;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aCurrentPrintSettings = mPrintJob->GetCurrentPrintSettings().take();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocumentViewer::ExitPrintPreview() {
   NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
 
