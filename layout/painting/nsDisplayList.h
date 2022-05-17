@@ -5034,7 +5034,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    nsDisplayList* aList,
                    const ActiveScrolledRoot* aActiveScrolledRoot,
-                   bool aForEventsOnly, bool aNeedsActiveLayer);
+                   bool aForEventsOnly, bool aNeedsActiveLayer,
+                   bool aWrapsBackdropFilter);
 
   nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                    const nsDisplayOpacity& aOther)
@@ -5042,7 +5043,8 @@ class nsDisplayOpacity : public nsDisplayWrapList {
         mOpacity(aOther.mOpacity),
         mForEventsOnly(aOther.mForEventsOnly),
         mNeedsActiveLayer(aOther.mNeedsActiveLayer),
-        mChildOpacityState(ChildOpacityState::Unknown) {
+        mChildOpacityState(ChildOpacityState::Unknown),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayOpacity);
     // We should not try to merge flattened opacities.
     MOZ_ASSERT(aOther.mChildOpacityState != ChildOpacityState::Applied);
@@ -5151,6 +5153,7 @@ class nsDisplayOpacity : public nsDisplayWrapList {
 #else
   ChildOpacityState mChildOpacityState;
 #endif
+  bool mWrapsBackdropFilter;
 };
 
 class nsDisplayBlendMode : public nsDisplayWrapList {
@@ -5982,13 +5985,15 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
 class nsDisplayFilters : public nsDisplayEffectsBase {
  public:
   nsDisplayFilters(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                   nsDisplayList* aList, nsIFrame* aStyleFrame);
+                   nsDisplayList* aList, nsIFrame* aStyleFrame,
+                   bool aWrapsBackdropFilter);
 
   nsDisplayFilters(nsDisplayListBuilder* aBuilder,
                    const nsDisplayFilters& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
         mStyle(aOther.mStyle),
-        mEffectsBounds(aOther.mEffectsBounds) {
+        mEffectsBounds(aOther.mEffectsBounds),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayFilters);
   }
 
@@ -6056,6 +6061,7 @@ class nsDisplayFilters : public nsDisplayEffectsBase {
   // relative to mFrame
   nsRect mEffectsBounds;
   nsRect mVisibleRect;
+  bool mWrapsBackdropFilter;
 };
 
 /* A display item that applies a transformation to all of its descendant

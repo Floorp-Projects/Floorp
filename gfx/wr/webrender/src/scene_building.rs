@@ -287,6 +287,7 @@ impl PictureChainBuilder {
         interners: &mut Interners,
         prim_store: &mut PrimitiveStore,
         prim_instances: &mut Vec<PrimitiveInstance>,
+        extra_pic_flags: PictureFlags,
     ) -> PictureChainBuilder {
         let prim_list = match self.current {
             PictureSource::PrimitiveList { prim_list } => {
@@ -307,11 +308,13 @@ impl PictureChainBuilder {
             }
         };
 
-        let flags = if self.set_resolve_target {
+        let mut flags = if self.set_resolve_target {
             PictureFlags::IS_RESOLVE_TARGET
         } else {
             PictureFlags::empty()
         };
+
+        flags |= extra_pic_flags;
 
         let pic_index = PictureIndex(prim_store.pictures
             .alloc()
@@ -2275,7 +2278,6 @@ impl<'a> SceneBuilder<'a> {
         };
 
         let pic_flags = if stacking_context.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER) {
-            assert!(stacking_context.blit_reason.contains(BlitReason::CLIP));
             PictureFlags::WRAPS_SUB_GRAPH
         } else {
             PictureFlags::empty()
@@ -2479,6 +2481,7 @@ impl<'a> SceneBuilder<'a> {
             stacking_context.composite_ops.filter_primitives,
             stacking_context.composite_ops.filter_datas,
             None,
+            pic_flags,
         );
 
         // Same for mix-blend-mode, except we can skip if this primitive is the first in the parent
@@ -2507,6 +2510,7 @@ impl<'a> SceneBuilder<'a> {
                     &mut self.interners,
                     &mut self.prim_store,
                     &mut self.prim_instances,
+                    PictureFlags::empty(),
                 );
             } else {
                 // If we have a mix-blend-mode, the stacking context needs to be isolated
@@ -3644,6 +3648,7 @@ impl<'a> SceneBuilder<'a> {
             filter_primitives,
             filter_datas,
             Some(false),
+            PictureFlags::empty(),
         );
 
         // Clip the backdrop filter to the outline of the backdrop-filter prim. If this is
@@ -3691,6 +3696,7 @@ impl<'a> SceneBuilder<'a> {
         mut filter_primitives: Vec<FilterPrimitive>,
         filter_datas: Vec<FilterData>,
         should_inflate_override: Option<bool>,
+        extra_pic_flags: PictureFlags,
     ) -> PictureChainBuilder {
         // TODO(cbrewster): Currently CSS and SVG filters live side by side in WebRender, but unexpected results will
         // happen if they are used simulataneously. Gecko only provides either filter ops or filter primitives.
@@ -3756,6 +3762,7 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
+                extra_pic_flags,
             );
         }
 
@@ -3792,6 +3799,7 @@ impl<'a> SceneBuilder<'a> {
                 &mut self.interners,
                 &mut self.prim_store,
                 &mut self.prim_instances,
+                extra_pic_flags,
             );
         }
 

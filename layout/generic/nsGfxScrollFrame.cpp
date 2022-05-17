@@ -4146,14 +4146,18 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   };
   if (mIsRoot) {
     if (nsIFrame* rootStyleFrame = GetFrameForStyle()) {
+      bool usingBackdropFilter =
+          rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
+          rootStyleFrame->IsVisibleForPainting();
+
       if (rootStyleFrame->StyleEffects()->HasFilters()) {
         SerializeList();
         rootResultList.AppendNewToTop<nsDisplayFilters>(
-            aBuilder, mOuter, &rootResultList, rootStyleFrame);
+            aBuilder, mOuter, &rootResultList, rootStyleFrame,
+            usingBackdropFilter);
       }
 
-      if (rootStyleFrame->StyleEffects()->HasBackdropFilters() &&
-          rootStyleFrame->IsVisibleForPainting()) {
+      if (usingBackdropFilter) {
         SerializeList();
         DisplayListClipState::AutoSaveRestore clipState(aBuilder);
         nsRect backdropRect = mOuter->GetRectRelativeToSelf() +
