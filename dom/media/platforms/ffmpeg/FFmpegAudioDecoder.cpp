@@ -36,6 +36,29 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     }
   }
 
+  if (mCodecID == AV_CODEC_ID_FLAC) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        aConfig.mCodecSpecificConfig.is<FlacCodecSpecificData>());
+    // Gracefully handle bad data. If don't hit the preceding assert once this
+    // has been shipped for awhile, we can remove it and make the following code
+    // non-conditional.
+    if (aConfig.mCodecSpecificConfig.is<FlacCodecSpecificData>()) {
+      const FlacCodecSpecificData& flacCodecSpecificData =
+          aConfig.mCodecSpecificConfig.as<FlacCodecSpecificData>();
+      if (flacCodecSpecificData.mStreamInfoBinaryBlob->IsEmpty()) {
+        // Flac files without headers will be missing stream info. In this case
+        // we don't want to feed ffmpeg empty extra data as it will fail, just
+        // early return.
+        return;
+      }
+      // Use a new MediaByteBuffer as the object will be modified during
+      // initialization.
+      mExtraData = new MediaByteBuffer;
+      mExtraData->AppendElements(*flacCodecSpecificData.mStreamInfoBinaryBlob);
+      return;
+    }
+  }
+
   RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
       ForceGetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
   if (audioCodecSpecificBinaryBlob && audioCodecSpecificBinaryBlob->Length()) {
