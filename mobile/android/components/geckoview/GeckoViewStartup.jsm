@@ -31,6 +31,9 @@ function InitLater(fn, object, name) {
 
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
+    parent: {
+      moduleURI: "resource:///actors/LoadURIDelegateParent.jsm",
+    },
     child: {
       moduleURI: "resource:///actors/LoadURIDelegateChild.jsm",
     },
