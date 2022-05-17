@@ -112,12 +112,7 @@ nsresult nsScriptableInputStream::ReadHelper(char* aBuffer, uint32_t aCount) {
   return NS_OK;
 }
 
-nsresult nsScriptableInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                         void** aResult) {
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
+nsresult nsScriptableInputStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsScriptableInputStream> sis = new nsScriptableInputStream();
   return sis->QueryInterface(aIID, aResult);
 }

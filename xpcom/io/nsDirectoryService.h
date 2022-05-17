@@ -41,7 +41,7 @@ class nsDirectoryService final : public nsIDirectoryService,
   static void RealInit();
   void RegisterCategoryProviders();
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   static mozilla::StaticRefPtr<nsDirectoryService> gService;
 

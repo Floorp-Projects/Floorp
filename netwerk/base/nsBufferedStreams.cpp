@@ -311,10 +311,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsBufferedInputStream, nsIInputStream,
                             nsIBufferedInputStream, nsISeekableStream,
                             nsITellableStream, nsIStreamBufferAccess)
 
-nsresult nsBufferedInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                       void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsresult nsBufferedInputStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsBufferedInputStream> stream = new nsBufferedInputStream();
   return stream->QueryInterface(aIID, aResult);
 }
@@ -837,10 +834,7 @@ NS_INTERFACE_MAP_BEGIN(nsBufferedOutputStream)
   NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
 NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
 
-nsresult nsBufferedOutputStream::Create(nsISupports* aOuter, REFNSIID aIID,
-                                        void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsresult nsBufferedOutputStream::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsBufferedOutputStream> stream = new nsBufferedOutputStream();
   return stream->QueryInterface(aIID, aResult);
 }

@@ -24,7 +24,7 @@ class nsEnvironment final : public nsIEnvironment {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIENVIRONMENT
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  private:
   nsEnvironment() {}

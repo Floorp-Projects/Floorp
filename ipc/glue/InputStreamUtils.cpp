@@ -150,29 +150,29 @@ already_AddRefed<nsIInputStream> InputStreamHelper::DeserializeInputStream(
 
     case InputStreamParams::TFileInputStreamParams: {
       nsCOMPtr<nsIFileInputStream> stream;
-      nsFileInputStream::Create(nullptr, NS_GET_IID(nsIFileInputStream),
+      nsFileInputStream::Create(NS_GET_IID(nsIFileInputStream),
                                 getter_AddRefs(stream));
       serializable = do_QueryInterface(stream);
     } break;
 
     case InputStreamParams::TBufferedInputStreamParams: {
       nsCOMPtr<nsIBufferedInputStream> stream;
-      nsBufferedInputStream::Create(nullptr, NS_GET_IID(nsIBufferedInputStream),
+      nsBufferedInputStream::Create(NS_GET_IID(nsIBufferedInputStream),
                                     getter_AddRefs(stream));
       serializable = do_QueryInterface(stream);
     } break;
 
     case InputStreamParams::TMIMEInputStreamParams: {
       nsCOMPtr<nsIMIMEInputStream> stream;
-      nsMIMEInputStreamConstructor(nullptr, NS_GET_IID(nsIMIMEInputStream),
+      nsMIMEInputStreamConstructor(NS_GET_IID(nsIMIMEInputStream),
                                    getter_AddRefs(stream));
       serializable = do_QueryInterface(stream);
     } break;
 
     case InputStreamParams::TMultiplexInputStreamParams: {
       nsCOMPtr<nsIMultiplexInputStream> stream;
-      nsMultiplexInputStreamConstructor(
-          nullptr, NS_GET_IID(nsIMultiplexInputStream), getter_AddRefs(stream));
+      nsMultiplexInputStreamConstructor(NS_GET_IID(nsIMultiplexInputStream),
+                                        getter_AddRefs(stream));
       serializable = do_QueryInterface(stream);
     } break;
 

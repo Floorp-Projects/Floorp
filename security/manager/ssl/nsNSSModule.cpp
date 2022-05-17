@@ -71,12 +71,8 @@ template <class InstanceClass,
           ProcessRestriction processRestriction =
               ProcessRestriction::ParentProcessOnly,
           ThreadRestriction threadRestriction = ThreadRestriction::AnyThread>
-static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
-                            void** aResult) {
+static nsresult Constructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   if (processRestriction == ProcessRestriction::ParentProcessOnly &&
       !XRE_IsParentProcess()) {
@@ -95,11 +91,10 @@ static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
   return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
-#define IMPL(type, ...)                                                  \
-  template <>                                                            \
-  nsresult NSSConstructor<type>(nsISupports * aOuter, const nsIID& aIID, \
-                                void** aResult) {                        \
-    return Constructor<type, __VA_ARGS__>(aOuter, aIID, aResult);        \
+#define IMPL(type, ...)                                              \
+  template <>                                                        \
+  nsresult NSSConstructor<type>(const nsIID& aIID, void** aResult) { \
+    return Constructor<type, __VA_ARGS__>(aIID, aResult);            \
   }
 
 // Components that require main thread initialization could cause a deadlock

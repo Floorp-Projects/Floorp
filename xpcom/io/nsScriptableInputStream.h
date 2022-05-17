@@ -33,7 +33,7 @@ class nsScriptableInputStream final : public nsIScriptableInputStream {
   // nsScriptableInputStream methods
   nsScriptableInputStream() = default;
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  private:
   ~nsScriptableInputStream() = default;

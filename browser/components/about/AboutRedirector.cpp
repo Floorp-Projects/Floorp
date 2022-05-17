@@ -277,8 +277,7 @@ AboutRedirector::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsresult AboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID,
-                                 void** result) {
+nsresult AboutRedirector::Create(REFNSIID aIID, void** result) {
   AboutRedirector* about = new AboutRedirector();
   if (about == nullptr) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(about);

@@ -880,14 +880,10 @@ nsLocalFile::nsLocalFile(const nsAString& aFilePath)
   InitWithPath(aFilePath);
 }
 
-nsresult nsLocalFile::nsLocalFileConstructor(nsISupports* aOuter,
-                                             const nsIID& aIID,
+nsresult nsLocalFile::nsLocalFileConstructor(const nsIID& aIID,
                                              void** aInstancePtr) {
   if (NS_WARN_IF(!aInstancePtr)) {
     return NS_ERROR_INVALID_ARG;
-  }
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
   }
 
   nsLocalFile* inst = new nsLocalFile();

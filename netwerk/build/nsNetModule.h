@@ -13,29 +13,20 @@ class nsISupports;
 nsresult nsNetStartup();
 void nsNetShutdown();
 
-nsresult CreateNewStreamConvServiceFactory(nsISupports* aOuter,
-                                           const nsIID& aIID, void** aResult);
-nsresult CreateNewMultiMixedConvFactory(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult);
-nsresult CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, const nsIID& aIID,
-                                       void** aResult);
-nsresult CreateNewHTTPCompressConvFactory(nsISupports* aOuter,
-                                          const nsIID& aIID, void** aResult);
-nsresult CreateNewUnknownDecoderFactory(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult);
-nsresult CreateNewBinaryDetectorFactory(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult);
-nsresult nsLoadGroupConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                void** aResult);
+nsresult CreateNewStreamConvServiceFactory(const nsIID& aIID, void** aResult);
+nsresult CreateNewMultiMixedConvFactory(const nsIID& aIID, void** aResult);
+nsresult CreateNewTXTToHTMLConvFactory(const nsIID& aIID, void** aResult);
+nsresult CreateNewHTTPCompressConvFactory(const nsIID& aIID, void** aResult);
+nsresult CreateNewUnknownDecoderFactory(const nsIID& aIID, void** aResult);
+nsresult CreateNewBinaryDetectorFactory(const nsIID& aIID, void** aResult);
+nsresult nsLoadGroupConstructor(const nsIID& aIID, void** aResult);
 
-extern nsresult net_NewIncrementalDownload(nsISupports*, const nsIID&, void**);
+extern nsresult net_NewIncrementalDownload(const nsIID&, void**);
 
 namespace mozilla {
 namespace net {
-nsresult WebSocketChannelConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                     void** aResult);
-nsresult WebSocketSSLChannelConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult);
+nsresult WebSocketChannelConstructor(const nsIID& aIID, void** aResult);
+nsresult WebSocketSSLChannelConstructor(const nsIID& aIID, void** aResult);
 }  // namespace net
 }  // namespace mozilla
 

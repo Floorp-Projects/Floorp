@@ -33,7 +33,7 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
 
   nsresult Init(nsIStreamListener* aListener);
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  protected:
   void FormatSizeString(int64_t inSize, nsCString& outSizeString);

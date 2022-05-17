@@ -35,8 +35,7 @@ extern "C" void NS_NewWindowsRegKey(nsIWindowsRegKey** aResult);
       }                                                \
     }
 
-[[nodiscard]] extern nsresult nsWindowsRegKeyConstructor(nsISupports* aOuter,
-                                                         const nsIID& aIID,
+[[nodiscard]] extern nsresult nsWindowsRegKeyConstructor(const nsIID& aIID,
                                                          void** aResult);
 
 #endif  // IMPL_LIBXUL
