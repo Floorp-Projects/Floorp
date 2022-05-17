@@ -164,7 +164,7 @@ async function getViewSourceInDebuggerLocation(
     return generatedLocation;
   }
 
-  const originalSource = dbg.getSource(originalLocation.sourceId);
+  const originalSource = dbg.getLocationSource(originalLocation);
 
   if (!originalSource) {
     return generatedLocation;
