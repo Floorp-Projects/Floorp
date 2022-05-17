@@ -57,8 +57,6 @@ struct DataChannelStats {
   uint64_t bytes_received;
 };
 
-bool IsSctpLike(cricket::DataChannelType type);
-
 }  // namespace webrtc
 
 #endif  // PC_DATA_CHANNEL_UTILS_H_

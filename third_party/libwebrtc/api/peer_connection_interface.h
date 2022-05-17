@@ -1398,10 +1398,6 @@ class RTC_EXPORT PeerConnectionFactoryInterface
     // testing/debugging.
     bool disable_encryption = false;
 
-    // Deprecated. The only effect of setting this to true is that
-    // CreateDataChannel will fail, which is not that useful.
-    bool disable_sctp_data_channels = false;
-
     // If set to true, any platform-supported network monitoring capability
     // won't be used, and instead networks will only be updated via polling.
     //

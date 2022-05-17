@@ -262,17 +262,11 @@ DataChannelController::InternalCreateDataChannelWithProxy(
   if (pc_->IsClosed()) {
     return nullptr;
   }
-  if (data_channel_type_ == cricket::DCT_NONE) {
-    RTC_LOG(LS_ERROR)
-        << "InternalCreateDataChannel: Data is not supported in this call.";
-    return nullptr;
-  }
-  if (IsSctpLike(data_channel_type())) {
-    rtc::scoped_refptr<SctpDataChannel> channel =
-        InternalCreateSctpDataChannel(label, config);
-    if (channel) {
-      return SctpDataChannel::CreateProxy(channel);
-    }
+
+  rtc::scoped_refptr<SctpDataChannel> channel =
+      InternalCreateSctpDataChannel(label, config);
+  if (channel) {
+    return SctpDataChannel::CreateProxy(channel);
   }
 
   return nullptr;
@@ -375,18 +369,6 @@ SctpDataChannel* DataChannelController::FindDataChannelBySid(int sid) const {
     }
   }
   return nullptr;
-}
-
-cricket::DataChannelType DataChannelController::data_channel_type() const {
-  // TODO(bugs.webrtc.org/9987): Should be restricted to the signaling thread.
-  // RTC_DCHECK_RUN_ON(signaling_thread());
-  return data_channel_type_;
-}
-
-void DataChannelController::set_data_channel_type(
-    cricket::DataChannelType type) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  data_channel_type_ = type;
 }
 
 DataChannelTransportInterface* DataChannelController::data_channel_transport()
