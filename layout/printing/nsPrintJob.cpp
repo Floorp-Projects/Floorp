@@ -571,16 +571,6 @@ int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
   return numSheets;
 }
 
-already_AddRefed<nsIPrintSettings> nsPrintJob::GetCurrentPrintSettings() {
-  if (mPrt) {
-    return do_AddRef(mPrt->mPrintSettings);
-  }
-  if (mPrtPreview) {
-    return do_AddRef(mPrtPreview->mPrintSettings);
-  }
-  return nullptr;
-}
-
 //-----------------------------------------------------------------
 //-- Section: Pre-Reflow Methods
 //-----------------------------------------------------------------
