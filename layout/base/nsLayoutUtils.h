@@ -2066,13 +2066,6 @@ class nsLayoutUtils {
                                      mozilla::Side aSide);
 
   /**
-   * Return the border radius size (width, height) based only on the top-left
-   * corner. This is a special case used for drawing the Windows 10 drop-shadow.
-   */
-  static mozilla::LayoutDeviceSize GetBorderRadiusForMenuDropShadow(
-      const nsIFrame*);
-
-  /**
    * Determine if a widget is likely to require transparency or translucency.
    *   @param aBackgroundFrame The frame that the background is set on. For
    *                           <window>s, this will be the canvas frame.

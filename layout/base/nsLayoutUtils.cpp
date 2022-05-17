@@ -6808,24 +6808,6 @@ bool nsLayoutUtils::HasNonZeroCornerOnSide(const BorderRadius& aCorners,
 }
 
 /* static */
-LayoutDeviceSize nsLayoutUtils::GetBorderRadiusForMenuDropShadow(
-    const nsIFrame* aFrame) {
-  if (aFrame->StyleUIReset()->mWindowShadow != StyleWindowShadow::Cliprounded) {
-    return {};
-  }
-
-  nscoord cssRadii[8];
-  if (!aFrame->GetBorderRadii(cssRadii)) {
-    return {};
-  }
-
-  RectCornerRadii devPxRadii;
-  nsCSSRendering::ComputePixelRadii(
-      cssRadii, aFrame->PresContext()->AppUnitsPerDevPixel(), &devPxRadii);
-  return LayoutDeviceSize::FromUnknownSize(devPxRadii.TopLeft());
-}
-
-/* static */
 nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
     nsIFrame* aBackgroundFrame, nsIFrame* aCSSRootFrame) {
   if (aCSSRootFrame->StyleEffects()->mOpacity < 1.0f)
