@@ -627,10 +627,12 @@ CanonicalBrowsingContext::ReplaceLoadingSessionHistoryEntryForLoad(
   return nullptr;
 }
 
+using PrintPromise = CanonicalBrowsingContext::PrintPromise;
 #ifdef NS_PRINTING
 class PrintListenerAdapter final : public nsIWebProgressListener {
  public:
-  explicit PrintListenerAdapter(Promise* aPromise) : mPromise(aPromise) {}
+  explicit PrintListenerAdapter(PrintPromise::Private* aPromise)
+      : mPromise(aPromise) {}
 
   NS_DECL_ISUPPORTS
 
@@ -639,7 +641,7 @@ class PrintListenerAdapter final : public nsIWebProgressListener {
                            uint32_t aStateFlags, nsresult aStatus) override {
     if (aStateFlags & nsIWebProgressListener::STATE_STOP &&
         aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT && mPromise) {
-      mPromise->MaybeResolveWithUndefined();
+      mPromise->Resolve(true, __func__);
       mPromise = nullptr;
     }
     return NS_OK;
@@ -648,7 +650,7 @@ class PrintListenerAdapter final : public nsIWebProgressListener {
                             nsresult aStatus,
                             const char16_t* aMessage) override {
     if (aStatus != NS_OK && mPromise) {
-      mPromise->MaybeReject(ErrorResult(aStatus));
+      mPromise->Reject(aStatus, __func__);
       mPromise = nullptr;
     }
     return NS_OK;
@@ -678,31 +680,41 @@ class PrintListenerAdapter final : public nsIWebProgressListener {
  private:
   ~PrintListenerAdapter() = default;
 
-  RefPtr<Promise> mPromise;
+  RefPtr<PrintPromise::Private> mPromise;
 };
 
 NS_IMPL_ISUPPORTS(PrintListenerAdapter, nsIWebProgressListener)
 #endif
 
-already_AddRefed<Promise> CanonicalBrowsingContext::Print(
+already_AddRefed<Promise> CanonicalBrowsingContext::PrintJS(
     nsIPrintSettings* aPrintSettings, ErrorResult& aRv) {
   RefPtr<Promise> promise = Promise::Create(GetIncumbentGlobal(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return promise.forget();
   }
 
-#ifndef NS_PRINTING
-  promise->MaybeReject(ErrorResult(NS_ERROR_NOT_AVAILABLE));
+  Print(aPrintSettings)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise](bool) { promise->MaybeResolveWithUndefined(); },
+          [promise](nsresult aResult) { promise->MaybeReject(aResult); });
   return promise.forget();
+}
+
+RefPtr<PrintPromise> CanonicalBrowsingContext::Print(
+    nsIPrintSettings* aPrintSettings) {
+#ifndef NS_PRINTING
+  return PrintPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
 #else
 
+  auto promise = MakeRefPtr<PrintPromise::Private>(__func__);
   auto listener = MakeRefPtr<PrintListenerAdapter>(promise);
   if (IsInProcess()) {
     RefPtr<nsGlobalWindowOuter> outerWindow =
         nsGlobalWindowOuter::Cast(GetDOMWindow());
     if (NS_WARN_IF(!outerWindow)) {
-      promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
-      return promise.forget();
+      promise->Reject(NS_ERROR_FAILURE, __func__);
+      return promise;
     }
 
     ErrorResult rv;
@@ -713,22 +725,22 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
                        nsGlobalWindowOuter::IsForWindowDotPrint::No,
                        /* aPrintPreviewCallback = */ nullptr, rv);
     if (rv.Failed()) {
-      promise->MaybeReject(std::move(rv));
+      promise->Reject(rv.StealNSResult(), __func__);
     }
-    return promise.forget();
+    return promise;
   }
 
   auto* browserParent = GetBrowserParent();
   if (NS_WARN_IF(!browserParent)) {
-    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
-    return promise.forget();
+    promise->Reject(NS_ERROR_FAILURE, __func__);
+    return promise;
   }
 
   nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
       do_GetService("@mozilla.org/gfx/printsettings-service;1");
   if (NS_WARN_IF(!printSettingsSvc)) {
-    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
-    return promise.forget();
+    promise->Reject(NS_ERROR_FAILURE, __func__);
+    return promise;
   }
 
   nsresult rv;
@@ -737,16 +749,16 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
     rv =
         printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      promise->MaybeReject(ErrorResult(rv));
-      return promise.forget();
+      promise->Reject(rv, __func__);
+      return promise;
     }
   }
 
   embedding::PrintData printData;
   rv = printSettingsSvc->SerializeToPrintData(printSettings, &printData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(ErrorResult(rv));
-    return promise.forget();
+    promise->Reject(rv, __func__);
+    return promise;
   }
 
   layout::RemotePrintJobParent* remotePrintJob =
@@ -759,7 +771,7 @@ already_AddRefed<Promise> CanonicalBrowsingContext::Print(
   }
 
   if (NS_WARN_IF(!browserParent->SendPrint(this, printData))) {
-    promise->MaybeReject(ErrorResult(NS_ERROR_FAILURE));
+    promise->Reject(NS_ERROR_FAILURE, __func__);
   }
   return promise.forget();
 #endif

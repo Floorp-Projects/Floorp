@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "SessionStoreData.h"
 #include "SessionStoreRestoreData.h"
