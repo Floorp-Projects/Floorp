@@ -431,6 +431,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``media.gmp-gmpopenh264.lastDownloadFailed``: When OpenH264 was last downloaded unsuccessfully as seconds since Jan 1, 1970.
 
+- ``media.gmp-gmpopenh264.lastDownloadFailReason``: The exception value when OpenH264 was last failed to downloaded.
+
 - ``media.gmp-gmpopenh264.lastInstallFailed``: When OpenH264 installation last failed as seconds since Jan 1, 1970.
 
 - ``media.gmp-gmpopenh264.lastInstallStart``: When OpenH264 installation was last started as seconds since Jan 1, 1970.
