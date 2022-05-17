@@ -179,9 +179,6 @@ class BaseChannel : public ChannelInterface,
   // Used for latency measurements.
   sigslot::signal1<ChannelInterface*>& SignalFirstPacketReceived() override;
 
-  // Forward SignalSentPacket to worker thread.
-  sigslot::signal1<const rtc::SentPacket&>& SignalSentPacket();
-
   // From RtpTransport - public for testing only
   void OnTransportReadyToSend(bool ready);
 
@@ -319,8 +316,7 @@ class BaseChannel : public ChannelInterface,
  private:
   bool ConnectToRtpTransport() RTC_RUN_ON(network_thread());
   void DisconnectFromRtpTransport() RTC_RUN_ON(network_thread());
-  void SignalSentPacket_n(const rtc::SentPacket& sent_packet)
-      RTC_RUN_ON(network_thread());
+  void SignalSentPacket_n(const rtc::SentPacket& sent_packet);
 
   rtc::Thread* const worker_thread_;
   rtc::Thread* const network_thread_;
@@ -328,8 +324,6 @@ class BaseChannel : public ChannelInterface,
   rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_;
   sigslot::signal1<ChannelInterface*> SignalFirstPacketReceived_
       RTC_GUARDED_BY(signaling_thread_);
-  sigslot::signal1<const rtc::SentPacket&> SignalSentPacket_
-      RTC_GUARDED_BY(worker_thread_);
 
   const std::string content_name_;
 

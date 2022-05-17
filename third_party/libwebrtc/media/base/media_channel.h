@@ -51,7 +51,6 @@
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
 class Timing;
@@ -154,7 +153,7 @@ struct VideoOptions {
   }
 };
 
-class MediaChannel : public sigslot::has_slots<> {
+class MediaChannel {
  public:
   class NetworkInterface {
    public:
@@ -171,7 +170,7 @@ class MediaChannel : public sigslot::has_slots<> {
 
   explicit MediaChannel(const MediaConfig& config);
   MediaChannel();
-  ~MediaChannel() override;
+  virtual ~MediaChannel();
 
   virtual cricket::MediaType media_type() const = 0;
 
@@ -181,6 +180,9 @@ class MediaChannel : public sigslot::has_slots<> {
   // Called on the network when an RTP packet is received.
   virtual void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
                                 int64_t packet_time_us) = 0;
+  // Called on the network thread after a transport has finished sending a
+  // packet.
+  virtual void OnPacketSent(const rtc::SentPacket& sent_packet) = 0;
   // Called when the socket's ability to send has changed.
   virtual void OnReadyToSend(bool ready) = 0;
   // Called when the network route used for sending packets changed.
@@ -239,30 +241,21 @@ class MediaChannel : public sigslot::has_slots<> {
 
   // Base method to send packet using NetworkInterface.
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
-                  const rtc::PacketOptions& options) {
-    return DoSendPacket(packet, false, options);
-  }
+                  const rtc::PacketOptions& options);
 
   bool SendRtcp(rtc::CopyOnWriteBuffer* packet,
-                const rtc::PacketOptions& options) {
-    return DoSendPacket(packet, true, options);
-  }
+                const rtc::PacketOptions& options);
 
   int SetOption(NetworkInterface::SocketType type,
                 rtc::Socket::Option opt,
-                int option) RTC_LOCKS_EXCLUDED(network_interface_mutex_) {
-    webrtc::MutexLock lock(&network_interface_mutex_);
-    return SetOptionLocked(type, opt, option);
-  }
+                int option) RTC_LOCKS_EXCLUDED(network_interface_mutex_);
 
   // Corresponds to the SDP attribute extmap-allow-mixed, see RFC8285.
   // Set to true if it's allowed to mix one- and two-byte RTP header extensions
   // in the same stream. The setter and getter must only be called from
   // worker_thread.
-  void SetExtmapAllowMixed(bool extmap_allow_mixed) {
-    extmap_allow_mixed_ = extmap_allow_mixed;
-  }
-  bool ExtmapAllowMixed() const { return extmap_allow_mixed_; }
+  void SetExtmapAllowMixed(bool extmap_allow_mixed);
+  bool ExtmapAllowMixed() const;
 
   virtual webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const = 0;
   virtual webrtc::RTCError SetRtpSendParameters(
@@ -280,58 +273,27 @@ class MediaChannel : public sigslot::has_slots<> {
   int SetOptionLocked(NetworkInterface::SocketType type,
                       rtc::Socket::Option opt,
                       int option)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_) {
-    if (!network_interface_)
-      return -1;
-    return network_interface_->SetOption(type, opt, option);
-  }
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_);
 
-  bool DscpEnabled() const { return enable_dscp_; }
+  bool DscpEnabled() const;
 
   // This is the DSCP value used for both RTP and RTCP channels if DSCP is
   // enabled. It can be changed at any time via |SetPreferredDscp|.
   rtc::DiffServCodePoint PreferredDscp() const
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_) {
-    webrtc::MutexLock lock(&network_interface_mutex_);
-    return preferred_dscp_;
-  }
+      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
 
   int SetPreferredDscp(rtc::DiffServCodePoint preferred_dscp)
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_) {
-    webrtc::MutexLock lock(&network_interface_mutex_);
-    if (preferred_dscp == preferred_dscp_) {
-      return 0;
-    }
-    preferred_dscp_ = preferred_dscp;
-    return UpdateDscp();
-  }
+      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
 
  private:
   // Apply the preferred DSCP setting to the underlying network interface RTP
   // and RTCP channels. If DSCP is disabled, then apply the default DSCP value.
-  int UpdateDscp() RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_) {
-    rtc::DiffServCodePoint value =
-        enable_dscp_ ? preferred_dscp_ : rtc::DSCP_DEFAULT;
-    int ret =
-        SetOptionLocked(NetworkInterface::ST_RTP, rtc::Socket::OPT_DSCP, value);
-    if (ret == 0) {
-      ret = SetOptionLocked(NetworkInterface::ST_RTCP, rtc::Socket::OPT_DSCP,
-                            value);
-    }
-    return ret;
-  }
+  int UpdateDscp() RTC_EXCLUSIVE_LOCKS_REQUIRED(network_interface_mutex_);
 
   bool DoSendPacket(rtc::CopyOnWriteBuffer* packet,
                     bool rtcp,
                     const rtc::PacketOptions& options)
-      RTC_LOCKS_EXCLUDED(network_interface_mutex_) {
-    webrtc::MutexLock lock(&network_interface_mutex_);
-    if (!network_interface_)
-      return false;
-
-    return (!rtcp) ? network_interface_->SendPacket(packet, options)
-                   : network_interface_->SendRtcp(packet, options);
-  }
+      RTC_LOCKS_EXCLUDED(network_interface_mutex_);
 
   const bool enable_dscp_;
   // |network_interface_| can be accessed from the worker_thread and
