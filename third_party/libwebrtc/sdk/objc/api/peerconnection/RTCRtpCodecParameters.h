@@ -66,7 +66,7 @@ RTC_OBJC_EXPORT
 /** The "format specific parameters" field from the "a=fmtp" line in the SDP */
 @property(nonatomic, readonly, nonnull) NSDictionary *parameters;
 
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+- (instancetype)init;
 
 @end
 

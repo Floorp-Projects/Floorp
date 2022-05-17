@@ -65,7 +65,7 @@ RTC_OBJC_EXPORT
 /** The relative DiffServ Code Point priority. */
 @property(nonatomic, assign) RTCPriority networkPriority;
 
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+- (instancetype)init;
 
 @end
 
