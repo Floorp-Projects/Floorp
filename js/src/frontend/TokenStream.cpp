@@ -2511,9 +2511,6 @@ template <typename Unit, class AnyCharsAccess>
 
     ungetCodeUnit(unit);
 
-    // "0." and "0e..." numbers parse "." or "e..." here.  Neither range
-    // contains a number, so we can't use |FullStringToDouble|.  (Parse
-    // failures return 0.0, so we'll still get the right result.)
     if (!GetDecimalNonInteger(anyCharsAccess().cx, numStart,
                               this->sourceUnits.addressOfNextCodeUnit(),
                               &dval)) {
@@ -2987,11 +2984,9 @@ template <typename Unit, class AnyCharsAccess>
         return badToken();
       } else {
         // '0' not followed by [XxBbOo0-9_];  scan as a decimal number.
-        numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
-
-        // NOTE: |unit| may be EOF here.  (This is permitted by case #3
-        //       in TokenStream.h docs for this function.)
-        return decimalNumber(unit, start, numStart, modifier, ttp);
+        ungetCodeUnit(unit);
+        numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;  // The '0'.
+        return decimalNumber('0', start, numStart, modifier, ttp);
       }
 
       if (unit == 'n') {

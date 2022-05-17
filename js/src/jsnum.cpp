@@ -414,7 +414,7 @@ bool js::GetDecimalNonInteger(JSContext* cx, const CharT* start,
 
   char* ep;
   *dp = js_strtod_harder(cx->dtoaState, chars.begin(), &ep);
-  MOZ_ASSERT(ep >= chars.begin());
+  MOZ_ASSERT(ep == chars.begin() + i);
 
   return true;
 }
