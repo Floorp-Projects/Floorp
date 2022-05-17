@@ -11,19 +11,18 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_AGC2_COMMON_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_AGC2_COMMON_H_
 
-#include <stddef.h>
-
 namespace webrtc {
 
 constexpr float kMinFloatS16Value = -32768.0f;
 constexpr float kMaxFloatS16Value = 32767.0f;
 constexpr float kMaxAbsFloatS16Value = 32768.0f;
 
+// Minimum audio level in dBFS scale for S16 samples.
+constexpr float kMinLevelDbfs = -90.31f;
+
 constexpr int kFrameDurationMs = 10;
 constexpr int kSubFramesInFrame = 20;
 constexpr int kMaximalNumberOfSamplesPerChannel = 480;
-
-constexpr float kAttackFilterConstant = 0.0f;
 
 // Adaptive digital gain applier settings below.
 constexpr float kHeadroomDbfs = 1.0f;
@@ -37,43 +36,29 @@ constexpr float kLimiterThresholdForAgcGainDbfs = -kHeadroomDbfs;
 // gain reduction.
 constexpr float kVadConfidenceThreshold = 0.95f;
 
-// The amount of 'memory' of the Level Estimator. Decides leak factors.
-constexpr int kFullBufferSizeMs = 1200;
-constexpr float kFullBufferLeakFactor = 1.0f - 1.0f / kFullBufferSizeMs;
-
-constexpr float kInitialSpeechLevelEstimateDbfs = -30.0f;
+// Adaptive digital level estimator parameters.
+// Number of milliseconds of speech frames to observe to make the estimator
+// confident.
+constexpr float kLevelEstimatorTimeToConfidenceMs = 400;
+constexpr float kLevelEstimatorLeakFactor =
+    1.0f - 1.0f / kLevelEstimatorTimeToConfidenceMs;
 
 // Robust VAD probability and speech decisions.
 constexpr int kDefaultVadRnnResetPeriodMs = 1500;
 static_assert(kDefaultVadRnnResetPeriodMs % kFrameDurationMs == 0, "");
-constexpr float kDefaultSmoothedVadProbabilityAttack = 1.0f;
-constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 1;
+constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 12;
 
 // Saturation Protector settings.
-constexpr float kDefaultInitialSaturationMarginDb = 20.0f;
-constexpr float kDefaultExtraSaturationMarginDb = 2.0f;
+constexpr float kSaturationProtectorInitialHeadroomDb = 20.0f;
+constexpr float kSaturationProtectorExtraHeadroomDb = 5.0f;
+constexpr int kSaturationProtectorBufferSize = 4;
 
-constexpr int kPeakEnveloperSuperFrameLengthMs = 400;
-static_assert(kFullBufferSizeMs % kPeakEnveloperSuperFrameLengthMs == 0,
-              "Full buffer size should be a multiple of super frame length for "
-              "optimal Saturation Protector performance.");
-
-constexpr int kPeakEnveloperBufferSize =
-    kFullBufferSizeMs / kPeakEnveloperSuperFrameLengthMs + 1;
-
-// This value is 10 ** (-1/20 * frame_size_ms / satproc_attack_ms),
-// where satproc_attack_ms is 5000.
-constexpr float kSaturationProtectorAttackConstant = 0.9988493699365052f;
-
-// This value is 10 ** (-1/20 * frame_size_ms / satproc_decay_ms),
-// where satproc_decay_ms is 1000.
-constexpr float kSaturationProtectorDecayConstant = 0.9997697679981565f;
-
-// This is computed from kDecayMs by
-// 10 ** (-1/20 * subframe_duration / kDecayMs).
-// |subframe_duration| is |kFrameDurationMs / kSubFramesInFrame|.
-// kDecayMs is defined in agc2_testing_common.h
-constexpr float kDecayFilterConstant = 0.9998848773724686f;
+// Set the initial speech level estimate so that `kInitialAdaptiveDigitalGainDb`
+// is applied at the beginning of the call.
+constexpr float kInitialSpeechLevelEstimateDbfs =
+    -kSaturationProtectorExtraHeadroomDb -
+    kSaturationProtectorInitialHeadroomDb - kInitialAdaptiveDigitalGainDb -
+    kHeadroomDbfs;
 
 // Number of interpolation points for each region of the limiter.
 // These values have been tuned to limit the interpolated gain curve error given

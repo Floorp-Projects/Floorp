@@ -73,7 +73,7 @@ void GainController2::Process(AudioBuffer* audio) {
 
 void GainController2::NotifyAnalogLevel(int level) {
   if (analog_level_ != level && adaptive_agc_) {
-    adaptive_agc_->Reset();
+    adaptive_agc_->HandleInputGainChange();
   }
   analog_level_ = level;
 }
