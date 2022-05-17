@@ -484,14 +484,6 @@ partial interface Window {
                            optional boolean searchInFrames = false,
                            optional boolean showDialog = false);
 
-  /**
-   * Returns the number of times this document for this window has
-   * been painted to the screen.
-   *
-   * If you need this for tests use nsIDOMWindowUtils.paintCount instead.
-   */
-  [Throws, Pref="dom.mozPaintCount.enabled"] readonly attribute unsigned long long mozPaintCount;
-
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;
            attribute EventHandler onabsolutedeviceorientation;
