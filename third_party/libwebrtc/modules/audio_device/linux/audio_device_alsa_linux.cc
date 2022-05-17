@@ -1042,7 +1042,7 @@ int32_t AudioDeviceLinuxALSA::StartRecording() {
   // RECORDING
   _ptrThreadRec.reset(new rtc::PlatformThread(
       RecThreadFunc, this, "webrtc_audio_module_capture_thread",
-      rtc::kRealtimePriority));
+      rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)));
 
   _ptrThreadRec->Start();
 
@@ -1160,7 +1160,7 @@ int32_t AudioDeviceLinuxALSA::StartPlayout() {
   // PLAYOUT
   _ptrThreadPlay.reset(new rtc::PlatformThread(
       PlayThreadFunc, this, "webrtc_audio_module_play_thread",
-      rtc::kRealtimePriority));
+      rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority)));
   _ptrThreadPlay->Start();
 
   int errVal = LATE(snd_pcm_prepare)(_handlePlayout);

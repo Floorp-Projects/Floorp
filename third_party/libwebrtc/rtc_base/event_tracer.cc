@@ -91,7 +91,7 @@ class EventLogger final {
       : logging_thread_(EventTracingThreadFunc,
                         this,
                         "EventTracingThread",
-                        kLowPriority) {}
+                        ThreadAttributes().SetPriority(kLowPriority)) {}
   ~EventLogger() { RTC_DCHECK(thread_checker_.IsCurrent()); }
 
   void AddTraceEvent(const char* name,

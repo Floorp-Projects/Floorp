@@ -47,6 +47,20 @@ enum ThreadPriority {
 #endif
 };
 
+struct ThreadAttributes {
+  ThreadPriority priority = kNormalPriority;
+  bool joinable = true;
+
+  ThreadAttributes& SetPriority(ThreadPriority priority_param) {
+    priority = priority_param;
+    return *this;
+  }
+  ThreadAttributes& SetDetached() {
+    joinable = false;
+    return *this;
+  }
+};
+
 // Represents a simple worker thread.  The implementation must be assumed
 // to be single threaded, meaning that all methods of the class, must be
 // called from the same thread, including instantiation.
@@ -55,13 +69,14 @@ class PlatformThread {
   PlatformThread(ThreadRunFunction func,
                  void* obj,
                  absl::string_view thread_name,
-                 ThreadPriority priority = kNormalPriority);
+                 ThreadAttributes attributes = ThreadAttributes());
   virtual ~PlatformThread();
 
   const std::string& name() const { return name_; }
 
   // Spawns a thread and tries to set thread priority according to the priority
   // from when CreateThread was called.
+  // Start can only be called after the constructor or after a call to Stop().
   virtual void Start();
 
   bool IsRunning() const;
@@ -70,7 +85,11 @@ class PlatformThread {
   // thread checks.
   PlatformThreadRef GetThreadRef() const;
 
-  // Stops (joins) the spawned thread.
+  // Stop() prepares the PlatformThread for destruction or another call to
+  // Start(). For a PlatformThread that's been created with
+  // ThreadAttributes::joinable true (the default), Stop() suspends the calling
+  // thread until the created thread exits unless the thread has already exited.
+  // Stop() can only be called after calling Start().
   virtual void Stop();
 
  protected:
@@ -78,28 +97,20 @@ class PlatformThread {
   // Exposed to derived classes to allow for special cases specific to Windows.
   bool QueueAPC(PAPCFUNC apc_function, ULONG_PTR data);
 #endif
-  virtual void Run();
 
  private:
-  bool SetPriority(ThreadPriority priority);
-
   ThreadRunFunction const run_function_ = nullptr;
-  const ThreadPriority priority_ = kNormalPriority;
+  const ThreadAttributes attributes_;
   void* const obj_;
   // TODO(pbos): Make sure call sites use string literals and update to a const
   // char* instead of a std::string.
   const std::string name_;
   webrtc::SequenceChecker thread_checker_;
-  webrtc::SequenceChecker spawned_thread_checker_;
 #if defined(WEBRTC_WIN)
-  static DWORD WINAPI StartThread(void* param);
-
   HANDLE thread_ = nullptr;
   DWORD thread_id_ = 0;
   RecursiveCriticalSection cs_;
 #else
-  static void* StartThread(void* param);
-
   pthread_t thread_ = 0;
 #endif  // defined(WEBRTC_WIN)
   // Bug 1691641

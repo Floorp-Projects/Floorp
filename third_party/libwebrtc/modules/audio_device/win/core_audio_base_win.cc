@@ -9,15 +9,16 @@
  */
 
 #include "modules/audio_device/win/core_audio_base_win.h"
-#include "modules/audio_device/audio_device_buffer.h"
 
 #include <memory>
 #include <string>
 
+#include "modules/audio_device/audio_device_buffer.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
+#include "rtc_base/platform_thread.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/win/scoped_com_initializer.h"
 #include "rtc_base/win/windows_version.h"
@@ -560,7 +561,7 @@ bool CoreAudioBase::Start() {
   if (!audio_thread_) {
     audio_thread_ = std::make_unique<rtc::PlatformThread>(
         Run, this, IsInput() ? "wasapi_capture_thread" : "wasapi_render_thread",
-        rtc::kRealtimePriority);
+        rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority));
     RTC_DCHECK(audio_thread_);
     audio_thread_->Start();
     if (!audio_thread_->IsRunning()) {

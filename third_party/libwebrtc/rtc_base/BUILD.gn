@@ -238,7 +238,10 @@ rtc_library("platform_thread") {
     ":timeutils",
     "../api:sequence_checker",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
 }
 
 rtc_library("rtc_event") {

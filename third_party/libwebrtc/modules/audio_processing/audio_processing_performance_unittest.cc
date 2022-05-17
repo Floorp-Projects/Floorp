@@ -391,14 +391,16 @@ class TimedThreadApiProcessor {
 class CallSimulator : public ::testing::TestWithParam<SimulationConfig> {
  public:
   CallSimulator()
-      : render_thread_(new rtc::PlatformThread(RenderProcessorThreadFunc,
-                                               this,
-                                               "render",
-                                               rtc::kRealtimePriority)),
-        capture_thread_(new rtc::PlatformThread(CaptureProcessorThreadFunc,
-                                                this,
-                                                "capture",
-                                                rtc::kRealtimePriority)),
+      : render_thread_(new rtc::PlatformThread(
+            RenderProcessorThreadFunc,
+            this,
+            "render",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority))),
+        capture_thread_(new rtc::PlatformThread(
+            CaptureProcessorThreadFunc,
+            this,
+            "capture",
+            rtc::ThreadAttributes().SetPriority(rtc::kRealtimePriority))),
         rand_gen_(42U),
         simulation_config_(static_cast<SimulationConfig>(GetParam())) {}
 
