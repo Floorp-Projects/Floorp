@@ -70,7 +70,6 @@ PacketBuffer::~PacketBuffer() {
 PacketBuffer::InsertResult PacketBuffer::InsertPacket(
     std::unique_ptr<PacketBuffer::Packet> packet) {
   PacketBuffer::InsertResult result;
-  MutexLock lock(&mutex_);
 
   uint16_t seq_num = packet->seq_num;
   size_t index = seq_num % buffer_.size();
@@ -120,7 +119,6 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
 }
 
 uint32_t PacketBuffer::ClearTo(uint16_t seq_num) {
-  MutexLock lock(&mutex_);
   // We have already cleared past this sequence number, no need to do anything.
   if (is_cleared_to_first_seq_num_ &&
       AheadOf<uint16_t>(first_seq_num_, seq_num)) {
@@ -161,13 +159,11 @@ uint32_t PacketBuffer::ClearTo(uint16_t seq_num) {
 }
 
 void PacketBuffer::Clear() {
-  MutexLock lock(&mutex_);
   ClearInternal();
 }
 
 PacketBuffer::InsertResult PacketBuffer::InsertPadding(uint16_t seq_num) {
   PacketBuffer::InsertResult result;
-  MutexLock lock(&mutex_);
   UpdateMissingPackets(seq_num);
   result.packets = FindFrames(static_cast<uint16_t>(seq_num + 1));
   return result;

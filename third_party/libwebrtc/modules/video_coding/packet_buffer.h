@@ -23,7 +23,6 @@
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/numerics/sequence_number_util.h"
-#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -78,58 +77,50 @@ class PacketBuffer {
   PacketBuffer(size_t start_buffer_size, size_t max_buffer_size);
   ~PacketBuffer();
 
-  ABSL_MUST_USE_RESULT InsertResult InsertPacket(std::unique_ptr<Packet> packet)
-      RTC_LOCKS_EXCLUDED(mutex_);
-  ABSL_MUST_USE_RESULT InsertResult InsertPadding(uint16_t seq_num)
-      RTC_LOCKS_EXCLUDED(mutex_);
+  ABSL_MUST_USE_RESULT InsertResult
+  InsertPacket(std::unique_ptr<Packet> packet);
+  ABSL_MUST_USE_RESULT InsertResult InsertPadding(uint16_t seq_num);
 
   // Clear all packets older than |seq_num|. Returns the number of packets
   // cleared.
-  uint32_t ClearTo(uint16_t seq_num) RTC_LOCKS_EXCLUDED(mutex_);
-  void Clear() RTC_LOCKS_EXCLUDED(mutex_);
+  uint32_t ClearTo(uint16_t seq_num);
+  void Clear();
 
   void ForceSpsPpsIdrIsH264Keyframe();
 
  private:
-  // Clears with |mutex_| taken.
-  void ClearInternal() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  void ClearInternal();
 
   // Tries to expand the buffer.
-  bool ExpandBufferSize() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool ExpandBufferSize();
 
   // Test if all previous packets has arrived for the given sequence number.
-  bool PotentialNewFrame(uint16_t seq_num) const
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  bool PotentialNewFrame(uint16_t seq_num) const;
 
   // Test if all packets of a frame has arrived, and if so, returns packets to
   // create frames.
-  std::vector<std::unique_ptr<Packet>> FindFrames(uint16_t seq_num)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  std::vector<std::unique_ptr<Packet>> FindFrames(uint16_t seq_num);
 
-  void UpdateMissingPackets(uint16_t seq_num)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-
-  mutable Mutex mutex_;
+  void UpdateMissingPackets(uint16_t seq_num);
 
   // buffer_.size() and max_size_ must always be a power of two.
   const size_t max_size_;
 
   // The fist sequence number currently in the buffer.
-  uint16_t first_seq_num_ RTC_GUARDED_BY(mutex_);
+  uint16_t first_seq_num_;
 
   // If the packet buffer has received its first packet.
-  bool first_packet_received_ RTC_GUARDED_BY(mutex_);
+  bool first_packet_received_;
 
   // If the buffer is cleared to |first_seq_num_|.
-  bool is_cleared_to_first_seq_num_ RTC_GUARDED_BY(mutex_);
+  bool is_cleared_to_first_seq_num_;
 
   // Buffer that holds the the inserted packets and information needed to
   // determine continuity between them.
-  std::vector<std::unique_ptr<Packet>> buffer_ RTC_GUARDED_BY(mutex_);
+  std::vector<std::unique_ptr<Packet>> buffer_;
 
-  absl::optional<uint16_t> newest_inserted_seq_num_ RTC_GUARDED_BY(mutex_);
-  std::set<uint16_t, DescendingSeqNumComp<uint16_t>> missing_packets_
-      RTC_GUARDED_BY(mutex_);
+  absl::optional<uint16_t> newest_inserted_seq_num_;
+  std::set<uint16_t, DescendingSeqNumComp<uint16_t>> missing_packets_;
 
   // Indicates if we should require SPS, PPS, and IDR for a particular
   // RTP timestamp to treat the corresponding frame as a keyframe.
