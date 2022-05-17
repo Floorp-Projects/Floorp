@@ -661,6 +661,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td id="select">cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>' +
                        "<tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr>" +
                      "</table>";
+  editor.scrollTop; // requires layout information.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
@@ -683,6 +684,7 @@ SimpleTest.waitForFocus(() => {
                        '<tr><td id="select">cell1-1</td><td>cell1-2</td><td>cell1-3</td></tr>' +
                        "<tr><td>cell2-1</td><td>cell2-2</td><td>cell2-3</td></tr>" +
                      "</table>";
+  editor.scrollTop; // requires layout information.
   beforeInputEvents = [];
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,

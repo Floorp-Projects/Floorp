@@ -1277,7 +1277,7 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   }
 
   // Find enclosing table cell from selection (cell may be selected element)
-  const RefPtr<Element> cellElement =
+  Element* cellElement =
       GetInclusiveAncestorByTagNameAtSelection(*nsGkAtoms::td);
   if (!cellElement) {
     NS_WARNING(
@@ -1339,19 +1339,18 @@ EditActionResult HTMLEditor::HandleTabKeyPressInTable(
   AutoEditActionDataSetter editActionData(*this,
                                           EditAction::eInsertTableRowElement);
   rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
-  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
                          "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
     return EditActionHandled(rv);
   }
-  rv = InsertTableRowsWithTransaction(*cellElement, 1,
-                                      InsertPosition::eAfterSelectedCell);
+  rv = InsertTableRowsWithTransaction(1, InsertPosition::eAfterSelectedCell);
   if (NS_WARN_IF(Destroyed())) {
     return EditActionHandled(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "HTMLEditor::InsertTableRowsWithTransaction(*cellElement, 1, "
+        "HTMLEditor::InsertTableRowsWithTransaction(1, "
         "InsertPosition::eAfterSelectedCell) failed");
     return EditActionHandled(rv);
   }
@@ -2353,15 +2352,17 @@ nsresult HTMLEditor::GetHTMLBackgroundColorState(bool* aMixed,
   *aMixed = false;
   aOutColor.Truncate();
 
-  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
-      GetSelectedOrParentTableElement();
-  if (cellOrRowOrTableElementOrError.isErr()) {
-    NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() returned error");
-    return cellOrRowOrTableElementOrError.unwrapErr();
+  ErrorResult error;
+  RefPtr<Element> cellOrRowOrTableElement =
+      GetSelectedOrParentTableElement(error);
+  if (error.Failed()) {
+    NS_WARNING(
+        "HTMLEditor::GetSelectedOrParentTableElement() returned nullptr");
+    return error.StealNSResult();
   }
 
-  for (RefPtr<Element> element = cellOrRowOrTableElementOrError.unwrap();
-       element; element = element->GetParentElement()) {
+  for (RefPtr<Element> element = std::move(cellOrRowOrTableElement); element;
+       element = element->GetParentElement()) {
     // We are in a cell or selected table
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
 
@@ -2719,7 +2720,7 @@ Element* HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(
 }
 
 Element* HTMLEditor::GetInclusiveAncestorByTagNameInternal(
-    const nsStaticAtom& aTagName, const nsIContent& aContent) const {
+    const nsStaticAtom& aTagName, nsIContent& aContent) const {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
   Element* currentElement = aContent.GetAsElementOrParentElement();
@@ -3296,18 +3297,19 @@ nsresult HTMLEditor::SetHTMLBackgroundColorWithTransaction(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   // Find a selected or enclosing table element to set background on
+  ErrorResult error;
   bool isCellSelected = false;
-  Result<RefPtr<Element>, nsresult> cellOrRowOrTableElementOrError =
-      GetSelectedOrParentTableElement(&isCellSelected);
-  if (cellOrRowOrTableElementOrError.isErr()) {
+  RefPtr<Element> cellOrRowOrTableElement =
+      GetSelectedOrParentTableElement(error, &isCellSelected);
+  if (error.Failed()) {
     NS_WARNING("HTMLEditor::GetSelectedOrParentTableElement() failed");
-    return cellOrRowOrTableElementOrError.unwrapErr();
+    return error.StealNSResult();
   }
 
   bool setColor = !aColor.IsEmpty();
-  RefPtr<Element> rootElementOfBackgroundColor =
-      cellOrRowOrTableElementOrError.unwrap();
-  if (rootElementOfBackgroundColor) {
+  RefPtr<Element> rootElementOfBackgroundColor;
+  if (cellOrRowOrTableElement) {
+    rootElementOfBackgroundColor = std::move(cellOrRowOrTableElement);
     // Needs to set or remove background color of each selected cell elements.
     // Therefore, just the cell contains selection range, we don't need to
     // do this.  Note that users can select each cell, but with Selection API,

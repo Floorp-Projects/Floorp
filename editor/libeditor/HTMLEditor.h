@@ -12,7 +12,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorForwards.h"
 #include "mozilla/EditorUtils.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
@@ -2892,8 +2891,8 @@ class HTMLEditor final : public EditorBase,
    * @return                If an element which matches aTagName, returns
    *                        an Element.  Otherwise, nullptr.
    */
-  Element* GetInclusiveAncestorByTagNameInternal(
-      const nsStaticAtom& aTagName, const nsIContent& aContent) const;
+  Element* GetInclusiveAncestorByTagNameInternal(const nsStaticAtom& aTagName,
+                                                 nsIContent& aContent) const;
 
   /**
    * GetSelectedElement() returns a "selected" element node.  "selected" means:
@@ -2929,30 +2928,34 @@ class HTMLEditor final : public EditorBase,
   /**
    * GetFirstTableRowElement() returns the first <tr> element in the most
    * nearest ancestor of aTableOrElementInTable or itself.
-   * When aTableOrElementInTable is neither <table> nor in a <table> element,
-   * returns NS_ERROR_FAILURE. However, if <table> does not have <tr> element,
-   * returns nullptr.
    *
    * @param aTableOrElementInTable      <table> element or another element.
    *                                    If this is a <table> element, returns
    *                                    first <tr> element in it.  Otherwise,
    *                                    returns first <tr> element in nearest
    *                                    ancestor <table> element.
+   * @param aRv                         Returns an error code.  When
+   *                                    aTableOrElementInTable is neither
+   *                                    <table> nor in a <table> element,
+   *                                    returns NS_ERROR_FAILURE.
+   *                                    However, if <table> does not have
+   *                                    <tr> element, returns NS_OK.
    */
-  Result<RefPtr<Element>, nsresult> GetFirstTableRowElement(
-      const Element& aTableOrElementInTable) const;
+  Element* GetFirstTableRowElement(Element& aTableOrElementInTable,
+                                   ErrorResult& aRv) const;
 
   /**
    * GetNextTableRowElement() returns next <tr> element of aTableRowElement.
    * This won't cross <table> element boundary but may cross table section
    * elements like <tbody>.
-   * Note that if given element is <tr> but there is no next <tr> element, this
-   * returns nullptr but does not return error.
    *
    * @param aTableRowElement    A <tr> element.
+   * @param aRv                 Returns error.  If given element is <tr> but
+   *                            there is no next <tr> element, this returns
+   *                            nullptr but does not return error.
    */
-  Result<RefPtr<Element>, nsresult> GetNextTableRowElement(
-      const Element& aTableRowElement) const;
+  Element* GetNextTableRowElement(Element& aTableRowElement,
+                                  ErrorResult& aRv) const;
 
   struct CellData;
 
@@ -3053,13 +3056,6 @@ class HTMLEditor final : public EditorBase,
     [[nodiscard]] static CellData AtIndexInTableElement(
         const HTMLEditor& aHTMLEditor, const Element& aTableElement,
         int32_t aRowIndex, int32_t aColumnIndex);
-    [[nodiscard]] static CellData AtIndexInTableElement(
-        const HTMLEditor& aHTMLEditor, const Element& aTableElement,
-        const CellIndexes& aIndexes) {
-      MOZ_ASSERT(!aIndexes.isErr());
-      return AtIndexInTableElement(aHTMLEditor, aTableElement, aIndexes.mRow,
-                                   aIndexes.mColumn);
-    }
 
     /**
      * Treated as error if fails to compute current index or first index of the
@@ -3247,15 +3243,8 @@ class HTMLEditor final : public EditorBase,
    * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
    * a selection range selects a cell element).
    */
-  Result<RefPtr<Element>, nsresult> GetSelectedOrParentTableElement(
-      bool* aIsCellSelected = nullptr) const;
-
-  /**
-   * GetFirstSelectedCellElementInTable() returns <td> or <th> element at
-   * first selection (using GetSelectedOrParentTableElement).  If found cell
-   * element is not in <table> or <tr> element, this returns nullptr.
-   */
-  Result<RefPtr<Element>, nsresult> GetFirstSelectedCellElementInTable() const;
+  already_AddRefed<Element> GetSelectedOrParentTableElement(
+      ErrorResult& aRv, bool* aIsCellSelected = nullptr) const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
@@ -3472,6 +3461,8 @@ class HTMLEditor final : public EditorBase,
       bool* aMixed, nsAString& aOutColor, bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
+  nsresult GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode);
+
   /**
    * This sets background on the appropriate container element (table, cell,)
    * or calls to set the page background.
@@ -3590,7 +3581,10 @@ class HTMLEditor final : public EditorBase,
   };
 
   /**
-   * InsertTableCellsWithTransaction() inserts <td> elements at aPointToInsert.
+   * InsertTableCellsWithTransaction() inserts <td> elements before or after
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
+   * will be inserted after the right-most column which contains the cell.
    * Note that this simply inserts <td> elements, i.e., colspan and rowspan
    * around the cell containing selection are not modified.  So, for example,
    * adding a cell to rectangular table changes non-rectangular table.
@@ -3598,41 +3592,45 @@ class HTMLEditor final : public EditorBase,
    * it may be moved to right side of the row-spanning cell after inserting
    * some cell elements before it.  Similarly, colspan won't be adjusted
    * for keeping table rectangle.
-   * Finally, puts caret into previous cell of the insertion point or the
-   * first inserted cell if aPointToInsert is start of the row.
+   * If first selection range is not in table cell element, this does nothing
+   * but does not return error.
    *
-   * @param aPointToInsert              The place to insert one or more cell
-   *                                    elements.  The container must be a
-   *                                    <tr> element.
-   * @param aNumberOfCellsToInsert      Number of cells to insert.
+   * @param aNumberOfCellssToInsert     Number of cells to insert.
+   * @param aInsertPosition             Before or after the target cell which
+   *                                    contains first selection range.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
-      const EditorDOMPoint& aPointToInsert, int32_t aNumberOfCellsToInsert);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
+      int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition);
 
   /**
-   * InsertTableColumnsWithTransaction() inserts cell elements to every rows
-   * at same column index as the cell specified by aPointToInsert.
+   * InsertTableColumnsWithTransaction() inserts columns before or after
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
+   * will be inserted after the right-most row which contains the cell.
+   * If first selection range is not in table cell element, this does nothing
+   * but does not return error.
    *
    * @param aNumberOfColumnsToInsert    Number of columns to insert.
+   * @param aInsertPosition             Before or after the target cell which
+   *                                    contains first selection range.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
-      const EditorDOMPoint& aPointToInsert, int32_t aNumberOfColumnsToInsert);
+  MOZ_CAN_RUN_SCRIPT nsresult InsertTableColumnsWithTransaction(
+      int32_t aNumberOfColumnsToInsert, InsertPosition aInsertPosition);
 
   /**
    * InsertTableRowsWithTransaction() inserts <tr> elements before or after
-   * aCellElement.  When aCellElement spans rows and aInsertPosition is
-   * eAfterSelectedCell, new rows will be inserted after the most-bottom row
-   * which contains the cell.
+   * a cell element containing first selection range.  I.e., if the cell
+   * spans rows and aInsertPosition is eAfterSelectedCell, new rows will be
+   * inserted after the most-bottom row which contains the cell.  If first
+   * selection range is not in table cell element, this does nothing but
+   * does not return error.
    *
-   * @param aCellElement                The cell element pinting where this will
-   *                                    insert a row before or after.
    * @param aNumberOfRowsToInsert       Number of rows to insert.
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertTableRowsWithTransaction(
-      Element& aCellElement, int32_t aNumberOfRowsToInsert,
-      InsertPosition aInsertPosition);
+      int32_t aNumberOfRowsToInsert, InsertPosition aInsertPosition);
 
   /**
    * Insert a new cell after or before supplied aCell.
