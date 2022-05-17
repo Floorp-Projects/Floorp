@@ -282,6 +282,8 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
 class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
  public:
   FakeCall();
+  FakeCall(webrtc::TaskQueueBase* worker_thread,
+           webrtc::TaskQueueBase* network_thread);
   ~FakeCall() override;
 
   webrtc::MockRtpTransportControllerSend* GetMockTransportControllerSend() {
@@ -364,11 +366,17 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
     return trials_;
   }
 
+  webrtc::TaskQueueBase* network_thread() const override;
+  webrtc::TaskQueueBase* worker_thread() const override;
+
   void SignalChannelNetworkState(webrtc::MediaType media,
                                  webrtc::NetworkState state) override;
   void OnAudioTransportOverheadChanged(
       int transport_overhead_per_packet) override;
   void OnSentPacket(const rtc::SentPacket& sent_packet) override;
+
+  webrtc::TaskQueueBase* const network_thread_;
+  webrtc::TaskQueueBase* const worker_thread_;
 
   ::testing::NiceMock<webrtc::MockRtpTransportControllerSend>
       transport_controller_send_;

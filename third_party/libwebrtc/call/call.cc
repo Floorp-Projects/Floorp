@@ -292,6 +292,9 @@ class Call final : public webrtc::Call,
 
   const WebRtcKeyValueConfig& trials() const override;
 
+  TaskQueueBase* network_thread() const override;
+  TaskQueueBase* worker_thread() const override;
+
   // Implements PacketReceiver.
   DeliveryStatus DeliverPacket(MediaType media_type,
                                rtc::CopyOnWriteBuffer packet,
@@ -1151,6 +1154,14 @@ Call::Stats Call::GetStats() const {
 
 const WebRtcKeyValueConfig& Call::trials() const {
   return *config_.trials;
+}
+
+TaskQueueBase* Call::network_thread() const {
+  return network_thread_;
+}
+
+TaskQueueBase* Call::worker_thread() const {
+  return worker_thread_;
 }
 
 void Call::SignalChannelNetworkState(MediaType media, NetworkState state) {
