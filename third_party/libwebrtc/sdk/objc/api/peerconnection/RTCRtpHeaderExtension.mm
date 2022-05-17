@@ -19,11 +19,12 @@
 @synthesize encrypted = _encrypted;
 
 - (instancetype)init {
-  return [super init];
+  webrtc::RtpExtension nativeExtension;
+  return [self initWithNativeParameters:nativeExtension];
 }
 
 - (instancetype)initWithNativeParameters:(const webrtc::RtpExtension &)nativeParameters {
-  if (self = [self init]) {
+  if (self = [super init]) {
     _uri = [NSString stringForStdString:nativeParameters.uri];
     _id = nativeParameters.id;
     _encrypted = nativeParameters.encrypt;

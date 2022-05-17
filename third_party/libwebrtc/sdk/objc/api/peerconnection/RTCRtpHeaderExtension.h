@@ -26,7 +26,7 @@ RTC_OBJC_EXPORT
 /** Whether the header extension is encrypted or not. */
 @property(nonatomic, readonly, getter=isEncrypted) BOOL encrypted;
 
-- (instancetype)init NS_DESIGNATED_INITIALIZER;
+- (instancetype)init;
 
 @end
 
