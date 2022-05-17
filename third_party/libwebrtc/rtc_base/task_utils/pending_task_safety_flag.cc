@@ -16,12 +16,21 @@ namespace webrtc {
 
 // static
 rtc::scoped_refptr<PendingTaskSafetyFlag> PendingTaskSafetyFlag::Create() {
-  return new rtc::RefCountedObject<PendingTaskSafetyFlag>();
+  return new rtc::RefCountedObject<PendingTaskSafetyFlag>(true);
 }
 
 rtc::scoped_refptr<PendingTaskSafetyFlag>
 PendingTaskSafetyFlag::CreateDetached() {
-  auto safety_flag = Create();
+  rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag(
+      new rtc::RefCountedObject<PendingTaskSafetyFlag>(true));
+  safety_flag->main_sequence_.Detach();
+  return safety_flag;
+}
+
+rtc::scoped_refptr<PendingTaskSafetyFlag>
+PendingTaskSafetyFlag::CreateDetachedInactive() {
+  rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag(
+      new rtc::RefCountedObject<PendingTaskSafetyFlag>(false));
   safety_flag->main_sequence_.Detach();
   return safety_flag;
 }
