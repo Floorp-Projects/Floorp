@@ -23,7 +23,6 @@ var StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox, commands) {
   this._panelWin = panelWin;
   this._panelDoc = panelWin.document;
 
-  this.destroy = this.destroy.bind(this);
   this._showError = this._showError.bind(this);
 };
 
