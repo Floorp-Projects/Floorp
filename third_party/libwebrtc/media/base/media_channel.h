@@ -907,8 +907,6 @@ struct ReceiveDataParams {
   DataMessageType type = DMT_TEXT;
   // A per-stream value incremented per packet in the stream.
   int seq_num = 0;
-  // A per-stream value monotonically increasing with time.
-  int timestamp = 0;
 };
 
 struct SendDataParams {

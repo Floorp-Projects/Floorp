@@ -1318,8 +1318,6 @@ void UsrsctpTransport::OnDataOrNotificationFromSctp(const void* data,
   // Furthermore, it is increased per stream and not on the whole
   // association.
   params.seq_num = rcv.rcv_ssn;
-  // There is no timestamp field in the SCTP API
-  params.timestamp = 0;
 
   // Append the chunk's data to the message buffer
   partial_incoming_message_.AppendData(reinterpret_cast<const uint8_t*>(data),
