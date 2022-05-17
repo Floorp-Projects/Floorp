@@ -3243,8 +3243,8 @@ class HTMLEditor final : public EditorBase,
    * In #1 and #4, *aIsCellSelected will be set to true (i.e,, when
    * a selection range selects a cell element).
    */
-  already_AddRefed<Element> GetSelectedOrParentTableElement(
-      ErrorResult& aRv, bool* aIsCellSelected = nullptr) const;
+  Result<RefPtr<Element>, nsresult> GetSelectedOrParentTableElement(
+      bool* aIsCellSelected = nullptr) const;
 
   /**
    * PasteInternal() pasts text with replacing selected content.
