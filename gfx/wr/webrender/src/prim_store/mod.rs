@@ -546,6 +546,12 @@ pub struct PrimTemplateCommonData {
     /// also remains valid, which reduces the number of updates to the GPU
     /// cache when a new display list is processed.
     pub gpu_cache_handle: GpuCacheHandle,
+    /// Specifies the edges that are *allowed* to have anti-aliasing.
+    /// In other words EdgeAaSegmentFlags::all() does not necessarily mean all edges will
+    /// be anti-aliased, only that they could be.
+    ///
+    /// Use this to force disable anti-alasing on edges of the primitives.
+    pub edge_aa_mask: EdgeAaSegmentMask,
 }
 
 impl PrimTemplateCommonData {
@@ -556,6 +562,7 @@ impl PrimTemplateCommonData {
             prim_rect: common.prim_rect.into(),
             gpu_cache_handle: GpuCacheHandle::new(),
             opacity: PrimitiveOpacity::translucent(),
+            edge_aa_mask: EdgeAaSegmentMask::all(),
         }
     }
 }

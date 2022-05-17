@@ -276,10 +276,6 @@ bool nsPrintJob::CheckBeforeDestroy() const {
   return mPrt && mPrt->mPreparingForPrint;
 }
 
-PresShell* nsPrintJob::GetPrintPreviewPresShell() {
-  return mPrtPreview->mPrintObject->mPresShell;
-}
-
 //-------------------------------------------------------
 void nsPrintJob::Destroy() {
   if (mIsDestroying) {
@@ -433,12 +429,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   if (aIsPrintPreview) {
     mIsCreatingPrintPreview = true;
-
-    // Our new print preview nsPrintData is stored in mPtr until we move it
-    // to mPrtPreview once we've finish creating the print preview. We must
-    // clear mPtrPreview so that code will use mPtr until that happens.
-    mPrtPreview = nullptr;
-
     SetIsPrintPreview(true);
   } else {
     SetIsPrinting(true);
@@ -531,23 +521,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 }
 
 //---------------------------------------------------------------------------------
-nsresult nsPrintJob::Print(Document* aSourceDoc,
-                           nsIPrintSettings* aPrintSettings,
+nsresult nsPrintJob::Print(Document* aDoc, nsIPrintSettings* aPrintSettings,
                            RemotePrintJobChild* aRemotePrintJob,
                            nsIWebProgressListener* aWebProgressListener) {
   mRemotePrintJob = aRemotePrintJob;
-
-  // If we have a print preview document, use that instead of the original
-  // mDocument. That way animated images etc. get printed using the same state
-  // as in print preview.
-  RefPtr<Document> doc = mPrtPreview && mPrtPreview->mPrintObject
-                             ? mPrtPreview->mPrintObject->mDocument.get()
-                             : aSourceDoc;
-
-  return CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
+  return CommonPrint(false, aPrintSettings, aWebProgressListener, aDoc);
 }
 
-nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
+nsresult nsPrintJob::PrintPreview(Document* aDoc,
                                   nsIPrintSettings* aPrintSettings,
                                   nsIWebProgressListener* aWebProgressListener,
                                   PrintPreviewResolver&& aCallback) {
@@ -555,8 +536,7 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
   // stack will call it to signal failure (by passing zero).
   mPrintPreviewCallback = std::move(aCallback);
 
-  nsresult rv =
-      CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
+  nsresult rv = CommonPrint(true, aPrintSettings, aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
       // signal error
@@ -589,16 +569,6 @@ int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
   auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
   Unused << seqFrame;
   return numSheets;
-}
-
-already_AddRefed<nsIPrintSettings> nsPrintJob::GetCurrentPrintSettings() {
-  if (mPrt) {
-    return do_AddRef(mPrt->mPrintSettings);
-  }
-  if (mPrtPreview) {
-    return do_AddRef(mPrtPreview->mPrintSettings);
-  }
-  return nullptr;
 }
 
 //-----------------------------------------------------------------
