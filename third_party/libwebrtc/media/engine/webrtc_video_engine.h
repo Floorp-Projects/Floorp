@@ -159,6 +159,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   bool AddRecvStream(const StreamParams& sp, bool default_stream);
   bool RemoveRecvStream(uint32_t ssrc) override;
   void ResetUnsignaledRecvStream() override;
+  void OnDemuxerCriteriaUpdatePending() override;
+  void OnDemuxerCriteriaUpdateComplete() override;
   bool SetSink(uint32_t ssrc,
                rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void SetDefaultSink(
@@ -574,6 +576,22 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       RTC_GUARDED_BY(thread_checker_);
   std::map<uint32_t, WebRtcVideoReceiveStream*> receive_streams_
       RTC_GUARDED_BY(thread_checker_);
+  // When the channel and demuxer get reconfigured, there is a window of time
+  // where we have to be prepared for packets arriving based on the old demuxer
+  // criteria because the streams live on the worker thread and the demuxer
+  // lives on the network thread. Because packets are posted from the network
+  // thread to the worker thread, they can still be in-flight when streams are
+  // reconfgured. This can happen when |demuxer_criteria_id_| and
+  // |demuxer_criteria_completed_id_| don't match. During this time, we do not
+  // want to create unsignalled receive streams and should instead drop the
+  // packets. E.g:
+  // * If RemoveRecvStream(old_ssrc) was recently called, there may be packets
+  //   in-flight for that ssrc. This happens when a receiver becomes inactive.
+  // * If we go from one to many m= sections, the demuxer may change from
+  //   forwarding all packets to only forwarding the configured ssrcs, so there
+  //   is a risk of receiving ssrcs for other, recently added m= sections.
+  uint32_t demuxer_criteria_id_ RTC_GUARDED_BY(thread_checker_) = 0;
+  uint32_t demuxer_criteria_completed_id_ RTC_GUARDED_BY(thread_checker_) = 0;
   std::set<uint32_t> send_ssrcs_ RTC_GUARDED_BY(thread_checker_);
   std::set<uint32_t> receive_ssrcs_ RTC_GUARDED_BY(thread_checker_);
 

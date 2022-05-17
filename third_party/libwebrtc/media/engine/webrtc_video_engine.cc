@@ -1587,6 +1587,19 @@ void WebRtcVideoChannel::ResetUnsignaledRecvStream() {
   }
 }
 
+void WebRtcVideoChannel::OnDemuxerCriteriaUpdatePending() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  ++demuxer_criteria_id_;
+}
+
+void WebRtcVideoChannel::OnDemuxerCriteriaUpdateComplete() {
+  RTC_DCHECK_RUN_ON(&network_thread_checker_);
+  worker_thread_->PostTask(ToQueuedTask(task_safety_, [this] {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    ++demuxer_criteria_completed_id_;
+  }));
+}
+
 bool WebRtcVideoChannel::SetSink(
     uint32_t ssrc,
     rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) {
@@ -1750,6 +1763,14 @@ void WebRtcVideoChannel::OnPacketReceived(rtc::CopyOnWriteBuffer packet,
           }
         }
         if (payload_type == recv_flexfec_payload_type_) {
+          return;
+        }
+
+        // Ignore unknown ssrcs if there is a demuxer criteria update pending.
+        // During a demuxer update we may receive ssrcs that were recently
+        // removed or we may receve ssrcs that were recently configured for a
+        // different video channel.
+        if (demuxer_criteria_id_ != demuxer_criteria_completed_id_) {
           return;
         }
 

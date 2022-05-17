@@ -118,6 +118,8 @@ class RtpHelper : public Base {
     return RemoveStreamBySsrc(&send_streams_, ssrc);
   }
   virtual void ResetUnsignaledRecvStream() {}
+  virtual void OnDemuxerCriteriaUpdatePending() {}
+  virtual void OnDemuxerCriteriaUpdateComplete() {}
 
   virtual bool AddRecvStream(const StreamParams& sp) {
     if (absl::c_linear_search(receive_streams_, sp)) {

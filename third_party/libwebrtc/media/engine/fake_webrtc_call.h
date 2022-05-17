@@ -20,6 +20,7 @@
 #ifndef MEDIA_ENGINE_FAKE_WEBRTC_CALL_H_
 #define MEDIA_ENGINE_FAKE_WEBRTC_CALL_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -299,6 +300,10 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   const std::vector<FakeFlexfecReceiveStream*>& GetFlexfecReceiveStreams();
 
   rtc::SentPacket last_sent_packet() const { return last_sent_packet_; }
+  size_t GetDeliveredPacketsForSsrc(uint32_t ssrc) const {
+    auto it = delivered_packets_by_ssrc_.find(ssrc);
+    return it != delivered_packets_by_ssrc_.end() ? it->second : 0u;
+  }
 
   // This is useful if we care about the last media packet (with id populated)
   // but not the last ICE packet (with -1 ID).
@@ -379,6 +384,7 @@ class FakeCall final : public webrtc::Call, public webrtc::PacketReceiver {
   std::vector<FakeVideoReceiveStream*> video_receive_streams_;
   std::vector<FakeAudioReceiveStream*> audio_receive_streams_;
   std::vector<FakeFlexfecReceiveStream*> flexfec_receive_streams_;
+  std::map<uint32_t, size_t> delivered_packets_by_ssrc_;
 
   int num_created_send_streams_;
   int num_created_receive_streams_;
