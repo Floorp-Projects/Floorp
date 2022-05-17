@@ -991,22 +991,10 @@ class EditorBase : public nsIEditor,
     }
     [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
     CanHandleAndMaybeDispatchBeforeInputEvent() {
-      if (MOZ_UNLIKELY(NS_WARN_IF(!CanHandle()))) {
+      if (NS_WARN_IF(!CanHandle())) {
         return NS_ERROR_NOT_INITIALIZED;
-      }
-      nsresult rv = MaybeFlushPendingNotifications();
-      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-        return rv;
       }
       return MaybeDispatchBeforeInputEvent();
-    }
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-    CanHandleAndFlushPendingNotifications() {
-      if (MOZ_UNLIKELY(NS_WARN_IF(!CanHandle()))) {
-        return NS_ERROR_NOT_INITIALIZED;
-      }
-      MOZ_ASSERT(MayEditActionRequireLayout(mRawEditAction));
-      return MaybeFlushPendingNotifications();
     }
 
     [[nodiscard]] bool IsDataAvailable() const {
@@ -1289,9 +1277,6 @@ class EditorBase : public nsIEditor,
    private:
     bool IsBeforeInputEventEnabled() const;
 
-    [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-    MaybeFlushPendingNotifications() const;
-
     static bool NeedsBeforeInputEventHandling(EditAction aEditAction) {
       MOZ_ASSERT(aEditAction != EditAction::eNone);
       switch (aEditAction) {
@@ -1302,9 +1287,6 @@ class EditorBase : public nsIEditor,
         // If we're being initialized, we may need to create a padding <br>
         // element, but it shouldn't cause `beforeinput` event.
         case EditAction::eInitializing:
-        // If we're just selecting or getting table cells, we shouldn't
-        // dispatch `beforeinput` event.
-        case NS_EDIT_ACTION_CASES_ACCESSING_TABLE_DATA_WITHOUT_EDITING:
         // If raw level transaction API is used, the API user needs to handle
         // both "beforeinput" event and "input" event if it's necessary.
         case EditAction::eUnknown:
@@ -1389,12 +1371,7 @@ class EditorBase : public nsIEditor,
     // for current edit sub action.
     EditSubActionData mEditSubActionData;
 
-    // mEditAction and mRawEditActions stores edit action.  The difference of
-    // them is, if and only if edit actions are nested and parent edit action
-    // is one of trying to edit something, but nested one is not so, it's
-    // overwritten by the parent edit action.
     EditAction mEditAction;
-    EditAction mRawEditAction;
 
     // Different from its data, you can refer "current" AutoEditActionDataSetter
     // instance's mTopLevelEditSubAction member since it's copied from the

@@ -217,6 +217,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
@@ -235,6 +236,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
@@ -253,6 +255,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
@@ -271,6 +274,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td id="select">cell1-1</td><td>cell1-2</td></tr><tr><td>cell2-1</td><td>cell2-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
@@ -289,6 +293,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
@@ -307,6 +312,7 @@ SimpleTest.waitForFocus(() => {
   selection.removeAllRanges();
   editor.innerHTML =
     '<table><tr><td>cell1-1</td><td>cell1-2</td></tr><tr><td id="select">cell2-1</td><td>cell2-2</td></tr><tr><td>cell3-1</td><td>cell3-2</td></tr></table>';
+  editor.scrollTop; // Needs to flush pending reflow since we need layout information in this case.
   beforeInputEvents = [];
   inputEvents = [];
   range = document.createRange();
