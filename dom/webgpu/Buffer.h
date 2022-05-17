@@ -53,7 +53,6 @@ class Buffer final : public ObjectBase, public ChildOf<Device> {
  private:
   virtual ~Buffer();
   void Cleanup();
-  void UnmapArrayBuffers(JSContext* aCx, ErrorResult& aRv);
 
   // Note: we can't map a buffer with the size that don't fit into `size_t`
   // (which may be smaller than `BufferAddress`), but general not all buffers
