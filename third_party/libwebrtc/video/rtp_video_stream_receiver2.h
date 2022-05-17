@@ -346,6 +346,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   absl::optional<uint32_t> last_received_rtp_timestamp_
       RTC_GUARDED_BY(worker_task_checker_);
+  absl::optional<uint32_t> last_received_keyframe_rtp_timestamp_
+      RTC_GUARDED_BY(worker_task_checker_);
   absl::optional<Timestamp> last_received_rtp_system_time_
       RTC_GUARDED_BY(worker_task_checker_);
   absl::optional<Timestamp> last_received_keyframe_rtp_system_time_
