@@ -27,6 +27,7 @@ using ::testing::ElementsAre;
 using ::testing::IsEmpty;
 
 constexpr size_t kArwnd = 10000;
+constexpr TSN kInitialTSN(11);
 
 class DataTrackerTest : public testing::Test {
  protected:
@@ -37,7 +38,7 @@ class DataTrackerTest : public testing::Test {
             "test/delayed_ack",
             []() { return absl::nullopt; },
             TimerOptions(DurationMs(0)))),
-        buf_("log: ", timer_.get(), /*peer_initial_tsn=*/TSN(11)) {}
+        buf_("log: ", timer_.get(), kInitialTSN) {}
 
   void Observer(std::initializer_list<uint32_t> tsns) {
     for (const uint32_t tsn : tsns) {
@@ -205,5 +206,29 @@ TEST_F(DataTrackerTest, ForceShouldSendSackImmediately) {
 
   EXPECT_TRUE(buf_.ShouldSendAck());
 }
+
+TEST_F(DataTrackerTest, WillAcceptValidTSNs) {
+  // The initial TSN is always one more than the last, which is our base.
+  TSN last_tsn = TSN(*kInitialTSN - 1);
+  int limit = static_cast<int>(DataTracker::kMaxAcceptedOutstandingFragments);
+
+  for (int i = -limit; i <= limit; ++i) {
+    EXPECT_TRUE(buf_.IsTSNValid(TSN(*last_tsn + i)));
+  }
+}
+
+TEST_F(DataTrackerTest, WillNotAcceptInvalidTSNs) {
+  // The initial TSN is always one more than the last, which is our base.
+  TSN last_tsn = TSN(*kInitialTSN - 1);
+
+  size_t limit = DataTracker::kMaxAcceptedOutstandingFragments;
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + limit + 1)));
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - (limit + 1))));
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + 65536)));
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 65536)));
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn + 0x8000000)));
+  EXPECT_FALSE(buf_.IsTSNValid(TSN(*last_tsn - 0x8000000)));
+}
+
 }  // namespace
 }  // namespace dcsctp

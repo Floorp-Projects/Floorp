@@ -38,6 +38,13 @@ namespace dcsctp {
 // 200ms, whatever is smallest).
 class DataTracker {
  public:
+  // The maximum number of accepted in-flight DATA chunks. This indicates the
+  // maximum difference from this buffer's last cumulative ack TSN, and any
+  // received data. Data received beyond this limit will be dropped, which will
+  // force the transmitter to send data that actually increases the last
+  // cumulative acked TSN.
+  static constexpr uint32_t kMaxAcceptedOutstandingFragments = 256;
+
   explicit DataTracker(absl::string_view log_prefix,
                        Timer* delayed_ack_timer,
                        TSN peer_initial_tsn)
@@ -45,6 +52,11 @@ class DataTracker {
         delayed_ack_timer_(*delayed_ack_timer),
         last_cumulative_acked_tsn_(
             tsn_unwrapper_.Unwrap(TSN(*peer_initial_tsn - 1))) {}
+
+  // Indicates if the provided TSN is valid. If this return false, the data
+  // should be dropped and not added to any other buffers, which essentially
+  // means that there is intentional packet loss.
+  bool IsTSNValid(TSN tsn) const;
 
   // Call for every incoming data chunk.
   void Observe(TSN tsn,
@@ -113,7 +125,7 @@ class DataTracker {
   // All TSNs up until (and including) this value have been seen.
   UnwrappedTSN last_cumulative_acked_tsn_;
   // Received TSNs that are not directly following `last_cumulative_acked_tsn_`.
-  std::set<UnwrappedTSN> additional_tsns;
+  std::set<UnwrappedTSN> additional_tsns_;
   std::set<UnwrappedTSN> duplicates_;
 };
 }  // namespace dcsctp
