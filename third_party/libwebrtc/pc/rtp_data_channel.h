@@ -25,7 +25,6 @@
 #include "media/base/media_channel.h"
 #include "pc/channel.h"
 #include "pc/data_channel_utils.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
