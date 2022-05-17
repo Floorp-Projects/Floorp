@@ -789,6 +789,11 @@ GMPDownloader.prototype = {
         );
       },
       reason => {
+        GMPPrefs.setString(
+          GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD_FAIL_REASON,
+          reason,
+          gmpAddon.id
+        );
         let now = Math.round(Date.now() / 1000);
         GMPPrefs.setInt(
           GMPPrefs.KEY_PLUGIN_LAST_DOWNLOAD_FAILED,
