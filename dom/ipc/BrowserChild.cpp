@@ -2216,7 +2216,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
 
   rv = nsContentUtils::IPCTransferableToTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      trans, nullptr, this);
+      trans, this);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());

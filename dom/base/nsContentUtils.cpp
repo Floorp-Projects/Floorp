@@ -7567,12 +7567,19 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
     nsIPrincipal* aRequestingPrincipal,
     const nsContentPolicyType& aContentPolicyType,
-    nsITransferable* aTransferable, mozilla::dom::ContentParent* aContentParent,
-    mozilla::dom::BrowserChild* aBrowserChild) {
-  nsresult rv;
+    nsITransferable* aTransferable, IShmemAllocator* aAllocator) {
+  auto release = MakeScopeExit([&] {
+    const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
+    for (const auto& item : items) {
+      if (item.data().type() == IPCDataTransferData::TShmem) {
+        Unused << aAllocator->DeallocShmem(item.data().get_Shmem());
+      }
+    }
+  });
 
   aTransferable->SetIsPrivateData(aIsPrivateData);
 
+  nsresult rv;
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
   for (const auto& item : items) {
     aTransferable->AddDataFlavor(item.flavor().get());
@@ -7587,7 +7594,6 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
       if (nsContentUtils::IsFlavorImage(item.flavor())) {
@@ -7596,7 +7602,9 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
             item, getter_AddRefs(imageContainer));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        aTransferable->SetTransferData(item.flavor().get(), imageContainer);
+        rv =
+            aTransferable->SetTransferData(item.flavor().get(), imageContainer);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else {
         nsCOMPtr<nsISupportsCString> dataWrapper =
             do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
@@ -7610,14 +7618,7 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-
         NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      if (aContentParent) {
-        Unused << aContentParent->DeallocShmem(item.data().get_Shmem());
-      } else if (aBrowserChild) {
-        Unused << aBrowserChild->DeallocShmem(item.data().get_Shmem());
       }
     }
   }
