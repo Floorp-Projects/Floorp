@@ -358,11 +358,7 @@ pref("browser.urlbar.accessibility.tabToSearch.announceResults", true);
 pref("browser.urlbar.autoFill", true);
 
 // Whether enabling adaptive history autofill.
-#ifdef NIGHTLY_BUILD
-pref("browser.urlbar.autoFill.adaptiveHistory.enabled", true);
-#else
 pref("browser.urlbar.autoFill.adaptiveHistory.enabled", false);
-#endif
 
 // Whether to warm up network connections for autofill or search results.
 pref("browser.urlbar.speculativeConnect.enabled", true);
