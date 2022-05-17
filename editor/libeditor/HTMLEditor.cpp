@@ -2718,7 +2718,7 @@ Element* HTMLEditor::GetInclusiveAncestorByTagNameAtSelection(
 }
 
 Element* HTMLEditor::GetInclusiveAncestorByTagNameInternal(
-    const nsStaticAtom& aTagName, nsIContent& aContent) const {
+    const nsStaticAtom& aTagName, const nsIContent& aContent) const {
   MOZ_ASSERT(&aTagName != nsGkAtoms::_empty);
 
   Element* currentElement = aContent.GetAsElementOrParentElement();

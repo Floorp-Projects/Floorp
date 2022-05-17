@@ -475,18 +475,21 @@ NS_IMETHODIMP HTMLEditor::GetFirstRow(Element* aTableOrElementInTable,
     return EditorBase::ToGenericNSResult(rv);
   }
 
-  ErrorResult error;
-  RefPtr<Element> firstRowElement =
-      GetFirstTableRowElement(*aTableOrElementInTable, error);
-  NS_WARNING_ASSERTION(!error.Failed(),
+  Result<RefPtr<Element>, nsresult> firstRowElementOrError =
+      GetFirstTableRowElement(*aTableOrElementInTable);
+  NS_WARNING_ASSERTION(!firstRowElementOrError.isErr(),
                        "HTMLEditor::GetFirstTableRowElement() failed");
-  firstRowElement.forget(aFirstRowElement);
-  return EditorBase::ToGenericNSResult(error.StealNSResult());
+  if (firstRowElementOrError.isErr()) {
+    NS_WARNING("HTMLEditor::GetFirstTableRowElement() failed");
+    return EditorBase::ToGenericNSResult(firstRowElementOrError.unwrapErr());
+  }
+  firstRowElementOrError.unwrap().forget(aFirstRowElement);
+  return NS_OK;
 }
 
-Element* HTMLEditor::GetFirstTableRowElement(Element& aTableOrElementInTable,
-                                             ErrorResult& aRv) const {
-  MOZ_ASSERT(!aRv.Failed());
+Result<RefPtr<Element>, nsresult> HTMLEditor::GetFirstTableRowElement(
+    const Element& aTableOrElementInTable) const {
+  MOZ_ASSERT(IsEditActionDataAvailable());
 
   Element* tableElement = GetInclusiveAncestorByTagNameInternal(
       *nsGkAtoms::table, aTableOrElementInTable);
@@ -495,15 +498,14 @@ Element* HTMLEditor::GetFirstTableRowElement(Element& aTableOrElementInTable,
     NS_WARNING(
         "HTMLEditor::GetInclusiveAncestorByTagNameInternal(nsGkAtoms::table) "
         "failed");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
 
   for (nsIContent* tableChild = tableElement->GetFirstChild(); tableChild;
        tableChild = tableChild->GetNextSibling()) {
     if (tableChild->IsHTMLElement(nsGkAtoms::tr)) {
       // Found a row directly under <table>
-      return tableChild->AsElement();
+      return RefPtr<Element>(tableChild->AsElement());
     }
     // <table> can have table section elements like <tbody>.  <tr> elements
     // may be children of them.
@@ -513,13 +515,13 @@ Element* HTMLEditor::GetFirstTableRowElement(Element& aTableOrElementInTable,
            tableSectionChild;
            tableSectionChild = tableSectionChild->GetNextSibling()) {
         if (tableSectionChild->IsHTMLElement(nsGkAtoms::tr)) {
-          return tableSectionChild->AsElement();
+          return RefPtr<Element>(tableSectionChild->AsElement());
         }
       }
     }
   }
   // Don't return error when there is no <tr> element in the <table>.
-  return nullptr;
+  return RefPtr<Element>();
 }
 
 Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
@@ -747,15 +749,17 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
 
     // Get current row and append new cells after last cell in row
     if (!rowIndex) {
-      rowElement = GetFirstTableRowElement(*table, error);
-      if (error.Failed()) {
+      Result<RefPtr<Element>, nsresult> rowElementOrError =
+          GetFirstTableRowElement(*table);
+      if (rowElementOrError.isErr()) {
         NS_WARNING("HTMLEditor::GetFirstTableRowElement() failed");
-        return error.StealNSResult();
+        return rowElementOrError.unwrapErr();
       }
-      if (!rowElement) {
+      if (!rowElementOrError.inspect()) {
         NS_WARNING("There was no table row");
         continue;
       }
+      rowElement = rowElementOrError.unwrap();
     } else {
       if (!rowElement) {
         NS_WARNING("Have not found table row yet");
