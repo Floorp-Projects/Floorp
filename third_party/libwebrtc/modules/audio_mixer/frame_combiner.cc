@@ -88,13 +88,14 @@ void MixToFloatFrame(rtc::ArrayView<const AudioFrame* const> mix_list,
   // Convert to FloatS16 and mix.
   for (size_t i = 0; i < mix_list.size(); ++i) {
     const AudioFrame* const frame = mix_list[i];
+    const int16_t* const frame_data = frame->data();
     for (size_t j = 0; j < std::min(number_of_channels,
                                     FrameCombiner::kMaximumNumberOfChannels);
          ++j) {
       for (size_t k = 0; k < std::min(samples_per_channel,
                                       FrameCombiner::kMaximumChannelSize);
            ++k) {
-        (*mixing_buffer)[j][k] += frame->data()[number_of_channels * k + j];
+        (*mixing_buffer)[j][k] += frame_data[number_of_channels * k + j];
       }
     }
   }
@@ -113,10 +114,11 @@ void InterleaveToAudioFrame(AudioFrameView<const float> mixing_buffer_view,
                             AudioFrame* audio_frame_for_mixing) {
   const size_t number_of_channels = mixing_buffer_view.num_channels();
   const size_t samples_per_channel = mixing_buffer_view.samples_per_channel();
+  int16_t* const mixing_data = audio_frame_for_mixing->mutable_data();
   // Put data in the result frame.
   for (size_t i = 0; i < number_of_channels; ++i) {
     for (size_t j = 0; j < samples_per_channel; ++j) {
-      audio_frame_for_mixing->mutable_data()[number_of_channels * j + i] =
+      mixing_data[number_of_channels * j + i] =
           FloatS16ToS16(mixing_buffer_view.channel(i)[j]);
     }
   }
