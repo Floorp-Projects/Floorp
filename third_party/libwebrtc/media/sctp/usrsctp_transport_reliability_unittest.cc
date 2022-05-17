@@ -13,8 +13,8 @@
 
 #include "media/sctp/sctp_transport_internal.h"
 #include "media/sctp/usrsctp_transport.h"
-#include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "rtc_base/event.h"
 #include "rtc_base/gunit.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/random.h"
@@ -54,11 +54,6 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
 
   ~SimulatedPacketTransport() override {
     RTC_DCHECK_RUN_ON(transport_thread_);
-    auto destination = destination_.load();
-    if (destination != nullptr) {
-      invoker_.Flush(destination->transport_thread_);
-    }
-    invoker_.Flush(transport_thread_);
     destination_ = nullptr;
     SignalWritableState(this);
   }
@@ -83,15 +78,13 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
       return 0;
     }
     rtc::CopyOnWriteBuffer buffer(data, len);
-    auto send_job = [this, flags, buffer = std::move(buffer)] {
-      auto destination = destination_.load();
-      if (destination == nullptr) {
-        return;
-      }
-      destination->SignalReadPacket(
-          destination, reinterpret_cast<const char*>(buffer.data()),
-          buffer.size(), rtc::Time(), flags);
-    };
+    auto send_task = ToQueuedTask(
+        destination->task_safety_.flag(),
+        [destination, flags, buffer = std::move(buffer)] {
+          destination->SignalReadPacket(
+              destination, reinterpret_cast<const char*>(buffer.data()),
+              buffer.size(), rtc::Time(), flags);
+        });
     // Introduce random send delay in range [0 .. 2 * avg_send_delay_millis_]
     // millis, which will also work as random packet reordering mechanism.
     uint16_t actual_send_delay = avg_send_delay_millis_;
@@ -101,12 +94,10 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
     actual_send_delay += reorder_delay;
 
     if (actual_send_delay > 0) {
-      invoker_.AsyncInvokeDelayed<void>(RTC_FROM_HERE,
-                                        destination->transport_thread_,
-                                        std::move(send_job), actual_send_delay);
+      destination->transport_thread_->PostDelayedTask(std::move(send_task),
+                                                      actual_send_delay);
     } else {
-      invoker_.AsyncInvoke<void>(RTC_FROM_HERE, destination->transport_thread_,
-                                 std::move(send_job));
+      destination->transport_thread_->PostTask(std::move(send_task));
     }
     return 0;
   }
@@ -136,8 +127,8 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
   const uint8_t packet_loss_percents_;
   const uint16_t avg_send_delay_millis_;
   std::atomic<SimulatedPacketTransport*> destination_ ATOMIC_VAR_INIT(nullptr);
-  rtc::AsyncInvoker invoker_;
   webrtc::Random random_;
+  webrtc::ScopedTaskSafety task_safety_;
   RTC_DISALLOW_COPY_AND_ASSIGN(SimulatedPacketTransport);
 };
 
