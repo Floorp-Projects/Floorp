@@ -15,8 +15,6 @@ class StoragePanel {
     this._toolbox = toolbox;
     this._commands = commands;
     this._panelWin = panelWin;
-
-    this.destroy = this.destroy.bind(this);
   }
 
   get panelWindow() {
