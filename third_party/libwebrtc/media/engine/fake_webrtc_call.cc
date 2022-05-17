@@ -578,14 +578,17 @@ FakeCall::DeliveryStatus FakeCall::DeliverPacket(webrtc::MediaType media_type,
 
   if (media_type == webrtc::MediaType::VIDEO) {
     for (auto receiver : video_receive_streams_) {
-      if (receiver->GetConfig().rtp.remote_ssrc == ssrc)
+      if (receiver->GetConfig().rtp.remote_ssrc == ssrc) {
+        ++delivered_packets_by_ssrc_[ssrc];
         return DELIVERY_OK;
+      }
     }
   }
   if (media_type == webrtc::MediaType::AUDIO) {
     for (auto receiver : audio_receive_streams_) {
       if (receiver->GetConfig().rtp.remote_ssrc == ssrc) {
         receiver->DeliverRtp(packet.cdata(), packet.size(), packet_time_us);
+        ++delivered_packets_by_ssrc_[ssrc];
         return DELIVERY_OK;
       }
     }

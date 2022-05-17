@@ -2070,6 +2070,13 @@ void WebRtcVoiceMediaChannel::ResetUnsignaledRecvStream() {
   }
 }
 
+// Not implemented.
+// TODO(https://crbug.com/webrtc/12676): Implement a fix for the unsignalled
+// SSRC race that can happen when an m= section goes from receiving to not
+// receiving.
+void WebRtcVoiceMediaChannel::OnDemuxerCriteriaUpdatePending() {}
+void WebRtcVoiceMediaChannel::OnDemuxerCriteriaUpdateComplete() {}
+
 bool WebRtcVoiceMediaChannel::SetLocalSource(uint32_t ssrc,
                                              AudioSource* source) {
   auto it = send_streams_.find(ssrc);
