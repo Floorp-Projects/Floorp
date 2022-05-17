@@ -133,6 +133,52 @@ SimpleTest.waitForFocus(() => {
   inputEvents = [];
   selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
                              document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(0, false);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(0, false) should not do nothing without throwing exception");
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired when calling nsITableEditor.insertTableCell(0, false)');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when calling nsITableEditor.insertTableCell(0, false)');
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table><tbody>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</tbody></table>";
+  editor.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
+  getTableEditor().insertTableCell(0, true);
+  is(editor.innerHTML, "<table><tbody>" +
+                         "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                         '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                         "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                       "</tbody></table>",
+     "nsITableEditor.insertTableCell(0, true) should not do nothing without throwing exception");
+  is(beforeInputEvents.length, 0,
+     'No "beforeinput" event should be fired when calling nsITableEditor.insertTableCell(0, true)');
+  is(inputEvents.length, 0,
+     'No "input" event should be fired when calling nsITableEditor.insertTableCell(0, true)');
+
+  selection.removeAllRanges();
+  editor.innerHTML = "<table>" +
+                       "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
+                       '<tr><td id="select">cell2-1</td><td>cell2-2</td></tr>' +
+                       "<tr><td>cell3-1</td><td>cell3-2</td></tr>" +
+                     "</table>";
+  editor.focus();
+  beforeInputEvents = [];
+  inputEvents = [];
+  selection.setBaseAndExtent(document.getElementById("select").firstChild, 0,
+                             document.getElementById("select").firstChild, 0);
   getTableEditor().insertTableCell(1, false);
   is(editor.innerHTML, "<table><tbody>" +
                          "<tr><td>cell1-1</td><td>cell1-2</td></tr>" +
