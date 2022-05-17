@@ -9,8 +9,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_regexp_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_regexp_4.xpi"
         }
       ]
     },
@@ -23,8 +23,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_hard_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_hard_4.xpi"
         }
       ]
     },
@@ -37,8 +37,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_soft5_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_soft5_4.xpi"
         }
       ]
     },
@@ -51,8 +51,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_soft4_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_soft4_4.xpi"
         }
       ]
     },
@@ -65,8 +65,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_soft3_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_soft3_4.xpi"
         }
       ]
     },
@@ -79,8 +79,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_soft2_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_soft2_4.xpi"
         }
       ]
     },
@@ -93,8 +93,8 @@
               "advisory_max_version": "*"
             }
           },
-          "version": "4",
-          "update_link": "http://example.com/addons/blocklist_soft1_1.xpi"
+          "version": "4.0",
+          "update_link": "http://example.com/addons/blocklist_soft1_4.xpi"
         }
       ]
     }
