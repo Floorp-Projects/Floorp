@@ -330,6 +330,11 @@ class ForwardErrorCorrection {
   // for recovering lost packets.
   void DiscardOldRecoveredPackets(RecoveredPacketList* recovered_packets);
 
+  // Checks if the FEC packet is old enough and no longer relevant for
+  // recovering lost media packets.
+  bool IsOldFecPacket(const ReceivedFecPacket& fec_packet,
+                      const RecoveredPacketList* recovered_packets);
+
   // These SSRCs are only used by the decoder.
   const uint32_t ssrc_;
   const uint32_t protected_media_ssrc_;
