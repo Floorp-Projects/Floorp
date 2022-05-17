@@ -141,7 +141,11 @@ Result<Ok, nsresult> FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket,
       mInfo.mRate = sampleRate;
       mInfo.mChannels = numChannels;
       mInfo.mBitDepth = bps;
-      mInfo.mCodecSpecificConfig->AppendElements(blockDataStart, blockDataSize);
+      AudioCodecSpecificBinaryBlob codecSpecificBlob;
+      codecSpecificBlob.mBinaryBlob->AppendElements(blockDataStart,
+                                                    blockDataSize);
+      mInfo.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{std::move(codecSpecificBlob)};
       auto duration = FramesToTimeUnit(mNumFrames, sampleRate);
       mInfo.mDuration = duration.IsValid() ? duration : media::TimeUnit::Zero();
       mParser = MakeUnique<OpusParser>();
