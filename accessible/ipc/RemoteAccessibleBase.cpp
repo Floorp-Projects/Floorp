@@ -700,7 +700,8 @@ template <class Derived>
 uint8_t RemoteAccessibleBase<Derived>::ActionCount() const {
   uint8_t actionCount = 0;
   if (mCachedFields) {
-    if (HasPrimaryAction() || ActionAncestor()) {
+    if (HasPrimaryAction() ||
+        ((IsTextLeaf() || IsImage()) && ActionAncestor())) {
       actionCount++;
     }
 
@@ -719,21 +720,25 @@ void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
   if (mCachedFields) {
     aName.Truncate();
     nsAtom* action = GetPrimaryAction();
-    bool hasActionAncestor = !action && ActionAncestor();
+    if (!action && (IsTextLeaf() || IsImage())) {
+      const Accessible* actionAcc = ActionAncestor();
+      Derived* acc =
+          actionAcc ? const_cast<Accessible*>(actionAcc)->AsRemote() : nullptr;
+      if (acc) {
+        action = acc->GetPrimaryAction();
+      }
+    }
 
     switch (aIndex) {
       case 0:
         if (action) {
           action->ToString(aName);
-        } else if (hasActionAncestor) {
-          aName.AssignLiteral("click ancestor");
         } else if (mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;
       case 1:
-        if ((action || hasActionAncestor) &&
-            mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
+        if (action && mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
           aName.AssignLiteral("showlongdesc");
         }
         break;

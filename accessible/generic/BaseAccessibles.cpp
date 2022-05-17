@@ -89,6 +89,12 @@ void LinkableAccessible::Value(nsString& aValue) const {
   }
 }
 
+uint8_t LinkableAccessible::ActionCount() const {
+  bool isLink, isOnclick;
+  ActionWalk(&isLink, &isOnclick);
+  return (isLink || isOnclick) ? 1 : 0;
+}
+
 const LocalAccessible* LinkableAccessible::ActionWalk(bool* aIsLink,
                                                       bool* aIsOnclick) const {
   if (aIsOnclick) {
@@ -124,6 +130,33 @@ const LocalAccessible* LinkableAccessible::ActionWalk(bool* aIsLink,
   }
 
   return localAction;
+}
+
+void LinkableAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
+  aName.Truncate();
+
+  // Action 0 (default action): Jump to link
+  if (aIndex == eAction_Jump) {
+    bool isOnclick, isLink;
+    ActionWalk(&isLink, &isOnclick);
+    if (isLink) {
+      aName.AssignLiteral("jump");
+    } else if (isOnclick) {
+      aName.AssignLiteral("click");
+    }
+  }
+}
+
+bool LinkableAccessible::DoAction(uint8_t aIndex) const {
+  if (aIndex != eAction_Jump) {
+    return false;
+  }
+
+  if (const LocalAccessible* actionAcc = ActionWalk()) {
+    return actionAcc->DoAction(aIndex);
+  }
+
+  return AccessibleWrap::DoAction(aIndex);
 }
 
 KeyBinding LinkableAccessible::AccessKey() const {
