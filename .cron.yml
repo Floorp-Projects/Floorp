@@ -244,6 +244,17 @@ jobs:
           - {weekday: 'Saturday', hour: 3, minute: 0}
           - {weekday: 'Sunday', hour: 3, minute: 0}
 
+    - name: backfill-all-browsertime
+        job:
+          type: decision-task
+          treeherder-symbol: baB
+          target-tasks-method: backfill_all_browsertime
+          include-push-tasks: true
+        run-on-projects:
+          - autoland
+        when:
+          - {hour: 5, minute: 0}
+
     - name: condprof
       job:
           type: decision-task
