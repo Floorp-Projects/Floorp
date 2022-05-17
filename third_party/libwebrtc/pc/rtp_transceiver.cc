@@ -141,7 +141,10 @@ RtpTransceiver::RtpTransceiver(
 }
 
 RtpTransceiver::~RtpTransceiver() {
-  StopInternal();
+  if (!stopped_) {
+    RTC_DCHECK_RUN_ON(thread_);
+    StopInternal();
+  }
 }
 
 void RtpTransceiver::SetChannel(cricket::ChannelInterface* channel) {
@@ -401,6 +404,7 @@ RTCError RtpTransceiver::StopStandard() {
 }
 
 void RtpTransceiver::StopInternal() {
+  RTC_DCHECK_RUN_ON(thread_);
   StopTransceiverProcedure();
 }
 

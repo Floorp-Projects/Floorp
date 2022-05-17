@@ -454,7 +454,10 @@ rtc_library("transceiver_list") {
     "../api:rtc_error",
     "../api:rtp_parameters",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../rtc_base:checks",
+    "../rtc_base:macromagic",
+    "../rtc_base/system:no_unique_address",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
