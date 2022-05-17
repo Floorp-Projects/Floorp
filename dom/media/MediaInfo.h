@@ -469,8 +469,7 @@ class AudioInfo : public TrackInfo {
         mChannelMap(AudioConfig::ChannelLayout::UNKNOWN_MAP),
         mBitDepth(0),
         mProfile(0),
-        mExtendedProfile(0),
-        mExtraData(new MediaByteBuffer) {}
+        mExtendedProfile(0) {}
 
   AudioInfo(const AudioInfo& aOther) = default;
 
@@ -511,8 +510,6 @@ class AudioInfo : public TrackInfo {
   int8_t mExtendedProfile;
 
   AudioCodecSpecificVariant mCodecSpecificConfig{NoCodecSpecificData{}};
-  RefPtr<MediaByteBuffer> mExtraData;  // TODO(bryce) remove this, it can be
-                                       // replaced with codec specific entriely.
 };
 
 class EncryptionInfo {
