@@ -3530,7 +3530,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     if (usingFilter && !aBuilder->IsForGenerateGlyphMask()) {
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayFilters>(aBuilder, this, &resultList,
-                                                  this);
+                                                  this, usingBackdropFilter);
       createdContainer = true;
     }
 
@@ -3577,7 +3577,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
     resultList.AppendNewToTop<nsDisplayOpacity>(
         aBuilder, this, &resultList, containerItemASR, opacityItemForEventsOnly,
-        needsActiveOpacityLayer);
+        needsActiveOpacityLayer, usingBackdropFilter);
     createdContainer = true;
   }
 
