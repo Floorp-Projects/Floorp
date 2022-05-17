@@ -382,6 +382,56 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    @WithDisplay(width = 100, height = 100)
+    fun selectTestUpdate() {
+        mainSession.loadTestPath(SELECT_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
+        val promptInstanceDelegate = object : PromptDelegate.PromptInstanceDelegate {
+            override fun onPromptUpdate(prompt: PromptDelegate.BasePrompt) {
+                val newPrompt: PromptDelegate.ChoicePrompt = prompt as PromptDelegate.ChoicePrompt
+                assertThat("First choice is correct", newPrompt.choices[0].label, equalTo("foo"))
+                assertThat("Second choice is correct", newPrompt.choices[1].label, equalTo("bar"))
+                assertThat("Third choice is correct", newPrompt.choices[2].label, equalTo("baz"))
+                result.complete(prompt.confirm(newPrompt.choices[2]))
+            }
+        }
+
+        sessionRule.delegateUntilTestEnd(object: PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("There should be two choices", prompt.choices.size, equalTo(2))
+                prompt.setDelegate(promptInstanceDelegate)
+                return result
+            }
+        })
+
+        mainSession.evaluateJS("""
+            document.querySelector("select").addEventListener("focus", () => {
+                window.setTimeout(() => {
+                    document.querySelector("select").innerHTML =
+                        "<option>foo</option><option>bar</option><option>baz</option>";
+                }, 100);
+            }, { once: true })
+        """.trimIndent())
+
+        val promise = mainSession.evaluatePromiseJS("""
+            new Promise(resolve => {
+                document.querySelector("select").addEventListener("change", e => {
+                    resolve(e.target.value);
+                });
+            })
+        """.trimIndent())
+
+        mainSession.synthesizeTap(10, 10)
+        sessionRule.waitForResult(result)
+        assertThat("Selected item should be as expected",
+                   promise.value as String,
+                   equalTo("baz"))
+    }
+
+    @Test
     fun onBeforeUnloadTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false

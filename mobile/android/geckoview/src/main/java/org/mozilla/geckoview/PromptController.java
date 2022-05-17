@@ -69,12 +69,50 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
       }
       mPrompts.remove(prompt.id);
     }
+
+    public boolean contains(final String id) {
+      return mPrompts.containsKey(id);
+    }
+
+    public void update(final BasePrompt prompt) {
+      final BasePrompt previousPrompt = mPrompts.get(prompt.id);
+      if (previousPrompt == null) {
+        return;
+      }
+      final PromptInstanceDelegate delegate = previousPrompt.getDelegate();
+      if (delegate == null) {
+        return;
+      }
+      prompt.setDelegate(delegate);
+      delegate.onPromptUpdate(prompt);
+      mPrompts.put(prompt.id, prompt);
+    }
   }
 
   final PromptStorage mStorage = new PromptStorage();
 
   public void dismissPrompt(final String id) {
     mStorage.dismiss(id);
+  }
+
+  public void updatePrompt(final GeckoBundle message) {
+    final String type = message.getString("type");
+    final PromptHandler<?> handler = sPromptHandlers.handlerFor(type);
+    if (handler == null) {
+      // Invalid prompt message type to update the prompt.
+      return;
+    }
+    final BasePrompt prompt = handler.newPrompt(message, mStorage);
+    if (prompt == null) {
+      // Invalid prompt message to update the prompt.
+      return;
+    }
+    if (!mStorage.contains(prompt.id)) {
+      // Invalid prompt id to update the prompt. Dismissed?
+      return;
+    }
+
+    mStorage.update(prompt);
   }
 
   public void handleEvent(

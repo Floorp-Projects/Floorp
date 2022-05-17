@@ -1313,7 +1313,12 @@ public class GeckoSession {
     /* package */ void registerListeners() {
       getEventDispatcher()
           .registerUiThreadListener(
-              this, "GeckoView:PinOnScreen", "GeckoView:Prompt", "GeckoView:Prompt:Dismiss", null);
+              this,
+              "GeckoView:PinOnScreen",
+              "GeckoView:Prompt",
+              "GeckoView:Prompt:Dismiss",
+              "GeckoView:Prompt:Update",
+              null);
     }
 
     @Override
@@ -1327,6 +1332,8 @@ public class GeckoSession {
         mPromptController.handleEvent(GeckoSession.this, message.getBundle("prompt"), callback);
       } else if ("GeckoView:Prompt:Dismiss".equals(event)) {
         mPromptController.dismissPrompt(message.getString("id"));
+      } else if ("GeckoView:Prompt:Update".equals(event)) {
+        mPromptController.updatePrompt(message.getBundle("prompt"));
       }
     }
   }
@@ -3921,6 +3928,19 @@ public class GeckoSession {
        */
       @UiThread
       default void onPromptDismiss(final @NonNull BasePrompt prompt) {}
+
+      /**
+       * Called when this prompt has been updated.
+       *
+       * <p>This is called if inner &lt;option&gt; elements are updated when using &lt;select&gt;
+       * element.
+       *
+       * <p>When this method is called, you should update the prompt UI elements.
+       *
+       * @param prompt the new prompt that should be updated.
+       */
+      @UiThread
+      default void onPromptUpdate(final @NonNull BasePrompt prompt) {}
     }
 
     // Prompt classes.

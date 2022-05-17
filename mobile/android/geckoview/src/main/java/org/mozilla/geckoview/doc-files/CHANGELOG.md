@@ -26,6 +26,8 @@ exclude: true
   [`onNodeFocus`][102.11], [`onNodeRemove`][102.12], [`onNodeUpdate`][102.13],
   [`onSessionCancel`][102.14], [`onSessionCommit`][102.15],
   [`onSessionStart`][102.16].
+- Added [`PromptInstanceDelegate.onPromptUpdate`][102.17] to allow GeckoView to update current prompts.
+  ([bug 1758800]({{bugzilla}}1758800))
 
 [102.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.DateTimePrompt.html#stepValue
 [102.2]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/date#step
@@ -43,6 +45,7 @@ exclude: true
 [102.14]: {{javadoc_uri}}/Autofill.Delegate.html#onSessionCancel(org.mozilla.geckoview.GeckoSession)
 [102.15]: {{javadoc_uri}}/Autofill.Delegate.html#onSessionCommit(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.Autofill.Node,org.mozilla.geckoview.Autofill.NodeData)
 [102.16]: {{javadoc_uri}}/Autofill.Delegate.html#onSessionStart(org.mozilla.geckoview.GeckoSession)
+[102.17]: {{javadoc_uri}}/GeckoSession.PromptDelegate.PromptInstanceDelegate.html#onPromptUpdate(org.mozilla.geckoview.GeckoSession.PromptDelegate.BasePrompt)
 
 ## v101
 - Added [`GeckoDisplay.surfaceChanged`][101.1] function taking new type [`GeckoDisplay.SurfaceInfo`][101.2].
@@ -1197,4 +1200,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: dbe27cda45ed1bdff264b14f4471fdbe8438ca94
+[api-version]: bed2c4478302cfedbd7a1c3d25548770d4b48761
