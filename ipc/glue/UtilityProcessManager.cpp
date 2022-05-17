@@ -126,7 +126,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
   MOZ_ASSERT(NS_IsMainThread());
 
   if (IsShutdown()) {
-    NS_WARNING("Reject early LaunchProcess() for Shutdown");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
@@ -134,7 +133,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
   RefPtr<ProcessFields> p = GetProcess(aSandbox);
   if (p && p->mNumProcessAttempts) {
     // We failed to start the Utility process earlier, abort now.
-    NS_WARNING("Reject LaunchProcess() for earlier mNumProcessAttempts");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
@@ -158,7 +156,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
   if (!p->mProcess->Launch(extraArgs)) {
     p->mNumProcessAttempts++;
     DestroyProcess(aSandbox);
-    NS_WARNING("Reject LaunchProcess() for mNumProcessAttempts++");
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
                                                        __func__);
   }
@@ -168,13 +165,11 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
       GetMainThreadSerialEventTarget(), __func__,
       [self, p, aSandbox](bool) {
         if (self->IsShutdown()) {
-          NS_WARNING("Reject LaunchProcess() after LaunchPromise() for Shutdown");
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
 
         if (self->IsProcessDestroyed(aSandbox)) {
-          NS_WARNING("Reject LaunchProcess() after LaunchPromise() for destroyed process");
           return GenericNonExclusivePromise::CreateAndReject(
               NS_ERROR_NOT_AVAILABLE, __func__);
         }
@@ -199,7 +194,6 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::LaunchProcess(
           p->mNumProcessAttempts++;
           self->DestroyProcess(aSandbox);
         }
-        NS_WARNING("Reject LaunchProcess() for LaunchPromise() rejection");
         return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
       });
 
@@ -250,11 +244,8 @@ RefPtr<GenericNonExclusivePromise> UtilityProcessManager::StartUtility(
 
         return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
       },
-      [self](nsresult aError) {
-        if (!self->IsShutdown()) {
-          MOZ_ASSERT_UNREACHABLE("Failure when starting actor");
-        }
-        NS_WARNING("Reject StartUtility() for LaunchProcess() rejection");
+      [](nsresult aError) {
+        MOZ_ASSERT_UNREACHABLE("Failure when starting actor");
         return GenericNonExclusivePromise::CreateAndReject(aError, __func__);
       });
 }
@@ -298,12 +289,9 @@ UtilityProcessManager::StartAudioDecoding(base::ProcessId aOtherProcess) {
             return AudioDecodingPromise::CreateAndResolve(std::move(childPipe),
                                                           __func__);
           },
-          [self](nsresult aError) {
-            if (!self->IsShutdown()) {
-              MOZ_ASSERT_UNREACHABLE(
-                  "PUtilityAudioDecoder: failure when starting actor");
-            }
-            NS_WARNING("Reject StartAudioDecoding() for StartUtility() rejection");
+          [](nsresult aError) {
+            MOZ_ASSERT_UNREACHABLE(
+                "PUtilityAudioDecoder: failure when starting actor");
             return AudioDecodingPromise::CreateAndReject(aError, __func__);
           });
 }
