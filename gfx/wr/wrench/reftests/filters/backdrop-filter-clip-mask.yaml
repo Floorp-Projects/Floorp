@@ -1,0 +1,25 @@
+# Ensure that a backdrop-filter enclosed by a stacking context with
+# a clip-mask can select the correct backdrop root
+---
+root:
+  items:
+    - type: clip
+      bounds: [64, 64, 128, 128]
+      id: 2
+      image-mask:
+          image: solid-color(255,255,255,255,128,128)
+          rect: [64, 64, 128, 128]
+          repeat: false
+    - type: stacking-context
+      backdrop-root: true
+      items:
+        - type: rect
+          bounds: 0 0 256 256
+          color: red
+        - type: stacking-context
+          clip-node: 2
+          wraps-backdrop-filter: true
+          items:
+          - type: backdrop-filter
+            bounds: 0 0 256 256
+            filters: invert(1)

@@ -4392,6 +4392,8 @@ bitflags! {
         /// This picture establishes a sub-graph, which affects how SurfaceBuilder will
         /// set up dependencies in the render task graph
         const IS_SUB_GRAPH = 1 << 1;
+        /// This picture wraps a sub-graph, but is not the resolve source itself
+        const WRAPS_SUB_GRAPH = 1 << 2;
     }
 }
 
@@ -5127,6 +5129,7 @@ impl PicturePrimitive {
                 frame_state.surface_builder.push_surface(
                     surface_index,
                     false,
+                    false,
                     surface_local_dirty_rect,
                     descriptor,
                     frame_state.surfaces,
@@ -5562,10 +5565,12 @@ impl PicturePrimitive {
                 }
 
                 let is_sub_graph = self.flags.contains(PictureFlags::IS_SUB_GRAPH);
+                let wraps_sub_graph = self.flags.contains(PictureFlags::WRAPS_SUB_GRAPH);
 
                 frame_state.surface_builder.push_surface(
                     raster_config.surface_index,
                     is_sub_graph,
+                    wraps_sub_graph,
                     surface_rects.clipped_local,
                     surface_descriptor,
                     frame_state.surfaces,
@@ -5924,7 +5929,8 @@ impl PicturePrimitive {
                 //           context.
                 let allow_snapping =
                     parent_allows_snapping &&
-                    !self.flags.contains(PictureFlags::IS_SUB_GRAPH);
+                    !self.flags.contains(PictureFlags::IS_SUB_GRAPH) &&
+                    !self.flags.contains(PictureFlags::WRAPS_SUB_GRAPH);
 
                 // Check if there is perspective or if an SVG filter is applied, and thus whether a new
                 // rasterization root should be established.

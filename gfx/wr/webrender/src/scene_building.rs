@@ -637,8 +637,8 @@ impl<'a> SceneBuilder<'a> {
 
             // If we're a surface, use that spatial node, otherwise the parent
             let spatial_node_index = match pic.composite_mode {
-                Some(_) => pic.spatial_node_index,
-                None => parent_spatial_node_index.expect("bug: no parent"),
+                Some(_) if !pic.flags.contains(PictureFlags::WRAPS_SUB_GRAPH) => pic.spatial_node_index,
+                Some(_) | None => parent_spatial_node_index.expect("bug: no parent"),
             };
 
             (
@@ -2271,6 +2271,13 @@ impl<'a> SceneBuilder<'a> {
             None => true,
         };
 
+        let pic_flags = if stacking_context.flags.contains(StackingContextFlags::WRAPS_BACKDROP_FILTER) {
+            assert!(stacking_context.blit_reason.contains(BlitReason::CLIP));
+            PictureFlags::WRAPS_SUB_GRAPH
+        } else {
+            PictureFlags::empty()
+        };
+
         let mut source = match stacking_context.context_3d {
             // TODO(gw): For now, as soon as this picture is in
             //           a 3D context, we draw it to an intermediate
@@ -2295,7 +2302,7 @@ impl<'a> SceneBuilder<'a> {
                         stacking_context.prim_list,
                         stacking_context.spatial_node_index,
                         stacking_context.raster_space,
-                        PictureFlags::empty(),
+                        pic_flags,
                     ))
                 );
 
@@ -2339,7 +2346,7 @@ impl<'a> SceneBuilder<'a> {
                             stacking_context.prim_list,
                             stacking_context.spatial_node_index,
                             stacking_context.raster_space,
-                            PictureFlags::empty(),
+                            pic_flags,
                         ))
                     );
 
