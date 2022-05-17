@@ -481,6 +481,7 @@ template("rtc_test") {
     }
     if (!build_with_chromium && is_android) {
       android_manifest = webrtc_root + "test/android/AndroidManifest.xml"
+      use_raw_android_executable = false
       min_sdk_version = 21
       target_sdk_version = 23
       deps += [
