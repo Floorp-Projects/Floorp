@@ -12,14 +12,20 @@ add_task(async function() {
   info("Waiting for source editor to load.");
   await ui.editors[0].getSourceEditor();
 
-  const selected = ui.once("editor-selected");
+  const onEditorSelected = new Promise(resolve => {
+    const off = ui.on("editor-selected", editor => {
+      if (editor == ui.editors[2]) {
+        resolve();
+        off();
+      }
+    });
+  });
 
   info("Testing keyboard navigation on the sheet list.");
   testKeyboardNavigation(ui.editors[0], panel);
 
   info("Waiting for editor #2 to be selected due to keyboard navigation.");
-  await selected;
-
+  await onEditorSelected;
   ok(ui.editors[2].sourceEditor.hasFocus(), "Editor #2 has focus.");
 });
 
