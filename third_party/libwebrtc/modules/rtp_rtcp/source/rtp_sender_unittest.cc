@@ -511,43 +511,7 @@ TEST_P(RtpSenderTestWithoutPacer, AllocatePacketReserveExtensions) {
   EXPECT_FALSE(packet->HasExtension<VideoOrientation>());
 }
 
-TEST_P(RtpSenderTestWithoutPacer, AssignSequenceNumberAdvanceSequenceNumber) {
-  auto packet = rtp_sender()->AllocatePacket();
-  ASSERT_TRUE(packet);
-  const uint16_t sequence_number = rtp_sender()->SequenceNumber();
-
-  EXPECT_TRUE(rtp_sender()->AssignSequenceNumber(packet.get()));
-
-  EXPECT_EQ(sequence_number, packet->SequenceNumber());
-  EXPECT_EQ(sequence_number + 1, rtp_sender()->SequenceNumber());
-}
-
-TEST_P(RtpSenderTestWithoutPacer, AssignSequenceNumberFailsOnNotSending) {
-  auto packet = rtp_sender()->AllocatePacket();
-  ASSERT_TRUE(packet);
-
-  rtp_sender()->SetSendingMediaStatus(false);
-  EXPECT_FALSE(rtp_sender()->AssignSequenceNumber(packet.get()));
-}
-
-TEST_P(RtpSenderTestWithoutPacer, AssignSequenceNumberMayAllowPaddingOnVideo) {
-  constexpr size_t kPaddingSize = 100;
-  auto packet = rtp_sender()->AllocatePacket();
-  ASSERT_TRUE(packet);
-
-  ASSERT_TRUE(rtp_sender()->GeneratePadding(kPaddingSize, true).empty());
-  packet->SetMarker(false);
-  ASSERT_TRUE(rtp_sender()->AssignSequenceNumber(packet.get()));
-  // Packet without marker bit doesn't allow padding on video stream.
-  ASSERT_TRUE(rtp_sender()->GeneratePadding(kPaddingSize, true).empty());
-
-  packet->SetMarker(true);
-  ASSERT_TRUE(rtp_sender()->AssignSequenceNumber(packet.get()));
-  // Packet with marker bit allows send padding.
-  ASSERT_FALSE(rtp_sender()->GeneratePadding(kPaddingSize, true).empty());
-}
-
-TEST_P(RtpSenderTest, AssignSequenceNumberAllowsPaddingOnAudio) {
+TEST_P(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
   MockTransport transport;
   RtpRtcpInterface::Configuration config;
   config.audio = true;
@@ -579,21 +543,6 @@ TEST_P(RtpSenderTest, AssignSequenceNumberAllowsPaddingOnAudio) {
   EXPECT_CALL(transport, SendRtp(_, kMinPaddingSize + kRtpHeaderSize, _))
       .WillOnce(Return(true));
   EXPECT_EQ(kMinPaddingSize, GenerateAndSendPadding(kMinPaddingSize - 5));
-}
-
-TEST_P(RtpSenderTestWithoutPacer, AssignSequenceNumberSetPaddingTimestamps) {
-  constexpr size_t kPaddingSize = 100;
-  auto packet = rtp_sender()->AllocatePacket();
-  ASSERT_TRUE(packet);
-  packet->SetMarker(true);
-  packet->SetTimestamp(kTimestamp);
-
-  ASSERT_TRUE(rtp_sender()->AssignSequenceNumber(packet.get()));
-  auto padding_packets = rtp_sender()->GeneratePadding(kPaddingSize, true);
-
-  ASSERT_EQ(1u, padding_packets.size());
-  // Verify padding packet timestamp.
-  EXPECT_EQ(kTimestamp, padding_packets[0]->Timestamp());
 }
 
 TEST_P(RtpSenderTestWithoutPacer,
