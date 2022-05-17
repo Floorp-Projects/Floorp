@@ -1022,18 +1022,15 @@ bool OpusState::Init(void) {
   mInfo.mChannels = mParser->mChannels;
   mInfo.mBitDepth = 16;
   // Save preskip & the first header packet for the Opus decoder
-  AudioCodecSpecificBinaryBlob blob;
-  OpusDataDecoder::AppendCodecDelay(blob.mBinaryBlob,
-                                    Time(0, mParser->mPreSkip));
+  OpusCodecSpecificData opusData;
+  opusData.mContainerCodecDelayMicroSeconds = Time(0, mParser->mPreSkip);
+
   if (!mHeaders.PeekFront()) {
-    mInfo.mCodecSpecificConfig = AudioCodecSpecificVariant{
-        std::move(blob)};  // maybe not needed but do it just in case for this
-                           // temporary state.
     return false;
   }
-  blob.mBinaryBlob->AppendElements(mHeaders.PeekFront()->packet,
-                                   mHeaders.PeekFront()->bytes);
-  mInfo.mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(blob)};
+  opusData.mHeadersBinaryBlob->AppendElements(mHeaders.PeekFront()->packet,
+                                              mHeaders.PeekFront()->bytes);
+  mInfo.mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(opusData)};
 
   mHeaders.Erase();
   LOG(LogLevel::Debug, ("Opus decoder init"));
