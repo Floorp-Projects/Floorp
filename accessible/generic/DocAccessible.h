@@ -84,10 +84,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
 
   virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const override;
 
-  // ActionAccessible
-  virtual bool HasPrimaryAction() const override;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
-
   // HyperTextAccessible
   virtual already_AddRefed<EditorBase> GetEditor() const override;
 

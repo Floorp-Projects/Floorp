@@ -2616,26 +2616,3 @@ LocalAccessible* DocAccessible::GetAccessible(nsINode* aNode) const {
   return aNode == mDocumentNode ? const_cast<DocAccessible*>(this)
                                 : mNodeToAccessibleMap.Get(aNode);
 }
-
-bool DocAccessible::HasPrimaryAction() const {
-  if (HyperTextAccessible::HasPrimaryAction()) {
-    return true;
-  }
-  // mContent is normally the body, but there might be a click listener on the
-  // root.
-  dom::Element* root = mDocumentNode->GetRootElement();
-  if (mContent != root) {
-    return nsCoreUtils::HasClickListener(root);
-  }
-  return false;
-}
-
-void DocAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
-  aName.Truncate();
-  if (aIndex != 0) {
-    return;
-  }
-  if (HasPrimaryAction()) {
-    aName.AssignLiteral("click");
-  }
-}
