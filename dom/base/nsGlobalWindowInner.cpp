@@ -3617,10 +3617,6 @@ double nsGlobalWindowInner::GetDesktopToDeviceScale(ErrorResult& aError) {
   return presContext->DeviceContext()->GetDesktopToDeviceScale().scale;
 }
 
-uint64_t nsGlobalWindowInner::GetMozPaintCount(ErrorResult& aError) {
-  FORWARD_TO_OUTER_OR_THROW(GetMozPaintCountOuter, (), aError, 0);
-}
-
 int32_t nsGlobalWindowInner::RequestAnimationFrame(
     FrameRequestCallback& aCallback, ErrorResult& aError) {
   if (!mDoc) {

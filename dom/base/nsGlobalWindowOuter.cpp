@@ -3816,15 +3816,6 @@ float nsGlobalWindowOuter::GetMozInnerScreenYOuter(CallerType aCallerType) {
   return nsPresContext::AppUnitsToFloatCSSPixels(r.y);
 }
 
-uint64_t nsGlobalWindowOuter::GetMozPaintCountOuter() {
-  if (!mDocShell) {
-    return 0;
-  }
-
-  PresShell* presShell = mDocShell->GetPresShell();
-  return presShell ? presShell->GetPaintCount() : 0;
-}
-
 void nsGlobalWindowOuter::SetScreenXOuter(int32_t aScreenX,
                                           CallerType aCallerType,
                                           ErrorResult& aError) {

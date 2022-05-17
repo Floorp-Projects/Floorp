@@ -627,7 +627,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   bool FindOuter(const nsAString& aString, bool aCaseSensitive, bool aBackwards,
                  bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
                  bool aShowDialog, mozilla::ErrorResult& aError);
-  uint64_t GetMozPaintCountOuter();
 
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialogOuter(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,
