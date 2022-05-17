@@ -470,17 +470,6 @@ deps = {
       'condition': 'checkout_android',
   },
 
-  'src/third_party/xstream': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/xstream',
-              'version': '4278b1b78b86ab7a1a29e64d5aec9a47a9aab0fe',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-
   'src/tools/luci-go': {
       'packages': [
         {
