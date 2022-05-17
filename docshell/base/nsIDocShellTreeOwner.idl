@@ -12,6 +12,7 @@
 
 interface nsIDocShellTreeItem;
 interface nsIRemoteTab;
+webidl BrowsingContext;
 
 [scriptable, uuid(0e3dc4b1-4cea-4a37-af71-79f0afd07574)]
 interface nsIDocShellTreeOwner : nsISupports
@@ -50,6 +51,12 @@ interface nsIDocShellTreeOwner : nsISupports
 	primaryRemoteTab.
 	 */
 	readonly attribute nsIRemoteTab primaryRemoteTab;
+
+	/*
+	Get the BrowsingContext associated with either the primary content shell or
+	primary remote tab, depending on which is available.
+	*/
+	readonly attribute BrowsingContext primaryContentBrowsingContext;
 
 	/*
 	Tells the tree owner to size its window or parent window in such a way
