@@ -250,7 +250,7 @@ class SctpDataSender final {
   rtc::Event sent_target_messages_count_{true, false};
   std::atomic<uint64_t> num_bytes_sent_ ATOMIC_VAR_INIT(0);
   absl::optional<std::string> last_error_;
-  webrtc::ScopedTaskSafety task_safety_;
+  webrtc::ScopedTaskSafetyDetached task_safety_;
   RTC_DISALLOW_COPY_AND_ASSIGN(SctpDataSender);
 };
 
