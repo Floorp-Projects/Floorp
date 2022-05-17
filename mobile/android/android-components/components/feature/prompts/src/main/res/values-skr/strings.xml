@@ -94,6 +94,7 @@
 
     <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
     <string name="mozac_feature_prompt_repost_title">ایں سائٹ تے ڈیٹا ولدا بھیڄوں؟</string>
+    <string name="mozac_feature_prompt_repost_message">ایں ورقے کوں تازہ کرݨ نال حالیہ عملاں دی ݙوجھی نقل بݨ سڳدی ہے۔ جیویں جو پیسیاں دی ادائیگی پٹھݨ یا ݙو واری تبصرہ کرݨ۔</string>
     <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
     <string name="mozac_feature_prompt_repost_positive_button_text">ڈیٹا ولدا پٹھو</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->

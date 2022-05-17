@@ -105,8 +105,20 @@
     <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_title">حفاظتی وجوہات کیتے پورٹ محدود کر ݙتا ڳیا ہے</string>
 
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>ارداس کیتا پتہ ہک خاص پورٹ (مثلاً، mozilla.org تے پورٹ 80 کیتے <q>mozilla.org:80</q>)  
+ کوں مخصوص کریندا ہے جہڑا عام طور تے ویب براؤز کرݨ دے علاوہ <em>کجھ ٻئے</em> مقاصد کیتے ورتیندے۔ تہاݙی حفاظت تے سلامتی کیتے براؤزر  نے ارداس کوں منسوخ کر  ݙتا ہے۔</p>]]></string>
+
     <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_title">کنکشن ریسٹ تھی ڳیا</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+<p>کنکشن قائم کرݨ دے دوران نیٹ ورک لنک وچ رکاوٹ پیدا تھئی۔ براہ کرم، ولدا کوشش کرو۔</p>
+      <ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف تھی سڳدی ہے۔ کجھ دیر بعد وت کوشش کرو۔</li>
+        <li>جے تساں کوئی وی ورقہ لوڈ نہوے کر سڳدے پئے ، تاں آپݨاں ڈیوائس ڈیٹا یا وائی-فائی کنیکشن دی پڑتال کرو۔ </li>
+      </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">غیر محفوظ فائل قسم</string>
@@ -118,11 +130,33 @@
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">خراب مواد نقص</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <ul>
+        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</li> 
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">مواد تباہ تھی ڳیا</string>
 
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <ul>
+        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ڈیٹا ترسیل وچ ہک خرابی دا سراغ لڳے۔</li> 
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_invalid_content_encoding_title">مواد اینکوڈ کرݨ وچ خرابی</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <ul>
+        <li>جہڑا ورقہ ݙیکھݨ چاہندے ہو، کائنی ݙکھایا ون٘ڄ سڳدا کیونجو  ایہ ہک غلط یا بغیر سہارا تھئی کمپریشن ورتیندے۔</li> 
+        <li>ویب سائٹ دے مالک کوں ایں مسئلے دا ݙسݨ کیتے  انہاں  نال رابطہ کرو۔</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">پتہ کائنی لبھا</string>
