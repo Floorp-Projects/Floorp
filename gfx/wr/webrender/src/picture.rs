@@ -457,19 +457,13 @@ struct TilePreUpdateContext {
     frame_id: FrameId,
 }
 
-// Immutable context passed to picture cache tiles during post_update
-struct TilePostUpdateContext<'a> {
+// Immutable context passed to picture cache tiles during update_dirty_and_valid_rects
+struct TileUpdateDirtyContext<'a> {
     /// Maps from picture cache coords -> world space coords.
     pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
 
     /// Global scale factor from world -> device pixels.
     global_device_pixel_scale: DevicePixelScale,
-
-    /// The local clip rect (in picture space) of the entire picture cache
-    local_clip_rect: PictureRect,
-
-    /// The calculated backdrop information for this cache instance.
-    backdrop: Option<BackdropInfo>,
 
     /// Information about opacity bindings from the picture cache.
     opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
@@ -477,22 +471,16 @@ struct TilePostUpdateContext<'a> {
     /// Information about color bindings from the picture cache.
     color_bindings: &'a FastHashMap<PropertyBindingId, ColorBindingInfo>,
 
-    /// Current size in device pixels of tiles for this cache
-    current_tile_size: DeviceIntSize,
-
     /// The local rect of the overall picture cache
     local_rect: PictureRect,
-
-    /// Pre-allocated z-id to assign to tiles during post_update.
-    z_id: ZBufferId,
 
     /// If true, the scale factor of the root transform for this picture
     /// cache changed, so we need to invalidate the tile and re-render.
     invalidate_all: bool,
 }
 
-// Mutable state passed to picture cache tiles during post_update
-struct TilePostUpdateState<'a> {
+// Mutable state passed to picture cache tiles during update_dirty_and_valid_rects
+struct TileUpdateDirtyState<'a> {
     /// Allow access to the texture cache for requesting tiles
     resource_cache: &'a mut ResourceCache,
 
@@ -504,6 +492,30 @@ struct TilePostUpdateState<'a> {
 
     /// Information about transform node differences from last frame.
     spatial_node_comparer: &'a mut SpatialNodeComparer,
+}
+
+// Immutable context passed to picture cache tiles during post_update
+struct TilePostUpdateContext {
+    /// The local clip rect (in picture space) of the entire picture cache
+    local_clip_rect: PictureRect,
+
+    /// The calculated backdrop information for this cache instance.
+    backdrop: Option<BackdropInfo>,
+
+    /// Current size in device pixels of tiles for this cache
+    current_tile_size: DeviceIntSize,
+
+    /// Pre-allocated z-id to assign to tiles during post_update.
+    z_id: ZBufferId,
+}
+
+// Mutable state passed to picture cache tiles during post_update
+struct TilePostUpdateState<'a> {
+    /// Allow access to the texture cache for requesting tiles
+    resource_cache: &'a mut ResourceCache,
+
+    /// Current configuration and setup for compositing all the picture cache tiles in renderer.
+    composite_state: &'a mut CompositeState,
 }
 
 /// Information about the dependencies of a single primitive instance.
@@ -723,6 +735,8 @@ pub enum InvalidationReason {
     ValidRectChanged,
     // The overall scale of the picture cache changed
     ScaleChanged,
+    // The content of the sampling surface changed
+    SurfaceContentChanged,
 }
 
 /// Information about a cached tile.
@@ -823,8 +837,8 @@ impl Tile {
     /// Check if the content of the previous and current tile descriptors match
     fn update_dirty_rects(
         &mut self,
-        ctx: &TilePostUpdateContext,
-        state: &mut TilePostUpdateState,
+        ctx: &TileUpdateDirtyContext,
+        state: &mut TileUpdateDirtyState,
         invalidation_reason: &mut Option<InvalidationReason>,
         frame_context: &FrameVisibilityContext,
     ) -> PictureRect {
@@ -857,8 +871,8 @@ impl Tile {
     /// later by changing how ComparableVec is used.
     fn update_content_validity(
         &mut self,
-        ctx: &TilePostUpdateContext,
-        state: &mut TilePostUpdateState,
+        ctx: &TileUpdateDirtyContext,
+        state: &mut TileUpdateDirtyState,
         frame_context: &FrameVisibilityContext,
     ) {
         // Check if the contents of the primitives, clips, and
@@ -1061,12 +1075,12 @@ impl Tile {
 
     /// Called during tile cache instance post_update. Allows invalidation and dirty
     /// rect calculation after primitive dependencies have been updated.
-    fn post_update(
+    fn update_dirty_and_valid_rects(
         &mut self,
-        ctx: &TilePostUpdateContext,
-        state: &mut TilePostUpdateState,
+        ctx: &TileUpdateDirtyContext,
+        state: &mut TileUpdateDirtyState,
         frame_context: &FrameVisibilityContext,
-    ) -> bool {
+    ) {
         // Register the frame id of this tile with the spatial node comparer, to ensure
         // that it doesn't GC any spatial nodes from the comparer that are referenced
         // by this tile. Must be done before we early exit below, so that we retain
@@ -1077,7 +1091,7 @@ impl Tile {
         // so don't want to invalidate, merge, split etc. The tile won't need to be drawn
         // (and thus updated / invalidated) until it is on screen again.
         if !self.is_visible {
-            return false;
+            return;
         }
 
         // Calculate the overall valid rect for this tile.
@@ -1116,6 +1130,22 @@ impl Tile {
 
         // Invalidate the tile based on the content changing.
         self.update_content_validity(ctx, state, frame_context);
+    }
+
+    /// Called during tile cache instance post_update. Allows invalidation and dirty
+    /// rect calculation after primitive dependencies have been updated.
+    fn post_update(
+        &mut self,
+        ctx: &TilePostUpdateContext,
+        state: &mut TilePostUpdateState,
+        frame_context: &FrameVisibilityContext,
+    ) {
+        // If tile is not visible, just early out from here - we don't update dependencies
+        // so don't want to invalidate, merge, split etc. The tile won't need to be drawn
+        // (and thus updated / invalidated) until it is on screen again.
+        if !self.is_visible {
+            return;
+        }
 
         // If there are no primitives there is no need to draw or cache it.
         // Bug 1719232 - The final device valid rect does not always describe a non-empty
@@ -1132,7 +1162,7 @@ impl Tile {
             }
 
             self.is_visible = false;
-            return false;
+            return;
         }
 
         // Check if this tile can be considered opaque. Opacity state must be updated only
@@ -1278,8 +1308,6 @@ impl Tile {
 
         // Store the current surface backing info for use during batching.
         self.surface = Some(surface);
-
-        true
     }
 }
 
@@ -1892,6 +1920,9 @@ pub struct TileCacheInstance {
     current_raster_scale: f32,
     /// Depth of off-screen surfaces that are currently pushed during dependency updates
     current_surface_traversal_depth: usize,
+    /// A list of extra dirty invalidation tests that can only be checked once we
+    /// know the dirty rect of all tiles
+    deferred_dirty_tests: Vec<DeferredDirtyTest>,
 }
 
 enum SurfacePromotionResult {
@@ -1950,6 +1981,7 @@ impl TileCacheInstance {
             invalidate_all_tiles: true,
             current_raster_scale: 1.0,
             current_surface_traversal_depth: 0,
+            deferred_dirty_tests: Vec::new(),
         }
     }
 
@@ -2068,6 +2100,7 @@ impl TileCacheInstance {
         self.surface_index = surface_index;
         self.local_rect = pic_rect;
         self.local_clip_rect = PictureRect::max_rect();
+        self.deferred_dirty_tests.clear();
 
         for sub_slice in &mut self.sub_slices {
             sub_slice.reset();
@@ -3297,6 +3330,13 @@ impl TileCacheInstance {
                         tile.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
                     }
                 }
+
+                // For backdrop-filter, we need to check if any of the dirty rects
+                // in tiles that are affected by the filter primitive are dirty.
+                self.deferred_dirty_tests.push(DeferredDirtyTest {
+                    tile_rect: TileRect::new(p0, p1),
+                    prim_rect: pic_coverage_rect,
+                });
             }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
@@ -3549,20 +3589,16 @@ impl TileCacheInstance {
             frame_context.spatial_tree,
         );
 
-        let mut ctx = TilePostUpdateContext {
+        let ctx = TileUpdateDirtyContext {
             pic_to_world_mapper,
             global_device_pixel_scale: frame_context.global_device_pixel_scale,
-            local_clip_rect: self.local_clip_rect,
-            backdrop: None,
             opacity_bindings: &self.opacity_bindings,
             color_bindings: &self.color_bindings,
-            current_tile_size: self.current_tile_size,
             local_rect: self.local_rect,
-            z_id: ZBufferId::invalid(),
             invalidate_all: self.invalidate_all_tiles,
         };
 
-        let mut state = TilePostUpdateState {
+        let mut state = TileUpdateDirtyState {
             resource_cache: frame_state.resource_cache,
             composite_state: frame_state.composite_state,
             compare_cache: &mut self.compare_cache,
@@ -3571,6 +3607,60 @@ impl TileCacheInstance {
 
         // Step through each tile and invalidate if the dependencies have changed. Determine
         // the current opacity setting and whether it's changed.
+        for sub_slice in &mut self.sub_slices {
+            for tile in sub_slice.tiles.values_mut() {
+                tile.update_dirty_and_valid_rects(&ctx, &mut state, frame_context);
+            }
+        }
+
+        // Process any deferred dirty checks
+        for sub_slice in &mut self.sub_slices {
+            for dirty_test in self.deferred_dirty_tests.drain(..) {
+                // Calculate the total dirty rect from all tiles that this primitive affects
+                let mut total_dirty_rect = PictureRect::zero();
+
+                for y in dirty_test.tile_rect.min.y .. dirty_test.tile_rect.max.y {
+                    for x in dirty_test.tile_rect.min.x .. dirty_test.tile_rect.max.x {
+                        let key = TileOffset::new(x, y);
+                        let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
+                        total_dirty_rect = total_dirty_rect.union(&tile.local_dirty_rect);
+                    }
+                }
+
+                // If that dirty rect intersects with the local rect of the primitive
+                // being checked, invalidate that region in all of the affected tiles.
+                // TODO(gw): This is somewhat conservative, we could be more clever
+                //           here and avoid invalidating every tile when this changes.
+                //           We could also store the dirty rect only when the prim
+                //           is encountered, so that we don't invalidate if something
+                //           *after* the query in the rendering order affects invalidation.
+                if total_dirty_rect.intersects(&dirty_test.prim_rect) {
+                    for y in dirty_test.tile_rect.min.y .. dirty_test.tile_rect.max.y {
+                        for x in dirty_test.tile_rect.min.x .. dirty_test.tile_rect.max.x {
+                            let key = TileOffset::new(x, y);
+                            let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
+                            tile.invalidate(
+                                Some(dirty_test.prim_rect),
+                                InvalidationReason::SurfaceContentChanged,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut ctx = TilePostUpdateContext {
+            local_clip_rect: self.local_clip_rect,
+            backdrop: None,
+            current_tile_size: self.current_tile_size,
+            z_id: ZBufferId::invalid(),
+        };
+
+        let mut state = TilePostUpdateState {
+            resource_cache: frame_state.resource_cache,
+            composite_state: frame_state.composite_state,
+        };
+
         for (i, sub_slice) in self.sub_slices.iter_mut().enumerate().rev() {
             // The backdrop is only relevant for the first sub-slice
             if i == 0 {
@@ -6155,6 +6245,16 @@ impl ImageDependency {
         key: ImageKey::DUMMY,
         generation: ImageGeneration::INVALID,
     };
+}
+
+/// In some cases, we need to know the dirty rect of all tiles in order
+/// to correctly invalidate a primitive.
+#[derive(Debug)]
+struct DeferredDirtyTest {
+    /// The tile rect that the primitive being checked affects
+    tile_rect: TileRect,
+    /// The picture-cache local rect of the primitive being checked
+    prim_rect: PictureRect,
 }
 
 /// A helper struct to compare a primitive and all its sub-dependencies.
