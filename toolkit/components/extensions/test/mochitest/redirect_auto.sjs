@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 "use strict";
-Cu.importGlobalProperties(["URLSearchParams", "URL"]);
+Components.utils.importGlobalProperties(["URLSearchParams", "URL"]);
 
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);

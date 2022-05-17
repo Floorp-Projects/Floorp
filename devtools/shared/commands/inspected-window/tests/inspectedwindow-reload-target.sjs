@@ -1,6 +1,6 @@
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
   const params = new URLSearchParams(request.queryString);

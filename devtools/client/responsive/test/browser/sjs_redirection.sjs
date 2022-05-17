@@ -4,6 +4,7 @@
 "use strict";
 
 async function handleRequest(request, response) {
+  Components.utils.importGlobalProperties(["URLSearchParams"]);
   const query = new URLSearchParams(request.queryString);
 
   const requestUserAgent = request.getHeader("user-agent");

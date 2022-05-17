@@ -2,7 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80 ft=javascript: */
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);

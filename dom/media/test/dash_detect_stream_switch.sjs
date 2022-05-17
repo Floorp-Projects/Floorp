@@ -64,15 +64,15 @@ function handleRequest(request, response) {
       }
       var startOffset = parseInt(offsets[0]);
       var endOffset = parseInt(offsets[1]);
-      var file = Cc["@mozilla.org/file/directory_service;1"]
-        .getService(Ci.nsIProperties)
-        .get("CurWorkD", Ci.nsIFile);
-      var fis = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
-        Ci.nsIFileInputStream
-      );
-      var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-        Ci.nsIBinaryInputStream
-      );
+      var file = Components.classes["@mozilla.org/file/directory_service;1"]
+        .getService(Components.interfaces.nsIProperties)
+        .get("CurWorkD", Components.interfaces.nsIFile);
+      var fis = Components.classes[
+        "@mozilla.org/network/file-input-stream;1"
+      ].createInstance(Components.interfaces.nsIFileInputStream);
+      var bis = Components.classes[
+        "@mozilla.org/binaryinputstream;1"
+      ].createInstance(Components.interfaces.nsIBinaryInputStream);
 
       var paths = "tests/dom/media/test/" + name;
       var split = paths.split("/");
@@ -103,7 +103,10 @@ function handleRequest(request, response) {
         }
         endOffset = file.fileSize - 1;
       }
-      fis.seek(Ci.nsISeekableStream.NS_SEEK_SET, startOffset);
+      fis.seek(
+        Components.interfaces.nsISeekableStream.NS_SEEK_SET,
+        startOffset
+      );
       bis.setInputStream(fis);
 
       var byteLengthToRead = endOffset + 1 - startOffset;

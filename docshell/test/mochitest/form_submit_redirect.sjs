@@ -1,10 +1,10 @@
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 async function handleRequest(request, response) {
   if (request.method !== "POST") {
-    throw new Error("Expected a post request");
+    message = "bad";
   } else {
     let params = new URLSearchParams(request.queryString);
     let redirect = params.get("redirectTo");

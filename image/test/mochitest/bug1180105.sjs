@@ -3,13 +3,13 @@
  */
 
 var counter = 100;
-var timer = Cc["@mozilla.org/timer;1"];
-var partTimer = timer.createInstance(Ci.nsITimer);
+var timer = Components.classes["@mozilla.org/timer;1"];
+var partTimer = timer.createInstance(Components.interfaces.nsITimer);
 
 function getFileAsInputStream(aFilename) {
-  var file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("CurWorkD", Ci.nsIFile);
+  var file = Components.classes["@mozilla.org/file/directory_service;1"]
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
 
   file.append("tests");
   file.append("image");
@@ -17,9 +17,9 @@ function getFileAsInputStream(aFilename) {
   file.append("mochitest");
   file.append(aFilename);
 
-  var fileStream = Cc[
+  var fileStream = Components.classes[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Ci.nsIFileInputStream);
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   fileStream.init(file, 1, 0, false);
   return fileStream;
 }
@@ -50,7 +50,7 @@ function sendParts(response) {
       sendParts(response);
     },
     1,
-    Ci.nsITimer.TYPE_ONE_SHOT
+    Components.interfaces.nsITimer.TYPE_ONE_SHOT
   );
 }
 

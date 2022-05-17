@@ -76,6 +76,6 @@ function handleRequest(request, response) {
       break;
   }
 
-  let messageStr = JSON.stringify(message);
+  messageStr = JSON.stringify(message);
   response.bodyOutputStream.write(messageStr, messageStr.length);
 }

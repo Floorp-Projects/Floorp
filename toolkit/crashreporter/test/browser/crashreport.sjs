@@ -10,8 +10,10 @@ function parseHeaders(data, start) {
   let headers = {};
 
   while (true) {
+    let done = false;
     let end = data.indexOf("\r\n", start);
     if (end == -1) {
+      done = true;
       end = data.length;
     }
     let line = data.substring(start, end);
@@ -65,11 +67,13 @@ function parseMultipartForm(request) {
     data += String.fromCharCode(b);
   }
   let formData = {};
+  let done = false;
   let start = 0;
   while (true) {
     // read first line
     let end = data.indexOf("\r\n", start);
     if (end == -1) {
+      done = true;
       end = data.length;
     }
 

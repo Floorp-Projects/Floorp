@@ -78,14 +78,16 @@ function handleRequest(req, resp) {
 
   if (opts.wait) {
     resp.write("Waiting " + opts.wait + " ms... ");
-    timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+      Components.interfaces.nsITimer
+    );
     timer.init(
       function ding() {
         resp.write("OK!");
         resp.finish();
       },
       opts.wait,
-      Ci.nsITimer.TYPE_ONE_SHOT
+      Components.interfaces.nsITimer.TYPE_ONE_SHOT
     );
     return;
   }

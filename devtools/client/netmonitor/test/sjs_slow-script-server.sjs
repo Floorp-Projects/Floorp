@@ -1,5 +1,8 @@
 "use strict";
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
 let timer;
 
 const DELAY_MS = 2000;
