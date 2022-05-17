@@ -239,21 +239,25 @@ bool WebGPUParent::ForwardError(RawId aDeviceId, ErrorBuffer& aError) {
     return false;
   }
 
+  ReportError(aDeviceId, cString.value());
+
+  return true;
+}
+
+void WebGPUParent::ReportError(RawId aDeviceId, const nsCString& aMessage) {
   // find the appropriate error scope
   const auto& lookup = mErrorScopeMap.find(aDeviceId);
   if (lookup != mErrorScopeMap.end() && !lookup->second.mStack.IsEmpty()) {
     auto& last = lookup->second.mStack.LastElement();
     if (last.isNothing()) {
-      last.emplace(ScopedError{false, cString.value()});
+      last.emplace(ScopedError{false, aMessage});
     }
   } else {
     // fall back to the uncaptured error handler
-    if (!SendDeviceUncapturedError(aDeviceId, cString.value())) {
+    if (!SendDeviceUncapturedError(aDeviceId, aMessage)) {
       NS_ERROR("Unable to SendError");
     }
   }
-
-  return true;
 }
 
 ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
@@ -924,6 +928,12 @@ ipc::IPCResult WebGPUParent::RecvDevicePopErrorScope(
 
   auto scope = lookup->second.mStack.PopLastElement();
   aResolver(scope);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvGenerateError(RawId aDeviceId,
+                                               const nsCString& aMessage) {
+  ReportError(aDeviceId, aMessage);
   return IPC_OK();
 }
 
