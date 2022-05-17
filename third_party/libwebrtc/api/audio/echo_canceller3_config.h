@@ -109,6 +109,7 @@ struct RTC_EXPORT EchoCanceller3Config {
     float default_len = 0.83f;
     bool echo_can_saturate = true;
     bool bounded_erl = false;
+    bool erle_onset_compensation_in_dominant_nearend = false;
   } ep_strength;
 
   struct EchoAudibility {

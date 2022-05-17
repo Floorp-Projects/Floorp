@@ -178,8 +178,9 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
                      filter_frequency_response, X2, Y2, E2, converged_filters);
   }
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.max_l, config.erle.max_h);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.max_l,
+             config.erle.max_h);
 
   FormNearendFrame(&x, &X2, E2, Y2);
   // Verifies that the ERLE is not immediately decreased during nearend
@@ -190,8 +191,9 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleIncreaseAndHold) {
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
                      filter_frequency_response, X2, Y2, E2, converged_filters);
   }
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.max_l, config.erle.max_h);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.max_l,
+             config.erle.max_h);
 }
 
 TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
@@ -253,7 +255,8 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
                        converged_filters);
     }
   }
-  VerifyErleBands(estimator.ErleOnsets(), config.erle.min, config.erle.min);
+  VerifyErleBands(estimator.ErleDuringOnsets(), config.erle.min,
+                  config.erle.min);
   FormNearendFrame(&x, &X2, E2, Y2);
   for (size_t k = 0; k < 1000; k++) {
     estimator.Update(*render_delay_buffer->GetRenderBuffer(),
@@ -261,8 +264,9 @@ TEST_P(ErleEstimatorMultiChannel, VerifyErleTrackingOnOnsets) {
   }
   // Verifies that during ne activity, Erle converges to the Erle for
   // onsets.
-  VerifyErle(estimator.Erle(), std::pow(2.f, estimator.FullbandErleLog2()),
-             config.erle.min, config.erle.min);
+  VerifyErle(estimator.Erle(/*onset_compensated=*/true),
+             std::pow(2.f, estimator.FullbandErleLog2()), config.erle.min,
+             config.erle.min);
 }
 
 }  // namespace webrtc
