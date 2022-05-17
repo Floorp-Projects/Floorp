@@ -1204,6 +1204,10 @@ BrowserGlue.prototype = {
       this._matchCBCategory
     );
     Services.prefs.removeObserver(
+      "privacy.query_stripping.enabled",
+      this._matchCBCategory
+    );
+    Services.prefs.removeObserver(
       ContentBlockingCategoriesPrefs.PREF_CB_CATEGORY,
       this._updateCBCategory
     );
@@ -1717,6 +1721,10 @@ BrowserGlue.prototype = {
     );
     Services.prefs.addObserver(
       "privacy.partition.network_state.ocsp_cache",
+      this._matchCBCategory
+    );
+    Services.prefs.addObserver(
+      "privacy.query_stripping.enabled",
       this._matchCBCategory
     );
     Services.prefs.addObserver(
@@ -4678,6 +4686,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
+        "privacy.query_stripping.enabled": null,
       },
       standard: {
         "network.cookie.cookieBehavior": null,
@@ -4691,6 +4700,7 @@ var ContentBlockingCategoriesPrefs = {
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault.top_navigation": null,
         "privacy.partition.network_state.ocsp_cache": null,
+        "privacy.query_stripping.enabled": null,
       },
     };
     let type = "strict";
@@ -4788,6 +4798,12 @@ var ContentBlockingCategoriesPrefs = {
           this.CATEGORY_PREFS[type][
             "privacy.partition.network_state.ocsp_cache"
           ] = false;
+          break;
+        case "qps":
+          this.CATEGORY_PREFS[type]["privacy.query_stripping.enabled"] = true;
+          break;
+        case "-qps":
+          this.CATEGORY_PREFS[type]["privacy.query_stripping.enabled"] = false;
           break;
         case "cookieBehavior0":
           this.CATEGORY_PREFS[type]["network.cookie.cookieBehavior"] =
