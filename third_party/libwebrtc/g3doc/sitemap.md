@@ -8,8 +8,9 @@
     * Network
       * [ICE](/p2p/g3doc/ice.md)
       * STUN
-      * DTLS
       * TURN
+      * DTLS
+      * [SCTP](/pc/g3doc/sctp_transport.md)
     *   Congestion control and bandwidth estimation
     *   Audio
       * AudioEngine
