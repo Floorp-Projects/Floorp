@@ -11,7 +11,7 @@ import {
   getBreakpoint,
   getBreakpointPositionsForLocation,
   getFirstBreakpointPosition,
-  getSource,
+  getLocationSource,
   getSourceContent,
   getBreakpointsList,
   getPendingBreakpointList,
@@ -64,7 +64,7 @@ async function clientSetBreakpoint(
   );
   const shouldMapBreakpointExpressions =
     isMapScopesEnabled(getState()) &&
-    getSource(getState(), breakpoint.location?.sourceId).isOriginal &&
+    getLocationSource(getState(), breakpoint.location).isOriginal &&
     (breakpoint.options.logValue || breakpoint.options.condition);
 
   if (shouldMapBreakpointExpressions) {
@@ -107,9 +107,12 @@ export function addBreakpoint(
     const { dispatch, getState, client } = thunkArgs;
     recordEvent("add_breakpoint");
 
-    const { sourceId, column, line } = initialLocation;
+    const { column, line } = initialLocation;
+    const initialSource = getLocationSource(getState(), initialLocation);
 
-    await dispatch(setBreakpointPositions({ cx, sourceId, line }));
+    await dispatch(
+      setBreakpointPositions({ cx, sourceId: initialSource.id, line })
+    );
 
     const position = column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
@@ -123,8 +126,8 @@ export function addBreakpoint(
 
     const { location, generatedLocation } = position;
 
-    const source = getSource(getState(), location.sourceId);
-    const generatedSource = getSource(getState(), generatedLocation.sourceId);
+    const source = getLocationSource(getState(), location);
+    const generatedSource = getLocationSource(getState(), generatedLocation);
 
     if (!source || !generatedSource) {
       return;

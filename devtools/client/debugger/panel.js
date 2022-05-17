@@ -275,6 +275,10 @@ class DebuggerPanel {
     return this._selectors.getSource(this._getState(), sourceId);
   }
 
+  getLocationSource(location) {
+    return this._selectors.getLocationSource(this._getState(), location);
+  }
+
   destroy() {
     this.panelWin.Debugger.destroy();
     this.emit("destroyed");

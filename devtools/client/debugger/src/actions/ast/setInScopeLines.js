@@ -4,7 +4,7 @@
 
 import {
   hasInScopeLines,
-  getSource,
+  getLocationSource,
   getSourceTextContent,
   getVisibleSelectedFrame,
 } from "../../selectors";
@@ -29,7 +29,7 @@ function getOutOfScopeLines(outOfScopeLocations) {
 }
 
 async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
-  const source = getSource(getState(), location.sourceId);
+  const source = getLocationSource(getState(), location);
   const sourceTextContent = getSourceTextContent(getState(), source.id);
 
   let locations = null;
