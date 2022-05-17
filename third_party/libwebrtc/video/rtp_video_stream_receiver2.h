@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/crypto/frame_decryptor_interface.h"
 #include "api/sequence_checker.h"
+#include "api/units/timestamp.h"
 #include "api/video/color_space.h"
 #include "api/video_codecs/video_codec.h"
 #include "call/rtp_packet_sink_interface.h"
@@ -268,6 +269,9 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
       const RtpPacketReceived& rtp_packet,
       RTPVideoHeader* video_header) RTC_RUN_ON(worker_task_checker_);
   void OnAssembledFrame(std::unique_ptr<RtpFrameObject> frame);
+  void UpdatePacketReceiveTimestamps(const RtpPacketReceived& packet,
+                                     bool is_keyframe)
+      RTC_RUN_ON(worker_task_checker_);
 
   Clock* const clock_;
   // Ownership of this object lies with VideoReceiveStream, which owns |this|.
@@ -341,7 +345,9 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   absl::optional<uint32_t> last_received_rtp_timestamp_
       RTC_GUARDED_BY(worker_task_checker_);
-  absl::optional<int64_t> last_received_rtp_system_time_ms_
+  absl::optional<Timestamp> last_received_rtp_system_time_
+      RTC_GUARDED_BY(worker_task_checker_);
+  absl::optional<Timestamp> last_received_keyframe_rtp_system_time_
       RTC_GUARDED_BY(worker_task_checker_);
 
   // Handles incoming encrypted frames and forwards them to the

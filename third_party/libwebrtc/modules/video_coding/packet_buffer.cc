@@ -30,7 +30,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/numerics/mod_ops.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -51,11 +50,8 @@ PacketBuffer::Packet::Packet(const RtpPacketReceived& rtp_packet,
                   rtp_packet.GetExtension<AbsoluteCaptureTimeExtension>(),
                   receive_time_ms) {}
 
-PacketBuffer::PacketBuffer(Clock* clock,
-                           size_t start_buffer_size,
-                           size_t max_buffer_size)
-    : clock_(clock),
-      max_size_(max_buffer_size),
+PacketBuffer::PacketBuffer(size_t start_buffer_size, size_t max_buffer_size)
+    : max_size_(max_buffer_size),
       first_seq_num_(0),
       first_packet_received_(false),
       is_cleared_to_first_seq_num_(false),
@@ -112,14 +108,6 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
       result.buffer_cleared = true;
       return result;
     }
-  }
-
-  int64_t now_ms = clock_->TimeInMilliseconds();
-  last_received_packet_ms_ = now_ms;
-  if (packet->video_header.frame_type == VideoFrameType::kVideoFrameKey ||
-      last_received_keyframe_rtp_timestamp_ == packet->timestamp) {
-    last_received_keyframe_packet_ms_ = now_ms;
-    last_received_keyframe_rtp_timestamp_ = packet->timestamp;
   }
 
   packet->continuous = false;
@@ -185,18 +173,10 @@ PacketBuffer::InsertResult PacketBuffer::InsertPadding(uint16_t seq_num) {
   return result;
 }
 
-absl::optional<int64_t> PacketBuffer::LastReceivedPacketMs() const {
-  MutexLock lock(&mutex_);
-  return last_received_packet_ms_;
-}
-
-absl::optional<int64_t> PacketBuffer::LastReceivedKeyframePacketMs() const {
-  MutexLock lock(&mutex_);
-  return last_received_keyframe_packet_ms_;
-}
 void PacketBuffer::ForceSpsPpsIdrIsH264Keyframe() {
   sps_pps_idr_is_h264_keyframe_ = true;
 }
+
 void PacketBuffer::ClearInternal() {
   for (auto& entry : buffer_) {
     entry = nullptr;
@@ -204,8 +184,6 @@ void PacketBuffer::ClearInternal() {
 
   first_packet_received_ = false;
   is_cleared_to_first_seq_num_ = false;
-  last_received_packet_ms_.reset();
-  last_received_keyframe_packet_ms_.reset();
   newest_inserted_seq_num_.reset();
   missing_packets_.clear();
 }

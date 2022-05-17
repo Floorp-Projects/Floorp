@@ -25,7 +25,6 @@
 #include "rtc_base/numerics/sequence_number_util.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
-#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace video_coding {
@@ -76,7 +75,7 @@ class PacketBuffer {
   };
 
   // Both |start_buffer_size| and |max_buffer_size| must be a power of 2.
-  PacketBuffer(Clock* clock, size_t start_buffer_size, size_t max_buffer_size);
+  PacketBuffer(size_t start_buffer_size, size_t max_buffer_size);
   ~PacketBuffer();
 
   ABSL_MUST_USE_RESULT InsertResult InsertPacket(std::unique_ptr<Packet> packet)
@@ -89,16 +88,9 @@ class PacketBuffer {
   uint32_t ClearTo(uint16_t seq_num) RTC_LOCKS_EXCLUDED(mutex_);
   void Clear() RTC_LOCKS_EXCLUDED(mutex_);
 
-  // Timestamp (not RTP timestamp) of the last received packet/keyframe packet.
-  absl::optional<int64_t> LastReceivedPacketMs() const
-      RTC_LOCKS_EXCLUDED(mutex_);
-  absl::optional<int64_t> LastReceivedKeyframePacketMs() const
-      RTC_LOCKS_EXCLUDED(mutex_);
   void ForceSpsPpsIdrIsH264Keyframe();
 
  private:
-  Clock* const clock_;
-
   // Clears with |mutex_| taken.
   void ClearInternal() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
@@ -134,13 +126,6 @@ class PacketBuffer {
   // Buffer that holds the the inserted packets and information needed to
   // determine continuity between them.
   std::vector<std::unique_ptr<Packet>> buffer_ RTC_GUARDED_BY(mutex_);
-
-  // Timestamp of the last received packet/keyframe packet.
-  absl::optional<int64_t> last_received_packet_ms_ RTC_GUARDED_BY(mutex_);
-  absl::optional<int64_t> last_received_keyframe_packet_ms_
-      RTC_GUARDED_BY(mutex_);
-  absl::optional<uint32_t> last_received_keyframe_rtp_timestamp_
-      RTC_GUARDED_BY(mutex_);
 
   absl::optional<uint16_t> newest_inserted_seq_num_ RTC_GUARDED_BY(mutex_);
   std::set<uint16_t, DescendingSeqNumComp<uint16_t>> missing_packets_
