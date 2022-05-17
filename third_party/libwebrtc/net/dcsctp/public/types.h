@@ -11,6 +11,8 @@
 #ifndef NET_DCSCTP_PUBLIC_TYPES_H_
 #define NET_DCSCTP_PUBLIC_TYPES_H_
 
+#include <cstdint>
+
 #include "net/dcsctp/public/strong_alias.h"
 
 namespace dcsctp {
@@ -29,10 +31,74 @@ using TimeoutID = StrongAlias<class TimeoutTag, uint64_t>;
 using IsUnordered = StrongAlias<class IsUnorderedTag, bool>;
 
 // Duration, as milliseconds. Overflows after 24 days.
-using DurationMs = StrongAlias<class DurationMsTag, int32_t>;
+class DurationMs : public StrongAlias<class DurationMsTag, int32_t> {
+ public:
+  constexpr explicit DurationMs(const UnderlyingType& v)
+      : StrongAlias<class DurationMsTag, int32_t>(v) {}
 
-// Current time, in milliseconds since a client-defined epoch.´
-using TimeMs = StrongAlias<class TimeMsTag, int64_t>;
+  // Convenience methods for working with time.
+  constexpr DurationMs& operator+=(DurationMs d) {
+    value_ += d.value_;
+    return *this;
+  }
+  constexpr DurationMs& operator-=(DurationMs d) {
+    value_ -= d.value_;
+    return *this;
+  }
+  template <typename T>
+  constexpr DurationMs& operator*=(T factor) {
+    value_ *= factor;
+    return *this;
+  }
+};
+
+constexpr inline DurationMs operator+(DurationMs lhs, DurationMs rhs) {
+  return lhs += rhs;
+}
+constexpr inline DurationMs operator-(DurationMs lhs, DurationMs rhs) {
+  return lhs -= rhs;
+}
+template <typename T>
+constexpr inline DurationMs operator*(DurationMs lhs, T rhs) {
+  return lhs *= rhs;
+}
+template <typename T>
+constexpr inline DurationMs operator*(T lhs, DurationMs rhs) {
+  return rhs *= lhs;
+}
+constexpr inline int32_t operator/(DurationMs lhs, DurationMs rhs) {
+  return lhs.value() / rhs.value();
+}
+
+// Represents time, in milliseconds since a client-defined epoch.
+class TimeMs : public StrongAlias<class TimeMsTag, int64_t> {
+ public:
+  constexpr explicit TimeMs(const UnderlyingType& v)
+      : StrongAlias<class TimeMsTag, int64_t>(v) {}
+
+  // Convenience methods for working with time.
+  constexpr TimeMs& operator+=(DurationMs d) {
+    value_ += *d;
+    return *this;
+  }
+  constexpr TimeMs& operator-=(DurationMs d) {
+    value_ -= *d;
+    return *this;
+  }
+};
+
+constexpr inline TimeMs operator+(TimeMs lhs, DurationMs rhs) {
+  return lhs += rhs;
+}
+constexpr inline TimeMs operator+(DurationMs lhs, TimeMs rhs) {
+  return rhs += lhs;
+}
+constexpr inline TimeMs operator-(TimeMs lhs, DurationMs rhs) {
+  return lhs -= rhs;
+}
+constexpr inline DurationMs operator-(TimeMs lhs, TimeMs rhs) {
+  return DurationMs(*lhs - *rhs);
+}
 
 }  // namespace dcsctp
 
