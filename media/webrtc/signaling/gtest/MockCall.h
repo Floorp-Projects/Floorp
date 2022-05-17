@@ -257,6 +257,14 @@ class MockCall : public webrtc::Call {
     return mUnusedConfig;
   }
 
+  virtual webrtc::TaskQueueBase* network_thread() const override {
+    return nullptr;
+  }
+
+  virtual webrtc::TaskQueueBase* worker_thread() const override {
+    return nullptr;
+  }
+
   virtual ~MockCall(){};
 
   const RefPtr<MockCallWrapper> mCallWrapper;
