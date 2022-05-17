@@ -25,9 +25,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -36,6 +37,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 public class Autofill {
   private static final boolean DEBUG = false;
 
+  @Deprecated
+  @DeprecationSchedule(id = "autofill-node", version = 104)
   public static final class Notify {
     private Notify() {}
 
@@ -164,73 +167,196 @@ public class Autofill {
   @IntDef({InputType.NONE, InputType.TEXT, InputType.NUMBER, InputType.PHONE})
   public @interface AutofillInputType {}
 
+  /** Represents autofill data associated to a {@link Node}. */
+  public static class NodeData {
+    /** Autofill id for this node. */
+    final int id;
+
+    String value;
+    Node node;
+    EventCallback callback;
+
+    NodeData(final int id, final Node node) {
+      this.id = id;
+      this.node = node;
+    }
+
+    /**
+     * Gets the value for this node.
+     *
+     * @return a String representing the value for this node.
+     */
+    @AnyThread
+    public @Nullable String getValue() {
+      return value;
+    }
+
+    /**
+     * Returns the autofill id for this node.
+     *
+     * @return an int representing the id for this node.
+     */
+    @AnyThread
+    public int getId() {
+      return id;
+    }
+  }
+
   /** Represents an autofill session. A session holds the autofill nodes and state of a page. */
   public static final class Session {
     private static final String LOGTAG = "AutofillSession";
 
     private @NonNull final GeckoSession mGeckoSession;
     private Node mRoot;
-    private SparseArray<Node> mNodes;
-    private HashMap<String, Integer> mUuidToId;
-    private int mCurrentIndex;
-    // TODO: support session id?
-    private int mId = View.NO_ID;
-    private int mFocusedId = View.NO_ID;
-    private int mFocusedRootId = View.NO_ID;
+    private HashMap<String, NodeData> mUuidToNodeData;
+    private SparseArray<Node> mIdToNode;
+    private int mCurrentIndex = 0;
+    private String mId = null;
+
+    // We can't store the Node directly because it might be updated by subsequent NodeAdd calls.
+    private String mFocusedUuid = null;
 
     /* package */ Session(@NonNull final GeckoSession geckoSession) {
       mGeckoSession = geckoSession;
-      clear();
+      // Dummy session until a real one gets created
+      clear(UUID.randomUUID().toString());
     }
 
-    @AnyThread
+    @UiThread
     @SuppressWarnings("checkstyle:javadocmethod")
     public @NonNull Rect getDefaultDimensions() {
-      return Support.getDummyAutofillRect(mGeckoSession, false, null);
+      final Rect rect = new Rect();
+      mGeckoSession.getSurfaceBounds(rect);
+      return rect;
     }
 
-    /* package */ void clear() {
-      mId = View.NO_ID;
-      mFocusedId = View.NO_ID;
-      mFocusedRootId = View.NO_ID;
-      mRoot = new Node.Builder(this).dimensions(getDefaultDimensions()).build();
-      mNodes = new SparseArray<>();
-      mUuidToId = new HashMap<>();
-      mCurrentIndex = 0;
+    /* package */ void clear(final String newSessionId) {
+      mId = newSessionId;
+      mFocusedUuid = null;
+      mRoot = Node.newDummyRoot(getDefaultDimensions(), newSessionId);
+      mIdToNode = new SparseArray<>();
+      mUuidToNodeData = new HashMap<>();
+      addNode(mRoot);
     }
 
     /* package */ boolean isEmpty() {
-      return mNodes.size() == 0;
+      // Root data is always there
+      return mUuidToNodeData.size() == 1;
+    }
+
+    /**
+     * Get data for the given node.
+     *
+     * @param node the {@link Node} get data for.
+     * @return the {@link NodeData} for the given node.
+     */
+    @UiThread
+    public @NonNull NodeData dataFor(final @NonNull Node node) {
+      final NodeData data = mUuidToNodeData.get(node.getUuid());
+      Objects.requireNonNull(data);
+      return data;
+    }
+
+    /* package */ void addRoot(@NonNull final Node node, final EventCallback callback) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "addRoot: " + node);
+      }
+
+      mRoot.addChild(node);
+      addNode(node);
+      dataFor(node).callback = callback;
     }
 
     /* package */ void addNode(@NonNull final Node node) {
       if (DEBUG) {
         Log.d(LOGTAG, "addNode: " + node);
       }
-      node.setAutofillSession(this);
-      mNodes.put(node.getId(), node);
 
-      if (node.getParentId() == View.NO_ID) {
-        mRoot.addChild(node);
+      NodeData data = mUuidToNodeData.get(node.getUuid());
+      if (data == null) {
+        final int nodeId = mCurrentIndex++;
+        data = new NodeData(nodeId, node);
+        mUuidToNodeData.put(node.getUuid(), data);
+      } else {
+        data.node = node;
+      }
+
+      mIdToNode.put(data.id, node);
+      for (final Node child : node.getChildren()) {
+        addNode(child);
       }
     }
 
-    /* package */ void setFocus(final int id, final int rootId) {
-      mFocusedId = id;
-      mFocusedRootId = rootId;
+    /**
+     * Returns true if the node is currently visible in the page.
+     *
+     * @param node the {@link Node} instance
+     * @return true if the node is visible, false otherwise.
+     */
+    @UiThread
+    public boolean isVisible(final @NonNull Node node) {
+      if (!Objects.equals(node.mSessionId, mId)) {
+        Log.w(LOGTAG, "Requesting visibility for older session " + node.mSessionId);
+        return false;
+      }
+      if (mRoot == node) {
+        // The root is always visible
+        return true;
+      }
+      final Node focused = getFocused();
+      if (focused == null) {
+        return false;
+      }
+      final Node focusedRoot = focused.getRoot();
+      final Node focusedParent = focused.getParent();
+
+      final String parentUuid = node.getParent() != null ? node.getParent().getUuid() : null;
+      final String rootUuid = node.getRoot() != null ? node.getRoot().getUuid() : null;
+
+      return (focusedParent != null && focusedParent.getUuid().equals(parentUuid))
+          || (focusedRoot != null && focusedRoot.getUuid().equals(rootUuid));
     }
 
-    /* package */ int getFocusedId() {
-      return mFocusedId;
+    /**
+     * Returns the currently focused node.
+     *
+     * @return a reference to the {@link Node} that is currently focused or null if no node is
+     *     currently focused.
+     */
+    @UiThread
+    public @Nullable Node getFocused() {
+      return getNode(mFocusedUuid);
     }
 
-    /* package */ int getFocusedRootId() {
-      return mFocusedRootId;
+    /* package */ void setFocus(final Node node) {
+      mFocusedUuid = node != null ? node.getUuid() : null;
+    }
+
+    /**
+     * Returns the currently focused node data.
+     *
+     * @return a refernce to {@link NodeData} or null if no node is focused.
+     */
+    @UiThread
+    public @Nullable NodeData getFocusedData() {
+      final Node focused = getFocused();
+      return focused != null ? dataFor(focused) : null;
     }
 
     /* package */ @Nullable
-    Node getNode(final int id) {
-      return mNodes.get(id);
+    Node getNode(final String uuid) {
+      if (uuid == null) {
+        return null;
+      }
+      final NodeData nodeData = mUuidToNodeData.get(uuid);
+      if (nodeData == null) {
+        return null;
+      }
+      return nodeData.node;
+    }
+
+    /* package */ Node getNode(final int id) {
+      return mIdToNode.get(id);
     }
 
     /**
@@ -244,31 +370,23 @@ public class Autofill {
       return mRoot;
     }
 
-    /* package */ int getIdFromUuid(final String uuid) {
-      final Integer id = mUuidToId.get(uuid);
-      if (id != null) {
-        return id;
-      }
-      return -1;
-    }
-
-    /* package */ int mapUuidtoId(final String uuid) {
-      final int newId = ++mCurrentIndex;
-      mUuidToId.put(uuid, newId);
-      return newId;
+    /* package */ String getId() {
+      return mId;
     }
 
     @Override
-    @AnyThread
+    @UiThread
     public String toString() {
       final StringBuilder builder = new StringBuilder("Session {");
+      final Node focused = getFocused();
       builder
           .append("id=")
           .append(mId)
-          .append(", focusedId=")
-          .append(mFocusedId)
-          .append(", focusedRootId=")
-          .append(mFocusedRootId)
+          .append(", focused=")
+          .append(mFocusedUuid)
+          .append(", focusedRoot=")
+          .append(
+              (focused != null && focused.getRoot() != null) ? focused.getRoot().getUuid() : null)
           .append(", root=")
           .append(getRoot())
           .append("}");
@@ -281,424 +399,64 @@ public class Autofill {
     public void fillViewStructure(
         @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {
       ThreadUtils.assertOnUiThread();
-
-      getRoot().fillViewStructure(view, structure, flags);
-    }
-  }
-
-  /**
-   * Represents an autofill node. A node is an input element and may contain child nodes forming a
-   * tree.
-   */
-  public static final class Node {
-    private static final String LOGTAG = "AutofillNode";
-
-    private int mId;
-    private String mUuid;
-    private int mRootId;
-    private int mParentId;
-    private Session mAutofillSession;
-    private @NonNull Rect mDimens;
-    private @NonNull Collection<Node> mChildren;
-    private @NonNull Map<String, String> mAttributes;
-    private boolean mEnabled;
-    private boolean mFocusable;
-    private @AutofillHint int mHint;
-    private @AutofillInputType int mInputType;
-    private @NonNull String mTag;
-    private @NonNull String mDomain;
-    private @NonNull String mValue;
-    private @Nullable EventCallback mCallback;
-
-    /**
-     * Get the unique (within this page) ID for this node.
-     *
-     * @return The unique ID of this node.
-     */
-    @AnyThread
-    public int getId() {
-      return mId;
-    }
-
-    /* package */ @NonNull
-    Node setId(final int id) {
-      mId = id;
-      return this;
-    }
-
-    /* package */ @NonNull
-    Node setUuid(final String uuid) {
-      mUuid = uuid;
-      return this;
-    }
-
-    /* package */ @NonNull
-    String getUuid() {
-      return mUuid;
-    }
-
-    /* package */ @Nullable
-    Node getRoot() {
-      return getAutofillSession().getNode(mRootId);
-    }
-
-    /* package */ @NonNull
-    Node setRootId(final int rootId) {
-      mRootId = rootId;
-      return this;
-    }
-
-    /* package */ @Nullable
-    Node getParent() {
-      return getAutofillSession().getNode(mParentId);
-    }
-
-    /* package */ int getParentId() {
-      return mParentId;
-    }
-
-    /* package */ @NonNull
-    Node setParentId(final int parentId) {
-      mParentId = parentId;
-      return this;
-    }
-
-    /* package */ @NonNull
-    Session getAutofillSession() {
-      return mAutofillSession;
-    }
-
-    /* package */ @NonNull
-    Node setAutofillSession(@Nullable final Session session) {
-      mAutofillSession = session;
-      return this;
-    }
-
-    /**
-     * Get whether this node is visible. Nodes are visible, when they are part of a focused branch.
-     * A focused branch includes the focused node, its siblings, its parent and the session root
-     * node.
-     *
-     * @return True if this node is visible, false otherwise.
-     */
-    @AnyThread
-    public boolean getVisible() {
-      final int focusedId = getAutofillSession().getFocusedId();
-      final int focusedRootId = getAutofillSession().getFocusedRootId();
-
-      if (focusedId == View.NO_ID) {
-        return false;
-      }
-
-      final int focusedParentId = getAutofillSession().getNode(focusedId).getParentId();
-
-      return mId == View.NO_ID
-          || // The session root node.
-          mParentId == focusedParentId
-          || mRootId == focusedRootId;
-    }
-
-    /**
-     * Get the dimensions of this node in CSS coordinates. Note: Invisible nodes will report their
-     * proper dimensions, see {@link #getVisible} for details.
-     *
-     * @return The dimensions of this node.
-     */
-    @AnyThread
-    public @NonNull Rect getDimensions() {
-      return mDimens;
-    }
-
-    /* package */ @NonNull
-    Node setDimensions(final Rect rect) {
-      mDimens = rect;
-      return this;
-    }
-
-    /**
-     * Get the child nodes for this node.
-     *
-     * @return The collection of child nodes for this node.
-     */
-    @AnyThread
-    public @NonNull Collection<Node> getChildren() {
-      return mChildren;
-    }
-
-    /* package */ @NonNull
-    Node addChild(@NonNull final Node child) {
-      mChildren.add(child);
-      return this;
-    }
-
-    /**
-     * Get HTML attributes for this node.
-     *
-     * @return The HTML attributes for this node.
-     */
-    @AnyThread
-    public @NonNull Map<String, String> getAttributes() {
-      return mAttributes;
-    }
-
-    @AnyThread
-    @SuppressWarnings("checkstyle:javadocmethod")
-    public @Nullable String getAttribute(@NonNull final String key) {
-      return mAttributes.get(key);
-    }
-
-    /* package */ @NonNull
-    Node setAttributes(final Map<String, String> attributes) {
-      mAttributes = attributes;
-      return this;
-    }
-
-    /* package */ @NonNull
-    Node setAttribute(final String key, final String value) {
-      mAttributes.put(key, value);
-      return this;
-    }
-
-    /**
-     * Get whether or not this node is enabled.
-     *
-     * @return True if the node is enabled, false otherwise.
-     */
-    @AnyThread
-    public boolean getEnabled() {
-      return mEnabled;
-    }
-
-    /* package */ @NonNull
-    Node setEnabled(final boolean enabled) {
-      mEnabled = enabled;
-      return this;
-    }
-
-    /**
-     * Get whether or not this node is focusable.
-     *
-     * @return True if the node is focusable, false otherwise.
-     */
-    @AnyThread
-    public boolean getFocusable() {
-      return mFocusable;
-    }
-
-    /* package */ @NonNull
-    Node setFocusable(final boolean focusable) {
-      mFocusable = focusable;
-      return this;
-    }
-
-    /**
-     * Get whether or not this node is focused.
-     *
-     * @return True if this node is focused, false otherwise.
-     */
-    @AnyThread
-    public boolean getFocused() {
-      return getId() != View.NO_ID && getAutofillSession().getFocusedId() == getId();
-    }
-
-    /**
-     * Get the hint for the type of data contained in this node.
-     *
-     * @return The input data hint for this node, one of {@link Hint}.
-     */
-    @AnyThread
-    public @AutofillHint int getHint() {
-      return mHint;
-    }
-
-    /* package */ @NonNull
-    Node setHint(final @AutofillHint int hint) {
-      mHint = hint;
-      return this;
-    }
-
-    /**
-     * Get the input type of this node.
-     *
-     * @return The input type of this node, one of {@link InputType}.
-     */
-    @AnyThread
-    public @AutofillInputType int getInputType() {
-      return mInputType;
-    }
-
-    /* package */ @NonNull
-    Node setInputType(final @AutofillInputType int inputType) {
-      mInputType = inputType;
-      return this;
-    }
-
-    /**
-     * Get the HTML tag of this node.
-     *
-     * @return The HTML tag of this node.
-     */
-    @AnyThread
-    public @NonNull String getTag() {
-      return mTag;
-    }
-
-    /* package */ @NonNull
-    Node setTag(final String tag) {
-      mTag = tag;
-      return this;
-    }
-
-    /**
-     * Get web domain of this node.
-     *
-     * @return The domain of this node.
-     */
-    @AnyThread
-    public @NonNull String getDomain() {
-      return mDomain;
-    }
-
-    /* package */ @NonNull
-    Node setDomain(final String domain) {
-      mDomain = domain;
-      return this;
-    }
-
-    /**
-     * Get the value assigned to this node.
-     *
-     * @return The value of this node.
-     */
-    @AnyThread
-    public @NonNull String getValue() {
-      return mValue;
-    }
-
-    /* package */ @NonNull
-    Node setValue(final String value) {
-      mValue = value;
-      return this;
-    }
-
-    /* package */ @Nullable
-    EventCallback getCallback() {
-      return mCallback;
-    }
-
-    /* package */ @NonNull
-    Node setCallback(final EventCallback callback) {
-      mCallback = callback;
-      return this;
-    }
-
-    /* package */ Node(@NonNull final Session session) {
-      mAutofillSession = session;
-      mId = View.NO_ID;
-      mDimens = new Rect(0, 0, 0, 0);
-      mAttributes = new ArrayMap<>();
-      mEnabled = false;
-      mFocusable = false;
-      mHint = Hint.NONE;
-      mInputType = InputType.NONE;
-      mTag = "";
-      mDomain = "";
-      mValue = "";
-      mChildren = new LinkedList<>();
-    }
-
-    @Override
-    @AnyThread
-    public String toString() {
-      final StringBuilder builder = new StringBuilder("Node {");
-      builder
-          .append("id=")
-          .append(mId)
-          .append(", parent=")
-          .append(mParentId)
-          .append(", root=")
-          .append(mRootId)
-          .append(", dims=")
-          .append(getDimensions().toShortString())
-          .append(", children=[");
-
-      for (final Node child : mChildren) {
-        builder.append(child.getId()).append(", ");
-      }
-
-      builder
-          .append("]")
-          .append(", attrs=")
-          .append(mAttributes)
-          .append(", enabled=")
-          .append(mEnabled)
-          .append(", focusable=")
-          .append(mFocusable)
-          .append(", focused=")
-          .append(getFocused())
-          .append(", visible=")
-          .append(getVisible())
-          .append(", hint=")
-          .append(Hint.toString(mHint))
-          .append(", type=")
-          .append(InputType.toString(mInputType))
-          .append(", tag=")
-          .append(mTag)
-          .append(", domain=")
-          .append(mDomain)
-          .append(", value=")
-          .append(mValue)
-          .append(", callback=")
-          .append(mCallback != null)
-          .append("}");
-
-      return builder.toString();
+      fillViewStructure(getRoot(), view, structure, flags);
     }
 
     @TargetApi(23)
     @UiThread
     @SuppressWarnings("checkstyle:javadocmethod")
     public void fillViewStructure(
-        @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {
+        final @NonNull Node node,
+        @NonNull final View view,
+        @NonNull final ViewStructure structure,
+        final int flags) {
       ThreadUtils.assertOnUiThread();
 
-      Log.d(LOGTAG, "fillViewStructure");
-
-      if (Build.VERSION.SDK_INT >= 26) {
-        structure.setAutofillId(view.getAutofillId(), getId());
-        structure.setWebDomain(getDomain());
-        structure.setAutofillValue(AutofillValue.forText(getValue()));
+      if (DEBUG) {
+        Log.d(LOGTAG, "fillViewStructure");
       }
 
-      structure.setId(getId(), null, null, null);
-      structure.setDimens(0, 0, 0, 0, getDimensions().width(), getDimensions().height());
+      final NodeData data = dataFor(node);
+      if (data == null) {
+        return;
+      }
 
       if (Build.VERSION.SDK_INT >= 26) {
-        final ViewStructure.HtmlInfo.Builder htmlBuilder = structure.newHtmlInfoBuilder(getTag());
-        for (final String key : getAttributes().keySet()) {
-          htmlBuilder.addAttribute(key, String.valueOf(getAttribute(key)));
+        structure.setAutofillId(view.getAutofillId(), data.id);
+        structure.setWebDomain(node.getDomain());
+        structure.setAutofillValue(AutofillValue.forText(data.value));
+      }
+
+      structure.setId(data.id, null, null, null);
+      structure.setDimens(0, 0, 0, 0, node.getDimensions().width(), node.getDimensions().height());
+
+      if (Build.VERSION.SDK_INT >= 26) {
+        final ViewStructure.HtmlInfo.Builder htmlBuilder =
+            structure.newHtmlInfoBuilder(node.getTag());
+        for (final String key : node.getAttributes().keySet()) {
+          htmlBuilder.addAttribute(key, String.valueOf(node.getAttribute(key)));
         }
 
         structure.setHtmlInfo(htmlBuilder.build());
       }
 
-      structure.setChildCount(getChildren().size());
+      structure.setChildCount(node.getChildren().size());
       int childCount = 0;
 
-      for (final Node child : getChildren()) {
+      for (final Node child : node.getChildren()) {
         final ViewStructure childStructure = structure.newChild(childCount);
-        child.fillViewStructure(view, childStructure, flags);
+        fillViewStructure(child, view, childStructure, flags);
         childCount++;
       }
 
-      switch (getTag()) {
+      switch (node.getTag()) {
         case "input":
         case "textarea":
           structure.setClassName("android.widget.EditText");
-          structure.setEnabled(getEnabled());
-          structure.setFocusable(getFocusable());
-          structure.setFocused(getFocused());
-          structure.setVisibility(getVisible() ? View.VISIBLE : View.INVISIBLE);
+          structure.setEnabled(node.getEnabled());
+          structure.setFocusable(node.getFocusable());
+          structure.setFocused(node.equals(getFocused()));
+          structure.setVisibility(isVisible(node) ? View.VISIBLE : View.INVISIBLE);
 
           if (Build.VERSION.SDK_INT >= 26) {
             structure.setAutofillType(View.AUTOFILL_TYPE_TEXT);
@@ -713,12 +471,12 @@ public class Autofill {
           break;
       }
 
-      if (Build.VERSION.SDK_INT < 26 || !"input".equals(getTag())) {
+      if (Build.VERSION.SDK_INT < 26 || !"input".equals(node.getTag())) {
         return;
       }
       // LastPass will fill password to the field where setAutofillHints
       // is unset and setInputType is set.
-      switch (getHint()) {
+      switch (node.getHint()) {
         case Hint.EMAIL_ADDRESS:
           {
             structure.setAutofillHints(new String[] {View.AUTOFILL_HINT_EMAIL_ADDRESS});
@@ -750,9 +508,14 @@ public class Autofill {
                     | android.text.InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
             break;
           }
+        case Hint.NONE:
+          {
+            // Nothing to do.
+            break;
+          }
       }
 
-      switch (getInputType()) {
+      switch (node.getInputType()) {
         case InputType.NUMBER:
           {
             structure.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
@@ -764,194 +527,409 @@ public class Autofill {
             structure.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
             break;
           }
-        default:
+        case InputType.TEXT:
+        case InputType.NONE:
+          // Nothing to do.
           break;
       }
     }
+  }
 
-    /* package */ static class Builder {
-      private Node mNode;
+  /**
+   * Represents an autofill node. A node is an input element and may contain child nodes forming a
+   * tree.
+   */
+  public static final class Node {
+    private final String mUuid;
+    private final Node mRoot;
+    private final Node mParent;
+    private final @NonNull Rect mDimens;
+    private final @NonNull Map<String, Node> mChildren;
+    private final @NonNull Map<String, String> mAttributes;
+    private final boolean mEnabled;
+    private final boolean mFocusable;
+    private final @AutofillHint int mHint;
+    private final @AutofillInputType int mInputType;
+    private final @NonNull String mTag;
+    private final @NonNull String mDomain;
+    private final String mSessionId;
 
-      /* package */ Builder(@NonNull final Session session) {
-        mNode = new Node(session);
+    /**
+     * Get the unique (within this page) ID for this node.
+     *
+     * @return The unique ID of this node.
+     */
+    @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
+    public int getId() {
+      return 0;
+    }
+
+    /* package */
+    @NonNull
+    String getUuid() {
+      return mUuid;
+    }
+
+    /* package */
+    @Nullable
+    Node getRoot() {
+      return mRoot;
+    }
+
+    /* package */
+    @Nullable
+    Node getParent() {
+      return mParent;
+    }
+
+    /**
+     * Get whether this node is visible. Nodes are visible, when they are part of a focused branch.
+     * A focused branch includes the focused node, its siblings, its parent and the session root
+     * node.
+     *
+     * @return True if this node is visible, false otherwise.
+     */
+    @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
+    public boolean getVisible() {
+      return false;
+    }
+
+    /**
+     * Get the dimensions of this node in CSS coordinates. Note: Invisible nodes will report their
+     * proper dimensions, see {@link #getVisible} for details.
+     *
+     * @return The dimensions of this node.
+     */
+    @AnyThread
+    public @NonNull Rect getDimensions() {
+      return mDimens;
+    }
+
+    /**
+     * Get the child nodes for this node.
+     *
+     * @return The collection of child nodes for this node.
+     */
+    @AnyThread
+    public @NonNull Collection<Node> getChildren() {
+      return mChildren.values();
+    }
+
+    /* package */
+    @NonNull
+    Node addChild(@NonNull final Node child) {
+      mChildren.put(child.getUuid(), child);
+      return this;
+    }
+
+    /**
+     * Get HTML attributes for this node.
+     *
+     * @return The HTML attributes for this node.
+     */
+    @AnyThread
+    public @NonNull Map<String, String> getAttributes() {
+      return mAttributes;
+    }
+
+    @AnyThread
+    @SuppressWarnings("checkstyle:javadocmethod")
+    public @Nullable String getAttribute(@NonNull final String key) {
+      return mAttributes.get(key);
+    }
+
+    /**
+     * Get whether or not this node is enabled.
+     *
+     * @return True if the node is enabled, false otherwise.
+     */
+    @AnyThread
+    public boolean getEnabled() {
+      return mEnabled;
+    }
+
+    /**
+     * Get whether or not this node is focusable.
+     *
+     * @return True if the node is focusable, false otherwise.
+     */
+    @AnyThread
+    public boolean getFocusable() {
+      return mFocusable;
+    }
+
+    /**
+     * Get whether or not this node is focused.
+     *
+     * @return True if this node is focused, false otherwise.
+     */
+    @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
+    public boolean getFocused() {
+      return false;
+    }
+
+    /**
+     * Get the hint for the type of data contained in this node.
+     *
+     * @return The input data hint for this node, one of {@link Hint}.
+     */
+    @AnyThread
+    public @AutofillHint int getHint() {
+      return mHint;
+    }
+
+    /**
+     * Get the input type of this node.
+     *
+     * @return The input type of this node, one of {@link InputType}.
+     */
+    @AnyThread
+    public @AutofillInputType int getInputType() {
+      return mInputType;
+    }
+
+    /**
+     * Get the HTML tag of this node.
+     *
+     * @return The HTML tag of this node.
+     */
+    @AnyThread
+    public @NonNull String getTag() {
+      return mTag;
+    }
+
+    /**
+     * Get web domain of this node.
+     *
+     * @return The domain of this node.
+     */
+    @AnyThread
+    public @NonNull String getDomain() {
+      return mDomain;
+    }
+
+    /**
+     * Get the value assigned to this node.
+     *
+     * @return The value of this node.
+     */
+    @AnyThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
+    public @NonNull String getValue() {
+      return null;
+    }
+
+    /* package */
+    static Node newDummyRoot(final Rect dimensions, final String sessionId) {
+      return new Node(dimensions, sessionId);
+    }
+
+    /* package */ Node(final Rect dimensions, final String sessionId) {
+      mRoot = null;
+      mParent = null;
+      mUuid = UUID.randomUUID().toString();
+      mDimens = dimensions;
+      mSessionId = sessionId;
+      mAttributes = new ArrayMap<>();
+      mEnabled = false;
+      mFocusable = false;
+      mHint = Hint.NONE;
+      mInputType = InputType.NONE;
+      mTag = "";
+      mDomain = "";
+      mChildren = new HashMap<>();
+    }
+
+    @Override
+    @AnyThread
+    public String toString() {
+      final StringBuilder builder = new StringBuilder("Node {");
+      builder
+          .append("uuid=")
+          .append(mUuid)
+          .append(", sessionId=")
+          .append(mSessionId)
+          .append(", parent=")
+          .append(mParent != null ? mParent.getUuid() : null)
+          .append(", root=")
+          .append(mRoot != null ? mRoot.getUuid() : null)
+          .append(", dims=")
+          .append(getDimensions().toShortString())
+          .append(", children=[");
+
+      for (final Node child : mChildren.values()) {
+        builder.append(child.getUuid()).append(", ");
       }
 
-      public Builder(@NonNull final Session autofillSession, @NonNull final GeckoBundle bundle) {
-        this(autofillSession);
+      builder
+          .append("]")
+          .append(", attrs=")
+          .append(mAttributes)
+          .append(", enabled=")
+          .append(mEnabled)
+          .append(", focusable=")
+          .append(mFocusable)
+          .append(", hint=")
+          .append(Hint.toString(mHint))
+          .append(", type=")
+          .append(InputType.toString(mInputType))
+          .append(", tag=")
+          .append(mTag)
+          .append(", domain=")
+          .append(mDomain)
+          .append("}");
 
-        final GeckoBundle bounds = bundle.getBundle("bounds");
+      return builder.toString();
+    }
 
-        final String uuid = bundle.getString("uuid");
-        final int id = autofillSession.mapUuidtoId(uuid);
+    /**
+     * @param view The {@link View} instance
+     * @param structure The {@link ViewStructure} instance
+     * @param flags Flags for this structure
+     * @deprecated This method is deprecated and does nothing, use {@link Session#fillViewStructure}
+     *     instead.
+     */
+    @TargetApi(23)
+    @UiThread
+    @SuppressWarnings("checkstyle:javadocmethod")
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
+    public void fillViewStructure(
+        @NonNull final View view, @NonNull final ViewStructure structure, final int flags) {}
 
-        mNode
-            .setAutofillSession(autofillSession)
-            .setId(id)
-            .setUuid(uuid)
-            .setDomain(bundle.getString("origin", ""))
-            .setValue(bundle.getString("value", ""))
-            .setDimensions(
-                new Rect(
-                    bounds.getInt("left"),
-                    bounds.getInt("top"),
-                    bounds.getInt("right"),
-                    bounds.getInt("bottom")));
+    /* package */ Node(
+        @NonNull final GeckoBundle bundle, final Rect defaultDimensions, final String sessionId) {
+      this(bundle, /* root */ null, /* parent */ null, defaultDimensions, sessionId);
+    }
 
-        final String parentUuid = bundle.getString("parentUuid");
-        if (parentUuid != null) {
-          final int parentId = autofillSession.getIdFromUuid(parentUuid);
-          mNode.setParentId(parentId);
-        } else {
-          mNode.setParentId(View.NO_ID);
+    /* package */ Node(
+        @NonNull final GeckoBundle bundle,
+        final Node root,
+        final Node parent,
+        final Rect defaultDimensions,
+        final String sessionId) {
+      final GeckoBundle bounds = bundle.getBundle("bounds");
+
+      mSessionId = sessionId;
+      mUuid = bundle.getString("uuid");
+      mDomain = bundle.getString("origin", "");
+      final Rect dimens =
+          new Rect(
+              bounds.getInt("left"),
+              bounds.getInt("top"),
+              bounds.getInt("right"),
+              bounds.getInt("bottom"));
+      if (dimens.isEmpty()) {
+        // Some nodes like <html> will have null-dimensions,
+        // we need to set them to the virtual documents dimensions.
+        mDimens = defaultDimensions;
+      } else {
+        mDimens = dimens;
+      }
+
+      mParent = parent;
+      // If the root is null, then this object is the root itself
+      mRoot = root != null ? root : this;
+
+      final GeckoBundle[] children = bundle.getBundleArray("children");
+      final Map<String, Node> childrenMap = new HashMap<>(children != null ? children.length : 0);
+
+      if (children != null) {
+        for (final GeckoBundle childBundle : children) {
+          final Node child = new Node(childBundle, mRoot, this, defaultDimensions, sessionId);
+          childrenMap.put(child.getUuid(), child);
         }
+      }
 
-        final String rootUuid = bundle.getString("rootUuid");
-        if (rootUuid != null) {
-          final int rootId = autofillSession.getIdFromUuid(rootUuid);
-          mNode.setRootId(rootId);
-        } else {
-          mNode.setRootId(View.NO_ID);
-        }
+      mChildren = childrenMap;
 
-        if (mNode.getDimensions().isEmpty()) {
-          // Some nodes like <html> will have null-dimensions,
-          // we need to set them to the virtual documents dimensions.
-          mNode.setDimensions(autofillSession.getDefaultDimensions());
-        }
+      mTag = bundle.getString("tag", "").toLowerCase(Locale.ROOT);
 
-        final GeckoBundle[] children = bundle.getBundleArray("children");
-        if (children != null) {
-          for (final GeckoBundle childBundle : children) {
-            final Node child = new Builder(autofillSession, childBundle).build();
-            mNode.addChild(child);
-            autofillSession.addNode(child);
+      final GeckoBundle attrs = bundle.getBundle("attributes");
+      final Map<String, String> attributes = new HashMap<>();
+
+      for (final String key : attrs.keys()) {
+        attributes.put(key, String.valueOf(attrs.get(key)));
+      }
+
+      mAttributes = attributes;
+
+      mEnabled =
+          enabledFromBundle(
+              mTag, bundle.getBoolean("editable", false), bundle.getBoolean("disabled", false));
+      mFocusable = mEnabled;
+
+      final String type = bundle.getString("type", "text").toLowerCase(Locale.ROOT);
+      final String hint = bundle.getString("autofillhint", "").toLowerCase(Locale.ROOT);
+      mInputType = typeFromBundle(type, hint);
+      mHint = hintFromBundle(type, hint);
+    }
+
+    private boolean enabledFromBundle(
+        final String tag, final boolean editable, final boolean disabled) {
+      switch (tag) {
+        case "input":
+          {
+            if (!editable) {
+              // Don't process non-editable inputs (e.g., type="button").
+              return false;
+            }
+            return !disabled;
           }
-        }
+        case "textarea":
+          return !disabled;
+        default:
+          return false;
+      }
+    }
 
-        String tag = bundle.getString("tag", "").toLowerCase(Locale.ROOT);
-        mNode.setTag(tag);
-
-        final GeckoBundle attrs = bundle.getBundle("attributes");
-
-        for (final String key : attrs.keys()) {
-          mNode.setAttribute(key, String.valueOf(attrs.get(key)));
-        }
-
-        if ("input".equals(tag) && !bundle.getBoolean("editable", false)) {
-          // Don't process non-editable inputs (e.g., type="button").
-          tag = "";
-        }
-
-        switch (tag) {
-          case "input":
-          case "textarea":
-            {
-              final boolean disabled = bundle.getBoolean("disabled");
-              mNode.setEnabled(!disabled).setFocusable(!disabled);
-              break;
+    private @AutofillHint int hintFromBundle(final String type, final String hint) {
+      switch (type) {
+        case "email":
+          return Hint.EMAIL_ADDRESS;
+        case "password":
+          return Hint.PASSWORD;
+        case "url":
+          return Hint.URI;
+        case "text":
+          {
+            if (hint.equals("username")) {
+              return Hint.USERNAME;
             }
-          default:
             break;
-        }
+          }
+      }
 
-        final String type = bundle.getString("type", "text").toLowerCase(Locale.ROOT);
+      return Hint.NONE;
+    }
 
-        switch (type) {
-          case "email":
-            {
-              mNode.setHint(Hint.EMAIL_ADDRESS).setInputType(InputType.TEXT);
-              break;
+    private @AutofillInputType int typeFromBundle(final String type, final String hint) {
+      switch (type) {
+        case "password":
+        case "url":
+        case "email":
+          return InputType.TEXT;
+        case "number":
+          return InputType.NUMBER;
+        case "tel":
+          return InputType.PHONE;
+        case "text":
+          {
+            if (hint.equals("username")) {
+              return InputType.TEXT;
             }
-          case "number":
-            {
-              mNode.setInputType(InputType.NUMBER);
-              break;
-            }
-          case "password":
-            {
-              mNode.setHint(Hint.PASSWORD).setInputType(InputType.TEXT);
-              break;
-            }
-          case "tel":
-            {
-              mNode.setInputType(InputType.PHONE);
-              break;
-            }
-          case "url":
-            {
-              mNode.setHint(Hint.URI).setInputType(InputType.TEXT);
-              break;
-            }
-          case "text":
-            {
-              final String autofillHint =
-                  bundle.getString("autofillhint", "").toLowerCase(Locale.ROOT);
-              if (autofillHint.equals("username")) {
-                mNode.setHint(Hint.USERNAME).setInputType(InputType.TEXT);
-              }
-              break;
-            }
-        }
+            break;
+          }
       }
 
-      public @NonNull Builder dimensions(final Rect rect) {
-        mNode.setDimensions(rect);
-        return this;
-      }
-
-      public @NonNull Node build() {
-        return mNode;
-      }
-
-      public @NonNull Builder id(final int id) {
-        mNode.setId(id);
-        return this;
-      }
-
-      public @NonNull Builder child(@NonNull final Node child) {
-        mNode.addChild(child);
-        return this;
-      }
-
-      public @NonNull Builder attribute(final String key, final String value) {
-        mNode.setAttribute(key, value);
-        return this;
-      }
-
-      public @NonNull Builder enabled(final boolean enabled) {
-        mNode.setEnabled(enabled);
-        return this;
-      }
-
-      public @NonNull Builder focusable(final boolean focusable) {
-        mNode.setFocusable(focusable);
-        return this;
-      }
-
-      public @NonNull Builder hint(final int hint) {
-        mNode.setHint(hint);
-        return this;
-      }
-
-      public @NonNull Builder inputType(final int inputType) {
-        mNode.setInputType(inputType);
-        return this;
-      }
-
-      public @NonNull Builder tag(final String tag) {
-        mNode.setTag(tag);
-        return this;
-      }
-
-      public @NonNull Builder domain(final String domain) {
-        mNode.setDomain(domain);
-        return this;
-      }
-
-      public @NonNull Builder value(final String value) {
-        mNode.setValue(value);
-        return this;
-      }
+      return InputType.NONE;
     }
   }
 
@@ -968,10 +946,99 @@ public class Autofill {
      * @param node The target node for this event, or null for {@link Notify#SESSION_CANCELED}.
      */
     @UiThread
+    @Deprecated
+    @DeprecationSchedule(id = "autofill-node", version = 104)
     default void onAutofill(
         @NonNull final GeckoSession session,
         @AutofillNotify final int notification,
         @Nullable final Node node) {}
+
+    /**
+     * An autofill session has started. Usually triggered by page load.
+     *
+     * @param session The {@link GeckoSession} instance.
+     */
+    @UiThread
+    default void onSessionStart(@NonNull final GeckoSession session) {}
+    /**
+     * An autofill session has been committed. Triggered by form submission or navigation.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param node the node that is being committed.
+     * @param data the node data associated to the node being committed.
+     */
+    @UiThread
+    default void onSessionCommit(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /**
+     * An autofill session has been canceled. Triggered by page unload.
+     *
+     * @param session The {@link GeckoSession} instance.
+     */
+    @UiThread
+    default void onSessionCancel(@NonNull final GeckoSession session) {}
+    /**
+     * A node within the autofill session has been added.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param node The {@link Node} that was added.
+     * @param data The {@link NodeData} associated to the note that was added.
+     */
+    @UiThread
+    default void onNodeAdd(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /**
+     * A node within the autofill session has been removed.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param node The {@link Node} that was removed.
+     * @param data The {@link NodeData} associated to the note that was removed.
+     */
+    @UiThread
+    default void onNodeRemove(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /**
+     * A node within the autofill session has been updated.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param node The {@link Node} that was updated.
+     * @param data The {@link NodeData} associated to the note that was updated.
+     */
+    @UiThread
+    default void onNodeUpdate(
+        @NonNull final GeckoSession session,
+        @NonNull final Node node,
+        @NonNull final NodeData data) {}
+    /**
+     * A node within the autofill session has gained focus.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param focused The {@link Node} that is now focused.
+     * @param data The {@link NodeData} associated to the note that is now focused.
+     */
+    @UiThread
+    default void onNodeFocus(
+        @NonNull final GeckoSession session,
+        @NonNull final Node focused,
+        @NonNull final NodeData data) {}
+    /**
+     * A node within the autofill session has lost focus.
+     *
+     * @param session The {@link GeckoSession} instance.
+     * @param prev The {@link Node} that lost focus.
+     * @param data The {@link NodeData} associated to the note that lost focus.
+     */
+    @UiThread
+    default void onNodeBlur(
+        @NonNull final GeckoSession session,
+        @NonNull final Node prev,
+        @NonNull final NodeData data) {}
   }
 
   /* package */ static final class Support implements BundleEventListener {
@@ -991,6 +1058,7 @@ public class Autofill {
           .getEventDispatcher()
           .registerUiThreadListener(
               this,
+              "GeckoView:StartAutofill",
               "GeckoView:AddAutofill",
               "GeckoView:ClearAutofill",
               "GeckoView:CommitAutofill",
@@ -1001,16 +1069,19 @@ public class Autofill {
     @Override
     public void handleMessage(
         final String event, final GeckoBundle message, final EventCallback callback) {
+      Log.d(LOGTAG, "handleMessage " + event);
       if ("GeckoView:AddAutofill".equals(event)) {
-        addNode(message, callback);
+        addNode(message.getBundle("node"), callback);
+      } else if ("GeckoView:StartAutofill".equals(event)) {
+        start(message.getString("sessionId"));
       } else if ("GeckoView:ClearAutofill".equals(event)) {
         clear();
       } else if ("GeckoView:OnAutofillFocus".equals(event)) {
-        onFocusChanged(message);
+        onFocusChanged(message.getBundle("node"));
       } else if ("GeckoView:CommitAutofill".equals(event)) {
-        commit(message);
+        commit(message.getBundle("node"));
       } else if ("GeckoView:UpdateAutofill".equals(event)) {
-        update(message);
+        update(message.getBundle("node"));
       }
     }
 
@@ -1027,45 +1098,41 @@ public class Autofill {
         return;
       }
 
-      GeckoBundle response = null;
-      EventCallback callback = null;
+      final HashMap<Node, GeckoBundle> valueBundles = new HashMap<>();
 
       for (int i = 0; i < values.size(); i++) {
         final int id = values.keyAt(i);
+        final Node node = getAutofillSession().getNode(id);
+        if (node == null) {
+          Log.w(LOGTAG, "Could not find node id=" + id);
+          continue;
+        }
+
         final CharSequence value = values.valueAt(i);
 
         if (DEBUG) {
           Log.d(LOGTAG, "Process autofill for id=" + id + ", value=" + value);
         }
 
-        int rootId = id;
-        for (int currentId = id; currentId != View.NO_ID; ) {
-          final Node elem = getAutofillSession().getNode(currentId);
-
-          if (elem == null) {
-            return;
-          }
-          rootId = currentId;
-          currentId = elem.getParentId();
+        if (node == getAutofillSession().getRoot()) {
+          // We cannot autofill the session root as it does not correspond to a
+          // real element on the page.
+          Log.w(LOGTAG, "Ignoring autofill on session root.");
+          continue;
         }
 
-        final Node root = getAutofillSession().getNode(rootId);
-        final EventCallback newCallback = root != null ? root.getCallback() : null;
-        if (callback == null || newCallback != callback) {
-          if (callback != null) {
-            callback.sendSuccess(response);
-          }
-          response = new GeckoBundle(values.size() - i);
-          callback = newCallback;
+        final Node root = node.getRoot();
+        if (!valueBundles.containsKey(root)) {
+          valueBundles.put(root, new GeckoBundle());
         }
-        final Node node = getAutofillSession().getNode(id);
-        if (node != null) {
-          response.putString(node.getUuid(), String.valueOf(value));
-        }
+        valueBundles.get(root).putString(node.getUuid(), String.valueOf(value));
       }
 
-      if (callback != null) {
-        callback.sendSuccess(response);
+      for (final Node root : valueBundles.keySet()) {
+        final NodeData data = getAutofillSession().dataFor(root);
+        Objects.requireNonNull(data);
+        final EventCallback callback = data.callback;
+        callback.sendSuccess(valueBundles.get(root));
       }
     }
 
@@ -1092,30 +1159,44 @@ public class Autofill {
 
     /* package */ void addNode(
         @NonNull final GeckoBundle message, @NonNull final EventCallback callback) {
-      final boolean initializing = getAutofillSession().isEmpty();
+      final Session session = getAutofillSession();
+      final Node node = new Node(message, session.getDefaultDimensions(), session.getId());
 
-      if (DEBUG) {
-        Log.d(LOGTAG, "addNode(" + message.getString("uuid") + ')');
+      session.addRoot(node, callback);
+      addValues(message);
+
+      if (mDelegate != null) {
+        mDelegate.onNodeAdd(mGeckoSession, node, getAutofillSession().dataFor(node));
       }
-
-      if (initializing) {
-        // TODO: We need this to set the dimensions on the root node.
-        // We should find a better way of handling this.
-        getAutofillSession().clear();
-      }
-
-      final Node node = new Node.Builder(getAutofillSession(), message).build();
-      node.setCallback(callback);
-      getAutofillSession().addNode(node);
-      maybeDispatch(initializing ? Notify.SESSION_STARTED : Notify.NODE_ADDED, node);
     }
 
-    private void maybeDispatch(final @AutofillNotify int notification, final Node node) {
-      if (mDelegate == null) {
+    private void addValues(final GeckoBundle message) {
+      final String uuid = message.getString("uuid");
+      if (uuid == null) {
         return;
       }
 
-      mDelegate.onAutofill(mGeckoSession, notification, node);
+      final String value = message.getString("value");
+      final Node node = getAutofillSession().getNode(uuid);
+      Objects.requireNonNull(node);
+      final NodeData data = getAutofillSession().dataFor(node);
+      Objects.requireNonNull(data);
+      data.value = value;
+
+      final GeckoBundle[] children = message.getBundleArray("children");
+      if (children != null) {
+        for (final GeckoBundle child : children) {
+          addValues(child);
+        }
+      }
+    }
+
+    /* package */ void start(@Nullable final String sessionId) {
+      // Make sure we start with a clean session
+      getAutofillSession().clear(sessionId);
+      if (mDelegate != null) {
+        mDelegate.onSessionStart(mGeckoSession);
+      }
     }
 
     /* package */ void commit(@Nullable final GeckoBundle message) {
@@ -1124,13 +1205,19 @@ public class Autofill {
       }
 
       final String uuid = message.getString("uuid");
-      final int id = getAutofillSession().getIdFromUuid(uuid);
-
-      if (DEBUG) {
-        Log.d(LOGTAG, "commit(" + id + ")");
+      final Node node = getAutofillSession().getNode(uuid);
+      if (node == null) {
+        Log.w(LOGTAG, "Cannot find node uuid=" + uuid);
+        return;
       }
 
-      maybeDispatch(Notify.SESSION_COMMITTED, getAutofillSession().getNode(id));
+      if (DEBUG) {
+        Log.d(LOGTAG, "commit(" + uuid + ")");
+      }
+
+      if (mDelegate != null) {
+        mDelegate.onSessionCommit(mGeckoSession, node, getAutofillSession().dataFor(node));
+      }
     }
 
     /* package */ void update(@Nullable final GeckoBundle message) {
@@ -1139,26 +1226,33 @@ public class Autofill {
       }
 
       final String uuid = message.getString("uuid");
-      final int id = getAutofillSession().getIdFromUuid(uuid);
 
       if (DEBUG) {
-        Log.d(LOGTAG, "update(" + id + ")");
+        Log.d(LOGTAG, "update(" + uuid + ")");
       }
 
-      final Node node = getAutofillSession().getNode(id);
+      final Node node = getAutofillSession().getNode(uuid);
       final String value = message.getString("value", "");
 
       if (node == null) {
-        Log.d(LOGTAG, "could not find node " + id);
+        Log.d(LOGTAG, "could not find node " + uuid);
         return;
       }
 
       if (DEBUG) {
-        Log.d(LOGTAG, "updating node " + id + " value from " + node.getValue() + " to " + value);
+        final NodeData data = getAutofillSession().dataFor(node);
+        Log.d(
+            LOGTAG,
+            "updating node " + uuid + " value from " + data != null
+                ? data.value
+                : null + " to " + value);
       }
 
-      node.setValue(value);
-      maybeDispatch(Notify.NODE_UPDATED, node);
+      getAutofillSession().dataFor(node).value = value;
+
+      if (mDelegate != null) {
+        mDelegate.onNodeUpdate(mGeckoSession, node, getAutofillSession().dataFor(node));
+      }
     }
 
     /* package */ void clear() {
@@ -1170,76 +1264,73 @@ public class Autofill {
         Log.d(LOGTAG, "clear()");
       }
 
-      getAutofillSession().clear();
-      maybeDispatch(Notify.SESSION_CANCELED, null);
+      getAutofillSession().clear(null);
+      if (mDelegate != null) {
+        mDelegate.onSessionCancel(mGeckoSession);
+      }
     }
 
     /* package */ void onFocusChanged(@Nullable final GeckoBundle message) {
-      if (getAutofillSession().isEmpty()) {
+      final Session session = getAutofillSession();
+      if (session.isEmpty()) {
         return;
       }
 
-      final int prevId = getAutofillSession().getFocusedId();
-      final int id;
-      final int root;
+      final Node prev = getAutofillSession().getFocused();
+      final String prevUuid = prev != null ? prev.getUuid() : null;
+      final String uuid = message != null ? message.getString("uuid") : null;
 
-      if (message != null) {
-        final String uuid = message.getString("uuid");
-        id = getAutofillSession().getIdFromUuid(uuid);
-        final String rootUuid = message.getString("rootUuid");
-        root = getAutofillSession().getIdFromUuid(rootUuid);
+      final Node focused;
+      if (uuid == null) {
+        focused = null;
       } else {
-        id = root = View.NO_ID;
+        focused = session.getNode(uuid);
+        if (focused == null) {
+          Log.w(LOGTAG, "Cannot find node uuid=" + uuid);
+          return;
+        }
       }
 
       if (DEBUG) {
-        Log.d(LOGTAG, "onFocusChanged(" + prevId + " -> " + id + ')');
+        Log.d(
+            LOGTAG,
+            "onFocusChanged(" + (prev != null ? prev.getUuid() : null) + " -> " + uuid + ')');
       }
 
-      if (prevId == id) {
+      if (Objects.equals(uuid, prevUuid)) {
+        // Nothing changed, nothing to do.
         return;
       }
 
-      getAutofillSession().setFocus(id, root);
+      session.setFocus(focused);
 
-      if (prevId != View.NO_ID) {
-        maybeDispatch(Notify.NODE_BLURRED, getAutofillSession().getNode(prevId));
-      }
-
-      if (id != View.NO_ID) {
-        maybeDispatch(Notify.NODE_FOCUSED, getAutofillSession().getNode(id));
-      }
-    }
-
-    /* package */ static Rect getDummyAutofillRect(
-        @NonNull final GeckoSession geckoSession, final boolean screen, @Nullable final View view) {
-      final Rect rect = new Rect();
-      geckoSession.getSurfaceBounds(rect);
-
-      if (screen) {
-        if (view == null) {
-          throw new IllegalArgumentException();
+      if (mDelegate != null) {
+        if (prev != null) {
+          mDelegate.onNodeBlur(mGeckoSession, prev, getAutofillSession().dataFor(prev));
         }
-        final int[] offset = new int[2];
-        view.getLocationOnScreen(offset);
-        rect.offset(offset[0], offset[1]);
+        if (uuid != null) {
+          mDelegate.onNodeFocus(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        }
       }
-      return rect;
     }
 
     @UiThread
     public void onActiveChanged(final boolean active) {
       ThreadUtils.assertOnUiThread();
 
-      final int focusedId = getAutofillSession().getFocusedId();
+      final Node focused = getAutofillSession().getFocused();
 
-      if (focusedId == View.NO_ID) {
+      if (focused == null) {
         return;
       }
 
-      maybeDispatch(
-          active ? Notify.NODE_FOCUSED : Notify.NODE_BLURRED,
-          getAutofillSession().getNode(focusedId));
+      if (mDelegate != null) {
+        if (active) {
+          mDelegate.onNodeFocus(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        } else {
+          mDelegate.onNodeBlur(mGeckoSession, focused, getAutofillSession().dataFor(focused));
+        }
+      }
     }
   }
 }

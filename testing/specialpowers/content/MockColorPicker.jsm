@@ -32,9 +32,6 @@ var newFactory = function(window) {
       }
       return new MockColorPickerInstance(window).QueryInterface(aIID);
     },
-    lockFactory(aLock) {
-      throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-    },
     QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),
   };
 };

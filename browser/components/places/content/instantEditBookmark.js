@@ -241,7 +241,7 @@ var gEditItemOverlay = {
    *   List of rows to be hidden regardless of the item edited. Possible values:
    *   "title", "location", "keyword", "folderPicker".
    */
-  initPanel(aInfo) {
+  async initPanel(aInfo) {
     if (typeof aInfo != "object" || aInfo === null) {
       throw new Error("aInfo must be an object.");
     }
@@ -278,6 +278,12 @@ var gEditItemOverlay = {
       focusedElement,
       onPanelReady,
     } = this._setPaneInfo(aInfo);
+
+    // initPanel can be called multiple times in a row,
+    // and awaits Promises. If the reference to `instance`
+    // changes, it must mean another caller has called
+    // initPanel again, so bail out of the initialization.
+    let instance = (this._instance = {});
 
     // If we're creating a new item on the toolbar, show it:
     if (
@@ -316,7 +322,12 @@ var gEditItemOverlay = {
     }
 
     if (showOrCollapse("keywordRow", isBookmark, "keyword")) {
-      this._initKeywordField().catch(Cu.reportError);
+      await this._initKeywordField().catch(Cu.reportError);
+      // paneInfo can be null if paneInfo is uninitialized while
+      // the process above is awaiting initialization
+      if (instance != this._instance || this._paneInfo == null) {
+        return;
+      }
       this._keywordField.readOnly = this.readOnly;
     }
 
@@ -332,7 +343,10 @@ var gEditItemOverlay = {
     // not cheap (we don't always have the parent), and there's no use case for
     // this (it's only the Star UI that shows the folderPicker)
     if (showOrCollapse("folderRow", isItem, "folderPicker")) {
-      this._initFolderMenuList(parentGuid).catch(Cu.reportError);
+      await this._initFolderMenuList(parentGuid).catch(Cu.reportError);
+      if (instance != this._instance || this._paneInfo == null) {
+        return;
+      }
     }
 
     // Selection count.

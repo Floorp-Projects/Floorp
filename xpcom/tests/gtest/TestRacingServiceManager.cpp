@@ -83,8 +83,6 @@ class Factory final : public nsIFactory {
   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID,
                             void** aResult) override;
 
-  NS_IMETHOD LockFactory(bool aLock) override { return NS_OK; }
-
   bool mFirstComponentCreated;
 };
 

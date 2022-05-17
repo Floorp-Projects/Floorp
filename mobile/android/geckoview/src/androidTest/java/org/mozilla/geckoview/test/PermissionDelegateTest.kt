@@ -151,7 +151,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                         window.navigator.mediaDevices.getUserMedia({ video: true })""")
             } else {
                 mainSession.waitForJS("""
-                        window.navigator.mediaDevices.getUserMedia({ audio: true: video: true })""")
+                        window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })""")
             }
             fail("Request should have failed")
         } catch (e: RejectedPromiseException) {

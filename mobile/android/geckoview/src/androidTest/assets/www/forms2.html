@@ -12,13 +12,6 @@
                 <input type="password" id="pass1" value="foo" autofocus>
             </fieldset>
         </form>
-        <iframe id="iframe"></iframe>
-    <script>
-        addEventListener("load", function(e) {
-            if (window.parent === window) {
-                document.getElementById("iframe").contentWindow.location.href = window.location.href;
-            }
-        });
-    </script>
+        <iframe id="iframe" src="forms2_iframe.html"></iframe>
     </body>
 </html>

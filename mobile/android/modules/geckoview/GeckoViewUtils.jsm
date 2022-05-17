@@ -212,47 +212,6 @@ var GeckoViewUtils = {
   },
 
   /**
-   * Add lazy event listeners on the per-window EventDispatcher, and only load
-   * the actual handler when an event is being handled.
-   *
-   * @param window  Window with the target EventDispatcher.
-   * @param events  Event name as a string or array.
-   * @param handler If specified, function that, for a given event, returns the
-   *                actual event handler as an object or an array of objects.
-   *                If handler is not specified, the actual event handler is
-   *                specified using the scope and name pair.
-   * @param scope   See handler.
-   * @param name    See handler.
-   * @param once    If true, only listen to the specified events once.
-   */
-  registerLazyWindowEventListener(
-    window,
-    events,
-    { handler, scope, name, once }
-  ) {
-    const dispatcher = this.getDispatcherForWindow(window);
-
-    this._addLazyListeners(
-      events,
-      handler,
-      scope,
-      name,
-      (events, listener) => {
-        dispatcher.registerListener(listener, events);
-      },
-      (handlers, listener, args) => {
-        if (!once) {
-          dispatcher.unregisterListener(listener, args[0]);
-          handlers.forEach(handler =>
-            dispatcher.registerListener(handler, args[0])
-          );
-        }
-        handlers.forEach(handler => handler.onEvent(...args));
-      }
-    );
-  },
-
-  /**
    * Add lazy pref observers, and only load the actual handler once the pref
    * value changes from default, and every time the pref value changes
    * afterwards.
@@ -363,23 +322,6 @@ var GeckoViewUtils = {
       }
     } catch (e) {}
     return null;
-  },
-
-  getActiveDispatcherAndWindow() {
-    const bc = Services.focus.activeBrowsingContext;
-    const win = bc ? bc.window : null; // WON'T WORK FOR OOP IFRAMES!
-    let dispatcher = this.getDispatcherForWindow(win);
-    if (dispatcher) {
-      return [dispatcher, win];
-    }
-
-    for (const win of Services.wm.getEnumerator(/* windowType */ null)) {
-      dispatcher = this.getDispatcherForWindow(win);
-      if (dispatcher) {
-        return [dispatcher, win];
-      }
-    }
-    return [null, null];
   },
 
   /**

@@ -5863,11 +5863,13 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
  public:
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              nsDisplayList* aList,
-                             const ActiveScrolledRoot* aActiveScrolledRoot);
+                             const ActiveScrolledRoot* aActiveScrolledRoot,
+                             bool aWrapsBackdropFilter);
   nsDisplayMasksAndClipPaths(nsDisplayListBuilder* aBuilder,
                              const nsDisplayMasksAndClipPaths& aOther)
       : nsDisplayEffectsBase(aBuilder, aOther),
-        mDestRects(aOther.mDestRects.Clone()) {
+        mDestRects(aOther.mDestRects.Clone()),
+        mWrapsBackdropFilter(aOther.mWrapsBackdropFilter) {
     MOZ_COUNT_CTOR(nsDisplayMasksAndClipPaths);
   }
 
@@ -5932,6 +5934,7 @@ class nsDisplayMasksAndClipPaths : public nsDisplayEffectsBase {
   NS_DISPLAY_ALLOW_CLONING()
 
   nsTArray<nsRect> mDestRects;
+  bool mWrapsBackdropFilter;
 };
 
 class nsDisplayBackdropFilters : public nsDisplayWrapList {
@@ -5961,6 +5964,8 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
   }
 
   bool CreatesStackingContextHelper() override { return true; }
+
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override;
 
  private:
   RefPtr<ComputedStyle> mStyle;

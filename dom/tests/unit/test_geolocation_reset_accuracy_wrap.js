@@ -16,9 +16,6 @@ var provider = {
     }
     return this.QueryInterface(iid);
   },
-  lockFactory: function eventsink_lockf(lock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  },
   startup() {},
   watch() {},
   shutdown() {},
