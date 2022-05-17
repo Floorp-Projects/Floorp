@@ -177,7 +177,14 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   } else if (codecType == MP4PARSE_CODEC_AAC) {
     mMimeType = "audio/mp4a-latm"_ns;
   } else if (codecType == MP4PARSE_CODEC_FLAC) {
+    MOZ_ASSERT(extraData.length == 0,
+               "FLAC doesn't expect extra data so doesn't handle it!");
     mMimeType = "audio/flac"_ns;
+    FlacCodecSpecificData flacCodecSpecificData{};
+    flacCodecSpecificData.mStreamInfoBinaryBlob->AppendElements(
+        mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
+    mCodecSpecificConfig =
+        AudioCodecSpecificVariant{std::move(flacCodecSpecificData)};
   } else if (codecType == MP4PARSE_CODEC_MP3) {
     // mp3 in mp4 can contain ES_Descriptor info (it also has a flash in mp4
     // specific box, which the rust parser recognizes). However, we don't
