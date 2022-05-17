@@ -108,7 +108,7 @@ rtc_library("rtc_pc_base") {
     "../common_video",
     "../common_video:common_video",
     "../logging:ice_log",
-    "../media:rtc_data",
+    "../media:rtc_data_sctp_transport_internal",
     "../media:rtc_h264_profile_id",
     "../media:rtc_media_base",
     "../media:rtc_media_config",
@@ -281,7 +281,7 @@ rtc_library("peerconnection") {
     "../call:call_interfaces",
     "../common_video",
     "../logging:ice_log",
-    "../media:rtc_data",
+    "../media:rtc_data_sctp_transport_internal",
     "../media:rtc_media_base",
     "../media:rtc_media_config",
     "../modules/audio_processing:audio_processing_statistics",
@@ -336,7 +336,7 @@ rtc_library("connection_context") {
     "../api/transport:field_trial_based_config",
     "../api/transport:sctp_transport_factory_interface",
     "../api/transport:webrtc_key_value_config",
-    "../media:rtc_data",
+    "../media:rtc_data_sctp_transport_factory",
     "../media:rtc_media_base",
     "../p2p:rtc_p2p",
     "../rtc_base",
@@ -869,7 +869,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/video/test:mock_recordable_encoded_frame",
       "../call:rtp_interfaces",
       "../call:rtp_receiver",
-      "../media:rtc_data",
+      "../media:rtc_data_sctp_transport_internal",
       "../media:rtc_media_base",
       "../media:rtc_media_tests_utils",
       "../modules/rtp_rtcp:rtp_rtcp_format",
@@ -1011,10 +1011,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "webrtc_sdp_unittest.cc",
     ]
 
-    if (rtc_enable_sctp) {
-      defines = [ "WEBRTC_HAVE_SCTP" ]
-    }
-
     deps = [
       ":audio_rtp_receiver",
       ":audio_track",
@@ -1065,6 +1061,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/video:video_rtp_headers",
       "../call/adaptation:resource_adaptation_test_utilities",
       "../logging:fake_rtc_event_log",
+      "../media:rtc_data_sctp_transport_internal",
       "../media:rtc_media_config",
       "../media:rtc_media_engine_defaults",
       "../modules/audio_device:audio_device_api",
@@ -1118,8 +1115,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/video_codecs:video_codecs_api",
       "../call:call_interfaces",
       "../media:rtc_audio_video",
-      "../media:rtc_data",  # TODO(phoglund): AFAIK only used for one sctp
-                            # constant.
       "../media:rtc_media_base",
       "../media:rtc_media_tests_utils",
       "../modules/audio_processing",
@@ -1328,7 +1323,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api/video_codecs:builtin_video_encoder_factory",
       "../api/video_codecs:video_codecs_api",
       "../call:call_interfaces",
-      "../media:rtc_data",
       "../media:rtc_media",
       "../media:rtc_media_base",
       "../media:rtc_media_tests_utils",

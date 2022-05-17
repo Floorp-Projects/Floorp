@@ -777,7 +777,6 @@ if (current_os == "linux" || is_android) {
       "../../api/video_codecs:video_codecs_api",
       "../../call:call_interfaces",
       "../../media:rtc_audio_video",
-      "../../media:rtc_data",
       "../../media:rtc_media_base",
       "../../modules/audio_device",
       "../../modules/audio_processing:api",

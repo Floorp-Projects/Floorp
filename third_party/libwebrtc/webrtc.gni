@@ -238,7 +238,6 @@ declare_args() {
   rtc_build_libvpx = !build_with_mozilla
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
-  rtc_build_usrsctp = !build_with_mozilla
 
   # Enable libevent task queues on platforms that support it.
   if (is_win || is_mac || is_ios || is_nacl || is_fuchsia ||
@@ -293,6 +292,11 @@ declare_args() {
   # Set this to true to exclude the transient suppressor in the audio processing
   # module from the build.
   rtc_exclude_transient_suppressor = false
+}
+
+declare_args() {
+  # Enable the usrsctp backend for DataChannels and related unittests
+  rtc_build_usrsctp = !build_with_mozilla && rtc_enable_sctp
 }
 
 # Enable liboam only on non-mozilla builds.

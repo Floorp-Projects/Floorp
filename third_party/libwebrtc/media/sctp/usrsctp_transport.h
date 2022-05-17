@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "absl/types/optional.h"
-#include "api/transport/sctp_transport_factory_interface.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/constructor_magic.h"
 #include "rtc_base/copy_on_write_buffer.h"

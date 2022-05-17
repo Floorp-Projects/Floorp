@@ -22,7 +22,6 @@
 #include "api/transport/sctp_transport_factory_interface.h"
 #include "api/transport/webrtc_key_value_config.h"
 #include "media/base/media_engine.h"
-#include "media/sctp/sctp_transport_internal.h"
 #include "p2p/base/basic_packet_socket_factory.h"
 #include "pc/channel_manager.h"
 #include "rtc_base/checks.h"
