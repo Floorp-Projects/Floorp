@@ -161,12 +161,16 @@ void WindowCapturerWinGdi::CaptureFrame() {
 
   CaptureResults results = CaptureFrame(/*capture_owned_windows*/ true);
 
-  int capture_time_ms = (rtc::TimeNanos() - capture_start_time_nanos) /
-                        rtc::kNumNanosecsPerMillisec;
-  RTC_HISTOGRAM_COUNTS_1000(
-      "WebRTC.DesktopCapture.Win.WindowGdiCapturerFrameTime", capture_time_ms);
-  results.frame->set_capture_time_ms(capture_time_ms);
-  results.frame->set_capturer_id(DesktopCapturerId::kWindowCapturerWinGdi);
+  if (results.frame) {
+    int capture_time_ms = (rtc::TimeNanos() - capture_start_time_nanos) /
+                          rtc::kNumNanosecsPerMillisec;
+    RTC_HISTOGRAM_COUNTS_1000(
+        "WebRTC.DesktopCapture.Win.WindowGdiCapturerFrameTime",
+        capture_time_ms);
+    results.frame->set_capture_time_ms(capture_time_ms);
+    results.frame->set_capturer_id(DesktopCapturerId::kWindowCapturerWinGdi);
+  }
+
   callback_->OnCaptureResult(results.result, std::move(results.frame));
 }
 
