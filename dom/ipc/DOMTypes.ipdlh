@@ -42,6 +42,7 @@ using mozilla::LayoutDeviceIntPoint from "Units.h";
 using nsSizeMode from "nsIWidgetListener.h";
 using ScrollbarPreference from "mozilla/ScrollbarPreferences.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
+using TransferableDataType from "ipc/nsTransferableIPC.h";
 [RefCounted] using class nsIPrincipal from "nsIPrincipal.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 [RefCounted] using class nsIURI from "nsIURI.h";
@@ -119,6 +120,7 @@ struct IPCDataTransferItem
 {
   nsCString flavor;
   IPCDataTransferData data;
+  TransferableDataType dataType;
   // The image details are only used when transferring images.
   IPCDataTransferImage? imageDetails;
 };
