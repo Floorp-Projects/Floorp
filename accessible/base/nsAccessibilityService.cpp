@@ -304,10 +304,6 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
 
       if (document) {
         LocalAccessible* acc = document->GetAccessible(content);
-        if (!acc && (content == document->GetContent() ||
-                     content == document->DocumentNode()->GetRootElement())) {
-          acc = document;
-        }
         if (!acc && nsCoreUtils::HasClickListener(content)) {
           // Create an accessible for a inaccessible element having click event
           // handler.
