@@ -153,6 +153,7 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   // track, or if we have different numbers or channels in a single track.
   Mp4parseByteData mp4ParseSampleCodecSpecific =
       audio->sample_info[0].codec_specific_config;
+  Mp4parseByteData extraData = audio->sample_info[0].extra_data;
   MOZ_ASSERT(mCodecSpecificConfig.is<NoCodecSpecificData>(),
              "Should have no codec specific data yet");
   AudioCodecSpecificBinaryBlob codecSpecificBinaryBlob;
@@ -178,7 +179,12 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
   } else if (codecType == MP4PARSE_CODEC_FLAC) {
     mMimeType = "audio/flac"_ns;
   } else if (codecType == MP4PARSE_CODEC_MP3) {
+    // mp3 in mp4 can contain ES_Descriptor info (it also has a flash in mp4
+    // specific box, which the rust parser recognizes). However, we don't
+    // handle any such data here.
     mMimeType = "audio/mpeg"_ns;
+    // TODO(bug 1705812): parse the encoder delay values from the mp4.
+    mCodecSpecificConfig = AudioCodecSpecificVariant{Mp3CodecSpecificData{}};
   }
 
   mRate = audio->sample_info[0].sample_rate;
@@ -194,13 +200,16 @@ MediaResult MP4AudioInfo::Update(const Mp4parseTrackInfo* track,
     mProfile = audio->sample_info[0].profile;
   }
 
-  Mp4parseByteData extraData = audio->sample_info[0].extra_data;
   // If length is 0 we append nothing
   mExtraData->AppendElements(extraData.data, extraData.length);
-  codecSpecificBinaryBlob.mBinaryBlob->AppendElements(
-      mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
-  mCodecSpecificConfig =
-      AudioCodecSpecificVariant{std::move(codecSpecificBinaryBlob)};
+  if (mCodecSpecificConfig.is<NoCodecSpecificData>()) {
+    // No codec specific metadata set, use the generic form.
+    codecSpecificBinaryBlob.mBinaryBlob->AppendElements(
+        mp4ParseSampleCodecSpecific.data, mp4ParseSampleCodecSpecific.length);
+    mCodecSpecificConfig =
+        AudioCodecSpecificVariant{std::move(codecSpecificBinaryBlob)};
+  }
+
   return NS_OK;
 }
 
