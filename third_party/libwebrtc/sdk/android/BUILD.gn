@@ -43,7 +43,6 @@ if (is_android) {
       ":filevideo_java",
       ":hwcodecs_java",
       ":java_audio_device_module_java",
-      ":libaom_av1_java",
       ":libjingle_peerconnection_java",
       ":libjingle_peerconnection_metrics_default_java",
       ":libvpx_vp8_java",
@@ -501,20 +500,6 @@ if (is_android) {
     ]
   }
 
-  rtc_android_library("libaom_av1_java") {
-    visibility = [ "*" ]
-    sources = [
-      "api/org/webrtc/LibaomAv1Decoder.java",
-      "api/org/webrtc/LibaomAv1Encoder.java",
-    ]
-    deps = [
-      ":base_java",
-      ":video_api_java",
-      ":video_java",
-      "//rtc_base:base_java",
-    ]
-  }
-
   rtc_android_library("swcodecs_java") {
     visibility = [ "*" ]
     sources = [
@@ -524,7 +509,6 @@ if (is_android) {
 
     deps = [
       ":base_java",
-      ":libaom_av1_java",
       ":libvpx_vp8_java",
       ":libvpx_vp9_java",
       ":video_api_java",
@@ -841,24 +825,10 @@ if (current_os == "linux" || is_android) {
     ]
   }
 
-  rtc_library("libaom_av1_jni") {
-    visibility = [ "*" ]
-    allow_poison = [ "software_video_codecs" ]
-    sources = [ "src/jni/av1_codec.cc" ]
-    deps = [
-      ":base_jni",
-      ":generated_libaom_av1_jni",
-      ":video_jni",
-      "../../modules/video_coding/codecs/av1:libaom_av1_decoder",
-      "../../modules/video_coding/codecs/av1:libaom_av1_encoder",
-    ]
-  }
-
   rtc_library("swcodecs_jni") {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
     deps = [
-      ":libaom_av1_jni",
       ":libvpx_vp8_jni",
       ":libvpx_vp9_jni",
     ]
@@ -1288,16 +1258,6 @@ if (current_os == "linux" || is_android) {
     sources = [
       "api/org/webrtc/LibvpxVp9Decoder.java",
       "api/org/webrtc/LibvpxVp9Encoder.java",
-    ]
-
-    namespace = "webrtc::jni"
-    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
-  }
-
-  generate_jni("generated_libaom_av1_jni") {
-    sources = [
-      "api/org/webrtc/LibaomAv1Decoder.java",
-      "api/org/webrtc/LibaomAv1Encoder.java",
     ]
 
     namespace = "webrtc::jni"

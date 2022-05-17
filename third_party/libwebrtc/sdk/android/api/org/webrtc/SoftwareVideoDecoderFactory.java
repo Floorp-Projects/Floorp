@@ -32,9 +32,6 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
     if (codecType.getName().equalsIgnoreCase("VP9") && LibvpxVp9Decoder.nativeIsSupported()) {
       return new LibvpxVp9Decoder();
     }
-    if (codecType.getName().equalsIgnoreCase("AV1") && LibaomAv1Decoder.nativeIsSupported()) {
-      return new LibaomAv1Decoder();
-    }
 
     return null;
   }
@@ -50,9 +47,6 @@ public class SoftwareVideoDecoderFactory implements VideoDecoderFactory {
     codecs.add(new VideoCodecInfo("VP8", new HashMap<>()));
     if (LibvpxVp9Decoder.nativeIsSupported()) {
       codecs.add(new VideoCodecInfo("VP9", new HashMap<>()));
-    }
-    if (LibaomAv1Decoder.nativeIsSupported()) {
-      codecs.add(new VideoCodecInfo("AV1", new HashMap<>()));
     }
 
     return codecs.toArray(new VideoCodecInfo[codecs.size()]);
