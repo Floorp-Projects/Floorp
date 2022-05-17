@@ -45,6 +45,13 @@ float GetLateReflectionsDefaultModeGain(
   return config.default_gain;
 }
 
+bool UseErleOnsetCompensationInDominantNearend(
+    const EchoCanceller3Config::EpStrength& config) {
+  return config.erle_onset_compensation_in_dominant_nearend ||
+         field_trial::IsEnabled(
+             "WebRTC-Aec3UseErleOnsetCompensationInDominantNearend");
+}
+
 // Computes the indexes that will be used for computing spectral power over
 // the blocks surrounding the delay.
 void GetRenderIndexesToAnalyze(
@@ -156,7 +163,9 @@ ResidualEchoEstimator::ResidualEchoEstimator(const EchoCanceller3Config& config,
       early_reflections_general_gain_(
           GetEarlyReflectionsDefaultModeGain(config_.ep_strength)),
       late_reflections_general_gain_(
-          GetLateReflectionsDefaultModeGain(config_.ep_strength)) {
+          GetLateReflectionsDefaultModeGain(config_.ep_strength)),
+      erle_onset_compensation_in_dominant_nearend_(
+          UseErleOnsetCompensationInDominantNearend(config_.ep_strength)) {
   Reset();
 }
 
@@ -167,6 +176,7 @@ void ResidualEchoEstimator::Estimate(
     const RenderBuffer& render_buffer,
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> S2_linear,
     rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> Y2,
+    bool dominant_nearend,
     rtc::ArrayView<std::array<float, kFftLengthBy2Plus1>> R2) {
   RTC_DCHECK_EQ(R2.size(), Y2.size());
   RTC_DCHECK_EQ(R2.size(), S2_linear.size());
@@ -185,7 +195,9 @@ void ResidualEchoEstimator::Estimate(
         std::copy(Y2[ch].begin(), Y2[ch].end(), R2[ch].begin());
       }
     } else {
-      LinearEstimate(S2_linear, aec_state.Erle(), R2);
+      const bool onset_compensated =
+          erle_onset_compensation_in_dominant_nearend_ || !dominant_nearend;
+      LinearEstimate(S2_linear, aec_state.Erle(onset_compensated), R2);
     }
 
     AddReverb(ReverbType::kLinear, aec_state, render_buffer, R2);

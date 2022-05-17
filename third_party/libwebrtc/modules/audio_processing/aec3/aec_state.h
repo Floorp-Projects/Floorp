@@ -70,8 +70,9 @@ class AecState {
   }
 
   // Returns the ERLE.
-  rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> Erle() const {
-    return erle_estimator_.Erle();
+  rtc::ArrayView<const std::array<float, kFftLengthBy2Plus1>> Erle(
+      bool onset_compensated) const {
+    return erle_estimator_.Erle(onset_compensated);
   }
 
   // Returns the fullband ERLE estimate in log2 units.

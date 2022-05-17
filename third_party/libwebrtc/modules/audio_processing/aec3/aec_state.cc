@@ -294,7 +294,9 @@ void AecState::Update(
   data_dumper_->DumpRaw("aec3_active_render", active_render);
   data_dumper_->DumpRaw("aec3_erl", Erl());
   data_dumper_->DumpRaw("aec3_erl_time_domain", ErlTimeDomain());
-  data_dumper_->DumpRaw("aec3_erle", Erle()[0]);
+  data_dumper_->DumpRaw("aec3_erle", Erle(/*onset_compensated=*/false)[0]);
+  data_dumper_->DumpRaw("aec3_erle_onset_compensated",
+                        Erle(/*onset_compensated=*/true)[0]);
   data_dumper_->DumpRaw("aec3_usable_linear_estimate", UsableLinearEstimate());
   data_dumper_->DumpRaw("aec3_transparent_mode", TransparentModeActive());
   data_dumper_->DumpRaw("aec3_filter_delay",
