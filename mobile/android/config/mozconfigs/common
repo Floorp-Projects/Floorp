@@ -31,9 +31,7 @@ if [ -n "$TASKCLUSTER_PGO_PROFILE_USE" -a -z "$USE_ARTIFACT" ]; then
 
     ac_add_options --enable-profile-use=cross
 
-    # This is disabled because jarlog re-ordering breaks apk publishing tasks,
-    # see bug 1539933.
-    # ac_add_options --with-pgo-jarlog=${MOZ_FETCHES_DIR}/en-US.log
+    ac_add_options --with-pgo-jarlog=${MOZ_FETCHES_DIR}/en-US.log
     ac_add_options --with-pgo-profile-path=${MOZ_FETCHES_DIR}/merged.profdata
 fi
 
