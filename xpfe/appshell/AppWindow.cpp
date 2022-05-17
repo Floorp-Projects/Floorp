@@ -450,6 +450,19 @@ AppWindow::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AppWindow::GetPrimaryContentBrowsingContext(
+    mozilla::dom::BrowsingContext** aBc) {
+  if (mPrimaryBrowserParent) {
+    return mPrimaryBrowserParent->GetBrowsingContext(aBc);
+  }
+  if (mPrimaryContentShell) {
+    return mPrimaryContentShell->GetBrowsingContextXPCOM(aBc);
+  }
+  *aBc = nullptr;
+  return NS_OK;
+}
+
 static LayoutDeviceIntSize GetOuterToInnerSizeDifference(nsIWidget* aWindow) {
   if (!aWindow) {
     return LayoutDeviceIntSize();

@@ -24,6 +24,7 @@ interface nsIXULBrowserWindow;
 interface nsIRemoteTab;
 interface mozIDOMWindowProxy;
 interface nsIOpenWindowInfo;
+webidl BrowsingContext;
 
 native LiveResizeListenerArray(nsTArray<RefPtr<mozilla::LiveResizeListener>>);
 
@@ -55,6 +56,12 @@ interface nsIAppWindow : nsISupports
    * primaryRemoteTab.
    */
   readonly attribute nsIRemoteTab primaryRemoteTab;
+
+  /**
+   * Helper for getting the BrowsingContext from either `primaryContentShell` or
+   * `primaryRemoteTab` depending on which is available.
+   */
+  readonly attribute BrowsingContext primaryContentBrowsingContext;
 
   void remoteTabAdded(in nsIRemoteTab aTab, in boolean aPrimary);
   void remoteTabRemoved(in nsIRemoteTab aTab);
