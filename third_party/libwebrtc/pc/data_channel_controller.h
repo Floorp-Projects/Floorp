@@ -102,8 +102,6 @@ class DataChannelController : public SctpDataChannelProviderInterface,
   }
 
   // Accessors
-  cricket::DataChannelType data_channel_type() const;
-  void set_data_channel_type(cricket::DataChannelType type);
   DataChannelTransportInterface* data_channel_transport() const;
   void set_data_channel_transport(DataChannelTransportInterface* transport);
 
@@ -143,11 +141,6 @@ class DataChannelController : public SctpDataChannelProviderInterface,
 
   rtc::Thread* network_thread() const;
   rtc::Thread* signaling_thread() const;
-
-  // Specifies whether or not SCTP data channels are allowed.
-  cricket::DataChannelType data_channel_type_ =
-      cricket::DCT_NONE;  // TODO(bugs.webrtc.org/9987): Accessed on both
-                          // signaling and network thread.
 
   // Plugin transport used for data channels.  Pointer may be accessed and
   // checked from any thread, but the object may only be touched on the

@@ -2656,8 +2656,7 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
   bool secure = bundle_transport ? bundle_transport->description.secure()
                                  : data_transport->secure();
 
-  bool rejected = session_options.data_channel_type == DCT_NONE ||
-                  media_description_options.stopped ||
+  bool rejected = media_description_options.stopped ||
                   offer_content->rejected ||
                   !IsMediaProtocolSupported(MEDIA_TYPE_DATA,
                                             data_answer->protocol(), secure);

@@ -329,10 +329,8 @@ static void AddAudioVideoSections(RtpTransceiverDirection direction,
                              opts);
 }
 
-static void AddDataSection(cricket::DataChannelType dct,
-                           RtpTransceiverDirection direction,
+static void AddDataSection(RtpTransceiverDirection direction,
                            MediaSessionOptions* opts) {
-  opts->data_channel_type = dct;
   AddMediaDescriptionOptions(MEDIA_TYPE_DATA, "data", direction, kActive, opts);
 }
 
@@ -869,7 +867,6 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
                              RtpTransceiverDirection::kInactive, kStopped,
                              &opts);
-  opts.data_channel_type = cricket::DCT_NONE;
   opts.bundle_enabled = true;
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
   std::unique_ptr<SessionDescription> answer =
@@ -898,7 +895,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateSctpDataOffer) {
   MediaSessionOptions opts;
   opts.bundle_enabled = true;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   f1_.set_secure(SEC_ENABLED);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
   EXPECT_TRUE(offer.get() != NULL);
@@ -913,7 +910,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateSctpDataOffer) {
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateSecureSctpDataOffer) {
   MediaSessionOptions opts;
   opts.bundle_enabled = true;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   f1_.set_secure(SEC_ENABLED);
   tdf1_.set_secure(SEC_ENABLED);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
@@ -929,7 +926,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateSecureSctpDataOffer) {
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateImplicitSctpDataOffer) {
   MediaSessionOptions opts;
   opts.bundle_enabled = true;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   f1_.set_secure(SEC_ENABLED);
   std::unique_ptr<SessionDescription> offer1(f1_.CreateOffer(opts, NULL));
   ASSERT_TRUE(offer1.get() != NULL);
@@ -937,10 +934,6 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateImplicitSctpDataOffer) {
   ASSERT_TRUE(data != NULL);
   ASSERT_EQ(cricket::kMediaProtocolSctp, data->media_description()->protocol());
 
-  // Now set data_channel_type to 'none' (default) and make sure that the
-  // datachannel type that gets generated from the previous offer, is of the
-  // same type.
-  opts.data_channel_type = cricket::DCT_NONE;
   std::unique_ptr<SessionDescription> offer2(
       f1_.CreateOffer(opts, offer1.get()));
   data = offer2->GetContentByName("data");
@@ -1144,7 +1137,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateSendOnlyOffer) {
 // SessionDescription is preserved in the new SessionDescription.
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateOfferContentOrder) {
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
 
   std::unique_ptr<SessionDescription> offer1(f1_.CreateOffer(opts, NULL));
   ASSERT_TRUE(offer1.get() != NULL);
@@ -1282,7 +1275,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateVideoAnswerGcmAnswer) {
 // default. The answer's use_sctpmap flag should match the offer's.
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateDataAnswerUsesSctpmap) {
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
   ASSERT_TRUE(offer.get() != NULL);
   ContentInfo* dc_offer = offer->GetContentByName("data");
@@ -1303,7 +1296,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateDataAnswerUsesSctpmap) {
 // The answer's use_sctpmap flag should match the offer's.
 TEST_F(MediaSessionDescriptionFactoryTest, TestCreateDataAnswerWithoutSctpmap) {
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, NULL);
   ASSERT_TRUE(offer.get() != NULL);
   ContentInfo* dc_offer = offer->GetContentByName("data");
@@ -1333,7 +1326,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   tdf2_.set_secure(SEC_ENABLED);
 
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
   ASSERT_TRUE(offer.get() != nullptr);
   ContentInfo* dc_offer = offer->GetContentByName("data");
@@ -1367,7 +1360,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   tdf2_.set_secure(SEC_ENABLED);
 
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
   ASSERT_TRUE(offer.get() != nullptr);
   ContentInfo* dc_offer = offer->GetContentByName("data");
@@ -1396,7 +1389,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   tdf2_.set_secure(SEC_ENABLED);
 
   MediaSessionOptions opts;
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
   ASSERT_TRUE(offer.get() != nullptr);
   ContentInfo* dc_offer = offer->GetContentByName("data");
@@ -1421,7 +1414,7 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestCreateAnswerContentOrder) {
   MediaSessionOptions opts;
 
   // Creates a data only offer.
-  AddDataSection(cricket::DCT_SCTP, RtpTransceiverDirection::kSendRecv, &opts);
+  AddDataSection(RtpTransceiverDirection::kSendRecv, &opts);
   std::unique_ptr<SessionDescription> offer1(f1_.CreateOffer(opts, NULL));
   ASSERT_TRUE(offer1.get() != NULL);
 
@@ -3799,7 +3792,6 @@ TEST_F(MediaSessionDescriptionFactoryTest, TestMIDsMatchesExistingOffer) {
   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video_modified",
                              RtpTransceiverDirection::kRecvOnly, kActive,
                              &opts);
-  opts.data_channel_type = cricket::DCT_SCTP;
   AddMediaDescriptionOptions(MEDIA_TYPE_DATA, "data_modified",
                              RtpTransceiverDirection::kSendRecv, kActive,
                              &opts);

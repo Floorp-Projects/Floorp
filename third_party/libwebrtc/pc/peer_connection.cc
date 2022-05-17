@@ -597,11 +597,6 @@ RTCError PeerConnection::Initialize(
     NoteUsageEvent(UsageEvent::TURN_SERVER_ADDED);
   }
 
-  // DTLS has to be enabled to use SCTP.
-  if (!options_.disable_sctp_data_channels && dtls_enabled_) {
-    data_channel_controller_.set_data_channel_type(cricket::DCT_SCTP);
-  }
-
   // Network thread initialization.
   network_thread()->Invoke<void>(RTC_FROM_HERE, [this, &stun_servers,
                                                  &turn_servers, &configuration,
@@ -680,7 +675,7 @@ void PeerConnection::InitializeTransportController_n(
   config.active_reset_srtp_params = configuration.active_reset_srtp_params;
 
   // DTLS has to be enabled to use SCTP.
-  if (!options_.disable_sctp_data_channels && dtls_enabled_) {
+  if (dtls_enabled_) {
     config.sctp_factory = context_->sctp_transport_factory();
   }
 
@@ -1943,12 +1938,7 @@ void PeerConnection::OnSelectedCandidatePairChanged(
 
 absl::optional<std::string> PeerConnection::GetDataMid() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  switch (data_channel_type()) {
-    case cricket::DCT_SCTP:
-      return sctp_mid_s_;
-    default:
-      return absl::nullopt;
-  }
+  return sctp_mid_s_;
 }
 
 void PeerConnection::SetSctpDataMid(const std::string& mid) {
@@ -2229,10 +2219,6 @@ std::unique_ptr<rtc::SSLCertChain> PeerConnection::GetRemoteSSLCertChain(
     const std::string& transport_name) {
   RTC_DCHECK_RUN_ON(network_thread());
   return transport_controller_->GetRemoteSSLCertChain(transport_name);
-}
-
-cricket::DataChannelType PeerConnection::data_channel_type() const {
-  return data_channel_controller_.data_channel_type();
 }
 
 bool PeerConnection::IceRestartPending(const std::string& content_name) const {

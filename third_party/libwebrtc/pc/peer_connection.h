@@ -363,7 +363,6 @@ class PeerConnection : public PeerConnectionInternal,
   const PeerConnectionFactoryInterface::Options* options() const {
     return &options_;
   }
-  cricket::DataChannelType data_channel_type() const;
   void SetIceConnectionState(IceConnectionState new_state);
   void NoteUsageEvent(UsageEvent event);
 

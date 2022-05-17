@@ -23,7 +23,6 @@
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
 #include "media/base/media_constants.h"
-#include "media/base/media_engine.h"  // For DataChannelType
 #include "media/base/rid_description.h"
 #include "media/base/stream_params.h"
 #include "p2p/base/ice_credentials_iterator.h"
@@ -106,7 +105,6 @@ struct MediaSessionOptions {
 
   bool HasMediaDescription(MediaType type) const;
 
-  DataChannelType data_channel_type = DCT_NONE;
   bool vad_enabled = true;  // When disabled, removes all CN codecs from SDP.
   bool rtcp_mux_enabled = true;
   bool bundle_enabled = false;
