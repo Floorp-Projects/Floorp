@@ -1302,7 +1302,7 @@ rtc::scoped_refptr<DataChannelInterface> PeerConnection::CreateDataChannel(
 
   // Trigger the onRenegotiationNeeded event for every new RTP DataChannel, or
   // the first SCTP DataChannel.
-  if (data_channel_type() == cricket::DCT_RTP || first_datachannel) {
+  if (first_datachannel) {
     sdp_handler_->UpdateNegotiationNeeded();
   }
   NoteUsageEvent(UsageEvent::DATA_ADDED);
@@ -1768,7 +1768,6 @@ void PeerConnection::Close() {
     // TODO(tommi): ^^ That's not exactly optimal since this is yet another
     // blocking hop to the network thread during Close(). Further still, the
     // voice/video/data channels will be cleared on the worker thread.
-    RTC_DCHECK(!data_channel_controller_.rtp_data_channel());
     transport_controller_.reset();
     port_allocator_->DiscardCandidatePool();
     if (network_thread_safety_) {
@@ -1945,11 +1944,6 @@ void PeerConnection::OnSelectedCandidatePairChanged(
 absl::optional<std::string> PeerConnection::GetDataMid() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   switch (data_channel_type()) {
-    case cricket::DCT_RTP:
-      if (!data_channel_controller_.rtp_data_channel()) {
-        return absl::nullopt;
-      }
-      return data_channel_controller_.rtp_data_channel()->content_name();
     case cricket::DCT_SCTP:
       return sctp_mid_s_;
     default:
@@ -2106,10 +2100,6 @@ cricket::ChannelInterface* PeerConnection::GetChannel(
       return channel;
     }
   }
-  if (rtp_data_channel() &&
-      rtp_data_channel()->content_name() == content_name) {
-    return rtp_data_channel();
-  }
   return nullptr;
 }
 
@@ -2210,11 +2200,6 @@ std::map<std::string, std::string> PeerConnection::GetTransportNamesByMid()
       transport_names_by_mid[channel->content_name()] =
           channel->transport_name();
     }
-  }
-  if (data_channel_controller_.rtp_data_channel()) {
-    transport_names_by_mid[data_channel_controller_.rtp_data_channel()
-                               ->content_name()] =
-        data_channel_controller_.rtp_data_channel()->transport_name();
   }
   if (sctp_mid_n_) {
     cricket::DtlsTransportInternal* dtls_transport =
@@ -2448,22 +2433,7 @@ bool PeerConnection::SetupDataChannelTransport_n(const std::string& mid) {
   return true;
 }
 
-void PeerConnection::SetupRtpDataChannelTransport_n(
-    cricket::RtpDataChannel* data_channel) {
-  data_channel_controller_.set_rtp_data_channel(data_channel);
-  if (!data_channel)
-    return;
-
-  // TODO(bugs.webrtc.org/9987): OnSentPacket_w needs to be changed to
-  // OnSentPacket_n (and be called on the network thread).
-  data_channel->SignalSentPacket().connect(this,
-                                           &PeerConnection::OnSentPacket_w);
-}
-
 void PeerConnection::TeardownDataChannelTransport_n() {
-  // Clear the RTP data channel if any.
-  data_channel_controller_.set_rtp_data_channel(nullptr);
-
   if (sctp_mid_n_) {
     // |sctp_mid_| may still be active through an SCTP transport.  If not, unset
     // it.
@@ -2705,11 +2675,6 @@ void PeerConnection::ReportTransportStats() {
       media_types_by_transport_name[transport_name].insert(
           transceiver->media_type());
     }
-  }
-
-  if (rtp_data_channel()) {
-    media_types_by_transport_name[rtp_data_channel()->transport_name()].insert(
-        cricket::MEDIA_TYPE_DATA);
   }
 
   if (sctp_mid_n_) {

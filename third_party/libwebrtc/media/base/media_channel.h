@@ -958,11 +958,8 @@ enum DataMessageType {
 // signal fires, on up the chain.
 struct ReceiveDataParams {
   // The in-packet stream indentifier.
-  // RTP data channels use SSRCs, SCTP data channels use SIDs.
-  union {
-    uint32_t ssrc;
-    int sid = 0;
-  };
+  // SCTP data channels use SIDs.
+  int sid = 0;
   // The type of message (binary, text, or control).
   DataMessageType type = DMT_TEXT;
   // A per-stream value incremented per packet in the stream.
@@ -973,11 +970,7 @@ struct ReceiveDataParams {
 
 struct SendDataParams {
   // The in-packet stream indentifier.
-  // RTP data channels use SSRCs, SCTP data channels use SIDs.
-  union {
-    uint32_t ssrc;
-    int sid = 0;
-  };
+  int sid = 0;
   // The type of message (binary, text, or control).
   DataMessageType type = DMT_TEXT;
 

@@ -65,7 +65,6 @@ using cricket::MediaProtocolType;
 using cricket::RELAY_PORT_TYPE;
 using cricket::RidDescription;
 using cricket::RidDirection;
-using cricket::RtpDataContentDescription;
 using cricket::SctpDataContentDescription;
 using cricket::SessionDescription;
 using cricket::SimulcastDescription;
@@ -262,22 +261,6 @@ static const char kSdpString[] =
     "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n"
     "a=ssrc:3 mslabel:local_stream_1\r\n"
     "a=ssrc:3 label:video_track_id_1\r\n";
-
-static const char kSdpRtpDataChannelString[] =
-    "m=application 9 RTP/SAVPF 101\r\n"
-    "c=IN IP4 0.0.0.0\r\n"
-    "a=rtcp:9 IN IP4 0.0.0.0\r\n"
-    "a=ice-ufrag:ufrag_data\r\n"
-    "a=ice-pwd:pwd_data\r\n"
-    "a=mid:data_content_name\r\n"
-    "a=sendrecv\r\n"
-    "a=crypto:1 AES_CM_128_HMAC_SHA1_80 "
-    "inline:FvLcvU2P3ZWmQxgPAgcDu7Zl9vftYElFOjEzhWs5\r\n"
-    "a=rtpmap:101 google-data/90000\r\n"
-    "a=ssrc:10 cname:data_channel_cname\r\n"
-    "a=ssrc:10 msid:data_channel data_channeld0\r\n"
-    "a=ssrc:10 mslabel:data_channel\r\n"
-    "a=ssrc:10 label:data_channeld0\r\n";
 
 // draft-ietf-mmusic-sctp-sdp-03
 static const char kSdpSctpDataChannelString[] =
@@ -906,12 +889,6 @@ static const uint32_t kVideoTrack3Ssrc = 6;
 static const char kAudioTrackId3[] = "audio_track_id_3";
 static const uint32_t kAudioTrack3Ssrc = 7;
 
-// DataChannel
-static const char kDataChannelLabel[] = "data_channel";
-static const char kDataChannelMsid[] = "data_channeld0";
-static const char kDataChannelCname[] = "data_channel_cname";
-static const uint32_t kDataChannelSsrc = 10;
-
 // Candidate
 static const char kDummyMid[] = "dummy_mid";
 static const int kDummyIndex = 123;
@@ -1466,11 +1443,6 @@ class WebRtcSdpTest : public ::testing::Test {
               simulcast2.receive_layers().size());
   }
 
-  void CompareRtpDataContentDescription(const RtpDataContentDescription* dcd1,
-                                        const RtpDataContentDescription* dcd2) {
-    CompareMediaContentDescription<RtpDataContentDescription>(dcd1, dcd2);
-  }
-
   void CompareSctpDataContentDescription(
       const SctpDataContentDescription* dcd1,
       const SctpDataContentDescription* dcd2) {
@@ -1521,14 +1493,6 @@ class WebRtcSdpTest : public ::testing::Test {
         const SctpDataContentDescription* scd2 =
             c2.media_description()->as_sctp();
         CompareSctpDataContentDescription(scd1, scd2);
-      } else {
-        if (IsDataContent(&c1)) {
-          const RtpDataContentDescription* dcd1 =
-              c1.media_description()->as_rtp_data();
-          const RtpDataContentDescription* dcd2 =
-              c2.media_description()->as_rtp_data();
-          CompareRtpDataContentDescription(dcd1, dcd2);
-        }
       }
 
       CompareSimulcastDescription(
@@ -1816,28 +1780,6 @@ class WebRtcSdpTest : public ::testing::Test {
         kDataContentName, TransportDescription(kUfragData, kPwdData)));
   }
 
-  void AddRtpDataChannel() {
-    std::unique_ptr<RtpDataContentDescription> data(
-        new RtpDataContentDescription());
-    data_desc_ = data.get();
-
-    data_desc_->AddCodec(DataCodec(101, "google-data"));
-    StreamParams data_stream;
-    data_stream.id = kDataChannelMsid;
-    data_stream.cname = kDataChannelCname;
-    data_stream.set_stream_ids({kDataChannelLabel});
-    data_stream.ssrcs.push_back(kDataChannelSsrc);
-    data_desc_->AddStream(data_stream);
-    data_desc_->AddCrypto(
-        CryptoParams(1, "AES_CM_128_HMAC_SHA1_80",
-                     "inline:FvLcvU2P3ZWmQxgPAgcDu7Zl9vftYElFOjEzhWs5", ""));
-    data_desc_->set_protocol(cricket::kMediaProtocolSavpf);
-    desc_.AddContent(kDataContentName, MediaProtocolType::kRtp,
-                     std::move(data));
-    desc_.AddTransportInfo(TransportInfo(
-        kDataContentName, TransportDescription(kUfragData, kPwdData)));
-  }
-
   bool TestDeserializeDirection(RtpTransceiverDirection direction) {
     std::string new_sdp = kSdpFullString;
     ReplaceDirection(direction, &new_sdp);
@@ -2103,7 +2045,6 @@ class WebRtcSdpTest : public ::testing::Test {
   SessionDescription desc_;
   AudioContentDescription* audio_desc_;
   VideoContentDescription* video_desc_;
-  RtpDataContentDescription* data_desc_;
   SctpDataContentDescription* sctp_desc_;
   Candidates candidates_;
   std::unique_ptr<IceCandidateInterface> jcandidate_;
@@ -2269,18 +2210,6 @@ TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithAudioVideoRejected) {
   EXPECT_TRUE(TestSerializeRejected(true, true));
 }
 
-TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithRtpDataChannel) {
-  AddRtpDataChannel();
-  JsepSessionDescription jsep_desc(kDummyType);
-
-  MakeDescriptionWithoutCandidates(&jsep_desc);
-  std::string message = webrtc::SdpSerialize(jsep_desc);
-
-  std::string expected_sdp = kSdpString;
-  expected_sdp.append(kSdpRtpDataChannelString);
-  EXPECT_EQ(expected_sdp, message);
-}
-
 TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithSctpDataChannel) {
   bool use_sctpmap = true;
   AddSctpDataChannel(use_sctpmap);
@@ -2324,22 +2253,6 @@ TEST_F(WebRtcSdpTest, SerializeWithSctpDataChannelAndNewPort) {
       {{rtc::ToString(kDefaultSctpPort), rtc::ToString(kNewPort)}},
       &expected_sdp);
 
-  EXPECT_EQ(expected_sdp, message);
-}
-
-TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithDataChannelAndBandwidth) {
-  JsepSessionDescription jsep_desc(kDummyType);
-  AddRtpDataChannel();
-  data_desc_->set_bandwidth(100 * 1000);
-  data_desc_->set_bandwidth_type("AS");
-  MakeDescriptionWithoutCandidates(&jsep_desc);
-  std::string message = webrtc::SdpSerialize(jsep_desc);
-
-  std::string expected_sdp = kSdpString;
-  expected_sdp.append(kSdpRtpDataChannelString);
-  // Serializing data content shouldn't ignore bandwidth settings.
-  InjectAfter("m=application 9 RTP/SAVPF 101\r\nc=IN IP4 0.0.0.0\r\n",
-              "b=AS:100\r\n", &expected_sdp);
   EXPECT_EQ(expected_sdp, message);
 }
 
@@ -2913,21 +2826,6 @@ TEST_F(WebRtcSdpTest, DeserializeInvalidCandidiate) {
   EXPECT_FALSE(SdpDeserializeCandidate(kSdpTcpInvalidCandidate, &jcandidate));
 }
 
-TEST_F(WebRtcSdpTest, DeserializeSdpWithRtpDataChannels) {
-  AddRtpDataChannel();
-  JsepSessionDescription jdesc(kDummyType);
-  ASSERT_TRUE(jdesc.Initialize(desc_.Clone(), kSessionId, kSessionVersion));
-
-  std::string sdp_with_data = kSdpString;
-  sdp_with_data.append(kSdpRtpDataChannelString);
-  JsepSessionDescription jdesc_output(kDummyType);
-
-  // Deserialize
-  EXPECT_TRUE(SdpDeserialize(sdp_with_data, &jdesc_output));
-  // Verify
-  EXPECT_TRUE(CompareSessionDescription(jdesc, jdesc_output));
-}
-
 TEST_F(WebRtcSdpTest, DeserializeSdpWithSctpDataChannels) {
   bool use_sctpmap = true;
   AddSctpDataChannel(use_sctpmap);
@@ -3088,8 +2986,9 @@ TEST_F(WebRtcSdpTest, DeserializeSdpWithRtpmapAttribute) {
 }
 
 TEST_F(WebRtcSdpTest, DeserializeSdpWithStrangeApplicationProtocolNames) {
-  static const char* bad_strings[] = {"DTLS/SCTPRTP/", "obviously-bogus",
-                                      "UDP/TL/RTSP/SAVPF", "UDP/TL/RTSP/S"};
+  static const char* bad_strings[] = {
+      "DTLS/SCTPRTP/", "obviously-bogus",   "UDP/TL/RTSP/SAVPF",
+      "UDP/TL/RTSP/S", "DTLS/SCTP/RTP/FOO", "obviously-bogus/RTP/"};
   for (auto proto : bad_strings) {
     std::string sdp_with_data = kSdpString;
     sdp_with_data.append("m=application 9 ");
@@ -3098,18 +2997,6 @@ TEST_F(WebRtcSdpTest, DeserializeSdpWithStrangeApplicationProtocolNames) {
     JsepSessionDescription jdesc_output(kDummyType);
     EXPECT_FALSE(SdpDeserialize(sdp_with_data, &jdesc_output))
         << "Parsing should have failed on " << proto;
-  }
-  // The following strings are strange, but acceptable as RTP.
-  static const char* weird_strings[] = {"DTLS/SCTP/RTP/FOO",
-                                        "obviously-bogus/RTP/"};
-  for (auto proto : weird_strings) {
-    std::string sdp_with_data = kSdpString;
-    sdp_with_data.append("m=application 9 ");
-    sdp_with_data.append(proto);
-    sdp_with_data.append(" 47\r\n");
-    JsepSessionDescription jdesc_output(kDummyType);
-    EXPECT_TRUE(SdpDeserialize(sdp_with_data, &jdesc_output))
-        << "Parsing should have succeeded on " << proto;
   }
 }
 
@@ -3166,21 +3053,6 @@ TEST_F(WebRtcSdpTest,
 
   EXPECT_TRUE(SdpDeserialize(sdp_with_data, &jdesc_output));
   EXPECT_TRUE(CompareSessionDescription(jdesc, jdesc_output));
-}
-
-TEST_F(WebRtcSdpTest, DeserializeSdpWithRtpDataChannelsAndBandwidth) {
-  // We want to test that deserializing data content limits bandwidth
-  // settings (it should never be greater than the default).
-  // This should prevent someone from using unlimited data bandwidth through
-  // JS and "breaking the Internet".
-  // See: https://code.google.com/p/chromium/issues/detail?id=280726
-  std::string sdp_with_bandwidth = kSdpString;
-  sdp_with_bandwidth.append(kSdpRtpDataChannelString);
-  InjectAfter("a=mid:data_content_name\r\n", "b=AS:100\r\n",
-              &sdp_with_bandwidth);
-  JsepSessionDescription jdesc_with_bandwidth(kDummyType);
-
-  EXPECT_FALSE(SdpDeserialize(sdp_with_bandwidth, &jdesc_with_bandwidth));
 }
 
 TEST_F(WebRtcSdpTest, DeserializeSdpWithSctpDataChannelsAndBandwidth) {

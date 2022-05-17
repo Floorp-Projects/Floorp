@@ -1380,14 +1380,6 @@ void MediaDescriptionOptions::AddVideoSender(
                     num_sim_layers);
 }
 
-void MediaDescriptionOptions::AddRtpDataChannel(const std::string& track_id,
-                                                const std::string& stream_id) {
-  RTC_DCHECK(type == MEDIA_TYPE_DATA);
-  // TODO(steveanton): Is it the case that RtpDataChannel will never have more
-  // than one stream?
-  AddSenderInternal(track_id, {stream_id}, {}, SimulcastLayerList(), 1);
-}
-
 void MediaDescriptionOptions::AddSenderInternal(
     const std::string& track_id,
     const std::vector<std::string>& stream_ids,
@@ -1428,7 +1420,6 @@ MediaSessionDescriptionFactory::MediaSessionDescriptionFactory(
   channel_manager->GetSupportedAudioReceiveCodecs(&audio_recv_codecs_);
   channel_manager->GetSupportedVideoSendCodecs(&video_send_codecs_);
   channel_manager->GetSupportedVideoReceiveCodecs(&video_recv_codecs_);
-  channel_manager->GetSupportedDataCodecs(&rtp_data_codecs_);
   ComputeAudioCodecsIntersectionAndUnion();
   ComputeVideoCodecsIntersectionAndUnion();
 }
@@ -1521,12 +1512,8 @@ std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
 
   AudioCodecs offer_audio_codecs;
   VideoCodecs offer_video_codecs;
-  RtpDataCodecs offer_rtp_data_codecs;
-  GetCodecsForOffer(
-      current_active_contents, &offer_audio_codecs, &offer_video_codecs,
-      session_options.data_channel_type == DataChannelType::DCT_SCTP
-          ? nullptr
-          : &offer_rtp_data_codecs);
+  GetCodecsForOffer(current_active_contents, &offer_audio_codecs,
+                    &offer_video_codecs);
   if (!session_options.vad_enabled) {
     // If application doesn't want CN codecs in offer.
     StripCNCodecs(&offer_audio_codecs);
@@ -1574,8 +1561,8 @@ std::unique_ptr<SessionDescription> MediaSessionDescriptionFactory::CreateOffer(
       case MEDIA_TYPE_DATA:
         if (!AddDataContentForOffer(media_description_options, session_options,
                                     current_content, current_description,
-                                    offer_rtp_data_codecs, &current_streams,
-                                    offer.get(), &ice_credentials)) {
+                                    &current_streams, offer.get(),
+                                    &ice_credentials)) {
           return nullptr;
         }
         break;
@@ -1673,9 +1660,8 @@ MediaSessionDescriptionFactory::CreateAnswer(
   // sections.
   AudioCodecs answer_audio_codecs;
   VideoCodecs answer_video_codecs;
-  RtpDataCodecs answer_rtp_data_codecs;
   GetCodecsForAnswer(current_active_contents, *offer, &answer_audio_codecs,
-                     &answer_video_codecs, &answer_rtp_data_codecs);
+                     &answer_video_codecs);
 
   if (!session_options.vad_enabled) {
     // If application doesn't want CN codecs in answer.
@@ -1732,11 +1718,11 @@ MediaSessionDescriptionFactory::CreateAnswer(
         }
         break;
       case MEDIA_TYPE_DATA:
-        if (!AddDataContentForAnswer(
-                media_description_options, session_options, offer_content,
-                offer, current_content, current_description,
-                bundle_transport.get(), answer_rtp_data_codecs,
-                &current_streams, answer.get(), &ice_credentials)) {
+        if (!AddDataContentForAnswer(media_description_options, session_options,
+                                     offer_content, offer, current_content,
+                                     current_description,
+                                     bundle_transport.get(), &current_streams,
+                                     answer.get(), &ice_credentials)) {
           return nullptr;
         }
         break;
@@ -1899,7 +1885,6 @@ void MergeCodecsFromDescription(
     const std::vector<const ContentInfo*>& current_active_contents,
     AudioCodecs* audio_codecs,
     VideoCodecs* video_codecs,
-    RtpDataCodecs* rtp_data_codecs,
     UsedPayloadTypes* used_pltypes) {
   for (const ContentInfo* content : current_active_contents) {
     if (IsMediaContentOfType(content, MEDIA_TYPE_AUDIO)) {
@@ -1910,14 +1895,6 @@ void MergeCodecsFromDescription(
       const VideoContentDescription* video =
           content->media_description()->as_video();
       MergeCodecs<VideoCodec>(video->codecs(), video_codecs, used_pltypes);
-    } else if (IsMediaContentOfType(content, MEDIA_TYPE_DATA)) {
-      const RtpDataContentDescription* data =
-          content->media_description()->as_rtp_data();
-      if (data) {
-        // Only relevant for RTP datachannels
-        MergeCodecs<RtpDataCodec>(data->codecs(), rtp_data_codecs,
-                                  used_pltypes);
-      }
     }
   }
 }
@@ -1931,22 +1908,17 @@ void MergeCodecsFromDescription(
 void MediaSessionDescriptionFactory::GetCodecsForOffer(
     const std::vector<const ContentInfo*>& current_active_contents,
     AudioCodecs* audio_codecs,
-    VideoCodecs* video_codecs,
-    RtpDataCodecs* rtp_data_codecs) const {
+    VideoCodecs* video_codecs) const {
   // First - get all codecs from the current description if the media type
   // is used. Add them to |used_pltypes| so the payload type is not reused if a
   // new media type is added.
   UsedPayloadTypes used_pltypes;
   MergeCodecsFromDescription(current_active_contents, audio_codecs,
-                             video_codecs, rtp_data_codecs, &used_pltypes);
+                             video_codecs, &used_pltypes);
 
   // Add our codecs that are not in the current description.
   MergeCodecs<AudioCodec>(all_audio_codecs_, audio_codecs, &used_pltypes);
   MergeCodecs<VideoCodec>(all_video_codecs_, video_codecs, &used_pltypes);
-  // Only allocate a payload type for rtp datachannels when using rtp data
-  // channels.
-  if (rtp_data_codecs)
-    MergeCodecs<DataCodec>(rtp_data_codecs_, rtp_data_codecs, &used_pltypes);
 }
 
 // Getting codecs for an answer involves these steps:
@@ -1960,19 +1932,17 @@ void MediaSessionDescriptionFactory::GetCodecsForAnswer(
     const std::vector<const ContentInfo*>& current_active_contents,
     const SessionDescription& remote_offer,
     AudioCodecs* audio_codecs,
-    VideoCodecs* video_codecs,
-    RtpDataCodecs* rtp_data_codecs) const {
+    VideoCodecs* video_codecs) const {
   // First - get all codecs from the current description if the media type
   // is used. Add them to |used_pltypes| so the payload type is not reused if a
   // new media type is added.
   UsedPayloadTypes used_pltypes;
   MergeCodecsFromDescription(current_active_contents, audio_codecs,
-                             video_codecs, rtp_data_codecs, &used_pltypes);
+                             video_codecs, &used_pltypes);
 
   // Second - filter out codecs that we don't support at all and should ignore.
   AudioCodecs filtered_offered_audio_codecs;
   VideoCodecs filtered_offered_video_codecs;
-  RtpDataCodecs filtered_offered_rtp_data_codecs;
   for (const ContentInfo& content : remote_offer.contents()) {
     if (IsMediaContentOfType(&content, MEDIA_TYPE_AUDIO)) {
       const AudioContentDescription* audio =
@@ -1998,22 +1968,6 @@ void MediaSessionDescriptionFactory::GetCodecsForAnswer(
           filtered_offered_video_codecs.push_back(offered_video_codec);
         }
       }
-    } else if (IsMediaContentOfType(&content, MEDIA_TYPE_DATA)) {
-      const RtpDataContentDescription* data =
-          content.media_description()->as_rtp_data();
-      if (data) {
-        // RTP data. This part is inactive for SCTP data.
-        for (const RtpDataCodec& offered_rtp_data_codec : data->codecs()) {
-          if (!FindMatchingCodec<RtpDataCodec>(
-                  data->codecs(), filtered_offered_rtp_data_codecs,
-                  offered_rtp_data_codec, nullptr) &&
-              FindMatchingCodec<RtpDataCodec>(data->codecs(), rtp_data_codecs_,
-                                              offered_rtp_data_codec,
-                                              nullptr)) {
-            filtered_offered_rtp_data_codecs.push_back(offered_rtp_data_codec);
-          }
-        }
-      }
     }
   }
 
@@ -2023,8 +1977,6 @@ void MediaSessionDescriptionFactory::GetCodecsForAnswer(
                           &used_pltypes);
   MergeCodecs<VideoCodec>(filtered_offered_video_codecs, video_codecs,
                           &used_pltypes);
-  MergeCodecs<DataCodec>(filtered_offered_rtp_data_codecs, rtp_data_codecs,
-                         &used_pltypes);
 }
 
 MediaSessionDescriptionFactory::AudioVideoRtpHeaderExtensions
@@ -2333,7 +2285,7 @@ bool MediaSessionDescriptionFactory::AddVideoContentForOffer(
   return true;
 }
 
-bool MediaSessionDescriptionFactory::AddSctpDataContentForOffer(
+bool MediaSessionDescriptionFactory::AddDataContentForOffer(
     const MediaDescriptionOptions& media_description_options,
     const MediaSessionOptions& session_options,
     const ContentInfo* current_content,
@@ -2376,73 +2328,6 @@ bool MediaSessionDescriptionFactory::AddSctpDataContentForOffer(
     return false;
   }
   return true;
-}
-
-bool MediaSessionDescriptionFactory::AddRtpDataContentForOffer(
-    const MediaDescriptionOptions& media_description_options,
-    const MediaSessionOptions& session_options,
-    const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const RtpDataCodecs& rtp_data_codecs,
-    StreamParamsVec* current_streams,
-    SessionDescription* desc,
-    IceCredentialsIterator* ice_credentials) const {
-  auto data = std::make_unique<RtpDataContentDescription>();
-  bool secure_transport = (transport_desc_factory_->secure() != SEC_DISABLED);
-
-  cricket::SecurePolicy sdes_policy =
-      IsDtlsActive(current_content, current_description) ? cricket::SEC_DISABLED
-                                                         : secure();
-  std::vector<std::string> crypto_suites;
-  GetSupportedDataSdesCryptoSuiteNames(session_options.crypto_options,
-                                       &crypto_suites);
-  if (!CreateMediaContentOffer(media_description_options, session_options,
-                               rtp_data_codecs, sdes_policy,
-                               GetCryptos(current_content), crypto_suites,
-                               RtpHeaderExtensions(), ssrc_generator_,
-                               current_streams, data.get())) {
-    return false;
-  }
-
-  data->set_bandwidth(kRtpDataMaxBandwidth);
-  SetMediaProtocol(secure_transport, data.get());
-  desc->AddContent(media_description_options.mid, MediaProtocolType::kRtp,
-                   media_description_options.stopped, std::move(data));
-  if (!AddTransportOffer(media_description_options.mid,
-                         media_description_options.transport_options,
-                         current_description, desc, ice_credentials)) {
-    return false;
-  }
-  return true;
-}
-
-bool MediaSessionDescriptionFactory::AddDataContentForOffer(
-    const MediaDescriptionOptions& media_description_options,
-    const MediaSessionOptions& session_options,
-    const ContentInfo* current_content,
-    const SessionDescription* current_description,
-    const RtpDataCodecs& rtp_data_codecs,
-    StreamParamsVec* current_streams,
-    SessionDescription* desc,
-    IceCredentialsIterator* ice_credentials) const {
-  bool is_sctp = (session_options.data_channel_type == DCT_SCTP);
-  // If the DataChannel type is not specified, use the DataChannel type in
-  // the current description.
-  if (session_options.data_channel_type == DCT_NONE && current_content) {
-    RTC_CHECK(IsMediaContentOfType(current_content, MEDIA_TYPE_DATA));
-    is_sctp = (current_content->media_description()->protocol() ==
-               kMediaProtocolSctp);
-  }
-  if (is_sctp) {
-    return AddSctpDataContentForOffer(
-        media_description_options, session_options, current_content,
-        current_description, current_streams, desc, ice_credentials);
-  } else {
-    return AddRtpDataContentForOffer(media_description_options, session_options,
-                                     current_content, current_description,
-                                     rtp_data_codecs, current_streams, desc,
-                                     ice_credentials);
-  }
 }
 
 bool MediaSessionDescriptionFactory::AddUnsupportedContentForOffer(
@@ -2718,7 +2603,6 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
     const ContentInfo* current_content,
     const SessionDescription* current_description,
     const TransportInfo* bundle_transport,
-    const RtpDataCodecs& rtp_data_codecs,
     StreamParamsVec* current_streams,
     SessionDescription* answer,
     IceCredentialsIterator* ice_credentials) const {
@@ -2766,25 +2650,7 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
     bool offer_uses_sctpmap = offer_data_description->use_sctpmap();
     data_answer->as_sctp()->set_use_sctpmap(offer_uses_sctpmap);
   } else {
-    // RTP offer
-    data_answer = std::make_unique<RtpDataContentDescription>();
-
-    const RtpDataContentDescription* offer_data_description =
-        offer_content->media_description()->as_rtp_data();
-    RTC_CHECK(offer_data_description);
-    if (!SetCodecsInAnswer(offer_data_description, rtp_data_codecs,
-                           media_description_options, session_options,
-                           ssrc_generator_, current_streams,
-                           data_answer->as_rtp_data())) {
-      return false;
-    }
-    if (!CreateMediaContentAnswer(
-            offer_data_description, media_description_options, session_options,
-            sdes_policy, GetCryptos(current_content), RtpHeaderExtensions(),
-            ssrc_generator_, enable_encrypted_rtp_header_extensions_,
-            current_streams, bundle_enabled, data_answer.get())) {
-      return false;  // Fails the session setup.
-    }
+    RTC_NOTREACHED() << "Non-SCTP data content found";
   }
 
   bool secure = bundle_transport ? bundle_transport->description.secure()
@@ -2800,13 +2666,6 @@ bool MediaSessionDescriptionFactory::AddDataContentForAnswer(
     return false;
   }
 
-  if (!rejected && session_options.data_channel_type == DCT_RTP) {
-    data_answer->set_bandwidth(kRtpDataMaxBandwidth);
-  } else {
-    // RFC 3264
-    // The answer MUST contain the same number of m-lines as the offer.
-    RTC_LOG(LS_INFO) << "Data is not supported in the answer.";
-  }
   answer->AddContent(media_description_options.mid, offer_content->type,
                      rejected, std::move(data_answer));
   return true;
@@ -2991,12 +2850,6 @@ const VideoContentDescription* GetFirstVideoContentDescription(
   return desc ? desc->as_video() : nullptr;
 }
 
-const RtpDataContentDescription* GetFirstRtpDataContentDescription(
-    const SessionDescription* sdesc) {
-  auto desc = GetFirstMediaContentDescription(sdesc, MEDIA_TYPE_DATA);
-  return desc ? desc->as_rtp_data() : nullptr;
-}
-
 const SctpDataContentDescription* GetFirstSctpDataContentDescription(
     const SessionDescription* sdesc) {
   auto desc = GetFirstMediaContentDescription(sdesc, MEDIA_TYPE_DATA);
@@ -3067,12 +2920,6 @@ VideoContentDescription* GetFirstVideoContentDescription(
     SessionDescription* sdesc) {
   auto desc = GetFirstMediaContentDescription(sdesc, MEDIA_TYPE_VIDEO);
   return desc ? desc->as_video() : nullptr;
-}
-
-RtpDataContentDescription* GetFirstRtpDataContentDescription(
-    SessionDescription* sdesc) {
-  auto desc = GetFirstMediaContentDescription(sdesc, MEDIA_TYPE_DATA);
-  return desc ? desc->as_rtp_data() : nullptr;
 }
 
 SctpDataContentDescription* GetFirstSctpDataContentDescription(

@@ -58,7 +58,6 @@ class ChannelManagerTest : public ::testing::Test {
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
         cm_(cricket::ChannelManager::Create(CreateFakeMediaEngine(),
-                                            std::make_unique<FakeDataEngine>(),
                                             false,
                                             worker_,
                                             network_.get())),
@@ -80,14 +79,8 @@ class ChannelManagerTest : public ::testing::Test {
         webrtc::CryptoOptions(), &ssrc_generator_, VideoOptions(),
         video_bitrate_allocator_factory_.get());
     EXPECT_TRUE(video_channel != nullptr);
-    cricket::RtpDataChannel* rtp_data_channel = cm_->CreateRtpDataChannel(
-        cricket::MediaConfig(), rtp_transport, rtc::Thread::Current(),
-        cricket::CN_DATA, kDefaultSrtpRequired, webrtc::CryptoOptions(),
-        &ssrc_generator_);
-    EXPECT_TRUE(rtp_data_channel != nullptr);
     cm_->DestroyVideoChannel(video_channel);
     cm_->DestroyVoiceChannel(voice_channel);
-    cm_->DestroyRtpDataChannel(rtp_data_channel);
   }
 
   std::unique_ptr<rtc::Thread> network_;
@@ -112,7 +105,6 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
 
   // Enable and check.
   cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
-                                        std::make_unique<FakeDataEngine>(),
                                         true, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
   EXPECT_TRUE(ContainsMatchingCodec(send_codecs, rtx_codec));
@@ -121,7 +113,6 @@ TEST_F(ChannelManagerTest, SetVideoRtxEnabled) {
 
   // Disable and check.
   cm_ = cricket::ChannelManager::Create(CreateFakeMediaEngine(),
-                                        std::make_unique<FakeDataEngine>(),
                                         false, worker_, network_.get());
   cm_->GetSupportedVideoSendCodecs(&send_codecs);
   EXPECT_FALSE(ContainsMatchingCodec(send_codecs, rtx_codec));

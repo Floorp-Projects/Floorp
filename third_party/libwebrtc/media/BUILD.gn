@@ -142,8 +142,6 @@ rtc_library("rtc_media_base") {
     #"base/media_engine.h",
     #"base/rid_description.cc",
     #"base/rid_description.h",
-    #"base/rtp_data_engine.cc",
-    #"base/rtp_data_engine.h",
     #"base/rtp_utils.cc",
     #"base/rtp_utils.h",
     #"base/stream_params.cc",
@@ -630,7 +628,6 @@ if (rtc_include_tests) {
       sources = [
         "base/codec_unittest.cc",
         "base/media_engine_unittest.cc",
-        "base/rtp_data_engine_unittest.cc",
         "base/rtp_utils_unittest.cc",
         "base/sdp_fmtp_utils_unittest.cc",
         "base/stream_params_unittest.cc",

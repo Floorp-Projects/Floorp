@@ -84,7 +84,6 @@ class RtpTransceiverUnifiedPlanTest : public ::testing::Test {
   RtpTransceiverUnifiedPlanTest()
       : channel_manager_(cricket::ChannelManager::Create(
             std::make_unique<cricket::FakeMediaEngine>(),
-            std::make_unique<cricket::FakeDataEngine>(),
             false,
             rtc::Thread::Current(),
             rtc::Thread::Current())),
@@ -121,7 +120,6 @@ class RtpTransceiverTestForHeaderExtensions : public ::testing::Test {
   RtpTransceiverTestForHeaderExtensions()
       : channel_manager_(cricket::ChannelManager::Create(
             std::make_unique<cricket::FakeMediaEngine>(),
-            std::make_unique<cricket::FakeDataEngine>(),
             false,
             rtc::Thread::Current(),
             rtc::Thread::Current())),

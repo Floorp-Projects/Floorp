@@ -37,7 +37,6 @@
 #include "media/base/media_channel.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
-#include "media/base/rtp_data_engine.h"
 #include "media/base/stream_params.h"
 #include "media/base/test_utils.h"
 #include "media/engine/fake_webrtc_call.h"
@@ -112,8 +111,7 @@ class RtpSenderReceiverTest
         local_stream_(MediaStream::Create(kStreamId1)) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
       channel_manager_ = cricket::ChannelManager::Create(
-          absl::WrapUnique(media_engine_),
-          std::make_unique<cricket::RtpDataEngine>(), false, worker_thread_,
+          absl::WrapUnique(media_engine_), false, worker_thread_,
           network_thread_);
     });
 

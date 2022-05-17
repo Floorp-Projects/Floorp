@@ -553,11 +553,10 @@ TEST_F(DataChannelIntegrationTestUnifiedPlan,
   callee()->AddAudioVideoTracks();
   caller()->CreateAndSetAndSignalOffer();
   ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
-  network_thread()->Invoke<void>(RTC_FROM_HERE, [this] {
-    ASSERT_EQ_WAIT(SctpTransportState::kConnected,
-                   caller()->pc()->GetSctpTransport()->Information().state(),
-                   kDefaultTimeout);
-  });
+  ASSERT_TRUE_WAIT(caller()->pc()->GetSctpTransport(), kDefaultTimeout);
+  ASSERT_EQ_WAIT(SctpTransportState::kConnected,
+                 caller()->pc()->GetSctpTransport()->Information().state(),
+                 kDefaultTimeout);
   ASSERT_TRUE_WAIT(callee()->data_channel(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(callee()->data_observer()->IsOpen(), kDefaultTimeout);
 }
