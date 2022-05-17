@@ -668,7 +668,7 @@ void StatsCollector::UpdateStats(
       ExtractSessionInfo();
 
   // TODO(tommi): All of these hop over to the worker thread to fetch
-  // information.  We could use an AsyncInvoker to run all of these and post
+  // information.  We could post a task to run all of these and post
   // the information back to the signaling thread where we can create and
   // update stats reports.  That would also clean up the threading story a bit
   // since we'd be creating/updating the stats report objects consistently on
