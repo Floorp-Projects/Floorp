@@ -21,7 +21,7 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
   constructor(aModuleName, aMessageManager) {
     super(aModuleName, aMessageManager);
 
-    this._seqNo = 0;
+    this._actionCallback = () => {};
     this._isActive = false;
     this._previousMessage = "";
 
@@ -132,6 +132,16 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       perform: e => this.docShell.doCommand("cmd_selectAll"),
     },
   ];
+
+  receiveMessage({ name, data }) {
+    debug`receiveMessage ${name}`;
+
+    switch (name) {
+      case "ExecuteSelectionAction": {
+        this._actionCallback(data);
+      }
+    }
+  }
 
   _performPaste() {
     this.handleEvent({ type: "pagehide" });
@@ -307,8 +317,6 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       const password = this._isPasswordField(aEvent);
 
       const msg = {
-        type: "GeckoView:ShowSelectionAction",
-        seqNo: this._seqNo,
         collapsed: aEvent.collapsed,
         editable: aEvent.selectionEditable,
         password,
@@ -333,29 +341,21 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
         return;
       }
 
-      msg.seqNo = ++this._seqNo;
       this._isActive = true;
       this._previousMessage = JSON.stringify(msg);
 
-      this.eventDispatcher.sendRequest(msg, {
-        onSuccess: response => {
-          if (response.seqNo !== this._seqNo) {
-            // Stale action.
-            warn`Stale response ${response.id}`;
-            return;
-          }
-          const action = actions.find(action => action.id === response.id);
-          if (action) {
-            debug`Performing ${response.id}`;
-            action.perform.call(this, aEvent, response);
-          } else {
-            warn`Invalid action ${response.id}`;
-          }
-        },
-        onError: _ => {
-          // Do nothing; we can get here if the delegate was just unregistered.
-        },
-      });
+      // We can't just listen to the response of the message because we accept
+      // multiple callbacks.
+      this._actionCallback = data => {
+        const action = actions.find(action => action.id === data.id);
+        if (action) {
+          debug`Performing ${data.id}`;
+          action.perform.call(this, aEvent);
+        } else {
+          warn`Invalid action ${data.id}`;
+        }
+      };
+      this.sendAsyncMessage("ShowSelectionAction", msg);
     } else if (
       [
         "invisibleselection",
@@ -367,7 +367,6 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       if (!this._isActive) {
         return;
       }
-
       this._isActive = false;
 
       // Mark previous actions as stale. Don't do this for "invisibleselection"
@@ -377,10 +376,7 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
         this._seqNo++;
       }
 
-      this.eventDispatcher.sendRequest({
-        type: "GeckoView:HideSelectionAction",
-        reason,
-      });
+      this.sendAsyncMessage("HideSelectionAction", { reason });
     } else if (reason == "dragcaret") {
       // nothing for selection action
     } else {
