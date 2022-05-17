@@ -71,7 +71,7 @@ ReconfigurationResponseParameter::Parse(rtc::ArrayView<const uint8_t> data) {
     return absl::nullopt;
   }
 
-  ReconfigResponseSN response_sequence_number(reader->Load32<4>());
+  ReconfigRequestSN response_sequence_number(reader->Load32<4>());
   Result result;
   uint32_t result_nbr = reader->Load32<8>();
   switch (result_nbr) {

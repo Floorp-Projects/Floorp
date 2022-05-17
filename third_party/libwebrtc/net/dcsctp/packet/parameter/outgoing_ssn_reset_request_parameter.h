@@ -41,7 +41,7 @@ class OutgoingSSNResetRequestParameter
 
   explicit OutgoingSSNResetRequestParameter(
       ReconfigRequestSN request_sequence_number,
-      ReconfigResponseSN response_sequence_number,
+      ReconfigRequestSN response_sequence_number,
       TSN sender_last_assigned_tsn,
       std::vector<StreamID> stream_ids)
       : request_sequence_number_(request_sequence_number),
@@ -58,7 +58,7 @@ class OutgoingSSNResetRequestParameter
   ReconfigRequestSN request_sequence_number() const {
     return request_sequence_number_;
   }
-  ReconfigResponseSN response_sequence_number() const {
+  ReconfigRequestSN response_sequence_number() const {
     return response_sequence_number_;
   }
   TSN sender_last_assigned_tsn() const { return sender_last_assigned_tsn_; }
@@ -68,7 +68,7 @@ class OutgoingSSNResetRequestParameter
   static constexpr size_t kStreamIdSize = sizeof(uint16_t);
 
   ReconfigRequestSN request_sequence_number_;
-  ReconfigResponseSN response_sequence_number_;
+  ReconfigRequestSN response_sequence_number_;
   TSN sender_last_assigned_tsn_;
   std::vector<StreamID> stream_ids_;
 };

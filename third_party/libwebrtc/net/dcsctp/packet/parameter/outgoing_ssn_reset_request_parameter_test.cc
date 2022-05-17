@@ -26,7 +26,7 @@ using ::testing::ElementsAre;
 
 TEST(OutgoingSSNResetRequestParameterTest, SerializeAndDeserialize) {
   OutgoingSSNResetRequestParameter parameter(
-      ReconfigRequestSN(1), ReconfigResponseSN(2), TSN(3),
+      ReconfigRequestSN(1), ReconfigRequestSN(2), TSN(3),
       {StreamID(4), StreamID(5), StreamID(6)});
 
   std::vector<uint8_t> serialized;

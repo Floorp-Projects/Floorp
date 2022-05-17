@@ -64,7 +64,7 @@ TEST(ReConfigChunkTest, FromCapture) {
 TEST(ReConfigChunkTest, SerializeAndDeserialize) {
   Parameters::Builder params_builder =
       Parameters::Builder().Add(OutgoingSSNResetRequestParameter(
-          ReconfigRequestSN(123), ReconfigResponseSN(456), TSN(789),
+          ReconfigRequestSN(123), ReconfigRequestSN(456), TSN(789),
           {StreamID(42), StreamID(43)}));
 
   ReConfigChunk chunk(params_builder.Build());

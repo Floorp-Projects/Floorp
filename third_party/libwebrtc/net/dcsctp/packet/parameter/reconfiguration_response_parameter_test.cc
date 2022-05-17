@@ -24,7 +24,7 @@ namespace {
 
 TEST(ReconfigurationResponseParameterTest, SerializeAndDeserializeFirstForm) {
   ReconfigurationResponseParameter parameter(
-      ReconfigResponseSN(1),
+      ReconfigRequestSN(1),
       ReconfigurationResponseParameter::Result::kSuccessPerformed);
 
   std::vector<uint8_t> serialized;
@@ -44,7 +44,7 @@ TEST(ReconfigurationResponseParameterTest, SerializeAndDeserializeFirstForm) {
 TEST(ReconfigurationResponseParameterTest,
      SerializeAndDeserializeFirstFormSecondForm) {
   ReconfigurationResponseParameter parameter(
-      ReconfigResponseSN(1),
+      ReconfigRequestSN(1),
       ReconfigurationResponseParameter::Result::kSuccessPerformed, TSN(2),
       TSN(3));
 

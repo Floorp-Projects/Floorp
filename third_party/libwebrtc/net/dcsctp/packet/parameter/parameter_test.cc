@@ -29,7 +29,7 @@ TEST(ParameterTest, SerializeDeserializeParameter) {
   Parameters parameters =
       Parameters::Builder()
           .Add(OutgoingSSNResetRequestParameter(ReconfigRequestSN(123),
-                                                ReconfigResponseSN(456),
+                                                ReconfigRequestSN(456),
                                                 TSN(789), {StreamID(42)}))
           .Build();
 
