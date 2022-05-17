@@ -366,6 +366,7 @@
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 #include "nsStringIterator.h"
+#include "nsStringStream.h"
 #include "nsTArray.h"
 #include "nsTLiteralString.h"
 #include "nsTPromiseFlatString.h"
@@ -7564,9 +7565,7 @@ void nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
 }
 
 nsresult nsContentUtils::IPCTransferableToTransferable(
-    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
-    nsIPrincipal* aRequestingPrincipal,
-    const nsContentPolicyType& aContentPolicyType,
+    const IPCDataTransfer& aDataTransfer, bool aAddDataFlavor,
     nsITransferable* aTransferable, IShmemAllocator* aAllocator) {
   auto release = MakeScopeExit([&] {
     const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
@@ -7577,12 +7576,12 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
     }
   });
 
-  aTransferable->SetIsPrivateData(aIsPrivateData);
-
   nsresult rv;
   const nsTArray<IPCDataTransferItem>& items = aDataTransfer.items();
   for (const auto& item : items) {
-    aTransferable->AddDataFlavor(item.flavor().get());
+    if (aAddDataFlavor) {
+      aTransferable->AddDataFlavor(item.flavor().get());
+    }
 
     if (item.data().type() == IPCDataTransferData::TnsString) {
       nsCOMPtr<nsISupportsString> dataWrapper =
@@ -7597,14 +7596,26 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
       NS_ENSURE_SUCCESS(rv, rv);
     } else if (item.data().type() == IPCDataTransferData::TShmem) {
       if (nsContentUtils::IsFlavorImage(item.flavor())) {
-        nsCOMPtr<imgIContainer> imageContainer;
-        rv = nsContentUtils::DataTransferItemToImage(
-            item, getter_AddRefs(imageContainer));
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (item.imageDetails().isSome()) {
+          nsCOMPtr<imgIContainer> imageContainer;
+          rv = nsContentUtils::DataTransferItemToImage(
+              item, getter_AddRefs(imageContainer));
+          NS_ENSURE_SUCCESS(rv, rv);
 
-        rv =
-            aTransferable->SetTransferData(item.flavor().get(), imageContainer);
-        NS_ENSURE_SUCCESS(rv, rv);
+          rv = aTransferable->SetTransferData(item.flavor().get(),
+                                              imageContainer);
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          mozilla::ipc::Shmem data = item.data().get_Shmem();
+          nsCOMPtr<nsIInputStream> stream;
+
+          NS_NewCStringInputStream(
+              getter_AddRefs(stream),
+              nsDependentCSubstring(data.get<char>(), data.Size<char>()));
+
+          rv = aTransferable->SetTransferData(item.flavor().get(), stream);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       } else {
         nsCOMPtr<nsISupportsCString> dataWrapper =
             do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
@@ -7622,6 +7633,19 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
       }
     }
   }
+  return NS_OK;
+}
+
+nsresult nsContentUtils::IPCTransferableToTransferable(
+    const IPCDataTransfer& aDataTransfer, const bool& aIsPrivateData,
+    nsIPrincipal* aRequestingPrincipal,
+    const nsContentPolicyType& aContentPolicyType, bool aAddDataFlavor,
+    nsITransferable* aTransferable, IShmemAllocator* aAllocator) {
+  aTransferable->SetIsPrivateData(aIsPrivateData);
+
+  nsresult rv = IPCTransferableToTransferable(aDataTransfer, aAddDataFlavor,
+                                              aTransferable, aAllocator);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
   aTransferable->SetContentPolicyType(aContentPolicyType);
@@ -7743,8 +7767,9 @@ nsresult nsContentUtils::DataTransferItemToImage(
     const IPCDataTransferItem& aItem, imgIContainer** aContainer) {
   MOZ_ASSERT(aItem.data().type() == IPCDataTransferData::TShmem);
   MOZ_ASSERT(IsFlavorImage(aItem.flavor()));
+  MOZ_ASSERT(aItem.imageDetails().isSome());
 
-  const IPCDataTransferImage& imageDetails = aItem.imageDetails();
+  const IPCDataTransferImage& imageDetails = aItem.imageDetails().value();
   const IntSize size(imageDetails.width(), imageDetails.height());
   RefPtr<DataSourceSurface> image =
       ShmemToDataSurface(aItem.data().get_Shmem(), imageDetails.stride(), size,
@@ -7893,12 +7918,9 @@ void nsContentUtils::TransferableToIPCTransferable(
         // Turn item->data() into an nsCString prior to accessing it.
         item->data() = std::move(surfaceData.ref());
 
-        IPCDataTransferImage& imageDetails = item->imageDetails();
         mozilla::gfx::IntSize size = dataSurface->GetSize();
-        imageDetails.width() = size.width;
-        imageDetails.height() = size.height;
-        imageDetails.stride() = stride;
-        imageDetails.format() = dataSurface->GetFormat();
+        item->imageDetails().emplace(size.width, size.height, stride,
+                                     dataSurface->GetFormat());
       } else {
         // Otherwise, handle this as a file.
         nsCOMPtr<BlobImpl> blobImpl;
