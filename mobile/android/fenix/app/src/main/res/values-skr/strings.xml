@@ -307,6 +307,8 @@
     <string name="preferences_add_private_browsing_shortcut">نجی براؤزنگ شاٹ کٹ شامل کرو</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">ایچ ٹی ٹی پی ایس ــ صرف موڈ</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">خودکار طور تے ودھدی ہوئی حفاظت کیتے ایچ ٹی ٹی پی ایس خفیہ کاری پروٹوکول ورتندے ہوئے سائٹاں کوں کنکٹ کرݨ دی کوشش کریندے۔</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
     <string name="preferences_https_only_on">چالو</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -494,14 +496,20 @@
     <string name="preferences_tracking_protection_exceptions">استثنيات</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ساریاں سائٹاں کیتے چالو کرو</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">استثنیات تہاکوں چُݨی ہوئیاں سائٹاں دے ٹریکنگ تحفظ کوں غیرفعال کرݨ ݙیندن۔</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">ٻیا سِکھو</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">ورتاوا تے فنی ڈیٹا</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">%1$s کوں بہتر بݨاوݨ وچ ساݙی مدد کرݨ کیتے تہاݙے براؤزر دی کارکردگی، ورتاوا تے ہارڈویئر تے ڈیٹا کوں من پسند کاری کوں موزلّا نال شیئر کریندے </string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">مارکیٹنگ ڈیٹا</string>
 
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">ساݙے موبائل مارکیٹنگ وینڈر ایڈجسٹمنٹ نال بݨیادی ورتاوے دا ڈیٹا شیئر کریندے</string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">مطالعہ</string>
 
@@ -1127,6 +1135,8 @@
     <string name="preferences_delete_browsing_data_button">براؤزنگ ڈیٹا مٹاؤ</string>
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">بند کرݨ تے براؤزنگ ڈیٹا مٹاؤ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">جہڑے ویلے تساں مین مینیو وچوں  \&quot;چھوڑو\&quot; کوں چُݨدے ہو تاں براؤزنگ دا ڈیٹا خودبخود مٹ ویندا ہے</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">نکل ون٘ڄو</string>
 
@@ -1188,17 +1198,26 @@
     <string name="onboarding_firefox_account_sync_is_on">ہم وقت کرݨ چالو ہے</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">ہمیشہ رازداری تے</string>
+    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_4">%1$s خودکار طور تے کمپنیاں کوں ویب تے  تہاکوں خفیہ فالو کرݨ کنوں روکیندے۔</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے کنوں مقرر)</string>
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">کارکردگی تے رازداری کیتے متوازن تھیا، ورقے معمول دے مطابق لوڈ تھیندن۔</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">سخت</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">ورقیاں کوں تکھیرا لوڈ کرݨ سانگے ٻئے ٹریکراں کوں بلاک کریندے، پر ورقے تے کجھ فعالت ترٹ سڳدی ہے۔</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">آپݨے ٹول بار دی جاء چُݨو</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">ٹول بار کوں سوکھی پہنچ آلی جاء تے رکھو۔ ایں کوں تل وچ رکھو یا چوٹی تے گھن ون٘ڄو۔ </string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">تہاݙی رازداری</string>
 
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو اوں کوں تہاݙے ڳاٻو وچ ݙیوݨ سانگے اساں %s کوں بݨایا ہے۔</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ساݙا رازداری نوٹس پڑھو</string>
 
@@ -1240,6 +1259,8 @@
     <string name="sign_in_with_email">ایندی بجائے ای میل ورتو</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[کھاتہ کائنی؟ ڈیوائساں دے درمیان فائرفوکس ہم وقت کرݨ کیتے<u>ہک کھاتہ بݨاؤ</u>۔]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s تہاݙے کھاتے نال ہم وقت تھیوݨ رک ویسی، پر ایں ڈیوائس تے تہاݙے براؤز تھئے ڈیٹا وچوں کجھ نہ مٹیسی۔</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
     <string name="sign_out_disconnect">کنکشن توڑو</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
@@ -1255,6 +1276,8 @@
     <string name="preference_enhanced_tracking_protection">بہتر ٹریکنگ حفاظت</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">بغیر فالو تھئے براؤز کرو</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">آپݨاں ڈیٹا آپݨے کول رکھو۔ %s تہاکوں ٻہوں سارے ݙاڈھے عام ٹریکراں کنوں بچیندے، جہڑے  تہاݙے آن لائن کم کوں فالو کریندن۔</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">ٻیا سِکھو</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1265,6 +1288,8 @@
     <string name="preference_enhanced_tracking_protection_standard_info_button">معیاری ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">سخت</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">ورقیاں کوں تکھیرا لوڈ کرݨ سانگے ٻئے ٹریکراں کوں بلاک کریندے، پر ورقے تے کجھ فعالت ترٹ سڳدی ہے۔</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">سخت ٹریکنگ تحفظ نال کیا بلاک ہے</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1306,6 +1331,8 @@
     <string name="etp_social_media_trackers_description">ویب تے تہاݙیاں براؤزنگ سرگرمیاں کوں ٹریک کرݨ آلے سماجی نیٹ ورک دی صلاحیت کوں محدود کریندے۔</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">کراس سائٹ ٹریکنگ کوکیاں</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">کوکیاں کوں بلاک کریندا ہے جہڑا اشتہاری نیٹ ورکس تے تجزیاتی کمپنیاں تہاݙے براؤزنگ ڈیٹا کوں کئی سائٹاں تے مرتب کرݨ کیتے ورتیندیاں ہن۔</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">کریپٹومینرز</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1316,6 +1343,8 @@
     <string name="etp_fingerprinters_description">تہاݙی ڈیوائس بارے نویکلے سُن٘ڄاپُو ڈیٹا کوں کٹھا تھیوݨ کنوں روکیندے۔ جیکوں ٹریک کرݨ کیتے ورتیا ون٘ڄ سڳدے۔</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">ٹریکنگ مواد</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">ٹریکنگ کوڈ تے مشتمل اشتہارات ، ویڈیوز تے بئے مواد کوں لوڈ تھیوݨ کنوں روکیندا ہے۔  ویب سائٹ دی فعالیت کوں کجھ متاثر کر سڳدا ہے۔</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">ایں سائٹ کیتے حفاظتاں چالو ہن۔</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1334,6 +1363,9 @@
     <string name="etp_redirect_trackers_title">ریڈائرکٹ ٹریکرز</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">معلوم ٹریکنگ ویب سائٹاں تے ریڈائریکٹ نال مقرر تھیاں کوکیاں کوں صاف کریندے۔</string>
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description"> ہیٹھاں کجھ نشان زدہ ٹریکرز کوں ایں ورقے تے  جزوی طور تے اݨ بلاک کر ݙتا ڳئے کیوں جو تساں انہاں نال تعامل کیتے*۔</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">ٻیا سِکھو</string>
 
@@ -1379,6 +1411,9 @@
     <string name="add_to_homescreen_continue">ویب سائٹ تے جاری رکھو</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">شارٹ کٹ ناں</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">تساں ایں ویب سائٹ کوں آسانی نال آپݨی ڈیوائس دی ہوم سکرین وچ شامل کر سڳدے ہو  تاں جو  فوری رسائی حاصل تھیوے تے  ایپ جیہے تجربے نال  تیزی نال براؤز کرو۔</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">لاگ ان تے پاس ورڈ</string>
@@ -1451,6 +1486,8 @@
     <string name="logins_biometric_prompt_message">آپݨے محفوظ کیتے لاگ اناں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">لاگ ان تے پاس ورڈ دی محفوظ بݨاؤ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">جے تہاݙے کول کوئی ٻئی ڈیوائس ہے تاں آپݨے محفوظ کیتے لاگ ان تے پاس ورڈ تائیں پہنچ کنوں بچݨ سانگے ڈیوائس لاگ ان پیٹرن، پن پاس ورڈ قائم کرو۔</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">بعد وچ</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1530,6 +1567,8 @@
     <string name="credit_cards_biometric_prompt_message">آپݨے محفوظ تھئے کارڈاں کوں ݙیکھݨ کیتے اݨ لاک کرو</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title">آپݨے کریڈٹ کارڈاں کوں محفوظ بݨاؤ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">جے تہاݙے کول کوئی ٻئی ڈیوائس ہے تاں آپݨے محفوظ کیتے کریڈٹ کارڈ تائیں پہنچ کنوں بچݨ سانگے ڈیوائس لاگ ان پیٹرن، پن پاس ورڈ قائم کرو۔</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">بݨ قائم کرو</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
