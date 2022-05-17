@@ -35,7 +35,7 @@ constexpr float kLimiterThresholdForAgcGainDbfs = -kHeadroomDbfs;
 // This is the threshold for speech. Speech frames are used for updating the
 // speech level, measuring the amount of speech, and decide when to allow target
 // gain reduction.
-constexpr float kVadConfidenceThreshold = 0.9f;
+constexpr float kVadConfidenceThreshold = 0.95f;
 
 // The amount of 'memory' of the Level Estimator. Decides leak factors.
 constexpr int kFullBufferSizeMs = 1200;

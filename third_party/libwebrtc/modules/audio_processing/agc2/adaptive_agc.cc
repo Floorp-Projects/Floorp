@@ -20,6 +20,11 @@
 namespace webrtc {
 namespace {
 
+using AdaptiveDigitalConfig =
+    AudioProcessing::Config::GainController2::AdaptiveDigital;
+using NoiseEstimatorType =
+    AudioProcessing::Config::GainController2::NoiseEstimator;
+
 void DumpDebugData(const AdaptiveDigitalGainApplier::FrameInfo& info,
                    ApmDataDumper& dumper) {
   dumper.DumpRaw("agc2_vad_probability", info.vad_result.speech_probability);
@@ -35,7 +40,7 @@ constexpr float kMaxOutputNoiseLevelDbfs = -50.0f;
 
 // Detects the available CPU features and applies any kill-switches.
 AvailableCpuFeatures GetAllowedCpuFeatures(
-    const AudioProcessing::Config::GainController2::AdaptiveDigital& config) {
+    const AdaptiveDigitalConfig& config) {
   AvailableCpuFeatures features = GetAvailableCpuFeatures();
   if (!config.sse2_allowed) {
     features.sse2 = false;
@@ -49,6 +54,20 @@ AvailableCpuFeatures GetAllowedCpuFeatures(
   return features;
 }
 
+std::unique_ptr<NoiseLevelEstimator> CreateNoiseLevelEstimator(
+    NoiseEstimatorType estimator_type,
+    ApmDataDumper* apm_data_dumper) {
+  switch (estimator_type) {
+    case NoiseEstimatorType::kStationaryNoise:
+      return CreateStationaryNoiseEstimator(apm_data_dumper);
+    case NoiseEstimatorType::kNoiseFloor:
+      return CreateNoiseFloorEstimator(apm_data_dumper);
+  }
+}
+
+constexpr NoiseEstimatorType kDefaultNoiseLevelEstimatorType =
+    NoiseEstimatorType::kNoiseFloor;
+
 }  // namespace
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
@@ -58,31 +77,32 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
                     kMaxGainChangePerSecondDb,
                     kMaxOutputNoiseLevelDbfs),
       apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(CreateNoiseLevelEstimator(apm_data_dumper)) {
+      noise_level_estimator_(
+          CreateNoiseLevelEstimator(kDefaultNoiseLevelEstimatorType,
+                                    apm_data_dumper)) {
   RTC_DCHECK(apm_data_dumper);
 }
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
-                         const AudioProcessing::Config::GainController2& config)
+                         const AdaptiveDigitalConfig& config)
     : speech_level_estimator_(
           apm_data_dumper,
-          config.adaptive_digital.level_estimator,
-          config.adaptive_digital
-              .level_estimator_adjacent_speech_frames_threshold,
-          config.adaptive_digital.initial_saturation_margin_db,
-          config.adaptive_digital.extra_saturation_margin_db),
-      vad_(config.adaptive_digital.vad_reset_period_ms,
-           config.adaptive_digital.vad_probability_attack,
-           GetAllowedCpuFeatures(config.adaptive_digital)),
-      gain_applier_(
-          apm_data_dumper,
-          config.adaptive_digital.gain_applier_adjacent_speech_frames_threshold,
-          config.adaptive_digital.max_gain_change_db_per_second,
-          config.adaptive_digital.max_output_noise_level_dbfs),
+          config.level_estimator,
+          config.level_estimator_adjacent_speech_frames_threshold,
+          config.initial_saturation_margin_db,
+          config.extra_saturation_margin_db),
+      vad_(config.vad_reset_period_ms,
+           config.vad_probability_attack,
+           GetAllowedCpuFeatures(config)),
+      gain_applier_(apm_data_dumper,
+                    config.gain_applier_adjacent_speech_frames_threshold,
+                    config.max_gain_change_db_per_second,
+                    config.max_output_noise_level_dbfs),
       apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(CreateNoiseLevelEstimator(apm_data_dumper)) {
+      noise_level_estimator_(
+          CreateNoiseLevelEstimator(config.noise_estimator, apm_data_dumper)) {
   RTC_DCHECK(apm_data_dumper);
-  if (!config.adaptive_digital.use_saturation_protector) {
+  if (!config.use_saturation_protector) {
     RTC_LOG(LS_WARNING) << "The saturation protector cannot be disabled.";
   }
 }

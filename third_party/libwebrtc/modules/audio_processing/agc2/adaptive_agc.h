@@ -29,8 +29,9 @@ class AdaptiveAgc {
  public:
   explicit AdaptiveAgc(ApmDataDumper* apm_data_dumper);
   // TODO(crbug.com/webrtc/7494): Remove ctor above.
-  AdaptiveAgc(ApmDataDumper* apm_data_dumper,
-              const AudioProcessing::Config::GainController2& config);
+  AdaptiveAgc(
+      ApmDataDumper* apm_data_dumper,
+      const AudioProcessing::Config::GainController2::AdaptiveDigital& config);
   ~AdaptiveAgc();
 
   // Analyzes `frame` and applies a digital adaptive gain to it. Takes into

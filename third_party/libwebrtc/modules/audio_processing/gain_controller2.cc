@@ -90,7 +90,8 @@ void GainController2::ApplyConfig(
   }
   gain_applier_.SetGainFactor(DbToRatio(config_.fixed_digital.gain_db));
   if (config_.adaptive_digital.enabled) {
-    adaptive_agc_ = std::make_unique<AdaptiveAgc>(&data_dumper_, config_);
+    adaptive_agc_ =
+        std::make_unique<AdaptiveAgc>(&data_dumper_, config_.adaptive_digital);
   } else {
     adaptive_agc_.reset();
   }
