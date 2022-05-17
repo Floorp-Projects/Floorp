@@ -113,14 +113,6 @@ void AecState::GetResidualEchoScaling(
                                           residual_scaling);
 }
 
-absl::optional<float> AecState::ErleUncertainty() const {
-  if (SaturatedEcho()) {
-    return 1.f;
-  }
-
-  return absl::nullopt;
-}
-
 AecState::AecState(const EchoCanceller3Config& config,
                    size_t num_capture_channels)
     : data_dumper_(

@@ -74,12 +74,6 @@ class AecState {
     return erle_estimator_.Erle();
   }
 
-  // Returns an offset to apply to the estimation of the residual echo
-  // computation. Returning nullopt means that no offset should be used, while
-  // any other value will be applied as a multiplier to the estimated residual
-  // echo.
-  absl::optional<float> ErleUncertainty() const;
-
   // Returns the fullband ERLE estimate in log2 units.
   float FullBandErleLog2() const { return erle_estimator_.FullbandErleLog2(); }
 
