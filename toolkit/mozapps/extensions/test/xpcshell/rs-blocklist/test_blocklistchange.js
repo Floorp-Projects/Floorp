@@ -560,7 +560,7 @@ add_task(async function setup() {
   // pattern used to map ids like softblock1 to soft1
   let pattern = /^(soft|hard|regexp)block([1-9]*)@/;
   for (let id of ADDON_IDS) {
-    for (let version of [1, 2, 3]) {
+    for (let version of [1, 2, 3, 4]) {
       let match = id.match(pattern);
       let name = `blocklist_${match[1]}${match[2]}_${version}`;
 
@@ -1168,25 +1168,36 @@ add_task(async function run_background_update_2_test() {
 
   check_addon(
     s1,
-    "1.0",
+    "4.0",
     false,
     false,
     Ci.nsIBlocklistService.STATE_NOT_BLOCKED
   );
-  check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  check_addon(s2, "4.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(
     s3,
-    "1.0",
+    "4.0",
     false,
     false,
     Ci.nsIBlocklistService.STATE_NOT_BLOCKED
   );
-  check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  check_addon(h, "4.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+  check_addon(r, "4.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
   await s1.enable();
   await s2.enable();
   await s4.disable();
+});
+
+// The next test task (run_manual_update_test) was written to expect version 1,
+// but after the previous test, version 4 of the add-ons were installed.
+add_task(async function reset_addons_to_version_1_instead_of_4() {
+  await promiseInstallFile(XPIS.blocklist_soft1_1);
+  await promiseInstallFile(XPIS.blocklist_soft2_1);
+  await promiseInstallFile(XPIS.blocklist_soft3_1);
+  await promiseInstallFile(XPIS.blocklist_soft4_1);
+  await promiseInstallFile(XPIS.blocklist_hard_1);
+  await promiseInstallFile(XPIS.blocklist_regexp_1);
 });
 
 // Starts with add-ons blocked and then simulates the user upgrading them to
