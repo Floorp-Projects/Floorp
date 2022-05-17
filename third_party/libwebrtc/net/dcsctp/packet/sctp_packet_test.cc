@@ -15,6 +15,7 @@
 
 #include "api/array_view.h"
 #include "net/dcsctp/common/internal_types.h"
+#include "net/dcsctp/common/math.h"
 #include "net/dcsctp/packet/chunk/abort_chunk.h"
 #include "net/dcsctp/packet/chunk/cookie_ack_chunk.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
@@ -24,6 +25,7 @@
 #include "net/dcsctp/packet/error_cause/user_initiated_abort_cause.h"
 #include "net/dcsctp/packet/parameter/parameter.h"
 #include "net/dcsctp/packet/tlv_trait.h"
+#include "net/dcsctp/public/dcsctp_options.h"
 #include "net/dcsctp/testing/testing_macros.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
@@ -298,5 +300,43 @@ TEST(SctpPacketTest, DetectPacketWithZeroSizeChunk) {
 
   EXPECT_FALSE(SctpPacket::Parse(data, true).has_value());
 }
+
+TEST(SctpPacketTest, ReturnsCorrectSpaceAvailableToStayWithinMTU) {
+  DcSctpOptions options;
+  options.mtu = 1191;
+
+  SctpPacket::Builder builder(VerificationTag(123), options);
+
+  // Chunks will be padded to an even 4 bytes, so the maximum packet size should
+  // be rounded down.
+  const size_t kMaxPacketSize = RoundDownTo4(options.mtu);
+  EXPECT_EQ(kMaxPacketSize, 1188u);
+
+  const size_t kSctpHeaderSize = 12;
+  EXPECT_EQ(builder.bytes_remaining(), kMaxPacketSize - kSctpHeaderSize);
+  EXPECT_EQ(builder.bytes_remaining(), 1176u);
+
+  // Add a smaller packet first.
+  DataChunk::Options data_options;
+
+  std::vector<uint8_t> payload1(183);
+  builder.Add(
+      DataChunk(TSN(1), StreamID(1), SSN(0), PPID(53), payload1, data_options));
+
+  size_t chunk1_size = RoundUpTo4(DataChunk::kHeaderSize + payload1.size());
+  EXPECT_EQ(builder.bytes_remaining(),
+            kMaxPacketSize - kSctpHeaderSize - chunk1_size);
+  EXPECT_EQ(builder.bytes_remaining(), 976u);  // Hand-calculated.
+
+  std::vector<uint8_t> payload2(957);
+  builder.Add(
+      DataChunk(TSN(1), StreamID(1), SSN(0), PPID(53), payload2, data_options));
+
+  size_t chunk2_size = RoundUpTo4(DataChunk::kHeaderSize + payload2.size());
+  EXPECT_EQ(builder.bytes_remaining(),
+            kMaxPacketSize - kSctpHeaderSize - chunk1_size - chunk2_size);
+  EXPECT_EQ(builder.bytes_remaining(), 0u);  // Hand-calculated.
+}
+
 }  // namespace
 }  // namespace dcsctp

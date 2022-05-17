@@ -65,10 +65,9 @@ class SctpPacket {
     // Adds a chunk to the to-be-built SCTP packet.
     Builder& Add(const Chunk& chunk);
 
-    // The number of bytes remaining in the packet, until the MTU is reached.
-    size_t bytes_remaining() const {
-      return out_.size() >= max_mtu_ ? 0 : max_mtu_ - out_.size();
-    }
+    // The number of bytes remaining in the packet for chunk storage until the
+    // packet reaches its maximum size.
+    size_t bytes_remaining() const;
 
     // Indicates if any packets have been added to the builder.
     bool empty() const { return out_.empty(); }
@@ -82,7 +81,9 @@ class SctpPacket {
     VerificationTag verification_tag_;
     uint16_t source_port_;
     uint16_t dest_port_;
-    size_t max_mtu_;
+    // The maximum packet size is always even divisible by four, as chunks are
+    // always padded to a size even divisible by four.
+    size_t max_packet_size_;
     std::vector<uint8_t> out_;
   };
 
