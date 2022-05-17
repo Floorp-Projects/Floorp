@@ -35,7 +35,4 @@ specific_include_rules = {
   "create_frame_generator\.h": [
     "+system_wrappers/include/clock.h",
   ],
-  "videocodec_test_fixture\.h": [
-    "+media/base/h264_profile_level_id.h"
-  ],
 }

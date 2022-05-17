@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/base/vp9_profile.h"
+#include "api/video_codecs/vp9_profile.h"
 
 #include <map>
 #include <utility>
@@ -59,7 +59,7 @@ absl::optional<VP9Profile> ParseSdpForVP9Profile(
   return StringToVP9Profile(profile_str);
 }
 
-bool IsSameVP9Profile(const SdpVideoFormat::Parameters& params1,
+bool VP9IsSameProfile(const SdpVideoFormat::Parameters& params1,
                       const SdpVideoFormat::Parameters& params2) {
   const absl::optional<VP9Profile> profile = ParseSdpForVP9Profile(params1);
   const absl::optional<VP9Profile> other_profile =

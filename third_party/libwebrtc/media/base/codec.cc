@@ -12,8 +12,8 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
-#include "media/base/h264_profile_level_id.h"
-#include "media/base/vp9_profile.h"
+#include "api/video_codecs/h264_profile_level_id.h"
+#include "api/video_codecs/vp9_profile.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/string_encode.h"
@@ -51,10 +51,10 @@ bool IsSameCodecSpecific(const std::string& name1,
            absl::EqualsIgnoreCase(name, name2);
   };
   if (either_name_matches(kH264CodecName))
-    return webrtc::H264::IsSameH264Profile(params1, params2) &&
+    return webrtc::H264IsSameProfile(params1, params2) &&
            IsSameH264PacketizationMode(params1, params2);
   if (either_name_matches(kVp9CodecName))
-    return webrtc::IsSameVP9Profile(params1, params2);
+    return webrtc::VP9IsSameProfile(params1, params2);
   return true;
 }
 
@@ -473,15 +473,16 @@ void AddH264ConstrainedBaselineProfileToSupportedFormats(
   for (auto it = supported_formats->cbegin(); it != supported_formats->cend();
        ++it) {
     if (it->name == cricket::kH264CodecName) {
-      const absl::optional<webrtc::H264::ProfileLevelId> profile_level_id =
-          webrtc::H264::ParseSdpProfileLevelId(it->parameters);
-      if (profile_level_id && profile_level_id->profile !=
-                                  webrtc::H264::kProfileConstrainedBaseline) {
+      const absl::optional<webrtc::H264ProfileLevelId> profile_level_id =
+          webrtc::ParseSdpForH264ProfileLevelId(it->parameters);
+      if (profile_level_id &&
+          profile_level_id->profile !=
+              webrtc::H264Profile::kProfileConstrainedBaseline) {
         webrtc::SdpVideoFormat cbp_format = *it;
-        webrtc::H264::ProfileLevelId cbp_profile = *profile_level_id;
-        cbp_profile.profile = webrtc::H264::kProfileConstrainedBaseline;
+        webrtc::H264ProfileLevelId cbp_profile = *profile_level_id;
+        cbp_profile.profile = webrtc::H264Profile::kProfileConstrainedBaseline;
         cbp_format.parameters[cricket::kH264FmtpProfileLevelId] =
-            *webrtc::H264::ProfileLevelIdToString(cbp_profile);
+            *webrtc::H264ProfileLevelIdToString(cbp_profile);
         cbr_supported_formats.push_back(cbp_format);
       }
     }
