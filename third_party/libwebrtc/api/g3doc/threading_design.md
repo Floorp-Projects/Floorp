@@ -1,4 +1,6 @@
-# Design considerations
+<?% config.freshness.owner = 'hta' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
+# API Threading Design considerations
 
 The header files in this directory form the API to the WebRTC library
 that is intended for client applications' use.
@@ -30,7 +32,7 @@ the two calls.
 sequential execution - other names for such constructs are task runners
 and sequenced task queues.
 
-# Client threads and callbacks
+## Client threads and callbacks
 
 At the moment, the API does not give any guarantee on which thread* the
 callbacks and events are called on. So it's best to write all callback
@@ -47,7 +49,7 @@ void ObserverClass::Handler(event) {
 In the future, the implementation may change to always call the callbacks
 and event handlers on the client thread.
 
-# Implementation considerations
+## Implementation considerations
 
 The C++ classes that are part of the public API are also used to derive
 classes that form part of the implementation.
