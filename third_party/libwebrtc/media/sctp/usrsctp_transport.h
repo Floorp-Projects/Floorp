@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MEDIA_SCTP_SCTP_TRANSPORT_H_
-#define MEDIA_SCTP_SCTP_TRANSPORT_H_
+#ifndef MEDIA_SCTP_USRSCTP_TRANSPORT_H_
+#define MEDIA_SCTP_USRSCTP_TRANSPORT_H_
 
 #include <errno.h>
 
@@ -66,16 +66,16 @@ struct SctpInboundPacket;
 //  12. SctpTransport::SignalDataReceived(data)
 // [from the same thread, methods registered/connected to
 //  SctpTransport are called with the recieved data]
-class SctpTransport : public SctpTransportInternal,
-                      public sigslot::has_slots<> {
+class UsrsctpTransport : public SctpTransportInternal,
+                         public sigslot::has_slots<> {
  public:
   // |network_thread| is where packets will be processed and callbacks from
   // this transport will be posted, and is the only thread on which public
   // methods can be called.
   // |transport| is not required (can be null).
-  SctpTransport(rtc::Thread* network_thread,
-                rtc::PacketTransportInternal* transport);
-  ~SctpTransport() override;
+  UsrsctpTransport(rtc::Thread* network_thread,
+                   rtc::PacketTransportInternal* transport);
+  ~UsrsctpTransport() override;
 
   // SctpTransportInternal overrides (see sctptransportinternal.h for comments).
   void SetDtlsTransport(rtc::PacketTransportInternal* transport) override;
@@ -270,7 +270,7 @@ class SctpTransport : public SctpTransportInternal,
   std::map<uint32_t, StreamStatus> stream_status_by_sid_;
 
   // A static human-readable name for debugging messages.
-  const char* debug_name_ = "SctpTransport";
+  const char* debug_name_ = "UsrsctpTransport";
   // Hides usrsctp interactions from this header file.
   class UsrSctpWrapper;
   // Number of channels negotiated. Not set before negotiation completes.
@@ -281,13 +281,13 @@ class SctpTransport : public SctpTransportInternal,
   // various callbacks.
   uintptr_t id_ = 0;
 
-  friend class SctpTransportMap;
+  friend class UsrsctpTransportMap;
 
-  RTC_DISALLOW_COPY_AND_ASSIGN(SctpTransport);
+  RTC_DISALLOW_COPY_AND_ASSIGN(UsrsctpTransport);
 };
 
-class SctpTransportMap;
+class UsrsctpTransportMap;
 
 }  // namespace cricket
 
-#endif  // MEDIA_SCTP_SCTP_TRANSPORT_H_
+#endif  // MEDIA_SCTP_USRSCTP_TRANSPORT_H_

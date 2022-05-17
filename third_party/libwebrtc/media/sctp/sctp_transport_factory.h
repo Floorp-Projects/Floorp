@@ -14,7 +14,7 @@
 #include <memory>
 
 #include "api/transport/sctp_transport_factory_interface.h"
-#include "media/sctp/sctp_transport.h"
+#include "media/sctp/usrsctp_transport.h"
 #include "rtc_base/thread.h"
 
 namespace cricket {

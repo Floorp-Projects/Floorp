@@ -19,7 +19,7 @@ std::unique_ptr<SctpTransportInternal>
 SctpTransportFactory::CreateSctpTransport(
     rtc::PacketTransportInternal* transport) {
   return std::unique_ptr<SctpTransportInternal>(
-      new SctpTransport(network_thread_, transport));
+      new UsrsctpTransport(network_thread_, transport));
 }
 
 }  // namespace cricket
