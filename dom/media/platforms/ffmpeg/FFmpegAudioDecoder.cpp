@@ -18,6 +18,24 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType)) {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
 
+  if (mCodecID == AV_CODEC_ID_MP3) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>());
+    // Gracefully handle bad data. If don't hit the preceding assert once this
+    // has been shipped for awhile, we can remove it and make the following code
+    // non-conditional.
+    if (aConfig.mCodecSpecificConfig.is<Mp3CodecSpecificData>()) {
+      const Mp3CodecSpecificData& mp3CodecSpecificData =
+          aConfig.mCodecSpecificConfig.as<Mp3CodecSpecificData>();
+      mEncoderDelay = mp3CodecSpecificData.mEncoderDelayFrames;
+      mEncoderPadding = mp3CodecSpecificData.mEncoderPaddingFrames;
+      FFMPEG_LOG("FFmpegAudioDecoder, found encoder delay (%" PRIu32
+                 ") and padding values (%" PRIu32 ") in extra data",
+                 mEncoderDelay, mEncoderPadding);
+      return;
+    }
+  }
+
   RefPtr<MediaByteBuffer> audioCodecSpecificBinaryBlob =
       ForceGetAudioCodecSpecificBlob(aConfig.mCodecSpecificConfig);
   if (audioCodecSpecificBinaryBlob && audioCodecSpecificBinaryBlob->Length()) {
@@ -25,14 +43,6 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
     // initialization.
     mExtraData = new MediaByteBuffer;
     mExtraData->AppendElements(*audioCodecSpecificBinaryBlob);
-    if (mCodecID == AV_CODEC_ID_MP3) {
-      BufferReader reader(mExtraData->Elements(), mExtraData->Length());
-      mEncoderDelay = reader.ReadU32().unwrapOr(0);
-      mEncoderPadding = reader.ReadU32().unwrapOr(0);
-      FFMPEG_LOG("FFmpegAudioDecoder, found encoder delay (%" PRIu32
-                 ") and padding values (%" PRIu32 ") in extra data",
-                 mEncoderDelay, mEncoderPadding);
-    }
   }
 }
 
