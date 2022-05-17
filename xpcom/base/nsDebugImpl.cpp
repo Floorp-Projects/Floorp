@@ -625,13 +625,8 @@ static void Break(const char* aMsg) {
 #endif
 }
 
-nsresult nsDebugImpl::Create(nsISupports* aOuter, const nsIID& aIID,
-                             void** aInstancePtr) {
+nsresult nsDebugImpl::Create(const nsIID& aIID, void** aInstancePtr) {
   static const nsDebugImpl* sImpl;
-
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   if (!sImpl) {
     sImpl = new nsDebugImpl();

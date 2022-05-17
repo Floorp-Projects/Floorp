@@ -309,11 +309,8 @@ NS_IMETHODIMP nsMIMEInputStream::SetEOF(void) {
  * Factory method used by do_CreateInstance
  */
 
-nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
-                                      void** result) {
+nsresult nsMIMEInputStreamConstructor(REFNSIID iid, void** result) {
   *result = nullptr;
-
-  if (outer) return NS_ERROR_NO_AGGREGATION;
 
   RefPtr<nsMIMEInputStream> inst = new nsMIMEInputStream();
   if (!inst) return NS_ERROR_OUT_OF_MEMORY;

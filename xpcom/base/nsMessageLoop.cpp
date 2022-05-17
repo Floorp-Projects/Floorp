@@ -145,11 +145,7 @@ nsMessageLoop::PostIdleTask(nsIRunnable* aTask, uint32_t aEnsureRunsAfterMS) {
   return NS_OK;
 }
 
-nsresult nsMessageLoopConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                  void** aInstancePtr) {
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
+nsresult nsMessageLoopConstructor(const nsIID& aIID, void** aInstancePtr) {
   nsISupports* messageLoop = new nsMessageLoop();
   return messageLoop->QueryInterface(aIID, aInstancePtr);
 }

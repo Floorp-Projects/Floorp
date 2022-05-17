@@ -64,11 +64,7 @@ nsMemoryImpl::IsLowMemoryPlatform(bool* aResult) {
 }
 
 /*static*/
-nsresult nsMemoryImpl::Create(nsISupports* aOuter, const nsIID& aIID,
-                              void** aResult) {
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
+nsresult nsMemoryImpl::Create(const nsIID& aIID, void** aResult) {
   return sGlobalMemory.QueryInterface(aIID, aResult);
 }
 

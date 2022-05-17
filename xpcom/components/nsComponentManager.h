@@ -79,7 +79,7 @@ class nsComponentManagerImpl final : public nsIComponentManager,
   NS_DECL_NSICOMPONENTREGISTRAR
   NS_DECL_NSIMEMORYREPORTER
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   nsresult RegistryLocationForFile(nsIFile* aFile, nsCString& aResult);
   nsresult FileForRegistryLocation(const nsCString& aLocation, nsIFile** aSpec);

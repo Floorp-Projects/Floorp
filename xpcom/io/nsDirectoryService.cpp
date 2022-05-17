@@ -84,13 +84,9 @@ StaticRefPtr<nsDirectoryService> nsDirectoryService::gService;
 
 nsDirectoryService::nsDirectoryService() : mHashtable(128) {}
 
-nsresult nsDirectoryService::Create(nsISupports* aOuter, REFNSIID aIID,
-                                    void** aResult) {
+nsresult nsDirectoryService::Create(REFNSIID aIID, void** aResult) {
   if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_INVALID_ARG;
-  }
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
   }
 
   if (!gService) {

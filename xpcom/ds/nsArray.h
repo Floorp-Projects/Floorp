@@ -34,8 +34,7 @@ class nsArrayBase : public nsIMutableArray {
   static already_AddRefed<nsIMutableArray> Create();
   /* Only for the benefit of the XPCOM module system, use Create()
      instead.  */
-  static nsresult XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                   void** aResult);
+  static nsresult XPCOMConstructor(const nsIID& aIID, void** aResult);
 
  protected:
   nsArrayBase() = default;

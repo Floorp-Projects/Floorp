@@ -34,8 +34,7 @@ class nsObserverService final : public nsIObserverService,
 
   void Shutdown();
 
-  [[nodiscard]] static nsresult Create(nsISupports* aOuter, const nsIID& aIID,
-                                       void** aInstancePtr);
+  [[nodiscard]] static nsresult Create(const nsIID& aIID, void** aInstancePtr);
 
   // Unmark any strongly held observers implemented in JS so the cycle
   // collector will not traverse them.

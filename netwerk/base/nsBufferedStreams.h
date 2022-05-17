@@ -89,7 +89,7 @@ class nsBufferedInputStream final : public nsBufferedStream,
 
   nsBufferedInputStream() : nsBufferedStream() {}
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   nsIInputStream* Source() { return (nsIInputStream*)mStream.get(); }
 
@@ -145,7 +145,7 @@ class nsBufferedOutputStream : public nsBufferedStream,
 
   nsBufferedOutputStream() : nsBufferedStream() {}
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   nsIOutputStream* Sink() { return (nsIOutputStream*)mStream.get(); }
 

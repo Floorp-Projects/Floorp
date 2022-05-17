@@ -133,8 +133,8 @@ Class definitions may have the following properties:
   The fully-qualified name of a constructor function to call in order to
   create instances of this class. This function must be declared in one of the
   headers listed in the ``headers`` property, and must have the signature
-  ``nsresult(nsISupports* aOuter, const nsID& aIID, void** aResult)``, and
-  behave equivalently to ``nsIFactory::CreateInstance``.
+  ``nsresult(const nsID& aIID, void** aResult)``, and behave equivalently to
+  ``nsIFactory::CreateInstance``.
 
   This property is incompatible with ``constructor``.
 

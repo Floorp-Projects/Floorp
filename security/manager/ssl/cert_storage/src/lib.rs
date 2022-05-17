@@ -30,7 +30,7 @@ use crossbeam_utils::atomic::AtomicCell;
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use moz_task::{create_background_task_queue, is_main_thread, Task, TaskRunnable};
 use nserror::{
-    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
+    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED, NS_OK,
 };
 use nsstring::{nsACString, nsCStr, nsCString, nsString};
@@ -1268,7 +1268,6 @@ impl Task for BackgroundReadStashTask {
 }
 
 fn do_construct_cert_storage(
-    _outer: *const nsISupports,
     iid: *const xpcom::nsIID,
     result: *mut *mut xpcom::reexports::libc::c_void,
 ) -> Result<(), nserror::nsresult> {
@@ -1380,17 +1379,13 @@ impl<T: Default + VariantType, F: FnOnce(&mut SecurityState) -> Result<T, Securi
 
 #[no_mangle]
 pub extern "C" fn cert_storage_constructor(
-    outer: *const nsISupports,
     iid: *const xpcom::nsIID,
     result: *mut *mut xpcom::reexports::libc::c_void,
 ) -> nserror::nsresult {
-    if !outer.is_null() {
-        return NS_ERROR_NO_AGGREGATION;
-    }
     if !is_main_thread() {
         return NS_ERROR_NOT_SAME_THREAD;
     }
-    match do_construct_cert_storage(outer, iid, result) {
+    match do_construct_cert_storage(iid, result) {
         Ok(()) => NS_OK,
         Err(e) => e,
     }

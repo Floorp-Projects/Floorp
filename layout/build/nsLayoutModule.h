@@ -21,29 +21,18 @@ void nsLayoutModuleInitialize();
 
 void nsLayoutModuleDtor();
 
-nsresult CreateXMLContentSerializer(nsISupports* aOuter, const nsID& aIID,
-                                    void** aResult);
-nsresult CreateHTMLContentSerializer(nsISupports* aOuter, const nsID& aIID,
-                                     void** aResult);
-nsresult CreateXHTMLContentSerializer(nsISupports* aOuter, const nsID& aIID,
-                                      void** aResult);
-nsresult CreatePlainTextSerializer(nsISupports* aOuter, const nsID& aIID,
-                                   void** aResult);
-nsresult CreateContentPolicy(nsISupports* aOuter, const nsID& aIID,
-                             void** aResult);
-nsresult CreateGlobalMessageManager(nsISupports* aOuter, const nsID& aIID,
-                                    void** aResult);
-nsresult CreateParentMessageManager(nsISupports* aOuter, const nsID& aIID,
-                                    void** aResult);
-nsresult CreateChildMessageManager(nsISupports* aOuter, const nsID& aIID,
-                                   void** aResult);
+nsresult CreateXMLContentSerializer(const nsID& aIID, void** aResult);
+nsresult CreateHTMLContentSerializer(const nsID& aIID, void** aResult);
+nsresult CreateXHTMLContentSerializer(const nsID& aIID, void** aResult);
+nsresult CreatePlainTextSerializer(const nsID& aIID, void** aResult);
+nsresult CreateContentPolicy(const nsID& aIID, void** aResult);
+nsresult CreateGlobalMessageManager(const nsID& aIID, void** aResult);
+nsresult CreateParentMessageManager(const nsID& aIID, void** aResult);
+nsresult CreateChildMessageManager(const nsID& aIID, void** aResult);
 
-nsresult Construct_nsIScriptSecurityManager(nsISupports* aOuter,
-                                            const nsIID& aIID, void** aResult);
-nsresult LocalStorageManagerConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                        void** aResult);
-nsresult SessionStorageManagerConstructor(nsISupports* aOuter,
-                                          const nsIID& aIID, void** aResult);
+nsresult Construct_nsIScriptSecurityManager(const nsIID& aIID, void** aResult);
+nsresult LocalStorageManagerConstructor(const nsIID& aIID, void** aResult);
+nsresult SessionStorageManagerConstructor(const nsIID& aIID, void** aResult);
 
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
 

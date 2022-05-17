@@ -1864,10 +1864,7 @@ nsPipeHolder::GetOutputStream(nsIAsyncOutputStream** aOutputStream) {
   return NS_ERROR_NOT_INITIALIZED;
 }
 
-nsresult nsPipeConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult) {
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
+nsresult nsPipeConstructor(REFNSIID aIID, void** aResult) {
   RefPtr<nsPipeHolder> pipe = new nsPipeHolder();
   nsresult rv = pipe->QueryInterface(aIID, aResult);
   return rv;

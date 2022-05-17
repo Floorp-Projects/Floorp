@@ -14,9 +14,7 @@ class nsISupports;
 namespace mozilla {
 namespace psm {
 template <typename T>
-nsresult NSSConstructor(nsISupports* aOuter, const nsIID& aIID,
-                        void** aInstancePtr);
-
+nsresult NSSConstructor(const nsIID& aIID, void** aInstancePtr);
 }
 }  // namespace mozilla
 

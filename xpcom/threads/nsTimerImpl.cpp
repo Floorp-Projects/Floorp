@@ -794,13 +794,8 @@ RefPtr<nsTimer> nsTimer::WithEventTarget(nsIEventTarget* aTarget) {
 }
 
 /* static */
-nsresult nsTimer::XPCOMConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult) {
+nsresult nsTimer::XPCOMConstructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
   auto timer = WithEventTarget(nullptr);
 
   return timer->QueryInterface(aIID, aResult);

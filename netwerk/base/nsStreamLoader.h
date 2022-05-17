@@ -28,7 +28,7 @@ class nsStreamLoader final : public nsIStreamLoader,
 
   nsStreamLoader();
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  protected:
   ~nsStreamLoader() = default;

@@ -944,13 +944,8 @@ void nsMultiplexInputStream::AsyncWaitCompleted() {
   callback->OnInputStreamReady(this);
 }
 
-nsresult nsMultiplexInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                           void** aResult) {
+nsresult nsMultiplexInputStreamConstructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   RefPtr<nsMultiplexInputStream> inst = new nsMultiplexInputStream();
 
