@@ -17,7 +17,6 @@
 #include "api/transport/field_trial_based_config.h"
 #include "media/sctp/sctp_transport_factory.h"
 #include "rtc_base/helpers.h"
-#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/time_utils.h"
 
@@ -76,7 +75,7 @@ std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
 // Static
 rtc::scoped_refptr<ConnectionContext> ConnectionContext::Create(
     PeerConnectionFactoryDependencies* dependencies) {
-  return new rtc::RefCountedObject<ConnectionContext>(dependencies);
+  return new ConnectionContext(dependencies);
 }
 
 ConnectionContext::ConnectionContext(

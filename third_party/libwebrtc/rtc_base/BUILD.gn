@@ -918,6 +918,7 @@ rtc_library("rtc_base") {
     ":threading",
     "../api:array_view",
     "../api:function_view",
+    "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/numerics",

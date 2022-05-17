@@ -569,6 +569,7 @@ rtc_source_set("rtc_stats_api") {
 
   deps = [
     ":scoped_refptr",
+    "../api:refcountedbase",
     "../rtc_base:checks",
     "../rtc_base:rtc_base_approved",
     "../rtc_base/system:rtc_export",
@@ -690,7 +691,10 @@ rtc_source_set("array_view") {
 rtc_source_set("refcountedbase") {
   visibility = [ "*" ]
   sources = [ "ref_counted_base.h" ]
-  deps = [ "../rtc_base:rtc_base_approved" ]
+  deps = [
+    "../rtc_base:macromagic",
+    "../rtc_base:refcount",
+  ]
 }
 
 if (!build_with_mozilla) {

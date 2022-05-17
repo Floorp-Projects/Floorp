@@ -10,19 +10,17 @@
 
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 
-#include "rtc_base/ref_counted_object.h"
-
 namespace webrtc {
 
 // static
 rtc::scoped_refptr<PendingTaskSafetyFlag> PendingTaskSafetyFlag::Create() {
-  return new rtc::RefCountedObject<PendingTaskSafetyFlag>(true);
+  return new PendingTaskSafetyFlag(true);
 }
 
 rtc::scoped_refptr<PendingTaskSafetyFlag>
 PendingTaskSafetyFlag::CreateDetached() {
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag(
-      new rtc::RefCountedObject<PendingTaskSafetyFlag>(true));
+      new PendingTaskSafetyFlag(true));
   safety_flag->main_sequence_.Detach();
   return safety_flag;
 }
@@ -30,7 +28,7 @@ PendingTaskSafetyFlag::CreateDetached() {
 rtc::scoped_refptr<PendingTaskSafetyFlag>
 PendingTaskSafetyFlag::CreateDetachedInactive() {
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_flag(
-      new rtc::RefCountedObject<PendingTaskSafetyFlag>(false));
+      new PendingTaskSafetyFlag(false));
   safety_flag->main_sequence_.Detach();
   return safety_flag;
 }

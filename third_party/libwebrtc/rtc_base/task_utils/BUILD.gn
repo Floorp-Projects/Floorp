@@ -33,7 +33,7 @@ rtc_library("pending_task_safety_flag") {
   ]
   deps = [
     "..:checks",
-    "..:refcount",
+    "../../api:refcountedbase",
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
     "../system:no_unique_address",
