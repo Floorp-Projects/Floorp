@@ -20,10 +20,11 @@
 namespace webrtc {
 namespace jni {
 
-class AddIceCandidateObserverJni final : public rtc::RefCountedBase {
+class AddIceCandidateObserverJni final
+    : public rtc::RefCountedNonVirtual<AddIceCandidateObserverJni> {
  public:
   AddIceCandidateObserverJni(JNIEnv* env, const JavaRef<jobject>& j_observer);
-  ~AddIceCandidateObserverJni() override = default;
+  ~AddIceCandidateObserverJni() = default;
 
   void OnComplete(RTCError error);
 

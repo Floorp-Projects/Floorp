@@ -329,6 +329,7 @@ rtc_library("connection_context") {
     "../api:callfactory_api",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
+    "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
     "../api/neteq:neteq_api",
