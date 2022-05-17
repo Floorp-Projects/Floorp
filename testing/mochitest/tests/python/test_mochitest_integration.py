@@ -189,7 +189,12 @@ def test_output_crash(flavor, runFailures, runtests, test_name):
 @pytest.mark.parametrize("flavor", ["plain"])
 def test_output_asan(flavor, runFailures, runtests, test_name):
     extra_opts = {}
-    results = {"status": 1, "tbpl_status": TBPL_FAILURE, "log_level": ERROR, "lines": 0}
+    results = {
+        "status": 245,
+        "tbpl_status": TBPL_FAILURE,
+        "log_level": ERROR,
+        "lines": 0,
+    }
 
     status, lines = runtests(
         test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"], **extra_opts
