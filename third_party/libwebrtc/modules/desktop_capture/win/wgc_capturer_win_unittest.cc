@@ -364,6 +364,25 @@ TEST_F(WgcCapturerWinTest, SelectClosedWindow) {
   EXPECT_FALSE(capturer_->SelectSource(source_id_));
 }
 
+TEST_F(WgcCapturerWinTest, UnsupportedWindowStyle) {
+  // Create a window with the WS_EX_TOOLWINDOW style, which WGC does not
+  // support.
+  window_info_ = CreateTestWindow(kWindowTitle, kMediumWindowWidth,
+                                  kMediumWindowHeight, WS_EX_TOOLWINDOW);
+  capturer_ = WgcCapturerWin::CreateRawWindowCapturer(
+      DesktopCaptureOptions::CreateDefault());
+  DesktopCapturer::SourceList sources;
+  EXPECT_TRUE(capturer_->GetSourceList(&sources));
+  auto it = std::find_if(
+      sources.begin(), sources.end(), [&](const DesktopCapturer::Source& src) {
+        return src.id == reinterpret_cast<intptr_t>(window_info_.hwnd);
+      });
+
+  // We should not find the window, since we filter for unsupported styles.
+  EXPECT_EQ(it, sources.end());
+  DestroyTestWindow(window_info_);
+}
+
 TEST_F(WgcCapturerWinTest, IncreaseWindowSizeMidCapture) {
   SetUpForWindowCapture(kSmallWindowWidth, kSmallWindowHeight);
   EXPECT_TRUE(capturer_->SelectSource(source_id_));
