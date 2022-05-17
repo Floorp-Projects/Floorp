@@ -420,11 +420,11 @@ rtc_library("rtc_data") {
 
   if (rtc_enable_sctp) {
     sources = [
-      "sctp/sctp_transport.cc",
-      "sctp/sctp_transport.h",
       "sctp/sctp_transport_factory.cc",
       "sctp/sctp_transport_factory.h",
       "sctp/sctp_transport_internal.h",
+      "sctp/usrsctp_transport.cc",
+      "sctp/usrsctp_transport.h",
     ]
   } else {
     # libtool on mac does not like empty targets.
@@ -645,8 +645,8 @@ if (rtc_include_tests) {
 
       if (rtc_enable_sctp) {
         sources += [
-          "sctp/sctp_transport_reliability_unittest.cc",
-          "sctp/sctp_transport_unittest.cc",
+          "sctp/usrsctp_transport_reliability_unittest.cc",
+          "sctp/usrsctp_transport_unittest.cc",
         ]
         deps += [
           "../rtc_base/task_utils:pending_task_safety_flag",

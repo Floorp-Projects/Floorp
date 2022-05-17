@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "media/sctp/sctp_transport.h"
+#include "media/sctp/usrsctp_transport.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -74,7 +74,7 @@ class SctpFakeDataReceiver : public sigslot::has_slots<> {
 
 class SctpTransportObserver : public sigslot::has_slots<> {
  public:
-  explicit SctpTransportObserver(SctpTransport* transport) {
+  explicit SctpTransportObserver(UsrsctpTransport* transport) {
     transport->SignalClosingProcedureComplete.connect(
         this, &SctpTransportObserver::OnClosingProcedureComplete);
     transport->SignalReadyToSendData.connect(
@@ -105,7 +105,8 @@ class SctpTransportObserver : public sigslot::has_slots<> {
 // been closed.
 class SignalTransportClosedReopener : public sigslot::has_slots<> {
  public:
-  SignalTransportClosedReopener(SctpTransport* transport, SctpTransport* peer)
+  SignalTransportClosedReopener(UsrsctpTransport* transport,
+                                UsrsctpTransport* peer)
       : transport_(transport), peer_(peer) {}
 
   int StreamCloseCount(int stream) { return absl::c_count(streams_, stream); }
@@ -117,8 +118,8 @@ class SignalTransportClosedReopener : public sigslot::has_slots<> {
     streams_.push_back(stream);
   }
 
-  SctpTransport* transport_;
-  SctpTransport* peer_;
+  UsrsctpTransport* transport_;
+  UsrsctpTransport* peer_;
   std::vector<int> streams_;
 };
 
@@ -169,17 +170,17 @@ class SctpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
     return ret;
   }
 
-  SctpTransport* CreateTransport(FakeDtlsTransport* fake_dtls,
-                                 SctpFakeDataReceiver* recv) {
-    SctpTransport* transport =
-        new SctpTransport(rtc::Thread::Current(), fake_dtls);
+  UsrsctpTransport* CreateTransport(FakeDtlsTransport* fake_dtls,
+                                    SctpFakeDataReceiver* recv) {
+    UsrsctpTransport* transport =
+        new UsrsctpTransport(rtc::Thread::Current(), fake_dtls);
     // When data is received, pass it to the SctpFakeDataReceiver.
     transport->SignalDataReceived.connect(
         recv, &SctpFakeDataReceiver::OnDataReceived);
     return transport;
   }
 
-  bool SendData(SctpTransport* chan,
+  bool SendData(UsrsctpTransport* chan,
                 int sid,
                 const std::string& msg,
                 SendDataResult* result,
@@ -210,8 +211,8 @@ class SctpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
     return !thread->IsQuitting();
   }
 
-  SctpTransport* transport1() { return transport1_.get(); }
-  SctpTransport* transport2() { return transport2_.get(); }
+  UsrsctpTransport* transport1() { return transport1_.get(); }
+  UsrsctpTransport* transport2() { return transport2_.get(); }
   SctpFakeDataReceiver* receiver1() { return recv1_.get(); }
   SctpFakeDataReceiver* receiver2() { return recv2_.get(); }
   FakeDtlsTransport* fake_dtls1() { return fake_dtls1_.get(); }
@@ -229,8 +230,8 @@ class SctpTransportTest : public ::testing::Test, public sigslot::has_slots<> {
   std::unique_ptr<FakeDtlsTransport> fake_dtls2_;
   std::unique_ptr<SctpFakeDataReceiver> recv1_;
   std::unique_ptr<SctpFakeDataReceiver> recv2_;
-  std::unique_ptr<SctpTransport> transport1_;
-  std::unique_ptr<SctpTransport> transport2_;
+  std::unique_ptr<UsrsctpTransport> transport1_;
+  std::unique_ptr<UsrsctpTransport> transport2_;
 
   int transport1_ready_to_send_count_ = 0;
   int transport2_ready_to_send_count_ = 0;
@@ -244,9 +245,9 @@ TEST_F(SctpTransportTest, MessageInterleavedWithNotification) {
   FakeDtlsTransport fake_dtls2("fake dtls 2", 0);
   SctpFakeDataReceiver recv1;
   SctpFakeDataReceiver recv2;
-  std::unique_ptr<SctpTransport> transport1(
+  std::unique_ptr<UsrsctpTransport> transport1(
       CreateTransport(&fake_dtls1, &recv1));
-  std::unique_ptr<SctpTransport> transport2(
+  std::unique_ptr<UsrsctpTransport> transport2(
       CreateTransport(&fake_dtls2, &recv2));
 
   // Add a stream.
@@ -317,9 +318,9 @@ TEST_F(SctpTransportTest, SwitchDtlsTransport) {
   SctpFakeDataReceiver recv2;
 
   // Construct transport1 with the "black hole" transport.
-  std::unique_ptr<SctpTransport> transport1(
+  std::unique_ptr<UsrsctpTransport> transport1(
       CreateTransport(&black_hole, &recv1));
-  std::unique_ptr<SctpTransport> transport2(
+  std::unique_ptr<UsrsctpTransport> transport2(
       CreateTransport(&fake_dtls2, &recv2));
 
   // Add a stream.
@@ -377,9 +378,9 @@ TEST_F(SctpTransportTest, NegativeOnePortTreatedAsDefault) {
   FakeDtlsTransport fake_dtls2("fake dtls 2", 0);
   SctpFakeDataReceiver recv1;
   SctpFakeDataReceiver recv2;
-  std::unique_ptr<SctpTransport> transport1(
+  std::unique_ptr<UsrsctpTransport> transport1(
       CreateTransport(&fake_dtls1, &recv1));
-  std::unique_ptr<SctpTransport> transport2(
+  std::unique_ptr<UsrsctpTransport> transport2(
       CreateTransport(&fake_dtls2, &recv2));
 
   // Add a stream.
@@ -406,7 +407,8 @@ TEST_F(SctpTransportTest, NegativeOnePortTreatedAsDefault) {
 TEST_F(SctpTransportTest, OpenStreamWithAlreadyOpenedStreamFails) {
   FakeDtlsTransport fake_dtls("fake dtls", 0);
   SctpFakeDataReceiver recv;
-  std::unique_ptr<SctpTransport> transport(CreateTransport(&fake_dtls, &recv));
+  std::unique_ptr<UsrsctpTransport> transport(
+      CreateTransport(&fake_dtls, &recv));
   EXPECT_TRUE(transport->OpenStream(1));
   EXPECT_FALSE(transport->OpenStream(1));
 }
@@ -414,7 +416,8 @@ TEST_F(SctpTransportTest, OpenStreamWithAlreadyOpenedStreamFails) {
 TEST_F(SctpTransportTest, ResetStreamWithAlreadyResetStreamFails) {
   FakeDtlsTransport fake_dtls("fake dtls", 0);
   SctpFakeDataReceiver recv;
-  std::unique_ptr<SctpTransport> transport(CreateTransport(&fake_dtls, &recv));
+  std::unique_ptr<UsrsctpTransport> transport(
+      CreateTransport(&fake_dtls, &recv));
   EXPECT_TRUE(transport->OpenStream(1));
   EXPECT_TRUE(transport->ResetStream(1));
   EXPECT_FALSE(transport->ResetStream(1));
@@ -425,7 +428,8 @@ TEST_F(SctpTransportTest, ResetStreamWithAlreadyResetStreamFails) {
 TEST_F(SctpTransportTest, SignalReadyToSendDataAfterDtlsWritable) {
   FakeDtlsTransport fake_dtls("fake dtls", 0);
   SctpFakeDataReceiver recv;
-  std::unique_ptr<SctpTransport> transport(CreateTransport(&fake_dtls, &recv));
+  std::unique_ptr<UsrsctpTransport> transport(
+      CreateTransport(&fake_dtls, &recv));
   SctpTransportObserver observer(transport.get());
 
   transport->Start(kSctpDefaultPort, kSctpDefaultPort, kSctpSendBufferSize);
@@ -438,8 +442,8 @@ class SctpTransportTestWithOrdered
     : public SctpTransportTest,
       public ::testing::WithParamInterface<bool> {};
 
-// Tests that a small message gets buffered and later sent by the SctpTransport
-// when the sctp library only accepts the message partially.
+// Tests that a small message gets buffered and later sent by the
+// UsrsctpTransport when the sctp library only accepts the message partially.
 TEST_P(SctpTransportTestWithOrdered, SendSmallBufferedOutgoingMessage) {
   bool ordered = GetParam();
   SetupConnectedTransportsWithTwoStreams();
@@ -456,7 +460,7 @@ TEST_P(SctpTransportTestWithOrdered, SendSmallBufferedOutgoingMessage) {
                        ordered));
 
   std::string buffered_message("hello hello");
-  // SctpTransport accepts this message by buffering part of it.
+  // UsrsctpTransport accepts this message by buffering part of it.
   ASSERT_TRUE(
       SendData(transport1(), /*sid=*/1, buffered_message, &result, ordered));
   ASSERT_TRUE(transport1()->ReadyToSendData());
@@ -478,8 +482,8 @@ TEST_P(SctpTransportTestWithOrdered, SendSmallBufferedOutgoingMessage) {
   EXPECT_EQ(2u, receiver2()->num_messages_received());
 }
 
-// Tests that a large message gets buffered and later sent by the SctpTransport
-// when the sctp library only accepts the message partially.
+// Tests that a large message gets buffered and later sent by the
+// UsrsctpTransport when the sctp library only accepts the message partially.
 TEST_P(SctpTransportTestWithOrdered, SendLargeBufferedOutgoingMessage) {
   bool ordered = GetParam();
   SetupConnectedTransportsWithTwoStreams();
@@ -496,7 +500,7 @@ TEST_P(SctpTransportTestWithOrdered, SendLargeBufferedOutgoingMessage) {
                        ordered));
 
   std::string buffered_message(kSctpSendBufferSize, 'b');
-  // SctpTransport accepts this message by buffering the second half.
+  // UsrsctpTransport accepts this message by buffering the second half.
   ASSERT_TRUE(
       SendData(transport1(), /*sid=*/1, buffered_message, &result, ordered));
   ASSERT_TRUE(transport1()->ReadyToSendData());
@@ -518,9 +522,9 @@ TEST_P(SctpTransportTestWithOrdered, SendLargeBufferedOutgoingMessage) {
   EXPECT_EQ(2u, receiver2()->num_messages_received());
 }
 
-// Tests that a large message gets buffered and later sent by the SctpTransport
-// when the sctp library only accepts the message partially during a stream
-// reset.
+// Tests that a large message gets buffered and later sent by the
+// UsrsctpTransport when the sctp library only accepts the message partially
+// during a stream reset.
 TEST_P(SctpTransportTestWithOrdered,
        SendLargeBufferedOutgoingMessageDuringReset) {
   bool ordered = GetParam();
@@ -540,7 +544,7 @@ TEST_P(SctpTransportTestWithOrdered,
                        ordered));
 
   std::string buffered_message(kSctpSendBufferSize, 'b');
-  // SctpTransport accepts this message by buffering the second half.
+  // UsrsctpTransport accepts this message by buffering the second half.
   ASSERT_TRUE(
       SendData(transport1(), /*sid=*/1, buffered_message, &result, ordered));
   // Queue a stream reset
@@ -808,7 +812,8 @@ TEST_F(SctpTransportTest, ReusesAStream) {
 TEST_F(SctpTransportTest, RejectsTooLargeMessageSize) {
   FakeDtlsTransport fake_dtls("fake dtls", 0);
   SctpFakeDataReceiver recv;
-  std::unique_ptr<SctpTransport> transport(CreateTransport(&fake_dtls, &recv));
+  std::unique_ptr<UsrsctpTransport> transport(
+      CreateTransport(&fake_dtls, &recv));
 
   EXPECT_FALSE(transport->Start(kSctpDefaultPort, kSctpDefaultPort,
                                 kSctpSendBufferSize + 1));
@@ -817,7 +822,8 @@ TEST_F(SctpTransportTest, RejectsTooLargeMessageSize) {
 TEST_F(SctpTransportTest, RejectsTooSmallMessageSize) {
   FakeDtlsTransport fake_dtls("fake dtls", 0);
   SctpFakeDataReceiver recv;
-  std::unique_ptr<SctpTransport> transport(CreateTransport(&fake_dtls, &recv));
+  std::unique_ptr<UsrsctpTransport> transport(
+      CreateTransport(&fake_dtls, &recv));
 
   EXPECT_FALSE(transport->Start(kSctpDefaultPort, kSctpDefaultPort, 0));
 }
@@ -844,11 +850,11 @@ TEST_F(SctpTransportTest, SctpRestartWithPendingDataDoesNotDeadlock) {
   SctpFakeDataReceiver recv2;
   SctpFakeDataReceiver recv3;
 
-  std::unique_ptr<SctpTransport> transport1(
+  std::unique_ptr<UsrsctpTransport> transport1(
       CreateTransport(&fake_dtls1, &recv1));
-  std::unique_ptr<SctpTransport> transport2(
+  std::unique_ptr<UsrsctpTransport> transport2(
       CreateTransport(&fake_dtls2, &recv2));
-  std::unique_ptr<SctpTransport> transport3(
+  std::unique_ptr<UsrsctpTransport> transport3(
       CreateTransport(&fake_dtls3, &recv3));
   SctpTransportObserver observer(transport1.get());
 

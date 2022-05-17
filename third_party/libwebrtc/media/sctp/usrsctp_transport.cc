@@ -30,6 +30,7 @@ constexpr int kSctpErrorReturn = 0;
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 #include "absl/algorithm/container.h"
 #include "absl/base/attributes.h"
@@ -39,7 +40,7 @@ constexpr int kSctpErrorReturn = 0;
 #include "media/base/media_channel.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
-#include "media/sctp/sctp_transport.h"
+#include "media/sctp/usrsctp_transport.h"
 #include "p2p/base/dtls_transport_internal.h"  // For PF_NORMAL
 #include "rtc_base/arraysize.h"
 #include "rtc_base/copy_on_write_buffer.h"
@@ -94,7 +95,7 @@ enum {
 };
 
 // Should only be modified by UsrSctpWrapper.
-ABSL_CONST_INIT cricket::SctpTransportMap* g_transport_map_ = nullptr;
+ABSL_CONST_INIT cricket::UsrsctpTransportMap* g_transport_map_ = nullptr;
 
 // Helper that will call C's free automatically.
 // TODO(b/181900299): Figure out why unique_ptr with a custom deleter is causing
@@ -235,15 +236,16 @@ sctp_sendv_spa CreateSctpSendParams(const cricket::SendDataParams& params) {
 
 namespace cricket {
 
-// Maps SCTP transport ID to SctpTransport object, necessary in send threshold
-// callback and outgoing packet callback. It also provides a facility to
-// safely post a task to an SctpTransport's network thread from another thread.
-class SctpTransportMap {
+// Maps SCTP transport ID to UsrsctpTransport object, necessary in send
+// threshold callback and outgoing packet callback. It also provides a facility
+// to safely post a task to an UsrsctpTransport's network thread from another
+// thread.
+class UsrsctpTransportMap {
  public:
-  SctpTransportMap() = default;
+  UsrsctpTransportMap() = default;
 
   // Assigns a new unused ID to the following transport.
-  uintptr_t Register(cricket::SctpTransport* transport) {
+  uintptr_t Register(cricket::UsrsctpTransport* transport) {
     webrtc::MutexLock lock(&lock_);
     // usrsctp_connect fails with a value of 0...
     if (next_id_ == 0) {
@@ -256,7 +258,7 @@ class SctpTransportMap {
       if (next_id_ == 0) {
         ++next_id_;
       }
-    };
+    }
     map_[next_id_] = transport;
     return next_id_++;
   }
@@ -274,7 +276,7 @@ class SctpTransportMap {
   template <typename F>
   bool PostToTransportThread(uintptr_t id, F action) const {
     webrtc::MutexLock lock(&lock_);
-    SctpTransport* transport = RetrieveWhileHoldingLock(id);
+    UsrsctpTransport* transport = RetrieveWhileHoldingLock(id);
     if (!transport) {
       return false;
     }
@@ -285,7 +287,7 @@ class SctpTransportMap {
   }
 
  private:
-  SctpTransport* RetrieveWhileHoldingLock(uintptr_t id) const
+  UsrsctpTransport* RetrieveWhileHoldingLock(uintptr_t id) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(lock_) {
     auto it = map_.find(id);
     if (it == map_.end()) {
@@ -297,12 +299,12 @@ class SctpTransportMap {
   mutable webrtc::Mutex lock_;
 
   uintptr_t next_id_ RTC_GUARDED_BY(lock_) = 0;
-  std::unordered_map<uintptr_t, SctpTransport*> map_ RTC_GUARDED_BY(lock_);
+  std::unordered_map<uintptr_t, UsrsctpTransport*> map_ RTC_GUARDED_BY(lock_);
 };
 
 // Handles global init/deinit, and mapping from usrsctp callbacks to
-// SctpTransport calls.
-class SctpTransport::UsrSctpWrapper {
+// UsrsctpTransport calls.
+class UsrsctpTransport::UsrSctpWrapper {
  public:
   static void InitializeUsrSctp() {
     RTC_LOG(LS_INFO) << __FUNCTION__;
@@ -361,7 +363,7 @@ class SctpTransport::UsrSctpWrapper {
     // send in the SCTP INIT message.
     usrsctp_sysctl_set_sctp_nr_outgoing_streams_default(kMaxSctpStreams);
 
-    g_transport_map_ = new SctpTransportMap();
+    g_transport_map_ = new UsrsctpTransportMap();
   }
 
   static void UninitializeUsrSctp() {
@@ -427,7 +429,7 @@ class SctpTransport::UsrSctpWrapper {
     // simultaneously deregistered/deleted, since this callback may come from
     // the SCTP timer thread and thus race with the network thread.
     bool found = g_transport_map_->PostToTransportThread(
-        reinterpret_cast<uintptr_t>(addr), [buf](SctpTransport* transport) {
+        reinterpret_cast<uintptr_t>(addr), [buf](UsrsctpTransport* transport) {
           transport->OnPacketFromSctpToNetwork(buf);
         });
     if (!found) {
@@ -471,7 +473,7 @@ class SctpTransport::UsrSctpWrapper {
     // the SCTP timer thread and thus race with the network thread.
     bool found = g_transport_map_->PostToTransportThread(
         *id, [owned_data{std::move(owned_data)}, length, rcv,
-              flags](SctpTransport* transport) {
+              flags](UsrsctpTransport* transport) {
           transport->OnDataOrNotificationFromSctp(owned_data.get(), length, rcv,
                                                   flags);
         });
@@ -493,7 +495,7 @@ class SctpTransport::UsrSctpWrapper {
       return ret;
     }
     // usrsctp_getladdrs() returns the addresses bound to this socket, which
-    // contains the SctpTransport id as sconn_addr.  Read the id,
+    // contains the UsrsctpTransport id as sconn_addr.  Read the id,
     // then free the list of addresses once we have the pointer.  We only open
     // AF_CONN sockets, and they should all have the sconn_addr set to the
     // id of the transport that created them, so [0] is as good as any other.
@@ -508,7 +510,7 @@ class SctpTransport::UsrSctpWrapper {
   // TODO(crbug.com/webrtc/11899): This is a legacy callback signature, remove
   // when usrsctp is updated.
   static int SendThresholdCallback(struct socket* sock, uint32_t sb_free) {
-    // Fired on our I/O thread. SctpTransport::OnPacketReceived() gets
+    // Fired on our I/O thread. UsrsctpTransport::OnPacketReceived() gets
     // a packet containing acknowledgments, which goes into usrsctp_conninput,
     // and then back here.
     absl::optional<uintptr_t> id = GetTransportIdFromSocket(sock);
@@ -524,8 +526,9 @@ class SctpTransport::UsrSctpWrapper {
       return 0;
     }
     bool found = g_transport_map_->PostToTransportThread(
-        *id,
-        [](SctpTransport* transport) { transport->OnSendThresholdCallback(); });
+        *id, [](UsrsctpTransport* transport) {
+          transport->OnSendThresholdCallback();
+        });
     if (!found) {
       RTC_LOG(LS_ERROR)
           << "SendThresholdCallback: Failed to get transport for socket ID "
@@ -537,7 +540,7 @@ class SctpTransport::UsrSctpWrapper {
   static int SendThresholdCallback(struct socket* sock,
                                    uint32_t sb_free,
                                    void* ulp_info) {
-    // Fired on our I/O thread. SctpTransport::OnPacketReceived() gets
+    // Fired on our I/O thread. UsrsctpTransport::OnPacketReceived() gets
     // a packet containing acknowledgments, which goes into usrsctp_conninput,
     // and then back here.
     absl::optional<uintptr_t> id = GetTransportIdFromSocket(sock);
@@ -553,8 +556,9 @@ class SctpTransport::UsrSctpWrapper {
       return 0;
     }
     bool found = g_transport_map_->PostToTransportThread(
-        *id,
-        [](SctpTransport* transport) { transport->OnSendThresholdCallback(); });
+        *id, [](UsrsctpTransport* transport) {
+          transport->OnSendThresholdCallback();
+        });
     if (!found) {
       RTC_LOG(LS_ERROR)
           << "SendThresholdCallback: Failed to get transport for socket ID "
@@ -564,8 +568,8 @@ class SctpTransport::UsrSctpWrapper {
   }
 };
 
-SctpTransport::SctpTransport(rtc::Thread* network_thread,
-                             rtc::PacketTransportInternal* transport)
+UsrsctpTransport::UsrsctpTransport(rtc::Thread* network_thread,
+                                   rtc::PacketTransportInternal* transport)
     : network_thread_(network_thread),
       transport_(transport),
       was_ever_writable_(transport ? transport->writable() : false) {
@@ -574,17 +578,17 @@ SctpTransport::SctpTransport(rtc::Thread* network_thread,
   ConnectTransportSignals();
 }
 
-SctpTransport::~SctpTransport() {
+UsrsctpTransport::~UsrsctpTransport() {
   RTC_DCHECK_RUN_ON(network_thread_);
   // Close abruptly; no reset procedure.
   CloseSctpSocket();
   // It's not strictly necessary to reset these fields to nullptr,
   // but having these fields set to nullptr is a clear indication that
   // object was destructed. There was a bug in usrsctp when it
-  // invoked OnSctpOutboundPacket callback for destructed SctpTransport,
+  // invoked OnSctpOutboundPacket callback for destructed UsrsctpTransport,
   // which caused obscure SIGSEGV on access to these fields,
   // having this fields set to nullptr will make it easier to understand
-  // that SctpTransport was destructed and "use-after-free" bug happen.
+  // that UsrsctpTransport was destructed and "use-after-free" bug happen.
   // SIGSEGV error triggered on dereference these pointers will also
   // be easier to understand due to 0x0 address. All of this assumes
   // that ASAN is not enabled to detect "use-after-free", which is
@@ -593,7 +597,8 @@ SctpTransport::~SctpTransport() {
   transport_ = nullptr;
 }
 
-void SctpTransport::SetDtlsTransport(rtc::PacketTransportInternal* transport) {
+void UsrsctpTransport::SetDtlsTransport(
+    rtc::PacketTransportInternal* transport) {
   RTC_DCHECK_RUN_ON(network_thread_);
   DisconnectTransportSignals();
   transport_ = transport;
@@ -609,9 +614,9 @@ void SctpTransport::SetDtlsTransport(rtc::PacketTransportInternal* transport) {
   }
 }
 
-bool SctpTransport::Start(int local_sctp_port,
-                          int remote_sctp_port,
-                          int max_message_size) {
+bool UsrsctpTransport::Start(int local_sctp_port,
+                             int remote_sctp_port,
+                             int max_message_size) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (local_sctp_port == -1) {
     local_sctp_port = kSctpDefaultPort;
@@ -653,7 +658,7 @@ bool SctpTransport::Start(int local_sctp_port,
   return true;
 }
 
-bool SctpTransport::OpenStream(int sid) {
+bool UsrsctpTransport::OpenStream(int sid) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (sid > kMaxSctpSid) {
     RTC_LOG(LS_WARNING) << debug_name_
@@ -685,7 +690,7 @@ bool SctpTransport::OpenStream(int sid) {
   }
 }
 
-bool SctpTransport::ResetStream(int sid) {
+bool UsrsctpTransport::ResetStream(int sid) {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   auto it = stream_status_by_sid_.find(sid);
@@ -707,9 +712,9 @@ bool SctpTransport::ResetStream(int sid) {
   return true;
 }
 
-bool SctpTransport::SendData(const SendDataParams& params,
-                             const rtc::CopyOnWriteBuffer& payload,
-                             SendDataResult* result) {
+bool UsrsctpTransport::SendData(const SendDataParams& params,
+                                const rtc::CopyOnWriteBuffer& payload,
+                                SendDataResult* result) {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   if (partial_outgoing_message_.has_value()) {
@@ -759,7 +764,7 @@ bool SctpTransport::SendData(const SendDataParams& params,
   return true;
 }
 
-SendDataResult SctpTransport::SendMessageInternal(OutgoingMessage* message) {
+SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!sock_) {
     RTC_LOG(LS_WARNING) << debug_name_
@@ -815,23 +820,23 @@ SendDataResult SctpTransport::SendMessageInternal(OutgoingMessage* message) {
   return SDR_SUCCESS;
 }
 
-bool SctpTransport::ReadyToSendData() {
+bool UsrsctpTransport::ReadyToSendData() {
   RTC_DCHECK_RUN_ON(network_thread_);
   return ready_to_send_data_;
 }
 
-void SctpTransport::ConnectTransportSignals() {
+void UsrsctpTransport::ConnectTransportSignals() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!transport_) {
     return;
   }
   transport_->SignalWritableState.connect(this,
-                                          &SctpTransport::OnWritableState);
-  transport_->SignalReadPacket.connect(this, &SctpTransport::OnPacketRead);
-  transport_->SignalClosed.connect(this, &SctpTransport::OnClosed);
+                                          &UsrsctpTransport::OnWritableState);
+  transport_->SignalReadPacket.connect(this, &UsrsctpTransport::OnPacketRead);
+  transport_->SignalClosed.connect(this, &UsrsctpTransport::OnClosed);
 }
 
-void SctpTransport::DisconnectTransportSignals() {
+void UsrsctpTransport::DisconnectTransportSignals() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!transport_) {
     return;
@@ -841,7 +846,7 @@ void SctpTransport::DisconnectTransportSignals() {
   transport_->SignalClosed.disconnect(this);
 }
 
-bool SctpTransport::Connect() {
+bool UsrsctpTransport::Connect() {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_LOG(LS_VERBOSE) << debug_name_ << "->Connect().";
 
@@ -904,7 +909,7 @@ bool SctpTransport::Connect() {
   return true;
 }
 
-bool SctpTransport::OpenSctpSocket() {
+bool UsrsctpTransport::OpenSctpSocket() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (sock_) {
     RTC_LOG(LS_WARNING) << debug_name_
@@ -947,7 +952,7 @@ bool SctpTransport::OpenSctpSocket() {
   return true;
 }
 
-bool SctpTransport::ConfigureSctpSocket() {
+bool UsrsctpTransport::ConfigureSctpSocket() {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(sock_);
   // Make the socket non-blocking. Connect, close, shutdown etc will not block
@@ -1028,7 +1033,7 @@ bool SctpTransport::ConfigureSctpSocket() {
   return true;
 }
 
-void SctpTransport::CloseSctpSocket() {
+void UsrsctpTransport::CloseSctpSocket() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (sock_) {
     // We assume that SO_LINGER option is set to close the association when
@@ -1043,7 +1048,7 @@ void SctpTransport::CloseSctpSocket() {
   }
 }
 
-bool SctpTransport::SendQueuedStreamResets() {
+bool UsrsctpTransport::SendQueuedStreamResets() {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   auto needs_reset =
@@ -1109,7 +1114,7 @@ bool SctpTransport::SendQueuedStreamResets() {
   return true;
 }
 
-void SctpTransport::SetReadyToSendData() {
+void UsrsctpTransport::SetReadyToSendData() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!ready_to_send_data_) {
     ready_to_send_data_ = true;
@@ -1117,7 +1122,7 @@ void SctpTransport::SetReadyToSendData() {
   }
 }
 
-bool SctpTransport::SendBufferedMessage() {
+bool UsrsctpTransport::SendBufferedMessage() {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK(partial_outgoing_message_.has_value());
   RTC_DLOG(LS_VERBOSE) << "Sending partially buffered message of size "
@@ -1142,7 +1147,8 @@ bool SctpTransport::SendBufferedMessage() {
   return true;
 }
 
-void SctpTransport::OnWritableState(rtc::PacketTransportInternal* transport) {
+void UsrsctpTransport::OnWritableState(
+    rtc::PacketTransportInternal* transport) {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK_EQ(transport_, transport);
   if (!was_ever_writable_ && transport->writable()) {
@@ -1154,14 +1160,14 @@ void SctpTransport::OnWritableState(rtc::PacketTransportInternal* transport) {
 }
 
 // Called by network interface when a packet has been received.
-void SctpTransport::OnPacketRead(rtc::PacketTransportInternal* transport,
-                                 const char* data,
-                                 size_t len,
-                                 const int64_t& /* packet_time_us */,
-                                 int flags) {
+void UsrsctpTransport::OnPacketRead(rtc::PacketTransportInternal* transport,
+                                    const char* data,
+                                    size_t len,
+                                    const int64_t& /* packet_time_us */,
+                                    int flags) {
   RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK_EQ(transport_, transport);
-  TRACE_EVENT0("webrtc", "SctpTransport::OnPacketRead");
+  TRACE_EVENT0("webrtc", "UsrsctpTransport::OnPacketRead");
 
   if (flags & PF_SRTP_BYPASS) {
     // We are only interested in SCTP packets.
@@ -1188,11 +1194,11 @@ void SctpTransport::OnPacketRead(rtc::PacketTransportInternal* transport,
   }
 }
 
-void SctpTransport::OnClosed(rtc::PacketTransportInternal* transport) {
+void UsrsctpTransport::OnClosed(rtc::PacketTransportInternal* transport) {
   SignalClosedAbruptly();
 }
 
-void SctpTransport::OnSendThresholdCallback() {
+void UsrsctpTransport::OnSendThresholdCallback() {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (partial_outgoing_message_.has_value()) {
     if (!SendBufferedMessage()) {
@@ -1203,7 +1209,7 @@ void SctpTransport::OnSendThresholdCallback() {
   SetReadyToSendData();
 }
 
-sockaddr_conn SctpTransport::GetSctpSockAddr(int port) {
+sockaddr_conn UsrsctpTransport::GetSctpSockAddr(int port) {
   sockaddr_conn sconn = {0};
   sconn.sconn_family = AF_CONN;
 #ifdef HAVE_SCONN_LEN
@@ -1215,7 +1221,7 @@ sockaddr_conn SctpTransport::GetSctpSockAddr(int port) {
   return sconn;
 }
 
-void SctpTransport::OnPacketFromSctpToNetwork(
+void UsrsctpTransport::OnPacketFromSctpToNetwork(
     const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (buffer.size() > (kSctpMtu)) {
@@ -1225,7 +1231,7 @@ void SctpTransport::OnPacketFromSctpToNetwork(
                          "than its official MTU: "
                       << buffer.size() << " vs max of " << kSctpMtu;
   }
-  TRACE_EVENT0("webrtc", "SctpTransport::OnPacketFromSctpToNetwork");
+  TRACE_EVENT0("webrtc", "UsrsctpTransport::OnPacketFromSctpToNetwork");
 
   // Don't create noise by trying to send a packet when the DTLS transport isn't
   // even writable.
@@ -1238,7 +1244,7 @@ void SctpTransport::OnPacketFromSctpToNetwork(
                          rtc::PacketOptions(), PF_NORMAL);
 }
 
-void SctpTransport::InjectDataOrNotificationFromSctpForTesting(
+void UsrsctpTransport::InjectDataOrNotificationFromSctpForTesting(
     const void* data,
     size_t length,
     struct sctp_rcvinfo rcv,
@@ -1246,10 +1252,10 @@ void SctpTransport::InjectDataOrNotificationFromSctpForTesting(
   OnDataOrNotificationFromSctp(data, length, rcv, flags);
 }
 
-void SctpTransport::OnDataOrNotificationFromSctp(const void* data,
-                                                 size_t length,
-                                                 struct sctp_rcvinfo rcv,
-                                                 int flags) {
+void UsrsctpTransport::OnDataOrNotificationFromSctp(const void* data,
+                                                    size_t length,
+                                                    struct sctp_rcvinfo rcv,
+                                                    int flags) {
   RTC_DCHECK_RUN_ON(network_thread_);
   // If data is NULL, the SCTP association has been closed.
   if (!data) {
@@ -1345,7 +1351,7 @@ void SctpTransport::OnDataOrNotificationFromSctp(const void* data,
   partial_incoming_message_.Clear();
 }
 
-void SctpTransport::OnDataFromSctpToTransport(
+void UsrsctpTransport::OnDataFromSctpToTransport(
     const ReceiveDataParams& params,
     const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -1358,7 +1364,7 @@ void SctpTransport::OnDataFromSctpToTransport(
   SignalDataReceived(params, buffer);
 }
 
-void SctpTransport::OnNotificationFromSctp(
+void UsrsctpTransport::OnNotificationFromSctp(
     const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (buffer.size() < sizeof(sctp_notification::sn_header)) {
@@ -1459,7 +1465,8 @@ void SctpTransport::OnNotificationFromSctp(
   }
 }
 
-void SctpTransport::OnNotificationAssocChange(const sctp_assoc_change& change) {
+void UsrsctpTransport::OnNotificationAssocChange(
+    const sctp_assoc_change& change) {
   RTC_DCHECK_RUN_ON(network_thread_);
   switch (change.sac_state) {
     case SCTP_COMM_UP:
@@ -1491,7 +1498,7 @@ void SctpTransport::OnNotificationAssocChange(const sctp_assoc_change& change) {
   }
 }
 
-void SctpTransport::OnStreamResetEvent(
+void UsrsctpTransport::OnStreamResetEvent(
     const struct sctp_stream_reset_event* evt) {
   RTC_DCHECK_RUN_ON(network_thread_);
 

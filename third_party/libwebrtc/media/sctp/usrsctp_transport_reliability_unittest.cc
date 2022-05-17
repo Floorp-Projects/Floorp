@@ -11,8 +11,8 @@
 #include <queue>
 #include <string>
 
-#include "media/sctp/sctp_transport.h"
 #include "media/sctp/sctp_transport_internal.h"
+#include "media/sctp/usrsctp_transport.h"
 #include "rtc_base/async_invoker.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
@@ -143,7 +143,7 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
 
 /**
  * A helper class to send specified number of messages
- * over SctpTransport with SCTP reliability settings
+ * over UsrsctpTransport with SCTP reliability settings
  * provided by user. The reliability settings are specified
  * by passing a template instance of SendDataParams.
  * When .sid field inside SendDataParams is specified to
@@ -156,7 +156,7 @@ class SimulatedPacketTransport final : public rtc::PacketTransportInternal {
 class SctpDataSender final {
  public:
   SctpDataSender(rtc::Thread* thread,
-                 cricket::SctpTransport* transport,
+                 cricket::UsrsctpTransport* transport,
                  uint64_t target_messages_count,
                  cricket::SendDataParams send_params,
                  uint32_t sender_id)
@@ -233,14 +233,14 @@ class SctpDataSender final {
         break;
       case cricket::SDR_ERROR:
         // give up
-        last_error_ = "SctpTransport::SendData error returned";
+        last_error_ = "UsrsctpTransport::SendData error returned";
         sent_target_messages_count_.Set();
         break;
     }
   }
 
   rtc::Thread* const thread_;
-  cricket::SctpTransport* const transport_;
+  cricket::UsrsctpTransport* const transport_;
   const uint64_t target_messages_count_;
   const cricket::SendDataParams send_params_;
   const uint32_t sender_id_;
@@ -256,7 +256,7 @@ class SctpDataSender final {
 
 /**
  * A helper class which counts number of received messages
- * and bytes over SctpTransport. Also allow waiting until
+ * and bytes over UsrsctpTransport. Also allow waiting until
  * specified number of messages received.
  */
 class SctpDataReceiver final : public sigslot::has_slots<> {
@@ -323,7 +323,7 @@ class ThreadPool final {
 };
 
 /**
- * Represents single ping-pong test over SctpTransport.
+ * Represents single ping-pong test over UsrsctpTransport.
  * User can specify target number of message for bidirectional
  * send, underlying transport packets loss and average packet delay
  * and SCTP delivery settings.
@@ -505,7 +505,7 @@ class SctpPingPong final {
           "SctpPingPong id = " + rtc::ToString(id_) + ", packet transport 1",
           transport_thread1_, packet_loss_percents_, avg_send_delay_millis_));
       data_receiver1_.reset(new SctpDataReceiver(id_, messages_count_));
-      sctp_transport1_.reset(new cricket::SctpTransport(
+      sctp_transport1_.reset(new cricket::UsrsctpTransport(
           transport_thread1_, packet_transport1_.get()));
       sctp_transport1_->set_debug_name_for_testing("sctp transport 1");
 
@@ -527,7 +527,7 @@ class SctpPingPong final {
           "SctpPingPong id = " + rtc::ToString(id_) + "packet transport 2",
           transport_thread2_, packet_loss_percents_, avg_send_delay_millis_));
       data_receiver2_.reset(new SctpDataReceiver(id_, messages_count_));
-      sctp_transport2_.reset(new cricket::SctpTransport(
+      sctp_transport2_.reset(new cricket::UsrsctpTransport(
           transport_thread2_, packet_transport2_.get()));
       sctp_transport2_->set_debug_name_for_testing("sctp transport 2");
       sctp_transport2_->SignalDataReceived.connect(
@@ -576,8 +576,8 @@ class SctpPingPong final {
   std::unique_ptr<SimulatedPacketTransport> packet_transport2_;
   std::unique_ptr<SctpDataReceiver> data_receiver1_;
   std::unique_ptr<SctpDataReceiver> data_receiver2_;
-  std::unique_ptr<cricket::SctpTransport> sctp_transport1_;
-  std::unique_ptr<cricket::SctpTransport> sctp_transport2_;
+  std::unique_ptr<cricket::UsrsctpTransport> sctp_transport1_;
+  std::unique_ptr<cricket::UsrsctpTransport> sctp_transport2_;
   std::unique_ptr<SctpDataSender> data_sender1_;
   std::unique_ptr<SctpDataSender> data_sender2_;
   mutable webrtc::Mutex lock_;
