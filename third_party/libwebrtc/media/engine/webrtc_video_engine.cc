@@ -759,8 +759,8 @@ WebRtcVideoChannel::SelectSendVideoCodecs(
       // following the spec in https://tools.ietf.org/html/rfc6184#section-8.2.2
       // since we should limit the encode level to the lower of local and remote
       // level when level asymmetry is not allowed.
-      if (IsSameCodec(format_it->name, format_it->parameters,
-                      remote_codec.codec.name, remote_codec.codec.params)) {
+      if (format_it->IsSameCodec(
+              {remote_codec.codec.name, remote_codec.codec.params})) {
         encoders.push_back(remote_codec);
 
         // To allow the VideoEncoderFactory to keep information about which
@@ -954,8 +954,8 @@ void WebRtcVideoChannel::RequestEncoderSwitch(
   RTC_DCHECK_RUN_ON(&thread_checker_);
 
   for (const VideoCodecSettings& codec_setting : negotiated_codecs_) {
-    if (IsSameCodec(format.name, format.parameters, codec_setting.codec.name,
-                    codec_setting.codec.params)) {
+    if (format.IsSameCodec(
+            {codec_setting.codec.name, codec_setting.codec.params})) {
       VideoCodecSettings new_codec_setting = codec_setting;
       for (const auto& kv : format.parameters) {
         new_codec_setting.codec.params[kv.first] = kv.second;

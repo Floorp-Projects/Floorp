@@ -44,6 +44,7 @@ rtc_library("video_codecs_api") {
   deps = [
     "..:fec_controller_api",
     "..:scoped_refptr",
+    "../../api:array_view",
     "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base:checks",
     "../../rtc_base:rtc_base_approved",
