@@ -38,7 +38,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_without_table() {
     editor.innerHTML = "<p>Here is a paragraph</p>";
-    document.body.scrollTop;  // Flush pending layout
     selection.collapse(editor.querySelector("p").firstChild, 0);
     try {
       getTableEditor().getSelectedCellsType(null);
@@ -51,7 +50,6 @@ SimpleTest.waitForFocus(function() {
   (function test_with_selection_outside_table() {
     editor.innerHTML = "<p>Here is a paragraph before the table</p>" +
       "<table><tr><td>cell</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.collapse(editor.querySelector("p").firstChild, 0);
     try {
       getTableEditor().getSelectedCellsType(null);
@@ -63,7 +61,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selection_in_text_in_cell() {
     editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.collapse(editor.querySelector("td").firstChild, 0);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
       "nsITableEditor.getSelectedCellsType(null) should return None when selection is collapsed in a text node in a cell");
@@ -71,7 +68,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_which_is_only_one_cell_in_table() {
     editor.innerHTML = "<table><tr><td>cell</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
       "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects the cell which is only one in the table");
@@ -79,7 +75,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_whose_table_has_one_row() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
       "nsITableEditor.getSelectedCellsType(null) should return Column when selection selects a cell in the first row which is only one in the table");
@@ -87,7 +82,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_whose_table_has_one_column() {
     editor.innerHTML = "<table><tr><td>cell1</td></tr><tr><td>cell2</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
       "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects a cell in the first row which is only one in the row");
@@ -95,7 +89,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_1_1_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
       "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at first row and first column");
@@ -103,7 +96,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_1_2_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 1, editor.querySelector("tr"), 2);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
       "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at first row and second column");
@@ -111,7 +103,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_2_1_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr + tr"), 0, editor.querySelector("tr + tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
       "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at second row and first column");
@@ -119,7 +110,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_2_2_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr + tr"), 1, editor.querySelector("tr + tr"), 2);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Cell,
       "nsITableEditor.getSelectedCellsType(null) should return Cell when selection selects a cell at second row and second column");
@@ -127,7 +117,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_1_1_whose_colspan_2_and_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td colspan=\"2\">cell1</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
       "nsITableEditor.getSelectedCellsType(null) should return Row when selection selects a cell whose colspan is 2 at first row");
@@ -135,7 +124,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_cell_at_1_1_whose_rowspan_2_and_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td rowspan=\"2\">cell1</td><td>cell2</td></tr><tr><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tr"), 0, editor.querySelector("tr"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
       "nsITableEditor.getSelectedCellsType(null) should return Column when selection selects a cell whose row is 2 at first column");
@@ -143,7 +131,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_all_cells_in_first_row_whose_table_has_2x2_cells() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
     synthesizeMouseAtCenter(editor.querySelector("td + td"), {accelKey: true});
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Row,
@@ -153,7 +140,6 @@ SimpleTest.waitForFocus(function() {
   (function test_with_selecting_all_cells_in_first_column_whose_table_has_2x2_cells() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
     synthesizeMouseAtCenter(editor.querySelector("tr + tr > td"), {accelKey: true});
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_Column,
@@ -163,7 +149,6 @@ SimpleTest.waitForFocus(function() {
   (function test_with_selecting_all_cells_whose_table_has_2x2_cells() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     synthesizeMouseAtCenter(editor.querySelector("td"), {accelKey: true});
     synthesizeMouseAtCenter(editor.querySelector("td + td"), {accelKey: true});
     synthesizeMouseAtCenter(editor.querySelector("tr + tr > td"), {accelKey: true});
@@ -174,7 +159,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_raw() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("tbody"), 0, editor.querySelector("tbody"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
       "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a row");
@@ -182,7 +166,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_tbody() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor.querySelector("table"), 0, editor.querySelector("table"), 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
       "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a tbody");
@@ -190,7 +173,6 @@ SimpleTest.waitForFocus(function() {
 
   (function test_with_selecting_a_table() {
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     selection.setBaseAndExtent(editor, 0, editor, 1);
     is(getTableEditor().getSelectedCellsType(null), kTableSelectionMode_None,
       "nsITableEditor.getSelectedCellsType(null) should return None when selection selects a table");
@@ -200,7 +182,6 @@ SimpleTest.waitForFocus(function() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
       "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     let range = document.createRange();
     range.selectNode(editor.querySelector("td"));
     selection.addRange(range);
@@ -215,7 +196,6 @@ SimpleTest.waitForFocus(function() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
       "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     let range = document.createRange();
     range.selectNode(editor.querySelector("td"));
     selection.addRange(range);
@@ -227,7 +207,6 @@ SimpleTest.waitForFocus(function() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
       "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     let range = document.createRange();
     range.selectNode(editor.querySelector("tr + tr > td"));
     selection.addRange(range);
@@ -239,7 +218,6 @@ SimpleTest.waitForFocus(function() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
       "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     let range = document.createRange();
     range.selectNode(editor.querySelector("td"));
     selection.addRange(range);
@@ -251,7 +229,6 @@ SimpleTest.waitForFocus(function() {
     selection.removeAllRanges();
     editor.innerHTML = "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>" +
       "<table><tr><td>cell1</td><td>cell2</td></tr><tr><td>cell3</td><td>cell4</td></tr></table>";
-    document.body.scrollTop;  // Flush pending layout
     let range = document.createRange();
     range.selectNode(editor.querySelector("td"));
     selection.addRange(range);

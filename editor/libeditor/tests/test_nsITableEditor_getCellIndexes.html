@@ -66,7 +66,6 @@ SimpleTest.waitForFocus(function() {
 
   for (const kTest of kTests) {
     editor.innerHTML = kTest;
-    editor.scrollTop; // compute layout now.
     let cell = document.getElementById("test");
     getTableEditor().getCellIndexes(cell, rowIndex, columnIndex);
     is(rowIndex.value.toString(10), cell.getAttribute("data-row"), `Specified cell element directly, row Index value of ${kTest}`);
