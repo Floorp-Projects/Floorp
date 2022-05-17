@@ -10,16 +10,30 @@
 
 #include "media/sctp/sctp_transport_factory.h"
 
+#include "rtc_base/system/unused.h"
+
+#ifdef WEBRTC_HAVE_USRSCTP
+#include "media/sctp/usrsctp_transport.h"  // nogncheck
+#endif
+
 namespace cricket {
 
 SctpTransportFactory::SctpTransportFactory(rtc::Thread* network_thread)
-    : network_thread_(network_thread) {}
+    : network_thread_(network_thread) {
+  RTC_UNUSED(network_thread_);
+}
 
 std::unique_ptr<SctpTransportInternal>
 SctpTransportFactory::CreateSctpTransport(
     rtc::PacketTransportInternal* transport) {
-  return std::unique_ptr<SctpTransportInternal>(
-      new UsrsctpTransport(network_thread_, transport));
+  std::unique_ptr<SctpTransportInternal> result;
+#ifdef WEBRTC_HAVE_USRSCTP
+  if (!result) {
+    result = std::unique_ptr<SctpTransportInternal>(
+        new UsrsctpTransport(network_thread_, transport));
+  }
+#endif
+  return result;
 }
 
 }  // namespace cricket

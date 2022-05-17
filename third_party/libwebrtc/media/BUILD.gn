@@ -393,49 +393,66 @@ rtc_library("rtc_media_engine_defaults") {
 }
 
 if (!build_with_mozilla) {
-rtc_library("rtc_data") {
-  defines = [
-    # "SCTP_DEBUG" # Uncomment for SCTP debugging.
-  ]
+rtc_source_set("rtc_data_sctp_transport_internal") {
+  sources = [ "sctp/sctp_transport_internal.h" ]
   deps = [
-    ":rtc_media_base",
-    "../api:call_api",
-    "../api:sequence_checker",
-    "../api:transport_api",
+    "../media:rtc_media_base",
     "../p2p:rtc_p2p",
-    "../rtc_base",
     "../rtc_base:rtc_base_approved",
     "../rtc_base:threading",
-    "../rtc_base/synchronization:mutex",
-    "../rtc_base/task_utils:pending_task_safety_flag",
-    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
-    "../system_wrappers",
   ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/algorithm:container",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
+}
 
-  if (rtc_enable_sctp) {
+if (rtc_build_usrsctp) {
+  rtc_library("rtc_data_usrsctp_transport") {
+    defines = [
+      # "SCTP_DEBUG" # Uncomment for SCTP debugging.
+    ]
     sources = [
-      "sctp/sctp_transport_factory.cc",
-      "sctp/sctp_transport_factory.h",
-      "sctp/sctp_transport_internal.h",
       "sctp/usrsctp_transport.cc",
       "sctp/usrsctp_transport.h",
     ]
-  } else {
-    # libtool on mac does not like empty targets.
-    sources = [ "sctp/noop.cc" ]
-  }
-
-  if (rtc_enable_sctp && rtc_build_usrsctp) {
-    deps += [
-      "../api/transport:sctp_transport_factory_interface",
+    deps = [
+      ":rtc_data_sctp_transport_internal",
+      "../media:rtc_media_base",
+      "../p2p:rtc_p2p",
+      "../rtc_base",
+      "../rtc_base:rtc_base_approved",
+      "../rtc_base:threading",
+      "../rtc_base/synchronization:mutex",
+      "../rtc_base/task_utils:pending_task_safety_flag",
+      "../rtc_base/task_utils:to_queued_task",
+      "../rtc_base/third_party/sigslot:sigslot",
       "//third_party/usrsctp",
     ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
+  }
+}
+
+rtc_library("rtc_data_sctp_transport_factory") {
+  defines = []
+  sources = [
+    "sctp/sctp_transport_factory.cc",
+    "sctp/sctp_transport_factory.h",
+  ]
+  deps = [
+    ":rtc_data_sctp_transport_internal",
+    "../api/transport:sctp_transport_factory_interface",
+    "../rtc_base:threading",
+    "../rtc_base/system:unused",
+  ]
+
+  if (rtc_enable_sctp) {
+    assert(rtc_build_usrsctp, "An SCTP backend is required to enable SCTP")
+  }
+
+  if (rtc_build_usrsctp) {
+    defines += [ "WEBRTC_HAVE_USRSCTP" ]
+    deps += [ ":rtc_data_usrsctp_transport" ]
   }
 }
 }
@@ -443,10 +460,7 @@ rtc_library("rtc_data") {
 rtc_source_set("rtc_media") {
   visibility = [ "*" ]
   allow_poison = [ "audio_codecs" ]  # TODO(bugs.webrtc.org/8396): Remove.
-  deps = [
-    ":rtc_audio_video",
-    #":rtc_data",
-  ]
+  deps = [ ":rtc_audio_video" ]
 }
 
 if (rtc_include_tests) {
@@ -539,7 +553,6 @@ if (rtc_include_tests) {
       defines = []
       deps = [
         ":rtc_audio_video",
-        ":rtc_data",
         ":rtc_encoder_simulcast_proxy",
         ":rtc_internal_video_codecs",
         ":rtc_media",
@@ -643,15 +656,18 @@ if (rtc_include_tests) {
         sources += [ "engine/webrtc_voice_engine_unittest.cc" ]
       }
 
-      if (rtc_enable_sctp) {
+      if (rtc_build_usrsctp) {
         sources += [
           "sctp/usrsctp_transport_reliability_unittest.cc",
           "sctp/usrsctp_transport_unittest.cc",
         ]
         deps += [
+          ":rtc_data_sctp_transport_internal",
+          ":rtc_data_usrsctp_transport",
           "../rtc_base:rtc_event",
           "../rtc_base/task_utils:pending_task_safety_flag",
           "../rtc_base/task_utils:to_queued_task",
+          "//third_party/usrsctp",
         ]
       }
 
@@ -670,10 +686,6 @@ if (rtc_include_tests) {
 
       if (is_ios) {
         deps += [ ":rtc_media_unittests_bundle_data" ]
-      }
-
-      if (rtc_enable_sctp && rtc_build_usrsctp) {
-        deps += [ "//third_party/usrsctp" ]
       }
     }
   }
