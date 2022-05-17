@@ -65,6 +65,10 @@ RTC_OBJC_EXPORT
 /** The relative DiffServ Code Point priority. */
 @property(nonatomic, assign) RTCPriority networkPriority;
 
+/** Allow dynamic frame length changes for audio:
+ https://w3c.github.io/webrtc-extensions/#dom-rtcrtpencodingparameters-adaptiveptime */
+@property(nonatomic, assign) BOOL adaptiveAudioPacketTime;
+
 - (instancetype)init;
 
 @end
