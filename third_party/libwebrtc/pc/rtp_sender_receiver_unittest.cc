@@ -107,7 +107,7 @@ class RtpSenderReceiverTest
         // Create fake media engine/etc. so we can create channels to use to
         // test RtpSenders/RtpReceivers.
         media_engine_(new cricket::FakeMediaEngine()),
-        fake_call_(),
+        fake_call_(worker_thread_, network_thread_),
         local_stream_(MediaStream::Create(kStreamId1)) {
     worker_thread_->Invoke<void>(RTC_FROM_HERE, [&]() {
       channel_manager_ = cricket::ChannelManager::Create(

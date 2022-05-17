@@ -17,6 +17,7 @@
 #include "media/base/rtp_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/gunit.h"
+#include "rtc_base/thread.h"
 
 namespace cricket {
 FakeAudioSendStream::FakeAudioSendStream(
@@ -377,7 +378,13 @@ void FakeFlexfecReceiveStream::OnRtpPacket(const webrtc::RtpPacketReceived&) {
 }
 
 FakeCall::FakeCall()
-    : audio_network_state_(webrtc::kNetworkUp),
+    : FakeCall(rtc::Thread::Current(), rtc::Thread::Current()) {}
+
+FakeCall::FakeCall(webrtc::TaskQueueBase* worker_thread,
+                   webrtc::TaskQueueBase* network_thread)
+    : network_thread_(network_thread),
+      worker_thread_(worker_thread),
+      audio_network_state_(webrtc::kNetworkUp),
       video_network_state_(webrtc::kNetworkUp),
       num_created_send_streams_(0),
       num_created_receive_streams_(0) {}
@@ -610,6 +617,14 @@ int FakeCall::GetNumCreatedReceiveStreams() const {
 
 webrtc::Call::Stats FakeCall::GetStats() const {
   return stats_;
+}
+
+webrtc::TaskQueueBase* FakeCall::network_thread() const {
+  return network_thread_;
+}
+
+webrtc::TaskQueueBase* FakeCall::worker_thread() const {
+  return worker_thread_;
 }
 
 void FakeCall::SignalChannelNetworkState(webrtc::MediaType media,
