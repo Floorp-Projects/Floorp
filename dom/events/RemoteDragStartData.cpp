@@ -50,30 +50,12 @@ void RemoteDragStartData::AddInitialDnDDataTo(
         RefPtr<nsISupports> flavorDataProvider =
             new nsContentAreaDragDropDataProvider();
         variant->SetAsISupports(flavorDataProvider);
-      } else if (item.data().type() == IPCDataTransferData::TnsString) {
-        variant->SetAsAString(item.data().get_nsString());
-      } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
-        RefPtr<BlobImpl> impl =
-            IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
-        variant->SetAsISupports(impl);
-      } else if (item.data().type() == IPCDataTransferData::TShmem) {
-        if (nsContentUtils::IsFlavorImage(item.flavor())) {
-          // An image! Get the imgIContainer for it and set it in the variant.
-          nsCOMPtr<imgIContainer> imageContainer;
-          nsresult rv = nsContentUtils::DataTransferItemToImage(
-              item, getter_AddRefs(imageContainer));
-          if (NS_FAILED(rv)) {
-            continue;
-          }
-          variant->SetAsISupports(imageContainer);
-        } else {
-          Shmem data = item.data().get_Shmem();
-          variant->SetAsACString(
-              nsDependentCSubstring(data.get<char>(), data.Size<char>()));
+      } else {
+        nsresult rv = nsContentUtils::IPCTransferableItemToVariant(
+            item, variant, mBrowserParent);
+        if (NS_FAILED(rv)) {
+          continue;
         }
-
-        mozilla::Unused << mBrowserParent->DeallocShmem(
-            item.data().get_Shmem());
       }
 
       // We set aHidden to false, as we don't need to worry about hiding data

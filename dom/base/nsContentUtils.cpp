@@ -379,6 +379,7 @@
 #include "nsUGenCategory.h"
 #include "nsURLHelper.h"
 #include "nsUnicodeProperties.h"
+#include "nsVariant.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsXPCOM.h"
@@ -7649,6 +7650,45 @@ nsresult nsContentUtils::IPCTransferableToTransferable(
 
   aTransferable->SetRequestingPrincipal(aRequestingPrincipal);
   aTransferable->SetContentPolicyType(aContentPolicyType);
+  return NS_OK;
+}
+
+nsresult nsContentUtils::IPCTransferableItemToVariant(
+    const IPCDataTransferItem& aDataTransferItem, nsIWritableVariant* aVariant,
+    IProtocol* aActor) {
+  MOZ_ASSERT(aVariant);
+  MOZ_ASSERT(aActor);
+
+  if (aDataTransferItem.data().type() == IPCDataTransferData::TnsString) {
+    const nsString& data = aDataTransferItem.data().get_nsString();
+    aVariant->SetAsAString(data);
+  } else if (aDataTransferItem.data().type() == IPCDataTransferData::TShmem) {
+    auto release = MakeScopeExit([&] {
+      Unused << aActor->DeallocShmem(aDataTransferItem.data().get_Shmem());
+    });
+
+    if (nsContentUtils::IsFlavorImage(aDataTransferItem.flavor())) {
+      // An image! Get the imgIContainer for it and set it in the
+      // variant.
+      nsCOMPtr<imgIContainer> imageContainer;
+      nsresult rv = nsContentUtils::DataTransferItemToImage(
+          aDataTransferItem, getter_AddRefs(imageContainer));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      aVariant->SetAsISupports(imageContainer);
+    } else {
+      Shmem data = aDataTransferItem.data().get_Shmem();
+      aVariant->SetAsACString(
+          nsDependentCSubstring(data.get<char>(), data.Size<char>()));
+    }
+  } else if (aDataTransferItem.data().type() == IPCDataTransferData::TIPCBlob) {
+    RefPtr<BlobImpl> blobImpl =
+        IPCBlobUtils::Deserialize(aDataTransferItem.data().get_IPCBlob());
+    aVariant->SetAsISupports(blobImpl);
+  } else {
+    return NS_ERROR_UNEXPECTED;
+  }
   return NS_OK;
 }
 

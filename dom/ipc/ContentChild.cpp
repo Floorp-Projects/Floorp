@@ -3153,34 +3153,12 @@ mozilla::ipc::IPCResult ContentChild::RecvInvokeDragSession(
         for (uint32_t j = 0; j < items.Length(); ++j) {
           const IPCDataTransferItem& item = items[j];
           RefPtr<nsVariantCC> variant = new nsVariantCC();
-          if (item.data().type() == IPCDataTransferData::TnsString) {
-            const nsString& data = item.data().get_nsString();
-            variant->SetAsAString(data);
-          } else if (item.data().type() == IPCDataTransferData::TShmem) {
-            if (nsContentUtils::IsFlavorImage(item.flavor())) {
-              // An image! Get the imgIContainer for it and set it in the
-              // variant.
-              nsCOMPtr<imgIContainer> imageContainer;
-              nsresult rv = nsContentUtils::DataTransferItemToImage(
-                  item, getter_AddRefs(imageContainer));
-              if (NS_FAILED(rv)) {
-                continue;
-              }
-              variant->SetAsISupports(imageContainer);
-            } else {
-              Shmem data = item.data().get_Shmem();
-              variant->SetAsACString(
-                  nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-            }
-
-            Unused << DeallocShmem(item.data().get_Shmem());
-          } else if (item.data().type() == IPCDataTransferData::TIPCBlob) {
-            RefPtr<BlobImpl> blobImpl =
-                IPCBlobUtils::Deserialize(item.data().get_IPCBlob());
-            variant->SetAsISupports(blobImpl);
-          } else {
+          nsresult rv =
+              nsContentUtils::IPCTransferableItemToVariant(item, variant, this);
+          if (NS_FAILED(rv)) {
             continue;
           }
+
           // We should hide this data from content if we have a file, and we
           // aren't a file.
           bool hidden =
