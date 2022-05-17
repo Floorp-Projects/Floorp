@@ -3461,8 +3461,6 @@ class HTMLEditor final : public EditorBase,
       bool* aMixed, nsAString& aOutColor, bool aBlockLevel);
   nsresult GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
-  nsresult GetLastCellInRow(nsINode* aRowNode, nsINode** aCellNode);
-
   /**
    * This sets background on the appropriate container element (table, cell,)
    * or calls to set the page background.
@@ -3581,10 +3579,7 @@ class HTMLEditor final : public EditorBase,
   };
 
   /**
-   * InsertTableCellsWithTransaction() inserts <td> elements before or after
-   * a cell element containing first selection range.  I.e., if the cell
-   * spans columns and aInsertPosition is eAfterSelectedCell, new columns
-   * will be inserted after the right-most column which contains the cell.
+   * InsertTableCellsWithTransaction() inserts <td> elements at aPointToInsert.
    * Note that this simply inserts <td> elements, i.e., colspan and rowspan
    * around the cell containing selection are not modified.  So, for example,
    * adding a cell to rectangular table changes non-rectangular table.
@@ -3592,15 +3587,16 @@ class HTMLEditor final : public EditorBase,
    * it may be moved to right side of the row-spanning cell after inserting
    * some cell elements before it.  Similarly, colspan won't be adjusted
    * for keeping table rectangle.
-   * If first selection range is not in table cell element, this does nothing
-   * but does not return error.
+   * Finally, puts caret into previous cell of the insertion point or the
+   * first inserted cell if aPointToInsert is start of the row.
    *
-   * @param aNumberOfCellssToInsert     Number of cells to insert.
-   * @param aInsertPosition             Before or after the target cell which
-   *                                    contains first selection range.
+   * @param aPointToInsert              The place to insert one or more cell
+   *                                    elements.  The container must be a
+   *                                    <tr> element.
+   * @param aNumberOfCellsToInsert      Number of cells to insert.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
-      int32_t aNumberOfCellsToInsert, InsertPosition aInsertPosition);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult InsertTableCellsWithTransaction(
+      const EditorDOMPoint& aPointToInsert, int32_t aNumberOfCellsToInsert);
 
   /**
    * InsertTableColumnsWithTransaction() inserts columns before or after
