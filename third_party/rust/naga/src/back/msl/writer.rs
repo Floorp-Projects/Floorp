@@ -70,15 +70,16 @@ const CLAMPED_LOD_LOAD_PREFIX: &str = "clamped_lod_e";
 
 struct TypeContext<'a> {
     handle: Handle<crate::Type>,
-    arena: &'a crate::UniqueArena<crate::Type>,
+    module: &'a crate::Module,
     names: &'a FastHashMap<NameKey, String>,
     access: crate::StorageAccess,
+    binding: Option<&'a super::ResolvedBinding>,
     first_time: bool,
 }
 
 impl<'a> Display for TypeContext<'a> {
     fn fmt(&self, out: &mut Formatter<'_>) -> Result<(), FmtError> {
-        let ty = &self.arena[self.handle];
+        let ty = &self.module.types[self.handle];
         if ty.needs_alias() && !self.first_time {
             let name = &self.names[&NameKey::Type(self.handle)];
             return write!(out, "{}", name);
@@ -201,6 +202,39 @@ impl<'a> Display for TypeContext<'a> {
             crate::TypeInner::Sampler { comparison: _ } => {
                 write!(out, "{}::sampler", NAMESPACE)
             }
+            crate::TypeInner::BindingArray { base, size } => {
+                let base_tyname = Self {
+                    handle: base,
+                    first_time: false,
+                    ..*self
+                };
+
+                if let Some(&super::ResolvedBinding::Resource(super::BindTarget {
+                    binding_array_size: Some(override_size),
+                    ..
+                })) = self.binding
+                {
+                    write!(
+                        out,
+                        "{}::array<{}, {}>",
+                        NAMESPACE, base_tyname, override_size
+                    )
+                } else if let crate::ArraySize::Constant(size) = size {
+                    let constant_ctx = ConstantContext {
+                        handle: size,
+                        arena: &self.module.constants,
+                        names: self.names,
+                        first_time: false,
+                    };
+                    write!(
+                        out,
+                        "{}::array<{}, {}>",
+                        NAMESPACE, base_tyname, constant_ctx
+                    )
+                } else {
+                    unreachable!("metal requires all arrays be constant sized");
+                }
+            }
         }
     }
 }
@@ -210,6 +244,7 @@ struct TypedGlobalVariable<'a> {
     names: &'a FastHashMap<NameKey, String>,
     handle: Handle<crate::GlobalVariable>,
     usage: valid::GlobalUse,
+    binding: Option<&'a super::ResolvedBinding>,
     reference: bool,
 }
 
@@ -225,14 +260,24 @@ impl<'a> TypedGlobalVariable<'a> {
                     class: crate::ImageClass::Storage { access, .. },
                     ..
                 } => access,
+                crate::TypeInner::BindingArray { base, .. } => {
+                    match self.module.types[base].inner {
+                        crate::TypeInner::Image {
+                            class: crate::ImageClass::Storage { access, .. },
+                            ..
+                        } => access,
+                        _ => crate::StorageAccess::default(),
+                    }
+                }
                 _ => crate::StorageAccess::default(),
             },
         };
         let ty_name = TypeContext {
             handle: var.ty,
-            arena: &self.module.types,
+            module: self.module,
             names: self.names,
             access: storage_access,
+            binding: self.binding,
             first_time: false,
         };
 
@@ -452,7 +497,7 @@ impl crate::Type {
             // composite types are better to be aliased, regardless of the name
             Ti::Struct { .. } | Ti::Array { .. } => true,
             // handle types may be different, depending on the global var access, so we always inline them
-            Ti::Image { .. } | Ti::Sampler { .. } => false,
+            Ti::Image { .. } | Ti::Sampler { .. } | Ti::BindingArray { .. } => false,
         }
     }
 }
@@ -1225,13 +1270,14 @@ impl<W: Write> Writer<W> {
         let expression = &context.function.expressions[expr_handle];
         log::trace!("expression {:?} = {:?}", expr_handle, expression);
         match *expression {
-            crate::Expression::Access { .. } | crate::Expression::AccessIndex { .. } => {
+            crate::Expression::Access { base, .. }
+            | crate::Expression::AccessIndex { base, .. } => {
                 // This is an acceptable place to generate a `ReadZeroSkipWrite` check.
                 // Since `put_bounds_checks` and `put_access_chain` handle an entire
                 // access chain at a time, recursing back through `put_expression` only
                 // for index expressions and the base object, we will never see intermediate
                 // `Access` or `AccessIndex` expressions here.
-                let policy = context.choose_bounds_check_policy(expr_handle);
+                let policy = context.choose_bounds_check_policy(base);
                 if policy == index::BoundsCheckPolicy::ReadZeroSkipWrite
                     && self.put_bounds_checks(
                         expr_handle,
@@ -2269,9 +2315,10 @@ impl<W: Write> Writer<W> {
             TypeResolution::Handle(ty_handle) => {
                 let ty_name = TypeContext {
                     handle: ty_handle,
-                    arena: &context.module.types,
+                    module: context.module,
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
+                    binding: None,
                     first_time: false,
                 };
                 write!(self.out, "{}", ty_name)?;
@@ -2863,9 +2910,10 @@ impl<W: Write> Writer<W> {
                 } => {
                     let base_name = TypeContext {
                         handle: base,
-                        arena: &module.types,
+                        module,
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
+                        binding: None,
                         first_time: false,
                     };
 
@@ -2926,9 +2974,10 @@ impl<W: Write> Writer<W> {
                             None => {
                                 let base_name = TypeContext {
                                     handle: member.ty,
-                                    arena: &module.types,
+                                    module,
                                     names: &self.names,
                                     access: crate::StorageAccess::empty(),
+                                    binding: None,
                                     first_time: false,
                                 };
                                 writeln!(
@@ -2956,9 +3005,10 @@ impl<W: Write> Writer<W> {
                 _ => {
                     let ty_name = TypeContext {
                         handle,
-                        arena: &module.types,
+                        module,
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
+                        binding: None,
                         first_time: true,
                     };
                     writeln!(self.out, "typedef {} {};", ty_name, name)?;
@@ -3015,9 +3065,10 @@ impl<W: Write> Writer<W> {
                     let name = &self.names[&NameKey::Constant(handle)];
                     let ty_name = TypeContext {
                         handle: ty,
-                        arena: &module.types,
+                        module,
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
+                        binding: None,
                         first_time: false,
                     };
                     write!(self.out, "constant {} {} = {{", ty_name, name,)?;
@@ -3150,9 +3201,10 @@ impl<W: Write> Writer<W> {
                 Some(ref result) => {
                     let ty_name = TypeContext {
                         handle: result.ty,
-                        arena: &module.types,
+                        module,
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
+                        binding: None,
                         first_time: false,
                     };
                     write!(self.out, "{}", ty_name)?;
@@ -3167,9 +3219,10 @@ impl<W: Write> Writer<W> {
                 let name = &self.names[&NameKey::FunctionArgument(fun_handle, index as u32)];
                 let param_type_name = TypeContext {
                     handle: arg.ty,
-                    arena: &module.types,
+                    module,
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
+                    binding: None,
                     first_time: false,
                 };
                 let separator = separate(
@@ -3192,6 +3245,7 @@ impl<W: Write> Writer<W> {
                     names: &self.names,
                     handle,
                     usage: fun_info[handle],
+                    binding: None,
                     reference: true,
                 };
                 let separator =
@@ -3214,9 +3268,10 @@ impl<W: Write> Writer<W> {
             for (local_handle, local) in fun.local_variables.iter() {
                 let ty_name = TypeContext {
                     handle: local.ty,
-                    arena: &module.types,
+                    module,
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
+                    binding: None,
                     first_time: false,
                 };
                 let local_name = &self.names[&NameKey::FunctionLocal(fun_handle, local_handle)];
@@ -3285,11 +3340,19 @@ impl<W: Write> Writer<W> {
                     }
                     if let Some(ref br) = var.binding {
                         let good = match options.per_stage_map[ep.stage].resources.get(br) {
-                            Some(target) => match module.types[var.ty].inner {
-                                crate::TypeInner::Image { .. } => target.texture.is_some(),
-                                crate::TypeInner::Sampler { .. } => target.sampler.is_some(),
-                                _ => target.buffer.is_some(),
-                            },
+                            Some(target) => {
+                                let binding_ty = match module.types[var.ty].inner {
+                                    crate::TypeInner::BindingArray { base, .. } => {
+                                        &module.types[base].inner
+                                    }
+                                    ref ty => ty,
+                                };
+                                match *binding_ty {
+                                    crate::TypeInner::Image { .. } => target.texture.is_some(),
+                                    crate::TypeInner::Sampler { .. } => target.sampler.is_some(),
+                                    _ => target.buffer.is_some(),
+                                }
+                            }
                             None => false,
                         };
                         if !good {
@@ -3377,9 +3440,10 @@ impl<W: Write> Writer<W> {
                     let name = &self.names[name_key];
                     let ty_name = TypeContext {
                         handle: ty,
-                        arena: &module.types,
+                        module,
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
+                        binding: None,
                         first_time: false,
                     };
                     let resolved = options.resolve_local_binding(binding, in_mode)?;
@@ -3420,9 +3484,10 @@ impl<W: Write> Writer<W> {
                     for (name, ty, binding) in result_members {
                         let ty_name = TypeContext {
                             handle: ty,
-                            arena: &module.types,
+                            module,
                             names: &self.names,
                             access: crate::StorageAccess::empty(),
+                            binding: None,
                             first_time: true,
                         };
                         let binding = binding.ok_or(Error::Validation)?;
@@ -3521,9 +3586,10 @@ impl<W: Write> Writer<W> {
                 };
                 let ty_name = TypeContext {
                     handle: ty,
-                    arena: &module.types,
+                    module,
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
+                    binding: None,
                     first_time: false,
                 };
                 let resolved = options.resolve_local_binding(binding, in_mode)?;
@@ -3572,6 +3638,7 @@ impl<W: Write> Writer<W> {
                     names: &self.names,
                     handle,
                     usage,
+                    binding: resolved.as_ref(),
                     reference: true,
                 };
                 let separator = if is_first_argument {
@@ -3632,6 +3699,7 @@ impl<W: Write> Writer<W> {
                         names: &self.names,
                         handle,
                         usage,
+                        binding: None,
                         reference: false,
                     };
                     write!(self.out, "{}", back::INDENT)?;
@@ -3733,9 +3801,10 @@ impl<W: Write> Writer<W> {
                 let name = &self.names[&NameKey::EntryPointLocal(ep_index as _, local_handle)];
                 let ty_name = TypeContext {
                     handle: local.ty,
-                    arena: &module.types,
+                    module,
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
+                    binding: None,
                     first_time: false,
                 };
                 write!(self.out, "{}{} {}", back::INDENT, ty_name, name)?;
@@ -3855,7 +3924,7 @@ fn test_stack_size() {
         let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
         // last observed macOS value: 19152 (CI)
-        if !(11000..=20000).contains(&stack_size) {
+        if !(9500..=20000).contains(&stack_size) {
             panic!("`put_block` stack size {} has changed!", stack_size);
         }
     }
