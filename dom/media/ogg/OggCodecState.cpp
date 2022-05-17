@@ -751,8 +751,9 @@ bool VorbisState::Init() {
     headerLens.AppendElement(mHeaders[i]->bytes);
   }
   // Save header packets for the decoder
-  AudioCodecSpecificBinaryBlob blob;
-  if (!XiphHeadersToExtradata(blob.mBinaryBlob, headers, headerLens)) {
+  VorbisCodecSpecificData vorbisCodecSpecificData{};
+  if (!XiphHeadersToExtradata(vorbisCodecSpecificData.mHeadersBinaryBlob,
+                              headers, headerLens)) {
     return mActive = false;
   }
   mHeaders.Erase();
@@ -760,7 +761,8 @@ bool VorbisState::Init() {
   mInfo.mRate = mVorbisInfo.rate;
   mInfo.mChannels = mVorbisInfo.channels;
   mInfo.mBitDepth = 16;
-  mInfo.mCodecSpecificConfig = AudioCodecSpecificVariant{std::move(blob)};
+  mInfo.mCodecSpecificConfig =
+      AudioCodecSpecificVariant{std::move(vorbisCodecSpecificData)};
 
   return true;
 }
