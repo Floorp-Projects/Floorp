@@ -479,7 +479,10 @@ template("rtc_test") {
       android_manifest = webrtc_root + "test/android/AndroidManifest.xml"
       min_sdk_version = 21
       target_sdk_version = 23
-      deps += [ webrtc_root + "test:native_test_java" ]
+      deps += [
+        "//build/android/gtest_apk:native_test_instrumentation_test_runner_java",
+        webrtc_root + "test:native_test_java",
+      ]
     }
 
     # When not targeting a simulator, building //base/test:google_test_runner
