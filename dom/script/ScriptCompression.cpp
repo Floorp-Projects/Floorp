@@ -9,6 +9,8 @@
 #include "ScriptLoader.h"
 #include "mozilla/Vector.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 using namespace mozilla;
 
@@ -98,8 +100,9 @@ bool ScriptBytecodeCompress(Vector<uint8_t>& aBytecodeBuf,
   zstream.next_out = compressedLayout.bytecode();
   zstream.avail_out = compressedLength;
 
-  const int COMPRESSION = 2;  // TODO find appropriate compression level
-  if (deflateInit(&zstream, COMPRESSION) != Z_OK) {
+  const uint32_t compressionLevel =
+      StaticPrefs::browser_cache_jsbc_compression_level();
+  if (deflateInit(&zstream, compressionLevel) != Z_OK) {
     LOG(
         ("ScriptLoadRequest: Unable to initialize bytecode cache "
          "compression."));
