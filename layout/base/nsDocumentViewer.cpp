@@ -3019,8 +3019,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
-  nsIScrollableFrame* sf =
-      mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
   if (!sf) return NS_OK;
 
   auto [seqFrame, sheetCount] = mPrintJob->GetSeqFrameAndCountSheets();
@@ -3094,8 +3093,7 @@ nsDocumentViewer::GetCurrentSheetFrameAndNumber() const {
     return {nullptr, 0};
   }
 
-  nsIScrollableFrame* sf =
-      mPrintJob->GetPrintPreviewPresShell()->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* sf = mPresShell->GetRootScrollFrameAsScrollable();
   if (!sf) {
     // No scrollable contents, returns 1 even if there are multiple sheets.
     return {seqFrame->PrincipalChildList().FirstChild(), 1};
@@ -3184,18 +3182,6 @@ nsDocumentViewer::GetDoingPrintPreview(bool* aDoingPrintPreview) {
   NS_ENSURE_ARG_POINTER(aDoingPrintPreview);
 
   *aDoingPrintPreview = mPrintJob ? mPrintJob->CreatedForPrintPreview() : false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::GetCurrentPrintSettings(
-    nsIPrintSettings** aCurrentPrintSettings) {
-  NS_ENSURE_ARG_POINTER(aCurrentPrintSettings);
-
-  *aCurrentPrintSettings = nullptr;
-  NS_ENSURE_TRUE(mPrintJob, NS_ERROR_FAILURE);
-
-  *aCurrentPrintSettings = mPrintJob->GetCurrentPrintSettings().take();
   return NS_OK;
 }
 

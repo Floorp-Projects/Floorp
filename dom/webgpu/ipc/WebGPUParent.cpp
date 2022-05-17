@@ -536,29 +536,58 @@ ipc::IPCResult WebGPUParent::RecvImplicitLayoutDestroy(
 }
 
 // TODO: proper destruction
-static const uint64_t kBufferAlignment = 0x100;
-
-static uint64_t Align(uint64_t value) {
-  return (value | (kBufferAlignment - 1)) + 1;
-}
 
 ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
     RawId aSelfId, RawId aQueueId, const RGBDescriptor& aDesc,
     const nsTArray<RawId>& aBufferIds, const CompositableHandle& aHandle) {
-  const auto rows = aDesc.size().height;
-  const auto bufferStride =
-      Align(static_cast<uint64_t>(aDesc.size().width) * 4);
+  switch (aDesc.format()) {
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid surface format!");
+      return IPC_OK();
+  }
+
+  constexpr uint32_t kBufferAlignmentMask = 0xff;
+  const auto bufferStrideWithMask = CheckedInt<uint32_t>(aDesc.size().width) *
+                                        gfx::BytesPerPixel(aDesc.format()) +
+                                    kBufferAlignmentMask;
+  if (!bufferStrideWithMask.isValid()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid width / buffer stride!");
+    return IPC_OK();
+  }
+
+  const uint32_t bufferStride =
+      bufferStrideWithMask.value() & ~kBufferAlignmentMask;
+  // GetRGBStride does its own size validation and returns 0 if invalid.
   const auto textureStride = layers::ImageDataSerializer::GetRGBStride(aDesc);
-  const auto wholeBufferSize = CheckedInt<size_t>(textureStride) * rows;
-  if (!wholeBufferSize.isValid()) {
-    NS_ERROR("Invalid total buffer size!");
+  if (textureStride <= 0) {
+    MOZ_ASSERT_UNREACHABLE("Invalid texture stride!");
     return IPC_OK();
   }
-  auto* textureHostData = new (fallible) uint8_t[wholeBufferSize.value()];
-  if (!textureHostData) {
-    NS_ERROR("Unable to allocate host data!");
+
+  const auto rows = CheckedInt<uint32_t>(aDesc.size().height);
+  if (!rows.isValid()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid height!");
     return IPC_OK();
   }
+
+  const auto wholeBufferSize = rows * bufferStride;
+  const auto wholeTextureSize = rows * textureStride;
+  if (!wholeBufferSize.isValid() || !wholeTextureSize.isValid()) {
+    MOZ_ASSERT_UNREACHABLE("Invalid total buffer/texture size!");
+    return IPC_OK();
+  }
+
+  auto* textureHostData = new (fallible) uint8_t[wholeTextureSize.value()];
+  if (NS_WARN_IF(!textureHostData)) {
+    ReportError(
+        aSelfId,
+        "Error in Device::create_swapchain: failed to allocate texture buffer"_ns);
+    return IPC_OK();
+  }
+
   layers::TextureInfo texInfo(layers::CompositableType::IMAGE);
   layers::TextureFlags texFlags = layers::TextureFlags::NO_FLAGS;
   wr::ExternalImageId externalId =
@@ -574,7 +603,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
 
   auto data = MakeRefPtr<PresentationData>(
       aSelfId, aQueueId, imageHost.forget(), textureHost.forget(), bufferStride,
-      textureStride, rows, aBufferIds);
+      textureStride, rows.value(), aBufferIds);
   if (!mCanvasMap.insert({aHandle.Value(), data}).second) {
     NS_ERROR("External image is already registered as WebGPU canvas!");
   }

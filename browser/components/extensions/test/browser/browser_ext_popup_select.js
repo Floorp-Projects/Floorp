@@ -71,15 +71,17 @@ add_task(async function testPopupSelectPopup() {
     });
 
     let popupRect = selectPopup.getOuterScreenRect();
+    let marginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
+    let marginLeft = parseFloat(getComputedStyle(selectPopup).marginLeft);
 
     is(
-      Math.floor(browser.screenX + elemRect.left),
+      Math.floor(browser.screenX + elemRect.left + marginLeft),
       popupRect.left,
       "Select popup has the correct x origin"
     );
 
     is(
-      Math.floor(browser.screenY + elemRect.bottom),
+      Math.floor(browser.screenY + elemRect.bottom + marginTop),
       popupRect.top,
       "Select popup has the correct y origin"
     );

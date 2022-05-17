@@ -132,17 +132,13 @@ VertexInfo write_vertex(vec2 local_pos,
     return vi;
 }
 
-RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint local_segment_rect,
-                                            RectWithEndpoint local_prim_rect,
-                                            RectWithEndpoint local_clip_rect,
+RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint segment_rect,
+                                            RectWithEndpoint prim_rect,
+                                            RectWithEndpoint clip_rect,
                                             int edge_flags,
                                             float z,
                                             Transform transform,
                                             PictureTask task) {
-    // Calculate a clip rect from local_rect + local clip
-    RectWithEndpoint clip_rect = local_clip_rect;
-    RectWithEndpoint segment_rect = local_segment_rect;
-
 #ifdef SWGL_ANTIALIAS
     // Check if the bounds are smaller than the unmodified segment rect. If so,
     // it is safe to enable AA on those edges.
@@ -155,11 +151,7 @@ RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint local_segment_rect,
     segment_rect.p0 = clamp(segment_rect.p0, clip_rect.p0, clip_rect.p1);
     segment_rect.p1 = clamp(segment_rect.p1, clip_rect.p0, clip_rect.p1);
 
-#ifdef SWGL_ANTIALIAS
-    // Trim the segment geometry to the clipped bounds.
-    local_segment_rect = segment_rect;
-#else
-    RectWithEndpoint prim_rect = local_prim_rect;
+#ifndef SWGL_ANTIALIAS
     prim_rect.p0 = clamp(prim_rect.p0, clip_rect.p0, clip_rect.p1);
     prim_rect.p1 = clamp(prim_rect.p1, clip_rect.p0, clip_rect.p1);
 
@@ -169,7 +161,7 @@ RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint local_segment_rect,
     // compilation crashes on some Adreno devices. See bug 1715746.
     bvec4 clip_edge_mask = bvec4(bool(edge_flags & 1), bool(edge_flags & 2), bool(edge_flags & 4), bool(edge_flags & 8));
     init_transform_vs(mix(
-        vec4(prim_rect.p0, prim_rect.p1),
+        vec4(vec2(-1e16), vec2(1e16)),
         vec4(segment_rect.p0, segment_rect.p1),
         clip_edge_mask
     ));
@@ -186,11 +178,11 @@ RectWithEndpoint clip_and_init_antialiasing(RectWithEndpoint local_segment_rect,
     // Only extrude along edges where we are going to apply AA.
     float extrude_amount = 2.0;
     vec4 extrude_distance = mix(vec4(0.0), vec4(extrude_amount), clip_edge_mask);
-    local_segment_rect.p0 -= extrude_distance.xy;
-    local_segment_rect.p1 += extrude_distance.zw;
+    segment_rect.p0 -= extrude_distance.xy;
+    segment_rect.p1 += extrude_distance.zw;
 #endif
 
-    return local_segment_rect;
+    return segment_rect;
 }
 
 void write_clip(vec4 world_pos, ClipArea area, PictureTask task) {
