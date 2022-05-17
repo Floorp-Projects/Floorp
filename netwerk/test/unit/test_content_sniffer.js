@@ -21,10 +21,7 @@ var isNosniff = false;
  */
 var sniffer = {
   QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIContentSniffer"]),
-  createInstance: function sniffer_ci(outer, iid) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance: function sniffer_ci(iid) {
     return this.QueryInterface(iid);
   },
 

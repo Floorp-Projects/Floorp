@@ -170,7 +170,7 @@ let WebsiteFilter = {
     "nsIObserver",
     "nsISupportsWeakReference",
   ]),
-  createInstance(outer, iid) {
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
   isAllowed(url) {

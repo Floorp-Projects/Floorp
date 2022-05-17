@@ -46,11 +46,7 @@ var MockRegistrar = Object.freeze({
     let cid = Services.uuid.generateUUID();
 
     let factory = {
-      createInstance(outer, iid) {
-        if (outer) {
-          throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-        }
-
+      createInstance(iid) {
         let wrappedMock;
         if (mock.prototype && mock.prototype.constructor) {
           wrappedMock = Object.create(mock.prototype);
@@ -60,7 +56,7 @@ var MockRegistrar = Object.freeze({
         }
 
         try {
-          let genuine = originalFactory.createInstance(outer, iid);
+          let genuine = originalFactory.createInstance(iid);
           wrappedMock._genuine = genuine;
         } catch (ex) {
           logger.info("Creating original instance failed", ex);

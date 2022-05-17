@@ -41,10 +41,7 @@ MockObjectRegisterer.prototype = {
     var isChrome = location.protocol == "chrome:";
     var providedConstructor = this._replacementCtor;
     this._mockFactory = {
-      createInstance: function MF_createInstance(aOuter, aIid) {
-        if (aOuter != null) {
-          throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
-        }
+      createInstance: function MF_createInstance(aIid) {
         var inst = new providedConstructor().QueryInterface(aIid);
         if (!isChrome) {
           inst = SpecialPowers.wrapCallbackObject(inst);

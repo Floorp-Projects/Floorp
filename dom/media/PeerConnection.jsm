@@ -212,10 +212,7 @@ setupPrototype(GlobalPCList, {
   ]),
   classID: PC_MANAGER_CID,
   _xpcom_factory: {
-    createInstance(outer, iid) {
-      if (outer) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(iid) {
       return _globalPCList.QueryInterface(iid);
     },
   },

@@ -178,7 +178,7 @@ nsresult nsCreateInstanceByContractID::operator()(const nsIID& aIID,
 
 nsresult nsCreateInstanceFromFactory::operator()(const nsIID& aIID,
                                                  void** aInstancePtr) const {
-  nsresult status = mFactory->CreateInstance(nullptr, aIID, aInstancePtr);
+  nsresult status = mFactory->CreateInstance(aIID, aInstancePtr);
   if (NS_FAILED(status)) {
     *aInstancePtr = 0;
   }

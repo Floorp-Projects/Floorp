@@ -107,13 +107,7 @@ ProtocolHandler.prototype = {
     Ci.nsIRequest.LOAD_BYPASS_CACHE,
 
   /** nsIFactory */
-  createInstance(aOuter, aIID) {
-    if (aOuter) {
-      throw Components.Exception(
-        "createInstance no aggregation",
-        Cr.NS_ERROR_NO_AGGREGATION
-      );
-    }
+  createInstance(aIID) {
     return this.QueryInterface(aIID);
   },
 

@@ -46,12 +46,7 @@ nsINIParserFactory::CreateINIParser(nsIFile* aINIFile, nsIINIParser** aResult) {
 }
 
 NS_IMETHODIMP
-nsINIParserFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult) {
-  if (NS_WARN_IF(aOuter)) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
+nsINIParserFactory::CreateInstance(REFNSIID aIID, void** aResult) {
   // We are our own singleton.
   return QueryInterface(aIID, aResult);
 }

@@ -166,9 +166,7 @@ add_test(function test_categoryRegistration()
     platformVersion: "",
   });
   let XULAppInfoFactory = {
-    createInstance: function (outer, iid) {
-      if (outer != null)
-        throw Cr.NS_ERROR_NO_AGGREGATION;
+    createInstance: function (iid) {
       return XULAppInfo.QueryInterface(iid);
     }
   };

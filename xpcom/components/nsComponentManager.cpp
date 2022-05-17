@@ -1067,7 +1067,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass, const nsIID& aIID,
   nsresult rv;
   nsCOMPtr<nsIFactory> factory = entry->GetFactory();
   if (factory) {
-    rv = factory->CreateInstance(nullptr, aIID, aResult);
+    rv = factory->CreateInstance(aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
       rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
@@ -1150,7 +1150,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char* aContractID,
   nsresult rv;
   nsCOMPtr<nsIFactory> factory = entry->GetFactory();
   if (factory) {
-    rv = factory->CreateInstance(nullptr, aIID, aResult);
+    rv = factory->CreateInstance(aIID, aResult);
     if (NS_SUCCEEDED(rv) && !*aResult) {
       NS_ERROR("Factory did not return an object but returned success!");
       rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
@@ -1762,7 +1762,7 @@ already_AddRefed<nsIFactory> nsFactoryEntry::GetFactory() {
 nsresult nsFactoryEntry::CreateInstance(const nsIID& aIID, void** aResult) {
   nsCOMPtr<nsIFactory> factory = GetFactory();
   NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
-  return factory->CreateInstance(nullptr, aIID, aResult);
+  return factory->CreateInstance(aIID, aResult);
 }
 
 size_t nsFactoryEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {

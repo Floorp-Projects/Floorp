@@ -68,10 +68,7 @@ function mockServicesChromeScript() {
 
     QueryInterface: ChromeUtils.generateQI(["nsIAlertsService"]),
 
-    createInstance: function(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance: function(iid) {
       return this.QueryInterface(iid);
     },
   };
