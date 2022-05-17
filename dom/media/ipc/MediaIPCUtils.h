@@ -80,6 +80,87 @@ struct ParamTraits<mozilla::MediaByteBuffer>
   typedef mozilla::MediaByteBuffer paramType;
 };
 
+// Traits for AudioCodecSpecificVariant types.
+
+template <>
+struct ParamTraits<mozilla::NoCodecSpecificData>
+    : public EmptyStructSerializer<mozilla::NoCodecSpecificData> {};
+
+template <>
+struct ParamTraits<mozilla::AudioCodecSpecificBinaryBlob> {
+  using paramType = mozilla::AudioCodecSpecificBinaryBlob;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, *aParam.mBinaryBlob);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, aResult->mBinaryBlob.get());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::AacCodecSpecificData> {
+  using paramType = mozilla::AacCodecSpecificData;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, *aParam.mEsDescriptorBinaryBlob);
+    WriteParam(aWriter, *aParam.mDecoderConfigDescriptorBinaryBlob);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, aResult->mEsDescriptorBinaryBlob.get()) &&
+           ReadParam(aReader,
+                     aResult->mDecoderConfigDescriptorBinaryBlob.get());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::FlacCodecSpecificData> {
+  using paramType = mozilla::FlacCodecSpecificData;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, *aParam.mStreamInfoBinaryBlob);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, aResult->mStreamInfoBinaryBlob.get());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::Mp3CodecSpecificData>
+    : public PlainOldDataSerializer<mozilla::Mp3CodecSpecificData> {};
+
+template <>
+struct ParamTraits<mozilla::OpusCodecSpecificData> {
+  using paramType = mozilla::OpusCodecSpecificData;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, aParam.mContainerCodecDelayMicroSeconds);
+    WriteParam(aWriter, *aParam.mHeadersBinaryBlob);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, &aResult->mContainerCodecDelayMicroSeconds) &&
+           ReadParam(aReader, aResult->mHeadersBinaryBlob.get());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::VorbisCodecSpecificData> {
+  using paramType = mozilla::VorbisCodecSpecificData;
+
+  static void Write(MessageWriter* aWriter, const paramType& aParam) {
+    WriteParam(aWriter, *aParam.mHeadersBinaryBlob);
+  }
+  static bool Read(MessageReader* aReader, paramType* aResult) {
+    return ReadParam(aReader, aResult->mHeadersBinaryBlob.get());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::WaveCodecSpecificData>
+    : public EmptyStructSerializer<mozilla::WaveCodecSpecificData> {};
+
+// End traits for AudioCodecSpecificVariant types.
+
 template <>
 struct ParamTraits<mozilla::AudioInfo> {
   typedef mozilla::AudioInfo paramType;
