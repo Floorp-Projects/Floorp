@@ -1319,14 +1319,12 @@ public class GeckoSession {
     @Override
     public void handleMessage(
         final String event, final GeckoBundle message, final EventCallback callback) {
-      if (DEBUG) {
-        Log.d(LOGTAG, "handleMessage: event = " + event);
-      }
+      Log.d(LOGTAG, "handleMessage " + event);
 
       if ("GeckoView:PinOnScreen".equals(event)) {
         GeckoSession.this.setShouldPinOnScreen(message.getBoolean("pinned"));
       } else if ("GeckoView:Prompt".equals(event)) {
-        mPromptController.handleEvent(GeckoSession.this, message, callback);
+        mPromptController.handleEvent(GeckoSession.this, message.getBundle("prompt"), callback);
       } else if ("GeckoView:Prompt:Dismiss".equals(event)) {
         mPromptController.dismissPrompt(message.getString("id"));
       }
