@@ -103,7 +103,6 @@ rtc_library("rtc_base_approved") {
     "event_tracer.h",
     "location.cc",
     "location.h",
-    "message_buffer_reader.h",
     "numerics/histogram_percentile_counter.cc",
     "numerics/histogram_percentile_counter.h",
     "numerics/mod_ops.h",
