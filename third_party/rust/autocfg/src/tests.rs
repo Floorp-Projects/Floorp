@@ -1,6 +1,5 @@
 use super::AutoCfg;
 use std::env;
-use std::path::Path;
 
 impl AutoCfg {
     fn core_std(&self, path: &str) -> String {
@@ -137,7 +136,7 @@ fn probe_constant() {
 fn dir_does_not_contain_target() {
     assert!(!super::dir_contains_target(
         &Some("x86_64-unknown-linux-gnu".into()),
-        Path::new("/project/target/debug/build/project-ea75983148559682/out"),
+        &"/project/target/debug/build/project-ea75983148559682/out".into(),
         None,
     ));
 }
@@ -146,9 +145,7 @@ fn dir_does_not_contain_target() {
 fn dir_does_contain_target() {
     assert!(super::dir_contains_target(
         &Some("x86_64-unknown-linux-gnu".into()),
-        Path::new(
-            "/project/target/x86_64-unknown-linux-gnu/debug/build/project-0147aca016480b9d/out"
-        ),
+        &"/project/target/x86_64-unknown-linux-gnu/debug/build/project-0147aca016480b9d/out".into(),
         None,
     ));
 }
@@ -157,7 +154,7 @@ fn dir_does_contain_target() {
 fn dir_does_not_contain_target_with_custom_target_dir() {
     assert!(!super::dir_contains_target(
         &Some("x86_64-unknown-linux-gnu".into()),
-        Path::new("/project/custom/debug/build/project-ea75983148559682/out"),
+        &"/project/custom/debug/build/project-ea75983148559682/out".into(),
         Some("custom".into()),
     ));
 }
@@ -166,9 +163,7 @@ fn dir_does_not_contain_target_with_custom_target_dir() {
 fn dir_does_contain_target_with_custom_target_dir() {
     assert!(super::dir_contains_target(
         &Some("x86_64-unknown-linux-gnu".into()),
-        Path::new(
-            "/project/custom/x86_64-unknown-linux-gnu/debug/build/project-0147aca016480b9d/out"
-        ),
+        &"/project/custom/x86_64-unknown-linux-gnu/debug/build/project-0147aca016480b9d/out".into(),
         Some("custom".into()),
     ));
 }

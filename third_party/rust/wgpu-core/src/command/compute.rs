@@ -6,8 +6,8 @@ use crate::{
         bind::Binder,
         end_pipeline_statistics_query,
         memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
-        BasePass, BasePassRef, BindGroupStateChange, CommandBuffer, CommandEncoderError,
-        CommandEncoderStatus, MapPassErr, PassErrorScope, QueryUseError, StateChange,
+        BasePass, BasePassRef, CommandBuffer, CommandEncoderError, CommandEncoderStatus,
+        MapPassErr, PassErrorScope, QueryUseError, StateChange,
     },
     device::MissingDownlevelFlags,
     error::{ErrorFormatter, PrettyError},
@@ -76,12 +76,6 @@ pub enum ComputeCommand {
 pub struct ComputePass {
     base: BasePass<ComputeCommand>,
     parent_id: id::CommandEncoderId,
-
-    // Resource binding dedupe state.
-    #[cfg_attr(feature = "serial-pass", serde(skip))]
-    current_bind_groups: BindGroupStateChange,
-    #[cfg_attr(feature = "serial-pass", serde(skip))]
-    current_pipeline: StateChange<id::ComputePipelineId>,
 }
 
 impl ComputePass {
@@ -89,9 +83,6 @@ impl ComputePass {
         Self {
             base: BasePass::new(&desc.label),
             parent_id,
-
-            current_bind_groups: BindGroupStateChange::new(),
-            current_pipeline: StateChange::new(),
         }
     }
 
@@ -231,7 +222,7 @@ where
 #[derive(Debug)]
 struct State {
     binder: Binder,
-    pipeline: Option<id::ComputePipelineId>,
+    pipeline: StateChange<id::ComputePipelineId>,
     trackers: StatefulTrackerSubset,
     debug_scope_depth: u32,
 }
@@ -245,7 +236,7 @@ impl State {
                 index: bind_mask.trailing_zeros(),
             });
         }
-        if self.pipeline.is_none() {
+        if self.pipeline.is_unset() {
             return Err(DispatchError::MissingPipeline);
         }
         self.binder.check_late_buffer_bindings()?;
@@ -309,11 +300,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let (device_guard, mut token) = hub.devices.read(&mut token);
 
         let (mut cmd_buf_guard, mut token) = hub.command_buffers.write(&mut token);
-        // Spell out the type, to placate rust-analyzer.
-        // https://github.com/rust-lang/rust-analyzer/issues/12247
-        let cmd_buf: &mut CommandBuffer<A> =
-            CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)
-                .map_pass_err(init_scope)?;
+        let cmd_buf = CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)
+            .map_pass_err(init_scope)?;
         // will be reset to true if recording is done without errors
         cmd_buf.status = CommandEncoderStatus::Error;
         let raw = cmd_buf.encoder.open();
@@ -337,7 +325,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
         let mut state = State {
             binder: Binder::new(),
-            pipeline: None,
+            pipeline: StateChange::new(),
             trackers: StatefulTrackerSubset::new(A::VARIANT),
             debug_scope_depth: 0,
         };
@@ -432,7 +420,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 ComputeCommand::SetPipeline(pipeline_id) => {
                     let scope = PassErrorScope::SetPipelineCompute(pipeline_id);
 
-                    state.pipeline = Some(pipeline_id);
+                    if state.pipeline.set_and_check_redundant(pipeline_id) {
+                        continue;
+                    }
 
                     let pipeline = cmd_buf
                         .trackers
@@ -534,7 +524,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 ComputeCommand::Dispatch(groups) => {
                     let scope = PassErrorScope::Dispatch {
                         indirect: false,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
 
                     fixup_discarded_surfaces(
@@ -578,7 +568,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 ComputeCommand::DispatchIndirect { buffer_id, offset } => {
                     let scope = PassErrorScope::Dispatch {
                         indirect: true,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
 
                     state.is_ready().map_pass_err(scope)?;
@@ -760,23 +750,16 @@ pub mod compute_ffi {
         offsets: *const DynamicOffset,
         offset_length: usize,
     ) {
-        let redundant = pass.current_bind_groups.set_and_check_redundant(
-            bind_group_id,
-            index,
-            &mut pass.base.dynamic_offsets,
-            offsets,
-            offset_length,
-        );
-
-        if redundant {
-            return;
-        }
-
         pass.base.commands.push(ComputeCommand::SetBindGroup {
             index: index.try_into().unwrap(),
             num_dynamic_offsets: offset_length.try_into().unwrap(),
             bind_group_id,
         });
+        if offset_length != 0 {
+            pass.base
+                .dynamic_offsets
+                .extend_from_slice(slice::from_raw_parts(offsets, offset_length));
+        }
     }
 
     #[no_mangle]
@@ -784,10 +767,6 @@ pub mod compute_ffi {
         pass: &mut ComputePass,
         pipeline_id: id::ComputePipelineId,
     ) {
-        if pass.current_pipeline.set_and_check_redundant(pipeline_id) {
-            return;
-        }
-
         pass.base
             .commands
             .push(ComputeCommand::SetPipeline(pipeline_id));
@@ -833,7 +812,7 @@ pub mod compute_ffi {
     }
 
     #[no_mangle]
-    pub extern "C" fn wgpu_compute_pass_dispatch_workgroups(
+    pub extern "C" fn wgpu_compute_pass_dispatch(
         pass: &mut ComputePass,
         groups_x: u32,
         groups_y: u32,
@@ -845,7 +824,7 @@ pub mod compute_ffi {
     }
 
     #[no_mangle]
-    pub extern "C" fn wgpu_compute_pass_dispatch_workgroups_indirect(
+    pub extern "C" fn wgpu_compute_pass_dispatch_indirect(
         pass: &mut ComputePass,
         buffer_id: id::BufferId,
         offset: BufferAddress,

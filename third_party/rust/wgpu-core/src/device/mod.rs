@@ -856,7 +856,10 @@ impl<A: HalApi> Device<A> {
             }
             None => match texture.desc.dimension {
                 wgt::TextureDimension::D1 => wgt::TextureViewDimension::D1,
-                wgt::TextureDimension::D2 if texture.desc.size.depth_or_array_layers > 1 => {
+                wgt::TextureDimension::D2
+                    if texture.desc.size.depth_or_array_layers > 1
+                        && desc.range.array_layer_count.is_none() =>
+                {
                     wgt::TextureViewDimension::D2Array
                 }
                 wgt::TextureDimension::D2 => wgt::TextureViewDimension::D2,
@@ -868,13 +871,7 @@ impl<A: HalApi> Device<A> {
             desc.range.base_mip_level + desc.range.mip_level_count.map_or(1, |count| count.get());
         let required_layer_count = match desc.range.array_layer_count {
             Some(count) => desc.range.base_array_layer + count.get(),
-            None => match view_dim {
-                wgt::TextureViewDimension::D1
-                | wgt::TextureViewDimension::D2
-                | wgt::TextureViewDimension::D3 => 1,
-                wgt::TextureViewDimension::Cube => 6,
-                _ => texture.desc.array_layer_count(),
-            },
+            None => texture.desc.array_layer_count(),
         };
         let level_end = texture.full_range.levels.end;
         let layer_end = texture.full_range.layers.end;
@@ -1144,25 +1141,6 @@ impl<A: HalApi> Device<A> {
             Caps::PRIMITIVE_INDEX,
             self.features
                 .contains(wgt::Features::SHADER_PRIMITIVE_INDEX),
-        );
-        caps.set(
-            Caps::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-            self.features.contains(
-                wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-            ),
-        );
-        caps.set(
-            Caps::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-            self.features.contains(
-                wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-            ),
-        );
-        // TODO: This needs a proper wgpu feature
-        caps.set(
-            Caps::SAMPLER_NON_UNIFORM_INDEXING,
-            self.features.contains(
-                wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING,
-            ),
         );
         let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), caps)
             .validate(&module)
@@ -4949,14 +4927,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     }
 
     /// Check `device_id` for freeable resources and completed buffer mappings.
-    ///
-    /// Return `queue_empty` indicating whether there are more queue submissions still in flight.
     pub fn device_poll<A: HalApi>(
         &self,
         device_id: id::DeviceId,
         force_wait: bool,
-    ) -> Result<bool, WaitIdleError> {
-        let (closures, queue_empty) = {
+    ) -> Result<(), WaitIdleError> {
+        let (closures, _) = {
             let hub = A::hub(self);
             let mut token = Token::root();
             let (device_guard, mut token) = hub.devices.read(&mut token);
@@ -4968,31 +4944,27 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         unsafe {
             closures.fire();
         }
-        Ok(queue_empty)
+        Ok(())
     }
 
     /// Poll all devices belonging to the backend `A`.
     ///
     /// If `force_wait` is true, block until all buffer mappings are done.
-    ///
-    /// Return `all_queue_empty` indicating whether there are more queue submissions still in flight.
     fn poll_devices<A: HalApi>(
         &self,
         force_wait: bool,
         closures: &mut UserClosures,
-    ) -> Result<bool, WaitIdleError> {
+    ) -> Result<(), WaitIdleError> {
         profiling::scope!("poll_devices");
 
         let hub = A::hub(self);
         let mut devices_to_drop = vec![];
-        let mut all_queue_empty = true;
         {
             let mut token = Token::root();
             let (device_guard, mut token) = hub.devices.read(&mut token);
 
             for (id, device) in device_guard.iter(A::VARIANT) {
                 let (cbs, queue_empty) = device.maintain(hub, force_wait, &mut token)?;
-                all_queue_empty = all_queue_empty && queue_empty;
 
                 // If the device's own `RefCount` clone is the only one left, and
                 // its submission queue is empty, then it can be freed.
@@ -5007,49 +4979,41 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             self.exit_device::<A>(device_id);
         }
 
-        Ok(all_queue_empty)
+        Ok(())
     }
 
     /// Poll all devices on all backends.
     ///
     /// This is the implementation of `wgpu::Instance::poll_all`.
-    ///
-    /// Return `all_queue_empty` indicating whether there are more queue submissions still in flight.
-    pub fn poll_all_devices(&self, force_wait: bool) -> Result<bool, WaitIdleError> {
+    pub fn poll_all_devices(&self, force_wait: bool) -> Result<(), WaitIdleError> {
         let mut closures = UserClosures::default();
-        let mut all_queue_empty = true;
 
         #[cfg(vulkan)]
         {
-            all_queue_empty = self.poll_devices::<hal::api::Vulkan>(force_wait, &mut closures)?
-                && all_queue_empty;
+            self.poll_devices::<hal::api::Vulkan>(force_wait, &mut closures)?;
         }
         #[cfg(metal)]
         {
-            all_queue_empty =
-                self.poll_devices::<hal::api::Metal>(force_wait, &mut closures)? && all_queue_empty;
+            self.poll_devices::<hal::api::Metal>(force_wait, &mut closures)?;
         }
         #[cfg(dx12)]
         {
-            all_queue_empty =
-                self.poll_devices::<hal::api::Dx12>(force_wait, &mut closures)? && all_queue_empty;
+            self.poll_devices::<hal::api::Dx12>(force_wait, &mut closures)?;
         }
         #[cfg(dx11)]
         {
-            all_queue_empty =
-                self.poll_devices::<hal::api::Dx11>(force_wait, &mut closures)? && all_queue_empty;
+            self.poll_devices::<hal::api::Dx11>(force_wait, &mut closures)?;
         }
         #[cfg(gl)]
         {
-            all_queue_empty =
-                self.poll_devices::<hal::api::Gles>(force_wait, &mut closures)? && all_queue_empty;
+            self.poll_devices::<hal::api::Gles>(force_wait, &mut closures)?;
         }
 
         unsafe {
             closures.fire();
         }
 
-        Ok(all_queue_empty)
+        Ok(())
     }
 
     pub fn device_label<A: HalApi>(&self, id: id::DeviceId) -> String {

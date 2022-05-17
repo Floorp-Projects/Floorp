@@ -3,12 +3,13 @@ use super::conv;
 use ash::{extensions::khr, vk};
 use parking_lot::Mutex;
 
-use std::{collections::BTreeMap, ffi::CStr, sync::Arc};
+use std::{ffi::CStr, sync::Arc};
 
 //TODO: const fn?
 fn indexing_features() -> wgt::Features {
     wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
         | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING
+        | wgt::Features::UNSIZED_BINDING_ARRAY
 }
 
 /// Aggregate of the `vk::PhysicalDevice*Features` structs used by `gfx`.
@@ -25,10 +26,6 @@ pub struct PhysicalDeviceFeatures {
     depth_clip_enable: Option<vk::PhysicalDeviceDepthClipEnableFeaturesEXT>,
     multiview: Option<vk::PhysicalDeviceMultiviewFeaturesKHR>,
     astc_hdr: Option<vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT>,
-    shader_float16: Option<(
-        vk::PhysicalDeviceShaderFloat16Int8Features,
-        vk::PhysicalDevice16BitStorageFeatures,
-    )>,
 }
 
 // This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -65,10 +62,6 @@ impl PhysicalDeviceFeatures {
         }
         if let Some(ref mut feature) = self.astc_hdr {
             info = info.push_next(feature);
-        }
-        if let Some((ref mut f16_i8_feature, ref mut _16bit_feature)) = self.shader_float16 {
-            info = info.push_next(f16_i8_feature);
-            info = info.push_next(_16bit_feature);
         }
         info
     }
@@ -219,6 +212,9 @@ impl PhysicalDeviceFeatures {
                             uab_types.contains(super::UpdateAfterBindTypes::STORAGE_BUFFER),
                         )
                         .descriptor_binding_partially_bound(needs_partially_bound)
+                        .runtime_descriptor_array(
+                            requested_features.contains(wgt::Features::UNSIZED_BINDING_ARRAY),
+                        )
                         //.sampler_filter_minmax(requested_features.contains(wgt::Features::SAMPLER_REDUCTION))
                         .imageless_framebuffer(private_caps.imageless_framebuffers)
                         .timeline_semaphore(private_caps.timeline_semaphores)
@@ -257,6 +253,9 @@ impl PhysicalDeviceFeatures {
                             uab_types.contains(super::UpdateAfterBindTypes::STORAGE_BUFFER),
                         )
                         .descriptor_binding_partially_bound(needs_partially_bound)
+                        .runtime_descriptor_array(
+                            requested_features.contains(wgt::Features::UNSIZED_BINDING_ARRAY),
+                        )
                         .build(),
                 )
             } else {
@@ -331,19 +330,6 @@ impl PhysicalDeviceFeatures {
                         .texture_compression_astc_hdr(true)
                         .build(),
                 )
-            } else {
-                None
-            },
-            shader_float16: if requested_features.contains(wgt::Features::SHADER_FLOAT16) {
-                Some((
-                    vk::PhysicalDeviceShaderFloat16Int8Features::builder()
-                        .shader_float16(true)
-                        .build(),
-                    vk::PhysicalDevice16BitStorageFeatures::builder()
-                        .storage_buffer16_bit_access(true)
-                        .uniform_and_storage_buffer16_bit_access(true)
-                        .build(),
-                ))
             } else {
                 None
             },
@@ -485,6 +471,9 @@ impl PhysicalDeviceFeatures {
             ) {
                 features.insert(F::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING);
             }
+            if vulkan_1_2.runtime_descriptor_array != 0 {
+                features |= F::UNSIZED_BINDING_ARRAY;
+            }
             if vulkan_1_2.descriptor_binding_partially_bound != 0 && !intel_windows {
                 features |= F::PARTIALLY_BOUND_BINDING_ARRAY;
             }
@@ -530,6 +519,9 @@ impl PhysicalDeviceFeatures {
             if descriptor_indexing.descriptor_binding_partially_bound != 0 && !intel_windows {
                 features |= F::PARTIALLY_BOUND_BINDING_ARRAY;
             }
+            if descriptor_indexing.runtime_descriptor_array != 0 {
+                features |= F::UNSIZED_BINDING_ARRAY;
+            }
         }
 
         if let Some(ref feature) = self.depth_clip_enable {
@@ -549,15 +541,6 @@ impl PhysicalDeviceFeatures {
             features.set(
                 F::TEXTURE_COMPRESSION_ASTC_HDR,
                 astc_hdr.texture_compression_astc_hdr != 0,
-            );
-        }
-
-        if let Some((ref f16_i8, ref bit16)) = self.shader_float16 {
-            features.set(
-                F::SHADER_FLOAT16,
-                f16_i8.shader_float16 != 0
-                    && bit16.storage_buffer16_bit_access != 0
-                    && bit16.uniform_and_storage_buffer16_bit_access != 0,
             );
         }
 
@@ -672,12 +655,7 @@ impl PhysicalDeviceCapabilities {
         extensions.push(vk::KhrPortabilitySubsetFn::name());
 
         if requested_features.contains(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR) {
-            extensions.push(vk::ExtTextureCompressionAstcHdrFn::name());
-        }
-
-        if requested_features.contains(wgt::Features::SHADER_FLOAT16) {
-            extensions.push(vk::KhrShaderFloat16Int8Fn::name());
-            extensions.push(vk::Khr16bitStorageFn::name());
+            extensions.push(vk::ExtTextureCompressionAstcHdrFn::name())
         }
 
         extensions
@@ -917,16 +895,6 @@ impl super::InstanceShared {
                     .astc_hdr
                     .insert(vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::default());
                 builder = builder.push_next(next);
-            }
-            if capabilities.supports_extension(vk::KhrShaderFloat16Int8Fn::name())
-                && capabilities.supports_extension(vk::Khr16bitStorageFn::name())
-            {
-                let next = features.shader_float16.insert((
-                    vk::PhysicalDeviceShaderFloat16Int8FeaturesKHR::default(),
-                    vk::PhysicalDevice16BitStorageFeaturesKHR::default(),
-                ));
-                builder = builder.push_next(&mut next.0);
-                builder = builder.push_next(&mut next.1);
             }
 
             let mut features2 = builder.build();
@@ -1215,13 +1183,6 @@ impl super::Adapter {
                 capabilities.push(spv::Capability::MultiView);
             }
 
-            if features.intersects(
-                wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING
-                    | wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING,
-            ) {
-                capabilities.push(spv::Capability::ShaderNonUniform);
-            }
-
             let mut flags = spv::WriterFlags::empty();
             flags.set(
                 spv::WriterFlags::DEBUG,
@@ -1254,11 +1215,7 @@ impl super::Adapter {
                     } else {
                         naga::proc::BoundsCheckPolicy::Restrict
                     },
-                    // TODO: support bounds checks on binding arrays
-                    binding_array: naga::proc::BoundsCheckPolicy::Unchecked,
                 },
-                // We need to build this separately for each invocation, so just default it out here
-                binding_map: BTreeMap::default(),
             }
         };
 

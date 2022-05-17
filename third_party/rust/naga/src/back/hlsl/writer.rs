@@ -603,12 +603,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 register
             }
             crate::AddressSpace::Handle => {
-                let handle_ty = match *inner {
-                    TypeInner::BindingArray { ref base, .. } => &module.types[*base].inner,
-                    _ => inner,
-                };
-
-                let register = match *handle_ty {
+                let register = match *inner {
                     TypeInner::Sampler { .. } => "s",
                     // all storage textures are UAV, unconditionally
                     TypeInner::Image {
@@ -629,16 +624,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         if let Some(ref binding) = global.binding {
             // this was already resolved earlier when we started evaluating an entry point.
             let bt = self.options.resolve_resource_binding(binding).unwrap();
-
-            // need to write the binding array size if the type was emitted with `write_type`
-            if let TypeInner::BindingArray { base, size, .. } = module.types[global.ty].inner {
-                if let Some(overridden_size) = bt.binding_array_size {
-                    write!(self.out, "[{}]", overridden_size)?;
-                } else {
-                    self.write_array_size(module, base, size)?;
-                }
-            }
-
             write!(self.out, " : register({}{}", register_ty, bt.register)?;
             if bt.space != 0 {
                 write!(self.out, ", space{}", bt.space)?;
@@ -747,7 +732,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 let size = module.constants[const_handle].to_array_length().unwrap();
                 write!(self.out, "{}", size)?;
             }
-            crate::ArraySize::Dynamic => {}
+            crate::ArraySize::Dynamic => unreachable!(),
         }
 
         write!(self.out, "]")?;
@@ -889,9 +874,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         match *inner {
             TypeInner::Struct { .. } => write!(self.out, "{}", self.names[&NameKey::Type(ty)])?,
             // hlsl array has the size separated from the base type
-            TypeInner::Array { base, .. } | TypeInner::BindingArray { base, .. } => {
-                self.write_type(module, base)?
-            }
+            TypeInner::Array { base, .. } => self.write_type(module, base)?,
             ref other => self.write_value_type(module, other)?,
         }
 
@@ -950,7 +933,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             // HLSL arrays are written as `type name[size]`
             // Current code is written arrays only as `[size]`
             // Base `type` and `name` should be written outside
-            TypeInner::Array { base, size, .. } | TypeInner::BindingArray { base, size } => {
+            TypeInner::Array { base, size, .. } => {
                 self.write_array_size(module, base, size)?;
             }
             _ => {
@@ -1810,27 +1793,9 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 {
                     // do nothing, the chain is written on `Load`/`Store`
                 } else {
-                    let base_ty_res = &func_ctx.info[base].ty;
-                    let resolved = base_ty_res.inner_with(&module.types);
-
-                    let non_uniform_qualifier = match *resolved {
-                        TypeInner::BindingArray { .. } => {
-                            let uniformity = &func_ctx.info[index].uniformity;
-
-                            uniformity.non_uniform_result.is_some()
-                        }
-                        _ => false,
-                    };
-
                     self.write_expr(module, base, func_ctx)?;
                     write!(self.out, "[")?;
-                    if non_uniform_qualifier {
-                        write!(self.out, "NonUniformResourceIndex(")?;
-                    }
                     self.write_expr(module, index, func_ctx)?;
-                    if non_uniform_qualifier {
-                        write!(self.out, ")")?;
-                    }
                     write!(self.out, "]")?;
                 }
             }
@@ -1887,7 +1852,6 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         }
                         TypeInner::Matrix { .. }
                         | TypeInner::Array { .. }
-                        | TypeInner::BindingArray { .. }
                         | TypeInner::ValuePointer { .. } => write!(self.out, "[{}]", index)?,
                         TypeInner::Struct { .. } => {
                             // This will never panic in case the type is a `Struct`, this is not true
