@@ -9,6 +9,7 @@
 import("../../../webrtc.gni")
 
 rtc_source_set("internal_types") {
+  deps = [ "../public:strong_alias" ]
   sources = [ "internal_types.h" ]
 }
 
@@ -23,13 +24,14 @@ rtc_source_set("pair_hash") {
 }
 
 rtc_source_set("sequence_numbers") {
-  deps = []
+  deps = [ ":internal_types" ]
   sources = [ "sequence_numbers.h" ]
 }
 
 rtc_source_set("str_join") {
-  deps = []
+  deps = [ "../../../rtc_base:stringutils" ]
   sources = [ "str_join.h" ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 if (rtc_include_tests) {

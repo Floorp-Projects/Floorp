@@ -45,6 +45,8 @@ rtc_source_set("data") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../public:types",
   ]
   sources = [ "data.h" ]
 }
@@ -64,14 +66,17 @@ rtc_library("crc32c") {
 
 rtc_library("parameter") {
   deps = [
+    ":bounded_io",
     ":data",
     ":tlv_trait",
     "../../../api:array_view",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
     "../common:math",
     "../common:str_join",
+    "../public:types",
   ]
   sources = [
     "parameter/add_incoming_streams_request_parameter.cc",
@@ -97,6 +102,7 @@ rtc_library("parameter") {
     "parameter/supported_extensions_parameter.cc",
     "parameter/supported_extensions_parameter.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("error_cause") {
@@ -108,8 +114,11 @@ rtc_library("error_cause") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
     "../common:math",
     "../common:str_join",
+    "../packet:bounded_io",
+    "../public:types",
   ]
   sources = [
     "error_cause/cookie_received_while_shutting_down_cause.cc",
@@ -141,6 +150,7 @@ rtc_library("error_cause") {
     "error_cause/user_initiated_abort_cause.cc",
     "error_cause/user_initiated_abort_cause.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("chunk") {
@@ -155,6 +165,7 @@ rtc_library("chunk") {
     "../../../rtc_base:rtc_base_approved",
     "../common:math",
     "../common:str_join",
+    "../packet:bounded_io",
   ]
   sources = [
     "chunk/abort_chunk.cc",
@@ -196,20 +207,29 @@ rtc_library("chunk") {
     "chunk/shutdown_complete_chunk.cc",
     "chunk/shutdown_complete_chunk.h",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("sctp_packet") {
   deps = [
+    ":bounded_io",
+    ":chunk",
     ":crc32c",
     "../../../api:array_view",
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../common:internal_types",
+    "../common:math",
     "../public:types",
   ]
   sources = [
     "sctp_packet.cc",
     "sctp_packet.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/memory:memory",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
