@@ -32,10 +32,6 @@ class PerfStats {
     HttpChannelCompletion,
     HttpChannelCompletion_Network,
     HttpChannelCompletion_Cache,
-    JSBC_Compression,
-    JSBC_Decompression,
-    JSBC_IO_Read,
-    JSBC_IO_Write,
     Max
   };
 
