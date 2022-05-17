@@ -698,8 +698,6 @@ pub enum TypeInner {
     },
     /// Can be used to sample values from images.
     Sampler { comparison: bool },
-    /// Array of bindings
-    BindingArray { base: Handle<Type>, size: ArraySize },
 }
 
 /// Constant value.

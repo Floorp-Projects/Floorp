@@ -36,8 +36,8 @@ invalidations or index format changes.
 use crate::{
     binding_model::buffer_binding_type_alignment,
     command::{
-        BasePass, BindGroupStateChange, DrawError, MapPassErr, PassErrorScope, RenderCommand,
-        RenderCommandError, StateChange,
+        BasePass, DrawError, MapPassErr, PassErrorScope, RenderCommand, RenderCommandError,
+        StateChange,
     },
     conv,
     device::{
@@ -86,12 +86,6 @@ pub struct RenderBundleEncoder {
     parent_id: id::DeviceId,
     pub(crate) context: RenderPassContext,
     pub(crate) is_ds_read_only: bool,
-
-    // Resource binding dedupe state.
-    #[cfg_attr(feature = "serial-pass", serde(skip))]
-    current_bind_groups: BindGroupStateChange,
-    #[cfg_attr(feature = "serial-pass", serde(skip))]
-    current_pipeline: StateChange<id::RenderPipelineId>,
 }
 
 impl RenderBundleEncoder {
@@ -132,9 +126,6 @@ impl RenderBundleEncoder {
                 }
                 None => false,
             },
-
-            current_bind_groups: BindGroupStateChange::new(),
-            current_pipeline: StateChange::new(),
         })
     }
 
@@ -152,9 +143,6 @@ impl RenderBundleEncoder {
                 multiview: None,
             },
             is_ds_read_only: false,
-
-            current_bind_groups: BindGroupStateChange::new(),
-            current_pipeline: StateChange::new(),
         }
     }
 
@@ -192,7 +180,7 @@ impl RenderBundleEncoder {
             raw_dynamic_offsets: Vec::new(),
             flat_dynamic_offsets: Vec::new(),
             used_bind_groups: 0,
-            pipeline: None,
+            pipeline: StateChange::new(),
         };
         let mut commands = Vec::new();
         let mut base = self.base.as_ref();
@@ -264,15 +252,15 @@ impl RenderBundleEncoder {
                 }
                 RenderCommand::SetPipeline(pipeline_id) => {
                     let scope = PassErrorScope::SetPipelineRender(pipeline_id);
-
-                    state.pipeline = Some(pipeline_id);
+                    if state.pipeline.set_and_check_redundant(pipeline_id) {
+                        continue;
+                    }
 
                     let pipeline = state
                         .trackers
                         .render_pipes
                         .use_extend(&*pipeline_guard, pipeline_id, (), ())
-                        .map_err(|_| RenderCommandError::InvalidPipeline(pipeline_id))
-                        .map_pass_err(scope)?;
+                        .unwrap();
 
                     self.context
                         .check_compatible(&pipeline.pass_context)
@@ -382,7 +370,7 @@ impl RenderBundleEncoder {
                     let scope = PassErrorScope::Draw {
                         indexed: false,
                         indirect: false,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
                     let vertex_limits = state.vertex_limits();
                     let last_vertex = first_vertex + vertex_count;
@@ -417,7 +405,7 @@ impl RenderBundleEncoder {
                     let scope = PassErrorScope::Draw {
                         indexed: true,
                         indirect: false,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
                     //TODO: validate that base_vertex + max_index() is within the provided range
                     let vertex_limits = state.vertex_limits();
@@ -453,7 +441,7 @@ impl RenderBundleEncoder {
                     let scope = PassErrorScope::Draw {
                         indexed: false,
                         indirect: true,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
                     device
                         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
@@ -486,7 +474,7 @@ impl RenderBundleEncoder {
                     let scope = PassErrorScope::Draw {
                         indexed: true,
                         indirect: true,
-                        pipeline: state.pipeline,
+                        pipeline: state.pipeline.last_state,
                     };
                     device
                         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
@@ -1002,7 +990,7 @@ struct State {
     raw_dynamic_offsets: Vec<wgt::DynamicOffset>,
     flat_dynamic_offsets: Vec<wgt::DynamicOffset>,
     used_bind_groups: usize,
-    pipeline: Option<id::RenderPipelineId>,
+    pipeline: StateChange<id::RenderPipelineId>,
 }
 
 impl State {
@@ -1220,7 +1208,7 @@ pub mod bundle_ffi {
     use super::{RenderBundleEncoder, RenderCommand};
     use crate::{id, RawString};
     use std::{convert::TryInto, slice};
-    use wgt::{BufferAddress, BufferSize, DynamicOffset, IndexFormat};
+    use wgt::{BufferAddress, BufferSize, DynamicOffset};
 
     /// # Safety
     ///
@@ -1234,23 +1222,17 @@ pub mod bundle_ffi {
         offsets: *const DynamicOffset,
         offset_length: usize,
     ) {
-        let redundant = bundle.current_bind_groups.set_and_check_redundant(
-            bind_group_id,
-            index,
-            &mut bundle.base.dynamic_offsets,
-            offsets,
-            offset_length,
-        );
-
-        if redundant {
-            return;
-        }
-
         bundle.base.commands.push(RenderCommand::SetBindGroup {
             index: index.try_into().unwrap(),
             num_dynamic_offsets: offset_length.try_into().unwrap(),
             bind_group_id,
         });
+        if offset_length != 0 {
+            bundle
+                .base
+                .dynamic_offsets
+                .extend_from_slice(slice::from_raw_parts(offsets, offset_length));
+        }
     }
 
     #[no_mangle]
@@ -1258,10 +1240,6 @@ pub mod bundle_ffi {
         bundle: &mut RenderBundleEncoder,
         pipeline_id: id::RenderPipelineId,
     ) {
-        if bundle.current_pipeline.set_and_check_redundant(pipeline_id) {
-            return;
-        }
-
         bundle
             .base
             .commands
@@ -1282,17 +1260,6 @@ pub mod bundle_ffi {
             offset,
             size,
         });
-    }
-
-    #[no_mangle]
-    pub extern "C" fn wgpu_render_bundle_set_index_buffer(
-        encoder: &mut RenderBundleEncoder,
-        buffer: id::BufferId,
-        index_format: IndexFormat,
-        offset: BufferAddress,
-        size: Option<BufferSize>,
-    ) {
-        encoder.set_index_buffer(buffer, index_format, offset, size);
     }
 
     /// # Safety

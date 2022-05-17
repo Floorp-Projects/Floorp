@@ -98,7 +98,6 @@ impl super::Adapter {
         // opengl has no way to discern device_type, so we can try to infer it from the renderer string
         let strings_that_imply_integrated = [
             " xpress", // space here is on purpose so we don't match express
-            "amd renoir",
             "radeon hd 4200",
             "radeon hd 4250",
             "radeon hd 4290",
@@ -135,7 +134,7 @@ impl super::Adapter {
         } else if strings_that_imply_cpu.iter().any(|&s| renderer.contains(s)) {
             wgt::DeviceType::Cpu
         } else {
-            wgt::DeviceType::Other
+            wgt::DeviceType::DiscreteGpu
         };
 
         // source: Sascha Willems at Vulkan
@@ -285,10 +284,6 @@ impl super::Adapter {
                 && (vertex_shader_storage_blocks != 0 || vertex_ssbo_false_zero),
         );
         downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
-        downlevel_flags.set(
-            wgt::DownlevelFlags::ANISOTROPIC_FILTERING,
-            extensions.contains("EXT_texture_filter_anisotropic"),
-        );
 
         let mut features = wgt::Features::empty()
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES

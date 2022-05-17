@@ -117,10 +117,6 @@ pub struct BoundsCheckPolicies {
     /// [`ImageStore`]: crate::Statement::ImageStore
     #[cfg_attr(feature = "deserialize", serde(default))]
     pub image: BoundsCheckPolicy,
-
-    /// How should the generated code handle binding array indexes that are out of bounds.
-    #[cfg_attr(feature = "deserialize", serde(default))]
-    pub binding_array: BoundsCheckPolicy,
 }
 
 /// The default `BoundsCheckPolicy` is `Unchecked`.
@@ -131,27 +127,20 @@ impl Default for BoundsCheckPolicy {
 }
 
 impl BoundsCheckPolicies {
-    /// Determine which policy applies to `base`.
+    /// Determine which policy applies to `access`.
     ///
-    /// `base` is the "base" expression (the expression being indexed) of a `Access`
-    /// and `AccessIndex` expression. This is either a pointer, a value, being directly
-    /// indexed, or a binding array.
+    /// `access` is a subtree of `Access` and `AccessIndex` expressions,
+    /// operating either on a pointer to a value, or on a value directly.
     ///
     /// See the documentation for [`BoundsCheckPolicy`] for details about
     /// when each policy applies.
     pub fn choose_policy(
         &self,
-        base: Handle<crate::Expression>,
+        access: Handle<crate::Expression>,
         types: &UniqueArena<crate::Type>,
         info: &valid::FunctionInfo,
     ) -> BoundsCheckPolicy {
-        let ty = info[base].ty.inner_with(types);
-
-        if let crate::TypeInner::BindingArray { .. } = *ty {
-            return self.binding_array;
-        }
-
-        match ty.pointer_space() {
+        match info[access].ty.inner_with(types).pointer_space() {
             Some(crate::AddressSpace::Storage { access: _ } | crate::AddressSpace::Uniform) => {
                 self.buffer
             }
@@ -376,7 +365,7 @@ impl crate::TypeInner {
         let known_length = match *self {
             Ti::Vector { size, .. } => size as _,
             Ti::Matrix { columns, .. } => columns as _,
-            Ti::Array { size, .. } | Ti::BindingArray { size, .. } => {
+            Ti::Array { size, .. } => {
                 return size.to_indexable_length(module);
             }
             Ti::ValuePointer {

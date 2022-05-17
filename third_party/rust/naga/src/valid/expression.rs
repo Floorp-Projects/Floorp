@@ -65,8 +65,6 @@ pub enum ExpressionError {
     ExpectedGlobalOrArgument,
     #[error("Calling an undeclared function {0:?}")]
     CallToUndeclaredFunction(Handle<crate::Function>),
-    #[error("Needs to be an binding array instead of {0:?}")]
-    ExpectedBindingArrayType(Handle<crate::Type>),
     #[error("Needs to be an image instead of {0:?}")]
     ExpectedImageType(Handle<crate::Type>),
     #[error("Needs to be an image instead of {0:?}")]
@@ -117,8 +115,6 @@ pub enum ExpressionError {
     InvalidArgumentType(crate::MathFunction, u32, Handle<crate::Expression>),
     #[error("Atomic result type can't be {0:?} of {1} bytes")]
     InvalidAtomicResultType(crate::ScalarKind, crate::Bytes),
-    #[error("Shader requires capability {0:?}")]
-    MissingCapabilities(super::Capabilities),
 }
 
 #[cfg(feature = "validate")]
@@ -168,9 +164,7 @@ impl super::Validator {
                 let dynamic_indexing_restricted = match *base_type {
                     Ti::Vector { .. } => false,
                     Ti::Matrix { .. } | Ti::Array { .. } => true,
-                    Ti::Pointer { .. }
-                    | Ti::ValuePointer { size: Some(_), .. }
-                    | Ti::BindingArray { .. } => false,
+                    Ti::Pointer { .. } | Ti::ValuePointer { size: Some(_), .. } => false,
                     ref other => {
                         log::error!("Indexing of {:?}", other);
                         return Err(ExpressionError::InvalidBaseType(base));
@@ -241,7 +235,7 @@ impl super::Validator {
                             size: crate::ArraySize::Constant(handle),
                             ..
                         } => module.constants[handle].to_array_length().unwrap(),
-                        Ti::Array { .. } | Ti::BindingArray { .. } => !0, // can't statically know, but need run-time checks
+                        Ti::Array { .. } => !0, // can't statically know, but need run-time checks
                         Ti::Pointer { base, .. } if top_level => {
                             resolve_index_limit(module, top, &module.types[base].inner, false)?
                         }
@@ -351,50 +345,13 @@ impl super::Validator {
                         module.global_variables[var_handle].ty
                     }
                     crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
-                    crate::Expression::Access { base, .. }
-                    | crate::Expression::AccessIndex { base, .. } => {
-                        match function.expressions[base] {
-                            crate::Expression::GlobalVariable(var_handle) => {
-                                let array_ty = module.global_variables[var_handle].ty;
-
-                                match module.types[array_ty].inner {
-                                    Ti::BindingArray { base, .. } => base,
-                                    _ => {
-                                        return Err(ExpressionError::ExpectedBindingArrayType(
-                                            array_ty,
-                                        ))
-                                    }
-                                }
-                            }
-                            _ => return Err(ExpressionError::ExpectedGlobalVariable),
-                        }
-                    }
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
-
                 let sampler_ty = match function.expressions[sampler] {
                     crate::Expression::GlobalVariable(var_handle) => {
                         module.global_variables[var_handle].ty
                     }
                     crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
-                    crate::Expression::Access { base, .. }
-                    | crate::Expression::AccessIndex { base, .. } => {
-                        match function.expressions[base] {
-                            crate::Expression::GlobalVariable(var_handle) => {
-                                let array_ty = module.global_variables[var_handle].ty;
-
-                                match module.types[array_ty].inner {
-                                    Ti::BindingArray { base, .. } => base,
-                                    _ => {
-                                        return Err(ExpressionError::ExpectedBindingArrayType(
-                                            array_ty,
-                                        ))
-                                    }
-                                }
-                            }
-                            _ => return Err(ExpressionError::ExpectedGlobalVariable),
-                        }
-                    }
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
                 let comparison = match module.types[sampler_ty].inner {
@@ -584,24 +541,6 @@ impl super::Validator {
                         module.global_variables[var_handle].ty
                     }
                     crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
-                    crate::Expression::Access { base, .. }
-                    | crate::Expression::AccessIndex { base, .. } => {
-                        match function.expressions[base] {
-                            crate::Expression::GlobalVariable(var_handle) => {
-                                let array_ty = module.global_variables[var_handle].ty;
-
-                                match module.types[array_ty].inner {
-                                    Ti::BindingArray { base, .. } => base,
-                                    _ => {
-                                        return Err(ExpressionError::ExpectedBindingArrayType(
-                                            array_ty,
-                                        ))
-                                    }
-                                }
-                            }
-                            _ => return Err(ExpressionError::ExpectedGlobalVariable),
-                        }
-                    }
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
                 match module.types[ty].inner {
@@ -667,24 +606,6 @@ impl super::Validator {
                         module.global_variables[var_handle].ty
                     }
                     crate::Expression::FunctionArgument(i) => function.arguments[i as usize].ty,
-                    crate::Expression::Access { base, .. }
-                    | crate::Expression::AccessIndex { base, .. } => {
-                        match function.expressions[base] {
-                            crate::Expression::GlobalVariable(var_handle) => {
-                                let array_ty = module.global_variables[var_handle].ty;
-
-                                match module.types[array_ty].inner {
-                                    Ti::BindingArray { base, .. } => base,
-                                    _ => {
-                                        return Err(ExpressionError::ExpectedBindingArrayType(
-                                            array_ty,
-                                        ))
-                                    }
-                                }
-                            }
-                            _ => return Err(ExpressionError::ExpectedGlobalVariable),
-                        }
-                    }
                     _ => return Err(ExpressionError::ExpectedGlobalVariable),
                 };
                 match module.types[ty].inner {

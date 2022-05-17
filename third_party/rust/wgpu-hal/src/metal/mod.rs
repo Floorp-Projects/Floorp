@@ -261,7 +261,7 @@ impl AdapterShared {
 
         Self {
             disabilities: PrivateDisabilities::new(&device),
-            private_caps,
+            private_caps: PrivateCapabilities::new(&device),
             device: Mutex::new(device),
             settings: Settings::default(),
         }
