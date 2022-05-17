@@ -10,7 +10,7 @@ import platform
 import re
 import subprocess
 import sys
-from distutils.version import LooseVersion
+from packaging.version import Version
 from filecmp import dircmp
 
 from mozbuild.nodeutil import (
@@ -270,7 +270,7 @@ def eslint_module_needs_setup():
             # these are symlinked, so we'll always pick up the latest.
             continue
 
-        if name == "eslint" and LooseVersion("4.0.0") > LooseVersion(data["version"]):
+        if name == "eslint" and Version("4.0.0") > Version(data["version"]):
             print("ESLint is an old version, clobbering node_modules directory")
             needs_clobber = True
             has_issues = True
@@ -295,7 +295,7 @@ def version_in_range(version, version_range):
     version_match = VERSION_RE.match(version)
     if not version_match:
         raise RuntimeError("mach eslint doesn't understand module version %s" % version)
-    version = LooseVersion(version)
+    version = Version(version)
 
     # Caret ranges as specified by npm allow changes that do not modify the left-most non-zero
     # digit in the [major, minor, patch] tuple.  The code below assumes the major digit is
@@ -305,8 +305,8 @@ def version_in_range(version, version_range):
         range_version = range_match.group(1)
         range_major = int(range_match.group(2))
 
-        range_min = LooseVersion(range_version)
-        range_max = LooseVersion("%d.0.0" % (range_major + 1))
+        range_min = Version(range_version)
+        range_max = Version("%d.0.0" % (range_major + 1))
 
         return range_min <= version < range_max
 
