@@ -20,6 +20,7 @@
       * AudioProcessingModule
         * [APM](/modules/audio_processing/g3doc/audio_processing_module.md)
     *   Video
+      * [Adaptation](/video/g3doc/adaptation.md)
     *   DataChannel
     *   PeerConnection
     *   Desktop capture
