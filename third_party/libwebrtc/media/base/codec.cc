@@ -58,18 +58,6 @@ bool IsSameCodecSpecific(const std::string& name1,
   return true;
 }
 
-bool IsCodecInList(
-    const webrtc::SdpVideoFormat& format,
-    const std::vector<webrtc::SdpVideoFormat>& existing_formats) {
-  for (auto existing_format : existing_formats) {
-    if (IsSameCodec(format.name, format.parameters, existing_format.name,
-                    existing_format.parameters)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 FeedbackParams::FeedbackParams() = default;
@@ -452,6 +440,8 @@ const VideoCodec* FindMatchingCodec(
   return nullptr;
 }
 
+// TODO(crbug.com/1187565): Remove once downstream projects stopped using this
+// method in favor of SdpVideoFormat::IsSameCodec().
 bool IsSameCodec(const std::string& name1,
                  const CodecParameterMap& params1,
                  const std::string& name2,
@@ -493,7 +483,7 @@ void AddH264ConstrainedBaselineProfileToSupportedFormats(
   std::copy_if(cbr_supported_formats.begin(), cbr_supported_formats.end(),
                std::back_inserter(*supported_formats),
                [supported_formats](const webrtc::SdpVideoFormat& format) {
-                 return !IsCodecInList(format, *supported_formats);
+                 return !format.IsCodecInList(*supported_formats);
                });
 
   if (supported_formats->size() > original_size) {
