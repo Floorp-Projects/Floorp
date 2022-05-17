@@ -169,7 +169,7 @@ class HardwareVideoEncoder implements VideoEncoder {
    * intervals, and bitrateAdjuster.
    *
    * @param codecName the hardware codec implementation to use
-   * @param codecType the type of the given video codec (eg. VP8, VP9, or H264)
+   * @param codecType the type of the given video codec (eg. VP8, VP9, H264 or AV1)
    * @param surfaceColorFormat color format for surface mode or null if not available
    * @param yuvColorFormat color format for bytebuffer mode
    * @param keyFrameIntervalSec interval in seconds between key frames; used to initialize the codec
