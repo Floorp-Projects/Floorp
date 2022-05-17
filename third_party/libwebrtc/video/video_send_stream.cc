@@ -65,10 +65,7 @@ VideoStreamEncoder::BitrateAllocationCallbackType
 GetBitrateAllocationCallbackType(const VideoSendStream::Config& config) {
   if (webrtc::RtpExtension::FindHeaderExtensionByUri(
           config.rtp.extensions,
-          webrtc::RtpExtension::kVideoLayersAllocationUri,
-          config.crypto_options.srtp.enable_encrypted_rtp_header_extensions
-              ? RtpExtension::Filter::kPreferEncryptedExtension
-              : RtpExtension::Filter::kDiscardEncryptedExtension)) {
+          webrtc::RtpExtension::kVideoLayersAllocationUri)) {
     return VideoStreamEncoder::BitrateAllocationCallbackType::
         kVideoLayersAllocation;
   }
