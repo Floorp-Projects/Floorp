@@ -19,7 +19,7 @@ namespace dcsctp {
 using StreamID = StrongAlias<class StreamIDTag, uint16_t>;
 
 // Payload Protocol Identifier (PPID)
-using PPID = StrongAlias<class PPIDTag, uint16_t>;
+using PPID = StrongAlias<class PPIDTag, uint32_t>;
 
 // Timeout Identifier
 using TimeoutID = StrongAlias<class TimeoutTag, uint64_t>;
