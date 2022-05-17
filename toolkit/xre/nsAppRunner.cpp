@@ -2119,10 +2119,7 @@ nsSingletonFactory::nsSingletonFactory(nsISupports* aSingleton)
 NS_IMPL_ISUPPORTS(nsSingletonFactory, nsIFactory)
 
 NS_IMETHODIMP
-nsSingletonFactory::CreateInstance(nsISupports* aOuter, const nsIID& aIID,
-                                   void** aResult) {
-  NS_ENSURE_NO_AGGREGATION(aOuter);
-
+nsSingletonFactory::CreateInstance(const nsIID& aIID, void** aResult) {
   return mSingleton->QueryInterface(aIID, aResult);
 }
 

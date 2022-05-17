@@ -23,10 +23,7 @@ function run_test() {
   };
 
   let xulRuntimeFactory = {
-    createInstance(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(iid) {
       return xulRuntime.QueryInterface(iid);
     },
   };

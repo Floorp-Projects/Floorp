@@ -2433,10 +2433,7 @@ Update.prototype = {
 
 const UpdateServiceFactory = {
   _instance: null,
-  createInstance(outer, iid) {
-    if (outer != null) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(iid) {
     return this._instance == null
       ? (this._instance = new UpdateService())
       : this._instance;

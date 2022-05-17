@@ -64,7 +64,7 @@ let autoCompleteSimple = {
     "nsIFactory",
     "nsIAutoCompleteSearch"
   ]),
-  createInstance(outer, iid) {
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 

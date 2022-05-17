@@ -2663,7 +2663,7 @@ let ChromeURLBlockPolicy = {
   contractID: "@mozilla-org/policy-engine-content-policy-service;1",
   classID: Components.ID("{ba7b9118-cabc-4845-8b26-4215d2a59ed7}"),
   QueryInterface: ChromeUtils.generateQI(["nsIContentPolicy"]),
-  createInstance(outer, iid) {
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 };

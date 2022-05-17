@@ -42,10 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874090
       throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
     },
 
-    createInstance: function(aOuter, aIID) {
-      if (aOuter != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance: function(aIID) {
       return this.QueryInterface(aIID);
     }
   };

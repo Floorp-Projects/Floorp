@@ -86,9 +86,7 @@ var ComponentUtils = {
     var factory = component.prototype._xpcom_factory;
     if (!factory) {
       factory = {
-        createInstance: function(outer, iid) {
-          if (outer)
-            throw Cr.NS_ERROR_NO_AGGREGATION;
+        createInstance: function(iid) {
           return (new component()).QueryInterface(iid);
         },
         QueryInterface: nsIFactoryQI
@@ -107,10 +105,7 @@ var ComponentUtils = {
   function XPCOMUtils_generateSingletonFactory(aServiceConstructor) {
     return {
       _instance: null,
-      createInstance: function XPCU_SF_createInstance(aOuter, aIID) {
-        if (aOuter !== null) {
-          throw Cr.NS_ERROR_NO_AGGREGATION;
-        }
+      createInstance: function XPCU_SF_createInstance(aIID) {
         if (this._instance === null) {
           this._instance = new aServiceConstructor();
         }

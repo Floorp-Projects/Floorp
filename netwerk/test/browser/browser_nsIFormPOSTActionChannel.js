@@ -42,10 +42,7 @@ CustomProtocolHandler.prototype = {
   },
 
   /** nsIFactory */
-  createInstance(aOuter, aIID) {
-    if (aOuter) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(aIID) {
     return this.QueryInterface(aIID);
   },
 

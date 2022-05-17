@@ -16,10 +16,7 @@ const mockUpdateManager = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIUpdateManager"]),
 
-  createInstance(outer, iiD) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(iiD) {
     return this.QueryInterface(iiD);
   },
 

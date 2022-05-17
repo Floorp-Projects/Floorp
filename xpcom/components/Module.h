@@ -28,8 +28,7 @@ struct Module {
   typedef already_AddRefed<nsIFactory> (*GetFactoryProcPtr)(
       const Module& module, const CIDEntry& entry);
 
-  typedef nsresult (*ConstructorProcPtr)(nsISupports* aOuter, const nsIID& aIID,
-                                         void** aResult);
+  typedef nsresult (*ConstructorProcPtr)(const nsIID& aIID, void** aResult);
 
   typedef nsresult (*LoadFuncPtr)();
   typedef void (*UnloadFuncPtr)();

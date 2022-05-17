@@ -13,30 +13,22 @@
 #include "mozilla/Module.h"
 
 #define NS_GENERIC_FACTORY_CONSTRUCTOR(_InstanceClass)                         \
-  static nsresult _InstanceClass##Constructor(nsISupports* aOuter,             \
-                                              REFNSIID aIID, void** aResult) { \
+  static nsresult _InstanceClass##Constructor(REFNSIID aIID, void** aResult) { \
     RefPtr<_InstanceClass> inst;                                               \
                                                                                \
     *aResult = nullptr;                                                        \
-    if (nullptr != aOuter) {                                                   \
-      return NS_ERROR_NO_AGGREGATION;                                          \
-    }                                                                          \
                                                                                \
     inst = new _InstanceClass();                                               \
     return inst->QueryInterface(aIID, aResult);                                \
   }
 
 #define NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(_InstanceClass, _InitMethod)       \
-  static nsresult _InstanceClass##Constructor(nsISupports* aOuter,             \
-                                              REFNSIID aIID, void** aResult) { \
+  static nsresult _InstanceClass##Constructor(REFNSIID aIID, void** aResult) { \
     nsresult rv;                                                               \
                                                                                \
     RefPtr<_InstanceClass> inst;                                               \
                                                                                \
     *aResult = nullptr;                                                        \
-    if (nullptr != aOuter) {                                                   \
-      return NS_ERROR_NO_AGGREGATION;                                          \
-    }                                                                          \
                                                                                \
     inst = new _InstanceClass();                                               \
     rv = inst->_InitMethod();                                                  \
@@ -65,14 +57,10 @@ struct RemoveAlreadyAddRefed<already_AddRefed<T>> {
 
 // 'Constructor' that uses an existing getter function that gets a singleton.
 #define NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(_InstanceClass, _GetterProc)  \
-  static nsresult _InstanceClass##Constructor(nsISupports* aOuter,             \
-                                              REFNSIID aIID, void** aResult) { \
+  static nsresult _InstanceClass##Constructor(REFNSIID aIID, void** aResult) { \
     RefPtr<_InstanceClass> inst;                                               \
                                                                                \
     *aResult = nullptr;                                                        \
-    if (nullptr != aOuter) {                                                   \
-      return NS_ERROR_NO_AGGREGATION;                                          \
-    }                                                                          \
                                                                                \
     using T =                                                                  \
         mozilla::detail::RemoveAlreadyAddRefed<decltype(_GetterProc())>::Type; \
