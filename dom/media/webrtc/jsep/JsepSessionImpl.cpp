@@ -2438,6 +2438,13 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
     }
 
     size_t level = transceiver->GetLevel();
+    if (NS_WARN_IF(mCurrentLocalDescription->GetMediaSectionCount() <= level) ||
+        NS_WARN_IF(mCurrentRemoteDescription->GetMediaSectionCount() <=
+                   level)) {
+      MOZ_ASSERT(false);
+      continue;
+    }
+
     const SdpMediaSection& local =
         mCurrentLocalDescription->GetMediaSection(level);
     const SdpMediaSection& remote =
