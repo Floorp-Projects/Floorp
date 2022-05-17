@@ -529,17 +529,13 @@ static RTCError UpdateSimulcastLayerStatusInSender(
 
 static bool SimulcastIsRejected(
     const ContentInfo* local_content,
-    const MediaContentDescription& answer_media_desc,
-    bool enable_encrypted_rtp_header_extensions) {
+    const MediaContentDescription& answer_media_desc) {
   bool simulcast_offered = local_content &&
                            local_content->media_description() &&
                            local_content->media_description()->HasSimulcast();
   bool simulcast_answered = answer_media_desc.HasSimulcast();
   bool rids_supported = RtpExtension::FindHeaderExtensionByUri(
-      answer_media_desc.rtp_header_extensions(), RtpExtension::kRidUri,
-      enable_encrypted_rtp_header_extensions
-          ? RtpExtension::Filter::kPreferEncryptedExtension
-          : RtpExtension::Filter::kDiscardEncryptedExtension);
+      answer_media_desc.rtp_header_extensions(), RtpExtension::kRidUri);
   return simulcast_offered && (!simulcast_answered || !rids_supported);
 }
 
@@ -3300,9 +3296,7 @@ SdpOfferAnswerHandler::AssociateTransceiver(
 
     // Check if the offer indicated simulcast but the answer rejected it.
     // This can happen when simulcast is not supported on the remote party.
-    if (SimulcastIsRejected(old_local_content, *media_desc,
-                            pc_->GetCryptoOptions()
-                                .srtp.enable_encrypted_rtp_header_extensions)) {
+    if (SimulcastIsRejected(old_local_content, *media_desc)) {
       RTC_HISTOGRAM_BOOLEAN(kSimulcastDisabled, true);
       RTCError error =
           DisableSimulcastInSender(transceiver->internal()->sender_internal());

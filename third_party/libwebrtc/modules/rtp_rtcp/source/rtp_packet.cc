@@ -27,7 +27,6 @@ constexpr size_t kFixedHeaderSize = 12;
 constexpr uint8_t kRtpVersion = 2;
 constexpr uint16_t kOneByteExtensionProfileId = 0xBEDE;
 constexpr uint16_t kTwoByteExtensionProfileId = 0x1000;
-constexpr uint16_t kTwobyteExtensionProfileIdAppBitsFilter = 0xfff0;
 constexpr size_t kOneByteExtensionHeaderLength = 1;
 constexpr size_t kTwoByteExtensionHeaderLength = 2;
 constexpr size_t kDefaultPacketSize = 1500;
@@ -506,8 +505,7 @@ bool RtpPacket::ParseBuffer(const uint8_t* buffer, size_t size) {
       return false;
     }
     if (profile != kOneByteExtensionProfileId &&
-        (profile & kTwobyteExtensionProfileIdAppBitsFilter) !=
-            kTwoByteExtensionProfileId) {
+        profile != kTwoByteExtensionProfileId) {
       RTC_LOG(LS_WARNING) << "Unsupported rtp extension " << profile;
     } else {
       size_t extension_header_length = profile == kOneByteExtensionProfileId
