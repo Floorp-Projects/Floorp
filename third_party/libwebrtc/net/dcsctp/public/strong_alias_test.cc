@@ -347,4 +347,16 @@ TEST(StrongAliasTest, EnsureConstexpr) {
   static_assert(kOne > kZero, "");
   static_assert(kOne >= kZero, "");
 }
+
+TEST(StrongAliasTest, BooleansAreEvaluatedAsBooleans) {
+  using BoolAlias = StrongAlias<class BoolTag, bool>;
+
+  BoolAlias happy(true);
+  BoolAlias sad(false);
+
+  EXPECT_TRUE(happy);
+  EXPECT_FALSE(sad);
+  EXPECT_TRUE(*happy);
+  EXPECT_FALSE(*sad);
+}
 }  // namespace dcsctp
