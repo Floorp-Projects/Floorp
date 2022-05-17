@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { isOriginalId } from "devtools-source-map";
-import { getSource } from "../selectors";
+import { getSource, getLocationSource } from "../selectors";
 
 export async function getGeneratedLocation(
   state,
@@ -41,7 +41,7 @@ export async function getOriginalLocation(generatedLocation, sourceMaps) {
 }
 
 export async function getMappedLocation(state, sourceMaps, location) {
-  const source = getSource(state, location.sourceId);
+  const source = getLocationSource(state, location);
 
   if (!source) {
     throw new Error(`no source ${location.sourceId}`);
@@ -74,7 +74,7 @@ export async function getMappedLocation(state, sourceMaps, location) {
  * related location in the generated source.
  */
 export async function getRelatedMapLocation(state, sourceMaps, location) {
-  const source = getSource(state, location.sourceId);
+  const source = getLocationSource(state, location);
 
   if (!source) {
     return location;
