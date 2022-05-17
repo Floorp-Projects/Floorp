@@ -391,8 +391,8 @@ void WorkerErrorReport::ReportError(
 void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
                                           WorkerErrorReport& aReport,
                                           uint64_t aInnerWindowId) {
-  JS::RootedObject stack(aCx, aReport.ReadStack(aCx));
-  JS::RootedObject stackGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
+  JS::Rooted<JSObject*> stack(aCx, aReport.ReadStack(aCx));
+  JS::Rooted<JSObject*> stackGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
   ErrorData errorData(
       aReport.mIsWarning, aReport.mLineNumber, aReport.mColumnNumber,
@@ -407,8 +407,8 @@ void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
 /* static */
 void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
                                           uint64_t aInnerWindowId,
-                                          JS::HandleObject aStack,
-                                          JS::HandleObject aStackGlobal) {
+                                          JS::Handle<JSObject*> aStack,
+                                          JS::Handle<JSObject*> aStackGlobal) {
   AssertIsOnMainThread();
 
   RefPtr<nsScriptErrorBase> scriptError =
