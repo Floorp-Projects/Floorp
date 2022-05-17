@@ -56,8 +56,6 @@ const useMLBF = Services.prefs.getBoolPref(
 );
 
 var testserver = createHttpServer({ hosts: ["example.com"] });
-// Needed for updates:
-testserver.registerDirectory("/data/", do_get_file("../data"));
 
 function permissionPromptHandler(subject, topic, data) {
   ok(
@@ -152,7 +150,6 @@ const BLOCKLIST_DATA = {
     softBlockApp("softblock2"),
     softBlockApp("softblock3"),
     softBlockApp("softblock4"),
-    softBlockApp("softblock5"),
     {
       guid: "hardblock@tests.mozilla.org",
       versionRange: [
@@ -184,7 +181,6 @@ const BLOCKLIST_DATA = {
     softBlockAddonChange("softblock2"),
     softBlockAddonChange("softblock3"),
     softBlockAddonChange("softblock4"),
-    softBlockAddonChange("softblock5"),
     {
       guid: "hardblock@tests.mozilla.org",
       versionRange: [
@@ -222,7 +218,6 @@ const BLOCKLIST_DATA = {
     softBlockUpdate2("softblock2"),
     softBlockUpdate2("softblock3"),
     softBlockUpdate2("softblock4"),
-    softBlockUpdate2("softblock5"),
     {
       guid: "hardblock@tests.mozilla.org",
       versionRange: [],
@@ -241,7 +236,6 @@ const BLOCKLIST_DATA = {
     softBlockManual("softblock2"),
     softBlockManual("softblock3"),
     softBlockManual("softblock4"),
-    softBlockManual("softblock5"),
     {
       guid: "hardblock@tests.mozilla.org",
       versionRange: [
@@ -557,28 +551,75 @@ add_task(async function setup() {
     });
   }
 
-  // pattern used to map ids like softblock1 to soft1
-  let pattern = /^(soft|hard|regexp)block([1-9]*)@/;
+  function getxpibasename(id, version) {
+    // pattern used to map ids like softblock1 to soft1
+    let pattern = /^(soft|hard|regexp)block([1-9]*)@/;
+    let match = id.match(pattern);
+    return `blocklist_${match[1]}${match[2]}_${version}`;
+  }
   for (let id of ADDON_IDS) {
     for (let version of [1, 2, 3, 4]) {
-      let match = id.match(pattern);
-      let name = `blocklist_${match[1]}${match[2]}_${version}`;
+      let name = getxpibasename(id, version);
 
-      XPIS[name] = createTempWebExtensionFile({
+      let xpi = createTempWebExtensionFile({
         manifest: {
           name: "Test",
           version: `${version}.0`,
           applications: {
             gecko: {
               id,
-              update_url: `http://example.com/data/blocklistchange/addon_update${version}.json`,
+              // This file is generated below, as updateJson.
+              update_url: `http://example.com/addon_update${version}.json`,
             },
           },
         },
       });
 
-      testserver.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+      // To test updates, individual tasks in this test file start the test by
+      // installing a set of add-ons with version |version| and trigger an
+      // update check, from XPIS.${nameprefix}${version} (version = 1, 2, 3)
+      if (version != 4) {
+        XPIS[name] = xpi;
+      }
+
+      // update_url above points to a test manifest that references the next
+      // version. The xpi is made available on the server, so that the test
+      // can verify that the blocklist works as intended (i.e. update to newer
+      // version is blocked).
+      // There is nothing that updates to version 1, only to versions 2, 3, 4.
+      if (version != 1) {
+        testserver.registerFile(`/addons/${name}.xpi`, xpi);
+      }
     }
+  }
+
+  // For each version that this test file uses, create a test manifest that
+  // references the next version for each id in ADDON_IDS.
+  for (let version of [1, 2, 3]) {
+    let updateJson = { addons: {} };
+    for (let id of ADDON_IDS) {
+      let nextversion = version + 1;
+      let name = getxpibasename(id, nextversion);
+      updateJson.addons[id] = {
+        updates: [
+          {
+            applications: {
+              gecko: {
+                strict_min_version: "0",
+                advisory_max_version: "*",
+              },
+            },
+            version: `${nextversion}.0`,
+            update_link: `http://example.com/addons/${name}.xpi`,
+          },
+        ],
+      };
+    }
+    AddonTestUtils.registerJSON(
+      testserver,
+      `/addon_update${version}.json`,
+      updateJson
+    );
   }
 
   await promiseStartupManager();
