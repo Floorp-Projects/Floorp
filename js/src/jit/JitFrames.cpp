@@ -2279,25 +2279,21 @@ template <typename T>
 T MachineState::read(FloatRegister reg) const {
   MOZ_ASSERT(reg.size() == sizeof(T));
 
+#if !defined(JS_CODEGEN_NONE)
   if (state_.is<BailoutState>()) {
     uint32_t offset = reg.getRegisterDumpOffsetInBytes();
+    MOZ_ASSERT((offset % sizeof(T)) == 0);
+    MOZ_ASSERT((offset + sizeof(T)) <= sizeof(RegisterDump::FPUArray));
 
-    MOZ_ASSERT((offset % sizeof(FloatRegisters::RegisterContent)) == 0);
-    uint32_t index = offset / sizeof(FloatRegisters::RegisterContent);
-
-    FloatRegisters::RegisterContent content =
-        state_.as<BailoutState>().floatRegs[index];
-    if constexpr (std::is_same_v<T, double>) {
-      return content.d;
-    } else {
-      static_assert(std::is_same_v<T, float>);
-      return content.s;
-    }
+    const BailoutState& state = state_.as<BailoutState>();
+    char* addr = reinterpret_cast<char*>(state.floatRegs.begin()) + offset;
+    return *reinterpret_cast<T*>(addr);
   }
   if (state_.is<SafepointState>()) {
     char* addr = state_.as<SafepointState>().addressOfRegister(reg);
     return *reinterpret_cast<T*>(addr);
   }
+#endif
   MOZ_CRASH("Invalid state");
 }
 
