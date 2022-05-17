@@ -1818,12 +1818,6 @@
 # Prefs starting with "dom."
 #---------------------------------------------------------------------------
 
-# Whether window.mozPaintCount is exposed to the web.
-- name: dom.mozPaintCount.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Allow cut/copy
 - name: dom.allow_cut_copy
   type: bool
