@@ -78,9 +78,6 @@ VoiceMediaInfo::~VoiceMediaInfo() = default;
 VideoMediaInfo::VideoMediaInfo() = default;
 VideoMediaInfo::~VideoMediaInfo() = default;
 
-DataMediaInfo::DataMediaInfo() = default;
-DataMediaInfo::~DataMediaInfo() = default;
-
 AudioSendParameters::AudioSendParameters() = default;
 AudioSendParameters::~AudioSendParameters() = default;
 
@@ -105,33 +102,6 @@ std::map<std::string, std::string> VideoSendParameters::ToStringMap() const {
 
 cricket::MediaType VideoMediaChannel::media_type() const {
   return cricket::MediaType::MEDIA_TYPE_VIDEO;
-}
-
-DataMediaChannel::DataMediaChannel() = default;
-DataMediaChannel::DataMediaChannel(const MediaConfig& config)
-    : MediaChannel(config) {}
-DataMediaChannel::~DataMediaChannel() = default;
-
-webrtc::RtpParameters DataMediaChannel::GetRtpSendParameters(
-    uint32_t ssrc) const {
-  // GetRtpSendParameters is not supported for DataMediaChannel.
-  RTC_NOTREACHED();
-  return webrtc::RtpParameters();
-}
-webrtc::RTCError DataMediaChannel::SetRtpSendParameters(
-    uint32_t ssrc,
-    const webrtc::RtpParameters& parameters) {
-  // SetRtpSendParameters is not supported for DataMediaChannel.
-  RTC_NOTREACHED();
-  return webrtc::RTCError(webrtc::RTCErrorType::UNSUPPORTED_OPERATION);
-}
-
-cricket::MediaType DataMediaChannel::media_type() const {
-  return cricket::MediaType::MEDIA_TYPE_DATA;
-}
-
-bool DataMediaChannel::GetStats(DataMediaInfo* info) {
-  return true;
 }
 
 }  // namespace cricket
