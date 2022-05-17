@@ -69,7 +69,7 @@ function handleRequest(request, response) {
 
   // Note: 'to' is the first index *excluded*, so we need (to + 1)
   // in the substring end here.
-  byterange = bytes.substring(from, to + 1);
+  let byterange = bytes.substring(from, to + 1);
 
   let contentRange = "bytes " + from + "-" + to + "/" + bytes.length;
   let contentLength = byterange.length.toString();

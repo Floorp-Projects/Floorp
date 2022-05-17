@@ -136,7 +136,7 @@ function handleRequest(request, response) {
   DBG("totalLength: " + totalLength);
 
   // Prepare common headers for the two responses.
-  date = new Date();
+  let date = new Date();
   DBG("Date: " + date.toUTCString() + ", Last-Modified: " + lastModified);
   var commonHeaders =
     "Date: " +
