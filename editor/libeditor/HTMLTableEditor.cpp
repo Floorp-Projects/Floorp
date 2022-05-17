@@ -524,19 +524,16 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::GetFirstTableRowElement(
   return RefPtr<Element>();
 }
 
-Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
-                                            ErrorResult& aRv) const {
-  MOZ_ASSERT(!aRv.Failed());
-
+Result<RefPtr<Element>, nsresult> HTMLEditor::GetNextTableRowElement(
+    const Element& aTableRowElement) const {
   if (NS_WARN_IF(!aTableRowElement.IsHTMLElement(nsGkAtoms::tr))) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   for (nsIContent* maybeNextRow = aTableRowElement.GetNextSibling();
        maybeNextRow; maybeNextRow = maybeNextRow->GetNextSibling()) {
     if (maybeNextRow->IsHTMLElement(nsGkAtoms::tr)) {
-      return maybeNextRow->AsElement();
+      return RefPtr<Element>(maybeNextRow->AsElement());
     }
   }
 
@@ -545,8 +542,7 @@ Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
   Element* parentElementOfRow = aTableRowElement.GetParentElement();
   if (!parentElementOfRow) {
     NS_WARNING("aTableRowElement was an orphan node");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Basically, <tr> elements should be in table section elements even if
@@ -554,7 +550,7 @@ Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
   // cross table boundary, check it now.
   if (parentElementOfRow->IsHTMLElement(nsGkAtoms::table)) {
     // Don't return error since this means just not found.
-    return nullptr;
+    return RefPtr<Element>();
   }
 
   for (nsIContent* maybeNextTableSection = parentElementOfRow->GetNextSibling();
@@ -567,7 +563,7 @@ Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
       for (nsIContent* maybeNextRow = maybeNextTableSection->GetFirstChild();
            maybeNextRow; maybeNextRow = maybeNextRow->GetNextSibling()) {
         if (maybeNextRow->IsHTMLElement(nsGkAtoms::tr)) {
-          return maybeNextRow->AsElement();
+          return RefPtr<Element>(maybeNextRow->AsElement());
         }
       }
     }
@@ -575,12 +571,12 @@ Element* HTMLEditor::GetNextTableRowElement(Element& aTableRowElement,
     // elements are created automatically.  However, DOM API may create
     // <tr> elements without table section elements.  So, let's check it.
     else if (maybeNextTableSection->IsHTMLElement(nsGkAtoms::tr)) {
-      return maybeNextTableSection->AsElement();
+      return RefPtr<Element>(maybeNextTableSection->AsElement());
     }
   }
   // Don't return error when the given <tr> element is the last <tr> element in
   // the <table>.
-  return nullptr;
+  return RefPtr<Element>();
 }
 
 NS_IMETHODIMP HTMLEditor::InsertTableColumn(int32_t aNumberOfColumnsToInsert,
@@ -767,16 +763,18 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
         //     same as or larger than tableSize.mColumnCount.  Is it true?
         return NS_ERROR_FAILURE;
       }
-      rowElement = GetNextTableRowElement(*rowElement, error);
-      if (error.Failed()) {
+      Result<RefPtr<Element>, nsresult> rowElementOrError =
+          GetNextTableRowElement(*rowElement);
+      if (rowElementOrError.isErr()) {
         NS_WARNING("HTMLEditor::GetNextTableRowElement() failed");
-        return error.StealNSResult();
+        return rowElementOrError.unwrapErr();
       }
-      if (!rowElement) {
+      if (!rowElementOrError.inspect()) {
         NS_WARNING(
             "HTMLEditor::GetNextTableRowElement() didn't return <tr> element");
         continue;
       }
+      rowElement = rowElementOrError.unwrap();
     }
 
     EditorDOMPoint atEndOfRow = EditorDOMPoint::AtEndOf(*rowElement);
