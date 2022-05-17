@@ -167,8 +167,6 @@ void CopyConstraintsIntoRtcConfiguration(
   FindConstraint(constraints, MediaConstraints::kCpuOveruseDetection,
                  &configuration->media_config.video.enable_cpu_adaptation,
                  nullptr);
-  FindConstraint(constraints, MediaConstraints::kEnableRtpDataChannels,
-                 &configuration->enable_rtp_data_channel, nullptr);
   // Find Suspend Below Min Bitrate constraint.
   FindConstraint(
       constraints, MediaConstraints::kEnableVideoSuspendBelowMinBitrate,

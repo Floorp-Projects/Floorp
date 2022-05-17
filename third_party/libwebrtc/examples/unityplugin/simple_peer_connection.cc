@@ -190,7 +190,6 @@ bool SimplePeerConnection::CreatePeerConnection(const char** turn_urls,
   webrtc::PeerConnectionInterface::IceServer stun_server;
   stun_server.uri = GetPeerConnectionString();
   config_.servers.push_back(stun_server);
-  config_.enable_rtp_data_channel = true;
   config_.enable_dtls_srtp = false;
 
   peer_connection_ = g_peer_connection_factory->CreatePeerConnection(

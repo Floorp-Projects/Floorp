@@ -362,7 +362,6 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          disable_ipv6_on_wifi == o.disable_ipv6_on_wifi &&
          max_ipv6_networks == o.max_ipv6_networks &&
          disable_link_local_networks == o.disable_link_local_networks &&
-         enable_rtp_data_channel == o.enable_rtp_data_channel &&
          screencast_min_bitrate == o.screencast_min_bitrate &&
          combined_audio_video_bwe == o.combined_audio_video_bwe &&
          enable_dtls_srtp == o.enable_dtls_srtp &&
@@ -594,16 +593,9 @@ RTCError PeerConnection::Initialize(
     NoteUsageEvent(UsageEvent::TURN_SERVER_ADDED);
   }
 
-  if (configuration.enable_rtp_data_channel) {
-    // Enable creation of RTP data channels if the kEnableRtpDataChannels is
-    // set. It takes precendence over the disable_sctp_data_channels
-    // PeerConnectionFactoryInterface::Options.
-    data_channel_controller_.set_data_channel_type(cricket::DCT_RTP);
-  } else {
-    // DTLS has to be enabled to use SCTP.
-    if (!options_.disable_sctp_data_channels && dtls_enabled_) {
-      data_channel_controller_.set_data_channel_type(cricket::DCT_SCTP);
-    }
+  // DTLS has to be enabled to use SCTP.
+  if (!options_.disable_sctp_data_channels && dtls_enabled_) {
+    data_channel_controller_.set_data_channel_type(cricket::DCT_SCTP);
   }
 
   // Network thread initialization.
@@ -684,8 +676,7 @@ void PeerConnection::InitializeTransportController_n(
   config.active_reset_srtp_params = configuration.active_reset_srtp_params;
 
   // DTLS has to be enabled to use SCTP.
-  if (!configuration.enable_rtp_data_channel &&
-      !options_.disable_sctp_data_channels && dtls_enabled_) {
+  if (!options_.disable_sctp_data_channels && dtls_enabled_) {
     config.sctp_factory = context_->sctp_transport_factory();
   }
 

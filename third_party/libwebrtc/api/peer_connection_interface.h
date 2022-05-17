@@ -404,12 +404,6 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     // from consideration for gathering ICE candidates.
     bool disable_link_local_networks = false;
 
-    // If set to true, use RTP data channels instead of SCTP.
-    // TODO(deadbeef): Remove this. We no longer commit to supporting RTP data
-    // channels, though some applications are still working on moving off of
-    // them.
-    bool enable_rtp_data_channel = false;
-
     // Minimum bitrate at which screencast video tracks will be encoded at.
     // This means adding padding bits up to this bitrate, which can help
     // when switching from a static scene to one with motion.
