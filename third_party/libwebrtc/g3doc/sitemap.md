@@ -23,6 +23,7 @@
     *   Video
         *   [Adaptation](/video/g3doc/adaptation.md)
         *   [Video coding](/modules/video_coding/g3doc/index.md)
+        *   [Stats](/video/g3doc/stats.md)
     *   DataChannel
     *   PeerConnection
     *   Desktop capture
