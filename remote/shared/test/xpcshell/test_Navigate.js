@@ -13,6 +13,7 @@ const {
 const CURRENT_URI = Services.io.newURI("http://foo.bar/");
 const INITIAL_URI = Services.io.newURI("about:blank");
 const TARGET_URI = Services.io.newURI("http://foo.cheese/");
+const TARGET_URI_WITH_HASH = Services.io.newURI("http://foo.cheese/#foo");
 
 class MockRequest {
   constructor(uri) {
@@ -89,6 +90,20 @@ class MockWebProgress {
       this.documentRequest,
       Ci.nsIWebProgressListener.STATE_STOP,
       null
+    );
+
+    return new Promise(executeSoon);
+  }
+
+  sendLocationChangeHashChange() {
+    this.documentRequest = null;
+    this.browsingContext.currentURI = TARGET_URI_WITH_HASH;
+
+    this.listener?.onLocationChange(
+      this,
+      this.documentRequest,
+      TARGET_URI_WITH_HASH,
+      Ci.nsIWebProgressListener.LOCATION_CHANGE_HASHCHANGE
     );
 
     return new Promise(executeSoon);
@@ -601,6 +616,35 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
   ok(
     await hasPromiseResolved(navigated),
     "Listener resolved after finishing the new navigation"
+  );
+
+  run_next_test();
+});
+
+add_test(async function test_ProgressListener_resolveWhenHashChange() {
+  const browsingContext = new MockTopContext();
+  const webProgress = browsingContext.webProgress;
+
+  const progressListener = new ProgressListener(webProgress);
+  const navigated = progressListener.start();
+
+  ok(!(await hasPromiseResolved(navigated)), "Listener has not resolved");
+
+  // Send hash change location change notification to complete the navigation
+  await webProgress.sendLocationChangeHashChange();
+
+  ok(await hasPromiseResolved(navigated), "Listener has resolved");
+
+  const { currentURI, targetURI } = progressListener;
+  equal(
+    currentURI.spec,
+    TARGET_URI_WITH_HASH.spec,
+    "Expected current URI has been set"
+  );
+  equal(
+    targetURI.spec,
+    TARGET_URI_WITH_HASH.spec,
+    "Expected target URI has been set"
   );
 
   run_next_test();
