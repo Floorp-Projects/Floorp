@@ -3551,7 +3551,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
                                : containerItemASR;
       /* List now emptied, so add the new list to the top. */
       resultList.AppendNewToTop<nsDisplayMasksAndClipPaths>(
-          aBuilder, this, &resultList, maskASR);
+          aBuilder, this, &resultList, maskASR, usingBackdropFilter);
       createdContainer = true;
     }
 
