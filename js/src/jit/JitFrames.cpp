@@ -1781,6 +1781,15 @@ Value SnapshotIterator::maybeRead(const RValueAllocation& a,
   return UndefinedValue();
 }
 
+bool SnapshotIterator::tryRead(Value* result) {
+  RValueAllocation a = readAllocation();
+  if (allocationReadable(a)) {
+    *result = allocationValue(a);
+    return true;
+  }
+  return false;
+}
+
 void SnapshotIterator::writeAllocationValuePayload(
     const RValueAllocation& alloc, const Value& v) {
   MOZ_ASSERT(v.isGCThing());

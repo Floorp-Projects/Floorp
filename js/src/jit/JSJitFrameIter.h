@@ -531,6 +531,8 @@ class SnapshotIterator {
     return maybeRead(a, fallback);
   }
 
+  bool tryRead(Value* result);
+
   void traceAllocation(JSTracer* trc);
 
   template <class Op>
