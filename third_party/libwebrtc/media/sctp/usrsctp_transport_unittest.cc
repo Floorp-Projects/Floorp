@@ -576,8 +576,6 @@ TEST_P(SctpTransportTestWithOrdered, SendData) {
   RTC_LOG(LS_VERBOSE) << "recv2.received=" << receiver2()->received()
                       << ", recv2.last_params.sid="
                       << receiver2()->last_params().sid
-                      << ", recv2.last_params.timestamp="
-                      << receiver2()->last_params().timestamp
                       << ", recv2.last_params.seq_num="
                       << receiver2()->last_params().seq_num
                       << ", recv2.last_data=" << receiver2()->last_data();
@@ -591,8 +589,6 @@ TEST_P(SctpTransportTestWithOrdered, SendData) {
   RTC_LOG(LS_VERBOSE) << "recv1.received=" << receiver1()->received()
                       << ", recv1.last_params.sid="
                       << receiver1()->last_params().sid
-                      << ", recv1.last_params.timestamp="
-                      << receiver1()->last_params().timestamp
                       << ", recv1.last_params.seq_num="
                       << receiver1()->last_params().seq_num
                       << ", recv1.last_data=" << receiver1()->last_data();
