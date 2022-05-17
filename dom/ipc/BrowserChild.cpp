@@ -36,7 +36,6 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/IMEStateManager.h"
-#include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NativeKeyBindingsType.h"
@@ -148,6 +147,7 @@
 #endif
 
 #ifdef NS_PRINTING
+#  include "mozilla/layout/RemotePrintJobChild.h"
 #  include "nsIPrintSettings.h"
 #  include "nsIPrintSettingsService.h"
 #  include "nsIWebBrowserPrint.h"
