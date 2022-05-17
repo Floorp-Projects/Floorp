@@ -472,7 +472,7 @@ class LogViolationDetailsRunnable final : public WorkerMainThreadRunnable {
   ~LogViolationDetailsRunnable() = default;
 };
 
-bool ContentSecurityPolicyAllows(JSContext* aCx, JS::HandleString aCode) {
+bool ContentSecurityPolicyAllows(JSContext* aCx, JS::Handle<JSString*> aCode) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   worker->AssertIsOnWorkerThread();
 
@@ -627,7 +627,7 @@ static bool DispatchToEventLoop(void* aClosure,
   return r->Dispatch();
 }
 
-static bool ConsumeStream(JSContext* aCx, JS::HandleObject aObj,
+static bool ConsumeStream(JSContext* aCx, JS::Handle<JSObject*> aObj,
                           JS::MimeType aMimeType,
                           JS::StreamConsumer* aConsumer) {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
@@ -695,7 +695,7 @@ bool InitJSContextForWorker(WorkerPrivate* aWorkerPrivate,
   return true;
 }
 
-static bool PreserveWrapper(JSContext* cx, JS::HandleObject obj) {
+static bool PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(obj);
   MOZ_ASSERT(mozilla::dom::IsDOMObject(obj));
@@ -703,15 +703,16 @@ static bool PreserveWrapper(JSContext* cx, JS::HandleObject obj) {
   return mozilla::dom::TryPreserveWrapper(obj);
 }
 
-static bool IsWorkerDebuggerGlobalOrSandbox(JS::HandleObject aGlobal) {
+static bool IsWorkerDebuggerGlobalOrSandbox(JS::Handle<JSObject*> aGlobal) {
   return IsWorkerDebuggerGlobal(aGlobal) || IsWorkerDebuggerSandbox(aGlobal);
 }
 
-JSObject* Wrap(JSContext* cx, JS::HandleObject existing, JS::HandleObject obj) {
-  JS::RootedObject targetGlobal(cx, JS::CurrentGlobalOrNull(cx));
+JSObject* Wrap(JSContext* cx, JS::Handle<JSObject*> existing,
+               JS::Handle<JSObject*> obj) {
+  JS::Rooted<JSObject*> targetGlobal(cx, JS::CurrentGlobalOrNull(cx));
 
   // Note: the JS engine unwraps CCWs before calling this callback.
-  JS::RootedObject originGlobal(cx, JS::GetNonCCWObjectGlobal(obj));
+  JS::Rooted<JSObject*> originGlobal(cx, JS::GetNonCCWObjectGlobal(obj));
 
   const js::Wrapper* wrapper = nullptr;
   if (IsWorkerDebuggerGlobalOrSandbox(targetGlobal) &&

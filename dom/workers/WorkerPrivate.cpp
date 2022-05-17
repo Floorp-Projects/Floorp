@@ -4643,7 +4643,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
       return;
     }
 
-    JS::RootedObject stack(aCx), stackGlobal(aCx);
+    JS::Rooted<JSObject*> stack(aCx), stackGlobal(aCx);
     xpc::FindExceptionStackForConsoleReport(
         nullptr, exnStack.exception(), exnStack.stack(), &stack, &stackGlobal);
 
