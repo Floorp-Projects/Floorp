@@ -111,6 +111,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
 
   void CleanupUnregisteredInParent();
 
+  void GenerateError(const nsCString& aMessage);
+
  private:
   ~Device();
   void Cleanup();
