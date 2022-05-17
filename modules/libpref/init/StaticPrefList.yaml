@@ -12170,11 +12170,7 @@
 
 - name: security.intermediate_preloading_healer.enabled
   type: RelaxedAtomicBool
-#if defined(EARLY_BETA_OR_EARLIER) && !defined(MOZ_WIDGET_ANDROID)
-  value: true
-#else
-  value: false
-#endif
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 - name: security.intermediate_preloading_healer.timer_interval_ms
