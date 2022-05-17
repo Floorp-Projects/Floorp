@@ -140,11 +140,11 @@ class MainActivityNavigation(
         val onboardingFeature = FocusNimbus.features.onboarding
         val onboardingConfig = onboardingFeature.value(activity)
         val onboardingFragment = if (onboardingConfig.isEnabled) {
+            onboardingFeature.recordExposure()
             OnboardingFragment.create()
         } else {
             FirstrunFragment.create()
         }
-        onboardingFeature.recordExposure()
         activity.supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, onboardingFragment, FirstrunFragment.FRAGMENT_TAG)
