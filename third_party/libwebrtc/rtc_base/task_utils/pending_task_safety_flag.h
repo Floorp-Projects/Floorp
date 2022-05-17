@@ -58,9 +58,14 @@ namespace webrtc {
 class PendingTaskSafetyFlag : public rtc::RefCountInterface {
  public:
   static rtc::scoped_refptr<PendingTaskSafetyFlag> Create();
+
   // Creates a flag, but with its SequenceChecker initially detached. Hence, it
   // may be created on a different thread than the flag will be used on.
   static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateDetached();
+
+  // Same as `CreateDetached()` except the initial state of the returned flag
+  // will be `!alive()`.
+  static rtc::scoped_refptr<PendingTaskSafetyFlag> CreateDetachedInactive();
 
   ~PendingTaskSafetyFlag() = default;
 
@@ -84,7 +89,7 @@ class PendingTaskSafetyFlag : public rtc::RefCountInterface {
   bool alive() const;
 
  protected:
-  PendingTaskSafetyFlag() = default;
+  explicit PendingTaskSafetyFlag(bool alive) : alive_(alive) {}
 
  private:
   bool alive_ = true;
