@@ -4520,17 +4520,10 @@ cricket::VoiceChannel* SdpOfferAnswerHandler::CreateVoiceChannel(
   // TODO(bugs.webrtc.org/11992): CreateVoiceChannel internally switches to the
   // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
   // be on the worker thread and use |call_| (update upstream code).
-  cricket::VoiceChannel* voice_channel = channel_manager()->CreateVoiceChannel(
+  return channel_manager()->CreateVoiceChannel(
       pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
       signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
       &ssrc_generator_, audio_options());
-
-  if (!voice_channel) {
-    return nullptr;
-  }
-  voice_channel->SignalSentPacket().connect(pc_,
-                                            &PeerConnection::OnSentPacket_w);
-  return voice_channel;
 }
 
 // TODO(steveanton): Perhaps this should be managed by the RtpTransceiver.
@@ -4546,17 +4539,11 @@ cricket::VideoChannel* SdpOfferAnswerHandler::CreateVideoChannel(
   // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to the
   // worker thread. We shouldn't be using the |call_ptr_| hack here but simply
   // be on the worker thread and use |call_| (update upstream code).
-  cricket::VideoChannel* video_channel = channel_manager()->CreateVideoChannel(
+  return channel_manager()->CreateVideoChannel(
       pc_->call_ptr(), pc_->configuration()->media_config, rtp_transport,
       signaling_thread(), mid, pc_->SrtpRequired(), pc_->GetCryptoOptions(),
       &ssrc_generator_, video_options(),
       video_bitrate_allocator_factory_.get());
-  if (!video_channel) {
-    return nullptr;
-  }
-  video_channel->SignalSentPacket().connect(pc_,
-                                            &PeerConnection::OnSentPacket_w);
-  return video_channel;
 }
 
 bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {

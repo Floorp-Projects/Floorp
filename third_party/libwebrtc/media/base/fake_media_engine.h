@@ -267,14 +267,14 @@ class RtpHelper : public Base {
   void set_recv_rtcp_parameters(const RtcpParameters& params) {
     recv_rtcp_parameters_ = params;
   }
-  virtual void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
-                                int64_t packet_time_us) {
+  void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
+                        int64_t packet_time_us) override {
     rtp_packets_.push_back(std::string(packet.cdata<char>(), packet.size()));
   }
-  virtual void OnReadyToSend(bool ready) { ready_to_send_ = ready; }
-
-  virtual void OnNetworkRouteChanged(const std::string& transport_name,
-                                     const rtc::NetworkRoute& network_route) {
+  void OnPacketSent(const rtc::SentPacket& sent_packet) override {}
+  void OnReadyToSend(bool ready) override { ready_to_send_ = ready; }
+  void OnNetworkRouteChanged(const std::string& transport_name,
+                             const rtc::NetworkRoute& network_route) override {
     last_network_route_ = network_route;
     ++num_network_route_changes_;
     transport_overhead_per_packet_ = network_route.packet_overhead;

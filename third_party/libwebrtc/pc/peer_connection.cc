@@ -2796,12 +2796,6 @@ void PeerConnection::ReportNegotiatedCiphers(
   }
 }
 
-void PeerConnection::OnSentPacket_w(const rtc::SentPacket& sent_packet) {
-  RTC_DCHECK_RUN_ON(worker_thread());
-  RTC_DCHECK(call_);
-  call_->OnSentPacket(sent_packet);
-}
-
 bool PeerConnection::OnTransportChanged(
     const std::string& mid,
     RtpTransportInternal* rtp_transport,

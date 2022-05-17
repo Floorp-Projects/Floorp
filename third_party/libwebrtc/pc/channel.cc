@@ -174,6 +174,8 @@ std::string BaseChannel::ToString() const {
 
 bool BaseChannel::ConnectToRtpTransport() {
   RTC_DCHECK(rtp_transport_);
+  RTC_DCHECK(media_channel());
+
   // We don't need to call OnDemuxerCriteriaUpdatePending/Complete because
   // there's no previous criteria to worry about.
   bool result = rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this);
@@ -197,6 +199,7 @@ bool BaseChannel::ConnectToRtpTransport() {
 
 void BaseChannel::DisconnectFromRtpTransport() {
   RTC_DCHECK(rtp_transport_);
+  RTC_DCHECK(media_channel());
   rtp_transport_->UnregisterRtpDemuxerSink(this);
   rtp_transport_->SignalReadyToSend.disconnect(this);
   rtp_transport_->SignalNetworkRouteChanged.disconnect(this);
@@ -387,13 +390,6 @@ void BaseChannel::OnNetworkRouteChanged(
 sigslot::signal1<ChannelInterface*>& BaseChannel::SignalFirstPacketReceived() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   return SignalFirstPacketReceived_;
-}
-
-sigslot::signal1<const rtc::SentPacket&>& BaseChannel::SignalSentPacket() {
-  // TODO(bugs.webrtc.org/11994): Uncomment this check once callers have been
-  // fixed to access this variable from the correct thread.
-  // RTC_DCHECK_RUN_ON(worker_thread_);
-  return SignalSentPacket_;
 }
 
 void BaseChannel::OnTransportReadyToSend(bool ready) {
@@ -844,10 +840,8 @@ void BaseChannel::FlushRtcpMessages_n() {
 }
 
 void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
-  worker_thread_->PostTask(ToQueuedTask(alive_, [this, sent_packet] {
-    RTC_DCHECK_RUN_ON(worker_thread());
-    SignalSentPacket()(sent_packet);
-  }));
+  RTC_DCHECK_RUN_ON(network_thread());
+  media_channel()->OnPacketSent(sent_packet);
 }
 
 void BaseChannel::SetNegotiatedHeaderExtensions_w(

@@ -217,6 +217,7 @@ class WebRtcVoiceMediaChannel final : public VoiceMediaChannel,
 
   void OnPacketReceived(rtc::CopyOnWriteBuffer packet,
                         int64_t packet_time_us) override;
+  void OnPacketSent(const rtc::SentPacket& sent_packet) override;
   void OnNetworkRouteChanged(const std::string& transport_name,
                              const rtc::NetworkRoute& network_route) override;
   void OnReadyToSend(bool ready) override;
