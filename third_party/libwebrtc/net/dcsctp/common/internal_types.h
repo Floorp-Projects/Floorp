@@ -31,9 +31,6 @@ using TSN = StrongAlias<class TSNTag, uint32_t>;
 // Reconfiguration Request Sequence Number
 using ReconfigRequestSN = StrongAlias<class ReconfigRequestSNTag, uint32_t>;
 
-// Reconfiguration Response Sequence Number
-using ReconfigResponseSN = StrongAlias<class ReconfigResponseSNTag, uint32_t>;
-
 // Verification Tag, used for packet validation.
 using VerificationTag = StrongAlias<class VerificationTagTag, uint32_t>;
 

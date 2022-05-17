@@ -56,7 +56,7 @@ OutgoingSSNResetRequestParameter::Parse(rtc::ArrayView<const uint8_t> data) {
   }
 
   ReconfigRequestSN request_sequence_number(reader->Load32<4>());
-  ReconfigResponseSN response_sequence_number(reader->Load32<8>());
+  ReconfigRequestSN response_sequence_number(reader->Load32<8>());
   TSN sender_last_assigned_tsn(reader->Load32<12>());
 
   size_t stream_count = reader->variable_data_size() / kStreamIdSize;

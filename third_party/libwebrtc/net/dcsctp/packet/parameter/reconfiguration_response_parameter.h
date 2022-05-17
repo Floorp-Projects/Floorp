@@ -47,7 +47,7 @@ class ReconfigurationResponseParameter
     kInProgress = 6,
   };
 
-  ReconfigurationResponseParameter(ReconfigResponseSN response_sequence_number,
+  ReconfigurationResponseParameter(ReconfigRequestSN response_sequence_number,
                                    Result result)
       : response_sequence_number_(response_sequence_number),
         result_(result),
@@ -55,7 +55,7 @@ class ReconfigurationResponseParameter
         receiver_next_tsn_(absl::nullopt) {}
 
   explicit ReconfigurationResponseParameter(
-      ReconfigResponseSN response_sequence_number,
+      ReconfigRequestSN response_sequence_number,
       Result result,
       TSN sender_next_tsn,
       TSN receiver_next_tsn)
@@ -70,7 +70,7 @@ class ReconfigurationResponseParameter
   void SerializeTo(std::vector<uint8_t>& out) const override;
   std::string ToString() const override;
 
-  ReconfigResponseSN response_sequence_number() const {
+  ReconfigRequestSN response_sequence_number() const {
     return response_sequence_number_;
   }
   Result result() const { return result_; }
@@ -79,7 +79,7 @@ class ReconfigurationResponseParameter
 
  private:
   static constexpr size_t kNextTsnHeaderSize = 8;
-  ReconfigResponseSN response_sequence_number_;
+  ReconfigRequestSN response_sequence_number_;
   Result result_;
   absl::optional<TSN> sender_next_tsn_;
   absl::optional<TSN> receiver_next_tsn_;
