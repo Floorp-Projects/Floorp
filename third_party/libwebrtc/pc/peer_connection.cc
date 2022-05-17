@@ -180,7 +180,6 @@ IceCandidatePairType GetIceCandidatePairCounter(
   return kIceCandidatePairMax;
 }
 
-
 absl::optional<int> RTCConfigurationToIceConfigOptionalInt(
     int rtc_configuration_parameter) {
   if (rtc_configuration_parameter ==
@@ -248,6 +247,8 @@ cricket::IceConfig ParseIceConfig(
   ice_config.ice_inactive_timeout = config.ice_inactive_timeout;
   ice_config.stun_keepalive_interval = config.stun_candidate_keepalive_interval;
   ice_config.network_preference = config.network_preference;
+  ice_config.stable_writable_connection_ping_interval =
+      config.stable_writable_connection_ping_interval_ms;
   return ice_config;
 }
 
@@ -334,6 +335,7 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
     bool enable_implicit_rollback;
     absl::optional<bool> allow_codec_switching;
     absl::optional<int> report_usage_pattern_delay_ms;
+    absl::optional<int> stable_writable_connection_ping_interval_ms;
   };
   static_assert(sizeof(stuff_being_tested_for_equality) == sizeof(*this),
                 "Did you add something to RTCConfiguration and forget to "
@@ -393,7 +395,9 @@ bool PeerConnectionInterface::RTCConfiguration::operator==(
          turn_logging_id == o.turn_logging_id &&
          enable_implicit_rollback == o.enable_implicit_rollback &&
          allow_codec_switching == o.allow_codec_switching &&
-         report_usage_pattern_delay_ms == o.report_usage_pattern_delay_ms;
+         report_usage_pattern_delay_ms == o.report_usage_pattern_delay_ms &&
+         stable_writable_connection_ping_interval_ms ==
+             o.stable_writable_connection_ping_interval_ms;
 }
 
 bool PeerConnectionInterface::RTCConfiguration::operator!=(
@@ -1423,6 +1427,8 @@ RTCError PeerConnection::SetConfiguration(
       configuration.active_reset_srtp_params;
   modified_config.turn_logging_id = configuration.turn_logging_id;
   modified_config.allow_codec_switching = configuration.allow_codec_switching;
+  modified_config.stable_writable_connection_ping_interval_ms =
+      configuration.stable_writable_connection_ping_interval_ms;
   if (configuration != modified_config) {
     LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_MODIFICATION,
                          "Modifying the configuration in an unsupported way.");

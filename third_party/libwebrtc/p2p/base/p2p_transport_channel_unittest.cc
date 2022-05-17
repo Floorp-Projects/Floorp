@@ -2937,6 +2937,53 @@ TEST_F(P2PTransportChannelMultihomedTest, TestPingBackupConnectionRate) {
   DestroyChannels();
 }
 
+// Test that the connection is pinged at a rate no faster than
+// what was configured when stable and writable.
+TEST_F(P2PTransportChannelMultihomedTest, TestStableWritableRate) {
+  AddAddress(0, kPublicAddrs[0]);
+  // Adding alternate address will make sure |kPublicAddrs| has the higher
+  // priority than others. This is due to FakeNetwork::AddInterface method.
+  AddAddress(1, kAlternateAddrs[1]);
+  AddAddress(1, kPublicAddrs[1]);
+
+  // Use only local ports for simplicity.
+  SetAllocatorFlags(0, kOnlyLocalPorts);
+  SetAllocatorFlags(1, kOnlyLocalPorts);
+
+  // Create channels and let them go writable, as usual.
+  CreateChannels();
+  EXPECT_TRUE_WAIT_MARGIN(CheckConnected(ep1_ch1(), ep2_ch1()), 1000, 1000);
+  // Set a value larger than the default value of 2500 ms
+  int ping_interval_ms = 3456;
+  IceConfig config = CreateIceConfig(2 * ping_interval_ms, GATHER_ONCE);
+  config.stable_writable_connection_ping_interval = ping_interval_ms;
+  ep2_ch1()->SetIceConfig(config);
+  // After the state becomes COMPLETED and is stable and writable, the
+  // connection will be pinged once every |ping_interval_ms| milliseconds.
+  ASSERT_TRUE_WAIT(ep2_ch1()->GetState() == IceTransportState::STATE_COMPLETED,
+                   1000);
+  auto connections = ep2_ch1()->connections();
+  ASSERT_EQ(2U, connections.size());
+  Connection* conn = connections[0];
+  EXPECT_TRUE_WAIT(conn->writable(), kMediumTimeout);
+
+  int64_t last_ping_response_ms;
+  // Burn through some pings so the connection is stable.
+  for (int i = 0; i < 5; i++) {
+    last_ping_response_ms = conn->last_ping_response_received();
+    EXPECT_TRUE_WAIT(
+        last_ping_response_ms < conn->last_ping_response_received(),
+        kDefaultTimeout);
+  }
+  EXPECT_TRUE(conn->stable(last_ping_response_ms)) << "Connection not stable";
+  int time_elapsed =
+      conn->last_ping_response_received() - last_ping_response_ms;
+  RTC_LOG(LS_INFO) << "Time elapsed: " << time_elapsed;
+  EXPECT_GE(time_elapsed, ping_interval_ms);
+
+  DestroyChannels();
+}
+
 TEST_F(P2PTransportChannelMultihomedTest, TestGetState) {
   rtc::ScopedFakeClock clock;
   AddAddress(0, kAlternateAddrs[0]);
