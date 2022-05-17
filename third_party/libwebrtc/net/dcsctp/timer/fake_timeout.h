@@ -33,7 +33,7 @@ class FakeTimeout : public Timeout {
 
   void Start(DurationMs duration_ms, TimeoutID timeout_id) override {
     timeout_id_ = timeout_id;
-    expiry_ = TimeMs(*get_time_() + *duration_ms);
+    expiry_ = get_time_() + duration_ms;
   }
   void Stop() override { expiry_ = InfiniteFuture(); }
 

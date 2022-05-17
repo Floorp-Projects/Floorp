@@ -46,11 +46,15 @@ if (rtc_include_tests) {
 
     deps = [
       ":strong_alias",
+      ":types",
       "../../../rtc_base:checks",
       "../../../rtc_base:gunit_helpers",
       "../../../rtc_base:rtc_base_approved",
       "../../../test:test_support",
     ]
-    sources = [ "strong_alias_test.cc" ]
+    sources = [
+      "strong_alias_test.cc",
+      "types_test.cc",
+    ]
   }
 }

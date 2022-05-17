@@ -30,7 +30,7 @@ class TimerTest : public testing::Test {
   }
 
   void AdvanceTimeAndRunTimers(DurationMs duration) {
-    now_ = TimeMs(*now_ + *duration);
+    now_ = now_ + duration;
 
     for (TimeoutID timeout_id : timeout_manager_.RunTimers()) {
       manager_.HandleTimeout(timeout_id);
