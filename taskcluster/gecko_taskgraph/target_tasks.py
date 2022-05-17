@@ -4,6 +4,7 @@
 
 
 import copy
+from datetime import datetime, timedelta
 import os
 import re
 
@@ -11,12 +12,14 @@ from redo import retry
 from taskgraph.parameters import Parameters
 from taskgraph.util.taskcluster import find_task_id
 
-from gecko_taskgraph import try_option_syntax
+from gecko_taskgraph import try_option_syntax, GECKO
 from gecko_taskgraph.util.attributes import (
     match_run_on_projects,
     match_run_on_hg_branches,
 )
 from gecko_taskgraph.util.platforms import platform_family
+from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
+
 
 _target_task_methods = {}
 
@@ -1183,6 +1186,77 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
                 return True
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+
+@_target_task("backfill_all_browsertime")
+def target_tasks_backfill_all_browsertime(full_task_graph, parameters, graph_config):
+    """
+    Search for revisions that contains patches that were reviewed by perftest reviewers
+    and landed the day before the cron is running. Trigger backfill-all-browsertime action
+    task on each of them.
+    """
+    from gecko_taskgraph.actions.util import (
+        get_decision_task_id,
+        get_pushes,
+    )
+
+    def date_is_yesterday(date):
+        yesterday = datetime.today() - timedelta(days=1)
+        date = datetime.fromtimestamp(date)
+        return date.date() == yesterday.date()
+
+    def reviewed_by_perftest(push):
+        try:
+            commit_message = get_hg_commit_message(
+                os.path.join(GECKO, graph_config["product-dir"]), rev=push
+            )
+        except Exception as e:
+            print(e)
+            return False
+
+        for line in commit_message.split("\n\n"):
+            if line.lower().startswith("bug ") and "r=" in line:
+                if "perftest-reviewers" in line.split("r=")[-1]:
+                    print(line)
+                    return True
+        return False
+
+    pushes = get_pushes(
+        project=parameters["head_repository"],
+        end_id=int(parameters["pushlog_id"]),
+        depth=200,
+        full_response=True,
+    )
+    for push_id in sorted([int(p) for p in pushes.keys()], reverse=True):
+        push_rev = pushes[str(push_id)]["changesets"][-1]
+        push_info = find_hg_revision_push_info(
+            "https://hg.mozilla.org/integration/" + parameters["project"], push_rev
+        )
+        pushdate = int(push_info["pushdate"])
+        if date_is_yesterday(pushdate) and reviewed_by_perftest(push_rev):
+            from gecko_taskgraph.actions.util import trigger_action
+
+            print(
+                f"Revision {push_rev} was created yesterday and was reviewed by "
+                f"#perftest-reviewers."
+            )
+            try:
+                push_decision_task_id = get_decision_task_id(
+                    parameters["project"], push_id
+                )
+            except Exception:
+                print(f"Could not find decision task for push {push_id}")
+                continue
+            try:
+                trigger_action(
+                    action_name="backfill-all-browsertime",
+                    # This lets the action know on which push we want to add a new task
+                    decision_task_id=push_decision_task_id,
+                )
+            except Exception as e:
+                print(f"Failed to trigger action for {push_rev}: {e}")
+
+    return []
 
 
 @_target_task("condprof")
