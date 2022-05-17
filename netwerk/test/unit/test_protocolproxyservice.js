@@ -49,7 +49,7 @@ TestProtocolHandler.prototype = {
 
 function TestProtocolHandlerFactory() {}
 TestProtocolHandlerFactory.prototype = {
-  createInstance(delegate, iid) {
+  createInstance(iid) {
     return new TestProtocolHandler().QueryInterface(iid);
   },
 };

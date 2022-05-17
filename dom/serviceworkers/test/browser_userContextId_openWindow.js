@@ -44,10 +44,7 @@ let mockAlertsService = {
     throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
   },
 
-  createInstance(aOuter, aIID) {
-    if (aOuter != null) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(aIID) {
     return this.QueryInterface(aIID);
   },
 };

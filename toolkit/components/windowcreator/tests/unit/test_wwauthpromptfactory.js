@@ -11,10 +11,7 @@ const tPFContract = "@mozilla.org/passwordmanager/authpromptfactory;1";
 var TestPromptFactory = {
   QueryInterface: ChromeUtils.generateQI(["nsIFactory", "nsIPromptFactory"]),
 
-  createInstance: function tPF_ci(outer, iid) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance: function tPF_ci(iid) {
     return this.QueryInterface(iid);
   },
 

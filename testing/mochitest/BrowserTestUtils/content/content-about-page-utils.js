@@ -32,10 +32,7 @@ AboutPage.prototype = {
     return channel;
   },
 
-  createInstance(outer, iid) {
-    if (outer !== null) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 

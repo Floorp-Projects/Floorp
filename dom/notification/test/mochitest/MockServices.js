@@ -105,10 +105,7 @@ var MockServices = (function() {
       throw SpecialPowers.Components.results.NS_ERROR_NO_INTERFACE;
     },
 
-    createInstance(aOuter, aIID) {
-      if (aOuter != null) {
-        throw SpecialPowers.Components.results.NS_ERROR_NO_AGGREGATION;
-      }
+    createInstance(aIID) {
       return this.QueryInterface(aIID);
     },
   };

@@ -302,10 +302,7 @@ var _fakeIdleService = {
 
   factory: {
     // nsIFactory
-    createInstance(aOuter, aIID) {
-      if (aOuter) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(aIID) {
       return _fakeIdleService.QueryInterface(aIID);
     },
     QueryInterface: ChromeUtils.generateQI(["nsIFactory"]),

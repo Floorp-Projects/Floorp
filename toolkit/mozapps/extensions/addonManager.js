@@ -325,14 +325,7 @@ amManager.prototype = {
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
   _xpcom_factory: {
-    createInstance(aOuter, aIid) {
-      if (aOuter != null) {
-        throw Components.Exception(
-          "Component does not support aggregation",
-          Cr.NS_ERROR_NO_AGGREGATION
-        );
-      }
-
+    createInstance(aIid) {
       if (!gSingleton) {
         gSingleton = new amManager();
       }

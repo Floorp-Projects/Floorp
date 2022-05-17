@@ -335,10 +335,7 @@ var InstallConfirm = {
 };
 
 var InstallConfirmFactory = {
-  createInstance: function createInstance(outer, iid) {
-    if (outer != null) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance: function createInstance(iid) {
     return InstallConfirm.QueryInterface(iid);
   },
 };
