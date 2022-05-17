@@ -80,7 +80,7 @@ void InitAckChunk::SerializeTo(std::vector<uint8_t>& out) const {
 }
 
 std::string InitAckChunk::ToString() const {
-  return rtc::StringFormat("INIT_ACK, initiate_tag=0x%0x, initial_tsn=%d",
+  return rtc::StringFormat("INIT_ACK, initiate_tag=0x%0x, initial_tsn=%u",
                            *initiate_tag(), *initial_tsn());
 }
 }  // namespace dcsctp
