@@ -141,6 +141,10 @@ class FrameHeader {
     if (mValid) {
       // Set the mimetype to make it a valid AudioInfo.
       mInfo.mMimeType = "audio/flac";
+      // Set the codec specific data to flac, but leave it empty since we don't
+      // have METADATA_BLOCK_STREAMINFO in the frame.
+      mInfo.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{FlacCodecSpecificData{}};
     }
 
     return mValid;
@@ -666,11 +670,19 @@ UniquePtr<TrackInfo> FlacTrackDemuxer::GetInfo() const {
         info->mTags.AppendElement(MetadataTag(entry.GetKey(), entry.GetData()));
       }
     }
+    MOZ_ASSERT(info->IsAudio() &&
+                   info->GetAsAudioInfo()
+                       ->mCodecSpecificConfig.is<FlacCodecSpecificData>(),
+               "Should get flac specific data from parser");
     return info;
   } else if (mParser->FirstFrame().Info().IsValid()) {
     // Use the first frame header.
     UniquePtr<TrackInfo> info = mParser->FirstFrame().Info().Clone();
     info->mDuration = Duration();
+    MOZ_ASSERT(info->IsAudio() &&
+                   info->GetAsAudioInfo()
+                       ->mCodecSpecificConfig.is<FlacCodecSpecificData>(),
+               "Should get flac specific data from parser");
     return info;
   }
   return nullptr;
