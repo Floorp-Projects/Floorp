@@ -876,8 +876,11 @@ if (rtc_include_tests) {
       "codecs/test/video_encoder_decoder_instantiation_tests.cc",
       "codecs/test/videocodec_test_libvpx.cc",
       "codecs/vp8/test/vp8_impl_unittest.cc",
-      "codecs/vp9/test/vp9_impl_unittest.cc",
     ]
+
+    if (rtc_libvpx_build_vp9) {
+      sources += [ "codecs/vp9/test/vp9_impl_unittest.cc" ]
+    }
 
     # TODO(jianj): Fix crash on iOS and re-enable
     if (enable_libaom && !is_ios) {
