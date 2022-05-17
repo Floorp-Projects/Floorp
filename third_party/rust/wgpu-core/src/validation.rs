@@ -867,14 +867,7 @@ impl Interface {
                 Some(ref br) => br.clone(),
                 _ => continue,
             };
-            let naga_ty = &module.types[var.ty].inner;
-
-            let inner_ty = match *naga_ty {
-                naga::TypeInner::BindingArray { base, .. } => &module.types[base].inner,
-                ref ty => ty,
-            };
-
-            let ty = match *inner_ty {
+            let ty = match module.types[var.ty].inner {
                 naga::TypeInner::Image {
                     dim,
                     arrayed,
@@ -906,7 +899,7 @@ impl Interface {
 
         let mut entry_points = FastHashMap::default();
         entry_points.reserve(module.entry_points.len());
-        for (index, entry_point) in module.entry_points.iter().enumerate() {
+        for (index, entry_point) in (&module.entry_points).iter().enumerate() {
             let info = info.get_entry_point(index);
             let mut ep = EntryPoint::default();
             for arg in entry_point.function.arguments.iter() {
