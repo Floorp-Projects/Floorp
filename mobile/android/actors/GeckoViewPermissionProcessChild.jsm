@@ -12,8 +12,27 @@ const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "MediaManagerService",
+  "@mozilla.org/mediaManagerService;1",
+  "nsIMediaManagerService"
+);
+
+const STATUS_RECORDING = "recording";
+const STATUS_INACTIVE = "inactive";
+const TYPE_CAMERA = "camera";
+const TYPE_MICROPHONE = "microphone";
 
 class GeckoViewPermissionProcessChild extends JSProcessActorChild {
+  getActor(window) {
+    return window.windowGlobalChild.getActor("GeckoViewPermission");
+  }
+
   /* ----------  nsIObserver  ---------- */
   async observe(aSubject, aTopic, aData) {
     switch (aTopic) {
@@ -45,7 +64,60 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
         );
         break;
       }
+      case "recording-device-events": {
+        this.handleRecordingDeviceEvents(aSubject);
+        break;
+      }
     }
+  }
+
+  handleRecordingDeviceEvents(aRequest) {
+    aRequest.QueryInterface(Ci.nsIPropertyBag2);
+    const contentWindow = aRequest.getProperty("window");
+    const devices = [];
+
+    const getStatusString = function(activityStatus) {
+      switch (activityStatus) {
+        case MediaManagerService.STATE_CAPTURE_ENABLED:
+        case MediaManagerService.STATE_CAPTURE_DISABLED:
+          return STATUS_RECORDING;
+        case MediaManagerService.STATE_NOCAPTURE:
+          return STATUS_INACTIVE;
+        default:
+          throw new Error("Unexpected activityStatus value");
+      }
+    };
+
+    const hasCamera = {};
+    const hasMicrophone = {};
+    const screen = {};
+    const window = {};
+    const browser = {};
+    const mediaDevices = {};
+    MediaManagerService.mediaCaptureWindowState(
+      contentWindow,
+      hasCamera,
+      hasMicrophone,
+      screen,
+      window,
+      browser,
+      mediaDevices
+    );
+    var cameraStatus = getStatusString(hasCamera.value);
+    var microphoneStatus = getStatusString(hasMicrophone.value);
+    if (hasCamera.value != MediaManagerService.STATE_NOCAPTURE) {
+      devices.push({
+        type: TYPE_CAMERA,
+        status: cameraStatus,
+      });
+    }
+    if (hasMicrophone.value != MediaManagerService.STATE_NOCAPTURE) {
+      devices.push({
+        type: TYPE_MICROPHONE,
+        status: microphoneStatus,
+      });
+    }
+    this.getActor(contentWindow).mediaRecordingStatusChanged(devices);
   }
 
   async handleMediaRequest(aRequest) {
@@ -84,17 +156,15 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
       return null;
     }
 
-    const response = await window.windowGlobalChild
-      .getActor("GeckoViewPermission")
-      .getMediaPermission({
-        uri: window.document.documentURI,
-        video: constraints.video
-          ? sources.filter(source => source.type === "videoinput")
-          : null,
-        audio: constraints.audio
-          ? sources.filter(source => source.type === "audioinput")
-          : null,
-      });
+    const response = await this.getActor(window).getMediaPermission({
+      uri: window.document.documentURI,
+      video: constraints.video
+        ? sources.filter(source => source.type === "videoinput")
+        : null,
+      audio: constraints.audio
+        ? sources.filter(source => source.type === "audioinput")
+        : null,
+    });
 
     if (!response) {
       // Rejected.
@@ -110,9 +180,7 @@ class GeckoViewPermissionProcessChild extends JSProcessActorChild {
         Cu.reportError("Media device error: invalid video id");
         return null;
       }
-      await window.windowGlobalChild
-        .getActor("GeckoViewPermission")
-        .addCameraPermission();
+      await this.getActor(window).addCameraPermission();
       allowedDevices.appendElement(video);
     }
     if (constraints.audio) {
