@@ -29,14 +29,16 @@ add_task(async function() {
   info("Create a dummy target tab");
   const targetTab = await addTab("data:text/html,somehtml");
 
+  let onToolboxReady = gDevTools.once("toolbox-ready");
   const { tab } = await openAboutToolbox({
     id: targetTab.linkedBrowser.browserId,
     remoteId: "this-firefox-this-firefox",
     type: "tab",
   });
+  await onToolboxReady;
 
   info("Reload about:devtools-toolbox page");
-  const onToolboxReady = gDevTools.once("toolbox-ready");
+  onToolboxReady = gDevTools.once("toolbox-ready");
   tab.linkedBrowser.reload();
   await onToolboxReady;
 
