@@ -49,7 +49,6 @@ function handleRequest(aRequest, aResponse) {
 
     function complete_download() {
       LOG("Completing download");
-      downloadPaused = false;
 
       try {
         // Doesn't seem to be a sane way to read using OS.File and write to an

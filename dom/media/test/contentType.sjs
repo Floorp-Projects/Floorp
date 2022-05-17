@@ -22,12 +22,6 @@ function handleRequest(request, response) {
     // Get the filename to send back.
     var filename = parseQuery(request, "file");
 
-    const CC = Components.Constructor;
-    const BinaryOutputStream = CC(
-      "@mozilla.org/binaryoutputstream;1",
-      "nsIBinaryOutputStream",
-      "setOutputStream"
-    );
     var file = Cc["@mozilla.org/file/directory_service;1"]
       .getService(Ci.nsIProperties)
       .get("CurWorkD", Ci.nsIFile);
