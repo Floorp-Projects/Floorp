@@ -94,6 +94,7 @@ class WgcCapturerWin : public DesktopCapturer {
   // DesktopCapturer interface.
   bool GetSourceList(SourceList* sources) override;
   bool SelectSource(SourceId id) override;
+  bool FocusOnSelectedSource() override;
   void Start(Callback* callback) override;
   void CaptureFrame() override;
 

@@ -11,6 +11,8 @@
 #include "modules/desktop_capture/win/wgc_capture_source.h"
 
 #include <windows.graphics.capture.interop.h>
+#include <windows.h>
+
 #include <utility>
 
 #include "modules/desktop_capture/win/screen_capture_utils.h"
@@ -26,6 +28,18 @@ WgcCaptureSource::WgcCaptureSource(DesktopCapturer::SourceId source_id)
     : source_id_(source_id) {}
 WgcCaptureSource::~WgcCaptureSource() = default;
 
+bool WgcCaptureSource::IsCapturable() {
+  // If we can create a capture item, then we can capture it. Unfortunately,
+  // we can't cache this item because it may be created in a different COM
+  // apartment than where capture will eventually start from.
+  ComPtr<WGC::IGraphicsCaptureItem> item;
+  return SUCCEEDED(CreateCaptureItem(&item));
+}
+
+bool WgcCaptureSource::FocusOnSource() {
+  return false;
+}
+
 HRESULT WgcCaptureSource::GetCaptureItem(
     ComPtr<WGC::IGraphicsCaptureItem>* result) {
   HRESULT hr = S_OK;
@@ -34,14 +48,6 @@ HRESULT WgcCaptureSource::GetCaptureItem(
 
   *result = item_;
   return hr;
-}
-
-bool WgcCaptureSource::IsCapturable() {
-  // If we can create a capture item, then we can capture it. Unfortunately,
-  // we can't cache this item because it may be created in a different COM
-  // apartment than where capture will eventually start from.
-  ComPtr<WGC::IGraphicsCaptureItem> item;
-  return SUCCEEDED(CreateCaptureItem(&item));
 }
 
 WgcCaptureSourceFactory::~WgcCaptureSourceFactory() = default;
@@ -71,6 +77,14 @@ bool WgcWindowSource::IsCapturable() {
     return false;
 
   return WgcCaptureSource::IsCapturable();
+}
+
+bool WgcWindowSource::FocusOnSource() {
+  if (!IsWindowValidAndVisible(reinterpret_cast<HWND>(GetSourceId())))
+    return false;
+
+  return ::BringWindowToTop(reinterpret_cast<HWND>(GetSourceId())) &&
+         ::SetForegroundWindow(reinterpret_cast<HWND>(GetSourceId()));
 }
 
 HRESULT WgcWindowSource::CreateCaptureItem(
