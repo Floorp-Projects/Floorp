@@ -9,8 +9,6 @@
 #include "ScriptTrace.h"
 #include "ModuleLoader.h"
 
-#include "zlib.h"
-
 #include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -19,7 +17,6 @@
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/loader/ScriptLoadRequest.h"
-#include "ScriptCompression.h"
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ModuleLoadRequest.h"
 #include "js/MemoryFunctions.h"
@@ -2555,14 +2552,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     return;
   }
 
-  Vector<uint8_t> compressedBytecode;
-  // TODO probably need to move this to a helper thread
-  if (!ScriptBytecodeCompress(aRequest->mScriptBytecode,
-                              aRequest->mBytecodeOffset, compressedBytecode)) {
-    return;
-  }
-
-  if (compressedBytecode.length() >= UINT32_MAX) {
+  if (aRequest->mScriptBytecode.length() >= UINT32_MAX) {
     LOG(
         ("ScriptLoadRequest (%p): Bytecode cache is too large to be decoded "
          "correctly.",
@@ -2575,8 +2565,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
   rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(
-      BytecodeMimeTypeFor(aRequest),
-      static_cast<int64_t>(compressedBytecode.length()),
+      BytecodeMimeTypeFor(aRequest), aRequest->mScriptBytecode.length(),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
@@ -2593,17 +2582,17 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   });
 
   uint32_t n;
-  rv = output->Write(reinterpret_cast<char*>(compressedBytecode.begin()),
-                     compressedBytecode.length(), &n);
-  LOG(
-      ("ScriptLoadRequest (%p): Write bytecode cache (rv = %X, length = %u, "
-       "written = %u)",
-       aRequest, unsigned(rv), unsigned(compressedBytecode.length()), n));
+  rv = output->Write(reinterpret_cast<char*>(aRequest->mScriptBytecode.begin()),
+                     aRequest->mScriptBytecode.length(), &n);
+  LOG((
+      "ScriptLoadRequest (%p): Write bytecode cache (rv = %X, length = %u, "
+      "written = %u)",
+      aRequest, unsigned(rv), unsigned(aRequest->mScriptBytecode.length()), n));
   if (NS_FAILED(rv)) {
     return;
   }
 
-  MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
+  MOZ_RELEASE_ASSERT(aRequest->mScriptBytecode.length() == n);
 
   bytecodeFailed.release();
   TRACE_FOR_TEST_NONE(aRequest->GetScriptLoadContext()->GetScriptElement(),

@@ -985,15 +985,6 @@
   value: 3
   mirror: always
 
-# Compression level for cached JavaScript bytecode
-#   0 = do not compress,
-#   1 = minimal compression,
-#   9 = maximal compression
-- name: browser.cache.jsbc_compression_level
-  type: RelaxedAtomicUint32
-  value: 0
-  mirror: always
-
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
