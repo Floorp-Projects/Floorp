@@ -161,6 +161,17 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">پتہ کائنی لبھا</string>
 
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>ݙتے ہوئے پتے کیتے براؤزر ہوسٹ سرور کائنی لبھ سڳا۔</p>
+      <ul>
+        <li>پتے وچ ایں طرحاں دیاں ٹائپنگ غلطیاں دی پڑتال کرو 
+          <strong>ww</strong>.example.com پر لکھݨا ہائی
+          <strong>www</strong>.example.com.</li>
+        <li>جے تساں کہیں وی ورقے کوں لوڈ نہوے کر سڳدے تاں ڈیوائس ڈیٹا یا وائی فائی کنکشن دی پڑتال کرو</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_no_internet_title">کوئی انٹرنیٹ کنکشن کائنی</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
@@ -186,8 +197,24 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">نامعلوم پروٹوکول</string>
 
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>پتے وچ پروٹوکول (مثال دے طور تے <q>wxyz://</q>) جیکوں براؤز کائنی سُن٘ڄݨیندا، تہوں تاں براؤزر سائٹ کوں ٹھیک طرحاں کنکٹ کائنی کر سڳدا۔</p>
+      <ul>
+        <li>بھلا تساں  ملٹی میڈیا تے ٻیاں غیرعبارت خدمتاں تے رسائی دی کوشش کریندے پئے ہو؟  ٻیاں ضروریات کیتے سائٹ دی پڑتال کرو۔</li>
+        <li>براؤزر دے سُن٘ڄاݨݨ کنوں پہلے کجھ پروٹوکولاں کوں تریجھی پارٹی سافٹ ویئر یا پلگ اناں دی لوڑ ہوندی ہے۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">فائل کائنی لبھی</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>بھلا آئٹم دا ناں وٹایا ون٘ڄ سڳدا ہائی، ہٹا ون٘ڄ سڳدا ہائی، یا ٻئی جاء تے منتقل کیتا ون٘ڄ سڳدا ہائی؟</li>
+        <li>بھلا پتے وچ ہجیاں، وݙے حروف یا ٹائپ دی کوئی ٻئی غلطی ہے؟</li>
+        <li>بھلا تہاݙے کول مطلوبہ آئٹم تائیں رسائی دی کافی اجازت ہے؟</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_access_denied_title">فائل تائیں رسائی مسترد کر ݙتی ڳئی ہائی</string>
@@ -201,23 +228,63 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_proxy_connection_refused_title">پراکسی سرور کنکشن دا انکار کر ݙتے</string>
 
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>براؤزر پراکسی سرر ورتݨ کیتے کنفیگر تھیا ہویا ہے، پر پراکسی نے کنکشن دا انکار کر ݙتے۔</p>
+      <ul>
+        <li>بھلا براؤزر دی پراکسی کنفیگریشن ٹھیک ہے؟ ترتیباں دی پڑتال کرو تے ولدا کوشش کرو۔</li>
+        <li>بھلا پراکسی سروس ایں نیٹ ورک کنوں اجازت ݙیندی ہے؟</li>
+        <li>اڄݨ وی مشکل وچ ہو؟ مدد کیتے نیٹ ورک ایڈمن یا انٹرنیٹ فراہم کرݨ آلے نال مشورہ کرو۔</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_proxy_host_title">پراکسی سرور کائنی لبھا</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>براؤزر پراکسی سرر ورتݨ کیتے کنفیگر تھیا ہویا ہے، پر پراکسی کائنی لبھ سڳی۔</p>
+      <ul>
+        <li>بھلا براؤزر دی پراکسی کنفیگریشن ٹھیک ہے؟ ترتیباں دی پڑتال کرو تے ولدا کوشش کرو۔</li>
+        <li>بھلا ڈیوائس فعال نیٹ ورک نال کنکٹ تھئی ہوئی ہے؟</li>
+        <li>اڄݨ وی مشکل وچ ہو؟ مدد کیتے نیٹ ورک ایڈمن یا انٹرنیٹ فراہم کرݨ آلے نال مشورہ کرو۔</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">مالویئر سائٹ مسئلہ</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں حملہ سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ناپسندیدہ سائٹ مسئلہ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں ناپسندیدہ سافٹ ویئر خدمت دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_harmful_uri_title">نقصان دہ سائٹ مسئلہ</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>%1$s تے  موجود سائٹ کوں ممکنہ نقصان دہ  سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">فریبی سائٹ مسئلہ</string>
 
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>%1$s تے  موجود ویب ورقے کوں فریبی سائٹ دے طور تے رپورٹ کیتا ڳئے تے تہاݙی سیکیورٹی ترجیحات دی بݨیاد تے بلاک کر ݙتا ڳئے۔</p>
+    ]]></string>
+
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">محفوظ سائٹ دستیاب کائنی</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[وادھوں حفاظت کیتے اساں ایچ ٹی ٹی پی ایس ــ صرف موڈ فعال کر ݙتے، تے <em>%1$s</em> دا ایچ ٹی ٹی پی ایس ورشن دستیاب کائنی۔]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">ایچ ٹی ٹی پی سائٹ تے جاری رکھو</string>
 </resources>
