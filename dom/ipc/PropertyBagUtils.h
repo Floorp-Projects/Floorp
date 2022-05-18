@@ -11,8 +11,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsIVariant.h"
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 /**
  * Limited nsIVariant support. Not all types are implemented and only
@@ -34,7 +33,6 @@ struct IPDLParamTraits<nsIPropertyBag2*> {
                    RefPtr<nsIPropertyBag2>* aResult);
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif  // mozilla_ipc_URIUtils_h
