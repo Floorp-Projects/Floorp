@@ -17,6 +17,7 @@
 #endif
 #include "JSHandleRootedTypedefChecker.h"
 #include "KungFuDeathGripChecker.h"
+#include "KnownLiveChecker.h"
 #include "MustOverrideChecker.h"
 #include "MustReturnFromCallerChecker.h"
 #include "NaNExprChecker.h"

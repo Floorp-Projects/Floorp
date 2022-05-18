@@ -19,6 +19,7 @@ HOST_SOURCES += [
     "ExplicitImplicitChecker.cpp",
     "ExplicitOperatorBoolChecker.cpp",
     "JSHandleRootedTypedefChecker.cpp",
+    "KnownLiveChecker.cpp",
     "KungFuDeathGripChecker.cpp",
     "MozCheckAction.cpp",
     "MustOverrideChecker.cpp",
