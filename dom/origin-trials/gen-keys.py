@@ -7,14 +7,21 @@ from pyasn1_modules import pem
 from pyasn1.type import univ
 import sys
 
+
 def public_key_to_string(file, name):
     out = "static const unsigned char " + name + "[65] = { "
     with open(file) as f:
-        substrate = pem.readPemFromFile(f, "-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----")
+        substrate = pem.readPemFromFile(
+            f, "-----BEGIN PUBLIC KEY-----", "-----END PUBLIC KEY-----"
+        )
         key = decoder.decode(substrate)
         ident = key[0][0]
-        assert ident[0] == univ.ObjectIdentifier("1.2.840.10045.2.1"), "should be an ECPublicKey"
-        assert ident[1] == univ.ObjectIdentifier("1.2.840.10045.3.1.7"), "should be a EcdsaP256 key"
+        assert ident[0] == univ.ObjectIdentifier(
+            "1.2.840.10045.2.1"
+        ), "should be an ECPublicKey"
+        assert ident[1] == univ.ObjectIdentifier(
+            "1.2.840.10045.3.1.7"
+        ), "should be a EcdsaP256 key"
         bits = key[0][1]
         assert isinstance(bits, univ.BitString), "Should be a bit string"
         assert len(bits) == 520, "Should be 520 bits (65 bytes)"
