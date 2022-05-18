@@ -77,7 +77,7 @@ class WgcCapturerWinTest : public ::testing::TestWithParam<CaptureType>,
   void SetUp() override {
     if (rtc::rtc_win::GetVersion() < rtc::rtc_win::Version::VERSION_WIN10_RS5) {
       RTC_LOG(LS_INFO)
-          << "Skipping WgcWindowCaptureTests on Windows versions < RS5.";
+          << "Skipping WgcCapturerWinTests on Windows versions < RS5.";
       GTEST_SKIP();
     }
 

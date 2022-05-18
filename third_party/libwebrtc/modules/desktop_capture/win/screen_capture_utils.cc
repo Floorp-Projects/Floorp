@@ -99,6 +99,18 @@ bool IsMonitorValid(const HMONITOR monitor) {
   return GetMonitorInfoA(monitor, &monitor_info);
 }
 
+DesktopRect GetMonitorRect(const HMONITOR monitor) {
+  MONITORINFO monitor_info;
+  monitor_info.cbSize = sizeof(MONITORINFO);
+  if (!GetMonitorInfoA(monitor, &monitor_info)) {
+    return DesktopRect();
+  }
+
+  return DesktopRect::MakeLTRB(
+      monitor_info.rcMonitor.left, monitor_info.rcMonitor.top,
+      monitor_info.rcMonitor.right, monitor_info.rcMonitor.bottom);
+}
+
 bool IsScreenValid(const DesktopCapturer::SourceId screen,
                    std::wstring* device_key) {
   if (screen == kFullDesktopScreenId) {

@@ -18,6 +18,7 @@
 
 #include "absl/types/optional.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "modules/desktop_capture/desktop_geometry.h"
 
 namespace webrtc {
 
@@ -30,6 +31,7 @@ class WgcCaptureSource {
   explicit WgcCaptureSource(DesktopCapturer::SourceId source_id);
   virtual ~WgcCaptureSource();
 
+  virtual DesktopVector GetTopLeft() = 0;
   virtual bool IsCapturable();
   virtual bool FocusOnSource();
   HRESULT GetCaptureItem(
@@ -93,6 +95,7 @@ class WgcWindowSource final : public WgcCaptureSource {
 
   ~WgcWindowSource() override;
 
+  DesktopVector GetTopLeft() override;
   bool IsCapturable() override;
   bool FocusOnSource() override;
 
@@ -113,6 +116,7 @@ class WgcScreenSource final : public WgcCaptureSource {
 
   ~WgcScreenSource() override;
 
+  DesktopVector GetTopLeft() override;
   bool IsCapturable() override;
 
  private:

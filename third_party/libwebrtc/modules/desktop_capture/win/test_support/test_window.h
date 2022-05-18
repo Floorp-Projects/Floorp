@@ -38,6 +38,8 @@ WindowInfo CreateTestWindow(const WCHAR* window_title,
 
 void ResizeTestWindow(const HWND hwnd, const int width, const int height);
 
+void MoveTestWindow(const HWND hwnd, const int x, const int y);
+
 void MinimizeTestWindow(const HWND hwnd);
 
 void UnminimizeTestWindow(const HWND hwnd);

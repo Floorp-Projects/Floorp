@@ -144,7 +144,10 @@ if (rtc_include_tests) {
         sources += [ "screen_capturer_mac_unittest.cc" ]
       }
       if (rtc_enable_win_wgc) {
-        sources += [ "win/wgc_capturer_win_unittest.cc" ]
+        sources += [
+          "win/wgc_capture_source_unittest.cc",
+          "win/wgc_capturer_win_unittest.cc",
+        ]
       }
       deps += [
         ":desktop_capture_mock",
