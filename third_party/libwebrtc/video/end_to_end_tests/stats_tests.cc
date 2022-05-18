@@ -154,7 +154,10 @@ TEST_F(StatsEndToEndTest, GetStats) {
 
     bool CheckSendStats() {
       RTC_DCHECK(send_stream_);
-      VideoSendStream::Stats stats = send_stream_->GetStats();
+
+      VideoSendStream::Stats stats;
+      SendTask(RTC_FROM_HERE, task_queue_,
+               [&]() { stats = send_stream_->GetStats(); });
 
       size_t expected_num_streams =
           kNumSimulcastStreams + expected_send_ssrcs_.size();

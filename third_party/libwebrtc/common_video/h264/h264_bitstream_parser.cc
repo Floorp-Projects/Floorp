@@ -275,14 +275,14 @@ void H264BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
       sps_ = SpsParser::ParseSps(slice + H264::kNaluTypeSize,
                                  length - H264::kNaluTypeSize);
       if (!sps_)
-        RTC_LOG(LS_WARNING) << "Unable to parse SPS from H264 bitstream.";
+        RTC_DLOG(LS_WARNING) << "Unable to parse SPS from H264 bitstream.";
       break;
     }
     case H264::NaluType::kPps: {
       pps_ = PpsParser::ParsePps(slice + H264::kNaluTypeSize,
                                  length - H264::kNaluTypeSize);
       if (!pps_)
-        RTC_LOG(LS_WARNING) << "Unable to parse PPS from H264 bitstream.";
+        RTC_DLOG(LS_WARNING) << "Unable to parse PPS from H264 bitstream.";
       break;
     }
     case H264::NaluType::kAud:
@@ -291,7 +291,7 @@ void H264BitstreamParser::ParseSlice(const uint8_t* slice, size_t length) {
     default:
       Result res = ParseNonParameterSetNalu(slice, length, nalu_type);
       if (res != kOk)
-        RTC_LOG(LS_INFO) << "Failed to parse bitstream. Error: " << res;
+        RTC_DLOG(LS_INFO) << "Failed to parse bitstream. Error: " << res;
       break;
   }
 }
