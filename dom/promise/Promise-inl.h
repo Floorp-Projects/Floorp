@@ -308,13 +308,14 @@ void Promise::AddCallbacksWithCycleCollectedArgs(ResolveCallback&& aOnResolve,
                                                  RejectCallback&& aOnReject,
                                                  Args&&... aArgs) {
   auto onResolve =
-      [aOnResolve](JSContext* aCx, JS::HandleValue value, ErrorResult& aRv,
+      [aOnResolve](JSContext* aCx, JS::Handle<JS::Value> value,
+                   ErrorResult& aRv,
                    StorageType<Args>&&... aArgs) -> already_AddRefed<Promise> {
     aOnResolve(aCx, value, aRv, aArgs...);
     return nullptr;
   };
   auto onReject =
-      [aOnReject](JSContext* aCx, JS::HandleValue value, ErrorResult& aRv,
+      [aOnReject](JSContext* aCx, JS::Handle<JS::Value> value, ErrorResult& aRv,
                   StorageType<Args>&&... aArgs) -> already_AddRefed<Promise> {
     aOnReject(aCx, value, aRv, aArgs...);
     return nullptr;

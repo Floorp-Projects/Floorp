@@ -59,8 +59,8 @@ class TransformStreamDefaultController final : public nsISupports,
 };
 
 void SetUpTransformStreamDefaultControllerFromTransformer(
-    JSContext* aCx, TransformStream& aStream, JS::HandleObject aTransformer,
-    Transformer& aTransformerDict);
+    JSContext* aCx, TransformStream& aStream,
+    JS::Handle<JSObject*> aTransformer, Transformer& aTransformerDict);
 
 }  // namespace mozilla::dom
 

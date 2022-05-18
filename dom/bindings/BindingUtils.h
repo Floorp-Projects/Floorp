@@ -1286,12 +1286,13 @@ inline bool WrapNewBindingNonWrapperCachedObject(
 }
 
 template <bool Fatal>
-inline bool EnumValueNotFound(BindingCallContext& cx, JS::HandleString str,
+inline bool EnumValueNotFound(BindingCallContext& cx, JS::Handle<JSString*> str,
                               const char* type, const char* sourceDescription);
 
 template <>
 inline bool EnumValueNotFound<false>(BindingCallContext& cx,
-                                     JS::HandleString str, const char* type,
+                                     JS::Handle<JSString*> str,
+                                     const char* type,
                                      const char* sourceDescription) {
   // TODO: Log a warning to the console.
   return true;
@@ -1299,7 +1300,7 @@ inline bool EnumValueNotFound<false>(BindingCallContext& cx,
 
 template <>
 inline bool EnumValueNotFound<true>(BindingCallContext& cx,
-                                    JS::HandleString str, const char* type,
+                                    JS::Handle<JSString*> str, const char* type,
                                     const char* sourceDescription) {
   JS::UniqueChars deflated = JS_EncodeStringToUTF8(cx, str);
   if (!deflated) {
@@ -1898,8 +1899,8 @@ static inline bool ConvertJSValueToUSVString(
 }
 
 template <typename T>
-inline bool ConvertIdToString(JSContext* cx, JS::HandleId id, T& result,
-                              bool& isSymbol) {
+inline bool ConvertIdToString(JSContext* cx, JS::Handle<JS::PropertyKey> id,
+                              T& result, bool& isSymbol) {
   if (MOZ_LIKELY(id.isString())) {
     if (!AssignJSString(cx, result, id.toString())) {
       return false;
@@ -2837,7 +2838,7 @@ bool ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
 
 bool MayResolveGlobal(const JSAtomState& aNames, jsid aId, JSObject* aMaybeObj);
 
-bool EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
+bool EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
                      JS::MutableHandleVector<jsid> aProperties,
                      bool aEnumerableOnly);
 

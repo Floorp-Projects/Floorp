@@ -64,8 +64,8 @@ void ReadableStreamBYOBRequest::Respond(JSContext* aCx, uint64_t bytesWritten,
 
   // Step 2.
   bool isSharedMemory;
-  JS::RootedObject view(aCx, mView);
-  JS::RootedObject arrayBuffer(
+  JS::Rooted<JSObject*> view(aCx, mView);
+  JS::Rooted<JSObject*> arrayBuffer(
       aCx, JS_GetArrayBufferViewBuffer(aCx, view, &isSharedMemory));
   if (!arrayBuffer) {
     aRv.StealExceptionFromJSContext(aCx);
@@ -100,8 +100,8 @@ void ReadableStreamBYOBRequest::RespondWithNewView(JSContext* aCx,
 
   // Step 2.
   bool isSharedMemory;
-  JS::RootedObject rootedViewObj(aCx, view.Obj());
-  JS::RootedObject viewedArrayBuffer(
+  JS::Rooted<JSObject*> rootedViewObj(aCx, view.Obj());
+  JS::Rooted<JSObject*> viewedArrayBuffer(
       aCx, JS_GetArrayBufferViewBuffer(aCx, rootedViewObj, &isSharedMemory));
   if (!viewedArrayBuffer) {
     aRv.StealExceptionFromJSContext(aCx);
