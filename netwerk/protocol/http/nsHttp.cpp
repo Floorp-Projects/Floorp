@@ -795,7 +795,7 @@ ParsedHeaderValueListList::ParsedHeaderValueListList(
 }
 
 Maybe<nsCString> CallingScriptLocationString() {
-  if (!LOG4_ENABLED()) {
+  if (!LOG4_ENABLED() && !xpc::IsInAutomation()) {
     return Nothing();
   }
 
@@ -817,13 +817,18 @@ Maybe<nsCString> CallingScriptLocationString() {
 
 void LogCallingScriptLocation(void* instance) {
   Maybe<nsCString> logLocation = CallingScriptLocationString();
-  if (logLocation.isNothing()) {
+  LogCallingScriptLocation(instance, logLocation);
+}
+
+void LogCallingScriptLocation(void* instance,
+                              const Maybe<nsCString>& aLogLocation) {
+  if (aLogLocation.isNothing()) {
     return;
   }
 
   nsCString logString;
   logString.AppendPrintf("%p called from script: ", instance);
-  logString.AppendPrintf("%s", logLocation->get());
+  logString.AppendPrintf("%s", aLogLocation->get());
   LOG(("%s", logString.get()));
 }
 

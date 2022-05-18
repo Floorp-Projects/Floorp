@@ -340,6 +340,9 @@ with modules["NETWORK"]:
     errors["NS_ERROR_HTTPS_ONLY"] = FAILURE(86)
     # A WebSocket connection is failed.
     errors["NS_ERROR_WEBSOCKET_CONNECTION_REFUSED"] = FAILURE(87)
+    # A connection to a non local address is refused because
+    # xpc::AreNonLocalConnectionsDisabled() returns true.
+    errors["NS_ERROR_NON_LOCAL_CONNECTION_REFUSED"] = FAILURE(88)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??
