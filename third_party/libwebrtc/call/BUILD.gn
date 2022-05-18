@@ -454,6 +454,7 @@ if (rtc_include_tests) {
         "../test:audio_codec_mocks",
         "../test:direct_transport",
         "../test:encoder_settings",
+        "../test:explicit_key_value_config",
         "../test:fake_video_codecs",
         "../test:field_trial",
         "../test:mock_frame_transformer",

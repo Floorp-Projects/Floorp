@@ -12,6 +12,7 @@
 #define CALL_RTP_PAYLOAD_PARAMS_H_
 
 #include <array>
+#include <vector>
 
 #include "absl/types/optional.h"
 #include "api/transport/webrtc_key_value_config.h"
@@ -61,6 +62,10 @@ class RtpPayloadParams final {
                     bool is_keyframe,
                     RTPVideoHeader* rtp_video_header);
 
+  void Vp9ToGeneric(const CodecSpecificInfoVP9& vp9_info,
+                    int64_t shared_frame_id,
+                    RTPVideoHeader& rtp_video_header);
+
   void H264ToGeneric(const CodecSpecificInfoH264& h264_info,
                      int64_t shared_frame_id,
                      bool is_keyframe,
@@ -94,6 +99,13 @@ class RtpPayloadParams final {
   std::array<std::array<int64_t, RtpGenericFrameDescriptor::kMaxTemporalLayers>,
              RtpGenericFrameDescriptor::kMaxSpatialLayers>
       last_shared_frame_id_;
+  // circular buffer of frame ids for the last 128 vp9 pictures.
+  // ids for the `picture_id` are stored at the index `picture_id % 128`.
+  std::vector<std::array<int64_t, RtpGenericFrameDescriptor::kMaxSpatialLayers>>
+      last_vp9_frame_id_;
+  // Last frame id for each chain
+  std::array<int64_t, RtpGenericFrameDescriptor::kMaxSpatialLayers>
+      chain_last_frame_id_;
 
   // TODO(eladalon): When additional codecs are supported,
   // set kMaxCodecBuffersCount to the max() of these codecs' buffer count.
@@ -113,6 +125,7 @@ class RtpPayloadParams final {
   RtpPayloadState state_;
 
   const bool generic_picture_id_experiment_;
+  const bool simulate_generic_vp9_;
 };
 }  // namespace webrtc
 #endif  // CALL_RTP_PAYLOAD_PARAMS_H_
