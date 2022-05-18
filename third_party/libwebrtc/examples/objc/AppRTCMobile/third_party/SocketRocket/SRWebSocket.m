@@ -1487,7 +1487,7 @@ static const size_t SRFrameHeaderOverhead = 32;
                   if (bytes_read > 0) {
                     [self->_readBuffer appendBytes:buffer length:bytes_read];
                   } else if (bytes_read < 0) {
-                    [self _failWithError:_inputStream.streamError];
+                    [self _failWithError:self->_inputStream.streamError];
                   }
 
                   if (bytes_read != bufferSize) {
