@@ -7,7 +7,7 @@ import {
   getExpressions,
   getSelectedFrame,
   getSelectedFrameId,
-  getSourceFromId,
+  getLocationSource,
   getSelectedSource,
   getSelectedScopeMappings,
   getSelectedFrameBindings,
@@ -133,8 +133,7 @@ function evaluateExpression(cx, expression) {
     const frame = getSelectedFrame(getState(), cx.thread);
 
     if (frame) {
-      const { location } = frame;
-      const source = getSourceFromId(getState(), location.sourceId);
+      const source = getLocationSource(getState(), frame.location);
 
       const selectedSource = getSelectedSource(getState());
 

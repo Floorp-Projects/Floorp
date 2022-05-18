@@ -156,7 +156,7 @@ AutoCompleteSearch.prototype = {
   ]),
 
   // nsIFactory implementation
-  createInstance(outer, iid) {
+  createInstance(iid) {
     return this.QueryInterface(iid);
   },
 };

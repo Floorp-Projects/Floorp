@@ -52,7 +52,7 @@ async function addBookmarks() {
  * @resolves to an OS.File path
  */
 async function promiseFile(aBasename) {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, aBasename);
+  let path = PathUtils.join(PathUtils.profileDir, aBasename);
   info("opening " + path);
 
   await IOUtils.writeUTF8(path, "");

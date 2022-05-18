@@ -8,7 +8,7 @@ import re
 import signal
 import six
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 from mozboot.util import get_tools_dir
 from mozfile import which
 from mozlint import result
@@ -130,7 +130,7 @@ def get_clippy_version(log, cargo):
     version = re.findall(r"(\d+-\d+-\d+)", output[0])
     if not version:
         return False
-    version = StrictVersion(version[0].replace("-", "."))
+    version = Version(version[0].replace("-", "."))
     log.debug("Found version: {}".format(version))
     return version
 
@@ -173,7 +173,7 @@ def lint(paths, config, fix=None, **lintargs):
         return []
 
     min_version_str = config.get("min_clippy_version")
-    min_version = StrictVersion(min_version_str)
+    min_version = Version(min_version_str)
     actual_version = get_clippy_version(log, cargo)
     log.debug(
         "Found version: {}. Minimum expected version: {}".format(

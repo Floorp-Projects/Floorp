@@ -18,7 +18,6 @@
 #include "mozilla/SyncRunnable.h"
 #include "nsCURILoader.h"
 #include "nsCryptoHash.h"
-#include "nsKeyModule.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h"
@@ -72,12 +71,8 @@ template <class InstanceClass,
           ProcessRestriction processRestriction =
               ProcessRestriction::ParentProcessOnly,
           ThreadRestriction threadRestriction = ThreadRestriction::AnyThread>
-static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
-                            void** aResult) {
+static nsresult Constructor(REFNSIID aIID, void** aResult) {
   *aResult = nullptr;
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   if (processRestriction == ProcessRestriction::ParentProcessOnly &&
       !XRE_IsParentProcess()) {
@@ -96,11 +91,10 @@ static nsresult Constructor(nsISupports* aOuter, REFNSIID aIID,
   return Instantiate<InstanceClass, InitMethod>(aIID, aResult);
 }
 
-#define IMPL(type, ...)                                                  \
-  template <>                                                            \
-  nsresult NSSConstructor<type>(nsISupports * aOuter, const nsIID& aIID, \
-                                void** aResult) {                        \
-    return Constructor<type, __VA_ARGS__>(aOuter, aIID, aResult);        \
+#define IMPL(type, ...)                                              \
+  template <>                                                        \
+  nsresult NSSConstructor<type>(const nsIID& aIID, void** aResult) { \
+    return Constructor<type, __VA_ARGS__>(aIID, aResult);            \
   }
 
 // Components that require main thread initialization could cause a deadlock
@@ -114,9 +108,6 @@ IMPL(nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsNSSCertificateDB, nullptr)
 IMPL(nsCertTree, nullptr)
 IMPL(nsCryptoHash, nullptr, ProcessRestriction::AnyProcess)
-IMPL(nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess)
-IMPL(nsKeyObject, nullptr, ProcessRestriction::AnyProcess)
-IMPL(nsKeyObjectFactory, nullptr, ProcessRestriction::AnyProcess)
 IMPL(ContentSignatureVerifier, nullptr)
 IMPL(nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess)
 IMPL(TransportSecurityInfo, nullptr, ProcessRestriction::AnyProcess)

@@ -130,12 +130,7 @@ nsArrayBase::GetElementAt(uint32_t aIndex, nsISupports** aResult) {
   return NS_OK;
 }
 
-nsresult nsArrayBase::XPCOMConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                       void** aResult) {
-  if (aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
+nsresult nsArrayBase::XPCOMConstructor(const nsIID& aIID, void** aResult) {
   nsCOMPtr<nsIMutableArray> inst = Create();
   return inst->QueryInterface(aIID, aResult);
 }

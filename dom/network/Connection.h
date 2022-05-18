@@ -47,12 +47,12 @@ class Connection : public DOMEventTargetHelper {
                : mType;
   }
 
-  bool GetIsWifi() {
+  bool GetIsWifi() const {
     NS_ASSERT_OWNINGTHREAD(Connection);
 
     return mIsWifi;
   }
-  uint32_t GetDhcpGateway() {
+  uint32_t GetDhcpGateway() const {
     NS_ASSERT_OWNINGTHREAD(Connection);
 
     return mDHCPGateway;

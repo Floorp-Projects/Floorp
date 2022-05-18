@@ -11,13 +11,10 @@
 
 class nsISupports;
 
-nsresult nsThreadManagerGetSingleton(nsISupports* aOuter, const nsIID& aIID,
-                                     void** aInstancePtr);
+nsresult nsThreadManagerGetSingleton(const nsIID& aIID, void** aInstancePtr);
 
-nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
-                                void** aInstancePtr);
+nsresult nsLocalFileConstructor(const nsIID& aIID, void** aInstancePtr);
 
-extern nsresult nsStringInputStreamConstructor(nsISupports*, const nsID&,
-                                               void**);
+extern nsresult nsStringInputStreamConstructor(const nsID&, void**);
 
 #endif  // XPCOMModule_h

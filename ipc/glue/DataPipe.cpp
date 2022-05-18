@@ -572,15 +572,17 @@ NS_IMETHODIMP DataPipeSender::AsyncWait(nsIOutputStreamCallback* aCallback,
                                         uint32_t aFlags,
                                         uint32_t aRequestedCount,
                                         nsIEventTarget* aTarget) {
-  AsyncWaitInternal(NS_NewRunnableFunction(
-                        "DataPipeReceiver::AsyncWait",
-                        [self = RefPtr{this}, callback = RefPtr{aCallback}] {
-                          MOZ_LOG(gDataPipeLog, LogLevel::Debug,
-                                  ("Calling OnOutputStreamReady(%p, %p)",
-                                   callback.get(), self.get()));
-                          callback->OnOutputStreamReady(self);
-                        }),
-                    do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
+  AsyncWaitInternal(
+      aCallback ? NS_NewRunnableFunction(
+                      "DataPipeReceiver::AsyncWait",
+                      [self = RefPtr{this}, callback = RefPtr{aCallback}] {
+                        MOZ_LOG(gDataPipeLog, LogLevel::Debug,
+                                ("Calling OnOutputStreamReady(%p, %p)",
+                                 callback.get(), self.get()));
+                        callback->OnOutputStreamReady(self);
+                      })
+                : nullptr,
+      do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
   return NS_OK;
 }
 
@@ -641,41 +643,39 @@ NS_IMETHODIMP DataPipeReceiver::AsyncWait(nsIInputStreamCallback* aCallback,
                                           uint32_t aFlags,
                                           uint32_t aRequestedCount,
                                           nsIEventTarget* aTarget) {
-  AsyncWaitInternal(NS_NewRunnableFunction(
-                        "DataPipeReceiver::AsyncWait",
-                        [self = RefPtr{this}, callback = RefPtr{aCallback}] {
-                          MOZ_LOG(gDataPipeLog, LogLevel::Debug,
-                                  ("Calling OnInputStreamReady(%p, %p)",
-                                   callback.get(), self.get()));
-                          callback->OnInputStreamReady(self);
-                        }),
-                    do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
+  AsyncWaitInternal(
+      aCallback ? NS_NewRunnableFunction(
+                      "DataPipeReceiver::AsyncWait",
+                      [self = RefPtr{this}, callback = RefPtr{aCallback}] {
+                        MOZ_LOG(gDataPipeLog, LogLevel::Debug,
+                                ("Calling OnInputStreamReady(%p, %p)",
+                                 callback.get(), self.get()));
+                        callback->OnInputStreamReady(self);
+                      })
+                : nullptr,
+      do_AddRef(aTarget), aFlags & WAIT_CLOSURE_ONLY);
   return NS_OK;
 }
 
 // nsIIPCSerializableInputStream
 
-void DataPipeReceiver::Serialize(InputStreamParams& aParams,
-                                 FileDescriptorArray& aFileDescriptors,
-                                 bool aDelayedStart, uint32_t aMaxSize,
-                                 uint32_t* aSizeUsed,
-                                 ParentToChildStreamActorManager* aManager) {
+void DataPipeReceiver::SerializedComplexity(uint32_t aMaxSize,
+                                            uint32_t* aSizeUsed,
+                                            uint32_t* aPipes,
+                                            uint32_t* aTransferables) {
+  // We report DataPipeReceiver as taking one transferrable to serialize, rather
+  // than one pipe, as we aren't starting a new pipe for this purpose, and are
+  // instead transferring an existing pipe.
+  *aTransferables = 1;
+}
+
+void DataPipeReceiver::Serialize(InputStreamParams& aParams, uint32_t aMaxSize,
+                                 uint32_t* aSizeUsed) {
   *aSizeUsed = 0;
   aParams = DataPipeReceiverStreamParams(this);
 }
 
-void DataPipeReceiver::Serialize(InputStreamParams& aParams,
-                                 FileDescriptorArray& aFileDescriptors,
-                                 bool aDelayedStart, uint32_t aMaxSize,
-                                 uint32_t* aSizeUsed,
-                                 ChildToParentStreamActorManager* aManager) {
-  *aSizeUsed = 0;
-  aParams = DataPipeReceiverStreamParams(this);
-}
-
-bool DataPipeReceiver::Deserialize(
-    const InputStreamParams& aParams,
-    const FileDescriptorArray& aFileDescriptors) {
+bool DataPipeReceiver::Deserialize(const InputStreamParams& aParams) {
   MOZ_CRASH("Handled directly in `DeserializeInputStream`");
 }
 

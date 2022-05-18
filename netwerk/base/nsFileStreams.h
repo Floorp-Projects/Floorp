@@ -150,13 +150,10 @@ class nsFileInputStream : public nsFileStreamBase,
 
   nsFileInputStream() : mLineBuffer(nullptr) {}
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
  protected:
   virtual ~nsFileInputStream() = default;
-
-  void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
-                         FileDescriptorArray& aFileDescriptors);
 
   nsresult SeekInternal(int32_t aWhence, int64_t aOffset,
                         bool aClearBuf = true);
@@ -199,7 +196,7 @@ class nsFileOutputStream : public nsFileStreamBase, public nsIFileOutputStream {
   NS_DECL_NSIFILEOUTPUTSTREAM
   NS_FORWARD_NSIOUTPUTSTREAM(nsFileStreamBase::)
 
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
   nsresult InitWithFileDescriptor(const mozilla::ipc::FileDescriptor& aFd);
 
  protected:
@@ -258,7 +255,7 @@ class nsFileStream : public nsFileStreamBase,
                      public nsIOutputStream,
                      public nsIFileStream {
  public:
-  static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+  static nsresult Create(REFNSIID aIID, void** aResult);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIFILESTREAM

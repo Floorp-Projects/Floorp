@@ -381,6 +381,10 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
+- ``browser.urlbar.autoFill``: The global preference for whether autofill in the urlbar is enabled. When false, all types of autofill are disabled.
+
+- ``browser.urlbar.autoFill.adaptiveHistory.enabled``: True if adaptive history autofill in the urlbar is enabled.
+
 - ``browser.urlbar.quicksuggest.onboardingDialogChoice``: The user's choice in the Firefox Suggest onboarding dialog. If the dialog was shown multiple times, this records the user's most recent choice. Values are the following. Empty string: The user has not made a choice (e.g., because the dialog hasn't been shown). ``accept_2`` is recorded when the user accepts the dialog and opts in, ``reject_2`` is recorded when the user rejects the dialog and opts out, ``learn_more_1`` is recorded when the user clicks "Learn more" on the introduction section (the user remains opted out), ``learn_more_2`` is recorded when the user clicks "Learn more" on the main section (the user remains opted out), ``close_1`` is recorded when the user clicks close button on the introduction section (the user remains opted out), ``not_now_2`` is recorded when the user clicks "Not now" link on main section (the user remains opted out), ``dismiss_1`` recorded when the user dismisses the dialog on the introduction section (the user remains opted out), ``dismiss_2`` recorded when the user dismisses the dialog on main (the user remains opted out).
 
 - ``browser.urlbar.quicksuggest.dataCollection.enabled``: Whether the user has opted in to data collection for Firefox Suggest. This pref is set to true when the user opts in to the Firefox Suggest onboarding dialog modal. The user can also toggle the pref using a toggle switch in the Firefox Suggest preferences UI.
@@ -423,11 +427,23 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``media.gmp-gmpopenh264.enabled``: Whether OpenH264 is enabled.
 
-- ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated.
+- ``media.gmp-gmpopenh264.lastDownload``: When OpenH264 was last downloaded as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastDownloadFailed``: When OpenH264 was last downloaded unsuccessfully as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastDownloadFailReason``: The exception value when OpenH264 was last failed to downloaded.
+
+- ``media.gmp-gmpopenh264.lastInstallFailed``: When OpenH264 installation last failed as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastInstallStart``: When OpenH264 installation was last started as seconds since Jan 1, 1970.
+
+- ``media.gmp-gmpopenh264.lastUpdate``: When OpenH264 was last updated as seconds since Jan 1, 1970.
 
 - ``media.gmp-gmpopenh264.visible``: Whether OpenH264 is visible.
 
-- ``media.gmp-manager.lastCheck``: When the gmp-manager last checked for updates.
+- ``media.gmp-manager.lastCheck``: When the gmp-manager last checked for updates as seconds since Jan 1, 1970.
+
+- ``media.gmp-manager.lastEmptyCheck``: When the gmp-manager last checked for updates and there was nothing to install as seconds since Jan 1, 1970.
 
 attribution
 ~~~~~~~~~~~

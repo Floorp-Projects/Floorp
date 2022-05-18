@@ -37,7 +37,7 @@ FlacFrameParser::FlacFrameParser()
       mMaxFrameSize(0),
       mNumFrames(0),
       mFullMetadata(false),
-      mPacketCount(0) {}
+      mPacketCount(0){};
 
 FlacFrameParser::~FlacFrameParser() = default;
 
@@ -141,7 +141,11 @@ Result<Ok, nsresult> FlacFrameParser::DecodeHeaderBlock(const uint8_t* aPacket,
       mInfo.mRate = sampleRate;
       mInfo.mChannels = numChannels;
       mInfo.mBitDepth = bps;
-      mInfo.mCodecSpecificConfig->AppendElements(blockDataStart, blockDataSize);
+      FlacCodecSpecificData flacCodecSpecificData;
+      flacCodecSpecificData.mStreamInfoBinaryBlob->AppendElements(
+          blockDataStart, blockDataSize);
+      mInfo.mCodecSpecificConfig =
+          AudioCodecSpecificVariant{std::move(flacCodecSpecificData)};
       auto duration = FramesToTimeUnit(mNumFrames, sampleRate);
       mInfo.mDuration = duration.IsValid() ? duration : media::TimeUnit::Zero();
       mParser = MakeUnique<OpusParser>();

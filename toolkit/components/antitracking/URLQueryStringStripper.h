@@ -34,7 +34,7 @@ class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
 
   // Strip the query parameters that are in the strip list. Return true if there
   // is any query parameter has been stripped. Otherwise, false.
-  static bool Strip(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput);
+  static bool Strip(nsIURI* aURI, bool aIsPBM, nsCOMPtr<nsIURI>& aOutput);
 
  private:
   URLQueryStringStripper() = default;

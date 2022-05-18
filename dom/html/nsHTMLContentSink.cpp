@@ -177,7 +177,7 @@ class SinkContext {
   nsresult GrowStack();
   nsresult FlushTags();
 
-  bool IsCurrentContainer(nsHTMLTag mType);
+  bool IsCurrentContainer(nsHTMLTag aTag) const;
 
   void DidAddContent(nsIContent* aContent);
   void UpdateChildCounts();
@@ -278,12 +278,8 @@ nsresult SinkContext::Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
   return NS_OK;
 }
 
-bool SinkContext::IsCurrentContainer(nsHTMLTag aTag) {
-  if (aTag == mStack[mStackPos - 1].mType) {
-    return true;
-  }
-
-  return false;
+bool SinkContext::IsCurrentContainer(nsHTMLTag aTag) const {
+  return aTag == mStack[mStackPos - 1].mType;
 }
 
 void SinkContext::DidAddContent(nsIContent* aContent) {

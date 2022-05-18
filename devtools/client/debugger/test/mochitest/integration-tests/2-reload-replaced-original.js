@@ -64,7 +64,7 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   );
   const syncBp = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   testServer.switchToNextVersion();
-  await reload(dbg);
+  await reload(dbg, "new-original.js");
   await syncBp;
 
   // Assert the new breakpoint being created after reload
@@ -104,7 +104,6 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
 
   // Let some time for breakpoint syncing to be buggy and recreated unexpected breakpoint
   await wait(1000);
-
   info("Assert that sources and breakpoints are gone and we aren't paused");
   ok(
     !sourceExists(dbg, "removed-original.js"),

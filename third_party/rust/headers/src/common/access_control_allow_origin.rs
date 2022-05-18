@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use super::origin::Origin;
 use util::{IterExt, TryFromValues};
 use HeaderValue;
@@ -25,9 +27,11 @@ use HeaderValue;
 /// ```
 /// # extern crate headers;
 /// use headers::AccessControlAllowOrigin;
+/// use std::convert::TryFrom;
 ///
 /// let any_origin = AccessControlAllowOrigin::ANY;
 /// let null_origin = AccessControlAllowOrigin::NULL;
+/// let origin = AccessControlAllowOrigin::try_from("http://web-platform.test:8000");
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct AccessControlAllowOrigin(OriginOrAny);
@@ -60,6 +64,26 @@ impl AccessControlAllowOrigin {
     }
 }
 
+impl TryFrom<&str> for AccessControlAllowOrigin {
+    type Error = ::Error;
+
+    fn try_from(s: &str) -> Result<Self, ::Error> {
+        let header_value = HeaderValue::from_str(s).map_err(|_| ::Error::invalid())?;
+        let origin = OriginOrAny::try_from(&header_value)?;
+        Ok(Self(origin))
+    }
+}
+
+impl TryFrom<&HeaderValue> for OriginOrAny {
+    type Error = ::Error;
+
+    fn try_from(header_value: &HeaderValue) -> Result<Self, ::Error> {
+        Origin::try_from_value(header_value)
+            .map(OriginOrAny::Origin)
+            .ok_or_else(::Error::invalid)
+    }
+}
+
 impl TryFromValues for OriginOrAny {
     fn try_from_values<'i, I>(values: &mut I) -> Result<Self, ::Error>
     where
@@ -89,13 +113,31 @@ impl<'a> From<&'a OriginOrAny> for HeaderValue {
 
 #[cfg(test)]
 mod tests {
+
     use super::super::{test_decode, test_encode};
     use super::*;
 
     #[test]
     fn origin() {
         let s = "http://web-platform.test:8000";
+
         let allow_origin = test_decode::<AccessControlAllowOrigin>(&[s]).unwrap();
+        {
+            let origin = allow_origin.origin().unwrap();
+            assert_eq!(origin.scheme(), "http");
+            assert_eq!(origin.hostname(), "web-platform.test");
+            assert_eq!(origin.port(), Some(8000));
+        }
+
+        let headers = test_encode(allow_origin);
+        assert_eq!(headers["access-control-allow-origin"], s);
+    }
+
+    #[test]
+    fn try_from_origin() {
+        let s = "http://web-platform.test:8000";
+
+        let allow_origin = AccessControlAllowOrigin::try_from(s).unwrap();
         {
             let origin = allow_origin.origin().unwrap();
             assert_eq!(origin.scheme(), "http");

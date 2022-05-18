@@ -98,7 +98,7 @@ add_task(async function setup() {
   enginesSettings.appVersion = appInfo.version;
 
   await IOUtils.write(
-    OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME),
+    PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME),
     new TextEncoder().encode(JSON.stringify(enginesSettings)),
     { compress: true }
   );

@@ -10,14 +10,8 @@ var provider = {
     "nsIFactory",
     "nsIGeolocationProvider",
   ]),
-  createInstance: function eventsink_ci(outer, iid) {
-    if (outer) {
-      throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-    }
+  createInstance: function eventsink_ci(iid) {
     return this.QueryInterface(iid);
-  },
-  lockFactory: function eventsink_lockf(lock) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
   startup() {},
   watch() {},

@@ -11,6 +11,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
@@ -583,6 +584,12 @@ void WorkerMainThreadRunnable::Dispatch(WorkerStatus aFailStatus,
 NS_IMETHODIMP
 WorkerMainThreadRunnable::Run() {
   AssertIsOnMainThread();
+
+  // This shouldn't be necessary once we're better about making sure no workers
+  // are created during shutdown in earlier phases.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
 
   bool runResult = MainThreadRun();
 

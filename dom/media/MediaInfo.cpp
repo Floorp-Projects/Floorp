@@ -52,8 +52,7 @@ bool AudioInfo::operator==(const AudioInfo& rhs) const {
           mChannels == rhs.mChannels && mChannelMap == rhs.mChannelMap &&
           mBitDepth == rhs.mBitDepth && mProfile == rhs.mProfile &&
           mExtendedProfile == rhs.mExtendedProfile &&
-          *mCodecSpecificConfig == *rhs.mCodecSpecificConfig &&
-          *mExtraData == *rhs.mExtraData);
+          mCodecSpecificConfig == rhs.mCodecSpecificConfig);
 }
 
 }  // namespace mozilla

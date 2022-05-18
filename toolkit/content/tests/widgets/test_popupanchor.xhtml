@@ -24,17 +24,26 @@ function is_close(got, exp, msg) {
   ok(Math.abs(got - exp) < 1, msg + ": " + got + " should be equal(-ish) to " + exp);
 }
 
+function margins(popup) {
+  let ret = {};
+  let cs = getComputedStyle(popup);
+  for (let side of ["top", "right", "bottom", "left"]) {
+    ret[side] = parseFloat(cs.getPropertyValue("margin-" + side));
+  }
+  return ret;
+}
+
 function checkPositionRelativeToAnchor(side) {
   var panelRect = panel.getBoundingClientRect();
   var anchorRect = anchor.getBoundingClientRect();
   switch (side) {
     case "left":
     case "right":
-      is_close(panelRect.top, anchorRect.bottom, "top of panel should be at bottom of anchor");
+      is_close(panelRect.top - margins(panel).top, anchorRect.bottom, "top of panel should be at bottom of anchor");
       break;
     case "top":
     case "bottom":
-      is_close(panelRect.right, anchorRect.left, "right of panel should be left of anchor");
+      is_close(panelRect.right + margins(panel).left, anchorRect.left, "right of panel should be left of anchor");
       break;
     default:
       ok(false, "unknown side " + side);
@@ -295,7 +304,7 @@ var tests = [
   ['after_start', 'left', function(next) {
     openPopup("after_start", function() {
       var panelRect = panel.getBoundingClientRect();
-      is(panelRect.left, 0, "panel remains within the screen");
+      ok(panelRect.left - margins(panel).left >= 0, "panel remains within the screen");
       checkPositionRelativeToAnchor("left");
       next();
     });

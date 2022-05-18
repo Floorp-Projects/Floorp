@@ -89,7 +89,7 @@ class nsHTMLDocument : public mozilla::dom::Document {
    */
   // XXXbz is this still needed now that we can flush just content,
   // not the rest?
-  int32_t GetNumFormsSynchronous();
+  int32_t GetNumFormsSynchronous() const;
   void SetIsXHTML(bool aXHTML) { mType = (aXHTML ? eXHTML : eHTML); }
 
   virtual nsresult Clone(mozilla::dom::NodeInfo*,

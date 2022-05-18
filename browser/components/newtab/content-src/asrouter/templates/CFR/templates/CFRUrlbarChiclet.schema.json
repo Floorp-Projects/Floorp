@@ -81,11 +81,11 @@
               "enum": ["current", "tabshifted"]
             }
           },
-          "additionalProperties": "false",
+          "additionalProperties": true,
           "required": ["url", "where"]
         }
       },
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "layout",
         "category",

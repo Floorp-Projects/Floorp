@@ -930,7 +930,7 @@ const biases = [
 // all the tyoes). When the above case exists, the coefficient of the rule will be
 // overwritten, which means, we can't have different coefficient for the same rule on
 // different types. To workaround this issue, we create a new ruleset for each type.
-this.creditCardRulesets = {
+var creditCardRulesets = {
   init() {
     for (const type of this.types) {
       this[type] = makeRuleset([...coefficients[type]], biases);
@@ -948,7 +948,7 @@ this.creditCardRulesets = {
     ];
   },
 };
-this.creditCardRulesets.init();
+creditCardRulesets.init();
 
 FathomHeuristicsRegExp = {
   RULES: {

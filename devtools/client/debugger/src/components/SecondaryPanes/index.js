@@ -22,7 +22,7 @@ import {
   getCurrentThread,
   getThreadContext,
   getPauseReason,
-  getSourceFromId,
+  getLocationSource,
   getSkipPausing,
   shouldLogEventBreakpoints,
 } from "../../selectors";
@@ -466,8 +466,7 @@ const mapStateToProps = state => {
     workers: getThreads(state),
     skipPausing: getSkipPausing(state),
     logEventBreakpoints: shouldLogEventBreakpoints(state),
-    source:
-      selectedFrame && getSourceFromId(state, selectedFrame.location.sourceId),
+    source: selectedFrame && getLocationSource(state, selectedFrame.location),
     pauseReason: pauseReason?.type ?? "",
   };
 };

@@ -210,7 +210,15 @@ runHeuristicsTest(
       expectedResult: [
         [
           // ac-off
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+          [
+            { 
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "email"
+            },
+          ]
+          
         ],
       ],
     },

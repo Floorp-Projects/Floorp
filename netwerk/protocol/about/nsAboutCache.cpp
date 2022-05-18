@@ -516,8 +516,7 @@ nsAboutCache::GetURIFlags(nsIURI* aURI, uint32_t* result) {
 }
 
 // static
-nsresult nsAboutCache::Create(nsISupports* aOuter, REFNSIID aIID,
-                              void** aResult) {
+nsresult nsAboutCache::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsAboutCache> about = new nsAboutCache();
   return about->QueryInterface(aIID, aResult);
 }

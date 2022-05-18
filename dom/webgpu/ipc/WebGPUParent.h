@@ -88,6 +88,7 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDevicePushErrorScope(RawId aSelfId);
   ipc::IPCResult RecvDevicePopErrorScope(
       RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
+  ipc::IPCResult RecvGenerateError(RawId aDeviceId, const nsCString& message);
 
   ipc::IPCResult GetFrontBufferSnapshot(IProtocol* aProtocol,
                                         const CompositableHandle& aHandle,
@@ -100,6 +101,7 @@ class WebGPUParent final : public PWebGPUParent {
   virtual ~WebGPUParent();
   void MaintainDevices();
   bool ForwardError(RawId aDeviceID, ErrorBuffer& aError);
+  void ReportError(RawId aDeviceId, const nsCString& message);
 
   UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;

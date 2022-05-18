@@ -30,6 +30,7 @@ import {
   getSelectedLocation,
   getSelectedSource,
   getSelectedSourceTextContent,
+  getSelectedBreakableLines,
   getConditionalPanelLocation,
   getSymbols,
   getIsCurrentThreadPaused,
@@ -134,6 +135,7 @@ class Editor extends PureComponent {
       editorWrappingEnabled: PropTypes.bool,
       skipPausing: PropTypes.bool,
       blackboxedRanges: PropTypes.object,
+      breakableLines: PropTypes.object,
     };
   }
 
@@ -454,6 +456,7 @@ class Editor extends PureComponent {
       addBreakpointAtLine,
       continueToHere,
       toggleBlackBox,
+      breakableLines,
     } = this.props;
 
     // ignore right clicks in the gutter
@@ -476,6 +479,11 @@ class Editor extends PureComponent {
 
     const sourceLine = toSourceLine(selectedSource.id, line);
     if (typeof sourceLine !== "number") {
+      return;
+    }
+
+    // ignore clicks on a non-breakable line
+    if (!breakableLines.has(sourceLine)) {
       return;
     }
 
@@ -734,6 +742,7 @@ const mapStateToProps = state => {
     editorWrappingEnabled: getEditorWrapping(state),
     highlightedCalls: getHighlightedCalls(state, getCurrentThread(state)),
     blackboxedRanges: getBlackBoxRanges(state),
+    breakableLines: getSelectedBreakableLines(state),
   };
 };
 

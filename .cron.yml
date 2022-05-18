@@ -122,6 +122,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr91
+          - mozilla-esr102
           - elm
       # For all non m-c jobs we just run once daily matching the 10 UTC
       # nightly which is designed to align with searchfox's AWS cron
@@ -221,6 +222,7 @@ jobs:
           - mozilla-beta
           - mozilla-release
           - mozilla-esr91
+          - mozilla-esr102
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}
           - {weekday: 'Thursday', hour: 8, minute: 0}
@@ -241,6 +243,17 @@ jobs:
           - {weekday: 'Friday', hour: 3, minute: 0}
           - {weekday: 'Saturday', hour: 3, minute: 0}
           - {weekday: 'Sunday', hour: 3, minute: 0}
+
+    - name: backfill-all-browsertime
+      job:
+          type: decision-task
+          treeherder-symbol: baB
+          target-tasks-method: backfill_all_browsertime
+          include-push-tasks: true
+      run-on-projects:
+          - autoland
+      when:
+          - {hour: 5, minute: 0}
 
     - name: condprof
       job:

@@ -436,15 +436,10 @@ void Predictor::Shutdown() {
   mInitialized = false;
 }
 
-nsresult Predictor::Create(nsISupports* aOuter, const nsIID& aIID,
-                           void** aResult) {
+nsresult Predictor::Create(const nsIID& aIID, void** aResult) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-
-  if (aOuter != nullptr) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
 
   RefPtr<Predictor> svc = new Predictor();
   if (IsNeckoChild()) {

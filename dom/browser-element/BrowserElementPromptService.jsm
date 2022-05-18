@@ -662,10 +662,7 @@ var BrowserElementPromptService = {
     var newInstance = new BrowserElementPromptFactory(oldInstance);
 
     var newFactory = {
-      createInstance(outer, iid) {
-        if (outer != null) {
-          throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-        }
+      createInstance(iid) {
         return newInstance.QueryInterface(iid);
       },
     };

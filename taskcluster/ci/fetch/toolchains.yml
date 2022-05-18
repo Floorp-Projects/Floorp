@@ -311,8 +311,8 @@ sccache:
     fetch:
         type: git
         repo: https://github.com/mozilla/sccache
-        # 0.2.15 release
-        revision: 6b6d2f7d2dceefeb4f583712aa4c221db62be0bd
+        # 0.3.0 release
+        revision: f6e36e68c6cb1e17127273956df9ebf2127dff1a
 
 fxc2:
     description: fxc2 source code
@@ -383,11 +383,11 @@ rust-1.61.0-dev:
         revision: 3b348d932aa5c9884310d025cf7c516023fd0d9a
 
 wasi-sdk:
-    description: wasi-sdk source code
+    description: wasi-sdk-15 source code + LLVM-15 fix
     fetch:
         type: git
         repo: https://github.com/WebAssembly/wasi-sdk
-        revision: f0d40b6491efc1e2332f55eb22e6292abdce4335
+        revision: 37ae6af88201884c8b98a65adcd6d8cd1284f95e
 
 ninja:
     description: ninja 1.9.0

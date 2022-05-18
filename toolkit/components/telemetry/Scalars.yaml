@@ -5066,6 +5066,26 @@ update:
     record_in_processes:
       - main
 
+  version_pin:
+    bug_numbers:
+      - 1762957
+    description: >
+      The AppUpdatePin Enterprise Policy controls the maximum version that the
+      browser can update to. If the policy is set, this probe will report the
+      policy's value. The possible policy values are "X." and "X.Y.", where
+      X is the pinned major version and Y is the pinned minor version.
+    expires: never
+    kind: string
+    keyed: false
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - bytesized@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # The following section contains search counters.
 browser.search:
   with_ads:
@@ -6620,9 +6640,9 @@ urlbar.tabtosearch:
       - main
 
 urlbar.picked:
-    autofill:
+    autofill_adaptive:
       bug_numbers:
-        - 1671508
+        - 1597791
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never
@@ -6630,7 +6650,38 @@ urlbar.picked:
       keyed: true
       notification_emails:
         - fx-search@mozilla.com
-        - tbrooks@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_origin:
+      bug_numbers:
+        - 1597791
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    autofill_url:
+      bug_numbers:
+        - 1597791
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search@mozilla.com
       release_channel_collection: opt-out
       products:
         - 'firefox'

@@ -129,7 +129,7 @@ void RemoteWorkerService::InitializeOnTargetThread() {
   mActor = actor;
 }
 
-void RemoteWorkerService::ShutdownOnTargetThread() {
+void RemoteWorkerService::CloseActorOnTargetThread() {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mThread->IsOnCurrentThread());
 
@@ -139,16 +139,6 @@ void RemoteWorkerService::ShutdownOnTargetThread() {
     mActor->Send__delete__(mActor);
     mActor = nullptr;
   }
-
-  // Then we can terminate the thread on the main-thread.
-  RefPtr<RemoteWorkerService> self = this;
-  nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableFunction("ShutdownOnMainThread", [self]() {
-        self->mThread->Shutdown();
-        self->mThread = nullptr;
-      });
-
-  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 NS_IMETHODIMP
@@ -163,10 +153,19 @@ RemoteWorkerService::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     RefPtr<RemoteWorkerService> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        "ShutdownThread", [self]() { self->ShutdownOnTargetThread(); });
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction("RemoteWorkerService::CloseActorOnTargetThread",
+                               [self]() { self->CloseActorOnTargetThread(); });
 
     mThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+
+    // We've posted a shutdown message; now shutdown the thread.  This will spin
+    // a nested event loop waiting for the thread to process all pending events
+    // (including the just dispatched CloseActorOnTargetThread which will close
+    // the actor), ensuring to block main thread shutdown long enough to avoid
+    // races.
+    mThread->Shutdown();
+    mThread = nullptr;
 
     StaticMutexAutoLock lock(sRemoteWorkerServiceMutex);
     sRemoteWorkerService = nullptr;

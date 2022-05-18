@@ -85,14 +85,14 @@ var gBookmarksFileNew;
 
 add_task(async function setup() {
   // File pointer to legacy bookmarks file.
-  gBookmarksFileOld = OS.Path.join(
+  gBookmarksFileOld = PathUtils.join(
     do_get_cwd().path,
     "bookmarks.preplaces.html"
   );
 
   // File pointer to a new Places-exported bookmarks file.
-  gBookmarksFileNew = OS.Path.join(
-    OS.Constants.Path.profileDir,
+  gBookmarksFileNew = PathUtils.join(
+    PathUtils.profileDir,
     "bookmarks.exported.html"
   );
   await IOUtils.remove(gBookmarksFileNew, { ignoreAbsent: true });

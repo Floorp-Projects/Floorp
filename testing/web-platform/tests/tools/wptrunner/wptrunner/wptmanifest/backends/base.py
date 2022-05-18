@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import abc
 
 from ..node import NodeVisitor
@@ -130,7 +132,7 @@ class ManifestItem:
         self._data = {}
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__, self.node.data)
+        return f"<{self.__class__} {self.node.data}>"
 
     def __str__(self):
         rv = [repr(self)]

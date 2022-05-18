@@ -34,14 +34,12 @@ interface nsIPrintSettingsService : nsISupports
   [noscript] readonly attribute nsIPrintSettings defaultPrintSettingsForPrinting;
 
   /**
-   * Returns a new, unique PrintSettings object each time.
+   * Creates a new nsIPrintSettings object.
    *
-   * Initializes the newPrintSettings from the unprefixed printer
+   * Initializes the settings object from the unprefixed printer
    * (Note: this may not happen if there is an OS specific implementation.)
-   *
-   * XXX This should really be a function called `createPrintSettings()`.
    */
-  readonly attribute nsIPrintSettings newPrintSettings;
+  nsIPrintSettings createNewPrintSettings();
 
   /**
    * The name of the last printer used. Note that this may not be set, or may

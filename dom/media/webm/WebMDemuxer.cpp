@@ -391,12 +391,16 @@ nsresult WebMDemuxer::ReadMetadata() {
       mHasAudio = true;
       mAudioCodec = nestegg_track_codec_id(context, track);
       if (mAudioCodec == NESTEGG_CODEC_VORBIS) {
+        mInfo.mAudio.mCodecSpecificConfig =
+            AudioCodecSpecificVariant{VorbisCodecSpecificData{}};
         mInfo.mAudio.mMimeType = "audio/vorbis";
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         uint64_t codecDelayUs = params.codec_delay / 1000;
         mInfo.mAudio.mMimeType = "audio/opus";
-        OpusDataDecoder::AppendCodecDelay(mInfo.mAudio.mCodecSpecificConfig,
-                                          codecDelayUs);
+        OpusCodecSpecificData opusCodecSpecificData;
+        opusCodecSpecificData.mContainerCodecDelayMicroSeconds = codecDelayUs;
+        mInfo.mAudio.mCodecSpecificConfig =
+            AudioCodecSpecificVariant{std::move(opusCodecSpecificData)};
       }
       mSeekPreroll = params.seek_preroll;
       mInfo.mAudio.mRate = params.rate;
@@ -426,14 +430,15 @@ nsresult WebMDemuxer::ReadMetadata() {
       // TODO: This is already the format WebM stores them in. Would be nice
       // to avoid having libnestegg split them only for us to pack them again,
       // but libnestegg does not give us an API to access this data directly.
+      RefPtr<MediaByteBuffer> audioCodecSpecificBlob =
+          GetAudioCodecSpecificBlob(mInfo.mAudio.mCodecSpecificConfig);
       if (nheaders > 1) {
-        if (!XiphHeadersToExtradata(mInfo.mAudio.mCodecSpecificConfig, headers,
+        if (!XiphHeadersToExtradata(audioCodecSpecificBlob, headers,
                                     headerLens)) {
           return NS_ERROR_FAILURE;
         }
       } else {
-        mInfo.mAudio.mCodecSpecificConfig->AppendElements(headers[0],
-                                                          headerLens[0]);
+        audioCodecSpecificBlob->AppendElements(headers[0], headerLens[0]);
       }
       uint64_t duration = 0;
       r = nestegg_duration(context, &duration);

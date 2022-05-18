@@ -2,7 +2,7 @@
 #
 # Process this file with autoconf to produce a configure script.
 #
-# Copyright (C) 2001-2021 by
+# Copyright (C) 2001-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.11.1], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.12.1], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.h.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='24:1:18'
+version_info='24:3:18'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -317,6 +317,12 @@ if test x"$with_zlib" = xyes -a "$have_zlib" = no; then
   AC_MSG_ERROR([external zlib support requested but library not found])
 fi
 
+SYSTEM_ZLIB=
+if test "$have_zlib" != no; then
+  SYSTEM_ZLIB=yes
+fi
+AC_SUBST([SYSTEM_ZLIB])
+
 
 # check for system libbz2
 
@@ -508,19 +514,48 @@ if test x"$with_brotli" = xyes -a "$have_brotli" = no; then
 fi
 
 
-# check for librt
+# Checks for the demo programs.
 #
-# We need `clock_gettime' for the `ftbench' demo program.
-#
-# The code is modeled after gnulib's file `clock_time.m4', ignoring
-# very old Solaris systems.
+# FreeType doesn't need this.  However, since the demo program repository
+# doesn't come with a `configure` script of its own, we integrate the tests
+# here for simplicity.
 
+# We need `clock_gettime` from 'librt' for the `ftbench` demo program.
+#
+# The code is modeled after gnulib's file `clock_time.m4`, ignoring
+# very old Solaris systems.
 LIB_CLOCK_GETTIME=
 AC_SEARCH_LIBS([clock_gettime],
                [rt],
                [test "$ac_cv_search_clock_gettime" = "none required" \
                 || LIB_CLOCK_GETTIME=$ac_cv_search_clock_gettime])
-AC_SUBST([LIB_CLOCK_GETTIME])
+
+FT_DEMO_CFLAGS=""
+FT_DEMO_LDFLAGS="$LIB_CLOCK_GETTIME"
+
+# 'librsvg' is needed to demonstrate SVG support.
+AC_ARG_WITH([librsvg],
+  [AS_HELP_STRING([--with-librsvg=@<:@yes|no|auto@:>@],
+                  [support OpenType SVG fonts in FreeType demo programs @<:@default=auto@:>@])],
+  [], [with_librsvg=auto])
+
+have_librsvg=no
+if test x"$with_librsvg" = xyes -o x"$with_librsvg" = xauto; then
+  PKG_CHECK_MODULES([LIBRSVG], [librsvg-2.0 >= 2.46.0],
+                    [have_librsvg="yes (pkg-config)"], [:])
+
+  if test "$have_librsvg" != no; then
+    FT_DEMO_CFLAGS="$FT_DEMO_CFLAGS $LIBRSVG_CFLAGS -DHAVE_LIBRSVG"
+    FT_DEMO_LDFLAGS="$FT_DEMO_LDFLAGS $LIBRSVG_LIBS"
+  fi
+fi
+
+if test x"$with_librsvg" = xyes -a "$have_librsvg" = no; then
+  AC_MSG_ERROR([librsvg support requested but library not found])
+fi
+
+AC_SUBST([FT_DEMO_CFLAGS])
+AC_SUBST([FT_DEMO_LDFLAGS])
 
 
 # Some options handling SDKs/archs in CFLAGS should be copied
@@ -962,32 +997,32 @@ fi
 
 
 # entries in Requires.private are separated by commas
-REQUIRES_PRIVATE="$zlib_reqpriv,     \
-                  $bzip2_reqpriv,    \
-                  $libpng_reqpriv,   \
-                  $harfbuzz_reqpriv, \
-                  $brotli_reqpriv"
+PKGCONFIG_REQUIRES_PRIVATE="$zlib_reqpriv,     \
+                            $bzip2_reqpriv,    \
+                            $libpng_reqpriv,   \
+                            $harfbuzz_reqpriv, \
+                            $brotli_reqpriv"
 # beautify
-REQUIRES_PRIVATE=`echo "$REQUIRES_PRIVATE" \
-                  | sed -e 's/^  *//'      \
-                        -e 's/  *$//'      \
-                        -e 's/, */,/g'     \
-                        -e 's/,,*/,/g'     \
-                        -e 's/^,*//'       \
-                        -e 's/,*$//'       \
-                        -e 's/,/, /g'`
+PKGCONFIG_REQUIRES_PRIVATE=`echo "$PKGCONFIG_REQUIRES_PRIVATE" \
+                            | sed -e 's/^  *//'      \
+                                  -e 's/  *$//'      \
+                                  -e 's/, */,/g'     \
+                                  -e 's/,,*/,/g'     \
+                                  -e 's/^,*//'       \
+                                  -e 's/,*$//'       \
+                                  -e 's/,/, /g'`
 
-LIBS_PRIVATE="$zlib_libspriv     \
-              $bzip2_libspriv    \
-              $libpng_libspriv   \
-              $harfbuzz_libspriv \
-              $brotli_libspriv   \
-              $ft2_extra_libs"
+PKGCONFIG_LIBS_PRIVATE="$zlib_libspriv     \
+                        $bzip2_libspriv    \
+                        $libpng_libspriv   \
+                        $harfbuzz_libspriv \
+                        $brotli_libspriv   \
+                        $ft2_extra_libs"
 # beautify
-LIBS_PRIVATE=`echo "$LIBS_PRIVATE"  \
-              | sed -e 's/^  *//'   \
-                    -e 's/  *$//'   \
-                    -e 's/  */ /g'`
+PKGCONFIG_LIBS_PRIVATE=`echo "$PKGCONFIG_LIBS_PRIVATE"  \
+                        | sed -e 's/^  *//'   \
+                              -e 's/  *$//'   \
+                              -e 's/  */ /g'`
 
 LIBSSTATIC_CONFIG="-lfreetype               \
                    $zlib_libsstaticconf     \
@@ -1005,10 +1040,28 @@ LIBSSTATIC_CONFIG=`echo "$LIBSSTATIC_CONFIG"          \
                          -e 's/  *$//'                \
                          -e 's/  */ /g'`
 
+# If FreeType gets installed with `--disable-shared', don't use
+# 'private' fields.  `pkg-config' only looks into `.pc' files and is
+# completely agnostic to whether shared libraries are actually present
+# or not.  As a consequence, the user had to specify `--static' while
+# calling `pkg-config', which configure scripts are normally not
+# prepared for.
+
+PKGCONFIG_REQUIRES=
+PKGCONFIG_LIBS='-L${libdir} -lfreetype'
+
+if test $enable_shared = "no"; then
+  PKGCONFIG_REQUIRES="$PKGCONFIG_REQUIRES $PKGCONFIG_REQUIRES_PRIVATE"
+  PKGCONFIG_REQUIRES_PRIVATE=
+  PKGCONFIG_LIBS="$PKGCONFIG_LIBS $PKGCONFIG_LIBS_PRIVATE"
+  PKGCONFIG_LIBS_PRIVATE=
+fi
 
 AC_SUBST([ftmac_c])
-AC_SUBST([REQUIRES_PRIVATE])
-AC_SUBST([LIBS_PRIVATE])
+AC_SUBST([PKGCONFIG_REQUIRES])
+AC_SUBST([PKGCONFIG_LIBS])
+AC_SUBST([PKGCONFIG_REQUIRES_PRIVATE])
+AC_SUBST([PKGCONFIG_LIBS_PRIVATE])
 AC_SUBST([LIBSSTATIC_CONFIG])
 
 AC_SUBST([hardcode_libdir_flag_spec])

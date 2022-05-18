@@ -127,11 +127,7 @@ var updateAppInfo = function(options) {
   } catch (ex) {}
 
   let factory = {
-    createInstance(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
-
+    createInstance(iid) {
       return currentAppInfo.QueryInterface(iid);
     },
   };

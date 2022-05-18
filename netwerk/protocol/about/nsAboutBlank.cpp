@@ -44,8 +44,7 @@ nsAboutBlank::GetChromeURI(nsIURI* aURI, nsIURI** chromeURI) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsresult nsAboutBlank::Create(nsISupports* aOuter, REFNSIID aIID,
-                              void** aResult) {
+nsresult nsAboutBlank::Create(REFNSIID aIID, void** aResult) {
   RefPtr<nsAboutBlank> about = new nsAboutBlank();
   return about->QueryInterface(aIID, aResult);
 }

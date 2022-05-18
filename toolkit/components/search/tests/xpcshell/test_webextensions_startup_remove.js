@@ -46,7 +46,7 @@ add_task(async function test_removeAddonOnStartup() {
   // Note: the saved settings will have the engine in. If this didn't work,
   // the engine would still be present.
   await IOUtils.remove(
-    OS.Path.join(profile.path, "extensions", `${ENGINE_ID}.xpi`)
+    PathUtils.join(profile.path, "extensions", `${ENGINE_ID}.xpi`)
   );
 
   let removePromise = SearchTestUtils.promiseSearchNotification(

@@ -120,8 +120,7 @@ class nsAboutCache final : public nsIAboutModule {
 
   nsAboutCache() = default;
 
-  [[nodiscard]] static nsresult Create(nsISupports* aOuter, REFNSIID aIID,
-                                       void** aResult);
+  [[nodiscard]] static nsresult Create(REFNSIID aIID, void** aResult);
 
   [[nodiscard]] static nsresult GetStorage(nsACString const& storageName,
                                            nsILoadContextInfo* loadInfo,

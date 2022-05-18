@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.jsm",
 });
 
-var { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 var { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
@@ -65,13 +64,13 @@ Services.prefs.setBoolPref(
 SearchSettings.SETTNGS_INVALIDATION_DELAY = 250;
 
 async function promiseSettingsData() {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME);
+  let path = PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME);
   return JSON.parse(await IOUtils.readUTF8(path, { decompress: true }));
 }
 
 function promiseSaveSettingsData(data) {
   return IOUtils.write(
-    OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME),
+    PathUtils.join(PathUtils.profileDir, SETTINGS_FILENAME),
     new TextEncoder().encode(JSON.stringify(data)),
     { compress: true }
   );

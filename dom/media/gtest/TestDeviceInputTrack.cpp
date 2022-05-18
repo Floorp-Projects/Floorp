@@ -430,12 +430,12 @@ TEST_F(TestDeviceInputTrack, NonNativeInputTrackData) {
     EXPECT_TRUE(data.IsNull());
   }
 
-  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
   mGraph->RemoveTrackGraphThread(track);
 }
 
-TEST_F(TestDeviceInputTrack, DeviceChangedCallback) {
+TEST_F(TestDeviceInputTrack, NonNativeDeviceChangedCallback) {
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
@@ -488,12 +488,12 @@ TEST_F(TestDeviceInputTrack, DeviceChangedCallback) {
   DispatchFunction([&] { track->StopAudio(); });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
 
-  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
   mGraph->RemoveTrackGraphThread(track);
 }
 
-TEST_F(TestDeviceInputTrack, ErrorCallback) {
+TEST_F(TestDeviceInputTrack, NonNativeErrorCallback) {
   MockCubeb* cubeb = new MockCubeb();
   CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
 
@@ -541,11 +541,16 @@ TEST_F(TestDeviceInputTrack, ErrorCallback) {
   DispatchFunction([&] { stream->ForceError(); });
   WaitFor(stream->ErrorForcedEvent());
 
+  // Make sure the stream has been stopped by the error-state's backgroud thread
+  // task, to avoid getting a stopped state callback by `track->StopAudio`
+  // below.
+  WaitFor(stream->ErrorStoppedEvent());
+
   // Stop and destroy the stream.
   DispatchFunction([&] { track->StopAudio(); });
   Unused << WaitFor(cubeb->StreamDestroyEvent());
 
-  // Tear down: Destroy the NativeInputTrack and remove it from mGraph.
+  // Tear down: Destroy the NonNativeInputTrack and remove it from mGraph.
   track->Destroy();
   mGraph->RemoveTrackGraphThread(track);
 }

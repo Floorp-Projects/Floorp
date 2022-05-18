@@ -4,9 +4,7 @@
 // Tests that history initialization correctly handles a corrupt places schema.
 
 add_task(async function() {
-  let path = await setupPlacesDatabase(
-    OS.Path.join("..", "migration", "favicons_v41.sqlite")
-  );
+  let path = await setupPlacesDatabase(["migration", "favicons_v41.sqlite"]);
 
   // Ensure the database will go through a migration that depends on moz_places
   // and break the schema by dropping that table.

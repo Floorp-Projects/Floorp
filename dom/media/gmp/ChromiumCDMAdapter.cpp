@@ -223,7 +223,7 @@ static std::vector<std::wstring> GetDosDeviceNames() {
     if (drive.back() == '\\') {
       drive.erase(drive.end() - 1);
     }
-    v.push_back(move(drive));
+    v.push_back(std::move(drive));
     p += l + 1;
   }
   return v;

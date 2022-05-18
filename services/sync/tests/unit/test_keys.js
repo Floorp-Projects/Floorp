@@ -8,33 +8,12 @@ const { CollectionKeyManager, CryptoWrapper } = ChromeUtils.import(
 
 var collectionKeys = new CollectionKeyManager();
 
-function sha256HMAC(message, key) {
-  let h = Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, key);
-  return Utils.digestBytes(message, h);
-}
-
 function do_check_keypair_eq(a, b) {
   Assert.equal(2, a.length);
   Assert.equal(2, b.length);
   Assert.equal(a[0], b[0]);
   Assert.equal(a[1], b[1]);
 }
-
-add_task(async function test_time_keyFromString() {
-  const iterations = 1000;
-  let o;
-  let b = new BulkKeyBundle("dummy");
-  let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");
-  await b.generateRandom();
-
-  _("Running " + iterations + " iterations of hmacKeyObject + sha256HMAC.");
-  for (let i = 0; i < iterations; ++i) {
-    let k = b.hmacKeyObject;
-    o = sha256HMAC(d, k);
-  }
-  Assert.ok(!!o);
-  _("Done.");
-});
 
 add_test(function test_set_invalid_values() {
   _("Ensure that setting invalid encryption and HMAC key values is caught.");
@@ -101,16 +80,6 @@ add_test(function test_set_invalid_values() {
     Assert.ok(thrown);
     thrown = false;
   }
-
-  run_next_test();
-});
-
-add_test(function test_repeated_hmac() {
-  let testKey = "ababcdefabcdefabcdefabcdef";
-  let k = Utils.makeHMACKey("foo");
-  let one = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
-  let two = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
-  Assert.equal(one, two);
 
   run_next_test();
 });

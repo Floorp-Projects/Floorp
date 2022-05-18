@@ -167,7 +167,7 @@ void TCPSocketChild::SetSocket(TCPSocket* aSocket) { mSocket = aSocket; }
 
 void TCPSocketChild::GetHost(nsAString& aHost) { aHost = mHost; }
 
-void TCPSocketChild::GetPort(uint16_t* aPort) { *aPort = mPort; }
+void TCPSocketChild::GetPort(uint16_t* aPort) const { *aPort = mPort; }
 
 mozilla::ipc::IPCResult TCPSocketChild::RecvRequestDelete() {
   mozilla::Unused << Send__delete__(this);

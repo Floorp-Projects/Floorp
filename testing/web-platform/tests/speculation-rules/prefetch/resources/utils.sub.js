@@ -14,11 +14,20 @@ class PrefetchAgent extends RemoteContext {
   }
 
   getExecutorURL(options = {}) {
-    let {hostname, protocol, ...extra} = options;
+    let {hostname, username, password, protocol, executor, ...extra} = options;
     let params = new URLSearchParams({uuid: this.context_id, ...extra});
-    let url = new URL(`executor.sub.html?${params}`, SR_PREFETCH_UTILS_URL);
+    if(executor === undefined) {
+      executor = "executor.sub.html";
+    }
+    let url = new URL(`${executor}?${params}`, SR_PREFETCH_UTILS_URL);
     if(hostname !== undefined) {
       url.hostname = hostname;
+    }
+    if(username !== undefined) {
+      url.username = username;
+    }
+    if(password !== undefined) {
+      url.password = password;
     }
     if(protocol !== undefined) {
       url.protocol = protocol;
@@ -45,6 +54,8 @@ class PrefetchAgent extends RemoteContext {
         location.href = url;
       });
     }, [url]);
+    url.username = '';
+    url.password = '';
     assert_equals(
         await this.execute_script(() => location.href),
         url.toString(),
@@ -54,6 +65,25 @@ class PrefetchAgent extends RemoteContext {
 
   async getRequestHeaders() {
     return this.execute_script(() => requestHeaders);
+  }
+
+  async getResponseCookies() {
+    return this.execute_script(() => {
+      let cookie = {};
+      document.cookie.split(/\s*;\s*/).forEach((kv)=>{
+        let [key, value] = kv.split(/\s*=\s*/);
+        cookie[key] = value;
+      });
+      return cookie;
+    });
+  }
+
+  async getRequestCookies() {
+    return this.execute_script(() => window.requestCookies);
+  }
+
+  async getRequestCredentials() {
+    return this.execute_script(() => window.requestCredentials);
   }
 }
 
@@ -79,9 +109,9 @@ async function isUrlPrefetched(url) {
 }
 
 // Must also include /common/utils.js and /common/dispatcher/dispatcher.js to use this.
-async function spawnWindow(t, extra = {}) {
+async function spawnWindow(t, options = {}) {
   let agent = new PrefetchAgent(token(), t);
-  let w = window.open(agent.getExecutorURL(), extra);
+  let w = window.open(agent.getExecutorURL(options), options);
   t.add_cleanup(() => w.close());
   return agent;
 }

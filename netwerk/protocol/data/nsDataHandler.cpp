@@ -17,8 +17,7 @@
 
 NS_IMPL_ISUPPORTS(nsDataHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
-nsresult nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID,
-                               void** aResult) {
+nsresult nsDataHandler::Create(const nsIID& aIID, void** aResult) {
   RefPtr<nsDataHandler> ph = new nsDataHandler();
   return ph->QueryInterface(aIID, aResult);
 }

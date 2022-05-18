@@ -124,9 +124,7 @@
  * It inherits from the "Runnable" class, so instances are ref counted and
  * they are internally used on multiple threads (specifically on the main
  * thread and on the RemoteLazyInputStream thread). Anyway, users should create
- * and use instances of this class only on the main thread (apart from a special
- * case when we need to cancel the request from an internal chromium IPC thread
- * to prevent a dead lock involving CPOWs).
+ * and use instances of this class only on the main thread.
  * The actual child actor is represented by the "LSRequestChild" class that
  * implements the "PBackgroundLSRequestChild" interface. An "LSRequestChild"
  * instance is not ref counted and lives on the RemoteLazyInputStream thread.

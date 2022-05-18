@@ -468,7 +468,7 @@ class CycleCollectedJSRuntime {
   nsTHashSet<JS::Zone*> mZonesWaitingForGC;
 
   struct EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
-    void invoke(JS::HandleObject global, Closure& closure) override;
+    void invoke(JS::Handle<JSObject*> global, Closure& closure) override;
   };
   EnvironmentPreparer mEnvironmentPreparer;
 
@@ -481,7 +481,8 @@ class CycleCollectedJSRuntime {
   // Built on nightly only to avoid any possible performance impact on release
 
   struct ErrorInterceptor final : public JSErrorInterceptor {
-    virtual void interceptError(JSContext* cx, JS::HandleValue exn) override;
+    virtual void interceptError(JSContext* cx,
+                                JS::Handle<JS::Value> exn) override;
     void Shutdown(JSRuntime* rt);
 
     // Copy of the details of the exception.

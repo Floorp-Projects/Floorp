@@ -151,8 +151,7 @@ void nsObserverService::Shutdown() {
   mObserverTopicTable.Clear();
 }
 
-nsresult nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
-                                   void** aInstancePtr) {
+nsresult nsObserverService::Create(const nsIID& aIID, void** aInstancePtr) {
   LOG(("nsObserverService::Create()"));
 
   RefPtr<nsObserverService> os = new nsObserverService();

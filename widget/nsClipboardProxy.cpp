@@ -11,7 +11,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsXULAppAPI.h"
 #include "nsContentUtils.h"
-#include "nsStringStream.h"
 #include "PermissionMessageUtils.h"
 
 using namespace mozilla;
@@ -47,62 +46,12 @@ nsClipboardProxy::GetData(nsITransferable* aTransferable,
   nsTArray<nsCString> types;
   aTransferable->FlavorsTransferableCanImport(types);
 
-  nsresult rv;
   IPCDataTransfer dataTransfer;
   ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard,
                                                  &dataTransfer);
-
-  auto& items = dataTransfer.items();
-  for (uint32_t j = 0; j < items.Length(); ++j) {
-    const IPCDataTransferItem& item = items[j];
-
-    if (item.data().type() == IPCDataTransferData::TnsString) {
-      nsCOMPtr<nsISupportsString> dataWrapper =
-          do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      const nsString& data = item.data().get_nsString();
-      rv = dataWrapper->SetData(data);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else if (item.data().type() == IPCDataTransferData::TShmem) {
-      // If this is an image, convert it into an nsIInputStream.
-      const nsCString& flavor = item.flavor();
-      mozilla::ipc::Shmem data = item.data().get_Shmem();
-      if (flavor.EqualsLiteral(kJPEGImageMime) ||
-          flavor.EqualsLiteral(kJPGImageMime) ||
-          flavor.EqualsLiteral(kPNGImageMime) ||
-          flavor.EqualsLiteral(kGIFImageMime)) {
-        nsCOMPtr<nsIInputStream> stream;
-
-        NS_NewCStringInputStream(
-            getter_AddRefs(stream),
-            nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-
-        rv = aTransferable->SetTransferData(flavor.get(), stream);
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else if (flavor.EqualsLiteral(kNativeHTMLMime) ||
-                 flavor.EqualsLiteral(kRTFMime) ||
-                 flavor.EqualsLiteral(kCustomTypesMime)) {
-        nsCOMPtr<nsISupportsCString> dataWrapper =
-            do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = dataWrapper->SetData(
-            nsDependentCSubstring(data.get<char>(), data.Size<char>()));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      mozilla::Unused << ContentChild::GetSingleton()->DeallocShmem(data);
-    }
-  }
-
-  return NS_OK;
+  return nsContentUtils::IPCTransferableToTransferable(
+      dataTransfer, false /* aAddDataFlavor */, aTransferable,
+      ContentChild::GetSingleton());
 }
 
 NS_IMETHODIMP

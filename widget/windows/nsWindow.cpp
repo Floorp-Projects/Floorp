@@ -678,6 +678,19 @@ static bool IsMouseVanishKey(WPARAM aVirtKey) {
  * Hide/unhide the cursor if the correct Windows and Firefox settings are set.
  */
 static void MaybeHideCursor(bool aShouldHide) {
+  static bool sMouseExists =
+      []{
+        // Before the first call to ShowCursor, the visibility count is 0
+        // if there is a mouse installed and -1 if not.
+        int count = ::ShowCursor(FALSE);
+        ::ShowCursor(TRUE);
+        return count == -1;
+      }();
+
+  if (!sMouseExists) {
+    return;
+  }
+
   static bool sIsHidden = false;
   bool shouldHide = aShouldHide &&
                     StaticPrefs::widget_windows_hide_cursor_when_typing() &&

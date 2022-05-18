@@ -72,6 +72,19 @@ var PrintUtils = {
     ));
   },
 
+  async checkForSelection(browsingContext) {
+    try {
+      let sourceActor = browsingContext.currentWindowGlobal.getActor(
+        "PrintingSelection"
+      );
+      // Need the await for the try to trigger...
+      return await sourceActor.sendQuery("PrintingSelection:HasSelection", {});
+    } catch (e) {
+      Cu.reportError(e);
+    }
+    return false;
+  },
+
   /**
    * Updates the hidden state of the "Page Setup" menu items in the File menu,
    * depending on the value of the `print.show_page_setup_menu` pref.
@@ -115,10 +128,10 @@ var PrintUtils = {
       }
     }
     try {
-      var PRINTPROMPTSVC = Cc[
-        "@mozilla.org/embedcomp/printingprompt-service;1"
-      ].getService(Ci.nsIPrintingPromptService);
-      PRINTPROMPTSVC.showPageSetupDialog(window, printSettings, null);
+      var PRINTDIALOGSVC = Cc[
+        "@mozilla.org/widget/printdialog-service;1"
+      ].getService(Ci.nsIPrintDialogService);
+      PRINTDIALOGSVC.showPageSetupDialog(window, printSettings, null);
     } catch (e) {
       dump("showPageSetup " + e + "\n");
       return false;
@@ -314,12 +327,20 @@ var PrintUtils = {
       }
 
       if (useSystemDialog) {
+        const hasSelection = await PrintUtils.checkForSelection(
+          browsingContext
+        );
+
         // Prompt the user to choose a printer and make any desired print
         // settings changes.
         try {
-          await Cc["@mozilla.org/embedcomp/printingprompt-service;1"]
-            .getService(Ci.nsIPrintingPromptService)
-            .showPrintDialog(browsingContext.topChromeWindow, settings);
+          await Cc["@mozilla.org/widget/printdialog-service;1"]
+            .getService(Ci.nsIPrintDialogService)
+            .showPrintDialog(
+              browsingContext.topChromeWindow,
+              hasSelection,
+              settings
+            );
         } catch (e) {
           if (browser) {
             browser.remove(); // don't leak this
@@ -524,7 +545,7 @@ var PrintUtils = {
         ).systemDefaultPrinterName;
       })();
 
-      printSettings = PSSVC.newPrintSettings;
+      printSettings = PSSVC.createNewPrintSettings();
       printSettings.printerName = printerName;
 
       // First get any defaults from the printer. We want to skip this for Save

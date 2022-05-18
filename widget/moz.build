@@ -89,6 +89,12 @@ elif toolkit == "windows":
         "nsIWinTaskbar.idl",
     ]
 
+if CONFIG["NS_PRINTING"]:
+    # Needs to go before the XPIDL_MODULE line.
+    XPIDL_SOURCES += [
+        "nsIPrintDialogService.idl",
+    ]
+
 TEST_DIRS += ["tests", "tests/gtest"]
 
 DIRS += ["headless"]
@@ -119,7 +125,6 @@ XPIDL_SOURCES += [
     "nsIPaperMargin.idl",
     "nsIPrinter.idl",
     "nsIPrinterList.idl",
-    "nsIPrintSession.idl",
     "nsIPrintSettings.idl",
     "nsIPrintSettingsService.idl",
     "nsIScreen.idl",
@@ -145,7 +150,6 @@ EXPORTS += [
     "nsBaseScreen.h",
     "nsBaseWidget.h",
     "nsIDeviceContextSpec.h",
-    "nsIPrintDialogService.h",
     "nsIRollupListener.h",
     "nsIWidget.h",
     "nsIWidgetListener.h",
@@ -269,7 +273,6 @@ if CONFIG["NS_PRINTING"]:
         "nsPaperMargin.cpp",
         "nsPrinterBase.cpp",
         "nsPrinterListBase.cpp",
-        "nsPrintSession.cpp",
         "nsPrintSettingsService.cpp",
     ]
 
@@ -293,7 +296,10 @@ if CONFIG["MOZ_INSTRUMENT_EVENT_LOOP"]:
         "WidgetTraceEvent.h",
     ]
 
-EXPORTS.ipc = ["nsGUIEventIPC.h"]
+EXPORTS.ipc = [
+    "nsGUIEventIPC.h",
+    "nsTransferableIPC.h",
+]
 
 if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
     DIRS += ["x11"]

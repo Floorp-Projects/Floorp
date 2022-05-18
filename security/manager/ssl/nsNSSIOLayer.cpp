@@ -801,6 +801,7 @@ nsNSSSocketInfo::GetRetryEchConfig(nsACString& aEchConfig) {
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetPeerId(nsACString& aResult) {
+  MutexAutoLock lock(mMutex);
   if (!mPeerId.IsEmpty()) {
     aResult.Assign(mPeerId);
     return NS_OK;
@@ -819,11 +820,11 @@ nsNSSSocketInfo::GetPeerId(nsACString& aResult) {
 
   mPeerId.AppendPrintf("tlsflags0x%08x:", mProviderTlsFlags);
 
-  mPeerId.Append(GetHostName());
+  mPeerId.Append(mHostName);
   mPeerId.Append(':');
   mPeerId.AppendInt(GetPort());
   nsAutoCString suffix;
-  GetOriginAttributes().CreateSuffix(suffix);
+  mOriginAttributes.CreateSuffix(suffix);
   mPeerId.Append(suffix);
 
   aResult.Assign(mPeerId);

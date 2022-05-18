@@ -39,7 +39,7 @@ class TCPServerSocket final : public DOMEventTargetHelper,
 
   nsresult Init();
 
-  uint16_t LocalPort();
+  uint16_t LocalPort() const;
   void Close();
 
   static already_AddRefed<TCPServerSocket> Constructor(

@@ -343,19 +343,6 @@ async function defaultProfile(profile) {
 }
 
 function openProfile(profile) {
-  let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
-    Ci.nsISupportsPRBool
-  );
-  Services.obs.notifyObservers(
-    cancelQuit,
-    "quit-application-requested",
-    "restart"
-  );
-
-  if (cancelQuit.data) {
-    return;
-  }
-
   Services.startup.createInstanceWithProfile(profile);
 }
 

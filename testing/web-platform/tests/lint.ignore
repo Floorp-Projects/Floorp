@@ -153,6 +153,8 @@ SET TIMEOUT: css/selectors/selector-required-type-change-002.html
 SET TIMEOUT: encrypted-media/polyfill/chrome-polyfill.js
 SET TIMEOUT: encrypted-media/polyfill/clearkey-polyfill.js
 SET TIMEOUT: encrypted-media/scripts/playback-temporary-events.js
+SET TIMEOUT: fetch/metadata/resources/helper.sub.js
+SET TIMEOUT: fetch/metadata/resources/message-opener.html
 SET TIMEOUT: focus/support/iframe-focus-with-different-site-intermediate-frame-outer.sub.html
 SET TIMEOUT: focus/support/iframe-focus-with-different-site-intermediate-frame-middle.sub.html
 SET TIMEOUT: focus/support/iframe-contentwindow-focus-with-different-site-intermediate-frame-outer.sub.html
@@ -349,6 +351,13 @@ SET TIMEOUT: acid/acid3/test.html
 *: resources/webidl2/*
 *: tools/*
 *: */third_party/*
+
+# .gitignore files in child directories
+*: cors/resources/.gitignore
+*: css/.gitignore
+*: css/css-writing-modes/tools/generators/.gitignore
+*: resources/.gitignore
+*: webaudio/.gitignore
 
 # Build system virtualenv
 *: css/tools/_virtualenv/*
@@ -752,6 +761,8 @@ AHEM SYSTEM FONT: css/css-font-loading/fontface-size-adjust-descriptor.html
 AHEM SYSTEM FONT: css/css-font-loading/fontface-size-adjust-descriptor-ref.html
 AHEM SYSTEM FONT: css/css-fonts/ascent-descent-override.html
 AHEM SYSTEM FONT: css/css-fonts/line-gap-override.html
+AHEM SYSTEM FONT: html/dom/render-blocking/remove-attr-unblocks-rendering.optional.html
+AHEM SYSTEM FONT: html/dom/render-blocking/remove-element-unblocks-rendering.optional.html
 
 # TODO: The following should be deleted along with the Ahem web font cleanup
 # PR (https://github.com/web-platform-tests/wpt/pull/18702)

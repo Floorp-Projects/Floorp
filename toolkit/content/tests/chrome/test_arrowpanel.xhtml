@@ -45,6 +45,11 @@
      * using em unit padding, which is the default as of bug 1701920.
      */
     --arrowpanel-padding: 16px;
+    /**
+     * Linux and windows have some negative margin-inline that can change the
+     * overflow calculations
+     */
+    margin-inline: 0 !important;
   }
 </html:style>
 
@@ -52,8 +57,6 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
-
-const isOSXYosemite = navigator.userAgent.includes("Mac OS X 10.10");
 
 var expectedAnchor = null;
 var expectedSide = "", expectedAnchorEdge = "";
@@ -72,7 +75,7 @@ function* nextTest()
 {
   var panel = $("panel");
 
-  function openPopup(position, anchor, expected, anchorEdge, alignment)
+  function openPopup(position, anchor, expected, anchorEdge)
   {
     expectedAnchor = anchor instanceof Node ? anchor : $(anchor);
     expectedSide = expected;
@@ -85,9 +88,9 @@ function* nextTest()
   for (var iter = 0; iter < 2; iter++) {
     openPopup("after_start", "topleft", "top", "left");
     yield;
-    openPopup("after_start", "bottomleft", "bottom", "left", "before_start");
+    openPopup("after_start", "bottomleft", "bottom", "left");
     yield;
-    openPopup("before_start", "topleft", "top", "left", "after_start");
+    openPopup("before_start", "topleft", "top", "left");
     yield;
     openPopup("before_start", "bottomleft", "bottom", "left");
     yield;
@@ -96,13 +99,13 @@ function* nextTest()
     openPopup("before_start", "middle", "bottom", "left");
     yield;
 
-    openPopup("after_start", "topright", "top", "right", "after_end");
+    openPopup("after_start", "topright", "top", "right");
     yield;
-    openPopup("after_start", "bottomright", "bottom", "right", "before_end");
+    openPopup("after_start", "bottomright", "bottom", "right");
     yield;
-    openPopup("before_start", "topright", "top", "right", "after_end");
+    openPopup("before_start", "topright", "top", "right");
     yield;
-    openPopup("before_start", "bottomright", "bottom", "right", "before_end");
+    openPopup("before_start", "bottomright", "bottom", "right");
     yield;
 
     openPopup("after_end", "middle", "top", "right");
@@ -110,26 +113,26 @@ function* nextTest()
     openPopup("before_end", "middle", "bottom", "right");
     yield;
 
-    openPopup("start_before", "topleft", "left", "top", "end_before");
+    openPopup("start_before", "topleft", "left", "top");
     yield;
     openPopup("start_before", "topright", "right", "top");
     yield;
     openPopup("end_before", "topleft", "left", "top");
     yield;
-    openPopup("end_before", "topright", "right", "top", "start_before");
+    openPopup("end_before", "topright", "right", "top");
     yield;
     openPopup("start_before", "middle", "right", "top");
     yield;
     openPopup("end_before", "middle", "left", "top");
     yield;
 
-    openPopup("start_before", "bottomleft", "left", "bottom", "end_after");
+    openPopup("start_before", "bottomleft", "left", "bottom");
     yield;
-    openPopup("start_before", "bottomright", "right", "bottom", "start_after");
+    openPopup("start_before", "bottomright", "right", "bottom");
     yield;
-    openPopup("end_before", "bottomleft", "left", "bottom", "end_after");
+    openPopup("end_before", "bottomleft", "left", "bottom");
     yield;
-    openPopup("end_before", "bottomright", "right", "bottom", "start_after");
+    openPopup("end_before", "bottomright", "right", "bottom");
     yield;
 
     openPopup("start_after", "middle", "right", "bottom");
@@ -137,22 +140,22 @@ function* nextTest()
     openPopup("end_after", "middle", "left", "bottom");
     yield;
 
-    openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left", "before_start");
+    openPopup("topcenter bottomleft", "bottomleft", "bottom", "center left");
     yield;
-    openPopup("bottomcenter topleft", "topleft", "top", "center left", "after_start");
+    openPopup("bottomcenter topleft", "topleft", "top", "center left");
     yield;
-    openPopup("topcenter bottomright", "bottomright", "bottom", "center right", "before_end");
+    openPopup("topcenter bottomright", "bottomright", "bottom", "center right");
     yield;
-    openPopup("bottomcenter topright", "topright", "top", "center right", "after_end");
+    openPopup("bottomcenter topright", "topright", "top", "center right");
     yield;
-    openPopup("topcenter bottomleft", "middle", "bottom", "center left", "before_start");
+    openPopup("topcenter bottomleft", "middle", "bottom", "center left");
     yield;
-    openPopup("bottomcenter topleft", "middle", "top", "center left", "after_start");
+    openPopup("bottomcenter topleft", "middle", "top", "center left");
     yield;
 
-    openPopup("leftcenter topright", "middle", "right", "center top", "start_before");
+    openPopup("leftcenter topright", "middle", "right", "center top");
     yield;
-    openPopup("rightcenter bottomleft", "middle", "left", "center bottom", "end_after");
+    openPopup("rightcenter bottomleft", "middle", "left", "center bottom");
     yield;
 
 /*
@@ -190,10 +193,10 @@ function* nextTest()
     $("bottomright").style.marginLeft = "15px";
     $("bottomright").style.justifySelf = "left";
 
-    $("topleft").style.removeProperty("marginLeft");
-    $("topright").style.removeProperty("marginRight");
-    $("bottomleft").style.removeProperty("marginLeft");
-    $("bottomright").style.removeProperty("marginRight");
+    $("topleft").style.removeProperty("margin-left");
+    $("topright").style.removeProperty("margin-right");
+    $("bottomleft").style.removeProperty("margin-left");
+    $("bottomright").style.removeProperty("margin-right");
   }
 
   // Test that a transition occurs when opening or closing the popup.
@@ -267,6 +270,7 @@ function checkPanelPosition(panel)
       break;
   }
 
+  let desc = panel.id + ": anchored on " + expectedAnchorEdge + " to " + anchor.id + " | " + (isRTL ? "rtl" : "ltr") + " | " + anchor.getAttribute("style");
   let iscentered = false;
   if (expectedAnchorEdge.indexOf("center ") == 0) {
     expectedAnchorEdge = expectedAnchorEdge.substring(7);
@@ -275,29 +279,28 @@ function checkPanelPosition(panel)
 
   switch (expectedAnchorEdge) {
     case "top":
-      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginTop);
+      adj = vwinpos + parseInt(getComputedStyle(panel).marginTop);
       if (iscentered)
-        adj += Math.round(anchorRect.height) / 2;
-      isWithinHalfPixel(panelRect.top, anchorRect.top * zoomFactor + adj, "anchored on top");
+        adj += anchorRect.height / 2;
+      isWithinHalfPixel(panelRect.top, anchorRect.top * zoomFactor + adj, desc);
       break;
     case "bottom":
-      adj = vwinpos + parseInt(getComputedStyle(panel, "").marginBottom);
+      adj = vwinpos + parseInt(getComputedStyle(panel).marginBottom);
       if (iscentered)
-        adj += Math.round(anchorRect.height) / 2;
-      isWithinHalfPixel(panelRect.bottom, anchorRect.bottom * zoomFactor - adj, "anchored on bottom");
+        adj += anchorRect.height / 2;
+      isWithinHalfPixel(panelRect.bottom, anchorRect.bottom * zoomFactor - adj, desc);
       break;
     case "left":
-      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginLeft);
+      adj = hwinpos + parseInt(getComputedStyle(panel).marginLeft);
       if (iscentered)
-        adj += Math.round(anchorRect.width) / 2;
-      isWithinHalfPixel(panelRect.left, anchorRect.left * zoomFactor + adj, "anchored on left ");
+        adj += anchorRect.width / 2;
+      isWithinHalfPixel(panelRect.left, anchorRect.left * zoomFactor + adj, desc);
       break;
     case "right":
-      adj = hwinpos + parseInt(getComputedStyle(panel, "").marginRight);
+      adj = hwinpos + parseInt(getComputedStyle(panel).marginRight);
       if (iscentered)
-        adj += Math.round(anchorRect.width) / 2;
-      if (!isOSXYosemite)
-        isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, "anchored on right");
+        adj += anchorRect.width / 2;
+      isWithinHalfPixel(panelRect.right, anchorRect.right * zoomFactor - adj, desc);
       break;
   }
 
@@ -310,7 +313,7 @@ function checkPanelPosition(panel)
 
 function isWithinHalfPixel(a, b, desc)
 {
-  ok(Math.abs(a - b) <= 0.5, desc);
+  ok(Math.abs(a - b) <= 0.5, `${desc}: ${a} vs. ${b}`);
 }
 
 function checkBigPanel(panel)

@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from ..lint import check_file_contents
 from .base import check_errors
 import io

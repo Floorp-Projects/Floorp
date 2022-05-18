@@ -64,12 +64,14 @@ fuzzy(1,1) platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-fi
 #== backdrop-filter-basic.yaml backdrop-filter-basic-ref.yaml
 #platform(linux,mac) == backdrop-filter-perspective.yaml backdrop-filter-perspective.png
 #== backdrop-filter-on-child-surface.yaml backdrop-filter-on-child-surface-ref.yaml
+#== backdrop-filter-clip-mask.yaml backdrop-filter-clip-mask-ref.yaml
 #platform(linux,mac) == backdrop-filter-across-tiles.yaml backdrop-filter-across-tiles.png
 #platform(linux,mac) == backdrop-filter-chain.yaml backdrop-filter-chain.png
 #platform(linux,mac) == backdrop-filter-overlap.yaml backdrop-filter-overlap.png
 #platform(linux,mac) == backdrop-filter-blur-across-tiles.yaml backdrop-filter-blur-across-tiles.png
 #platform(linux,mac) == backdrop-filter-drop-shadow.yaml backdrop-filter-drop-shadow.png
 #== backdrop-filter-blur-edge-mode.yaml backdrop-filter-blur-edge-mode-ref.yaml
+#== backdrop-filter-half-opacity.yaml backdrop-filter-half-opacity-ref.yaml
 platform(linux,max) == svg-filter-offset.yaml svg-filter-offset-ref.yaml
 skip_on(android,device) == fuzzy(1,100) svg-filter-composite.yaml svg-filter-composite-ref.yaml
 skip_on(android,device) == filter-mix-blend-scaling.yaml filter-mix-blend-scaling-ref.yaml

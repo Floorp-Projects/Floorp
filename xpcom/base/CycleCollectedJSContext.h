@@ -146,7 +146,7 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
 
  private:
   static void PromiseRejectionTrackerCallback(
-      JSContext* aCx, bool aMutedErrors, JS::HandleObject aPromise,
+      JSContext* aCx, bool aMutedErrors, JS::Handle<JSObject*> aPromise,
       JS::PromiseRejectionHandlingState state, void* aData);
 
   void AfterProcessMicrotasks();
@@ -288,9 +288,10 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   // interruptions; see the comments on JS::AutoDebuggerJobQueueInterruption for
   // details.
   JSObject* getIncumbentGlobal(JSContext* cx) override;
-  bool enqueuePromiseJob(JSContext* cx, JS::HandleObject promise,
-                         JS::HandleObject job, JS::HandleObject allocationSite,
-                         JS::HandleObject incumbentGlobal) override;
+  bool enqueuePromiseJob(JSContext* cx, JS::Handle<JSObject*> promise,
+                         JS::Handle<JSObject*> job,
+                         JS::Handle<JSObject*> allocationSite,
+                         JS::Handle<JSObject*> incumbentGlobal) override;
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now so we don't have to change SpiderMonkey
   // headers.  The caller presumably knows this can run script (like everything
   // in SpiderMonkey!) and will deal.

@@ -130,9 +130,6 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
     this.traits = {
       networkMonitor: true,
-
-      // @backward-compat { version 100 } Expose the supported resources.
-      // This traits should be kept, but we can later remove the backward compat comment.
       resources: supportedResources,
 
       // @backward-compat { version 84 } Expose the pref value to the client.

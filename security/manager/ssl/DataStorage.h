@@ -194,24 +194,24 @@ class DataStorage : public nsIObserver {
                         nsTArray<DataStorageItem>* aItems,
                         const MutexAutoLock& aProofOfLock);
 
-  Mutex mMutex
-      MOZ_UNANNOTATED;  // This mutex protects access to the following members:
-  DataStorageTable mPersistentDataTable;
-  DataStorageTable mTemporaryDataTable;
-  DataStorageTable mPrivateDataTable;
-  nsCOMPtr<nsIFile> mBackingFile;
-  bool mPendingWrite;  // true if a write is needed but hasn't been dispatched
-  bool mShuttingDown;
-  RefPtr<TaskQueue> mBackgroundTaskQueue;
+  Mutex mMutex;  // This mutex protects access to the following members:
+  DataStorageTable mPersistentDataTable GUARDED_BY(mMutex);
+  DataStorageTable mTemporaryDataTable GUARDED_BY(mMutex);
+  DataStorageTable mPrivateDataTable GUARDED_BY(mMutex);
+  nsCOMPtr<nsIFile> mBackingFile GUARDED_BY(mMutex);
+  bool mPendingWrite GUARDED_BY(
+      mMutex);  // true if a write is needed but hasn't been dispatched
+  bool mShuttingDown GUARDED_BY(mMutex);
+  RefPtr<TaskQueue> mBackgroundTaskQueue GUARDED_BY(mMutex);
   // (End list of members protected by mMutex)
 
   nsCOMPtr<nsITimer> mTimer;  // Must only be accessed on the main thread
 
   mozilla::Atomic<bool> mInitCalled;  // Indicates that Init() has been called.
 
-  Monitor mReadyMonitor
-      MOZ_UNANNOTATED;  // Do not acquire this at the same time as mMutex.
-  bool mReady;  // Indicates that saved data has been read and Get can proceed.
+  Monitor mReadyMonitor;  // Do not acquire this at the same time as mMutex.
+  bool mReady GUARDED_BY(mReadyMonitor);  // Indicates that saved data has been
+                                          // read and Get can proceed.
 
   const nsString mFilename;
 

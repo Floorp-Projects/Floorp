@@ -19,7 +19,6 @@
     }                                                \
   }
 
-extern nsresult nsMIMEInputStreamConstructor(nsISupports* outer, REFNSIID iid,
-                                             void** result);
+extern nsresult nsMIMEInputStreamConstructor(REFNSIID iid, void** result);
 
 #endif  // _nsMIMEInputStream_h_

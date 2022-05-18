@@ -147,7 +147,7 @@
 #endif
 
 #ifdef NS_PRINTING
-#  include "nsIPrintSession.h"
+#  include "mozilla/layout/RemotePrintJobChild.h"
 #  include "nsIPrintSettings.h"
 #  include "nsIPrintSettingsService.h"
 #  include "nsIWebBrowserPrint.h"
@@ -1028,7 +1028,7 @@ nsresult BrowserChild::CloneDocumentTreeIntoSelf(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1096,7 +1096,7 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1116,7 +1116,9 @@ nsresult BrowserChild::UpdateRemotePrintSettings(
       // BC tree, and our code above is simple enough and keeps strong refs to
       // everything.
       ([&]() MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-        cv->SetPrintSettingsForSubdocument(printSettings);
+        RefPtr<RemotePrintJobChild> printJob =
+            static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild());
+        cv->SetPrintSettingsForSubdocument(printSettings, printJob);
       }());
     } else if (RefPtr<BrowserBridgeChild> remoteChild =
                    BrowserBridgeChild::GetFrom(aBc->GetEmbedderElement())) {
@@ -2214,7 +2216,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPasteTransferable(
 
   rv = nsContentUtils::IPCTransferableToTransferable(
       aDataTransfer, aIsPrivateData, aRequestingPrincipal, aContentPolicyType,
-      trans, nullptr, this);
+      true /* aAddDataFlavor */, trans, this);
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   nsCOMPtr<nsIDocShell> ourDocShell = do_GetInterface(WebNavigation());
@@ -2453,7 +2455,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
   if (NS_WARN_IF(!printSettingsSvc)) {
     return IPC_OK();
   }
-  printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+  printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(!printSettings)) {
     return IPC_OK();
   }
@@ -2468,6 +2470,7 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrintPreview(
   }
 
   sourceWindow->Print(printSettings,
+                      /* aRemotePrintJob = */ nullptr,
                       /* aListener = */ nullptr, docShellToCloneInto,
                       nsGlobalWindowOuter::IsPreview::Yes,
                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
@@ -2508,27 +2511,21 @@ mozilla::ipc::IPCResult BrowserChild::RecvPrint(
 
   nsCOMPtr<nsIPrintSettings> printSettings;
   nsresult rv =
-      printSettingsSvc->GetNewPrintSettings(getter_AddRefs(printSettings));
+      printSettingsSvc->CreateNewPrintSettings(getter_AddRefs(printSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return IPC_OK();
   }
 
-  nsCOMPtr<nsIPrintSession> printSession =
-      do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return IPC_OK();
-  }
-
-  printSettings->SetPrintSession(printSession);
   printSettingsSvc->DeserializeToPrintSettings(aPrintData, printSettings);
   {
     IgnoredErrorResult rv;
-    outerWindow->Print(printSettings,
-                       /* aListener = */ nullptr,
-                       /* aWindowToCloneInto = */ nullptr,
-                       nsGlobalWindowOuter::IsPreview::No,
-                       nsGlobalWindowOuter::IsForWindowDotPrint::No,
-                       /* aPrintPreviewCallback = */ nullptr, rv);
+    outerWindow->Print(
+        printSettings,
+        static_cast<RemotePrintJobChild*>(aPrintData.remotePrintJobChild()),
+        /* aListener = */ nullptr,
+        /* aWindowToCloneInto = */ nullptr, nsGlobalWindowOuter::IsPreview::No,
+        nsGlobalWindowOuter::IsForWindowDotPrint::No,
+        /* aPrintPreviewCallback = */ nullptr, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return IPC_OK();
     }

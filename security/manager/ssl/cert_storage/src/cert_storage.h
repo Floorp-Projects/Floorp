@@ -18,8 +18,7 @@
   }
 
 extern "C" {
-nsresult cert_storage_constructor(nsISupports* outer, REFNSIID iid,
-                                  void** result);
+nsresult cert_storage_constructor(REFNSIID iid, void** result);
 };
 
 #endif  // _cert_storage_h_

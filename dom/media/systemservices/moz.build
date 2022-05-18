@@ -21,6 +21,7 @@ if CONFIG["MOZ_WEBRTC"]:
     LOCAL_INCLUDES += [
         "/dom/media/webrtc",
         "/media/libyuv/libyuv/include",
+        "/mfbt",
         "/third_party/libwebrtc",
         "/third_party/libwebrtc/third_party/abseil-cpp",
         "/tools/profiler/public",

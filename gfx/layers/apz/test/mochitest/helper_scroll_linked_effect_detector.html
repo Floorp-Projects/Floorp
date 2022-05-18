@@ -24,16 +24,15 @@ body {
 <script>
 async function test() {
   let eventTimeStamp;
-  // Setup a no-op scroll event callback.
-  let scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
-  });
-
-  async function promiseScrollAndEvent() {
-    synthesizeNativeWheel(window, 50, 50, 0, -10);
+  // Utility function to synthesize a scroll and call the given function
+  // in the event listener.
+  async function promiseScrollAndEvent(fn) {
+    let scrollEventPromise = new Promise(resolve => {
+      window.addEventListener("scroll", () => {
+        fn();
+        resolve();
+      }, { once: true });
+    });
     await scrollEventPromise;
     // Wait a rAF to make sure we are outside of the micro tasks for the scroll
     // event callback so that we can ensure our stack based
@@ -42,81 +41,66 @@ async function test() {
     await promiseFrame();
   }
 
-  await promiseScrollAndEvent();
+  let intervalId = setInterval(async () => {
+    await synthesizeNativeWheel(window, 50, 50, 0, -10);
+  }, 0);
+  await promiseScrollAndEvent(() => {
+    eventTimeStamp = document.timeline.currentTime;
+  });
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "No scroll-linked effect found yet");
 
   // Setup a scroll-linked effect callback.
-  scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      isnot(window.scrollY, 0, "we've already scrolled some amount");
-      target.style.top = window.scrollY + "px";
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
+  await promiseScrollAndEvent(() => {
+    isnot(window.scrollY, 0, "we've already scrolled some amount");
+    target.style.top = window.scrollY + "px";
+    eventTimeStamp = document.timeline.currentTime;
   });
-  await promiseScrollAndEvent();
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "Scroll-linked effect found");
 
   // A no-op again.
-  scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
+  await promiseScrollAndEvent(() => {
+    eventTimeStamp = document.timeline.currentTime;
   });
-  await promiseScrollAndEvent();
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "No scroll-linked effect found");
 
   // Setup a non-effective scroll-linked effect callback.
-  scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      target.style.top = getComputedStyle(target).top;
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
+  await promiseScrollAndEvent(() => {
+    target.style.top = getComputedStyle(target).top;
+    eventTimeStamp = document.timeline.currentTime;
   });
-  await promiseScrollAndEvent();
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "No scroll-linked effect found");
 
   // Setup a callback to remove the style.
-  scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      target.style.top = "";
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
+  await promiseScrollAndEvent(() => {
+    target.style.top = "";
+    eventTimeStamp = document.timeline.currentTime;
   });
-  await promiseScrollAndEvent();
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "Scroll-linked effect found");
 
   // Setup a no-op callback.
-  scrollEventPromise = new Promise(resolve => {
-    window.addEventListener("scroll", () => {
-      target.style.top = "";
-      eventTimeStamp = document.timeline.currentTime;
-      resolve();
-    }, { once: true });
+  await promiseScrollAndEvent(() => {
+    eventTimeStamp = document.timeline.currentTime;
   });
-  await promiseScrollAndEvent();
   is(eventTimeStamp, document.timeline.currentTime,
      `We are in same time frame where we got a scroll event at ${eventTimeStamp}`);
   ok(!SpecialPowers.DOMWindowUtils.hasScrollLinkedEffect,
      "No scroll-linked effect found this time");
+  clearInterval(intervalId);
 }
 
 waitUntilApzStable()

@@ -101,7 +101,7 @@ var HawkClient = function(host) {
   this._localtimeOffsetMsec = 0;
 };
 
-this.HawkClient.prototype = {
+HawkClient.prototype = {
   /*
    * Construct an error message for a response.  Private.
    *

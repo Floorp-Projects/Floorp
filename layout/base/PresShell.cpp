@@ -5368,8 +5368,11 @@ void PresShell::AddCanvasBackgroundColorItem(
       nsLayoutUtils::UsesAsyncScrolling(aFrame) && NS_GET_A(bgcolor) == 255;
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
-    nsDisplayItem* item = MakeDisplayItem<nsDisplaySolidColor>(
+    nsDisplaySolidColor* item = MakeDisplayItem<nsDisplaySolidColor>(
         aBuilder, aFrame, aBounds, bgcolor);
+    if (addedScrollingBackgroundColor) {
+      item->SetIsCheckerboardBackground();
+    }
     AddDisplayItemToBottom(aBuilder, aList, item);
   }
 }

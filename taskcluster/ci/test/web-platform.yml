@@ -87,7 +87,6 @@ web-platform-tests:
                     (linux1804|windows10)-32.*/.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
                     default: []
             no-fission:
                 by-test-platform:
@@ -240,7 +239,6 @@ web-platform-tests-wdspec:
         - no-fission
         - webrender-sw+no-fission
         - webrender-sw+fission
-        - headless+no-fission
         - headless+fission
     run-without-variant: false
     run-on-projects:
@@ -260,11 +258,6 @@ web-platform-tests-wdspec:
                     (linux1804|windows10)-32.*/.*: []
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
-                    default: []
-            headless+no-fission:
-                by-test-platform:
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             headless+fission:
                 by-test-platform:

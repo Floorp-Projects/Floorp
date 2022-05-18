@@ -276,7 +276,7 @@ var StarUI = {
         { capture: true, once: true }
       );
     };
-    gEditItemOverlay.initPanel({
+    await gEditItemOverlay.initPanel({
       node: aNode,
       onPanelReady,
       hiddenRows: ["location", "keyword"],

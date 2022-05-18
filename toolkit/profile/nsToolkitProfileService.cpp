@@ -2074,10 +2074,7 @@ nsToolkitProfileService::Flush() {
 NS_IMPL_ISUPPORTS(nsToolkitProfileFactory, nsIFactory)
 
 NS_IMETHODIMP
-nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
-                                        void** aResult) {
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
+nsToolkitProfileFactory::CreateInstance(const nsID& aIID, void** aResult) {
   RefPtr<nsToolkitProfileService> profileService =
       nsToolkitProfileService::gService;
   if (!profileService) {
@@ -2086,9 +2083,6 @@ nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
   }
   return profileService->QueryInterface(aIID, aResult);
 }
-
-NS_IMETHODIMP
-nsToolkitProfileFactory::LockFactory(bool aVal) { return NS_OK; }
 
 nsresult NS_NewToolkitProfileFactory(nsIFactory** aResult) {
   *aResult = new nsToolkitProfileFactory();

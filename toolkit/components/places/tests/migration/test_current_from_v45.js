@@ -38,7 +38,7 @@ add_task(async function setup() {
   await setupPlacesDatabase("places_v43.sqlite");
 
   // Setup database contents to be migrated.
-  let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+  let path = PathUtils.join(PathUtils.profileDir, DB_FILENAME);
   let db = await Sqlite.openConnection({ path });
 
   for (let tag of gTags) {

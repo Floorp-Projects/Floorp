@@ -1,5 +1,8 @@
-import pytest
 import asyncio
+
+import pytest
+
+from . import navigate_and_assert
 
 pytestmark = pytest.mark.asyncio
 
@@ -22,13 +25,7 @@ async def test_interactive_simultaneous_navigation(bidi_session, inline, new_tab
         f"<iframe src='{frame1_start_url}'></iframe><iframe src='{frame2_start_url}'></iframe>"
     )
 
-    result = await bidi_session.browsing_context.navigate(
-        context=new_tab["context"], url=url, wait="complete"
-    )
-    assert result["url"] == url
-    contexts = await bidi_session.browsing_context.get_tree(root=new_tab["context"])
-    assert len(contexts) == 1
-    assert contexts[0]["url"] == url
+    contexts = await navigate_and_assert(bidi_session, new_tab, url)
     assert len(contexts[0]["children"]) == 2
 
     frame1_context_id = contexts[0]["children"][0]["context"]
@@ -80,20 +77,7 @@ async def test_relative_url(bidi_session, new_tab, url):
 
     # Navigate to page1 with wait=interactive to make sure the document's base URI
     # was updated.
-    result = await bidi_session.browsing_context.navigate(
-        context=new_tab["context"], url=url_before, wait="interactive"
-    )
-    contexts = await bidi_session.browsing_context.get_tree(
-        root=new_tab["context"], max_depth=0
-    )
-    assert contexts[0]["url"] == url_before
+    await navigate_and_assert(bidi_session, new_tab, url_before, "interactive")
 
     url_after = url_before.replace("empty.html", "other.html")
-    result = await bidi_session.browsing_context.navigate(
-        context=new_tab["context"], url="other.html", wait="interactive"
-    )
-    contexts = await bidi_session.browsing_context.get_tree(
-        root=new_tab["context"], max_depth=0
-    )
-    assert contexts[0]["url"] == url_after
-    assert result["url"] == url_after
+    await navigate_and_assert(bidi_session, new_tab, url_after, "interactive")

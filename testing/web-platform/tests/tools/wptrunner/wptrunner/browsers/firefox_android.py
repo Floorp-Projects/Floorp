@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 import os
 
 from mozrunner import FennecEmulatorRunner, get_app_context

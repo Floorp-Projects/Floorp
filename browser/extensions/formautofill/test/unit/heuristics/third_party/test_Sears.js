@@ -11,46 +11,155 @@ runHeuristicsTest(
         [], // search form, ac-off
         [
           // ac-off
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+          [    {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},]
+           
         ],
         [
           // check-out, ac-off
-          /*
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-*/
+          [
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "given-name"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "family-name"
+            },
+            // {
+            //   section: "",
+            //   addressType: "",
+            //   contactType: "",
+            //   fieldName: "address-line1"
+            // },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line2"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-level2"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-level1"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "postal-code"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel-extension"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "email"
+            },
+          ],
+          // ac-off
+          [
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "given-name"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "family-name"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line1"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-line2"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-level2"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "address-level1"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "postal-code"
+            },
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel"},
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "tel-extension"
+            },
+    //      {"section": "", "addressType": "", "contactType": "", "fieldName": "new-password"},
+          ],
+        ],
+        [
         ],
         [
           // ac-off
-          /*
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "new-password"},
-*/
+          [
+            {
+              section: "",
+              addressType: "",
+              contactType: "",
+              fieldName: "email"
+            },
+          ]
+            
         ],
         [
           // ac-off
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
-        ],
-        [
-          // ac-off
-          //      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+          [
+            {
+              section: "", addressType: "",
+              contactType: "",
+              fieldName: "email"
+            },
+          ]
         ],
       ],
     },
@@ -68,9 +177,13 @@ runHeuristicsTest(
               contactType: "",
               fieldName: "cc-number",
             },
-            // FIXME: bug 1392958 - Cardholder name field should be detected as cc-name
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-            //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
+            // {
+            //   section: "",
+            //   addressType: "",
+            //   contactType: "",
+            //   fieldName: "cc-name"
+            // },
+            // {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
             {
               section: "",
               addressType: "",

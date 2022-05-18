@@ -650,6 +650,15 @@ if args.variant == "msan":
     command += files
     subprocess.call(command)
 
+# Upload dist/bin/js as js.wasm for the WASI build.
+if args.variant == "wasi":
+    command = [
+        "cp",
+        os.path.join(OBJDIR, "dist/bin/js"),
+        os.path.join(env["MOZ_UPLOAD_DIR"], "js.wasm"),
+    ]
+    subprocess.call(command)
+
 # Generate stacks from minidumps.
 if use_minidump:
     venv_python = os.path.join(OBJDIR, "_virtualenvs", "build", "bin", "python3")

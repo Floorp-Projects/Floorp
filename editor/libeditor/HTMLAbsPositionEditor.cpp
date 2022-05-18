@@ -491,7 +491,7 @@ nsresult HTMLEditor::StartMoving() {
   return NS_OK;  // XXX Looks like nobody refers this result
 }
 
-void HTMLEditor::SnapToGrid(int32_t& newX, int32_t& newY) {
+void HTMLEditor::SnapToGrid(int32_t& newX, int32_t& newY) const {
   if (mSnapToGridEnabled && mGridSize) {
     newX = (int32_t)floor(((float)newX / (float)mGridSize) + 0.5f) * mGridSize;
     newY = (int32_t)floor(((float)newY / (float)mGridSize) + 0.5f) * mGridSize;

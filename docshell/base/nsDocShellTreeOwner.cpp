@@ -399,6 +399,25 @@ nsDocShellTreeOwner::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
 }
 
 NS_IMETHODIMP
+nsDocShellTreeOwner::GetPrimaryContentBrowsingContext(
+    mozilla::dom::BrowsingContext** aBc) {
+  if (mTreeOwner) {
+    return mTreeOwner->GetPrimaryContentBrowsingContext(aBc);
+  }
+  if (mPrimaryRemoteTab) {
+    return mPrimaryRemoteTab->GetBrowsingContext(aBc);
+  }
+  if (mPrimaryContentShell) {
+    return mPrimaryContentShell->GetBrowsingContextXPCOM(aBc);
+  }
+  if (mWebBrowser->mDocShell) {
+    return mWebBrowser->mDocShell->GetBrowsingContextXPCOM(aBc);
+  }
+  *aBc = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShellTreeOwner::GetPrimaryContentSize(int32_t* aWidth, int32_t* aHeight) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

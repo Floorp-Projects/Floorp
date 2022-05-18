@@ -14,7 +14,7 @@ body > header {
   margin: 2em;
 }
 
-body > header > h1 {
+#collection-title {
   display: inline-block;
   margin: 0;
   padding: 0;
@@ -69,9 +69,15 @@ input[type="radio"]::before {
   background-size: 24px;
   border-radius: 50%;
   content: "";
+  fill: #15141A;
   height: 24px;
-  width: 24px;
   margin: 4px 8px;
+  width: 24px;
+}
+
+input[type="radio"].active::before {
+  background-image: url(chrome://global/skin/icons/check.svg), var(--colorway-icon);
+  background-size: 14px, 24px;
 }
 
 input[type="radio"]:enabled:checked,

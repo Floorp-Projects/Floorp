@@ -11,7 +11,7 @@
     // C/C++ language support with clangd
     "llvm-vs-code-extensions.vscode-clangd",
     // Provides support for rust-analyzer: novel LSP server for the Rust programming language.
-    "matklad.rust-analyzer",
+    "rust-lang.rust-analyzer",
     // CSS support for HTML documents.
     "ecmel.vscode-html-css",
     // Web app and extension debugging.

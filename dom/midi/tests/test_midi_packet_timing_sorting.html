@@ -36,8 +36,8 @@
        ok(true, "MIDI Access Request successful");
        is(access.sysexEnabled, false, "Sysex should be false");
 
-       input = access.inputs.get(MIDITestUtils.inputInfo.id);
-       output = access.outputs.get(MIDITestUtils.outputInfo.id);
+       input = access.inputs.get(await MIDITestUtils.inputInfo.id);
+       output = access.outputs.get(await MIDITestUtils.outputInfo.id);
        input.onmidimessage = checkReturn;
        // trigger the packet timing sorting tests
        output.send([0x90, 0x03, 0x00], 0);

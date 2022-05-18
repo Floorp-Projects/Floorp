@@ -33,7 +33,8 @@ NS_IMETHODIMP
 nsPrintDialogServiceX::Init() { return NS_OK; }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSettings) {
+nsPrintDialogServiceX::ShowPrintDialog(mozIDOMWindowProxy* aParent, bool aHaveSelection,
+                                       nsIPrintSettings* aSettings) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aSettings, "aSettings must not be null");
@@ -86,7 +87,8 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
                     NSPrintPanelShowsPaperSize | NSPrintPanelShowsOrientation |
                     NSPrintPanelShowsScaling];
   PrintPanelAccessoryController* viewController =
-      [[PrintPanelAccessoryController alloc] initWithSettings:aSettings];
+      [[PrintPanelAccessoryController alloc] initWithSettings:aSettings
+                                                haveSelection:aHaveSelection];
   [panel addAccessoryController:viewController];
   [viewController release];
 
@@ -130,7 +132,8 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
 }
 
 NS_IMETHODIMP
-nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aNSSettings) {
+nsPrintDialogServiceX::ShowPageSetupDialog(mozIDOMWindowProxy* aParent,
+                                           nsIPrintSettings* aNSSettings) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_ASSERT(aParent, "aParent must not be null");
@@ -200,7 +203,7 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter* aParent, nsIPrintSettin
 - (NSPopUpButton*)headerFooterItemListWithFrame:(NSRect)aRect
                                    selectedItem:(const nsAString&)aCurrentString;
 
-- (void)addOptionsSection;
+- (void)addOptionsSection:(bool)aHaveSelection;
 
 - (void)addAppearanceSection;
 
@@ -220,12 +223,12 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 // Public methods
 
-- (id)initWithSettings:(nsIPrintSettings*)aSettings {
+- (id)initWithSettings:(nsIPrintSettings*)aSettings haveSelection:(bool)aHaveSelection {
   [super initWithFrame:NSMakeRect(0, 0, 540, 185)];
 
   mSettings = aSettings;
   [self initBundle];
-  [self addOptionsSection];
+  [self addOptionsSection:aHaveSelection];
   [self addAppearanceSection];
   [self addHeaderFooterSection];
 
@@ -332,16 +335,14 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 // Build sections
 
-- (void)addOptionsSection {
+- (void)addOptionsSection:(bool)aHaveSelection {
   // Title
   [self addLabel:"optionsTitleMac" withFrame:NSMakeRect(0, 155, 151, 22)];
 
   // "Print Selection Only"
   mPrintSelectionOnlyCheckbox = [self checkboxWithLabel:"selectionOnly"
                                                andFrame:NSMakeRect(156, 155, 0, 0)];
-
-  bool canPrintSelection = mSettings->GetIsPrintSelectionRBEnabled();
-  [mPrintSelectionOnlyCheckbox setEnabled:canPrintSelection];
+  [mPrintSelectionOnlyCheckbox setEnabled:aHaveSelection];
 
   if (mSettings->GetPrintSelectionOnly()) {
     [mPrintSelectionOnlyCheckbox setState:NSOnState];
@@ -526,10 +527,11 @@ static const char sHeaderFooterTags[][4] = {"", "&T", "&U", "&D", "&P", "&PT"};
 
 @implementation PrintPanelAccessoryController
 
-- (id)initWithSettings:(nsIPrintSettings*)aSettings {
+- (id)initWithSettings:(nsIPrintSettings*)aSettings haveSelection:(bool)aHaveSelection {
   [super initWithNibName:nil bundle:nil];
 
-  NSView* accView = [[PrintPanelAccessoryView alloc] initWithSettings:aSettings];
+  NSView* accView = [[PrintPanelAccessoryView alloc] initWithSettings:aSettings
+                                                        haveSelection:aHaveSelection];
   [self setView:accView];
   [accView release];
   return self;

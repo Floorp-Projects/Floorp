@@ -1495,7 +1495,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   // indicators of whether the popup should be flipped or resized.
   FlipStyle hFlip = FlipStyle_None, vFlip = FlipStyle_None;
 
-  nsMargin margin = GetMargin();
+  const nsMargin margin = GetMargin();
 
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
@@ -1594,23 +1594,38 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       (mInContentShell ||
        (mFlip != FlipType_None &&
         (!aIsMove || mIsOffset || mPopupType != ePopupTypePanel)))) {
-    int32_t appPerDev = presContext->AppUnitsPerDevPixel();
-    LayoutDeviceIntRect anchorRectDevPix =
-        LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRect, appPerDev);
-    LayoutDeviceIntRect rootScreenRectDevPix =
-        LayoutDeviceIntRect::FromAppUnitsToNearest(rootScreenRect, appPerDev);
-    LayoutDeviceIntRect screenRectDevPix =
-        GetConstraintRect(anchorRectDevPix, rootScreenRectDevPix, popupLevel);
-    nsRect screenRect =
-        LayoutDeviceIntRect::ToAppUnits(screenRectDevPix, appPerDev);
+    const nsRect screenRect = [&] {
+      int32_t appPerDev = presContext->AppUnitsPerDevPixel();
+      auto anchorRectDevPix =
+          LayoutDeviceIntRect::FromAppUnitsToNearest(anchorRect, appPerDev);
+      auto rootScreenRectDevPix =
+          LayoutDeviceIntRect::FromAppUnitsToNearest(rootScreenRect, appPerDev);
+      auto screenRectDevPix =
+          GetConstraintRect(anchorRectDevPix, rootScreenRectDevPix, popupLevel);
+      nsRect sr = LayoutDeviceIntRect::ToAppUnits(screenRectDevPix, appPerDev);
+
+      // Expand the allowable screen rect by the negative margins. Note that we
+      // intentionally don't include the context menu offset in the margin here.
+      nsMargin rawMargin;
+      if (StyleMargin()->GetMargin(rawMargin)) {
+        rawMargin.EnsureAtMost(nsMargin());
+        sr.Deflate(rawMargin);
+      }
+      return sr;
+    }();
+
     // Ensure that anchorRect is on screen.
     anchorRect = anchorRect.Intersect(screenRect);
 
-    // shrink the the popup down if it is larger than the screen size
-    if (mRect.width > screenRect.width) mRect.width = screenRect.width;
-    if (mRect.height > screenRect.height) mRect.height = screenRect.height;
+    // Shrink the the popup down if it is larger than the screen size
+    if (mRect.width > screenRect.width) {
+      mRect.width = screenRect.width;
+    }
+    if (mRect.height > screenRect.height) {
+      mRect.height = screenRect.height;
+    }
 
-    // at this point the anchor (anchorRect) is within the available screen
+    // At this point the anchor (anchorRect) is within the available screen
     // area (screenRect) and the popup is known to be no larger than the
     // screen.
 
@@ -1629,42 +1644,40 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
     // Next, check if there is enough space to show the popup at full size
     // when positioned at screenPoint. If not, flip the popups to the opposite
     // side of their anchor point, or resize them as necessary.
-    bool endAligned = IsDirectionRTL()
-                          ? mPopupAlignment == POPUPALIGNMENT_TOPLEFT ||
-                                mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT
-                          : mPopupAlignment == POPUPALIGNMENT_TOPRIGHT ||
-                                mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
-    nscoord preOffsetScreenPoint = screenPoint.x;
+    const nsPoint preOffsetScreenPoint = screenPoint;
     if (slideHorizontal) {
       mRect.width = SlideOrResize(screenPoint.x, mRect.width, screenRect.x,
                                   screenRect.XMost(), &mAlignmentOffset);
     } else {
+      bool endAligned = IsDirectionRTL()
+                            ? mPopupAlignment == POPUPALIGNMENT_TOPLEFT ||
+                                  mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT
+                            : mPopupAlignment == POPUPALIGNMENT_TOPRIGHT ||
+                                  mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
       mRect.width =
           FlipOrResize(screenPoint.x, mRect.width, screenRect.x,
                        screenRect.XMost(), anchorRect.x, anchorRect.XMost(),
                        margin.left, margin.right, hFlip, endAligned, &mHFlip);
     }
-    mIsOffset = preOffsetScreenPoint != screenPoint.x;
-
-    endAligned = mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
-                 mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
-    preOffsetScreenPoint = screenPoint.y;
     if (slideVertical) {
       mRect.height = SlideOrResize(screenPoint.y, mRect.height, screenRect.y,
                                    screenRect.YMost(), &mAlignmentOffset);
     } else {
+      bool endAligned = mPopupAlignment == POPUPALIGNMENT_BOTTOMLEFT ||
+                        mPopupAlignment == POPUPALIGNMENT_BOTTOMRIGHT;
       mRect.height =
           FlipOrResize(screenPoint.y, mRect.height, screenRect.y,
                        screenRect.YMost(), anchorRect.y, anchorRect.YMost(),
                        margin.top, margin.bottom, vFlip, endAligned, &mVFlip);
     }
-    mIsOffset = mIsOffset || (preOffsetScreenPoint != screenPoint.y);
+    mIsOffset = preOffsetScreenPoint != screenPoint;
 
-    NS_ASSERTION(screenPoint.x >= screenRect.x &&
-                     screenPoint.y >= screenRect.y &&
-                     screenPoint.x + mRect.width <= screenRect.XMost() &&
-                     screenPoint.y + mRect.height <= screenRect.YMost(),
-                 "Popup is offscreen");
+    NS_ASSERTION(screenPoint.x >= screenRect.x, "Popup is offscreen (x start)");
+    NS_ASSERTION(screenPoint.y >= screenRect.y, "Popup is offscreen (y start)");
+    NS_ASSERTION(screenPoint.x + mRect.width <= screenRect.XMost(),
+                 "Popup is offscreen (x end)");
+    NS_ASSERTION(screenPoint.y + mRect.height <= screenRect.YMost(),
+                 "Popup is offscreen (y end)");
   }
 
   // snap the popup's position in screen coordinates to device pixels,

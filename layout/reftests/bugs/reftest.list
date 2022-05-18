@@ -639,7 +639,6 @@ fuzzy-if(!nativeThemePref,0-1,0-4) == 370422-1.html 370422-1-ref.html
 == 370586-1.xhtml 370586-1-ref.xhtml
 == 370629-1.html 370629-1-ref.html
 == 370629-2.html 370629-2-ref.html
-pref(layout.css.line-height.normal-as-resolved-value.enabled,false) == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
@@ -1601,7 +1600,7 @@ fails-if(useDrawSnapshot) == 621253-1-internalFilter.html 621253-1-ref.html
 fails-if(useDrawSnapshot) == 621253-2-externalFilter.html 621253-2-ref.html
 fails-if(useDrawSnapshot) == 621253-2-internalFilter.html 621253-2-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
-random-if(winWidget) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above
+random-if(winWidget) fuzzy-if(geckoview&&!emulator,0-255,0-22) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above
 fuzzy-if(d2d,0-5,0-1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy(0-1,0-40000) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank

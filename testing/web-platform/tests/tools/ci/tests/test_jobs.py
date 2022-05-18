@@ -1,3 +1,5 @@
+# mypy: allow-untyped-defs
+
 from tools.ci import jobs
 
 all_jobs = {

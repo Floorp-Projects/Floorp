@@ -50,10 +50,8 @@ static void AppendNonAsciiToNCR(const nsAString& in, nsCString& out) {
   }
 }
 
-nsresult nsIndexedToHTML::Create(nsISupports* aOuter, REFNSIID aIID,
-                                 void** aResult) {
+nsresult nsIndexedToHTML::Create(REFNSIID aIID, void** aResult) {
   nsresult rv;
-  if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
   nsIndexedToHTML* _s = new nsIndexedToHTML();
   if (_s == nullptr) return NS_ERROR_OUT_OF_MEMORY;

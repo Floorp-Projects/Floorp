@@ -23,7 +23,7 @@
        }
 
        ok(true, "MIDI Access Request successful");
-       let input = access.inputs.get(MIDITestUtils.inputInfo.id);
+       let input = access.inputs.get(await MIDITestUtils.inputInfo.id);
        let portEventRes;
        let accessEventRes;
        let portEventPromise = new Promise((resolve, reject) => { portEventRes = resolve; });
@@ -66,7 +66,7 @@
          ok(event.port.connection === "closed", "connection registered as closed");
        };
        out_access.addEventListener("statechange", outputEventHandler);
-       let output_opened = out_access.outputs.get(MIDITestUtils.alwaysClosedTestOutputInfo.id);
+       let output_opened = out_access.outputs.get(await MIDITestUtils.alwaysClosedTestOutputInfo.id);
        try {
          await output_opened.open();
          ok(false, "Should've failed to open port!");

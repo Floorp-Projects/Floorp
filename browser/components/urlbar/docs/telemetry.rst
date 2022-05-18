@@ -206,10 +206,21 @@ urlbar.picked.*
     Available from Firefox 84 on. Use the *FX_URLBAR_SELECTED_** histograms in
     earlier versions. See the `Obsolete probes`_ section below.
 
+  .. note::
+    Firefox 102 added ``autofill_adaptive``, ``autofill_origin`` and
+    ``autofill_url`` and deprecated ``autofill``.
+
   Valid result types are:
 
   - ``autofill``
-    An origin or a URL completed the user typed text inline.
+    An origin or a URL completed the user typed text inline. This was deprecated
+    in Firefox 102.
+  - ``autofill_adaptive``
+    An adaptive history completed the user typed text inline.
+  - ``autofill_origin``
+    An origin completed the user typed text inline.
+  - ``autofill_url``
+    A URL completed the user typed text inline.
   - ``bookmark``
     A bookmarked URL.
   - ``dynamic``
@@ -460,6 +471,10 @@ Telemetry Environment
     - ``browser.search.suggest.enabled``: The global toggle for search
       suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to
       true.
+    - ``browser.urlbar.autoFill``: The global preference for whether autofill in
+      the urlbar is enabled. When false, all types of autofill are disabled.
+    - ``browser.urlbar.autoFill.adaptiveHistory.enabled``: True if adaptive
+      history autofill in the urlbar is enabled.
     - ``browser.urlbar.suggest.searches``: True if search suggestions are
       enabled in the urlbar. Defaults to false.
 
@@ -499,6 +514,9 @@ FX_URLBAR_SELECTED_RESULT_TYPE and FX_URLBAR_SELECTED_RESULT_TYPE_2 (from Firefo
     15. dynamic
     16. tabtosearch
     17. quicksuggest
+    18. autofill_adaptive
+    19. autofill_origin
+    20. autofill_url
 
 FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE and FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE_2 (from Firefox 78 on) (OBSOLETE)
   This probe tracked picked result type, for each one it tracked the index where

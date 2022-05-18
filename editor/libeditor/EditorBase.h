@@ -129,7 +129,7 @@ class EditorBase : public nsIEditor,
    * The default constructor. This should suffice. the setting of the
    * interfaces is done after the construction of the editor class.
    */
-  EditorBase();
+  explicit EditorBase(EditorType aEditorType);
 
   bool IsInitialized() const { return !!mDocument; }
   bool Destroyed() const { return mDidPreDestroy; }
@@ -201,7 +201,7 @@ class EditorBase : public nsIEditor,
   nsPresContext* GetPresContext() const;
   already_AddRefed<nsCaret> GetCaret() const;
 
-  already_AddRefed<nsIWidget> GetWidget();
+  already_AddRefed<nsIWidget> GetWidget() const;
 
   nsISelectionController* GetSelectionController() const;
 
@@ -1768,13 +1768,13 @@ class EditorBase : public nsIEditor,
    *
    * @param aTag        Tag you want.
    */
-  already_AddRefed<Element> CreateHTMLContent(const nsAtom* aTag);
+  already_AddRefed<Element> CreateHTMLContent(const nsAtom* aTag) const;
 
   /**
    * Creates text node which is marked as "maybe modified frequently" and
    * "maybe masked" if this is a password editor.
    */
-  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData);
+  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
 
   /**
    * DoInsertText(), DoDeleteText(), DoReplaceText() and DoSetText() are
@@ -1811,7 +1811,8 @@ class EditorBase : public nsIEditor,
    *
    * @param aElement    The element for which to insert formatting.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult MarkElementDirty(Element& aElement);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  MarkElementDirty(Element& aElement) const;
 
   MOZ_CAN_RUN_SCRIPT nsresult
   DoTransactionInternal(nsITransaction* aTransaction);
@@ -2359,7 +2360,8 @@ class EditorBase : public nsIEditor,
    * the editor's sync/async settings for reflowing, painting, and scrolling
    * match.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult ScrollSelectionFocusIntoView();
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  ScrollSelectionFocusIntoView() const;
 
   virtual nsresult InstallEventListeners();
   virtual void CreateEventListeners();
@@ -2379,9 +2381,9 @@ class EditorBase : public nsIEditor,
   /**
    * Return true if spellchecking should be enabled for this editor.
    */
-  bool GetDesiredSpellCheckState();
+  [[nodiscard]] bool GetDesiredSpellCheckState();
 
-  bool CanEnableSpellCheck() {
+  [[nodiscard]] bool CanEnableSpellCheck() const {
     // Check for password/readonly/disabled, which are not spellchecked
     // regardless of DOM. Also, check to see if spell check should be skipped
     // or not.

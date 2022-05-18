@@ -5,6 +5,9 @@
 const { GeckoViewUtils } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewUtils.jsm"
 );
+const { EventDispatcher } = ChromeUtils.import(
+  "resource://gre/modules/Messaging.jsm"
+);
 
 var EXPORTED_SYMBOLS = ["GeckoViewActorChild"];
 
@@ -15,9 +18,7 @@ class GeckoViewActorChild extends JSWindowActorChild {
   }
 
   actorCreated() {
-    this.eventDispatcher = GeckoViewUtils.getDispatcherForWindow(
-      this.docShell.domWindow
-    );
+    this.eventDispatcher = EventDispatcher.forActor(this);
   }
 }
 

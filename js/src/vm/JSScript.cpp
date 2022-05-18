@@ -1486,6 +1486,9 @@ bool ScriptSource::assignSource(JSContext* cx,
   MOZ_ASSERT(data.is<Missing>(),
              "source assignment should only occur on fresh ScriptSources");
 
+  mutedErrors_ = options.mutedErrors();
+  delazificationMode_ = options.eagerDelazificationStrategy();
+
   if (options.discardSource) {
     return true;
   }
@@ -1859,6 +1862,7 @@ bool ScriptSource::initFromOptions(JSContext* cx,
   MOZ_ASSERT(!introducerFilename_);
 
   mutedErrors_ = options.mutedErrors();
+  delazificationMode_ = options.eagerDelazificationStrategy();
 
   startLine_ = options.lineno;
   introductionType_ = options.introductionType;

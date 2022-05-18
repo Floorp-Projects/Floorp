@@ -171,7 +171,7 @@ nsresult HTMLFrameSetElement::ParseRowCol(const nsAString& aValue,
   nsAutoString spec(aValue);
   // remove whitespace (Bug 33699) and quotation marks (bug 224598)
   // also remove leading/trailing commas (bug 31482)
-  spec.StripChars(" \n\r\t\"\'");
+  spec.StripChars(u" \n\r\t\"\'");
   spec.Trim(",");
 
   // Count the commas. Don't count more than X commas (bug 576447).

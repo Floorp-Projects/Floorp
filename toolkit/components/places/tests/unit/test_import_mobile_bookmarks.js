@@ -1,6 +1,6 @@
 async function importFromFixture(fixture, replace) {
   let cwd = do_get_cwd().path;
-  let path = OS.Path.join(cwd, fixture);
+  let path = PathUtils.join(cwd, fixture);
 
   info(`Importing from ${path}`);
   await BookmarkJSONUtils.importFromFile(path, { replace });

@@ -45,7 +45,6 @@
 // Print Options
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
-#include "nsIPrintSession.h"
 #include "nsGkAtoms.h"
 #include "nsXPCOM.h"
 
@@ -117,8 +116,7 @@ static uint32_t gDumpLOFileNameCnt = 0;
 #endif
 
 #define PRT_YESNO(_p) ((_p) ? "YES" : "NO")
-static const char* gFrameTypesStr[] = {"eDoc", "eFrame", "eIFrame",
-                                       "eFrameSet"};
+static const char* gFrameTypesStr[] = {"eDoc", "eIFrame"};
 
 // This processes the selection on aOrigDoc and creates an inverted selection on
 // aDoc, which it then deletes. If the start or end of the inverted selection
@@ -149,51 +147,6 @@ static void DumpPrintObjectsTreeLayout(const UniquePtr<nsPrintObject>& aPO,
 // -------------------------------------------------------
 // Helpers
 // -------------------------------------------------------
-
-static bool HasFramesetChild(nsIContent* aContent) {
-  if (!aContent) {
-    return false;
-  }
-
-  // do a breadth search across all siblings
-  for (nsIContent* child = aContent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static bool IsParentAFrameSet(nsIDocShell* aParent) {
-  // See if the incoming doc is the root document
-  if (!aParent) return false;
-
-  // When it is the top level document we need to check
-  // to see if it contains a frameset. If it does, then
-  // we only want to print the doc's children and not the document itself
-  // For anything else we always print all the children and the document
-  // for example, if the doc contains an IFRAME we eant to print the child
-  // document (the IFRAME) and then the rest of the document.
-  //
-  // XXX we really need to search the frame tree, and not the content
-  // but there is no way to distinguish between IFRAMEs and FRAMEs
-  // with the GetFrameType call.
-  // Bug 53459 has been files so we can eventually distinguish
-  // between IFRAME frames and FRAME frames
-  bool isFrameSet = false;
-  // only check to see if there is a frameset if there is
-  // NO parent doc for this doc. meaning this parent is the root doc
-  nsCOMPtr<Document> doc = aParent->GetDocument();
-  if (doc) {
-    nsIContent* rootElement = doc->GetRootElement();
-    if (rootElement) {
-      isFrameSet = HasFramesetChild(rootElement);
-    }
-  }
-  return isFrameSet;
-}
 
 /**
  * Build a tree of nsPrintObjects under aPO. It also appends a (depth first)
@@ -321,10 +274,6 @@ nsPrintJob::~nsPrintJob() {
 
 bool nsPrintJob::CheckBeforeDestroy() const {
   return mPrt && mPrt->mPreparingForPrint;
-}
-
-PresShell* nsPrintJob::GetPrintPreviewPresShell() {
-  return mPrtPreview->mPrintObject->mPresShell;
 }
 
 //-------------------------------------------------------
@@ -480,12 +429,6 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   if (aIsPrintPreview) {
     mIsCreatingPrintPreview = true;
-
-    // Our new print preview nsPrintData is stored in mPtr until we move it
-    // to mPrtPreview once we've finish creating the print preview. We must
-    // clear mPtrPreview so that code will use mPtr until that happens.
-    mPrtPreview = nullptr;
-
     SetIsPrintPreview(true);
   } else {
     SetIsPrinting(true);
@@ -493,6 +436,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   if (aWebProgressListener) {
     printData->mPrintProgressListeners.AppendObject(aWebProgressListener);
+  }
+  if (mRemotePrintJob) {
+    // If we have a RemotePrintJob add it to the print progress listeners,
+    // so it can forward to the parent.
+    printData->mPrintProgressListeners.AppendElement(mRemotePrintJob);
   }
 
   // Get the docshell for this documentviewer
@@ -514,9 +462,7 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
     printData->mPrintDocList.AppendElement(printData->mPrintObject.get());
 
-    printData->mIsParentAFrameSet = IsParentAFrameSet(docShell);
-    printData->mPrintObject->mFrameType =
-        printData->mIsParentAFrameSet ? eFrameSet : eDoc;
+    printData->mPrintObject->mFrameType = eDoc;
 
     BuildNestedPrintObjects(printData->mPrintObject, printData);
   }
@@ -538,39 +484,11 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
-  // Create a print session and let the print settings know about it.
-  // Don't overwrite an existing print session.
-  // The print settings hold an nsWeakPtr to the session so it does not
-  // need to be cleared from the settings at the end of the job.
-  // XXX What lifetime does the printSession need to have?
-  nsCOMPtr<nsIPrintSession> printSession;
-  if (!mIsCreatingPrintPreview) {
-    rv = printData->mPrintSettings->GetPrintSession(
-        getter_AddRefs(printSession));
-    if (NS_FAILED(rv) || !printSession) {
-      printSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      printData->mPrintSettings->SetPrintSession(printSession);
-    } else {
-      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-          printSession->GetRemotePrintJob();
-      if (remotePrintJob) {
-        // If we have a RemotePrintJob add it to the print progress listeners,
-        // so it can forward to the parent.
-        printData->mPrintProgressListeners.AppendElement(remotePrintJob);
-      }
-    }
-  }
-
-  // Now determine how to set up the Frame print UI
-  printData->mPrintSettings->SetIsPrintSelectionRBEnabled(
-      !mDisallowSelectionPrint && printData->mSelectionRoot);
-
   bool printingViaParent =
       XRE_IsContentProcess() && StaticPrefs::print_print_via_parent();
   nsCOMPtr<nsIDeviceContextSpec> devspec;
   if (printingViaParent) {
-    devspec = new nsDeviceContextSpecProxy();
+    devspec = new nsDeviceContextSpecProxy(mRemotePrintJob);
   } else {
     devspec = do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -603,20 +521,14 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 }
 
 //---------------------------------------------------------------------------------
-nsresult nsPrintJob::Print(Document* aSourceDoc,
-                           nsIPrintSettings* aPrintSettings,
+nsresult nsPrintJob::Print(Document* aDoc, nsIPrintSettings* aPrintSettings,
+                           RemotePrintJobChild* aRemotePrintJob,
                            nsIWebProgressListener* aWebProgressListener) {
-  // If we have a print preview document, use that instead of the original
-  // mDocument. That way animated images etc. get printed using the same state
-  // as in print preview.
-  RefPtr<Document> doc = mPrtPreview && mPrtPreview->mPrintObject
-                             ? mPrtPreview->mPrintObject->mDocument.get()
-                             : aSourceDoc;
-
-  return CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
+  mRemotePrintJob = aRemotePrintJob;
+  return CommonPrint(false, aPrintSettings, aWebProgressListener, aDoc);
 }
 
-nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
+nsresult nsPrintJob::PrintPreview(Document* aDoc,
                                   nsIPrintSettings* aPrintSettings,
                                   nsIWebProgressListener* aWebProgressListener,
                                   PrintPreviewResolver&& aCallback) {
@@ -624,8 +536,7 @@ nsresult nsPrintJob::PrintPreview(Document* aSourceDoc,
   // stack will call it to signal failure (by passing zero).
   mPrintPreviewCallback = std::move(aCallback);
 
-  nsresult rv =
-      CommonPrint(true, aPrintSettings, aWebProgressListener, aSourceDoc);
+  nsresult rv = CommonPrint(true, aPrintSettings, aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
     if (mPrintPreviewCallback) {
       // signal error
@@ -658,16 +569,6 @@ int32_t nsPrintJob::GetPrintPreviewNumSheets() const {
   auto [seqFrame, numSheets] = GetSeqFrameAndCountSheets();
   Unused << seqFrame;
   return numSheets;
-}
-
-already_AddRefed<nsIPrintSettings> nsPrintJob::GetCurrentPrintSettings() {
-  if (mPrt) {
-    return do_AddRef(mPrt->mPrintSettings);
-  }
-  if (mPrtPreview) {
-    return do_AddRef(mPrtPreview->mPrintSettings);
-  }
-  return nullptr;
 }
 
 //-----------------------------------------------------------------
@@ -982,19 +883,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
   // But skip this step if we are in PrintPreview
   bool ppIsShrinkToFit = mPrtPreview && mPrtPreview->mShrinkToFit;
   if (printData->mShrinkToFit && !ppIsShrinkToFit) {
-    // Now look for the PO that has the smallest percent for shrink to fit
-    if (printData->mPrintDocList.Length() > 1 &&
-        printData->mPrintObject->mFrameType == eFrameSet) {
-      nsPrintObject* smallestPO = FindSmallestSTF();
-      NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
-      if (smallestPO) {
-        // Calc the shrinkage based on the entire content area
-        printData->mShrinkRatio = smallestPO->mShrinkRatio;
-      }
-    } else {
-      // Single document so use the Shrink as calculated for the PO
-      printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
-    }
+    printData->mShrinkRatio = printData->mPrintObject->mShrinkRatio;
 
     if (printData->mShrinkRatio < 0.998f) {
       nsresult rv = ReconstructAndReflow(true);
@@ -1010,19 +899,7 @@ nsresult nsPrintJob::SetupToPrintContent() {
     }
 
     if (MOZ_LOG_TEST(gPrintingLog, LogLevel::Debug)) {
-      float calcRatio = 0.0f;
-      if (printData->mPrintDocList.Length() > 1 &&
-          printData->mPrintObject->mFrameType == eFrameSet) {
-        nsPrintObject* smallestPO = FindSmallestSTF();
-        NS_ASSERTION(smallestPO, "There must always be an XMost PO!");
-        if (smallestPO) {
-          // Calc the shrinkage based on the entire content area
-          calcRatio = smallestPO->mShrinkRatio;
-        }
-      } else {
-        // Single document so use the Shrink as calculated for the PO
-        calcRatio = printData->mPrintObject->mShrinkRatio;
-      }
+      float calcRatio = printData->mPrintObject->mShrinkRatio;
       PR_PL(
           ("*******************************************************************"
            "*******\n"));
@@ -2153,32 +2030,6 @@ nsresult nsPrintJob::EnablePOsForPrinting() {
   return NS_OK;
 }
 
-//-------------------------------------------------------
-// Return the nsPrintObject with that is XMost (The widest frameset frame) AND
-// contains the XMost (widest) layout frame
-nsPrintObject* nsPrintJob::FindSmallestSTF() {
-  float smallestRatio = 1.0f;
-  nsPrintObject* smallestPO = nullptr;
-
-  for (uint32_t i = 0; i < mPrt->mPrintDocList.Length(); i++) {
-    nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
-    NS_ASSERTION(po, "nsPrintObject can't be null!");
-    if (po->mFrameType != eFrameSet && po->mFrameType != eIFrame) {
-      if (po->mShrinkRatio < smallestRatio) {
-        smallestRatio = po->mShrinkRatio;
-        smallestPO = po;
-      }
-    }
-  }
-
-#ifdef EXTENDED_DEBUG_PRINTING
-  if (smallestPO)
-    printf("*PO: %p  Type: %d  %10.3f\n", smallestPO, smallestPO->mFrameType,
-           smallestPO->mShrinkRatio);
-#endif
-  return smallestPO;
-}
-
 //-----------------------------------------------------------------
 //-- Done: Misc Support Methods
 //-----------------------------------------------------------------
@@ -2276,16 +2127,9 @@ nsresult nsPrintJob::StartPagePrintTimer(const UniquePtr<nsPrintObject>& aPO) {
     mPagePrintTimer =
         new nsPagePrintTimer(this, mDocViewerPrint, doc, printPageDelay);
 
-    nsCOMPtr<nsIPrintSession> printSession;
-    nsresult rv =
-        mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
-    if (NS_SUCCEEDED(rv) && printSession) {
-      RefPtr<layout::RemotePrintJobChild> remotePrintJob =
-          printSession->GetRemotePrintJob();
-      if (remotePrintJob) {
-        remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
-        remotePrintJob->SetPrintJob(this);
-      }
+    if (mRemotePrintJob) {
+      mRemotePrintJob->SetPagePrintTimer(mPagePrintTimer);
+      mRemotePrintJob->SetPrintJob(this);
     }
   }
 

@@ -156,11 +156,8 @@ const gTest0TimerCallback = {
 };
 
 const gTest0Factory = {
-  createInstance: function T0F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest0TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T0F_createInstance(aIID) {
+    return gTest0TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -174,11 +171,8 @@ const gTest1TimerCallback = {
 };
 
 const gTest1Factory = {
-  createInstance: function T1F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest1TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T1F_createInstance(aIID) {
+    return gTest1TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -192,11 +186,8 @@ const gTest2TimerCallback = {
 };
 
 const gTest2Factory = {
-  createInstance: function T2F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest2TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T2F_createInstance(aIID) {
+    return gTest2TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -205,11 +196,8 @@ const gTest3TimerCallback = {
 };
 
 const gTest3Factory = {
-  createInstance: function T3F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest3TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T3F_createInstance(aIID) {
+    return gTest3TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -227,11 +215,8 @@ const gTest4TimerCallback = {
 };
 
 const gTest4Factory = {
-  createInstance: function T4F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest4TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T4F_createInstance(aIID) {
+    return gTest4TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -249,11 +234,8 @@ const gTest5TimerCallback = {
 };
 
 const gTest5Factory = {
-  createInstance: function T5F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest5TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T5F_createInstance(aIID) {
+    return gTest5TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -271,11 +253,8 @@ const gTest6TimerCallback = {
 };
 
 const gTest6Factory = {
-  createInstance: function T6F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest6TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T6F_createInstance(aIID) {
+    return gTest6TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -293,11 +272,8 @@ const gTest7TimerCallback = {
 };
 
 const gTest7Factory = {
-  createInstance: function T7F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest7TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T7F_createInstance(aIID) {
+    return gTest7TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -313,11 +289,8 @@ const gTest8TimerCallback = {
 };
 
 const gTest8Factory = {
-  createInstance: function T8F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest8TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T8F_createInstance(aIID) {
+    return gTest8TimerCallback.QueryInterface(aIID);
   },
 };
 
@@ -342,11 +315,8 @@ const gTest10TimerCallback = {
 };
 
 const gTest9Factory = {
-  createInstance: function T9F_createInstance(aOuter, aIID) {
-    if (aOuter == null) {
-      return gTest9TimerCallback.QueryInterface(aIID);
-    }
-    throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
+  createInstance: function T9F_createInstance(aIID) {
+    return gTest9TimerCallback.QueryInterface(aIID);
   },
 };
 

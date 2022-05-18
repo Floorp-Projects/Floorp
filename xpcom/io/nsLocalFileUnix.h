@@ -57,7 +57,7 @@ class nsLocalFile final
   nsLocalFile();
   explicit nsLocalFile(const nsACString& aFilePath);
 
-  static nsresult nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
+  static nsresult nsLocalFileConstructor(const nsIID& aIID,
                                          void** aInstancePtr);
 
   NS_DECL_THREADSAFE_ISUPPORTS

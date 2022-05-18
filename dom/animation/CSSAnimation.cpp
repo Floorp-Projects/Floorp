@@ -205,8 +205,10 @@ void CSSAnimation::QueueEvents(const StickyTimeDuration& aActiveTime) {
     uint64_t iterationBoundary = mPreviousIteration > currentIteration
                                      ? currentIteration + 1
                                      : currentIteration;
-    iterationStartTime = computedTiming.mDuration.MultDouble(
-        (iterationBoundary - computedTiming.mIterationStart));
+    double multiplier = iterationBoundary - computedTiming.mIterationStart;
+    if (multiplier != 0.0) {
+      iterationStartTime = computedTiming.mDuration.MultDouble(multiplier);
+    }
   }
 
   TimeStamp startTimeStamp = ElapsedTimeToTimeStamp(intervalStartTime);

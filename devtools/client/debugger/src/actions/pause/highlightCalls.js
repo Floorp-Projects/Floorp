@@ -4,7 +4,7 @@
 
 import {
   getSymbols,
-  getSource,
+  getLocationSource,
   getSelectedFrame,
   getCurrentThread,
 } from "../../selectors";
@@ -46,7 +46,7 @@ export function highlightCalls(cx) {
       return;
     }
 
-    const source = getSource(getState(), frame.location.sourceId);
+    const source = getLocationSource(getState(), frame.location);
     if (!source) {
       return;
     }

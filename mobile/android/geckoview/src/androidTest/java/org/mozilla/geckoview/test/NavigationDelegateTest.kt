@@ -354,7 +354,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
-                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
+                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_NETWORK))
                 assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_HTTPS_ONLY))
                 return null
             }
@@ -424,7 +424,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         privateSession.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
-                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_SECURITY))
+                assertThat("categories should match", error.category, equalTo(WebRequestError.ERROR_CATEGORY_NETWORK))
                 assertThat("codes should match", error.code, equalTo(WebRequestError.ERROR_HTTPS_ONLY))
                 return null
             }

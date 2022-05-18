@@ -6,8 +6,6 @@
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironment", "Policy"];
 
-const myScope = this;
-
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { TelemetryUtils } = ChromeUtils.import(
@@ -254,6 +252,11 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["browser.search.widget.inNavBar", { what: RECORD_DEFAULTPREF_VALUE }],
   ["browser.startup.homepage", { what: RECORD_PREF_STATE }],
   ["browser.startup.page", { what: RECORD_PREF_VALUE }],
+  ["browser.urlbar.autoFill", { what: RECORD_DEFAULTPREF_VALUE }],
+  [
+    "browser.urlbar.autoFill.adaptiveHistory.enabled",
+    { what: RECORD_DEFAULTPREF_VALUE },
+  ],
   [
     "browser.urlbar.quicksuggest.onboardingDialogChoice",
     { what: RECORD_DEFAULTPREF_VALUE },
@@ -324,9 +327,15 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["layers.prefer-opengl", { what: RECORD_PREF_VALUE }],
   ["layout.css.devPixelsPerPx", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.enabled", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastInstallFailed", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastInstallStart", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastDownload", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastDownloadFailed", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-gmpopenh264.lastDownloadFailReason", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.lastUpdate", { what: RECORD_PREF_VALUE }],
   ["media.gmp-gmpopenh264.visible", { what: RECORD_PREF_VALUE }],
   ["media.gmp-manager.lastCheck", { what: RECORD_PREF_VALUE }],
+  ["media.gmp-manager.lastEmptyCheck", { what: RECORD_PREF_VALUE }],
   ["network.http.windows-sso.enabled", { what: RECORD_PREF_VALUE }],
   ["network.proxy.autoconfig_url", { what: RECORD_PREF_STATE }],
   ["network.proxy.http", { what: RECORD_PREF_STATE }],
@@ -758,7 +767,7 @@ EnvironmentAddonBuilder.prototype = {
       this._environment._log.trace("_updateAddons: addons differ");
       result.oldEnvironment = Cu.cloneInto(
         this._environment._currentEnvironment,
-        myScope
+        {}
       );
     }
     this._environment._currentEnvironment.addons = addons;
@@ -1007,7 +1016,7 @@ EnvironmentCache.prototype = {
    * @returns object
    */
   get currentEnvironment() {
-    return Cu.cloneInto(this._currentEnvironment, myScope);
+    return Cu.cloneInto(this._currentEnvironment, {});
   },
 
   /**
@@ -1152,7 +1161,7 @@ EnvironmentCache.prototype = {
       }
     }
 
-    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
     // Add the experiment annotation.
     let experiments = this._currentEnvironment.experiments || {};
     experiments[saneId] = { branch: saneBranch };
@@ -1172,7 +1181,7 @@ EnvironmentCache.prototype = {
     let experiments = this._currentEnvironment.experiments || {};
     if (id in experiments) {
       // Only attempt to notify if a previous annotation was found and removed.
-      let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+      let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
       // Remove the experiment annotation.
       delete this._currentEnvironment.experiments[id];
       // Notify of the change.
@@ -1184,7 +1193,7 @@ EnvironmentCache.prototype = {
   },
 
   getActiveExperiments() {
-    return Cu.cloneInto(this._currentEnvironment.experiments || {}, myScope);
+    return Cu.cloneInto(this._currentEnvironment.experiments || {}, {});
   },
 
   shutdown() {
@@ -1280,7 +1289,7 @@ EnvironmentCache.prototype = {
 
   _onPrefChanged(aData) {
     this._log.trace("_onPrefChanged");
-    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
     this._currentEnvironment.settings.userPrefs[aData] = this._getPrefValue(
       aData,
       this._watchedPrefs.get(aData).what
@@ -1452,7 +1461,7 @@ EnvironmentCache.prototype = {
     this._log.trace("_onSearchEngineChange");
 
     // Finally trigger the environment change notification.
-    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
     await this._updateSearchEngine();
     this._onEnvironmentChange("search-engine-changed", oldEnvironment);
   },
@@ -1466,7 +1475,7 @@ EnvironmentCache.prototype = {
     this._log.trace("_onCompositorProcessAborted");
 
     // Trigger the environment change notification.
-    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
     this._updateGraphicsFeatures();
     this._onEnvironmentChange("gfx-features-changed", oldEnvironment);
   },

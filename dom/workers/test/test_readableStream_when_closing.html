@@ -34,32 +34,28 @@ function workerCode() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [
-  ["javascript.options.streams", true],
-]}).then(() => {
-  const b = new Blob([workerCode+'workerCode();']);
-  const url = URL.createObjectURL(b);
-  const w = new Worker(url);
-  w.onmessage = function(e) {
-    ok(true, 'Worker is reading');
 
-    const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
-                getService(Ci.nsIWorkerDebuggerManager);
-    wdm.addListener({
-      onUnregister (dbg) {
-        if (dbg.url == url) {
-          ok(true, "Debugger with url " + url + " should be unregistered.");
-          wdm.removeListener(this);
-          SimpleTest.finish();
-        }
+const b = new Blob([workerCode+'workerCode();']);
+const url = URL.createObjectURL(b);
+const w = new Worker(url);
+w.onmessage = function(e) {
+  ok(true, 'Worker is reading');
+
+  const wdm = Cc["@mozilla.org/dom/workers/workerdebuggermanager;1"].
+              getService(Ci.nsIWorkerDebuggerManager);
+  wdm.addListener({
+    onUnregister (dbg) {
+      if (dbg.url == url) {
+        ok(true, "Debugger with url " + url + " should be unregistered.");
+        wdm.removeListener(this);
+        SimpleTest.finish();
       }
-    });
+    }
+  });
 
-    w.terminate();
-  }
-  w.postMessage("start");
-});
-
+  w.terminate();
+}
+w.postMessage("start");
   </script>
 </body>
 </html>

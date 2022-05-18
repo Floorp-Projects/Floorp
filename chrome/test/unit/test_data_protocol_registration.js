@@ -25,10 +25,7 @@ function run_test() {
     CID: uuidGenerator.generateUUID(),
     scheme: "XULAppInfo",
     contractID: XULAPPINFO_CONTRACTID,
-    createInstance(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(iid) {
       return XULAppInfo.QueryInterface(iid);
     },
   };

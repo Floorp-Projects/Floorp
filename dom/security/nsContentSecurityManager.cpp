@@ -1237,6 +1237,10 @@ static nsresult CheckAllowFileProtocolScriptLoad(nsIChannel* aChannel) {
     return NS_OK;
   }
 
+  if (!StaticPrefs::security_block_fileuri_script_with_wrong_mime()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);

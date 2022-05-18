@@ -122,16 +122,13 @@ bool MP3TrackDemuxer::Init() {
   mInfo->mBitDepth = 16;
   mInfo->mMimeType = "audio/mpeg";
   mInfo->mDuration = Duration().valueOr(TimeUnit::FromInfinity());
+  Mp3CodecSpecificData mp3CodecData{};
   if (mEncoderDelay) {
-    AutoTArray<uint8_t, 8> trimInfo;
-    ByteWriter<BigEndian> writer(trimInfo);
-    bool ok = false;
-    ok = writer.WriteU32(mEncoderDelay);
-    MOZ_ALWAYS_TRUE(ok);
-    ok = writer.WriteU32(mEncoderPadding);
-    MOZ_ALWAYS_TRUE(ok);
-    mInfo->mCodecSpecificConfig->AppendElements(trimInfo);
+    mp3CodecData.mEncoderDelayFrames = mEncoderDelay;
+    mp3CodecData.mEncoderPaddingFrames = mEncoderPadding;
   }
+  mInfo->mCodecSpecificConfig =
+      AudioCodecSpecificVariant{std::move(mp3CodecData)};
 
   MP3LOG("Init mInfo={mRate=%d mChannels=%d mBitDepth=%d mDuration=%" PRId64
          "}",

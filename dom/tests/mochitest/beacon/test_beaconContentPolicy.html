@@ -42,9 +42,9 @@ function setupPolicy() {
         return this;
       throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
     },
-    
+
     // nsIFactory implementation
-    createInstance(outer, iid) {
+    createInstance(iid) {
       return this.QueryInterface(iid);
     },
 

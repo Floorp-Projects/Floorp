@@ -654,41 +654,11 @@ void ParseTask::scheduleDelazifyTask(AutoLockHelperThreadState& lock) {
     JSContext* cx = TlsContext.get();
     AutoSetContextRuntime ascr(runtime);
 
-    // DelazifyTask are capturing errors. This is created here to capture errors
-    // as-if they were part of the to-be constructed DelazifyTask. This is also
-    // the reason why we move this structure to the DelazifyTask once created.
-    //
-    // In case of early failure, no errors are reported, as a DelazifyTask is an
-    // optimization and the VM should remain working even without this
-    // optimization in place.
-    OffThreadFrontendErrors errors;
-    AutoSetContextOffThreadFrontendErrors recordErrors(&errors);
-
-    task.reset(js_new<DelazifyTask>(runtime, contextOptions));
+    task = DelazifyTask::Create(cx, runtime, contextOptions, options,
+                                *stencil_);
     if (!task) {
       return;
     }
-
-    RefPtr<ScriptSource> source(stencil_->source);
-    StencilCache& cache = runtime->caches().delazificationCache;
-    if (!cache.startCaching(std::move(source))) {
-      return;
-    }
-
-    // Clone the extensible stencil to be used for eager delazification.
-    auto initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
-        cx, options, stencil_->source);
-    if (!initial->cloneFrom(cx, *stencil_)) {
-      // In case of errors, skip this and delazify on-demand.
-      return;
-    }
-
-    if (!task->init(cx, options, std::move(initial))) {
-      // In case of errors, skip this and delazify on-demand.
-      return;
-    }
-
-    task->errors_ = std::move(errors);
   }
 
   // Schedule delazification task if there is any function to delazify.
@@ -867,6 +837,42 @@ void MultiStencilsDecodeTask::parse(JSContext* cx) {
   }
 }
 
+bool js::StartOffThreadDelazification(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    const frontend::CompilationStencil& stencil) {
+
+  // Skip delazify tasks if we parse everything on-demand or ahead.
+  auto strategy = options.eagerDelazificationStrategy();
+  if (strategy == JS::DelazificationOption::OnDemandOnly ||
+      strategy == JS::DelazificationOption::ParseEverythingEagerly) {
+    return true;
+  }
+
+  // Skip delazify task if code coverage is enabled.
+  if (cx->realm()->collectCoverageForDebug()) {
+    return true;
+  }
+
+  if (!CanUseExtraThreads()) {
+    return true;
+  }
+
+  JSRuntime* runtime = cx->runtime();
+  UniquePtr<DelazifyTask> task;
+  task = DelazifyTask::Create(cx, runtime, cx->options(), options, stencil);
+  if (!task) {
+    return false;
+  }
+
+  // Schedule delazification task if there is any function to delazify.
+  if (!task->strategy->done()) {
+    AutoLockHelperThreadState lock;
+    HelperThreadState().submitTask(task.release(), lock);
+  }
+
+  return true;
+}
+
 bool DepthFirstDelazification::add(JSContext* cx,
                                    const frontend::CompilationStencil& stencil,
                                    ScriptIndex index) {
@@ -890,7 +896,8 @@ bool DepthFirstDelazification::add(JSContext* cx,
 
     ScriptIndex innerScriptIndex = index.toFunction();
     ScriptStencilRef innerScriptRef{stencil, innerScriptIndex};
-    if (innerScriptRef.scriptData().isGhost()) {
+    if (innerScriptRef.scriptData().isGhost() ||
+        !innerScriptRef.scriptData().functionFlags.isInterpreted()) {
       continue;
     }
     if (innerScriptRef.scriptData().hasSharedData()) {
@@ -909,6 +916,54 @@ bool DepthFirstDelazification::add(JSContext* cx,
   }
 
   return true;
+}
+
+UniquePtr<DelazifyTask> DelazifyTask::Create(
+    JSContext* cx,
+    JSRuntime* runtime,
+    const JS::ContextOptions& contextOptions,
+    const JS::ReadOnlyCompileOptions& options,
+    const frontend::CompilationStencil& stencil)
+{
+  // DelazifyTask are capturing errors. This is created here to capture errors
+  // as-if they were part of the to-be constructed DelazifyTask. This is also
+  // the reason why we move this structure to the DelazifyTask once created.
+  //
+  // In case of early failure, no errors are reported, as a DelazifyTask is an
+  // optimization and the VM should remain working even without this
+  // optimization in place.
+  OffThreadFrontendErrors errors;
+  AutoSetContextOffThreadFrontendErrors recordErrors(&errors);
+
+  UniquePtr<DelazifyTask> task;
+  task.reset(js_new<DelazifyTask>(runtime, contextOptions));
+  if (!task) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  RefPtr<ScriptSource> source(stencil.source);
+  StencilCache& cache = runtime->caches().delazificationCache;
+  if (!cache.startCaching(std::move(source))) {
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  // Clone the extensible stencil to be used for eager delazification.
+  auto initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
+      cx, options, stencil.source);
+  if (!initial || !initial->cloneFrom(cx, stencil)) {
+    // In case of errors, skip this and delazify on-demand.
+    return nullptr;
+  }
+
+  if (!task->init(cx, options, std::move(initial))) {
+    // In case of errors, skip this and delazify on-demand.
+    return nullptr;
+  }
+
+  task->errors_ = std::move(errors);
+  return task;
 }
 
 DelazifyTask::DelazifyTask(JSRuntime* runtime,
@@ -931,6 +986,7 @@ bool DelazifyTask::init(
       // execution on the main thread.
       MOZ_CRASH("OnDemandOnly should not create a DelazifyTask.");
       break;
+    case JS::DelazificationOption::CheckConcurrentWithOnDemand:
     case JS::DelazificationOption::ConcurrentDepthFirst:
       // ConcurrentDepthFirst visit all functions to be delazified, visiting the
       // inner functions before the siblings functions.
@@ -1227,6 +1283,39 @@ void js::CancelOffThreadDelazify(JSRuntime* runtime) {
   // Empty the free list of delazify task, in case one of the delazify task
   // ended and therefore did not returned to the pending list of delazify tasks.
   WaitUntilEmptyFreeDelazifyTaskVector(lock);
+}
+
+static bool HasAnyDelazifyTask(JSRuntime* rt, AutoLockHelperThreadState& lock) {
+  auto& delazifyList = HelperThreadState().delazifyWorklist(lock);
+  for (auto task : delazifyList) {
+    if (task->runtimeMatches(rt)) {
+      return true;
+    }
+  }
+
+  for (auto* helper : HelperThreadState().helperTasks(lock)) {
+    if (helper->is<DelazifyTask>() &&
+        helper->as<DelazifyTask>()->runtimeMatches(rt)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void js::WaitForAllDelazifyTasks(JSRuntime* rt) {
+  AutoLockHelperThreadState lock;
+  if (!HelperThreadState().isInitialized(lock)) {
+    return;
+  }
+
+  while (true) {
+    if (!HasAnyDelazifyTask(rt, lock)) {
+      break;
+    }
+
+    HelperThreadState().wait(lock);
+  }
 }
 
 static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {

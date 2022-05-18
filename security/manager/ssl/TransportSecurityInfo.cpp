@@ -310,6 +310,8 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
 // serialized object.
 nsresult TransportSecurityInfo::ReadSSLStatus(nsIObjectInputStream* aStream,
                                               MutexAutoLock& aProofOfLock) {
+  mMutex.AssertCurrentThreadOwns();
+
   bool nsISSLStatusPresent;
   nsresult rv = aStream->ReadBoolean(&nsISSLStatusPresent);
   CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv), "Deserialization should not fail");
@@ -1262,6 +1264,7 @@ void TransportSecurityInfo::SetResumed(bool aResumed) {
 
 NS_IMETHODIMP
 TransportSecurityInfo::GetPeerId(nsACString& aResult) {
+  MutexAutoLock lock(mMutex);
   aResult.Assign(mPeerId);
   return NS_OK;
 }

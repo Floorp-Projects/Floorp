@@ -176,10 +176,7 @@ function registerMockWindowsRegKeyFactory() {
     Ci.nsIWindowsRegKey
   );
   let mockWindowsRegKeyFactory = {
-    createInstance(outer, iid) {
-      if (outer != null) {
-        throw Components.Exception("", Cr.NS_ERROR_NO_AGGREGATION);
-      }
+    createInstance(iid) {
       info("Create a mock wrapper around RegKey");
       var key = new MockWindowsRegKey(originalRegKey);
       return key.QueryInterface(iid);

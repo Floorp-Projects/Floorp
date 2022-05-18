@@ -36,15 +36,10 @@ telemetry-tests-client:
     treeherder-symbol: tt(c)
     variants:
         - fission
-        - no-fission
     run-without-variant: false
     run-on-projects:
         by-variant:
             fission: built-projects
-            no-fission:
-                by-test-platform:
-                    linux.*: ['trunk']
-                    default: []
     max-run-time: 1200
     tier: default
     mozharness:

@@ -22,7 +22,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
   PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
@@ -954,10 +953,7 @@ var PlacesDBUtils = {
    */
   async vacuum() {
     let logs = [];
-    let placesDbPath = OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "places.sqlite"
-    );
+    let placesDbPath = PathUtils.join(PathUtils.profileDir, "places.sqlite");
     let info = await IOUtils.stat(placesDbPath);
     logs.push(`Initial database size is ${parseInt(info.size / 1024)}KiB`);
     return PlacesUtils.withConnectionWrapper(
@@ -1014,14 +1010,11 @@ var PlacesDBUtils = {
    */
   async stats() {
     let logs = [];
-    let placesDbPath = OS.Path.join(
-      OS.Constants.Path.profileDir,
-      "places.sqlite"
-    );
+    let placesDbPath = PathUtils.join(PathUtils.profileDir, "places.sqlite");
     let info = await IOUtils.stat(placesDbPath);
     logs.push(`Places.sqlite size is ${parseInt(info.size / 1024)}KiB`);
-    let faviconsDbPath = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    let faviconsDbPath = PathUtils.join(
+      PathUtils.profileDir,
       "favicons.sqlite"
     );
     info = await IOUtils.stat(faviconsDbPath);
@@ -1211,8 +1204,8 @@ var PlacesDBUtils = {
       {
         histogram: "PLACES_DATABASE_FILESIZE_MB",
         async callback() {
-          let placesDbPath = OS.Path.join(
-            OS.Constants.Path.profileDir,
+          let placesDbPath = PathUtils.join(
+            PathUtils.profileDir,
             "places.sqlite"
           );
           let info = await IOUtils.stat(placesDbPath);
@@ -1240,8 +1233,8 @@ var PlacesDBUtils = {
       {
         histogram: "PLACES_DATABASE_FAVICONS_FILESIZE_MB",
         async callback() {
-          let faviconsDbPath = OS.Path.join(
-            OS.Constants.Path.profileDir,
+          let faviconsDbPath = PathUtils.join(
+            PathUtils.profileDir,
             "favicons.sqlite"
           );
           let info = await IOUtils.stat(faviconsDbPath);
@@ -1308,7 +1301,7 @@ var PlacesDBUtils = {
     );
     let re = /places\.sqlite(-\d)?\.corrupt$/;
     let currentTime = Date.now();
-    let children = await IOUtils.getChildren(OS.Constants.Path.profileDir);
+    let children = await IOUtils.getChildren(PathUtils.profileDir);
     try {
       for (let entry of children) {
         let fileInfo = await IOUtils.stat(entry);
@@ -1445,7 +1438,7 @@ async function integrity(dbName) {
   // openConnection returns an exception with .result == Cr.NS_ERROR_FILE_CORRUPTED,
   // we should do the same everywhere we want maintenance to try replacing the
   // database on next startup.
-  let path = OS.Path.join(OS.Constants.Path.profileDir, dbName);
+  let path = PathUtils.join(PathUtils.profileDir, dbName);
   let db = await Sqlite.openConnection({ path });
   try {
     if (await check(db)) {

@@ -81,6 +81,8 @@ bool WAVTrackDemuxer::Init() {
 
   if (!mInfo) {
     mInfo = MakeUnique<AudioInfo>();
+    mInfo->mCodecSpecificConfig =
+        AudioCodecSpecificVariant{WaveCodecSpecificData{}};
   }
 
   if (!RIFFParserInit()) {
