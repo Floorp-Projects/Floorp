@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.pm.PackageInfoCompat
 import kotlinx.coroutines.Job
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
@@ -85,27 +86,11 @@ class AboutFragment : BaseSettingsLikeFragment() {
                 .replaceAfter("<br/>", "")
                 .replace("<br/>", "")
 
-        val gecko = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) " \uD83E\uDD8E " else " GV: "
-
-        val engineIndicator =
-            gecko + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
-
-        val packageInfo =
-            requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
-
-        @Suppress("ImplicitDefaultLocale")
-        val aboutVersion = String.format(
-            "%s (Build #%s)",
-            packageInfo.versionName,
-            @Suppress("DEPRECATION")
-            packageInfo.versionCode.toString() + engineIndicator
-        )
-
         secretSettingsUnlocker = SecretSettingsUnlocker(requireContext())
 
         binding.aboutPageContent.setContent {
             AboutPageContent(
-                aboutVersion,
+                getAboutHeader(),
                 content,
                 learnMore,
                 secretSettingsUnlocker,
@@ -113,6 +98,28 @@ class AboutFragment : BaseSettingsLikeFragment() {
             )
         }
         return binding.root
+    }
+
+    private fun getAboutHeader(): String {
+        val gecko = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) " \uD83E\uDD8E " else " GV: "
+        val engineIndicator = gecko + BuildConfig.MOZ_APP_VERSION + "-" + BuildConfig.MOZ_APP_BUILDID
+        val componentsAbbreviation = getString(R.string.components_abbreviation)
+        val componentsIndicator = mozilla.components.Build.version + ", " + mozilla.components.Build.gitHash
+        val servicesAbbreviation = getString(R.string.services_abbreviation)
+        val servicesIndicator = mozilla.components.Build.applicationServicesVersion
+        val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
+        val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
+
+        @Suppress("ImplicitDefaultLocale")
+        return String.format(
+            "%s (Build #%s)\n%s: %s\n%s: %s",
+            packageInfo.versionName,
+            versionCode + engineIndicator,
+            componentsAbbreviation,
+            componentsIndicator,
+            servicesAbbreviation,
+            servicesIndicator
+        )
     }
 }
 

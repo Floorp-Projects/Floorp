@@ -18,4 +18,8 @@
     <!-- Label for LeakCanary Toggle. It's used in Advanced Settings. -->
     <string name="preference_leakcanary" translatable="false">LeakCanary</string>
 
+    <!-- Android Components abbreviation used in AboutFragment -->
+    <string name="components_abbreviation" translatable="false">AC</string>
+    <!-- Application Services abbreviation used in AboutFragment -->
+    <string name="services_abbreviation" translatable="false">AS</string>
 </resources>
