@@ -4394,6 +4394,8 @@ bitflags! {
         const IS_SUB_GRAPH = 1 << 1;
         /// This picture wraps a sub-graph, but is not the resolve source itself
         const WRAPS_SUB_GRAPH = 1 << 2;
+        /// If set, this picture should not apply snapping via changing the raster root
+        const DISABLE_SNAPPING = 1 << 3;
     }
 }
 
@@ -5873,7 +5875,7 @@ impl PicturePrimitive {
                 // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
                 // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
 
-                let (world_scale_factors, parent_allows_snapping) = match parent_surface_index {
+                let world_scale_factors = match parent_surface_index {
                     Some(parent_surface_index) => {
                         let parent_surface = &surfaces[parent_surface_index.0];
 
@@ -5901,7 +5903,7 @@ impl PicturePrimitive {
                             scale_factors.1 * parent_surface.world_scale_factors.1,
                         );
 
-                        (scale_factors, parent_surface.allow_snapping)
+                        scale_factors
                     }
                     None => {
                         let local_to_surface_scale_factors = frame_context
@@ -5917,7 +5919,7 @@ impl PicturePrimitive {
                             local_to_surface_scale_factors.1,
                         );
 
-                        (scale_factors, true)
+                        scale_factors
                     }
                 };
 
@@ -5927,10 +5929,7 @@ impl PicturePrimitive {
                 //           cases (if it's even useful?) or perhaps add a ENABLE_SNAPPING
                 //           picture flag, if the IS_SUB_GRAPH is ever useful in a different
                 //           context.
-                let allow_snapping =
-                    parent_allows_snapping &&
-                    !self.flags.contains(PictureFlags::IS_SUB_GRAPH) &&
-                    !self.flags.contains(PictureFlags::WRAPS_SUB_GRAPH);
+                let allow_snapping = !self.flags.contains(PictureFlags::DISABLE_SNAPPING);
 
                 // Check if there is perspective or if an SVG filter is applied, and thus whether a new
                 // rasterization root should be established.

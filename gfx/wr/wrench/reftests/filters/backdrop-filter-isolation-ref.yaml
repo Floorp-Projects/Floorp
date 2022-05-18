@@ -1,0 +1,20 @@
+# Ensure that stacking context isolation correctly works with backdrop-filter
+# (doesn't apply the filter outside the bounds of the isolated stacking context bounds)
+root:
+  items:
+    - type: rect
+      bounds: [10, 10, 100, 100]
+      color: [0, 128, 0, 1]
+    - type: stacking-context
+      bounds: [130, 10, 0, 0]
+      filters: [identity]
+      items:
+        - type: rect
+          bounds: [0, 0, 100, 100]
+          color: [0, 128, 0, 1]
+        - type: rect
+          bounds: [-90, 30, 160, 160]
+          color: [255, 255, 0, 0.5]
+        - type: rect
+          bounds: [0, 30, 70, 70]
+          color: [255, 191, 127, 1]
