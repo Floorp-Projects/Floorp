@@ -53,7 +53,7 @@ class RtpReceiverInternal;
 // Stats are gathered on the signaling, worker and network threads
 // asynchronously. The callback is invoked on the signaling thread. Resulting
 // reports are cached for |cache_lifetime_| ms.
-class RTCStatsCollector : public virtual rtc::RefCountInterface,
+class RTCStatsCollector : public rtc::RefCountInterface,
                           public sigslot::has_slots<> {
  public:
   static rtc::scoped_refptr<RTCStatsCollector> Create(

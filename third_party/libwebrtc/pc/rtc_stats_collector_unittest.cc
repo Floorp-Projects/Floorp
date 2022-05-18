@@ -3215,10 +3215,19 @@ class FakeRTCStatsCollector : public RTCStatsCollector,
   static rtc::scoped_refptr<FakeRTCStatsCollector> Create(
       PeerConnectionInternal* pc,
       int64_t cache_lifetime_us) {
-    return rtc::scoped_refptr<FakeRTCStatsCollector>(
-        new rtc::RefCountedObject<FakeRTCStatsCollector>(pc,
-                                                         cache_lifetime_us));
+    return new rtc::RefCountedObject<FakeRTCStatsCollector>(pc,
+                                                            cache_lifetime_us);
   }
+
+  // Since FakeRTCStatsCollector inherits twice from RefCountInterface, once via
+  // RTCStatsCollector and once via RTCStatsCollectorCallback, scoped_refptr
+  // will get confused about which  AddRef()/Release() methods to call.
+  // So to remove all doubt, we declare them here again in the class that we
+  // give to scoped_refptr.
+  // Satisfying the implementation of these methods and associating them with a
+  // reference counter, will be done by RefCountedObject.
+  virtual void AddRef() const = 0;
+  virtual rtc::RefCountReleaseStatus Release() const = 0;
 
   // RTCStatsCollectorCallback implementation.
   void OnStatsDelivered(
