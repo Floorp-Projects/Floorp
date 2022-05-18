@@ -19,6 +19,7 @@
 #include "js/ContextOptions.h"        // JS::ContextOptionsRef
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/loader/ScriptLoadRequest.h"
+#include "ScriptCompression.h"
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ModuleLoadRequest.h"
 #include "js/MemoryFunctions.h"
@@ -99,14 +100,6 @@ using JS::SourceText;
 using namespace JS::loader;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
-
-namespace {  // TODO shared code with ScriptLoadHandler.cpp
-// A LengthPrefixType is stored at the start of the compressed optimized
-// encoding, allowing the decompressed buffer to be allocated to exactly
-// the right size.
-using LengthPrefixType = uint32_t;
-const unsigned PREFIX_BYTES = sizeof(LengthPrefixType);
-}  // namespace
 
 namespace mozilla::dom {
 
@@ -2563,43 +2556,10 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   }
 
   Vector<uint8_t> compressedBytecode;
-  {
-    // TODO probably need to move this to a helper thread
-    LengthPrefixType uncompressedLength =
-        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
-    z_stream zstream{.next_in = aRequest->mScriptBytecode.begin() +
-                                aRequest->mBytecodeOffset,
-                     .avail_in = uncompressedLength};
-    auto compressedLength = deflateBound(&zstream, uncompressedLength);
-    if (!compressedBytecode.resizeUninitialized(
-            compressedLength + aRequest->mBytecodeOffset + PREFIX_BYTES)) {
-      return;
-    }
-    memcpy(compressedBytecode.begin(), aRequest->mScriptBytecode.begin(),
-           aRequest->mBytecodeOffset);
-    memcpy(compressedBytecode.begin() + aRequest->mBytecodeOffset,
-           &uncompressedLength, PREFIX_BYTES);
-    zstream.next_out =
-        compressedBytecode.begin() + aRequest->mBytecodeOffset + PREFIX_BYTES;
-    zstream.avail_out = compressedLength;
-
-    const int COMPRESSION = 2;  // TODO find appropriate compression level
-    if (deflateInit(&zstream, COMPRESSION) != Z_OK) {
-      LOG(
-          ("ScriptLoadRequest (%p): Unable to initialize bytecode cache "
-           "compression.",
-           aRequest));
-      return;
-    }
-    auto autoDestroy = MakeScopeExit([&]() { deflateEnd(&zstream); });
-
-    int ret = deflate(&zstream, Z_FINISH);
-    if (ret == Z_MEM_ERROR) {
-      return;
-    }
-    MOZ_RELEASE_ASSERT(ret == Z_STREAM_END);
-
-    compressedBytecode.shrinkTo(zstream.next_out - compressedBytecode.begin());
+  // TODO probably need to move this to a helper thread
+  if (!ScriptBytecodeCompress(aRequest->mScriptBytecode,
+                              aRequest->mBytecodeOffset, compressedBytecode)) {
+    return;
   }
 
   if (compressedBytecode.length() >= UINT32_MAX) {
