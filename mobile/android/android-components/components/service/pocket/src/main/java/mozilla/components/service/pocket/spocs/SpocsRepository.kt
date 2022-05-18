@@ -6,7 +6,7 @@ package mozilla.components.service.pocket.spocs
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.pocket.PocketSponsoredStory
+import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.ext.toLocalSpoc
 import mozilla.components.service.pocket.ext.toPocketSponsoredStory
 import mozilla.components.service.pocket.spocs.api.ApiSpoc

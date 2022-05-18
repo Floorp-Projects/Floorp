@@ -6,7 +6,7 @@ package mozilla.components.service.pocket.stories
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.ext.toPartialTimeShownUpdate
 import mozilla.components.service.pocket.ext.toPocketLocalStory
 import mozilla.components.service.pocket.ext.toPocketRecommendedStory

@@ -7,7 +7,7 @@ package mozilla.components.service.pocket.stories
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.pocket.PocketRecommendedStory
+import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.stories.api.PocketEndpoint
 import mozilla.components.service.pocket.stories.api.PocketResponse
 
