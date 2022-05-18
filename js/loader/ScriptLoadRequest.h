@@ -325,8 +325,7 @@ class ScriptLoadRequest
   size_t mScriptTextLength;
 
   // Holds the SRI serialized hash and the script bytecode for non-inline
-  // scripts. The data is laid out according to ScriptBytecodeDataLayout
-  // or, if compression is enabled, ScriptBytecodeCompressedDataLayout.
+  // scripts.
   mozilla::Vector<uint8_t> mScriptBytecode;
   uint32_t mBytecodeOffset;  // Offset of the bytecode in mScriptBytecode
 
