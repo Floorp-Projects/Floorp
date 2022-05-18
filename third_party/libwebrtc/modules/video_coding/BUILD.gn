@@ -604,6 +604,7 @@ rtc_library("webrtc_vp9") {
     ":webrtc_libvpx_interface",
     ":webrtc_vp9_helpers",
     "../../api:fec_controller_api",
+    "../../api:refcountedbase",
     "../../api:scoped_refptr",
     "../../api/transport:field_trial_based_config",
     "../../api/transport:webrtc_key_value_config",

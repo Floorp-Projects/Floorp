@@ -34,9 +34,9 @@ class RefCountedObject : public T {
           std::forward<P1>(p1),
           std::forward<Args>(args)...) {}
 
-  virtual void AddRef() const { ref_count_.IncRef(); }
+  void AddRef() const override { ref_count_.IncRef(); }
 
-  virtual RefCountReleaseStatus Release() const {
+  RefCountReleaseStatus Release() const override {
     const auto status = ref_count_.DecRef();
     if (status == RefCountReleaseStatus::kDroppedLastRef) {
       delete this;
@@ -53,7 +53,7 @@ class RefCountedObject : public T {
   virtual bool HasOneRef() const { return ref_count_.HasOneRef(); }
 
  protected:
-  virtual ~RefCountedObject() {}
+  ~RefCountedObject() override {}
 
   mutable webrtc::webrtc_impl::RefCounter ref_count_{0};
 
