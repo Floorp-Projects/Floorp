@@ -14,6 +14,14 @@
 
 "use strict";
 
+requestLongerTimeout(5);
+
+/* import-globals-from ../../../framework/browser-toolbox/test/helpers-browser-toolbox.js */
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/framework/browser-toolbox/test/helpers-browser-toolbox.js",
+  this
+);
+
 const testServer = createVersionizedHttpTestServer(
   "examples/sourcemaps-reload-uncompressed"
 );
@@ -131,6 +139,7 @@ add_task(async function testSimpleSourcesWithManualClickExpand() {
 
   info("Assert that nested-source.js is still the selected source");
   await assertNodeIsFocused(dbg, 5);
+  dbg.toolbox.closeToolbox();
 });
 
 /**
@@ -237,6 +246,7 @@ add_task(async function testSimpleSourcesWithManualKeyShortcutsExpand() {
   // Up Key at the top of the source tree
   await pressKey(dbg, "Up");
   await assertNodeIsFocused(dbg, 2);
+  dbg.toolbox.closeToolbox();
 });
 
 /**
@@ -367,6 +377,7 @@ add_task(async function testSourceTreeOnTheIntegrationTestPage() {
     }
     return resultItem.innerText.includes("query.js?x=1");
   }, "Results include the source with the query string");
+  dbg.toolbox.closeToolbox();
 });
 
 /**
@@ -416,6 +427,80 @@ add_task(async function testSourceTreeWithWebExtensionContentScript() {
   await extension.unload();
 });
 
+// Test that the Web extension name is shown in source tree rather than
+// the extensions internal UUID. This checks both the web toolbox and the
+// browser toolbox.
+add_task(async function testSourceTreeNamesForWebExtensions() {
+  await pushPref("devtools.chrome.enabled", true);
+  const extension = await installAndStartContentScriptExtension();
+
+  const dbg = await initDebugger("doc-content-script-sources.html");
+  await waitForSourcesInSourceTree(dbg, [], {
+    noExpand: true,
+  });
+
+  is(
+    getLabel(dbg, 2),
+    "Test content script extension",
+    "Test content script extension is labeled properly"
+  );
+  is(getLabel(dbg, 3), "resource://gre", "resource://gre is labeled properly");
+
+  await dbg.toolbox.closeToolbox();
+  await extension.unload();
+
+  // Make sure the toolbox opens with the debugger selected.
+  await pushPref("devtools.browsertoolbox.panel", "jsdebugger");
+
+  const ToolboxTask = await initBrowserToolboxTask();
+  await ToolboxTask.importFunctions({
+    createDebuggerContext,
+    waitUntil,
+    findSourceNodeWithText,
+    findAllElements,
+    getSelector,
+    findAllElementsWithSelector,
+    assertSourceTreeNode,
+  });
+
+  // ToolboxTask.spawn pass input arguments by stringify them via string concatenation.
+  // This mean we have to stringify the input object, but don't have to parse it from the task.
+  await ToolboxTask.spawn(JSON.stringify(selectors), async _selectors => {
+    this.selectors = _selectors;
+  });
+
+  await ToolboxTask.spawn(null, async () => {
+    try {
+      /* global gToolbox */
+      // Wait for the debugger to finish loading.
+      await gToolbox.getPanelWhenReady("jsdebugger");
+      const dbgx = createDebuggerContext(gToolbox);
+      let rootNodeForExtensions = null;
+      await waitUntil(() => {
+        rootNodeForExtensions = findSourceNodeWithText(dbgx, "extension");
+        return !!rootNodeForExtensions;
+      });
+      // Find the root node for extensions and expand it if needed
+      if (
+        !!rootNodeForExtensions &&
+        !rootNodeForExtensions.querySelector(".arrow.expanded")
+      ) {
+        rootNodeForExtensions.querySelector(".arrow").click();
+      }
+
+      // Assert that extensions are displayed in the source tree
+      // with their extension name.
+      await assertSourceTreeNode(dbgx, "Picture-In-Picture");
+      await assertSourceTreeNode(dbgx, "Form Autofill");
+    } catch (e) {
+      console.log("Caught exception in spawn", e);
+      throw e;
+    }
+  });
+
+  await ToolboxTask.destroy();
+});
+
 /**
  * Return the text content for a given line in the Source Tree.
  *
@@ -430,6 +515,22 @@ function getLabel(dbg, index) {
       // There is some special whitespace character which aren't removed by trim()
       .replace(/^[\s\u200b]*/g, "")
   );
+}
+
+/**
+ * Find and assert the source tree node with the specified text
+ * exists on the source tree.
+ *
+ * @param {Object} dbg
+ * @param {String} text The node text displayed
+ */
+async function assertSourceTreeNode(dbg, text) {
+  let node = null;
+  await waitUntil(() => {
+    node = findSourceNodeWithText(dbg, text);
+    return !!node;
+  });
+  ok(!!node, `Source tree node with text "${text}" exists`);
 }
 
 /**

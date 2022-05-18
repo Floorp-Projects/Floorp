@@ -23,10 +23,6 @@ const {
   webExtensionInspectedWindowSpec,
 } = require("devtools/shared/specs/addon/webextension-inspected-window");
 
-const { WebExtensionPolicy } = Cu.getGlobalForObject(
-  require("resource://gre/modules/XPCOMUtils.jsm")
-);
-
 // A weak set of the documents for which a warning message has been
 // already logged (so that we don't keep emitting the same warning if an
 // extension keeps calling the devtools.inspectedWindow.eval API method
