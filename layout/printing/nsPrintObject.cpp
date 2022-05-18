@@ -35,7 +35,9 @@ nsPrintObject::nsPrintObject()
       mFrameType(eDoc),
       mParent(nullptr),
       mHasBeenPrinted(false),
-      mInvisible(false) {
+      mInvisible(false),
+      mShrinkRatio(1.0),
+      mZoomRatio(1.0) {
   MOZ_COUNT_CTOR(nsPrintObject);
 }
 
