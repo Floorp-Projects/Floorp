@@ -81,6 +81,7 @@ struct MarionetteHandshake {
 #[derive(Default)]
 pub(crate) struct MarionetteSettings {
     pub(crate) binary: Option<PathBuf>,
+    pub(crate) profile_root: Option<PathBuf>,
     pub(crate) connect_existing: bool,
     pub(crate) host: String,
     pub(crate) port: Option<u16>,
@@ -188,12 +189,14 @@ impl MarionetteHandler {
                 options,
                 marionette_port,
                 websocket_port,
+                self.settings.profile_root.as_ref().map(|x| x.as_path()),
             )?)
         } else if !self.settings.connect_existing {
             Browser::Local(LocalBrowser::new(
                 options,
                 marionette_port,
                 self.settings.jsdebugger,
+                self.settings.profile_root.as_ref().map(|x| x.as_path()),
             )?)
         } else {
             Browser::Existing(marionette_port)

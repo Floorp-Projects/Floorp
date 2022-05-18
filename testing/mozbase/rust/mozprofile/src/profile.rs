@@ -26,8 +26,14 @@ impl PartialEq for Profile {
 }
 
 impl Profile {
-    pub fn new() -> IoResult<Profile> {
-        let dir = Builder::new().prefix("rust_mozprofile").tempdir()?;
+    pub fn new(temp_root: Option<&Path>) -> IoResult<Profile> {
+        let mut dir_builder = Builder::new();
+        dir_builder.prefix("rust_mozprofile");
+        let dir = if let Some(temp_root) = temp_root {
+            dir_builder.tempdir_in(temp_root)
+        } else {
+            dir_builder.tempdir()
+        }?;
         let path = dir.path().to_path_buf();
         let temp_dir = Some(dir);
         Ok(Profile {

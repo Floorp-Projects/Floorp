@@ -71,6 +71,7 @@ impl LocalBrowser {
         options: FirefoxOptions,
         marionette_port: u16,
         jsdebugger: bool,
+        profile_root: Option<&Path>,
     ) -> WebDriverResult<LocalBrowser> {
         let binary = options.binary.ok_or_else(|| {
             WebDriverError::new(
@@ -87,7 +88,7 @@ impl LocalBrowser {
         let mut profile = match options.profile {
             ProfileType::Named => None,
             ProfileType::Path(x) => Some(x),
-            ProfileType::Temporary => Some(Profile::new()?),
+            ProfileType::Temporary => Some(Profile::new(profile_root)?),
         };
 
         let (profile_path, prefs_backup) = if let Some(ref mut profile) = profile {
@@ -234,6 +235,7 @@ impl RemoteBrowser {
         options: FirefoxOptions,
         marionette_port: u16,
         websocket_port: Option<u16>,
+        profile_root: Option<&Path>,
     ) -> WebDriverResult<RemoteBrowser> {
         let android_options = options.android.unwrap();
 
@@ -248,7 +250,7 @@ impl RemoteBrowser {
                 ));
             }
             ProfileType::Path(x) => (x, true),
-            ProfileType::Temporary => (Profile::new()?, false),
+            ProfileType::Temporary => (Profile::new(profile_root)?, false),
         };
 
         set_prefs(
@@ -398,7 +400,7 @@ mod tests {
     // several regressions related to remote.log.level.
     #[test]
     fn test_remote_log_level() {
-        let mut profile = Profile::new().unwrap();
+        let mut profile = Profile::new(None).unwrap();
         set_prefs(2828, &mut profile, false, vec![], false).ok();
         let user_prefs = profile.user_prefs().unwrap();
 
@@ -460,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_pref_backup() {
-        let mut profile = Profile::new().unwrap();
+        let mut profile = Profile::new(None).unwrap();
 
         // Create some prefs in the profile
         let initial_prefs = profile.user_prefs().unwrap();
