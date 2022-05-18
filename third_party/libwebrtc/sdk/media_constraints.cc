@@ -118,7 +118,6 @@ const char MediaConstraints::kUseRtpMux[] = "googUseRtpMUX";
 
 // Below constraints should be used during PeerConnection construction.
 const char MediaConstraints::kEnableDtlsSrtp[] = "DtlsSrtpKeyAgreement";
-const char MediaConstraints::kEnableRtpDataChannels[] = "RtpDataChannels";
 // Google-specific constraint keys.
 const char MediaConstraints::kEnableDscp[] = "googDscp";
 const char MediaConstraints::kEnableIPv6[] = "googIPv6";

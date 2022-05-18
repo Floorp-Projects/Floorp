@@ -452,8 +452,7 @@ class SdpOfferAnswerHandler : public SdpStateProvider,
       StreamCollection* new_streams);
 
   // Enables media channels to allow sending of media.
-  // This enables media to flow on all configured audio/video channels and the
-  // RtpDataChannel.
+  // This enables media to flow on all configured audio/video channels.
   void EnableSending();
   // Push the media parts of the local or remote session description
   // down to all of the channels.

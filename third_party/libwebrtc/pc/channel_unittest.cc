@@ -52,7 +52,6 @@ const cricket::AudioCodec kPcmaCodec(8, "PCMA", 64000, 8000, 1);
 const cricket::AudioCodec kIsacCodec(103, "ISAC", 40000, 16000, 1);
 const cricket::VideoCodec kH264Codec(97, "H264");
 const cricket::VideoCodec kH264SvcCodec(99, "H264-SVC");
-const cricket::DataCodec kGoogleDataCodec(101, "google-data");
 const uint32_t kSsrc1 = 0x1111;
 const uint32_t kSsrc2 = 0x2222;
 const uint32_t kSsrc3 = 0x3333;
@@ -93,7 +92,7 @@ class VideoTraits : public Traits<cricket::VideoChannel,
                                   cricket::VideoMediaInfo,
                                   cricket::VideoOptions> {};
 
-// Base class for Voice/Video/RtpDataChannel tests
+// Base class for Voice/Video tests
 template <class T>
 class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
  public:

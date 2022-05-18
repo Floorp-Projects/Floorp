@@ -1295,7 +1295,7 @@ rtc::scoped_refptr<DataChannelInterface> PeerConnection::CreateDataChannel(
     return nullptr;
   }
 
-  // Trigger the onRenegotiationNeeded event for every new RTP DataChannel, or
+  // Trigger the onRenegotiationNeeded event for
   // the first SCTP DataChannel.
   if (first_datachannel) {
     sdp_handler_->UpdateNegotiationNeeded();

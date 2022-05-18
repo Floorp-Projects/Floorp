@@ -67,7 +67,6 @@ class ChannelManager final {
   void GetSupportedAudioReceiveCodecs(std::vector<AudioCodec>* codecs) const;
   void GetSupportedVideoSendCodecs(std::vector<VideoCodec>* codecs) const;
   void GetSupportedVideoReceiveCodecs(std::vector<VideoCodec>* codecs) const;
-  void GetSupportedDataCodecs(std::vector<DataCodec>* codecs) const;
   RtpHeaderExtensions GetDefaultEnabledAudioRtpHeaderExtensions() const;
   std::vector<webrtc::RtpHeaderExtensionCapability>
   GetSupportedAudioRtpHeaderExtensions() const;

@@ -3049,21 +3049,6 @@ bool ParseContent(const std::string& message,
         return ParseFailed(
             line, "b=" + bandwidth_type + " value can't be negative.", error);
       }
-      // We should never use more than the default bandwidth for RTP-based
-      // data channels. Don't allow SDP to set the bandwidth, because
-      // that would give JS the opportunity to "break the Internet".
-      // See: https://code.google.com/p/chromium/issues/detail?id=280726
-      // Disallow TIAS since it shouldn't be generated for RTP data channels in
-      // the first place and provides another way to get around the limitation.
-      if (media_type == cricket::MEDIA_TYPE_DATA &&
-          cricket::IsRtpProtocol(protocol) &&
-          (b > cricket::kRtpDataMaxBandwidth / 1000 ||
-           bandwidth_type == kTransportSpecificBandwidth)) {
-        rtc::StringBuilder description;
-        description << "RTP-based data channels may not send more than "
-                    << cricket::kRtpDataMaxBandwidth / 1000 << "kbps.";
-        return ParseFailed(line, description.str(), error);
-      }
       // Convert values. Prevent integer overflow.
       if (bandwidth_type == kApplicationSpecificBandwidth) {
         b = std::min(b, INT_MAX / 1000) * 1000;

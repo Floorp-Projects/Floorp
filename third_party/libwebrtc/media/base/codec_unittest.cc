@@ -19,7 +19,6 @@
 
 using cricket::AudioCodec;
 using cricket::Codec;
-using cricket::DataCodec;
 using cricket::FeedbackParam;
 using cricket::kCodecParamAssociatedPayloadType;
 using cricket::kCodecParamMaxBitrate;
@@ -301,27 +300,6 @@ TEST(CodecTest, TestH264CodecMatches) {
     // Does not match since profile-level-id is different.
     EXPECT_FALSE(pli_1_pm_0.Matches(pli_2_pm_0));
   }
-}
-
-TEST(CodecTest, TestDataCodecMatches) {
-  // Test a codec with a static payload type.
-  DataCodec c0(34, "D");
-  EXPECT_TRUE(c0.Matches(DataCodec(34, "")));
-  EXPECT_FALSE(c0.Matches(DataCodec(96, "D")));
-  EXPECT_FALSE(c0.Matches(DataCodec(96, "")));
-
-  // Test a codec with a dynamic payload type.
-  DataCodec c1(96, "D");
-  EXPECT_TRUE(c1.Matches(DataCodec(96, "D")));
-  EXPECT_TRUE(c1.Matches(DataCodec(97, "D")));
-  EXPECT_TRUE(c1.Matches(DataCodec(96, "d")));
-  EXPECT_TRUE(c1.Matches(DataCodec(97, "d")));
-  EXPECT_TRUE(c1.Matches(DataCodec(35, "d")));
-  EXPECT_TRUE(c1.Matches(DataCodec(42, "d")));
-  EXPECT_TRUE(c1.Matches(DataCodec(63, "d")));
-  EXPECT_FALSE(c1.Matches(DataCodec(96, "")));
-  EXPECT_FALSE(c1.Matches(DataCodec(95, "D")));
-  EXPECT_FALSE(c1.Matches(DataCodec(34, "D")));
 }
 
 TEST(CodecTest, TestSetParamGetParamAndRemoveParam) {
