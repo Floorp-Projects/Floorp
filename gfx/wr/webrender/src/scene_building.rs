@@ -1696,10 +1696,9 @@ impl<'a> SceneBuilder<'a> {
                     &clips,
                 );
             },
-            DisplayItem::BackdropFilter(ref _info) => {
+            DisplayItem::BackdropFilter(ref info) => {
                 profile_scope!("backdrop");
 
-                /*
                 let (layout, _, spatial_node_index, clip_chain_id) = self.process_common_properties(
                     &info.common,
                     None,
@@ -1717,7 +1716,6 @@ impl<'a> SceneBuilder<'a> {
                     filter_datas,
                     filter_primitives,
                 );
-                */
             }
 
             // Do nothing; these are dummy items for the display list parser
