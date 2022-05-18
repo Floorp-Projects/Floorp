@@ -1036,6 +1036,66 @@ TEST_F(MediaSessionDescriptionFactoryTest, ReAnswerChangedBundleOffererTagged) {
   EXPECT_TRUE(bundle_group->HasContentName("video"));
 }
 
+TEST_F(MediaSessionDescriptionFactoryTest,
+       CreateAnswerForOfferWithMultipleBundleGroups) {
+  // Create an offer with 4 m= sections, initially without BUNDLE groups.
+  MediaSessionOptions opts;
+  opts.bundle_enabled = false;
+  AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+  AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "2",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+  AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "3",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+  AddMediaDescriptionOptions(MEDIA_TYPE_AUDIO, "4",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+  std::unique_ptr<SessionDescription> offer = f1_.CreateOffer(opts, nullptr);
+  ASSERT_TRUE(offer->groups().empty());
+
+  // Munge the offer to have two groups. Offers like these cannot be generated
+  // without munging, but it is valid to receive such offers from remote
+  // endpoints.
+  cricket::ContentGroup bundle_group1(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group1.AddContentName("1");
+  bundle_group1.AddContentName("2");
+  cricket::ContentGroup bundle_group2(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group2.AddContentName("3");
+  bundle_group2.AddContentName("4");
+  offer->AddGroup(bundle_group1);
+  offer->AddGroup(bundle_group2);
+
+  // If BUNDLE is enabled, the answer to this offer should accept both BUNDLE
+  // groups.
+  opts.bundle_enabled = true;
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswer(offer.get(), opts, nullptr);
+
+  std::vector<const cricket::ContentGroup*> answer_groups =
+      answer->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  ASSERT_EQ(answer_groups.size(), 2u);
+  EXPECT_EQ(answer_groups[0]->content_names().size(), 2u);
+  EXPECT_TRUE(answer_groups[0]->HasContentName("1"));
+  EXPECT_TRUE(answer_groups[0]->HasContentName("2"));
+  EXPECT_EQ(answer_groups[1]->content_names().size(), 2u);
+  EXPECT_TRUE(answer_groups[1]->HasContentName("3"));
+  EXPECT_TRUE(answer_groups[1]->HasContentName("4"));
+
+  // If BUNDLE is disabled, the answer to this offer should reject both BUNDLE
+  // groups.
+  opts.bundle_enabled = false;
+  answer = f2_.CreateAnswer(offer.get(), opts, nullptr);
+
+  answer_groups = answer->GetGroupsByName(cricket::GROUP_TYPE_BUNDLE);
+  // Rejected groups are still listed, but they are empty.
+  ASSERT_EQ(answer_groups.size(), 2u);
+  EXPECT_TRUE(answer_groups[0]->content_names().empty());
+  EXPECT_TRUE(answer_groups[1]->content_names().empty());
+}
+
 // Test that if the BUNDLE offerer-tagged media section is changed in a reoffer
 // and there is still a non-rejected media section that was in the initial
 // offer, then the ICE credentials do not change in the reoffer offerer-tagged

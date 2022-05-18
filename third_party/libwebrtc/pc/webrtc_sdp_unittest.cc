@@ -2124,17 +2124,21 @@ TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithoutCandidates) {
   EXPECT_EQ(std::string(kSdpString), message);
 }
 
-TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithBundle) {
-  ContentGroup group(cricket::GROUP_TYPE_BUNDLE);
-  group.AddContentName(kAudioContentName);
-  group.AddContentName(kVideoContentName);
-  desc_.AddGroup(group);
+TEST_F(WebRtcSdpTest, SerializeSessionDescriptionWithBundles) {
+  ContentGroup group1(cricket::GROUP_TYPE_BUNDLE);
+  group1.AddContentName(kAudioContentName);
+  group1.AddContentName(kVideoContentName);
+  desc_.AddGroup(group1);
+  ContentGroup group2(cricket::GROUP_TYPE_BUNDLE);
+  group2.AddContentName(kAudioContentName2);
+  desc_.AddGroup(group2);
   ASSERT_TRUE(jdesc_.Initialize(desc_.Clone(), jdesc_.session_id(),
                                 jdesc_.session_version()));
   std::string message = webrtc::SdpSerialize(jdesc_);
   std::string sdp_with_bundle = kSdpFullString;
   InjectAfter(kSessionTime,
-              "a=group:BUNDLE audio_content_name video_content_name\r\n",
+              "a=group:BUNDLE audio_content_name video_content_name\r\n"
+              "a=group:BUNDLE audio_content_name_2\r\n",
               &sdp_with_bundle);
   EXPECT_EQ(sdp_with_bundle, message);
 }

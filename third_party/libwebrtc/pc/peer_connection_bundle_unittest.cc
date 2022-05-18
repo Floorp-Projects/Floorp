@@ -886,4 +886,56 @@ TEST_F(PeerConnectionBundleTestUnifiedPlan,
   EXPECT_TRUE(bundle_group->content_names().empty());
 }
 
+TEST_F(PeerConnectionBundleTestUnifiedPlan, MultipleBundleGroups) {
+  auto caller = CreatePeerConnection();
+  caller->AddAudioTrack("0_audio");
+  caller->AddAudioTrack("1_audio");
+  caller->AddVideoTrack("2_audio");
+  caller->AddVideoTrack("3_audio");
+  auto callee = CreatePeerConnection();
+
+  auto offer = caller->CreateOffer(RTCOfferAnswerOptions());
+  // Modify the GROUP to have two BUNDLEs. We know that the MIDs will be 0,1,2,4
+  // because our implementation has predictable MIDs.
+  offer->description()->RemoveGroupByName(cricket::GROUP_TYPE_BUNDLE);
+  cricket::ContentGroup bundle_group1(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group1.AddContentName("0");
+  bundle_group1.AddContentName("1");
+  cricket::ContentGroup bundle_group2(cricket::GROUP_TYPE_BUNDLE);
+  bundle_group2.AddContentName("2");
+  bundle_group2.AddContentName("3");
+  offer->description()->AddGroup(bundle_group1);
+  offer->description()->AddGroup(bundle_group2);
+
+  EXPECT_TRUE(
+      caller->SetLocalDescription(CloneSessionDescription(offer.get())));
+  callee->SetRemoteDescription(std::move(offer));
+  auto answer = callee->CreateAnswer();
+  EXPECT_TRUE(
+      callee->SetLocalDescription(CloneSessionDescription(answer.get())));
+  caller->SetRemoteDescription(std::move(answer));
+
+  // Verify bundling on sender side.
+  auto senders = caller->pc()->GetSenders();
+  ASSERT_EQ(senders.size(), 4u);
+  auto sender0_transport = senders[0]->dtls_transport();
+  auto sender1_transport = senders[1]->dtls_transport();
+  auto sender2_transport = senders[2]->dtls_transport();
+  auto sender3_transport = senders[3]->dtls_transport();
+  EXPECT_EQ(sender0_transport, sender1_transport);
+  EXPECT_EQ(sender2_transport, sender3_transport);
+  EXPECT_NE(sender0_transport, sender2_transport);
+
+  // Verify bundling on receiver side.
+  auto receivers = callee->pc()->GetReceivers();
+  ASSERT_EQ(receivers.size(), 4u);
+  auto receiver0_transport = receivers[0]->dtls_transport();
+  auto receiver1_transport = receivers[1]->dtls_transport();
+  auto receiver2_transport = receivers[2]->dtls_transport();
+  auto receiver3_transport = receivers[3]->dtls_transport();
+  EXPECT_EQ(receiver0_transport, receiver1_transport);
+  EXPECT_EQ(receiver2_transport, receiver3_transport);
+  EXPECT_NE(receiver0_transport, receiver2_transport);
+}
+
 }  // namespace webrtc

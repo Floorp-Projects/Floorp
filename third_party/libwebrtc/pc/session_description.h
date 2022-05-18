@@ -567,6 +567,8 @@ class SessionDescription {
   // Group accessors.
   const ContentGroups& groups() const { return content_groups_; }
   const ContentGroup* GetGroupByName(const std::string& name) const;
+  std::vector<const ContentGroup*> GetGroupsByName(
+      const std::string& name) const;
   bool HasGroup(const std::string& name) const;
 
   // Group mutators.
