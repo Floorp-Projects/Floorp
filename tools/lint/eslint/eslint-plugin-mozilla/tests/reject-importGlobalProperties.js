@@ -25,6 +25,11 @@ ruleTester.run("reject-importGlobalProperties", rule, {
       options: ["allownonwebidl"],
       code: "Cu.importGlobalProperties(['fetch'])",
     },
+    {
+      options: ["allownonwebidl"],
+      code: "Cu.importGlobalProperties(['TextEncoder'])",
+      filename: "foo.sjs",
+    },
   ],
   invalid: [
     {
@@ -41,6 +46,12 @@ ruleTester.run("reject-importGlobalProperties", rule, {
       code: "Cu.importGlobalProperties(['TextEncoder'])",
       options: ["allownonwebidl"],
       errors: [{ messageId: "unexpectedCallWebIdl" }],
+    },
+    {
+      options: ["allownonwebidl"],
+      code: "Cu.importGlobalProperties(['TextEncoder'])",
+      errors: [{ messageId: "unexpectedCallWebIdl" }],
+      filename: "foo.js",
     },
   ],
 });

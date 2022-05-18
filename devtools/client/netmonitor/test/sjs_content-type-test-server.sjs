@@ -3,7 +3,6 @@
 
 "use strict";
 
-/* eslint-disable-next-line mozilla/reject-importGlobalProperties */
 Cu.importGlobalProperties(["TextEncoder"]);
 
 function gzipCompressString(string, obs) {
