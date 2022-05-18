@@ -12285,6 +12285,7 @@ int main(int argc, char** argv) {
                           "Track NotImplemented errors in the new frontend") ||
 #else
       !op.addBoolOption('\0', "smoosh", "No-op") ||
+#endif
       !op.addStringOption(
         '\0', "delazification-mode", "[option]",
         "Select one of the delazification mode for scripts given on the "
@@ -12292,7 +12293,6 @@ int main(int argc, char** argv) {
         "'on-demand', 'concurrent-df', 'eager', 'concurrent-df+on-demand'. "
         "Choosing 'concurrent-df+on-demand' will run both concurrent-df and "
         "on-demand delazification mode, and compare compilation outcome. ") ||
-#endif
       !op.addBoolOption('\0', "wasm-compile-and-serialize",
                         "Compile the wasm bytecode from stdin and serialize "
                         "the results to stdout") ||
