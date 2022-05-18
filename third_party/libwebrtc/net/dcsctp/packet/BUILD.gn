@@ -57,6 +57,7 @@ rtc_library("crc32c") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "//third_party/crc32c",
   ]
   sources = [
     "crc32c.cc",
