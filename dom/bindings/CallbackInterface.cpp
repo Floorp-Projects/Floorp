@@ -22,7 +22,7 @@ bool CallbackInterface::GetCallableProperty(
     return false;
   }
   if (!aCallable.isObject() || !JS::IsCallable(&aCallable.toObject())) {
-    JS::RootedString propId(cx, aPropId.toString());
+    JS::Rooted<JSString*> propId(cx, aPropId.toString());
     JS::UniqueChars propName = JS_EncodeStringToUTF8(cx, propId);
     nsPrintfCString description("Property '%s'", propName.get());
     cx.ThrowErrorMessage<MSG_NOT_CALLABLE>(description.get());

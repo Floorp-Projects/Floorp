@@ -310,8 +310,6 @@ nsStandardURL::~nsStandardURL() {
     }
   }
 #endif
-
-  SanityCheck();
 }
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN

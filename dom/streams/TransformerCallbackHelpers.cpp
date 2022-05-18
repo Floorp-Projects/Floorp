@@ -55,7 +55,7 @@ already_AddRefed<Promise> TransformerAlgorithms::TransformCallback(
   // an algorithm which takes an argument chunk and returns the result of
   // invoking transformerDict["transform"] with argument list « chunk,
   // controller » and callback this value transformer.
-  JS::RootedObject thisObj(aCx, mTransformer);
+  JS::Rooted<JSObject*> thisObj(aCx, mTransformer);
   return MOZ_KnownLive(mTransformCallback)
       ->Call(thisObj, aChunk, aController, aRv,
              "TransformStreamDefaultController.[[transformAlgorithm]]",
@@ -75,7 +75,7 @@ already_AddRefed<Promise> TransformerAlgorithms::FlushCallback(
   // Step 5. If transformerDict["flush"] exists, set flushAlgorithm to an
   // algorithm which returns the result of invoking transformerDict["flush"]
   // with argument list « controller » and callback this value transformer.
-  JS::RootedObject thisObj(aCx, mTransformer);
+  JS::Rooted<JSObject*> thisObj(aCx, mTransformer);
   return MOZ_KnownLive(mFlushCallback)
       ->Call(thisObj, aController, aRv,
              "TransformStreamDefaultController.[[flushAlgorithm]]",

@@ -15,8 +15,7 @@
 
 class nsMemoryReporterManager;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MemoryReport;
 
@@ -69,7 +68,6 @@ class MemoryReportRequestClient final : public nsIRunnable {
   FinishCallback mFinishCallback;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MemoryReportRequest_h_

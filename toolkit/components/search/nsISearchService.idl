@@ -503,7 +503,7 @@ interface nsISearchService : nsISupports
    *   contains information about the default engine for private browsing mode:
    *     name, loadPath, original submissionURL
    */
-  Promise getDefaultEngineInfo();
+  jsval getDefaultEngineInfo();
 
   /**
    * Determines if the provided URL represents results from a search engine, and

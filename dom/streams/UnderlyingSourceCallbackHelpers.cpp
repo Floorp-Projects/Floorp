@@ -45,7 +45,7 @@ void UnderlyingSourceAlgorithms::StartCallback(
   // an algorithm which returns the result of invoking
   // underlyingSourceDict["start"] with argument list « controller » and
   // callback this value underlyingSource.
-  JS::RootedObject thisObj(aCx, mUnderlyingSource);
+  JS::Rooted<JSObject*> thisObj(aCx, mUnderlyingSource);
   ReadableStreamDefaultControllerOrReadableByteStreamController controller;
   if (aController.IsDefault()) {
     controller.SetAsReadableStreamDefaultController() = aController.AsDefault();
@@ -61,7 +61,7 @@ void UnderlyingSourceAlgorithms::StartCallback(
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source
 already_AddRefed<Promise> UnderlyingSourceAlgorithms::PullCallback(
     JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
-  JS::RootedObject thisObj(aCx, mUnderlyingSource);
+  JS::Rooted<JSObject*> thisObj(aCx, mUnderlyingSource);
   if (!mPullCallback) {
     // Step 3: Let pullAlgorithm be an algorithm that returns a promise resolved
     // with undefined.
@@ -100,7 +100,7 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithms::CancelCallback(
   // to an algorithm which takes an argument reason and returns the result of
   // invoking underlyingSourceDict["cancel"] with argument list « reason » and
   // callback this value underlyingSource.
-  JS::RootedObject thisObj(aCx, mUnderlyingSource);
+  JS::Rooted<JSObject*> thisObj(aCx, mUnderlyingSource);
   RefPtr<Promise> promise =
       mCancelCallback->Call(thisObj, aReason, aRv, "UnderlyingSource.cancel",
                             CallbackFunction::eRethrowExceptions);

@@ -228,9 +228,10 @@ void SetUpWritableStreamDefaultController(
 
 // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
 void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
-    JSContext* aCx, WritableStream* aStream, JS::HandleObject aUnderlyingSink,
-    UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
-    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
+    JSContext* aCx, WritableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSink, UnderlyingSink& aUnderlyingSinkDict,
+    double aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv) {
   // Step 1.
   RefPtr<WritableStreamDefaultController> controller =
       new WritableStreamDefaultController(aStream->GetParentObject(), *aStream);

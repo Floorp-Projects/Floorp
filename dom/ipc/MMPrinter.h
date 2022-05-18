@@ -10,8 +10,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "nsString.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class MMPrinter {
  public:
@@ -28,7 +27,6 @@ class MMPrinter {
                         ClonedMessageData const& aData);
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif /* MMPrinter_h */

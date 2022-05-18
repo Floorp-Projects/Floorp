@@ -22,8 +22,8 @@ namespace mozilla::dom {
 const char ObservableArrayProxyHandler::family = 0;
 
 bool ObservableArrayProxyHandler::defineProperty(
-    JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
-    JS::Handle<JS::PropertyDescriptor> aDesc,
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
+    JS::Handle<JS::PropertyKey> aId, JS::Handle<JS::PropertyDescriptor> aDesc,
     JS::ObjectOpResult& aResult) const {
   if (aId.get() == s_length_id) {
     if (aDesc.isAccessorDescriptor()) {
@@ -39,7 +39,7 @@ bool ObservableArrayProxyHandler::defineProperty(
       return aResult.failInvalidDescriptor();
     }
     if (aDesc.hasValue()) {
-      JS::RootedObject backingListObj(aCx);
+      JS::Rooted<JSObject*> backingListObj(aCx);
       if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
         return false;
       }
@@ -63,7 +63,7 @@ bool ObservableArrayProxyHandler::defineProperty(
       return aResult.failInvalidDescriptor();
     }
     if (aDesc.hasValue()) {
-      JS::RootedObject backingListObj(aCx);
+      JS::Rooted<JSObject*> backingListObj(aCx);
       if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
         return false;
       }
@@ -79,15 +79,15 @@ bool ObservableArrayProxyHandler::defineProperty(
 }
 
 bool ObservableArrayProxyHandler::delete_(JSContext* aCx,
-                                          JS::HandleObject aProxy,
-                                          JS::HandleId aId,
+                                          JS::Handle<JSObject*> aProxy,
+                                          JS::Handle<JS::PropertyKey> aId,
                                           JS::ObjectOpResult& aResult) const {
   if (aId.get() == s_length_id) {
     return aResult.failCantDelete();
   }
   uint32_t index = GetArrayIndexFromId(aId);
   if (IsArrayIndex(index)) {
-    JS::RootedObject backingListObj(aCx);
+    JS::Rooted<JSObject*> backingListObj(aCx);
     if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
       return false;
     }
@@ -106,7 +106,7 @@ bool ObservableArrayProxyHandler::delete_(JSContext* aCx,
       return aResult.failBadIndex();
     }
 
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!JS_GetElement(aCx, backingListObj, index, &value)) {
       return false;
     }
@@ -124,11 +124,12 @@ bool ObservableArrayProxyHandler::delete_(JSContext* aCx,
   return ForwardingProxyHandler::delete_(aCx, aProxy, aId, aResult);
 }
 
-bool ObservableArrayProxyHandler::get(JSContext* aCx, JS::HandleObject aProxy,
-                                      JS::HandleValue aReceiver,
-                                      JS::HandleId aId,
-                                      JS::MutableHandleValue aVp) const {
-  JS::RootedObject backingListObj(aCx);
+bool ObservableArrayProxyHandler::get(JSContext* aCx,
+                                      JS::Handle<JSObject*> aProxy,
+                                      JS::Handle<JS::Value> aReceiver,
+                                      JS::Handle<JS::PropertyKey> aId,
+                                      JS::MutableHandle<JS::Value> aVp) const {
+  JS::Rooted<JSObject*> backingListObj(aCx);
   if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
     return false;
   }
@@ -153,9 +154,10 @@ bool ObservableArrayProxyHandler::get(JSContext* aCx, JS::HandleObject aProxy,
 }
 
 bool ObservableArrayProxyHandler::getOwnPropertyDescriptor(
-    JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
+    JS::Handle<JS::PropertyKey> aId,
     JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const {
-  JS::RootedObject backingListObj(aCx);
+  JS::Rooted<JSObject*> backingListObj(aCx);
   if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
     return false;
   }
@@ -166,7 +168,7 @@ bool ObservableArrayProxyHandler::getOwnPropertyDescriptor(
   }
 
   if (aId.get() == s_length_id) {
-    JS::RootedValue value(aCx, JS::NumberValue(length));
+    JS::Rooted<JS::Value> value(aCx, JS::NumberValue(length));
     aDesc.set(Some(JS::PropertyDescriptor::Data(
         value, {JS::PropertyAttribute::Writable})));
     return true;
@@ -177,7 +179,7 @@ bool ObservableArrayProxyHandler::getOwnPropertyDescriptor(
       return true;
     }
 
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!JS_GetElement(aCx, backingListObj, index, &value)) {
       return false;
     }
@@ -192,8 +194,10 @@ bool ObservableArrayProxyHandler::getOwnPropertyDescriptor(
                                                           aDesc);
 }
 
-bool ObservableArrayProxyHandler::has(JSContext* aCx, JS::HandleObject aProxy,
-                                      JS::HandleId aId, bool* aBp) const {
+bool ObservableArrayProxyHandler::has(JSContext* aCx,
+                                      JS::Handle<JSObject*> aProxy,
+                                      JS::Handle<JS::PropertyKey> aId,
+                                      bool* aBp) const {
   if (aId.get() == s_length_id) {
     *aBp = true;
     return true;
@@ -212,7 +216,7 @@ bool ObservableArrayProxyHandler::has(JSContext* aCx, JS::HandleObject aProxy,
 }
 
 bool ObservableArrayProxyHandler::ownPropertyKeys(
-    JSContext* aCx, JS::HandleObject aProxy,
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
     JS::MutableHandleVector<jsid> aProps) const {
   uint32_t length = 0;
   if (!GetBackingListLength(aCx, aProxy, &length)) {
@@ -228,17 +232,19 @@ bool ObservableArrayProxyHandler::ownPropertyKeys(
 }
 
 bool ObservableArrayProxyHandler::preventExtensions(
-    JSContext* aCx, JS::HandleObject aProxy,
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
     JS::ObjectOpResult& aResult) const {
   return aResult.failCantPreventExtensions();
 }
 
-bool ObservableArrayProxyHandler::set(JSContext* aCx, JS::HandleObject aProxy,
-                                      JS::HandleId aId, JS::HandleValue aV,
-                                      JS::HandleValue aReceiver,
+bool ObservableArrayProxyHandler::set(JSContext* aCx,
+                                      JS::Handle<JSObject*> aProxy,
+                                      JS::Handle<JS::PropertyKey> aId,
+                                      JS::Handle<JS::Value> aV,
+                                      JS::Handle<JS::Value> aReceiver,
                                       JS::ObjectOpResult& aResult) const {
   if (aId.get() == s_length_id) {
-    JS::RootedObject backingListObj(aCx);
+    JS::Rooted<JSObject*> backingListObj(aCx);
     if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
       return false;
     }
@@ -247,7 +253,7 @@ bool ObservableArrayProxyHandler::set(JSContext* aCx, JS::HandleObject aProxy,
   }
   uint32_t index = GetArrayIndexFromId(aId);
   if (IsArrayIndex(index)) {
-    JS::RootedObject backingListObj(aCx);
+    JS::Rooted<JSObject*> backingListObj(aCx);
     if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
       return false;
     }
@@ -258,15 +264,15 @@ bool ObservableArrayProxyHandler::set(JSContext* aCx, JS::HandleObject aProxy,
 }
 
 bool ObservableArrayProxyHandler::GetBackingListObject(
-    JSContext* aCx, JS::HandleObject aProxy,
-    JS::MutableHandleObject aBackingListObject) const {
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
+    JS::MutableHandle<JSObject*> aBackingListObject) const {
   // Retrieve the backing list object from the reserved slot on the proxy
   // object. If it doesn't exist yet, create it.
-  JS::RootedValue slotValue(aCx);
+  JS::Rooted<JS::Value> slotValue(aCx);
   slotValue = js::GetProxyReservedSlot(
       aProxy, OBSERVABLE_ARRAY_BACKING_LIST_OBJECT_SLOT);
   if (slotValue.isUndefined()) {
-    JS::RootedObject newBackingListObj(aCx);
+    JS::Rooted<JSObject*> newBackingListObj(aCx);
     newBackingListObj.set(JS::NewArrayObject(aCx, 0));
     if (NS_WARN_IF(!newBackingListObj)) {
       return false;
@@ -280,8 +286,8 @@ bool ObservableArrayProxyHandler::GetBackingListObject(
 }
 
 bool ObservableArrayProxyHandler::GetBackingListLength(
-    JSContext* aCx, JS::HandleObject aProxy, uint32_t* aLength) const {
-  JS::RootedObject backingListObj(aCx);
+    JSContext* aCx, JS::Handle<JSObject*> aProxy, uint32_t* aLength) const {
+  JS::Rooted<JSObject*> backingListObj(aCx);
   if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
     return false;
   }
@@ -290,9 +296,9 @@ bool ObservableArrayProxyHandler::GetBackingListLength(
 }
 
 bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
-                                            JS::HandleObject aProxy,
+                                            JS::Handle<JSObject*> aProxy,
                                             uint32_t aLength) const {
-  JS::RootedObject backingListObj(aCx);
+  JS::Rooted<JSObject*> backingListObj(aCx);
   if (!GetBackingListObject(aCx, aProxy, &backingListObj)) {
     return false;
   }
@@ -306,8 +312,8 @@ bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
 }
 
 bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
-                                            JS::HandleObject aProxy,
-                                            JS::HandleObject aBackingList,
+                                            JS::Handle<JSObject*> aProxy,
+                                            JS::Handle<JSObject*> aBackingList,
                                             uint32_t aLength,
                                             JS::ObjectOpResult& aResult) const {
   uint32_t oldLen;
@@ -323,7 +329,7 @@ bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
   uint32_t len = oldLen;
   for (; len > aLength; len--) {
     uint32_t indexToDelete = len - 1;
-    JS::RootedValue value(aCx);
+    JS::Rooted<JS::Value> value(aCx);
     if (!JS_GetElement(aCx, aBackingList, indexToDelete, &value)) {
       ok = false;
       break;
@@ -340,9 +346,9 @@ bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
 }
 
 bool ObservableArrayProxyHandler::SetLength(JSContext* aCx,
-                                            JS::HandleObject aProxy,
-                                            JS::HandleObject aBackingList,
-                                            JS::HandleValue aValue,
+                                            JS::Handle<JSObject*> aProxy,
+                                            JS::Handle<JSObject*> aBackingList,
+                                            JS::Handle<JS::Value> aValue,
                                             JS::ObjectOpResult& aResult) const {
   uint32_t uint32Len;
   if (!ToUint32(aCx, aValue, &uint32Len)) {

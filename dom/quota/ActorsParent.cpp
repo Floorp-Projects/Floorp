@@ -595,14 +595,15 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateWebAppsStoreConnection(
   return connection;
 }
 
-Result<nsCOMPtr<nsIFile>, nsresult> GetLocalStorageArchiveFile(
+Result<nsCOMPtr<nsIFile>, QMResult> GetLocalStorageArchiveFile(
     const nsAString& aDirectoryPath) {
   AssertIsOnIOThread();
   MOZ_ASSERT(!aDirectoryPath.IsEmpty());
 
-  QM_TRY_UNWRAP(auto lsArchiveFile, QM_NewLocalFile(aDirectoryPath));
+  QM_TRY_UNWRAP(auto lsArchiveFile,
+                QM_TO_RESULT_TRANSFORM(QM_NewLocalFile(aDirectoryPath)));
 
-  QM_TRY(MOZ_TO_RESULT(
+  QM_TRY(QM_TO_RESULT(
       lsArchiveFile->Append(nsLiteralString(LS_ARCHIVE_FILE_NAME))));
 
   return lsArchiveFile;

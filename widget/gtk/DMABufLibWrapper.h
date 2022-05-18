@@ -50,6 +50,9 @@ typedef uint32_t (*GetOffsetFunc)(struct gbm_bo*, int);
 typedef int (*DeviceIsFormatSupportedFunc)(struct gbm_device*, uint32_t,
                                            uint32_t);
 typedef int (*DrmPrimeHandleToFDFunc)(int, uint32_t, uint32_t, int*);
+typedef struct gbm_surface* (*CreateSurfaceFunc)(struct gbm_device*, uint32_t,
+                                                 uint32_t, uint32_t, uint32_t);
+typedef void (*DestroySurfaceFunc)(struct gbm_surface*);
 
 class nsGbmLib {
  public:
@@ -132,6 +135,16 @@ class nsGbmLib {
     StaticMutexAutoLock lockDRI(sDRILock);
     return sDrmPrimeHandleToFD(fd, handle, flags, prime_fd);
   }
+  static struct gbm_surface* CreateSurface(struct gbm_device* gbm,
+                                           uint32_t width, uint32_t height,
+                                           uint32_t format, uint32_t flags) {
+    StaticMutexAutoLock lockDRI(sDRILock);
+    return sCreateSurface(gbm, width, height, format, flags);
+  }
+  static void DestroySurface(struct gbm_surface* surface) {
+    StaticMutexAutoLock lockDRI(sDRILock);
+    return sDestroySurface(surface);
+  }
 
  private:
   static CreateDeviceFunc sCreateDevice;
@@ -150,6 +163,8 @@ class nsGbmLib {
   static GetOffsetFunc sGetOffset;
   static DeviceIsFormatSupportedFunc sDeviceIsFormatSupported;
   static DrmPrimeHandleToFDFunc sDrmPrimeHandleToFD;
+  static CreateSurfaceFunc sCreateSurface;
+  static DestroySurfaceFunc sDestroySurface;
 
   static void* sGbmLibHandle;
   static void* sXf86DrmLibHandle;

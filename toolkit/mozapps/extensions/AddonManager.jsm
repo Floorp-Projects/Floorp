@@ -3819,6 +3819,8 @@ var AddonManager = {
     ["ERROR_INCORRECT_ID", -7],
     // The addon install_origins does not list the 3rd party domain.
     ["ERROR_INVALID_DOMAIN", -8],
+    // Updates only: The downloaded add-on had a different version than expected.
+    ["ERROR_UNEXPECTED_ADDON_VERSION", -9],
   ]),
   // The update check timed out
   ERROR_TIMEOUT: -1,

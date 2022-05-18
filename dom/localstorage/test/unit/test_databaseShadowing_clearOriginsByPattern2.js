@@ -12,9 +12,10 @@ async function testSteps() {
 
   disableNextGenLocalStorage();
 
-  if (!importShadowDatabase("shadowdb-clearedOriginsByPattern.sqlite")) {
-    return;
-  }
+  ok(
+    importShadowDatabase("shadowdb-clearedOriginsByPattern.sqlite"),
+    "Import succeeded"
+  );
 
   verifyData([4, 5, 6], /* migrated */ true);
 }

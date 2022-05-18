@@ -190,6 +190,19 @@ Port to use for the WebDriver server.  Defaults to 4444.
 A helpful trick is that it is possible to bind to 0 to get the
 system to atomically assign a free port.
 
+
+## <code>&#x2D;&#x2D;profile-root <var>PROFILE_ROOT</var></code>
+
+Path to the directory to use when creating temporary profiles. By
+default this is the system temporary directory. Both geckodriver and
+Firefox must have read-write access to this path.
+
+This setting can be useful when Firefox is sandboxed from the host
+filesystem such that it doesn't share the same system temporary
+directory as geckodriver (e.g. when running Firefox inside a container
+or packaged as a snap).
+
+
 ## <code>-v<var>[v]</var></code>
 
 Increases the logging verbosity by to debug level when passing
@@ -197,6 +210,7 @@ a single `-v`, or to trace level if `-vv` is passed.  This is
 analogous to passing `--log debug` and `--log trace`, respectively.
 
 [Marionette]: /testing/marionette/index.rst
+
 
 ## <code>&#x2D;&#x2D;websocket-port<var>PORT</var></code>
 

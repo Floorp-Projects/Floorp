@@ -176,6 +176,8 @@ class MochitestRunner(MozbuildObject):
 
         # Disable fission until geckoview supports fission by default.
         setattr(options, "disable_fission", True)
+        if "fission.autostart=true" in options.extraPrefs:
+            setattr(options, "disable_fission", False)
 
         return runtestsremote.run_test_harness(parser, options)
 
@@ -190,6 +192,8 @@ class MochitestRunner(MozbuildObject):
 
         # Disable fission until geckoview supports fission by default.
         setattr(options, "disable_fission", True)
+        if "fission.autostart=true" in options.extra_prefs:
+            setattr(options, "disable_fission", False)
 
         return runjunit.run_test_harness(parser, options)
 

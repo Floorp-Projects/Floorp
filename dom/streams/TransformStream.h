@@ -81,12 +81,12 @@ class TransformStream final : public nsISupports, public nsWrapperCache {
 };
 
 MOZ_CAN_RUN_SCRIPT void TransformStreamErrorWritableAndUnblockWrite(
-    JSContext* aCx, TransformStream* aStream, JS::HandleValue aError,
+    JSContext* aCx, TransformStream* aStream, JS::Handle<JS::Value> aError,
     ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void TransformStreamError(JSContext* aCx,
                                              TransformStream* aStream,
-                                             JS::HandleValue aError,
+                                             JS::Handle<JS::Value> aError,
                                              ErrorResult& aRv);
 
 void TransformStreamSetBackpressure(TransformStream* aStream,

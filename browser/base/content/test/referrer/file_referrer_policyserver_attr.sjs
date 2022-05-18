@@ -4,7 +4,7 @@
  * Arguments: ?scheme=http://&policy=origin&rel=noreferrer
  */
 function handleRequest(request, response) {
-  Components.utils.importGlobalProperties(["URLSearchParams"]);
+  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let scheme = query.get("scheme");

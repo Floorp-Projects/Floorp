@@ -2595,6 +2595,12 @@ LayoutDeviceIntRect nsWindow::GetBounds() {
     }
   }
   rect.MoveTo(r.left, r.top);
+  if (mCompositorSession &&
+      !wr::WindowSizeSanityCheck(rect.width, rect.height)) {
+    gfxCriticalNoteOnce << "Invalid size" << rect << " size mode "
+                        << mFrameState->GetSizeMode();
+  }
+
   return rect;
 }
 

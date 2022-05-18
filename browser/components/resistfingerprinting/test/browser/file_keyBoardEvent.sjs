@@ -1,6 +1,6 @@
 "use strict";
 
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 const HTML_DATA = `
   <!DOCTYPE HTML>

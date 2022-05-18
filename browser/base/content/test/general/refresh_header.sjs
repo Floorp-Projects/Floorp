@@ -11,7 +11,7 @@
  * ?p=http%3A%2F%2Fexample.org%2Fbrowser%2Fbrowser%2Fbase%2Fcontent%2Ftest%2Fgeneral%2Frefresh_meta.sjs&d=200
  */
 function handleRequest(request, response) {
-  Components.utils.importGlobalProperties(["URLSearchParams"]);
+  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let page = query.get("p");

@@ -1525,6 +1525,8 @@ public class WebExtension {
       public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;
       /** The downloaded extension had a different type than expected. */
       public static final int ERROR_UNEXPECTED_ADDON_TYPE = -6;
+      /** The downloaded extension had a different version than expected */
+      public static final int ERROR_UNEXPECTED_ADDON_VERSION = -9;
       /** The extension did not have the expected ID. */
       public static final int ERROR_INCORRECT_ID = -7;
       /** The extension did not have the expected ID. */
@@ -1572,6 +1574,7 @@ public class WebExtension {
           ErrorCodes.ERROR_FILE_ACCESS,
           ErrorCodes.ERROR_SIGNEDSTATE_REQUIRED,
           ErrorCodes.ERROR_UNEXPECTED_ADDON_TYPE,
+          ErrorCodes.ERROR_UNEXPECTED_ADDON_VERSION,
           ErrorCodes.ERROR_INCORRECT_ID,
           ErrorCodes.ERROR_INVALID_DOMAIN,
           ErrorCodes.ERROR_USER_CANCELED,

@@ -139,9 +139,10 @@ MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultController(
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void SetUpWritableStreamDefaultControllerFromUnderlyingSink(
-    JSContext* aCx, WritableStream* aStream, JS::HandleObject aUnderlyingSink,
-    UnderlyingSink& aUnderlyingSinkDict, double aHighWaterMark,
-    QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv);
+    JSContext* aCx, WritableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSink, UnderlyingSink& aUnderlyingSinkDict,
+    double aHighWaterMark, QueuingStrategySize* aSizeAlgorithm,
+    ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void WritableStreamDefaultControllerClose(
     JSContext* aCx, WritableStreamDefaultController* aController,

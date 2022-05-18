@@ -55,7 +55,7 @@ class UnderlyingSinkAlgorithms final : public UnderlyingSinkAlgorithmsBase {
       UnderlyingSinkAlgorithms, UnderlyingSinkAlgorithmsBase)
 
   UnderlyingSinkAlgorithms(nsIGlobalObject* aGlobal,
-                           JS::HandleObject aUnderlyingSink,
+                           JS::Handle<JSObject*> aUnderlyingSink,
                            UnderlyingSink& aUnderlyingSinkDict)
       : mGlobal(aGlobal), mUnderlyingSink(aUnderlyingSink) {
     // Step 6. (implicit Step 2.)
