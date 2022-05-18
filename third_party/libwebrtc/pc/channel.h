@@ -131,7 +131,6 @@ class BaseChannel : public ChannelInterface,
     // TODO(tommi): Delete this variable.
     return transport_name_;
   }
-  bool enabled() const override { return enabled_; }
 
   // This function returns true if using SRTP (DTLS-based keying or SDES).
   bool srtp_active() const {
@@ -167,7 +166,7 @@ class BaseChannel : public ChannelInterface,
   // actually belong to a new channel. See: crbug.com/webrtc/11477
   bool SetPayloadTypeDemuxingEnabled(bool enabled) override;
 
-  bool Enable(bool enable) override;
+  void Enable(bool enable) override;
 
   const std::vector<StreamParams>& local_streams() const override {
     return local_streams_;
@@ -356,7 +355,8 @@ class BaseChannel : public ChannelInterface,
   // Currently the |enabled_| flag is accessed from the signaling thread as
   // well, but it can be changed only when signaling thread does a synchronous
   // call to the worker thread, so it should be safe.
-  bool enabled_ = false;
+  bool enabled_ RTC_GUARDED_BY(worker_thread()) = false;
+  bool enabled_s_ RTC_GUARDED_BY(signaling_thread()) = false;
   bool payload_type_demuxing_enabled_ RTC_GUARDED_BY(worker_thread()) = true;
   std::vector<StreamParams> local_streams_ RTC_GUARDED_BY(worker_thread());
   std::vector<StreamParams> remote_streams_ RTC_GUARDED_BY(worker_thread());
