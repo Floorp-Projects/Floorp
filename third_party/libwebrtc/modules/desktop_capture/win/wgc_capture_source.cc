@@ -135,7 +135,7 @@ DesktopVector WgcScreenSource::GetTopLeft() {
   if (!hmonitor_)
     return DesktopVector();
 
-  return GetMonitorRect(*hmonitor_)->top_left();
+  return GetMonitorRect(*hmonitor_).top_left();
 }
 
 bool WgcScreenSource::IsCapturable() {
