@@ -310,5 +310,41 @@ TEST_F(TimerTest, ReturningNewDurationWhenExpired) {
   AdvanceTimeAndRunTimers(DurationMs(1000));
 }
 
+TEST_F(TimerTest, TimersHaveMaximumDuration) {
+  std::unique_ptr<Timer> t1 = manager_.CreateTimer(
+      "t1", on_expired_.AsStdFunction(),
+      TimerOptions(DurationMs(1000), TimerBackoffAlgorithm::kExponential));
+
+  t1->set_duration(DurationMs(2 * *Timer::kMaxTimerDuration));
+  EXPECT_EQ(t1->duration(), Timer::kMaxTimerDuration);
+}
+
+TEST_F(TimerTest, TimersHaveMaximumBackoffDuration) {
+  std::unique_ptr<Timer> t1 = manager_.CreateTimer(
+      "t1", on_expired_.AsStdFunction(),
+      TimerOptions(DurationMs(1000), TimerBackoffAlgorithm::kExponential));
+
+  t1->Start();
+
+  int max_exponent = static_cast<int>(log2(*Timer::kMaxTimerDuration / 1000));
+  for (int i = 0; i < max_exponent; ++i) {
+    EXPECT_CALL(on_expired_, Call).Times(1);
+    AdvanceTimeAndRunTimers(DurationMs(1000 * (1 << i)));
+  }
+
+  // Reached the maximum duration.
+  EXPECT_CALL(on_expired_, Call).Times(1);
+  AdvanceTimeAndRunTimers(Timer::kMaxTimerDuration);
+
+  EXPECT_CALL(on_expired_, Call).Times(1);
+  AdvanceTimeAndRunTimers(Timer::kMaxTimerDuration);
+
+  EXPECT_CALL(on_expired_, Call).Times(1);
+  AdvanceTimeAndRunTimers(Timer::kMaxTimerDuration);
+
+  EXPECT_CALL(on_expired_, Call).Times(1);
+  AdvanceTimeAndRunTimers(Timer::kMaxTimerDuration);
+}
+
 }  // namespace
 }  // namespace dcsctp

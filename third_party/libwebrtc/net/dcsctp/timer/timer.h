@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -20,9 +21,13 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "net/dcsctp/public/strong_alias.h"
 #include "net/dcsctp/public/timeout.h"
 
 namespace dcsctp {
+
+using TimerID = StrongAlias<class TimerIDTag, uint32_t>;
+using TimerGeneration = StrongAlias<class TimerGenerationTag, uint32_t>;
 
 enum class TimerBackoffAlgorithm {
   // The base duration will be used for any restart.
@@ -68,6 +73,9 @@ struct TimerOptions {
 // backoff algorithm).
 class Timer {
  public:
+  // The maximum timer duration - one day.
+  static constexpr DurationMs kMaxTimerDuration = DurationMs(24 * 3600 * 1000);
+
   // When expired, the timer handler can optionally return a new duration which
   // will be set as `duration` and used as base duration when the timer is
   // restarted and as input to the backoff algorithm.
@@ -89,7 +97,9 @@ class Timer {
 
   // Sets the base duration. The actual timer duration may be larger depending
   // on the backoff algorithm.
-  void set_duration(DurationMs duration) { duration_ = duration; }
+  void set_duration(DurationMs duration) {
+    duration_ = std::min(duration, kMaxTimerDuration);
+  }
 
   // Retrieves the base duration. The actual timer duration may be larger
   // depending on the backoff algorithm.
@@ -110,7 +120,7 @@ class Timer {
  private:
   friend class TimerManager;
   using UnregisterHandler = std::function<void()>;
-  Timer(uint32_t id,
+  Timer(TimerID id,
         absl::string_view name,
         OnExpired on_expired,
         UnregisterHandler unregister,
@@ -122,9 +132,9 @@ class Timer {
   // duration as decided by the backoff algorithm, unless the
   // `TimerOptions::max_restarts` has been reached and then it will be stopped
   // and `is_running()` will return false.
-  void Trigger(uint32_t generation);
+  void Trigger(TimerGeneration generation);
 
-  const uint32_t id_;
+  const TimerID id_;
   const std::string name_;
   const TimerOptions options_;
   const OnExpired on_expired_;
@@ -133,8 +143,16 @@ class Timer {
 
   DurationMs duration_;
 
-  // Increased on each start, and is matched on Trigger, to avoid races.
-  uint32_t generation_ = 0;
+  // Increased on each start, and is matched on Trigger, to avoid races. And by
+  // race, meaning that a timeout - which may be evaluated/expired on a
+  // different thread while this thread has stopped that timer already. Note
+  // that the entire socket is not thread-safe, so `TimerManager::HandleTimeout`
+  // is never executed concurrently with any timer starting/stopping.
+  //
+  // This will wrap around after 4 billion timer restarts, and if it wraps
+  // around, it would just trigger _this_ timer in advance (but it's hard to
+  // restart it 4 billion times within its duration).
+  TimerGeneration generation_ = TimerGeneration(0);
   bool is_running_ = false;
   // Incremented each time time has expired and reset when stopped or restarted.
   int expiration_count_ = 0;
@@ -158,8 +176,8 @@ class TimerManager {
 
  private:
   const std::function<std::unique_ptr<Timeout>()> create_timeout_;
-  std::unordered_map<int, Timer*> timers_;
-  uint32_t next_id_ = 0;
+  std::unordered_map<TimerID, Timer*, TimerID::Hasher> timers_;
+  TimerID next_id_ = TimerID(0);
 };
 
 }  // namespace dcsctp
