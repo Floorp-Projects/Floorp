@@ -11,7 +11,7 @@ A macro for getting `&'static CStr` from literal or identifier.
 This macro checks whether the given literal is valid for `CStr`
 at compile time, and returns a static reference of `CStr`.
 
-This macro can be used to to initialize constants on Rust 1.46 and above.
+This macro can be used to to initialize constants on Rust 1.59 and above.
 
 ## Example
 

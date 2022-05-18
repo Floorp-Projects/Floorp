@@ -56,6 +56,7 @@ fn works_1() {
     assert_eq!(None, iter.next());
 }
 
+#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn works_2() {
     let (a_tx, a_rx) = oneshot::channel::<i32>();
@@ -85,6 +86,7 @@ fn from_iterator() {
     assert_eq!(block_on(stream.collect::<Vec<_>>()), vec![1, 2, 3]);
 }
 
+#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn finished_future() {
     let (_a_tx, a_rx) = oneshot::channel::<i32>();
@@ -340,7 +342,7 @@ fn polled_only_once_at_most_per_iteration() {
 
     let mut tasks = FuturesUnordered::from_iter(vec![F::default(); 33]);
     assert!(tasks.poll_next_unpin(cx).is_pending());
-    assert_eq!(32, tasks.iter().filter(|f| f.polled).count());
+    assert_eq!(33, tasks.iter().filter(|f| f.polled).count());
 
     let mut tasks = FuturesUnordered::<F>::new();
     assert_eq!(Poll::Ready(None), tasks.poll_next_unpin(cx));

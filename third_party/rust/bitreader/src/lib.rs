@@ -314,6 +314,9 @@ impl<'a> BitReader<'a> {
     }
 
     fn read_signed_value(&mut self, bit_count: u8, maximum_count: u8) -> Result<i64> {
+        if bit_count == 0 {
+            return Ok(0);
+        }
         let unsigned = self.read_value(bit_count, maximum_count)?;
         // Fill the bits above the requested bits with all ones or all zeros,
         // depending on the sign bit.

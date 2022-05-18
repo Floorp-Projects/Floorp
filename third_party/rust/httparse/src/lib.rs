@@ -244,6 +244,9 @@ impl<T> Status<T> {
 #[derive(Clone, Debug, Default)]
 pub struct ParserConfig {
     allow_spaces_after_header_name_in_responses: bool,
+    allow_obsolete_multiline_headers_in_responses: bool,
+    allow_multiple_spaces_in_request_line_delimiters: bool,
+    allow_multiple_spaces_in_response_status_delimiters: bool,
 }
 
 impl ParserConfig {
@@ -254,6 +257,108 @@ impl ParserConfig {
     ) -> &mut Self {
         self.allow_spaces_after_header_name_in_responses = value;
         self
+    }
+
+    /// Sets whether multiple spaces are allowed as delimiters in request lines.
+    ///
+    /// # Background
+    ///
+    /// The [latest version of the HTTP/1.1 spec][spec] allows implementations to parse multiple
+    /// whitespace characters in place of the `SP` delimiters in the request line, including:
+    ///
+    /// > SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
+    ///
+    /// This option relaxes the parser to allow for multiple spaces, but does *not* allow the
+    /// request line to contain the other mentioned whitespace characters.
+    ///
+    /// [spec]: https://httpwg.org/http-core/draft-ietf-httpbis-messaging-latest.html#rfc.section.3.p.3
+    pub fn allow_multiple_spaces_in_request_line_delimiters(&mut self, value: bool) -> &mut Self {
+        self.allow_multiple_spaces_in_request_line_delimiters = value;
+        self
+    }
+
+    /// Whether multiple spaces are allowed as delimiters in request lines.
+    pub fn multiple_spaces_in_request_line_delimiters_are_allowed(&self) -> bool {
+        self.allow_multiple_spaces_in_request_line_delimiters
+    }
+
+    /// Sets whether multiple spaces are allowed as delimiters in response status lines.
+    ///
+    /// # Background
+    ///
+    /// The [latest version of the HTTP/1.1 spec][spec] allows implementations to parse multiple
+    /// whitespace characters in place of the `SP` delimiters in the response status line,
+    /// including:
+    ///
+    /// > SP, HTAB, VT (%x0B), FF (%x0C), or bare CR
+    ///
+    /// This option relaxes the parser to allow for multiple spaces, but does *not* allow the status
+    /// line to contain the other mentioned whitespace characters.
+    ///
+    /// [spec]: https://httpwg.org/http-core/draft-ietf-httpbis-messaging-latest.html#rfc.section.4.p.3
+    pub fn allow_multiple_spaces_in_response_status_delimiters(&mut self, value: bool) -> &mut Self {
+        self.allow_multiple_spaces_in_response_status_delimiters = value;
+        self
+    }
+
+    /// Whether multiple spaces are allowed as delimiters in response status lines.
+    pub fn multiple_spaces_in_response_status_delimiters_are_allowed(&self) -> bool {
+        self.allow_multiple_spaces_in_response_status_delimiters
+    }
+
+    /// Sets whether obsolete multiline headers should be allowed.
+    ///
+    /// This is an obsolete part of HTTP/1. Use at your own risk. If you are
+    /// building an HTTP library, the newlines (`\r` and `\n`) should be
+    /// replaced by spaces before handing the header value to the user.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// let buf = b"HTTP/1.1 200 OK\r\nFolded-Header: hello\r\n there \r\n\r\n";
+    /// let mut headers = [httparse::EMPTY_HEADER; 16];
+    /// let mut response = httparse::Response::new(&mut headers);
+    ///
+    /// let res = httparse::ParserConfig::default()
+    ///     .allow_obsolete_multiline_headers_in_responses(true)
+    ///     .parse_response(&mut response, buf);
+    ///
+    /// assert_eq!(res, Ok(httparse::Status::Complete(buf.len())));
+    ///
+    /// assert_eq!(response.headers.len(), 1);
+    /// assert_eq!(response.headers[0].name, "Folded-Header");
+    /// assert_eq!(response.headers[0].value, b"hello\r\n there");
+    /// ```
+    pub fn allow_obsolete_multiline_headers_in_responses(
+        &mut self,
+        value: bool,
+    ) -> &mut Self {
+        self.allow_obsolete_multiline_headers_in_responses = value;
+        self
+    }
+
+    /// Whether obsolete multiline headers should be allowed.
+    pub fn obsolete_multiline_headers_in_responses_are_allowed(&self) -> bool {
+        self.allow_obsolete_multiline_headers_in_responses
+    }
+
+    /// Parses a request with the given config.
+    pub fn parse_request<'headers, 'buf>(
+        &self,
+        request: &mut Request<'headers, 'buf>,
+        buf: &'buf [u8],
+    ) -> Result<usize> {
+        request.parse_with_config(buf, self)
+    }
+
+    /// Parses a request with the given config and buffer for headers
+    pub fn parse_request_with_uninit_headers<'headers, 'buf>(
+        &self,
+        request: &mut Request<'headers, 'buf>,
+        buf: &'buf [u8],
+        headers: &'headers mut [MaybeUninit<Header<'buf>>],
+    ) -> Result<usize> {
+        request.parse_with_config_and_uninit_headers(buf, self, headers)
     }
 
     /// Parses a response with the given config.
@@ -321,24 +426,27 @@ impl<'h, 'b> Request<'h, 'b> {
             method: None,
             path: None,
             version: None,
-            headers: headers,
+            headers,
         }
     }
 
-    /// Try to parse a buffer of bytes into the Request,
-    /// except use an uninitialized slice of `Header`s.
-    ///
-    /// For more information, see `parse`
-    pub fn parse_with_uninit_headers(
+    fn parse_with_config_and_uninit_headers(
         &mut self,
         buf: &'b [u8],
+        config: &ParserConfig,
         mut headers: &'h mut [MaybeUninit<Header<'b>>],
     ) -> Result<usize> {
     let orig_len = buf.len();
         let mut bytes = Bytes::new(buf);
         complete!(skip_empty_lines(&mut bytes));
         self.method = Some(complete!(parse_token(&mut bytes)));
+        if config.allow_multiple_spaces_in_request_line_delimiters {
+            complete!(skip_spaces(&mut bytes));
+        }
         self.path = Some(complete!(parse_uri(&mut bytes)));
+        if config.allow_multiple_spaces_in_request_line_delimiters {
+            complete!(skip_spaces(&mut bytes));
+        }
         self.version = Some(complete!(parse_version(&mut bytes)));
         newline!(bytes);
 
@@ -354,17 +462,26 @@ impl<'h, 'b> Request<'h, 'b> {
         Ok(Status::Complete(len + headers_len))
     }
 
-    /// Try to parse a buffer of bytes into the Request.
+    /// Try to parse a buffer of bytes into the Request,
+    /// except use an uninitialized slice of `Header`s.
     ///
-    /// Returns byte offset in `buf` to start of HTTP body.
-    pub fn parse(&mut self, buf: &'b [u8]) -> Result<usize> {
+    /// For more information, see `parse`
+    pub fn parse_with_uninit_headers(
+        &mut self,
+        buf: &'b [u8],
+        headers: &'h mut [MaybeUninit<Header<'b>>],
+    ) -> Result<usize> {
+        self.parse_with_config_and_uninit_headers(buf, &Default::default(), headers)
+    }
+
+    fn parse_with_config(&mut self, buf: &'b [u8], config: &ParserConfig) -> Result<usize> {
         let headers = mem::replace(&mut self.headers, &mut []);
 
         /* SAFETY: see `parse_headers_iter_uninit` guarantees */
         unsafe {
             let headers: *mut [Header] = headers;
             let headers = headers as *mut [MaybeUninit<Header>];
-            match self.parse_with_uninit_headers(buf, &mut *headers) {
+            match self.parse_with_config_and_uninit_headers(buf, config, &mut *headers) {
                 Ok(Status::Complete(idx)) => Ok(Status::Complete(idx)),
                 other => {
                     // put the original headers back
@@ -373,6 +490,13 @@ impl<'h, 'b> Request<'h, 'b> {
                 },
             }
         }
+    }
+
+    /// Try to parse a buffer of bytes into the Request.
+    ///
+    /// Returns byte offset in `buf` to start of HTTP body.
+    pub fn parse(&mut self, buf: &'b [u8]) -> Result<usize> {
+        self.parse_with_config(buf, &Default::default())
     }
 }
 
@@ -395,6 +519,24 @@ fn skip_empty_lines(bytes: &mut Bytes) -> Result<()> {
                 return Ok(Status::Complete(()));
             },
             None => return Ok(Status::Partial)
+        }
+    }
+}
+
+#[inline]
+fn skip_spaces(bytes: &mut Bytes) -> Result<()> {
+    loop {
+        let b = bytes.peek();
+        match b {
+            Some(b' ') => {
+                // there's ` `, so it's safe to bump 1 pos
+                unsafe { bytes.bump() };
+            }
+            Some(..) => {
+                bytes.slice();
+                return Ok(Status::Complete(()));
+            }
+            None => return Ok(Status::Partial),
         }
     }
 }
@@ -424,7 +566,7 @@ impl<'h, 'b> Response<'h, 'b> {
             version: None,
             code: None,
             reason: None,
-            headers: headers,
+            headers,
         }
     }
 
@@ -462,6 +604,9 @@ impl<'h, 'b> Response<'h, 'b> {
         complete!(skip_empty_lines(&mut bytes));
         self.version = Some(complete!(parse_version(&mut bytes)));
         space!(bytes or Error::Version);
+        if config.allow_multiple_spaces_in_response_status_delimiters {
+            complete!(skip_spaces(&mut bytes));
+        }
         self.code = Some(complete!(parse_code(&mut bytes)));
 
         // RFC7230 says there must be 'SP' and then reason-phrase, but admits
@@ -475,6 +620,9 @@ impl<'h, 'b> Response<'h, 'b> {
         // Anything else we'll say is a malformed status.
         match next!(bytes) {
             b' ' => {
+                if config.allow_multiple_spaces_in_response_status_delimiters {
+                    complete!(skip_spaces(&mut bytes));
+                }
                 bytes.slice();
                 self.reason = Some(complete!(parse_reason(&mut bytes)));
             },
@@ -504,7 +652,7 @@ impl<'h, 'b> Response<'h, 'b> {
 }
 
 /// Represents a parsed header.
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Header<'a> {
     /// The name portion of a header.
     ///
@@ -515,6 +663,19 @@ pub struct Header<'a> {
     /// While headers **should** be ASCII-US, the specification allows for
     /// values that may not be, and so the value is stored as bytes.
     pub value: &'a [u8],
+}
+
+impl<'a> fmt::Debug for Header<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut f = f.debug_struct("Header");
+        f.field("name", &self.name);
+        if let Ok(value) = str::from_utf8(self.value) {
+            f.field("value", &value);
+        } else {
+            f.field("value", &self.value);
+        }
+        f.finish()
+    }
 }
 
 /// An empty header, useful for constructing a `Header` array to pass in for
@@ -600,7 +761,7 @@ fn parse_reason<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
                     ""
                 }
             }));
-        } else if !(b == 0x09 || b == b' ' || (b >= 0x21 && b <= 0x7E) || b >= 0x80) {
+        } else if !(b == 0x09 || b == b' ' || (0x21..=0x7E).contains(&b) || b >= 0x80) {
             return Err(Error::Status);
         } else if b >= 0x80 {
             seen_obs_text = true;
@@ -610,6 +771,12 @@ fn parse_reason<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
 
 #[inline]
 fn parse_token<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
+    let b = next!(bytes);
+    if !is_token(b) {
+        // First char must be a token char, it can't be a space which would indicate an empty token.
+        return Err(Error::Token);
+    }
+
     loop {
         let b = next!(bytes);
         if b == b' ' {
@@ -625,6 +792,12 @@ fn parse_token<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
 
 #[inline]
 fn parse_uri<'a>(bytes: &mut Bytes<'a>) -> Result<&'a str> {
+    let b = next!(bytes);
+    if !is_uri_token(b) {
+        // First char must be a URI char, it can't be a space which would indicate an empty path.
+        return Err(Error::Token);
+    }
+
     simd::match_uri_vectored(bytes);
 
     loop {
@@ -698,7 +871,7 @@ unsafe fn deinit_slice_mut<'a, 'b, T>(s: &'a mut &'b mut [T]) -> &'a mut &'b mut
     let s = s as *mut &mut [MaybeUninit<T>];
     &mut *s
 }
-unsafe fn assume_init_slice<'a, T>(s: &'a mut [MaybeUninit<T>]) -> &'a mut [T] {
+unsafe fn assume_init_slice<T>(s: &mut [MaybeUninit<T>]) -> &mut [T] {
     let s: *mut [MaybeUninit<T>] = s;
     let s = s as *mut [T];
     &mut *s
@@ -769,41 +942,39 @@ fn parse_headers_iter_uninit<'a, 'b>(
 
         // parse header name until colon
         let header_name: &str = 'name: loop {
-            let b = next!(bytes);
+            let mut b = next!(bytes);
+
+            if is_header_name_token(b) {
+                continue 'name;
+            }
+
+            count += bytes.pos();
+            let name = unsafe {
+                str::from_utf8_unchecked(bytes.slice_skip(1))
+            };
+
             if b == b':' {
-                count += bytes.pos();
-                let _name = unsafe {
-                    str::from_utf8_unchecked(bytes.slice_skip(1))
-                };
-                break 'name _name;
-            } else if !is_header_name_token(b) {
-                if !config.allow_spaces_after_header_name_in_responses {
-                    return Err(Error::HeaderName);
-                }
-                count += bytes.pos();
-                let _name = unsafe { str::from_utf8_unchecked(bytes.slice_skip(1)) };
-                // eat white space between name and colon
-                'whitespace_before_colon: loop {
-                    let b = next!(bytes);
-                    if b == b' ' || b == b'\t' {
+                break 'name name;
+            }
+
+            if config.allow_spaces_after_header_name_in_responses {
+                while b == b' ' || b == b'\t' {
+                    b = next!(bytes);
+
+                    if b == b':' {
                         count += bytes.pos();
                         bytes.slice();
-                        continue 'whitespace_before_colon;
-                    } else if b == b':' {
-                        count += bytes.pos();
-                        bytes.slice();
-                        break 'name _name;
-                    } else {
-                        return Err(Error::HeaderName);
+                        break 'name name;
                     }
                 }
             }
+
+            return Err(Error::HeaderName);
         };
 
         let mut b;
 
-        'value: loop {
-
+        let value_slice = 'value: loop {
             // eat white space between colon and value
             'whitespace_after_colon: loop {
                 b = next!(bytes);
@@ -813,73 +984,131 @@ fn parse_headers_iter_uninit<'a, 'b>(
                     continue 'whitespace_after_colon;
                 } else {
                     if !is_header_value_token(b) {
-                        break 'value;
+                        if b == b'\r' {
+                            expect!(bytes.next() == b'\n' => Err(Error::HeaderValue));
+                        } else if b != b'\n' {
+                            return Err(Error::HeaderValue);
+                        }
+
+                        if config.allow_obsolete_multiline_headers_in_responses {
+                            match bytes.peek() {
+                                None => {
+                                    // Next byte may be a space, in which case that header
+                                    // is using obsolete line folding, so we may have more
+                                    // whitespace to skip after colon.
+                                    return Ok(Status::Partial);
+                                }
+                                Some(b' ') | Some(b'\t') => {
+                                    // The space will be consumed next iteration.
+                                    continue 'whitespace_after_colon;
+                                }
+                                _ => {
+                                    // There is another byte after the end of the line,
+                                    // but it's not whitespace, so it's probably another
+                                    // header or the final line return. This header is thus
+                                    // empty.
+                                },
+                            }
+                        }
+
+                        count += bytes.pos();
+                        let whitespace_slice = bytes.slice();
+
+                        // This produces an empty slice that points to the beginning
+                        // of the whitespace.
+                        break 'value &whitespace_slice[0..0];
                     }
                     break 'whitespace_after_colon;
                 }
             }
 
-            // parse value till EOL
+            'value_lines: loop {
+                // parse value till EOL
 
-            simd::match_header_value_vectored(bytes);
+                simd::match_header_value_vectored(bytes);
 
-            macro_rules! check {
-                ($bytes:ident, $i:ident) => ({
-                    b = $bytes.$i();
-                    if !is_header_value_token(b) {
-                        break 'value;
+                'value_line: loop {
+                    if let Some(mut bytes8) = bytes.next_8() {
+                        macro_rules! check {
+                            ($bytes:ident, $i:ident) => ({
+                                b = $bytes.$i();
+                                if !is_header_value_token(b) {
+                                    break 'value_line;
+                                }
+                            });
+                            ($bytes:ident) => ({
+                                check!($bytes, _0);
+                                check!($bytes, _1);
+                                check!($bytes, _2);
+                                check!($bytes, _3);
+                                check!($bytes, _4);
+                                check!($bytes, _5);
+                                check!($bytes, _6);
+                                check!($bytes, _7);
+                            })
+                        }
+
+                        check!(bytes8);
+
+                        continue 'value_line;
                     }
-                });
-                ($bytes:ident) => ({
-                    check!($bytes, _0);
-                    check!($bytes, _1);
-                    check!($bytes, _2);
-                    check!($bytes, _3);
-                    check!($bytes, _4);
-                    check!($bytes, _5);
-                    check!($bytes, _6);
-                    check!($bytes, _7);
-                })
-            }
-            while let Some(mut bytes8) = bytes.next_8() {
-                check!(bytes8);
-            }
-            loop {
-                b = next!(bytes);
-                if !is_header_value_token(b) {
-                    break 'value;
+
+                    b = next!(bytes);
+                    if !is_header_value_token(b) {
+                        break 'value_line;
+                    }
+                }
+
+                //found_ctl
+                let skip = if b == b'\r' {
+                    expect!(bytes.next() == b'\n' => Err(Error::HeaderValue));
+                    2
+                } else if b == b'\n' {
+                    1
+                } else {
+                    return Err(Error::HeaderValue);
+                };
+
+                if config.allow_obsolete_multiline_headers_in_responses {
+                    match bytes.peek() {
+                        None => {
+                            // Next byte may be a space, in which case that header
+                            // may be using line folding, so we need more data.
+                            return Ok(Status::Partial);
+                        }
+                        Some(b' ') | Some(b'\t') => {
+                            // The space will be consumed next iteration.
+                            continue 'value_lines;
+                        }
+                        _ => {
+                            // There is another byte after the end of the line,
+                            // but it's not a space, so it's probably another
+                            // header or the final line return. We are thus done
+                            // with this current header.
+                        },
+                    }
+                }
+
+                count += bytes.pos();
+                // having just checked that a newline exists, it's safe to skip it.
+                unsafe {
+                    break 'value bytes.slice_skip(skip);
                 }
             }
-        }
-
-        //found_ctl
-        let value_slice : &[u8] = if b == b'\r' {
-            expect!(bytes.next() == b'\n' => Err(Error::HeaderValue));
-            count += bytes.pos();
-            // having just check that `\r\n` exists, it's safe to skip those 2 bytes
-            unsafe {
-                bytes.slice_skip(2)
-            }
-        } else if b == b'\n' {
-            count += bytes.pos();
-            // having just check that `\r\n` exists, it's safe to skip 1 byte
-            unsafe {
-                bytes.slice_skip(1)
-            }
-        } else {
-            return Err(Error::HeaderValue);
         };
 
-        let header_value: &[u8];
         // trim trailing whitespace in the header
-        if let Some(last_visible) = value_slice.iter().rposition(|b| *b != b' ' && *b != b'\t' ) {
+        let header_value = if let Some(last_visible) = value_slice
+            .iter()
+            .rposition(|b| *b != b' ' && *b != b'\t' && *b != b'\r' && *b != b'\n')
+        {
             // There is at least one non-whitespace character.
-            header_value = &value_slice[0..last_visible+1];
+            &value_slice[0..last_visible+1]
         } else {
             // There is no non-whitespace character. This can only happen when value_slice is
             // empty.
-            header_value = value_slice;
-        }
+            value_slice
+        };
 
         *uninit_header = MaybeUninit::new(Header {
             name: header_name,
@@ -1203,6 +1432,27 @@ mod tests {
         |_r| {}
     }
 
+    req! {
+        test_request_with_empty_method,
+        b" / HTTP/1.1\r\n\r\n",
+        Err(::Error::Token),
+        |_r| {}
+    }
+
+    req! {
+        test_request_with_empty_path,
+        b"GET  HTTP/1.1\r\n\r\n",
+        Err(::Error::Token),
+        |_r| {}
+    }
+
+    req! {
+        test_request_with_empty_method_and_path,
+        b"  HTTP/1.1\r\n\r\n",
+        Err(::Error::Token),
+        |_r| {}
+    }
+
     macro_rules! res {
         ($name:ident, $buf:expr, |$arg:ident| $body:expr) => (
             res! {$name, $buf, Ok(Status::Complete($buf.len())), |$arg| $body }
@@ -1349,11 +1599,11 @@ mod tests {
     }
 
     static RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON: &'static [u8] =
-        b"HTTP/1.1 200 OK\r\nAccess-Control-Allow-Credentials : true\r\n\r\n";
+        b"HTTP/1.1 200 OK\r\nAccess-Control-Allow-Credentials : true\r\nBread: baguette\r\n\r\n";
 
     #[test]
     fn test_forbid_response_with_whitespace_between_header_name_and_colon() {
-        let mut headers = [EMPTY_HEADER; 1];
+        let mut headers = [EMPTY_HEADER; 2];
         let mut response = Response::new(&mut headers[..]);
         let result = response.parse(RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
 
@@ -1362,19 +1612,21 @@ mod tests {
 
     #[test]
     fn test_allow_response_with_whitespace_between_header_name_and_colon() {
-        let mut headers = [EMPTY_HEADER; 1];
+        let mut headers = [EMPTY_HEADER; 2];
         let mut response = Response::new(&mut headers[..]);
         let result = ::ParserConfig::default()
             .allow_spaces_after_header_name_in_responses(true)
             .parse_response(&mut response, RESPONSE_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
 
-        assert_eq!(result, Ok(Status::Complete(60)));
+        assert_eq!(result, Ok(Status::Complete(77)));
         assert_eq!(response.version.unwrap(), 1);
         assert_eq!(response.code.unwrap(), 200);
         assert_eq!(response.reason.unwrap(), "OK");
-        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers.len(), 2);
         assert_eq!(response.headers[0].name, "Access-Control-Allow-Credentials");
         assert_eq!(response.headers[0].value, &b"true"[..]);
+        assert_eq!(response.headers[1].name, "Bread");
+        assert_eq!(response.headers[1].value, &b"baguette"[..]);
     }
 
     static REQUEST_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON: &'static [u8] =
@@ -1387,6 +1639,122 @@ mod tests {
         let result = request.parse(REQUEST_WITH_WHITESPACE_BETWEEN_HEADER_NAME_AND_COLON);
 
         assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    static RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_START: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nLine-Folded-Header: \r\n   \r\n hello there\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_obsolete_line_folding_at_start() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_START);
+
+        assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    #[test]
+    fn test_allow_response_with_obsolete_line_folding_at_start() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_obsolete_multiline_headers_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_START);
+
+        assert_eq!(result, Ok(Status::Complete(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_START.len())));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers[0].name, "Line-Folded-Header");
+        assert_eq!(response.headers[0].value, &b"hello there"[..]);
+    }
+
+    static RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_END: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nLine-Folded-Header: hello there\r\n   \r\n \r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_obsolete_line_folding_at_end() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_END);
+
+        assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    #[test]
+    fn test_allow_response_with_obsolete_line_folding_at_end() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_obsolete_multiline_headers_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_END);
+
+        assert_eq!(result, Ok(Status::Complete(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_AT_END.len())));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers[0].name, "Line-Folded-Header");
+        assert_eq!(response.headers[0].value, &b"hello there"[..]);
+    }
+
+    static RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_MIDDLE: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nLine-Folded-Header: hello  \r\n \r\n there\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_obsolete_line_folding_in_middle() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_MIDDLE);
+
+        assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    #[test]
+    fn test_allow_response_with_obsolete_line_folding_in_middle() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_obsolete_multiline_headers_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_MIDDLE);
+
+        assert_eq!(result, Ok(Status::Complete(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_MIDDLE.len())));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers[0].name, "Line-Folded-Header");
+        assert_eq!(response.headers[0].value, &b"hello  \r\n \r\n there"[..]);
+    }
+
+    static RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_EMPTY_HEADER: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nLine-Folded-Header:   \r\n \r\n \r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_obsolete_line_folding_in_empty_header() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_EMPTY_HEADER);
+
+        assert_eq!(result, Err(::Error::HeaderName));
+    }
+
+    #[test]
+    fn test_allow_response_with_obsolete_line_folding_in_empty_header() {
+        let mut headers = [EMPTY_HEADER; 1];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_obsolete_multiline_headers_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_EMPTY_HEADER);
+
+        assert_eq!(result, Ok(Status::Complete(RESPONSE_WITH_OBSOLETE_LINE_FOLDING_IN_EMPTY_HEADER.len())));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 1);
+        assert_eq!(response.headers[0].name, "Line-Folded-Header");
+        assert_eq!(response.headers[0].value, &b""[..]);
     }
 
     #[test]
@@ -1405,5 +1773,145 @@ mod tests {
         assert_eq!(parse_chunk_size(b"1ffffffffffffffff\r\n"), Err(::InvalidChunkSize));
         assert_eq!(parse_chunk_size(b"Affffffffffffffff\r\n"), Err(::InvalidChunkSize));
         assert_eq!(parse_chunk_size(b"fffffffffffffffff\r\n"), Err(::InvalidChunkSize));
+    }
+
+    static RESPONSE_WITH_MULTIPLE_SPACE_DELIMITERS: &'static [u8] =
+        b"HTTP/1.1   200  OK\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_multiple_space_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_MULTIPLE_SPACE_DELIMITERS);
+
+        assert_eq!(result, Err(::Error::Status));
+    }
+
+    #[test]
+    fn test_allow_response_with_multiple_space_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_response_status_delimiters(true)
+            .parse_response(&mut response, RESPONSE_WITH_MULTIPLE_SPACE_DELIMITERS);
+
+        assert_eq!(result, Ok(Status::Complete(RESPONSE_WITH_MULTIPLE_SPACE_DELIMITERS.len())));
+        assert_eq!(response.version.unwrap(), 1);
+        assert_eq!(response.code.unwrap(), 200);
+        assert_eq!(response.reason.unwrap(), "OK");
+        assert_eq!(response.headers.len(), 0);
+    }
+
+    /// This is technically allowed by the spec, but we only support multiple spaces as an option,
+    /// not stray `\r`s.
+    static RESPONSE_WITH_WEIRD_WHITESPACE_DELIMITERS: &'static [u8] =
+        b"HTTP/1.1 200\rOK\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_weird_whitespace_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut response = Response::new(&mut headers[..]);
+        let result = response.parse(RESPONSE_WITH_WEIRD_WHITESPACE_DELIMITERS);
+
+        assert_eq!(result, Err(::Error::Status));
+    }
+
+    #[test]
+    fn test_still_forbid_response_with_weird_whitespace_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_response_status_delimiters(true)
+            .parse_response(&mut response, RESPONSE_WITH_WEIRD_WHITESPACE_DELIMITERS);
+        assert_eq!(result, Err(::Error::Status));
+    }
+
+    static REQUEST_WITH_MULTIPLE_SPACE_DELIMITERS: &'static [u8] =
+        b"GET  /    HTTP/1.1\r\n\r\n";
+
+    #[test]
+    fn test_forbid_request_with_multiple_space_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut request = Request::new(&mut headers[..]);
+        let result = request.parse(REQUEST_WITH_MULTIPLE_SPACE_DELIMITERS);
+
+        assert_eq!(result, Err(::Error::Token));
+    }
+
+    #[test]
+    fn test_allow_request_with_multiple_space_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut request = Request::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_request_line_delimiters(true)
+            .parse_request(&mut request, REQUEST_WITH_MULTIPLE_SPACE_DELIMITERS);
+
+        assert_eq!(result, Ok(Status::Complete(REQUEST_WITH_MULTIPLE_SPACE_DELIMITERS.len())));
+        assert_eq!(request.method.unwrap(), "GET");
+        assert_eq!(request.path.unwrap(), "/");
+        assert_eq!(request.version.unwrap(), 1);
+        assert_eq!(request.headers.len(), 0);
+    }
+
+    /// This is technically allowed by the spec, but we only support multiple spaces as an option,
+    /// not stray `\r`s.
+    static REQUEST_WITH_WEIRD_WHITESPACE_DELIMITERS: &'static [u8] =
+        b"GET\r/\rHTTP/1.1\r\n\r\n";
+
+    #[test]
+    fn test_forbid_request_with_weird_whitespace_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut request = Request::new(&mut headers[..]);
+        let result = request.parse(REQUEST_WITH_WEIRD_WHITESPACE_DELIMITERS);
+
+        assert_eq!(result, Err(::Error::Token));
+    }
+
+    #[test]
+    fn test_still_forbid_request_with_weird_whitespace_delimiters() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut request = Request::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_request_line_delimiters(true)
+            .parse_request(&mut request, REQUEST_WITH_WEIRD_WHITESPACE_DELIMITERS);
+        assert_eq!(result, Err(::Error::Token));
+    }
+
+    static REQUEST_WITH_MULTIPLE_SPACES_AND_BAD_PATH: &'static [u8] = b"GET   /foo>ohno HTTP/1.1\r\n\r\n";
+
+    #[test]
+    fn test_request_with_multiple_spaces_and_bad_path() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut request = Request::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_request_line_delimiters(true)
+            .parse_request(&mut request, REQUEST_WITH_MULTIPLE_SPACES_AND_BAD_PATH);
+        assert_eq!(result, Err(::Error::Token));
+    }
+
+    static RESPONSE_WITH_SPACES_IN_CODE: &'static [u8] = b"HTTP/1.1 99 200 OK\r\n\r\n";
+
+    #[test]
+    fn test_response_with_spaces_in_code() {
+        let mut headers = [EMPTY_HEADER; NUM_OF_HEADERS];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_multiple_spaces_in_response_status_delimiters(true)
+            .parse_response(&mut response, RESPONSE_WITH_SPACES_IN_CODE);
+        assert_eq!(result, Err(::Error::Status));
+    }
+
+    static RESPONSE_WITH_INVALID_CHAR_BETWEEN_HEADER_NAME_AND_COLON: &'static [u8] =
+        b"HTTP/1.1 200 OK\r\nAccess-Control-Allow-Credentials\xFF: true\r\nBread: baguette\r\n\r\n";
+
+    #[test]
+    fn test_forbid_response_with_invalid_char_between_header_name_and_colon() {
+        let mut headers = [EMPTY_HEADER; 2];
+        let mut response = Response::new(&mut headers[..]);
+        let result = ::ParserConfig::default()
+            .allow_spaces_after_header_name_in_responses(true)
+            .parse_response(&mut response, RESPONSE_WITH_INVALID_CHAR_BETWEEN_HEADER_NAME_AND_COLON);
+
+        assert_eq!(result, Err(::Error::HeaderName));
     }
 }

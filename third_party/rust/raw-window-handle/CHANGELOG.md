@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.4.2 (?)
+## 0.4.3 (2022-03-29)
+
+* [Add visual IDs to X11 handles](https://github.com/rust-windowing/raw-window-handle/pull/83)
+* [Add a link to the MDN page for data attributes in the documentation for WebHandle](https://github.com/rust-windowing/raw-window-handle/pull/86)
+* [add haiku support](https://github.com/rust-windowing/raw-window-handle/pull/88)
+
+## 0.4.2 (2021-11-24)
 
 * Also implement `HasRawWindowHandle` for `Rc<T>`, and `Arc<T>` where `T: ?Sized`.
 
@@ -19,6 +25,16 @@
 * **Breaking:** Rename `Android` to `AndroidNdk`.
 * **Breaking:** Inner window handle structs are now exported at crate root.
 * Added Windows `WinRt` handle.
+
+# 0.3.4 (2021-11-27)
+
+* Add `HasRawWindowHandle` implementation for `HasRawWindowHandle` in the
+  newer `v0.4`.
+  This allows "provider" crates that implement `HasRawWindowHandle` (like
+  `winit`, `sdl2`, `glfw`, `fltk`, ...) to upgrade to `v0.4` without a
+  breaking change.
+  Afterwards "consumer" crates (like `gfx`, `wgpu`, `rfd`, ...) can start
+  upgrading with minimal breakage for their users.
 
 ## 0.3.3 (2019-12-1)
 

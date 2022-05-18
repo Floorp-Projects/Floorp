@@ -1,8 +1,10 @@
 use crate::memmem::{rarebytes::RareNeedleBytes, NeedleInfo};
 
 mod fallback;
-#[cfg(all(target_arch = "x86_64", memchr_runtime_simd))]
+#[cfg(memchr_runtime_simd)]
 mod genericsimd;
+#[cfg(all(not(miri), target_arch = "wasm32", memchr_runtime_simd))]
+mod wasm;
 #[cfg(all(not(miri), target_arch = "x86_64", memchr_runtime_simd))]
 mod x86;
 
@@ -89,6 +91,21 @@ pub(crate) type PrefilterFnTy = unsafe fn(
     haystack: &[u8],
     needle: &[u8],
 ) -> Option<usize>;
+
+// If the haystack is too small for SSE2, then just run memchr on the
+// rarest byte and be done with it. (It is likely that this code path is
+// rarely exercised, since a higher level routine will probably dispatch to
+// Rabin-Karp for such a small haystack.)
+#[cfg(memchr_runtime_simd)]
+fn simple_memchr_fallback(
+    _prestate: &mut PrefilterState,
+    ninfo: &NeedleInfo,
+    haystack: &[u8],
+    needle: &[u8],
+) -> Option<usize> {
+    let (rare, _) = ninfo.rarebytes.as_rare_ordered_usize();
+    crate::memchr(needle[rare], haystack).map(|i| i.saturating_sub(rare))
+}
 
 impl PrefilterFn {
     /// Create a new prefilter function from the function pointer given.
@@ -269,7 +286,6 @@ impl PrefilterState {
 /// This only applies to x86_64 when runtime SIMD detection is enabled (which
 /// is the default). In general, we try to use an AVX prefilter, followed by
 /// SSE and then followed by a generic one based on memchr.
-#[cfg(all(not(miri), target_arch = "x86_64", memchr_runtime_simd))]
 #[inline(always)]
 pub(crate) fn forward(
     config: &Prefilter,
@@ -280,46 +296,37 @@ pub(crate) fn forward(
         return None;
     }
 
-    #[cfg(feature = "std")]
+    #[cfg(all(not(miri), target_arch = "x86_64", memchr_runtime_simd))]
     {
-        if cfg!(memchr_runtime_avx) {
-            if is_x86_feature_detected!("avx2") {
-                // SAFETY: x86::avx::find only requires the avx2 feature,
-                // which we've just checked above.
-                return unsafe { Some(PrefilterFn::new(x86::avx::find)) };
+        #[cfg(feature = "std")]
+        {
+            if cfg!(memchr_runtime_avx) {
+                if is_x86_feature_detected!("avx2") {
+                    // SAFETY: x86::avx::find only requires the avx2 feature,
+                    // which we've just checked above.
+                    return unsafe { Some(PrefilterFn::new(x86::avx::find)) };
+                }
             }
         }
+        if cfg!(memchr_runtime_sse2) {
+            // SAFETY: x86::sse::find only requires the sse2 feature, which is
+            // guaranteed to be available on x86_64.
+            return unsafe { Some(PrefilterFn::new(x86::sse::find)) };
+        }
     }
-    if cfg!(memchr_runtime_sse2) {
-        // SAFETY: x86::sse::find only requires the sse2 feature, which is
-        // guaranteed to be available on x86_64.
-        return unsafe { Some(PrefilterFn::new(x86::sse::find)) };
+    #[cfg(all(not(miri), target_arch = "wasm32", memchr_runtime_simd))]
+    {
+        // SAFETY: `wasm::find` is actually a safe function
+        //
+        // Also note that the `if true` is here to prevent, on wasm with simd,
+        // rustc warning about the code below being dead code.
+        if true {
+            return unsafe { Some(PrefilterFn::new(wasm::find)) };
+        }
     }
     // Check that our rarest byte has a reasonably low rank. The main issue
     // here is that the fallback prefilter can perform pretty poorly if it's
     // given common bytes. So we try to avoid the worst cases here.
-    let (rare1_rank, _) = rare.as_ranks(needle);
-    if rare1_rank <= MAX_FALLBACK_RANK {
-        // SAFETY: fallback::find is safe to call in all environments.
-        return unsafe { Some(PrefilterFn::new(fallback::find)) };
-    }
-    None
-}
-
-/// Determine which prefilter function, if any, to use.
-///
-/// Since SIMD is currently only supported on x86_64, this will just select
-/// the fallback prefilter if the rare bytes provided have a low enough rank.
-#[cfg(not(all(not(miri), target_arch = "x86_64", memchr_runtime_simd)))]
-#[inline(always)]
-pub(crate) fn forward(
-    config: &Prefilter,
-    rare: &RareNeedleBytes,
-    needle: &[u8],
-) -> Option<PrefilterFn> {
-    if config.is_none() || needle.len() <= 1 {
-        return None;
-    }
     let (rare1_rank, _) = rare.as_ranks(needle);
     if rare1_rank <= MAX_FALLBACK_RANK {
         // SAFETY: fallback::find is safe to call in all environments.
@@ -424,7 +431,7 @@ pub(crate) mod tests {
         /// (Currently, we take the approach of massaging tests to be valid
         /// instead of rejecting them outright.)
         fn new(
-            seed: &PrefilterTestSeed,
+            seed: PrefilterTestSeed,
             rare1i: usize,
             rare2i: usize,
             haystack_len: usize,
@@ -508,6 +515,7 @@ pub(crate) mod tests {
     ];
 
     /// Data that describes a single prefilter test seed.
+    #[derive(Clone, Copy)]
     struct PrefilterTestSeed {
         first: u8,
         rare1: u8,
@@ -516,47 +524,47 @@ pub(crate) mod tests {
 
     impl PrefilterTestSeed {
         /// Generate a series of prefilter tests from this seed.
-        fn generate(&self) -> Vec<PrefilterTest> {
-            let mut tests = vec![];
-            let mut push = |test: Option<PrefilterTest>| {
-                if let Some(test) = test {
-                    tests.push(test);
-                }
-            };
+        fn generate(self) -> impl Iterator<Item = PrefilterTest> {
             let len_start = 2;
-            // The loop below generates *a lot* of tests. The number of tests
-            // was chosen somewhat empirically to be "bearable" when running
-            // the test suite.
-            for needle_len in len_start..=40 {
+            // The iterator below generates *a lot* of tests. The number of
+            // tests was chosen somewhat empirically to be "bearable" when
+            // running the test suite.
+            //
+            // We use an iterator here because the collective haystacks of all
+            // these test cases add up to enough memory to OOM a conservative
+            // sandbox or a small laptop.
+            (len_start..=40).flat_map(move |needle_len| {
                 let rare_start = len_start - 1;
-                for rare1i in rare_start..needle_len {
-                    for rare2i in rare1i..needle_len {
-                        for haystack_len in needle_len..=66 {
-                            push(PrefilterTest::new(
+                (rare_start..needle_len).flat_map(move |rare1i| {
+                    (rare1i..needle_len).flat_map(move |rare2i| {
+                        (needle_len..=66).flat_map(move |haystack_len| {
+                            PrefilterTest::new(
                                 self,
                                 rare1i,
                                 rare2i,
                                 haystack_len,
                                 needle_len,
                                 None,
-                            ));
-                            // Test all possible match scenarios for this
-                            // needle and haystack.
-                            for output in 0..=(haystack_len - needle_len) {
-                                push(PrefilterTest::new(
-                                    self,
-                                    rare1i,
-                                    rare2i,
-                                    haystack_len,
-                                    needle_len,
-                                    Some(output),
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-            tests
+                            )
+                            .into_iter()
+                            .chain(
+                                (0..=(haystack_len - needle_len)).flat_map(
+                                    move |output| {
+                                        PrefilterTest::new(
+                                            self,
+                                            rare1i,
+                                            rare2i,
+                                            haystack_len,
+                                            needle_len,
+                                            Some(output),
+                                        )
+                                    },
+                                ),
+                            )
+                        })
+                    })
+                })
+            })
         }
     }
 }

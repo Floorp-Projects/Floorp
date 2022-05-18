@@ -50,38 +50,16 @@
 /// #     Ok(())
 /// # }
 /// ```
-#[cfg(doc)]
 #[macro_export]
 macro_rules! bail {
     ($msg:literal $(,)?) => {
-        return $crate::private::Err($crate::anyhow!($msg))
+        return $crate::private::Err($crate::__anyhow!($msg))
     };
     ($err:expr $(,)?) => {
-        return $crate::private::Err($crate::anyhow!($err))
+        return $crate::private::Err($crate::__anyhow!($err))
     };
     ($fmt:expr, $($arg:tt)*) => {
-        return $crate::private::Err($crate::anyhow!($fmt, $($arg)*))
-    };
-}
-
-// Workaround for crates that intentionally contained `{}` in an error message
-// prior to https://github.com/dtolnay/anyhow/issues/55 catching the missing
-// format args.
-#[cfg(not(doc))]
-#[macro_export]
-macro_rules! bail {
-    // https://github.com/estk/log4rs/blob/afa0351af56b3bfd1780389700051d7e4d8bbdc9/src/append/rolling_file/policy/compound/roll/fixed_window.rs#L261
-    ("pattern does not contain `{}`") => {
-        return $crate::private::Err($crate::Error::msg("pattern does not contain `{}`"))
-    };
-    ($msg:literal $(,)?) => {
-        return $crate::private::Err($crate::anyhow!($msg))
-    };
-    ($err:expr $(,)?) => {
-        return $crate::private::Err($crate::anyhow!($err))
-    };
-    ($fmt:expr, $($arg:tt)*) => {
-        return $crate::private::Err($crate::anyhow!($fmt, $($arg)*))
+        return $crate::private::Err($crate::__anyhow!($fmt, $($arg)*))
     };
 }
 
@@ -145,17 +123,17 @@ macro_rules! ensure {
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::anyhow!($msg));
+            return $crate::private::Err($crate::__anyhow!($msg));
         }
     };
     ($cond:expr, $err:expr $(,)?) => {
         if !$cond {
-            return $crate::private::Err($crate::anyhow!($err));
+            return $crate::private::Err($crate::__anyhow!($err));
         }
     };
     ($cond:expr, $fmt:expr, $($arg:tt)*) => {
         if !$cond {
-            return $crate::private::Err($crate::anyhow!($fmt, $($arg)*));
+            return $crate::private::Err($crate::__anyhow!($fmt, $($arg)*));
         }
     };
 }
@@ -206,6 +184,32 @@ macro_rules! ensure {
 /// ```
 #[macro_export]
 macro_rules! anyhow {
+    ($msg:literal $(,)?) => {
+        $crate::private::must_use({
+            let error = $crate::private::format_err($crate::private::format_args!($msg));
+            error
+        })
+    };
+    ($err:expr $(,)?) => {
+        $crate::private::must_use({
+            use $crate::private::kind::*;
+            let error = match $err {
+                error => (&error).anyhow_kind().new(error),
+            };
+            error
+        })
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        $crate::Error::msg($crate::private::format!($fmt, $($arg)*))
+    };
+}
+
+// Not public API. This is used in the implementation of some of the other
+// macros, in which the must_use call is not needed because the value is known
+// to be used.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __anyhow {
     ($msg:literal $(,)?) => ({
         let error = $crate::private::format_err($crate::private::format_args!($msg));
         error
