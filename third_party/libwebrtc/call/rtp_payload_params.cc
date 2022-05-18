@@ -407,6 +407,45 @@ void RtpPayloadParams::Vp8ToGeneric(const CodecSpecificInfoVP8& vp8_info,
   }
 }
 
+FrameDependencyStructure RtpPayloadParams::MinimalisticVp9Structure(
+    const CodecSpecificInfoVP9& vp9) {
+  const int num_spatial_layers = vp9.num_spatial_layers;
+  const int num_temporal_layers = kMaxTemporalStreams;
+  FrameDependencyStructure structure;
+  structure.num_decode_targets = num_spatial_layers * num_temporal_layers;
+  structure.num_chains = num_spatial_layers;
+  structure.templates.reserve(num_spatial_layers * num_temporal_layers);
+  for (int sid = 0; sid < num_spatial_layers; ++sid) {
+    for (int tid = 0; tid < num_temporal_layers; ++tid) {
+      FrameDependencyTemplate a_template;
+      a_template.spatial_id = sid;
+      a_template.temporal_id = tid;
+      for (int s = 0; s < num_spatial_layers; ++s) {
+        for (int t = 0; t < num_temporal_layers; ++t) {
+          // Prefer kSwitch for indication frame is part of the decode target
+          // because RtpPayloadParams::Vp9ToGeneric uses that indication more
+          // often that kRequired, increasing chance custom dti need not to
+          // use more bits in dependency descriptor on the wire.
+          a_template.decode_target_indications.push_back(
+              sid <= s && tid <= t ? DecodeTargetIndication::kSwitch
+                                   : DecodeTargetIndication::kNotPresent);
+        }
+      }
+      a_template.frame_diffs.push_back(tid == 0 ? num_spatial_layers *
+                                                      num_temporal_layers
+                                                : num_spatial_layers);
+      a_template.chain_diffs.assign(structure.num_chains, 1);
+      structure.templates.push_back(a_template);
+
+      structure.decode_target_protected_by_chain.push_back(sid);
+    }
+    if (vp9.ss_data_available && vp9.spatial_layer_resolution_present) {
+      structure.resolutions.emplace_back(vp9.width[sid], vp9.height[sid]);
+    }
+  }
+  return structure;
+}
+
 void RtpPayloadParams::Vp9ToGeneric(const CodecSpecificInfoVP9& vp9_info,
                                     int64_t shared_frame_id,
                                     RTPVideoHeader& rtp_video_header) {

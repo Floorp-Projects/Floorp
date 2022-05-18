@@ -367,6 +367,9 @@ RtpVideoSender::RtpVideoSender(
           field_trials_.Lookup("WebRTC-Video-UseFrameRateForOverhead"),
           "Enabled")),
       has_packet_feedback_(TransportSeqNumExtensionConfigured(rtp_config)),
+      simulate_vp9_structure_(absl::StartsWith(
+          field_trials_.Lookup("WebRTC-Vp9DependencyDescriptor"),
+          "Enabled")),
       active_(false),
       module_process_thread_(nullptr),
       suspended_ssrcs_(std::move(suspended_ssrcs)),
@@ -578,10 +581,18 @@ EncodedImageCallback::Result RtpVideoSender::OnEncodedImage(
     // If encoder adapter produce FrameDependencyStructure, pass it so that
     // dependency descriptor rtp header extension can be used.
     // If not supported, disable using dependency descriptor by passing nullptr.
-    rtp_streams_[stream_index].sender_video->SetVideoStructure(
-        (codec_specific_info && codec_specific_info->template_structure)
-            ? &*codec_specific_info->template_structure
-            : nullptr);
+    RTPSenderVideo& sender_video = *rtp_streams_[stream_index].sender_video;
+    if (codec_specific_info && codec_specific_info->template_structure) {
+      sender_video.SetVideoStructure(&*codec_specific_info->template_structure);
+    } else if (simulate_vp9_structure_ && codec_specific_info &&
+               codec_specific_info->codecType == kVideoCodecVP9) {
+      FrameDependencyStructure structure =
+          RtpPayloadParams::MinimalisticVp9Structure(
+              codec_specific_info->codecSpecific.VP9);
+      sender_video.SetVideoStructure(&structure);
+    } else {
+      sender_video.SetVideoStructure(nullptr);
+    }
   }
 
   bool send_result = rtp_streams_[stream_index].sender_video->SendEncodedImage(

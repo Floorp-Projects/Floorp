@@ -178,6 +178,7 @@ class RtpVideoSender : public RtpVideoSenderInterface,
   const bool send_side_bwe_with_overhead_;
   const bool use_frame_rate_for_overhead_;
   const bool has_packet_feedback_;
+  const bool simulate_vp9_structure_;
 
   // TODO(holmer): Remove mutex_ once RtpVideoSender runs on the
   // transport task queue.
