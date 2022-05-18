@@ -24,6 +24,7 @@
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_nack_stats.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
+#include "modules/rtp_rtcp/source/rtcp_packet/tmmb_item.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -149,9 +150,45 @@ class RTCPReceiver final {
   };
 
   struct PacketInformation;
-  struct TmmbrInformation;
-  struct RrtrInformation;
-  struct LastFirStatus;
+
+  // Structure for handing TMMBR and TMMBN rtcp messages (RFC5104,
+  // section 3.5.4).
+  struct TmmbrInformation {
+    struct TimedTmmbrItem {
+      rtcp::TmmbItem tmmbr_item;
+      int64_t last_updated_ms;
+    };
+
+    int64_t last_time_received_ms = 0;
+
+    bool ready_for_delete = false;
+
+    std::vector<rtcp::TmmbItem> tmmbn;
+    std::map<uint32_t, TimedTmmbrItem> tmmbr;
+  };
+
+  // Structure for storing received RRTR RTCP messages (RFC3611, section 4.4).
+  struct RrtrInformation {
+    RrtrInformation(uint32_t ssrc,
+                    uint32_t received_remote_mid_ntp_time,
+                    uint32_t local_receive_mid_ntp_time)
+        : ssrc(ssrc),
+          received_remote_mid_ntp_time(received_remote_mid_ntp_time),
+          local_receive_mid_ntp_time(local_receive_mid_ntp_time) {}
+
+    uint32_t ssrc;
+    // Received NTP timestamp in compact representation.
+    uint32_t received_remote_mid_ntp_time;
+    // NTP time when the report was received in compact representation.
+    uint32_t local_receive_mid_ntp_time;
+  };
+
+  struct LastFirStatus {
+    LastFirStatus(int64_t now_ms, uint8_t sequence_number)
+        : request_ms(now_ms), sequence_number(sequence_number) {}
+    int64_t request_ms;
+    uint8_t sequence_number;
+  };
 
   // TODO(boivie): `ReportBlockDataMap` and `ReportBlockMap` should be converted
   // to std::unordered_map, but as there are too many tests that assume a
