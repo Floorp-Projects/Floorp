@@ -1621,7 +1621,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   }
 
   // Block this call if security callbacks forbid it.
-  if (!cx->isRuntimeCodeGenEnabled(functionText)) {
+  if (!cx->isRuntimeCodeGenEnabled(JS::RuntimeCode::JS, functionText)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_CSP_BLOCKED_FUNCTION);
     return false;
