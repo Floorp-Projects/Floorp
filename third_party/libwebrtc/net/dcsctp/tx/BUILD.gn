@@ -52,6 +52,19 @@ rtc_library("retransmission_timeout") {
   ]
 }
 
+rtc_library("retransmission_queue") {
+  deps = [
+    ":send_queue",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "retransmission_queue.cc",
+    "retransmission_queue.h",
+  ]
+}
+
 if (rtc_include_tests) {
   rtc_source_set("mock_send_queue") {
     testonly = true
@@ -65,6 +78,7 @@ if (rtc_include_tests) {
     deps = [
       ":fcfs_send_queue",
       ":retransmission_error_counter",
+      ":retransmission_queue",
       ":retransmission_timeout",
       "../../../api:array_view",
       "../../../rtc_base:checks",
@@ -75,6 +89,7 @@ if (rtc_include_tests) {
     sources = [
       "fcfs_send_queue_test.cc",
       "retransmission_error_counter_test.cc",
+      "retransmission_queue_test.cc",
       "retransmission_timeout_test.cc",
     ]
   }
