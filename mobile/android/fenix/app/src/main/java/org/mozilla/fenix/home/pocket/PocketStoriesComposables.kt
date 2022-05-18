@@ -6,7 +6,6 @@
 
 package org.mozilla.fenix.home.pocket
 
-import android.content.Context
 import android.graphics.Rect
 import android.net.Uri
 import androidx.annotation.FloatRange
@@ -40,6 +39,7 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -66,6 +66,7 @@ import org.mozilla.fenix.compose.StaggeredHorizontalGrid
 import org.mozilla.fenix.compose.PrimaryText
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
 import org.mozilla.fenix.compose.SecondaryText
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
 import kotlin.math.max
@@ -278,8 +279,20 @@ private fun Modifier.onShown(
         val context = LocalContext.current
         var wasEventReported by remember { mutableStateOf(false) }
 
+        val toolbarHeight = context.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        val isToolbarPlacedAtBottom = context.settings().shouldUseBottomToolbar
+        // Get a Rect of the entire screen minus system insets minus the toolbar
+        val screenBounds = Rect()
+            .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+            .apply {
+                when (isToolbarPlacedAtBottom) {
+                    true -> bottom -= toolbarHeight
+                    false -> top += toolbarHeight
+                }
+            }
+
         onGloballyPositioned { coordinates ->
-            if (!wasEventReported && coordinates.isVisible(context, threshold) &&
+            if (!wasEventReported && coordinates.isVisible(screenBounds, threshold) &&
                 System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS
             ) {
                 wasEventReported = true
@@ -294,19 +307,12 @@ private fun Modifier.onShown(
  * the screen bounds.
  */
 private fun LayoutCoordinates.isVisible(
-    context: Context,
+    visibleRect: Rect,
     @FloatRange(from = 0.0, to = 1.0) threshold: Float,
 ): Boolean {
     if (!isAttached) return false
 
-    val screenBounds = Rect(
-        /* left = */0,
-        /* top = */0,
-        /* right = */context.resources.displayMetrics.widthPixels,
-        /* bottom = */context.resources.displayMetrics.heightPixels
-    )
-
-    return boundsInWindow().toAndroidRect().getIntersectPercentage(screenBounds) >= threshold
+    return boundsInWindow().toAndroidRect().getIntersectPercentage(visibleRect) >= threshold
 }
 
 /**
