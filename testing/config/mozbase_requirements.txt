@@ -22,9 +22,9 @@
 ../mozbase/moztest
 ../mozbase/mozversion
 
-../condprofile
-aiohttp==3.7.4.post0
-https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl
-requests==2.22.0
-pyyaml==5.1.2
-structlog==15.2.0
+../condprofile; sys_platform != 'darwin'
+aiohttp==3.7.4.post0; sys_platform != 'darwin'
+https://pypi.pub.build.mozilla.org/pub/arsenic-19.1-py3-none-any.whl; sys_platform != 'darwin'
+requests==2.22.0; sys_platform != 'darwin'
+pyyaml==5.1.2; sys_platform != 'darwin'
+structlog==15.2.0; sys_platform != 'darwin'
