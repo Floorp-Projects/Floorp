@@ -185,8 +185,7 @@ void SetUpWritableStreamDefaultController(
   }
 
   // Step 16. Let startPromise be a promise resolved with startResult.
-  RefPtr<Promise> startPromise =
-      Promise::Create(aStream->GetParentObject(), aRv);
+  RefPtr<Promise> startPromise = Promise::Create(GetIncumbentGlobal(), aRv);
   if (aRv.Failed()) {
     return;
   }

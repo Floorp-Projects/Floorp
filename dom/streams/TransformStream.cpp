@@ -45,13 +45,6 @@ TransformStream::TransformStream(nsIGlobalObject* aGlobal) : mGlobal(aGlobal) {
   mozilla::HoldJSObjects(this);
 }
 
-TransformStream::TransformStream(nsIGlobalObject* aGlobal,
-                                 ReadableStream* aReadable,
-                                 WritableStream* aWritable)
-    : mGlobal(aGlobal), mReadable(aReadable), mWritable(aWritable) {
-  mozilla::HoldJSObjects(this);
-}
-
 TransformStream::~TransformStream() { mozilla::DropJSObjects(this); }
 
 JSObject* TransformStream::WrapObject(JSContext* aCx,

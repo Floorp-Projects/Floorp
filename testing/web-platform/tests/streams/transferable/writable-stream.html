@@ -109,37 +109,25 @@ promise_test(async () => {
   assert_true(writeDone, 'second write should have resolved');
 }, 'second write should wait for first underlying write to complete');
 
-async function transferredWritableStreamWithAbortPromise() {
-  let resolveAbortCalled;
-  const abortCalled = new Promise(resolve => {
-    resolveAbortCalled = resolve;
-  });
-  const orig = recordingWritableStream({
-    abort() {
-      resolveAbortCalled();
-    }
-  });
-  const transferred = await transfer(orig);
-  return { orig, transferred, abortCalled };
-}
-
 promise_test(async t => {
-  const { orig, transferred, abortCalled } = await transferredWritableStreamWithAbortPromise();
+  const orig = recordingWritableStream();
+  const transferred = await transfer(orig);
   transferred.abort('p');
-  await abortCalled;
+  await delay(0);
   assert_array_equals(orig.events, ['abort', 'p'],
                       'abort() should have been called');
 }, 'abort() should work');
 
 promise_test(async t => {
-  const { orig, transferred, abortCalled } = await transferredWritableStreamWithAbortPromise();
+  const orig = recordingWritableStream();
+  const transferred = await transfer(orig);
   const writer = transferred.getWriter();
   // A WritableStream object cannot be cloned.
   await promise_rejects_dom(t, 'DataCloneError', writer.write(new WritableStream()),
                             'the write should reject');
   await promise_rejects_dom(t, 'DataCloneError', writer.closed,
                             'the stream should be errored');
-  await abortCalled;
+  await delay(0);
   assert_equals(orig.events.length, 2, 'abort should have been called');
   assert_equals(orig.events[0], 'abort', 'first event should be abort');
   assert_equals(orig.events[1].name, 'DataCloneError',
