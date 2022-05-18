@@ -7,6 +7,7 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -27,6 +28,7 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
  * @param context [Context] used for various platform interactions or accessing [Components]
  * @param browserTrayInteractor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 @Suppress("TooManyFunctions")
 class TabGroupAdapter(
@@ -34,6 +36,7 @@ class TabGroupAdapter(
     private val browserTrayInteractor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
     override val featureName: String,
+    private val viewLifecycleOwner: LifecycleOwner
 ) : ListAdapter<TabGroup, TabGroupViewHolder>(DiffCallback), TabsTray, FeatureNameHolder {
 
     /**
@@ -44,14 +47,19 @@ class TabGroupAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabGroupViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
-        return when {
-            context.components.settings.gridTabView -> {
-                TabGroupViewHolder(view, HORIZONTAL, browserTrayInteractor, store, selectionHolder)
-            }
-            else -> {
-                TabGroupViewHolder(view, VERTICAL, browserTrayInteractor, store, selectionHolder)
-            }
+        val orientation = if (context.components.settings.gridTabView) {
+            HORIZONTAL
+        } else {
+            VERTICAL
         }
+        return TabGroupViewHolder(
+            view,
+            orientation,
+            browserTrayInteractor,
+            store,
+            selectionHolder,
+            viewLifecycleOwner
+        )
     }
 
     override fun onBindViewHolder(holder: TabGroupViewHolder, position: Int) {

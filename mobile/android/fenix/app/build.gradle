@@ -466,6 +466,7 @@ dependencies {
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout
     implementation Deps.androidx_coordinatorlayout
+    implementation Deps.google_accompanist_drawablepainter
 
     implementation Deps.sentry
 

@@ -51,9 +51,9 @@ class TrayPagerAdapter(
                 inactiveTabsInteractor = inactiveTabsInteractor,
                 featureName = INACTIVE_TABS_FEATURE_NAME,
             ),
-            TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME),
+            TabGroupAdapter(context, browserInteractor, tabsTrayStore, TAB_GROUP_FEATURE_NAME, lifecycleOwner),
             TitleHeaderAdapter(),
-            BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME)
+            BrowserTabsAdapter(context, browserInteractor, tabsTrayStore, TABS_TRAY_FEATURE_NAME, lifecycleOwner)
         )
     }
 
@@ -62,7 +62,8 @@ class TrayPagerAdapter(
             context,
             browserInteractor,
             tabsTrayStore,
-            TABS_TRAY_FEATURE_NAME
+            TABS_TRAY_FEATURE_NAME,
+            lifecycleOwner
         )
     }
 

@@ -87,7 +87,8 @@ class TabsTrayFragmentTest {
         fragment._tabsTrayDialogBinding = tabsTrayDialogBinding
         fragment._fabButtonBinding = fabButtonBinding
         every { fragment.context } returns context
-        every { fragment.view } returns view
+        every { fragment.context } returns context
+        every { fragment.viewLifecycleOwner } returns mockk(relaxed = true)
     }
 
     @Test
@@ -100,6 +101,7 @@ class TabsTrayFragmentTest {
             fabButtonBinding.newTabButton.isVisible = true
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+            every { fragment.requireView() } returns view
 
             fragment.showUndoSnackbarForTab(true)
 
@@ -130,6 +132,7 @@ class TabsTrayFragmentTest {
             every { any<LifecycleOwner>().lifecycleScope } returns lifecycleScope
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+            every { fragment.requireView() } returns view
 
             fragment.showUndoSnackbarForTab(true)
 
@@ -161,6 +164,7 @@ class TabsTrayFragmentTest {
             fabButtonBinding.newTabButton.isVisible = true
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+            every { fragment.requireView() } returns view
 
             fragment.showUndoSnackbarForTab(false)
 
@@ -191,6 +195,7 @@ class TabsTrayFragmentTest {
             every { any<LifecycleOwner>().lifecycleScope } returns lifecycleScope
             every { fragment.context } returns testContext // needed for getString()
             every { any<CoroutineScope>().allowUndo(any(), any(), any(), any(), any(), any(), any(), any()) } just Runs
+            every { fragment.requireView() } returns view
 
             fragment.showUndoSnackbarForTab(false)
 

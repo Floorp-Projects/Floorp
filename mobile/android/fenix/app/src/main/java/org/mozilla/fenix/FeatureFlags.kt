@@ -98,4 +98,8 @@ object FeatureFlags {
      * Enables receiving from the messaging framework.
      */
     const val messagingFeature = true
+    /**
+     * Enables compose on the tabs tray items.
+     */
+    val composeTabsTray = Config.channel.isDebug
 }

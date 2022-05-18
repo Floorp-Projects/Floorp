@@ -21,7 +21,7 @@ import androidx.core.view.isVisible
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.browser.tabstray.TabViewHolder
+import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
@@ -31,7 +31,6 @@ import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Tab
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -44,7 +43,6 @@ import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.ext.isSelect
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
@@ -61,10 +59,9 @@ abstract class AbstractBrowserTabViewHolder(
     private val imageLoader: ImageLoader,
     private val trayStore: TabsTrayStore,
     private val selectionHolder: SelectionHolder<TabSessionState>?,
-    @VisibleForTesting
     internal val featureName: String,
     private val store: BrowserStore = itemView.context.components.core.store,
-) : TabViewHolder(itemView) {
+) : SelectableTabViewHolder(itemView) {
 
     private val faviconView: ImageView? =
         itemView.findViewById(R.id.mozac_browser_tabstray_favicon_icon)
@@ -109,7 +106,9 @@ abstract class AbstractBrowserTabViewHolder(
         if (selectionHolder != null) {
             setSelectionInteractor(tab, selectionHolder, browserTrayInteractor)
         } else {
-            itemView.setOnClickListener { browserTrayInteractor.onTabSelected(tab, featureName) }
+            itemView.setOnClickListener {
+                browserTrayInteractor.onTabSelected(tab, featureName)
+            }
         }
 
         if (tab.content.thumbnail != null) {
@@ -119,7 +118,7 @@ abstract class AbstractBrowserTabViewHolder(
         }
     }
 
-    fun showTabIsMultiSelectEnabled(selectedMaskView: View?, isSelected: Boolean) {
+    override fun showTabIsMultiSelectEnabled(selectedMaskView: View?, isSelected: Boolean) {
         selectedMaskView?.isVisible = isSelected
         closeView.isInvisible = trayStore.state.mode is TabsTrayState.Mode.Select
     }
@@ -217,24 +216,11 @@ abstract class AbstractBrowserTabViewHolder(
         interactor: BrowserTrayInteractor
     ) {
         itemView.setOnClickListener {
-            val selected = holder.selectedItems
-            when {
-                selected.isEmpty() && trayStore.state.mode.isSelect().not() -> {
-                    interactor.onTabSelected(item, featureName)
-                }
-                item.id in selected.map { item -> item.id } -> interactor.deselect(item)
-                else -> interactor.select(item)
-            }
+            interactor.onMultiSelectClicked(item, holder, featureName)
         }
 
         itemView.setOnLongClickListener {
-            if (holder.selectedItems.isEmpty()) {
-                Collections.longPress.record(NoExtras())
-                interactor.select(item)
-                true
-            } else {
-                false
-            }
+            interactor.onLongClicked(item, holder)
         }
         setDragInteractor(item, holder, interactor)
     }

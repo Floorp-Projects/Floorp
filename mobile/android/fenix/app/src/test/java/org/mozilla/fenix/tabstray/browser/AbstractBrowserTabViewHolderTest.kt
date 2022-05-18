@@ -16,7 +16,6 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
@@ -77,12 +76,12 @@ class AbstractBrowserTabViewHolderTest {
             interactor
         )
 
-        holder.bind(createTab(url = "url"), false, mockk(), mockk())
+        val tab = createTab(url = "url")
+        holder.bind(tab, false, mockk(), mockk())
 
         holder.itemView.performClick()
 
-        verify { interactor.onTabSelected(any(), holder.featureName) }
-        assertTrue(selectionHolder.invoked)
+        verify { interactor.onMultiSelectClicked(tab, any(), holder.featureName) }
     }
 
     @Test

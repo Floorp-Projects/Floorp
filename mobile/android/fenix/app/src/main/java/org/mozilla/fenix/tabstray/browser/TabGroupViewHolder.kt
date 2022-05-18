@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.browser
 
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.selector.normalTabs
@@ -25,13 +26,15 @@ import org.mozilla.fenix.tabstray.TrayPagerAdapter
  * @param interactor the [BrowserTrayInteractor] for tab interactions.
  * @param store the [TabsTrayStore] instance.
  * @param selectionHolder the store that holds the currently selected tabs.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 class TabGroupViewHolder(
     itemView: View,
     val orientation: Int,
     val interactor: BrowserTrayInteractor,
     val store: TabsTrayStore,
-    val selectionHolder: SelectionHolder<TabSessionState>? = null
+    val selectionHolder: SelectionHolder<TabSessionState>? = null,
+    private val viewLifecycleOwner: LifecycleOwner
 ) : RecyclerView.ViewHolder(itemView) {
     private val binding = TabGroupItemBinding.bind(itemView)
 
@@ -51,7 +54,8 @@ class TabGroupViewHolder(
                 interactor = interactor,
                 store = store,
                 selectionHolder = selectionHolder,
-                featureName = TrayPagerAdapter.TAB_GROUP_FEATURE_NAME
+                featureName = TrayPagerAdapter.TAB_GROUP_FEATURE_NAME,
+                viewLifecycleOwner
             )
 
             adapter = groupListAdapter

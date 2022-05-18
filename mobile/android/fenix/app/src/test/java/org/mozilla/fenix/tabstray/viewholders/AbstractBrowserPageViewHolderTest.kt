@@ -35,7 +35,9 @@ class AbstractBrowserPageViewHolderTest {
         every { testContext.components.core.thumbnailStorage } returns mockk()
         every { testContext.components.settings } returns mockk(relaxed = true)
     }
-    val adapter = BrowserTabsAdapter(testContext, browserTrayInteractor, tabsTrayStore, "Test")
+
+    val adapter =
+        BrowserTabsAdapter(testContext, browserTrayInteractor, tabsTrayStore, "Test", mockk())
 
     @Test
     fun `WHEN tabs inserted THEN show tray`() {

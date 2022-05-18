@@ -8,17 +8,22 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.browser.compose.ComposeListViewHolder
 
 /**
  * A [RecyclerView.Adapter] for browser tabs.
@@ -27,19 +32,22 @@ import org.mozilla.fenix.tabstray.TabsTrayStore
  * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 class BrowserTabsAdapter(
     private val context: Context,
     val interactor: BrowserTrayInteractor,
     private val store: TabsTrayStore,
-    override val featureName: String
-) : TabsAdapter<AbstractBrowserTabViewHolder>(interactor), FeatureNameHolder {
+    override val featureName: String,
+    internal val viewLifecycleOwner: LifecycleOwner
+) : TabsAdapter<SelectableTabViewHolder>(interactor), FeatureNameHolder {
 
     /**
      * The layout types for the tabs.
      */
     enum class ViewType(val layoutRes: Int) {
         LIST(BrowserTabViewHolder.ListViewHolder.LAYOUT_ID),
+        COMPOSE_LIST(ComposeListViewHolder.LAYOUT_ID),
         GRID(BrowserTabViewHolder.GridViewHolder.LAYOUT_ID)
     }
 
@@ -57,23 +65,52 @@ class BrowserTabsAdapter(
                 ViewType.GRID.layoutRes
             }
             else -> {
-                ViewType.LIST.layoutRes
+                if (FeatureFlags.composeTabsTray) {
+                    ViewType.COMPOSE_LIST.layoutRes
+                } else {
+                    ViewType.LIST.layoutRes
+                }
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractBrowserTabViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SelectableTabViewHolder {
         return when (viewType) {
-            ViewType.GRID.layoutRes ->
-                BrowserTabViewHolder.GridViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
-            else ->
-                BrowserTabViewHolder.ListViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
+            ViewType.COMPOSE_LIST.layoutRes ->
+                ComposeListViewHolder(
+                    interactor = interactor,
+                    tabsTrayStore = store,
+                    selectionHolder = selectionHolder,
+                    composeItemView = ComposeView(parent.context),
+                    featureName = featureName,
+                    viewLifecycleOwner = viewLifecycleOwner
+                )
+            else -> {
+                val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+                if (viewType == ViewType.GRID.layoutRes) {
+                    BrowserTabViewHolder.GridViewHolder(
+                        imageLoader,
+                        interactor,
+                        store,
+                        selectionHolder,
+                        view,
+                        featureName
+                    )
+                } else {
+                    BrowserTabViewHolder.ListViewHolder(
+                        imageLoader,
+                        interactor,
+                        store,
+                        selectionHolder,
+                        view,
+                        featureName
+                    )
+                }
+            }
         }
     }
 
-    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: SelectableTabViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
         var selectedMaskView: View? = null
         holder.tab?.let { tab ->
@@ -103,7 +140,7 @@ class BrowserTabsAdapter(
      * Over-ridden [onBindViewHolder] that uses the payloads to notify the selected tab how to
      * display itself.
      */
-    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: SelectableTabViewHolder, position: Int, payloads: List<Any>) {
         if (currentList.isEmpty()) return
 
         if (payloads.isEmpty()) {

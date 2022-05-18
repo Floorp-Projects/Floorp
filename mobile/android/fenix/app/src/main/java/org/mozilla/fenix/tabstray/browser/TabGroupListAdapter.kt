@@ -8,14 +8,18 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsTrayStyling
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
@@ -23,6 +27,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.topsites.dpToPx
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.browser.compose.ComposeListViewHolder
 import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
 
 /**
@@ -32,6 +37,7 @@ import org.mozilla.fenix.tabstray.ext.MIN_COLUMN_WIDTH_DP
  * @param interactor [BrowserTrayInteractor] handling tabs interactions in a tab tray.
  * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @param featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
+ * @param viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */
 class TabGroupListAdapter(
     private val context: Context,
@@ -39,14 +45,15 @@ class TabGroupListAdapter(
     private val store: TabsTrayStore,
     private val selectionHolder: SelectionHolder<TabSessionState>?,
     private val featureName: String,
-) : ListAdapter<TabSessionState, AbstractBrowserTabViewHolder>(DiffCallback) {
+    private val viewLifecycleOwner: LifecycleOwner
+) : ListAdapter<TabSessionState, SelectableTabViewHolder>(DiffCallback) {
 
     private val selectedItemAdapterBinding = SelectedItemAdapterBinding(store, this)
     private val imageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): AbstractBrowserTabViewHolder {
+    ): SelectableTabViewHolder {
         return when {
             context.components.settings.gridTabView -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.tab_tray_grid_item, parent, false)
@@ -54,13 +61,32 @@ class TabGroupListAdapter(
                 BrowserTabViewHolder.GridViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
             }
             else -> {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.tab_tray_item, parent, false)
-                BrowserTabViewHolder.ListViewHolder(imageLoader, interactor, store, selectionHolder, view, featureName)
+                if (FeatureFlags.composeTabsTray) {
+                    ComposeListViewHolder(
+                        interactor = interactor,
+                        tabsTrayStore = store,
+                        selectionHolder = selectionHolder,
+                        composeItemView = ComposeView(parent.context),
+                        featureName = featureName,
+                        viewLifecycleOwner = viewLifecycleOwner
+                    )
+                } else {
+                    val view = LayoutInflater.from(parent.context)
+                        .inflate(R.layout.tab_tray_item, parent, false)
+                    BrowserTabViewHolder.ListViewHolder(
+                        imageLoader,
+                        interactor,
+                        store,
+                        selectionHolder,
+                        view,
+                        featureName
+                    )
+                }
             }
         }
     }
 
-    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: SelectableTabViewHolder, position: Int) {
         val tab = getItem(position)
         val selectedTabId = context.components.core.store.state.selectedTabId
         holder.bind(tab, tab.id == selectedTabId, TabsTrayStyling(), interactor)
@@ -88,7 +114,7 @@ class TabGroupListAdapter(
      *
      * N.B: this is a modified version of [BrowserTabsAdapter.onBindViewHolder].
      */
-    override fun onBindViewHolder(holder: AbstractBrowserTabViewHolder, position: Int, payloads: List<Any>) {
+    override fun onBindViewHolder(holder: SelectableTabViewHolder, position: Int, payloads: List<Any>) {
         val tabs = currentList
         val selectedTabId = context.components.core.store.state.selectedTabId
         val selectedIndex = tabs.indexOfFirst { it.id == selectedTabId }
@@ -120,7 +146,10 @@ class TabGroupListAdapter(
                     selectedMaskView = listBinding.checkboxInclude.selectedMask
                 }
             }
-            holder.showTabIsMultiSelectEnabled(selectedMaskView, it.selectedItems.contains(holder.tab))
+            holder.showTabIsMultiSelectEnabled(
+                selectedMaskView,
+                it.selectedItems.contains(holder.tab)
+            )
         }
     }
 
@@ -130,7 +159,11 @@ class TabGroupListAdapter(
                 BrowserTabsAdapter.ViewType.GRID.layoutRes
             }
             else -> {
-                BrowserTabsAdapter.ViewType.LIST.layoutRes
+                if (FeatureFlags.composeTabsTray) {
+                    BrowserTabsAdapter.ViewType.COMPOSE_LIST.layoutRes
+                } else {
+                    BrowserTabsAdapter.ViewType.LIST.layoutRes
+                }
             }
         }
     }

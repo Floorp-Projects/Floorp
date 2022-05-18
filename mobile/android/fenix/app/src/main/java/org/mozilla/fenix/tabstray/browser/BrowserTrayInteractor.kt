@@ -8,12 +8,16 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.base.feature.UserInteractionHandler
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayController
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayState.Mode
 import org.mozilla.fenix.tabstray.TabsTrayStore
+import org.mozilla.fenix.tabstray.ext.isSelect
 
 /**
  * For interacting with UI that is specifically for [AbstractBrowserTrayList] and other browser
@@ -46,6 +50,29 @@ interface BrowserTrayInteractor : SelectionInteractor<TabSessionState>, UserInte
      * Recently Closed item is clicked.
      */
     fun onRecentlyClosedClicked()
+
+    /**
+     * Indicates Play/Pause item is clicked.
+     * @param tab [TabSessionState] to close.
+     */
+    fun onMediaClicked(tab: TabSessionState)
+
+    /**
+     * Handles clicks when multi-selection is enabled.
+     */
+    fun onMultiSelectClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+        source: String?
+    )
+
+    /**
+     * Handles long click events when tab item is clicked.
+     */
+    fun onLongClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>
+    ): Boolean
 }
 
 /**
@@ -133,6 +160,47 @@ class DefaultBrowserTrayInteractor(
      */
     override fun onRecentlyClosedClicked() {
         controller.handleNavigateToRecentlyClosed()
+    }
+
+    /**
+     * See [BrowserTrayInteractor.onMultiSelectClicked]
+     */
+    override fun onMediaClicked(tab: TabSessionState) {
+        controller.handleMediaClicked(tab)
+    }
+
+    /**
+     * See [BrowserTrayInteractor.onMultiSelectClicked]
+     */
+    override fun onMultiSelectClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+        source: String?
+    ) {
+        val selected = holder.selectedItems
+        when {
+            selected.isEmpty() && store.state.mode.isSelect().not() -> {
+                onTabSelected(tab, source)
+            }
+            tab.id in selected.map { it.id } -> deselect(tab)
+            else -> select(tab)
+        }
+    }
+
+    /**
+     * See [BrowserTrayInteractor.onLongClicked]
+     */
+    override fun onLongClicked(
+        tab: TabSessionState,
+        holder: SelectionHolder<TabSessionState>
+    ): Boolean {
+        return if (holder.selectedItems.isEmpty()) {
+            Collections.longPress.record(NoExtras())
+            select(tab)
+            true
+        } else {
+            false
+        }
     }
 
     private fun selectTab(tab: TabSessionState, source: String? = null) {
