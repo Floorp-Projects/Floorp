@@ -7771,8 +7771,17 @@ PrepareDatastoreOp::CompressFunction::OnFunctionCall(
 
   const nsCString& buffer = compressed.IsVoid() ? value : compressed;
 
-  nsCOMPtr<nsIVariant> result = new storage::BlobVariant(std::make_pair(
-      static_cast<const void*>(buffer.get()), int(buffer.Length())));
+  // mozStorage transforms empty blobs into null values, but our database
+  // schema doesn't allow null values. We can workaround this by storing
+  // empty buffers as UTF8 text (SQLite supports the type affinity, so the type
+  // of the column is not fixed).
+  nsCOMPtr<nsIVariant> result;
+  if (0u == buffer.Length()) {  // Otherwise empty string becomes null
+    result = new storage::UTF8TextVariant(buffer);
+  } else {
+    result = new storage::BlobVariant(std::make_pair(
+        static_cast<const void*>(buffer.get()), int(buffer.Length())));
+  }
 
   result.forget(aResult);
   return NS_OK;
