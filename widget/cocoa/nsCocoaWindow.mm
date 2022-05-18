@@ -4019,8 +4019,6 @@ static const NSUInteger kWindowShadowOptionsTooltipMojaveOrLater = 4;
 
     case StyleWindowShadow::Default:  // we treat "default" as "default panel"
     case StyleWindowShadow::Menu:
-    case StyleWindowShadow::Sheet:
-    case StyleWindowShadow::Cliprounded:  // this is a Windows-only value.
       return kWindowShadowOptionsMenu;
 
     case StyleWindowShadow::Tooltip:

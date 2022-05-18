@@ -9,14 +9,13 @@ import hashlib
 import io
 import logging
 import os
-import platform
 import re
 import subprocess
 import sys
 from collections import defaultdict, OrderedDict
 from distutils.version import LooseVersion
 from itertools import dropwhile
-from datetime import datetime
+from mozboot.util import MINIMUM_RUST_VERSION
 
 import pytoml
 import mozpack.path as mozpath
@@ -114,10 +113,7 @@ class VendorRust(MozbuildObject):
 
     def check_cargo_version(self, cargo):
         """
-        Ensure that cargo is new enough. cargo 1.42 fixed some issue with
-        the vendor command. cargo 1.47 similarly did so for windows, but as of
-        this writing is the current nightly, so we restrict this check only to
-        the platform it's actually required on
+        Ensure that Cargo is new enough.
         """
         out = (
             subprocess.check_output([cargo, "--version"])
@@ -127,36 +123,14 @@ class VendorRust(MozbuildObject):
         if not out.startswith("cargo"):
             return False
         version = LooseVersion(out.split()[1])
-        if platform.system() == "Windows":
-            if version >= "1.47" and "nightly" in out:
-                # parsing the date from "cargo 1.47.0-nightly (aa6872140 2020-07-23)"
-                date_format = "%Y-%m-%d"
-                req_nightly = datetime.strptime("2020-07-23", date_format)
-                nightly = datetime.strptime(
-                    out.rstrip(")").rsplit(" ", 1)[1], date_format
-                )
-                if nightly < req_nightly:
-                    self.log(
-                        logging.ERROR,
-                        "cargo_version",
-                        {},
-                        "Cargo >= 1.47.0-nightly (2020-07-23) required (update your nightly)",
-                    )
-                    return False
-            elif version < "1.47":
-                self.log(
-                    logging.ERROR,
-                    "cargo_version",
-                    {},
-                    "Cargo >= 1.47 required (install Rust 1.47 or newer)",
-                )
-                return False
-        elif version < "1.42":
+        if version < MINIMUM_RUST_VERSION:
             self.log(
                 logging.ERROR,
                 "cargo_version",
                 {},
-                "Cargo >= 1.42 required (install Rust 1.42 or newer)",
+                "Cargo >= {0} required (install Rust {0} or newer)".format(
+                    MINIMUM_RUST_VERSION
+                ),
             )
             return False
         self.log(logging.DEBUG, "cargo_version", {}, "cargo is new enough")
