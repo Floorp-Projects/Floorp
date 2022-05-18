@@ -321,7 +321,7 @@ ReceiveStatisticsImpl::ReceiveStatisticsImpl(
         int max_reordering_threshold)> stream_statistician_factory)
     : clock_(clock),
       stream_statistician_factory_(std::move(stream_statistician_factory)),
-      last_returned_ssrc_(0),
+      last_returned_ssrc_idx_(0),
       max_reordering_threshold_(kDefaultMaxReorderingThreshold) {}
 
 void ReceiveStatisticsImpl::OnRtpPacket(const RtpPacketReceived& packet) {
@@ -346,6 +346,7 @@ StreamStatisticianImplInterface* ReceiveStatisticsImpl::GetOrCreateStatistician(
   if (impl == nullptr) {  // new element
     impl =
         stream_statistician_factory_(ssrc, clock_, max_reordering_threshold_);
+    all_ssrcs_.push_back(ssrc);
   }
   return impl.get();
 }
@@ -373,14 +374,20 @@ void ReceiveStatisticsImpl::EnableRetransmitDetection(uint32_t ssrc,
 std::vector<rtcp::ReportBlock> ReceiveStatisticsImpl::RtcpReportBlocks(
     size_t max_blocks) {
   std::vector<rtcp::ReportBlock> result;
-  result.reserve(std::min(max_blocks, statisticians_.size()));
-  auto add_report_block = [&result](
-                              uint32_t media_ssrc,
-                              StreamStatisticianImplInterface* statistician) {
+  result.reserve(std::min(max_blocks, all_ssrcs_.size()));
+
+  size_t ssrc_idx = 0;
+  for (size_t i = 0; i < all_ssrcs_.size() && result.size() < max_blocks; ++i) {
+    ssrc_idx = (last_returned_ssrc_idx_ + i + 1) % all_ssrcs_.size();
+    const uint32_t media_ssrc = all_ssrcs_[ssrc_idx];
+    auto statistician_it = statisticians_.find(media_ssrc);
+    RTC_DCHECK(statistician_it != statisticians_.end());
+
     // Do we have receive statistics to send?
     RtcpStatistics stats;
-    if (!statistician->GetActiveStatisticsAndReset(&stats))
-      return;
+    if (!statistician_it->second->GetActiveStatisticsAndReset(&stats))
+      continue;
+
     result.emplace_back();
     rtcp::ReportBlock& block = result.back();
     block.SetMediaSsrc(media_ssrc);
@@ -388,22 +395,12 @@ std::vector<rtcp::ReportBlock> ReceiveStatisticsImpl::RtcpReportBlocks(
     if (!block.SetCumulativeLost(stats.packets_lost)) {
       RTC_LOG(LS_WARNING) << "Cumulative lost is oversized.";
       result.pop_back();
-      return;
+      continue;
     }
     block.SetExtHighestSeqNum(stats.extended_highest_sequence_number);
     block.SetJitter(stats.jitter);
-  };
-
-  const auto start_it = statisticians_.upper_bound(last_returned_ssrc_);
-  for (auto it = start_it;
-       result.size() < max_blocks && it != statisticians_.end(); ++it)
-    add_report_block(it->first, it->second.get());
-  for (auto it = statisticians_.begin();
-       result.size() < max_blocks && it != start_it; ++it)
-    add_report_block(it->first, it->second.get());
-
-  if (!result.empty())
-    last_returned_ssrc_ = result.back().source_ssrc();
+  }
+  last_returned_ssrc_idx_ = ssrc_idx;
   return result;
 }
 
