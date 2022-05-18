@@ -1081,7 +1081,7 @@ checksum = "031d29b6d1ea84f63436e45fb6f3c1a3d62dc1650018c53fa7165e108d35d88f"
 dependencies = [
  "cssparser-macros",
  "dtoa-short",
- "itoa",
+ "itoa 0.4.999",
  "matches",
  "phf",
  "proc-macro2",
@@ -2388,7 +2388,7 @@ checksum = "1323096b05d41827dadeaee54c9981958c0f94e670bc94ed80037d1a7b8b186b"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
- "itoa",
+ "itoa 0.4.999",
 ]
 
 [[package]]
@@ -2460,7 +2460,7 @@ dependencies = [
  "http",
  "http-body",
  "httparse",
- "itoa",
+ "itoa 0.4.999",
  "log",
  "pin-project",
  "socket2",
@@ -2601,9 +2601,16 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "0.4.8"
+version = "0.4.999"
+dependencies = [
+ "itoa 1.0.2",
+]
+
+[[package]]
+name = "itoa"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
+checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "jobserver"
@@ -4608,7 +4615,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0ffa0837f2dfa6fb90868c2b5468cad482e175f7dad97e7421951e663f2b527"
 dependencies = [
  "indexmap",
- "itoa",
+ "itoa 0.4.999",
  "ryu",
  "serde",
 ]
@@ -4631,7 +4638,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ec5d77e2d4c73717816afac02670d5c4f534ea95ed430442cad02e7a6e32c97"
 dependencies = [
  "dtoa",
- "itoa",
+ "itoa 0.4.999",
  "serde",
  "url",
 ]
@@ -4878,7 +4885,7 @@ dependencies = [
  "gecko-profiler",
  "indexmap",
  "itertools 0.8.2",
- "itoa",
+ "itoa 0.4.999",
  "lazy_static",
  "log",
  "malloc_size_of",
