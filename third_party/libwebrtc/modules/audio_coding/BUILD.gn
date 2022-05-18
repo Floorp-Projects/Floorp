@@ -1835,7 +1835,7 @@ if (rtc_include_tests) {
       ]
     }
 
-    rtc_executable("isac_fix_test") {
+    rtc_test("isac_fix_test") {
       testonly = true
 
       sources = [ "codecs/isac/fix/test/kenny.cc" ]
