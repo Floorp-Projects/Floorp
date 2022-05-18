@@ -117,6 +117,12 @@ pub struct GzBuilder {
     mtime: u32,
 }
 
+impl Default for GzBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GzBuilder {
     /// Create a new blank builder with no header by default.
     pub fn new() -> GzBuilder {
@@ -204,28 +210,19 @@ impl GzBuilder {
         } = self;
         let mut flg = 0;
         let mut header = vec![0u8; 10];
-        match extra {
-            Some(v) => {
-                flg |= FEXTRA;
-                header.push((v.len() >> 0) as u8);
-                header.push((v.len() >> 8) as u8);
-                header.extend(v);
-            }
-            None => {}
+        if let Some(v) = extra {
+            flg |= FEXTRA;
+            header.push((v.len() >> 0) as u8);
+            header.push((v.len() >> 8) as u8);
+            header.extend(v);
         }
-        match filename {
-            Some(filename) => {
-                flg |= FNAME;
-                header.extend(filename.as_bytes_with_nul().iter().map(|x| *x));
-            }
-            None => {}
+        if let Some(filename) = filename {
+            flg |= FNAME;
+            header.extend(filename.as_bytes_with_nul().iter().map(|x| *x));
         }
-        match comment {
-            Some(comment) => {
-                flg |= FCOMMENT;
-                header.extend(comment.as_bytes_with_nul().iter().map(|x| *x));
-            }
-            None => {}
+        if let Some(comment) = comment {
+            flg |= FCOMMENT;
+            header.extend(comment.as_bytes_with_nul().iter().map(|x| *x));
         }
         header[0] = 0x1f;
         header[1] = 0x8b;
@@ -248,7 +245,7 @@ impl GzBuilder {
         // default this value to 255. I'm not sure that if we "correctly" set
         // this it'd do anything anyway...
         header[9] = operating_system.unwrap_or(255);
-        return header;
+        header
     }
 }
 
@@ -287,7 +284,7 @@ mod tests {
         let mut w = write::GzEncoder::new(Vec::new(), Compression::default());
         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
-            let to_write = &v[..thread_rng().gen_range(0, v.len())];
+            let to_write = &v[..thread_rng().gen_range(0..v.len())];
             real.extend(to_write.iter().map(|x| *x));
             w.write_all(to_write).unwrap();
         }

@@ -14,6 +14,7 @@
 //! ## Example
 //!
 //! ```rust
+//! # #[cfg(feature = "hardcoded-data")] {
 //! use unicode_bidi::BidiInfo;
 //!
 //! // This example text is defined using `concat!` because some browsers
@@ -51,19 +52,20 @@
 //!   "ב",
 //!   "א",
 //! ]);
+//! # } // feature = "hardcoded-data"
 //! ```
 //!
 //! # Features
 //!
 //! - `std`: Enabled by default, but can be disabled to make `unicode_bidi`
 //!   `#![no_std]` + `alloc` compatible.
+//! - `hardcoded-data`: Enabled by default. Includes hardcoded Unicode bidi data and more convenient APIs.
 //! - `serde`: Adds [`serde::Serialize`] and [`serde::Deserialize`]
 //!   implementations to relevant types.
 //!
 //! [tr9]: <http://www.unicode.org/reports/tr9/>
 
 #![forbid(unsafe_code)]
-
 #![no_std]
 // We need to link to std to make doc tests work on older Rust versions
 #[cfg(feature = "std")]
@@ -71,6 +73,7 @@ extern crate std;
 #[macro_use]
 extern crate alloc;
 
+pub mod data_source;
 pub mod deprecated;
 pub mod format_chars;
 pub mod level;
@@ -80,19 +83,30 @@ mod explicit;
 mod implicit;
 mod prepare;
 
-pub use crate::char_data::{BidiClass, bidi_class, UNICODE_VERSION};
+pub use crate::char_data::{BidiClass, UNICODE_VERSION};
+pub use crate::data_source::BidiDataSource;
 pub use crate::level::{Level, LTR_LEVEL, RTL_LEVEL};
 pub use crate::prepare::LevelRun;
 
+#[cfg(feature = "hardcoded-data")]
+pub use crate::char_data::{bidi_class, HardcodedBidiData};
+
 use alloc::borrow::Cow;
-use alloc::vec::Vec;
 use alloc::string::String;
+use alloc::vec::Vec;
 use core::cmp::{max, min};
 use core::iter::repeat;
 use core::ops::Range;
 
-use crate::BidiClass::*;
 use crate::format_chars as chars;
+use crate::BidiClass::*;
+
+#[derive(PartialEq, Debug)]
+pub enum Direction {
+    Ltr,
+    Rtl,
+    Mixed,
+}
 
 /// Bidi information about a single paragraph
 #[derive(Debug, PartialEq)]
@@ -106,6 +120,13 @@ pub struct ParagraphInfo {
     ///
     /// <http://www.unicode.org/reports/tr9/#BD4>
     pub level: Level,
+}
+
+impl ParagraphInfo {
+    /// Gets the length of the paragraph in the source text.
+    pub fn len(&self) -> usize {
+        self.range.end - self.range.start
+    }
 }
 
 /// Initial bidi information of the text.
@@ -132,8 +153,29 @@ impl<'text> InitialInfo<'text> {
     /// Also sets the class for each First Strong Isolate initiator (FSI) to LRI or RLI if a strong
     /// character is found before the matching PDI.  If no strong character is found, the class will
     /// remain FSI, and it's up to later stages to treat these as LRI when needed.
+    ///
+    /// The `hardcoded-data` Cargo feature (enabled by default) must be enabled to use this.
     #[cfg_attr(feature = "flame_it", flamer::flame)]
+    #[cfg(feature = "hardcoded-data")]
     pub fn new(text: &str, default_para_level: Option<Level>) -> InitialInfo<'_> {
+        Self::new_with_data_source(&HardcodedBidiData, text, default_para_level)
+    }
+
+    /// Find the paragraphs and BidiClasses in a string of text, with a custom [`BidiDataSource`]
+    /// for Bidi data. If you just wish to use the hardcoded Bidi data, please use [`InitialInfo::new()`]
+    /// instead (enabled with tbe default `hardcoded-data` Cargo feature)
+    ///
+    /// <http://www.unicode.org/reports/tr9/#The_Paragraph_Level>
+    ///
+    /// Also sets the class for each First Strong Isolate initiator (FSI) to LRI or RLI if a strong
+    /// character is found before the matching PDI.  If no strong character is found, the class will
+    /// remain FSI, and it's up to later stages to treat these as LRI when needed.
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
+    pub fn new_with_data_source<'a, D: BidiDataSource>(
+        data_source: &D,
+        text: &'a str,
+        default_para_level: Option<Level>,
+    ) -> InitialInfo<'a> {
         let mut original_classes = Vec::with_capacity(text.len());
 
         // The stack contains the starting byte index for each nested isolate we're inside.
@@ -143,19 +185,21 @@ impl<'text> InitialInfo<'text> {
         let mut para_start = 0;
         let mut para_level = default_para_level;
 
-        #[cfg(feature = "flame_it")] flame::start("InitialInfo::new(): iter text.char_indices()");
+        #[cfg(feature = "flame_it")]
+        flame::start("InitialInfo::new(): iter text.char_indices()");
 
         for (i, c) in text.char_indices() {
-            let class = bidi_class(c);
+            let class = data_source.bidi_class(c);
 
-            #[cfg(feature = "flame_it")] flame::start("original_classes.extend()");
+            #[cfg(feature = "flame_it")]
+            flame::start("original_classes.extend()");
 
             original_classes.extend(repeat(class).take(c.len_utf8()));
 
-            #[cfg(feature = "flame_it")] flame::end("original_classes.extend()");
+            #[cfg(feature = "flame_it")]
+            flame::end("original_classes.extend()");
 
             match class {
-
                 B => {
                     // P1. Split the text into separate paragraphs. The paragraph separator is kept
                     // with the previous paragraph.
@@ -217,7 +261,8 @@ impl<'text> InitialInfo<'text> {
         }
         assert_eq!(original_classes.len(), text.len());
 
-        #[cfg(feature = "flame_it")] flame::end("InitialInfo::new(): iter text.char_indices()");
+        #[cfg(feature = "flame_it")]
+        flame::end("InitialInfo::new(): iter text.char_indices()");
 
         InitialInfo {
             text,
@@ -254,17 +299,38 @@ pub struct BidiInfo<'text> {
 impl<'text> BidiInfo<'text> {
     /// Split the text into paragraphs and determine the bidi embedding levels for each paragraph.
     ///
+    ///
+    /// The `hardcoded-data` Cargo feature (enabled by default) must be enabled to use this.
+    ///
     /// TODO: In early steps, check for special cases that allow later steps to be skipped. like
     /// text that is entirely LTR.  See the `nsBidi` class from Gecko for comparison.
     ///
     /// TODO: Support auto-RTL base direction
     #[cfg_attr(feature = "flame_it", flamer::flame)]
+    #[cfg(feature = "hardcoded-data")]
     pub fn new(text: &str, default_para_level: Option<Level>) -> BidiInfo<'_> {
+        Self::new_with_data_source(&HardcodedBidiData, text, default_para_level)
+    }
+
+    /// Split the text into paragraphs and determine the bidi embedding levels for each paragraph, with a custom [`BidiDataSource`]
+    /// for Bidi data. If you just wish to use the hardcoded Bidi data, please use [`BidiInfo::new()`]
+    /// instead (enabled with tbe default `hardcoded-data` Cargo feature).
+    ///
+    /// TODO: In early steps, check for special cases that allow later steps to be skipped. like
+    /// text that is entirely LTR.  See the `nsBidi` class from Gecko for comparison.
+    ///
+    /// TODO: Support auto-RTL base direction
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
+    pub fn new_with_data_source<'a, D: BidiDataSource>(
+        data_source: &D,
+        text: &'a str,
+        default_para_level: Option<Level>,
+    ) -> BidiInfo<'a> {
         let InitialInfo {
             original_classes,
             paragraphs,
             ..
-        } = InitialInfo::new(text, default_para_level);
+        } = InitialInfo::new_with_data_source(data_source, text, default_para_level);
 
         let mut levels = Vec::<Level>::with_capacity(text.len());
         let mut processing_classes = original_classes.clone();
@@ -323,7 +389,6 @@ impl<'text> BidiInfo<'text> {
         let levels = self.reordered_levels(para, line);
         self.text.char_indices().map(|(i, _)| levels[i]).collect()
     }
-
 
     /// Re-order a line based on resolved levels and return the line in display order.
     #[cfg_attr(feature = "flame_it", flamer::flame)]
@@ -455,9 +520,9 @@ impl<'text> BidiInfo<'text> {
 
                 seq_start = seq_end;
             }
-            max_level.lower(1).expect(
-                "Lowering embedding level below zero",
-            );
+            max_level
+                .lower(1)
+                .expect("Lowering embedding level below zero");
         }
 
         (levels, runs)
@@ -469,6 +534,52 @@ impl<'text> BidiInfo<'text> {
     #[inline]
     pub fn has_rtl(&self) -> bool {
         level::has_rtl(&self.levels)
+    }
+}
+
+/// Contains a reference of `BidiInfo` and one of its `paragraphs`.
+/// And it supports all operation in the `Paragraph` that needs also its
+/// `BidiInfo` such as `direction`.
+#[derive(Debug)]
+pub struct Paragraph<'a, 'text> {
+    pub info: &'a BidiInfo<'text>,
+    pub para: &'a ParagraphInfo,
+}
+
+impl<'a, 'text> Paragraph<'a, 'text> {
+    pub fn new(info: &'a BidiInfo<'text>, para: &'a ParagraphInfo) -> Paragraph<'a, 'text> {
+        Paragraph { info, para }
+    }
+
+    /// Returns if the paragraph is Left direction, right direction or mixed.
+    pub fn direction(&self) -> Direction {
+        let mut ltr = false;
+        let mut rtl = false;
+        for i in self.para.range.clone() {
+            if self.info.levels[i].is_ltr() {
+                ltr = true;
+            }
+
+            if self.info.levels[i].is_rtl() {
+                rtl = true;
+            }
+        }
+
+        if ltr && rtl {
+            return Direction::Mixed;
+        }
+
+        if ltr {
+            return Direction::Ltr;
+        }
+
+        Direction::Rtl
+    }
+
+    /// Returns the `Level` of a certain character in the paragraph.
+    pub fn level_at(&self, pos: usize) -> Level {
+        let actual_position = self.para.range.start + pos;
+        self.info.levels[actual_position]
     }
 }
 
@@ -485,8 +596,8 @@ fn assign_levels_to_removed_chars(para_level: Level, classes: &[BidiClass], leve
     }
 }
 
-
 #[cfg(test)]
+#[cfg(feature = "hardcoded-data")]
 mod tests {
     use super::*;
 
@@ -498,12 +609,10 @@ mod tests {
             InitialInfo {
                 text,
                 original_classes: vec![L, EN],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..2,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..2,
+                    level: LTR_LEVEL,
+                },],
             }
         );
 
@@ -513,12 +622,10 @@ mod tests {
             InitialInfo {
                 text,
                 original_classes: vec![AL, AL, WS, R, R],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..5,
-                        level: RTL_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..5,
+                    level: RTL_LEVEL,
+                },],
             }
         );
 
@@ -547,17 +654,16 @@ mod tests {
             InitialInfo {
                 text: &text,
                 original_classes: vec![RLI, RLI, RLI, R, R, PDI, PDI, PDI, L],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..9,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..9,
+                    level: LTR_LEVEL,
+                },],
             }
         );
     }
 
     #[test]
+    #[cfg(feature = "hardcoded-data")]
     fn test_process_text() {
         let text = "abc123";
         assert_eq!(
@@ -566,12 +672,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[0, 0, 0, 0, 0, 0]),
                 original_classes: vec![L, L, L, EN, EN, EN],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..6,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..6,
+                    level: LTR_LEVEL,
+                },],
             }
         );
 
@@ -582,12 +686,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[0, 0, 0, 0, 1, 1, 1, 1, 1, 1]),
                 original_classes: vec![L, L, L, WS, R, R, R, R, R, R],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..10,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..10,
+                    level: LTR_LEVEL,
+                },],
             }
         );
         assert_eq!(
@@ -596,12 +698,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[2, 2, 2, 1, 1, 1, 1, 1, 1, 1]),
                 original_classes: vec![L, L, L, WS, R, R, R, R, R, R],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..10,
-                        level: RTL_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..10,
+                    level: RTL_LEVEL,
+                },],
             }
         );
 
@@ -612,12 +712,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[1, 1, 1, 1, 1, 1, 0, 0, 0, 0]),
                 original_classes: vec![R, R, R, R, R, R, WS, L, L, L],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..10,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..10,
+                    level: LTR_LEVEL,
+                },],
             }
         );
         assert_eq!(
@@ -626,12 +724,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[1, 1, 1, 1, 1, 1, 1, 2, 2, 2]),
                 original_classes: vec![R, R, R, R, R, R, WS, L, L, L],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..10,
-                        level: RTL_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..10,
+                    level: RTL_LEVEL,
+                },],
             }
         );
 
@@ -642,12 +738,10 @@ mod tests {
                 text,
                 levels: Level::vec(&[1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1]),
                 original_classes: vec![AL, AL, EN, AL, AL, WS, R, R, EN, R, R],
-                paragraphs: vec![
-                    ParagraphInfo {
-                        range: 0..11,
-                        level: LTR_LEVEL,
-                    },
-                ],
+                paragraphs: vec![ParagraphInfo {
+                    range: 0..11,
+                    level: LTR_LEVEL,
+                },],
             }
         );
 
@@ -677,6 +771,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "hardcoded-data")]
     fn test_bidi_info_has_rtl() {
         // ASCII only
         assert_eq!(BidiInfo::new("123", None).has_rtl(), false);
@@ -700,6 +795,7 @@ mod tests {
         assert_eq!(BidiInfo::new("אבּג\n123", None).has_rtl(), true);
     }
 
+    #[cfg(feature = "hardcoded-data")]
     fn reorder_paras(text: &str) -> Vec<Cow<'_, str>> {
         let bidi_info = BidiInfo::new(text, None);
         bidi_info
@@ -710,6 +806,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "hardcoded-data")]
     fn test_reorder_line() {
         // Bidi_Class: L L L B L L L B L L L
         assert_eq!(
@@ -761,10 +858,7 @@ mod tests {
         assert_eq!(reorder_paras("A אבג?"), vec!["A גבא?"]);
 
         // Testing neutral characters with Implicit RTL Marker
-        assert_eq!(
-            reorder_paras("A אבג?\u{200F}"),
-            vec!["A \u{200F}?גבא"]
-        );
+        assert_eq!(reorder_paras("A אבג?\u{200F}"), vec!["A \u{200F}?גבא"]);
         assert_eq!(reorder_paras("אבג abc"), vec!["abc גבא"]);
         assert_eq!(
             reorder_paras("abc\u{2067}.-\u{2069}ghi"),
@@ -780,10 +874,7 @@ mod tests {
         assert_eq!(reorder_paras("א(ב)ג."), vec![".ג)ב(א"]);
 
         // With mirrorable characters on level boundry
-        assert_eq!(
-            reorder_paras("אב(גד[&ef].)gh"),
-            vec!["ef].)gh&[דג(בא"]
-        );
+        assert_eq!(reorder_paras("אב(גד[&ef].)gh"), vec!["ef].)gh&[דג(בא"]);
     }
 
     fn reordered_levels_for_paras(text: &str) -> Vec<Vec<Level>> {
@@ -800,15 +891,13 @@ mod tests {
         bidi_info
             .paragraphs
             .iter()
-            .map(|para| {
-                bidi_info.reordered_levels_per_char(para, para.range.clone())
-            })
+            .map(|para| bidi_info.reordered_levels_per_char(para, para.range.clone()))
             .collect()
     }
 
     #[test]
+    #[cfg(feature = "hardcoded-data")]
     fn test_reordered_levels() {
-
         // BidiTest:946 (LRI PDI)
         let text = "\u{2067}\u{2069}";
         assert_eq!(
@@ -848,13 +937,96 @@ mod tests {
         );
          */
     }
-}
 
+    #[test]
+    fn test_paragraph_info_len() {
+        let text = "hello world";
+        let bidi_info = BidiInfo::new(text, None);
+        assert_eq!(bidi_info.paragraphs.len(), 1);
+        assert_eq!(bidi_info.paragraphs[0].len(), text.len());
+
+        let text2 = "How are you";
+        let whole_text = format!("{}\n{}", text, text2);
+        let bidi_info = BidiInfo::new(&whole_text, None);
+        assert_eq!(bidi_info.paragraphs.len(), 2);
+
+        // The first paragraph include the paragraph separator.
+        // TODO: investigate if the paragraph separator character
+        // should not be part of any paragraph.
+        assert_eq!(bidi_info.paragraphs[0].len(), text.len() + 1);
+        assert_eq!(bidi_info.paragraphs[1].len(), text2.len());
+    }
+
+    #[test]
+    fn test_direction() {
+        let ltr_text = "hello world";
+        let rtl_text = "أهلا بكم";
+        let all_paragraphs = format!("{}\n{}\n{}{}", ltr_text, rtl_text, ltr_text, rtl_text);
+        let bidi_info = BidiInfo::new(&all_paragraphs, None);
+        assert_eq!(bidi_info.paragraphs.len(), 3);
+        let p_ltr = Paragraph::new(&bidi_info, &bidi_info.paragraphs[0]);
+        let p_rtl = Paragraph::new(&bidi_info, &bidi_info.paragraphs[1]);
+        let p_mixed = Paragraph::new(&bidi_info, &bidi_info.paragraphs[2]);
+        assert_eq!(p_ltr.direction(), Direction::Ltr);
+        assert_eq!(p_rtl.direction(), Direction::Rtl);
+        assert_eq!(p_mixed.direction(), Direction::Mixed);
+    }
+
+    #[test]
+    fn test_edge_cases_direction() {
+        // No paragraphs for empty text.
+        let empty = "";
+        let bidi_info = BidiInfo::new(empty, Option::from(RTL_LEVEL));
+        assert_eq!(bidi_info.paragraphs.len(), 0);
+        // The paragraph separator will take the value of the default direction
+        // which is left to right.
+        let empty = "\n";
+        let bidi_info = BidiInfo::new(empty, None);
+        assert_eq!(bidi_info.paragraphs.len(), 1);
+        let p = Paragraph::new(&bidi_info, &bidi_info.paragraphs[0]);
+        assert_eq!(p.direction(), Direction::Ltr);
+        // The paragraph separator will take the value of the given initial direction
+        // which is left to right.
+        let empty = "\n";
+        let bidi_info = BidiInfo::new(empty, Option::from(LTR_LEVEL));
+        assert_eq!(bidi_info.paragraphs.len(), 1);
+        let p = Paragraph::new(&bidi_info, &bidi_info.paragraphs[0]);
+        assert_eq!(p.direction(), Direction::Ltr);
+
+        // The paragraph separator will take the value of the given initial direction
+        // which is right to left.
+        let empty = "\n";
+        let bidi_info = BidiInfo::new(empty, Option::from(RTL_LEVEL));
+        assert_eq!(bidi_info.paragraphs.len(), 1);
+        let p = Paragraph::new(&bidi_info, &bidi_info.paragraphs[0]);
+        assert_eq!(p.direction(), Direction::Rtl);
+    }
+
+    #[test]
+    fn test_level_at() {
+        let ltr_text = "hello world";
+        let rtl_text = "أهلا بكم";
+        let all_paragraphs = format!("{}\n{}\n{}{}", ltr_text, rtl_text, ltr_text, rtl_text);
+        let bidi_info = BidiInfo::new(&all_paragraphs, None);
+        assert_eq!(bidi_info.paragraphs.len(), 3);
+
+        let p_ltr = Paragraph::new(&bidi_info, &bidi_info.paragraphs[0]);
+        let p_rtl = Paragraph::new(&bidi_info, &bidi_info.paragraphs[1]);
+        let p_mixed = Paragraph::new(&bidi_info, &bidi_info.paragraphs[2]);
+
+        assert_eq!(p_ltr.level_at(0), LTR_LEVEL);
+        assert_eq!(p_rtl.level_at(0), RTL_LEVEL);
+        assert_eq!(p_mixed.level_at(0), LTR_LEVEL);
+        assert_eq!(p_mixed.info.levels.len(), 54);
+        assert_eq!(p_mixed.para.range.start, 28);
+        assert_eq!(p_mixed.level_at(ltr_text.len()), RTL_LEVEL);
+    }
+}
 
 #[cfg(all(feature = "serde", test))]
 mod serde_tests {
-    use serde_test::{Token, assert_tokens};
     use super::*;
+    use serde_test::{assert_tokens, Token};
 
     #[test]
     fn test_levels() {

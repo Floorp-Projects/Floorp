@@ -133,14 +133,7 @@ impl<'a> Parse<'a> for Data<'a> {
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        // The `passive` keyword is mentioned in the current spec but isn't
-        // mentioned in `wabt` tests, so consider it optional for now
-        let kind = if parser.peek::<kw::passive>() {
-            parser.parse::<kw::passive>()?;
-            DataKind::Passive
-
-        // If data directly follows then assume this is a passive segment
-        } else if parser.peek::<&[u8]>() {
+        let kind = if parser.peek::<&[u8]>() {
             DataKind::Passive
 
         // ... and otherwise we must be attached to a particular memory as well

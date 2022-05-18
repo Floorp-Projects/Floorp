@@ -1,11 +1,6 @@
 use std::io;
 use std::io::prelude::*;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use crate::zio;
 use crate::{Compress, Decompress};
 
@@ -139,7 +134,7 @@ impl<W: Write> DeflateEncoder<W> {
         Ok(self.inner.take_inner())
     }
 
-    /// Returns the number of bytes that have been written to this compresor.
+    /// Returns the number of bytes that have been written to this compressor.
     ///
     /// Note that not all bytes written to this object may be accounted for,
     /// there may still be some active buffering.
@@ -166,22 +161,11 @@ impl<W: Write> Write for DeflateEncoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for DeflateEncoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.inner.finish()?;
-        self.inner.get_mut().shutdown()
-    }
-}
-
 impl<W: Read + Write> Read for DeflateEncoder<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for DeflateEncoder<W> {}
 
 /// A DEFLATE decoder, or decompressor.
 ///
@@ -331,19 +315,8 @@ impl<W: Write> Write for DeflateDecoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for DeflateDecoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.inner.finish()?;
-        self.inner.get_mut().shutdown()
-    }
-}
-
 impl<W: Read + Write> Read for DeflateDecoder<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for DeflateDecoder<W> {}

@@ -1,4 +1,4 @@
-# mime_guess [![Build Status](https://travis-ci.org/abonander/mime_guess.svg?branch=master)](https://travis-ci.org/abonander/mime_guess) [![Crates.io](https://img.shields.io/crates/v/mime_guess.svg)](https://crates.io/crates/mime_guess)
+# mime_guess ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/abonander/mime_guess/Rust) [![Crates.io](https://img.shields.io/crates/v/mime_guess.svg)](https://crates.io/crates/mime_guess)
 
 MIME/MediaType guessing by file extension. 
 Uses a static map of known file extension -> MIME type mappings.
@@ -68,7 +68,12 @@ whatever is defined by the latest IETF RFC for the given file format, or otherwi
 supercedes all others.
 
 If an official IANA registration replaces an older "experimental" style media type, please
-place the new type before the old type in the list, but keep the old type for reference.
+place the new type before the old type in the list, but keep the old type for reference:
+
+```
+- ("md", &["text/x-markdown"]),
++ ("md", &["text/markdown", "text/x-markdown"]),
+```
 
 #### Changes to the API or operation of the crate
 

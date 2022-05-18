@@ -24,6 +24,8 @@ use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
 use num_traits::{NumCast, Saturating};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A one-dimensional distance, with value represented by `T` and unit of measurement `Unit`.
 ///
@@ -74,6 +76,12 @@ where
         self.0.serialize(serializer)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Length<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Length<T, U> {}
 
 impl<T, U> Length<T, U> {
     /// Associate a value with a unit of measure.

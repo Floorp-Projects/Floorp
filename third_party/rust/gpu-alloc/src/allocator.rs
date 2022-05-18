@@ -28,7 +28,6 @@ pub struct GpuAllocator<M> {
     memory_for_usage: MemoryForUsage,
     memory_types: Box<[MemoryType]>,
     memory_heaps: Box<[Heap]>,
-    max_allocation_count: u32,
     allocations_remains: u32,
     non_coherent_atom_mask: u64,
     starting_free_list_chunk: u64,
@@ -102,7 +101,6 @@ where
 
             buffer_device_address: props.buffer_device_address,
 
-            max_allocation_count: props.max_memory_allocation_count,
             allocations_remains: props.max_memory_allocation_count,
             non_coherent_atom_mask: props.non_coherent_atom_size - 1,
 

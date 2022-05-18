@@ -1,11 +1,6 @@
 use std::io;
 use std::io::prelude::*;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use super::bufread;
 use crate::bufreader::BufReader;
 
@@ -110,9 +105,6 @@ impl<R: Read> Read for ZlibEncoder<R> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead> AsyncRead for ZlibEncoder<R> {}
-
 impl<W: Read + Write> Write for ZlibEncoder<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -120,13 +112,6 @@ impl<W: Read + Write> Write for ZlibEncoder<W> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead + AsyncWrite> AsyncWrite for ZlibEncoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
@@ -244,9 +229,6 @@ impl<R: Read> Read for ZlibDecoder<R> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead> AsyncRead for ZlibDecoder<R> {}
-
 impl<R: Read + Write> Write for ZlibDecoder<R> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -254,12 +236,5 @@ impl<R: Read + Write> Write for ZlibDecoder<R> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + AsyncRead> AsyncWrite for ZlibDecoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }

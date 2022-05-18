@@ -22,9 +22,13 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[cfg(feature = "mint")]
 use mint;
+use num_traits::real::Real;
 use num_traits::{Float, NumCast};
 #[cfg(feature = "serde")]
 use serde;
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A 2d Point tagged with a unit.
 #[repr(C)]
@@ -93,6 +97,13 @@ where
         })
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Point2D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Point2D<T, U> {}
+
 impl<T, U> Eq for Point2D<T, U> where T: Eq {}
 
 impl<T, U> PartialEq for Point2D<T, U>
@@ -500,7 +511,7 @@ impl<T: Copy + Add<T, Output = T>, U> Point2D<T, U> {
     }
 }
 
-impl<T: Float + Sub<T, Output = T>, U> Point2D<T, U> {
+impl<T: Real + Sub<T, Output = T>, U> Point2D<T, U> {
     #[inline]
     pub fn distance_to(self, other: Self) -> T {
         (self - other).length()
@@ -780,6 +791,12 @@ where
         (&self.x, &self.y, &self.z).serialize(serializer)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Point3D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Point3D<T, U> {}
 
 impl<T, U> Eq for Point3D<T, U> where T: Eq {}
 
@@ -1224,7 +1241,7 @@ impl<T: Copy + Add<T, Output = T>, U> Point3D<T, U> {
     }
 }
 
-impl<T: Float + Sub<T, Output = T>, U> Point3D<T, U> {
+impl<T: Real + Sub<T, Output = T>, U> Point3D<T, U> {
     #[inline]
     pub fn distance_to(self, other: Self) -> T {
         (self - other).length()

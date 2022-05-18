@@ -143,7 +143,9 @@ where
             // then we need to keep asking for more data because if we
             // return that 0 bytes of data have been read then it will
             // be interpreted as EOF.
-            Ok(Status::Ok) | Ok(Status::BufError) if read == 0 && !eof && dst.len() > 0 => continue,
+            Ok(Status::Ok) | Ok(Status::BufError) if read == 0 && !eof && !dst.is_empty() => {
+                continue
+            }
             Ok(Status::Ok) | Ok(Status::BufError) | Ok(Status::StreamEnd) => return Ok(read),
 
             Err(..) => {
@@ -216,13 +218,9 @@ impl<W: Write, D: Ops> Writer<W, D> {
             let before_in = self.data.total_in();
             let ret = self.data.run_vec(buf, &mut self.buf, D::Flush::none());
             let written = (self.data.total_in() - before_in) as usize;
+            let is_stream_end = matches!(ret, Ok(Status::StreamEnd));
 
-            let is_stream_end = match ret {
-                Ok(Status::StreamEnd) => true,
-                _ => false,
-            };
-
-            if buf.len() > 0 && written == 0 && ret.is_ok() && !is_stream_end {
+            if !buf.is_empty() && written == 0 && ret.is_ok() && !is_stream_end {
                 continue;
             }
             return match ret {
@@ -240,7 +238,7 @@ impl<W: Write, D: Ops> Writer<W, D> {
     fn dump(&mut self) -> io::Result<()> {
         // TODO: should manage this buffer not with `drain` but probably more of
         // a deque-like strategy.
-        while self.buf.len() > 0 {
+        while !self.buf.is_empty() {
             let n = self.obj.as_mut().unwrap().write(&self.buf)?;
             if n == 0 {
                 return Err(io::ErrorKind::WriteZero.into());

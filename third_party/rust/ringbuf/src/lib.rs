@@ -5,8 +5,8 @@
 //! `RingBuffer` is the initial structure representing ring buffer itself.
 //! Ring buffer can be splitted into pair of `Producer` and `Consumer`.
 //!
-//! `Producer` and `Consumer` are used to append/remove elements to/from the ring buffer accordingly. They can be safely transfered between threads.
-//! Operations with `Producer` and `Consumer` are lock-free - they're succeded or failed immediately without blocking or waiting.
+//! `Producer` and `Consumer` are used to append/remove elements to/from the ring buffer accordingly. They can be safely sent between threads.
+//! Operations with `Producer` and `Consumer` are lock-free - they succeed or fail immediately without blocking or waiting.
 //!
 //! Elements can be effectively appended/removed one by one or many at once.
 //! Also data could be loaded/stored directly into/from [`Read`]/[`Write`] instances.

@@ -5,9 +5,11 @@
 use crate::approxeq::ApproxEq;
 use crate::trig::Trig;
 use crate::{Rotation3D, Transform3D, UnknownUnit, Vector3D};
-use num_traits::Float;
+use num_traits::real::Real;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A rigid transformation. All lengths are preserved under such a transformation.
 ///
@@ -17,7 +19,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This can be more efficient to use over full matrices, especially if you
 /// have to deal with the decomposed quantities often.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
 pub struct RigidTransform3D<T, Src, Dst> {
@@ -45,7 +47,7 @@ impl<T: Copy, Src, Dst> RigidTransform3D<T, Src, Dst> {
     }
 }
 
-impl<T: Float + ApproxEq<T>, Src, Dst> RigidTransform3D<T, Src, Dst> {
+impl<T: Real + ApproxEq<T>, Src, Dst> RigidTransform3D<T, Src, Dst> {
     /// Construct an identity transform
     #[inline]
     pub fn identity() -> Self {
@@ -183,7 +185,24 @@ impl<T: Float + ApproxEq<T>, Src, Dst> RigidTransform3D<T, Src, Dst> {
     }
 }
 
-impl<T: Float + ApproxEq<T>, Src, Dst> From<Rotation3D<T, Src, Dst>>
+impl<T: Copy, Src, Dst> Copy for RigidTransform3D<T, Src, Dst> {}
+
+impl<T: Clone, Src, Dst> Clone for RigidTransform3D<T, Src, Dst> {
+    fn clone(&self) -> Self {
+        RigidTransform3D {
+            rotation: self.rotation.clone(),
+            translation: self.translation.clone(),
+        }
+    }
+}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, Src, Dst> Zeroable for RigidTransform3D<T, Src, Dst> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, Src: 'static, Dst: 'static> Pod for RigidTransform3D<T, Src, Dst> {}
+
+impl<T: Real + ApproxEq<T>, Src, Dst> From<Rotation3D<T, Src, Dst>>
     for RigidTransform3D<T, Src, Dst>
 {
     fn from(rot: Rotation3D<T, Src, Dst>) -> Self {
@@ -191,7 +210,7 @@ impl<T: Float + ApproxEq<T>, Src, Dst> From<Rotation3D<T, Src, Dst>>
     }
 }
 
-impl<T: Float + ApproxEq<T>, Src, Dst> From<Vector3D<T, Dst>> for RigidTransform3D<T, Src, Dst> {
+impl<T: Real + ApproxEq<T>, Src, Dst> From<Vector3D<T, Dst>> for RigidTransform3D<T, Src, Dst> {
     fn from(t: Vector3D<T, Dst>) -> Self {
         Self::from_translation(t)
     }

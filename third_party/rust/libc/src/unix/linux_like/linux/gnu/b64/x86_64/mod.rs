@@ -7,6 +7,7 @@ pub type blksize_t = i64;
 pub type greg_t = i64;
 pub type suseconds_t = i64;
 pub type __u64 = ::c_ulonglong;
+pub type __s64 = ::c_longlong;
 
 s! {
     pub struct sigaction {
@@ -259,10 +260,10 @@ s! {
         __unused5: u64
     }
 
-    pub struct ip_mreqn {
-        pub imr_multiaddr: ::in_addr,
-        pub imr_address: ::in_addr,
-        pub imr_ifindex: ::c_int,
+    pub struct seccomp_notif_sizes {
+        pub seccomp_notif: ::__u16,
+        pub seccomp_notif_resp: ::__u16,
+        pub seccomp_data: ::__u16,
     }
 }
 
@@ -398,16 +399,6 @@ pub const VEOF: usize = 4;
 pub const RTLD_DEEPBIND: ::c_int = 0x8;
 pub const RTLD_GLOBAL: ::c_int = 0x100;
 pub const RTLD_NOLOAD: ::c_int = 0x4;
-pub const TIOCGSOFTCAR: ::c_ulong = 0x5419;
-pub const TIOCSSOFTCAR: ::c_ulong = 0x541A;
-pub const TIOCGRS485: ::c_int = 0x542E;
-pub const TIOCSRS485: ::c_int = 0x542F;
-
-pub const RLIMIT_RSS: ::__rlimit_resource_t = 5;
-pub const RLIMIT_AS: ::__rlimit_resource_t = 9;
-pub const RLIMIT_MEMLOCK: ::__rlimit_resource_t = 8;
-pub const RLIMIT_NOFILE: ::__rlimit_resource_t = 7;
-pub const RLIMIT_NPROC: ::__rlimit_resource_t = 6;
 
 pub const O_APPEND: ::c_int = 1024;
 pub const O_CREAT: ::c_int = 64;
@@ -566,14 +557,6 @@ pub const TCSANOW: ::c_int = 0;
 pub const TCSADRAIN: ::c_int = 1;
 pub const TCSAFLUSH: ::c_int = 2;
 
-pub const TIOCLINUX: ::c_ulong = 0x541C;
-pub const TIOCGSERIAL: ::c_ulong = 0x541E;
-pub const TIOCEXCL: ::c_ulong = 0x540C;
-pub const TIOCNXCL: ::c_ulong = 0x540D;
-pub const TIOCSCTTY: ::c_ulong = 0x540E;
-pub const TIOCSTI: ::c_ulong = 0x5412;
-pub const TIOCCONS: ::c_ulong = 0x541D;
-
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
 pub const NCCS: usize = 32;
@@ -632,10 +615,6 @@ pub const ENOTNAM: ::c_int = 118;
 pub const ENAVAIL: ::c_int = 119;
 pub const EISNAM: ::c_int = 120;
 pub const EREMOTEIO: ::c_int = 121;
-
-pub const FIOCLEX: ::c_ulong = 0x5451;
-pub const FIONCLEX: ::c_ulong = 0x5450;
-pub const FIONBIO: ::c_ulong = 0x5421;
 
 pub const PTRACE_GETFPREGS: ::c_uint = 14;
 pub const PTRACE_SETFPREGS: ::c_uint = 15;
@@ -745,26 +724,6 @@ pub const IEXTEN: ::tcflag_t = 0x00008000;
 pub const TOSTOP: ::tcflag_t = 0x00000100;
 pub const FLUSHO: ::tcflag_t = 0x00001000;
 pub const EXTPROC: ::tcflag_t = 0x00010000;
-pub const TCGETS: ::c_ulong = 0x5401;
-pub const TCSETS: ::c_ulong = 0x5402;
-pub const TCSETSW: ::c_ulong = 0x5403;
-pub const TCSETSF: ::c_ulong = 0x5404;
-pub const TCGETA: ::c_ulong = 0x5405;
-pub const TCSETA: ::c_ulong = 0x5406;
-pub const TCSETAW: ::c_ulong = 0x5407;
-pub const TCSETAF: ::c_ulong = 0x5408;
-pub const TCSBRK: ::c_ulong = 0x5409;
-pub const TCXONC: ::c_ulong = 0x540A;
-pub const TCFLSH: ::c_ulong = 0x540B;
-pub const TIOCINQ: ::c_ulong = 0x541B;
-pub const TIOCGPGRP: ::c_ulong = 0x540F;
-pub const TIOCSPGRP: ::c_ulong = 0x5410;
-pub const TIOCOUTQ: ::c_ulong = 0x5411;
-pub const TIOCGWINSZ: ::c_ulong = 0x5413;
-pub const TIOCSWINSZ: ::c_ulong = 0x5414;
-pub const FIONREAD: ::c_ulong = 0x541B;
-pub const TIOCSBRK: ::c_ulong = 0x5427;
-pub const TIOCCBRK: ::c_ulong = 0x5428;
 
 // offsets in user_regs_structs, from sys/reg.h
 pub const R15: ::c_int = 0;
@@ -819,6 +778,11 @@ pub const REG_ERR: ::c_int = 19;
 pub const REG_TRAPNO: ::c_int = 20;
 pub const REG_OLDMASK: ::c_int = 21;
 pub const REG_CR2: ::c_int = 22;
+
+pub const SECCOMP_SET_MODE_STRICT: ::c_uint = 0;
+pub const SECCOMP_SET_MODE_FILTER: ::c_uint = 1;
+pub const SECCOMP_GET_ACTION_AVAIL: ::c_uint = 2;
+pub const SECCOMP_GET_NOTIF_SIZES: ::c_uint = 3;
 
 extern "C" {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;

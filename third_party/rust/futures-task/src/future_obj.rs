@@ -224,7 +224,7 @@ mod if_alloc {
         }
 
         unsafe fn drop(ptr: *mut (dyn Future<Output = T> + 'a)) {
-            drop(Box::from_raw(ptr as *mut F))
+            drop(Box::from_raw(ptr.cast::<F>()))
         }
     }
 
@@ -252,10 +252,9 @@ mod if_alloc {
     where
         F: Future<Output = T> + 'a,
     {
-        fn into_raw(mut self) -> *mut (dyn Future<Output = T> + 'a) {
-            let ptr = unsafe { self.as_mut().get_unchecked_mut() as *mut _ };
-            mem::forget(self);
-            ptr
+        fn into_raw(self) -> *mut (dyn Future<Output = T> + 'a) {
+            let mut this = mem::ManuallyDrop::new(self);
+            unsafe { this.as_mut().get_unchecked_mut() as *mut _ }
         }
 
         unsafe fn drop(ptr: *mut (dyn Future<Output = T> + 'a)) {
@@ -264,10 +263,9 @@ mod if_alloc {
     }
 
     unsafe impl<'a, T: 'a> UnsafeFutureObj<'a, T> for Pin<Box<dyn Future<Output = T> + 'a>> {
-        fn into_raw(mut self) -> *mut (dyn Future<Output = T> + 'a) {
-            let ptr = unsafe { self.as_mut().get_unchecked_mut() as *mut _ };
-            mem::forget(self);
-            ptr
+        fn into_raw(self) -> *mut (dyn Future<Output = T> + 'a) {
+            let mut this = mem::ManuallyDrop::new(self);
+            unsafe { this.as_mut().get_unchecked_mut() as *mut _ }
         }
 
         unsafe fn drop(ptr: *mut (dyn Future<Output = T> + 'a)) {
@@ -276,10 +274,9 @@ mod if_alloc {
     }
 
     unsafe impl<'a, T: 'a> UnsafeFutureObj<'a, T> for Pin<Box<dyn Future<Output = T> + Send + 'a>> {
-        fn into_raw(mut self) -> *mut (dyn Future<Output = T> + 'a) {
-            let ptr = unsafe { self.as_mut().get_unchecked_mut() as *mut _ };
-            mem::forget(self);
-            ptr
+        fn into_raw(self) -> *mut (dyn Future<Output = T> + 'a) {
+            let mut this = mem::ManuallyDrop::new(self);
+            unsafe { this.as_mut().get_unchecked_mut() as *mut _ }
         }
 
         unsafe fn drop(ptr: *mut (dyn Future<Output = T> + 'a)) {

@@ -114,22 +114,6 @@ mod test {
     use runloop::{CFRunLoop};
 
     #[test]
-    fn test_consumed() {
-        let path = CString::new("/dev/null").unwrap();
-        let raw_fd = unsafe { libc::open(path.as_ptr(), O_RDWR, 0) };
-        let cf_fd = CFFileDescriptor::new(raw_fd, true, never_callback, None);
-        assert!(cf_fd.is_some());
-        let cf_fd = cf_fd.unwrap();
-
-        assert!(cf_fd.valid());
-        cf_fd.invalidate();
-        assert!(!cf_fd.valid());
-
-        // close() should fail
-        assert_eq!(unsafe { libc::close(raw_fd) }, -1);
-    }
-
-    #[test]
     fn test_unconsumed() {
         let path = CString::new("/dev/null").unwrap();
         let raw_fd = unsafe { libc::open(path.as_ptr(), O_RDWR, 0) };

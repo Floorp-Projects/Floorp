@@ -147,6 +147,7 @@ fn single_receiver_drop_closes_channel_and_drains() {
 
 // Stress test that `try_send()`s occurring concurrently with receiver
 // close/drops don't appear as successful sends.
+#[cfg_attr(miri, ignore)] // Miri is too slow
 #[test]
 fn stress_try_send_as_receiver_closes() {
     const AMT: usize = 10000;

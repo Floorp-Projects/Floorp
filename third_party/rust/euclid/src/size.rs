@@ -26,6 +26,8 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 use num_traits::{NumCast, Signed, Float};
 #[cfg(feature = "serde")]
 use serde;
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A 2d size tagged with a unit.
 #[repr(C)]
@@ -98,6 +100,12 @@ where
         })
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Size2D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Size2D<T, U> {}
 
 impl<T, U> Eq for Size2D<T, U> where T: Eq {}
 
@@ -988,6 +996,12 @@ where
         (&self.width, &self.height, &self.depth).serialize(serializer)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Size3D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Size3D<T, U> {}
 
 impl<T, U> Eq for Size3D<T, U> where T: Eq {}
 

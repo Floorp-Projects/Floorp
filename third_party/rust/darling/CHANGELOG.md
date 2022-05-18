@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.13.4 (April 6, 2022)
+
+- Impl `FromMeta` for `syn::Visibility` [#173](https://github.com/TedDriggs/darling/pull/173)
+
+## v0.13.3 (April 5, 2022)
+
+- Add `error::Accumulator` for dealing with multiple errors [#164](https://github.com/TedDriggs/darling/pull/164)
+- Impl `FromMeta` for `syn::Type` and its variants [#172](https://github.com/TedDriggs/darling/pulls/172)
+
+## v0.13.2 (March 30, 2022)
+
+- Impl `FromMeta` for `syn::ExprPath` [#169](https://github.com/TedDriggs/darling/issues/169)
+
 ## v0.13.1 (December 7, 2021)
 
 - Add `FromAttributes` trait and macro [#151](https://github.com/TedDriggs/darling/issues/151)

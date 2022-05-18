@@ -4,6 +4,7 @@
 mod macros;
 
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
+use quote::quote;
 use std::iter::FromIterator;
 use syn::Stmt;
 
@@ -71,6 +72,22 @@ fn test_none_group() {
             output: Default,
         },
         block: Block,
+    })
+    "###);
+}
+
+#[test]
+fn test_let_dot_dot() {
+    let tokens = quote! {
+        let .. = 10;
+    };
+
+    snapshot!(tokens as Stmt, @r###"
+    Local(Local {
+        pat: Pat::Rest,
+        init: Some(Expr::Lit {
+            lit: 10,
+        }),
     })
     "###);
 }
