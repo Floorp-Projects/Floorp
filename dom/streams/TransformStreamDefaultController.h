@@ -54,7 +54,7 @@ class TransformStreamDefaultController final : public nsISupports,
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
   // Internal slots
-  RefPtr<TransformStream> mStream;
+  MOZ_KNOWN_LIVE RefPtr<TransformStream> mStream;
   RefPtr<TransformerAlgorithms> mTransformerAlgorithms;
 };
 

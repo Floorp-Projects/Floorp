@@ -51,8 +51,8 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
  */
 class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final {
  private:
-  const RefPtr<HTMLEditor> mHTMLEditor;
-  const RefPtr<Element> mTable;
+  MOZ_KNOWN_LIVE RefPtr<HTMLEditor> mHTMLEditor;
+  MOZ_KNOWN_LIVE RefPtr<Element> mTable;
   int32_t mCol, mRow, mDirection, mSelected;
 
  public:
@@ -71,6 +71,13 @@ class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final {
       mHTMLEditor->SetSelectionAfterTableEdit(mTable, mRow, mCol, mDirection,
                                               mSelected);
     }
+  }
+
+  // This is needed to abort the caret reset in the destructor
+  // when one method yields control to another
+  void CancelSetCaret() {
+    mHTMLEditor = nullptr;
+    mTable = nullptr;
   }
 };
 

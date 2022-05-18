@@ -154,11 +154,7 @@ void TransformStreamDefaultController::Error(JSContext* aCx,
   // https://streams.spec.whatwg.org/#transform-stream-default-controller-error
 
   // Perform ! TransformStreamError(controller.[[stream]], e).
-  // mStream is set in initialization step and only modified in cycle
-  // collection.
-  // TODO: Move mStream initialization to a method/constructor and make it
-  // MOZ_KNOWN_LIVE again. (See bug 1769854)
-  TransformStreamError(aCx, MOZ_KnownLive(mStream), aError, aRv);
+  TransformStreamError(aCx, mStream, aError, aRv);
 }
 
 // https://streams.spec.whatwg.org/#ts-default-controller-terminate
