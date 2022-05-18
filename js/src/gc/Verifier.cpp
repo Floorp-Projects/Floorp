@@ -189,11 +189,12 @@ static VerifyNode* NextNode(VerifyNode* node) {
   }
 }
 
-static void ClearMarkBitsForAllZones(GCRuntime* gc) {
+template <typename ZonesIterT>
+static void ClearMarkBits(GCRuntime* gc) {
   // This does not clear the mark bits for permanent atoms, whose arenas are
   // removed from the arena lists by GCRuntime::freezePermanentAtoms.
 
-  for (AllZonesIter zone(gc); !zone.done(); zone.next()) {
+  for (ZonesIterT zone(gc); !zone.done(); zone.next()) {
     for (auto kind : AllAllocKinds()) {
       for (ArenaIter arena(zone, kind); !arena.done(); arena.next()) {
         arena->unmarkAll();
@@ -222,7 +223,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
 
   AutoPrepareForTracing prep(cx);
 
-  ClearMarkBitsForAllZones(this);
+  ClearMarkBits<AllZonesIter>(this);
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::TRACE_HEAP);
 
@@ -592,7 +593,7 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       MOZ_ASSERT(gcmarker->isDrained());
       gcmarker->reset();
 
-      ClearMarkBitsForAllZones(gc);
+      ClearMarkBits<GCZonesIter>(gc);
     }
   }
 
@@ -683,6 +684,7 @@ void js::gc::MarkingValidator::validate() {
 
   gc->waitBackgroundSweepEnd();
 
+  bool ok = true;
   AutoLockGC lock(gc->rt);
   for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done(); chunk.next()) {
     BitmapMap::Ptr ptr = map.lookup(chunk);
@@ -716,7 +718,18 @@ void js::gc::MarkingValidator::validate() {
          * an incremental GC won't collect it.
          */
         if (bitmap->isMarkedAny(cell)) {
-          MOZ_RELEASE_ASSERT(incBitmap->isMarkedAny(cell));
+          if (!incBitmap->isMarkedAny(cell)) {
+            ok = false;
+            const char* color = TenuredCell::getColor(bitmap, cell).name();
+            fprintf(stderr,
+                    "%p: cell not marked, but would be marked by %s "
+                    "non-incremental marking\n",
+                    cell, color);
+#  ifdef DEBUG
+            cell->dump();
+            fprintf(stderr, "\n");
+#  endif
+          }
         }
 
         /*
@@ -725,13 +738,26 @@ void js::gc::MarkingValidator::validate() {
          * collected it after an incremental GC.
          */
         if (!bitmap->isMarkedGray(cell)) {
-          MOZ_RELEASE_ASSERT(!incBitmap->isMarkedGray(cell));
+          if (incBitmap->isMarkedGray(cell)) {
+            ok = false;
+            const char* color = TenuredCell::getColor(bitmap, cell).name();
+            fprintf(stderr,
+                    "%p: cell marked gray, but would be marked %s by "
+                    "non-incremental marking\n",
+                    cell, color);
+#  ifdef DEBUG
+            cell->dump();
+            fprintf(stderr, "\n");
+#  endif
+          }
         }
 
         thing += Arena::thingSize(kind);
       }
     }
   }
+
+  MOZ_RELEASE_ASSERT(ok, "Incremental marking verification failed");
 }
 
 void GCRuntime::computeNonIncrementalMarkingForValidation(
