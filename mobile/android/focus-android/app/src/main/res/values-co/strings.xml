@@ -876,7 +876,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">Modu solu HTTPS</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Tentativu autumaticu di cunnessione à i siti impieghendu HTTPS per aummentà a sicurità. E cunnessioni HTTPS furniscenu una cunnessione sicura è cifrata à i siti visitati.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Tentativu autumaticu di cunnessione à i siti impieghendu HTTPS per aumentà a sicurità. E cunnessioni HTTPS furniscenu una cunnessione sicura è cifrata à i siti visitati.</string>
 
     <string name="preference_https_only_summary3">Tentativu autumaticu di cunnessione à i siti impieghendu u protocollu di cifratura HTTPS per aumentà a sicurità.</string>
 
@@ -971,7 +971,7 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="errorpage_httpsonly_title">U situ richiestu ùn permette micca u modu HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Per aummentà a sicurità, l’ozzione predefinita di %1$s hè di fà un tentativu autumaticu di cunnessione impieghendu HTTPS. Per cambià sta definizione, o per sapene di più, andate in Preferenze &gt; Vita privata è sicurità &gt; Sicurità.</string>
+    <string name="errorpage_httpsonly_message">Per aumentà a sicurità, l’ozzione predefinita di %1$s hè di fà un tentativu autumaticu di cunnessione impieghendu HTTPS. Per cambià sta definizione, o per sapene di più, andate in Preferenze &gt; Vita privata è sicurità &gt; Sicurità.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
