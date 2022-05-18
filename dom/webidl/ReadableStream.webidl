@@ -1,5 +1,5 @@
 [Exposed=*,
-//Transferable See Bug 1562065
+//Transferable See Bug 1734240
 ]
 interface ReadableStream {
   [Throws]

@@ -43,10 +43,8 @@ class MessageEvent final : public Event {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(MessageEvent, Event)
 
-  JSObject* WrapObjectInternal(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
-
-  MessageEvent* AsMessageEvent() override { return this; }
+  virtual JSObject* WrapObjectInternal(
+      JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
                ErrorResult& aRv);
