@@ -21,6 +21,11 @@ interface nsIAddonPolicyService : nsISupports
   readonly attribute AString defaultCSP;
 
   /**
+   * Same as above, but used for extensions using manifest v3.
+   */
+  readonly attribute AString defaultCSPV3;
+
+  /**
    * Returns the base content security policy which applies to all extension resources.
    */
   AString getBaseCSP(in AString aAddonId);
@@ -79,13 +84,14 @@ interface nsIAddonContentPolicy : nsISupports
   /* options to pass to validateAddonCSP
    *
    * Manifest V2 uses CSP_ALLOW_ANY.
-   * In Manifest V3, extension_pages would use CSP_ALLOW_LOCALHOST and
-   * sandbox would use CSP_ALLOW_EVAL.
+   * In Manifest V3, extension_pages would use CSP_ALLOW_LOCALHOST|CSP_ALLOW_WASM
+   * and sandbox would use CSP_ALLOW_EVAL.
    */
   const unsigned long CSP_ALLOW_ANY = 0xFFFF;
   const unsigned long CSP_ALLOW_LOCALHOST = (1<<0);
   const unsigned long CSP_ALLOW_EVAL = (1<<1);
   const unsigned long CSP_ALLOW_REMOTE = (1<<2);
+  const unsigned long CSP_ALLOW_WASM = (1<<3);
 
   /**
    * Checks a custom content security policy string, to ensure that it meets
