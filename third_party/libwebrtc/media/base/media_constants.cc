@@ -13,8 +13,6 @@
 namespace cricket {
 
 const int kVideoCodecClockrate = 90000;
-const int kDataCodecClockrate = 90000;
-const int kRtpDataMaxBandwidth = 30720;  // bps
 
 const int kVideoMtu = 1200;
 const int kVideoRtpSendBufferSize = 65536;
@@ -96,9 +94,6 @@ const char kCodecParamMaxBitrate[] = "x-google-max-bitrate";
 const char kCodecParamMinBitrate[] = "x-google-min-bitrate";
 const char kCodecParamStartBitrate[] = "x-google-start-bitrate";
 const char kCodecParamMaxQuantization[] = "x-google-max-quantization";
-
-const int kGoogleRtpDataCodecPlType = 109;
-const char kGoogleRtpDataCodecName[] = "google-data";
 
 const char kComfortNoiseCodecName[] = "CN";
 

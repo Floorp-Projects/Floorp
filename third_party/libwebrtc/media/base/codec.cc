@@ -384,25 +384,6 @@ bool VideoCodec::ValidateCodecFormat() const {
   return true;
 }
 
-RtpDataCodec::RtpDataCodec(int id, const std::string& name)
-    : Codec(id, name, kDataCodecClockrate) {}
-
-RtpDataCodec::RtpDataCodec() : Codec() {
-  clockrate = kDataCodecClockrate;
-}
-
-RtpDataCodec::RtpDataCodec(const RtpDataCodec& c) = default;
-RtpDataCodec::RtpDataCodec(RtpDataCodec&& c) = default;
-RtpDataCodec& RtpDataCodec::operator=(const RtpDataCodec& c) = default;
-RtpDataCodec& RtpDataCodec::operator=(RtpDataCodec&& c) = default;
-
-std::string RtpDataCodec::ToString() const {
-  char buf[256];
-  rtc::SimpleStringBuilder sb(buf);
-  sb << "RtpDataCodec[" << id << ":" << name << "]";
-  return sb.str();
-}
-
 bool HasLntf(const Codec& codec) {
   return codec.HasFeedbackParam(
       FeedbackParam(kRtcpFbParamLntf, kParamValueEmpty));
