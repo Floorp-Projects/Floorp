@@ -188,8 +188,8 @@ bool RTCPSender::Sending() const {
   return sending_;
 }
 
-int32_t RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
-                                     bool sending) {
+void RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
+                                  bool sending) {
   bool sendRTCPBye = false;
   {
     MutexLock lock(&mutex_rtcp_sender_);
@@ -202,9 +202,11 @@ int32_t RTCPSender::SetSendingStatus(const FeedbackState& feedback_state,
     }
     sending_ = sending;
   }
-  if (sendRTCPBye)
-    return SendRTCP(feedback_state, kRtcpBye);
-  return 0;
+  if (sendRTCPBye) {
+    if (SendRTCP(feedback_state, kRtcpBye) != 0) {
+      RTC_LOG(LS_WARNING) << "Failed to send RTCP BYE";
+    }
+  }
 }
 
 int32_t RTCPSender::SendLossNotification(const FeedbackState& feedback_state,
@@ -214,11 +216,10 @@ int32_t RTCPSender::SendLossNotification(const FeedbackState& feedback_state,
                                          bool buffering_allowed) {
   int32_t error_code = -1;
   auto callback = [&](rtc::ArrayView<const uint8_t> packet) {
-    if (transport_->SendRtcp(packet.data(), packet.size())) {
-      error_code = 0;
-      if (event_log_) {
-        event_log_->Log(std::make_unique<RtcEventRtcpPacketOutgoing>(packet));
-      }
+    transport_->SendRtcp(packet.data(), packet.size());
+    error_code = 0;
+    if (event_log_) {
+      event_log_->Log(std::make_unique<RtcEventRtcpPacketOutgoing>(packet));
     }
   };
   absl::optional<PacketSender> sender;

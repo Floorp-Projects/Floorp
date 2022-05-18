@@ -75,8 +75,8 @@ class RTCPSender final {
   void SetRTCPStatus(RtcpMode method) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
 
   bool Sending() const RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
-  int32_t SetSendingStatus(const FeedbackState& feedback_state,
-                           bool enabled)
+  void SetSendingStatus(const FeedbackState& feedback_state,
+                        bool enabled)
       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);  // combine the functions
 
   int32_t SetNackStatus(bool enable) RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
