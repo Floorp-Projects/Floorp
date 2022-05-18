@@ -5,9 +5,7 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "application/javascript", false);
   response.write("asyncState = 'mid-async';\n");
 
-  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
-    Components.interfaces.nsITimer
-  );
+  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
     function() {
       response.write("asyncState = 'loaded';\n");

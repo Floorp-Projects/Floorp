@@ -1,6 +1,6 @@
 "use strict";
 
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 async function handleRequest(request, response) {
   if (request.method !== "POST") {

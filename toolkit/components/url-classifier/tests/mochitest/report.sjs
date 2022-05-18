@@ -6,7 +6,7 @@ const REDIRECT =
   "mochi.test:8888/chrome/toolkit/components/url-classifier/tests/mochitest/" +
   SJS;
 
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 function createBlockedIframePage() {
   return `<!DOCTYPE HTML>

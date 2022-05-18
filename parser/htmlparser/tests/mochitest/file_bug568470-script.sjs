@@ -6,14 +6,12 @@ function handleRequest(request, response) {
   response.write("var i = 0;");
   response.bodyOutputStream.flush();
   response.processAsync();
-  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
-    Components.interfaces.nsITimer
-  );
+  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
     function() {
       response.finish();
     },
     500,
-    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    Ci.nsITimer.TYPE_ONE_SHOT
   );
 }
