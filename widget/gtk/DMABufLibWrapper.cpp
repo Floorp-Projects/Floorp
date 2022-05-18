@@ -48,6 +48,8 @@ GetStrideForPlaneFunc nsGbmLib::sGetStrideForPlane;
 GetOffsetFunc nsGbmLib::sGetOffset;
 DeviceIsFormatSupportedFunc nsGbmLib::sDeviceIsFormatSupported;
 DrmPrimeHandleToFDFunc nsGbmLib::sDrmPrimeHandleToFD;
+CreateSurfaceFunc nsGbmLib::sCreateSurface;
+DestroySurfaceFunc nsGbmLib::sDestroySurface;
 
 bool nsGbmLib::IsLoaded() {
   return sCreateDevice != nullptr && sDestroyDevice != nullptr &&
@@ -57,7 +59,8 @@ bool nsGbmLib::IsLoaded() {
          sUnmap != nullptr && sGetPlaneCount != nullptr &&
          sGetHandleForPlane != nullptr && sGetStrideForPlane != nullptr &&
          sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr &&
-         sDrmPrimeHandleToFD != nullptr;
+         sDrmPrimeHandleToFD != nullptr && sCreateSurface != nullptr &&
+         sDestroySurface != nullptr;
 }
 
 bool nsGbmLib::IsAvailable() {
@@ -99,6 +102,10 @@ bool nsGbmLib::Load() {
     sGetOffset = (GetOffsetFunc)dlsym(sGbmLibHandle, "gbm_bo_get_offset");
     sDeviceIsFormatSupported = (DeviceIsFormatSupportedFunc)dlsym(
         sGbmLibHandle, "gbm_device_is_format_supported");
+    sCreateSurface =
+        (CreateSurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_create");
+    sDestroySurface =
+        (DestroySurfaceFunc)dlsym(sGbmLibHandle, "gbm_surface_destroy");
 
     sXf86DrmLibHandle = dlopen(DRMLIB_NAME, RTLD_LAZY | RTLD_LOCAL);
     if (!sXf86DrmLibHandle) {
