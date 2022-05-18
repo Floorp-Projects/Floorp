@@ -116,44 +116,6 @@ struct RTCPReceiver::PacketInformation {
   std::unique_ptr<rtcp::LossNotification> loss_notification;
 };
 
-// Structure for handing TMMBR and TMMBN rtcp messages (RFC5104, section 3.5.4).
-struct RTCPReceiver::TmmbrInformation {
-  struct TimedTmmbrItem {
-    rtcp::TmmbItem tmmbr_item;
-    int64_t last_updated_ms;
-  };
-
-  int64_t last_time_received_ms = 0;
-
-  bool ready_for_delete = false;
-
-  std::vector<rtcp::TmmbItem> tmmbn;
-  std::map<uint32_t, TimedTmmbrItem> tmmbr;
-};
-
-// Structure for storing received RRTR RTCP messages (RFC3611, section 4.4).
-struct RTCPReceiver::RrtrInformation {
-  RrtrInformation(uint32_t ssrc,
-                  uint32_t received_remote_mid_ntp_time,
-                  uint32_t local_receive_mid_ntp_time)
-      : ssrc(ssrc),
-        received_remote_mid_ntp_time(received_remote_mid_ntp_time),
-        local_receive_mid_ntp_time(local_receive_mid_ntp_time) {}
-
-  uint32_t ssrc;
-  // Received NTP timestamp in compact representation.
-  uint32_t received_remote_mid_ntp_time;
-  // NTP time when the report was received in compact representation.
-  uint32_t local_receive_mid_ntp_time;
-};
-
-struct RTCPReceiver::LastFirStatus {
-  LastFirStatus(int64_t now_ms, uint8_t sequence_number)
-      : request_ms(now_ms), sequence_number(sequence_number) {}
-  int64_t request_ms;
-  uint8_t sequence_number;
-};
-
 RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
                            ModuleRtpRtcp* owner)
     : clock_(config.clock),
