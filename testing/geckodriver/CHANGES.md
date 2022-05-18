@@ -15,11 +15,16 @@ All notable changes to this program are documented in this file.
   to access the system temporary directory. geckodriver uses the
   temporary directory to store Firefox profiles created during the run.
 
-  This issue can be worked around by setting the `TMPDIR` environment
-  variable to a location that both Firefox and geckodriver have
-  read/write access to e.g.:
+  This issue can be worked around by using the `--profile-root`
+  command line option or setting the `TMPDIR` environment variable to
+  a location that both Firefox and geckodriver have read/write access
+  to e.g.:
 
   % mkdir $HOME/tmp
+  % geckodriver --profile-root=~/tmp
+
+  or
+
   % TMPDIR=$HOME/tmp geckodriver
 
   Alternatively, geckodriver may be used with a Firefox install that
