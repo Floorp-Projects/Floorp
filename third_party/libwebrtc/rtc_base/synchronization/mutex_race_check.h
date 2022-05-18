@@ -13,6 +13,7 @@
 
 #include <atomic>
 
+#include "absl/base/attributes.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/unused.h"
 #include "rtc_base/thread_annotations.h"
@@ -41,7 +42,7 @@ class RTC_LOCKABLE MutexImpl final {
     RTC_CHECK(was_free)
         << "WEBRTC_RACE_CHECK_MUTEX: mutex locked concurrently.";
   }
-  RTC_WARN_UNUSED_RESULT bool TryLock() RTC_EXCLUSIVE_TRYLOCK_FUNCTION(true) {
+  ABSL_MUST_USE_RESULT bool TryLock() RTC_EXCLUSIVE_TRYLOCK_FUNCTION(true) {
     bool was_free = free_.exchange(false, std::memory_order_acquire);
     return was_free;
   }
