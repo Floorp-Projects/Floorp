@@ -18,6 +18,7 @@ if (rtc_include_tests) {
       "public:dcsctp_public_unittests",
       "rx:dcsctp_rx_unittests",
       "timer:dcsctp_timer_unittests",
+      "tx:dcsctp_tx_unittests",
     ]
   }
 }

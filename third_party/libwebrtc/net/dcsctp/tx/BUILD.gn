@@ -1,0 +1,53 @@
+# Copyright (c) 2021 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+rtc_source_set("send_queue") {
+  deps = [
+    "../common:internal_types",
+    "../packet:chunk",
+    "../public:types",
+  ]
+  sources = [ "send_queue.h" ]
+}
+
+rtc_library("fcfs_send_queue") {
+  deps = [
+    ":send_queue",
+    "../../../api:array_view",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:rtc_base_approved",
+  ]
+  sources = [
+    "fcfs_send_queue.cc",
+    "fcfs_send_queue.h",
+  ]
+}
+
+if (rtc_include_tests) {
+  rtc_source_set("mock_send_queue") {
+    testonly = true
+    deps = [ ":send_queue" ]
+    sources = [ "mock_send_queue.h" ]
+  }
+
+  rtc_library("dcsctp_tx_unittests") {
+    testonly = true
+
+    deps = [
+      ":fcfs_send_queue",
+      "../../../api:array_view",
+      "../../../rtc_base:checks",
+      "../../../rtc_base:gunit_helpers",
+      "../../../rtc_base:rtc_base_approved",
+      "../../../test:test_support",
+    ]
+    sources = [ "fcfs_send_queue_test.cc" ]
+  }
+}
