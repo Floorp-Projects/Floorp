@@ -997,9 +997,11 @@ PeerConnection::AddTransceiver(
   parameters.encodings = init.send_encodings;
 
   // Encodings are dropped from the tail if too many are provided.
-  if (parameters.encodings.size() > kMaxSimulcastStreams) {
+  size_t max_simulcast_streams =
+      media_type == cricket::MEDIA_TYPE_VIDEO ? kMaxSimulcastStreams : 1u;
+  if (parameters.encodings.size() > max_simulcast_streams) {
     parameters.encodings.erase(
-        parameters.encodings.begin() + kMaxSimulcastStreams,
+        parameters.encodings.begin() + max_simulcast_streams,
         parameters.encodings.end());
   }
 
