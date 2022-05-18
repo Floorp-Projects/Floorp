@@ -336,6 +336,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
                                              SdpType::kOffer, NULL);
     if (result) {
       channel1_->Enable(true);
+      FlushCurrentThread();
       result = channel2_->SetRemoteContent(&remote_media_content1_,
                                            SdpType::kOffer, NULL);
       if (result) {
@@ -349,6 +350,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
 
   bool SendAccept() {
     channel2_->Enable(true);
+    FlushCurrentThread();
     return channel1_->SetRemoteContent(&remote_media_content2_,
                                        SdpType::kAnswer, NULL);
   }
@@ -633,7 +635,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     CreateContent(0, kPcmuCodec, kH264Codec, &content1);
     content1.AddStream(stream1);
     EXPECT_TRUE(channel1_->SetLocalContent(&content1, SdpType::kOffer, NULL));
-    EXPECT_TRUE(channel1_->Enable(true));
+    channel1_->Enable(true);
     EXPECT_EQ(1u, media_channel1_->send_streams().size());
 
     EXPECT_TRUE(channel2_->SetRemoteContent(&content1, SdpType::kOffer, NULL));
@@ -646,7 +648,7 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     EXPECT_TRUE(channel1_->SetRemoteContent(&content2, SdpType::kAnswer, NULL));
     EXPECT_EQ(0u, media_channel1_->recv_streams().size());
     EXPECT_TRUE(channel2_->SetLocalContent(&content2, SdpType::kAnswer, NULL));
-    EXPECT_TRUE(channel2_->Enable(true));
+    channel2_->Enable(true);
     EXPECT_EQ(0u, media_channel2_->send_streams().size());
 
     SendCustomRtp1(kSsrc1, 0);
@@ -690,7 +692,8 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
       EXPECT_FALSE(media_channel2_->playout());
     }
     EXPECT_FALSE(media_channel2_->sending());
-    EXPECT_TRUE(channel1_->Enable(true));
+    channel1_->Enable(true);
+    FlushCurrentThread();
     if (verify_playout_) {
       EXPECT_FALSE(media_channel1_->playout());
     }
@@ -722,7 +725,8 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
       EXPECT_FALSE(media_channel2_->playout());
     }
     EXPECT_FALSE(media_channel2_->sending());
-    EXPECT_TRUE(channel2_->Enable(true));
+    channel2_->Enable(true);
+    FlushCurrentThread();
     if (verify_playout_) {
       EXPECT_TRUE(media_channel2_->playout());
     }
@@ -746,8 +750,9 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     // Set |content2| to be InActive.
     content2.set_direction(RtpTransceiverDirection::kInactive);
 
-    EXPECT_TRUE(channel1_->Enable(true));
-    EXPECT_TRUE(channel2_->Enable(true));
+    channel1_->Enable(true);
+    channel2_->Enable(true);
+    FlushCurrentThread();
     if (verify_playout_) {
       EXPECT_FALSE(media_channel1_->playout());
     }
@@ -1364,6 +1369,9 @@ class ChannelTest : public ::testing::Test, public sigslot::has_slots<> {
     while (!thread->empty()) {
       thread->ProcessMessages(0);
     }
+  }
+  static void FlushCurrentThread() {
+    rtc::Thread::Current()->ProcessMessages(0);
   }
   void WaitForThreads(rtc::ArrayView<rtc::Thread*> threads) {
     // |threads| and current thread post packets to network thread.

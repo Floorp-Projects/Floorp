@@ -4137,7 +4137,7 @@ void SdpOfferAnswerHandler::EnableSending() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   for (const auto& transceiver : transceivers()->ListInternal()) {
     cricket::ChannelInterface* channel = transceiver->channel();
-    if (channel && !channel->enabled()) {
+    if (channel) {
       channel->Enable(true);
     }
   }
