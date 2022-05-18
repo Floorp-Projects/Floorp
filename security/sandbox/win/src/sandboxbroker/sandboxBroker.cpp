@@ -1331,7 +1331,8 @@ bool SandboxBroker::SetSecurityLevelForUtilityProcess(
                 sandbox::MITIGATION_DLL_SEARCH_ORDER
 // TODO: Bug 1766432 - Investigate why this crashes in MSAudDecMFT.dll during
 // Utility AudioDecoder process startup only on 32-bits systems.
-#if defined(_M_X64)
+// Investiate also why it crashes (no idea where exactly) for MinGW64 builds
+#if defined(_M_X64) && !defined(__MINGW64__)
                 | sandbox::MITIGATION_DYNAMIC_CODE_DISABLE
 #endif  // defined(_M_X64)
       ;
