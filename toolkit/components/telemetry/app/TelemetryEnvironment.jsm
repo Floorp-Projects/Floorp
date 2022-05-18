@@ -1205,10 +1205,10 @@ EnvironmentCache.prototype = {
    * Only used in tests, set the preferences to watch.
    * @param aPreferences A map of preferences names and their recording policy.
    */
-  async _watchPreferences(aPreferences) {
+  _watchPreferences(aPreferences) {
     this._stopWatchingPrefs();
     this._watchedPrefs = aPreferences;
-    await this._updateSettings();
+    this._updateSettings();
     this._startWatchingPrefs();
   },
 
@@ -1420,7 +1420,7 @@ EnvironmentCache.prototype = {
   /**
    * Update the default search engine value.
    */
-  async _updateSearchEngine() {
+  _updateSearchEngine() {
     if (!this._canQuerySearch) {
       this._log.trace("_updateSearchEngine - ignoring early call");
       return;
@@ -1437,7 +1437,7 @@ EnvironmentCache.prototype = {
     this._currentEnvironment.settings = this._currentEnvironment.settings || {};
 
     // Update the search engine entry in the current environment.
-    const defaultEngineInfo = await Services.search.getDefaultEngineInfo();
+    const defaultEngineInfo = Services.search.getDefaultEngineInfo();
     this._currentEnvironment.settings.defaultSearchEngine =
       defaultEngineInfo.defaultSearchEngine;
     this._currentEnvironment.settings.defaultSearchEngineData = {
@@ -1457,12 +1457,12 @@ EnvironmentCache.prototype = {
   /**
    * Update the default search engine value and trigger the environment change.
    */
-  async _onSearchEngineChange() {
+  _onSearchEngineChange() {
     this._log.trace("_onSearchEngineChange");
 
     // Finally trigger the environment change notification.
     let oldEnvironment = Cu.cloneInto(this._currentEnvironment, {});
-    await this._updateSearchEngine();
+    this._updateSearchEngine();
     this._onEnvironmentChange("search-engine-changed", oldEnvironment);
   },
 
@@ -1582,7 +1582,7 @@ EnvironmentCache.prototype = {
   /**
    * Update the cached settings data.
    */
-  async _updateSettings() {
+  _updateSettings() {
     let updateChannel = null;
     try {
       updateChannel = Utils.getUpdateChannel();
@@ -1623,7 +1623,7 @@ EnvironmentCache.prototype = {
       this._updateAttribution();
     }
     this._updateDefaultBrowser();
-    await this._updateSearchEngine();
+    this._updateSearchEngine();
     this._loadAsyncUpdateSettingsFromCache();
   },
 

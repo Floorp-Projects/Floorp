@@ -369,7 +369,7 @@ for (const test of tests) {
       let oldDefaultEngine = Services.search.defaultEngine;
       Services.search.defaultEngine = engine;
 
-      let engineInfo = await Services.search.getDefaultEngineInfo();
+      let engineInfo = Services.search.getDefaultEngineInfo();
       Assert.deepEqual(
         engineInfo,
         {
