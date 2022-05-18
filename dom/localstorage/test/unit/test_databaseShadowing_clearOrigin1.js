@@ -23,7 +23,7 @@ async function testSteps() {
   request = reset();
   await requestFinished(request);
 
-  exportShadowDatabase("shadowdb_clearedOrigin.sqlite");
+  exportShadowDatabase("shadowdb-clearedOrigin.sqlite");
 
   // The shadow database is now prepared for
   // test_databaseShadowing_clearOrigin2.js
