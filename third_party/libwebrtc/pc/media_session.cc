@@ -1673,10 +1673,19 @@ MediaSessionDescriptionFactory::CreateAnswer(
 
   // If the offer supports BUNDLE, and we want to use it too, create a BUNDLE
   // group in the answer with the appropriate content names.
-  const ContentGroup* offer_bundle = offer->GetGroupByName(GROUP_TYPE_BUNDLE);
-  ContentGroup answer_bundle(GROUP_TYPE_BUNDLE);
-  // Transport info shared by the bundle group.
-  std::unique_ptr<TransportInfo> bundle_transport;
+  std::vector<const ContentGroup*> offer_bundles =
+      offer->GetGroupsByName(GROUP_TYPE_BUNDLE);
+  // There are as many answer BUNDLE groups as offer BUNDLE groups (even if
+  // rejected, we respond with an empty group). |offer_bundles|,
+  // |answer_bundles| and |bundle_transports| share the same size and indices.
+  std::vector<ContentGroup> answer_bundles;
+  std::vector<std::unique_ptr<TransportInfo>> bundle_transports;
+  answer_bundles.reserve(offer_bundles.size());
+  bundle_transports.reserve(offer_bundles.size());
+  for (size_t i = 0; i < offer_bundles.size(); ++i) {
+    answer_bundles.emplace_back(GROUP_TYPE_BUNDLE);
+    bundle_transports.emplace_back(nullptr);
+  }
 
   answer->set_extmap_allow_mixed(offer->extmap_allow_mixed());
 
@@ -1691,6 +1700,18 @@ MediaSessionDescriptionFactory::CreateAnswer(
     RTC_DCHECK(
         IsMediaContentOfType(offer_content, media_description_options.type));
     RTC_DCHECK(media_description_options.mid == offer_content->name);
+    // Get the index of the BUNDLE group that this MID belongs to, if any.
+    absl::optional<size_t> bundle_index;
+    for (size_t i = 0; i < offer_bundles.size(); ++i) {
+      if (offer_bundles[i]->HasContentName(media_description_options.mid)) {
+        bundle_index = i;
+        break;
+      }
+    }
+    TransportInfo* bundle_transport =
+        bundle_index.has_value() ? bundle_transports[bundle_index.value()].get()
+                                 : nullptr;
+
     const ContentInfo* current_content = nullptr;
     if (current_description &&
         msection_index < current_description->contents().size()) {
@@ -1703,35 +1724,34 @@ MediaSessionDescriptionFactory::CreateAnswer(
       case MEDIA_TYPE_AUDIO:
         if (!AddAudioContentForAnswer(
                 media_description_options, session_options, offer_content,
-                offer, current_content, current_description,
-                bundle_transport.get(), answer_audio_codecs, header_extensions,
-                &current_streams, answer.get(), &ice_credentials)) {
+                offer, current_content, current_description, bundle_transport,
+                answer_audio_codecs, header_extensions, &current_streams,
+                answer.get(), &ice_credentials)) {
           return nullptr;
         }
         break;
       case MEDIA_TYPE_VIDEO:
         if (!AddVideoContentForAnswer(
                 media_description_options, session_options, offer_content,
-                offer, current_content, current_description,
-                bundle_transport.get(), answer_video_codecs, header_extensions,
-                &current_streams, answer.get(), &ice_credentials)) {
+                offer, current_content, current_description, bundle_transport,
+                answer_video_codecs, header_extensions, &current_streams,
+                answer.get(), &ice_credentials)) {
           return nullptr;
         }
         break;
       case MEDIA_TYPE_DATA:
-        if (!AddDataContentForAnswer(media_description_options, session_options,
-                                     offer_content, offer, current_content,
-                                     current_description,
-                                     bundle_transport.get(), &current_streams,
-                                     answer.get(), &ice_credentials)) {
+        if (!AddDataContentForAnswer(
+                media_description_options, session_options, offer_content,
+                offer, current_content, current_description, bundle_transport,
+                &current_streams, answer.get(), &ice_credentials)) {
           return nullptr;
         }
         break;
       case MEDIA_TYPE_UNSUPPORTED:
         if (!AddUnsupportedContentForAnswer(
                 media_description_options, session_options, offer_content,
-                offer, current_content, current_description,
-                bundle_transport.get(), answer.get(), &ice_credentials)) {
+                offer, current_content, current_description, bundle_transport,
+                answer.get(), &ice_credentials)) {
           return nullptr;
         }
         break;
@@ -1742,37 +1762,41 @@ MediaSessionDescriptionFactory::CreateAnswer(
     // See if we can add the newly generated m= section to the BUNDLE group in
     // the answer.
     ContentInfo& added = answer->contents().back();
-    if (!added.rejected && session_options.bundle_enabled && offer_bundle &&
-        offer_bundle->HasContentName(added.name)) {
-      answer_bundle.AddContentName(added.name);
-      bundle_transport.reset(
+    if (!added.rejected && session_options.bundle_enabled &&
+        bundle_index.has_value()) {
+      // The |bundle_index| is for |media_description_options.mid|.
+      RTC_DCHECK_EQ(media_description_options.mid, added.name);
+      answer_bundles[bundle_index.value()].AddContentName(added.name);
+      bundle_transports[bundle_index.value()].reset(
           new TransportInfo(*answer->GetTransportInfoByName(added.name)));
     }
   }
 
-  // If a BUNDLE group was offered, put a BUNDLE group in the answer even if
-  // it's empty. RFC5888 says:
+  // If BUNDLE group(s) were offered, put the same number of BUNDLE groups in
+  // the answer even if they're empty. RFC5888 says:
   //
   //   A SIP entity that receives an offer that contains an "a=group" line
   //   with semantics that are understood MUST return an answer that
   //   contains an "a=group" line with the same semantics.
-  if (offer_bundle) {
-    answer->AddGroup(answer_bundle);
-  }
+  if (!offer_bundles.empty()) {
+    for (const ContentGroup& answer_bundle : answer_bundles) {
+      answer->AddGroup(answer_bundle);
 
-  if (answer_bundle.FirstContentName()) {
-    // Share the same ICE credentials and crypto params across all contents,
-    // as BUNDLE requires.
-    if (!UpdateTransportInfoForBundle(answer_bundle, answer.get())) {
-      RTC_LOG(LS_ERROR)
-          << "CreateAnswer failed to UpdateTransportInfoForBundle.";
-      return NULL;
-    }
+      if (answer_bundle.FirstContentName()) {
+        // Share the same ICE credentials and crypto params across all contents,
+        // as BUNDLE requires.
+        if (!UpdateTransportInfoForBundle(answer_bundle, answer.get())) {
+          RTC_LOG(LS_ERROR)
+              << "CreateAnswer failed to UpdateTransportInfoForBundle.";
+          return NULL;
+        }
 
-    if (!UpdateCryptoParamsForBundle(answer_bundle, answer.get())) {
-      RTC_LOG(LS_ERROR)
-          << "CreateAnswer failed to UpdateCryptoParamsForBundle.";
-      return NULL;
+        if (!UpdateCryptoParamsForBundle(answer_bundle, answer.get())) {
+          RTC_LOG(LS_ERROR)
+              << "CreateAnswer failed to UpdateCryptoParamsForBundle.";
+          return NULL;
+        }
+      }
     }
   }
 

@@ -2413,21 +2413,20 @@ void PeerConnection::TeardownDataChannelTransport_n() {
 }
 
 // Returns false if bundle is enabled and rtcp_mux is disabled.
-bool PeerConnection::ValidateBundleSettings(const SessionDescription* desc) {
-  bool bundle_enabled = desc->HasGroup(cricket::GROUP_TYPE_BUNDLE);
-  if (!bundle_enabled)
+bool PeerConnection::ValidateBundleSettings(
+    const SessionDescription* desc,
+    const std::map<std::string, const cricket::ContentGroup*>&
+        bundle_groups_by_mid) {
+  if (bundle_groups_by_mid.empty())
     return true;
-
-  const cricket::ContentGroup* bundle_group =
-      desc->GetGroupByName(cricket::GROUP_TYPE_BUNDLE);
-  RTC_DCHECK(bundle_group != NULL);
 
   const cricket::ContentInfos& contents = desc->contents();
   for (cricket::ContentInfos::const_iterator citer = contents.begin();
        citer != contents.end(); ++citer) {
     const cricket::ContentInfo* content = (&*citer);
     RTC_DCHECK(content != NULL);
-    if (bundle_group->HasContentName(content->name) && !content->rejected &&
+    auto it = bundle_groups_by_mid.find(content->name);
+    if (it != bundle_groups_by_mid.end() && !content->rejected &&
         content->type == MediaProtocolType::kRtp) {
       if (!HasRtcpMuxEnabled(content))
         return false;

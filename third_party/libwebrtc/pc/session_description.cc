@@ -259,6 +259,17 @@ const ContentGroup* SessionDescription::GetGroupByName(
   return NULL;
 }
 
+std::vector<const ContentGroup*> SessionDescription::GetGroupsByName(
+    const std::string& name) const {
+  std::vector<const ContentGroup*> content_groups;
+  for (const ContentGroup& content_group : content_groups_) {
+    if (content_group.semantics() == name) {
+      content_groups.push_back(&content_group);
+    }
+  }
+  return content_groups;
+}
+
 ContentInfo::~ContentInfo() {
 }
 
