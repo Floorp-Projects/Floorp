@@ -1816,49 +1816,15 @@ bool nsWindow::IsVisible() const { return mIsVisible; }
  *
  **************************************************************/
 
-static bool ShouldHaveRoundedMenuDropShadow(nsWindow* aWindow) {
-  nsView* view = nsView::GetViewFor(aWindow);
-  return view && view->GetFrame() &&
-         view->GetFrame()->StyleUIReset()->mWindowShadow ==
-             StyleWindowShadow::Cliprounded;
-}
-
 // XP and Vista visual styles sometimes require window clipping regions to be
 // applied for proper transparency. These routines are called on size and move
 // operations.
 // XXX this is apparently still needed in Windows 7 and later
 void nsWindow::ClearThemeRegion() {
-  if (mWindowType == eWindowType_popup &&
-      (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypeMenu ||
-       mPopupType == ePopupTypePanel) &&
-      ShouldHaveRoundedMenuDropShadow(this)) {
+  if (!HasGlass() &&
+      (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
+       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, nullptr, false);
-  } else if (!HasGlass() &&
-             (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
-              (mPopupType == ePopupTypeTooltip ||
-               mPopupType == ePopupTypePanel))) {
-    SetWindowRgn(mWnd, nullptr, false);
-  }
-}
-
-void nsWindow::SetThemeRegion() {
-  // Clip the window to the rounded rect area of the popup if needed.
-  if (mWindowType == eWindowType_popup &&
-      (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypeMenu ||
-       mPopupType == ePopupTypePanel)) {
-    if (nsView* view = nsView::GetViewFor(this)) {
-      LayoutDeviceSize size =
-          nsLayoutUtils::GetBorderRadiusForMenuDropShadow(view->GetFrame());
-      if (size.width || size.height) {
-        int32_t width = NSToIntRound(size.width);
-        int32_t height = NSToIntRound(size.height);
-        HRGN region = CreateRoundRectRgn(0, 0, mBounds.Width() + 1,
-                                         mBounds.Height() + 1, width, height);
-        if (!SetWindowRgn(mWnd, region, false)) {
-          DeleteObject(region);  // region setting failed so delete the region.
-        }
-      }
-    }
   }
 }
 
@@ -2055,8 +2021,6 @@ void nsWindow::Move(double aX, double aY) {
       if (WinUtils::LogToPhysFactor(mWnd) != oldScale) {
         ChangedDPI();
       }
-
-      SetThemeRegion();
     }
 
     ResizeDirectManipulationViewport();
@@ -2124,7 +2088,6 @@ void nsWindow::Resize(double aWidth, double aHeight, bool aRepaint) {
       if (WinUtils::LogToPhysFactor(mWnd) != oldScale) {
         ChangedDPI();
       }
-      SetThemeRegion();
     }
 
     ResizeDirectManipulationViewport();
@@ -2214,7 +2177,6 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
         ::SetWindowPos(mTransitionWnd, HWND_TOPMOST, 0, 0, 0, 0,
                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
       }
-      SetThemeRegion();
     }
 
     ResizeDirectManipulationViewport();

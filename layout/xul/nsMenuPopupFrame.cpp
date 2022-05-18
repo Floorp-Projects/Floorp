@@ -367,11 +367,9 @@ nsresult nsMenuPopupFrame::CreateWidgetForView(nsView* aView) {
   widgetData.mSupportTranslucency = mode == eTransparencyTransparent;
   widgetData.mPopupLevel = PopupLevel(widgetData.mNoAutoHide);
 
-  // The special cases are menulists and handling the Windows 10
-  // drop-shadow on menus with rounded borders.
+  // The special cases are menulists.
   widgetData.mDropShadow =
-      !(mode == eTransparencyTransparent || tag == nsGkAtoms::menulist) ||
-      StyleUIReset()->mWindowShadow == StyleWindowShadow::Cliprounded;
+      !(mode == eTransparencyTransparent || tag == nsGkAtoms::menulist);
 
   // panels which have a parent level need a parent widget. This allows them to
   // always appear in front of the parent window but behind other windows that
