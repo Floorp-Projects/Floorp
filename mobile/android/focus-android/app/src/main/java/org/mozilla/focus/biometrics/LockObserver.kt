@@ -39,7 +39,7 @@ class LockObserver(
     private fun triggerAppLock() {
         GlobalScope.launch(Dispatchers.IO) {
             val tabCount = browserStore.state.privateTabs.size.toLong()
-            TabCount.appBackgrounded.accumulateSamples(longArrayOf(tabCount))
+            TabCount.appBackgrounded.accumulateSamples(listOf(tabCount))
             val topSitesList = context.components.topSitesStorage.getTopSites(
                 totalSites = DefaultTopSitesStorage.TOP_SITES_MAX_LIMIT,
                 frecencyConfig = null
