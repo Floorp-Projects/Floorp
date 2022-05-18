@@ -4586,14 +4586,19 @@ void SdpOfferAnswerHandler::DestroyTransceiverChannel(
   RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(0);
   if (channel) {
     // TODO(tommi): VideoRtpReceiver::SetMediaChannel blocks and jumps to the
-    // worker thread. When being set to nullptrpus, there are additional
+    // worker thread. When being set to nullptr, there are additional
     // blocking calls to e.g. ClearRecordableEncodedFrameCallback which triggers
     // another blocking call or Stop() for video channels.
+    // The channel object also needs to be de-initialized on the network thread
+    // so if ownership of the channel object lies with the transceiver, we could
+    // un-set the channel pointer and uninitialize/destruct the channel object
+    // at the same time, rather than in separate steps.
     transceiver->internal()->SetChannel(nullptr);
-    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(2);
+    RTC_DCHECK_BLOCK_COUNT_NO_MORE_THAN(3);
     // TODO(tommi): All channel objects end up getting deleted on the
-    // worker thread. Can DestroyTransceiverChannel be purely posted to the
-    // worker?
+    // worker thread (ideally should be on the network thread but the
+    // MediaChannel objects are tied to the worker. Can the teardown be done
+    // asynchronously across the threads rather than blocking?
     DestroyChannelInterface(channel);
   }
 }

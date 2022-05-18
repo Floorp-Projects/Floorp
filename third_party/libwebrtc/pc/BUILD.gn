@@ -400,6 +400,8 @@ rtc_library("rtp_transceiver") {
     "../rtc_base:macromagic",
     "../rtc_base:refcount",
     "../rtc_base:threading",
+    "../rtc_base/task_utils:pending_task_safety_flag",
+    "../rtc_base/task_utils:to_queued_task",
     "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
