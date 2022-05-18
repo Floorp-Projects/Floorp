@@ -545,44 +545,6 @@ TEST_P(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
   EXPECT_EQ(kMinPaddingSize, GenerateAndSendPadding(kMinPaddingSize - 5));
 }
 
-TEST_P(RtpSenderTestWithoutPacer,
-       TransportFeedbackObserverGetsCorrectByteCount) {
-  constexpr size_t kRtpOverheadBytesPerPacket = 12 + 8;
-  constexpr size_t kPayloadSize = 1400;
-
-  RtpRtcpInterface::Configuration config;
-  config.clock = clock_;
-  config.outgoing_transport = &transport_;
-  config.local_media_ssrc = kSsrc;
-  config.transport_feedback_callback = &feedback_observer_;
-  config.event_log = &mock_rtc_event_log_;
-  config.retransmission_rate_limiter = &retransmission_rate_limiter_;
-  config.field_trials = &field_trials_;
-  rtp_sender_context_ =
-      std::make_unique<RtpSenderContext>(config, &time_controller_);
-
-  EXPECT_TRUE(rtp_sender()->RegisterRtpHeaderExtension(
-      TransportSequenceNumber::kUri, kTransportSequenceNumberExtensionId));
-
-  const size_t expected_bytes = GetParam().with_overhead
-                                    ? kPayloadSize + kRtpOverheadBytesPerPacket
-                                    : kPayloadSize;
-
-  EXPECT_CALL(feedback_observer_,
-              OnAddPacket(AllOf(
-                  Field(&RtpPacketSendInfo::ssrc, rtp_sender()->SSRC()),
-                  Field(&RtpPacketSendInfo::transport_sequence_number,
-                        kTransportSequenceNumber),
-                  Field(&RtpPacketSendInfo::rtp_sequence_number,
-                        rtp_sender()->SequenceNumber()),
-                  Field(&RtpPacketSendInfo::length, expected_bytes),
-                  Field(&RtpPacketSendInfo::pacing_info, PacedPacketInfo()))))
-      .Times(1);
-  EXPECT_EQ(rtp_sender()->ExpectedPerPacketOverhead(),
-            kRtpOverheadBytesPerPacket);
-  SendPacket(clock_->TimeInMilliseconds(), kPayloadSize);
-}
-
 TEST_P(RtpSenderTestWithoutPacer, SendsPacketsWithTransportSequenceNumber) {
   RtpRtcpInterface::Configuration config;
   config.clock = clock_;
