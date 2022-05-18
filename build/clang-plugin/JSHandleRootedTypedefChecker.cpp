@@ -7,7 +7,8 @@
 
 void JSHandleRootedTypedefChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
-      declaratorDecl(isUsingJSHandleRootedTypedef()).bind("declaratorDecl"),
+      declaratorDecl(isUsingJSHandleRootedTypedef(), isNotSpiderMonkey())
+          .bind("declaratorDecl"),
       this);
 }
 
@@ -28,15 +29,6 @@ void JSHandleRootedTypedefChecker::check(
 
   const DeclaratorDecl *Declarator =
       Result.Nodes.getNodeAs<DeclaratorDecl>("declaratorDecl");
-
-  // Detect SpiderMonkey path. Admittedly hacky but works
-  bool IsSpiderMonkey = Declarator->getBeginLoc()
-                            .printToString(Result.Context->getSourceManager())
-                            .find("js") != std::string::npos;
-  if (IsSpiderMonkey) {
-    // Using typedefs within SpiderMonkey is okay.
-    return;
-  }
 
   std::string Replacement = getReplacement(Declarator->getType().getAsString());
   diag(Declarator->getBeginLoc(), Warning, DiagnosticIDs::Warning)
