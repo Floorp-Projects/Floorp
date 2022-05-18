@@ -356,7 +356,13 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         float gain_db = 0.0f;
       } fixed_digital;
       struct AdaptiveDigital {
+        bool operator==(const AdaptiveDigital& rhs) const;
+        bool operator!=(const AdaptiveDigital& rhs) const {
+          return !(*this == rhs);
+        }
+
         bool enabled = false;
+        // Run the adaptive digital controller but the signal is not modified.
         bool dry_run = false;
         NoiseEstimator noise_estimator = kNoiseFloor;
         int vad_reset_period_ms = 1500;
