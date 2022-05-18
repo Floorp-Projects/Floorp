@@ -14,6 +14,7 @@ rtc_library("timer") {
     "../../../rtc_base",
     "../../../rtc_base:checks",
     "../../../rtc_base:rtc_base_approved",
+    "../public:socket",
     "../public:strong_alias",
     "../public:types",
   ]
@@ -21,6 +22,10 @@ rtc_library("timer") {
     "fake_timeout.h",
     "timer.cc",
     "timer.h",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
 }
 
