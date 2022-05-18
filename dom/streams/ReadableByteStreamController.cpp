@@ -294,7 +294,7 @@ void ReadableByteStreamControllerClose(
       ErrorResult rv;
       rv.ThrowTypeError("Leftover Bytes");
 
-      JS::RootedValue exception(aCx);
+      JS::Rooted<JS::Value> exception(aCx);
       MOZ_ALWAYS_TRUE(ToJSValue(aCx, std::move(rv), &exception));
 
       // Step 4.2.2
@@ -547,8 +547,8 @@ JSObject* ReadableByteStreamControllerConvertPullIntoDescriptor(
 MOZ_CAN_RUN_SCRIPT
 void ReadableStreamFulfillReadIntoRequest(JSContext* aCx,
                                           ReadableStream* aStream,
-                                          JS::HandleValue aChunk, bool done,
-                                          ErrorResult& aRv) {
+                                          JS::Handle<JS::Value> aChunk,
+                                          bool done, ErrorResult& aRv) {
   // Step 1. Assert: !ReadableStreamHasBYOBReader(stream) is true.
   MOZ_ASSERT(ReadableStreamHasBYOBReader(aStream));
 
@@ -599,13 +599,13 @@ void ReadableByteStreamControllerCommitPullIntoDescriptor(
 
   // Step 5. Let filledView be !
   // ReadableByteStreamControllerConvertPullIntoDescriptor(pullIntoDescriptor).
-  JS::RootedObject filledView(
+  JS::Rooted<JSObject*> filledView(
       aCx, ReadableByteStreamControllerConvertPullIntoDescriptor(
                aCx, pullIntoDescriptor, aRv));
   if (aRv.Failed()) {
     return;
   }
-  JS::RootedValue filledViewValue(aCx, JS::ObjectValue(*filledView));
+  JS::Rooted<JS::Value> filledViewValue(aCx, JS::ObjectValue(*filledView));
 
   // Step 6. If pullIntoDescriptor’s reader type is "default",
   if (pullIntoDescriptor->GetReaderType() == ReaderType::Default) {
@@ -1059,7 +1059,7 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
     // Step 5.2
     if (!buffer) {
       // Step 5.2.1
-      JS::RootedValue bufferError(aCx);
+      JS::Rooted<JS::Value> bufferError(aCx);
       if (!JS_GetPendingException(aCx, &bufferError)) {
         // Uncatchable exception; we should mark aRv and return.
         aRv.StealExceptionFromJSContext(aCx);
@@ -1127,7 +1127,7 @@ ReadableByteStreamControllerShiftPendingPullInto(
 
 JSObject* ConstructFromPullIntoConstructor(
     JSContext* aCx, PullIntoDescriptor::Constructor constructor,
-    JS::HandleObject buffer, size_t byteOffset, size_t length) {
+    JS::Handle<JSObject*> buffer, size_t byteOffset, size_t length) {
   switch (constructor) {
     case PullIntoDescriptor::Constructor::DataView:
       return JS_NewDataView(aCx, buffer, byteOffset, length);
@@ -1591,8 +1591,8 @@ bool ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(
     //            buffer.[[ArrayBufferData]], destStart, headOfQueue’s
     //            buffer.[[ArrayBufferData]], headOfQueue’s byte offset,
     //            bytesToCopy).
-    JS::RootedObject descriptorBuffer(aCx, aPullIntoDescriptor->Buffer());
-    JS::RootedObject queueBuffer(aCx, headOfQueue->Buffer());
+    JS::Rooted<JSObject*> descriptorBuffer(aCx, aPullIntoDescriptor->Buffer());
+    JS::Rooted<JSObject*> queueBuffer(aCx, headOfQueue->Buffer());
     if (!JS::ArrayBufferCopyData(aCx, descriptorBuffer, destStart, queueBuffer,
                                  headOfQueue->ByteOffset(), bytesToCopy)) {
       aRv.StealExceptionFromJSContext(aCx);
@@ -1652,7 +1652,7 @@ bool ReadableByteStreamControllerFillPullIntoDescriptorFromQueue(
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-pull-into
 void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
-    JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
+    JS::Handle<JSObject*> aView, ReadIntoRequest* aReadIntoRequest,
     ErrorResult& aRv) {
   aRv.MightThrowJSException();
 
@@ -1688,18 +1688,18 @@ void ReadableByteStreamControllerPullInto(
   // Step 7. Let bufferResult be
   // TransferArrayBuffer(view.[[ViewedArrayBuffer]]).
   bool isShared;
-  JS::RootedObject viewedArrayBuffer(
+  JS::Rooted<JSObject*> viewedArrayBuffer(
       aCx, JS_GetArrayBufferViewBuffer(aCx, aView, &isShared));
   if (!viewedArrayBuffer) {
     aRv.StealExceptionFromJSContext(aCx);
     return;
   }
-  JS::RootedObject bufferResult(aCx,
-                                TransferArrayBuffer(aCx, viewedArrayBuffer));
+  JS::Rooted<JSObject*> bufferResult(
+      aCx, TransferArrayBuffer(aCx, viewedArrayBuffer));
 
   // Step 8. If bufferResult is an abrupt completion,
   if (!bufferResult) {
-    JS::RootedValue pendingException(aCx);
+    JS::Rooted<JS::Value> pendingException(aCx);
     if (!JS_GetPendingException(aCx, &pendingException)) {
       // This means an un-catchable exception. Use StealExceptionFromJSContext
       // to setup aRv properly.
@@ -1721,7 +1721,7 @@ void ReadableByteStreamControllerPullInto(
   }
 
   // Step 9. Let buffer be bufferResult.[[Value]].
-  JS::RootedObject buffer(aCx, bufferResult);
+  JS::Rooted<JSObject*> buffer(aCx, bufferResult);
 
   // Step 10. Let pullIntoDescriptor be a new pull-into descriptor with
   //  buffer: buffer,
@@ -1753,17 +1753,18 @@ void ReadableByteStreamControllerPullInto(
   if (stream->State() == ReadableStream::ReaderState::Closed) {
     // Step 12.1. Let emptyView be !Construct(ctor, « pullIntoDescriptor’s
     //            buffer, pullIntoDescriptor’s byte offset, 0 »).
-    JS::RootedObject pullIntoBuffer(aCx, pullIntoDescriptor->Buffer());
-    JS::RootedObject emptyView(aCx, ConstructFromPullIntoConstructor(
-                                        aCx, ctor, pullIntoBuffer,
-                                        pullIntoDescriptor->ByteOffset(), 0));
+    JS::Rooted<JSObject*> pullIntoBuffer(aCx, pullIntoDescriptor->Buffer());
+    JS::Rooted<JSObject*> emptyView(
+        aCx,
+        ConstructFromPullIntoConstructor(aCx, ctor, pullIntoBuffer,
+                                         pullIntoDescriptor->ByteOffset(), 0));
     if (!emptyView) {
       aRv.StealExceptionFromJSContext(aCx);
       return;
     }
 
     // Step 12.2. Perform readIntoRequest’s close steps, given emptyView.
-    JS::RootedValue emptyViewValue(aCx, JS::ObjectValue(*emptyView));
+    JS::Rooted<JS::Value> emptyViewValue(aCx, JS::ObjectValue(*emptyView));
     aReadIntoRequest->CloseSteps(aCx, emptyViewValue, aRv);
 
     // Step 12.3. Return.
@@ -1796,7 +1797,7 @@ void ReadableByteStreamControllerPullInto(
         return;
       }
       // Step 13.1.3.  Perform readIntoRequest’s chunk steps, given filledView.
-      JS::RootedValue filledViewValue(aCx, JS::ObjectValue(*filledView));
+      JS::Rooted<JS::Value> filledViewValue(aCx, JS::ObjectValue(*filledView));
       aReadIntoRequest->ChunkSteps(aCx, filledViewValue, aRv);
       // Step 13.1.4.   Return.
       return;
@@ -1808,7 +1809,7 @@ void ReadableByteStreamControllerPullInto(
       ErrorResult typeError;
       typeError.ThrowTypeError("Close Requested True during Pull Into");
 
-      JS::RootedValue e(aCx);
+      JS::Rooted<JS::Value> e(aCx);
       MOZ_RELEASE_ASSERT(ToJSValue(aCx, std::move(typeError), &e));
 
       // Step 13.2.2. Perform !ReadableByteStreamControllerError(controller, e).
@@ -1886,7 +1887,7 @@ void SetUpReadableByteStreamController(
   aStream->SetController(*aController);
 
   // Step 14. Let startResult be the result of performing startAlgorithm.
-  JS::RootedValue startResult(aCx, JS::UndefinedValue());
+  JS::Rooted<JS::Value> startResult(aCx, JS::UndefinedValue());
   RefPtr<ReadableStreamController> controller = aController;
   aAlgorithms->StartCallback(aCx, *controller, &startResult, aRv);
   if (aRv.Failed()) {
@@ -1930,7 +1931,8 @@ void SetUpReadableByteStreamController(
 
 // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source
 void SetUpReadableByteStreamControllerFromUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
+    JSContext* aCx, ReadableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     ErrorResult& aRv) {
   // Step 1. Let controller be a new ReadableByteStreamController.

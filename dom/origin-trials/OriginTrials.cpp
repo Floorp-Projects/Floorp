@@ -27,48 +27,25 @@ namespace mozilla {
 LazyLogModule sOriginTrialsLog("OriginTrials");
 #define LOG(...) MOZ_LOG(sOriginTrialsLog, LogLevel::Debug, (__VA_ARGS__))
 
-// This is the EcdsaP256 public key from the production key managed in Google
-// Cloud. See:
+// prod.pub is the EcdsaP256 public key from the production key managed in
+// Google Cloud. See:
 //
 //   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#get-the-public-key
 //
-// for how to get the public key. Once you've obtained the public key, this
-// variable is generated with:
-//
-//   $ dump /path/to/public/key --c
+// for how to get the public key.
 //
 // See also:
 //
 //   https://github.com/emilio/origin-trial-token/blob/main/tools/README.md#sign-a-token-using-gcloud
 //
 // for how to sign using this key.
-static const unsigned char kProductionKey[65] = {
-    0x4,  0x51, 0xbe, 0xd3, 0xe,  0xf1, 0x32, 0xb8, 0xb5, 0xe7, 0xb5,
-    0xde, 0x12, 0xd0, 0x44, 0x60, 0xbf, 0x96, 0x16, 0x2c, 0x28, 0x8e,
-    0xd5, 0x54, 0x8,  0xf6, 0x2,  0x78, 0x9e, 0xf5, 0x45, 0xfe, 0x60,
-    0xfc, 0x3a, 0x61, 0x48, 0xe9, 0x2e, 0x36, 0x6c, 0xa9, 0xb3, 0xb2,
-    0xa,  0xb4, 0x45, 0x5c, 0x4,  0x1c, 0x95, 0x0,  0x16, 0x96, 0x96,
-    0x6a, 0x58, 0x60, 0x26, 0x67, 0xe8, 0xdd, 0x3f, 0x6b, 0x4f,
-};
-
-// This is the EcdsaP256 public key from this key pair:
+//
+// test.pub is the EcdsaP256 public key from this key pair:
 //
 //  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pkcs8
 //  * https://github.com/emilio/origin-trial-token/blob/64f03749e2e8c58f811f67044cecc7d6955fd51a/tools/test-keys/test-ecdsa.pub
 //
-// This is generated with:
-//
-//  $ dump test-keys/test-ecdsa.pub --c
-//
-// See that repo for tools for key and token generation and signing.
-static const unsigned char kTestKey[65] = {
-    0x4,  0x4a, 0xae, 0x76, 0x64, 0x24, 0xa0, 0x55, 0xc4, 0x66, 0xe,
-    0x43, 0x32, 0x4c, 0x1d, 0x85, 0x8,  0x63, 0x6a, 0x93, 0xd4, 0x1d,
-    0xf,  0xfc, 0xb4, 0x2c, 0x77, 0x3d, 0xe6, 0x87, 0xdc, 0xeb, 0x46,
-    0xcd, 0xcf, 0x88, 0xd0, 0xe3, 0x39, 0x8f, 0xe5, 0x17, 0xb8, 0xc8,
-    0xd7, 0xd3, 0xdc, 0x32, 0x7c, 0x4f, 0x8,  0x8b, 0x61, 0x19, 0xdd,
-    0xc0, 0x2,  0x5f, 0x11, 0x20, 0x6b, 0x44, 0xcf, 0x2a, 0x64,
-};
+#include "keys.inc"
 
 constexpr auto kEcAlgorithm =
     NS_LITERAL_STRING_FROM_CSTRING(WEBCRYPTO_NAMED_CURVE_P256);
@@ -81,11 +58,11 @@ bool VerifySignature(const uint8_t* aSignature, uintptr_t aSignatureLen,
 
   const unsigned char* key = StaticPrefs::dom_origin_trials_test_key_enabled()
                                  ? kTestKey
-                                 : kProductionKey;
+                                 : kProdKey;
 
-  static_assert(sizeof(kTestKey) == sizeof(kProductionKey));
+  static_assert(sizeof(kTestKey) == sizeof(kProdKey));
   const SECItem rawKey{siBuffer, const_cast<unsigned char*>(key),
-                       sizeof(kProductionKey)};
+                       sizeof(kProdKey)};
   MOZ_RELEASE_ASSERT(rawKey.data[0] == EC_POINT_FORM_UNCOMPRESSED);
   UniqueSECKEYPublicKey pubKey = dom::CreateECPublicKey(&rawKey, kEcAlgorithm);
   if (NS_WARN_IF(!pubKey)) {

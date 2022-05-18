@@ -100,7 +100,7 @@ void CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx) {
   if (mRefCnt.get() > 1) {
     mozilla::HoldJSObjects(this);
     if (JS::IsAsyncStackCaptureEnabledForRealm(aCx)) {
-      JS::RootedObject stack(aCx);
+      JS::Rooted<JSObject*> stack(aCx);
       if (!JS::CaptureCurrentStack(aCx, &stack)) {
         JS_ClearPendingException(aCx);
       }
@@ -147,7 +147,7 @@ void CallbackObject::GetDescription(nsACString& aOutString) {
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  JS::RootedObject rootedCallback(cx, unwrappedCallback);
+  JS::Rooted<JSObject*> rootedCallback(cx, unwrappedCallback);
   JSAutoRealm ar(cx, rootedCallback);
 
   JS::Rooted<JSFunction*> rootedFunction(cx,

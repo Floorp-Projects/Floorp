@@ -7,6 +7,9 @@
 var Services = require("Services");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn } = DevToolsUtils;
+var {
+  createContentProcessSessionContext,
+} = require("devtools/server/actors/watcher/session-context");
 
 loader.lazyRequireGetter(
   this,
@@ -71,6 +74,9 @@ function connectToContentProcess(connection, mm, onDestroy) {
     // prefix.
     mm.sendAsyncMessage("debug:init-content-server", {
       prefix: prefix,
+      // This connector is only used for the Browser Content Toolbox,
+      // when creating the content process target from the Process Descriptor.
+      sessionContext: createContentProcessSessionContext(),
     });
 
     function onClose() {

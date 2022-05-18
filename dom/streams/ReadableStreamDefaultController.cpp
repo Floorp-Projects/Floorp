@@ -276,7 +276,7 @@ void ReadableStreamDefaultControllerEnqueue(
     // Step 4.2:
     if (aRv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultController.enqueue")) {
-      JS::RootedValue errorValue(aCx);
+      JS::Rooted<JS::Value> errorValue(aCx);
 
       JS_GetPendingException(aCx, &errorValue);
 
@@ -303,7 +303,7 @@ void ReadableStreamDefaultControllerEnqueue(
     // and there are tests to ensure the identity of these errors are the same.
     if (aRv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultController.enqueue")) {
-      JS::RootedValue errorValue(aCx);
+      JS::Rooted<JS::Value> errorValue(aCx);
 
       JS_GetPendingException(aCx, &errorValue);
 
@@ -495,7 +495,7 @@ void SetUpReadableStreamDefaultController(
 
   // Step 9. Default algorithm returns undefined. See Step 2 of
   // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
-  JS::RootedValue startResult(aCx, JS::UndefinedValue());
+  JS::Rooted<JS::Value> startResult(aCx, JS::UndefinedValue());
   RefPtr<ReadableStreamDefaultController> controller = aController;
   aAlgorithms->StartCallback(aCx, *controller, &startResult, aRv);
   if (aRv.Failed()) {
@@ -540,7 +540,8 @@ void SetUpReadableStreamDefaultController(
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source
 void SetupReadableStreamDefaultControllerFromUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
+    JSContext* aCx, ReadableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     QueuingStrategySize* aSizeAlgorithm, ErrorResult& aRv) {
   // Step 1.
@@ -588,7 +589,7 @@ void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
   // Step 2.
   if (!mQueue.isEmpty()) {
     // Step 2.1
-    JS::RootedValue chunk(aCx);
+    JS::Rooted<JS::Value> chunk(aCx);
     DequeueValue(this, &chunk);
 
     // Step 2.2

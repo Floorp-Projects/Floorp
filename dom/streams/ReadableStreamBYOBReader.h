@@ -71,8 +71,9 @@ already_AddRefed<ReadableStreamBYOBReader> AcquireReadableStreamBYOBReader(
     ReadableStream* aStream, ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void ReadableStreamBYOBReaderRead(
-    JSContext* aCx, ReadableStreamBYOBReader* aReader, JS::HandleObject aView,
-    ReadIntoRequest* aReadIntoRequest, ErrorResult& aRv);
+    JSContext* aCx, ReadableStreamBYOBReader* aReader,
+    JS::Handle<JSObject*> aView, ReadIntoRequest* aReadIntoRequest,
+    ErrorResult& aRv);
 
 void ReadableStreamBYOBReaderErrorReadIntoRequests(
     JSContext* aCx, ReadableStreamBYOBReader* aReader,

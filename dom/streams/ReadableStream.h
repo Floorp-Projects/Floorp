@@ -78,7 +78,7 @@ class ReadableStream final : public nsISupports, public nsWrapperCache {
   void SetState(const ReaderState& aState) { mState = aState; }
 
   JS::Value StoredError() const { return mStoredError; }
-  void SetStoredError(JS::HandleValue aStoredError) {
+  void SetStoredError(JS::Handle<JS::Value> aStoredError) {
     mStoredError = aStoredError;
   }
 

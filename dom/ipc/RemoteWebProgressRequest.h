@@ -8,8 +8,7 @@
 #include "nsIChannel.h"
 #include "nsIClassifiedChannel.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class RemoteWebProgressRequest final : public nsIChannel,
                                        public nsIClassifiedChannel {
@@ -32,7 +31,6 @@ class RemoteWebProgressRequest final : public nsIChannel,
   nsCString mMatchedList;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_RemoteWebProgressRequest_h

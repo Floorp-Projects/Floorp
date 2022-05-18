@@ -240,7 +240,8 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
 
   JS::Stencil* GetStencil() { return mStencil.get(); }
 
-  nsresult InstantiateScript(JSContext* aCx, JS::MutableHandleScript aScript);
+  nsresult InstantiateScript(JSContext* aCx,
+                             JS::MutableHandle<JSScript*> aScript);
 
   nsCOMPtr<nsIURI> mSrcURI;
   uint32_t mLineNo;

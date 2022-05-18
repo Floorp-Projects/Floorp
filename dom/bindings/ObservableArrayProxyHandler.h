@@ -28,65 +28,73 @@ class ObservableArrayProxyHandler : public js::ForwardingProxyHandler {
 
   // Implementations of methods that can be implemented in terms of
   // other lower-level methods.
-  bool defineProperty(JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
+  bool defineProperty(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                      JS::Handle<JS::PropertyKey> aId,
                       JS::Handle<JS::PropertyDescriptor> aDesc,
                       JS::ObjectOpResult& aResult) const override;
 
-  bool delete_(JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
+  bool delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+               JS::Handle<JS::PropertyKey> aId,
                JS::ObjectOpResult& aResult) const override;
 
-  bool get(JSContext* aCx, JS::HandleObject aProxy, JS::HandleValue aReceiver,
-           JS::HandleId aId, JS::MutableHandleValue aVp) const override;
+  bool get(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+           JS::Handle<JS::Value> aReceiver, JS::Handle<JS::PropertyKey> aId,
+           JS::MutableHandle<JS::Value> aVp) const override;
 
   bool getOwnPropertyDescriptor(
-      JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
+      JSContext* aCx, JS::Handle<JSObject*> aProxy,
+      JS::Handle<JS::PropertyKey> aId,
       JS::MutableHandle<Maybe<JS::PropertyDescriptor>> aDesc) const override;
 
-  bool has(JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
-           bool* aBp) const override;
+  bool has(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+           JS::Handle<JS::PropertyKey> aId, bool* aBp) const override;
 
-  bool ownPropertyKeys(JSContext* aCx, JS::HandleObject aProxy,
+  bool ownPropertyKeys(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                        JS::MutableHandleVector<jsid> aProps) const override;
 
-  bool preventExtensions(JSContext* aCx, JS::HandleObject aProxy,
+  bool preventExtensions(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                          JS::ObjectOpResult& aResult) const override;
 
-  bool set(JSContext* aCx, JS::HandleObject aProxy, JS::HandleId aId,
-           JS::HandleValue aV, JS::HandleValue aReceiver,
+  bool set(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+           JS::Handle<JS::PropertyKey> aId, JS::Handle<JS::Value> aV,
+           JS::Handle<JS::Value> aReceiver,
            JS::ObjectOpResult& aResult) const override;
 
-  bool SetLength(JSContext* aCx, JS::HandleObject aProxy,
+  bool SetLength(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                  uint32_t aLength) const;
 
   static const char family;
 
  protected:
-  bool GetBackingListObject(JSContext* aCx, JS::HandleObject aProxy,
-                            JS::MutableHandleObject aBackingListObject) const;
+  bool GetBackingListObject(
+      JSContext* aCx, JS::Handle<JSObject*> aProxy,
+      JS::MutableHandle<JSObject*> aBackingListObject) const;
 
-  bool GetBackingListLength(JSContext* aCx, JS::HandleObject aProxy,
+  bool GetBackingListLength(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                             uint32_t* aLength) const;
 
-  bool SetLength(JSContext* aCx, JS::HandleObject aProxy,
-                 JS::HandleObject aBackingList, uint32_t aLength,
+  bool SetLength(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                 JS::Handle<JSObject*> aBackingList, uint32_t aLength,
                  JS::ObjectOpResult& aResult) const;
 
-  bool SetLength(JSContext* aCx, JS::HandleObject aProxy,
-                 JS::HandleObject aBackingList, JS::HandleValue aValue,
+  bool SetLength(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                 JS::Handle<JSObject*> aBackingList,
+                 JS::Handle<JS::Value> aValue,
                  JS::ObjectOpResult& aResult) const;
 
   // Hook for subclasses to invoke the setting the indexed value steps which
   // would invoke DeleteAlgorithm/SetAlgorithm defined and implemented per
   // interface. Returns false and throw exception on failure.
-  virtual bool SetIndexedValue(JSContext* aCx, JS::HandleObject aProxy,
-                               JS::HandleObject aBackingList, uint32_t aIndex,
-                               JS::HandleValue aValue,
+  virtual bool SetIndexedValue(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                               JS::Handle<JSObject*> aBackingList,
+                               uint32_t aIndex, JS::Handle<JS::Value> aValue,
                                JS::ObjectOpResult& aResult) const = 0;
 
   // Hook for subclasses to invoke the DeleteAlgorithm defined and implemented
   // per interface. Returns false and throw exception on failure.
-  virtual bool OnDeleteItem(JSContext* aCx, JS::HandleObject aProxy,
-                            JS::HandleValue aValue, uint32_t aIndex) const = 0;
+  virtual bool OnDeleteItem(JSContext* aCx, JS::Handle<JSObject*> aProxy,
+                            JS::Handle<JS::Value> aValue,
+                            uint32_t aIndex) const = 0;
 };
 
 inline bool IsObservableArrayProxy(JSObject* obj) {

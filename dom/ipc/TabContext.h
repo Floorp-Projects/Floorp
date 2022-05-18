@@ -12,8 +12,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class IPCTabContext;
 
@@ -198,7 +197,6 @@ class MaybeInvalidTabContext {
   MutableTabContext mTabContext;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif
