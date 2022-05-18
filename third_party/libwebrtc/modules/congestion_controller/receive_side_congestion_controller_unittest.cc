@@ -20,10 +20,8 @@
 
 using ::testing::_;
 using ::testing::AtLeast;
-using ::testing::NiceMock;
-using ::testing::Return;
-using ::testing::SaveArg;
-using ::testing::StrictMock;
+using ::testing::ElementsAre;
+using ::testing::MockFunction;
 
 namespace webrtc {
 
@@ -37,34 +35,28 @@ uint32_t AbsSendTime(int64_t t, int64_t denom) {
   return (((t << 18) + (denom >> 1)) / denom) & 0x00fffffful;
 }
 
-class MockPacketRouter : public PacketRouter {
- public:
-  MOCK_METHOD(void,
-              OnReceiveBitrateChanged,
-              (const std::vector<uint32_t>& ssrcs, uint32_t bitrate),
-              (override));
-};
-
 const uint32_t kInitialBitrateBps = 60000;
 
 }  // namespace
 
 namespace test {
 
-TEST(ReceiveSideCongestionControllerTest, OnReceivedPacketWithAbsSendTime) {
-  StrictMock<MockPacketRouter> packet_router;
+TEST(ReceiveSideCongestionControllerTest, SendsRembWithAbsSendTime) {
+  MockFunction<void(std::vector<std::unique_ptr<rtcp::RtcpPacket>>)>
+      feedback_sender;
+  MockFunction<void(uint64_t, std::vector<uint32_t>)> remb_sender;
   SimulatedClock clock_(123456);
 
-  ReceiveSideCongestionController controller(&clock_, &packet_router);
+  ReceiveSideCongestionController controller(
+      &clock_, feedback_sender.AsStdFunction(), remb_sender.AsStdFunction(),
+      nullptr);
 
   size_t payload_size = 1000;
   RTPHeader header;
   header.ssrc = 0x11eb21c;
   header.extension.hasAbsoluteSendTime = true;
 
-  std::vector<unsigned int> ssrcs;
-  EXPECT_CALL(packet_router, OnReceiveBitrateChanged(_, _))
-      .WillRepeatedly(SaveArg<0>(&ssrcs));
+  EXPECT_CALL(remb_sender, Call(_, ElementsAre(header.ssrc))).Times(AtLeast(1));
 
   for (int i = 0; i < 10; ++i) {
     clock_.AdvanceTimeMilliseconds((1000 * payload_size) / kInitialBitrateBps);
@@ -72,9 +64,20 @@ TEST(ReceiveSideCongestionControllerTest, OnReceivedPacketWithAbsSendTime) {
     header.extension.absoluteSendTime = AbsSendTime(now_ms, 1000);
     controller.OnReceivedPacket(now_ms, payload_size, header);
   }
+}
 
-  ASSERT_EQ(1u, ssrcs.size());
-  EXPECT_EQ(header.ssrc, ssrcs[0]);
+TEST(ReceiveSideCongestionControllerTest,
+     SendsRembAfterSetMaxDesiredReceiveBitrate) {
+  MockFunction<void(std::vector<std::unique_ptr<rtcp::RtcpPacket>>)>
+      feedback_sender;
+  MockFunction<void(uint64_t, std::vector<uint32_t>)> remb_sender;
+  SimulatedClock clock_(123456);
+
+  ReceiveSideCongestionController controller(
+      &clock_, feedback_sender.AsStdFunction(), remb_sender.AsStdFunction(),
+      nullptr);
+  EXPECT_CALL(remb_sender, Call(123, _));
+  controller.SetMaxDesiredReceiveBitrate(DataRate::BitsPerSec(123));
 }
 
 TEST(ReceiveSideCongestionControllerTest, ConvergesToCapacity) {

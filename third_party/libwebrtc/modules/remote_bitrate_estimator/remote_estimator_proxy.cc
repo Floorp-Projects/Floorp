@@ -33,11 +33,11 @@ static constexpr int64_t kMaxTimeMs =
 
 RemoteEstimatorProxy::RemoteEstimatorProxy(
     Clock* clock,
-    TransportFeedbackSenderInterface* feedback_sender,
+    TransportFeedbackSender feedback_sender,
     const WebRtcKeyValueConfig* key_value_config,
     NetworkStateEstimator* network_state_estimator)
     : clock_(clock),
-      feedback_sender_(feedback_sender),
+      feedback_sender_(std::move(feedback_sender)),
       send_config_(key_value_config),
       last_process_time_ms_(-1),
       network_state_estimator_(network_state_estimator),
@@ -219,7 +219,7 @@ void RemoteEstimatorProxy::SendPeriodicFeedbacks() {
     }
     packets.push_back(std::move(feedback_packet));
 
-    feedback_sender_->SendCombinedRtcpPacket(std::move(packets));
+    feedback_sender_(std::move(packets));
     // Note: Don't erase items from packet_arrival_times_ after sending, in case
     // they need to be re-sent after a reordering. Removal will be handled
     // by OnPacketArrival once packets are too old.
@@ -252,7 +252,7 @@ void RemoteEstimatorProxy::SendFeedbackOnRequest(
   RTC_DCHECK(feedback_sender_ != nullptr);
   std::vector<std::unique_ptr<rtcp::RtcpPacket>> packets;
   packets.push_back(std::move(feedback_packet));
-  feedback_sender_->SendCombinedRtcpPacket(std::move(packets));
+  feedback_sender_(std::move(packets));
 }
 
 int64_t RemoteEstimatorProxy::BuildFeedbackPacket(
