@@ -495,7 +495,7 @@ void Performance::LogEntry(PerformanceEntry* aEntry,
 
 void Performance::TimingNotification(PerformanceEntry* aEntry,
                                      const nsACString& aOwner,
-                                     uint64_t aEpoch) {
+                                     const double aEpoch) {
   PerformanceEntryEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
