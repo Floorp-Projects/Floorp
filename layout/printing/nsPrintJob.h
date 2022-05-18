@@ -166,8 +166,7 @@ class nsPrintJob final : public nsIWebProgressListener,
                        nsresult& aStatus);
   nsresult DoPrint(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO,
-                         bool aSetPixelScale);
+  nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
@@ -223,9 +222,8 @@ class nsPrintJob final : public nsIWebProgressListener,
   nsresult SetRootView(nsPrintObject* aPO, bool& aDoReturn,
                        bool& aDocumentIsTopLevel, nsSize& aAdjSize);
   nsView* GetParentViewForRoot();
-  bool DoSetPixelScale();
-  void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
-  MOZ_CAN_RUN_SCRIPT nsresult ReconstructAndReflow(bool aDoSetPixelScale);
+  void UpdateZoomRatio(nsPrintObject* aPO);
+  MOZ_CAN_RUN_SCRIPT nsresult ReconstructAndReflow();
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult UpdateSelectionAndShrinkPrintObject(
       nsPrintObject* aPO, bool aDocumentIsTopLevel);
   MOZ_CAN_RUN_SCRIPT nsresult InitPrintDocConstruction(bool aHandleError);
