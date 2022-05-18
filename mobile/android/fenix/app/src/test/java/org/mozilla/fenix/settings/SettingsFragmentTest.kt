@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.concept.fetch.Client
-import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -30,7 +29,6 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
 import java.io.IOException
@@ -55,8 +53,6 @@ class SettingsFragmentTest {
 
         mockkObject(Config)
         every { Config.channel } returns ReleaseChannel.Nightly
-
-        FxNimbus.api = NimbusDisabled(testContext)
 
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
         activity.supportFragmentManager.beginTransaction()

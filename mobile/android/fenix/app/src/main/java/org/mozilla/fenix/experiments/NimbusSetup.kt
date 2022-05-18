@@ -13,11 +13,26 @@ import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.experiments.nimbus.NimbusInterface
+import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
+
+/**
+ * Fenix specific observer of Nimbus events.
+ *
+ * The generated code `FxNimbus` provides a cache which should be invalidated
+ * when the experiments recipes are updated.
+ */
+private val observer = object : NimbusInterface.Observer {
+    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+        FxNimbus.invalidateCachedValues()
+    }
+}
 
 @Suppress("TooGenericExceptionCaught")
 fun createNimbus(context: Context, url: String?): NimbusApi {
@@ -69,6 +84,10 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
             )
         )
         Nimbus(context, appInfo, serverSettings, errorReporter).apply {
+            // We register our own internal observer for housekeeping the Nimbus SDK and
+            // generated code.
+            register(observer)
+
             // This performs the minimal amount of work required to load branch and enrolment data
             // into memory. If `getExperimentBranch` is called from another thread between here
             // and the next nimbus disk write (setting `globalUserParticipation` or
