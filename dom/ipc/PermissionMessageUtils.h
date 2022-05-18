@@ -35,8 +35,7 @@ class Principal {
 
 }  // namespace IPC
 
-namespace mozilla {
-namespace ipc {
+namespace mozilla::ipc {
 
 template <>
 struct IPDLParamTraits<nsIPrincipal*> {
@@ -70,7 +69,6 @@ struct IPDLParamTraits<IPC::Principal> {
   }
 };
 
-}  // namespace ipc
-}  // namespace mozilla
+}  // namespace mozilla::ipc
 
 #endif  // mozilla_dom_permission_message_utils_h__

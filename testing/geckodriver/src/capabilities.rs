@@ -432,7 +432,10 @@ impl FirefoxOptions {
             rv.env = FirefoxOptions::load_env(options)?;
             rv.log = FirefoxOptions::load_log(options)?;
             rv.prefs = FirefoxOptions::load_prefs(options)?;
-            if let Some(profile) = FirefoxOptions::load_profile(options)? {
+            if let Some(profile) = FirefoxOptions::load_profile(
+                settings.profile_root.as_ref().map(|x| x.as_path()),
+                options,
+            )? {
                 rv.profile = ProfileType::Path(profile);
             }
         }
@@ -554,7 +557,10 @@ impl FirefoxOptions {
         Ok(rv)
     }
 
-    fn load_profile(options: &Capabilities) -> WebDriverResult<Option<Profile>> {
+    fn load_profile(
+        profile_root: Option<&Path>,
+        options: &Capabilities,
+    ) -> WebDriverResult<Option<Profile>> {
         if let Some(profile_json) = options.get("profile") {
             let profile_base64 = profile_json.as_str().ok_or_else(|| {
                 WebDriverError::new(ErrorStatus::InvalidArgument, "Profile is not a string")
@@ -562,7 +568,7 @@ impl FirefoxOptions {
             let profile_zip = &*base64::decode(profile_base64)?;
 
             // Create an emtpy profile directory
-            let profile = Profile::new()?;
+            let profile = Profile::new(profile_root)?;
             unzip_buffer(
                 profile_zip,
                 profile

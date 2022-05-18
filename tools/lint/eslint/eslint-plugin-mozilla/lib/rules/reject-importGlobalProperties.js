@@ -8,6 +8,8 @@
 
 "use strict";
 
+const path = require("path");
+
 const privilegedGlobals = Object.keys(
   require("../environments/privileged.js").globals
 );
@@ -34,7 +36,12 @@ module.exports = {
   create(context) {
     return {
       CallExpression(node) {
-        if (node.callee.type !== "MemberExpression") {
+        if (
+          node.callee.type !== "MemberExpression" ||
+          // TODO Bug 1501127: sjs files have their own sandbox, and do not inherit
+          // the Window backstage pass directly.
+          path.extname(context.getFilename()) == ".sjs"
+        ) {
           return;
         }
         let memexp = node.callee;

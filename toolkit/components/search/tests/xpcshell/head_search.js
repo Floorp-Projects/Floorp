@@ -330,6 +330,62 @@ function useCustomGeoServer(region, waitToRespond = Promise.resolve()) {
 }
 
 /**
+ * @typedef {object} TelemetryDetails
+ * @property {string} engineId
+ * @property {string} [displayName]
+ * @property {string} [loadPath]
+ * @property {string} [submissionUrl]
+ * @property {string} [verified].
+
+/**
+ * Asserts that default search engine telemetry has been correctly reported
+ * to Glean.
+ *
+ * @param {object} expected
+ * @param {TelemetryDetails} expected.normal
+ *   An object with the expected details for the normal search engine.
+ * @param {TelemetryDetails} [expected.private]
+ *   An object with the expected details for the private search engine.
+ */
+async function assertGleanDefaultEngine(expected) {
+  await TestUtils.waitForCondition(
+    () =>
+      Glean.searchEngineDefault.engineId.testGetValue() ==
+      (expected.normal.engineId ?? ""),
+    "Should have set the correct telemetry id for the normal engine"
+  );
+
+  await TestUtils.waitForCondition(
+    () =>
+      Glean.searchEnginePrivate.engineId.testGetValue() ==
+      (expected.private?.engineId ?? ""),
+    "Should have set the correct telemetry id for the private engine"
+  );
+
+  for (let property of [
+    "displayName",
+    "loadPath",
+    "submissionUrl",
+    "verified",
+  ]) {
+    if (property in expected.normal) {
+      Assert.equal(
+        Glean.searchEngineDefault[property].testGetValue(),
+        expected.normal[property] ?? "",
+        `Should have set ${property} correctly`
+      );
+    }
+    if (expected.private && property in expected.private) {
+      Assert.equal(
+        Glean.searchEnginePrivate[property].testGetValue(),
+        expected.private[property] ?? "",
+        `Should have set ${property} correctly`
+      );
+    }
+  }
+}
+
+/**
  * A simple observer to ensure we get only the expected notifications.
  */
 class SearchObserver {

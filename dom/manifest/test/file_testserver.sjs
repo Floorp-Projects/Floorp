@@ -1,20 +1,18 @@
 "use strict";
 let { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  const testHTMLFile = Components.classes[
-    "@mozilla.org/file/directory_service;1"
-  ]
-    .getService(Components.interfaces.nsIProperties)
-    .get("CurWorkD", Components.interfaces.nsIFile);
+  const testHTMLFile = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
 
-  const testHTMLFileStream = Components.classes[
+  const testHTMLFileStream = Cc[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Components.interfaces.nsIFileInputStream);
+  ].createInstance(Ci.nsIFileInputStream);
 
   path
     .split("/")

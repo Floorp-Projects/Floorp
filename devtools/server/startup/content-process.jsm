@@ -80,7 +80,10 @@ function initContentProcessTarget(msg) {
   const { ContentProcessTargetActor } = loader.require(
     "devtools/server/actors/targets/content-process"
   );
-  const actor = new ContentProcessTargetActor(conn);
+
+  const actor = new ContentProcessTargetActor(conn, {
+    sessionContext: msg.data.sessionContext,
+  });
   actor.manage(actor);
 
   const response = { watcherActorID, prefix, actor: actor.form() };

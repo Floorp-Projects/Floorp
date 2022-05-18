@@ -439,10 +439,6 @@ struct NativePropertyHooks {
   // constructors::id::_ID_Count.
   constructors::ID mConstructorID;
 
-  // The NativePropertyHooks instance for the parent interface (for
-  // ShimInterfaceInfo).
-  const NativePropertyHooks* mProtoHooks;
-
   // The JSClass to use for expandos on our Xrays.  Can be null, in which case
   // Xrays will use a default class of their choice.
   const JSClass* mXrayExpandoClass;

@@ -37,6 +37,8 @@ namespace mozilla {
 namespace net {
 Maybe<nsCString> CallingScriptLocationString();
 void LogCallingScriptLocation(void* instance);
+void LogCallingScriptLocation(void* instance,
+                              const Maybe<nsCString>& aLogLocation);
 extern LazyLogModule gHttpLog;
 }  // namespace net
 }  // namespace mozilla

@@ -84,12 +84,12 @@ struct TeeState : public nsISupports {
   }
 
   JS::Value Reason1() const { return mReason1; }
-  void SetReason1(JS::HandleValue aReason1) { mReason1 = aReason1; }
+  void SetReason1(JS::Handle<JS::Value> aReason1) { mReason1 = aReason1; }
 
   JS::Value Reason2() const { return mReason2; }
-  void SetReason2(JS::HandleValue aReason2) { mReason2 = aReason2; }
+  void SetReason2(JS::Handle<JS::Value> aReason2) { mReason2 = aReason2; }
 
-  void SetReason(TeeBranch aBranch, JS::HandleValue aReason) {
+  void SetReason(TeeBranch aBranch, JS::Handle<JS::Value> aReason) {
     aBranch == TeeBranch::Branch1 ? SetReason1(aReason) : SetReason2(aReason);
   }
 

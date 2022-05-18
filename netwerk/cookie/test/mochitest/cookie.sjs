@@ -119,6 +119,8 @@ function handleRequest(aRequest, aResponse) {
       })
     );
 
+    // This function is exported as a string.
+    /* eslint-disable no-undef */
     function w() {
       onconnect = e => {
         e.ports[0].onmessage = evt => {
@@ -145,6 +147,7 @@ function handleRequest(aRequest, aResponse) {
         e.ports[0].postMessage(42);
       };
     }
+    /* eslint-enable no-undef */
 
     aResponse.setHeader("Content-Type", "text/javascript", false);
     aResponse.write(w.toString() + "; w();");

@@ -163,27 +163,27 @@ nsScriptErrorBase::GetHasException(bool* aHasException) {
 }
 
 NS_IMETHODIMP
-nsScriptErrorBase::GetException(JS::MutableHandleValue aException) {
+nsScriptErrorBase::GetException(JS::MutableHandle<JS::Value> aException) {
   aException.setUndefined();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorBase::SetException(JS::HandleValue aStack) {
+nsScriptErrorBase::SetException(JS::Handle<JS::Value> aStack) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsScriptErrorBase::GetStack(JS::MutableHandleValue aStack) {
+nsScriptErrorBase::GetStack(JS::MutableHandle<JS::Value> aStack) {
   aStack.setUndefined();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScriptErrorBase::SetStack(JS::HandleValue aStack) { return NS_OK; }
+nsScriptErrorBase::SetStack(JS::Handle<JS::Value> aStack) { return NS_OK; }
 
 NS_IMETHODIMP
-nsScriptErrorBase::GetStackGlobal(JS::MutableHandleValue aStackGlobal) {
+nsScriptErrorBase::GetStackGlobal(JS::MutableHandle<JS::Value> aStackGlobal) {
   aStackGlobal.setUndefined();
   return NS_OK;
 }

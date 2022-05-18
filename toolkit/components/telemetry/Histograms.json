@@ -8569,8 +8569,8 @@
     "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
     "expires_in_version": "default",
     "kind": "exponential",
-    "high": 3000,
-    "n_buckets": 10,
+    "high": 9000,
+    "n_buckets": 20,
     "description": "Session restore: Time to write the session data to the file on disk (ms)"
   },
   "FX_SESSION_RESTORE_FILE_SIZE_BYTES": {

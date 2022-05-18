@@ -4,13 +4,10 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const {
   setBreakpointAtEntryPoints,
 } = require("devtools/server/actors/breakpoint");
 const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert } = DevToolsUtils;
 const { sourceSpec } = require("devtools/shared/specs/source");
 const {
   resolveSourceURL,
@@ -33,12 +30,13 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(this, "Services");
-loader.lazyGetter(
+loader.lazyRequireGetter(
   this,
-  "WebExtensionPolicy",
-  () => Cu.getGlobalForObject(Cu).WebExtensionPolicy
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
 );
+
+loader.lazyRequireGetter(this, "Services");
 
 const windowsDrive = /^([a-zA-Z]:)/;
 
@@ -153,7 +151,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
             }
           }
         } catch (e) {
-          // Ignore
+          console.warn(`Failed to find extension name for ${this.url} : ${e}`);
         }
       }
     }
@@ -209,7 +207,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     if (this._isWasm) {
       const wasm = this._source.binary;
       const buffer = wasm.buffer;
-      assert(
+      DevToolsUtils.assert(
         wasm.byteOffset === 0 && wasm.byteLength === buffer.byteLength,
         "Typed array from wasm source binary must cover entire buffer"
       );

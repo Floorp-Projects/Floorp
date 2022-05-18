@@ -44,7 +44,7 @@ static bool ByteLengthQueuingStrategySize(JSContext* cx, unsigned argc,
   JS::CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1: Return ? GetV(chunk, "byteLength").
-  JS::RootedObject chunkObj(cx, JS::ToObject(cx, args.get(0)));
+  JS::Rooted<JSObject*> chunkObj(cx, JS::ToObject(cx, args.get(0)));
   if (!chunkObj) {
     return false;
   }

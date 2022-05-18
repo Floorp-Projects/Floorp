@@ -11,9 +11,7 @@ async function testSteps() {
 
   disableNextGenLocalStorage();
 
-  if (!importShadowDatabase("shadowdb-clearedOrigin.sqlite")) {
-    return;
-  }
+  ok(importShadowDatabase("shadowdb-clearedOrigin.sqlite"), "Import succeeded");
 
   verifyData([1], /* migrated */ true);
 }

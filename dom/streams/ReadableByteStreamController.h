@@ -336,16 +336,16 @@ MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerRespondWithNewView(
 
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
-    JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
+    JS::Handle<JSObject*> aView, ReadIntoRequest* aReadIntoRequest,
     ErrorResult& aRv);
 
 void ReadableByteStreamControllerError(
-    ReadableByteStreamController* aController, JS::HandleValue aValue,
+    ReadableByteStreamController* aController, JS::Handle<JS::Value> aValue,
     ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
-    JS::HandleObject aChunk, ErrorResult& aRv);
+    JS::Handle<JSObject*> aChunk, ErrorResult& aRv);
 
 already_AddRefed<ReadableStreamBYOBRequest>
 ReadableByteStreamControllerGetBYOBRequest(
@@ -367,7 +367,8 @@ MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerCallPullIfNeeded(
     ErrorResult& aRv);
 
 MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamControllerFromUnderlyingSource(
-    JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
+    JSContext* aCx, ReadableStream* aStream,
+    JS::Handle<JSObject*> aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
     ErrorResult& aRv);
 

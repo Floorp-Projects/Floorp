@@ -12,7 +12,7 @@ const IMG_BYTES = atob(
 
 // stolen from file_blocked_script.sjs
 function setGlobalState(data, key) {
-  x = {
+  let x = {
     data,
     QueryInterface: ChromeUtils.generateQI([]),
   };

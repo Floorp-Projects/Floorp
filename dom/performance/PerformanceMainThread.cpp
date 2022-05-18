@@ -405,7 +405,7 @@ void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoCString uri;
-  uint64_t markCreationEpoch = 0;
+  double markCreationEpoch = 0;
 
   if (StaticPrefs::dom_performance_enable_user_timing_logging() ||
       StaticPrefs::dom_performance_enable_notify_performance_timing()) {
@@ -419,7 +419,11 @@ void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
       // If we have no URI, just put in "none".
       uri.AssignLiteral("none");
     }
-    markCreationEpoch = static_cast<uint64_t>(PR_Now() / PR_USEC_PER_MSEC);
+
+    // PR_Now() returns a signed 64-bit integer. Since it represents a
+    // timestamp, only ~32-bits will represent the value which should safely fit
+    // into a double.
+    markCreationEpoch = static_cast<double>(PR_Now() / PR_USEC_PER_MSEC);
 
     if (StaticPrefs::dom_performance_enable_user_timing_logging()) {
       Performance::LogEntry(aEntry, uri);

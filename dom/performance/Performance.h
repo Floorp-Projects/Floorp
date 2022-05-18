@@ -175,7 +175,7 @@ class Performance : public DOMEventTargetHelper {
 
   void LogEntry(PerformanceEntry* aEntry, const nsACString& aOwner) const;
   void TimingNotification(PerformanceEntry* aEntry, const nsACString& aOwner,
-                          uint64_t epoch);
+                          const double aEpoch);
 
   void RunNotificationObserversTask();
   void QueueEntry(PerformanceEntry* aEntry);

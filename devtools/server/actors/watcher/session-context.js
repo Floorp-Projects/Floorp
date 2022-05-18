@@ -16,11 +16,19 @@
 // These objects have only two attributes used by all the Session contexts:
 // - type: String
 //   Describes which type of context we are debugging.
-//   Can be "all", "browser-element" or "webextension".
+//   See SESSION_TYPES for all possible values.
 //   See each create* method for more info about each type and their specific attributes.
 // - isServerTargetSwitchingEnabled: Boolean
 //   If true, targets should all be spawned by the server codebase.
 //   Especially the first, top level target.
+
+const SESSION_TYPES = {
+  ALL: "all",
+  BROWSER_ELEMENT: "browser-element",
+  CONTENT_PROCESS: "content-process",
+  WEBEXTENSION: "webextension",
+  WORKER: "worker",
+};
 
 /**
  * Create the SessionContext used by the Browser Toolbox and Browser Console.
@@ -33,7 +41,7 @@
  */
 function createBrowserSessionContext() {
   return {
-    type: "all",
+    type: SESSION_TYPES.ALL,
     // For now, the top level target (ParentProcessTargetActor) is created via ProcessDescriptor.getTarget
     // and is never replaced by any other, nor is it created by the WatcherActor.
     isServerTargetSwitchingEnabled: false,
@@ -51,7 +59,7 @@ function createBrowserSessionContext() {
  */
 function createBrowserElementSessionContext(browserElement, config) {
   return {
-    type: "browser-element",
+    type: SESSION_TYPES.BROWSER_ELEMENT,
     browserId: browserElement.browserId,
     // Nowaday, it should always be enabled except for WebExtension special
     // codepath and some tests.
@@ -86,7 +94,7 @@ function createWebExtensionSessionContext(
   config
 ) {
   return {
-    type: "webextension",
+    type: SESSION_TYPES.WEBEXTENSION,
     addonId: addonId,
     addonBrowsingContextID: browsingContextID,
     addonInnerWindowId: innerWindowId,
@@ -96,8 +104,30 @@ function createWebExtensionSessionContext(
   };
 }
 
+/**
+ * Create the SessionContext used by the Browser Content Toolbox, to debug only one content process.
+ * Or when debugging XpcShell via about:debugging, where we instantiate only one content process target.
+ */
+function createContentProcessSessionContext() {
+  return {
+    type: SESSION_TYPES.CONTENT_PROCESS,
+  };
+}
+
+/**
+ * Create the SessionContext used when debugging one specific Service Worker or special chrome worker.
+ * This is only used from about:debugging.
+ */
+function createWorkerSessionContext() {
+  return {
+    type: SESSION_TYPES.WORKER,
+  };
+}
+
 module.exports = {
   createBrowserSessionContext,
   createBrowserElementSessionContext,
   createWebExtensionSessionContext,
+  createContentProcessSessionContext,
+  createWorkerSessionContext,
 };

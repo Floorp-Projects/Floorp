@@ -65,7 +65,7 @@ bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-cloneasuint8array
-JSObject* CloneAsUint8Array(JSContext* aCx, JS::HandleObject aObject) {
+JSObject* CloneAsUint8Array(JSContext* aCx, JS::Handle<JSObject*> aObject) {
   // Step 1. Assert: Type(O) is Object. Implicit.
   // Step 2. Assert: O has an [[ViewedArrayBuffer]] internal slot.
   MOZ_ASSERT(JS_IsArrayBufferViewObject(aObject));

@@ -18,9 +18,7 @@ class nsFrameLoader;
 class nsILoadContext;
 class nsIContent;
 
-namespace mozilla {
-
-namespace dom {
+namespace mozilla::dom {
 
 class BrowserHost;
 class BrowserBridgeHost;
@@ -69,7 +67,6 @@ class RemoteBrowser : public nsISupports {
   virtual void UpdateEffects(EffectsInfo aInfo) = 0;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_ipc_RemoteBrowser_h
