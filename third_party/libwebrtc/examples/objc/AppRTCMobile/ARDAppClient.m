@@ -212,11 +212,7 @@ static int const kKbpsMultiplier = 1000;
     return;
   }
   _state = state;
-  __weak ARDAppClient *weakSelf = self;
-  dispatch_async(dispatch_get_main_queue(), ^{
-    ARDAppClient *strongSelf = weakSelf;
-    [strongSelf.delegate appClient:strongSelf didChangeState:strongSelf.state];
-  });
+  [_delegate appClient:self didChangeState:_state];
 }
 
 - (void)connectToRoomWithId:(NSString *)roomId
