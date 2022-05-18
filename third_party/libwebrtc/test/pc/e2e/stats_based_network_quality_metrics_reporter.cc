@@ -215,7 +215,7 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
   ReportResult("bytes_discarded_no_receiver", pc_label,
                network_layer_stats.stats->BytesDropped().bytes(),
                "sizeInBytes");
-  ReportResult("packets_discarded_no_recevier", pc_label,
+  ReportResult("packets_discarded_no_receiver", pc_label,
                network_layer_stats.stats->PacketsDropped(), "unitless");
 
   ReportResult("payload_bytes_received", pc_label,
