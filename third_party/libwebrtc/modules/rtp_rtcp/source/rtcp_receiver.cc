@@ -67,22 +67,6 @@ const size_t kMaxNumberOfStoredRrtrs = 300;
 constexpr TimeDelta kDefaultVideoReportInterval = TimeDelta::Seconds(1);
 constexpr TimeDelta kDefaultAudioReportInterval = TimeDelta::Seconds(5);
 
-std::set<uint32_t> GetRegisteredSsrcs(
-    const RtpRtcpInterface::Configuration& config) {
-  std::set<uint32_t> ssrcs;
-  ssrcs.insert(config.local_media_ssrc);
-  if (config.rtx_send_ssrc) {
-    ssrcs.insert(*config.rtx_send_ssrc);
-  }
-  if (config.fec_generator) {
-    absl::optional<uint32_t> flexfec_ssrc = config.fec_generator->FecSsrc();
-    if (flexfec_ssrc) {
-      ssrcs.insert(*flexfec_ssrc);
-    }
-  }
-  return ssrcs;
-}
-
 // Returns true if the |timestamp| has exceeded the |interval *
 // kRrTimeoutIntervals| period and was reset (set to PlusInfinity()). Returns
 // false if the timer was either already reset or if it has not expired.
@@ -99,6 +83,22 @@ bool ResetTimestampIfExpired(const Timestamp now,
 }
 
 }  // namespace
+
+RTCPReceiver::RegisteredSsrcs::RegisteredSsrcs(
+    const RtpRtcpInterface::Configuration& config) {
+  ssrcs_.push_back(config.local_media_ssrc);
+  if (config.rtx_send_ssrc) {
+    ssrcs_.push_back(*config.rtx_send_ssrc);
+  }
+  if (config.fec_generator) {
+    absl::optional<uint32_t> flexfec_ssrc = config.fec_generator->FecSsrc();
+    if (flexfec_ssrc) {
+      ssrcs_.push_back(*flexfec_ssrc);
+    }
+  }
+  // Ensure that the RegisteredSsrcs can inline the SSRCs.
+  RTC_DCHECK_LE(ssrcs_.size(), RTCPReceiver::RegisteredSsrcs::kMaxSsrcs);
+}
 
 struct RTCPReceiver::PacketInformation {
   uint32_t packet_type_flags = 0;  // RTCPPacketTypeFlags bit field.
@@ -160,7 +160,7 @@ RTCPReceiver::RTCPReceiver(const RtpRtcpInterface::Configuration& config,
       receiver_only_(config.receiver_only),
       rtp_rtcp_(owner),
       main_ssrc_(config.local_media_ssrc),
-      registered_ssrcs_(GetRegisteredSsrcs(config)),
+      registered_ssrcs_(config),
       rtcp_bandwidth_observer_(config.bandwidth_callback),
       rtcp_event_observer_(config.rtcp_event_observer),
       rtcp_intra_frame_observer_(config.intra_frame_callback),
@@ -578,7 +578,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   // which the information in this reception report block pertains.
 
   // Filter out all report blocks that are not for us.
-  if (registered_ssrcs_.count(report_block.source_ssrc()) == 0)
+  if (!registered_ssrcs_.contains(report_block.source_ssrc()))
     return;
 
   last_received_rb_ = clock_->CurrentTime();
@@ -853,7 +853,7 @@ void RTCPReceiver::HandleXrReceiveReferenceTime(uint32_t sender_ssrc,
 }
 
 void RTCPReceiver::HandleXrDlrrReportBlock(const rtcp::ReceiveTimeInfo& rti) {
-  if (registered_ssrcs_.count(rti.ssrc) == 0)  // Not to us.
+  if (!registered_ssrcs_.contains(rti.ssrc))  // Not to us.
     return;
 
   // Caller should explicitly enable rtt calculation using extended reports.
@@ -1076,14 +1076,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     // Might trigger a OnReceivedBandwidthEstimateUpdate.
     NotifyTmmbrUpdated();
   }
-  uint32_t local_ssrc;
-  std::set<uint32_t> registered_ssrcs;
-  {
-    // We don't want to hold this critsect when triggering the callbacks below.
-    MutexLock lock(&rtcp_receiver_lock_);
-    local_ssrc = main_ssrc_;
-    registered_ssrcs = registered_ssrcs_;
-  }
+
   if (!receiver_only_ && (packet_information.packet_type_flags & kRtcpSrReq)) {
     rtp_rtcp_->OnRequestSendReport();
   }
@@ -1110,7 +1103,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
         RTC_LOG(LS_VERBOSE)
             << "Incoming FIR from SSRC " << packet_information.remote_ssrc;
       }
-      rtcp_intra_frame_observer_->OnReceivedIntraFrameRequest(local_ssrc);
+      rtcp_intra_frame_observer_->OnReceivedIntraFrameRequest(main_ssrc_);
     }
   }
   if (rtcp_loss_notification_observer_ &&
@@ -1118,7 +1111,7 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
     rtcp::LossNotification* loss_notification =
         packet_information.loss_notification.get();
     RTC_DCHECK(loss_notification);
-    if (loss_notification->media_ssrc() == local_ssrc) {
+    if (loss_notification->media_ssrc() == main_ssrc_) {
       rtcp_loss_notification_observer_->OnReceivedLossNotification(
           loss_notification->media_ssrc(), loss_notification->last_decoded(),
           loss_notification->last_received(),
@@ -1150,8 +1143,8 @@ void RTCPReceiver::TriggerCallbacksFromRtcpPacket(
       (packet_information.packet_type_flags & kRtcpTransportFeedback)) {
     uint32_t media_source_ssrc =
         packet_information.transport_feedback->media_ssrc();
-    if (media_source_ssrc == local_ssrc ||
-        registered_ssrcs.find(media_source_ssrc) != registered_ssrcs.end()) {
+    if (media_source_ssrc == main_ssrc_ ||
+        registered_ssrcs_.contains(media_source_ssrc)) {
       transport_feedback_observer_->OnTransportFeedback(
           *packet_information.transport_feedback);
     }
