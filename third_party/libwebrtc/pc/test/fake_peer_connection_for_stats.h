@@ -388,7 +388,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
       }
     }
     auto transceiver = RtpTransceiverProxyWithInternal<RtpTransceiver>::Create(
-        signaling_thread_, new RtpTransceiver(media_type));
+        signaling_thread_,
+        new RtpTransceiver(media_type, channel_manager_.get()));
     transceivers_.push_back(transceiver);
     return transceiver;
   }
@@ -396,6 +397,12 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   rtc::Thread* const network_thread_;
   rtc::Thread* const worker_thread_;
   rtc::Thread* const signaling_thread_;
+
+  std::unique_ptr<cricket::ChannelManager> channel_manager_ =
+      cricket::ChannelManager::Create(nullptr /* MediaEngineInterface */,
+                                      true,
+                                      worker_thread_,
+                                      network_thread_);
 
   rtc::scoped_refptr<StreamCollection> local_streams_;
   rtc::scoped_refptr<StreamCollection> remote_streams_;

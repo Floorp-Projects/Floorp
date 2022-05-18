@@ -93,8 +93,12 @@ struct CryptoParams;
 // NetworkInterface.
 
 class BaseChannel : public ChannelInterface,
-                    public rtc::MessageHandlerAutoCleanup,
+                    // TODO(tommi): Remove MessageHandler inheritance.
+                    public rtc::MessageHandler,
+                    // TODO(tommi): Remove has_slots inheritance.
                     public sigslot::has_slots<>,
+                    // TODO(tommi): Consider implementing these interfaces
+                    // via composition.
                     public MediaChannel::NetworkInterface,
                     public webrtc::RtpPacketSinkInterface {
  public:
@@ -175,7 +179,7 @@ class BaseChannel : public ChannelInterface,
   }
 
   // Used for latency measurements.
-  sigslot::signal1<ChannelInterface*>& SignalFirstPacketReceived() override;
+  void SetFirstPacketReceivedCallback(std::function<void()> callback) override;
 
   // From RtpTransport - public for testing only
   void OnTransportReadyToSend(bool ready);
@@ -319,12 +323,11 @@ class BaseChannel : public ChannelInterface,
   rtc::Thread* const network_thread_;
   rtc::Thread* const signaling_thread_;
   rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_;
-  sigslot::signal1<ChannelInterface*> SignalFirstPacketReceived_
-      RTC_GUARDED_BY(signaling_thread_);
 
   const std::string content_name_;
 
-  bool has_received_packet_ = false;
+  std::function<void()> on_first_packet_received_
+      RTC_GUARDED_BY(network_thread());
 
   // Won't be set when using raw packet transports. SDP-specific thing.
   // TODO(bugs.webrtc.org/12230): Written on network thread, read on

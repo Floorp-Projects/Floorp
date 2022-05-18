@@ -89,7 +89,6 @@ enum {
   MSG_SEND_RTCP_PACKET,
   MSG_READYTOSENDDATA,
   MSG_DATARECEIVED,
-  MSG_FIRSTPACKETRECEIVED,
 };
 
 static void SafeSetError(const std::string& message, std::string* error_desc) {
@@ -156,7 +155,6 @@ BaseChannel::~BaseChannel() {
 
   // Eats any outstanding messages or packets.
   alive_->SetNotAlive();
-  signaling_thread_->Clear(this);
   // The media channel is destroyed at the end of the destructor, since it
   // is a std::unique_ptr. The transport channel (rtp_transport) must outlive
   // the media channel.
@@ -411,9 +409,11 @@ void BaseChannel::OnNetworkRouteChanged(
   media_channel_->OnNetworkRouteChanged(transport_name_, new_route);
 }
 
-sigslot::signal1<ChannelInterface*>& BaseChannel::SignalFirstPacketReceived() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  return SignalFirstPacketReceived_;
+void BaseChannel::SetFirstPacketReceivedCallback(
+    std::function<void()> callback) {
+  RTC_DCHECK_RUN_ON(network_thread());
+  RTC_DCHECK(!on_first_packet_received_ || !callback);
+  on_first_packet_received_ = std::move(callback);
 }
 
 void BaseChannel::OnTransportReadyToSend(bool ready) {
@@ -490,6 +490,8 @@ bool BaseChannel::SendPacket(bool rtcp,
 }
 
 void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
+  RTC_DCHECK_RUN_ON(network_thread());
+
   // Take packet time from the |parsed_packet|.
   // RtpPacketReceived.arrival_time_ms = (timestamp_us + 500) / 1000;
   int64_t packet_time_us = -1;
@@ -497,9 +499,9 @@ void BaseChannel::OnRtpPacket(const webrtc::RtpPacketReceived& parsed_packet) {
     packet_time_us = parsed_packet.arrival_time_ms() * 1000;
   }
 
-  if (!has_received_packet_) {
-    has_received_packet_ = true;
-    signaling_thread()->Post(RTC_FROM_HERE, this, MSG_FIRSTPACKETRECEIVED);
+  if (on_first_packet_received_) {
+    on_first_packet_received_();
+    on_first_packet_received_ = nullptr;
   }
 
   if (!srtp_active() && srtp_required_) {
@@ -828,11 +830,6 @@ void BaseChannel::OnMessage(rtc::Message* pmsg) {
       bool rtcp = pmsg->message_id == MSG_SEND_RTCP_PACKET;
       SendPacket(rtcp, &data->packet, data->options);
       delete data;
-      break;
-    }
-    case MSG_FIRSTPACKETRECEIVED: {
-      RTC_DCHECK_RUN_ON(signaling_thread_);
-      SignalFirstPacketReceived_(this);
       break;
     }
   }

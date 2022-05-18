@@ -35,6 +35,7 @@
 #include "pc/rtp_receiver.h"
 #include "pc/rtp_sender.h"
 #include "rtc_base/ref_counted_object.h"
+#include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -78,7 +79,8 @@ class RtpTransceiver final
   // channel set.
   // |media_type| specifies the type of RtpTransceiver (and, by transitivity,
   // the type of senders, receivers, and channel). Can either by audio or video.
-  explicit RtpTransceiver(cricket::MediaType media_type);
+  RtpTransceiver(cricket::MediaType media_type,
+                 cricket::ChannelManager* channel_manager);
   // Construct a Unified Plan-style RtpTransceiver with the given sender and
   // receiver. The media type will be derived from the media types of the sender
   // and receiver. The sender and receiver should have the same media type.
@@ -232,20 +234,21 @@ class RtpTransceiver final
           header_extensions_to_offer) override;
 
  private:
-  void OnFirstPacketReceived(cricket::ChannelInterface* channel);
+  void OnFirstPacketReceived();
   void StopSendingAndReceiving();
 
   // Enforce that this object is created, used and destroyed on one thread.
-  const TaskQueueBase* thread_;
+  TaskQueueBase* const thread_;
   const bool unified_plan_;
   const cricket::MediaType media_type_;
+  rtc::scoped_refptr<PendingTaskSafetyFlag> signaling_thread_safety_;
   std::vector<rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>>>
       senders_;
   std::vector<
       rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>>
       receivers_;
 
-  bool stopped_ = false;
+  bool stopped_ RTC_GUARDED_BY(thread_) = false;
   bool stopping_ RTC_GUARDED_BY(thread_) = false;
   bool is_pc_closed_ = false;
   RtpTransceiverDirection direction_ = RtpTransceiverDirection::kInactive;
