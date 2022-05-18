@@ -1906,7 +1906,8 @@ class WebRtcSdpTest : public ::testing::Test {
     os.clear();
     os.str("");
     // Pl type 100 preferred.
-    os << "m=video 9 RTP/SAVPF 99 95\r\n"
+    os << "m=video 9 RTP/SAVPF 99 95 96\r\n"
+          "a=rtpmap:96 VP9/90000\r\n"  // out-of-order wrt the m= line.
           "a=rtpmap:99 VP8/90000\r\n"
           "a=rtpmap:95 RTX/90000\r\n"
           "a=fmtp:95 apt=99;\r\n";
@@ -1954,6 +1955,10 @@ class WebRtcSdpTest : public ::testing::Test {
     EXPECT_EQ("RTX", rtx.name);
     EXPECT_EQ(95, rtx.id);
     VerifyCodecParameter(rtx.params, "apt", vp8.id);
+    // VP9 is listed last in the m= line so should come after VP8 and RTX.
+    cricket::VideoCodec vp9 = vcd->codecs()[2];
+    EXPECT_EQ("VP9", vp9.name);
+    EXPECT_EQ(96, vp9.id);
   }
 
   void TestDeserializeRtcpFb(JsepSessionDescription* jdesc_output,
