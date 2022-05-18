@@ -8,6 +8,7 @@
 #include "js/TypeDecls.h"
 #include "js/experimental/TypedData.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/ReadIntoRequest.h"
 #include "mozilla/dom/ReadableStream.h"

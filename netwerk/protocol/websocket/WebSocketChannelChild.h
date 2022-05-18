@@ -18,7 +18,6 @@ namespace net {
 
 class ChannelEvent;
 class ChannelEventQueue;
-class MessageEvent;
 
 class WebSocketChannelChild final : public BaseWebSocketChannel,
                                     public PWebSocketChild,
