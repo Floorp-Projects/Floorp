@@ -25,10 +25,6 @@ using AdaptiveDigitalConfig =
 using NoiseEstimatorType =
     AudioProcessing::Config::GainController2::NoiseEstimator;
 
-constexpr int kGainApplierAdjacentSpeechFramesThreshold = 1;
-constexpr float kMaxGainChangePerSecondDb = 3.0f;
-constexpr float kMaxOutputNoiseLevelDbfs = -50.0f;
-
 // Detects the available CPU features and applies any kill-switches.
 AvailableCpuFeatures GetAllowedCpuFeatures(
     const AdaptiveDigitalConfig& config) {
@@ -56,28 +52,7 @@ std::unique_ptr<NoiseLevelEstimator> CreateNoiseLevelEstimator(
   }
 }
 
-constexpr NoiseEstimatorType kDefaultNoiseLevelEstimatorType =
-    NoiseEstimatorType::kNoiseFloor;
-
 }  // namespace
-
-AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper)
-    : speech_level_estimator_(apm_data_dumper),
-      gain_controller_(apm_data_dumper,
-                       kGainApplierAdjacentSpeechFramesThreshold,
-                       kMaxGainChangePerSecondDb,
-                       kMaxOutputNoiseLevelDbfs),
-      apm_data_dumper_(apm_data_dumper),
-      noise_level_estimator_(
-          CreateNoiseLevelEstimator(kDefaultNoiseLevelEstimatorType,
-                                    apm_data_dumper)),
-      saturation_protector_(
-          CreateSaturationProtector(kSaturationProtectorInitialHeadroomDb,
-                                    kSaturationProtectorExtraHeadroomDb,
-                                    kGainApplierAdjacentSpeechFramesThreshold,
-                                    apm_data_dumper)) {
-  RTC_DCHECK(apm_data_dumper);
-}
 
 AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
                          const AdaptiveDigitalConfig& config)
@@ -87,7 +62,8 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
       gain_controller_(apm_data_dumper,
                        config.adjacent_speech_frames_threshold,
                        config.max_gain_change_db_per_second,
-                       config.max_output_noise_level_dbfs),
+                       config.max_output_noise_level_dbfs,
+                       config.dry_run),
       apm_data_dumper_(apm_data_dumper),
       noise_level_estimator_(
           CreateNoiseLevelEstimator(config.noise_estimator, apm_data_dumper)),
@@ -105,6 +81,10 @@ AdaptiveAgc::AdaptiveAgc(ApmDataDumper* apm_data_dumper,
 }
 
 AdaptiveAgc::~AdaptiveAgc() = default;
+
+void AdaptiveAgc::Initialize(int sample_rate_hz, int num_channels) {
+  gain_controller_.Initialize(sample_rate_hz, num_channels);
+}
 
 void AdaptiveAgc::Process(AudioFrameView<float> frame, float limiter_envelope) {
   AdaptiveDigitalGainApplier::FrameInfo info;

@@ -11,6 +11,8 @@
 #ifndef MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_APPLIER_H_
 #define MODULES_AUDIO_PROCESSING_AGC2_ADAPTIVE_DIGITAL_GAIN_APPLIER_H_
 
+#include <vector>
+
 #include "modules/audio_processing/agc2/gain_applier.h"
 #include "modules/audio_processing/include/audio_frame_view.h"
 
@@ -37,14 +39,17 @@ class AdaptiveDigitalGainApplier {
   // frames must be observed in order to consider the sequence as speech.
   // `max_gain_change_db_per_second` limits the adaptation speed (uniformly
   // operated across frames). `max_output_noise_level_dbfs` limits the output
-  // noise level.
+  // noise level. If `dry_run` is true, `Process()` will not modify the audio.
   AdaptiveDigitalGainApplier(ApmDataDumper* apm_data_dumper,
                              int adjacent_speech_frames_threshold,
                              float max_gain_change_db_per_second,
-                             float max_output_noise_level_dbfs);
+                             float max_output_noise_level_dbfs,
+                             bool dry_run);
   AdaptiveDigitalGainApplier(const AdaptiveDigitalGainApplier&) = delete;
   AdaptiveDigitalGainApplier& operator=(const AdaptiveDigitalGainApplier&) =
       delete;
+
+  void Initialize(int sample_rate_hz, int num_channels);
 
   // Analyzes `info`, updates the digital gain and applies it to a 10 ms
   // `frame`. Supports any sample rate supported by APM.
@@ -57,10 +62,14 @@ class AdaptiveDigitalGainApplier {
   const int adjacent_speech_frames_threshold_;
   const float max_gain_change_db_per_10ms_;
   const float max_output_noise_level_dbfs_;
+  const bool dry_run_;
 
   int calls_since_last_gain_log_;
   int frames_to_gain_increase_allowed_;
   float last_gain_db_;
+
+  std::vector<std::vector<float>> dry_run_frame_;
+  std::vector<float*> dry_run_channels_;
 };
 
 }  // namespace webrtc

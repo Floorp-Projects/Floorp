@@ -44,8 +44,6 @@ constexpr float kLevelEstimatorLeakFactor =
     1.0f - 1.0f / kLevelEstimatorTimeToConfidenceMs;
 
 // Robust VAD probability and speech decisions.
-constexpr int kDefaultVadRnnResetPeriodMs = 1500;
-static_assert(kDefaultVadRnnResetPeriodMs % kFrameDurationMs == 0, "");
 constexpr int kDefaultLevelEstimatorAdjacentSpeechFramesThreshold = 12;
 
 // Saturation Protector settings.

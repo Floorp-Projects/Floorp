@@ -67,10 +67,6 @@ class Vad : public VoiceActivityDetector {
 
 }  // namespace
 
-VadLevelAnalyzer::VadLevelAnalyzer()
-    : VadLevelAnalyzer(kDefaultVadRnnResetPeriodMs, GetAvailableCpuFeatures()) {
-}
-
 VadLevelAnalyzer::VadLevelAnalyzer(int vad_reset_period_ms,
                                    const AvailableCpuFeatures& cpu_features)
     : VadLevelAnalyzer(vad_reset_period_ms,
