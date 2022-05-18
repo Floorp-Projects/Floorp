@@ -18,28 +18,35 @@ import mozilla.components.concept.toolbar.Toolbar
  * @property toolbar the [Toolbar] to connect to autocomplete providers.
  * @property engine (optional) instance of a browser [Engine] to issue
  * [Engine.speculativeConnect] calls on successful URL autocompletion.
+ * @property shouldAutocomplete (optional) lambda expression that returns true if
+ * autocomplete is shown. Otherwise, autocomplete is not shown.
  */
 class ToolbarAutocompleteFeature(
     val toolbar: Toolbar,
-    val engine: Engine? = null
+    val engine: Engine? = null,
+    val shouldAutocomplete: () -> Boolean = { true }
 ) {
     private val historyProviders: MutableList<HistoryStorage> = mutableListOf()
     private val domainProviders: MutableList<DomainAutocompleteProvider> = mutableListOf()
 
     init {
         toolbar.setAutocompleteListener { query, delegate ->
-            val historyResults = historyProviders.asSequence()
-                .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
-            val domainResults = domainProviders.asSequence()
-                .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
-
-            val result = (historyResults + domainResults).firstOrNull()
-            if (result != null) {
-                delegate.applyAutocompleteResult(result) {
-                    engine?.speculativeConnect(result.url)
-                }
-            } else {
+            if (!shouldAutocomplete()) {
                 delegate.noAutocompleteResult(query)
+            } else {
+                val historyResults = historyProviders.asSequence()
+                    .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
+                val domainResults = domainProviders.asSequence()
+                    .mapNotNull { provider -> provider.getAutocompleteSuggestion(query)?.into() }
+
+                val result = (historyResults + domainResults).firstOrNull()
+                if (result != null) {
+                    delegate.applyAutocompleteResult(result) {
+                        engine?.speculativeConnect(result.url)
+                    }
+                } else {
+                    delegate.noAutocompleteResult(query)
+                }
             }
         }
     }

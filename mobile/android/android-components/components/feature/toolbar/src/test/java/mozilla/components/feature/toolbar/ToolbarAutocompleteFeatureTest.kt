@@ -304,6 +304,37 @@ class ToolbarAutocompleteFeatureTest {
         verify(engine).speculativeConnect("https://www.mozilla.org")
     }
 
+    @Test
+    fun `WHEN should autocomplete returns false THEN return no results`() = runTest {
+        val toolbar = TestToolbar()
+        val engine: Engine = mock()
+        var shouldAutoComplete = false
+        val feature = ToolbarAutocompleteFeature(toolbar, engine) { shouldAutoComplete }
+        val autocompleteDelegate: AutocompleteDelegate = mock()
+
+        val domains = object : BaseDomainAutocompleteProvider(DomainList.CUSTOM, { emptyList() }) {
+            fun testDomains(list: List<Domain>) {
+                domains = list
+            }
+        }
+        domains.testDomains(listOf(Domain.create("https://www.mozilla.org")))
+        feature.addDomainProvider(domains)
+
+        toolbar.autocompleteFilter!!.invoke("mo", autocompleteDelegate)
+
+        verify(autocompleteDelegate, times(1)).noAutocompleteResult(any())
+        verify(engine, never()).speculativeConnect("https://www.mozilla.org")
+
+        shouldAutoComplete = true
+        toolbar.autocompleteFilter!!.invoke("mo", autocompleteDelegate)
+
+        val callbackCaptor = argumentCaptor<() -> Unit>()
+        verify(autocompleteDelegate, times(1)).applyAutocompleteResult(any(), callbackCaptor.capture())
+        verify(engine, never()).speculativeConnect("https://www.mozilla.org")
+        callbackCaptor.value.invoke()
+        verify(engine).speculativeConnect("https://www.mozilla.org")
+    }
+
     @Suppress("SameParameterValue")
     private fun verifyNoAutocompleteResult(toolbar: TestToolbar, autocompleteDelegate: AutocompleteDelegate, query: String) = runTest {
         toolbar.autocompleteFilter!!(query, autocompleteDelegate)
