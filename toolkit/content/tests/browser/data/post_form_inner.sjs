@@ -15,8 +15,7 @@ function handleRequest(request, response) {
     Inner POST data: ";
 
   var bodyStream = new BinaryInputStream(request.bodyInputStream);
-  var bytes = [],
-    avail = 0;
+  var avail = 0;
   while ((avail = bodyStream.available()) > 0) {
     body += String.fromCharCode.apply(String, bodyStream.readByteArray(avail));
   }

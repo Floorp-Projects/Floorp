@@ -30,7 +30,7 @@ function handleRequest(request, response) {
   // We're sending data off in a delayed fashion
   response.processAsync();
   var inputStream = getFileAsInputStream("animated-gif_trailing-garbage.gif");
-  var available = inputStream.available(); // = 4029 bytes
+  // Should be 4029 bytes available.
   // Send the good data at once
   response.bodyOutputStream.writeFrom(inputStream, 285);
   sendParts(inputStream, response);
