@@ -143,7 +143,7 @@ class FrameValidator : public EncodedImageCallback {
   }
 
   GofInfoVP9 gof_;
-  int64_t picture_id_;
+  int64_t picture_id_ = 1;
   FrameDependenciesCalculator dependencies_calculator_;
   std::vector<LayerFrame> frames_;
 };
