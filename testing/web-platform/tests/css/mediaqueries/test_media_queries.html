@@ -607,11 +607,11 @@ setup({ "explicit_done": true });
     }, "Sanity check for overflow-inline");
 
     // Parsing tests for update from mediaqueries-4
-    expression_should_be_parseable("update")
-    expression_should_be_parseable("update: none")
-    expression_should_be_parseable("update: slow")
-    expression_should_be_parseable("update: fast")
-    expression_should_not_be_parseable("update: some-random-invalid-thing")
+    expression_should_be_known("update")
+    expression_should_be_known("update: none")
+    expression_should_be_known("update: slow")
+    expression_should_be_known("update: fast")
+    expression_should_be_unknown("update: some-random-invalid-thing")
 
     // Sanity check for update
     test(function() {
