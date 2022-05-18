@@ -1188,12 +1188,13 @@ bool JSContext::isThrowingDebuggeeWouldRun() {
              JSEXN_DEBUGGEEWOULDRUN;
 }
 
-bool JSContext::isRuntimeCodeGenEnabled(HandleString code) {
+bool JSContext::isRuntimeCodeGenEnabled(JS::RuntimeCode kind,
+                                        HandleString code) {
   // Make sure that the CSP callback is installed and that it permits runtime
   // code generation.
   if (JSCSPEvalChecker allows =
           runtime()->securityCallbacks->contentSecurityPolicyAllows) {
-    return allows(this, code);
+    return allows(this, kind, code);
   }
 
   return true;
