@@ -38,3 +38,14 @@ SEARCH_SUGGESTIONS_LATENCY_MS
   response. It is a keyed exponential histogram with 50 buckets and values
   between 0 and 30000 (0s and 30s). Keys in this histogram are search engine IDs
   for built-in search engines and 'other' for non-built-in search engines.
+
+Default Search Engine
+---------------------
+
+Telemetry for the user's default search engine is currently reported via two
+systems:
+
+  1. Legacy telemetry:
+     `Fields are reported within the telemetry environment <https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/data/environment.html#defaultsearchengine>`__
+  2. Glean:
+     `Fields are documented in the Glean dictionary <https://dictionary.telemetry.mozilla.org/apps/firefox_desktop?search=search.engine>`__.
