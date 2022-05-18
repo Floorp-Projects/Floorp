@@ -131,6 +131,7 @@ class TRRService : public TRRServiceBase,
   Atomic<bool, Relaxed> mCaptiveIsPassed{
       false};  // set when captive portal check is passed
   Atomic<bool, Relaxed> mDisableIPv6;  // don't even try
+  Atomic<bool, Relaxed> mShutdown{false};
 
   // TRR Blocklist storage
   // mTRRBLStorage is only modified on the main thread, but we query whether it
