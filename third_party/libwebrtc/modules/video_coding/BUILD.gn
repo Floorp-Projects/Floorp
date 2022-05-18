@@ -472,6 +472,15 @@ rtc_library("webrtc_libvpx_interface") {
   }
 }
 
+rtc_library("mock_libvpx_interface") {
+  testonly = true
+  sources = [ "codecs/interface/mock_libvpx_interface.h" ]
+  deps = [
+    ":webrtc_libvpx_interface",
+    "../../test:test_support",
+  ]
+}
+
 # This target includes the internal SW codec.
 rtc_library("webrtc_vp8") {
   visibility = [ "*" ]
@@ -688,15 +697,6 @@ if (rtc_include_tests) {
       "../../api/video:video_frame_type",
       "../../api/video_codecs:video_codecs_api",
       "../../rtc_base:checks",
-    ]
-  }
-
-  rtc_library("mock_libvpx_interface") {
-    testonly = true
-    sources = [ "codecs/interface/mock_libvpx_interface.h" ]
-    deps = [
-      ":webrtc_libvpx_interface",
-      "../../test:test_support",
     ]
   }
 
