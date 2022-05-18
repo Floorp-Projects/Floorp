@@ -72,6 +72,14 @@ WgcWindowSource::WgcWindowSource(DesktopCapturer::SourceId source_id)
     : WgcCaptureSource(source_id) {}
 WgcWindowSource::~WgcWindowSource() = default;
 
+DesktopVector WgcWindowSource::GetTopLeft() {
+  DesktopRect window_rect;
+  if (!GetWindowRect(reinterpret_cast<HWND>(GetSourceId()), &window_rect))
+    return DesktopVector();
+
+  return window_rect.top_left();
+}
+
 bool WgcWindowSource::IsCapturable() {
   if (!IsWindowValidAndVisible(reinterpret_cast<HWND>(GetSourceId())))
     return false;
@@ -113,17 +121,26 @@ HRESULT WgcWindowSource::CreateCaptureItem(
 }
 
 WgcScreenSource::WgcScreenSource(DesktopCapturer::SourceId source_id)
-    : WgcCaptureSource(source_id) {}
+    : WgcCaptureSource(source_id) {
+  // Getting the HMONITOR could fail if the source_id is invalid. In that case,
+  // we leave hmonitor_ uninitialized and |IsCapturable()| will fail.
+  HMONITOR hmon;
+  if (GetHmonitorFromDeviceIndex(GetSourceId(), &hmon))
+    hmonitor_ = hmon;
+}
+
 WgcScreenSource::~WgcScreenSource() = default;
 
-bool WgcScreenSource::IsCapturable() {
-  if (!hmonitor_) {
-    HMONITOR hmon;
-    if (!GetHmonitorFromDeviceIndex(GetSourceId(), &hmon))
-      return false;
+DesktopVector WgcScreenSource::GetTopLeft() {
+  if (!hmonitor_)
+    return DesktopVector();
 
-    hmonitor_ = hmon;
-  }
+  return GetMonitorRect(*hmonitor_)->top_left();
+}
+
+bool WgcScreenSource::IsCapturable() {
+  if (!hmonitor_)
+    return false;
 
   if (!IsMonitorValid(*hmonitor_))
     return false;

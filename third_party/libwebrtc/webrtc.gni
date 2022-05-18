@@ -213,8 +213,8 @@ declare_args() {
   rtc_win_undef_unicode = false
 
   # When set to true, a capturer implementation that uses the
-  # Windows.Graphics.Capture APIs will be available for use. These APIs are
-  # available in the Win 10 SDK v10.0.19041.
+  # Windows.Graphics.Capture APIs will be available for use. This introduces a
+  # dependency on the Win 10 SDK v10.0.17763.0.
   rtc_enable_win_wgc = false
 }
 

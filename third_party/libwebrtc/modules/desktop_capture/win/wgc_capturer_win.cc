@@ -200,6 +200,7 @@ void WgcCapturerWin::CaptureFrame() {
   frame->set_capture_time_ms(capture_time_ms);
   frame->set_capturer_id(DesktopCapturerId::kWgcCapturerWin);
   frame->set_may_contain_cursor(true);
+  frame->set_top_left(capture_source_->GetTopLeft());
   RecordWgcCapturerResult(WgcCapturerResult::kSuccess);
   callback_->OnCaptureResult(DesktopCapturer::Result::SUCCESS,
                              std::move(frame));
