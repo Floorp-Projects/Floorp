@@ -29,11 +29,7 @@ static const char* const sMetricNames[] = {"DisplayListBuilding",
                                            "Styling",
                                            "HttpChannelCompletion",
                                            "HttpChannelCompletion_Network",
-                                           "HttpChannelCompletion_Cache",
-                                           "JSBC_Compression",
-                                           "JSBC_Decompression",
-                                           "JSBC_IO_Read",
-                                           "JSBC_IO_Write"};
+                                           "HttpChannelCompletion_Cache"};
 
 static_assert(sizeof(sMetricNames) / sizeof(sMetricNames[0]) ==
               static_cast<uint64_t>(PerfStats::Metric::Max));
