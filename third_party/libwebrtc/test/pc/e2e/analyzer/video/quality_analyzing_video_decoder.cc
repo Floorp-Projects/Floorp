@@ -255,15 +255,5 @@ QualityAnalyzingVideoDecoderFactory::CreateVideoDecoder(
       peer_name_, std::move(decoder), extractor_, analyzer_);
 }
 
-std::unique_ptr<VideoDecoder>
-QualityAnalyzingVideoDecoderFactory::LegacyCreateVideoDecoder(
-    const SdpVideoFormat& format,
-    const std::string& receive_stream_id) {
-  std::unique_ptr<VideoDecoder> decoder =
-      delegate_->LegacyCreateVideoDecoder(format, receive_stream_id);
-  return std::make_unique<QualityAnalyzingVideoDecoder>(
-      peer_name_, std::move(decoder), extractor_, analyzer_);
-}
-
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc

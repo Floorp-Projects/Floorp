@@ -276,10 +276,6 @@ class VideoReceiveStream {
     // used for streaming instead of a real-time call.
     int target_delay_ms = 0;
 
-    // TODO(nisse): Used with VideoDecoderFactory::LegacyCreateVideoDecoder.
-    // Delete when that method is retired.
-    std::string stream_id;
-
     // An optional custom frame decryptor that allows the entire frame to be
     // decrypted in whatever way the caller choses. This is not required by
     // default.

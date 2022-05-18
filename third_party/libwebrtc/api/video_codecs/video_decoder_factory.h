@@ -60,12 +60,6 @@ class RTC_EXPORT VideoDecoderFactory {
   virtual std::unique_ptr<VideoDecoder> CreateVideoDecoder(
       const SdpVideoFormat& format) = 0;
 
-  // Note: Do not call or override this method! This method is a legacy
-  // workaround and is scheduled for removal without notice.
-  virtual std::unique_ptr<VideoDecoder> LegacyCreateVideoDecoder(
-      const SdpVideoFormat& format,
-      const std::string& receive_stream_id);
-
   virtual ~VideoDecoderFactory() {}
 };
 
