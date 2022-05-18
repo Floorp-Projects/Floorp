@@ -27,7 +27,9 @@
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::Eq;
 using ::testing::Invoke;
+using ::testing::Property;
 using ::testing::SizeIs;
 
 namespace webrtc {
@@ -275,11 +277,11 @@ TEST_F(RtcpSenderTest, SendRrWithTwoReportBlocks) {
   EXPECT_EQ(0, rtcp_sender->SendRTCP(feedback_state(), kRtcpRr));
   EXPECT_EQ(1, parser()->receiver_report()->num_packets());
   EXPECT_EQ(kSenderSsrc, parser()->receiver_report()->sender_ssrc());
-  EXPECT_EQ(2U, parser()->receiver_report()->report_blocks().size());
-  EXPECT_EQ(kRemoteSsrc,
-            parser()->receiver_report()->report_blocks()[0].source_ssrc());
-  EXPECT_EQ(kRemoteSsrc + 1,
-            parser()->receiver_report()->report_blocks()[1].source_ssrc());
+  EXPECT_THAT(
+      parser()->receiver_report()->report_blocks(),
+      UnorderedElementsAre(
+          Property(&rtcp::ReportBlock::source_ssrc, Eq(kRemoteSsrc)),
+          Property(&rtcp::ReportBlock::source_ssrc, Eq(kRemoteSsrc + 1))));
 }
 
 TEST_F(RtcpSenderTest, SendSdes) {
