@@ -16,43 +16,43 @@ using namespace mozilla::widget;
 static class GLContextProviderGLX sGLContextProviderGLX;
 static class GLContextProviderEGL sGLContextProviderEGL;
 
-already_AddRefed<GLContext> GLContextProviderLinux::CreateForCompositorWidget(
+already_AddRefed<GLContext> GLContextProviderX11::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
-  if (gfxVars::UseEGL()) {
-    return sGLContextProviderEGL.CreateForCompositorWidget(
-        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
-  } else {
+  if (!gfxVars::UseEGL()) {
     return sGLContextProviderGLX.CreateForCompositorWidget(
         aCompositorWidget, aHardwareWebRender, aForceAccelerated);
+  } else {
+    return sGLContextProviderEGL.CreateForCompositorWidget(
+        aCompositorWidget, aHardwareWebRender, aForceAccelerated);
   }
 }
 
 /*static*/
-already_AddRefed<GLContext> GLContextProviderLinux::CreateHeadless(
+already_AddRefed<GLContext> GLContextProviderX11::CreateHeadless(
     const GLContextCreateDesc& desc, nsACString* const out_failureId) {
-  if (gfxVars::UseEGL()) {
-    return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
-  } else {
+  if (!gfxVars::UseEGL()) {
     return sGLContextProviderGLX.CreateHeadless(desc, out_failureId);
+  } else {
+    return sGLContextProviderEGL.CreateHeadless(desc, out_failureId);
   }
 }
 
 /*static*/
-GLContext* GLContextProviderLinux::GetGlobalContext() {
-  if (gfxVars::UseEGL()) {
-    return sGLContextProviderEGL.GetGlobalContext();
-  } else {
+GLContext* GLContextProviderX11::GetGlobalContext() {
+  if (!gfxVars::UseEGL()) {
     return sGLContextProviderGLX.GetGlobalContext();
+  } else {
+    return sGLContextProviderEGL.GetGlobalContext();
   }
 }
 
 /*static*/
-void GLContextProviderLinux::Shutdown() {
-  if (gfxVars::UseEGL()) {
-    sGLContextProviderEGL.Shutdown();
-  } else {
+void GLContextProviderX11::Shutdown() {
+  if (!gfxVars::UseEGL()) {
     sGLContextProviderGLX.Shutdown();
+  } else {
+    sGLContextProviderEGL.Shutdown();
   }
 }
 
