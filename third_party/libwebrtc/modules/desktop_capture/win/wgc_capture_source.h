@@ -31,6 +31,7 @@ class WgcCaptureSource {
   virtual ~WgcCaptureSource();
 
   virtual bool IsCapturable();
+  virtual bool FocusOnSource();
   HRESULT GetCaptureItem(
       Microsoft::WRL::ComPtr<
           ABI::Windows::Graphics::Capture::IGraphicsCaptureItem>* result);
@@ -93,6 +94,7 @@ class WgcWindowSource final : public WgcCaptureSource {
   ~WgcWindowSource() override;
 
   bool IsCapturable() override;
+  bool FocusOnSource() override;
 
  private:
   HRESULT CreateCaptureItem(
