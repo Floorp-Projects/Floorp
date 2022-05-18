@@ -20,11 +20,6 @@ loader.lazyGetter(this, "ExtensionStorageIDB", () => {
   return require("resource://gre/modules/ExtensionStorageIDB.jsm")
     .ExtensionStorageIDB;
 });
-loader.lazyGetter(
-  this,
-  "WebExtensionPolicy",
-  () => Cu.getGlobalForObject(ExtensionProcessScript).WebExtensionPolicy
-);
 
 const EXTENSION_STORAGE_ENABLED_PREF =
   "devtools.storage.extensionStorage.enabled";

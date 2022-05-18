@@ -23,6 +23,7 @@ const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 const {
   CanonicalBrowsingContext,
   BrowsingContext,
+  WebExtensionPolicy,
   WindowGlobalParent,
   WindowGlobalChild,
   console,
@@ -257,6 +258,7 @@ exports.globals = {
   btoa,
   CanonicalBrowsingContext,
   BrowsingContext,
+  WebExtensionPolicy,
   WindowGlobalParent,
   WindowGlobalChild,
   console,
