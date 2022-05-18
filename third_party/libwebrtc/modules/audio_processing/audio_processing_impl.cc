@@ -1936,7 +1936,8 @@ void AudioProcessingImpl::InitializeGainController2() {
       submodules_.gain_controller2.reset(new GainController2());
     }
 
-    submodules_.gain_controller2->Initialize(proc_fullband_sample_rate_hz());
+    submodules_.gain_controller2->Initialize(proc_fullband_sample_rate_hz(),
+                                             num_input_channels());
     submodules_.gain_controller2->ApplyConfig(config_.gain_controller2);
   } else {
     submodules_.gain_controller2.reset();

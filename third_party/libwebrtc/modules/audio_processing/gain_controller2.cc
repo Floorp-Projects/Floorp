@@ -26,22 +26,26 @@ int GainController2::instance_count_ = 0;
 GainController2::GainController2()
     : data_dumper_(rtc::AtomicOps::Increment(&instance_count_)),
       gain_applier_(/*hard_clip_samples=*/false,
-                    /*initial_gain_factor=*/0.f),
+                    /*initial_gain_factor=*/0.0f),
       limiter_(static_cast<size_t>(48000), &data_dumper_, "Agc2"),
       calls_since_last_limiter_log_(0) {
   if (config_.adaptive_digital.enabled) {
-    adaptive_agc_ = std::make_unique<AdaptiveAgc>(&data_dumper_);
+    adaptive_agc_ =
+        std::make_unique<AdaptiveAgc>(&data_dumper_, config_.adaptive_digital);
   }
 }
 
 GainController2::~GainController2() = default;
 
-void GainController2::Initialize(int sample_rate_hz) {
+void GainController2::Initialize(int sample_rate_hz, int num_channels) {
   RTC_DCHECK(sample_rate_hz == AudioProcessing::kSampleRate8kHz ||
              sample_rate_hz == AudioProcessing::kSampleRate16kHz ||
              sample_rate_hz == AudioProcessing::kSampleRate32kHz ||
              sample_rate_hz == AudioProcessing::kSampleRate48kHz);
   limiter_.SetSampleRate(sample_rate_hz);
+  if (adaptive_agc_) {
+    adaptive_agc_->Initialize(sample_rate_hz, num_channels);
+  }
   data_dumper_.InitiateNewSetOfRecordings();
   data_dumper_.DumpRaw("sample_rate_hz", sample_rate_hz);
   calls_since_last_limiter_log_ = 0;

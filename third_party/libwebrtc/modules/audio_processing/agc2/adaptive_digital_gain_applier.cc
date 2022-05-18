@@ -92,13 +92,28 @@ float ComputeGainChangeThisFrameDb(float target_gain_db,
                         max_gain_increase_db);
 }
 
+// Copies the (multichannel) audio samples from `src` into `dst`.
+void CopyAudio(AudioFrameView<const float> src,
+               std::vector<std::vector<float>>& dst) {
+  RTC_DCHECK_GT(src.num_channels(), 0);
+  RTC_DCHECK_GT(src.samples_per_channel(), 0);
+  RTC_DCHECK_EQ(dst.size(), src.num_channels());
+  for (size_t c = 0; c < src.num_channels(); ++c) {
+    rtc::ArrayView<const float> channel_view = src.channel(c);
+    RTC_DCHECK_EQ(channel_view.size(), src.samples_per_channel());
+    RTC_DCHECK_EQ(dst[c].size(), src.samples_per_channel());
+    std::copy(channel_view.begin(), channel_view.end(), dst[c].begin());
+  }
+}
+
 }  // namespace
 
 AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
     ApmDataDumper* apm_data_dumper,
     int adjacent_speech_frames_threshold,
     float max_gain_change_db_per_second,
-    float max_output_noise_level_dbfs)
+    float max_output_noise_level_dbfs,
+    bool dry_run)
     : apm_data_dumper_(apm_data_dumper),
       gain_applier_(
           /*hard_clip_samples=*/false,
@@ -107,13 +122,39 @@ AdaptiveDigitalGainApplier::AdaptiveDigitalGainApplier(
       max_gain_change_db_per_10ms_(max_gain_change_db_per_second *
                                    kFrameDurationMs / 1000.f),
       max_output_noise_level_dbfs_(max_output_noise_level_dbfs),
+      dry_run_(dry_run),
       calls_since_last_gain_log_(0),
       frames_to_gain_increase_allowed_(adjacent_speech_frames_threshold_),
       last_gain_db_(kInitialAdaptiveDigitalGainDb) {
-  RTC_DCHECK_GT(max_gain_change_db_per_second, 0.f);
+  RTC_DCHECK_GT(max_gain_change_db_per_second, 0.0f);
   RTC_DCHECK_GE(frames_to_gain_increase_allowed_, 1);
-  RTC_DCHECK_GE(max_output_noise_level_dbfs_, -90.f);
-  RTC_DCHECK_LE(max_output_noise_level_dbfs_, 0.f);
+  RTC_DCHECK_GE(max_output_noise_level_dbfs_, -90.0f);
+  RTC_DCHECK_LE(max_output_noise_level_dbfs_, 0.0f);
+  Initialize(/*sample_rate_hz=*/48000, /*num_channels=*/1);
+}
+
+void AdaptiveDigitalGainApplier::Initialize(int sample_rate_hz,
+                                            int num_channels) {
+  if (!dry_run_) {
+    return;
+  }
+  RTC_DCHECK_GT(sample_rate_hz, 0);
+  RTC_DCHECK_GT(num_channels, 0);
+  int frame_size = rtc::CheckedDivExact(sample_rate_hz, 100);
+  bool sample_rate_changed =
+      dry_run_frame_.empty() ||  // Handle initialization.
+      dry_run_frame_[0].size() != static_cast<size_t>(frame_size);
+  bool num_channels_changed =
+      dry_run_channels_.size() != static_cast<size_t>(num_channels);
+  if (sample_rate_changed || num_channels_changed) {
+    // Resize the multichannel audio vector and update the channel pointers.
+    dry_run_frame_.resize(num_channels);
+    dry_run_channels_.resize(num_channels);
+    for (int c = 0; c < num_channels; ++c) {
+      dry_run_frame_[c].resize(frame_size);
+      dry_run_channels_[c] = dry_run_frame_[c].data();
+    }
+  }
 }
 
 void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
@@ -174,7 +215,19 @@ void AdaptiveDigitalGainApplier::Process(const FrameInfo& info,
     gain_applier_.SetGainFactor(
         DbToRatio(last_gain_db_ + gain_change_this_frame_db));
   }
-  gain_applier_.ApplyGain(frame);
+
+  // Modify `frame` only if not running in "dry run" mode.
+  if (!dry_run_) {
+    gain_applier_.ApplyGain(frame);
+  } else {
+    // Copy `frame` so that `ApplyGain()` is called (on a copy).
+    CopyAudio(frame, dry_run_frame_);
+    RTC_DCHECK(!dry_run_channels_.empty());
+    AudioFrameView<float> frame_copy(&dry_run_channels_[0],
+                                     frame.num_channels(),
+                                     frame.samples_per_channel());
+    gain_applier_.ApplyGain(frame_copy);
+  }
 
   // Remember that the gain has changed for the next iteration.
   last_gain_db_ = last_gain_db_ + gain_change_this_frame_db;

@@ -71,16 +71,16 @@ struct FrameWithView {
   const AudioFrameView<const float> view;
 };
 
-TEST(GainController2VadLevelAnalyzer, PeakLevelGreaterThanRmsLevel) {
+TEST(GainController2VadLevelAnalyzer, RmsLessThanPeakLevel) {
+  auto analyzer = CreateVadLevelAnalyzerWithMockVad(
+      /*vad_reset_period_ms=*/1500,
+      /*speech_probabilities=*/{1.0f},
+      /*expected_vad_reset_calls=*/0);
   // Handcrafted frame so that the average is lower than the peak value.
   FrameWithView frame(1000.0f);  // Constant frame.
   frame.samples[10] = 2000.0f;   // Except for one peak value.
-
-  // Compute audio frame levels (the VAD result is ignored).
-  VadLevelAnalyzer analyzer;
-  auto levels_and_vad_prob = analyzer.AnalyzeFrame(frame.view);
-
-  // Compare peak and RMS levels.
+  // Compute audio frame levels.
+  auto levels_and_vad_prob = analyzer->AnalyzeFrame(frame.view);
   EXPECT_LT(levels_and_vad_prob.rms_dbfs, levels_and_vad_prob.peak_dbfs);
 }
 

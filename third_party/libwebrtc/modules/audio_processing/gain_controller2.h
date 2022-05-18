@@ -34,7 +34,7 @@ class GainController2 {
   GainController2& operator=(const GainController2&) = delete;
   ~GainController2();
 
-  void Initialize(int sample_rate_hz);
+  void Initialize(int sample_rate_hz, int num_channels);
   void Process(AudioBuffer* audio);
   void NotifyAnalogLevel(int level);
 

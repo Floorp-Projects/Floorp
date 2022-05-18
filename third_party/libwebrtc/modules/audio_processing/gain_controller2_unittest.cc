@@ -65,7 +65,7 @@ std::unique_ptr<GainController2> CreateAgc2FixedDigitalMode(
     size_t sample_rate_hz) {
   auto agc2 = std::make_unique<GainController2>();
   agc2->ApplyConfig(CreateAgc2FixedDigitalModeConfig(fixed_gain_db));
-  agc2->Initialize(sample_rate_hz);
+  agc2->Initialize(sample_rate_hz, /*num_channels=*/1);
   return agc2;
 }
 
@@ -337,9 +337,10 @@ TEST(GainController2, CheckGainAdaptiveDigital) {
   constexpr float kExpectedGainDb = 4.3f;
   constexpr float kToleranceDb = 0.5f;
   GainController2 gain_controller2;
-  gain_controller2.Initialize(AudioProcessing::kSampleRate48kHz);
+  gain_controller2.Initialize(AudioProcessing::kSampleRate48kHz,
+                              /*num_channels=*/1);
   AudioProcessing::Config::GainController2 config;
-  config.fixed_digital.gain_db = 0.f;
+  config.fixed_digital.gain_db = 0.0f;
   config.adaptive_digital.enabled = true;
   gain_controller2.ApplyConfig(config);
   EXPECT_NEAR(

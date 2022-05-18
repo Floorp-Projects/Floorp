@@ -37,8 +37,6 @@ class VadLevelAnalyzer {
     virtual float ComputeProbability(AudioFrameView<const float> frame) = 0;
   };
 
-  // Ctor. Uses the default VAD with the default settings.
-  VadLevelAnalyzer();
   // Ctor. `vad_reset_period_ms` indicates the period in milliseconds to call
   // `VadLevelAnalyzer::Reset()`; it must be equal to or greater than the
   // duration of two frames. Uses `cpu_features` to instantiate the default VAD.

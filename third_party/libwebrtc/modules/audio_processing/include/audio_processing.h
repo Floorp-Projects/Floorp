@@ -357,6 +357,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       } fixed_digital;
       struct AdaptiveDigital {
         bool enabled = false;
+        bool dry_run = false;
         NoiseEstimator noise_estimator = kNoiseFloor;
         int vad_reset_period_ms = 1500;
         int adjacent_speech_frames_threshold = 12;
