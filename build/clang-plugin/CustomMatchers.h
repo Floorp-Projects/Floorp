@@ -60,6 +60,17 @@ AST_POLYMORPHIC_MATCHER(isFirstParty,
          !ASTIsInSystemHeader(Finder->getASTContext(), Node);
 }
 
+AST_MATCHER(DeclaratorDecl, isNotSpiderMonkey) {
+  // Detect SpiderMonkey path. Not as strict as isFirstParty, but this is
+  // expected to disappear soon by getting a common style guide between DOM and
+  // SpiderMonkey.
+  std::string Path = Node.getBeginLoc().printToString(
+      Finder->getASTContext().getSourceManager());
+  return Path.find("js") == std::string::npos &&
+         Path.find("xpc") == std::string::npos &&
+         Path.find("XPC") == std::string::npos;
+}
+
 /// This matcher will match temporary expressions.
 /// We need this matcher for compatibility with clang 3.* (clang 4 and above
 /// insert a MaterializeTemporaryExpr everywhere).
