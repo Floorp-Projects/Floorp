@@ -161,6 +161,18 @@ void ApplyVp8EncoderConfigToVpxConfig(const Vp8EncoderConfig& encoder_config,
   }
 }
 
+bool IsCompatibleVideoFrameBufferType(VideoFrameBuffer::Type left,
+                                      VideoFrameBuffer::Type right) {
+  if (left == VideoFrameBuffer::Type::kI420 ||
+      left == VideoFrameBuffer::Type::kI420A) {
+    // LibvpxVp8Encoder does not care about the alpha channel, I420A and I420
+    // are considered compatible.
+    return right == VideoFrameBuffer::Type::kI420 ||
+           right == VideoFrameBuffer::Type::kI420A;
+  }
+  return left == right;
+}
+
 void SetRawImagePlanes(vpx_image_t* raw_image, VideoFrameBuffer* buffer) {
   switch (buffer->type()) {
     case VideoFrameBuffer::Type::kI420:
@@ -1378,7 +1390,8 @@ LibvpxVp8Encoder::PrepareBuffers(rtc::scoped_refptr<VideoFrameBuffer> buffer) {
     }
     RTC_DCHECK_EQ(scaled_buffer->type(), mapped_buffer->type())
         << "Scaled frames must have the same type as the mapped frame.";
-    if (scaled_buffer->type() != mapped_buffer->type()) {
+    if (!IsCompatibleVideoFrameBufferType(scaled_buffer->type(),
+                                          mapped_buffer->type())) {
       RTC_LOG(LS_ERROR) << "When scaling "
                         << VideoFrameBufferTypeToString(buffer_to_scale->type())
                         << ", the image was unexpectedly converted to "
