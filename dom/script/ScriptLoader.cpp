@@ -9,6 +9,8 @@
 #include "ScriptTrace.h"
 #include "ModuleLoader.h"
 
+#include "zlib.h"
+
 #include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -97,6 +99,14 @@ using JS::SourceText;
 using namespace JS::loader;
 
 using mozilla::Telemetry::LABELS_DOM_SCRIPT_PRELOAD_RESULT;
+
+namespace {  // TODO shared code with ScriptLoadHandler.cpp
+// A LengthPrefixType is stored at the start of the compressed optimized
+// encoding, allowing the decompressed buffer to be allocated to exactly
+// the right size.
+using LengthPrefixType = uint32_t;
+const unsigned PREFIX_BYTES = sizeof(LengthPrefixType);
+}  // namespace
 
 namespace mozilla::dom {
 
@@ -2552,7 +2562,47 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     return;
   }
 
-  if (aRequest->mScriptBytecode.length() >= UINT32_MAX) {
+  Vector<uint8_t> compressedBytecode;
+  {
+    // TODO probably need to move this to a helper thread
+    LengthPrefixType uncompressedLength =
+        aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
+    z_stream zstream{.next_in = aRequest->mScriptBytecode.begin() +
+                                aRequest->mBytecodeOffset,
+                     .avail_in = uncompressedLength};
+    auto compressedLength = deflateBound(&zstream, uncompressedLength);
+    if (!compressedBytecode.resizeUninitialized(
+            compressedLength + aRequest->mBytecodeOffset + PREFIX_BYTES)) {
+      return;
+    }
+    memcpy(compressedBytecode.begin(), aRequest->mScriptBytecode.begin(),
+           aRequest->mBytecodeOffset);
+    memcpy(compressedBytecode.begin() + aRequest->mBytecodeOffset,
+           &uncompressedLength, PREFIX_BYTES);
+    zstream.next_out =
+        compressedBytecode.begin() + aRequest->mBytecodeOffset + PREFIX_BYTES;
+    zstream.avail_out = compressedLength;
+
+    const int COMPRESSION = 2;  // TODO find appropriate compression level
+    if (deflateInit(&zstream, COMPRESSION) != Z_OK) {
+      LOG(
+          ("ScriptLoadRequest (%p): Unable to initialize bytecode cache "
+           "compression.",
+           aRequest));
+      return;
+    }
+    auto autoDestroy = MakeScopeExit([&]() { deflateEnd(&zstream); });
+
+    int ret = deflate(&zstream, Z_FINISH);
+    if (ret == Z_MEM_ERROR) {
+      return;
+    }
+    MOZ_RELEASE_ASSERT(ret == Z_STREAM_END);
+
+    compressedBytecode.shrinkTo(zstream.next_out - compressedBytecode.begin());
+  }
+
+  if (compressedBytecode.length() >= UINT32_MAX) {
     LOG(
         ("ScriptLoadRequest (%p): Bytecode cache is too large to be decoded "
          "correctly.",
@@ -2565,7 +2615,8 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
   rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(
-      BytecodeMimeTypeFor(aRequest), aRequest->mScriptBytecode.length(),
+      BytecodeMimeTypeFor(aRequest),
+      static_cast<int64_t>(compressedBytecode.length()),
       getter_AddRefs(output));
   if (NS_FAILED(rv)) {
     LOG(
@@ -2582,17 +2633,17 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   });
 
   uint32_t n;
-  rv = output->Write(reinterpret_cast<char*>(aRequest->mScriptBytecode.begin()),
-                     aRequest->mScriptBytecode.length(), &n);
-  LOG((
-      "ScriptLoadRequest (%p): Write bytecode cache (rv = %X, length = %u, "
-      "written = %u)",
-      aRequest, unsigned(rv), unsigned(aRequest->mScriptBytecode.length()), n));
+  rv = output->Write(reinterpret_cast<char*>(compressedBytecode.begin()),
+                     compressedBytecode.length(), &n);
+  LOG(
+      ("ScriptLoadRequest (%p): Write bytecode cache (rv = %X, length = %u, "
+       "written = %u)",
+       aRequest, unsigned(rv), unsigned(compressedBytecode.length()), n));
   if (NS_FAILED(rv)) {
     return;
   }
 
-  MOZ_RELEASE_ASSERT(aRequest->mScriptBytecode.length() == n);
+  MOZ_RELEASE_ASSERT(compressedBytecode.length() == n);
 
   bytecodeFailed.release();
   TRACE_FOR_TEST_NONE(aRequest->GetScriptLoadContext()->GetScriptElement(),
