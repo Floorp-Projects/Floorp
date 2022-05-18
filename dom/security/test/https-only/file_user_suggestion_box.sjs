@@ -15,7 +15,6 @@ function handleRequest(request, response) {
   if (request.host.startsWith("www.")) {
     // in this test all pages that can be reached via https must have www.
     response.write("You are now on the secure www. page");
-    createIframe();
     return;
   }
   // in this test there should not be a secure connection to a site without www.
