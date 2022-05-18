@@ -336,10 +336,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
     }
   }
 
-  // When this signal is sent out, any references to this queue should
-  // no longer be used.
-  sigslot::signal0<> SignalQueueDestroyed;
-
   bool IsCurrent() const;
 
   // Sleeps the calling thread for the specified number of milliseconds, during

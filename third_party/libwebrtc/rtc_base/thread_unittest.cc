@@ -553,36 +553,6 @@ TEST(ThreadTest, ThreeThreadsInvoke) {
   EXPECT_TRUE_WAIT(thread_a_called.Get(), 2000);
 }
 
-// Set the name on a thread when the underlying QueueDestroyed signal is
-// triggered. This causes an error if the object is already partially
-// destroyed.
-class SetNameOnSignalQueueDestroyedTester : public sigslot::has_slots<> {
- public:
-  SetNameOnSignalQueueDestroyedTester(Thread* thread) : thread_(thread) {
-    thread->SignalQueueDestroyed.connect(
-        this, &SetNameOnSignalQueueDestroyedTester::OnQueueDestroyed);
-  }
-
-  void OnQueueDestroyed() {
-    // Makes sure that if we access the Thread while it's being destroyed, that
-    // it doesn't cause a problem because the vtable has been modified.
-    thread_->SetName("foo", nullptr);
-  }
-
- private:
-  Thread* thread_;
-};
-
-TEST(ThreadTest, SetNameOnSignalQueueDestroyed) {
-  auto thread1 = Thread::CreateWithSocketServer();
-  SetNameOnSignalQueueDestroyedTester tester1(thread1.get());
-  thread1.reset();
-
-  Thread* thread2 = new AutoThread();
-  SetNameOnSignalQueueDestroyedTester tester2(thread2);
-  delete thread2;
-}
-
 class ThreadQueueTest : public ::testing::Test, public Thread {
  public:
   ThreadQueueTest() : Thread(CreateDefaultSocketServer(), true) {}

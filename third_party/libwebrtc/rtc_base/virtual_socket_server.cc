@@ -613,10 +613,6 @@ VirtualSocket* VirtualSocketServer::CreateSocketInternal(int family, int type) {
 
 void VirtualSocketServer::SetMessageQueue(Thread* msg_queue) {
   msg_queue_ = msg_queue;
-  if (msg_queue_) {
-    msg_queue_->SignalQueueDestroyed.connect(
-        this, &VirtualSocketServer::OnMessageQueueDestroyed);
-  }
 }
 
 bool VirtualSocketServer::Wait(int cmsWait, bool process_io) {

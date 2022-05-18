@@ -70,7 +70,6 @@ rtc_library("emulated_network") {
     "../../rtc_base/task_utils:pending_task_safety_flag",
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/task_utils:to_queued_task",
-    "../../rtc_base/third_party/sigslot",
     "../../system_wrappers",
     "../scenario:column_printer",
     "../time_controller",
