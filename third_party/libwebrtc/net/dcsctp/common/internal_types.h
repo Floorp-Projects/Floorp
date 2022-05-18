@@ -35,6 +35,9 @@ using ReconfigRequestSN = StrongAlias<class ReconfigRequestSNTag, uint32_t>;
 // Verification Tag, used for packet validation.
 using VerificationTag = StrongAlias<class VerificationTagTag, uint32_t>;
 
+// Tie Tag, used as a nonce when connecting.
+using TieTag = StrongAlias<class TieTagTag, uint64_t>;
+
 // Hasher for separated ordered/unordered stream identifiers.
 struct UnorderedStreamHash {
   size_t operator()(const std::pair<IsUnordered, StreamID>& p) const {
