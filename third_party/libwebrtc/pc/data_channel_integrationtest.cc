@@ -218,6 +218,52 @@ TEST_P(DataChannelIntegrationTest,
   }
 }
 
+// This test sets up a call between two parties with an SCTP
+// data channel only, and sends empty messages
+TEST_P(DataChannelIntegrationTest,
+       EndToEndCallWithSctpDataChannelEmptyMessages) {
+  ASSERT_TRUE(CreatePeerConnectionWrappers());
+  ConnectFakeSignaling();
+  // Expect that data channel created on caller side will show up for callee as
+  // well.
+  caller()->CreateDataChannel();
+  caller()->CreateAndSetAndSignalOffer();
+  ASSERT_TRUE_WAIT(SignalingStateStable(), kDefaultTimeout);
+  // Caller data channel should already exist (it created one). Callee data
+  // channel may not exist yet, since negotiation happens in-band, not in SDP.
+  ASSERT_NE(nullptr, caller()->data_channel());
+  ASSERT_TRUE_WAIT(callee()->data_channel() != nullptr, kDefaultTimeout);
+  EXPECT_TRUE_WAIT(caller()->data_observer()->IsOpen(), kDefaultTimeout);
+  EXPECT_TRUE_WAIT(callee()->data_observer()->IsOpen(), kDefaultTimeout);
+
+  // Ensure data can be sent in both directions.
+  // Sending empty string data
+  std::string data = "";
+  caller()->data_channel()->Send(DataBuffer(data));
+  EXPECT_EQ_WAIT(1u, callee()->data_observer()->received_message_count(),
+                 kDefaultTimeout);
+  EXPECT_TRUE(callee()->data_observer()->last_message().empty());
+  EXPECT_FALSE(callee()->data_observer()->messages().back().binary);
+  callee()->data_channel()->Send(DataBuffer(data));
+  EXPECT_EQ_WAIT(1u, caller()->data_observer()->received_message_count(),
+                 kDefaultTimeout);
+  EXPECT_TRUE(caller()->data_observer()->last_message().empty());
+  EXPECT_FALSE(caller()->data_observer()->messages().back().binary);
+
+  // Sending empty binary data
+  rtc::CopyOnWriteBuffer empty_buffer;
+  caller()->data_channel()->Send(DataBuffer(empty_buffer, true));
+  EXPECT_EQ_WAIT(2u, callee()->data_observer()->received_message_count(),
+                 kDefaultTimeout);
+  EXPECT_TRUE(callee()->data_observer()->last_message().empty());
+  EXPECT_TRUE(callee()->data_observer()->messages().back().binary);
+  callee()->data_channel()->Send(DataBuffer(empty_buffer, true));
+  EXPECT_EQ_WAIT(2u, caller()->data_observer()->received_message_count(),
+                 kDefaultTimeout);
+  EXPECT_TRUE(caller()->data_observer()->last_message().empty());
+  EXPECT_TRUE(caller()->data_observer()->messages().back().binary);
+}
+
 TEST_P(DataChannelIntegrationTest,
        EndToEndCallWithSctpDataChannelLowestSafeMtu) {
   // The lowest payload size limit that's tested and found safe for this
@@ -386,10 +432,16 @@ TEST_P(DataChannelIntegrationTest, StressTestUnorderedSctpDataChannel) {
                  kDefaultTimeout);
 
   // Sort and compare to make sure none of the messages were corrupted.
-  std::vector<std::string> caller_received_messages =
-      caller()->data_observer()->messages();
-  std::vector<std::string> callee_received_messages =
-      callee()->data_observer()->messages();
+  std::vector<std::string> caller_received_messages;
+  absl::c_transform(caller()->data_observer()->messages(),
+                    std::back_inserter(caller_received_messages),
+                    [](const auto& a) { return a.data; });
+
+  std::vector<std::string> callee_received_messages;
+  absl::c_transform(callee()->data_observer()->messages(),
+                    std::back_inserter(callee_received_messages),
+                    [](const auto& a) { return a.data; });
+
   absl::c_sort(sent_messages);
   absl::c_sort(caller_received_messages);
   absl::c_sort(callee_received_messages);

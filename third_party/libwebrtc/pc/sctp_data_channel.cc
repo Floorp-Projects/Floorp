@@ -294,13 +294,6 @@ bool SctpDataChannel::Send(const DataBuffer& buffer) {
     return false;
   }
 
-  // TODO(jiayl): the spec is unclear about if the remote side should get the
-  // onmessage event. We need to figure out the expected behavior and change the
-  // code accordingly.
-  if (buffer.size() == 0) {
-    return true;
-  }
-
   buffered_amount_ += buffer.size();
 
   // If the queue is non-empty, we're waiting for SignalReadyToSend,

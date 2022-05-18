@@ -74,24 +74,25 @@ static constexpr size_t kSctpMtu = 1191;
 ABSL_CONST_INIT int g_usrsctp_usage_count = 0;
 ABSL_CONST_INIT bool g_usrsctp_initialized_ = false;
 ABSL_CONST_INIT webrtc::GlobalMutex g_usrsctp_lock_(absl::kConstInit);
+ABSL_CONST_INIT char kZero[] = {'\0'};
 
 // DataMessageType is used for the SCTP "Payload Protocol Identifier", as
 // defined in http://tools.ietf.org/html/rfc4960#section-14.4
 //
 // For the list of IANA approved values see:
+// https://tools.ietf.org/html/rfc8831 Sec. 8
 // http://www.iana.org/assignments/sctp-parameters/sctp-parameters.xml
 // The value is not used by SCTP itself. It indicates the protocol running
 // on top of SCTP.
 enum {
   PPID_NONE = 0,  // No protocol is specified.
-  // Matches the PPIDs in mozilla source and
-  // https://datatracker.ietf.org/doc/draft-ietf-rtcweb-data-protocol Sec. 9
-  // They're not yet assigned by IANA.
   PPID_CONTROL = 50,
-  PPID_BINARY_PARTIAL = 52,
+  PPID_TEXT_LAST = 51,
+  PPID_BINARY_PARTIAL = 52,  // Deprecated
   PPID_BINARY_LAST = 53,
-  PPID_TEXT_PARTIAL = 54,
-  PPID_TEXT_LAST = 51
+  PPID_TEXT_PARTIAL = 54,  // Deprecated
+  PPID_TEXT_EMPTY = 56,
+  PPID_BINARY_EMPTY = 57,
 };
 
 // Should only be modified by UsrSctpWrapper.
@@ -128,7 +129,7 @@ void DebugSctpPrintf(const char* format, ...) {
 }
 
 // Get the PPID to use for the terminating fragment of this type.
-uint32_t GetPpid(cricket::DataMessageType type) {
+uint32_t GetPpid(cricket::DataMessageType type, size_t size) {
   switch (type) {
     default:
     case cricket::DMT_NONE:
@@ -136,9 +137,9 @@ uint32_t GetPpid(cricket::DataMessageType type) {
     case cricket::DMT_CONTROL:
       return PPID_CONTROL;
     case cricket::DMT_BINARY:
-      return PPID_BINARY_LAST;
+      return size > 0 ? PPID_BINARY_LAST : PPID_BINARY_EMPTY;
     case cricket::DMT_TEXT:
-      return PPID_TEXT_LAST;
+      return size > 0 ? PPID_TEXT_LAST : PPID_TEXT_EMPTY;
   }
 }
 
@@ -147,11 +148,13 @@ bool GetDataMediaType(uint32_t ppid, cricket::DataMessageType* dest) {
   switch (ppid) {
     case PPID_BINARY_PARTIAL:
     case PPID_BINARY_LAST:
+    case PPID_BINARY_EMPTY:
       *dest = cricket::DMT_BINARY;
       return true;
 
     case PPID_TEXT_PARTIAL:
     case PPID_TEXT_LAST:
+    case PPID_TEXT_EMPTY:
       *dest = cricket::DMT_TEXT;
       return true;
 
@@ -166,6 +169,10 @@ bool GetDataMediaType(uint32_t ppid, cricket::DataMessageType* dest) {
     default:
       return false;
   }
+}
+
+bool IsEmptyPPID(uint32_t ppid) {
+  return ppid == PPID_BINARY_EMPTY || ppid == PPID_TEXT_EMPTY;
 }
 
 // Log the packet in text2pcap format, if log level is at LS_VERBOSE.
@@ -205,11 +212,12 @@ void VerboseLogPacket(const void* data, size_t length, int direction) {
 
 // Creates the sctp_sendv_spa struct used for setting flags in the
 // sctp_sendv() call.
-sctp_sendv_spa CreateSctpSendParams(const cricket::SendDataParams& params) {
+sctp_sendv_spa CreateSctpSendParams(const cricket::SendDataParams& params,
+                                    size_t size) {
   struct sctp_sendv_spa spa = {0};
   spa.sendv_flags |= SCTP_SEND_SNDINFO_VALID;
   spa.sendv_sndinfo.snd_sid = params.sid;
-  spa.sendv_sndinfo.snd_ppid = rtc::HostToNetwork32(GetPpid(params.type));
+  spa.sendv_sndinfo.snd_ppid = rtc::HostToNetwork32(GetPpid(params.type, size));
   // Explicitly marking the EOR flag turns the usrsctp_sendv call below into a
   // non atomic operation. This means that the sctp lib might only accept the
   // message partially. This is done in order to improve throughput, so that we
@@ -792,13 +800,23 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
   }
 
   // Send data using SCTP.
-  sctp_sendv_spa spa = CreateSctpSendParams(message->send_params());
+  sctp_sendv_spa spa =
+      CreateSctpSendParams(message->send_params(), message->size());
+  const void* data = message->data();
+  size_t data_length = message->size();
+  if (message->size() == 0) {
+    // Empty messages are replaced by a single NUL byte on the wire as SCTP
+    // doesn't support empty messages.
+    // The PPID carries the information that the payload needs to be ignored.
+    data = kZero;
+    data_length = 1;
+  }
   // Note: this send call is not atomic because the EOR bit is set. This means
   // that usrsctp can partially accept this message and it is our duty to buffer
   // the rest.
-  ssize_t send_res = usrsctp_sendv(
-      sock_, message->data(), message->size(), NULL, 0, &spa,
-      rtc::checked_cast<socklen_t>(sizeof(spa)), SCTP_SENDV_SPA, 0);
+  ssize_t send_res = usrsctp_sendv(sock_, data, data_length, NULL, 0, &spa,
+                                   rtc::checked_cast<socklen_t>(sizeof(spa)),
+                                   SCTP_SENDV_SPA, 0);
   if (send_res < 0) {
     if (errno == SCTP_EWOULDBLOCK) {
       ready_to_send_data_ = false;
@@ -814,8 +832,9 @@ SendDataResult UsrsctpTransport::SendMessageInternal(OutgoingMessage* message) {
   }
 
   size_t amount_sent = static_cast<size_t>(send_res);
-  RTC_DCHECK_LE(amount_sent, message->size());
-  message->Advance(amount_sent);
+  RTC_DCHECK_LE(amount_sent, data_length);
+  if (message->size() != 0)
+    message->Advance(amount_sent);
   // Only way out now is success.
   return SDR_SUCCESS;
 }
@@ -1319,9 +1338,12 @@ void UsrsctpTransport::OnDataOrNotificationFromSctp(const void* data,
   // association.
   params.seq_num = rcv.rcv_ssn;
 
-  // Append the chunk's data to the message buffer
-  partial_incoming_message_.AppendData(reinterpret_cast<const uint8_t*>(data),
-                                       length);
+  // Append the chunk's data to the message buffer unless we have a chunk with a
+  // PPID marking an empty message.
+  // See: https://tools.ietf.org/html/rfc8831#section-6.6
+  if (!IsEmptyPPID(ppid))
+    partial_incoming_message_.AppendData(reinterpret_cast<const uint8_t*>(data),
+                                         length);
   partial_params_ = params;
   partial_flags_ = flags;
 
