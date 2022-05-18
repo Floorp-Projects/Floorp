@@ -54,7 +54,7 @@ Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
 for those working on C++ code. For more information see:
 https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
 
-Please choose the version of Firefox you want to build:
+Please choose the version of Firefox you want to build (see note above):
 %s
 Your choice:
 """.strip()
