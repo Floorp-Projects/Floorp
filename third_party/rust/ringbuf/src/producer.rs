@@ -2,6 +2,7 @@ use alloc::sync::Arc;
 use core::{
     mem::{self, MaybeUninit},
     ptr::copy_nonoverlapping,
+    slice,
     sync::atomic::Ordering,
 };
 #[cfg(feature = "std")]
@@ -50,7 +51,7 @@ impl<T: Sized> Producer<T> {
         self.rb.remaining()
     }
 
-    /// Allows to write into ring buffer memory directry.
+    /// Allows to write into ring buffer memory directly.
     ///
     /// *This function is unsafe because it gives access to possibly uninitialized memory*
     ///
@@ -75,7 +76,7 @@ impl<T: Sized> Producer<T> {
     {
         let head = self.rb.head.load(Ordering::Acquire);
         let tail = self.rb.tail.load(Ordering::Acquire);
-        let len = self.rb.data.get_ref().len();
+        let len = self.rb.data.len();
 
         let ranges = if tail >= head {
             if head > 0 {
@@ -91,9 +92,11 @@ impl<T: Sized> Producer<T> {
             (0..0, 0..0)
         };
 
+        let ptr = self.rb.data.get_mut().as_mut_ptr();
+
         let slices = (
-            &mut self.rb.data.get_mut()[ranges.0],
-            &mut self.rb.data.get_mut()[ranges.1],
+            slice::from_raw_parts_mut(ptr.add(ranges.0.start), ranges.0.len()),
+            slice::from_raw_parts_mut(ptr.add(ranges.1.start), ranges.1.len()),
         );
 
         let n = f(slices.0, slices.1);
@@ -145,7 +148,7 @@ impl<T: Sized> Producer<T> {
     }
 
     /// Appends an element to the ring buffer.
-    /// On failure returns an error containing the element that hasn't beed appended.
+    /// On failure returns an error containing the element that hasn't been appended.
     pub fn push(&mut self, elem: T) -> Result<(), T> {
         let mut elem_mu = MaybeUninit::new(elem);
         let n = unsafe {
@@ -225,7 +228,7 @@ impl Producer<u8> {
     /// and appends them to the ring buffer.
     /// If `count` is `None` then as much as possible bytes will be read.
     ///
-    /// Returns `Ok(n)` if `read` is succeded. `n` is number of bytes been read.
+    /// Returns `Ok(n)` if `read` succeeded. `n` is number of bytes been read.
     /// `n == 0` means that either `read` returned zero or ring buffer is full.
     ///
     /// If `read` is failed or returned an invalid number then error is returned.

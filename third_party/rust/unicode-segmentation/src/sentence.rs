@@ -30,7 +30,7 @@ mod fwd {
         UpperLower,
         ClosePlus,
         SpPlus,
-        STerm
+        STerm,
     }
 
     #[derive(Clone, PartialEq, Eq)]
@@ -40,14 +40,14 @@ mod fwd {
         StatePart::Sot,
         StatePart::Sot,
         StatePart::Sot,
-        StatePart::Sot
+        StatePart::Sot,
     ]);
 
     #[derive(Clone)]
     pub struct SentenceBreaks<'a> {
         pub string: &'a str,
         pos: usize,
-        state: SentenceBreaksState
+        state: SentenceBreaksState,
     }
 
     impl SentenceBreaksState {
@@ -67,26 +67,20 @@ mod fwd {
                         SentenceCat::SC_LF => StatePart::LF,
                         SentenceCat::SC_Sep => StatePart::Sep,
                         SentenceCat::SC_ATerm => StatePart::ATerm,
-                        SentenceCat::SC_Upper |
-                        SentenceCat::SC_Lower => StatePart::UpperLower,
+                        SentenceCat::SC_Upper | SentenceCat::SC_Lower => StatePart::UpperLower,
                         SentenceCat::SC_Close => StatePart::ClosePlus,
                         SentenceCat::SC_Sp => StatePart::SpPlus,
                         SentenceCat::SC_STerm => StatePart::STerm,
-                        _ => StatePart::Other
-                    }
-                ]
+                        _ => StatePart::Other,
+                    },
+                ],
             };
             SentenceBreaksState(parts)
         }
 
         fn end(&self) -> SentenceBreaksState {
             let &SentenceBreaksState(parts) = self;
-            SentenceBreaksState([
-                parts[1],
-                parts[2],
-                parts[3],
-                StatePart::Eot
-            ])
+            SentenceBreaksState([parts[1], parts[2], parts[3], StatePart::Eot])
         }
 
         // Helper function to check if state head matches a single `StatePart`
@@ -108,7 +102,9 @@ mod fwd {
     fn match_sb8(state: &SentenceBreaksState, ahead: &str) -> bool {
         let &SentenceBreaksState(parts) = state;
         let mut idx = if parts[3] == StatePart::SpPlus { 2 } else { 3 };
-        if parts[idx] == StatePart::ClosePlus { idx -= 1 }
+        if parts[idx] == StatePart::ClosePlus {
+            idx -= 1
+        }
 
         if parts[idx] == StatePart::ATerm {
             use crate::tables::sentence as se;
@@ -117,11 +113,14 @@ mod fwd {
                 //( ¬(OLetter | Upper | Lower | ParaSep | SATerm) )* Lower
                 match se::sentence_category(next_char).2 {
                     se::SC_Lower => return true,
-                    se::SC_OLetter |
-                    se::SC_Upper |
-                    se::SC_Sep | se::SC_CR | se::SC_LF |
-                    se::SC_STerm | se::SC_ATerm => return false,
-                    _ => continue
+                    se::SC_OLetter
+                    | se::SC_Upper
+                    | se::SC_Sep
+                    | se::SC_CR
+                    | se::SC_LF
+                    | se::SC_STerm
+                    | se::SC_ATerm => return false,
+                    _ => continue,
                 }
             }
         }
@@ -134,7 +133,9 @@ mod fwd {
         // SATerm Close* Sp*
         let &SentenceBreaksState(parts) = state;
         let mut idx = if parts[3] == StatePart::SpPlus { 2 } else { 3 };
-        if parts[idx] == StatePart::ClosePlus { idx -= 1 }
+        if parts[idx] == StatePart::ClosePlus {
+            idx -= 1
+        }
         parts[idx] == StatePart::STerm || parts[idx] == StatePart::ATerm
     }
 
@@ -142,7 +143,11 @@ mod fwd {
     fn match_sb9(state: &SentenceBreaksState) -> bool {
         // SATerm Close*
         let &SentenceBreaksState(parts) = state;
-        let idx = if parts[3] == StatePart::ClosePlus { 2 } else { 3 };
+        let idx = if parts[3] == StatePart::ClosePlus {
+            2
+        } else {
+            3
+        };
         parts[idx] == StatePart::STerm || parts[idx] == StatePart::ATerm
     }
 
@@ -151,14 +156,16 @@ mod fwd {
         // SATerm Close* Sp* ParaSep?
         let &SentenceBreaksState(parts) = state;
         let mut idx = match parts[3] {
-            StatePart::Sep |
-            StatePart::CR |
-            StatePart::LF => 2,
-            _ => 3
+            StatePart::Sep | StatePart::CR | StatePart::LF => 2,
+            _ => 3,
         };
 
-        if parts[idx] == StatePart::SpPlus { idx -= 1 }
-        if parts[idx] == StatePart::ClosePlus { idx -= 1}
+        if parts[idx] == StatePart::SpPlus {
+            idx -= 1
+        }
+        if parts[idx] == StatePart::ClosePlus {
+            idx -= 1
+        }
 
         parts[idx] == StatePart::STerm || parts[idx] == StatePart::ATerm
     }
@@ -189,64 +196,70 @@ mod fwd {
 
                 match next_cat {
                     // SB1 https://unicode.org/reports/tr29/#SB1
-                    _ if state_before.match1(StatePart::Sot) =>
-                        return Some(position_before),
+                    _ if state_before.match1(StatePart::Sot) => return Some(position_before),
 
                     // SB2 is handled when inner iterator (chars) is finished
 
                     // SB3 https://unicode.org/reports/tr29/#SB3
-                    SentenceCat::SC_LF if state_before.match1(StatePart::CR) =>
-                        continue,
+                    SentenceCat::SC_LF if state_before.match1(StatePart::CR) => continue,
 
                     // SB4 https://unicode.org/reports/tr29/#SB4
                     _ if state_before.match1(StatePart::Sep)
                         || state_before.match1(StatePart::CR)
-                        || state_before.match1(StatePart::LF)
-                    => return Some(position_before),
+                        || state_before.match1(StatePart::LF) =>
+                    {
+                        return Some(position_before)
+                    }
 
                     // SB5 https://unicode.org/reports/tr29/#SB5
-                    SentenceCat::SC_Extend |
-                    SentenceCat::SC_Format => self.state = state_before,
+                    SentenceCat::SC_Extend | SentenceCat::SC_Format => self.state = state_before,
 
                     // SB6 https://unicode.org/reports/tr29/#SB6
-                    SentenceCat::SC_Numeric if state_before.match1(StatePart::ATerm) =>
-                        continue,
+                    SentenceCat::SC_Numeric if state_before.match1(StatePart::ATerm) => continue,
 
                     // SB7 https://unicode.org/reports/tr29/#SB7
-                    SentenceCat::SC_Upper if state_before.match2(StatePart::UpperLower, StatePart::ATerm) =>
-                        continue,
+                    SentenceCat::SC_Upper
+                        if state_before.match2(StatePart::UpperLower, StatePart::ATerm) =>
+                    {
+                        continue
+                    }
 
                     // SB8 https://unicode.org/reports/tr29/#SB8
-                    _ if match_sb8(&state_before, &self.string[position_before..]) =>
-                        continue,
+                    _ if match_sb8(&state_before, &self.string[position_before..]) => continue,
 
                     // SB8a https://unicode.org/reports/tr29/#SB8a
-                    SentenceCat::SC_SContinue |
-                    SentenceCat::SC_STerm |
-                    SentenceCat::SC_ATerm if match_sb8a(&state_before) =>
-                        continue,
+                    SentenceCat::SC_SContinue | SentenceCat::SC_STerm | SentenceCat::SC_ATerm
+                        if match_sb8a(&state_before) =>
+                    {
+                        continue
+                    }
 
                     // SB9 https://unicode.org/reports/tr29/#SB9
-                    SentenceCat::SC_Close |
-                    SentenceCat::SC_Sp |
-                    SentenceCat::SC_Sep |
-                    SentenceCat::SC_CR |
-                    SentenceCat::SC_LF if match_sb9(&state_before) =>
-                        continue,
+                    SentenceCat::SC_Close
+                    | SentenceCat::SC_Sp
+                    | SentenceCat::SC_Sep
+                    | SentenceCat::SC_CR
+                    | SentenceCat::SC_LF
+                        if match_sb9(&state_before) =>
+                    {
+                        continue
+                    }
 
                     // SB10 https://unicode.org/reports/tr29/#SB10
-                    SentenceCat::SC_Sp |
-                    SentenceCat::SC_Sep |
-                    SentenceCat::SC_CR |
-                    SentenceCat::SC_LF if match_sb8a(&state_before) =>
-                        continue,
+                    SentenceCat::SC_Sp
+                    | SentenceCat::SC_Sep
+                    | SentenceCat::SC_CR
+                    | SentenceCat::SC_LF
+                        if match_sb8a(&state_before) =>
+                    {
+                        continue
+                    }
 
                     // SB11 https://unicode.org/reports/tr29/#SB11
-                    _ if match_sb11(&state_before) =>
-                        return Some(position_before),
+                    _ if match_sb11(&state_before) => return Some(position_before),
 
                     // SB998 https://unicode.org/reports/tr29/#SB998
-                    _ => continue
+                    _ => continue,
                 }
             }
 
@@ -263,9 +276,12 @@ mod fwd {
     }
 
     pub fn new_sentence_breaks<'a>(source: &'a str) -> SentenceBreaks<'a> {
-        SentenceBreaks { string: source, pos: 0, state: INITIAL_STATE }
+        SentenceBreaks {
+            string: source,
+            pos: 0,
+            state: INITIAL_STATE,
+        }
     }
-
 }
 
 /// An iterator over the substrings of a string which, after splitting the string on
@@ -296,7 +312,7 @@ pub struct UnicodeSentences<'a> {
 #[derive(Clone)]
 pub struct USentenceBounds<'a> {
     iter: fwd::SentenceBreaks<'a>,
-    sentence_start: Option<usize>
+    sentence_start: Option<usize>,
 }
 
 /// External iterator for sentence boundaries and byte offsets.
@@ -316,7 +332,7 @@ pub struct USentenceBoundIndices<'a> {
 pub fn new_sentence_bounds<'a>(source: &'a str) -> USentenceBounds<'a> {
     USentenceBounds {
         iter: fwd::new_sentence_breaks(source),
-        sentence_start: None
+        sentence_start: None,
     }
 }
 
@@ -324,7 +340,7 @@ pub fn new_sentence_bounds<'a>(source: &'a str) -> USentenceBounds<'a> {
 pub fn new_sentence_bound_indices<'a>(source: &'a str) -> USentenceBoundIndices<'a> {
     USentenceBoundIndices {
         start_offset: source.as_ptr() as usize,
-        iter: new_sentence_bounds(source)
+        iter: new_sentence_bounds(source),
     }
 }
 
@@ -333,17 +349,23 @@ pub fn new_unicode_sentences<'b>(s: &'b str) -> UnicodeSentences<'b> {
     use super::UnicodeSegmentation;
     use crate::tables::util::is_alphanumeric;
 
-    fn has_alphanumeric(s: &&str) -> bool { s.chars().any(|c| is_alphanumeric(c)) }
+    fn has_alphanumeric(s: &&str) -> bool {
+        s.chars().any(|c| is_alphanumeric(c))
+    }
     let has_alphanumeric: fn(&&str) -> bool = has_alphanumeric; // coerce to fn pointer
 
-    UnicodeSentences { inner: s.split_sentence_bounds().filter(has_alphanumeric) }
+    UnicodeSentences {
+        inner: s.split_sentence_bounds().filter(has_alphanumeric),
+    }
 }
 
 impl<'a> Iterator for UnicodeSentences<'a> {
     type Item = &'a str;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a str> { self.inner.next() }
+    fn next(&mut self) -> Option<&'a str> {
+        self.inner.next()
+    }
 }
 
 impl<'a> Iterator for USentenceBounds<'a> {
@@ -361,7 +383,7 @@ impl<'a> Iterator for USentenceBounds<'a> {
             if let Some(start_pos) = self.iter.next() {
                 self.sentence_start = Some(start_pos)
             } else {
-                return None
+                return None;
             }
         }
 
@@ -381,7 +403,9 @@ impl<'a> Iterator for USentenceBoundIndices<'a> {
 
     #[inline]
     fn next(&mut self) -> Option<(usize, &'a str)> {
-        self.iter.next().map(|s| (s.as_ptr() as usize - self.start_offset, s))
+        self.iter
+            .next()
+            .map(|s| (s.as_ptr() as usize - self.start_offset, s))
     }
 
     #[inline]

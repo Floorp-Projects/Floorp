@@ -27,10 +27,14 @@
 //! }
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/serde_bytes/0.11.5")]
+#![doc(html_root_url = "https://docs.rs/serde_bytes/0.11.6")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
-#![allow(clippy::needless_doctest_main)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::must_use_candidate,
+    clippy::needless_doctest_main
+)]
 
 mod bytes;
 mod de;

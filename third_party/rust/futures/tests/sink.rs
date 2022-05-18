@@ -288,6 +288,7 @@ fn mpsc_blocking_start_send() {
 
 // test `flush` by using `with` to make the first insertion into a sink block
 // until a oneshot is completed
+#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn with_flush() {
     let (tx, rx) = oneshot::channel();

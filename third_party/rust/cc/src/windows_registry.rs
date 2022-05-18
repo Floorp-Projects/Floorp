@@ -134,7 +134,9 @@ pub fn find_vs_version() -> Result<VsVers, String> {
         _ => {
             // Check for the presence of a specific registry key
             // that indicates visual studio is installed.
-            if impl_::has_msbuild_version("16.0") {
+            if impl_::has_msbuild_version("17.0") {
+                Ok(VsVers::Vs17)
+            } else if impl_::has_msbuild_version("16.0") {
                 Ok(VsVers::Vs16)
             } else if impl_::has_msbuild_version("15.0") {
                 Ok(VsVers::Vs15)
@@ -250,18 +252,22 @@ mod impl_ {
         }
     }
 
+    fn find_msbuild_vs17(target: &str) -> Option<Tool> {
+        find_tool_in_vs16plus_path(r"MSBuild\Current\Bin\MSBuild.exe", target, "17")
+    }
+
     #[allow(bare_trait_objects)]
-    fn vs16_instances(target: &str) -> Box<Iterator<Item = PathBuf>> {
+    fn vs16plus_instances(target: &str, version: &'static str) -> Box<Iterator<Item = PathBuf>> {
         let instances = if let Some(instances) = vs15plus_instances(target) {
             instances
         } else {
             return Box::new(iter::empty());
         };
-        Box::new(instances.into_iter().filter_map(|instance| {
+        Box::new(instances.into_iter().filter_map(move |instance| {
             let installation_name = instance.installation_name()?;
-            if installation_name.starts_with("VisualStudio/16.") {
+            if installation_name.starts_with(&format!("VisualStudio/{}.", version)) {
                 Some(instance.installation_path()?)
-            } else if installation_name.starts_with("VisualStudioPreview/16.") {
+            } else if installation_name.starts_with(&format!("VisualStudioPreview/{}.", version)) {
                 Some(instance.installation_path()?)
             } else {
                 None
@@ -269,8 +275,8 @@ mod impl_ {
         }))
     }
 
-    fn find_tool_in_vs16_path(tool: &str, target: &str) -> Option<Tool> {
-        vs16_instances(target)
+    fn find_tool_in_vs16plus_path(tool: &str, target: &str, version: &'static str) -> Option<Tool> {
+        vs16plus_instances(target, version)
             .filter_map(|path| {
                 let path = path.join(tool);
                 if !path.is_file() {
@@ -289,7 +295,7 @@ mod impl_ {
     }
 
     fn find_msbuild_vs16(target: &str) -> Option<Tool> {
-        find_tool_in_vs16_path(r"MSBuild\Current\Bin\MSBuild.exe", target)
+        find_tool_in_vs16plus_path(r"MSBuild\Current\Bin\MSBuild.exe", target, "16")
     }
 
     // In MSVC 15 (2017) MS once again changed the scheme for locating
@@ -663,7 +669,15 @@ mod impl_ {
     // only need to bother checking x64, making this code a tiny bit simpler.
     // Like we do for the Universal CRT, we sort the possibilities
     // asciibetically to find the newest one as that is what vcvars does.
+    // Before doing that, we check the "WindowsSdkDir" and "WindowsSDKVersion"
+    // environment variables set by vcvars to use the environment sdk version
+    // if one is already configured.
     fn get_sdk10_dir() -> Option<(PathBuf, String)> {
+        if let (Ok(root), Ok(version)) = (env::var("WindowsSdkDir"), env::var("WindowsSDKVersion"))
+        {
+            return Some((root.into(), version.trim_end_matches('\\').to_string()));
+        }
+
         let key = r"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0";
         let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
         let root = key.query_str("InstallationFolder").ok()?;
@@ -816,6 +830,11 @@ mod impl_ {
 
     pub fn has_msbuild_version(version: &str) -> bool {
         match version {
+            "17.0" => {
+                find_msbuild_vs17("x86_64-pc-windows-msvc").is_some()
+                    || find_msbuild_vs17("i686-pc-windows-msvc").is_some()
+                    || find_msbuild_vs17("aarch64-pc-windows-msvc").is_some()
+            }
             "16.0" => {
                 find_msbuild_vs16("x86_64-pc-windows-msvc").is_some()
                     || find_msbuild_vs16("i686-pc-windows-msvc").is_some()

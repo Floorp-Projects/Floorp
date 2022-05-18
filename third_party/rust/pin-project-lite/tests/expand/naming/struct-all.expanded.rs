@@ -75,10 +75,10 @@ const _: () = {
         ) -> StructProjReplace<T, U> {
             unsafe {
                 let __self_ptr: *mut Self = self.get_unchecked_mut();
-                let __guard = ::pin_project_lite::__private::UnsafeOverwriteGuard {
-                    target: __self_ptr,
-                    value: ::pin_project_lite::__private::ManuallyDrop::new(replacement),
-                };
+                let __guard = ::pin_project_lite::__private::UnsafeOverwriteGuard::new(
+                    __self_ptr,
+                    replacement,
+                );
                 let Self { pinned, unpinned } = &mut *__self_ptr;
                 let result = StructProjReplace {
                     pinned: ::pin_project_lite::__private::PhantomData,
@@ -86,7 +86,7 @@ const _: () = {
                 };
                 {
                     (
-                        ::pin_project_lite::__private::UnsafeDropInPlaceGuard(pinned),
+                        ::pin_project_lite::__private::UnsafeDropInPlaceGuard::new(pinned),
                         (),
                     );
                 }

@@ -111,7 +111,7 @@ req! {
 req! {
     urltest_007,
     b"GET  foo.com HTTP/1.1\r\nHost: \r\n\r\n",
-    Err(Error::Version),
+    Err(Error::Token),
     |_r| {}
 }
 

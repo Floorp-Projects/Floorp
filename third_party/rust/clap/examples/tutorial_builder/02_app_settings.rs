@@ -1,10 +1,12 @@
-use clap::{app_from_crate, arg, AppSettings};
+// Note: this requires the `cargo` feature
+
+use clap::{arg, command, AppSettings};
 
 fn main() {
-    let matches = app_from_crate!()
-        .global_setting(AppSettings::AllArgsOverrideSelf)
+    let matches = command!()
+        .args_override_self(true)
         .global_setting(AppSettings::DeriveDisplayOrder)
-        .global_setting(AppSettings::AllowNegativeNumbers)
+        .allow_negative_numbers(true)
         .arg(arg!(--two <VALUE>))
         .arg(arg!(--one <VALUE>))
         .get_matches();

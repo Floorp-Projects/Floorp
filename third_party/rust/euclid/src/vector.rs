@@ -27,9 +27,13 @@ use core::marker::PhantomData;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 #[cfg(feature = "mint")]
 use mint;
+use num_traits::real::Real;
 use num_traits::{Float, NumCast, Signed};
 #[cfg(feature = "serde")]
 use serde;
+
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A 2d Vector tagged with a unit.
 #[repr(C)]
@@ -102,6 +106,12 @@ where
         })
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Vector2D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Vector2D<T, U> {}
 
 impl<T: Eq, U> Eq for Vector2D<T, U> {}
 
@@ -440,6 +450,27 @@ where
 }
 
 impl<T: Float, U> Vector2D<T, U> {
+    /// Return the normalized vector even if the length is larger than the max value of Float.
+    #[inline]
+    #[must_use]
+    pub fn robust_normalize(self) -> Self {
+        let length = self.length();
+        if length.is_infinite() {
+            let scaled = self / T::max_value();
+            scaled / scaled.length()
+        } else {
+            self / length
+        }
+    }
+
+    /// Returns true if all members are finite.
+    #[inline]
+    pub fn is_finite(self) -> bool {
+        self.x.is_finite() && self.y.is_finite()
+    }
+}
+
+impl<T: Real, U> Vector2D<T, U> {
     /// Returns the vector length.
     #[inline]
     pub fn length(self) -> T {
@@ -468,17 +499,10 @@ impl<T: Float, U> Vector2D<T, U> {
         }
     }
 
-    /// Return the normalized vector even if the length is larger than the max value of Float.
+    /// Return this vector scaled to fit the provided length.
     #[inline]
-    #[must_use]
-    pub fn robust_normalize(self) -> Self {
-        let length = self.length();
-        if length.is_infinite() {
-            let scaled = self / T::max_value();
-            scaled / scaled.length()
-        } else {
-            self / length
-        }
+    pub fn with_length(self, length: T) -> Self {
+        self.normalize() * length
     }
 
     /// Return this vector capped to a maximum length.
@@ -508,12 +532,6 @@ impl<T: Float, U> Vector2D<T, U> {
     pub fn clamp_length(self, min: T, max: T) -> Self {
         debug_assert!(min <= max);
         self.with_min_length(min).with_max_length(max)
-    }
-
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.x.is_finite() && self.y.is_finite()
     }
 }
 
@@ -948,6 +966,12 @@ where
     }
 }
 
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for Vector3D<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for Vector3D<T, U> {}
+
 impl<T: Eq, U> Eq for Vector3D<T, U> {}
 
 impl<T: PartialEq, U> PartialEq for Vector3D<T, U> {
@@ -1277,6 +1301,27 @@ where
 }
 
 impl<T: Float, U> Vector3D<T, U> {
+    /// Return the normalized vector even if the length is larger than the max value of Float.
+    #[inline]
+    #[must_use]
+    pub fn robust_normalize(self) -> Self {
+        let length = self.length();
+        if length.is_infinite() {
+            let scaled = self / T::max_value();
+            scaled / scaled.length()
+        } else {
+            self / length
+        }
+    }
+
+    /// Returns true if all members are finite.
+    #[inline]
+    pub fn is_finite(self) -> bool {
+        self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
+    }
+}
+
+impl<T: Real, U> Vector3D<T, U> {
     /// Returns the positive angle between this vector and another vector.
     ///
     /// The returned angle is between 0 and PI.
@@ -1318,19 +1363,6 @@ impl<T: Float, U> Vector3D<T, U> {
         }
     }
 
-    /// Return the normalized vector even if the length is larger than the max value of Float.
-    #[inline]
-    #[must_use]
-    pub fn robust_normalize(self) -> Self {
-        let length = self.length();
-        if length.is_infinite() {
-            let scaled = self / T::max_value();
-            scaled / scaled.length()
-        } else {
-            self / length
-        }
-    }
-
     /// Return this vector capped to a maximum length.
     #[inline]
     pub fn with_max_length(self, max_length: T) -> Self {
@@ -1358,12 +1390,6 @@ impl<T: Float, U> Vector3D<T, U> {
     pub fn clamp_length(self, min: T, max: T) -> Self {
         debug_assert!(min <= max);
         self.with_min_length(min).with_max_length(max)
-    }
-
-    /// Returns true if all members are finite.
-    #[inline]
-    pub fn is_finite(self) -> bool {
-        self.x.is_finite() && self.y.is_finite() && self.z.is_finite()
     }
 }
 

@@ -26,17 +26,21 @@
 #[cfg(not(feature = "std"))]
 compile_error!("`std` feature is currently required to build `clap`");
 
+pub use crate::build::Command;
+pub use crate::build::{
+    AppFlags, AppSettings, Arg, ArgFlags, ArgGroup, ArgSettings, PossibleValue, ValueHint,
+};
+pub use crate::error::Error;
+pub use crate::parse::{ArgMatches, Indices, OsValues, ValueSource, Values};
 #[cfg(feature = "color")]
 pub use crate::util::color::ColorChoice;
-pub use crate::{
-    build::{
-        App, AppFlags, AppSettings, Arg, ArgFlags, ArgGroup, ArgSettings, PossibleValue, ValueHint,
-    },
-    parse::errors::{Error, ErrorKind, Result},
-    parse::{ArgMatches, Indices, OsValues, Values},
-};
 
-pub use crate::derive::{ArgEnum, Args, FromArgMatches, IntoApp, Parser, Subcommand};
+pub use crate::derive::{ArgEnum, Args, CommandFactory, FromArgMatches, Parser, Subcommand};
+
+pub use crate::error::{ErrorKind, Result};
+
+#[allow(deprecated)]
+pub use crate::build::App;
 
 #[cfg(feature = "yaml")]
 #[doc(hidden)]
@@ -44,14 +48,19 @@ pub use crate::derive::{ArgEnum, Args, FromArgMatches, IntoApp, Parser, Subcomma
     since = "3.0.0",
     note = "Deprecated in Issue #3087, maybe clap::Parser would fit your use case?"
 )]
+#[doc(hidden)]
 pub use yaml_rust::YamlLoader;
 
 #[cfg(feature = "derive")]
 #[doc(hidden)]
 pub use clap_derive::{self, *};
 
+/// Deprecated, replaced with [`CommandFactory`]
+#[deprecated(since = "3.0.0", note = "Replaced with `CommandFactory`")]
+pub use CommandFactory as IntoApp;
 /// Deprecated, replaced with [`Parser`]
 #[deprecated(since = "3.0.0", note = "Replaced with `Parser`")]
+#[doc(hidden)]
 pub use Parser as StructOpt;
 
 #[cfg(any(feature = "derive", feature = "cargo"))]
@@ -65,7 +74,9 @@ mod macros;
 mod derive;
 
 #[cfg(feature = "regex")]
-pub use crate::build::arg::RegexRef;
+pub use crate::build::RegexRef;
+
+pub mod error;
 
 mod build;
 mod mkeymap;
@@ -77,21 +88,23 @@ const INTERNAL_ERROR_MSG: &str = "Fatal internal error. Please consider filing a
                                   report at https://github.com/clap-rs/clap/issues";
 const INVALID_UTF8: &str = "unexpected invalid UTF-8 code point";
 
-/// Deprecated, replaced with [`App::new`], unless you were looking for [Subcommand]
+/// Deprecated, replaced with [`Command::new`], unless you were looking for [Subcommand]
 #[deprecated(
     since = "3.0.0",
-    note = "Replaced with `App::new` unless you intended the `Subcommand` trait"
+    note = "Replaced with `Command::new` unless you intended the `Subcommand` trait"
 )]
+#[doc(hidden)]
 #[derive(Debug, Copy, Clone)]
 pub struct SubCommand {}
 
 #[allow(deprecated)]
 impl SubCommand {
-    /// Deprecated, replaced with [`App::new`].
+    /// Deprecated, replaced with [`Command::new`].
     /// Did you mean Subcommand (lower-case c)?
-    #[deprecated(since = "3.0.0", note = "Replaced with `App::new`")]
+    #[deprecated(since = "3.0.0", note = "Replaced with `Command::new`")]
+    #[doc(hidden)]
     pub fn with_name<'help>(name: &str) -> App<'help> {
-        App::new(name)
+        Command::new(name)
     }
 
     /// Deprecated in [Issue #3087](https://github.com/clap-rs/clap/issues/3087), maybe [`clap::Parser`][crate::Parser] would fit your use case?
@@ -100,8 +113,9 @@ impl SubCommand {
         since = "3.0.0",
         note = "Deprecated in Issue #3087, maybe clap::Parser would fit your use case?"
     )]
+    #[doc(hidden)]
     pub fn from_yaml(yaml: &yaml_rust::Yaml) -> App {
         #![allow(deprecated)]
-        App::from_yaml(yaml)
+        Command::from_yaml(yaml)
     }
 }

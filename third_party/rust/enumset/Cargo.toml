@@ -12,23 +12,28 @@
 [package]
 edition = "2018"
 name = "enumset"
-version = "1.0.8"
+version = "1.0.11"
 authors = ["Alissa Rao <lymia@lymiahugs.com>"]
 description = "A library for creating compact sets of enums."
 documentation = "https://docs.rs/enumset/"
 readme = "../README.md"
-keywords = ["enum", "bitset"]
+keywords = [
+    "enum",
+    "bitset",
+]
 categories = ["data-structures"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/Lymia/enumset"
+
 [dependencies.enumset_derive]
-version = "0.5.5"
+version = "0.6.0"
 
 [dependencies.serde2]
 version = "1.0.91"
 optional = true
 default-features = false
 package = "serde"
+
 [dev-dependencies.bincode]
 version = "1.0"
 features = ["i128"]
@@ -46,7 +51,16 @@ version = "1.0.39"
 version = "1.0.24"
 
 [features]
-serde = ["serde2", "enumset_derive/serde"]
+alloc = []
+serde = [
+    "serde2",
+    "enumset_derive/serde",
+]
+std = [
+    "alloc",
+    "enumset_derive/proc-macro-crate",
+]
+
 [badges.maintenance]
 status = "actively-developed"
 

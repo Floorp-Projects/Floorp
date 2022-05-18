@@ -19,6 +19,8 @@ use core::marker::PhantomData;
 use core::ops::Div;
 #[cfg(feature = "serde")]
 use serde;
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// Homogeneous vector in 3D space.
 #[repr(C)]
@@ -77,6 +79,12 @@ where
         (&self.x, &self.y, &self.z, &self.w).serialize(serializer)
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, U> Zeroable for HomogeneousVector<T, U> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, U: 'static> Pod for HomogeneousVector<T, U> {}
 
 impl<T, U> Eq for HomogeneousVector<T, U> where T: Eq {}
 

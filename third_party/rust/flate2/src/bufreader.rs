@@ -42,7 +42,7 @@ impl<R: Read> BufReader<R> {
 
     pub fn with_buf(buf: Vec<u8>, inner: R) -> BufReader<R> {
         BufReader {
-            inner: inner,
+            inner,
             buf: buf.into_boxed_slice(),
             pos: 0,
             cap: 0,

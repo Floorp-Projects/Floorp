@@ -28,6 +28,8 @@ use core::fmt;
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "bytemuck")]
+use bytemuck::{Zeroable, Pod};
 
 /// A 2d transform represented by a column-major 3 by 3 matrix, compressed down to 3 by 2.
 ///
@@ -83,6 +85,12 @@ where
         })
     }
 }
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Zeroable, Src, Dst> Zeroable for Transform2D<T, Src, Dst> {}
+
+#[cfg(feature = "bytemuck")]
+unsafe impl<T: Pod, Src: 'static, Dst: 'static> Pod for Transform2D<T, Src, Dst> {}
 
 impl<T: Copy, Src, Dst> Copy for Transform2D<T, Src, Dst> {}
 
