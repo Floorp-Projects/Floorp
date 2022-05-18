@@ -36,7 +36,7 @@
 //! The compiler will ensure that the loaded function will not outlive the `Library` from which it comes,
 //! preventing the most common memory-safety issues.
 #![cfg_attr(any(unix, windows), deny(missing_docs, clippy::all, unreachable_pub, unused))]
-#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(libloading_docs, feature(doc_cfg))]
 
 pub mod changelog;
 pub mod os;
@@ -45,9 +45,9 @@ mod util;
 mod error;
 pub use self::error::Error;
 
-#[cfg(any(unix, windows, docsrs))]
+#[cfg(any(unix, windows, libloading_docs))]
 mod safe;
-#[cfg(any(unix, windows, docsrs))]
+#[cfg(any(unix, windows, libloading_docs))]
 pub use self::safe::{Library, Symbol};
 
 use std::env::consts::{DLL_PREFIX, DLL_SUFFIX};

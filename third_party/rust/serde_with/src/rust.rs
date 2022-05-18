@@ -1,5 +1,6 @@
 //! De/Serialization for Rust's builtin and std types
 
+use crate::Separator;
 use serde::{
     de::{Deserialize, DeserializeOwned, Deserializer, Error, MapAccess, SeqAccess, Visitor},
     ser::{Serialize, SerializeMap, SerializeSeq, Serializer},
@@ -13,7 +14,6 @@ use std::{
     marker::PhantomData,
     str::FromStr,
 };
-use Separator;
 
 /// De/Serialize using [`Display`] and [`FromStr`] implementation
 ///
@@ -21,43 +21,63 @@ use Separator;
 /// It can be very useful for serialization formats like JSON, which do not support integer
 /// numbers and have to resort to strings to represent them.
 ///
+/// If you control the type you want to de/serialize, you can instead use the two derive macros, [`SerializeDisplay`] and [`DeserializeFromStr`].
+/// They properly implement the traits [`Serialize`] and [`Deserialize`] such that user of the type no longer have to use the with-attribute.
+///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`DisplayFromStr`] and using the [`serde_as`] macro.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, DisplayFromStr};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "DisplayFromStr")]
+///     value: mime::Mime,
+/// }
+/// # }
+/// ```
+///
 /// # Examples
 ///
-/// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
+/// ```rust
 /// # use serde_derive::{Deserialize, Serialize};
-/// # use std::net::Ipv4Addr;
 /// #
 /// #[derive(Deserialize, Serialize)]
 /// struct A {
 ///     #[serde(with = "serde_with::rust::display_fromstr")]
-///     address: Ipv4Addr,
+///     mime: mime::Mime,
 ///     #[serde(with = "serde_with::rust::display_fromstr")]
-///     b: bool,
+///     number: u32,
 /// }
 ///
 /// let v: A = serde_json::from_str(r#"{
-///     "address": "192.168.2.1",
-///     "b": "true"
+///     "mime": "text/plain",
+///     "number": "159"
 /// }"#).unwrap();
-/// assert_eq!(Ipv4Addr::new(192, 168, 2, 1), v.address);
-/// assert!(v.b);
+/// assert_eq!(mime::TEXT_PLAIN, v.mime);
+/// assert_eq!(159, v.number);
 ///
 /// let x = A {
-///     address: Ipv4Addr::new(127, 53, 0, 1),
-///     b: false,
+///     mime: mime::STAR_STAR,
+///     number: 777,
 /// };
-/// assert_eq!(r#"{"address":"127.53.0.1","b":"false"}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(r#"{"mime":"*/*","number":"777"}"#, serde_json::to_string(&x).unwrap());
 /// ```
+///
+/// [`DeserializeFromStr`]: serde_with_macros::DeserializeFromStr
+/// [`DisplayFromStr`]: crate::DisplayFromStr
+/// [`serde_as`]: crate::guide::serde_as
+/// [`SerializeDisplay`]: serde_with_macros::SerializeDisplay
 pub mod display_fromstr {
     use super::*;
     use std::str::FromStr;
 
-    /// Deserialize T using [FromStr]
+    /// Deserialize T using [`FromStr`]
     pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
     where
         D: Deserializer<'de>,
@@ -73,8 +93,8 @@ pub mod display_fromstr {
         {
             type Value = S;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "valid json object")
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                write!(formatter, "a string")
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -102,14 +122,30 @@ pub mod display_fromstr {
 ///
 /// This allows to serialize and deserialize collections with elements which can be represented as strings.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`DisplayFromStr`] and using the [`serde_as`] macro.
+/// Instead of
+///
+/// ```rust,ignore
+/// #[serde(with = "serde_with::rust::seq_display_fromstr")]
+/// addresses: BTreeSet<Ipv4Addr>,
+/// ```
+/// you can write:
+/// ```rust,ignore
+/// #[serde_as(as = "BTreeSet<DisplayFromStr>")]
+/// addresses: BTreeSet<Ipv4Addr>,
+/// ```
+///
+/// This works for any container type, so also for `Vec`:
+/// ```rust,ignore
+/// #[serde_as(as = "Vec<DisplayFromStr>")]
+/// bs: Vec<bool>,
+/// ```
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// #
 /// use std::collections::BTreeSet;
@@ -145,6 +181,9 @@ pub mod display_fromstr {
 /// };
 /// assert_eq!(r#"{"addresses":["127.53.0.1","127.53.0.2","127.53.1.1"],"bs":["false","true"]}"#, serde_json::to_string(&x).unwrap());
 /// ```
+///
+/// [`DisplayFromStr`]: crate::DisplayFromStr
+/// [`serde_as`]: crate::guide::serde_as
 pub mod seq_display_fromstr {
     use serde::{
         de::{Deserializer, Error, SeqAccess, Visitor},
@@ -174,7 +213,7 @@ pub mod seq_display_fromstr {
         {
             type Value = Vec<S>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 write!(formatter, "a sequence")
             }
 
@@ -224,14 +263,29 @@ pub mod seq_display_fromstr {
 ///
 /// An empty string deserializes as an empty collection.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can also be expressed using the [`serde_as`] macro.
+/// The usage is slightly different.
+/// `StringWithSeparator` takes a second type, which needs to implement [`Display`]+[`FromStr`] and constitutes the inner type of the collection.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, SpaceSeparator, StringWithSeparator};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "StringWithSeparator::<SpaceSeparator, String>")]
+///     tags: Vec<String>,
+/// }
+/// # }
+/// ```
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// #
 /// use serde_with::{CommaSeparator, SpaceSeparator};
@@ -258,8 +312,10 @@ pub mod seq_display_fromstr {
 /// };
 /// assert_eq!(r#"{"tags":"1 2 3","more_tags":""}"#, serde_json::to_string(&x).unwrap());
 /// ```
+///
+/// [`serde_as`]: crate::guide::serde_as
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct StringWithSeparator<Sep>(PhantomData<Sep>);
+pub struct StringWithSeparator<Sep, T = ()>(PhantomData<(Sep, T)>);
 
 impl<Sep> StringWithSeparator<Sep>
 where
@@ -319,11 +375,6 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// #
 /// # #[derive(Debug, PartialEq, Eq)]
@@ -351,7 +402,7 @@ where
 /// assert_eq!(Doc {a: Some(Some(5))}, serde_json::from_str(s).unwrap());
 /// assert_eq!(s, serde_json::to_string(&Doc {a: Some(Some(5))}).unwrap());
 /// ```
-#[cfg_attr(feature = "cargo-clippy", allow(option_option))]
+#[allow(clippy::option_option)]
 pub mod double_option {
     use super::*;
 
@@ -395,12 +446,6 @@ pub mod double_option {
 /// # Example
 ///
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// # extern crate ron;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
@@ -416,10 +461,8 @@ pub mod double_option {
 /// }
 ///
 /// // Transparently add/remove Some() wrapper
-/// # let pretty_config = ron::ser::PrettyConfig {
-/// #     new_line: "\n".into(),
-/// #     ..Default::default()
-/// # };
+/// # let pretty_config = ron::ser::PrettyConfig::new()
+/// #     .with_new_line("\n".into());
 /// let s = r#"(
 ///     mandatory: 1,
 ///     optional: 2,
@@ -433,10 +476,8 @@ pub mod double_option {
 ///
 /// // Missing values are deserialized as `None`
 /// // while `None` values are skipped during serialization.
-/// # let pretty_config = ron::ser::PrettyConfig {
-/// #     new_line: "\n".into(),
-/// #     ..Default::default()
-/// # };
+/// # let pretty_config = ron::ser::PrettyConfig::new()
+/// #     .with_new_line("\n".into());
 /// let s = r#"(
 ///     mandatory: 1,
 /// )"#;
@@ -489,13 +530,8 @@ pub mod unwrap_or_skip {
 /// # Example
 ///
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use std::{collections::HashSet, iter::FromIterator};
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_derive::Deserialize;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
 /// #[derive(Deserialize)]
@@ -518,7 +554,7 @@ pub mod unwrap_or_skip {
 /// ```
 pub mod sets_duplicate_value_is_error {
     use super::*;
-    use duplicate_key_impls::PreventDuplicateInsertsSet;
+    use crate::duplicate_key_impls::PreventDuplicateInsertsSet;
 
     /// Deserialize a set and return an error on duplicate values
     pub fn deserialize<'de, D, T, V>(deserializer: D) -> Result<T, D::Error>
@@ -530,7 +566,7 @@ pub mod sets_duplicate_value_is_error {
         struct SeqVisitor<T, V> {
             marker: PhantomData<T>,
             set_item_type: PhantomData<V>,
-        };
+        }
 
         impl<'de, T, V> Visitor<'de> for SeqVisitor<T, V>
         where
@@ -539,7 +575,7 @@ pub mod sets_duplicate_value_is_error {
         {
             type Value = T;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("a sequence")
             }
 
@@ -566,6 +602,15 @@ pub mod sets_duplicate_value_is_error {
         };
         deserializer.deserialize_seq(visitor)
     }
+
+    /// Serialize the set with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
 }
 
 /// Ensure no duplicate keys exist in a map.
@@ -584,12 +629,7 @@ pub mod sets_duplicate_value_is_error {
 /// # Example
 ///
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_derive::Deserialize;
 /// # use std::collections::HashMap;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
@@ -616,7 +656,7 @@ pub mod sets_duplicate_value_is_error {
 /// ```
 pub mod maps_duplicate_key_is_error {
     use super::*;
-    use duplicate_key_impls::PreventDuplicateInsertsMap;
+    use crate::duplicate_key_impls::PreventDuplicateInsertsMap;
 
     /// Deserialize a map and return an error on duplicate keys
     pub fn deserialize<'de, D, T, K, V>(deserializer: D) -> Result<T, D::Error>
@@ -630,7 +670,7 @@ pub mod maps_duplicate_key_is_error {
             marker: PhantomData<T>,
             map_key_type: PhantomData<K>,
             map_value_type: PhantomData<V>,
-        };
+        }
 
         impl<'de, T, K, V> Visitor<'de> for MapVisitor<T, K, V>
         where
@@ -640,7 +680,7 @@ pub mod maps_duplicate_key_is_error {
         {
             type Value = T;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("a map")
             }
 
@@ -668,22 +708,28 @@ pub mod maps_duplicate_key_is_error {
         };
         deserializer.deserialize_map(visitor)
     }
+
+    /// Serialize the map with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
 }
 
-/// Ensure that the first value is taken, if duplicate values exist
+/// *DEPRECATED* Ensure that the first value is taken, if duplicate values exist
 ///
-/// By default serde has a last-value-wins implementation, if duplicate keys for a set exist.
-/// Sometimes the opposite strategy is desired. This helper implements a first-value-wins strategy.
-///
-/// The implementation supports both the [`HashSet`] and the [`BTreeSet`] from the standard library.
-///
-/// [`HashSet`]: std::collections::HashSet
-/// [`BTreeSet`]: std::collections::HashSet
+/// This module implements the default behavior in serde.
+#[deprecated = "This module does nothing. Remove the attribute. Serde's default behavior is to use the first value when deserializing a set."]
+#[allow(deprecated)]
 pub mod sets_first_value_wins {
     use super::*;
-    use duplicate_key_impls::DuplicateInsertsFirstWinsSet;
+    use crate::duplicate_key_impls::DuplicateInsertsFirstWinsSet;
 
-    /// Deserialize a set and return an error on duplicate values
+    /// Deserialize a set and keep the first of equal values
+    #[deprecated = "This function does nothing. Remove the attribute. Serde's default behavior is to use the first value when deserializing a set."]
     pub fn deserialize<'de, D, T, V>(deserializer: D) -> Result<T, D::Error>
     where
         T: DuplicateInsertsFirstWinsSet<V>,
@@ -693,7 +739,7 @@ pub mod sets_first_value_wins {
         struct SeqVisitor<T, V> {
             marker: PhantomData<T>,
             set_item_type: PhantomData<V>,
-        };
+        }
 
         impl<'de, T, V> Visitor<'de> for SeqVisitor<T, V>
         where
@@ -702,7 +748,7 @@ pub mod sets_first_value_wins {
         {
             type Value = T;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("a sequence")
             }
 
@@ -727,6 +773,84 @@ pub mod sets_first_value_wins {
         };
         deserializer.deserialize_seq(visitor)
     }
+
+    /// Serialize the set with the default serializer
+    #[deprecated = "This function does nothing. Remove the attribute. Serde's default behavior is to use the first value when deserializing a set."]
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
+}
+
+/// Ensure that the last value is taken, if duplicate values exist
+///
+/// By default serde has a first-value-wins implementation, if duplicate keys for a set exist.
+/// Sometimes the opposite strategy is desired. This helper implements a first-value-wins strategy.
+///
+/// The implementation supports both the [`HashSet`] and the [`BTreeSet`] from the standard library.
+///
+/// [`HashSet`]: std::collections::HashSet
+/// [`BTreeSet`]: std::collections::HashSet
+pub mod sets_last_value_wins {
+    use super::*;
+    use crate::duplicate_key_impls::DuplicateInsertsLastWinsSet;
+
+    /// Deserialize a set and keep the last of equal values
+    pub fn deserialize<'de, D, T, V>(deserializer: D) -> Result<T, D::Error>
+    where
+        T: DuplicateInsertsLastWinsSet<V>,
+        V: Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        struct SeqVisitor<T, V> {
+            marker: PhantomData<T>,
+            set_item_type: PhantomData<V>,
+        }
+
+        impl<'de, T, V> Visitor<'de> for SeqVisitor<T, V>
+        where
+            T: DuplicateInsertsLastWinsSet<V>,
+            V: Deserialize<'de>,
+        {
+            type Value = T;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("a sequence")
+            }
+
+            #[inline]
+            fn visit_seq<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where
+                A: SeqAccess<'de>,
+            {
+                let mut values = Self::Value::new(access.size_hint());
+
+                while let Some(value) = access.next_element()? {
+                    values.replace(value);
+                }
+
+                Ok(values)
+            }
+        }
+
+        let visitor = SeqVisitor {
+            marker: PhantomData,
+            set_item_type: PhantomData,
+        };
+        deserializer.deserialize_seq(visitor)
+    }
+
+    /// Serialize the set with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
 }
 
 /// Ensure that the first key is taken, if duplicate keys exist
@@ -742,12 +866,7 @@ pub mod sets_first_value_wins {
 /// # Example
 ///
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
-/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_derive::Deserialize;
 /// # use std::collections::HashMap;
 /// #
 /// # #[derive(Debug, Eq, PartialEq)]
@@ -778,7 +897,7 @@ pub mod sets_first_value_wins {
 /// ```
 pub mod maps_first_key_wins {
     use super::*;
-    use duplicate_key_impls::DuplicateInsertsFirstWinsMap;
+    use crate::duplicate_key_impls::DuplicateInsertsFirstWinsMap;
 
     /// Deserialize a map and return an error on duplicate keys
     pub fn deserialize<'de, D, T, K, V>(deserializer: D) -> Result<T, D::Error>
@@ -792,7 +911,7 @@ pub mod maps_first_key_wins {
             marker: PhantomData<T>,
             map_key_type: PhantomData<K>,
             map_value_type: PhantomData<V>,
-        };
+        }
 
         impl<'de, T, K, V> Visitor<'de> for MapVisitor<T, K, V>
         where
@@ -802,7 +921,7 @@ pub mod maps_first_key_wins {
         {
             type Value = T;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("a map")
             }
 
@@ -828,49 +947,72 @@ pub mod maps_first_key_wins {
         };
         deserializer.deserialize_map(visitor)
     }
+
+    /// Serialize the map with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
 }
 
-/// De/Serialize a [`Option`]`<String>` type while transforming the empty string to [`None`]
+/// De/Serialize a [`Option`]`<`[`String`]`>` type while transforming the empty string to [`None`]
 ///
-/// Convert an [`Option`]`<T>` from/to string using [`FromStr`] and [`AsRef`]`<str>` implementations.
+/// Convert an [`Option`]`<T>` from/to string using [`FromStr`] and [`AsRef`]`<`[`str`]`>` implementations.
 /// An empty string is deserialized as [`None`] and a [`None`] vice versa.
+///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`NoneAsEmptyString`] and using the [`serde_as`] macro.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, NoneAsEmptyString};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "NoneAsEmptyString")]
+///     value: Option<String>,
+/// }
+/// # }
+/// ```
 ///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_json::json;
+/// # use serde_with::rust::string_empty_as_none;
 /// #
 /// #[derive(Deserialize, Serialize)]
 /// struct A {
-///     #[serde(with = "serde_with::rust::string_empty_as_none")]
+///     #[serde(with = "string_empty_as_none")]
 ///     tags: Option<String>,
 /// }
 ///
-/// let v: A = serde_json::from_str(r##"{
-///     "tags": ""
-/// }"##).unwrap();
-/// assert!(v.tags.is_none());
+/// let v: A = serde_json::from_value(json!({ "tags": "" })).unwrap();
+/// assert_eq!(None, v.tags);
 ///
-/// let v: A = serde_json::from_str(r##"{
-///     "tags": "Hi"
-/// }"##).unwrap();
+/// let v: A = serde_json::from_value(json!({ "tags": "Hi" })).unwrap();
 /// assert_eq!(Some("Hi".to_string()), v.tags);
 ///
 /// let x = A {
 ///     tags: Some("This is text".to_string()),
 /// };
-/// assert_eq!(r#"{"tags":"This is text"}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(json!({ "tags": "This is text" }), serde_json::to_value(&x).unwrap());
 ///
 /// let x = A {
 ///     tags: None,
 /// };
-/// assert_eq!(r#"{"tags":""}"#, serde_json::to_string(&x).unwrap());
+/// assert_eq!(json!({ "tags": "" }), serde_json::to_value(&x).unwrap());
 /// ```
+///
+/// [`NoneAsEmptyString`]: crate::NoneAsEmptyString
+/// [`serde_as`]: crate::guide::serde_as
 pub mod string_empty_as_none {
     use super::*;
 
@@ -889,7 +1031,7 @@ pub mod string_empty_as_none {
         {
             type Value = Option<S>;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
                 formatter.write_str("any string")
             }
 
@@ -943,20 +1085,35 @@ pub mod string_empty_as_none {
 ///
 /// Some formats, like JSON, have limitations on the type of keys for maps.
 /// In case of JSON, keys are restricted to strings.
-/// Rust features more powerfull keys, for example tuple, which can not be serialized to JSON.
+/// Rust features more powerful keys, for example tuple, which can not be serialized to JSON.
 ///
 /// This helper serializes the [`HashMap`] into a list of tuples, which does not have the same type restrictions.
 ///
 /// If you need to de/serialize a [`BTreeMap`] then use [`btreemap_as_tuple_list`].
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed using the [`serde_as`] macro.
+/// The `_` is a placeholder which works for any type which implements [`Serialize`]/[`Deserialize`], such as the tuple and `u32` type.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_with::serde_as;
+/// # use std::collections::HashMap;
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "Vec<(_, _)>")]
+///     s: HashMap<(String, u32), u32>,
+/// }
+/// # }
+/// ```
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use std::collections::HashMap;
@@ -981,12 +1138,6 @@ pub mod string_empty_as_none {
 /// The helper is generic over the hasher type of the [`HashMap`] and works with different variants, such as `FnvHashMap`.
 ///
 /// ```
-/// # extern crate fnv;
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// #
@@ -1008,6 +1159,8 @@ pub mod string_empty_as_none {
 /// assert_eq!(2, v.s.len());
 /// assert_eq!(true, v.s[&1]);
 /// ```
+///
+/// [`serde_as`]: crate::guide::serde_as
 pub mod hashmap_as_tuple_list {
     use super::{SerializeSeq, *}; // Needed to remove the unused import warning in the parent scope
 
@@ -1037,7 +1190,7 @@ pub mod hashmap_as_tuple_list {
         deserializer.deserialize_seq(HashMapVisitor(PhantomData))
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     struct HashMapVisitor<K, V, BH>(PhantomData<fn() -> HashMap<K, V, BH>>);
 
     impl<'de, K, V, BH> Visitor<'de> for HashMapVisitor<K, V, BH>
@@ -1048,7 +1201,7 @@ pub mod hashmap_as_tuple_list {
     {
         type Value = HashMap<K, V, BH>;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             formatter.write_str("a list of key-value pairs")
         }
 
@@ -1070,20 +1223,35 @@ pub mod hashmap_as_tuple_list {
 ///
 /// Some formats, like JSON, have limitations on the type of keys for maps.
 /// In case of JSON, keys are restricted to strings.
-/// Rust features more powerfull keys, for example tuple, which can not be serialized to JSON.
+/// Rust features more powerful keys, for example tuple, which can not be serialized to JSON.
 ///
 /// This helper serializes the [`BTreeMap`] into a list of tuples, which does not have the same type restrictions.
 ///
 /// If you need to de/serialize a [`HashMap`] then use [`hashmap_as_tuple_list`].
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed using the [`serde_as`] macro.
+/// The `_` is a placeholder which works for any type which implements [`Serialize`]/[`Deserialize`], such as the tuple and `u32` type.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_with::serde_as;
+/// # use std::collections::BTreeMap;
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct A {
+///     #[serde_as(as = "Vec<(_, _)>")]
+///     s: BTreeMap<(String, u32), u32>,
+/// }
+/// # }
+/// ```
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
 /// # use serde_json::json;
 /// # use std::collections::BTreeMap;
@@ -1104,6 +1272,8 @@ pub mod hashmap_as_tuple_list {
 /// assert_eq!(2, v.s.len());
 /// assert_eq!(1, v.s[&("World".to_string(), 456)]);
 /// ```
+///
+/// [`serde_as`]: crate::guide::serde_as
 pub mod btreemap_as_tuple_list {
     use super::*;
 
@@ -1131,7 +1301,7 @@ pub mod btreemap_as_tuple_list {
         deserializer.deserialize_seq(BTreeMapVisitor(PhantomData))
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     struct BTreeMapVisitor<K, V>(PhantomData<fn() -> BTreeMap<K, V>>);
 
     impl<'de, K, V> Visitor<'de> for BTreeMapVisitor<K, V>
@@ -1141,7 +1311,7 @@ pub mod btreemap_as_tuple_list {
     {
         type Value = BTreeMap<K, V>;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             formatter.write_str("a list of key-value pairs")
         }
 
@@ -1167,18 +1337,32 @@ pub mod btreemap_as_tuple_list {
 /// The implementation is generic using the [`FromIterator`] and [`IntoIterator`] traits.
 /// Therefore, all of [`Vec`], [`VecDeque`](std::collections::VecDeque), and [`LinkedList`](std::collections::LinkedList) and anything which implements those are supported.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed using the [`serde_as`] macro.
+/// The `_` is a placeholder which works for any type which implements [`Serialize`]/[`Deserialize`], such as the tuple and `u32` type.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::{Deserialize, Serialize};
+/// # use serde_with::serde_as;
+/// # use std::collections::BTreeMap;
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize, Serialize)]
+/// struct S {
+///     #[serde_as(as = "BTreeMap<_, _>")] // HashMap will also work
+///     s: Vec<(i32, String)>,
+/// }
+/// # }
+/// ```
+///
 /// # Examples
 ///
 /// `Wrapper` does not implement [`Hash`] nor [`Ord`], thus prohibiting the use [`HashMap`] or [`BTreeMap`].
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
-/// # use serde_json::json;
 /// #
 /// #[derive(Debug, Deserialize, Serialize, Default)]
 /// struct S {
@@ -1213,13 +1397,7 @@ pub mod btreemap_as_tuple_list {
 /// In this example, the serialized format contains duplicate keys, which is not supported with [`HashMap`] or [`BTreeMap`].
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
-/// # use serde_json::json;
 /// #
 /// #[derive(Debug, Deserialize, Serialize, PartialEq, Default)]
 /// struct S {
@@ -1244,6 +1422,8 @@ pub mod btreemap_as_tuple_list {
 /// assert_eq!(expected, res);
 /// assert_eq!(from, serde_json::to_string_pretty(&expected).unwrap());
 /// ```
+///
+/// [`serde_as`]: crate::guide::serde_as
 pub mod tuple_list_as_map {
     use super::{SerializeMap, *}; // Needed to remove the unused import warning in the parent scope
 
@@ -1275,7 +1455,7 @@ pub mod tuple_list_as_map {
         deserializer.deserialize_map(MapVisitor(PhantomData))
     }
 
-    #[cfg_attr(feature = "cargo-clippy", allow(type_complexity))]
+    #[allow(clippy::type_complexity)]
     struct MapVisitor<I, K, V>(PhantomData<fn() -> (I, K, V)>);
 
     impl<'de, I, K, V> Visitor<'de> for MapVisitor<I, K, V>
@@ -1286,7 +1466,7 @@ pub mod tuple_list_as_map {
     {
         type Value = I;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             formatter.write_str("a map")
         }
 
@@ -1316,24 +1496,43 @@ pub mod tuple_list_as_map {
                 Err(err) => Some(Err(err)),
             }
         }
+
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            match self.0.size_hint() {
+                Some(size) => (size, Some(size)),
+                None => (0, None),
+            }
+        }
     }
 }
 
-/// Deserialize from bytes or String
+/// Deserialize from bytes or string
 ///
-/// Any Rust [`String`] can be converted into bytes ([`Vec`]`<u8>`).
+/// Any Rust [`String`] can be converted into bytes, i.e., `Vec<u8>`.
 /// Accepting both as formats while deserializing can be helpful while interacting with language
 /// which have a looser definition of string than Rust.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`BytesOrString`] and using the [`serde_as`] macro.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, BytesOrString};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "BytesOrString")]
+///     bos: Vec<u8>,
+/// }
+/// # }
+/// ```
+///
 /// # Example
 /// ```rust
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::{Deserialize, Serialize};
-/// # use serde_json::json;
 /// #
 /// #[derive(Debug, Deserialize, Serialize, PartialEq, Default)]
 /// struct S {
@@ -1360,7 +1559,7 @@ pub mod tuple_list_as_map {
 /// // and serialization works too.
 /// assert_eq!(from, serde_json::to_string_pretty(&expected).unwrap());
 ///
-/// // But we also support deserializing from String
+/// // But we also support deserializing from a String
 /// let from = r#"{
 ///   "bos": "✨Works!"
 /// }"#;
@@ -1371,6 +1570,9 @@ pub mod tuple_list_as_map {
 /// let res: S = serde_json::from_str(from).unwrap();
 /// assert_eq!(expected, res);
 /// ```
+///
+/// [`BytesOrString`]: crate::BytesOrString
+/// [`serde_as`]: crate::guide::serde_as
 pub mod bytes_or_string {
     use super::*;
 
@@ -1387,7 +1589,7 @@ pub mod bytes_or_string {
     impl<'de> Visitor<'de> for BytesOrStringVisitor {
         type Value = Vec<u8>;
 
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
             formatter.write_str("a list of bytes or a string")
         }
 
@@ -1426,14 +1628,33 @@ pub mod bytes_or_string {
 /// Instead of erroring, it simply deserializes the [`Default`] variant of the type.
 /// It is not possible to find the error location, i.e., which field had a deserialization error, with this method.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`DefaultOnError`] and using the [`serde_as`] macro.
+/// It can be combined with other convertes as shown.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, DefaultOnError, DisplayFromStr};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "DefaultOnError")]
+///     value: u32,
+///     #[serde_as(as = "DefaultOnError<DisplayFromStr>")]
+///     value2: u32,
+/// }
+/// # }
+/// ```
+///
+/// [`DefaultOnError`]: crate::DefaultOnError
+/// [`serde_as`]: crate::guide::serde_as
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::Deserialize;
 /// #
 /// #[derive(Deserialize)]
@@ -1453,6 +1674,10 @@ pub mod bytes_or_string {
 /// let a: A = serde_json::from_str(r#"{"value": "123"}"#).unwrap();
 /// assert_eq!(0, a.value);
 ///
+/// // Map is of invalid type
+/// let a: A = serde_json::from_str(r#"{"value": {}}"#).unwrap();
+/// assert_eq!(0, a.value);
+///
 /// // Missing entries still cause errors
 /// assert!(serde_json::from_str::<A>(r#"{  }"#).is_err());
 /// ```
@@ -1460,11 +1685,6 @@ pub mod bytes_or_string {
 /// Deserializing missing values can be supported by adding the `default` field attribute:
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::Deserialize;
 /// #
 /// #[derive(Deserialize)]
@@ -1486,7 +1706,29 @@ pub mod default_on_error {
         D: Deserializer<'de>,
         T: Deserialize<'de> + Default,
     {
-        T::deserialize(deserializer).or_else(|_| Ok(Default::default()))
+        #[derive(Debug, serde::Deserialize)]
+        #[serde(untagged)]
+        enum GoodOrError<T> {
+            Good(T),
+            // This consumes one "item" when `T` errors while deserializing.
+            // This is necessary to make this work, when instead of having a direct value
+            // like integer or string, the deserializer sees a list or map.
+            Error(serde::de::IgnoredAny),
+        }
+
+        Ok(match Deserialize::deserialize(deserializer) {
+            Ok(GoodOrError::Good(res)) => res,
+            _ => Default::default(),
+        })
+    }
+
+    /// Serialize value with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
     }
 }
 
@@ -1495,14 +1737,33 @@ pub mod default_on_error {
 /// One use case are JSON APIs in which the `null` value represents some default state.
 /// This adapter allows to turn the `null` directly into the [`Default`] value of the type.
 ///
+/// ## Converting to `serde_as`
+///
+/// The same functionality can be more clearly expressed via [`DefaultOnNull`] and using the [`serde_as`] macro.
+/// It can be combined with other convertes as shown.
+///
+/// ```rust
+/// # #[cfg(feature = "macros")] {
+/// # use serde_derive::Deserialize;
+/// # use serde_with::{serde_as, DefaultOnNull, DisplayFromStr};
+/// #
+/// #[serde_as]
+/// #[derive(Deserialize)]
+/// struct A {
+///     #[serde_as(as = "DefaultOnNull")]
+///     value: u32,
+///     #[serde_as(as = "DefaultOnNull<DisplayFromStr>")]
+///     value2: u32,
+/// }
+/// # }
+/// ```
+///
+/// [`DefaultOnNull`]: crate::DefaultOnNull
+/// [`serde_as`]: crate::guide::serde_as
+///
 /// # Examples
 ///
 /// ```
-/// # extern crate serde;
-/// # extern crate serde_derive;
-/// # extern crate serde_json;
-/// # extern crate serde_with;
-/// #
 /// # use serde_derive::Deserialize;
 /// #
 /// #[derive(Deserialize)]
@@ -1531,4 +1792,110 @@ pub mod default_on_null {
     {
         Ok(Option::deserialize(deserializer)?.unwrap_or_default())
     }
+
+    /// Serialize value with the default serializer
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        T: Serialize,
+        S: Serializer,
+    {
+        value.serialize(serializer)
+    }
+}
+
+/// Deserialize any value, ignore it, and return the default value for the type being deserialized.
+///
+/// This function can be used in two different ways:
+///
+/// 1. It is useful for instance to create an enum with a catch-all variant that will accept any incoming data.
+/// 2. [`untagged`] enum representations do not allow the `other` annotation as the fallback enum variant.
+///     With this function you can emulate an `other` variant, which can deserialize any data carrying enum.
+///
+/// **Note:** Using this function will prevent deserializing data-less enum variants.
+/// If this is a problem depends on the data format.
+/// For example, deserializing `"Bar"` as an enum in JSON would fail, since it carries no data.
+///
+/// # Examples
+///
+/// ## Deserializing a heterogeneous collection of XML nodes
+///
+/// When [`serde-xml-rs`] deserializes an XML tag to an enum, it always maps the tag
+/// name to the enum variant name, and the tag attributes and children to the enum contents.
+/// This means that in order for an enum variant to accept any XML tag, it both has to use
+/// `#[serde(other)]` to accept any tag name, and `#[serde(deserialize_with = "deserialize_ignore_any")]`
+/// to accept any attributes and children.
+///
+/// ```rust
+/// # use serde::Deserialize;
+/// use serde_with::rust::deserialize_ignore_any;
+///
+/// # #[derive(Debug, PartialEq)]
+/// #[derive(Deserialize)]
+/// #[serde(rename_all = "lowercase")]
+/// enum Item {
+///     Foo(String),
+///     Bar(String),
+///     #[serde(other, deserialize_with = "deserialize_ignore_any")]
+///     Other,
+/// }
+///
+/// // Deserialize this XML
+/// # let items: Vec<Item> = serde_xml_rs::from_str(
+/// r"
+/// <foo>a</foo>
+/// <bar>b</bar>
+/// <foo>c</foo>
+/// <unknown>d</unknown>
+/// "
+/// # ).unwrap();
+///
+/// // into these Items
+/// # let expected =
+/// vec![
+///     Item::Foo(String::from("a")),
+///     Item::Bar(String::from("b")),
+///     Item::Foo(String::from("c")),
+///     Item::Other,
+/// ]
+/// # ;
+/// # assert_eq!(expected, items);
+/// ```
+///
+/// ## Simulating an `other` enum variant in an `untagged` enum
+///
+/// ```rust
+/// # use serde::Deserialize;
+/// # use serde_json::json;
+/// use serde_with::rust::deserialize_ignore_any;
+///
+/// # #[derive(Debug, PartialEq)]
+/// #[derive(Deserialize)]
+/// #[serde(untagged)]
+/// enum Item {
+///     Foo{x: u8},
+///     #[serde(deserialize_with = "deserialize_ignore_any")]
+///     Other,
+/// }
+///
+/// // Deserialize this JSON
+/// # let items: Vec<Item> = serde_json::from_value(
+/// json!([
+///     {"y": 1},
+///     {"x": 1},
+/// ])
+/// # ).unwrap();
+///
+/// // into these Items
+/// # let expected =
+/// vec![Item::Other, Item::Foo{x: 1}]
+/// # ;
+/// # assert_eq!(expected, items);
+/// ```
+///
+/// [`serde-xml-rs`]: https://docs.rs/serde-xml-rs
+/// [`untagged`]: https://serde.rs/enum-representations.html#untagged
+pub fn deserialize_ignore_any<'de, D: Deserializer<'de>, T: Default>(
+    deserializer: D,
+) -> Result<T, D::Error> {
+    serde::de::IgnoredAny::deserialize(deserializer).map(|_| T::default())
 }

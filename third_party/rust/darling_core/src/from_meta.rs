@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 use syn::{Expr, Lit, Meta, NestedMeta};
 
-use crate::{Error, Result};
+use crate::{util::path_to_string, Error, Result};
 
 /// Create an instance from an item in an attribute declaration.
 ///
@@ -238,25 +238,6 @@ macro_rules! from_meta_float {
 from_meta_float!(f32);
 from_meta_float!(f64);
 
-/// Parsing support for identifiers. This attempts to preserve span information
-/// when available, but also supports parsing strings with the call site as the
-/// emitted span.
-impl FromMeta for syn::Ident {
-    fn from_string(value: &str) -> Result<Self> {
-        Ok(syn::Ident::new(value, ::proc_macro2::Span::call_site()))
-    }
-
-    fn from_value(value: &Lit) -> Result<Self> {
-        if let Lit::Str(ref ident) = *value {
-            ident
-                .parse()
-                .map_err(|_| Error::unknown_lit_str_value(ident))
-        } else {
-            Err(Error::unexpected_lit_type(value))
-        }
-    }
-}
-
 /// Parsing support for punctuated. This attempts to preserve span information
 /// when available, but also supports parsing strings with the call site as the
 /// emitted span.
@@ -272,18 +253,52 @@ impl<T: syn::parse::Parse, P: syn::parse::Parse> FromMeta for syn::punctuated::P
     }
 }
 
-/// Parsing support for an array, i.e. `example = "[1 + 2, 2 - 2, 3 * 4]"`.
-impl FromMeta for syn::ExprArray {
-    fn from_value(value: &Lit) -> Result<Self> {
-        if let Lit::Str(ref ident) = *value {
-            ident
-                .parse::<syn::ExprArray>()
-                .map_err(|_| Error::unknown_lit_str_value(ident))
-        } else {
-            Err(Error::unexpected_lit_type(value))
+/// Adapter from `syn::parse::Parse` to `FromMeta`.
+///
+/// This cannot be a blanket impl, due to the `syn::Lit` family's need to handle non-string values.
+/// Therefore, we use a macro and a lot of impls.
+macro_rules! from_syn_parse {
+    ($ty:path) => {
+        impl FromMeta for $ty {
+            fn from_string(value: &str) -> Result<Self> {
+                syn::parse_str(value).map_err(|_| Error::unknown_value(value))
+            }
+
+            fn from_value(value: &::syn::Lit) -> Result<Self> {
+                if let ::syn::Lit::Str(ref v) = *value {
+                    v.parse::<$ty>()
+                        .map_err(|_| Error::unknown_lit_str_value(v))
+                } else {
+                    Err(Error::unexpected_lit_type(value))
+                }
+            }
         }
-    }
+    };
 }
+
+from_syn_parse!(syn::Ident);
+from_syn_parse!(syn::Expr);
+from_syn_parse!(syn::ExprArray);
+from_syn_parse!(syn::ExprPath);
+from_syn_parse!(syn::Path);
+from_syn_parse!(syn::Type);
+from_syn_parse!(syn::TypeArray);
+from_syn_parse!(syn::TypeBareFn);
+from_syn_parse!(syn::TypeGroup);
+from_syn_parse!(syn::TypeImplTrait);
+from_syn_parse!(syn::TypeInfer);
+from_syn_parse!(syn::TypeMacro);
+from_syn_parse!(syn::TypeNever);
+from_syn_parse!(syn::TypeParam);
+from_syn_parse!(syn::TypeParen);
+from_syn_parse!(syn::TypePath);
+from_syn_parse!(syn::TypePtr);
+from_syn_parse!(syn::TypeReference);
+from_syn_parse!(syn::TypeSlice);
+from_syn_parse!(syn::TypeTraitObject);
+from_syn_parse!(syn::TypeTuple);
+from_syn_parse!(syn::Visibility);
+from_syn_parse!(syn::WhereClause);
 
 macro_rules! from_numeric_array {
     ($ty:ident) => {
@@ -313,24 +328,6 @@ from_numeric_array!(u16);
 from_numeric_array!(u32);
 from_numeric_array!(u64);
 from_numeric_array!(usize);
-
-/// Parsing support for paths. This attempts to preserve span information when available,
-/// but also supports parsing strings with the call site as the emitted span.
-impl FromMeta for syn::Path {
-    fn from_string(value: &str) -> Result<Self> {
-        syn::parse_str(value).map_err(|_| Error::unknown_value(value))
-    }
-
-    fn from_value(value: &Lit) -> Result<Self> {
-        if let Lit::Str(ref path_str) = *value {
-            path_str
-                .parse()
-                .map_err(|_| Error::unknown_lit_str_value(path_str))
-        } else {
-            Err(Error::unexpected_lit_type(value))
-        }
-    }
-}
 
 impl FromMeta for syn::Lit {
     fn from_value(value: &Lit) -> Result<Self> {
@@ -367,16 +364,22 @@ impl FromMeta for syn::Meta {
     }
 }
 
-impl FromMeta for syn::WhereClause {
-    fn from_string(value: &str) -> Result<Self> {
-        syn::parse_str(value).map_err(|_| Error::unknown_value(value))
-    }
-}
-
 impl FromMeta for Vec<syn::WherePredicate> {
     fn from_string(value: &str) -> Result<Self> {
         syn::WhereClause::from_string(&format!("where {}", value))
             .map(|c| c.predicates.into_iter().collect())
+    }
+
+    fn from_value(value: &Lit) -> Result<Self> {
+        if let syn::Lit::Str(s) = value {
+            syn::WhereClause::from_value(&syn::Lit::Str(syn::LitStr::new(
+                &format!("where {}", s.value()),
+                value.span(),
+            )))
+            .map(|c| c.predicates.into_iter().collect())
+        } else {
+            Err(Error::unexpected_lit_type(value))
+        }
     }
 }
 
@@ -430,14 +433,6 @@ impl<T: FromMeta> FromMeta for RefCell<T> {
     fn from_meta(item: &Meta) -> Result<Self> {
         FromMeta::from_meta(item).map(RefCell::new)
     }
-}
-
-fn path_to_string(path: &syn::Path) -> String {
-    path.segments
-        .iter()
-        .map(|s| s.ident.to_string())
-        .collect::<Vec<String>>()
-        .join("::")
 }
 
 /// Trait to convert from a path into an owned key for a map.
@@ -508,7 +503,7 @@ macro_rules! hash_map {
                         }
                     });
 
-                let mut errors = vec![];
+                let mut errors = Error::accumulator();
                 // We need to track seen keys separately from the final map, since a seen key with an
                 // Err value won't go into the final map but should trigger a duplicate field error.
                 //
@@ -522,53 +517,40 @@ macro_rules! hash_map {
                 let mut map = HashMap::with_capacity_and_hasher(nested.len(), Default::default());
 
                 for item in pairs {
-                    match item {
-                        Ok((path, value)) => {
-                            let key: $key = match KeyFromPath::from_path(path) {
-                                Ok(k) => k,
-                                Err(e) => {
-                                    errors.push(e);
+                    if let Some((path, value)) = errors.handle(item) {
+                        let key: $key = match KeyFromPath::from_path(path) {
+                            Ok(k) => k,
+                            Err(e) => {
+                                errors.push(e);
 
-                                    // Surface value errors even under invalid keys
-                                    if let Err(val_err) = value {
-                                        errors.push(val_err);
-                                    }
+                                // Surface value errors even under invalid keys
+                                errors.handle(value);
 
-                                    continue;
-                                }
-                            };
-
-                            let already_seen = seen_keys.contains(&key);
-
-                            if already_seen {
-                                errors.push(
-                                    Error::duplicate_field(&key.to_display()).with_span(path),
-                                );
+                                continue;
                             }
+                        };
 
-                            match value {
-                                Ok(_) if already_seen => {}
-                                Ok(val) => {
-                                    map.insert(key.clone(), val);
-                                }
-                                Err(e) => {
-                                    errors.push(e);
-                                }
+                        let already_seen = seen_keys.contains(&key);
+
+                        if already_seen {
+                            errors.push(Error::duplicate_field(&key.to_display()).with_span(path));
+                        }
+
+                        match value {
+                            Ok(_) if already_seen => {}
+                            Ok(val) => {
+                                map.insert(key.clone(), val);
                             }
+                            Err(e) => {
+                                errors.push(e);
+                            }
+                        }
 
-                            seen_keys.insert(key);
-                        }
-                        Err(e) => {
-                            errors.push(e);
-                        }
+                        seen_keys.insert(key);
                     }
                 }
 
-                if !errors.is_empty() {
-                    return Err(Error::multiple(errors));
-                }
-
-                Ok(map)
+                errors.finish_with(map)
             }
         }
     };
@@ -789,6 +771,20 @@ mod tests {
     fn test_expr_array() {
         fm::<syn::ExprArray>(quote!(ignore = "[0x1, 0x2]"));
         fm::<syn::ExprArray>(quote!(ignore = "[\"Hello World\", \"Test Array\"]"));
+    }
+
+    #[test]
+    fn test_expr() {
+        fm::<syn::Expr>(quote!(ignore = "x + y"));
+        fm::<syn::Expr>(quote!(ignore = "an_object.method_call()"));
+        fm::<syn::Expr>(quote!(ignore = "{ a_statement(); in_a_block }"));
+    }
+
+    #[test]
+    fn test_expr_path() {
+        fm::<syn::ExprPath>(quote!(ignore = "std::mem::replace"));
+        fm::<syn::ExprPath>(quote!(ignore = "x"));
+        fm::<syn::ExprPath>(quote!(ignore = "example::<Test>"));
     }
 
     #[test]

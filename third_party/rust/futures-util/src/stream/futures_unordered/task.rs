@@ -1,6 +1,6 @@
 use alloc::sync::{Arc, Weak};
 use core::cell::UnsafeCell;
-use core::sync::atomic::Ordering::{self, SeqCst};
+use core::sync::atomic::Ordering::{self, Relaxed, SeqCst};
 use core::sync::atomic::{AtomicBool, AtomicPtr};
 
 use super::abort::abort;
@@ -31,6 +31,11 @@ pub(super) struct Task<Fut> {
 
     // Whether or not this task is currently in the ready to run queue
     pub(super) queued: AtomicBool,
+
+    // Whether the future was awoken during polling
+    // It is possible for this flag to be set to true after the polling,
+    // but it will be ignored.
+    pub(super) woken: AtomicBool,
 }
 
 // `Task` can be sent across threads safely because it ensures that
@@ -48,6 +53,8 @@ impl<Fut> ArcWake for Task<Fut> {
             None => return,
         };
 
+        arc_self.woken.store(true, Relaxed);
+
         // It's our job to enqueue this task it into the ready to run queue. To
         // do this we set the `queued` flag, and if successful we then do the
         // actual queueing operation, ensuring that we're only queued once.
@@ -62,7 +69,7 @@ impl<Fut> ArcWake for Task<Fut> {
         // still.
         let prev = arc_self.queued.swap(true, SeqCst);
         if !prev {
-            inner.enqueue(&**arc_self);
+            inner.enqueue(Arc::as_ptr(arc_self));
             inner.waker.wake();
         }
     }

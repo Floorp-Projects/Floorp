@@ -2,11 +2,6 @@ use std::cmp;
 use std::io;
 use std::io::prelude::*;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use super::bufread::{corrupt, read_gz_header};
 use super::{GzBuilder, GzHeader};
 use crate::crc::{Crc, CrcWriter};
@@ -47,7 +42,7 @@ pub fn gz_encoder<W: Write>(header: Vec<u8>, w: W, lvl: Compression) -> GzEncode
     GzEncoder {
         inner: zio::Writer::new(w, Compress::new(lvl, false)),
         crc: Crc::new(),
-        header: header,
+        header,
         crc_bytes_written: 0,
     }
 }
@@ -134,7 +129,7 @@ impl<W: Write> GzEncoder<W> {
     }
 
     fn write_header(&mut self) -> io::Result<()> {
-        while self.header.len() > 0 {
+        while !self.header.is_empty() {
             let n = self.inner.get_mut().write(&self.header)?;
             self.header.drain(..n);
         }
@@ -158,22 +153,11 @@ impl<W: Write> Write for GzEncoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for GzEncoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.try_finish()?;
-        self.get_mut().shutdown()
-    }
-}
-
 impl<R: Read + Write> Read for GzEncoder<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead + AsyncWrite> AsyncRead for GzEncoder<R> {}
 
 impl<W: Write> Drop for GzEncoder<W> {
     fn drop(&mut self) {
@@ -368,13 +352,11 @@ impl<W: Write> Write for GzDecoder<W> {
         } else {
             let (n, status) = self.inner.write_with_status(buf)?;
 
-            if status == Status::StreamEnd {
-                if n < buf.len() && self.crc_bytes.len() < 8 {
-                    let remaining = buf.len() - n;
-                    let crc_bytes = cmp::min(remaining, CRC_BYTES_LEN - self.crc_bytes.len());
-                    self.crc_bytes.extend(&buf[n..n + crc_bytes]);
-                    return Ok(n + crc_bytes);
-                }
+            if status == Status::StreamEnd && n < buf.len() && self.crc_bytes.len() < 8 {
+                let remaining = buf.len() - n;
+                let crc_bytes = cmp::min(remaining, CRC_BYTES_LEN - self.crc_bytes.len());
+                self.crc_bytes.extend(&buf[n..n + crc_bytes]);
+                return Ok(n + crc_bytes);
             }
             Ok(n)
         }
@@ -385,22 +367,11 @@ impl<W: Write> Write for GzDecoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for GzDecoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.try_finish()?;
-        self.inner.get_mut().get_mut().shutdown()
-    }
-}
-
 impl<W: Read + Write> Read for GzDecoder<W> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.get_mut().get_mut().read(buf)
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for GzDecoder<W> {}
 
 #[cfg(test)]
 mod tests {

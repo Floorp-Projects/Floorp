@@ -90,6 +90,18 @@ s! {
         pub imr_interface: in_addr,
     }
 
+    pub struct ip_mreqn {
+        pub imr_multiaddr: in_addr,
+        pub imr_address: in_addr,
+        pub imr_ifindex: ::c_int,
+    }
+
+    pub struct ip_mreq_source {
+        pub imr_multiaddr: in_addr,
+        pub imr_sourceaddr: in_addr,
+        pub imr_interface: in_addr,
+    }
+
     pub struct glob_t {
         pub gl_pathc:  ::size_t,
         pub gl_matchc: ::size_t,
@@ -264,6 +276,11 @@ s! {
         pub esterror: ::c_long,
         pub tai: ::c_long,
         pub time_state: ::c_int,
+    }
+
+    pub struct accept_filter_arg {
+        pub af_name: [::c_char; 16],
+        af_arg: [[::c_char; 10]; 24],
     }
 
     pub struct ptrace_io_desc {
@@ -573,6 +590,8 @@ pub const F_TEST: ::c_int = 3;
 pub const F_TLOCK: ::c_int = 2;
 pub const F_ULOCK: ::c_int = 0;
 pub const F_DUPFD_CLOEXEC: ::c_int = 17;
+pub const F_DUP2FD: ::c_int = 10;
+pub const F_DUP2FD_CLOEXEC: ::c_int = 18;
 pub const SIGHUP: ::c_int = 1;
 pub const SIGINT: ::c_int = 2;
 pub const SIGQUIT: ::c_int = 3;
@@ -950,6 +969,11 @@ pub const IPV6_PKTINFO: ::c_int = 46;
 pub const IPV6_HOPLIMIT: ::c_int = 47;
 pub const IPV6_RECVTCLASS: ::c_int = 57;
 pub const IPV6_TCLASS: ::c_int = 61;
+pub const IPV6_DONTFRAG: ::c_int = 62;
+pub const IP_ADD_SOURCE_MEMBERSHIP: ::c_int = 70;
+pub const IP_DROP_SOURCE_MEMBERSHIP: ::c_int = 71;
+pub const IP_BLOCK_SOURCE: ::c_int = 72;
+pub const IP_UNBLOCK_SOURCE: ::c_int = 73;
 
 pub const TCP_NOPUSH: ::c_int = 4;
 pub const TCP_NOOPT: ::c_int = 8;
@@ -1186,30 +1210,30 @@ pub const LOG_SECURITY: ::c_int = 13 << 3;
 pub const LOG_CONSOLE: ::c_int = 14 << 3;
 pub const LOG_NFACILITIES: ::c_int = 24;
 
-pub const TIOCEXCL: ::c_uint = 0x2000740d;
-pub const TIOCNXCL: ::c_uint = 0x2000740e;
+pub const TIOCEXCL: ::c_ulong = 0x2000740d;
+pub const TIOCNXCL: ::c_ulong = 0x2000740e;
 pub const TIOCFLUSH: ::c_ulong = 0x80047410;
-pub const TIOCGETA: ::c_uint = 0x402c7413;
+pub const TIOCGETA: ::c_ulong = 0x402c7413;
 pub const TIOCSETA: ::c_ulong = 0x802c7414;
 pub const TIOCSETAW: ::c_ulong = 0x802c7415;
 pub const TIOCSETAF: ::c_ulong = 0x802c7416;
-pub const TIOCGETD: ::c_uint = 0x4004741a;
+pub const TIOCGETD: ::c_ulong = 0x4004741a;
 pub const TIOCSETD: ::c_ulong = 0x8004741b;
-pub const TIOCGDRAINWAIT: ::c_uint = 0x40047456;
+pub const TIOCGDRAINWAIT: ::c_ulong = 0x40047456;
 pub const TIOCSDRAINWAIT: ::c_ulong = 0x80047457;
-pub const TIOCTIMESTAMP: ::c_uint = 0x40107459;
-pub const TIOCMGDTRWAIT: ::c_uint = 0x4004745a;
+pub const TIOCTIMESTAMP: ::c_ulong = 0x40107459;
+pub const TIOCMGDTRWAIT: ::c_ulong = 0x4004745a;
 pub const TIOCMSDTRWAIT: ::c_ulong = 0x8004745b;
-pub const TIOCDRAIN: ::c_uint = 0x2000745e;
+pub const TIOCDRAIN: ::c_ulong = 0x2000745e;
 pub const TIOCEXT: ::c_ulong = 0x80047460;
-pub const TIOCSCTTY: ::c_uint = 0x20007461;
+pub const TIOCSCTTY: ::c_ulong = 0x20007461;
 pub const TIOCCONS: ::c_ulong = 0x80047462;
-pub const TIOCGSID: ::c_uint = 0x40047463;
-pub const TIOCSTAT: ::c_uint = 0x20007465;
+pub const TIOCGSID: ::c_ulong = 0x40047463;
+pub const TIOCSTAT: ::c_ulong = 0x20007465;
 pub const TIOCUCNTL: ::c_ulong = 0x80047466;
 pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
-pub const TIOCGWINSZ: ::c_uint = 0x40087468;
-pub const TIOCMGET: ::c_uint = 0x4004746a;
+pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
+pub const TIOCMGET: ::c_ulong = 0x4004746a;
 pub const TIOCM_LE: ::c_int = 0x1;
 pub const TIOCM_DTR: ::c_int = 0x2;
 pub const TIOCM_RTS: ::c_int = 0x4;
@@ -1224,8 +1248,8 @@ pub const TIOCM_RNG: ::c_int = 0x80;
 pub const TIOCMBIC: ::c_ulong = 0x8004746b;
 pub const TIOCMBIS: ::c_ulong = 0x8004746c;
 pub const TIOCMSET: ::c_ulong = 0x8004746d;
-pub const TIOCSTART: ::c_uint = 0x2000746e;
-pub const TIOCSTOP: ::c_uint = 0x2000746f;
+pub const TIOCSTART: ::c_ulong = 0x2000746e;
+pub const TIOCSTOP: ::c_ulong = 0x2000746f;
 pub const TIOCPKT: ::c_ulong = 0x80047470;
 pub const TIOCPKT_DATA: ::c_int = 0x0;
 pub const TIOCPKT_FLUSHREAD: ::c_int = 0x1;
@@ -1235,13 +1259,13 @@ pub const TIOCPKT_START: ::c_int = 0x8;
 pub const TIOCPKT_NOSTOP: ::c_int = 0x10;
 pub const TIOCPKT_DOSTOP: ::c_int = 0x20;
 pub const TIOCPKT_IOCTL: ::c_int = 0x40;
-pub const TIOCNOTTY: ::c_uint = 0x20007471;
+pub const TIOCNOTTY: ::c_ulong = 0x20007471;
 pub const TIOCSTI: ::c_ulong = 0x80017472;
-pub const TIOCOUTQ: ::c_uint = 0x40047473;
+pub const TIOCOUTQ: ::c_ulong = 0x40047473;
 pub const TIOCSPGRP: ::c_ulong = 0x80047476;
-pub const TIOCGPGRP: ::c_uint = 0x40047477;
-pub const TIOCCDTR: ::c_uint = 0x20007478;
-pub const TIOCSDTR: ::c_uint = 0x20007479;
+pub const TIOCGPGRP: ::c_ulong = 0x40047477;
+pub const TIOCCDTR: ::c_ulong = 0x20007478;
+pub const TIOCSDTR: ::c_ulong = 0x20007479;
 pub const TTYDISC: ::c_int = 0x0;
 pub const SLIPDISC: ::c_int = 0x4;
 pub const PPPDISC: ::c_int = 0x5;
@@ -1581,6 +1605,16 @@ extern "C" {
     pub fn pthread_barrier_wait(barrier: *mut pthread_barrier_t) -> ::c_int;
     pub fn pthread_get_name_np(tid: ::pthread_t, name: *mut ::c_char, len: ::size_t);
     pub fn pthread_set_name_np(tid: ::pthread_t, name: *const ::c_char);
+    pub fn pthread_setschedparam(
+        native: ::pthread_t,
+        policy: ::c_int,
+        param: *const sched_param,
+    ) -> ::c_int;
+    pub fn pthread_getschedparam(
+        native: ::pthread_t,
+        policy: *mut ::c_int,
+        param: *mut sched_param,
+    ) -> ::c_int;
     pub fn ptrace(request: ::c_int, pid: ::pid_t, addr: *mut ::c_char, data: ::c_int) -> ::c_int;
     pub fn utrace(addr: *const ::c_void, len: ::size_t) -> ::c_int;
     pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
@@ -1588,6 +1622,7 @@ extern "C" {
         -> ::ssize_t;
     pub fn querylocale(mask: ::c_int, loc: ::locale_t) -> *const ::c_char;
     pub fn rtprio(function: ::c_int, pid: ::pid_t, rtp: *mut rtprio) -> ::c_int;
+    pub fn sched_rr_get_interval(pid: ::pid_t, t: *mut ::timespec) -> ::c_int;
     pub fn sched_getparam(pid: ::pid_t, param: *mut sched_param) -> ::c_int;
     pub fn sched_setparam(pid: ::pid_t, param: *const sched_param) -> ::c_int;
     pub fn sched_getscheduler(pid: ::pid_t) -> ::c_int;

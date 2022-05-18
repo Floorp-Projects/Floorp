@@ -1,6 +1,6 @@
 use ::iter::Bytes;
 
-pub unsafe fn parse_uri_batch_16<'a>(bytes: &mut Bytes<'a>) {
+pub unsafe fn parse_uri_batch_16(bytes: &mut Bytes) {
     while bytes.as_ref().len() >= 16 {
         let advance = match_url_char_16_sse(bytes.as_ref());
         bytes.advance(advance);
@@ -85,10 +85,11 @@ unsafe fn match_header_value_char_16_sse(buf: &[u8]) -> usize {
     // %x09 %x20-%x7e %x80-%xff
     let TAB: __m128i = _mm_set1_epi8(0x09);
     let DEL: __m128i = _mm_set1_epi8(0x7f);
-    let LOW: __m128i = _mm_set1_epi8(0x1f);
+    let LOW: __m128i = _mm_set1_epi8(0x20);
 
     let dat = _mm_lddqu_si128(ptr as *const _);
-    let low = _mm_cmpgt_epi8(dat, LOW);
+    // unsigned comparison dat >= LOW
+    let low = _mm_cmpeq_epi8(_mm_max_epu8(dat, LOW), dat);
     let tab = _mm_cmpeq_epi8(dat, TAB);
     let del = _mm_cmpeq_epi8(dat, DEL);
     let bit = _mm_andnot_si128(del, _mm_or_si128(low, tab));
@@ -106,11 +107,30 @@ fn sse_code_matches_uri_chars_table() {
     }
 
     unsafe {
-        assert!(byte_is_allowed(b'_'));
+        assert!(byte_is_allowed(b'_', parse_uri_batch_16));
 
         for (b, allowed) in ::URI_MAP.iter().cloned().enumerate() {
             assert_eq!(
-                byte_is_allowed(b as u8), allowed,
+                byte_is_allowed(b as u8, parse_uri_batch_16), allowed,
+                "byte_is_allowed({:?}) should be {:?}", b, allowed,
+            );
+        }
+    }
+}
+
+#[test]
+fn sse_code_matches_header_value_chars_table() {
+    match super::detect() {
+        super::SSE_42 | super::AVX_2_AND_SSE_42 => {},
+        _ => return,
+    }
+
+    unsafe {
+        assert!(byte_is_allowed(b'_', match_header_value_batch_16));
+
+        for (b, allowed) in ::HEADER_VALUE_MAP.iter().cloned().enumerate() {
+            assert_eq!(
+                byte_is_allowed(b as u8, match_header_value_batch_16), allowed,
                 "byte_is_allowed({:?}) should be {:?}", b, allowed,
             );
         }
@@ -118,7 +138,7 @@ fn sse_code_matches_uri_chars_table() {
 }
 
 #[cfg(test)]
-unsafe fn byte_is_allowed(byte: u8) -> bool {
+unsafe fn byte_is_allowed(byte: u8, f: unsafe fn(bytes: &mut Bytes<'_>)) -> bool {
     let slice = [
         b'_', b'_', b'_', b'_',
         b'_', b'_', b'_', b'_',
@@ -127,7 +147,7 @@ unsafe fn byte_is_allowed(byte: u8) -> bool {
     ];
     let mut bytes = Bytes::new(&slice);
 
-    parse_uri_batch_16(&mut bytes);
+    f(&mut bytes);
 
     match bytes.pos() {
         16 => true,

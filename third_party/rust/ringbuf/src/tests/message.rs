@@ -18,6 +18,7 @@ This book fully embraces the potential of Rust to empower its users. It’s a fr
 ";
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn push_pop_slice() {
     let buf = RingBuffer::<u8>::new(7);
     let (mut prod, mut cons) = buf.split();
@@ -67,6 +68,7 @@ fn push_pop_slice() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn read_from_write_into() {
     let buf = RingBuffer::<u8>::new(7);
     let (mut prod, mut cons) = buf.split();
@@ -110,6 +112,7 @@ fn read_from_write_into() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)]
 fn read_write() {
     let buf = RingBuffer::<u8>::new(7);
     let (mut prod, mut cons) = buf.split();

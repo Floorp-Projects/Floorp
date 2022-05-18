@@ -83,7 +83,7 @@ impl<Fut> ReadyToRunQueue<Fut> {
     }
 
     pub(super) fn stub(&self) -> *const Task<Fut> {
-        &*self.stub
+        Arc::as_ptr(&self.stub)
     }
 
     // Clear the queue of tasks.

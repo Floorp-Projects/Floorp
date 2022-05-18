@@ -16,12 +16,6 @@ Add this to your `Cargo.toml`:
 num-traits = "0.2"
 ```
 
-and this to your crate root:
-
-```rust
-extern crate num_traits;
-```
-
 ## Features
 
 This crate can be used without the standard library (`#![no_std]`) by disabling

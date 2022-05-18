@@ -1,16 +1,4 @@
-// Copyright 2018 Kyle Mayes
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use std::env;
 use std::fs::File;
@@ -19,7 +7,11 @@ use std::path::{Path, PathBuf};
 
 use super::common;
 
-/// Returns the ELF class from the ELF header in the supplied file.
+//================================================
+// Validation
+//================================================
+
+/// Extracts the ELF class from the ELF header in a shared library.
 fn parse_elf_header(path: &Path) -> io::Result<u8> {
     let mut file = File::open(path)?;
     let mut buffer = [0; 5];
@@ -31,34 +23,34 @@ fn parse_elf_header(path: &Path) -> io::Result<u8> {
     }
 }
 
-/// Returns the magic number from the PE header in the supplied file.
+/// Extracts the magic number from the PE header in a shared library.
 fn parse_pe_header(path: &Path) -> io::Result<u16> {
     let mut file = File::open(path)?;
 
-    // Determine the header offset.
+    // Extract the header offset.
     let mut buffer = [0; 4];
     let start = SeekFrom::Start(0x3C);
     file.seek(start)?;
     file.read_exact(&mut buffer)?;
     let offset = i32::from_le_bytes(buffer);
 
-    // Determine the validity of the header.
+    // Check the validity of the header.
     file.seek(SeekFrom::Start(offset as u64))?;
     file.read_exact(&mut buffer)?;
     if buffer != [80, 69, 0, 0] {
         return Err(Error::new(ErrorKind::InvalidData, "invalid PE header"));
     }
 
-    // Find the magic number.
+    // Extract the magic number.
     let mut buffer = [0; 2];
     file.seek(SeekFrom::Current(20))?;
     file.read_exact(&mut buffer)?;
     Ok(u16::from_le_bytes(buffer))
 }
 
-/// Validates the header for the supplied `libclang` shared library.
-fn validate_header(path: &Path) -> Result<(), String> {
-    if cfg!(any(target_os = "freebsd", target_os = "linux")) {
+/// Checks that a `libclang` shared library matches the target platform.
+fn validate_library(path: &Path) -> Result<(), String> {
+    if cfg!(any(target_os = "linux", target_os = "freebsd")) {
         let class = parse_elf_header(path).map_err(|e| e.to_string())?;
 
         if cfg!(target_pointer_width = "32") && class != 1 {
@@ -87,8 +79,11 @@ fn validate_header(path: &Path) -> Result<(), String> {
     }
 }
 
-/// Returns the components of the version in the supplied `libclang` shared
-// library filename.
+//================================================
+// Searching
+//================================================
+
+/// Extracts the version components in a `libclang` shared library filename.
 fn parse_version(filename: &str) -> Vec<u32> {
     let version = if let Some(version) = filename.strip_prefix("libclang.so.") {
         version
@@ -101,8 +96,8 @@ fn parse_version(filename: &str) -> Vec<u32> {
     version.split('.').map(|s| s.parse().unwrap_or(0)).collect()
 }
 
-/// Returns the paths to, the filenames, and the versions of the `libclang`
-// shared libraries.
+/// Finds `libclang` shared libraries and returns the paths to, filenames of,
+/// and versions of those shared libraries.
 fn search_libclang_directories(runtime: bool) -> Result<Vec<(PathBuf, String, Vec<u32>)>, String> {
     let mut files = vec![format!(
         "{}clang{}",
@@ -127,10 +122,10 @@ fn search_libclang_directories(runtime: bool) -> Result<Vec<(PathBuf, String, Ve
     }
 
     if cfg!(any(
-        target_os = "openbsd",
         target_os = "freebsd",
+        target_os = "haiku",
         target_os = "netbsd",
-        target_os = "haiku"
+        target_os = "openbsd",
     )) {
         // Some BSD distributions don't create a `libclang.so` symlink either,
         // but use a different naming scheme for versioned files (e.g.,
@@ -144,12 +139,12 @@ fn search_libclang_directories(runtime: bool) -> Result<Vec<(PathBuf, String, Ve
         files.push("libclang.dll".into());
     }
 
-    // Validate the `libclang` shared libraries and collect the versions.
+    // Find and validate `libclang` shared libraries and collect the versions.
     let mut valid = vec![];
     let mut invalid = vec![];
     for (directory, filename) in common::search_libclang_directories(&files, "LIBCLANG_PATH") {
         let path = directory.join(&filename);
-        match validate_header(&path) {
+        match validate_library(&path) {
             Ok(()) => {
                 let version = parse_version(&filename);
                 valid.push((directory, filename, version))
@@ -177,8 +172,8 @@ fn search_libclang_directories(runtime: bool) -> Result<Vec<(PathBuf, String, Ve
     Err(message)
 }
 
-/// Returns the directory and filename of the "best" available `libclang` shared
-/// library.
+/// Finds the "best" `libclang` shared library and returns the directory and
+/// filename of that library.
 pub fn find(runtime: bool) -> Result<(PathBuf, String), String> {
     search_libclang_directories(runtime)?
         .iter()
@@ -202,7 +197,11 @@ pub fn find(runtime: bool) -> Result<(PathBuf, String), String> {
         .ok_or_else(|| "unreachable".into())
 }
 
-/// Find and link to `libclang` dynamically.
+//================================================
+// Linking
+//================================================
+
+/// Finds and links to a `libclang` shared library.
 #[cfg(not(feature = "runtime"))]
 pub fn link() {
     let cep = common::CommandErrorPrinter::default();

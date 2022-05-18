@@ -88,25 +88,25 @@ impl TokenBuffer {
         // length of the backing buffer. The backing buffer must remain at a
         // constant address after this point, as we are going to store a raw
         // pointer into it.
-        let mut entries = entries.into_boxed_slice();
+        let entries = entries.into_boxed_slice();
+        let len = entries.len();
+        // Convert boxed slice into a pointer to the first element early, to
+        // avoid invalidating pointers into this slice when we move the Box.
+        // See https://github.com/rust-lang/unsafe-code-guidelines/issues/326
+        let entries = Box::into_raw(entries) as *mut Entry;
         for (idx, group) in groups {
             // We know that this index refers to one of the temporary
             // `End(null)` entries, and we know that the last entry is
             // `End(up)`, so the next index is also valid.
-            let group_up = unsafe { entries.as_ptr().add(idx + 1) };
+            let group_up = unsafe { entries.add(idx + 1) };
 
             // The end entry stored at the end of this Entry::Group should
             // point to the Entry which follows the Group in the list.
             let inner = Self::inner_new(group.stream(), group_up);
-            entries[idx] = Entry::Group(group, inner);
+            unsafe { *entries.add(idx) = Entry::Group(group, inner) };
         }
 
-        let len = entries.len();
-        let ptr = Box::into_raw(entries);
-        TokenBuffer {
-            ptr: ptr as *const Entry,
-            len,
-        }
+        TokenBuffer { ptr: entries, len }
     }
 
     /// Creates a `TokenBuffer` containing all the tokens from the input
