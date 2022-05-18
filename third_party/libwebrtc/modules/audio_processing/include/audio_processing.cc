@@ -80,30 +80,23 @@ bool Agc1Config::operator==(const Agc1Config& rhs) const {
              analog_rhs.enable_digital_adaptive;
 }
 
-bool Agc2Config::operator==(const Agc2Config& rhs) const {
-  const auto& adaptive_lhs = adaptive_digital;
-  const auto& adaptive_rhs = rhs.adaptive_digital;
+bool Agc2Config::AdaptiveDigital::operator==(
+    const Agc2Config::AdaptiveDigital& rhs) const {
+  return enabled == rhs.enabled && dry_run == rhs.dry_run &&
+         noise_estimator == rhs.noise_estimator &&
+         vad_reset_period_ms == rhs.vad_reset_period_ms &&
+         adjacent_speech_frames_threshold ==
+             rhs.adjacent_speech_frames_threshold &&
+         max_gain_change_db_per_second == rhs.max_gain_change_db_per_second &&
+         max_output_noise_level_dbfs == rhs.max_output_noise_level_dbfs &&
+         sse2_allowed == rhs.sse2_allowed && avx2_allowed == rhs.avx2_allowed &&
+         neon_allowed == rhs.neon_allowed;
+}
 
+bool Agc2Config::operator==(const Agc2Config& rhs) const {
   return enabled == rhs.enabled &&
          fixed_digital.gain_db == rhs.fixed_digital.gain_db &&
-         adaptive_lhs.enabled == adaptive_rhs.enabled &&
-         adaptive_lhs.vad_probability_attack ==
-             adaptive_rhs.vad_probability_attack &&
-         adaptive_lhs.level_estimator == adaptive_rhs.level_estimator &&
-         adaptive_lhs.level_estimator_adjacent_speech_frames_threshold ==
-             adaptive_rhs.level_estimator_adjacent_speech_frames_threshold &&
-         adaptive_lhs.use_saturation_protector ==
-             adaptive_rhs.use_saturation_protector &&
-         adaptive_lhs.initial_saturation_margin_db ==
-             adaptive_rhs.initial_saturation_margin_db &&
-         adaptive_lhs.extra_saturation_margin_db ==
-             adaptive_rhs.extra_saturation_margin_db &&
-         adaptive_lhs.gain_applier_adjacent_speech_frames_threshold ==
-             adaptive_rhs.gain_applier_adjacent_speech_frames_threshold &&
-         adaptive_lhs.max_gain_change_db_per_second ==
-             adaptive_rhs.max_gain_change_db_per_second &&
-         adaptive_lhs.max_output_noise_level_dbfs ==
-             adaptive_rhs.max_output_noise_level_dbfs;
+         adaptive_digital == rhs.adaptive_digital;
 }
 
 bool AudioProcessing::Config::CaptureLevelAdjustment::operator==(
@@ -160,7 +153,9 @@ std::string AudioProcessing::Config::ToString() const {
       << ", fixed_digital: { gain_db: "
       << gain_controller2.fixed_digital.gain_db
       << " }, adaptive_digital: { enabled: "
-      << gain_controller2.adaptive_digital.enabled << ", noise_estimator: "
+      << gain_controller2.adaptive_digital.enabled
+      << ", dry_run: " << gain_controller2.adaptive_digital.dry_run
+      << ", noise_estimator: "
       << GainController2NoiseEstimatorToString(
              gain_controller2.adaptive_digital.noise_estimator)
       << ", vad_reset_period_ms: "

@@ -3039,50 +3039,50 @@ TEST(AudioProcessing, GainController1ConfigNotEqual) {
 
   Toggle(a.enabled);
   EXPECT_NE(a, b);
-  a.enabled = b.enabled;
+  a = b;
 
   a.mode = AudioProcessing::Config::GainController1::Mode::kAdaptiveDigital;
   EXPECT_NE(a, b);
-  a.mode = b.mode;
+  a = b;
 
   a.target_level_dbfs++;
   EXPECT_NE(a, b);
-  a.target_level_dbfs = b.target_level_dbfs;
+  a = b;
 
   a.compression_gain_db++;
   EXPECT_NE(a, b);
-  a.compression_gain_db = b.compression_gain_db;
+  a = b;
 
   Toggle(a.enable_limiter);
   EXPECT_NE(a, b);
-  a.enable_limiter = b.enable_limiter;
+  a = b;
 
   a.analog_level_minimum++;
   EXPECT_NE(a, b);
-  a.analog_level_minimum = b.analog_level_minimum;
+  a = b;
 
   a.analog_level_maximum--;
   EXPECT_NE(a, b);
-  a.analog_level_maximum = b.analog_level_maximum;
+  a = b;
 
   auto& a_analog = a.analog_gain_controller;
   const auto& b_analog = b.analog_gain_controller;
 
   Toggle(a_analog.enabled);
   EXPECT_NE(a, b);
-  a_analog.enabled = b_analog.enabled;
+  a_analog = b_analog;
 
   a_analog.startup_min_volume++;
   EXPECT_NE(a, b);
-  a_analog.startup_min_volume = b_analog.startup_min_volume;
+  a_analog = b_analog;
 
   a_analog.clipped_level_min++;
   EXPECT_NE(a, b);
-  a_analog.clipped_level_min = b_analog.clipped_level_min;
+  a_analog = b_analog;
 
   Toggle(a_analog.enable_digital_adaptive);
   EXPECT_NE(a, b);
-  a_analog.enable_digital_adaptive = b_analog.enable_digital_adaptive;
+  a_analog = b_analog;
 }
 
 TEST(AudioProcessing, GainController2ConfigEqual) {
@@ -3094,7 +3094,7 @@ TEST(AudioProcessing, GainController2ConfigEqual) {
   b.enabled = a.enabled;
   EXPECT_EQ(a, b);
 
-  a.fixed_digital.gain_db += 1.f;
+  a.fixed_digital.gain_db += 1.0f;
   b.fixed_digital.gain_db = a.fixed_digital.gain_db;
   EXPECT_EQ(a, b);
 
@@ -3105,46 +3105,44 @@ TEST(AudioProcessing, GainController2ConfigEqual) {
   b_adaptive.enabled = a_adaptive.enabled;
   EXPECT_EQ(a, b);
 
-  a_adaptive.vad_probability_attack += 1.f;
-  b_adaptive.vad_probability_attack = a_adaptive.vad_probability_attack;
+  Toggle(a_adaptive.dry_run);
+  b_adaptive.dry_run = a_adaptive.dry_run;
   EXPECT_EQ(a, b);
 
-  a_adaptive.level_estimator =
-      AudioProcessing::Config::GainController2::LevelEstimator::kPeak;
-  b_adaptive.level_estimator = a_adaptive.level_estimator;
+  a_adaptive.noise_estimator = AudioProcessing::Config::GainController2::
+      NoiseEstimator::kStationaryNoise;
+  b_adaptive.noise_estimator = a_adaptive.noise_estimator;
   EXPECT_EQ(a, b);
 
-  a_adaptive.level_estimator_adjacent_speech_frames_threshold++;
-  b_adaptive.level_estimator_adjacent_speech_frames_threshold =
-      a_adaptive.level_estimator_adjacent_speech_frames_threshold;
+  a_adaptive.vad_reset_period_ms++;
+  b_adaptive.vad_reset_period_ms = a_adaptive.vad_reset_period_ms;
   EXPECT_EQ(a, b);
 
-  Toggle(a_adaptive.use_saturation_protector);
-  b_adaptive.use_saturation_protector = a_adaptive.use_saturation_protector;
+  a_adaptive.adjacent_speech_frames_threshold++;
+  b_adaptive.adjacent_speech_frames_threshold =
+      a_adaptive.adjacent_speech_frames_threshold;
   EXPECT_EQ(a, b);
 
-  a_adaptive.initial_saturation_margin_db += 1.f;
-  b_adaptive.initial_saturation_margin_db =
-      a_adaptive.initial_saturation_margin_db;
-  EXPECT_EQ(a, b);
-
-  a_adaptive.extra_saturation_margin_db += 1.f;
-  b_adaptive.extra_saturation_margin_db = a_adaptive.extra_saturation_margin_db;
-  EXPECT_EQ(a, b);
-
-  a_adaptive.gain_applier_adjacent_speech_frames_threshold++;
-  b_adaptive.gain_applier_adjacent_speech_frames_threshold =
-      a_adaptive.gain_applier_adjacent_speech_frames_threshold;
-  EXPECT_EQ(a, b);
-
-  a_adaptive.max_gain_change_db_per_second += 1.f;
+  a_adaptive.max_gain_change_db_per_second += 1.0f;
   b_adaptive.max_gain_change_db_per_second =
       a_adaptive.max_gain_change_db_per_second;
   EXPECT_EQ(a, b);
 
-  a_adaptive.max_output_noise_level_dbfs -= 1.f;
+  a_adaptive.max_output_noise_level_dbfs += 1.0f;
   b_adaptive.max_output_noise_level_dbfs =
       a_adaptive.max_output_noise_level_dbfs;
+  EXPECT_EQ(a, b);
+
+  Toggle(a_adaptive.sse2_allowed);
+  b_adaptive.sse2_allowed = a_adaptive.sse2_allowed;
+  EXPECT_EQ(a, b);
+
+  Toggle(a_adaptive.avx2_allowed);
+  b_adaptive.avx2_allowed = a_adaptive.avx2_allowed;
+  EXPECT_EQ(a, b);
+
+  Toggle(a_adaptive.neon_allowed);
+  b_adaptive.neon_allowed = a_adaptive.neon_allowed;
   EXPECT_EQ(a, b);
 }
 
@@ -3156,60 +3154,55 @@ TEST(AudioProcessing, GainController2ConfigNotEqual) {
 
   Toggle(a.enabled);
   EXPECT_NE(a, b);
-  a.enabled = b.enabled;
+  a = b;
 
-  a.fixed_digital.gain_db += 1.f;
+  a.fixed_digital.gain_db += 1.0f;
   EXPECT_NE(a, b);
-  a.fixed_digital.gain_db = b.fixed_digital.gain_db;
+  a.fixed_digital = b.fixed_digital;
 
   auto& a_adaptive = a.adaptive_digital;
   const auto& b_adaptive = b.adaptive_digital;
 
   Toggle(a_adaptive.enabled);
   EXPECT_NE(a, b);
-  a_adaptive.enabled = b_adaptive.enabled;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.vad_probability_attack += 1.f;
+  Toggle(a_adaptive.dry_run);
   EXPECT_NE(a, b);
-  a_adaptive.vad_probability_attack = b_adaptive.vad_probability_attack;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.level_estimator =
-      AudioProcessing::Config::GainController2::LevelEstimator::kPeak;
+  a_adaptive.noise_estimator = AudioProcessing::Config::GainController2::
+      NoiseEstimator::kStationaryNoise;
   EXPECT_NE(a, b);
-  a_adaptive.level_estimator = b_adaptive.level_estimator;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.level_estimator_adjacent_speech_frames_threshold++;
+  a_adaptive.vad_reset_period_ms++;
   EXPECT_NE(a, b);
-  a_adaptive.level_estimator_adjacent_speech_frames_threshold =
-      b_adaptive.level_estimator_adjacent_speech_frames_threshold;
+  a_adaptive = b_adaptive;
 
-  Toggle(a_adaptive.use_saturation_protector);
+  a_adaptive.adjacent_speech_frames_threshold++;
   EXPECT_NE(a, b);
-  a_adaptive.use_saturation_protector = b_adaptive.use_saturation_protector;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.initial_saturation_margin_db += 1.f;
+  a_adaptive.max_gain_change_db_per_second += 1.0f;
   EXPECT_NE(a, b);
-  a_adaptive.initial_saturation_margin_db =
-      b_adaptive.initial_saturation_margin_db;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.extra_saturation_margin_db += 1.f;
+  a_adaptive.max_output_noise_level_dbfs += 1.0f;
   EXPECT_NE(a, b);
-  a_adaptive.extra_saturation_margin_db = b_adaptive.extra_saturation_margin_db;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.gain_applier_adjacent_speech_frames_threshold++;
+  Toggle(a_adaptive.sse2_allowed);
   EXPECT_NE(a, b);
-  a_adaptive.gain_applier_adjacent_speech_frames_threshold =
-      b_adaptive.gain_applier_adjacent_speech_frames_threshold;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.max_gain_change_db_per_second += 1.f;
+  Toggle(a_adaptive.avx2_allowed);
   EXPECT_NE(a, b);
-  a_adaptive.max_gain_change_db_per_second =
-      b_adaptive.max_gain_change_db_per_second;
+  a_adaptive = b_adaptive;
 
-  a_adaptive.max_output_noise_level_dbfs -= 1.f;
+  Toggle(a_adaptive.neon_allowed);
   EXPECT_NE(a, b);
-  a_adaptive.max_output_noise_level_dbfs =
-      b_adaptive.max_output_noise_level_dbfs;
+  a_adaptive = b_adaptive;
 }
 
 }  // namespace webrtc
