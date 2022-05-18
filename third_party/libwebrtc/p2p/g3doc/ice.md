@@ -1,6 +1,7 @@
 # ICE
 
-<?% config.freshness.owner = 'jonaso' %?> <?% config.freshness.reviewed = '2021-04-12' %?>
+<?% config.freshness.owner = 'jonaso' %?>
+<?% config.freshness.reviewed = '2021-04-12' %?>
 
 ## Overview
 

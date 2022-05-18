@@ -1,5 +1,4 @@
 <?% config.freshness.reviewed = '2021-04-13' %?>
-
 <?% config.freshness.owner = 'eshr' %?>
 
 # Video Adaptation
