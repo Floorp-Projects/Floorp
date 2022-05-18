@@ -1067,9 +1067,9 @@ void VideoChannel::UpdateMediaSendRecvState_w() {
 }
 
 void VideoChannel::FillBitrateInfo(BandwidthEstimationInfo* bwe_info) {
+  RTC_DCHECK_RUN_ON(worker_thread());
   VideoMediaChannel* mc = media_channel();
-  InvokeOnWorker<void>(RTC_FROM_HERE,
-                       [mc, bwe_info] { mc->FillBitrateInfo(bwe_info); });
+  mc->FillBitrateInfo(bwe_info);
 }
 
 bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,

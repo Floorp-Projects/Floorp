@@ -654,7 +654,8 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
   static const int kAcceptableBitrateErrorMargin = 15;  // +- 7
   class BitrateObserver : public test::EndToEndTest {
    public:
-    explicit BitrateObserver(bool using_min_transmit_bitrate)
+    explicit BitrateObserver(bool using_min_transmit_bitrate,
+                             TaskQueueBase* task_queue)
         : EndToEndTest(kLongTimeoutMs),
           send_stream_(nullptr),
           converged_(false),
@@ -667,27 +668,31 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
                                       ? kMaxAcceptableTransmitBitrate
                                       : (kMaxEncodeBitrateKbps +
                                          kAcceptableBitrateErrorMargin / 2)),
-          num_bitrate_observations_in_range_(0) {}
+          num_bitrate_observations_in_range_(0),
+          task_queue_(task_queue) {}
 
    private:
     // TODO(holmer): Run this with a timer instead of once per packet.
     Action OnSendRtp(const uint8_t* packet, size_t length) override {
-      VideoSendStream::Stats stats = send_stream_->GetStats();
-      if (!stats.substreams.empty()) {
-        RTC_DCHECK_EQ(1, stats.substreams.size());
-        int bitrate_kbps =
-            stats.substreams.begin()->second.total_bitrate_bps / 1000;
-        if (bitrate_kbps > min_acceptable_bitrate_ &&
-            bitrate_kbps < max_acceptable_bitrate_) {
-          converged_ = true;
-          ++num_bitrate_observations_in_range_;
-          if (num_bitrate_observations_in_range_ ==
-              kNumBitrateObservationsInRange)
-            observation_complete_.Set();
+      task_queue_->PostTask(ToQueuedTask([this]() {
+        VideoSendStream::Stats stats = send_stream_->GetStats();
+
+        if (!stats.substreams.empty()) {
+          RTC_DCHECK_EQ(1, stats.substreams.size());
+          int bitrate_kbps =
+              stats.substreams.begin()->second.total_bitrate_bps / 1000;
+          if (bitrate_kbps > min_acceptable_bitrate_ &&
+              bitrate_kbps < max_acceptable_bitrate_) {
+            converged_ = true;
+            ++num_bitrate_observations_in_range_;
+            if (num_bitrate_observations_in_range_ ==
+                kNumBitrateObservationsInRange)
+              observation_complete_.Set();
+          }
+          if (converged_)
+            bitrate_kbps_list_.push_back(bitrate_kbps);
         }
-        if (converged_)
-          bitrate_kbps_list_.push_back(bitrate_kbps);
-      }
+      }));
       return SEND_PACKET;
     }
 
@@ -724,7 +729,8 @@ void CallPerfTest::TestMinTransmitBitrate(bool pad_to_min_bitrate) {
     const int max_acceptable_bitrate_;
     int num_bitrate_observations_in_range_;
     std::vector<double> bitrate_kbps_list_;
-  } test(pad_to_min_bitrate);
+    TaskQueueBase* task_queue_;
+  } test(pad_to_min_bitrate, task_queue());
 
   fake_encoder_max_bitrate_ = kMaxEncodeBitrateKbps;
   RunBaseTest(&test);
@@ -775,7 +781,7 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
 
   class BitrateObserver : public test::EndToEndTest, public test::FakeEncoder {
    public:
-    BitrateObserver()
+    explicit BitrateObserver(TaskQueueBase* task_queue)
         : EndToEndTest(kDefaultTimeoutMs),
           FakeEncoder(Clock::GetRealTimeClock()),
           encoder_inits_(0),
@@ -784,7 +790,8 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
           frame_generator_(nullptr),
           encoder_factory_(this),
           bitrate_allocator_factory_(
-              CreateBuiltinVideoBitrateAllocatorFactory()) {}
+              CreateBuiltinVideoBitrateAllocatorFactory()),
+          task_queue_(task_queue) {}
 
     int32_t InitEncode(const VideoCodec* config,
                        const VideoEncoder::Settings& settings) override {
@@ -854,7 +861,9 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
       ASSERT_TRUE(time_to_reconfigure_.Wait(kDefaultTimeoutMs))
           << "Timed out before receiving an initial high bitrate.";
       frame_generator_->ChangeResolution(kDefaultWidth * 2, kDefaultHeight * 2);
-      send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
+      SendTask(RTC_FROM_HERE, task_queue_, [&]() {
+        send_stream_->ReconfigureVideoEncoder(encoder_config_.Copy());
+      });
       EXPECT_TRUE(Wait())
           << "Timed out while waiting for a couple of high bitrate estimates "
              "after reconfiguring the send stream.";
@@ -869,7 +878,8 @@ TEST_F(CallPerfTest, MAYBE_KeepsHighBitrateWhenReconfiguringSender) {
     test::VideoEncoderProxyFactory encoder_factory_;
     std::unique_ptr<VideoBitrateAllocatorFactory> bitrate_allocator_factory_;
     VideoEncoderConfig encoder_config_;
-  } test;
+    TaskQueueBase* task_queue_;
+  } test(task_queue());
 
   RunBaseTest(&test);
 }

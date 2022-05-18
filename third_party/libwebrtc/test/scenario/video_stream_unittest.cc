@@ -130,7 +130,9 @@ TEST(VideoStreamTest, SendsNacksOnLoss) {
   auto video = s.CreateVideoStream(route->forward(), VideoStreamConfig());
   s.RunFor(TimeDelta::Seconds(1));
   int retransmit_packets = 0;
-  for (const auto& substream : video->send()->GetStats().substreams) {
+  VideoSendStream::Stats stats;
+  route->first()->SendTask([&]() { stats = video->send()->GetStats(); });
+  for (const auto& substream : stats.substreams) {
     retransmit_packets += substream.second.rtp_stats.retransmitted.packets;
   }
   EXPECT_GT(retransmit_packets, 0);
@@ -152,7 +154,8 @@ TEST(VideoStreamTest, SendsFecWithUlpFec) {
     c->stream.use_ulpfec = true;
   });
   s.RunFor(TimeDelta::Seconds(5));
-  VideoSendStream::Stats video_stats = video->send()->GetStats();
+  VideoSendStream::Stats video_stats;
+  route->first()->SendTask([&]() { video_stats = video->send()->GetStats(); });
   EXPECT_GT(video_stats.substreams.begin()->second.rtp_stats.fec.packets, 0u);
 }
 TEST(VideoStreamTest, SendsFecWithFlexFec) {
@@ -169,7 +172,8 @@ TEST(VideoStreamTest, SendsFecWithFlexFec) {
     c->stream.use_flexfec = true;
   });
   s.RunFor(TimeDelta::Seconds(5));
-  VideoSendStream::Stats video_stats = video->send()->GetStats();
+  VideoSendStream::Stats video_stats;
+  route->first()->SendTask([&]() { video_stats = video->send()->GetStats(); });
   EXPECT_GT(video_stats.substreams.begin()->second.rtp_stats.fec.packets, 0u);
 }
 
