@@ -50,7 +50,6 @@
 #include "rtc_base/task_utils/pending_task_safety_flag.h"
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/third_party/base64/base64.h"
-#include "rtc_base/thread.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -377,7 +376,7 @@ VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
     const MediaConfig& config,
     const AudioOptions& options,
     const webrtc::CryptoOptions& crypto_options) {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+  RTC_DCHECK_RUN_ON(call->worker_thread());
   return new WebRtcVoiceMediaChannel(this, config, options, crypto_options,
                                      call);
 }
@@ -624,19 +623,6 @@ WebRtcVoiceEngine::GetRtpHeaderExtensions() const {
     result.emplace_back(uri, id++, webrtc::RtpTransceiverDirection::kSendRecv);
   }
   return result;
-}
-
-void WebRtcVoiceEngine::RegisterChannel(WebRtcVoiceMediaChannel* channel) {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  RTC_DCHECK(channel);
-  channels_.push_back(channel);
-}
-
-void WebRtcVoiceEngine::UnregisterChannel(WebRtcVoiceMediaChannel* channel) {
-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-  auto it = absl::c_find(channels_, channel);
-  RTC_DCHECK(it != channels_.end());
-  channels_.erase(it);
 }
 
 bool WebRtcVoiceEngine::StartAecDump(webrtc::FileWrapper file,
@@ -1396,18 +1382,16 @@ WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
     const webrtc::CryptoOptions& crypto_options,
     webrtc::Call* call)
     : VoiceMediaChannel(config),
-      worker_thread_(rtc::Thread::Current()),
+      worker_thread_(call->worker_thread()),
       engine_(engine),
       call_(call),
       audio_config_(config.audio),
       crypto_options_(crypto_options),
       audio_red_for_opus_trial_enabled_(
           IsEnabled(call->trials(), "WebRTC-Audio-Red-For-Opus")) {
-  RTC_DCHECK_RUN_ON(worker_thread_);
   network_thread_checker_.Detach();
   RTC_LOG(LS_VERBOSE) << "WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel";
   RTC_DCHECK(call);
-  engine->RegisterChannel(this);
   SetOptions(options);
 }
 
@@ -1423,7 +1407,6 @@ WebRtcVoiceMediaChannel::~WebRtcVoiceMediaChannel() {
   while (!recv_streams_.empty()) {
     RemoveRecvStream(recv_streams_.begin()->first);
   }
-  engine()->UnregisterChannel(this);
 }
 
 bool WebRtcVoiceMediaChannel::SetSendParameters(

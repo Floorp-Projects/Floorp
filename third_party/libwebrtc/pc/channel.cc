@@ -295,7 +295,11 @@ void BaseChannel::Enable(bool enable) {
 bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
                                   SdpType type,
                                   std::string* error_desc) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetLocalContent");
+
+  SetContent_s(content, type);
+
   return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
     RTC_DCHECK_RUN_ON(worker_thread());
     return SetLocalContent_w(content, type, error_desc);
@@ -305,11 +309,22 @@ bool BaseChannel::SetLocalContent(const MediaContentDescription* content,
 bool BaseChannel::SetRemoteContent(const MediaContentDescription* content,
                                    SdpType type,
                                    std::string* error_desc) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "BaseChannel::SetRemoteContent");
+
+  SetContent_s(content, type);
+
   return InvokeOnWorker<bool>(RTC_FROM_HERE, [this, content, type, error_desc] {
     RTC_DCHECK_RUN_ON(worker_thread());
     return SetRemoteContent_w(content, type, error_desc);
   });
+}
+
+void BaseChannel::SetContent_s(const MediaContentDescription* content,
+                               SdpType type) {
+  RTC_DCHECK(content);
+  if (type == SdpType::kAnswer)
+    negotiated_header_extensions_ = content->rtp_header_extensions();
 }
 
 bool BaseChannel::SetPayloadTypeDemuxingEnabled(bool enabled) {
@@ -853,16 +868,8 @@ void BaseChannel::SignalSentPacket_n(const rtc::SentPacket& sent_packet) {
   media_channel()->OnPacketSent(sent_packet);
 }
 
-void BaseChannel::SetNegotiatedHeaderExtensions_w(
-    const RtpHeaderExtensions& extensions) {
-  TRACE_EVENT0("webrtc", __func__);
-  webrtc::MutexLock lock(&negotiated_header_extensions_lock_);
-  negotiated_header_extensions_ = extensions;
-}
-
 RtpHeaderExtensions BaseChannel::GetNegotiatedRtpHeaderExtensions() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  webrtc::MutexLock lock(&negotiated_header_extensions_lock_);
   return negotiated_header_extensions_;
 }
 
@@ -913,26 +920,19 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
   RTC_DCHECK_RUN_ON(worker_thread());
   RTC_LOG(LS_INFO) << "Setting local voice description for " << ToString();
 
-  RTC_DCHECK(content);
-  if (!content) {
-    SafeSetError("Can't find audio content in local description.", error_desc);
-    return false;
-  }
-
-  const AudioContentDescription* audio = content->as_audio();
-
-  if (type == SdpType::kAnswer)
-    SetNegotiatedHeaderExtensions_w(audio->rtp_header_extensions());
-
   RtpHeaderExtensions rtp_header_extensions =
-      GetFilteredRtpHeaderExtensions(audio->rtp_header_extensions());
+      GetFilteredRtpHeaderExtensions(content->rtp_header_extensions());
+  // TODO(tommi): There's a hop to the network thread here.
+  // some of the below is also network thread related.
   UpdateRtpHeaderExtensionMap(rtp_header_extensions);
-  media_channel()->SetExtmapAllowMixed(audio->extmap_allow_mixed());
+  media_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
 
   AudioRecvParameters recv_params = last_recv_params_;
   RtpParametersFromMediaDescription(
-      audio, rtp_header_extensions,
-      webrtc::RtpTransceiverDirectionHasRecv(audio->direction()), &recv_params);
+      content->as_audio(), rtp_header_extensions,
+      webrtc::RtpTransceiverDirectionHasRecv(content->direction()),
+      &recv_params);
+
   if (!media_channel()->SetRecvParameters(recv_params)) {
     SafeSetError(
         "Failed to set local audio description recv parameters for m-section "
@@ -942,8 +942,8 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
     return false;
   }
 
-  if (webrtc::RtpTransceiverDirectionHasRecv(audio->direction())) {
-    for (const AudioCodec& codec : audio->codecs()) {
+  if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
+    for (const AudioCodec& codec : content->as_audio()->codecs()) {
       MaybeAddHandledPayloadType(codec.id);
     }
     // Need to re-register the sink to update the handled payload.
@@ -959,7 +959,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
   // only give it to the media channel once we have a remote
   // description too (without a remote description, we won't be able
   // to send them anyway).
-  if (!UpdateLocalStreams_w(audio->streams(), type, error_desc)) {
+  if (!UpdateLocalStreams_w(content->as_audio()->streams(), type, error_desc)) {
     SafeSetError(
         "Failed to set local audio description streams for m-section with "
         "mid='" +
@@ -980,16 +980,7 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
   RTC_DCHECK_RUN_ON(worker_thread());
   RTC_LOG(LS_INFO) << "Setting remote voice description for " << ToString();
 
-  RTC_DCHECK(content);
-  if (!content) {
-    SafeSetError("Can't find audio content in remote description.", error_desc);
-    return false;
-  }
-
   const AudioContentDescription* audio = content->as_audio();
-
-  if (type == SdpType::kAnswer)
-    SetNegotiatedHeaderExtensions_w(audio->rtp_header_extensions());
 
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(audio->rtp_header_extensions());
@@ -1091,26 +1082,17 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   RTC_DCHECK_RUN_ON(worker_thread());
   RTC_LOG(LS_INFO) << "Setting local video description for " << ToString();
 
-  RTC_DCHECK(content);
-  if (!content) {
-    SafeSetError("Can't find video content in local description.", error_desc);
-    return false;
-  }
-
-  const VideoContentDescription* video = content->as_video();
-
-  if (type == SdpType::kAnswer)
-    SetNegotiatedHeaderExtensions_w(video->rtp_header_extensions());
-
   RtpHeaderExtensions rtp_header_extensions =
-      GetFilteredRtpHeaderExtensions(video->rtp_header_extensions());
+      GetFilteredRtpHeaderExtensions(content->rtp_header_extensions());
   UpdateRtpHeaderExtensionMap(rtp_header_extensions);
-  media_channel()->SetExtmapAllowMixed(video->extmap_allow_mixed());
+  media_channel()->SetExtmapAllowMixed(content->extmap_allow_mixed());
 
   VideoRecvParameters recv_params = last_recv_params_;
+
   RtpParametersFromMediaDescription(
-      video, rtp_header_extensions,
-      webrtc::RtpTransceiverDirectionHasRecv(video->direction()), &recv_params);
+      content->as_video(), rtp_header_extensions,
+      webrtc::RtpTransceiverDirectionHasRecv(content->direction()),
+      &recv_params);
 
   VideoSendParameters send_params = last_send_params_;
 
@@ -1143,8 +1125,8 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     return false;
   }
 
-  if (webrtc::RtpTransceiverDirectionHasRecv(video->direction())) {
-    for (const VideoCodec& codec : video->codecs()) {
+  if (webrtc::RtpTransceiverDirectionHasRecv(content->direction())) {
+    for (const VideoCodec& codec : content->as_video()->codecs()) {
       MaybeAddHandledPayloadType(codec.id);
     }
     // Need to re-register the sink to update the handled payload.
@@ -1170,7 +1152,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   // only give it to the media channel once we have a remote
   // description too (without a remote description, we won't be able
   // to send them anyway).
-  if (!UpdateLocalStreams_w(video->streams(), type, error_desc)) {
+  if (!UpdateLocalStreams_w(content->as_video()->streams(), type, error_desc)) {
     SafeSetError(
         "Failed to set local video description streams for m-section with "
         "mid='" +
@@ -1191,16 +1173,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   RTC_DCHECK_RUN_ON(worker_thread());
   RTC_LOG(LS_INFO) << "Setting remote video description for " << ToString();
 
-  RTC_DCHECK(content);
-  if (!content) {
-    SafeSetError("Can't find video content in remote description.", error_desc);
-    return false;
-  }
-
   const VideoContentDescription* video = content->as_video();
-
-  if (type == SdpType::kAnswer)
-    SetNegotiatedHeaderExtensions_w(video->rtp_header_extensions());
 
   RtpHeaderExtensions rtp_header_extensions =
       GetFilteredRtpHeaderExtensions(video->rtp_header_extensions());

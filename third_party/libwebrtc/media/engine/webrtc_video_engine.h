@@ -43,10 +43,6 @@ class VideoEncoderFactory;
 struct MediaConfig;
 }  // namespace webrtc
 
-namespace rtc {
-class Thread;
-}  // namespace rtc
-
 namespace cricket {
 
 class WebRtcVideoChannel;
@@ -402,7 +398,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
         RTC_EXCLUSIVE_LOCKS_REQUIRED(&thread_checker_);
 
     webrtc::SequenceChecker thread_checker_;
-    rtc::Thread* worker_thread_;
+    webrtc::TaskQueueBase* const worker_thread_;
     const std::vector<uint32_t> ssrcs_ RTC_GUARDED_BY(&thread_checker_);
     const std::vector<SsrcGroup> ssrc_groups_ RTC_GUARDED_BY(&thread_checker_);
     webrtc::Call* const call_;
@@ -553,7 +549,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   void FillSendAndReceiveCodecStats(VideoMediaInfo* video_media_info)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
 
-  rtc::Thread* const worker_thread_;
+  webrtc::TaskQueueBase* const worker_thread_;
   webrtc::ScopedTaskSafety task_safety_;
   webrtc::SequenceChecker network_thread_checker_;
   webrtc::SequenceChecker thread_checker_;

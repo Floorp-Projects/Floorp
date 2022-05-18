@@ -80,12 +80,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   std::vector<webrtc::RtpHeaderExtensionCapability> GetRtpHeaderExtensions()
       const override;
 
-  // For tracking WebRtc channels. Needed because we have to pause them
-  // all when switching devices.
-  // May only be called by WebRtcVoiceMediaChannel.
-  void RegisterChannel(WebRtcVoiceMediaChannel* channel);
-  void UnregisterChannel(WebRtcVoiceMediaChannel* channel);
-
   // Starts AEC dump using an existing file. A maximum file size in bytes can be
   // specified. When the maximum file size is reached, logging is stopped and
   // the file is closed. If max_size_bytes is set to <= 0, no limit will be
@@ -129,7 +123,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   std::vector<AudioCodec> send_codecs_;
   std::vector<AudioCodec> recv_codecs_;
-  std::vector<WebRtcVoiceMediaChannel*> channels_;
   bool is_dumping_aec_ = false;
   bool initialized_ = false;
 
