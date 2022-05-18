@@ -123,6 +123,7 @@ class StudiesAdapterTest {
         val study = mockk<EnrolledExperiment>()
 
         every { study.slug } returns "slug"
+        every { study.featureIds } returns listOf()
 
         adapter = spyk(StudiesAdapter(delegate, listOf(study), false))
 
@@ -137,8 +138,10 @@ class StudiesAdapterTest {
     fun `WHEN calling createListWithSections THEN returns the section + experiments, filtering messages`() {
         val study = mockk<EnrolledExperiment>()
         every { study.slug } returns "slug"
+        every { study.featureIds } returns listOf("dummy")
 
         val message = mockk<EnrolledExperiment>()
+        every { message.slug } returns "aMessage"
         every { message.featureIds } returns listOf(MESSAGING_FEATURE_ID)
 
         adapter = spyk(StudiesAdapter(delegate, listOf(study, message), false))
