@@ -72,7 +72,7 @@ ResourceAdaptationProcessor::ResourceAdaptationProcessor(
     VideoStreamAdapter* stream_adapter)
     : task_queue_(nullptr),
       resource_listener_delegate_(
-          new rtc::RefCountedObject<ResourceListenerDelegate>(this)),
+          rtc::make_ref_counted<ResourceListenerDelegate>(this)),
       resources_(),
       stream_adapter_(stream_adapter),
       last_reported_source_restrictions_(),

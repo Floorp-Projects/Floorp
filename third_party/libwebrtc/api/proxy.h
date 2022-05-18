@@ -253,26 +253,26 @@ class ConstMethodCall : public QueuedTask {
   void DestroyInternal() { delete c_; }                \
   INTERNAL_CLASS* c_;
 
-#define BEGIN_PRIMARY_PROXY_MAP(c)                                             \
-  PROXY_MAP_BOILERPLATE(c)                                                     \
-  PRIMARY_PROXY_MAP_BOILERPLATE(c)                                             \
-  REFCOUNTED_PROXY_MAP_BOILERPLATE(c)                                          \
- public:                                                                       \
-  static rtc::scoped_refptr<c##ProxyWithInternal> Create(                      \
-      rtc::Thread* primary_thread, INTERNAL_CLASS* c) {                        \
-    return new rtc::RefCountedObject<c##ProxyWithInternal>(primary_thread, c); \
+#define BEGIN_PRIMARY_PROXY_MAP(c)                                         \
+  PROXY_MAP_BOILERPLATE(c)                                                 \
+  PRIMARY_PROXY_MAP_BOILERPLATE(c)                                         \
+  REFCOUNTED_PROXY_MAP_BOILERPLATE(c)                                      \
+ public:                                                                   \
+  static rtc::scoped_refptr<c##ProxyWithInternal> Create(                  \
+      rtc::Thread* primary_thread, INTERNAL_CLASS* c) {                    \
+    return rtc::make_ref_counted<c##ProxyWithInternal>(primary_thread, c); \
   }
 
-#define BEGIN_PROXY_MAP(c)                                        \
-  PROXY_MAP_BOILERPLATE(c)                                        \
-  SECONDARY_PROXY_MAP_BOILERPLATE(c)                              \
-  REFCOUNTED_PROXY_MAP_BOILERPLATE(c)                             \
- public:                                                          \
-  static rtc::scoped_refptr<c##ProxyWithInternal> Create(         \
-      rtc::Thread* primary_thread, rtc::Thread* secondary_thread, \
-      INTERNAL_CLASS* c) {                                        \
-    return new rtc::RefCountedObject<c##ProxyWithInternal>(       \
-        primary_thread, secondary_thread, c);                     \
+#define BEGIN_PROXY_MAP(c)                                                   \
+  PROXY_MAP_BOILERPLATE(c)                                                   \
+  SECONDARY_PROXY_MAP_BOILERPLATE(c)                                         \
+  REFCOUNTED_PROXY_MAP_BOILERPLATE(c)                                        \
+ public:                                                                     \
+  static rtc::scoped_refptr<c##ProxyWithInternal> Create(                    \
+      rtc::Thread* primary_thread, rtc::Thread* secondary_thread,            \
+      INTERNAL_CLASS* c) {                                                   \
+    return rtc::make_ref_counted<c##ProxyWithInternal>(primary_thread,       \
+                                                       secondary_thread, c); \
   }
 
 #define BEGIN_OWNED_PROXY_MAP(c)                                   \

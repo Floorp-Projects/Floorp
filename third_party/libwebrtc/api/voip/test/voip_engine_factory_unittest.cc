@@ -24,11 +24,11 @@ namespace {
 // Create voip engine with mock modules as normal use case.
 TEST(VoipEngineFactoryTest, CreateEngineWithMockModules) {
   VoipEngineConfig config;
-  config.encoder_factory = new rtc::RefCountedObject<MockAudioEncoderFactory>();
-  config.decoder_factory = new rtc::RefCountedObject<MockAudioDecoderFactory>();
+  config.encoder_factory = rtc::make_ref_counted<MockAudioEncoderFactory>();
+  config.decoder_factory = rtc::make_ref_counted<MockAudioDecoderFactory>();
   config.task_queue_factory = CreateDefaultTaskQueueFactory();
   config.audio_processing =
-      new rtc::RefCountedObject<testing::NiceMock<test::MockAudioProcessing>>();
+      rtc::make_ref_counted<testing::NiceMock<test::MockAudioProcessing>>();
   config.audio_device_module = test::MockAudioDeviceModule::CreateNice();
 
   auto voip_engine = CreateVoipEngine(std::move(config));
@@ -38,8 +38,8 @@ TEST(VoipEngineFactoryTest, CreateEngineWithMockModules) {
 // Create voip engine without setting audio processing as optional component.
 TEST(VoipEngineFactoryTest, UseNoAudioProcessing) {
   VoipEngineConfig config;
-  config.encoder_factory = new rtc::RefCountedObject<MockAudioEncoderFactory>();
-  config.decoder_factory = new rtc::RefCountedObject<MockAudioDecoderFactory>();
+  config.encoder_factory = rtc::make_ref_counted<MockAudioEncoderFactory>();
+  config.decoder_factory = rtc::make_ref_counted<MockAudioDecoderFactory>();
   config.task_queue_factory = CreateDefaultTaskQueueFactory();
   config.audio_device_module = test::MockAudioDeviceModule::CreateNice();
 

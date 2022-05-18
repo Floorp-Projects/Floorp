@@ -44,7 +44,7 @@ DefaultIceTransportFactory::CreateIceTransport(
     int component,
     IceTransportInit init) {
   BasicIceControllerFactory factory;
-  return new rtc::RefCountedObject<DefaultIceTransport>(
+  return rtc::make_ref_counted<DefaultIceTransport>(
       cricket::P2PTransportChannel::Create(
           transport_name, component, init.port_allocator(),
           init.async_dns_resolver_factory(), init.event_log(), &factory));

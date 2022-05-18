@@ -950,7 +950,7 @@ void ChannelSend::InitFrameTransformerDelegate(
                             absolute_capture_timestamp_ms);
       };
   frame_transformer_delegate_ =
-      new rtc::RefCountedObject<ChannelSendFrameTransformerDelegate>(
+      rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
           std::move(send_audio_callback), std::move(frame_transformer),
           &encoder_queue_);
   frame_transformer_delegate_->Init();

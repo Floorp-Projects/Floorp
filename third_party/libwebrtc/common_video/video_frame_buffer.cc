@@ -208,7 +208,7 @@ rtc::scoped_refptr<I420BufferInterface> WrapI420Buffer(
     int v_stride,
     std::function<void()> no_longer_used) {
   return rtc::scoped_refptr<I420BufferInterface>(
-      new rtc::RefCountedObject<WrappedYuvBuffer<I420BufferInterface>>(
+      rtc::make_ref_counted<WrappedYuvBuffer<I420BufferInterface>>(
           width, height, y_plane, y_stride, u_plane, u_stride, v_plane,
           v_stride, no_longer_used));
 }
@@ -226,7 +226,7 @@ rtc::scoped_refptr<I420ABufferInterface> WrapI420ABuffer(
     int a_stride,
     std::function<void()> no_longer_used) {
   return rtc::scoped_refptr<I420ABufferInterface>(
-      new rtc::RefCountedObject<WrappedYuvaBuffer<I420ABufferInterface>>(
+      rtc::make_ref_counted<WrappedYuvaBuffer<I420ABufferInterface>>(
           width, height, y_plane, y_stride, u_plane, u_stride, v_plane,
           v_stride, a_plane, a_stride, no_longer_used));
 }
@@ -242,7 +242,7 @@ rtc::scoped_refptr<I444BufferInterface> WrapI444Buffer(
     int v_stride,
     std::function<void()> no_longer_used) {
   return rtc::scoped_refptr<I444BufferInterface>(
-      new rtc::RefCountedObject<WrappedYuvBuffer<I444BufferBase>>(
+      rtc::make_ref_counted<WrappedYuvBuffer<I444BufferBase>>(
           width, height, y_plane, y_stride, u_plane, u_stride, v_plane,
           v_stride, no_longer_used));
 }
@@ -281,7 +281,7 @@ rtc::scoped_refptr<I010BufferInterface> WrapI010Buffer(
     int v_stride,
     std::function<void()> no_longer_used) {
   return rtc::scoped_refptr<I010BufferInterface>(
-      new rtc::RefCountedObject<WrappedYuv16BBuffer<I010BufferBase>>(
+      rtc::make_ref_counted<WrappedYuv16BBuffer<I010BufferBase>>(
           width, height, y_plane, y_stride, u_plane, u_stride, v_plane,
           v_stride, no_longer_used));
 }
