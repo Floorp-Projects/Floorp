@@ -144,8 +144,8 @@ class FakeNativeBuffer : public webrtc::VideoFrameBuffer {
       int crop_height,
       int scaled_width,
       int scaled_height) override {
-    return new rtc::RefCountedObject<FakeNativeBuffer>(nullptr, scaled_width,
-                                                       scaled_height);
+    return rtc::make_ref_counted<FakeNativeBuffer>(nullptr, scaled_width,
+                                                   scaled_height);
   }
 
  private:
@@ -517,7 +517,7 @@ class AdaptingFrameForwarder : public test::FrameForwarder {
               &cropped_height, &out_width, &out_height)) {
         VideoFrame adapted_frame =
             VideoFrame::Builder()
-                .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
+                .set_video_frame_buffer(rtc::make_ref_counted<TestBuffer>(
                     nullptr, out_width, out_height))
                 .set_ntp_time_ms(video_frame.ntp_time_ms())
                 .set_timestamp_ms(99)
@@ -715,8 +715,8 @@ class VideoStreamEncoderTest : public ::testing::Test {
       vp9_settings.numberOfSpatialLayers = num_spatial_layers;
       vp9_settings.automaticResizeOn = num_spatial_layers <= 1;
       video_encoder_config.encoder_specific_settings =
-          new rtc::RefCountedObject<
-              VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
+          rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+              vp9_settings);
     }
     ConfigureEncoder(std::move(video_encoder_config), allocation_callback_type);
   }
@@ -724,7 +724,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
   VideoFrame CreateFrame(int64_t ntp_time_ms,
                          rtc::Event* destruction_event) const {
     return VideoFrame::Builder()
-        .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
+        .set_video_frame_buffer(rtc::make_ref_counted<TestBuffer>(
             destruction_event, codec_width_, codec_height_))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(99)
@@ -736,7 +736,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
                                          rtc::Event* destruction_event,
                                          int offset_x) const {
     return VideoFrame::Builder()
-        .set_video_frame_buffer(new rtc::RefCountedObject<TestBuffer>(
+        .set_video_frame_buffer(rtc::make_ref_counted<TestBuffer>(
             destruction_event, codec_width_, codec_height_))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(99)
@@ -748,7 +748,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
   VideoFrame CreateFrame(int64_t ntp_time_ms, int width, int height) const {
     return VideoFrame::Builder()
         .set_video_frame_buffer(
-            new rtc::RefCountedObject<TestBuffer>(nullptr, width, height))
+            rtc::make_ref_counted<TestBuffer>(nullptr, width, height))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(ntp_time_ms)
         .set_rotation(kVideoRotation_0)
@@ -769,7 +769,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
                                    int width,
                                    int height) const {
     return VideoFrame::Builder()
-        .set_video_frame_buffer(new rtc::RefCountedObject<FakeNativeBuffer>(
+        .set_video_frame_buffer(rtc::make_ref_counted<FakeNativeBuffer>(
             destruction_event, width, height))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(99)
@@ -782,7 +782,7 @@ class VideoStreamEncoderTest : public ::testing::Test {
                                        int width,
                                        int height) const {
     return VideoFrame::Builder()
-        .set_video_frame_buffer(new rtc::RefCountedObject<FakeNV12NativeBuffer>(
+        .set_video_frame_buffer(rtc::make_ref_counted<FakeNV12NativeBuffer>(
             destruction_event, width, height))
         .set_ntp_time_ms(ntp_time_ms)
         .set_timestamp_ms(99)
@@ -1587,7 +1587,7 @@ TEST_F(VideoStreamEncoderTest,
        NativeFrameWithoutI420SupportGetsCroppedIfNecessary) {
   // Use the cropping factory.
   video_encoder_config_.video_stream_factory =
-      new rtc::RefCountedObject<CroppingVideoStreamFactory>();
+      rtc::make_ref_counted<CroppingVideoStreamFactory>();
   video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config_),
                                           kMaxPayloadLength);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
@@ -2071,7 +2071,7 @@ TEST_F(VideoStreamEncoderTest,
   config.simulcast_layers[0].active = false;
   config.simulcast_layers[1].active = true;
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
@@ -2135,7 +2135,7 @@ TEST_F(VideoStreamEncoderTest,
   config.simulcast_layers[0].active = false;
   config.simulcast_layers[1].active = true;
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
@@ -2208,7 +2208,7 @@ TEST_F(VideoStreamEncoderTest,
   config.simulcast_layers[1].active = true;
   config.simulcast_layers[2].active = false;
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
@@ -2252,7 +2252,7 @@ TEST_F(VideoStreamEncoderTest,
   config.simulcast_layers[1].active = false;
   config.simulcast_layers[2].active = false;
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
@@ -2288,7 +2288,7 @@ TEST_F(VideoStreamEncoderTest,
   config.simulcast_layers[1].active = true;
   config.simulcast_layers[1].max_bitrate_bps = kMaxBitrateBps;
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(config.Copy(), kMaxPayloadLength);
@@ -2376,7 +2376,7 @@ TEST_P(ResolutionAlignmentTest, SinkWantsAlignmentApplied) {
     config.simulcast_layers[i].scale_resolution_down_by = scale_factors_[i];
   }
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->ConfigureEncoder(std::move(config), kMaxPayloadLength);
@@ -4406,7 +4406,7 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.content_type =
       VideoEncoderConfig::ContentType::kRealtimeVideo;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp8EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp8EncoderSpecificSettings>(
           VideoEncoder::GetDefaultVp8Settings());
   for (auto& layer : video_encoder_config.simulcast_layers) {
     layer.num_temporal_layers = 2;
@@ -4451,7 +4451,7 @@ TEST_F(VideoStreamEncoderTest,
   video_encoder_config.content_type =
       VideoEncoderConfig::ContentType::kRealtimeVideo;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp8EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp8EncoderSpecificSettings>(
           VideoEncoder::GetDefaultVp8Settings());
   for (auto& layer : video_encoder_config.simulcast_layers) {
     layer.num_temporal_layers = 2;
@@ -4500,7 +4500,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOn;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   ConfigureEncoder(std::move(video_encoder_config),
                    VideoStreamEncoder::BitrateAllocationCallbackType::
@@ -4555,7 +4555,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOn;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   ConfigureEncoder(std::move(video_encoder_config),
                    VideoStreamEncoder::BitrateAllocationCallbackType::
@@ -4603,7 +4603,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOnKeyPic;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   ConfigureEncoder(std::move(video_encoder_config),
                    VideoStreamEncoder::BitrateAllocationCallbackType::
@@ -4651,7 +4651,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOn;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   // Simulcast layers are used for enabling/disabling streams.
   video_encoder_config.simulcast_layers.resize(3);
@@ -4710,7 +4710,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOn;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   // Simulcast layers are used for enabling/disabling streams.
   video_encoder_config.simulcast_layers.resize(3);
@@ -4762,7 +4762,7 @@ TEST_F(VideoStreamEncoderTest,
   vp9_settings.interLayerPred = InterLayerPredMode::kOn;
   vp9_settings.automaticResizeOn = false;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   // Simulcast layers are used for enabling/disabling streams.
   video_encoder_config.simulcast_layers.resize(3);
@@ -5362,7 +5362,7 @@ TEST_F(VideoStreamEncoderTest, InitialFrameDropActivatesWhenLayersChange) {
   test::FillEncoderConfiguration(PayloadStringToCodecType("VP8"), 3,
                                  &video_encoder_config);
   video_encoder_config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   for (auto& layer : video_encoder_config.simulcast_layers) {
@@ -5429,7 +5429,7 @@ TEST_F(VideoStreamEncoderTest, InitialFrameDropActivatesWhenSVCLayersChange) {
   // Since only one layer is active - automatic resize should be enabled.
   vp9_settings.automaticResizeOn = true;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
@@ -5488,7 +5488,7 @@ TEST_F(VideoStreamEncoderTest,
   // Since only one layer is active - automatic resize should be enabled.
   vp9_settings.automaticResizeOn = true;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
@@ -5546,7 +5546,7 @@ TEST_F(VideoStreamEncoderTest,
   // Since only one layer is active - automatic resize should be enabled.
   vp9_settings.automaticResizeOn = true;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
@@ -5611,7 +5611,7 @@ TEST_F(VideoStreamEncoderTest, DefaultMaxAndMinBitratesNotUsedIfDisabled) {
   // Since only one layer is active - automatic resize should be enabled.
   vp9_settings.automaticResizeOn = true;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
@@ -5687,7 +5687,7 @@ TEST_F(VideoStreamEncoderTest,
   // Since only one layer is active - automatic resize should be enabled.
   vp9_settings.automaticResizeOn = true;
   video_encoder_config.encoder_specific_settings =
-      new rtc::RefCountedObject<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+      rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
           vp9_settings);
   video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrateBps;
   video_encoder_config.content_type =
@@ -6685,7 +6685,7 @@ TEST_F(VideoStreamEncoderTest, AcceptsFullHdAdaptedDownSimulcastFrames) {
   video_encoder_config.simulcast_layers[0].max_framerate = kFramerate;
   video_encoder_config.max_bitrate_bps = kTargetBitrateBps;
   video_encoder_config.video_stream_factory =
-      new rtc::RefCountedObject<CroppingVideoStreamFactory>();
+      rtc::make_ref_counted<CroppingVideoStreamFactory>();
   video_stream_encoder_->ConfigureEncoder(std::move(video_encoder_config),
                                           kMaxPayloadLength);
   video_stream_encoder_->WaitUntilTaskQueueIsIdle();
@@ -7650,7 +7650,7 @@ TEST_F(VideoStreamEncoderTest, EncoderResetAccordingToParameterChange) {
     config.simulcast_layers[i].active = true;
   }
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
@@ -7778,7 +7778,7 @@ TEST_F(VideoStreamEncoderTest, EncoderResolutionsExposedInSimulcast) {
     config.simulcast_layers[i].active = true;
   }
   config.video_stream_factory =
-      new rtc::RefCountedObject<cricket::EncoderStreamFactory>(
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
           "VP8", /*max qp*/ 56, /*screencast*/ false,
           /*screenshare enabled*/ false);
   video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(

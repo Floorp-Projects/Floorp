@@ -502,7 +502,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
     webrtc::VideoCodecH264 h264_settings =
         webrtc::VideoEncoder::GetDefaultH264Settings();
     h264_settings.frameDroppingOn = frame_dropping;
-    return new rtc::RefCountedObject<
+    return rtc::make_ref_counted<
         webrtc::VideoEncoderConfig::H264EncoderSpecificSettings>(h264_settings);
   }
   if (absl::EqualsIgnoreCase(codec.name, kVp8CodecName)) {
@@ -512,7 +512,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
     // VP8 denoising is enabled by default.
     vp8_settings.denoisingOn = codec_default_denoising ? true : denoising;
     vp8_settings.frameDroppingOn = frame_dropping;
-    return new rtc::RefCountedObject<
+    return rtc::make_ref_counted<
         webrtc::VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8_settings);
   }
   if (absl::EqualsIgnoreCase(codec.name, kVp9CodecName)) {
@@ -562,7 +562,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::ConfigureVideoEncoderSettings(
       vp9_settings.flexibleMode = vp9_settings.numberOfSpatialLayers > 1;
       vp9_settings.interLayerPred = webrtc::InterLayerPredMode::kOn;
     }
-    return new rtc::RefCountedObject<
+    return rtc::make_ref_counted<
         webrtc::VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9_settings);
   }
   return nullptr;
@@ -2546,7 +2546,7 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   int max_qp = kDefaultQpMax;
   codec.GetParam(kCodecParamMaxQuantization, &max_qp);
   encoder_config.video_stream_factory =
-      new rtc::RefCountedObject<EncoderStreamFactory>(
+      rtc::make_ref_counted<EncoderStreamFactory>(
           codec.name, max_qp, is_screencast, parameters_.conference_mode);
 
   return encoder_config;

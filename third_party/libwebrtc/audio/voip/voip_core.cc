@@ -138,7 +138,7 @@ ChannelId VoipCore::CreateChannel(Transport* transport,
   }
 
   rtc::scoped_refptr<AudioChannel> channel =
-      new rtc::RefCountedObject<AudioChannel>(
+      rtc::make_ref_counted<AudioChannel>(
           transport, local_ssrc.value(), task_queue_factory_.get(),
           process_thread_.get(), audio_mixer_.get(), decoder_factory_);
 

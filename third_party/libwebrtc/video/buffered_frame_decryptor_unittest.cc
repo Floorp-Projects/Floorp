@@ -86,7 +86,7 @@ class BufferedFrameDecryptorTest : public ::testing::Test,
     decrypted_frame_call_count_ = 0;
     decryption_status_change_count_ = 0;
     seq_num_ = 0;
-    mock_frame_decryptor_ = new rtc::RefCountedObject<MockFrameDecryptor>();
+    mock_frame_decryptor_ = rtc::make_ref_counted<MockFrameDecryptor>();
     buffered_frame_decryptor_ =
         std::make_unique<BufferedFrameDecryptor>(this, this);
     buffered_frame_decryptor_->SetFrameDecryptor(mock_frame_decryptor_.get());

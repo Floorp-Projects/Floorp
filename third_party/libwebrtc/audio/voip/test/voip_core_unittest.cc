@@ -39,7 +39,7 @@ class VoipCoreTest : public ::testing::Test {
     auto encoder_factory = CreateBuiltinAudioEncoderFactory();
     auto decoder_factory = CreateBuiltinAudioDecoderFactory();
     rtc::scoped_refptr<AudioProcessing> audio_processing =
-        new rtc::RefCountedObject<NiceMock<test::MockAudioProcessing>>();
+        rtc::make_ref_counted<NiceMock<test::MockAudioProcessing>>();
 
     auto process_thread = std::make_unique<NiceMock<MockProcessThread>>();
     // Hold the pointer to use for testing.

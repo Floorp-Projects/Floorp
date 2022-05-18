@@ -330,7 +330,7 @@ void WebRtcVoiceEngine::Init() {
     config.audio_device_module = adm_;
     if (audio_frame_processor_)
       config.async_audio_processing_factory =
-          new rtc::RefCountedObject<webrtc::AsyncAudioProcessing::Factory>(
+          rtc::make_ref_counted<webrtc::AsyncAudioProcessing::Factory>(
               *audio_frame_processor_, *task_queue_factory_);
     audio_state_ = webrtc::AudioState::Create(config);
   }

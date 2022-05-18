@@ -60,12 +60,12 @@ rtc::scoped_refptr<IceTransportInterface> CreateIceTransport(
     IceTransportInit init) {
   if (init.async_resolver_factory()) {
     // Backwards compatibility mode
-    return new rtc::RefCountedObject<IceTransportWithTransportChannel>(
+    return rtc::make_ref_counted<IceTransportWithTransportChannel>(
         std::make_unique<cricket::P2PTransportChannel>(
             "", cricket::ICE_CANDIDATE_COMPONENT_RTP, init.port_allocator(),
             init.async_resolver_factory(), init.event_log()));
   } else {
-    return new rtc::RefCountedObject<IceTransportWithTransportChannel>(
+    return rtc::make_ref_counted<IceTransportWithTransportChannel>(
         cricket::P2PTransportChannel::Create(
             "", cricket::ICE_CANDIDATE_COMPONENT_RTP, init.port_allocator(),
             init.async_dns_resolver_factory(), init.event_log()));

@@ -35,14 +35,16 @@ void SetEncoderSpecific(VideoEncoderConfig* encoder_config,
   if (type == kVideoCodecVP8) {
     VideoCodecVP8 vp8 = VideoEncoder::GetDefaultVp8Settings();
     vp8.automaticResizeOn = automatic_resize;
-    encoder_config->encoder_specific_settings = new rtc::RefCountedObject<
-        VideoEncoderConfig::Vp8EncoderSpecificSettings>(vp8);
+    encoder_config->encoder_specific_settings =
+        rtc::make_ref_counted<VideoEncoderConfig::Vp8EncoderSpecificSettings>(
+            vp8);
   } else if (type == kVideoCodecVP9) {
     VideoCodecVP9 vp9 = VideoEncoder::GetDefaultVp9Settings();
     vp9.automaticResizeOn = automatic_resize;
     vp9.numberOfSpatialLayers = num_spatial_layers;
-    encoder_config->encoder_specific_settings = new rtc::RefCountedObject<
-        VideoEncoderConfig::Vp9EncoderSpecificSettings>(vp9);
+    encoder_config->encoder_specific_settings =
+        rtc::make_ref_counted<VideoEncoderConfig::Vp9EncoderSpecificSettings>(
+            vp9);
   }
 }
 }  // namespace

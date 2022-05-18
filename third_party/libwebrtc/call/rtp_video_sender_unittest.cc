@@ -891,7 +891,7 @@ TEST(RtpVideoSenderTest, CanSetZeroBitrate) {
 
 TEST(RtpVideoSenderTest, SimulcastSenderRegistersFrameTransformers) {
   rtc::scoped_refptr<MockFrameTransformer> transformer =
-      new rtc::RefCountedObject<MockFrameTransformer>();
+      rtc::make_ref_counted<MockFrameTransformer>();
 
   EXPECT_CALL(*transformer, RegisterTransformedFrameSinkCallback(_, kSsrc1));
   EXPECT_CALL(*transformer, RegisterTransformedFrameSinkCallback(_, kSsrc2));

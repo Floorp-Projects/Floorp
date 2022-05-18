@@ -338,7 +338,7 @@ void ChannelReceive::InitFrameTransformerDelegate(
         OnReceivedPayloadData(packet, header);
       };
   frame_transformer_delegate_ =
-      new rtc::RefCountedObject<ChannelReceiveFrameTransformerDelegate>(
+      rtc::make_ref_counted<ChannelReceiveFrameTransformerDelegate>(
           std::move(receive_audio_callback), std::move(frame_transformer),
           rtc::Thread::Current());
   frame_transformer_delegate_->Init();
