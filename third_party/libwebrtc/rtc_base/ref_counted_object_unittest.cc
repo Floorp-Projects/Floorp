@@ -125,6 +125,22 @@ TEST(FinalRefCountedObject, CanWrapIntoScopedRefptr) {
   EXPECT_TRUE(ref2->HasOneRef());
 }
 
+TEST(FinalRefCountedObject, CanCreateFromMovedType) {
+  class MoveOnly {
+   public:
+    MoveOnly(int a) : a_(a) {}
+    MoveOnly(MoveOnly&&) = default;
+
+    int a() { return a_; }
+
+   private:
+    int a_;
+  };
+  MoveOnly foo(5);
+  auto ref = make_ref_counted<MoveOnly>(std::move(foo));
+  EXPECT_EQ(ref->a(), 5);
+}
+
 // This test is mostly a compile-time test for scoped_refptr compatibility.
 TEST(RefCounted, SmartPointers) {
   // Sanity compile-time tests. FooItf is virtual, Foo is not, FooItf inherits
