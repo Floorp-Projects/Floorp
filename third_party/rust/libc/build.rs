@@ -60,6 +60,11 @@ fn main() {
         println!("cargo:rustc-cfg=libc_align");
     }
 
+    // Rust >= 1.26 supports i128 and u128:
+    if rustc_minor_ver >= 26 || rustc_dep_of_std {
+        println!("cargo:rustc-cfg=libc_int128");
+    }
+
     // Rust >= 1.30 supports `core::ffi::c_void`, so libc can just re-export it.
     // Otherwise, it defines an incompatible type to retaining
     // backwards-compatibility.
@@ -80,6 +85,11 @@ fn main() {
 
     if rustc_minor_ver >= 51 || rustc_dep_of_std {
         println!("cargo:rustc-cfg=libc_ptr_addr_of");
+    }
+
+    // Rust >= 1.37.0 allows underscores as anonymous constant names.
+    if rustc_minor_ver >= 37 || rustc_dep_of_std {
+        println!("cargo:rustc-cfg=libc_underscore_const_names");
     }
 
     // #[thread_local] is currently unstable

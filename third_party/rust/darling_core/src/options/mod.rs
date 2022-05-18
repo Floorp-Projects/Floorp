@@ -47,32 +47,19 @@ impl FromMeta for DefaultExpression {
     }
 }
 
-/// Run a parsing task, and if it produces an error push it into `$errors`
-macro_rules! collect_error {
-    ($errors:ident, $task:expr) => {
-        if let Err(e) = $task {
-            $errors.push(e);
-        }
-    };
-}
-
 /// Middleware for extracting attribute values. Implementers are expected to override
 /// `parse_nested` so they can apply individual items to themselves, while `parse_attributes`
 /// is responsible for looping through distinct outer attributes and collecting errors.
 pub trait ParseAttribute: Sized {
     fn parse_attributes(mut self, attrs: &[syn::Attribute]) -> Result<Self> {
-        let mut errors = Vec::new();
+        let mut errors = Error::accumulator();
         for attr in attrs {
             if attr.path == parse_quote!(darling) {
-                collect_error!(errors, parse_attr(attr, &mut self));
+                errors.handle(parse_attr(attr, &mut self));
             }
         }
 
-        if !errors.is_empty() {
-            Err(Error::multiple(errors))
-        } else {
-            Ok(self)
-        }
+        errors.finish_with(self)
     }
 
     /// Read a meta-item, and apply its values to the current instance.
@@ -80,22 +67,18 @@ pub trait ParseAttribute: Sized {
 }
 
 fn parse_attr<T: ParseAttribute>(attr: &syn::Attribute, target: &mut T) -> Result<()> {
-    let mut errors = Vec::new();
+    let mut errors = Error::accumulator();
     match attr.parse_meta().ok() {
         Some(syn::Meta::List(data)) => {
             for item in data.nested {
                 if let syn::NestedMeta::Meta(ref mi) = item {
-                    collect_error!(errors, target.parse_nested(mi));
+                    errors.handle(target.parse_nested(mi));
                 } else {
                     panic!("Wasn't able to parse: `{:?}`", item);
                 }
             }
 
-            if !errors.is_empty() {
-                Err(Error::multiple(errors))
-            } else {
-                Ok(())
-            }
+            errors.finish()
         }
         Some(ref item) => panic!("Wasn't able to parse: `{:?}`", item),
         None => panic!("Unable to parse {:?}", attr),
@@ -109,35 +92,31 @@ pub trait ParseData: Sized {
     fn parse_body(mut self, body: &syn::Data) -> Result<Self> {
         use syn::{Data, Fields};
 
-        let mut errors = Vec::new();
+        let mut errors = Error::accumulator();
 
         match *body {
             Data::Struct(ref data) => match data.fields {
                 Fields::Unit => {}
                 Fields::Named(ref fields) => {
                     for field in &fields.named {
-                        collect_error!(errors, self.parse_field(field));
+                        errors.handle(self.parse_field(field));
                     }
                 }
                 Fields::Unnamed(ref fields) => {
                     for field in &fields.unnamed {
-                        collect_error!(errors, self.parse_field(field));
+                        errors.handle(self.parse_field(field));
                     }
                 }
             },
             Data::Enum(ref data) => {
                 for variant in &data.variants {
-                    collect_error!(errors, self.parse_variant(variant));
+                    errors.handle(self.parse_variant(variant));
                 }
             }
             Data::Union(_) => unreachable!(),
         };
 
-        if !errors.is_empty() {
-            Err(Error::multiple(errors))
-        } else {
-            Ok(self)
-        }
+        errors.finish_with(self)
     }
 
     /// Apply the next found variant to the object, returning an error

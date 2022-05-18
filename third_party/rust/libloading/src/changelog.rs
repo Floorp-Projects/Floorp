@@ -1,5 +1,15 @@
 //! The change log.
 
+/// Release 0.7.3 (2022-01-15)
+///
+/// This release has no functional changes.
+///
+/// In this release the `docsrs` `cfg` has been renamed to `libloading_docs` to better reflect that
+/// this `cfg` is intended to be only used by `libloading` and only specifically for the invocation
+/// of `rustdoc` when documenting `libloading`. Setting this `cfg` in any other situation is
+/// unsupported and will not work.
+pub mod r0_7_3 {}
+
 /// Release 0.7.2 (2021-11-14)
 ///
 /// Cargo.toml now specifies the MSRV bounds, which enables tooling to report an early failure when

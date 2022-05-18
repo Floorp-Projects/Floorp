@@ -11,20 +11,26 @@
 
 [package]
 edition = "2018"
-rust-version = "1.38"
+rust-version = "1.46"
 name = "serde_yaml"
-version = "0.8.23"
+version = "0.8.24"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 description = "YAML support for Serde"
 documentation = "https://docs.rs/serde_yaml/"
 readme = "README.md"
-keywords = ["yaml", "serde"]
+keywords = [
+    "yaml",
+    "serde",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/dtolnay/serde-yaml"
+
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
 [dependencies.indexmap]
-version = "1.5"
+version = "1.5.2"
+features = ["std"]
 
 [dependencies.ryu]
 version = "1.0"
@@ -34,6 +40,7 @@ version = "1.0.69"
 
 [dependencies.yaml-rust]
 version = "0.4.5"
+
 [dev-dependencies.anyhow]
 version = "1.0"
 

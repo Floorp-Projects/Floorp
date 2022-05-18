@@ -12,16 +12,30 @@
 [package]
 edition = "2018"
 name = "memchr"
-version = "2.4.1"
-authors = ["Andrew Gallant <jamslam@gmail.com>", "bluss"]
-exclude = ["/bench", "/.github", "/fuzz"]
+version = "2.5.0"
+authors = [
+    "Andrew Gallant <jamslam@gmail.com>",
+    "bluss",
+]
+exclude = [
+    "/bench",
+    "/.github",
+    "/fuzz",
+]
 description = "Safe interface to memchr."
 homepage = "https://github.com/BurntSushi/memchr"
 documentation = "https://docs.rs/memchr/"
 readme = "README.md"
-keywords = ["memchr", "char", "scan", "strchr", "string"]
+keywords = [
+    "memchr",
+    "char",
+    "scan",
+    "strchr",
+    "string",
+]
 license = "Unlicense/MIT"
 repository = "https://github.com/BurntSushi/memchr"
+
 [profile.bench]
 debug = true
 
@@ -35,6 +49,7 @@ debug = true
 [lib]
 name = "memchr"
 bench = false
+
 [dependencies.compiler_builtins]
 version = "0.1.2"
 optional = true
@@ -48,12 +63,16 @@ package = "rustc-std-workspace-core"
 version = "0.2.18"
 optional = true
 default-features = false
+
 [dev-dependencies.quickcheck]
 version = "1.0.3"
 default-features = false
 
 [features]
 default = ["std"]
-rustc-dep-of-std = ["core", "compiler_builtins"]
+rustc-dep-of-std = [
+    "core",
+    "compiler_builtins",
+]
 std = []
 use_std = ["std"]

@@ -96,6 +96,7 @@ fn drop_in_poll() {
     assert_eq!(block_on(future1), 1);
 }
 
+#[cfg_attr(miri, ignore)] // https://github.com/rust-lang/miri/issues/1038
 #[test]
 fn peek() {
     let mut local_pool = LocalPool::new();

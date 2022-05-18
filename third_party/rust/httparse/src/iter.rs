@@ -9,7 +9,7 @@ impl<'a> Bytes<'a> {
     #[inline]
     pub fn new(slice: &'a [u8]) -> Bytes<'a> {
         Bytes {
-            slice: slice,
+            slice,
             pos: 0
         }
     }
@@ -26,7 +26,7 @@ impl<'a> Bytes<'a> {
 
     #[inline]
     pub unsafe fn bump(&mut self) {
-        debug_assert!(self.pos + 1 <= self.slice.len(), "overflow");
+        debug_assert!(self.pos < self.slice.len(), "overflow");
         self.pos += 1;
     }
 
@@ -56,7 +56,7 @@ impl<'a> Bytes<'a> {
         let head_pos = self.pos - skip;
         let ptr = self.slice.as_ptr();
         let head = slice::from_raw_parts(ptr, head_pos);
-        let tail = slice::from_raw_parts(ptr.offset(self.pos as isize), self.slice.len() - self.pos);
+        let tail = slice::from_raw_parts(ptr.add(self.pos), self.slice.len() - self.pos);
         self.pos = 0;
         self.slice = tail;
         head
@@ -137,7 +137,7 @@ impl<'a, 'b: 'a> Bytes8<'a, 'b> {
     #[inline]
     fn new(bytes: &'a mut Bytes<'b>) -> Bytes8<'a, 'b> {
         Bytes8 {
-            bytes: bytes,
+            bytes,
             pos: 0,
         }
     }
